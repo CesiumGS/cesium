@@ -30,6 +30,8 @@ define([
         '../Renderer/Context',
         '../Renderer/PassState',
         '../Renderer/PixelDatatype',
+        '../Renderer/TextureMagnificationFilter',
+        '../Renderer/TextureMinificationFilter',
         './Camera',
         './CreditDisplay',
         './CullingVolume',
@@ -82,6 +84,8 @@ define([
         Context,
         PassState,
         PixelDatatype,
+        TextureMagnificationFilter,
+        TextureMinificationFilter,
         Camera,
         CreditDisplay,
         CullingVolume,
@@ -830,6 +834,11 @@ define([
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE
         });
+        scene._colorTexture.sampler = context.createSampler({
+            minificationFilter : TextureMinificationFilter.NEAREST,
+            magnificationFilter : TextureMagnificationFilter.NEAREST
+        });
+
         scene._depthStencilTexture = context.createTexture2D({
             width : width,
             height : height,
@@ -911,7 +920,7 @@ define([
         }
 
         var uniformMap = scene._copyDepthCommand.uniformMap;
-        if (!defined(uniformMap.depthTexture) || uniformMap.depthTexture !== scene._depthStencilTexture) {
+        if (!defined(uniformMap.depthTexture) || uniformMap.depthTexture() !== scene._depthStencilTexture) {
             uniformMap.depthTexture = function() {
                 return scene._depthStencilTexture;
             };
@@ -930,7 +939,7 @@ define([
         }
 
         uniformMap = scene._copyColorCommand.uniformMap;
-        if (!defined(uniformMap.colorTexture) || uniformMap.colorTexture !== scene._colorTexture) {
+        if (!defined(uniformMap.colorTexture) || uniformMap.colorTexture() !== scene._colorTexture) {
             uniformMap.colorTexture = function() {
                 return scene._colorTexture;
             };
@@ -1460,12 +1469,18 @@ define([
             scene._oit.execute(context, passState);
         }
 
-        passState.framebuffer = undefined;
         if (useFXAA) {
+            if (!useOIT) {
+                passState.framebuffer = scene._fxaa.getColorFramebuffer();
+                scene._copyColorCommand.execute(context, passState);
+            }
+
+            passState.framebuffer = undefined;
             scene._fxaa.execute(context, passState);
         }
 
         if (!useOIT && !useFXAA) {
+            passState.framebuffer = undefined;
             scene._copyColorCommand.execute(context, passState);
         }
     }
