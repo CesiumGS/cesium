@@ -1345,7 +1345,12 @@ define([
         var sunVisible = isVisible(sunCommand, frameState);
 
         var clear = scene._clearColorCommand;
+        var clearDepth = scene._depthClearCommand;
+
         Color.clone(clearColor, clear.color);
+        clear.execute(context, passState);
+
+        passState.framebuffer = scene._framebuffer;
         clear.execute(context, passState);
 
         var renderTranslucentCommands = false;
@@ -1371,13 +1376,7 @@ define([
             scene._fxaa.clear(context, passState, clearColor);
         }
 
-        var opaqueFramebuffer = useFXAA ? scene._fxaa.getColorFramebuffer() : scene._framebuffer;
-
-        if (sunVisible && scene.sunBloom) {
-            passState.framebuffer = scene._sunPostProcess.update(context);
-        } else {
-            passState.framebuffer = opaqueFramebuffer;
-        }
+        passState.framebuffer = (sunVisible && scene.sunBloom) ? scene._sunPostProcess.update(context) : scene._framebuffer;
 
         // Ideally, we would render the sky box and atmosphere last for
         // early-z, but we would have to draw it in each frustum
@@ -1396,12 +1395,11 @@ define([
         if (defined(sunCommand) && sunVisible) {
             sunCommand.execute(context, passState);
             if (scene.sunBloom) {
-                scene._sunPostProcess.execute(context, opaqueFramebuffer);
-                passState.framebuffer = opaqueFramebuffer;
+                scene._sunPostProcess.execute(context, scene._framebuffer);
+                passState.framebuffer = scene._framebuffer;
             }
         }
 
-        var clearDepth = scene._depthClearCommand;
         var executeTranslucentCommands;
         if (useOIT) {
             if (!defined(scene._executeOITFunction)) {
@@ -1435,7 +1433,7 @@ define([
                 executeCommand(commands[j], scene, context, passState);
             }
 
-            //scene._copyDepthCommand.execute(context, passState);
+            scene._copyDepthCommand.execute(context, passState);
 
             // Execute commands in order by pass up to the translucent pass.
             // Translucent geometry needs special handling (sorting/OIT).
