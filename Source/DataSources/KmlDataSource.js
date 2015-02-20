@@ -1483,12 +1483,19 @@ define([
     }
 
     /**
-     * A {@link DataSource} which processes Keyhole Markup Language (KML).
+     * A {@link DataSource} which processes KML.
      * @alias KmlDataSource
      * @constructor
      *
+     * @param {DefaultProxy} [proxy] A proxy to be used for loading external data.
+     *
      * @see https://developers.google.com/kml/
      * @see http://www.opengeospatial.org/standards/kml/
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=KML.html|Cesium Sandcastle KML Demo}
+     *
+     * @example
+     * var viewer = new Cesium.Viewer('cesiumContainer');
+     * viewer.dataSources.add(Cesium.KmlDataSource.fromUrl('../../SampleData/facilities.kmz');
      */
     var KmlDataSource = function(proxy) {
         this._changed = new Event();
@@ -1505,8 +1512,8 @@ define([
 
     /**
      * Creates a new instance and asynchronously loads the KML or KMZ file at the provided url.
-     *
      * @param {string} url The url to be processed.
+     * @param {DefaultProxy} [proxy] A proxy to be used for loading external data.
      *
      * @returns {KmlDataSource} A new instance set to load the specified url.
      */
@@ -1528,9 +1535,9 @@ define([
             }
         },
         /**
-         * Gets the clock settings defined by the loaded CZML.  If no clock is explicitly
-         * defined in the CZML, the combined availability of all entities is returned.  If
-         * only static data exists, this value is undefined.
+         * Gets the clock settings defined by the loaded KML. This represents the total
+         * availability interval for all time-dynamic data. If the KML does not contain
+         * time-dynamic data, this value is undefined.
          * @memberof KmlDataSource.prototype
          * @type {DataSourceClock}
          */
@@ -1592,21 +1599,30 @@ define([
     });
 
     /**
-     * Asynchronously loads the provided KML document, replacing any existing data.
+     * Asynchronously loads the provided KML document or binary KMZ blob, replacing any existing data.
      *
-     * @param {Document} kml The parsed KML document to be processed.
-     * @param {string} sourceUri The url of the document which is used for resolving relative links and other KML features.
-     *
-     * @returns {Promise} a promise that will resolve when the KML is processed.
+     * @param {Document|Blob} documentOrBlob A parsed KML document or binary KMZ blob to be processed.
+     * @param {string} [sourceUri] The url of the document which is used for resolving relative links and other KML features.
+     * @returns {Promise} A promise that will resolve when the KML is loaded.
      */
-    KmlDataSource.prototype.load = function(kml, sourceUri) {
-        if (!defined(kml)) {
-            throw new DeveloperError('kml is required.');
+    KmlDataSource.prototype.load = function(documentOrBlob, sourceUri) {
+        if (!defined(documentOrBlob)) {
+            throw new DeveloperError('documentOrBlob is required.');
         }
 
-        DataSource.setLoading(this, true);
         var that = this;
-        return when(loadKml(this, kml, sourceUri, undefined)).otherwise(function(error) {
+        DataSource.setLoading(this, true);
+
+        var promise;
+        if (documentOrBlob instanceof Blob) {
+            promise = isZipFile(documentOrBlob).then(function(isZip) {
+                return isZip ? loadKmz(that, documentOrBlob, sourceUri) : when.reject(new RuntimeError('Blob is not a valid zip file.'));
+            });
+        } else {
+            promise = when(loadKml(this, documentOrBlob, sourceUri, undefined));
+        }
+
+        return promise.otherwise(function(error) {
             DataSource.setLoading(that, false);
             that._error.raiseEvent(that, error);
             return when.reject(error);
@@ -1614,38 +1630,10 @@ define([
     };
 
     /**
-     * Asynchronously loads the provided KMZ Blob, replacing any existing data.
-     *
-     * @param {Blob} kmz The KMZ document to be processed.
-     * @param {string} sourceUri The url of the document which is used for resolving relative links and other KML features.
-     *
-     * @returns {Promise} a promise that will resolve when the KMZ is processed.
-     */
-    KmlDataSource.prototype.loadKmz = function(kmz, sourceUri) {
-        if (!defined(kmz)) {
-            throw new DeveloperError('kmz is required.');
-        }
-
-        DataSource.setLoading(this, true);
-        var that = this;
-        return isZipFile(kmz).then(function(isZip) {
-            if (isZip) {
-                return loadKmz(that, kmz, sourceUri);
-            }
-            return when.reject(new RuntimeError('KMZ file is not a valid zip file.'));
-        }).otherwise(function(error) {
-            DataSource.setLoading(that, false);
-            that._error.raiseEvent(that, error);
-            return when.reject(error);
-        });
-    };
-
-    /**
-     * Asynchronously loads the KML or KMZ file at the provided url, replacing any existing data.
+     * Asynchronously loads the KML or KMZ data at the provided url, replacing any existing data.
      *
      * @param {String} url The url to be processed.
-     *
-     * @returns {Promise} a promise that will resolve when the KMZ is processed.
+     * @returns {Promise} A promise that will resolve when the KMZ is processed.
      */
     KmlDataSource.prototype.loadUrl = function(url) {
         if (!defined(url)) {

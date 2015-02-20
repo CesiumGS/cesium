@@ -63,34 +63,27 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('loadKmz works with a KMZ file', function() {
+    it('load works with a KMZ file', function() {
         var dataSource = new KmlDataSource();
         waitsForPromise(loadBlob('Data/KML/simple.kmz').then(function(blob) {
-            return dataSource.loadKmz(blob);
+            return dataSource.load(blob);
         }).then(function(source) {
             expect(source).toBe(dataSource);
             expect(source.entities.values.length).toEqual(1);
         }));
     });
 
-    it('loadKmz throws with undefined blob', function() {
-        var dataSource = new KmlDataSource();
-        expect(function() {
-            dataSource.loadKmz(undefined);
-        }).toThrowDeveloperError();
-    });
-
-    it('loadKmz rejects loading non-KMZ file', function() {
+    it('load rejects loading non-KMZ file', function() {
         var dataSource = new KmlDataSource();
         waitsForPromise.toReject(loadBlob('Data/Images/Blue.png').then(function(blob) {
-            return dataSource.loadKmz(blob);
+            return dataSource.load(blob);
         }));
     });
 
-    it('loadKmz rejects KMZ file with no KML contained', function() {
+    it('load rejects KMZ file with no KML contained', function() {
         var dataSource = new KmlDataSource();
         waitsForPromise.toReject(loadBlob('Data/KML/empty.zip').then(function(blob) {
-            return dataSource.loadKmz(blob);
+            return dataSource.load(blob);
         }));
     });
 
@@ -575,20 +568,13 @@ defineSuite([
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <Placemark>\
               <styleUrl>Data/KML/externalStyle.kml#testStyle</styleUrl>\
-            </Placemark>\
-            </Document>';
+            </Placemark>';
 
         var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(kml, "text/xml"));
-
-        var entities = dataSource.entities.values;
-        waitsFor(function() {
-            return entities.length === 1;
-        });
-
-        runs(function() {
+        waitsForPromise(dataSource.load(parser.parseFromString(kml, "text/xml")).then(function() {
+            var entities = dataSource.entities.values;
             expect(entities[0].billboard.scale.getValue()).toEqual(3.0);
-        });
+        }));
     });
 
     it('Styles: inline styles take precedance over shared styles', function() {

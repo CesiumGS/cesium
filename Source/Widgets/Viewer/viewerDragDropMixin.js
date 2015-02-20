@@ -224,7 +224,7 @@ define([
                     loadPromise = dataSource.load(parser.parseFromString(evt.target.result, "text/xml"), fileName);
                 } else if (/\.kmz$/i.test(fileName)) {
                     dataSource = new KmlDataSource(proxy);
-                    loadPromise = dataSource.loadKmz(file, fileName);
+                    loadPromise = dataSource.load(file, fileName);
                 } else {
                     viewer.dropError.raiseEvent(viewer, fileName, 'Unrecognized file: ' + fileName);
                     return;
