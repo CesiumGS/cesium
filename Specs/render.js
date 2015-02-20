@@ -43,25 +43,23 @@ define([
         commands = defaultValue(commands, []);
         primitive.update(context, frameState, commands);
 
-        var opaqueCommands = [];
-        var translucentCommands = [];
-        var overlayCommands = [];
-
-        var length = commands.length;
-        for (var i = 0; i < length; i++) {
-            var command = commands[i];
-            if (command.pass === Pass.OPAQUE) {
-                opaqueCommands.push(command);
-            } else if (command.pass === Pass.TRANSLUCENT) {
-                translucentCommands.push(command);
-            } else if (command.pass === Pass.OVERLAY) {
-                overlayCommands.push(command);
-            }
+        var i;
+        var renderCommands = new Array(Pass.NUMBER_OF_PASSES);
+        for (i = 0; i < Pass.NUMBER_OF_PASSES; ++i) {
+            renderCommands[i] = [];
         }
 
-        var commandsExecuted = executeCommands(context, frameState, opaqueCommands);
-        commandsExecuted += executeCommands(context, frameState, translucentCommands);
-        commandsExecuted += executeCommands(context, frameState, overlayCommands);
+        var length = commands.length;
+        for (i = 0; i < length; i++) {
+            var command = commands[i];
+            var pass = defined(command.pass) ? command.pass : Pass.OPAQUE;
+            renderCommands[pass].push(command);
+        }
+
+        var commandsExecuted = 0;
+        for (i = 0; i < Pass.NUMBER_OF_PASSES; ++i) {
+            commandsExecuted += executeCommands(context, frameState, renderCommands[i]);
+        }
 
         return commandsExecuted;
     }
