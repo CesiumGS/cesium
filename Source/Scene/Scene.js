@@ -1353,6 +1353,8 @@ define([
         var sunCommand = (frameState.passes.render && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
         var sunVisible = isVisible(sunCommand, frameState);
 
+        var originalFramebuffer = passState.framebuffer;
+
         var clear = scene._clearColorCommand;
         var clearDepth = scene._depthClearCommand;
 
@@ -1475,12 +1477,12 @@ define([
                 scene._copyColorCommand.execute(context, passState);
             }
 
-            passState.framebuffer = undefined;
+            passState.framebuffer = originalFramebuffer;
             scene._fxaa.execute(context, passState);
         }
 
         if (!useOIT && !useFXAA) {
-            passState.framebuffer = undefined;
+            passState.framebuffer = originalFramebuffer;
             scene._copyColorCommand.execute(context, passState);
         }
     }
