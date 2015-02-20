@@ -121,18 +121,14 @@ define([
     var scratchCartesian = new Cartesian3();
 
     function isZipFile(blob) {
-        if (blob.size < 4) {
-            return false;
-        }
-
-        var magicBlob = blob.slice(0, 4);
+        var magicBlob = blob.slice(0, Math.min(4, blob.size));
         var deferred = when.defer();
         var reader = new FileReader();
         reader.addEventListener('load', function() {
             deferred.resolve(new DataView(reader.result).getUint32(0, false) === 0x504b0304);
         });
         reader.addEventListener('error', function() {
-            deferred.reject(new RuntimeError('Error reading blob.'));
+            deferred.reject(reader.error);
         });
         reader.readAsArrayBuffer(magicBlob);
         return deferred;
@@ -155,8 +151,6 @@ define([
         entry.getData(new zip.TextWriter(), function(text) {
             uriResolver.kml = parser.parseFromString(text, 'application/xml');
             deferred.resolve();
-        }, function(current, total) {
-            // onprogress callback
         });
     }
 
@@ -164,8 +158,6 @@ define([
         entry.getData(new zip.Data64URIWriter(), function(dataUri) {
             uriResolver[entry.filename] = dataUri;
             deferred.resolve();
-        }, function(current, total) {
-            // onprogress callback, currently unutilized.
         });
     }
 
@@ -178,9 +170,15 @@ define([
         return url;
     }
 
-    function createId(node) {
+    function getOrCreateEntity(node, entityCollection){
         var id = queryStringAttribute(node, 'id');
-        return defined(id) ? id : createGuid();
+        id = defined(id) ? id : createGuid();
+        var entity = entityCollection.getOrCreateEntity(id);
+        if (!defined(entity.kml)) {
+            entity.addProperty('kml');
+            entity.kml = {};
+        }
+        return entity;
     }
 
     function readCoordinate(value) {
@@ -190,7 +188,7 @@ define([
 
         var digits = value.trim().split(/[\s,\n]+/g);
         if (digits.length !== 2 && digits.length !== 3) {
-            window.console.log('invalid coordinates.');
+            window.console.log('KML - Invalid coordinates: ' + value);
             return undefined;
         }
 
@@ -622,8 +620,7 @@ define([
             var styleNodesLength = styleNodes.length;
             for (i = 0; i < styleNodesLength; i++) {
                 var node = styleNodes[i];
-                var attributes = node.attributes;
-                id = defined(attributes.id) ? attributes.id.value : undefined;
+                id = queryStringAttribute(node, 'id');
                 if (defined(id)) {
                     id = '#' + id;
                     if (isExternal && defined(sourceUri)) {
@@ -645,7 +642,7 @@ define([
             var styleMapsLength = styleMaps.length;
             for (i = 0; i < styleMapsLength; i++) {
                 var styleMap = styleMaps[i];
-                id = defined(styleMap.attributes.id) ? styleMap.attributes.id.value : undefined;
+                id = queryStringAttribute(styleMap, 'id');
                 if (defined(id)) {
                     var pairs = styleMap.childNodes;
                     for (var p = 0; p < pairs.length; p++) {
@@ -682,7 +679,7 @@ define([
             if (styleReference[0] !== '#') {
                 var tokens = styleReference.split('#');
                 if (tokens.length !== 2) {
-                    throw new RuntimeError('Unable to parse style: ' + styleReference);
+                    window.console.log('KML - Invalid style reference: ' + styleReference);
                 }
                 var uri = tokens[0];
                 if (!defined(externalStyleHash[uri])) {
@@ -718,7 +715,7 @@ define([
         } else if (altitudeMode === 'relativeToGround') {
 
         } else {
-            window.console.log('Unknown altitudeMode: ' + altitudeMode);
+            window.console.log('KML - Unknown altitudeMode: ' + altitudeMode);
         }
         return property;
     }
@@ -752,7 +749,7 @@ define([
             return new PositionPropertyArray(resultArray);
         }
 
-        window.console.log('Unknown altitudeMode: ' + altitudeMode);
+        window.console.log('KML - Unknown altitudeMode: ' + altitudeMode);
         return properties;
     }
 
@@ -991,11 +988,7 @@ define([
             var childNode = childNodes.item(i);
             var geometryProcessor = geometryTypes[childNode.localName];
             if (defined(geometryProcessor)) {
-                var childEntity = dataSource._entityCollection.getOrCreateEntity(createId(childNode));
-                if (!defined(childEntity.kml)) {
-                    childEntity.addProperty('kml');
-                    childEntity.kml = {};
-                }
+                var childEntity = getOrCreateEntity(childNode, dataSource._entityCollection);
                 childEntity.parent = entity;
                 childEntity.name = entity.name;
                 childEntity.availability = entity.availability;
@@ -1136,14 +1129,8 @@ define([
     }
 
     function processFeature(dataSource, parent, featureNode, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var id = createId(featureNode);
-        var entity = entityCollection.getOrCreateEntity(id);
-        var kmlData = {};
-        if (!defined(entity.kml)) {
-            entity.addProperty('kml');
-            entity.kml = kmlData;
-        }
-
+        var entity = getOrCreateEntity(featureNode, entityCollection);
+        var kmlData = entity.kml;
         var styleEntity = computeFinalStyle(entity, dataSource, featureNode, styleCollection, sourceUri, uriResolver);
 
         var name = queryStringValue(featureNode, 'name', namespaces.kml);
@@ -1310,7 +1297,7 @@ define([
         var href = queryStringValue(iconNode, 'href', namespaces.kml);
         if (defined(href)) {
             if (isLatLonQuad) {
-                window.console.log('gx:LatLonQuad Icon does not support texture projection.');
+                window.console.log('KML - gx:LatLonQuad Icon does not support texture projection.');
             }
             geometry.material = resolveHref(href, dataSource._proxy, sourceUri, uriResolver);
         } else {
@@ -1327,23 +1314,23 @@ define([
             } else if (altitudeMode === 'clampToGround') {
                 //TODO polygons on terrain
             } else {
-                window.console.log('Unknown altitudeMode: ' + altitudeMode);
+                window.console.log('KML - Unknown altitudeMode: ' + altitudeMode);
             }
         } else {
             altitudeMode = queryStringValue(groundOverlay, 'altitudeMode', namespaces.gx);
             if (altitudeMode === 'relativeToSeaFloor') {
-                window.console.log('altitudeMode relativeToSeaFloor is currently not supported, treating as absolute');
+                window.console.log('KML - altitudeMode relativeToSeaFloor is currently not supported, treating as absolute.');
                 geometry.height = queryNumericValue(groundOverlay, 'altitude', namespaces.kml);
             } else if (altitudeMode === 'clampToSeaFloor') {
-                window.console.log('altitudeMode clampToSeaFloor is currently not supported, treating as clampToGround');
+                window.console.log('KML - altitudeMode clampToSeaFloor is currently not supported, treating as clampToGround.');
             } else if (defined(altitudeMode)) {
-                window.console.log('Unknown altitudeMode: ' + altitudeMode);
+                window.console.log('KML - Unknown altitudeMode: ' + altitudeMode);
             }
         }
     }
 
     function processUnsupported(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
-        window.console.log('Unsupported feature: ' + node.nodeName);
+        window.console.log('KML - Unsupported feature: ' + node.nodeName);
     }
 
     function processNetworkLink(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
@@ -1389,7 +1376,7 @@ define([
         if (defined(featureProocessor)) {
             featureProocessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
         } else {
-            window.console.log('Unsupported feature node: ' + node.nodeName);
+            window.console.log('KML - Unsupported feature node: ' + node.nodeName);
         }
     }
 

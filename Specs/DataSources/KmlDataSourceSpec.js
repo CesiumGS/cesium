@@ -1292,11 +1292,27 @@ defineSuite([
         expect(placemark.parent).toBe(folder);
     });
 
-    it('Geometry Point: handles empty coordinates', function() {
+    it('Geometry Point: handles empty Point', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <Placemark>\
             <Point>\
-              <coordinates></coordinates>\
+            </Point>\
+          </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        expect(entities.length).toEqual(1);
+        expect(entities[0].position).toBeUndefined();
+        expect(entities[0].polyline).toBeUndefined();
+    });
+
+    it('Geometry Point: handles invalid coordinates', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Point>\
+            <coordinates>1,2,3,4</coordinates>\
             </Point>\
           </Placemark>';
 
