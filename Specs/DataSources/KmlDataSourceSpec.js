@@ -633,6 +633,52 @@ defineSuite([
         expect(billboard.image.getValue()).toEqual('http://test.invalid');
     });
 
+    it('Styles: colorMode random', function() {
+        CesiumMath.setRandomNumberSeed(0);
+
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Placemark>\
+              <Style>\
+                  <IconStyle>\
+                      <color>ccffffff</color>\
+                      <colorMode>random</colorMode>\
+                  </IconStyle>\
+              </Style>\
+            </Placemark>';
+
+          var dataSource = new KmlDataSource();
+          dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+          var generatedColor = dataSource.entities.values[0].billboard.color.getValue();
+          expect(generatedColor.red).toBeLessThan(1.0);
+          expect(generatedColor.green).toBeLessThan(1.0);
+          expect(generatedColor.blue).toBeLessThan(1.0);
+          expect(generatedColor.alpha).toEqual(0.8);
+    });
+
+    it('Styles: colorMode random black', function() {
+        CesiumMath.setRandomNumberSeed(0);
+
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Placemark>\
+              <Style>\
+                  <IconStyle>\
+                      <color>cc000000</color>\
+                      <colorMode>random</colorMode>\
+                  </IconStyle>\
+              </Style>\
+            </Placemark>';
+
+          var dataSource = new KmlDataSource();
+          dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+          var generatedColor = dataSource.entities.values[0].billboard.color.getValue();
+          expect(generatedColor.red).toEqual(0);
+          expect(generatedColor.green).toEqual(0);
+          expect(generatedColor.blue).toEqual(0);
+          expect(generatedColor.alpha).toEqual(0.8);
+    });
+
     it('IconStyle: handles empty element', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <Placemark>\
@@ -1882,85 +1928,17 @@ defineSuite([
         expect(point2.position.getValue(Iso8601.MINIMUM_VALUE)).toEqualEpsilon(Cartesian3.fromDegrees(3, 4), CesiumMath.EPSILON13);
     });
 
-//    it('handles Point Geometry with LabelStyle', function() {
-//        var name = new ConstantProperty('LabelStyle.kml');
-//        var scale = new ConstantProperty(1.5);
-//        var color = new ConstantProperty(Color.fromBytes(255, 0, 0, 0));
-//        var pointKml = '<?xml version="1.0" encoding="UTF-8"?>\
-//            <kml xmlns="http://www.opengis.net/kml/2.2">\
-//            <Document>\
-//            <Placemark>\
-//            <name>LabelStyle.kml</name>\
-//                <Style id="randomLabelColor">\
-//                    <LabelStyle>\
-//                        <color>000000ff</color>\
-//                        <colorMode>normal</colorMode>\
-//                        <scale>1.5</scale>\
-//                    </LabelStyle>\
-//                </Style>\
-//            <Point>\
-//                <coordinates>1,2,0</coordinates>\
-//            </Point>\
-//            </Placemark>\
-//            </Document>\
-//            </kml>';
-//
-//        var dataSource = new KmlDataSource();
-//        dataSource.load(parser.parseFromString(pointKml, "text/xml"));
-//
-//        var entities = dataSource.entities.values;
-//        expect(entities.length).toEqual(1);
-//        expect(entities[0].label.text.getValue()).toEqual(name.getValue());
-//        expect(entities[0].label.fillColor.red).toEqual(color.red);
-//        expect(entities[0].label.fillColor.green).toEqual(color.green);
-//        expect(entities[0].label.fillColor.blue).toEqual(color.blue);
-//        expect(entities[0].label.fillColor.alpha).toEqual(color.alpha);
-//    });
-//
-//    it('handles MultiGeometry with style', function() {
-//        var multiKml = '<?xml version="1.0" encoding="UTF-8"?>\
-//            <kml xmlns="http://www.opengis.net/kml/2.2">\
-//            <Document>\
-//            <Style id="randomColorIcon">\
-//                <IconStyle>\
-//                    <color>ff00ff00</color>\
-//                    <colorMode>normal</colorMode>\
-//                    <scale>1.1</scale>\
-//                    <Icon>\
-//                    <href>http://maps.google.com/mapfiles/kml/pal3/icon21.png</href>\
-//                    </Icon>\
-//                </IconStyle>\
-//            </Style>\
-//            <Placemark>\
-//            <name>IconStyle.kml</name>\
-//            <styleUrl>#randomColorIcon</styleUrl>\
-//                <MultiGeometry>\
-//                <Point>\
-//                    <coordinates>-9.171441666666666,38.67883055555556,0</coordinates>\
-//                </Point>\
-//                <Point>\
-//                    <coordinates>-122.367375,37.829192,0</coordinates>\
-//                </Point>\
-//                </MultiGeometry>\
-//            </Placemark>\
-//            </Document>\
-//            </kml>';
-//
-//        var dataSource = new KmlDataSource();
-//        dataSource.load(parser.parseFromString(multiKml, "text/xml"));
-//
-//        var entities = dataSource.entities.values;
-//        var entity1 = entities[1];
-//        var entity2 = entities[2];
-//        expect(entities.length).toEqual(3);
-//        expect(entity1.billboard.scale.getValue()).toEqual(entity2.billboard.scale.getValue());
-//        expect(entity1.billboard.image.getValue()).toEqual(entity2.billboard.image.getValue());
-//        expect(entity1.billboard.color.red).toEqual(entity2.billboard.color.red);
-//        expect(entity1.billboard.color.green).toEqual(entity2.billboard.color.green);
-//        expect(entity1.billboard.color.blue).toEqual(entity2.billboard.color.blue);
-//        expect(entity1.billboard.color.alpha).toEqual(entity2.billboard.color.alpha);
-//    });
-//
+    it('NetworkLink: Loads data', function() {
+        var dataSource = new KmlDataSource();
+
+        waitsForPromise(dataSource.loadUrl('Data/KML/networkLink.kml').then(function() {
+            var entities = dataSource.entities.values;
+            expect(entities.length).toEqual(2);
+            expect(entities[0].id).toEqual('link');
+            expect(entities[1].parent).toBe(entities[0]);
+        }));
+    });
+
 //    it('handles LabelStyle', function() {
 //        var scale = new ConstantProperty(1.5);
 //        var color = new ConstantProperty(new Color(0, 0, 0, 0));
@@ -1989,27 +1967,6 @@ defineSuite([
 //        expect(entities[0].label.fillColor).toEqual(color);
 //    });
 //
-//    it('handles empty LabelStyle element', function() {
-//        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-//            <kml xmlns="http://www.opengis.net/kml/2.2">\
-//            <Document>\
-//            <Placemark>\
-//              <Style>\
-//                <LabelStyle>\
-//                </LabelStyle>\
-//              </Style>\
-//            </Placemark>\
-//            </Document>\
-//            </kml>';
-//
-//        var dataSource = new KmlDataSource();
-//        dataSource.load(parser.parseFromString(kml, "text/xml"));
-//
-//        var entities = dataSource.entities.values;
-//        expect(entities.length).toEqual(1);
-//        expect(entities[0].label).toBeDefined();
-//    });
-//
 //    it('handles LineStyle', function() {
 //        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
 //            <kml xmlns="http://www.opengis.net/kml/2.2"\
@@ -2029,39 +1986,13 @@ defineSuite([
 //            </Document>\
 //            </kml>';
 //
-////        <gx:outerColor>ffffffff</gx:outerColor>\
-////        <gx:outerWidth>1.0</gx:outerWidth>\
-////        <gx:physicalWidth>0.0</gx:physicalWidth>\
-//
 //        var dataSource = new KmlDataSource();
 //        dataSource.load(parser.parseFromString(kml, "text/xml"));
 //
 //        var entities = dataSource.entities.values;
 //        expect(entities.length).toEqual(1);
 //        expect(entities[0].polyline.width.getValue()).toEqual(4);
-////        expect(entities[0].polyline.material.outlineWidth.getValue()).toEqual(1);
-//    });
-//
-//    it('handles empty LineStyle element', function() {
-//        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-//            <kml xmlns="http://www.opengis.net/kml/2.2">\
-//            <Document>\
-//            <Placemark>\
-//              <Style>\
-//                <LineStyle>\
-//                </LineStyle>\
-//              </Style>\
-//            </Placemark>\
-//            </Document>\
-//            </kml>';
-//
-//        var dataSource = new KmlDataSource();
-//        dataSource.load(parser.parseFromString(kml, "text/xml"));
-//
-//        var entities = dataSource.entities.values;
-//        expect(entities.length).toEqual(1);
-//        var polyline = entities[0].polyline;
-//        expect(polyline).toBeDefined();
+//        expect(entities[0].polyline.material.outlineWidth.getValue()).toEqual(1);
 //    });
 //
 //    it('handles PolyStyle', function() {
@@ -2096,85 +2027,4 @@ defineSuite([
 //        expect(generatedColor.blue).toEqual(color.blue);
 //        expect(generatedColor.alpha).toEqual(color.alpha);
 //    });
-//
-//    it('handles empty PolyStyle element', function() {
-//        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-//            <kml xmlns="http://www.opengis.net/kml/2.2">\
-//            <Document>\
-//            <Placemark>\
-//              <Style>\
-//                <PolyStyle>\
-//                </PolyStyle>\
-//              </Style>\
-//            </Placemark>\
-//            </Document>\
-//            </kml>';
-//
-//        var dataSource = new KmlDataSource();
-//        dataSource.load(parser.parseFromString(kml, "text/xml"));
-//
-//        var entities = dataSource.entities.values;
-//        expect(entities.length).toEqual(1);
-//        expect(entities[0].polygon).toBeDefined();
-//    });
-//
-//    it('handles Color in normal mode', function() {
-//        var color = new Color(1, 0, 0, 1);
-//        var colorKml = '<?xml version="1.0" encoding="UTF-8"?>\
-//            <kml xmlns="http://www.opengis.net/kml/2.2">\
-//            <Document>\
-//            <Style id="testStyle">\
-//            <IconStyle>\
-//                <color>ff0000ff</color>\
-//                <colorMode>normal</colorMode>\
-//            </IconStyle>\
-//            </Style>\
-//            <Placemark>\
-//            <styleUrl>#testStyle</styleUrl>\
-//            </Placemark>\
-//            </Document>\
-//            </kml>';
-//
-//        var dataSource = new KmlDataSource();
-//        dataSource.load(parser.parseFromString(colorKml, "text/xml"));
-//
-//        var entities = dataSource.entities.values;
-//        var generatedColor = entities[0].billboard.color.getValue();
-//        expect(entities.length).toEqual(1);
-//        expect(generatedColor.red).toEqual(color.red);
-//        expect(generatedColor.green).toEqual(color.green);
-//        expect(generatedColor.blue).toEqual(color.blue);
-//        expect(generatedColor.alpha).toEqual(color.alpha);
-//    });
-//
-//    it('handles Color in random mode', function() {
-//        var color = new Color(1, 0, 0, 1);
-//        var colorKml = '<?xml version="1.0" encoding="UTF-8"?>\
-//            <kml xmlns="http://www.opengis.net/kml/2.2">\
-//            <Document>\
-//            <Style id="testStyle">\
-//            <IconStyle>\
-//                <color>ff0000ff</color>\
-//                <colorMode>random</colorMode>\
-//            </IconStyle>\
-//            </Style>\
-//            <Placemark>\
-//            <styleUrl>#testStyle</styleUrl>\
-//            </Placemark>\
-//            </Document>\
-//            </kml>';
-//
-//        var dataSource = new KmlDataSource();
-//        dataSource.load(parser.parseFromString(colorKml, "text/xml"));
-//
-//        var entities = dataSource.entities.values;
-//        var generatedColor = entities[0].billboard.color.getValue();
-//        expect(entities.length).toEqual(1);
-//        expect(generatedColor.red <= color.red).toBe(true);
-//        expect(generatedColor.green).toEqual(color.green);
-//        expect(generatedColor.blue).toEqual(color.blue);
-//        expect(generatedColor.alpha).toEqual(color.alpha);
-//    });
-//
-
 });

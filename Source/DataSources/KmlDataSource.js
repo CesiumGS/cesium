@@ -338,7 +338,7 @@ define([
         return defined(result) ? result.textContent === '1' : undefined;
     }
 
-    function resolveHref(href, dataSource, sourceUri, uriResolver) {
+    function resolveHref(href, proxy, sourceUri, uriResolver) {
         if (!defined(href)) {
             return undefined;
         }
@@ -354,7 +354,7 @@ define([
             var baseUri = new Uri(document.location.href);
             sourceUri = new Uri(sourceUri);
             href = new Uri(href).resolve(sourceUri.resolve(baseUri)).toString();
-            href = proxyUrl(href, dataSource._proxy);
+            href = proxyUrl(href, proxy);
         }
         return href;
     }
@@ -468,7 +468,7 @@ define([
 
         var iconNode = queryFirstNode(node, 'Icon', namespaces.kml);
         var href = queryStringValue(iconNode, 'href', namespaces.kml);
-        var icon = resolveHref(href, dataSource, sourceUri, uriResolver);
+        var icon = resolveHref(href, dataSource._proxy, sourceUri, uriResolver);
         var x = queryNumericValue(iconNode, 'x', namespaces.gx);
         var y = queryNumericValue(iconNode, 'y', namespaces.gx);
         var w = queryNumericValue(iconNode, 'w', namespaces.gx);
@@ -1319,7 +1319,7 @@ define([
             if (isLatLonQuad) {
                 window.console.log('gx:LatLonQuad Icon does not support texture projection.');
             }
-            geometry.material = resolveHref(href, dataSource, sourceUri, uriResolver);
+            geometry.material = resolveHref(href, dataSource._proxy, sourceUri, uriResolver);
         } else {
             geometry.material = queryColorValue(groundOverlay, 'color', namespaces.kml);
         }
@@ -1361,6 +1361,7 @@ define([
         if (defined(link)) {
             var linkUrl = queryStringValue(link, 'href', namespaces.kml);
             if (defined(linkUrl)) {
+                linkUrl = resolveHref(linkUrl, undefined, sourceUri, uriResolver);
                 var networkLinkSource = new KmlDataSource(dataSource._proxy);
                 var promise = when(networkLinkSource.loadUrl(linkUrl), function() {
                     var entities = networkLinkSource.entities.entities;
@@ -1443,11 +1444,10 @@ define([
                 }
             }
 
-            when.all(dataSource._promises, function(){
+            return when.all(dataSource._promises, function() {
                 DataSource.setLoading(dataSource, false);
+                return dataSource;
             });
-
-            return dataSource;
         });
     }
 
