@@ -1,8 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-        'Widgets/InfoBox/InfoBoxViewModel'
+        'Widgets/InfoBox/InfoBoxViewModel',
+        'Core/sanitizeHtml'
     ], function(
-        InfoBoxViewModel) {
+        InfoBoxViewModel,
+        sanitizeHtml) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -15,32 +17,28 @@ defineSuite([
         expect(viewModel.closeClicked).toBeDefined();
         expect(viewModel.descriptionRawHtml).toBe('');
         expect(viewModel.maxHeightOffset(0)).toBeDefined();
-        expect(viewModel.sanitizer).toBeDefined();
+        expect(viewModel.preprocessor).toBeUndefined();
         expect(viewModel.loadingIndicatorHtml).toBeDefined();
     });
 
     it('allows some HTML in description', function() {
-        var safeString = '<p>This is a test.</p>';
+        var value = 'Testing. <script>console.error("Scripts are disallowed by default.");</script>';
         var viewModel = new InfoBoxViewModel();
-        viewModel.descriptionRawHtml = safeString;
-        waitsFor(function() {
-            return viewModel.descriptionSanitizedHtml !== viewModel.loadingIndicatorHtml;
-        });
-        runs(function() {
-            expect(viewModel.descriptionSanitizedHtml).toBe(safeString);
-        });
+        viewModel.descriptionRawHtml = value;
+        expect(viewModel.descriptionProcessedHtml).toBe(value);
     });
 
-    it('removes script tags from HTML description by default', function() {
+    it('removes script tags from HTML description when used with sanitizeHtml', function() {
         var evilString = 'Testing. <script>console.error("Scripts are disallowed by default.");</script>';
         var viewModel = new InfoBoxViewModel();
+        viewModel.preprocessor = sanitizeHtml;
         viewModel.descriptionRawHtml = evilString;
         waitsFor(function() {
-            return viewModel.descriptionSanitizedHtml !== viewModel.loadingIndicatorHtml;
+            return viewModel.descriptionProcessedHtml !== viewModel.loadingIndicatorHtml;
         });
         runs(function() {
-            expect(viewModel.descriptionSanitizedHtml).toContain('Testing.');
-            expect(viewModel.descriptionSanitizedHtml).not.toContain('script');
+            expect(viewModel.descriptionProcessedHtml).toContain('Testing.');
+            expect(viewModel.descriptionProcessedHtml).not.toContain('script');
         });
     });
 
@@ -49,36 +47,29 @@ defineSuite([
         expect(viewModel._bodyless).toBe(true);
         viewModel.descriptionRawHtml = 'Testing';
         waitsFor(function() {
-            return viewModel.descriptionSanitizedHtml !== viewModel.loadingIndicatorHtml;
+            return viewModel.descriptionProcessedHtml !== viewModel.loadingIndicatorHtml;
         });
         runs(function() {
             expect(viewModel._bodyless).toBe(false);
         });
     });
 
-    function customSanitizer(string) {
-        return string + ' (processed by customSanitizer)';
+    function customPreprocessor(string) {
+        return string + ' (processed by customPreprocessor)';
     }
 
-    it('allows user-supplied HTML sanitization.', function() {
-        var testString = 'Testing hot-swap of custom sanitizer.';
+    it('Reprocesses data when preprocessor is changed.', function() {
+        var testString = 'Testing hot-swap of custom preprocessor.';
         var viewModel = new InfoBoxViewModel();
 
         viewModel.descriptionRawHtml = testString;
-        waitsFor(function() {
-            return viewModel.descriptionSanitizedHtml !== viewModel.loadingIndicatorHtml;
-        });
-        runs(function() {
-            expect(viewModel.descriptionSanitizedHtml).toBe(testString);
+        viewModel.preprocessor = customPreprocessor;
+        expect(viewModel.descriptionProcessedHtml).toEqual(testString + ' (processed by customPreprocessor)');
 
-            viewModel.sanitizer = customSanitizer;
-            expect(viewModel.descriptionSanitizedHtml).toContain(testString);
-            expect(viewModel.descriptionSanitizedHtml).toContain('processed by customSanitizer');
-            testString = 'subsequent test, after the swap.';
-            viewModel.descriptionRawHtml = testString;
-            expect(viewModel.descriptionSanitizedHtml).toContain(testString);
-            expect(viewModel.descriptionSanitizedHtml).toContain('processed by customSanitizer');
-        });
+        testString = 'subsequent test, after the swap.';
+        viewModel.descriptionRawHtml = testString;
+        expect(viewModel.descriptionProcessedHtml).toContain(testString);
+        expect(viewModel.descriptionProcessedHtml).toEqual(testString + ' (processed by customPreprocessor)');
     });
 
     it('camera icon changes when tracking is not available, unless due to active tracking', function() {
