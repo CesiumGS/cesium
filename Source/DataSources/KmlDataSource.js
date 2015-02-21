@@ -28,7 +28,7 @@ define([
         '../Core/TimeIntervalCollection',
         '../Scene/HorizontalOrigin',
         '../Scene/LabelStyle',
-        '../ThirdParty/AutoLinker',
+        '../ThirdParty/Autolinker',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
         '../ThirdParty/zip',
@@ -78,7 +78,7 @@ define([
         TimeIntervalCollection,
         HorizontalOrigin,
         LabelStyle,
-        AutoLinker,
+        Autolinker,
         Uri,
         when,
         zip,
@@ -103,7 +103,7 @@ define([
     "use strict";
 
     var parser = new DOMParser();
-    var autoLinker = new AutoLinker({
+    var autolinker = new Autolinker({
         stripPrefix : false,
         twitter : false,
         email : false,
@@ -1113,7 +1113,7 @@ define([
             }
 
             //Turns non-explicit links into clickable links.
-            tmp = autoLinker.link(tmp);
+            tmp = autolinker.link(tmp);
 
             //Use a temporary div to manipulate the links
             //so that they open in a new window.
