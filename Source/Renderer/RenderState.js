@@ -77,7 +77,7 @@ define([
                 (stencilOperation === WebGLRenderingContext.INCR) ||
                 (stencilOperation === WebGLRenderingContext.DECR) ||
                 (stencilOperation === WebGLRenderingContext.INVERT) ||
-                (stencilOperation === WebGLRenderingContext.INCREMENT_WRAP) ||
+                (stencilOperation === WebGLRenderingContext.INCR_WRAP) ||
                 (stencilOperation === WebGLRenderingContext.DECR_WRAP));
     }
 
