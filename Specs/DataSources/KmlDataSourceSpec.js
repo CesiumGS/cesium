@@ -44,6 +44,9 @@ defineSuite([
 
     var parser = new DOMParser();
 
+    //simple.png in the DATA/KML directory
+    var image = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAMAAAAoyzS7AAADAFBMVEUAAP8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADHM2paAAAAGHRFWHRTb2Z0d2FyZQBQYWludC5ORVQgdjMuMzap5+IlAAAACklEQVQI12NgAAAAAgAB4iG8MwAAAABJRU5ErkJggg==';
+
     var uberStyle = '\
         <Style>\
             <LineStyle>\
@@ -123,7 +126,7 @@ defineSuite([
 
     it('load rejects KMZ file with no KML contained', function() {
         var dataSource = new KmlDataSource();
-        waitsForPromise.toReject(loadBlob('Data/KML/empty.zip').then(function(blob) {
+        waitsForPromise.toReject(loadBlob('Data/KML/empty.kmz').then(function(blob) {
             return dataSource.load(blob);
         }));
     });
@@ -163,7 +166,7 @@ defineSuite([
 
     it('loadUrl rejects KMZ file with no KML contained', function() {
         var dataSource = new KmlDataSource();
-        waitsForPromise.toReject(dataSource.loadUrl('Data/KML/empty.zip'));
+        waitsForPromise.toReject(dataSource.loadUrl('Data/KML/empty.kmz'));
     });
 
     it('fromUrl works', function() {
@@ -710,8 +713,8 @@ defineSuite([
               <altitudeMode>absolute</altitudeMode>\
               <coordinates>1,2,3</coordinates>\
             </Point>\
-          </Placemark\
-        <Document>';
+          </Placemark>\
+        </Document>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
@@ -743,8 +746,8 @@ defineSuite([
               <altitudeMode>absolute</altitudeMode>\
               <coordinates>1,2,3</coordinates>\
             </Point>\
-          </Placemark\
-        <Document>';
+          </Placemark>\
+        </Document>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
@@ -777,8 +780,8 @@ defineSuite([
                          4,5,6 \
             </coordinates>\
             </LineString>\
-          </Placemark\
-        <Document>';
+          </Placemark>\
+        </Document>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
@@ -805,8 +808,8 @@ defineSuite([
                          4,5,6 \
             </coordinates>\
             </LineString>\
-          </Placemark\
-        <Document>';
+          </Placemark>\
+        </Document>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
@@ -843,8 +846,8 @@ defineSuite([
                 </LinearRing>\
               </outerBoundaryIs>\
             </Polygon>\
-          </Placemark\
-        <Document>';
+          </Placemark>\
+        </Document>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
@@ -872,8 +875,8 @@ defineSuite([
               <when>2000-01-01T00:00:02Z</when>\
             <gx:coord>7 8 9</gx:coord>\
           </gx:Track>\
-          </Placemark\
-        <Document>';
+          </Placemark>\
+        </Document>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
@@ -906,8 +909,8 @@ defineSuite([
               <when>2000-01-01T00:00:02Z</when>\
               <gx:coord>7 8 9</gx:coord>\
             </gx:Track>\
-          </Placemark\
-        <Document>';
+          </Placemark>\
+        </Document>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
@@ -942,8 +945,8 @@ defineSuite([
               <gx:coord>7 8 9</gx:coord>\
               </gx:Track>\
             </gx:MultiTrack>\
-          </Placemark\
-        <Document>';
+          </Placemark>\
+        </Document>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
@@ -978,8 +981,8 @@ defineSuite([
                 <gx:coord>7 8 9</gx:coord>\
               </gx:Track>\
             </gx:MultiTrack>\
-          </Placemark\
-        <Document>';
+          </Placemark>\
+        </Document>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
@@ -999,6 +1002,81 @@ defineSuite([
         expect(entity.polyline.material).toBeInstanceOf(ColorMaterialProperty);
         expect(entity.polyline.material.color.getValue()).toEqual(uberLineColor);
         expect(entity.polyline.width.getValue()).toEqual(uberLineWidth);
+    });
+
+    xit('Styles: Applies local StyleMap', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Document xmlns="http://www.opengis.net/kml/2.2">\
+          <Placemark>\
+            <StyleMap>\
+              <Pair>\
+                <key>normal</key>\
+                <Style>\
+                  <IconStyle>\
+                    <scale>2</scale>\
+                  </IconStyle>\
+                </Style>\
+              </Pair>\
+            </StyleMap>\
+          </Placemark>\
+        </Document>';
+
+        var dataSource = new KmlDataSource();
+        waitsForPromise(dataSource.load(parser.parseFromString(kml, "text/xml")), function() {
+            var entity = dataSource.entities.values[0];
+            expect(entity.billboard.scale.getValue()).toBe(2.0);
+        });
+    });
+
+    it('Styles: Applies normal styleUrl StyleMap', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Document xmlns="http://www.opengis.net/kml/2.2">\
+          <StyleMap id="styleMapExample">\
+            <Pair>\
+              <key>normal</key>\
+              <Style>\
+                <IconStyle>\
+                  <scale>2</scale>\
+                </IconStyle>\
+              </Style>\
+            </Pair>\
+          </StyleMap>\
+          <Placemark>\
+            <styleUrl>#styleMapExample</styleUrl>\
+          </Placemark>\
+        </Document>';
+
+        var dataSource = new KmlDataSource();
+        waitsForPromise(dataSource.load(parser.parseFromString(kml, "text/xml")), function() {
+            var entity = dataSource.entities.values[0];
+            expect(entity.billboard.scale.getValue()).toBe(2.0);
+        });
+    });
+
+    it('Styles: Applies normal StyleMap containing styleUrl', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Document xmlns="http://www.opengis.net/kml/2.2">\
+          <Style id="normalStyle">\
+            <IconStyle>\
+              <scale>2</scale>\
+            </IconStyle>\
+          </Style>\
+          <StyleMap id="styleMapExample">\
+            <Pair>\
+              <key>normal</key>\
+              <styleUrl>#normalStyle</styleUrl>\
+            </Pair>\
+          </StyleMap>\
+          <Placemark>\
+            <styleUrl>#styleMapExample</styleUrl>\
+            </Placemark>\
+        </Document>';
+
+        var dataSource = new KmlDataSource();
+        waitsForPromise(dataSource.load(parser.parseFromString(kml, "text/xml")), function() {
+            var entity = dataSource.entities.values[0];
+            expect(entity.billboard.scale.getValue()).toBe(2.0);
+        });
     });
 
     it('IconStyle: handles empty element', function() {
@@ -1059,7 +1137,6 @@ defineSuite([
 
     it('IconStyle: Sets billboard image inside KMZ', function() {
         var dataSource = new KmlDataSource();
-        var image = 'data:;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAMAAAAoyzS7AAADAFBMVEUAAP8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADHM2paAAAAGHRFWHRTb2Z0d2FyZQBQYWludC5ORVQgdjMuMzap5+IlAAAACklEQVQI12NgAAAAAgAB4iG8MwAAAABJRU5ErkJggg==';
         waitsForPromise(dataSource.loadUrl('Data/KML/simple.kmz'), function(source) {
             var entities = dataSource.entities.values;
             var billboard = entities[0].billboard;
@@ -1397,6 +1474,30 @@ defineSuite([
 
         var div = element.firstChild;
         expect(div.innerHTML).toEqual('states.id google.com');
+    });
+
+    it('BalloonStyle: description is rewritten for embedded kmz links and images', function() {
+        var dataSource = new KmlDataSource();
+        waitsForPromise(dataSource.loadUrl('Data/KML/simple.kmz'), function(source) {
+            expect(source).toBe(dataSource);
+            var entity = source.entities.values[0];
+            var description = entity.description.getValue();
+            var div = document.createElement('div');
+            div.innerHTML = description;
+
+            expect(div.textContent).toEqual('image.png image.png');
+            var children = div.firstChild.querySelectorAll('*');
+            expect(children.length).toEqual(2);
+
+            var link = children[0];
+            expect(link.localName).toEqual('a');
+            expect(link.getAttribute('href')).toEqual(image);
+            expect(link.getAttribute('download')).toEqual('image.png');
+
+            var img = children[1];
+            expect(img.localName).toEqual('img');
+            expect(img.src).toEqual(image);
+        });
     });
 
     it('LabelStyle: Sets defaults', function() {

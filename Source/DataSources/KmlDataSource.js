@@ -102,6 +102,72 @@ define([
         ) {
     "use strict";
 
+    //This is by no means an exhaustive list of MIME types.
+    //The purpose of this list is to be able to accurately identify content embedded
+    //in KMZ files. Eventually, we can make this configurable by the end user so they can add
+    //there own content types if they have KMZ files that require it.
+    var MimeTypes = {
+        avi : "video/x-msvideo",
+        bmp : "image/bmp",
+        bz2 : "application/x-bzip2",
+        chm : "application/vnd.ms-htmlhelp",
+        css : "text/css",
+        csv : "text/csv",
+        doc : "application/msword",
+        dvi : "application/x-dvi",
+        eps : "application/postscript",
+        flv : "video/x-flv",
+        gif : "image/gif",
+        gz : "application/x-gzip",
+        htm : "text/html",
+        html : "text/html",
+        ico : "image/vnd.microsoft.icon",
+        jnlp : "application/x-java-jnlp-file",
+        jpeg : "image/jpeg",
+        jpg : "image/jpeg",
+        m3u : "audio/x-mpegurl",
+        m4v : "video/mp4",
+        mathml : "application/mathml+xml",
+        mid : "audio/midi",
+        midi : "audio/midi",
+        mov : "video/quicktime",
+        mp3 : "audio/mpeg",
+        mp4 : "video/mp4",
+        mp4v : "video/mp4",
+        mpeg : "video/mpeg",
+        mpg : "video/mpeg",
+        odp : "application/vnd.oasis.opendocument.presentation",
+        ods : "application/vnd.oasis.opendocument.spreadsheet",
+        odt : "application/vnd.oasis.opendocument.text",
+        ogg : "application/ogg",
+        pdf : "application/pdf",
+        png : "image/png",
+        pps : "application/vnd.ms-powerpoint",
+        ppt : "application/vnd.ms-powerpoint",
+        ps : "application/postscript",
+        qt : "video/quicktime",
+        rdf : "application/rdf+xml",
+        rss : "application/rss+xml",
+        rtf : "application/rtf",
+        svg : "image/svg+xml",
+        swf : "application/x-shockwave-flash",
+        text : "text/plain",
+        tif : "image/tiff",
+        tiff : "image/tiff",
+        txt : "text/plain",
+        wav : "audio/x-wav",
+        wma : "audio/x-ms-wma",
+        wmv : "video/x-ms-wmv",
+        xml : "application/xml",
+        zip : "application/zip",
+
+        detectFromFilename : function(filename) {
+            var ext = filename.toLowerCase();
+            ext = ext.substr(ext.lastIndexOf('.') + 1);
+            return MimeTypes[ext];
+        }
+    };
+
     var parser = new DOMParser();
     var autolinker = new Autolinker({
         stripPrefix : false,
@@ -155,10 +221,30 @@ define([
     }
 
     function loadDataUriFromZip(reader, entry, uriResolver, deferred) {
-        entry.getData(new zip.Data64URIWriter(), function(dataUri) {
+        var mimeType = defaultValue(MimeTypes.detectFromFilename(entry.filename), 'application/octet-stream');
+        entry.getData(new zip.Data64URIWriter(mimeType), function(dataUri) {
             uriResolver[entry.filename] = dataUri;
             deferred.resolve();
         });
+    }
+
+    function replaceAttributes(div, elementType, attributeName, uriResolver) {
+        var keys = Object.keys(uriResolver);
+        var baseUri = new Uri('.');
+        var elements = div.querySelectorAll(elementType);
+        for (var i = 0; i < elements.length; i++) {
+            var element = elements[i];
+            var value = element.getAttribute(attributeName);
+            var uri = new Uri(value).resolve(baseUri).toString();
+            var index = keys.indexOf(uri);
+            if (index !== -1) {
+                var key = keys[index];
+                element.setAttribute(attributeName, uriResolver[key]);
+                if (elementType === 'a' && element.getAttribute('download') === null) {
+                    element.setAttribute('download', key);
+                }
+            }
+        }
     }
 
     function proxyUrl(url, proxy) {
@@ -228,36 +314,25 @@ define([
         atom : ['http://www.w3.org/2005/Atom']
     };
 
-    function queryAttributeValue(node, attributeName) {
+    function queryNumericAttribute(node, attributeName) {
         if (!defined(node)) {
             return undefined;
         }
-        var attributes = node.attributes;
-        var length = attributes.length;
-        for (var q = 0; q < length; q++) {
-            var child = attributes[q];
-            if (child.name === attributeName) {
-                return child;
-            }
-        }
-        return undefined;
-    }
 
-    function queryNumericAttribute(node, attributeName) {
-        var resultNode = queryAttributeValue(node, attributeName);
-        if (defined(resultNode)) {
-            var result = parseFloat(resultNode.value);
+        var value = node.getAttribute(attributeName);
+        if (value !== null) {
+            var result = parseFloat(value);
             return !isNaN(result) ? result : undefined;
         }
         return undefined;
     }
 
     function queryStringAttribute(node, attributeName) {
-        var result = queryAttributeValue(node, attributeName);
-        if (defined(result)) {
-            return result.value;
+        if (!defined(node)) {
+            return undefined;
         }
-        return undefined;
+        var value = node.getAttribute(attributeName);
+        return value !== null ? value : undefined;
     }
 
     function queryFirstNode(node, tagName, namespace) {
@@ -615,11 +690,12 @@ define([
         var id;
         var styleEntity;
 
+        var node;
         var styleNodes = queryNodes(kml, 'Style', namespaces.kml);
         if (defined(styleNodes)) {
             var styleNodesLength = styleNodes.length;
             for (i = 0; i < styleNodesLength; i++) {
-                var node = styleNodes[i];
+                node = styleNodes[i];
                 id = queryStringAttribute(node, 'id');
                 if (defined(id)) {
                     id = '#' + id;
@@ -651,16 +727,22 @@ define([
                             continue;
                         }
                         if (queryStringValue(pair, 'key', namespaces.kml) === 'normal') {
-                            var styleUrl = queryStringValue(pair, 'styleUrl', namespaces.kml);
                             id = '#' + id;
                             if (isExternal && defined(sourceUri)) {
                                 id = sourceUri + id;
                             }
                             if (!defined(styleCollection.getById(id))) {
                                 styleEntity = styleCollection.getOrCreateEntity(id);
-                                var base = styleCollection.getOrCreateEntity(styleUrl);
-                                if (defined(base)) {
-                                    styleEntity.merge(base);
+
+                                var styleUrl = queryStringValue(pair, 'styleUrl', namespaces.kml);
+                                if (defined(styleUrl)) {
+                                    var base = styleCollection.getOrCreateEntity(styleUrl);
+                                    if (defined(base)) {
+                                        styleEntity.merge(base);
+                                    }
+                                } else {
+                                    node = queryFirstNode(pair, 'Style', namespaces.kml);
+                                    applyStyle(dataSource, node, styleEntity, sourceUri, uriResolver);
                                 }
                             }
                             break;
@@ -1116,18 +1198,6 @@ define([
                 tmp += '</tbody></table></div>';
             }
 
-            //Replace any references to embedded KMZ
-            //data with their data URI equivalent.
-            if (defined(uriResolver)) {
-                keys = Object.keys(uriResolver);
-                for (i = 0; i < keys.length; i++) {
-                    key = keys[i];
-                    if (key !== 'kml') {
-                        tmp = tmp.replace(key, uriResolver[key]);
-                    }
-                }
-            }
-
             //Turns non-explicit links into clickable links.
             tmp = autolinker.link(tmp);
 
@@ -1138,6 +1208,12 @@ define([
             var links = div.querySelectorAll('a');
             for (i = 0; i < links.length; i++) {
                 links[i].setAttribute('target', '_blank');
+            }
+
+            //Rewrite any KMZ embedded urls
+            if (defined(uriResolver)) {
+                replaceAttributes(div, 'a', 'href', uriResolver);
+                replaceAttributes(div, 'img', 'src', uriResolver);
             }
 
             //Set the final HTML as the description.
@@ -1369,9 +1445,6 @@ define([
 
     function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver) {
         var featureProocessor = featureTypes[node.nodeName];
-        if (!defined(featureProocessor)) {
-            featureProocessor = featureTypes[node.nodeName];
-        }
         if (defined(featureProocessor)) {
             featureProocessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
         } else {
