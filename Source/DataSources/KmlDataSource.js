@@ -753,6 +753,25 @@ define([
         return properties;
     }
 
+    function processPositionGraphics(dataSource, entity, styleEntity) {
+        var billboard = entity.billboard;
+        if (!defined(billboard)) {
+            billboard = defined(styleEntity.billboard) ? styleEntity.billboard.clone() : createDefaultBillboard();
+            entity.billboard = billboard;
+        }
+
+        if (!defined(billboard.image)) {
+            billboard.image = dataSource._pinBuilder.fromColor(Color.YELLOW, 64);
+        }
+
+        var label = entity.label;
+        if (!defined(label)) {
+            label = defined(styleEntity.label) ? styleEntity.label.clone() : createDefaultLabel();
+            entity.label = label;
+        }
+        label.text = entity.name;
+    }
+
     function processPoint(dataSource, geometryNode, entity, styleEntity) {
         var coordinatesString = queryStringValue(geometryNode, 'coordinates', namespaces.kml);
         var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
@@ -765,9 +784,7 @@ define([
         }
 
         entity.position = createPositionPropertyFromAltitudeMode(new ConstantPositionProperty(position), altitudeMode, gxAltitudeMode);
-        entity.billboard = defined(styleEntity.billboard) ? styleEntity.billboard.clone() : createDefaultBillboard();
-        entity.label = defined(styleEntity.label) ? styleEntity.label.clone() : createDefaultLabel();
-        entity.label.text = entity.name;
+        processPositionGraphics(dataSource, entity, styleEntity);
 
         if (extrude && isExtrudable(altitudeMode, gxAltitudeMode)) {
             createDropLine(dataSource, entity, styleEntity);
@@ -821,7 +838,6 @@ define([
         var canExtrude = isExtrudable(altitudeMode, gxAltitudeMode);
 
         var polygon = defined(styleEntity.polygon) ? styleEntity.polygon.clone() : createDefaultPolygon();
-        polygon.outline = true;
 
         var polyline = styleEntity.polyline;
         if (defined(polyline)) {
@@ -874,7 +890,7 @@ define([
         var property = new SampledPositionProperty();
         property.addSamples(times, coordinates);
         entity.position = createPositionPropertyFromAltitudeMode(property, altitudeMode, gxAltitudeMode);
-        entity.billboard = defined(styleEntity.billboard) ? styleEntity.billboard.clone() : createDefaultBillboard();
+        processPositionGraphics(dataSource, entity, styleEntity);
         entity.availability = new TimeIntervalCollection();
 
         if (timeNodes.length > 0) {
@@ -974,7 +990,7 @@ define([
 
         entity.availability = availability;
         entity.position = composite;
-        entity.billboard = defined(styleEntity.billboard) ? styleEntity.billboard.clone() : createDefaultBillboard();
+        processPositionGraphics(dataSource, entity, styleEntity);
 
         if (needDropLine) {
             createDropLine(dataSource, entity, styleEntity);
@@ -992,8 +1008,8 @@ define([
                 childEntity.parent = entity;
                 childEntity.name = entity.name;
                 childEntity.availability = entity.availability;
-                childEntity.label = entity.label;
                 childEntity.description = entity.description;
+                childEntity.kml = entity.kml;
                 geometryProcessor(dataSource, childNode, childEntity, styleEntity);
             }
         }
@@ -1225,25 +1241,7 @@ define([
 
         if (!hasGeometry) {
             entity.merge(styleEntity);
-        } else if (defined(entity.position)) {
-            //TODO Should this all really happen here?
-            if (!defined(entity.billboard)) {
-                entity.billboard = defined(styleEntity.billboard) ? styleEntity.billboard.clone() : createDefaultBillboard();
-            }
-
-            if (!defined(entity.billboard.image)) {
-                entity.billboard.image = dataSource._pinBuilder.fromColor(Color.YELLOW, 64);
-            }
-
-            var label = entity.label;
-            if (!defined(label)) {
-                label = defined(styleEntity.label) ? styleEntity.label.clone() : createDefaultLabel();
-                entity.label = label;
-            }
-
-            if (defined(entity.name)) {
-                label.text = entity.name;
-            }
+            processPositionGraphics(dataSource, entity, styleEntity);
         }
     }
 

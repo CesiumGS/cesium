@@ -44,6 +44,48 @@ defineSuite([
 
     var parser = new DOMParser();
 
+    var uberStyle = '\
+        <Style>\
+            <LineStyle>\
+              <color>aaaaaaaa</color>\
+              <width>2</width>\
+            </LineStyle>\
+            <PolyStyle>\
+              <color>cccccccc</color>\
+              <fill>0</fill>\
+              <outline>0</outline>\
+            </PolyStyle>\
+            <IconStyle>\
+              <color>dddddddd</color>\
+              <scale>3</scale>\
+              <heading>45</heading>\
+              <Icon>\
+                <href>test.png</href>\
+              </Icon>\
+              <hotSpot x="1"  y="2" xunits="pixels" yunits="pixels"/>\
+            </IconStyle>\
+            <LabelStyle>\
+              <color>eeeeeeee</color>\
+              <scale>4</scale>\
+            </LabelStyle>\
+        </Style>';
+
+    var uberLineColor = Color.fromBytes(0xaa, 0xaa, 0xaa, 0xaa);
+    var uberLineWidth = 2;
+
+    var uberPolyColor = Color.fromBytes(0xcc, 0xcc, 0xcc, 0xcc);
+    var uberPolyFill = false;
+    var uberPolyOutline = false;
+
+    var uberIconColor = Color.fromBytes(0xdd, 0xdd, 0xdd, 0xdd);
+    var uberIconScale = 3;
+    var uberIconHeading = CesiumMath.toRadians(-45);
+    var uberIcon = 'test.png';
+    var uberIconHotspot = new Cartesian2(45, -46);
+
+    var uberLabelColor = Color.fromBytes(0xee, 0xee, 0xee, 0xee);
+    var uberLabelScale = 4;
+
     it('default constructor has expected values', function() {
         var dataSource = new KmlDataSource();
         expect(dataSource.name).toBeUndefined();
@@ -193,6 +235,8 @@ defineSuite([
 
         var entity = dataSource.entities.values[0];
         expect(entity.name).toBe('bob');
+        expect(entity.label).toBeDefined();
+        expect(entity.label.text.getValue()).toBe('bob');
     });
 
     it('Feature: address', function() {
@@ -654,6 +698,307 @@ defineSuite([
           expect(generatedColor.green).toEqual(0);
           expect(generatedColor.blue).toEqual(0);
           expect(generatedColor.alpha).toEqual(0.8);
+    });
+
+    it('Styles: Applies expected styles to Point geometry', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Document xmlns="http://www.opengis.net/kml/2.2"\
+                  xmlns:gx="http://www.google.com/kml/ext/2.2">\
+          <Placemark>' + uberStyle + '\
+            <name>TheName</name>\
+            <Point>\
+              <altitudeMode>absolute</altitudeMode>\
+              <coordinates>1,2,3</coordinates>\
+            </Point>\
+          </Placemark\
+        <Document>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+
+        expect(entity.label).toBeDefined();
+        expect(entity.label.text.getValue()).toEqual('TheName');
+        expect(entity.label.fillColor.getValue()).toEqual(uberLabelColor);
+        expect(entity.label.scale.getValue()).toEqual(uberLabelScale);
+
+        expect(entity.billboard.color.getValue()).toEqual(uberIconColor);
+        expect(entity.billboard.scale.getValue()).toEqual(uberIconScale);
+        expect(entity.billboard.rotation.getValue()).toEqual(uberIconHeading);
+        expect(entity.billboard.image.getValue()).toEqual('test.png');
+        expect(entity.billboard.pixelOffset.getValue()).toEqual(uberIconHotspot);
+
+        expect(entity.polyline).toBeUndefined();
+    });
+
+    it('Styles: Applies expected styles to extruded Point geometry', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Document xmlns="http://www.opengis.net/kml/2.2"\
+                  xmlns:gx="http://www.google.com/kml/ext/2.2">\
+          <Placemark>' + uberStyle + '\
+            <name>TheName</name>\
+            <Point>\
+              <extrude>1</extrude>\
+              <altitudeMode>absolute</altitudeMode>\
+              <coordinates>1,2,3</coordinates>\
+            </Point>\
+          </Placemark\
+        <Document>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+
+        expect(entity.label.text.getValue()).toEqual('TheName');
+        expect(entity.label.fillColor.getValue()).toEqual(uberLabelColor);
+        expect(entity.label.scale.getValue()).toEqual(uberLabelScale);
+
+        expect(entity.billboard.color.getValue()).toEqual(uberIconColor);
+        expect(entity.billboard.scale.getValue()).toEqual(uberIconScale);
+        expect(entity.billboard.rotation.getValue()).toEqual(uberIconHeading);
+        expect(entity.billboard.image.getValue()).toEqual('test.png');
+        expect(entity.billboard.pixelOffset.getValue()).toEqual(uberIconHotspot);
+
+        expect(entity.polyline.material).toBeInstanceOf(ColorMaterialProperty);
+        expect(entity.polyline.material.color.getValue()).toEqual(uberLineColor);
+        expect(entity.polyline.width.getValue()).toEqual(uberLineWidth);
+    });
+
+    it('Styles: Applies expected styles to LineString geometry', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Document xmlns="http://www.opengis.net/kml/2.2"\
+                  xmlns:gx="http://www.google.com/kml/ext/2.2">\
+          <Placemark>' + uberStyle + '\
+            <name>TheName</name>\
+            <LineString>\
+            <coordinates>1,2,3 \
+                         4,5,6 \
+            </coordinates>\
+            </LineString>\
+          </Placemark\
+        <Document>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.polyline.material).toBeInstanceOf(ColorMaterialProperty);
+        expect(entity.polyline.material.color.getValue()).toEqual(uberLineColor);
+        expect(entity.polyline.width.getValue()).toEqual(uberLineWidth);
+
+        expect(entity.label).toBeUndefined();
+        expect(entity.wall).toBeUndefined();
+    });
+
+    it('Styles: Applies expected styles to extruded LineString geometry', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Document xmlns="http://www.opengis.net/kml/2.2"\
+                  xmlns:gx="http://www.google.com/kml/ext/2.2">\
+          <Placemark>' + uberStyle + '\
+            <name>TheName</name>\
+            <LineString>\
+            <extrude>1</extrude>\
+            <altitudeMode>absolute</altitudeMode>\
+            <coordinates>1,2,3 \
+                         4,5,6 \
+            </coordinates>\
+            </LineString>\
+          </Placemark\
+        <Document>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+
+        expect(entity.wall.material).toBeInstanceOf(ColorMaterialProperty);
+        expect(entity.wall.material.color.getValue()).toEqual(uberPolyColor);
+        expect(entity.wall.fill.getValue()).toEqual(uberPolyFill);
+        expect(entity.wall.outline.getValue()).toEqual(uberPolyOutline);
+        expect(entity.wall.outlineColor.getValue()).toEqual(uberLineColor);
+        expect(entity.wall.outlineWidth.getValue()).toEqual(uberLineWidth);
+
+        expect(entity.polyline).toBeUndefined();
+        expect(entity.label).toBeUndefined();
+    });
+
+    it('Styles: Applies expected styles to Polygon geometry', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Document xmlns="http://www.opengis.net/kml/2.2"\
+                  xmlns:gx="http://www.google.com/kml/ext/2.2">\
+          <Placemark>' + uberStyle + '\
+            <name>TheName</name>\
+            <Polygon>\
+            <extrude>1</extrude>\
+            <altitudeMode>absolute</altitudeMode>\
+              <outerBoundaryIs>\
+                <LinearRing>\
+                  <coordinates>\
+                    1,2,3\
+                    4,5,6\
+                    7,8,9\
+                   </coordinates>\
+                </LinearRing>\
+              </outerBoundaryIs>\
+            </Polygon>\
+          </Placemark\
+        <Document>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+
+        expect(entity.polygon.material).toBeInstanceOf(ColorMaterialProperty);
+        expect(entity.polygon.material.color.getValue()).toEqual(uberPolyColor);
+        expect(entity.polygon.fill.getValue()).toEqual(uberPolyFill);
+        expect(entity.polygon.outline.getValue()).toEqual(uberPolyOutline);
+        expect(entity.polygon.outlineColor.getValue()).toEqual(uberLineColor);
+        expect(entity.polygon.outlineWidth.getValue()).toEqual(uberLineWidth);
+
+        expect(entity.label).toBeUndefined();
+    });
+
+    it('Styles: Applies expected styles to gx:Track geometry', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Document xmlns="http://www.opengis.net/kml/2.2"\
+                  xmlns:gx="http://www.google.com/kml/ext/2.2">\
+          <Placemark>' + uberStyle + '\
+            <name>TheName</name>\
+            <gx:Track>\
+              <altitudeMode>absolute</altitudeMode>\
+              <when>2000-01-01T00:00:02Z</when>\
+            <gx:coord>7 8 9</gx:coord>\
+          </gx:Track>\
+          </Placemark\
+        <Document>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+
+        expect(entity.label).toBeDefined();
+        expect(entity.label.text.getValue()).toEqual('TheName');
+        expect(entity.label.fillColor.getValue()).toEqual(uberLabelColor);
+        expect(entity.label.scale.getValue()).toEqual(uberLabelScale);
+
+        expect(entity.billboard.color.getValue()).toEqual(uberIconColor);
+        expect(entity.billboard.scale.getValue()).toEqual(uberIconScale);
+        expect(entity.billboard.rotation.getValue()).toEqual(uberIconHeading);
+        expect(entity.billboard.image.getValue()).toEqual('test.png');
+        expect(entity.billboard.pixelOffset.getValue()).toEqual(uberIconHotspot);
+
+        expect(entity.polyline).toBeUndefined();
+    });
+
+    it('Styles: Applies expected styles to extruded gx:Track geometry', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Document xmlns="http://www.opengis.net/kml/2.2"\
+                  xmlns:gx="http://www.google.com/kml/ext/2.2">\
+          <Placemark>' + uberStyle + '\
+            <name>TheName</name>\
+            <gx:Track>\
+              <extrude>1</extrude>\
+              <altitudeMode>absolute</altitudeMode>\
+              <when>2000-01-01T00:00:02Z</when>\
+              <gx:coord>7 8 9</gx:coord>\
+            </gx:Track>\
+          </Placemark\
+        <Document>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+
+        expect(entity.label.text.getValue()).toEqual('TheName');
+        expect(entity.label.fillColor.getValue()).toEqual(uberLabelColor);
+        expect(entity.label.scale.getValue()).toEqual(uberLabelScale);
+
+        expect(entity.billboard.color.getValue()).toEqual(uberIconColor);
+        expect(entity.billboard.scale.getValue()).toEqual(uberIconScale);
+        expect(entity.billboard.rotation.getValue()).toEqual(uberIconHeading);
+        expect(entity.billboard.image.getValue()).toEqual('test.png');
+        expect(entity.billboard.pixelOffset.getValue()).toEqual(uberIconHotspot);
+
+        expect(entity.polyline.material).toBeInstanceOf(ColorMaterialProperty);
+        expect(entity.polyline.material.color.getValue()).toEqual(uberLineColor);
+        expect(entity.polyline.width.getValue()).toEqual(uberLineWidth);
+    });
+
+    it('Styles: Applies expected styles to gx:MultiTrack geometry', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Document xmlns="http://www.opengis.net/kml/2.2"\
+                  xmlns:gx="http://www.google.com/kml/ext/2.2">\
+          <Placemark>' + uberStyle + '\
+            <name>TheName</name>\
+            <gx:MultiTrack>\
+              <gx:Track>\
+                <altitudeMode>absolute</altitudeMode>\
+                <when>2000-01-01T00:00:02Z</when>\
+              <gx:coord>7 8 9</gx:coord>\
+              </gx:Track>\
+            </gx:MultiTrack>\
+          </Placemark\
+        <Document>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+
+        expect(entity.label).toBeDefined();
+        expect(entity.label.text.getValue()).toEqual('TheName');
+        expect(entity.label.fillColor.getValue()).toEqual(uberLabelColor);
+        expect(entity.label.scale.getValue()).toEqual(uberLabelScale);
+
+        expect(entity.billboard.color.getValue()).toEqual(uberIconColor);
+        expect(entity.billboard.scale.getValue()).toEqual(uberIconScale);
+        expect(entity.billboard.rotation.getValue()).toEqual(uberIconHeading);
+        expect(entity.billboard.image.getValue()).toEqual('test.png');
+        expect(entity.billboard.pixelOffset.getValue()).toEqual(uberIconHotspot);
+
+        expect(entity.polyline).toBeUndefined();
+    });
+
+    it('Styles: Applies expected styles to extruded gx:MultiTrack geometry', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Document xmlns="http://www.opengis.net/kml/2.2"\
+                  xmlns:gx="http://www.google.com/kml/ext/2.2">\
+          <Placemark>' + uberStyle + '\
+            <name>TheName</name>\
+            <gx:MultiTrack>\
+              <gx:Track>\
+                <extrude>1</extrude>\
+                <altitudeMode>absolute</altitudeMode>\
+                <when>2000-01-01T00:00:02Z</when>\
+                <gx:coord>7 8 9</gx:coord>\
+              </gx:Track>\
+            </gx:MultiTrack>\
+          </Placemark\
+        <Document>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+
+        expect(entity.label.text.getValue()).toEqual('TheName');
+        expect(entity.label.fillColor.getValue()).toEqual(uberLabelColor);
+        expect(entity.label.scale.getValue()).toEqual(uberLabelScale);
+
+        expect(entity.billboard.color.getValue()).toEqual(uberIconColor);
+        expect(entity.billboard.scale.getValue()).toEqual(uberIconScale);
+        expect(entity.billboard.rotation.getValue()).toEqual(uberIconHeading);
+        expect(entity.billboard.image.getValue()).toEqual('test.png');
+        expect(entity.billboard.pixelOffset.getValue()).toEqual(uberIconHotspot);
+
+        expect(entity.polyline.material).toBeInstanceOf(ColorMaterialProperty);
+        expect(entity.polyline.material.color.getValue()).toEqual(uberLineColor);
+        expect(entity.polyline.width.getValue()).toEqual(uberLineWidth);
     });
 
     it('IconStyle: handles empty element', function() {
@@ -2107,10 +2452,12 @@ defineSuite([
         expect(entity.position.getValue(time4)).toEqual(Cartesian3.fromDegrees(3, 2, 1));
     });
 
-    it('Geometry MultiGeometry: processes geometry', function() {
+    it('Geometry MultiGeometry: sets expected properties', function() {
         var multiKml = '<?xml version="1.0" encoding="UTF-8"?>\
           <Placemark id="testID">\
           <MultiGeometry>\
+            <name>TheName</name>\
+            <description>TheDescription</description>\
               <Point id="point1">\
                 <coordinates>1,2</coordinates>\
               </Point>\
@@ -2132,11 +2479,17 @@ defineSuite([
         var point1 = dataSource.entities.getById('point1');
         expect(point1).toBeDefined();
         expect(point1.parent).toBe(multi);
+        expect(point1.name).toBe(multi.name);
+        expect(point1.description).toBe(multi.description);
+        expect(point1.kml).toBe(multi.kml);
         expect(point1.position.getValue(Iso8601.MINIMUM_VALUE)).toEqualEpsilon(Cartesian3.fromDegrees(1, 2), CesiumMath.EPSILON13);
 
         var point2 = dataSource.entities.getById('point2');
         expect(point2).toBeDefined();
         expect(point2.parent).toBe(multi);
+        expect(point2.name).toBe(multi.name);
+        expect(point2.description).toBe(multi.description);
+        expect(point2.kml).toBe(multi.kml);
         expect(point2.position.getValue(Iso8601.MINIMUM_VALUE)).toEqualEpsilon(Cartesian3.fromDegrees(3, 4), CesiumMath.EPSILON13);
     });
 
