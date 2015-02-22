@@ -29,7 +29,6 @@
     user-select: none;
     -webkit-transform: translate(0, -20%);
     -moz-transform: translate(0, -20%);
-    -ms-transform: translate(0, -20%);
     transform: translate(0, -20%);
     visibility: hidden;
     opacity: 0;
@@ -41,7 +40,6 @@
 .cesium-baseLayerPicker-dropDown-visible {
     -webkit-transform: translate(0, 0);
     -moz-transform: translate(0, 0);
-    -ms-transform: translate(0, 0);
     transform: translate(0, 0);
     visibility: visible;
     opacity: 1;
@@ -84,7 +82,6 @@
     vertical-align: middle;
     color: #edffff;
     cursor: pointer;
-    -ms-word-wrap: break-word;
     word-wrap: break-word;
 }
 

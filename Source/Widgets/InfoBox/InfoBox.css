@@ -14,7 +14,6 @@
     box-shadow: 0 0 10px 1px #000;
     -webkit-transform: translate(100%, 0);
     -moz-transform: translate(100%, 0);
-    -ms-transform: translate(100%, 0);
     transform: translate(100%, 0);
     visibility: hidden;
     opacity: 0;
@@ -26,7 +25,6 @@
 .cesium-infoBox-visible {
     -webkit-transform: translate(0, 0);
     -moz-transform: translate(0, 0);
-    -ms-transform: translate(0, 0);
     transform: translate(0, 0);
     visibility: visible;
     opacity: 1;
@@ -42,7 +40,6 @@
     background: rgba(84, 84, 84, 0.8);
     border-top-left-radius: 7px;
     text-align: center;
-    -ms-text-overflow: ellipsis;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
