@@ -15,13 +15,11 @@
     -webkit-transform: translate(100%, 0);
     -moz-transform: translate(100%, 0);
     -ms-transform: translate(100%, 0);
-    -o-transform: translate(100%, 0);
     transform: translate(100%, 0);
     visibility: hidden;
     opacity: 0;
     -webkit-transition: visibility 0s 0.2s, opacity 0.2s ease-in, -webkit-transform 0.2s ease-in;
     -moz-transition: visibility 0s 0.2s, opacity 0.2s ease-in, -moz-transform 0.2s ease-in;
-    -o-transition: visibility 0s 0.2s, opacity 0.2s ease-in, transform 0.2s ease-in;
     transition: visibility 0s 0.2s, opacity 0.2s ease-in, transform 0.2s ease-in;
 }
 
@@ -29,13 +27,11 @@
     -webkit-transform: translate(0, 0);
     -moz-transform: translate(0, 0);
     -ms-transform: translate(0, 0);
-    -o-transform: translate(0, 0);
     transform: translate(0, 0);
     visibility: visible;
     opacity: 1;
     -webkit-transition: opacity 0.2s ease-out, -webkit-transform 0.2s ease-out;
     -moz-transition: opacity 0.2s ease-out, -moz-transform 0.2s ease-out;
-    -o-transition: opacity 0.2s ease-out, transform 0.2s ease-out;
     transition: opacity 0.2s ease-out, transform 0.2s ease-out;
 }
 
@@ -47,7 +43,6 @@
     border-top-left-radius: 7px;
     text-align: center;
     -ms-text-overflow: ellipsis;
-    -o-text-overflow: ellipsis;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;

@@ -14,7 +14,6 @@
     box-sizing: border-box;
     -webkit-transition: width ease-in-out 0.25s, background-color 0.2s ease-in-out;
     -moz-transition: width ease-in-out 0.25s, background-color 0.2s ease-in-out;
-    -o-transition: width ease-in-out 0.25s, background-color 0.2s ease-in-out;
     transition: width ease-in-out 0.25s, background-color 0.2s ease-in-out;
 }
 

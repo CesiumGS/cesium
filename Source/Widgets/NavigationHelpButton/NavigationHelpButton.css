@@ -13,16 +13,13 @@
     -webkit-transform: scale(0.01);
     -moz-transform: scale(0.01);
     -ms-transform: scale(0.01);
-    -o-transform: scale(0.01);
     transform: scale(0.01);
     -webkit-transform-origin: 234px -10px;
     -moz-transform-origin: 234px -10px;
     -ms-transform-origin: 234px -10px;
-    -o-transform-origin: 234px -10px;
     transform-origin: 234px -10px;
     -webkit-transition: visibility 0s 0.25s, -webkit-transform 0.25s ease-in;
     -moz-transition: visibility 0s 0.25s, -moz-transform 0.25s ease-in;
-    -o-transition: visibility 0s 0.25s, -o-transform 0.25s ease-in;
     transition: visibility 0s 0.25s, transform 0.25s ease-in;
 }
 
@@ -31,11 +28,9 @@
     -webkit-transform: scale(1);
     -moz-transform: scale(1);
     -ms-transform: scale(1);
-    -o-transform: scale(1);
     transform: scale(1);
     -webkit-transition: -webkit-transform 0.25s ease-out;
     -moz-transition: -moz-transform 0.25s ease-out;
-    -o-transition: -o-transform 0.25s ease-out;
     transition: transform 0.25s ease-out;
 }
 

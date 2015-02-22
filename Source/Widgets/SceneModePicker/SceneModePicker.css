@@ -7,7 +7,6 @@ span.cesium-sceneModePicker-wrapper {
 .cesium-sceneModePicker-visible {
     visibility: visible;
     opacity: 1;
-    -o-transition: opacity 0.25s linear;
     transition: opacity 0.25s linear;
     -webkit-transition: opacity 0.25s linear;
     -moz-transition: opacity 0.25s linear;
@@ -16,7 +15,6 @@ span.cesium-sceneModePicker-wrapper {
 .cesium-sceneModePicker-hidden {
     visibility: hidden;
     opacity: 0;
-    -o-transition: visibility 0s 0.25s, opacity 0.25s linear;
     transition: visibility 0s 0.25s, opacity 0.25s linear;
     -webkit-transition: visibility 0s 0.25s, opacity 0.25s linear;
     -moz-transition: visibility 0s 0.25s, opacity 0.25s linear;
@@ -29,7 +27,6 @@ span.cesium-sceneModePicker-wrapper {
 .cesium-sceneModePicker-slide-svg {
     -webkit-transition: left 2s;
     -moz-transition: left 2s;
-    -o-transition: left 2s;
     transition: left 2s;
     top: 0;
     left: 0;
