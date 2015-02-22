@@ -108,8 +108,7 @@ defineSuite([
             positiveZ : './Data/Images/Blue.png',
             negativeZ : './Data/Images/Blue.png'
         }).then(function(cubeMap) {
-            // this should not be called.
-            expect(true).toBe(false);
+            fail('should not be called');
         }).otherwise(function() {
         });
     });
@@ -123,8 +122,7 @@ defineSuite([
             positiveZ : './Data/Images/Blue.png',
             negativeZ : './Data/Images/Blue.png'
         }).then(function(cubeMap) {
-            // this should not be called.
-            expect(true).toBe(false);
+            fail('should not be called');
         }).otherwise(function() {
         });
     });
@@ -138,8 +136,7 @@ defineSuite([
             positiveZ : './Data/Images/Blue.png',
             negativeZ : './Data/Images/Blue.png'
         }).then(function(cubeMap) {
-            // this should not be called.
-            expect(true).toBe(false);
+            fail('should not be called');
         }).otherwise(function() {
         });
     });
@@ -153,8 +150,7 @@ defineSuite([
             positiveZ : './Data/Images/Blue.png',
             negativeZ : './Data/Images/Blue.png'
         }).then(function(cubeMap) {
-            // this should not be called.
-            expect(true).toBe(false);
+            fail('should not be called');
         }).otherwise(function() {
         });
     });
@@ -168,8 +164,7 @@ defineSuite([
             positiveZ : 'not.found',
             negativeZ : './Data/Images/Blue.png'
         }).then(function(cubeMap) {
-            // this should not be called.
-            expect(true).toBe(false);
+            fail('should not be called');
         }).otherwise(function() {
         });
     });
@@ -183,8 +178,7 @@ defineSuite([
             positiveZ : './Data/Images/Blue.png',
             negativeZ : 'not.found'
         }).then(function(cubeMap) {
-            // this should not be called.
-            expect(true).toBe(false);
+            fail('should not be called');
         }).otherwise(function() {
         });
     });

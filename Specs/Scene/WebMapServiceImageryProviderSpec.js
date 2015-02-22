@@ -625,8 +625,7 @@ defineSuite([
                 };
 
                 return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function() {
-                    // should not be called.
-                    expect(true).toBe(false);
+                    fail('should not be called');
                 }).otherwise(function() {
                 });
             });

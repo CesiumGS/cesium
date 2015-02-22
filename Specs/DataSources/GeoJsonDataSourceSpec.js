@@ -664,8 +664,7 @@ defineSuite([
     it('Fails when encountering unknown geometry', function() {
         var dataSource = new GeoJsonDataSource();
         return dataSource.load(featureUnknownGeometry).then(function() {
-            // should not be called
-            expect(true).toBe(false);
+            fail('should not be called');
         }).otherwise(function() {
         });
     });
@@ -673,8 +672,7 @@ defineSuite([
     it('Fails with undefined geomeetry', function() {
         var dataSource = new GeoJsonDataSource();
         return dataSource.load(featureUndefinedGeometry).then(function() {
-            // should not be called
-            expect(true).toBe(false);
+            fail('should not be called');
         }).otherwise(function() {
         });
     });
@@ -682,8 +680,7 @@ defineSuite([
     it('Fails with unknown geomeetry in geometryCollection', function() {
         var dataSource = new GeoJsonDataSource();
         return dataSource.load(geometryCollectionUnknownType).then(function() {
-            // should not be called
-            expect(true).toBe(false);
+            fail('should not be called');
         }).otherwise(function() {
         });
     });
@@ -811,8 +808,7 @@ defineSuite([
 
         // Blue.png is not JSON
         return dataSource.loadUrl('Data/Images/Blue.png').then(function() {
-            // should not be called.
-            expect(false).toBe(true);
+            fail('should not be called');
         }).otherwise(function() {
             expect(spy).toHaveBeenCalledWith(dataSource, jasmine.any(Error));
         });

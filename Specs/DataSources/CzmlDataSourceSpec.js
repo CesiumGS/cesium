@@ -421,8 +421,7 @@ defineSuite([
 
         // Blue.png is not JSON
         return dataSource.loadUrl('Data/Images/Blue.png').then(function() {
-            // should not be called.
-            expect(false).toBe(true);
+            fail('should not be called');
         }).otherwise(function() {
             expect(spy).toHaveBeenCalledWith(dataSource, jasmine.any(Error));
         });
@@ -436,8 +435,7 @@ defineSuite([
 
         // Blue.png is not JSON
         dataSource.processUrl('Data/Images/Blue.png').then(function() {
-            // should not be called.
-            expect(false).toBe(true);
+            fail('should not be called');
         }).otherwise(function() {
             expect(spy).toHaveBeenCalledWith(dataSource, jasmine.any(Error));
         });

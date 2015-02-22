@@ -914,8 +914,7 @@ defineSuite([
             return false;
         }).then(function() {
             return primitive.readyPromise.then(function() {
-                // should not be called.
-                expect(true).toBe(false);
+                fail('should not be called');
             }).otherwise(function(e) {
                 expect(e).toBe(primitive._error);
                 expect(function() {

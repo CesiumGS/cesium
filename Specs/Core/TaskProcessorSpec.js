@@ -106,8 +106,7 @@ defineSuite([
         };
 
         return taskProcessor.scheduleTask(parameters).then(function() {
-            // Should not be called.
-            expect(false).toBe(true);
+            fail('should not be called');
         }).otherwise(function(error) {
             expect(error.message).toEqual(message);
         });
@@ -122,8 +121,7 @@ defineSuite([
         };
 
         return taskProcessor.scheduleTask(parameters).then(function() {
-            // Should not be called.
-            expect(false).toBe(true);
+            fail('should not be called');
         }).otherwise(function(error) {
             expect(error).toContain('postMessage failed');
         });
