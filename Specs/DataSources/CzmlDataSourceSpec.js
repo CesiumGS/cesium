@@ -256,39 +256,27 @@ defineSuite([
     });
 
     it('process loads expected data', function() {
-        return pollToPromise(function() {
-            return defined(simple);
-        }).then(function() {
-            var dataSource = new CzmlDataSource();
-            dataSource.process(simple, simpleUrl);
-            expect(dataSource.entities.values.length).toEqual(10);
-        });
+        var dataSource = new CzmlDataSource();
+        dataSource.process(simple, simpleUrl);
+        expect(dataSource.entities.values.length).toEqual(10);
     });
 
     it('process loads data on top of existing', function() {
-        return pollToPromise(function() {
-            return defined(simple) && defined(vehicle);
-        }).then(function() {
-            var dataSource = new CzmlDataSource();
-            dataSource.process(simple, simpleUrl);
-            expect(dataSource.entities.values.length === 10);
+        var dataSource = new CzmlDataSource();
+        dataSource.process(simple, simpleUrl);
+        expect(dataSource.entities.values.length === 10);
 
-            dataSource.process(vehicle, vehicleUrl);
-            expect(dataSource.entities.values.length === 11);
-        });
+        dataSource.process(vehicle, vehicleUrl);
+        expect(dataSource.entities.values.length === 11);
     });
 
     it('load replaces data', function() {
-        return pollToPromise(function() {
-            return defined(simple) && defined(vehicle);
-        }).then(function() {
-            var dataSource = new CzmlDataSource();
-            dataSource.process(simple, simpleUrl);
-            expect(dataSource.entities.values.length).toEqual(10);
+        var dataSource = new CzmlDataSource();
+        dataSource.process(simple, simpleUrl);
+        expect(dataSource.entities.values.length).toEqual(10);
 
-            dataSource.load(vehicle, vehicleUrl);
-            expect(dataSource.entities.values.length).toEqual(1);
-        });
+        dataSource.load(vehicle, vehicleUrl);
+        expect(dataSource.entities.values.length).toEqual(1);
     });
 
     it('process throws with undefined CZML', function() {
