@@ -2,6 +2,7 @@
 define([
         'Core/BoundingRectangle',
         'Core/Color',
+        'Core/defined',
         'Renderer/ClearCommand',
         'Scene/CreditDisplay',
         'Scene/FrameState',
@@ -9,6 +10,7 @@ define([
     ], function(
         BoundingRectangle,
         Color,
+        defined,
         ClearCommand,
         CreditDisplay,
         FrameState,
@@ -41,21 +43,22 @@ define([
         });
         clear.execute(context, passState);
 
-        var opaqueCommands = [];
-        var translucentCommands = [];
-
-        var length = commands.length;
-        for (var i = 0; i < length; i++) {
-            var command = commands[i];
-            if (command.pass === Pass.OPAQUE) {
-                opaqueCommands.push(command);
-            } else if (command.pass === Pass.TRANSLUCENT) {
-                translucentCommands.push(command);
-            }
+        var i;
+        var renderCommands = new Array(Pass.NUMBER_OF_PASSES);
+        for (i = 0; i < Pass.NUMBER_OF_PASSES; ++i) {
+            renderCommands[i] = [];
         }
 
-        executeCommands(context, passState, opaqueCommands);
-        executeCommands(context, passState, translucentCommands);
+        var length = commands.length;
+        for (i = 0; i < length; i++) {
+            var command = commands[i];
+            var pass = defined(command.pass) ? command.pass : Pass.OPAQUE;
+            renderCommands[pass].push(command);
+        }
+
+        for (i = 0; i < Pass.NUMBER_OF_PASSES; ++i) {
+            executeCommands(context, passState, renderCommands[i]);
+        }
 
         frameState.passes = oldPasses;
 
