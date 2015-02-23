@@ -14,6 +14,7 @@ Change Log
 * Added `pack` and `unpack` functions to `Matrix2` and `Matrix3`.
 * Added camera-terrain collision detection/response when the camera reference frame is set.
 * Added `ScreenSpaceCameraController.enableCollisionDetection` to enable/disable camera collision detection with terrain.
+* Fixed some styling issues with `InfoBox` and `BaseLayerPicker` caused by using Bootstrap with Cesium. [#2487](https://github.com/AnalyticalGraphicsInc/cesium/issues/2479)
 * Cesium is now tested using Jasmine 2.2.0.
 
 ### 1.6 - 2015-02-02
