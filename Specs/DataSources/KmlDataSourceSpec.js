@@ -996,6 +996,13 @@ defineSuite([
         expect(entity.billboard.image.getValue()).toEqual('test.png');
         expect(entity.billboard.pixelOffset.getValue()).toEqual(uberIconHotspot);
 
+        expect(entity.path).toBeDefined();
+        expect(entity.path.material).toBeInstanceOf(ColorMaterialProperty);
+        expect(entity.path.material.color.getValue()).toEqual(uberLineColor);
+        expect(entity.path.width.getValue()).toEqual(uberLineWidth);
+        expect(entity.path.leadTime.getValue()).toEqual(0);
+        expect(entity.path.trailTime).toBeUndefined();
+
         expect(entity.polyline).toBeUndefined();
     });
 
@@ -1028,6 +1035,13 @@ defineSuite([
         expect(entity.billboard.rotation.getValue()).toEqual(uberIconHeading);
         expect(entity.billboard.image.getValue()).toEqual('test.png');
         expect(entity.billboard.pixelOffset.getValue()).toEqual(uberIconHotspot);
+
+        expect(entity.path).toBeDefined();
+        expect(entity.path.material).toBeInstanceOf(ColorMaterialProperty);
+        expect(entity.path.material.color.getValue()).toEqual(uberLineColor);
+        expect(entity.path.width.getValue()).toEqual(uberLineWidth);
+        expect(entity.path.leadTime.getValue()).toEqual(0);
+        expect(entity.path.trailTime).toBeUndefined();
 
         expect(entity.polyline.material).toBeInstanceOf(ColorMaterialProperty);
         expect(entity.polyline.material.color.getValue()).toEqual(uberLineColor);
@@ -1066,6 +1080,13 @@ defineSuite([
         expect(entity.billboard.image.getValue()).toEqual('test.png');
         expect(entity.billboard.pixelOffset.getValue()).toEqual(uberIconHotspot);
 
+        expect(entity.path).toBeDefined();
+        expect(entity.path.material).toBeInstanceOf(ColorMaterialProperty);
+        expect(entity.path.material.color.getValue()).toEqual(uberLineColor);
+        expect(entity.path.width.getValue()).toEqual(uberLineWidth);
+        expect(entity.path.leadTime.getValue()).toEqual(0);
+        expect(entity.path.trailTime).toBeUndefined();
+
         expect(entity.polyline).toBeUndefined();
     });
 
@@ -1100,6 +1121,13 @@ defineSuite([
         expect(entity.billboard.rotation.getValue()).toEqual(uberIconHeading);
         expect(entity.billboard.image.getValue()).toEqual('test.png');
         expect(entity.billboard.pixelOffset.getValue()).toEqual(uberIconHotspot);
+
+        expect(entity.path).toBeDefined();
+        expect(entity.path.material).toBeInstanceOf(ColorMaterialProperty);
+        expect(entity.path.material.color.getValue()).toEqual(uberLineColor);
+        expect(entity.path.width.getValue()).toEqual(uberLineWidth);
+        expect(entity.path.leadTime.getValue()).toEqual(0);
+        expect(entity.path.trailTime).toBeUndefined();
 
         expect(entity.polyline.material).toBeInstanceOf(ColorMaterialProperty);
         expect(entity.polyline.material.color.getValue()).toEqual(uberLineColor);

@@ -40,6 +40,7 @@ define([
         './Entity',
         './EntityCollection',
         './LabelGraphics',
+        './PathGraphics',
         './PolygonGraphics',
         './PolylineGraphics',
         './PositionPropertyArray',
@@ -90,6 +91,7 @@ define([
         Entity,
         EntityCollection,
         LabelGraphics,
+        PathGraphics,
         PolygonGraphics,
         PolylineGraphics,
         PositionPropertyArray,
@@ -98,8 +100,7 @@ define([
         SampledPositionProperty,
         SurfacePositionProperty,
         TimeIntervalCollectionProperty,
-        WallGraphics
-        ) {
+        WallGraphics) {
     "use strict";
 
     //This is by no means an exhaustive list of MIME types.
@@ -854,6 +855,22 @@ define([
         label.text = entity.name;
     }
 
+    function processPathGraphics(dataSource, entity, styleEntity) {
+        var path = entity.path;
+        if (!defined(path)) {
+            path = new PathGraphics();
+            path.leadTime = 0;
+            path.duration = Number.MAX_VALUE;
+            entity.path = path;
+        }
+
+        var polyline = styleEntity.polyline;
+        if (defined(polyline)) {
+            path.material = polyline.material;
+            path.width = polyline.width;
+        }
+    }
+
     function processPoint(dataSource, geometryNode, entity, styleEntity) {
         var coordinatesString = queryStringValue(geometryNode, 'coordinates', namespaces.kml);
         var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
@@ -973,6 +990,8 @@ define([
         property.addSamples(times, coordinates);
         entity.position = createPositionPropertyFromAltitudeMode(property, altitudeMode, gxAltitudeMode);
         processPositionGraphics(dataSource, entity, styleEntity);
+        processPathGraphics(dataSource, entity, styleEntity);
+
         entity.availability = new TimeIntervalCollection();
 
         if (timeNodes.length > 0) {
@@ -1073,7 +1092,7 @@ define([
         entity.availability = availability;
         entity.position = composite;
         processPositionGraphics(dataSource, entity, styleEntity);
-
+        processPathGraphics(dataSource, entity, styleEntity);
         if (needDropLine) {
             createDropLine(dataSource, entity, styleEntity);
             entity.polyline.show = dropShowProperty;
