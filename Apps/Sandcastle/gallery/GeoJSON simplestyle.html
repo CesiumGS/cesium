@@ -39,9 +39,10 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     animation : false
 });
 
-var dataSource = Cesium.GeoJsonDataSource.fromUrl('../../SampleData/simplestyles.geojson');
-viewer.dataSources.add(dataSource);
-viewer.zoomTo(dataSource);
+Cesium.GeoJsonDataSource.load('../../SampleData/simplestyles.geojson').then(function(dataSource) {
+    viewer.dataSources.add(dataSource);
+    viewer.zoomTo(dataSource);
+});
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

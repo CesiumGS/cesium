@@ -6,6 +6,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/getFilenameFromUri',
@@ -32,6 +33,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
         getFilenameFromUri,
@@ -505,11 +507,17 @@ define([
      * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
      *
      * @returns {GeoJsonDataSource} A new instance set to load the specified url.
+     * @deprecated
      */
     GeoJsonDataSource.fromUrl = function(url, options) {
+        deprecationWarning('GeoJsonDataSource.fromUrl', 'GeoJsonDataSource.fromUrl has been deprecated.  Use GeoJsonDataSource.load instead.');
         var result = new GeoJsonDataSource();
-        result.loadUrl(url, options);
+        result.load(url, options);
         return result;
+    };
+
+    GeoJsonDataSource.load = function(geoJson, options) {
+        return new GeoJsonDataSource().load(geoJson, options);
     };
 
     defineProperties(GeoJsonDataSource, {
@@ -731,24 +739,11 @@ define([
      * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
      *
      * @returns {Promise} a promise that will resolve when the GeoJSON is loaded.
+     * @deprecated
      */
     GeoJsonDataSource.prototype.loadUrl = function(url, options) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(url)) {
-            throw new DeveloperError('url is required.');
-        }
-        //>>includeEnd('debug');
-
-        DataSource.setLoading(this, true);
-
-        var that = this;
-        return when(loadJson(url), function(geoJson) {
-            return load(that, geoJson, url, options);
-        }).otherwise(function(error) {
-            DataSource.setLoading(that, false);
-            that._error.raiseEvent(that, error);
-            return when.reject(error);
-        });
+        deprecationWarning('GeoJsonDataSource.prototype.loadUrl', 'GeoJsonDataSource.loadUrl has been deprecated.  You can now pass a url to GeoJsonDataSource.load.');
+        return this.load(url, options);
     };
 
     /**
@@ -779,84 +774,94 @@ define([
         }
         //>>includeEnd('debug');
 
-        return load(this, geoJson, undefined, options);
+        return load(this, geoJson, options);
     };
 
-    function load(that, geoJson, sourceUri, options) {
+    function load(that, urlOrData, options) {
+        var promise = urlOrData;
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        sourceUri = defaultValue(sourceUri, options.sourceUri);
-
-        options = {
-            markerSize : defaultValue(options.markerSize, defaultMarkerSize),
-            markerSymbol : defaultValue(options.markerSymbol, defaultMarkerSymbol),
-            markerColor : defaultValue(options.markerColor, defaultMarkerColor),
-            strokeWidthProperty : new ConstantProperty(defaultValue(options.strokeWidth, defaultStrokeWidth)),
-            strokeMaterialProperty : new ColorMaterialProperty(defaultValue(options.stroke, defaultStroke)),
-            fillMaterialProperty : new ColorMaterialProperty(defaultValue(options.fill, defaultFill))
-        };
-
-        var name;
-        if (defined(sourceUri)) {
-            name = getFilenameFromUri(sourceUri);
-        }
-
-        if (defined(name) && that._name !== name) {
-            that._name = name;
-            that._changed.raiseEvent(that);
-        }
-
-        var typeHandler = geoJsonObjectTypes[geoJson.type];
-        if (!defined(typeHandler)) {
-            throw new DeveloperError('Unsupported GeoJSON object type: ' + geoJson.type);
-        }
-
-        //Check for a Coordinate Reference System.
-        var crsFunction = defaultCrsFunction;
-        var crs = geoJson.crs;
-        if (defined(crs)) {
-            if (crs === null) {
-                throw new RuntimeError('crs is null.');
-            }
-            if (!defined(crs.properties)) {
-                throw new RuntimeError('crs.properties is undefined.');
-            }
-
-            var properties = crs.properties;
-            if (crs.type === 'name') {
-                crsFunction = crsNames[properties.name];
-                if (!defined(crsFunction)) {
-                    throw new RuntimeError('Unknown crs name: ' + properties.name);
-                }
-            } else if (crs.type === 'link') {
-                var handler = crsLinkHrefs[properties.href];
-                if (!defined(handler)) {
-                    handler = crsLinkTypes[properties.type];
-                }
-
-                if (!defined(handler)) {
-                    throw new RuntimeError('Unable to resolve crs link: ' + JSON.stringify(properties));
-                }
-
-                crsFunction = handler(properties);
-            } else if (crs.type === 'EPSG') {
-                crsFunction = crsNames['EPSG:' + properties.code];
-                if (!defined(crsFunction)) {
-                    throw new RuntimeError('Unknown crs EPSG code: ' + properties.code);
-                }
-            } else {
-                throw new RuntimeError('Unknown crs type: ' + crs.type);
-            }
-        }
+        var sourceUri = options.sourceUri;
 
         DataSource.setLoading(that, true);
+        if (typeof urlOrData === 'string') {
+            if (!defined(sourceUri)) {
+                sourceUri = urlOrData;
+            }
+            promise = loadJson(urlOrData);
+        }
 
-        return when(crsFunction, function(crsFunction) {
-            that._entityCollection.removeAll();
-            typeHandler(that, geoJson, geoJson, crsFunction, options);
+        return when(promise, function(geoJson) {
+            options = {
+                markerSize : defaultValue(options.markerSize, defaultMarkerSize),
+                markerSymbol : defaultValue(options.markerSymbol, defaultMarkerSymbol),
+                markerColor : defaultValue(options.markerColor, defaultMarkerColor),
+                strokeWidthProperty : new ConstantProperty(defaultValue(options.strokeWidth, defaultStrokeWidth)),
+                strokeMaterialProperty : new ColorMaterialProperty(defaultValue(options.stroke, defaultStroke)),
+                fillMaterialProperty : new ColorMaterialProperty(defaultValue(options.fill, defaultFill))
+            };
 
-            return when.all(that._promises, function() {
-                that._promises.length = 0;
-                DataSource.setLoading(that, false);
+            var name;
+            if (defined(sourceUri)) {
+                name = getFilenameFromUri(sourceUri);
+            }
+
+            if (defined(name) && that._name !== name) {
+                that._name = name;
+                that._changed.raiseEvent(that);
+            }
+
+            var typeHandler = geoJsonObjectTypes[geoJson.type];
+            if (!defined(typeHandler)) {
+                throw new RuntimeError('Unsupported GeoJSON object type: ' + geoJson.type);
+            }
+
+            //Check for a Coordinate Reference System.
+            var crsFunction = defaultCrsFunction;
+            var crs = geoJson.crs;
+            if (defined(crs)) {
+                if (crs === null) {
+                    throw new RuntimeError('crs is null.');
+                }
+                if (!defined(crs.properties)) {
+                    throw new RuntimeError('crs.properties is undefined.');
+                }
+
+                var properties = crs.properties;
+                if (crs.type === 'name') {
+                    crsFunction = crsNames[properties.name];
+                    if (!defined(crsFunction)) {
+                        throw new RuntimeError('Unknown crs name: ' + properties.name);
+                    }
+                } else if (crs.type === 'link') {
+                    var handler = crsLinkHrefs[properties.href];
+                    if (!defined(handler)) {
+                        handler = crsLinkTypes[properties.type];
+                    }
+
+                    if (!defined(handler)) {
+                        throw new RuntimeError('Unable to resolve crs link: ' + JSON.stringify(properties));
+                    }
+
+                    crsFunction = handler(properties);
+                } else if (crs.type === 'EPSG') {
+                    crsFunction = crsNames['EPSG:' + properties.code];
+                    if (!defined(crsFunction)) {
+                        throw new RuntimeError('Unknown crs EPSG code: ' + properties.code);
+                    }
+                } else {
+                    throw new RuntimeError('Unknown crs type: ' + crs.type);
+                }
+            }
+
+            return when(crsFunction, function(crsFunction) {
+                that._entityCollection.removeAll();
+                typeHandler(that, geoJson, geoJson, crsFunction, options);
+
+                return when.all(that._promises, function() {
+                    that._promises.length = 0;
+                    DataSource.setLoading(that, false);
+                    return that;
+                });
             });
         }).otherwise(function(error) {
             DataSource.setLoading(that, false);
