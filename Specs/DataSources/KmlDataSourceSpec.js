@@ -4,6 +4,8 @@ defineSuite([
         'Core/BoundingRectangle',
         'Core/Cartesian2',
         'Core/Cartesian3',
+        'Core/ClockRange',
+        'Core/ClockStep',
         'Core/Color',
         'Core/DefaultProxy',
         'Core/Event',
@@ -24,6 +26,8 @@ defineSuite([
         BoundingRectangle,
         Cartesian2,
         Cartesian3,
+        ClockRange,
+        ClockStep,
         Color,
         DefaultProxy,
         Event,
@@ -119,9 +123,14 @@ defineSuite([
 
     it('load rejects loading non-KMZ file', function() {
         var dataSource = new KmlDataSource();
+        var spy = jasmine.createSpy('errorEvent');
+        dataSource.errorEvent.addEventListener(spy);
+
         waitsForPromise.toReject(loadBlob('Data/Images/Blue.png').then(function(blob) {
             return dataSource.load(blob);
-        }));
+        }), function() {
+            expect(spy).toHaveBeenCalled();
+        });
     });
 
     it('load rejects KMZ file with no KML contained', function() {
@@ -213,6 +222,99 @@ defineSuite([
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"), 'NameFromUri.kml');
         expect(dataSource.name).toEqual('NameFromUri.kml');
+    });
+
+    it('raises changed event when the name changes', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Document>\
+            <name>NameInKml</name>\
+            </Document>';
+
+        var dataSource = new KmlDataSource();
+
+        var spy = jasmine.createSpy('changedEvent');
+        dataSource.changedEvent.addEventListener(spy);
+
+        waitsForPromise(dataSource.load(parser.parseFromString(kml, "text/xml")), function() {
+            //Initial load
+            expect(spy).toHaveBeenCalledWith(dataSource);
+
+            spy.reset();
+            waitsForPromise(dataSource.load(parser.parseFromString(kml, "text/xml")), function() {
+                //Loading KML with same name
+                expect(spy).not.toHaveBeenCalled();
+
+                kml = kml.replace('NameInKml', 'newName');
+                spy.reset();
+                waitsForPromise(dataSource.load(parser.parseFromString(kml, "text/xml")), function() {
+                    //Loading KML with different name.
+                    expect(spy).toHaveBeenCalledWith(dataSource);
+                });
+            });
+        });
+    });
+
+    it('raises loadingEvent event at start and end of load', function() {
+        var dataSource = new KmlDataSource();
+
+        var spy = jasmine.createSpy('loadingEvent');
+        dataSource.loadingEvent.addEventListener(spy);
+
+        var promise = dataSource.loadUrl('Data/KML/simple.kml');
+        expect(spy).toHaveBeenCalledWith(dataSource, true);
+        spy.reset();
+
+        waitsForPromise(promise, function() {
+            expect(spy).toHaveBeenCalledWith(dataSource, false);
+        });
+    });
+
+    it('sets DatasourceClock based on feature availability', function() {
+        var beginDate = JulianDate.fromIso8601('2000-01-01');
+        var endDate = JulianDate.fromIso8601('2000-01-04');
+
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Document xmlns="http://www.opengis.net/kml/2.2"\
+                  xmlns:gx="http://www.google.com/kml/ext/2.2">\
+          <GroundOverlay>\
+            <TimeSpan>\
+              <begin>2000-01-01</begin>\
+              <end>2000-01-03</end>\
+            </TimeSpan>\
+          </GroundOverlay>\
+          <Placemark>\
+            <gx:Track>\
+              <when>2000-01-02</when>\
+              <gx:coord>1 2 3</gx:coord>\
+              <when>2000-01-04</when>\
+              <gx:coord>4 5 6</gx:coord>\
+            </gx:Track>\
+          </Placemark>\
+        </Document>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml")).then(function() {
+            var clock = dataSource.clock;
+            expect(dataSource.clock).toBeDefined();
+            expect(clock.startTime).toEqual(beginDate);
+            expect(clock.stopTime).toEqual(endDate);
+            expect(clock.currentTime).toEqual(beginDate);
+            expect(clock.clockRange).toEqual(ClockRange.LOOP_STOP);
+            expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_MULTIPLIER);
+            expect(clock.multiplier).toEqual(JulianDate.secondsDifference(endDate, beginDate) / 60);
+        }).then(function() {
+            //Loading a static data set should clear the clock.
+            kml = '<?xml version="1.0" encoding="UTF-8"?>\
+                <Document xmlns="http://www.opengis.net/kml/2.2"\
+                          xmlns:gx="http://www.google.com/kml/ext/2.2">\
+                  <GroundOverlay>\
+                  </GroundOverlay>\
+                </Document>';
+
+            return dataSource.load(parser.parseFromString(kml, "text/xml")).then(function() {
+                expect(dataSource.clock).toBeUndefined();
+            });
+        });
     });
 
     it('Feature: id', function() {

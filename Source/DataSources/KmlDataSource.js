@@ -1453,7 +1453,10 @@ define([
     }
 
     function loadKml(dataSource, kml, sourceUri, uriResolver) {
+        var entityCollection = dataSource._entityCollection;
+
         dataSource._promises = [];
+        entityCollection.removeAll();
 
         var documentElement = kml.documentElement;
         var document = documentElement.localName === 'Document' ? documentElement : queryFirstNode(documentElement, 'Document', namespaces.kml);
@@ -1462,41 +1465,41 @@ define([
             name = getFilenameFromUri(sourceUri);
         }
 
-        if (dataSource._name !== name) {
-            dataSource._name = name;
-            dataSource._changed.raiseEvent(dataSource);
-        }
-
         var styleCollection = new EntityCollection();
         return when.all(processStyles(dataSource, kml, styleCollection, sourceUri, false, uriResolver), function() {
-            var entityCollection = dataSource._entityCollection;
             var element = kml.documentElement;
             if (element.nodeName === 'kml') {
                 element = element.firstElementChild;
             }
             processFeatureNode(dataSource, element, undefined, entityCollection, styleCollection, sourceUri, uriResolver);
 
-            var availability = entityCollection.computeAvailability();
-            if (availability.equals(Iso8601.MAXIMUM_INTERVAL)) {
-                if (defined(dataSource._clock)) {
-                    dataSource._clock = undefined;
-                    dataSource._changed.raiseEvent(dataSource);
-                }
-            } else {
-                var clock = new DataSourceClock();
-                clock.startTime = availability.start;
-                clock.stopTime = availability.stop;
-                clock.currentTime = availability.start;
-                clock.clockRange = ClockRange.LOOP_STOP;
-                clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-                clock.multiplier = Math.min(Math.max(JulianDate.secondsDifference(availability.stop, availability.start) / 60, 60), 50000000);
-                if (!defined(dataSource._clock) || !(dataSource._clock.equals(clock))) {
-                    dataSource._clock = clock;
-                    dataSource._changed.raiseEvent(dataSource);
-                }
-            }
-
             return when.all(dataSource._promises, function() {
+                var clock;
+                var availability = entityCollection.computeAvailability();
+                if (!availability.equals(Iso8601.MAXIMUM_INTERVAL)) {
+                    clock = new DataSourceClock();
+                    clock.startTime = availability.start;
+                    clock.stopTime = availability.stop;
+                    clock.currentTime = availability.start;
+                    clock.clockRange = ClockRange.LOOP_STOP;
+                    clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+                    clock.multiplier = Math.min(Math.max(JulianDate.secondsDifference(availability.stop, availability.start) / 60, 1), 3.15569e7);
+                }
+                var changed = false;
+                if (dataSource._name !== name) {
+                    dataSource._name = name;
+                    changed = true;
+                }
+
+                if (clock !== dataSource._clock) {
+                    changed = true;
+                    dataSource._clock = clock;
+                }
+
+                if (changed) {
+                    dataSource._changed.raiseEvent(dataSource);
+                }
+
                 DataSource.setLoading(dataSource, false);
                 return dataSource;
             });
@@ -1665,9 +1668,11 @@ define([
      * @returns {Promise} A promise that will resolve when the KML is loaded.
      */
     KmlDataSource.prototype.load = function(documentOrBlob, sourceUri) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(documentOrBlob)) {
             throw new DeveloperError('documentOrBlob is required.');
         }
+        //>>includeEnd('debug');
 
         var that = this;
         DataSource.setLoading(this, true);
@@ -1695,9 +1700,11 @@ define([
      * @returns {Promise} A promise that will resolve when the KMZ is processed.
      */
     KmlDataSource.prototype.loadUrl = function(url) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(url)) {
             throw new DeveloperError('url is required.');
         }
+        //>>includeEnd('debug');
 
         DataSource.setLoading(this, true);
         var that = this;
