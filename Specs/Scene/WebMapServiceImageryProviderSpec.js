@@ -40,7 +40,7 @@ defineSuite([
         Uri,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
