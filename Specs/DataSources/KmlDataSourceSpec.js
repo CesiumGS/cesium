@@ -2301,6 +2301,7 @@ defineSuite([
                 <altitudeMode>clampToGround</altitudeMode>\
                 <extrude>1</extrude>\
                 <tessellate>1</tessellate>\
+                <coordinates>1,2,3 4,5,6</coordinates>\
             </LineString>\
             </Placemark>';
 
@@ -2312,6 +2313,8 @@ defineSuite([
 
         var entity = entities[0];
         expect(entity.polyline.followSurface).toBeUndefined();
+        var positions = entity.polyline.positions.getValue(Iso8601.MINIMUM_VALUE);
+        expect(positions).toEqualEpsilon([Cartesian3.fromDegrees(1, 2), Cartesian3.fromDegrees(4, 5)], CesiumMath.EPSILON10);
     });
 
     it('Geometry LineString: sets positions altitudeMode gx:clampToSeaFloor, cannot extrude, can tessellate', function() {
@@ -2322,6 +2325,7 @@ defineSuite([
                 <gx:altitudeMode>clampToSeaFloor</gx:altitudeMode>\
                 <extrude>1</extrude>\
                 <tessellate>1</tessellate>\
+                <coordinates>1,2,3 4,5,6</coordinates>\
             </LineString>\
             </Placemark>';
 
@@ -2333,6 +2337,8 @@ defineSuite([
 
         var entity = entities[0];
         expect(entity.polyline.followSurface).toBeUndefined();
+        var positions = entity.polyline.positions.getValue(Iso8601.MINIMUM_VALUE);
+        expect(positions).toEqualEpsilon([Cartesian3.fromDegrees(1, 2), Cartesian3.fromDegrees(4, 5)], CesiumMath.EPSILON10);
     });
 
     it('Geometry LineString: sets positions altitudeMode gx:relativeToSeaFloor, can extrude, cannot tessellate', function() {
@@ -2343,6 +2349,7 @@ defineSuite([
             <gx:altitudeMode>relativeToSeaFloor</gx:altitudeMode>\
             <extrude>1</extrude>\
             <tessellate>1</tessellate>\
+            <coordinates>1,2,3 4,5,6</coordinates>\
         </LineString>\
         </Placemark>';
 
@@ -2355,6 +2362,8 @@ defineSuite([
         var entity = entities[0];
         expect(entity.polyline).toBeUndefined(true);
         expect(entity.wall).toBeDefined();
+        var positions = entity.wall.positions.getValue(Iso8601.MINIMUM_VALUE);
+        expect(positions).toEqualEpsilon([Cartesian3.fromDegrees(1, 2, 3), Cartesian3.fromDegrees(4, 5, 6)], CesiumMath.EPSILON10);
     });
 
     it('Geometry LineString: sets positions altitudeMode relativeToGround, can extrude, cannot tessellate', function() {
@@ -2364,6 +2373,7 @@ defineSuite([
                 <altitudeMode>relativeToGround</altitudeMode>\
                 <extrude>1</extrude>\
                 <tessellate>1</tessellate>\
+                <coordinates>1,2,3 4,5,6</coordinates>\
             </LineString>\
             </Placemark>';
 
@@ -2376,6 +2386,8 @@ defineSuite([
         var entity = entities[0];
         expect(entity.polyline).toBeUndefined();
         expect(entity.wall).toBeDefined();
+        var positions = entity.wall.positions.getValue(Iso8601.MINIMUM_VALUE);
+        expect(positions).toEqualEpsilon([Cartesian3.fromDegrees(1, 2, 3), Cartesian3.fromDegrees(4, 5, 6)], CesiumMath.EPSILON10);
     });
 
     it('Geometry LineString: sets positions altitudeMode absolute, can extrude, cannot tessellate', function() {
@@ -2385,6 +2397,7 @@ defineSuite([
                 <altitudeMode>absolute</altitudeMode>\
                 <extrude>1</extrude>\
                 <tessellate>1</tessellate>\
+                <coordinates>1,2,3 4,5,6</coordinates>\
             </LineString>\
             </Placemark>';
 
@@ -2397,6 +2410,8 @@ defineSuite([
         var entity = entities[0];
         expect(entity.polyline).toBeUndefined();
         expect(entity.wall).toBeDefined();
+        var positions = entity.wall.positions.getValue(Iso8601.MINIMUM_VALUE);
+        expect(positions).toEqualEpsilon([Cartesian3.fromDegrees(1, 2, 3), Cartesian3.fromDegrees(4, 5, 6)], CesiumMath.EPSILON10);
     });
 
     it('Geometry gx:Track: sets position and availability (clampToGround default)', function() {

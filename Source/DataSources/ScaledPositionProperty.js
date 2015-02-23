@@ -23,7 +23,7 @@ define([
      * A {@link PositionProperty} whose value does not change in respect to the
      * {@link ReferenceFrame} in which is it defined.
      *
-     * @alias SurfacePositionProperty
+     * @alias ScaledPositionProperty
      * @constructor
      *
      * @param {PositionProperty} [value] The property value.
@@ -31,19 +31,18 @@ define([
      *
      * @private
      */
-    var SurfacePositionProperty = function(value, ellipsoid) {
+    var ScaledPositionProperty = function(value) {
         this._definitionChanged = new Event();
         this._value = undefined;
-        this._ellipsoid = undefined;
         this._removeSubscription = undefined;
-        this.setValue(value, ellipsoid);
+        this.setValue(value);
     };
 
-    defineProperties(SurfacePositionProperty.prototype, {
+    defineProperties(ScaledPositionProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.
-         * @memberof SurfacePositionProperty.prototype
+         * @memberof ScaledPositionProperty.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -57,7 +56,7 @@ define([
          * Gets the event that is raised whenever the definition of this property changes.
          * The definition is considered to have changed if a call to getValue would return
          * a different result for the same time.
-         * @memberof SurfacePositionProperty.prototype
+         * @memberof ScaledPositionProperty.prototype
          *
          * @type {Event}
          * @readonly
@@ -69,7 +68,7 @@ define([
         },
         /**
          * Gets the reference frame in which the position is defined.
-         * @memberof SurfacePositionProperty.prototype
+         * @memberof ScaledPositionProperty.prototype
          * @type {ReferenceFrame}
          * @default ReferenceFrame.FIXED;
          */
@@ -87,7 +86,7 @@ define([
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
      */
-    SurfacePositionProperty.prototype.getValue = function(time, result) {
+    ScaledPositionProperty.prototype.getValue = function(time, result) {
         return this.getValueInReferenceFrame(time, ReferenceFrame.FIXED, result);
     };
 
@@ -97,22 +96,15 @@ define([
      * @param {PositionProperty} [value] The property value.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid onto which the position will be projected.
      */
-    SurfacePositionProperty.prototype.setValue = function(value, ellipsoid) {
-        var changed = false;
+    ScaledPositionProperty.prototype.setValue = function(value) {
         if (this._value !== value) {
             this._value = value;
-            changed = true;
-        }
-        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        if (this._ellipsoid !== ellipsoid) {
-            this._ellipsoid = ellipsoid;
-            changed = true;
-        }
-        if (changed) {
+
             if (defined(this._removeSubscription)) {
                 this._removeSubscription();
                 this._removeSubscription = undefined;
             }
+
             if (defined(value)) {
                 this._removeSubscription = value.definitionChanged.addEventListener(this._raiseDefinitionChanged, this);
             }
@@ -128,7 +120,7 @@ define([
      * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
      */
-    SurfacePositionProperty.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
+    ScaledPositionProperty.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
@@ -143,7 +135,7 @@ define([
         }
 
         result = this._value.getValueInReferenceFrame(time, referenceFrame, result);
-        return defined(result) ? this._ellipsoid.scaleToGeodeticSurface(result, result) : undefined;
+        return defined(result) ? Ellipsoid.WGS84.scaleToGeodeticSurface(result, result) : undefined;
     };
 
     /**
@@ -153,16 +145,16 @@ define([
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
-    SurfacePositionProperty.prototype.equals = function(other) {
-        return this === other || (other instanceof SurfacePositionProperty && this._value === other._value);
+    ScaledPositionProperty.prototype.equals = function(other) {
+        return this === other || (other instanceof ScaledPositionProperty && this._value === other._value);
     };
 
     /**
      * @private
      */
-    SurfacePositionProperty.prototype._raiseDefinitionChanged = function() {
+    ScaledPositionProperty.prototype._raiseDefinitionChanged = function() {
         this._definitionChanged.raiseEvent(this);
     };
 
-    return SurfacePositionProperty;
+    return ScaledPositionProperty;
 });

@@ -47,7 +47,7 @@ define([
         './RectangleGraphics',
         './ReferenceProperty',
         './SampledPositionProperty',
-        './SurfacePositionProperty',
+        './ScaledPositionProperty',
         './TimeIntervalCollectionProperty',
         './WallGraphics'
     ], function(
@@ -98,7 +98,7 @@ define([
         RectangleGraphics,
         ReferenceProperty,
         SampledPositionProperty,
-        SurfacePositionProperty,
+        ScaledPositionProperty,
         TimeIntervalCollectionProperty,
         WallGraphics) {
     "use strict";
@@ -309,10 +309,14 @@ define([
         return result;
     }
 
+    var kmlNamespaces = [null, undefined, 'http://www.opengis.net/kml/2.2', 'http://earth.google.com/kml/2.2', 'http://earth.google.com/kml/2.1', 'http://earth.google.com/kml/2.0'];
+    var gxNamespaces = ['http://www.google.com/kml/ext/2.2'];
+    var atomNamespaces = ['http://www.w3.org/2005/Atom'];
     var namespaces = {
-        kml : [null, undefined, 'http://www.opengis.net/kml/2.2', 'http://earth.google.com/kml/2.2', 'http://earth.google.com/kml/2.1', 'http://earth.google.com/kml/2.0'],
-        gx : ['http://www.google.com/kml/ext/2.2'],
-        atom : ['http://www.w3.org/2005/Atom']
+        kml : kmlNamespaces,
+        gx : gxNamespaces,
+        atom : atomNamespaces,
+        kmlgx : kmlNamespaces.concat(gxNamespaces)
     };
 
     function queryNumericAttribute(node, attributeName) {
@@ -462,16 +466,16 @@ define([
     }
 
     function processTimeSpan(featureNode) {
-        var node = queryFirstNode(featureNode, 'TimeSpan', namespaces.kml);
+        var node = queryFirstNode(featureNode, 'TimeSpan', namespaces.kmlgx);
         if (!defined(node)) {
             return undefined;
         }
         var result;
 
-        var beginNode = queryFirstNode(node, 'begin', namespaces.kml);
+        var beginNode = queryFirstNode(node, 'begin', namespaces.kmlgx);
         var beginDate = defined(beginNode) ? JulianDate.fromIso8601(beginNode.textContent) : undefined;
 
-        var endNode = queryFirstNode(node, 'end', namespaces.kml);
+        var endNode = queryFirstNode(node, 'end', namespaces.kmlgx);
         var endDate = defined(endNode) ? JulianDate.fromIso8601(endNode.textContent) : undefined;
 
         if (defined(beginDate) && defined(endDate)) {
@@ -781,26 +785,24 @@ define([
 
     function createDropLine(dataSource, entity, styleEntity) {
         var entityPosition = new ReferenceProperty(dataSource._entityCollection, entity.id, ['position']);
-        var surfacePosition = new SurfacePositionProperty(entity.position, Ellipsoid.WGS84);
+        var surfacePosition = new ScaledPositionProperty(entity.position);
         entity.polyline = defined(styleEntity.polyline) ? styleEntity.polyline.clone() : new PolylineGraphics();
         entity.polyline.positions = new PositionPropertyArray([entityPosition, surfacePosition]);
     }
 
     function createPositionPropertyFromAltitudeMode(property, altitudeMode, gxAltitudeMode) {
-        if (gxAltitudeMode === 'relativeToSeaFloor') {
-
-        } else if (gxAltitudeMode === 'clampToSeaFloor') {
-            property = new SurfacePositionProperty(property, Ellipsoid.WGS84);
-        } else if (!defined(altitudeMode) || altitudeMode === 'clampToGround') {
-            property = new SurfacePositionProperty(property, Ellipsoid.WGS84);
-        } else if (altitudeMode === 'absolute') {
-
-        } else if (altitudeMode === 'relativeToGround') {
-
-        } else {
-            window.console.log('KML - Unknown altitudeMode: ' + altitudeMode);
+        if (gxAltitudeMode === 'relativeToSeaFloor' || altitudeMode === 'absolute' || altitudeMode === 'relativeToGround') {
+            //Just return the ellipsoid referenced property until we support MSL and terrain
+            return property;
         }
-        return property;
+
+        if ((defined(altitudeMode) && altitudeMode !== 'clampToGround') || //
+           (defined(gxAltitudeMode) && gxAltitudeMode !== 'clampToSeaFloor')) {
+            window.console.log('KML - Unknown altitudeMode: ' + defaultValue(altitudeMode, gxAltitudeMode));
+        }
+
+        //Clamp to ellipsoid until we support terrain
+        return new ScaledPositionProperty(property);
     }
 
     function createPositionPropertyArrayFromAltitudeMode(properties, altitudeMode, gxAltitudeMode) {
@@ -808,31 +810,22 @@ define([
             return undefined;
         }
 
-        var i;
-        var resultArray;
-        var propertiesLength = properties.length;
-
-        if (gxAltitudeMode === 'relativeToSeaFloor') {
+        if (gxAltitudeMode === 'relativeToSeaFloor' || altitudeMode === 'absolute' || altitudeMode === 'relativeToGround') {
+            //Just return the ellipsoid referenced property until we support MSL and terrain
             return properties;
-        } else if (gxAltitudeMode === 'clampToSeaFloor') {
-            resultArray = new Array(propertiesLength);
-            for (i = 0; i < propertiesLength; i++) {
-                resultArray[i] = new SurfacePositionProperty(new ConstantPositionProperty(properties[i]), Ellipsoid.WGS84);
-            }
-            return new PositionPropertyArray(resultArray);
-        } else if (altitudeMode === 'absolute') {
-            return properties;
-        } else if (altitudeMode === 'relativeToGround') {
-            return properties;
-        } else if (!defined(altitudeMode) || altitudeMode === 'clampToGround') {
-            resultArray = new Array(propertiesLength);
-            for (i = 0; i < propertiesLength; i++) {
-                resultArray[i] = new SurfacePositionProperty(new ConstantPositionProperty(properties[i]), Ellipsoid.WGS84);
-            }
-            return new PositionPropertyArray(resultArray);
         }
 
-        window.console.log('KML - Unknown altitudeMode: ' + altitudeMode);
+        if ((defined(altitudeMode) && altitudeMode !== 'clampToGround') || //
+            (defined(gxAltitudeMode) && gxAltitudeMode !== 'clampToSeaFloor')) {
+            window.console.log('KML - Unknown altitudeMode: ' + defaultValue(altitudeMode, gxAltitudeMode));
+        }
+
+        //Clamp to ellipsoid until we support terrain.
+        var propertiesLength = properties.length;
+        for (var i = 0; i < propertiesLength; i++) {
+            var property = properties[i];
+            Ellipsoid.WGS84.scaleToGeodeticSurface(property, property);
+        }
         return properties;
     }
 
@@ -860,7 +853,6 @@ define([
         if (!defined(path)) {
             path = new PathGraphics();
             path.leadTime = 0;
-            path.duration = Number.MAX_VALUE;
             entity.path = path;
         }
 
@@ -1403,10 +1395,10 @@ define([
         var altitude;
         if (defined(altitudeMode)) {
             if (altitudeMode === 'absolute') {
-                //TODO absolute means relative to sea level, not the ellipsoid.
+                //Use height above ellipsoid until we support MSL.
                 geometry.height = queryNumericValue(groundOverlay, 'altitude', namespaces.kml);
             } else if (altitudeMode === 'clampToGround') {
-                //TODO polygons on terrain
+                //Just use the default of 0 until we support terrain
             } else {
                 window.console.log('KML - Unknown altitudeMode: ' + altitudeMode);
             }
