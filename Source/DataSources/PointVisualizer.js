@@ -132,8 +132,8 @@ define([
             var colorProperty = pointGraphics._color;
             var outlineColorProperty = pointGraphics._outlineColor;
 
-            var newColor = init || !Property.isConstant(colorProperty) ? Property.getValueOrDefault(colorProperty, time, defaultColor, color) : item.color;
-            var newOutlineColor = init || !Property.isConstant(outlineColorProperty) ? Property.getValueOrDefault(outlineColorProperty, time, defaultOutlineColor, outlineColor) : item.outlineColor;
+            var newColor = Property.getValueOrDefault(colorProperty, time, defaultColor, color);
+            var newOutlineColor = Property.getValueOrDefault(outlineColorProperty, time, defaultOutlineColor, outlineColor);
             var newOutlineWidth = Math.round(Property.getValueOrDefault(pointGraphics._outlineWidth, time, defaultOutlineWidth));
             var newPixelSize = Math.max(1, Math.round(Property.getValueOrDefault(pointGraphics._pixelSize, time, defaultPixelSize)));
 
