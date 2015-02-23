@@ -28,16 +28,15 @@
 function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
-var gallery = '../../SampleData/';
 
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 Sandcastle.addDefaultToolbarButton('Facilities', function() {
-    viewer.dataSources.add(Cesium.KmlDataSource.fromUrl(gallery + 'facilities.kmz', new Cesium.DefaultProxy('/proxy/')));
+    viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/facilities.kmz'));
 });
 
 Sandcastle.addToolbarButton('US States', function() {
-    viewer.dataSources.add(Cesium.KmlDataSource.fromUrl(gallery + 'us_states.kml', new Cesium.DefaultProxy('/proxy/')));
+    viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/us_states.kml'));
 });
 
 Sandcastle.reset = function() {

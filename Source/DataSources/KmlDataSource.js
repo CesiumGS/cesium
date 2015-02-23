@@ -1429,7 +1429,7 @@ define([
             if (defined(linkUrl)) {
                 linkUrl = resolveHref(linkUrl, undefined, sourceUri, uriResolver);
                 var networkLinkSource = new KmlDataSource(dataSource._proxy);
-                var promise = when(networkLinkSource.loadUrl(linkUrl), function() {
+                var promise = when(networkLinkSource.load(linkUrl), function() {
                     var entities = networkLinkSource.entities.values;
                     for (var i = 0; i < entities.length; i++) {
                         dataSource._entityCollection.suspendEvents();
@@ -1568,7 +1568,7 @@ define([
      *
      * @example
      * var viewer = new Cesium.Viewer('cesiumContainer');
-     * viewer.dataSources.add(Cesium.KmlDataSource.fromUrl('../../SampleData/facilities.kmz');
+     * viewer.dataSources.add(new Cesium.KmlDataSource({ data : '../../SampleData/facilities.kmz' });
      */
     var KmlDataSource = function(proxy) {
         this._changed = new Event();
@@ -1584,16 +1584,18 @@ define([
     };
 
     /**
-     * Creates a new instance and asynchronously loads the KML or KMZ file at the provided url.
-     * @param {string} url The url to be processed.
-     * @param {DefaultProxy} [proxy] A proxy to be used for loading external data.
+     * Asynchronously loads the provided KML data, replacing any existing data.
      *
-     * @returns {KmlDataSource} A new instance set to load the specified url.
+     * @param {String|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
+     * @param {Object} [options] An object with the following properties:
+     * @param {DefaultProxy} [options.proxy] A proxy to be used for loading external data.
+     * @param {Number} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
+     * @returns {Promise} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
      */
-    KmlDataSource.fromUrl = function(url, proxy) {
-        var result = new KmlDataSource(proxy);
-        result.loadUrl(url);
-        return result;
+    KmlDataSource.load = function(data, options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var dataSource = new KmlDataSource(options.proxy);
+        return dataSource.load(data, options);
     };
 
     defineProperties(KmlDataSource.prototype, {
@@ -1672,68 +1674,51 @@ define([
     });
 
     /**
-     * Asynchronously loads the provided KML document or binary KMZ blob, replacing any existing data.
+     * Asynchronously loads the provided KML data, replacing any existing data.
      *
-     * @param {Document|Blob} documentOrBlob A parsed KML document or binary KMZ blob to be processed.
-     * @param {string} [sourceUri] The url of the document which is used for resolving relative links and other KML features.
-     * @returns {Promise} A promise that will resolve when the KML is loaded.
+     * @param {String|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
+     * @param {Object} [options] An object with the following properties:
+     * @param {Number} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
+     * @returns {Promise} A promise that will resolve to this instances once the KML is loaded.
      */
-    KmlDataSource.prototype.load = function(documentOrBlob, sourceUri) {
+    KmlDataSource.prototype.load = function(data, options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(documentOrBlob)) {
-            throw new DeveloperError('documentOrBlob is required.');
-        }
-        //>>includeEnd('debug');
-
-        var that = this;
-        DataSource.setLoading(this, true);
-
-        var promise;
-        if (documentOrBlob instanceof Blob) {
-            promise = isZipFile(documentOrBlob).then(function(isZip) {
-                return isZip ? loadKmz(that, documentOrBlob, sourceUri) : when.reject(new RuntimeError('Blob is not a valid zip file.'));
-            });
-        } else {
-            promise = when(loadKml(this, documentOrBlob, sourceUri, undefined));
-        }
-
-        return promise.otherwise(function(error) {
-            DataSource.setLoading(that, false);
-            that._error.raiseEvent(that, error);
-            return when.reject(error);
-        });
-    };
-
-    /**
-     * Asynchronously loads the KML or KMZ data at the provided url, replacing any existing data.
-     *
-     * @param {String} url The url to be processed.
-     * @returns {Promise} A promise that will resolve when the KMZ is processed.
-     */
-    KmlDataSource.prototype.loadUrl = function(url) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(url)) {
-            throw new DeveloperError('url is required.');
+        if (!defined(data)) {
+            throw new DeveloperError('data is required.');
         }
         //>>includeEnd('debug');
 
         DataSource.setLoading(this, true);
+
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var sourceUri = options.sourceUri;
+
+        var promise = data;
+        if (typeof data === 'string') {
+            promise = loadBlob(proxyUrl(data, this._proxy));
+            sourceUri = defaultValue(sourceUri, data);
+        }
+
         var that = this;
-        return when(loadBlob(proxyUrl(url, this._proxy))).then(function(blob) {
-            return isZipFile(blob).then(function(isZip) {
-                if (isZip) {
-                    return loadKmz(that, blob, url);
-                }
-                return when(readBlobAsText(blob)).then(function(text) {
-                    var kml = parser.parseFromString(text, 'application/xml');
-                    //There's no official way to validate if the parse was successful.
-                    //The following if check seems to detect the error on all supported browsers.
-                    if ((defined(kml.body) && kml.body !== null) || kml.documentElement.tagName === 'parsererror') {
-                        throw new RuntimeError(kml.body.innerText);
+        return when(promise, function(dataToLoad) {
+            if (dataToLoad instanceof Blob) {
+                return isZipFile(dataToLoad).then(function(isZip) {
+                    if (isZip) {
+                        return loadKmz(that, dataToLoad, sourceUri);
                     }
-                    return loadKml(that, kml, url, undefined);
+                    return when(readBlobAsText(dataToLoad)).then(function(text) {
+                        var kml = parser.parseFromString(text, 'application/xml');
+                        //There's no official way to validate if the parse was successful.
+                        //The following if check seems to detect the error on all supported browsers.
+                        if ((defined(kml.body) && kml.body !== null) || kml.documentElement.tagName === 'parsererror') {
+                            throw new RuntimeError(kml.body.innerText);
+                        }
+                        return loadKml(that, kml, sourceUri, undefined);
+                    });
                 });
-            });
+            } else {
+                return when(loadKml(that, dataToLoad, sourceUri, undefined));
+            }
         }).otherwise(function(error) {
             DataSource.setLoading(that, false);
             that._error.raiseEvent(that, error);

@@ -140,52 +140,39 @@ defineSuite([
         }));
     });
 
-    it('loadUrl works with a KML file', function() {
+    it('load works with a KML URL', function() {
         var dataSource = new KmlDataSource();
-        waitsForPromise(dataSource.loadUrl('Data/KML/simple.kml'), function(source) {
+        waitsForPromise(dataSource.load('Data/KML/simple.kml'), function(source) {
             expect(source).toBe(dataSource);
             expect(source.entities.values.length).toEqual(1);
         });
     });
 
-    it('loadUrl works with a KMZ file', function() {
+    it('load works with a KMZ URL', function() {
         var dataSource = new KmlDataSource();
-        waitsForPromise(dataSource.loadUrl('Data/KML/simple.kmz'), function(source) {
+        waitsForPromise(dataSource.load('Data/KML/simple.kmz'), function(source) {
             expect(source).toBe(dataSource);
             expect(source.entities.values.length).toEqual(1);
         });
     });
 
-    it('loadUrl throws with undefined Url', function() {
+    it('load rejects nonexistent URL', function() {
         var dataSource = new KmlDataSource();
-        expect(function() {
-            dataSource.loadUrl(undefined);
-        }).toThrowDeveloperError();
+        waitsForPromise.toReject(dataSource.load('test.invalid'));
     });
 
-    it('loadUrl rejects loading nonexistent file', function() {
+    it('load rejects loading non-KML URL', function() {
         var dataSource = new KmlDataSource();
-        waitsForPromise.toReject(dataSource.loadUrl('test.invalid'));
+        waitsForPromise.toReject(dataSource.load('Data/Images/Blue.png'));
     });
 
-    it('loadUrl rejects loading non-KML file', function() {
+    it('load rejects valid KMZ zip URL with no KML contained', function() {
         var dataSource = new KmlDataSource();
-        waitsForPromise.toReject(dataSource.loadUrl('Data/Images/Blue.png'));
+        waitsForPromise.toReject(dataSource.load('Data/KML/empty.kmz'));
     });
 
-    it('loadUrl rejects KMZ file with no KML contained', function() {
-        var dataSource = new KmlDataSource();
-        waitsForPromise.toReject(dataSource.loadUrl('Data/KML/empty.kmz'));
-    });
-
-    it('fromUrl works', function() {
-        var dataSource = KmlDataSource.fromUrl('Data/KML/simple.kml');
-
-        waitsFor(function() {
-            return !dataSource.isLoading;
-        });
-
-        runs(function() {
+    it('KmlDataSource.load works', function() {
+        waitsForPromise(KmlDataSource.load('Data/KML/simple.kml'), function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
         });
     });
@@ -197,8 +184,9 @@ defineSuite([
             </Document>';
 
         var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(kml, "text/xml"), 'NameFromUri.kml');
-        expect(dataSource.name).toEqual('NameInKml');
+        waitsForPromise(dataSource.load(parser.parseFromString(kml, "text/xml"), 'NameFromUri.kml').then(function() {
+            expect(dataSource.name).toEqual('NameInKml');
+        }));
     });
 
     it('sets DataSource name from Document with KML element', function() {
@@ -220,7 +208,9 @@ defineSuite([
             </Document>';
 
         var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(kml, "text/xml"), 'NameFromUri.kml');
+        dataSource.load(parser.parseFromString(kml, "text/xml"), {
+            sourceUri : 'NameFromUri.kml'
+        });
         expect(dataSource.name).toEqual('NameFromUri.kml');
     });
 
@@ -260,7 +250,7 @@ defineSuite([
         var spy = jasmine.createSpy('loadingEvent');
         dataSource.loadingEvent.addEventListener(spy);
 
-        var promise = dataSource.loadUrl('Data/KML/simple.kml');
+        var promise = dataSource.load('Data/KML/simple.kml');
         expect(spy).toHaveBeenCalledWith(dataSource, true);
         spy.reset();
 
@@ -1258,7 +1248,9 @@ defineSuite([
           </Placemark>';
 
         var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(kml, "text/xml"), 'http://test.invalid');
+        dataSource.load(parser.parseFromString(kml, "text/xml"), {
+            sourceUri : 'http://test.invalid'
+        });
 
         var entities = dataSource.entities.values;
         var billboard = entities[0].billboard;
@@ -1267,7 +1259,7 @@ defineSuite([
 
     it('IconStyle: Sets billboard image inside KMZ', function() {
         var dataSource = new KmlDataSource();
-        waitsForPromise(dataSource.loadUrl('Data/KML/simple.kmz'), function(source) {
+        waitsForPromise(dataSource.load('Data/KML/simple.kmz'), function(source) {
             var entities = dataSource.entities.values;
             var billboard = entities[0].billboard;
             expect(billboard.image.getValue()).toEqual(image);
@@ -1288,7 +1280,9 @@ defineSuite([
 
         var proxy = new DefaultProxy('/proxy/');
         var dataSource = new KmlDataSource(proxy);
-        dataSource.load(parser.parseFromString(kml, "text/xml"), 'http://test.invalid');
+        dataSource.load(parser.parseFromString(kml, "text/xml"), {
+            sourceUri : 'http://test.invalid'
+        });
 
         var entities = dataSource.entities.values;
         var billboard = entities[0].billboard;
@@ -1608,7 +1602,7 @@ defineSuite([
 
     it('BalloonStyle: description is rewritten for embedded kmz links and images', function() {
         var dataSource = new KmlDataSource();
-        waitsForPromise(dataSource.loadUrl('Data/KML/simple.kmz'), function(source) {
+        waitsForPromise(dataSource.load('Data/KML/simple.kmz'), function(source) {
             expect(source).toBe(dataSource);
             var entity = source.entities.values[0];
             var description = entity.description.getValue();
@@ -2742,7 +2736,7 @@ defineSuite([
     it('NetworkLink: Loads data', function() {
         var dataSource = new KmlDataSource();
 
-        waitsForPromise(dataSource.loadUrl('Data/KML/networkLink.kml').then(function() {
+        waitsForPromise(dataSource.load('Data/KML/networkLink.kml').then(function() {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(2);
             expect(entities[0].id).toEqual('link');
