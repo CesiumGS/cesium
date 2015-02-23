@@ -339,6 +339,8 @@
          */
         var modules = ['Specs/addDefaultMatchers', 'Specs/equalsMethodEqualityTester'].concat(specs);
         require(modules, function(addDefaultMatchers, equalsMethodEqualityTester) {
+            jasmine.DEFAULT_TIMEOUT_INTERVAL = 6000;
+
             htmlReporter.initialize();
 
             var release = getQueryParameter('release');
