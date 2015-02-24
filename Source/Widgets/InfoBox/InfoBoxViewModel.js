@@ -3,6 +3,7 @@ define([
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
+        '../../Core/deprecationWarning',
         '../../Core/Event',
         '../../Core/formatError',
         '../../ThirdParty/knockout',
@@ -11,6 +12,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         Event,
         formatError,
         knockout,
@@ -28,8 +30,8 @@ define([
      */
     var InfoBoxViewModel = function() {
         this._preprocessor = undefined;
-        this._descriptionRawHtml = '';
-        this._descriptionProcessedHtml = '';
+        this._description = '';
+        this._processedDescription = '';
         this._cameraClicked = new Event();
         this._closeClicked = new Event();
 
@@ -69,37 +71,48 @@ define([
          */
         this.loadingIndicatorHtml = '<div class="cesium-infoBox-loadingContainer"><span class="cesium-infoBox-loading"></span></div>';
 
-        knockout.track(this, ['showInfo', 'titleText', '_descriptionRawHtml', '_descriptionProcessedHtml', 'maxHeight', 'enableCamera', 'isCameraTracking']);
+        knockout.track(this, ['showInfo', 'titleText', '_description', '_processedDescription', 'maxHeight', 'enableCamera', 'isCameraTracking']);
 
         /**
          * Gets or sets the unprocessed description HTML for the info box.
          * @type {String}
          */
-        this.descriptionRawHtml = undefined;
-        knockout.defineProperty(this, 'descriptionRawHtml', {
+        this.description = undefined;
+        knockout.defineProperty(this, 'description', {
             get : function() {
-                return this._descriptionRawHtml;
+                return this._description;
             },
             set : function(value) {
-                if (this._descriptionRawHtml !== value) {
-                    this._descriptionRawHtml = value;
+                if (this._description !== value) {
+                    this._description = value;
                     var that = this;
                     if (defined(this.preprocessor)) {
-                        this._descriptionProcessedHtml = this.loadingIndicatorHtml;
+                        this._processedDescription = this.loadingIndicatorHtml;
                         when(this.preprocessor(value), function(processed) {
                             // make sure the raw HTML still matches the input we processed,
                             // in case it was changed again while we were processing.
-                            if (that._descriptionRawHtml === value) {
-                                that._descriptionProcessedHtml = processed;
+                            if (that._description === value) {
+                                that._processedDescription = processed;
                             }
                         }).otherwise(function(error) {
                             /*global console*/
                             console.log('An error occurred while processed the description: ' + formatError(error));
                         });
                     } else {
-                        that._descriptionProcessedHtml = value;
+                        that._processedDescription = value;
                     }
                 }
+            }
+        });
+
+        knockout.defineProperty(this, 'descriptionRawHtml', {
+            get : function() {
+                deprecationWarning('InfoBoxViewModel.descriptionRawHtml', 'InfoBoxViewModel.descriptionRawHtml has been deprecated.  Use InfoBoxViewModel.description instead.');
+                return this.description;
+            },
+            set : function(value) {
+                deprecationWarning('InfoBoxViewModel.descriptionRawHtml', 'InfoBoxViewModel.descriptionRawHtml has been deprecated.  Use InfoBoxViewModel.description instead.');
+                this.description = value;
             }
         });
 
@@ -107,10 +120,10 @@ define([
          * Gets the processed description HTML for the info box.
          * @type {String}
          */
-        this.descriptionProcessedHtml = undefined;
-        knockout.defineProperty(this, 'descriptionProcessedHtml', {
+        this.processedDescription = undefined;
+        knockout.defineProperty(this, 'processedDescription', {
             get : function() {
-                return this._descriptionProcessedHtml;
+                return this._processedDescription;
             }
         });
 
@@ -127,7 +140,7 @@ define([
 
         knockout.defineProperty(this, '_bodyless', {
             get : function() {
-                return !this._descriptionProcessedHtml;
+                return !this._processedDescription;
             }
         });
     };
@@ -143,28 +156,11 @@ define([
 
     defineProperties(InfoBoxViewModel, {
         /**
-         * Gets or sets the default HTML sanitization function to use for all instances.
-         * A specific instance can override this property by setting its sanitizer property.
-         *
-         * @member
-         * @type {InfoBoxViewModel~Preprocessor}
-         * @deprecated
-         */
-        defaultSanitizer : {
-            get : function() {
-                return InfoBoxViewModel.defaultPreprocessor;
-            },
-            set : function(value) {
-                InfoBoxViewModel.defaultPreprocessor = value;
-            }
-        },
-        /**
          * Gets or sets the default HTML preprocessor function to use for all instances.
          * By default, no preprocessing is done.
          *
-         * @member
+         * @member InfoBoxViewModel
          * @type {InfoBoxViewModel~Preprocessor}
-         * @deprecated
          */
         defaultPreprocessor : {
             get : function() {
@@ -172,6 +168,16 @@ define([
             },
             set : function(value) {
                 defaultPreprocessor = value;
+            }
+        },
+        defaultSanitizer : {
+            get : function() {
+                deprecationWarning('InfoBoxViewModel.defaultSanitizer', 'InfoBoxViewModel.defaultSanitizer has been deprecated.  Use InfoBoxViewModel.defaultPreprocessor instead.');
+                return InfoBoxViewModel.defaultPreprocessor;
+            },
+            set : function(value) {
+                deprecationWarning('InfoBoxViewModel.defaultSanitizer', 'InfoBoxViewModel.defaultSanitizer has been deprecated.  Use InfoBoxViewModel.defaultPreprocessor instead.');
+                InfoBoxViewModel.defaultPreprocessor = value;
             }
         }
     });
@@ -198,20 +204,6 @@ define([
             }
         },
         /**
-         * Gets the HTML sanitization function to use for the selection description.
-         * @memberof InfoBoxViewModel.prototype
-         * @type {InfoBoxViewModel~Preprocessor}
-         * @deprecated
-         */
-        sanitizer : {
-            get : function() {
-                return defaultValue(this._preprocessor, InfoBoxViewModel.defaultPreprocessor);
-            },
-            set : function(value) {
-                this._preprocessor = value;
-            }
-        },
-        /**
          * Gets the preprocessor function to use for the selection description.
          * @memberof InfoBoxViewModel.prototype
          * @type {InfoBoxViewModel~Preprocessor}
@@ -223,19 +215,29 @@ define([
             set : function(value) {
                 this._preprocessor = value;
                 //Force reprocessing of existing text
-                var oldHtml = this._descriptionRawHtml;
-                this._descriptionRawHtml = '';
-                this.descriptionRawHtml = oldHtml;
+                var oldHtml = this._description;
+                this._description = '';
+                this.description = oldHtml;
+            }
+        },
+        sanitizer : {
+            get : function() {
+                deprecationWarning('InfoBoxViewModel.sanitizer', 'InfoBoxViewModel.sanitizer has been deprecated.  Use InfoBoxViewModel.preprocessor instead.');
+                return defaultValue(this.preprocessor, InfoBoxViewModel.defaultPreprocessor);
+            },
+            set : function(value) {
+                deprecationWarning('InfoBoxViewModel.sanitizer', 'InfoBoxViewModel.sanitizer has been deprecated.  Use InfoBoxViewModel.preprocessor instead.');
+                this.preprocessor = value;
             }
         }
     });
 
     /**
-     * A function that preprocesses HTML for display in the info box.
+     * A function that preprocesses data for display in the info box.
      * @callback InfoBoxViewModel~Preprocessor
      *
-     * @param {String} rawHTML Raw string to display.
-     * @returns {String|Promise} Processed HTML, or a Promise for HTML.
+     * @param {String} value Unprocessed string to display.
+     * @returns {String|Promise} Processed HTML, or a Promise for the processed HTML.
      *
      * @see InfoBoxViewModel.defaultPreprocessor
      */

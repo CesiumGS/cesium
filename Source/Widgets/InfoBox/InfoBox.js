@@ -75,7 +75,7 @@ click: function () { closeClicked.raiseEvent(this); }');
         var descriptionElement = document.createElement('div');
         descriptionElement.className = 'cesium-infoBox-description';
         descriptionElement.setAttribute('data-bind', '\
-html: descriptionProcessedHtml,\
+html: processedDescription,\
 style : { maxHeight : maxHeightOffset(40) }');
         infoBodyElement.appendChild(descriptionElement);
 

@@ -1322,9 +1322,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             infoBoxViewModel.isCameraTracking = (this.trackedEntity === this.selectedEntity);
 
             if (showSelection && defined(selectedEntity.description)) {
-                infoBoxViewModel.descriptionRawHtml = defaultValue(selectedEntity.description.getValue(time), '');
+                infoBoxViewModel.description = defaultValue(selectedEntity.description.getValue(time), '');
             } else {
-                infoBoxViewModel.descriptionRawHtml = '';
+                infoBoxViewModel.description = '';
             }
         }
     };
