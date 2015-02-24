@@ -74,7 +74,7 @@ define([
      * @param {DataSource|Promise} dataSource A data source or a promise to a data source to add to the collection.
      *                                        When passing a promise, the data source will not actually be added
      *                                        to the collection until the promise resolves successfully.
-     * @returns {DataSource|Promise} The input argument for promise chaining.
+     * @returns {Promise} A Promise that resolves once the data source has been added to the collection.
      */
     DataSourceCollection.prototype.add = function(dataSource) {
         //>>includeStart('debug', pragmas.debug);
