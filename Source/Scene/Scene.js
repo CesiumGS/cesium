@@ -238,6 +238,7 @@ define([
 
         this._clearColorCommand = new ClearCommand({
             color : new Color(),
+            stencil : 0.0,
             owner : this
         });
         this._depthClearCommand = new ClearCommand({

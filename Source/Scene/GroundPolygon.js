@@ -514,7 +514,7 @@ define([
     }
 
     GroundPolygon.prototype.update = function(context, frameState, commandList) {
-        // TODO: determin if supported
+        // TODO: determine if supported
         if (!defined(context.uniformState.globeDepthTexture)) {
             return;
         }
@@ -561,8 +561,6 @@ define([
 
             this._stencilPassCommand = new DrawCommand({
                 primitiveType : PrimitiveType.TRIANGLES,
-                //offset : this._topCapOffset,
-                //count : this._topCapCount + this._wallCount,
                 vertexArray : this._va,
                 renderState : stencilPassRenderState,
                 shaderProgram : this._sp,
@@ -596,7 +594,7 @@ define([
                     face : CullFace.BACK
                 },
                 depthTest : {
-                    enabled : false
+                    enabled : true
                 },
                 depthMask : false,
                 blending : BlendingState.ALPHA_BLEND
@@ -604,8 +602,6 @@ define([
 
             this._colorPassCommand = new DrawCommand({
                 primitiveType : PrimitiveType.TRIANGLES,
-                //offset : this._topCapOffset,
-                //count : this._topCapCount + this._wallCount,
                 vertexArray : this._va,
                 renderState : coloRenderState,
                 shaderProgram : this._sp,
