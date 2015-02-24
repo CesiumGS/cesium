@@ -347,7 +347,7 @@ define([
         case VerticalOrigin:
             return VerticalOrigin[defaultValue(czmlInterval.verticalOrigin, czmlInterval)];
         default:
-            throw new DeveloperError(type);
+            throw new RuntimeError(type);
         }
     }
 
