@@ -1,10 +1,8 @@
 /*global defineSuite*/
 defineSuite([
-        'Widgets/InfoBox/InfoBoxViewModel',
-        'Core/sanitizeHtml'
+        'Widgets/InfoBox/InfoBoxViewModel'
     ], function(
-        InfoBoxViewModel,
-        sanitizeHtml) {
+        InfoBoxViewModel) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -31,7 +29,6 @@ defineSuite([
     it('removes script tags from HTML description when used with sanitizeHtml', function() {
         var evilString = 'Testing. <script>console.error("Scripts are disallowed by default.");</script>';
         var viewModel = new InfoBoxViewModel();
-        viewModel.preprocessor = sanitizeHtml;
         viewModel.description = evilString;
         waitsFor(function() {
             return viewModel.processedDescription !== viewModel.loadingIndicatorHtml;

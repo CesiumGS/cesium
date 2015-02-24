@@ -1,20 +1,24 @@
 /*global define*/
 define([
+        '../../Core/buildModuleUrl',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../ThirdParty/knockout',
         '../getElement',
-        './InfoBoxViewModel'
+        './InfoBoxViewModel',
+        '../subscribeAndEvaluate'
     ], function(
+        buildModuleUrl,
         defined,
         defineProperties,
         destroyObject,
         DeveloperError,
         knockout,
         getElement,
-        InfoBoxViewModel) {
+        InfoBoxViewModel,
+        subscribeAndEvaluate) {
     "use strict";
 
     /**
@@ -72,17 +76,41 @@ click: function () { closeClicked.raiseEvent(this); }');
         infoBodyElement.className = 'cesium-infoBox-body';
         infoElement.appendChild(infoBodyElement);
 
-        var descriptionElement = document.createElement('div');
-        descriptionElement.className = 'cesium-infoBox-description';
-        descriptionElement.setAttribute('data-bind', '\
-html: processedDescription,\
-style : { maxHeight : maxHeightOffset(40) }');
-        infoBodyElement.appendChild(descriptionElement);
+        var frame = document.createElement('iframe');
+        frame.className = 'cesium-infoBox-iframe';
+        frame.setAttribute('sandbox', 'allow-same-origin'); //allow-forms allow-popups allow-pointer-lock allow-scripts allow-popups
+        frame.setAttribute('data-bind', 'style : { maxHeight : maxHeightOffset(40) }');
+        infoBodyElement.appendChild(frame);
 
         var viewModel = new InfoBoxViewModel();
         this._viewModel = viewModel;
-
         knockout.applyBindings(this._viewModel, infoElement);
+
+        //CSS to be loaded into the description
+        var cssLink = document.createElement("link");
+        cssLink.href = buildModuleUrl('Widgets/InfoBox/InfoBoxDescription.css');
+        cssLink.rel = "stylesheet";
+        cssLink.type = "text/css";
+
+        //div to use for actual content.
+        var frameContent = document.createElement("div");
+        frameContent.className = 'cesium-infoBox-description';
+
+        //Add items to iframe
+        var frameDocument = frame.contentDocument;
+        frameDocument.head.appendChild(cssLink);
+        frameDocument.body.appendChild(frameContent);
+
+        subscribeAndEvaluate(viewModel, 'processedDescription', function(value) {
+            frameContent.innerHTML = value;
+            if (value === '') {
+                frame.style.display = 'none';
+            } else {
+                frame.style.display = 'block';
+                var rect = frameContent.getBoundingClientRect();
+                frame.style.height = rect.height + 'px';
+            }
+        });
     };
 
     defineProperties(InfoBox.prototype, {

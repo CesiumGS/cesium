@@ -95,9 +95,6 @@ button.cesium-infoBox-close:active {
 }
 
 .cesium-infoBox-body {
-    padding: 4px 10px;
-    margin-right: 4px;
-    overflow: auto;
 }
 
 .cesium-infoBox-bodyless .cesium-infoBox-body {
@@ -116,31 +113,7 @@ button.cesium-infoBox-close:active {
     height: 11px;
 }
 
-.cesium-infoBox-description {
-    font-size: 13px;
-}
-
-.cesium-infoBox-defaultTable {
+.cesium-infoBox-iframe {
+    border: none;
     width: 100%;
-}
-
-.cesium-infoBox-defaultTable tr:nth-child(odd) {
-    background-color: rgba(84, 84, 84, 0.8);
-}
-
-.cesium-infoBox-defaultTable tr:nth-child(even) {
-    background-color: rgba(84, 84, 84, 0.25);
-}
-
-.cesium-infoBox-defaultTable th {
-    font-weight: normal;
-    padding: 3px;
-    vertical-align: middle;
-    text-align: center;
-}
-
-.cesium-infoBox-defaultTable td {
-    padding: 3px;
-    vertical-align: middle;
-    text-align: left;
 }
