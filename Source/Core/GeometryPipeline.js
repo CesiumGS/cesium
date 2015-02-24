@@ -179,7 +179,7 @@ define([
      * @param {Geometry} geometry The <code>Geometry</code> instance with the attribute.
      * @param {String} [attributeName='normal'] The name of the attribute.
      * @param {Number} [length=10000.0] The length of each line segment in meters.  This can be negative to point the vector in the opposite direction.
-     * @returns {Geometry} A new <code>Geometry<code> instance with line segments for the vector.
+     * @returns {Geometry} A new <code>Geometry</code> instance with line segments for the vector.
      *
      * @exception {DeveloperError} geometry.attributes must have an attribute with the same name as the attributeName parameter.
      *

@@ -99,7 +99,7 @@ define([
             loadPromise = dataSource.loadUrl(source);
         } else if (/\.kml$/i.test(source) || /\.kmz$/i.test(source)) {
             dataSource = new KmlDataSource();
-            loadPromise = dataSource.loadUrl(source);
+            loadPromise = dataSource.load(source);
         } else {
             showLoadError(source, 'Unknown format.');
         }
