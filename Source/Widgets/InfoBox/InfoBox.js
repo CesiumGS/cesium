@@ -104,7 +104,10 @@ click: function () { closeClicked.raiseEvent(this); }');
             frameDocument.head.appendChild(cssLink);
             frameDocument.body.appendChild(frameContent);
 
-            //We manually subscribe to the
+            //We manually subscribe to the processedDescription event rather than through a binding for two reasons.
+            //1. It's an easy way to ensure order of operation so that we can adjust the height.
+            //2. Knockout does not bind to elements inside of an iFrame, so we would have two apply a second binding
+            //   model anyway.
             that._processedDescriptionSubscription = subscribeAndEvaluate(viewModel, 'processedDescription', function(value) {
                 // Set the frame to small height, force vertical scroll bar to appear, and text to wrap accordingly.
                 frame.style.height = '5px';
