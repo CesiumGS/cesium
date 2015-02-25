@@ -106,12 +106,11 @@ click: function () { closeClicked.raiseEvent(this); }');
 
             //We manually subscribe to the
             that._processedDescriptionSubscription = subscribeAndEvaluate(viewModel, 'processedDescription', function(value) {
+                // Set the frame to small height, force vertical scroll bar to appear, and text to wrap accordingly.
+                frame.style.height = '5px';
                 frameContent.innerHTML = value;
+                // Measure and set the new custom height, based on text wrapped above.
                 frame.style.height = frameContent.getBoundingClientRect().height + 'px';
-
-                //Chrome seems to get the height wrong above and requires us to meaure the body
-                //after setting the frame. Other browsers work without the below line.
-                frame.style.height = frameDocument.body.getBoundingClientRect().height + 'px';
             });
         });
 
