@@ -6,8 +6,8 @@ define([
         './createTaskProcessorWorker'
     ], function(
         defined,
-        RuntimeError,
         deprecationWarning,
+        RuntimeError,
         createTaskProcessorWorker) {
     "use strict";
 
@@ -24,7 +24,7 @@ define([
      * @see {@link http://www.w3.org/TR/workers/|Web Workers}
      */
     var sanitizeHtml = function(html) {
-        deprecationWarning('sanitize', 'sanitize has been deprecated and will be removed in Cesium 1.10.');
+        deprecationWarning('sanitize', 'The sanitize worker has been deprecated and will be removed in Cesium 1.10.');
 
         if (!defined(html_sanitize)) {
             /*global self,importScripts*/

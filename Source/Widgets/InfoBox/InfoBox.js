@@ -94,7 +94,7 @@ click: function () { closeClicked.raiseEvent(this); }');
         this._element = infoElement;
         this._frame = frame;
         this._viewModel = viewModel;
-        this._processedDescriptionSubscription = undefined;
+        this._descriptionSubscription = undefined;
 
         var that = this;
 
@@ -104,11 +104,11 @@ click: function () { closeClicked.raiseEvent(this); }');
             frameDocument.head.appendChild(cssLink);
             frameDocument.body.appendChild(frameContent);
 
-            //We manually subscribe to the processedDescription event rather than through a binding for two reasons.
+            //We manually subscribe to the description event rather than through a binding for two reasons.
             //1. It's an easy way to ensure order of operation so that we can adjust the height.
             //2. Knockout does not bind to elements inside of an iFrame, so we would have to apply a second binding
             //   model anyway.
-            that._processedDescriptionSubscription = subscribeAndEvaluate(viewModel, 'processedDescription', function(value) {
+            that._descriptionSubscription = subscribeAndEvaluate(viewModel, '_descriptionSanitizedHtml', function(value) {
                 // Set the frame to small height, force vertical scroll bar to appear, and text to wrap accordingly.
                 frame.style.height = '5px';
                 frameContent.innerHTML = value;
@@ -175,8 +175,8 @@ click: function () { closeClicked.raiseEvent(this); }');
         knockout.cleanNode(this._element);
         container.removeChild(this._element);
 
-        if (defined(this._processedDescriptionSubscription)) {
-            this._processedDescriptionSubscription.dispose();
+        if (defined(this._descriptionSubscription)) {
+            this._descriptionSubscription.dispose();
         }
 
         return destroyObject(this);
