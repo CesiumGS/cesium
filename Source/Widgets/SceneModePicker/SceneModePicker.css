@@ -34,6 +34,7 @@ span.cesium-sceneModePicker-wrapper {
 
 .cesium-sceneModePicker-wrapper .cesium-sceneModePicker-dropDown-icon {
     -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
     box-sizing: border-box;
     padding: 0;
     margin: 3px 0;
