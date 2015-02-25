@@ -40,3 +40,24 @@ body {
     vertical-align: middle;
     text-align: left;
 }
+
+.cesium-infoBox-description-lighter {
+    color: #000000;
+}
+
+.cesium-infoBox-description-lighter table {
+    color: #000000;
+}
+
+.cesium-infoBox-defaultTable-lighter {
+    width: 100%;
+    color: #000000;
+}
+
+.cesium-infoBox-defaultTable-lighter tr:nth-child(odd) {
+    background-color: rgba(84, 84, 84, 0.8);
+}
+
+.cesium-infoBox-defaultTable tr:nth-child(even) {
+    background-color: rgba(84, 84, 84, 0.25);
+}

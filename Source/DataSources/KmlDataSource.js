@@ -1165,7 +1165,7 @@ define([
         if (defined(text) || defined(extendedData)) {
             var value;
 
-            var tmp = '<div style="';
+            var tmp = '<div class="cesium-infoBox-description-lighter" style="';
             tmp += 'overflow:auto;';
             tmp += 'padding: 4px 5px;';
             tmp += 'word-wrap:break-word;';
