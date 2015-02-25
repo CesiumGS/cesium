@@ -97,10 +97,7 @@ button.cesium-infoBox-close:active {
     color: #000;
 }
 
-.cesium-infoBox-body {
-}
-
-.cesium-infoBox-bodyless .cesium-infoBox-body {
+.cesium-infoBox-bodyless {
     display: none;
 }
 
