@@ -78,8 +78,7 @@ click: function () { closeClicked.raiseEvent(this); }');
 
         var frame = document.createElement('iframe');
         frame.className = 'cesium-infoBox-iframe';
-        frame.setAttribute('sandbox', 'allow-same-origin'); //allow-forms allow-popups allow-pointer-lock allow-scripts allow-popups
-        frame.setAttribute('data-bind', 'style : { maxHeight : maxHeightOffset(40) }');
+        frame.setAttribute('data-bind', 'style : { maxHeight : maxHeightOffset(40) }, attr : { sandbox : sandbox }');
         infoBodyElement.appendChild(frame);
 
         var viewModel = new InfoBoxViewModel();
@@ -103,13 +102,8 @@ click: function () { closeClicked.raiseEvent(this); }');
 
         subscribeAndEvaluate(viewModel, 'processedDescription', function(value) {
             frameContent.innerHTML = value;
-            if (value === '') {
-                frame.style.display = 'none';
-            } else {
-                frame.style.display = 'block';
-                var rect = frameContent.getBoundingClientRect();
-                frame.style.height = rect.height + 'px';
-            }
+            var rect = frameContent.getBoundingClientRect();
+            frame.style.height = rect.height + 'px';
         });
     };
 

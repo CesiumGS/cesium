@@ -71,7 +71,13 @@ define([
          */
         this.loadingIndicatorHtml = '<div class="cesium-infoBox-loadingContainer"><span class="cesium-infoBox-loading"></span></div>';
 
-        knockout.track(this, ['showInfo', 'titleText', '_description', '_processedDescription', 'maxHeight', 'enableCamera', 'isCameraTracking']);
+        /**
+         * Gets or sets the description iframe {@link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe|sandbox attribute}.
+         * @type {String}
+         */
+        this.sandbox = 'allow-same-origin allow-popups allow-pointer-lock allow-forms'; //allow-scripts allow-top-navigation
+
+        knockout.track(this, ['showInfo', 'titleText', '_description', '_processedDescription', 'maxHeight', 'enableCamera', 'isCameraTracking', 'sandbox']);
 
         /**
          * Gets or sets the unprocessed description HTML for the info box.
@@ -105,17 +111,6 @@ define([
             }
         });
 
-        knockout.defineProperty(this, 'descriptionRawHtml', {
-            get : function() {
-                deprecationWarning('InfoBoxViewModel.descriptionRawHtml', 'InfoBoxViewModel.descriptionRawHtml has been deprecated.  Use InfoBoxViewModel.description instead.');
-                return this.description;
-            },
-            set : function(value) {
-                deprecationWarning('InfoBoxViewModel.descriptionRawHtml', 'InfoBoxViewModel.descriptionRawHtml has been deprecated.  Use InfoBoxViewModel.description instead.');
-                this.description = value;
-            }
-        });
-
         /**
          * Gets the processed description HTML for the info box.
          * @type {String}
@@ -140,7 +135,25 @@ define([
 
         knockout.defineProperty(this, '_bodyless', {
             get : function() {
-                return !this._processedDescription;
+                return !defined(this._processedDescription) || this._processedDescription.length === 0;
+            }
+        });
+
+        knockout.defineProperty(this, 'descriptionRawHtml', {
+            get : function() {
+                deprecationWarning('InfoBoxViewModel.descriptionRawHtml', 'InfoBoxViewModel.descriptionRawHtml has been deprecated.  Use InfoBoxViewModel.description instead.');
+                return this.description;
+            },
+            set : function(value) {
+                deprecationWarning('InfoBoxViewModel.descriptionRawHtml', 'InfoBoxViewModel.descriptionRawHtml has been deprecated.  Use InfoBoxViewModel.description instead.');
+                this.description = value;
+            }
+        });
+
+        knockout.defineProperty(this, 'descriptionSanitizedHtml', {
+            get : function() {
+                deprecationWarning('InfoBoxViewModel.descriptionSanitizedHtml', 'InfoBoxViewModel.descriptionSanitizedHtml has been deprecated.  Use InfoBoxViewModel.processedDescription instead.');
+                return this.processedDescription;
             }
         });
     };

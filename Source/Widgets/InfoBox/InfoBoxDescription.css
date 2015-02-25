@@ -2,17 +2,18 @@ body {
     overflow: auto;
     margin: 0;
     padding: 0;
-    color: #edffff;
 }
 
 .cesium-infoBox-description {
     font-size: 13px;
     padding: 4px 10px;
     margin-right: 4px;
+    color: #edffff;
 }
 
 .cesium-infoBox-defaultTable {
     width: 100%;
+    color: #edffff;
 }
 
 .cesium-infoBox-defaultTable tr:nth-child(odd) {
