@@ -8,12 +8,24 @@ Change Log
   * Removed `Camera.tilt`, which was deprecated in Cesium 1.6. Use `Camera.pitch`.
   * Removed `Camera.heading` and `Camera.tilt`. They were deprecated in Cesium 1.6. Use `Camera.setView`.
   * Removed `Camera.setPositionCartographic`, which was was deprecated in Cesium 1.6. Use `Camera.setView`.
+* Deprecated
+  * Deprecated `GeoJsonDataSource.fromUrl`, it will be removed in 1.10. Use `GeoJsonDataSource.load` instead. Unlike fromUrl, load can take either a url or parsed JSON object and returns a promise to a new instance, rather than a new instance.
+  * Deprecated `GeoJsonDataSource.prototype.loadUrl`, it will be removed in 1.10.  Instead, pass a url as the first parameter to `GeoJsonDataSource.prototype.load`.
+  * Deprecated `CzmlDataSource.prototype.loadUrl`, it will be removed in 1.10.  Instead, pass a url as the first parameter to `CzmlDataSource.prototype.load`.
+  * Deprecated `CzmlDataSource.prototype.processUrl`, it will be removed in 1.10.  Instead, pass a url as the first parameter to `CzmlDataSource.prototype.process`.
+  * Deprecated the `sourceUri` parameter to all `CzmlDataSource` load and process functions. Support will be removed in 1.10.  Instead pass an `options` object with `sourceUri` property.
 * Fixed incorrect ellipse texture coordinates. [#2363](https://github.com/AnalyticalGraphicsInc/cesium/issues/2363) and [#2465](https://github.com/AnalyticalGraphicsInc/cesium/issues/2465)
 * Fixed a bug in imagery loading that could cause some or all of the globe to be missing when using an imagery layer that does not cover the entire globe.
+* Fixed some styling issues with `InfoBox` and `BaseLayerPicker` caused by using Bootstrap with Cesium. [#2487](https://github.com/AnalyticalGraphicsInc/cesium/issues/2479)
 * Added support for rendering a water effect on Quantized-Mesh terrain tiles.
 * Added `pack` and `unpack` functions to `Matrix2` and `Matrix3`.
 * Added camera-terrain collision detection/response when the camera reference frame is set.
 * Added `ScreenSpaceCameraController.enableCollisionDetection` to enable/disable camera collision detection with terrain.
+* Added `CzmlDataSource.load` and `GeoJsonDataSource.load` to make it easy to create and load data in a single line.
+* Added the ability to pass a `Promise` to a `DataSource` to `DataSourceCollection.add`.  The `DataSource` will not actually be added until the promise resolves.
+* Added the ability to pass a `Promise` to a target to `viewer.zoomTo` and `viewer.flyTo`.
+* All `CzmlDataSource` and `GeoJsonDataSource` loading functions now return `Promise` instances that resolve to the instances after data is loaded.
+* Error handling in all `CzmlDataSource` and `GeoJsonDataSource` loading functions is now more consistent.  Rather than a mix of exceptions and `Promise` rejections, all errors are raised via `Promise` rejections.
 
 ### 1.6 - 2015-02-02
 

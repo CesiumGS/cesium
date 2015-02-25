@@ -43,6 +43,9 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+    -moz-box-sizing: content-box;
+    -webkit-box-sizing: content-box;
+    box-sizing: content-box;
 }
 
 .cesium-infoBox-bodyless .cesium-infoBox-title {
@@ -73,7 +76,7 @@ button.cesium-infoBox-close {
     border: none;
     border-radius: 2px;
     font-weight: bold;
-    font-size:16px;
+    font-size: 16px;
     padding: 0 5px;
     margin: 0;
     color: #edffff;

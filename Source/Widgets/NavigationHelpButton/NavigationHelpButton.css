@@ -12,18 +12,12 @@
     border-radius: 10px;
     -webkit-transform: scale(0.01);
     -moz-transform: scale(0.01);
-    -ms-transform: scale(0.01);
-    -o-transform: scale(0.01);
     transform: scale(0.01);
     -webkit-transform-origin: 234px -10px;
     -moz-transform-origin: 234px -10px;
-    -ms-transform-origin: 234px -10px;
-    -o-transform-origin: 234px -10px;
     transform-origin: 234px -10px;
     -webkit-transition: visibility 0s 0.25s, -webkit-transform 0.25s ease-in;
     -moz-transition: visibility 0s 0.25s, -moz-transform 0.25s ease-in;
-    -ms-transition: visibility 0s 0.25s, -ms-transform 0.25s ease-in;
-    -o-transition: visibility 0s 0.25s, -o-transform 0.25s ease-in;
     transition: visibility 0s 0.25s, transform 0.25s ease-in;
 }
 
@@ -31,14 +25,10 @@
     visibility: visible;
     -webkit-transform: scale(1);
     -moz-transform: scale(1);
-    -ms-transform: scale(1);
-    -o-transform: scale(1);
     transform: scale(1);
-    transition: transform 0.25s ease-out;
     -webkit-transition: -webkit-transform 0.25s ease-out;
     -moz-transition: -moz-transform 0.25s ease-out;
-    -ms-transition: -ms-transform 0.25s ease-out;
-    -o-transition: -o-transform 0.25s ease-out;
+    transition: transform 0.25s ease-out;
 }
 
 .cesium-navigation-help-instructions {
