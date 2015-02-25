@@ -9,15 +9,14 @@ Change Log
   * Removed `Camera.heading` and `Camera.tilt`. They were deprecated in Cesium 1.6. Use `Camera.setView`.
   * Removed `Camera.setPositionCartographic`, which was was deprecated in Cesium 1.6. Use `Camera.setView`.
 * Deprecated
-  * Deprecated `InfoBoxViewModel.defaultSanitizer` and `InfoBoxViewModel.sanitizer`. They will be removed in 1.10.  Instead use `InfoBoxViewModel.defaultPreprocessor` and `InfoBoxViewModel.preprocessor` to perform any desired preprocessing.
+  * Deprecated `InfoBoxViewModel.defaultSanitizer`, `InfoBoxViewModel.sanitizer`, and `Cesium.sanitize`. They will be removed in 1.10.
   * Deprecated `InfoBoxViewModel.descriptionRawHtml`, it will be removed in 1.10.  Use `InfoBoxViewModel.description` instead.
-  * Deprecated `Cesium.sanitize`, it will be removed in 1.10.
   * Deprecated `GeoJsonDataSource.fromUrl`, it will be removed in 1.10. Use `GeoJsonDataSource.load` instead. Unlike fromUrl, load can take either a url or parsed JSON object and returns a promise to a new instance, rather than a new instance.
   * Deprecated `GeoJsonDataSource.prototype.loadUrl`, it will be removed in 1.10.  Instead, pass a url as the first parameter to `GeoJsonDataSource.prototype.load`.
   * Deprecated `CzmlDataSource.prototype.loadUrl`, it will be removed in 1.10.  Instead, pass a url as the first parameter to `CzmlDataSource.prototype.load`.
   * Deprecated `CzmlDataSource.prototype.processUrl`, it will be removed in 1.10.  Instead, pass a url as the first parameter to `CzmlDataSource.prototype.process`.
   * Deprecated the `sourceUri` parameter to all `CzmlDataSource` load and process functions. Support will be removed in 1.10.  Instead pass an `options` object with `sourceUri` property.
-* `InfoBox` Sanitization now relies on [iframe sandboxing](http://www.html5rocks.com/en/tutorials/security/sandboxed-iframes/). This allows for much more content to be displayed in the InfoBox (and still be secure).
+* `InfoBox` sanitization now relies on [iframe sandboxing](http://www.html5rocks.com/en/tutorials/security/sandboxed-iframes/). This allows for much more content to be displayed in the InfoBox (and still be secure).
 * Added `InfoBox.frame` which is the instance of the iframe that is used to host description content. Sanitization can be controlled via the frame's `sandbox` attribute.  See the above link for additional information. 
 * Fixed incorrect ellipse texture coordinates. [#2363](https://github.com/AnalyticalGraphicsInc/cesium/issues/2363) and [#2465](https://github.com/AnalyticalGraphicsInc/cesium/issues/2465)
 * Fixed a bug in imagery loading that could cause some or all of the globe to be missing when using an imagery layer that does not cover the entire globe.
