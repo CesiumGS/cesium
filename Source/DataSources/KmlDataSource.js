@@ -524,7 +524,7 @@ define([
     function createDefaultLabel() {
         var label = new LabelGraphics();
         label.translucencyByDistance = new NearFarScalar(1500000, 1.0, 3400000, 0.0);
-        label.pixelOffset = new Cartesian2(16, 0);
+        label.pixelOffset = new Cartesian2(17, 0);
         label.horizontalOrigin = HorizontalOrigin.LEFT;
         label.font = '14pt sans-serif';
         label.style = LabelStyle.FILL_AND_OUTLINE;
@@ -725,12 +725,9 @@ define([
                 var styleMap = styleMaps[i];
                 id = queryStringAttribute(styleMap, 'id');
                 if (defined(id)) {
-                    var pairs = styleMap.childNodes;
+                    var pairs = queryChildNodes(styleMap, 'Pair', namespaces.kml);
                     for (var p = 0; p < pairs.length; p++) {
                         var pair = pairs[p];
-                        if (pair.nodeName !== 'Pair') {
-                            continue;
-                        }
                         if (queryStringValue(pair, 'key', namespaces.kml) === 'normal') {
                             id = '#' + id;
                             if (isExternal && defined(sourceUri)) {
@@ -830,6 +827,13 @@ define([
     }
 
     function processPositionGraphics(dataSource, entity, styleEntity) {
+        var label = entity.label;
+        if (!defined(label)) {
+            label = defined(styleEntity.label) ? styleEntity.label.clone() : createDefaultLabel();
+            entity.label = label;
+        }
+        label.text = entity.name;
+
         var billboard = entity.billboard;
         if (!defined(billboard)) {
             billboard = defined(styleEntity.billboard) ? styleEntity.billboard.clone() : createDefaultBillboard();
@@ -840,12 +844,16 @@ define([
             billboard.image = dataSource._pinBuilder.fromColor(Color.YELLOW, 64);
         }
 
-        var label = entity.label;
-        if (!defined(label)) {
-            label = defined(styleEntity.label) ? styleEntity.label.clone() : createDefaultLabel();
-            entity.label = label;
+        if (defined(billboard.scale)) {
+            var scale = billboard.scale.getValue();
+            if (scale !== 0) {
+                label.pixelOffset = new Cartesian2((scale * 16) + 1, 0);
+            } else {
+                //Minor tweaks to better match Google Earth.
+                label.pixelOffset = undefined;
+                label.horizontalOrigin = undefined;
+            }
         }
-        label.text = entity.name;
     }
 
     function processPathGraphics(dataSource, entity, styleEntity) {

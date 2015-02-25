@@ -1653,7 +1653,7 @@ defineSuite([
         expect(label.font.getValue()).toEqual('14pt sans-serif');
         expect(label.style.getValue()).toEqual(LabelStyle.FILL_AND_OUTLINE);
         expect(label.horizontalOrigin.getValue()).toEqual(HorizontalOrigin.LEFT);
-        expect(label.pixelOffset.getValue()).toEqual(new Cartesian2(16, 0));
+        expect(label.pixelOffset.getValue()).toEqual(new Cartesian2(17, 0));
         expect(label.translucencyByDistance.getValue()).toEqual(new NearFarScalar(1500000, 1.0, 3400000, 0.0));
     });
 
@@ -1677,11 +1677,30 @@ defineSuite([
 
     it('LabelStyle: Sets scale', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Placemark>\
+              <Style>\
+                <IconStyle>\
+                    <scale>2</scale>\
+                </IconStyle>\
+                <LabelStyle>\
+                </LabelStyle>\
+              </Style>\
+            </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        expect(entities[0].label.pixelOffset.getValue()).toEqual(new Cartesian2(33, 0));
+    });
+
+    it('LabelStyle: Sets pixelOffset when billboard scaled', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <Placemark>\
             <Style>\
-              <LabelStyle>\
-                <scale>2.75</scale>\
-              </LabelStyle>\
+              <IconStyle>\
+                <scale>3</scale>\
+              </IconStyle>\
             </Style>\
           </Placemark>';
 
@@ -1689,7 +1708,25 @@ defineSuite([
         dataSource.load(parser.parseFromString(kml, "text/xml"));
 
         var entities = dataSource.entities.values;
-        expect(entities[0].label.scale.getValue()).toEqual(2.75);
+        expect(entities[0].label.pixelOffset.getValue()).toEqual(new Cartesian3(3 * 16 + 1, 0));
+    });
+
+    it('LabelStyle: Sets pixelOffset when billboard scaled', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Style>\
+              <IconStyle>\
+                <scale>0</scale>\
+              </IconStyle>\
+            </Style>\
+          </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        expect(entities[0].label.pixelOffset).toBeUndefined();
+        expect(entities[0].label.horizontalOrigin).toBeUndefined();
     });
 
     it('LineStyle: Sets defaults', function() {
