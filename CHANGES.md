@@ -8,9 +8,8 @@ Change Log
   * Removed `Camera.tilt`, which was deprecated in Cesium 1.6. Use `Camera.pitch`.
   * Removed `Camera.heading` and `Camera.tilt`. They were deprecated in Cesium 1.6. Use `Camera.setView`.
   * Removed `Camera.setPositionCartographic`, which was was deprecated in Cesium 1.6. Use `Camera.setView`.
-  * The `InfoBox` widget no longer sanitizes HTML descriptions by default. To go back to the old behavior, set `Cesium.InfoBoxViewModel.defaultPreprocessor` to `Cesium.sanitizeHtml` at the beginning of your application.
 * Deprecated
-  * `InfoBoxViewModel.defaultSanitizer` and `InfoBoxViewModel.sanitizer` have been deprecated and will be removed in 1.10.  Use `InfoBoxViewModel.defaultPreprocessor` and `InfoBoxViewModel.preprocessor` to perform any preprocessing instead. Sanitization now relies on iframe sandboxing. Use the `InfoBoxViewModel.sandbox` property to control sanitization behavior.
+  * `InfoBoxViewModel.defaultSanitizer` and `InfoBoxViewModel.sanitizer` have been deprecated and will be removed in 1.10.  Instead use `InfoBoxViewModel.defaultPreprocessor` and `InfoBoxViewModel.preprocessor` to perform any desired preprocessing. Sanitization now relies on iframe sandboxing. Use the `InfoBoxViewModel.sandbox` property to control sanitization behavior.
   * `InfoBoxViewModel.descriptionRawHtml` has been deprecated and will be removed in 1.10.  Use `InfoBoxViewModel.description` instead.
   * The `Cesium.sanitize` worker has been deprecated and will be removed in 1.10.
 * Fixed incorrect ellipse texture coordinates. [#2363](https://github.com/AnalyticalGraphicsInc/cesium/issues/2363) and [#2465](https://github.com/AnalyticalGraphicsInc/cesium/issues/2465)

@@ -5,6 +5,7 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../../Core/FeatureDetection',
         '../../ThirdParty/knockout',
         '../getElement',
         './InfoBoxViewModel',
@@ -15,6 +16,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        FeatureDetection,
         knockout,
         getElement,
         InfoBoxViewModel,
@@ -95,16 +97,25 @@ click: function () { closeClicked.raiseEvent(this); }');
         var frameContent = document.createElement("div");
         frameContent.className = 'cesium-infoBox-description';
 
-        //Add items to iframe
-        var frameDocument = frame.contentDocument;
-        frameDocument.head.appendChild(cssLink);
-        frameDocument.body.appendChild(frameContent);
+        frame.onload = function() {
+            //Add items to iframe
+            var frameDocument = frame.contentDocument;
+            frameDocument.head.appendChild(cssLink);
+            frameDocument.body.appendChild(frameContent);
 
-        subscribeAndEvaluate(viewModel, 'processedDescription', function(value) {
-            frameContent.innerHTML = value;
-            var rect = frameContent.getBoundingClientRect();
-            frame.style.height = rect.height + 'px';
-        });
+            subscribeAndEvaluate(viewModel, 'processedDescription', function(value) {
+                frameContent.innerHTML = value;
+                var rect = frameContent.getBoundingClientRect();
+                frame.style.height = rect.height + 'px';
+            });
+        };
+
+        //Chrome does not fire the load event on an empty iframe,
+        //so taking out the below block causes the info box to always be empty.
+        //Last verified with Chrome 40.0.2214.115
+        if (FeatureDetection.isChrome()) {
+            frame.onload();
+        }
     };
 
     defineProperties(InfoBox.prototype, {
