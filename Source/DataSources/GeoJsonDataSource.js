@@ -90,7 +90,7 @@ define([
     var stringifyScratch = new Array(4);
 
     function describe(properties, nameProperty) {
-        var html = '<table class="cesium-infoBox-defaultTable"><tbody>';
+        var html = '';
         for ( var key in properties) {
             if (properties.hasOwnProperty(key)) {
                 if (key === nameProperty || simpleStyleIdentifiers.indexOf(key) !== -1) {
@@ -106,7 +106,11 @@ define([
                 }
             }
         }
-        html += '</tbody></table>';
+
+        if (html.length > 0) {
+            html = '<table class="cesium-infoBox-defaultTable"><tbody>' + html + '</tbody></table>';
+        }
+
         return html;
     }
 
