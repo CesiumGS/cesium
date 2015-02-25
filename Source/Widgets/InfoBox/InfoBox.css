@@ -115,5 +115,6 @@ button.cesium-infoBox-close:active {
 
 .cesium-infoBox-iframe {
     border: none;
-    width: 100%;
+    width: 100%; /* Fallback */
+    width: calc(100% - 2px);
 }
