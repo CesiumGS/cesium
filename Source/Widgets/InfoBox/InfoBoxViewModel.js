@@ -96,7 +96,7 @@ define([
                             }
                         }).otherwise(function(error) {
                             /*global console*/
-                            console.log('An error occurred while processed the description: ' + formatError(error));
+                            console.log('An error occurred while processing the description: ' + formatError(error));
                         });
                     } else {
                         that._processedDescription = value;
