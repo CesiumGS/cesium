@@ -71,23 +71,13 @@ click: function () { closeClicked.raiseEvent(this); }');
 
         var frame = document.createElement('iframe');
         frame.className = 'cesium-infoBox-iframe';
+        frame.setAttribute('sandbox', 'allow-same-origin allow-popups allow-forms'); //allow-pointer-lock allow-scripts allow-top-navigation
         frame.setAttribute('data-bind', 'style : { maxHeight : maxHeightOffset(40) }');
         frame.setAttribute('allowfullscreen', true);
         infoElement.appendChild(frame);
 
         var viewModel = new InfoBoxViewModel();
         knockout.applyBindings(viewModel, infoElement);
-
-        //We inject default css into the content iframe,
-        //end users can remove it or add their own via the exposed frame property.
-        var cssLink = document.createElement("link");
-        cssLink.href = buildModuleUrl('Widgets/InfoBox/InfoBoxDescription.css');
-        cssLink.rel = "stylesheet";
-        cssLink.type = "text/css";
-
-        //div to use for description content.
-        var frameContent = document.createElement("div");
-        frameContent.className = 'cesium-infoBox-description';
 
         this._container = container;
         this._element = infoElement;
@@ -96,15 +86,23 @@ click: function () { closeClicked.raiseEvent(this); }');
         this._descriptionSubscription = undefined;
 
         var that = this;
-
         //We can't actually add anything into the frame until the load event is fired
         frame.addEventListener('load', function() {
             var frameDocument = frame.contentDocument;
+
+            //We inject default css into the content iframe,
+            //end users can remove it or add their own via the exposed frame property.
+            var cssLink = frameDocument.createElement("link");
+            cssLink.href = buildModuleUrl('Widgets/InfoBox/InfoBoxDescription.css');
+            cssLink.rel = "stylesheet";
+            cssLink.type = "text/css";
+
+            //div to use for description content.
+            var frameContent = frameDocument.createElement("div");
+            frameContent.className = 'cesium-infoBox-description';
+
             frameDocument.head.appendChild(cssLink);
             frameDocument.body.appendChild(frameContent);
-
-            //Once the frame is initialized, we can enable sandboxing.
-            frame.setAttribute('sandbox', 'allow-popups allow-forms'); // allow-same-origin allow-pointer-lock allow-scripts allow-top-navigation
 
             //We manually subscribe to the description event rather than through a binding for two reasons.
             //1. It's an easy way to ensure order of operation so that we can adjust the height.
