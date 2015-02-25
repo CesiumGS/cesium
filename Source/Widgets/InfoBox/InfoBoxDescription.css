@@ -4,9 +4,14 @@ body {
 }
 
 .cesium-infoBox-description {
+    font-family: sans-serif;
     font-size: 13px;
     padding: 4px 10px;
     margin-right: 4px;
+    color: #edffff;
+}
+
+.cesium-infoBox-description table {
     color: #edffff;
 }
 

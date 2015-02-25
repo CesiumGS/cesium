@@ -97,7 +97,7 @@ button.cesium-infoBox-close:active {
     color: #000;
 }
 
-.cesium-infoBox-bodyless {
+.cesium-infoBox-bodyless .cesium-infoBox-iframe {
     display: none;
 }
 
