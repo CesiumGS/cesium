@@ -207,31 +207,28 @@ define([
         return function(evt) {
             var fileName = file.name;
             try {
-                var dataSource;
                 var loadPromise;
 
                 if (/\.czml$/i.test(fileName)) {
-                    dataSource = new CzmlDataSource(fileName);
-                    dataSource.load(JSON.parse(evt.target.result), fileName);
+                    loadPromise = CzmlDataSource.load(JSON.parse(evt.target.result), {
+                        sourceUri : fileName
+                    });
                 } else if (/\.geojson$/i.test(fileName) || /\.json$/i.test(fileName) || /\.topojson$/i.test(fileName)) {
-                    dataSource = new GeoJsonDataSource(fileName);
-                    loadPromise = dataSource.load(JSON.parse(evt.target.result), {
+                    loadPromise = GeoJsonDataSource.load(JSON.parse(evt.target.result), {
                         sourceUri : fileName
                     });
                 } else if (/\.(kml|kmz)$/i.test(fileName)) {
-                    dataSource = new KmlDataSource(proxy);
-                    loadPromise = dataSource.load(file, {
-                        sourceUri : fileName
+                    loadPromise = KmlDataSource.load(file, {
+                        sourceUri : fileName,
+                        proxy : proxy
                     });
                 } else {
                     viewer.dropError.raiseEvent(viewer, fileName, 'Unrecognized file: ' + fileName);
                     return;
                 }
 
-                viewer.dataSources.add(dataSource);
-
                 if (defined(loadPromise)) {
-                    loadPromise.otherwise(function(error) {
+                    viewer.dataSources.add(loadPromise).otherwise(function(error) {
                         viewer.dropError.raiseEvent(viewer, fileName, error);
                     });
                 }
