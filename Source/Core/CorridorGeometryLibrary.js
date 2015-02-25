@@ -1,6 +1,7 @@
 /*global define*/
 define([
         './Cartesian3',
+        './Cartographic',
         './CornerType',
         './defined',
         './isArray',
@@ -11,6 +12,7 @@ define([
         './Quaternion'
     ], function(
         Cartesian3,
+        Cartographic,
         CornerType,
         defined,
         isArray,
@@ -160,6 +162,10 @@ define([
         return positions;
     }
 
+    var scratchPrevCartographic = new Cartographic();
+    var scratchPosCartographic = new Cartographic();
+    var scratchNextCartographic = new Cartographic();
+
     /**
      * @private
      */
@@ -207,7 +213,21 @@ define([
             nextPosition = positions[i + 1];
             forward = Cartesian3.normalize(Cartesian3.subtract(nextPosition, position, forward), forward);
             cornerDirection = Cartesian3.normalize(Cartesian3.add(forward, backward, cornerDirection), cornerDirection);
-            var doCorner = !Cartesian3.equalsEpsilon(Cartesian3.negate(cornerDirection, scratch1), normal, CesiumMath.EPSILON2);
+
+            var positionCartographic = ellipsoid.cartesianToCartographic(position, scratchPosCartographic);
+            var prevPositionCartographic = ellipsoid.cartesianToCartographic(previousPos, scratchPrevCartographic);
+            var nextPositionCartographic = ellipsoid.cartesianToCartographic(nextPosition, scratchNextCartographic);
+
+            var cartographicEpsilon = CesiumMath.EPSILON14;
+            var prevLongitudeEquality = CesiumMath.equalsEpsilon(positionCartographic.longitude, prevPositionCartographic.longitude, cartographicEpsilon);
+            var prevLatitudeEquality = CesiumMath.equalsEpsilon(positionCartographic.latitude, prevPositionCartographic.latitude, cartographicEpsilon);
+            var nextLongitudeEquality = CesiumMath.equalsEpsilon(positionCartographic.longitude, nextPositionCartographic.longitude, cartographicEpsilon);
+            var nextLatitudeEquality = CesiumMath.equalsEpsilon(positionCartographic.latitude, nextPositionCartographic.latitude, cartographicEpsilon);
+
+            var longitudeEquality = prevLongitudeEquality && nextLongitudeEquality;
+            var latitudeEquality = prevLatitudeEquality && nextLatitudeEquality;
+            var doCorner = !longitudeEquality && !latitudeEquality;
+
             if (doCorner) {
                 cornerDirection = Cartesian3.cross(cornerDirection, normal, cornerDirection);
                 cornerDirection = Cartesian3.cross(normal, cornerDirection, cornerDirection);
