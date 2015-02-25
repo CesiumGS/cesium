@@ -17,7 +17,6 @@ defineSuite([
         expect(viewModel.maxHeightOffset(0)).toBeDefined();
         expect(viewModel.preprocessor).toBeUndefined();
         expect(viewModel.loadingIndicatorHtml).toBeDefined();
-        expect(viewModel.sandbox).toEqual('allow-same-origin allow-popups allow-pointer-lock allow-forms');
     });
 
     it('sets processedDescription when preprocessor is undefined', function() {

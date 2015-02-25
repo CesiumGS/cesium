@@ -17,7 +17,8 @@ Change Log
   * Deprecated `CzmlDataSource.prototype.loadUrl`, it will be removed in 1.10.  Instead, pass a url as the first parameter to `CzmlDataSource.prototype.load`.
   * Deprecated `CzmlDataSource.prototype.processUrl`, it will be removed in 1.10.  Instead, pass a url as the first parameter to `CzmlDataSource.prototype.process`.
   * Deprecated the `sourceUri` parameter to all `CzmlDataSource` load and process functions. Support will be removed in 1.10.  Instead pass an `options` object with `sourceUri` property.
-* `InfoBox` Sanitization now relies on [iframe sandboxing](http://www.w3schools.com/tags/att_iframe_sandbox.asp). Use the `InfoBoxViewModel.sandbox` property to control sanitization behavior.
+* `InfoBox` Sanitization now relies on [iframe sandboxing](http://www.w3schools.com/tags/att_iframe_sandbox.asp).
+* Added `InfoBox.frame` which is the instance of the iframe that is used to host description content.
 * Fixed incorrect ellipse texture coordinates. [#2363](https://github.com/AnalyticalGraphicsInc/cesium/issues/2363) and [#2465](https://github.com/AnalyticalGraphicsInc/cesium/issues/2465)
 * Fixed a bug in imagery loading that could cause some or all of the globe to be missing when using an imagery layer that does not cover the entire globe.
 * Fixed some styling issues with `InfoBox` and `BaseLayerPicker` caused by using Bootstrap with Cesium. [#2487](https://github.com/AnalyticalGraphicsInc/cesium/issues/2479)
