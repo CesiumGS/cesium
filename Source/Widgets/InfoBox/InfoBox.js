@@ -103,6 +103,9 @@ click: function () { closeClicked.raiseEvent(this); }');
             frameDocument.head.appendChild(cssLink);
             frameDocument.body.appendChild(frameContent);
 
+            //Once the frame is initialized, we can enable sandboxing.
+            frame.setAttribute('sandbox', 'allow-popups allow-forms'); // allow-same-origin allow-pointer-lock allow-scripts allow-top-navigation
+
             //We manually subscribe to the description event rather than through a binding for two reasons.
             //1. It's an easy way to ensure order of operation so that we can adjust the height.
             //2. Knockout does not bind to elements inside of an iFrame, so we would have to apply a second binding
@@ -114,9 +117,6 @@ click: function () { closeClicked.raiseEvent(this); }');
                 // Measure and set the new custom height, based on text wrapped above.
                 frame.style.height = frameContent.getBoundingClientRect().height + 'px';
             });
-
-            //Once the frame is initialized, we can enable sandboxing.
-            frame.setAttribute('sandbox', 'allow-popups allow-forms'); // allow-same-origin allow-pointer-lock allow-scripts allow-top-navigation
         });
 
         //Chrome does not send the load event unless we explicitly set a src
