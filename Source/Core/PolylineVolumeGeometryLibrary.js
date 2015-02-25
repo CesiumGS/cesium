@@ -290,6 +290,10 @@ define([
         return cleanedPositions;
     };
 
+    var scratchPrevCartographic = new Cartographic();
+    var scratchPosCartographic = new Cartographic();
+    var scratchNextCartographic = new Cartographic();
+
     PolylineVolumeGeometryLibrary.computePositions = function(positions, shape2D, boundingRectangle, geometry, duplicatePoints) {
         var ellipsoid = geometry._ellipsoid;
         var heights = scaleToSurface(positions, ellipsoid);
@@ -338,7 +342,21 @@ define([
             cornerDirection = Cartesian3.add(forward, backward, cornerDirection);
             cornerDirection = Cartesian3.normalize(cornerDirection, cornerDirection);
             surfaceNormal = ellipsoid.geodeticSurfaceNormal(position, surfaceNormal);
-            var doCorner = !Cartesian3.equalsEpsilon(Cartesian3.negate(cornerDirection, scratch1), surfaceNormal, CesiumMath.EPSILON2);
+
+            var positionCartographic = ellipsoid.cartesianToCartographic(position, scratchPosCartographic);
+            var prevPositionCartographic = ellipsoid.cartesianToCartographic(previousPosition, scratchPrevCartographic);
+            var nextPositionCartographic = ellipsoid.cartesianToCartographic(nextPosition, scratchNextCartographic);
+
+            var cartographicEpsilon = CesiumMath.EPSILON14;
+            var prevLongitudeEquality = CesiumMath.equalsEpsilon(positionCartographic.longitude, prevPositionCartographic.longitude, cartographicEpsilon);
+            var prevLatitudeEquality = CesiumMath.equalsEpsilon(positionCartographic.latitude, prevPositionCartographic.latitude, cartographicEpsilon);
+            var nextLongitudeEquality = CesiumMath.equalsEpsilon(positionCartographic.longitude, nextPositionCartographic.longitude, cartographicEpsilon);
+            var nextLatitudeEquality = CesiumMath.equalsEpsilon(positionCartographic.latitude, nextPositionCartographic.latitude, cartographicEpsilon);
+
+            var longitudeEquality = prevLongitudeEquality && nextLongitudeEquality;
+            var latitudeEquality = prevLatitudeEquality && nextLatitudeEquality;
+            var doCorner = !longitudeEquality && !latitudeEquality;
+
             if (doCorner) {
                 cornerDirection = Cartesian3.cross(cornerDirection, surfaceNormal, cornerDirection);
                 cornerDirection = Cartesian3.cross(surfaceNormal, cornerDirection, cornerDirection);
