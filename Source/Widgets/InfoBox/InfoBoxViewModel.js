@@ -71,13 +71,7 @@ define([
          */
         this.loadingIndicatorHtml = '<div class="cesium-infoBox-loadingContainer"><span class="cesium-infoBox-loading"></span></div>';
 
-        /**
-         * Gets or sets the description iframe {@link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe|sandbox attribute}.
-         * @type {String}
-         */
-        this.sandbox = 'allow-same-origin allow-popups allow-pointer-lock allow-forms'; //allow-scripts allow-top-navigation
-
-        knockout.track(this, ['showInfo', 'titleText', '_description', '_processedDescription', 'maxHeight', 'enableCamera', 'isCameraTracking', 'sandbox']);
+        knockout.track(this, ['showInfo', 'titleText', '_description', '_processedDescription', 'maxHeight', 'enableCamera', 'isCameraTracking']);
 
         /**
          * Gets or sets the unprocessed description HTML for the info box.
