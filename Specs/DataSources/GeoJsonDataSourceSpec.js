@@ -654,9 +654,9 @@ defineSuite([
         });
     });
 
-    it('loadUrl works', function() {
+    it('load works with a URL', function() {
         var dataSource = new GeoJsonDataSource();
-        return dataSource.loadUrl('Data/test.geojson').then(function() {
+        return dataSource.load('Data/test.geojson').then(function() {
             expect(dataSource.name).toEqual('test.geojson');
         });
     });
@@ -692,47 +692,25 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('load throws with unknown geometry', function() {
-        var dataSource = new GeoJsonDataSource();
-        expect(function() {
-            dataSource.load(unknownGeometry);
-        }).toThrowDeveloperError();
+    it('rejects unknown geometry', function() {
+        waitsForPromise.toReject(GeoJsonDataSource.load(unknownGeometry));
     });
 
-    it('loadUrl throws with undefined Url', function() {
-        var dataSource = new GeoJsonDataSource();
-        expect(function() {
-            dataSource.loadUrl(undefined);
-        }).toThrowDeveloperError();
+    it('rejects invalid url', function() {
+        waitsForPromise.toReject(GeoJsonDataSource.load('invalid.geojson'));
     });
 
-    it('loadUrl raises error with invalid url', function() {
-        var dataSource = new GeoJsonDataSource();
-
-        var deferred = when.defer();
-        dataSource.errorEvent.addEventListener(function() {
-            deferred.resolve();
-        });
-
-        dataSource.loadUrl('invalid.geojson');
-
-        return deferred.promise;
-    });
-
-    it('load throws with null crs', function() {
+    it('rejects null CRS', function() {
         var featureWithNullCrs = {
             type : 'Feature',
             geometry : point,
             crs : null
         };
 
-        var dataSource = new GeoJsonDataSource();
-        expect(function() {
-            dataSource.load(featureWithNullCrs);
-        }).toThrowRuntimeError();
+        waitsForPromise.toReject(GeoJsonDataSource.load(featureWithNullCrs));
     });
 
-    it('load throws with unknown crs type', function() {
+    it('rejects unknown CRS', function() {
         var featureWithUnknownCrsType = {
             type : 'Feature',
             geometry : point,
@@ -742,14 +720,11 @@ defineSuite([
             }
         };
 
-        var dataSource = new GeoJsonDataSource();
-        expect(function() {
-            dataSource.load(featureWithUnknownCrsType);
-        }).toThrowRuntimeError();
+        waitsForPromise.toReject(GeoJsonDataSource.load(featureWithUnknownCrsType));
     });
 
-    it('load throws with undefined crs properties', function() {
-        var featureWithUnknownCrsType = {
+    it('rejects undefined CRS properties', function() {
+        var featureWithUndefinedCrsProperty = {
             type : 'Feature',
             geometry : point,
             crs : {
@@ -757,13 +732,10 @@ defineSuite([
             }
         };
 
-        var dataSource = new GeoJsonDataSource();
-        expect(function() {
-            dataSource.load(featureWithUnknownCrsType);
-        }).toThrowRuntimeError();
+        waitsForPromise.toReject(GeoJsonDataSource.load(featureWithUndefinedCrsProperty));
     });
 
-    it('load throws with unknown crs', function() {
+    it('rejects unknown CRS name', function() {
         var featureWithUnknownCrsType = {
             type : 'Feature',
             geometry : point,
@@ -775,13 +747,10 @@ defineSuite([
             }
         };
 
-        var dataSource = new GeoJsonDataSource();
-        expect(function() {
-            dataSource.load(featureWithUnknownCrsType);
-        }).toThrowRuntimeError();
+        waitsForPromise.toReject(GeoJsonDataSource.load(featureWithUnknownCrsType));
     });
 
-    it('load throws with unknown crs link', function() {
+    it('rejects unknown CRS link', function() {
         var featureWithUnknownCrsType = {
             type : 'Feature',
             geometry : point,
@@ -794,15 +763,11 @@ defineSuite([
             }
         };
 
-        var dataSource = new GeoJsonDataSource();
-        expect(function() {
-            dataSource.load(featureWithUnknownCrsType);
-        }).toThrowRuntimeError();
+        waitsForPromise.toReject(GeoJsonDataSource.load(featureWithUnknownCrsType));
     });
 
-    it('raises error when an error occurs in loadUrl', function() {
+    it('load rejects loading non json file', function() {
         var dataSource = new GeoJsonDataSource();
-
         var spy = jasmine.createSpy('errorEvent');
         dataSource.errorEvent.addEventListener(spy);
 
@@ -812,5 +777,21 @@ defineSuite([
         }).otherwise(function() {
             expect(spy).toHaveBeenCalledWith(dataSource, jasmine.any(Error));
         });
+    });
+
+    it('load raises loading event', function() {
+        var dataSource = new GeoJsonDataSource();
+        var spy = jasmine.createSpy('loadingEvent');
+        dataSource.loadingEvent.addEventListener(spy);
+
+        var promise = dataSource.load('Data/test.geojson');
+        expect(spy).toHaveBeenCalledWith(dataSource, true);
+        expect(dataSource.isLoading).toBe(true);
+        spy.reset();
+
+        waitsForPromise(promise, function() {
+            expect(spy).toHaveBeenCalledWith(dataSource, false);
+            expect(dataSource.isLoading).toBe(false);
+       });
     });
 });

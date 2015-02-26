@@ -293,20 +293,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('processUrl throws with undefined Url', function() {
-        var dataSource = new CzmlDataSource();
-        expect(function() {
-            dataSource.processUrl(undefined);
-        }).toThrowDeveloperError();
-    });
-
-    it('loadUrl throws with undefined Url', function() {
-        var dataSource = new CzmlDataSource();
-        expect(function() {
-            dataSource.loadUrl(undefined);
-        }).toThrowDeveloperError();
-    });
-
     it('raises changed event when loading CZML', function() {
         var dataSource = new CzmlDataSource();
 
@@ -401,28 +387,28 @@ defineSuite([
         expect(spy).not.toHaveBeenCalled();
     });
 
-    it('raises error when an error occurs in loadUrl', function() {
+    it('raises error when an error occurs in load', function() {
         var dataSource = new CzmlDataSource();
 
         var spy = jasmine.createSpy('errorEvent');
         dataSource.errorEvent.addEventListener(spy);
 
         // Blue.png is not JSON
-        return dataSource.loadUrl('Data/Images/Blue.png').then(function() {
+        return dataSource.load('Data/Images/Blue.png').then(function() {
             fail('should not be called');
         }).otherwise(function() {
             expect(spy).toHaveBeenCalledWith(dataSource, jasmine.any(Error));
         });
     });
 
-    it('raises error when an error occurs in processUrl', function() {
+    it('raises error when an error occurs in process', function() {
         var dataSource = new CzmlDataSource();
 
         var spy = jasmine.createSpy('errorEvent');
         dataSource.errorEvent.addEventListener(spy);
 
         // Blue.png is not JSON
-        dataSource.processUrl('Data/Images/Blue.png').then(function() {
+        dataSource.process('Data/Images/Blue.png').then(function() {
             fail('should not be called');
         }).otherwise(function() {
             expect(spy).toHaveBeenCalledWith(dataSource, jasmine.any(Error));
@@ -2043,37 +2029,22 @@ defineSuite([
         expect(position.backwardExtrapolationDuration).toEqual(1.0);
     });
 
-    it('throws if first document packet lacks version information', function() {
-        var packet = {
+    it('rejects if first document packet lacks version information', function() {
+        waitsForPromise.toReject(CzmlDataSource.load({
             id : 'document'
-        };
-
-        var dataSource = new CzmlDataSource();
-        expect(function() {
-            dataSource.load(packet);
-        }).toThrowRuntimeError();
+        }));
     });
 
-    it('throws if first packet is not document', function() {
-        var packet = {
+    it('rejects if first packet is not document', function() {
+        waitsForPromise.toReject(CzmlDataSource.load({
             id : 'someId'
-        };
-
-        var dataSource = new CzmlDataSource();
-        expect(function() {
-            dataSource.load(packet);
-        }).toThrowRuntimeError();
+        }));
     });
 
-    it('throws if document packet contains bad version', function() {
-        var packet = {
+    it('rejects if document packet contains bad version', function() {
+        waitsForPromise.toReject(CzmlDataSource.load({
             id : 'document',
             version : 12
-        };
-
-        var dataSource = new CzmlDataSource();
-        expect(function() {
-            dataSource.load(packet);
-        }).toThrowRuntimeError();
+        }));
     });
 });

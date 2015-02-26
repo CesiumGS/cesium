@@ -8,11 +8,13 @@ defineSuite([
 
     it('constructor sets expected values', function() {
         var testElement = document.createElement('span');
+        document.body.appendChild(testElement);
         var infoBox = new InfoBox(testElement);
         expect(infoBox.container).toBe(testElement);
         expect(infoBox.viewModel).toBeDefined();
         expect(infoBox.isDestroyed()).toEqual(false);
         infoBox.destroy();
+        document.body.removeChild(testElement);
         expect(infoBox.isDestroyed()).toEqual(true);
     });
 
