@@ -534,10 +534,10 @@ define([
 
     function createDefaultLabel() {
         var label = new LabelGraphics();
-        label.translucencyByDistance = new NearFarScalar(1500000, 1.0, 3400000, 0.0);
+        label.translucencyByDistance = new NearFarScalar(3000000, 1.0, 5000000, 0.0);
         label.pixelOffset = new Cartesian2(17, 0);
         label.horizontalOrigin = HorizontalOrigin.LEFT;
-        label.font = '14pt sans-serif';
+        label.font = '16px san-serif';
         label.style = LabelStyle.FILL_AND_OUTLINE;
         return label;
     }
@@ -1217,7 +1217,7 @@ define([
                 tmp = tmp + text + '</div>';
             } else {
                 //If no description exists, build a table out of the extended data
-                tmp += '<table class="cesium-infoBox-defaultTable"><tbody>';
+                tmp += '<table class="cesium-infoBox-defaultTable cesium-infoBox-defaultTable-lighter"><tbody>';
                 keys = Object.keys(extendedData);
                 for (i = 0; i < keys.length; i++) {
                     key = keys[i];

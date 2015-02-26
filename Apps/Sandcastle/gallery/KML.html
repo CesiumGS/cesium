@@ -33,22 +33,34 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 Sandcastle.addToolbarMenu([{
     text : 'Load KML - Global Science Facilities',
     onselect : function() {
-        viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/Facilities.kmz'));
+        viewer.homeButton.viewModel.command();
+        viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/kml/facilities/facilities.kml'));
     }
 }, {
     text : 'Load KMZ with embedded data - GDP per capita 2008',
     onselect : function() {
-        viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/gdpPerCapita2008.kmz'));
+        viewer.homeButton.viewModel.command();
+        viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/kml/gdpPerCapita2008.kmz'));
     }
 }, {
     text : 'Load animated KML - Formation of United States',
     onselect : function() {
-        viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/us_states.kml'));
+        viewer.homeButton.viewModel.command();
+        viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/kml/us_states.kml'));
     }
 }, {
-    text : 'Load KML with gx extensions - GPS Constellation Orbit',
+    text : 'Load KML with gx extensions - Bike Ride',
     onselect : function() {
-        viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/us_states.kml'));
+        viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/kml/bikeRide.kml')).then(function(dataSource){
+            viewer.clock.shouldAnimate = false;
+            var rider = dataSource.entities.getById('tour');
+            viewer.flyTo(rider).then(function(){
+                viewer.trackedEntity = rider;
+                viewer.selectedEntity = viewer.trackedEntity;
+                viewer.clock.multiplier = 30;
+                viewer.clock.shouldAnimate = true;
+            });
+        });
     }
 }], 'toolbar');
 
@@ -56,7 +68,6 @@ Sandcastle.reset = function() {
     viewer.dataSources.removeAll();
     viewer.clock.clockRange = Cesium.ClockRange.UNBOUNDED;
     viewer.clock.clockStep = Cesium.ClockStep.SYSTEM_CLOCK;
-    viewer.homeButton.viewModel.command();
 };
 //Sandcastle_End
     Sandcastle.finishedLoading();

@@ -118,7 +118,9 @@ click: function () { closeClicked.raiseEvent(this); }');
                 //the content and produces much nicer results.
                 if (frameContent.childNodes.length === 1) {
                     var style = window.getComputedStyle(frameContent.firstChild);
-                    infoElement.style['background-color'] = style['background-color'];
+                    if (style['background-color'] !== 'rgba(0, 0, 0, 0)') {
+                        infoElement.style['background-color'] = style['background-color'];
+                    }
                 } else {
                     infoElement.style['background-color'] = null;
                 }
