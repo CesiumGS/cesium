@@ -547,7 +547,7 @@ define([
                     throw e;
                 }
 
-                url = buildGetFeatureInfoUrl(that, 'text/xml', x, y, level, i, j);
+                url = buildGetFeatureInfoUrl(that, that._getFeatureInfoXmlContentType, x, y, level, i, j);
 
                 return when(loadXML(url), function(xml) {
                     return xmlToFeatureInfo(xml);
