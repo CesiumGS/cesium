@@ -290,9 +290,8 @@ define([
         return cleanedPositions;
     };
 
-    var scratchPrevCartographic = new Cartographic();
-    var scratchPosCartographic = new Cartographic();
-    var scratchNextCartographic = new Cartographic();
+    var scratchForwardProjection = new Cartesian3();
+    var scratchBackwardProjection = new Cartesian3();
 
     PolylineVolumeGeometryLibrary.computePositions = function(positions, shape2D, boundingRectangle, geometry, duplicatePoints) {
         var ellipsoid = geometry._ellipsoid;
@@ -343,19 +342,15 @@ define([
             cornerDirection = Cartesian3.normalize(cornerDirection, cornerDirection);
             surfaceNormal = ellipsoid.geodeticSurfaceNormal(position, surfaceNormal);
 
-            var positionCartographic = ellipsoid.cartesianToCartographic(position, scratchPosCartographic);
-            var prevPositionCartographic = ellipsoid.cartesianToCartographic(previousPosition, scratchPrevCartographic);
-            var nextPositionCartographic = ellipsoid.cartesianToCartographic(nextPosition, scratchNextCartographic);
+            var forwardProjection = Cartesian3.multiplyByScalar(surfaceNormal, Cartesian3.dot(forward, surfaceNormal), scratchForwardProjection);
+            Cartesian3.subtract(forward, forwardProjection, forwardProjection);
+            Cartesian3.normalize(forwardProjection, forwardProjection);
 
-            var cartographicEpsilon = CesiumMath.EPSILON14;
-            var prevLongitudeEquality = CesiumMath.equalsEpsilon(positionCartographic.longitude, prevPositionCartographic.longitude, cartographicEpsilon);
-            var prevLatitudeEquality = CesiumMath.equalsEpsilon(positionCartographic.latitude, prevPositionCartographic.latitude, cartographicEpsilon);
-            var nextLongitudeEquality = CesiumMath.equalsEpsilon(positionCartographic.longitude, nextPositionCartographic.longitude, cartographicEpsilon);
-            var nextLatitudeEquality = CesiumMath.equalsEpsilon(positionCartographic.latitude, nextPositionCartographic.latitude, cartographicEpsilon);
+            var backwardProjection = Cartesian3.multiplyByScalar(surfaceNormal, Cartesian3.dot(backward, surfaceNormal), scratchBackwardProjection);
+            Cartesian3.subtract(backward, backwardProjection, backwardProjection);
+            Cartesian3.normalize(backwardProjection, backwardProjection);
 
-            var longitudeEquality = prevLongitudeEquality && nextLongitudeEquality;
-            var latitudeEquality = prevLatitudeEquality && nextLatitudeEquality;
-            var doCorner = !longitudeEquality && !latitudeEquality;
+            var doCorner = !CesiumMath.equalsEpsilon(Math.abs(Cartesian3.dot(forwardProjection, backwardProjection)), 1.0, CesiumMath.EPSILON1);
 
             if (doCorner) {
                 cornerDirection = Cartesian3.cross(cornerDirection, surfaceNormal, cornerDirection);

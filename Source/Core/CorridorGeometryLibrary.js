@@ -1,7 +1,6 @@
 /*global define*/
 define([
         './Cartesian3',
-        './Cartographic',
         './CornerType',
         './defined',
         './isArray',
@@ -12,7 +11,6 @@ define([
         './Quaternion'
     ], function(
         Cartesian3,
-        Cartographic,
         CornerType,
         defined,
         isArray,
@@ -162,9 +160,8 @@ define([
         return positions;
     }
 
-    var scratchPrevCartographic = new Cartographic();
-    var scratchPosCartographic = new Cartographic();
-    var scratchNextCartographic = new Cartographic();
+    var scratchForwardProjection = new Cartesian3();
+    var scratchBackwardProjection = new Cartesian3();
 
     /**
      * @private
@@ -214,19 +211,15 @@ define([
             forward = Cartesian3.normalize(Cartesian3.subtract(nextPosition, position, forward), forward);
             cornerDirection = Cartesian3.normalize(Cartesian3.add(forward, backward, cornerDirection), cornerDirection);
 
-            var positionCartographic = ellipsoid.cartesianToCartographic(position, scratchPosCartographic);
-            var prevPositionCartographic = ellipsoid.cartesianToCartographic(previousPos, scratchPrevCartographic);
-            var nextPositionCartographic = ellipsoid.cartesianToCartographic(nextPosition, scratchNextCartographic);
+            var forwardProjection = Cartesian3.multiplyByScalar(normal, Cartesian3.dot(forward, normal), scratchForwardProjection);
+            Cartesian3.subtract(forward, forwardProjection, forwardProjection);
+            Cartesian3.normalize(forwardProjection, forwardProjection);
 
-            var cartographicEpsilon = CesiumMath.EPSILON14;
-            var prevLongitudeEquality = CesiumMath.equalsEpsilon(positionCartographic.longitude, prevPositionCartographic.longitude, cartographicEpsilon);
-            var prevLatitudeEquality = CesiumMath.equalsEpsilon(positionCartographic.latitude, prevPositionCartographic.latitude, cartographicEpsilon);
-            var nextLongitudeEquality = CesiumMath.equalsEpsilon(positionCartographic.longitude, nextPositionCartographic.longitude, cartographicEpsilon);
-            var nextLatitudeEquality = CesiumMath.equalsEpsilon(positionCartographic.latitude, nextPositionCartographic.latitude, cartographicEpsilon);
+            var backwardProjection = Cartesian3.multiplyByScalar(normal, Cartesian3.dot(backward, normal), scratchBackwardProjection);
+            Cartesian3.subtract(backward, backwardProjection, backwardProjection);
+            Cartesian3.normalize(backwardProjection, backwardProjection);
 
-            var longitudeEquality = prevLongitudeEquality && nextLongitudeEquality;
-            var latitudeEquality = prevLatitudeEquality && nextLatitudeEquality;
-            var doCorner = !longitudeEquality && !latitudeEquality;
+            var doCorner = !CesiumMath.equalsEpsilon(Math.abs(Cartesian3.dot(forwardProjection, backwardProjection)), 1.0, CesiumMath.EPSILON1);
 
             if (doCorner) {
                 cornerDirection = Cartesian3.cross(cornerDirection, normal, cornerDirection);
