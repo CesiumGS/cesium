@@ -1495,14 +1495,35 @@ define([
             return when.all(dataSource._promises, function() {
                 var clock;
                 var availability = entityCollection.computeAvailability();
-                if (!availability.equals(Iso8601.MAXIMUM_INTERVAL)) {
+
+                var start = availability.start;
+                var stop = availability.stop;
+                var isMinStart = JulianDate.equals(start, Iso8601.MINIMUM_VALUE);
+                var isMaxStop = JulianDate.equals(stop, Iso8601.MAXIMUM_VALUE);
+                if (!isMinStart || !isMaxStop) {
+                    var date;
+
+                    //If start is min time just start at midnight this morning, local time
+                    if (isMinStart) {
+                        date = new Date();
+                        date.setHours(0, 0, 0, 0);
+                        start = JulianDate.fromDate(date);
+                    }
+
+                    //If stop is max value just stop at midnight tonight, local time
+                    if (isMaxStop) {
+                        date = new Date();
+                        date.setHours(24, 0, 0, 0);
+                        stop = JulianDate.fromDate(date);
+                    }
+
                     clock = new DataSourceClock();
-                    clock.startTime = availability.start;
-                    clock.stopTime = availability.stop;
-                    clock.currentTime = availability.start;
+                    clock.startTime = start;
+                    clock.stopTime = stop;
+                    clock.currentTime = JulianDate.clone(start);
                     clock.clockRange = ClockRange.LOOP_STOP;
                     clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-                    clock.multiplier = Math.min(Math.max(JulianDate.secondsDifference(availability.stop, availability.start) / 60, 1), 3.15569e7);
+                    clock.multiplier = Math.round(Math.min(Math.max(JulianDate.secondsDifference(stop, start) / 60, 1), 3.15569e7));
                 }
                 var changed = false;
                 if (dataSource._name !== name) {

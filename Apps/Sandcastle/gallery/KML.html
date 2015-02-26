@@ -28,16 +28,29 @@
 function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
-
 var viewer = new Cesium.Viewer('cesiumContainer');
 
-Sandcastle.addDefaultToolbarButton('Facilities', function() {
-    viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/facilities.kmz'));
-});
-
-Sandcastle.addToolbarButton('US States', function() {
-    viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/us_states.kml'));
-});
+Sandcastle.addToolbarMenu([{
+    text : 'Load KML - Global Science Facilities',
+    onselect : function() {
+        viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/Facilities.kmz'));
+    }
+}, {
+    text : 'Load KMZ with embedded data - GDP per capita 2008',
+    onselect : function() {
+        viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/gdpPerCapita2008.kmz'));
+    }
+}, {
+    text : 'Load animated KML - Formation of United States',
+    onselect : function() {
+        viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/us_states.kml'));
+    }
+}, {
+    text : 'Load KML with gx extensions - GPS Constellation Orbit',
+    onselect : function() {
+        viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/us_states.kml'));
+    }
+}], 'toolbar');
 
 Sandcastle.reset = function() {
     viewer.dataSources.removeAll();
