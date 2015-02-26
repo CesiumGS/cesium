@@ -717,6 +717,8 @@ define([
 
     var mapInfoMxpNamespace = 'http://www.mapinfo.com/mxp';
     var esriWmsNamespace = 'http://www.esri.com/wms';
+    var wfsNamespace = 'http://www.opengis.net/wfs';
+    var gmlNamespace = 'http://www.opengis.net/gml';
 
     function xmlToFeatureInfo(xml) {
         var documentElement = xml.documentElement;
@@ -726,6 +728,9 @@ define([
         } else if (documentElement.localName === 'FeatureInfoResponse' && documentElement.namespaceURI === esriWmsNamespace) {
             // This looks like an Esri WMS response
             return esriXmlToFeatureInfo(xml);
+        } else if (documentElement.localName === 'FeatureCollection' && documentElement.namespaceURI === wfsNamespace) {
+            // This looks like a WFS/GML response.
+            return gmlToFeatureInfo(xml);
         } else if (documentElement.localName === 'ServiceExceptionReport') {
             // This looks like a WMS server error, so no features picked.
             return undefined;
@@ -791,6 +796,51 @@ define([
         }
 
         return result;
+    }
+
+    function gmlToFeatureInfo(xml) {
+        var result = [];
+
+        var featureCollection = xml.documentElement;
+
+        var featureMembers = featureCollection.getElementsByTagNameNS(gmlNamespace, 'featureMember');
+        for (var featureIndex = 0; featureIndex < featureMembers.length; ++featureIndex) {
+            var featureMember = featureMembers[featureIndex];
+
+            var properties = {};
+
+            getGmlPropertiesRecursively(featureMember, properties);
+
+            var featureInfo = new ImageryLayerFeatureInfo();
+            featureInfo.data = featureMember;
+            featureInfo.configureNameFromProperties(properties);
+            featureInfo.configureDescriptionFromProperties(properties);
+            result.push(featureInfo);
+        }
+
+        return result;
+    }
+
+    function getGmlPropertiesRecursively(gmlNode, properties) {
+        var isSingleValue = true;
+
+        for (var i = 0; i < gmlNode.children.length; ++i) {
+            var child = gmlNode.children[i];
+
+            if (child.nodeType === Node.ELEMENT_NODE) {
+                isSingleValue = false;
+            }
+
+            if (child.localName === 'Point' || child.localName === 'LineString' || child.localName === 'Polygon') {
+                continue;
+            }
+
+            if (child.hasChildNodes() && getGmlPropertiesRecursively(child, properties)) {
+                properties[child.localName] = child.textContent;
+            }
+        }
+
+        return isSingleValue;
     }
 
     function unknownXmlToFeatureInfo(xml) {
