@@ -6,6 +6,7 @@ defineSuite([
         'Core/Event',
         'Core/JulianDate',
         'Core/PolygonHierarchy',
+        'Core/RuntimeError',
         'DataSources/EntityCollection',
         'ThirdParty/when'
     ], function(
@@ -15,6 +16,7 @@ defineSuite([
         Event,
         JulianDate,
         PolygonHierarchy,
+        RuntimeError,
         EntityCollection,
         when) {
     "use strict";
@@ -693,11 +695,20 @@ defineSuite([
     });
 
     it('rejects unknown geometry', function() {
-        waitsForPromise.toReject(GeoJsonDataSource.load(unknownGeometry));
+        return GeoJsonDataSource.load(unknownGeometry).then(function() {
+            fail('should not be called');
+        }).otherwise(function(error) {
+            expect(error).toBeInstanceOf(RuntimeError);
+            expect(error.message).toContain('Unsupported GeoJSON object type: TimeyWimey');
+        });
     });
 
     it('rejects invalid url', function() {
-        waitsForPromise.toReject(GeoJsonDataSource.load('invalid.geojson'));
+        return GeoJsonDataSource.load('invalid.geojson').then(function() {
+            fail('should not be called');
+        }).otherwise(function(error) {
+            expect(error.statusCode).toBe(404);
+        });
     });
 
     it('rejects null CRS', function() {
@@ -707,7 +718,12 @@ defineSuite([
             crs : null
         };
 
-        waitsForPromise.toReject(GeoJsonDataSource.load(featureWithNullCrs));
+        return GeoJsonDataSource.load(featureWithNullCrs).then(function() {
+            fail('should not be called');
+        }).otherwise(function(error) {
+            expect(error).toBeInstanceOf(RuntimeError);
+            expect(error.message).toContain('crs is null.');
+        });
     });
 
     it('rejects unknown CRS', function() {
@@ -720,7 +736,12 @@ defineSuite([
             }
         };
 
-        waitsForPromise.toReject(GeoJsonDataSource.load(featureWithUnknownCrsType));
+        return GeoJsonDataSource.load(featureWithUnknownCrsType).then(function() {
+            fail('should not be called');
+        }).otherwise(function(error) {
+            expect(error).toBeInstanceOf(RuntimeError);
+            expect(error.message).toContain('Unknown crs type: potato');
+        });
     });
 
     it('rejects undefined CRS properties', function() {
@@ -732,7 +753,12 @@ defineSuite([
             }
         };
 
-        waitsForPromise.toReject(GeoJsonDataSource.load(featureWithUndefinedCrsProperty));
+        return GeoJsonDataSource.load(featureWithUndefinedCrsProperty).then(function() {
+            fail('should not be called');
+        }).otherwise(function(error) {
+            expect(error).toBeInstanceOf(RuntimeError);
+            expect(error.message).toContain('crs.properties is undefined.');
+        });
     });
 
     it('rejects unknown CRS name', function() {
@@ -747,7 +773,12 @@ defineSuite([
             }
         };
 
-        waitsForPromise.toReject(GeoJsonDataSource.load(featureWithUnknownCrsType));
+        return GeoJsonDataSource.load(featureWithUnknownCrsType).then(function() {
+            fail('should not be called');
+        }).otherwise(function(error) {
+            expect(error).toBeInstanceOf(RuntimeError);
+            expect(error.message).toContain('Unknown crs name: failMe');
+        });
     });
 
     it('rejects unknown CRS link', function() {
@@ -763,7 +794,12 @@ defineSuite([
             }
         };
 
-        waitsForPromise.toReject(GeoJsonDataSource.load(featureWithUnknownCrsType));
+        return GeoJsonDataSource.load(featureWithUnknownCrsType).then(function() {
+            fail('should not be called');
+        }).otherwise(function(error) {
+            expect(error).toBeInstanceOf(RuntimeError);
+            expect(error.message).toContain('Unable to resolve crs link: {"href":"failMe","type":"failMeTwice"}');
+        });
     });
 
     it('load rejects loading non json file', function() {
@@ -787,11 +823,10 @@ defineSuite([
         var promise = dataSource.load('Data/test.geojson');
         expect(spy).toHaveBeenCalledWith(dataSource, true);
         expect(dataSource.isLoading).toBe(true);
-        spy.reset();
 
-        waitsForPromise(promise, function() {
+        return promise.then(function() {
             expect(spy).toHaveBeenCalledWith(dataSource, false);
             expect(dataSource.isLoading).toBe(false);
-       });
+        });
     });
 });

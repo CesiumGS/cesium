@@ -17,6 +17,7 @@ defineSuite([
         'Core/Quaternion',
         'Core/Rectangle',
         'Core/ReferenceFrame',
+        'Core/RuntimeError',
         'Core/TimeInterval',
         'DataSources/EntityCollection',
         'DataSources/ReferenceProperty',
@@ -43,6 +44,7 @@ defineSuite([
         Quaternion,
         Rectangle,
         ReferenceFrame,
+        RuntimeError,
         TimeInterval,
         EntityCollection,
         ReferenceProperty,
@@ -231,7 +233,7 @@ defineSuite([
     it('processUrl loads data on top of existing', function() {
         var dataSource = new CzmlDataSource();
         dataSource.processUrl(simpleUrl);
-        
+
         return pollToPromise(function() {
             return dataSource.entities.values.length === 10;
         }).then(function() {
@@ -2030,21 +2032,35 @@ defineSuite([
     });
 
     it('rejects if first document packet lacks version information', function() {
-        waitsForPromise.toReject(CzmlDataSource.load({
+        return CzmlDataSource.load({
             id : 'document'
-        }));
+        }).then(function() {
+            fail('should not be called');
+        }).otherwise(function(error) {
+            expect(error).toBeInstanceOf(RuntimeError);
+            expect(error.message).toEqual('CZML version information invalid.  It is expected to be a property on the document object in the <Major>.<Minor> version format.');
+        });
     });
 
     it('rejects if first packet is not document', function() {
-        waitsForPromise.toReject(CzmlDataSource.load({
+        return CzmlDataSource.load({
             id : 'someId'
-        }));
+        }).then(function() {
+            fail('should not be called');
+        }).otherwise(function(error) {
+            expect(error).toBeInstanceOf(RuntimeError);
+            expect(error.message).toEqual('The first CZML packet is required to be the document object.');
+        });
     });
 
     it('rejects if document packet contains bad version', function() {
-        waitsForPromise.toReject(CzmlDataSource.load({
-            id : 'document',
-            version : 12
-        }));
+        return CzmlDataSource.load({
+            id : 'document'
+        }).then(function() {
+            fail('should not be called');
+        }).otherwise(function(error) {
+            expect(error).toBeInstanceOf(RuntimeError);
+            expect(error.message).toContain('CZML version information invalid.  It is expected to be a property on the document object in the <Major>.<Minor> version format.');
+        });
     });
 });

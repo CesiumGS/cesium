@@ -47,8 +47,8 @@ defineSuite([
         expect(addSpy).toHaveBeenCalledWith(collection, source);
         expect(removeSpy).not.toHaveBeenCalled();
 
-        addSpy.reset();
-        removeSpy.reset();
+        addSpy.calls.reset();
+        removeSpy.calls.reset();
 
         expect(collection.remove(source)).toEqual(true);
         expect(addSpy).not.toHaveBeenCalled();
