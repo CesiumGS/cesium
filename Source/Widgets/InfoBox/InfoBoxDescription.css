@@ -11,6 +11,10 @@ body {
     color: #edffff;
 }
 
+.cesium-infoBox-description a:link,a:visited,a:hover,a:active {
+    color: #edffff;
+}
+
 .cesium-infoBox-description table {
     color: #edffff;
 }
@@ -42,6 +46,10 @@ body {
 }
 
 .cesium-infoBox-description-lighter {
+    color: #000000;
+}
+
+.cesium-infoBox-description-lighter a:link,a:visited,a:hover,a:active {
     color: #000000;
 }
 

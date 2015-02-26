@@ -431,18 +431,21 @@ define([
     }
 
     var colorOptions = {};
-    function queryColorValue(node, tagName, namespace) {
-        var colorString = queryStringValue(node, tagName, namespace);
-        if (!defined(colorString)) {
+    function parseColorString(value, isRandom) {
+        if (!defined(value)) {
             return undefined;
         }
 
-        var alpha = parseInt(colorString.substring(0, 2), 16) / 255.0;
-        var blue = parseInt(colorString.substring(2, 4), 16) / 255.0;
-        var green = parseInt(colorString.substring(4, 6), 16) / 255.0;
-        var red = parseInt(colorString.substring(6, 8), 16) / 255.0;
+        if(value[0] === '#'){
+            value = value.substring(1);
+        }
 
-        if (queryStringValue(node, 'colorMode', namespace) !== 'random') {
+        var alpha = parseInt(value.substring(0, 2), 16) / 255.0;
+        var blue = parseInt(value.substring(2, 4), 16) / 255.0;
+        var green = parseInt(value.substring(4, 6), 16) / 255.0;
+        var red = parseInt(value.substring(6, 8), 16) / 255.0;
+
+        if (!isRandom) {
             return new Color(red, green, blue, alpha);
         }
 
@@ -463,6 +466,14 @@ define([
         }
         colorOptions.alpha = alpha;
         return Color.fromRandom(colorOptions);
+    }
+
+    function queryColorValue(node, tagName, namespace) {
+        var value = queryStringValue(node, tagName, namespace);
+        if (!defined(value)) {
+            return undefined;
+        }
+        return parseColorString(value, queryStringValue(node, 'colorMode', namespace) === 'random');
     }
 
     function processTimeSpan(featureNode) {
@@ -640,8 +651,8 @@ define([
                 polygon.fill = defaultValue(queryBooleanValue(node, 'fill', namespaces.kml), polygon.fill);
                 polygon.outline = defaultValue(queryBooleanValue(node, 'outline', namespaces.kml), polygon.outline);
             } else if (node.nodeName === 'BalloonStyle') {
-                var bgColor = queryColorValue(node, 'bgColor', namespaces.kml);
-                var textColor = queryColorValue(node, 'textColor', namespaces.kml);
+                var bgColor = defaultValue(parseColorString(queryStringValue(node, 'bgColor', namespaces.kml)), Color.WHITE);
+                var textColor = defaultValue(parseColorString(queryStringValue(node, 'textColor', namespaces.kml)), Color.BLACK);
                 var text = queryStringValue(node, 'text', namespaces.kml);
 
                 //This is purely an internal property used in style processing,
@@ -1167,7 +1178,6 @@ define([
 
             var tmp = '<div class="cesium-infoBox-description-lighter" style="';
             tmp += 'overflow:auto;';
-            tmp += 'padding: 4px 5px;';
             tmp += 'word-wrap:break-word;';
             tmp += 'background-color:' + background.toCssColorString() + ';';
             tmp += 'color:' + foreground.toCssColorString() + ';';
