@@ -1650,11 +1650,11 @@ defineSuite([
         expect(label.eyeOffset).toBeUndefined();
         expect(label.pixelOffsetScaleByDistance).toBeUndefined();
 
-        expect(label.font.getValue()).toEqual('14pt sans-serif');
+        expect(label.font.getValue()).toEqual('16px san-serif');
         expect(label.style.getValue()).toEqual(LabelStyle.FILL_AND_OUTLINE);
         expect(label.horizontalOrigin.getValue()).toEqual(HorizontalOrigin.LEFT);
         expect(label.pixelOffset.getValue()).toEqual(new Cartesian2(17, 0));
-        expect(label.translucencyByDistance.getValue()).toEqual(new NearFarScalar(1500000, 1.0, 3400000, 0.0));
+        expect(label.translucencyByDistance.getValue()).toEqual(new NearFarScalar(3000000, 1.0, 5000000, 0.0));
     });
 
     it('LabelStyle: Sets color', function() {
