@@ -134,6 +134,7 @@ define([
         this._enablePickFeatures = defaultValue(options.enablePickFeatures, true);
         this._getFeatureInfoAsGeoJson = defaultValue(options.getFeatureInfoAsGeoJson, true);
         this._getFeatureInfoAsXml = defaultValue(options.getFeatureInfoAsXml, true);
+        this._getFeatureInfoXmlContentType = defaultValue(options.getFeatureInfoXmlContentType, 'text/xml');
 
         // Merge the parameters with the defaults, and make all parameter names lowercase
         this._parameters = combine(objectToLowercase(defaultValue(options.parameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.DefaultParameters);
@@ -553,7 +554,7 @@ define([
                 });
             });
         } else if (this._getFeatureInfoAsXml) {
-            url = buildGetFeatureInfoUrl(this, 'text/xml', x, y, level, i, j);
+            url = buildGetFeatureInfoUrl(this, this._getFeatureInfoXmlContentType, x, y, level, i, j);
 
             return when(loadXML(url), function(xml) {
                 return xmlToFeatureInfo(xml);
