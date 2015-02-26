@@ -489,64 +489,6 @@ define([
                     return when.reject(e);
                 }
 
-                url = buildGetFeatureInfoUrl(that, 'text/xml', x, y, level, i, j);
-
-                return when(loadXML(url), function(xml) {
-                    return xmlToFeatureInfo(xml);
-                });
-            });
-        } else if (this._getFeatureInfoAsXml) {
-            url = buildGetFeatureInfoUrl(this, 'text/xml', x, y, level, i, j);
-
-            return when(loadXML(url), function(xml) {
-                return xmlToFeatureInfo(xml);
-            });
-        } else {
-            return undefined;
-        }
-    };
-
-    /**
-     * Asynchronously determines what features, if any, are located at a given longitude and latitude within
-     * a tile.  This function should not be called before {@link ImageryProvider#ready} returns true.
-     *
-     * @param {Number} x The tile X coordinate.
-     * @param {Number} y The tile Y coordinate.
-     * @param {Number} level The tile level.
-     * @param {Number} longitude The longitude at which to pick features.
-     * @param {Number} latitude  The latitude at which to pick features.
-     * @return {Promise} A promise for the picked features that will resolve when the asynchronous
-     *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
-     *                   instances.  The array may be empty if no features are found at the given location.
-     *
-     * @exception {DeveloperError} <code>pickFeatures</code> must not be called before the imagery provider is ready.
-     */
-    WebMapServiceImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('pickFeatures must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        var rectangle = this._tilingScheme.tileXYToRectangle(x, y, level);
-
-        var i = (this._tileWidth * (longitude - rectangle.west) / (rectangle.east - rectangle.west)) | 0;
-        var j = (this._tileHeight * (rectangle.north - latitude) / (rectangle.north - rectangle.south)) | 0;
-
-        var url;
-
-        if (this._getFeatureInfoAsGeoJson) {
-            url = buildGetFeatureInfoUrl(this, 'application/json', x, y, level, i, j);
-
-            var that = this;
-            return when(loadJson(url), function(json) {
-                return geoJsonToFeatureInfo(json);
-            }, function (e) {
-                // GeoJSON failed, try XML.
-                if (!that._getFeatureInfoAsXml) {
-                    throw e;
-                }
-
                 url = buildGetFeatureInfoUrl(that, that._getFeatureInfoXmlContentType, x, y, level, i, j);
 
                 return when(loadXML(url), function(xml) {
