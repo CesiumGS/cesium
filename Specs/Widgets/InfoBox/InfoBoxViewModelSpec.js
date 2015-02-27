@@ -15,11 +15,10 @@ defineSuite([
         expect(viewModel.closeClicked).toBeDefined();
         expect(viewModel.descriptionRawHtml).toBe('');
         expect(viewModel.maxHeightOffset(0)).toBeDefined();
-        expect(viewModel.sanitizer).toBeDefined();
         expect(viewModel.loadingIndicatorHtml).toBeDefined();
     });
 
-    it('allows some HTML in description', function() {
+    it('sets description', function() {
         var safeString = '<p>This is a test.</p>';
         var viewModel = new InfoBoxViewModel();
         viewModel.descriptionRawHtml = safeString;
@@ -28,19 +27,6 @@ defineSuite([
         });
         runs(function() {
             expect(viewModel.descriptionSanitizedHtml).toBe(safeString);
-        });
-    });
-
-    it('removes script tags from HTML description by default', function() {
-        var evilString = 'Testing. <script>console.error("Scripts are disallowed by default.");</script>';
-        var viewModel = new InfoBoxViewModel();
-        viewModel.descriptionRawHtml = evilString;
-        waitsFor(function() {
-            return viewModel.descriptionSanitizedHtml !== viewModel.loadingIndicatorHtml;
-        });
-        runs(function() {
-            expect(viewModel.descriptionSanitizedHtml).toContain('Testing.');
-            expect(viewModel.descriptionSanitizedHtml).not.toContain('script');
         });
     });
 
