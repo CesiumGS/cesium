@@ -147,6 +147,20 @@ define([
                 set : function(value) {
                     clearOnDrop = value;
                 }
+            },
+
+            /**
+             * Gets or sets the proxy to be used for KML.
+             * @memberof viewerDragDropMixin.prototype
+             * @type {DefaultProxy}
+             */
+            proxy : {
+                get : function() {
+                    return proxy;
+                },
+                set : function(value) {
+                    proxy = value;
+                }
             }
         });
 
