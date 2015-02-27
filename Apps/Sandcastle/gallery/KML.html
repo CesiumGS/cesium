@@ -31,25 +31,25 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 Sandcastle.addToolbarMenu([{
-    text : 'Load KML - Global Science Facilities',
+    text : 'KML - Global Science Facilities',
     onselect : function() {
         viewer.homeButton.viewModel.command();
         viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/kml/facilities/facilities.kml'));
     }
 }, {
-    text : 'Load KMZ with embedded data - GDP per capita 2008',
+    text : 'KMZ with embedded data - GDP per capita',
     onselect : function() {
         viewer.homeButton.viewModel.command();
         viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/kml/gdpPerCapita2008.kmz'));
     }
 }, {
-    text : 'Load animated KML - Formation of United States',
+    text : 'Animated KML - Formation of United States',
     onselect : function() {
         viewer.homeButton.viewModel.command();
         viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/kml/us_states.kml'));
     }
 }, {
-    text : 'Load KML with gx extensions - Bike Ride',
+    text : 'gx KML extensions - Bike Ride',
     onselect : function() {
         viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/kml/bikeRide.kml')).then(function(dataSource){
             viewer.clock.shouldAnimate = false;

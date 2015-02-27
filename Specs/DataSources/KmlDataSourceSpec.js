@@ -370,7 +370,7 @@ defineSuite([
         dataSource.load(parser.parseFromString(kml, "text/xml"));
 
         var entity = dataSource.entities.values[0];
-        expect(entity.kml.Snippet).toBe('Hey!');
+        expect(entity.kml.snippet).toBe('Hey!');
     });
 
     it('Feature: atom:author', function() {

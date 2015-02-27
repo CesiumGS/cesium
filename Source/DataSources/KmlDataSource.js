@@ -230,7 +230,7 @@ define([
     }
 
     function replaceAttributes(div, elementType, attributeName, uriResolver) {
-        var keys = Object.keys(uriResolver);
+        var keys = uriResolver.keys;
         var baseUri = new Uri('.');
         var elements = div.querySelectorAll(elementType);
         for (var i = 0; i < elements.length; i++) {
@@ -263,7 +263,7 @@ define([
         var entity = entityCollection.getOrCreateEntity(id);
         if (!defined(entity.kml)) {
             entity.addProperty('kml');
-            entity.kml = {};
+            entity.kml = new KmlFeatureData();
         }
         return entity;
     }
@@ -1152,6 +1152,7 @@ define([
         entity.kml.extendedData = result;
     }
 
+    var scratchDiv = document.createElement('div');
     function processDescription(node, entity, styleEntity, uriResolver) {
         var i;
         var key;
@@ -1173,81 +1174,84 @@ define([
             text = defaultValue(balloonStyle.text, description);
         }
 
-        if (defined(text) || defined(extendedData)) {
-            var value;
+        if (!defined(text) && !defined(extendedData)) {
+            return;
+        }
 
-            var tmp = '<div class="cesium-infoBox-description-lighter" style="';
-            tmp += 'overflow:auto;';
-            tmp += 'word-wrap:break-word;';
-            tmp += 'background-color:' + background.toCssColorString() + ';';
-            tmp += 'color:' + foreground.toCssColorString() + ';';
-            tmp += '">';
+        var value;
+        if (defined(text)) {
+            text = text.replace('$[name]', defaultValue(entity.name, ''));
+            text = text.replace('$[description]', defaultValue(description, ''));
+            text = text.replace('$[address]', defaultValue(kmlData.address, ''));
+            text = text.replace('$[Snippet]', defaultValue(kmlData.snippet, ''));
+            text = text.replace('$[id]', entity.id);
 
-            if (defined(text)) {
-                text = text.replace('$[name]', defaultValue(entity.name, ''));
-                text = text.replace('$[description]', defaultValue(description, ''));
-                text = text.replace('$[address]', defaultValue(kmlData.address, ''));
-                text = text.replace('$[Snippet]', defaultValue(kmlData.Snippet, ''));
-                text = text.replace('$[id]', entity.id);
+            //While not explicitly defined by the OGC spec, in Google Earth
+            //The appearance of geDirections adds the directions to/from links
+            //We simply replace this string with nothing.
+            text = text.replace('$[geDirections]', '');
 
-                //While not explicitly defined by the OGC spec, in Google Earth
-                //The appearance of geDirections adds the directions to/from links
-                //We simply replace this string with nothing.
-                text = text.replace('$[geDirections]', '');
+            if (defined(extendedData)) {
+                var matches = text.match(/\$\[.+?\]/g);
+                if (matches !== null) {
+                    for (i = 0; i < matches.length; i++) {
+                        var token = matches[i];
+                        var propertyName = token.substr(2, token.length - 3);
+                        var isDisplayName = /\/displayName$/.test(propertyName);
+                        propertyName = propertyName.replace(/\/displayName$/, '');
 
-                if (defined(extendedData)) {
-                    var matches = text.match(/\$\[.+?\]/g);
-                    if (matches !== null) {
-                        for (i = 0; i < matches.length; i++) {
-                            var token = matches[i];
-                            var propertyName = token.substr(2, token.length - 3);
-                            var isDisplayName = /\/displayName$/.test(propertyName);
-                            propertyName = propertyName.replace(/\/displayName$/, '');
-
-                            value = extendedData[propertyName];
-                            if (defined(value)) {
-                                value = isDisplayName ? value.displayName : value.value;
-                            }
-                            if (defined(value)) {
-                                text = text.replace(token, defaultValue(value, ''));
-                            }
+                        value = extendedData[propertyName];
+                        if (defined(value)) {
+                            value = isDisplayName ? value.displayName : value.value;
+                        }
+                        if (defined(value)) {
+                            text = text.replace(token, defaultValue(value, ''));
                         }
                     }
                 }
-                tmp = tmp + text + '</div>';
-            } else {
-                //If no description exists, build a table out of the extended data
-                tmp += '<table class="cesium-infoBox-defaultTable cesium-infoBox-defaultTable-lighter"><tbody>';
-                keys = Object.keys(extendedData);
+            }
+        } else {
+            //If no description exists, build a table out of the extended data
+            keys = Object.keys(extendedData);
+            if (keys.length > 0) {
+                text = '<table class="cesium-infoBox-defaultTable cesium-infoBox-defaultTable-lighter"><tbody>';
                 for (i = 0; i < keys.length; i++) {
                     key = keys[i];
                     value = extendedData[key];
-                    tmp += '<tr><th>' + defaultValue(value.displayName, key) + '</th><td>' + defaultValue(value.value, '') + '</td></tr>';
+                    text += '<tr><th>' + defaultValue(value.displayName, key) + '</th><td>' + defaultValue(value.value, '') + '</td></tr>';
                 }
-                tmp += '</tbody></table></div>';
+                text += '</tbody></table>';
             }
-
-            //Turns non-explicit links into clickable links.
-            tmp = autolinker.link(tmp);
-
-            //Use a temporary div to manipulate the links
-            //so that they open in a new window.
-            var div = document.createElement('div');
-            div.innerHTML = tmp;
-            var links = div.querySelectorAll('a');
-            for (i = 0; i < links.length; i++) {
-                links[i].setAttribute('target', '_blank');
-            }
-
-            //Rewrite any KMZ embedded urls
-            if (defined(uriResolver)) {
-                replaceAttributes(div, 'a', 'href', uriResolver);
-                replaceAttributes(div, 'img', 'src', uriResolver);
-            }
-
-            //Set the final HTML as the description.
-            entity.description = div.innerHTML;
         }
+
+        //Turns non-explicit links into clickable links.
+        text = autolinker.link(text);
+
+        //Use a temporary div to manipulate the links
+        //so that they open in a new window.
+        scratchDiv.innerHTML = text;
+        var links = scratchDiv.querySelectorAll('a');
+        for (i = 0; i < links.length; i++) {
+            links[i].setAttribute('target', '_blank');
+        }
+
+        //Rewrite any KMZ embedded urls
+        if (defined(uriResolver) && uriResolver.keys.length > 1) {
+            replaceAttributes(scratchDiv, 'a', 'href', uriResolver);
+            replaceAttributes(scratchDiv, 'img', 'src', uriResolver);
+        }
+
+        var tmp = '<div class="cesium-infoBox-description-lighter" style="';
+        tmp += 'overflow:auto;';
+        tmp += 'word-wrap:break-word;';
+        tmp += 'background-color:' + background.toCssColorString() + ';';
+        tmp += 'color:' + foreground.toCssColorString() + ';';
+        tmp += '">';
+        tmp += scratchDiv.innerHTML + '</div>';
+        scratchDiv.innerHTML = '';
+
+        //Set the final HTML as the description.
+        entity.description = tmp;
     }
 
     function processFeature(dataSource, parent, featureNode, entityCollection, styleCollection, sourceUri, uriResolver) {
@@ -1265,25 +1269,23 @@ define([
         //var open = queryBooleanValue(featureNode, 'open', namespaces.kml);
 
         var authorNode = queryFirstNode(featureNode, 'author', namespaces.atom);
-        kmlData.author = {
-            name : queryStringValue(authorNode, 'name', namespaces.atom),
-            uri : queryStringValue(authorNode, 'uri', namespaces.atom),
-            email : queryStringValue(authorNode, 'email', namespaces.atom)
-        };
+        var author = kmlData.author;
+        author.name = queryStringValue(authorNode, 'name', namespaces.atom);
+        author.uri = queryStringValue(authorNode, 'uri', namespaces.atom);
+        author.email = queryStringValue(authorNode, 'email', namespaces.atom);
 
         var linkNode = queryFirstNode(featureNode, 'link', namespaces.atom);
-        kmlData.link = {
-            href : queryStringAttribute(linkNode, 'href'),
-            hreflang : queryStringAttribute(linkNode, 'hreflang'),
-            rel : queryStringAttribute(linkNode, 'rel'),
-            type : queryStringAttribute(linkNode, 'type'),
-            title : queryStringAttribute(linkNode, 'title'),
-            length : queryStringAttribute(linkNode, 'length')
-        };
+        var link = kmlData.link;
+        link.href = queryStringAttribute(linkNode, 'href');
+        link.hreflang = queryStringAttribute(linkNode, 'hreflang');
+        link.rel = queryStringAttribute(linkNode, 'rel');
+        link.type = queryStringAttribute(linkNode, 'type');
+        link.title = queryStringAttribute(linkNode, 'title');
+        link.length = queryStringAttribute(linkNode, 'length');
 
         kmlData.address = queryStringValue(featureNode, 'address', namespaces.kml);
         kmlData.phoneNumber = queryStringValue(featureNode, 'phoneNumber', namespaces.kml);
-        kmlData.Snippet = queryStringValue(featureNode, 'Snippet', namespaces.kml);
+        kmlData.snippet = queryStringValue(featureNode, 'Snippet', namespaces.kml);
 
         processExtendedData(featureNode, entity);
         processDescription(featureNode, entity, styleEntity, uriResolver);
@@ -1584,6 +1586,7 @@ define([
                         deferred.reject(new RuntimeError('KMZ file does not contain a KML document.'));
                         return;
                     }
+                    uriResolver.keys = Object.keys(uriResolver);
                     return loadKml(dataSource, uriResolver.kml, sourceUri, uriResolver).then(deferred.resolve);
                 }).otherwise(deferred.reject);
             });
@@ -1595,19 +1598,33 @@ define([
     }
 
     /**
-     * A {@link DataSource} which processes KML.
+     * A {@link DataSource} which processes Keyhole Markup Language 2.2 (KML).
+     * <p>
+     * KML support in Cesium is incomplete, but a large amount of the standard,
+     * as well as Google's <code>gx</code> extension namespace, is supported. See Github issue
+     * {@link https://github.com/AnalyticalGraphicsInc/cesium/issues/873|#873} for a
+     * detailed list of what is and isn't support. Cesium will also write information to the
+     * console when it encounters most unsupported features.
+     * </p>
+     * <p>
+     * Non visual feature data, such as <code>atom:author</code> and <code>ExtendedData</code>
+     * is exposed via an instance of {@link KmlFeatureData}, which is added to each {@link Entity}
+     * under the <code>kml</code> property.
+     * </p>
+     *
      * @alias KmlDataSource
      * @constructor
      *
      * @param {DefaultProxy} [proxy] A proxy to be used for loading external data.
      *
-     * @see https://developers.google.com/kml/
-     * @see http://www.opengeospatial.org/standards/kml/
+     * @see {@link http://www.opengeospatial.org/standards/kml/|Open Geospatial Consortium KML Standard}
+     * @see {@link https://developers.google.com/kml/|Google KML Documentation}
+     *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=KML.html|Cesium Sandcastle KML Demo}
      *
      * @example
      * var viewer = new Cesium.Viewer('cesiumContainer');
-     * viewer.dataSources.add(new Cesium.KmlDataSource({ data : '../../SampleData/facilities.kmz' });
+     * viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/facilities.kmz'));
      */
     var KmlDataSource = function(proxy) {
         this._changed = new Event();
@@ -1623,7 +1640,7 @@ define([
     };
 
     /**
-     * Asynchronously loads the provided KML data, replacing any existing data.
+     * Creates a Promise to a new instance loaded with the provided KML data.
      *
      * @param {String|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
      * @param {Object} [options] An object with the following properties:
@@ -1640,6 +1657,7 @@ define([
     defineProperties(KmlDataSource.prototype, {
         /**
          * Gets a human-readable name for this instance.
+         * This will be automatically be set to the KML document name on load.
          * @memberof KmlDataSource.prototype
          * @type {String}
          */
@@ -1763,6 +1781,122 @@ define([
             that._error.raiseEvent(that, error);
             return when.reject(error);
         });
+    };
+
+    /**
+     * Contains KML Feature data loaded into the <code>Entity.kml</code> property by {@link KmlDataSource}.
+     * @alias KmlFeatureData
+     * @constructor
+     */
+    var KmlFeatureData = function() {
+        /**
+         * Gets the atom syndication format author field.
+         * @type Object
+         */
+        this.author = {
+            /**
+             * Gets the name.
+             * @type String
+             * @alias author.name
+             * @memberof! KmlFeatureData#
+             * @property author.name
+             */
+            name : undefined,
+            /**
+             * Gets the URI.
+             * @type String
+             * @alias author.uri
+             * @memberof! KmlFeatureData#
+             * @property author.uri
+             */
+            uri : undefined,
+            /**
+             * Gets the email.
+             * @type String
+             * @alias author.email
+             * @memberof! KmlFeatureData#
+             * @property author.email
+             */
+            email : undefined
+        };
+
+        /**
+         * Gets the link.
+         * @type Object
+         */
+        this.link = {
+            /**
+             * Gets the href.
+             * @type String
+             * @alias link.href
+             * @memberof! KmlFeatureData#
+             * @property link.href
+             */
+            href : undefined,
+            /**
+             * Gets the language of the linked resource.
+             * @type String
+             * @alias link.hreflang
+             * @memberof! KmlFeatureData#
+             * @property link.hreflang
+             */
+            hreflang : undefined,
+            /**
+             * Gets the link relation.
+             * @type String
+             * @alias link.rel
+             * @memberof! KmlFeatureData#
+             * @property link.rel
+             */
+            rel : undefined,
+            /**
+             * Gets the link type.
+             * @type String
+             * @alias link.type
+             * @memberof! KmlFeatureData#
+             * @property link.type
+             */
+            type : undefined,
+            /**
+             * Gets the link title.
+             * @type String
+             * @alias link.title
+             * @memberof! KmlFeatureData#
+             * @property link.title
+             */
+            title : undefined,
+            /**
+             * Gets the link length.
+             * @type String
+             * @alias link.length
+             * @memberof! KmlFeatureData#
+             * @property link.length
+             */
+            length : undefined
+        };
+
+        /**
+         * Gets the unstructured address field.
+         * @type String
+         */
+        this.address = undefined;
+        /**
+         * Gets the phone number.
+         * @type String
+         */
+        this.phoneNumber = undefined;
+        /**
+         * Gets the snippet.
+         * @type String
+         */
+        this.snippet = undefined;
+        /**
+         * Gets the extended data, parsed into a JSON object.
+         * Currently only the <code>Data</code> property is supported.
+         * <code>SchemaData</code> and custom data are ignored.
+         * @type String
+         */
+        this.extendedData = undefined;
     };
 
     return KmlDataSource;
