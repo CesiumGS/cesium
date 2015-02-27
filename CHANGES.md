@@ -9,6 +9,7 @@ Change Log
   * Removed `Camera.heading` and `Camera.tilt`. They were deprecated in Cesium 1.6. Use `Camera.setView`.
   * Removed `Camera.setPositionCartographic`, which was was deprecated in Cesium 1.6. Use `Camera.setView`.
 * Fixed incorrect ellipse texture coordinates. [#2363](https://github.com/AnalyticalGraphicsInc/cesium/issues/2363) and [#2465](https://github.com/AnalyticalGraphicsInc/cesium/issues/2465)
+* Fixed a bug that would cause incorrect geometry for long Corridors and Polyline Volumes. [#2513](https://github.com/AnalyticalGraphicsInc/cesium/issues/2513)
 * Fixed a bug in imagery loading that could cause some or all of the globe to be missing when using an imagery layer that does not cover the entire globe.
 * Added support for rendering a water effect on Quantized-Mesh terrain tiles.
 * Added `pack` and `unpack` functions to `Matrix2` and `Matrix3`.
