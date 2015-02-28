@@ -31,12 +31,12 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 
 //Example 1: Load with default styling.
 Sandcastle.addDefaultToolbarButton('Default styling', function() {
-    viewer.dataSources.add(Cesium.GeoJsonDataSource.fromUrl('../../SampleData/ne_10m_us_states.topojson'));
+    viewer.dataSources.add(Cesium.GeoJsonDataSource.load('../../SampleData/ne_10m_us_states.topojson'));
 });
 
 //Example 2: Load with basic styling options.
 Sandcastle.addToolbarButton('Basic styling', function() {
-    viewer.dataSources.add(Cesium.GeoJsonDataSource.fromUrl('../../SampleData/ne_10m_us_states.topojson', {
+    viewer.dataSources.add(Cesium.GeoJsonDataSource.load('../../SampleData/ne_10m_us_states.topojson', {
         stroke: Cesium.Color.HOTPINK,
         fill: Cesium.Color.PINK,
         strokeWidth: 3
@@ -48,12 +48,10 @@ Sandcastle.addToolbarButton('Custom styling', function() {
     //Seed the random number generator for repeatable results.
     Cesium.Math.setRandomNumberSeed(0);
 
-    //Create a new GeoJSON data source and add it to the list.
-    var dataSource = new Cesium.GeoJsonDataSource();
-    viewer.dataSources.add(dataSource);
-    
-    //Load the document into the data source and then set custom graphics
-    dataSource.loadUrl('../../SampleData/ne_10m_us_states.topojson').then(function() {
+    var promise = Cesium.GeoJsonDataSource.load('../../SampleData/ne_10m_us_states.topojson');
+    promise.then(function(dataSource) {
+        viewer.dataSources.add(dataSource);
+
         //Get the array of entities
         var entities = dataSource.entities.values;
         
@@ -82,6 +80,9 @@ Sandcastle.addToolbarButton('Custom styling', function() {
             //Since the population is a huge number, we divide by 50.
             entity.polygon.extrudedHeight = entity.properties.Population / 50.0;
         }
+    }).otherwise(function(error){
+        //Display any errrors encountered while loading.
+        window.alert(error);
     });
 });
 

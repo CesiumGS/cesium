@@ -101,7 +101,7 @@ define([
             loadPromise = dataSource.loadUrl(source);
         } else if (/\.geojson$/i.test(source) || /\.json$/i.test(source) || /\.topojson$/i.test(source)) {
             dataSource = new GeoJsonDataSource(getFilenameFromUri(source));
-            loadPromise = dataSource.loadUrl(source);
+            loadPromise = dataSource.load(source);
         } else {
             showLoadError(source, 'Unknown format.');
         }

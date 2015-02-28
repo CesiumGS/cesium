@@ -30,13 +30,17 @@ html, body {
 }
 
 #toolbar, #galleryContainer {
+    -ms-user-select: none;
     -moz-user-select: -moz-none;  /* allows for re-enabling on sub-elements like the search box */
     -webkit-user-select: none;
+    user-select: none;
 }
 
 #search {
+    -ms-user-select: text;
     -moz-user-select: text;
     -webkit-user-select: text;
+    user-select: text;
  }
 
 .cesiumTitle {
