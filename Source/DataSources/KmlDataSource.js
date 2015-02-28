@@ -185,8 +185,6 @@ define([
 
     var BILLBOARD_SIZE = 32;
 
-    var scratchCartesian = new Cartesian3();
-
     function isZipFile(blob) {
         var magicBlob = blob.slice(0, Math.min(4, blob.size));
         var deferred = when.defer();
@@ -250,14 +248,14 @@ define([
 
     function proxyUrl(url, proxy) {
         if (defined(proxy)) {
-            if ((new Uri(url)).scheme) {
+            if (new Uri(url).isAbsolute()) {
                 url = proxy.getURL(url);
             }
         }
         return url;
     }
 
-    function getOrCreateEntity(node, entityCollection){
+    function getOrCreateEntity(node, entityCollection) {
         var id = queryStringAttribute(node, 'id');
         id = defined(id) ? id : createGuid();
         var entity = entityCollection.getOrCreateEntity(id);
@@ -268,12 +266,16 @@ define([
         return entity;
     }
 
+    function isExtrudable(altitudeMode, gxAltitudeMode) {
+        return altitudeMode === 'absolute' || altitudeMode === 'relativeToGround' || gxAltitudeMode === 'relativeToSeaFloor';
+    }
+
     function readCoordinate(value) {
         if (!defined(value)) {
             return undefined;
         }
 
-        var digits = value.trim().split(/[\s,\n]+/g);
+        var digits = value.match(/[^\s,\n]+/g);
         if (digits.length !== 2 && digits.length !== 3) {
             window.console.log('KML - Invalid coordinates: ' + value);
             return undefined;
@@ -290,16 +292,12 @@ define([
         return Cartesian3.fromDegrees(longitude, latitude, height);
     }
 
-    function isExtrudable(altitudeMode, gxAltitudeMode) {
-        return altitudeMode === 'absolute' || altitudeMode === 'relativeToGround' || gxAltitudeMode === 'relativeToSeaFloor';
-    }
-
     function readCoordinates(element) {
         if (!defined(element)) {
             return undefined;
         }
 
-        var tuples = element.textContent.trim().split(/[\s\n]+/g);
+        var tuples = element.textContent.match(/[^\s\n]+/g);
         var length = tuples.length;
         var result = new Array(length);
         var resultIndex = 0;
@@ -543,7 +541,6 @@ define([
     }
 
     function processBillboardIcon(dataSource, node, targetEntity, sourceUri, uriResolver) {
-        //Map style to billboard properties
         var scale = queryNumericValue(node, 'scale', namespaces.kml);
         var heading = queryNumericValue(node, 'heading', namespaces.kml);
         var color = queryColorValue(node, 'color', namespaces.kml);
@@ -1587,8 +1584,8 @@ define([
                         return;
                     }
                     uriResolver.keys = Object.keys(uriResolver);
-                    return loadKml(dataSource, uriResolver.kml, sourceUri, uriResolver).then(deferred.resolve);
-                }).otherwise(deferred.reject);
+                    return loadKml(dataSource, uriResolver.kml, sourceUri, uriResolver);
+                }).then(deferred.resolve).otherwise(deferred.reject);
             });
         }, function(e) {
             deferred.reject(e);

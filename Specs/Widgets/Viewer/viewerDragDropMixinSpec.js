@@ -403,7 +403,7 @@ defineSuite([
             proxy : proxy
         });
         expect(viewer.proxy).toBe(proxy);
-    })
+    });
 
     it('throws with undefined viewer', function() {
         expect(function() {
