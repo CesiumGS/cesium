@@ -278,9 +278,14 @@ define([
         }
         //>>includeEnd('debug');
 
+        var sceneMode = scene.mode;
+        if (sceneMode === SceneMode.MORPHING) {
+            return;
+        }
+
         var positionProperty = entity.position;
         var objectChanged = entity !== this._lastEntity;
-        var sceneModeChanged = scene.mode !== this._mode && scene.mode !== SceneMode.MORPHING;
+        var sceneModeChanged = sceneMode !== this._mode;
 
         var offset3D = this._offset3D;
         var offset2D = this._offset2D;

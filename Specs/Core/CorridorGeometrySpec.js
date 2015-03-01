@@ -180,6 +180,23 @@ defineSuite([
         expect(m.indices.length).toEqual(3 * 8);
     });
 
+    it('computes straight corridors', function() {
+        var m = CorridorGeometry.createGeometry(new CorridorGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            positions : Cartesian3.fromDegreesArray([
+                -67.655, 0.0,
+                -67.655, 15.0,
+                -67.655, 20.0
+            ]),
+            cornerType: CornerType.BEVELED,
+            width : 400000,
+            granularity : Math.PI / 6.0
+        }));
+
+        expect(m.attributes.position.values.length).toEqual(3 * 4);
+        expect(m.indices.length).toEqual(3 * 2);
+    });
+
     var positions = Cartesian3.fromDegreesArray([
          90.0, -30.0,
          90.0, -31.0
