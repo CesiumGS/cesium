@@ -195,29 +195,22 @@ define([
 
         // If the user entered (longitude, latitude, [height]) in degrees/meters,
         // fly without calling the geocoder.
-        var decodedPosition;
-        var splitQuery = query.split(/[ ,]+/);
+        var splitQuery = query.match(/[^\s,\n]+/g);
         if ((splitQuery.length === 2) || (splitQuery.length === 3)) {
             var longitude = +splitQuery[0];
             var latitude = +splitQuery[1];
             var height = (splitQuery.length === 3) ? +splitQuery[2] : 300.0;
 
             if (!isNaN(longitude) && !isNaN(latitude) && !isNaN(height)) {
-                decodedPosition = Cartesian3.fromDegrees(longitude, latitude, height);
+                viewModel._scene.camera.flyTo({
+                    destination : Cartesian3.fromDegrees(longitude, latitude, height),
+                    duration : viewModel._flightDuration,
+                    endTransform : Matrix4.IDENTITY,
+                    convert : false
+                });
+                return;
             }
         }
-
-        if (defined(decodedPosition)) {
-            viewModel._scene.camera.flyTo({
-                destination : decodedPosition,
-                duration : viewModel._flightDuration,
-                endTransform : Matrix4.IDENTITY,
-                convert : false
-            });
-
-            return;
-        }
-
         viewModel._isSearchInProgress = true;
 
         var promise = jsonp(viewModel._url + 'REST/v1/Locations', {

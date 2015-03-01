@@ -83,7 +83,7 @@ defineSuite([
 
         spyOn(Camera.prototype, 'flyTo');
 
-        viewModel.searchText = '1.0, 2.0, 3.0';
+        viewModel.searchText = ' 1.0, 2.0, 3.0 ';
         viewModel.search();
         expect(Camera.prototype.flyTo).toHaveBeenCalled();
         expect(Camera.prototype.flyTo.mostRecentCall.args[0].destination).toEqual(Cartesian3.fromDegrees(1.0, 2.0, 3.0));
