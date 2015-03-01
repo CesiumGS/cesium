@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../../Core/BingMapsApi',
+        '../../Core/Cartesian3',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -13,6 +14,7 @@ define([
         '../createCommand'
     ], function(
         BingMapsApi,
+        Cartesian3,
         defaultValue,
         defined,
         defineProperties,
@@ -85,7 +87,8 @@ define([
         });
 
         /**
-         * Gets or sets the text to search for.
+         * Gets or sets the text to search for.  The text can be an address, or longitude, latitude,
+         * and optional height, where longitude and latitude are in degrees and height is in meters.
          *
          * @type {String}
          */
@@ -190,6 +193,24 @@ define([
             return;
         }
 
+        // If the user entered (longitude, latitude, [height]) in degrees/meters,
+        // fly without calling the geocoder.
+        var splitQuery = query.match(/[^\s,\n]+/g);
+        if ((splitQuery.length === 2) || (splitQuery.length === 3)) {
+            var longitude = +splitQuery[0];
+            var latitude = +splitQuery[1];
+            var height = (splitQuery.length === 3) ? +splitQuery[2] : 300.0;
+
+            if (!isNaN(longitude) && !isNaN(latitude) && !isNaN(height)) {
+                viewModel._scene.camera.flyTo({
+                    destination : Cartesian3.fromDegrees(longitude, latitude, height),
+                    duration : viewModel._flightDuration,
+                    endTransform : Matrix4.IDENTITY,
+                    convert : false
+                });
+                return;
+            }
+        }
         viewModel._isSearchInProgress = true;
 
         var promise = jsonp(viewModel._url + 'REST/v1/Locations', {
