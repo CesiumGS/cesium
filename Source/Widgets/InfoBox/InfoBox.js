@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../../Core/buildModuleUrl',
+        '../../Core/Color',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
@@ -11,6 +12,7 @@ define([
         './InfoBoxViewModel'
     ], function(
         buildModuleUrl,
+        Color,
         defined,
         defineProperties,
         destroyObject,
@@ -112,8 +114,23 @@ click: function () { closeClicked.raiseEvent(this); }');
                 // Set the frame to small height, force vertical scroll bar to appear, and text to wrap accordingly.
                 frame.style.height = '5px';
                 frameContent.innerHTML = value;
+
+                //If the snippet is a single element, then use its background
+                //color for the body of the InfoBox. This makes the padding match
+                //the content and produces much nicer results.
+                if (frameContent.childNodes.length === 1) {
+                    var style = window.getComputedStyle(frameContent.firstChild);
+                    var color = Color.fromCssColorString(style['background-color']);
+                    if (color.alpha !== 0) {
+                        infoElement.style['background-color'] = style['background-color'];
+                    }
+                } else {
+                    infoElement.style['background-color'] = null;
+                }
+
                 // Measure and set the new custom height, based on text wrapped above.
-                frame.style.height = frameContent.getBoundingClientRect().height + 'px';
+                var height = frameContent.getBoundingClientRect().height;
+                frame.style.height =  height + 'px';
             });
         });
 

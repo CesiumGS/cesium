@@ -11,6 +11,10 @@ body {
     color: #edffff;
 }
 
+.cesium-infoBox-description a:link,a:visited,a:hover,a:active {
+    color: #edffff;
+}
+
 .cesium-infoBox-description table {
     color: #edffff;
 }
@@ -39,4 +43,29 @@ body {
     padding: 3px;
     vertical-align: middle;
     text-align: left;
+}
+
+.cesium-infoBox-description-lighter {
+    color: #000000;
+}
+
+.cesium-infoBox-description-lighter a:link,a:visited,a:hover,a:active {
+    color: #000000;
+}
+
+.cesium-infoBox-description-lighter table {
+    color: #000000;
+}
+
+.cesium-infoBox-defaultTable-lighter {
+    width: 100%;
+    color: #000000;
+}
+
+.cesium-infoBox-defaultTable-lighter tr:nth-child(odd) {
+    background-color: rgba(179, 179, 179, 0.8);
+}
+
+.cesium-infoBox-defaultTable-lighter tr:nth-child(even) {
+    background-color: rgba(179, 179, 179, 0.25);
 }
