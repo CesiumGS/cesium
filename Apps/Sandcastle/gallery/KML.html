@@ -43,12 +43,6 @@ Sandcastle.addToolbarMenu([{
         viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/kml/gdpPerCapita2008.kmz'));
     }
 }, {
-    text : 'Animated KML - Formation of United States',
-    onselect : function() {
-        viewer.homeButton.viewModel.command();
-        viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/kml/us_states.kml'));
-    }
-}, {
     text : 'gx KML extensions - Bike Ride',
     onselect : function() {
         viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/kml/bikeRide.kml')).then(function(dataSource){
