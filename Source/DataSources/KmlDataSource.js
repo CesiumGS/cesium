@@ -1761,11 +1761,31 @@ define([
                         return loadKmz(that, dataToLoad, sourceUri);
                     }
                     return when(readBlobAsText(dataToLoad)).then(function(text) {
-                        var kml = parser.parseFromString(text, 'application/xml');
-                        //There's no official way to validate if the parse was successful.
-                        //The following if check seems to detect the error on all supported browsers.
-                        if ((defined(kml.body) && kml.body !== null) || kml.documentElement.tagName === 'parsererror') {
-                            throw new RuntimeError(kml.body.innerText);
+                        //There's no official way to validate if a parse was successful.
+                        //The following check detects the error on various browsers.
+
+                        //IE raises an exception
+                        var kml;
+                        var error;
+                        try {
+                            kml = parser.parseFromString(text, 'application/xml');
+                        } catch (e) {
+                            error = e.toString();
+                        }
+
+                        //The pase succeeds on Chrome and Firefox, but the error
+                        //handling is different in each.
+                        if (defined(error) || kml.body || kml.documentElement.tagName === 'parsererror') {
+                            //Firefox has error information as the firstChild nodeValue.
+                            var msg = defined(error) ? error : kml.documentElement.firstChild.nodeValue;
+
+                            //Chrome has it in the body text.
+                            if (!msg) {
+                                msg = kml.body.innerText;
+                            }
+
+                            //Return the error
+                            throw new RuntimeError(msg);
                         }
                         return loadKml(that, kml, sourceUri, undefined);
                     });
