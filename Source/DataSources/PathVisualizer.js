@@ -19,6 +19,7 @@ define([
         './Property',
         './ReferenceProperty',
         './SampledPositionProperty',
+        './ScaledPositionProperty',
         './TimeIntervalCollectionPositionProperty'
     ], function(
         AssociativeArray,
@@ -40,6 +41,7 @@ define([
         Property,
         ReferenceProperty,
         SampledPositionProperty,
+        ScaledPositionProperty,
         TimeIntervalCollectionPositionProperty) {
     "use strict";
 
@@ -57,9 +59,7 @@ define([
         this.updater = undefined;
     };
 
-    function subSampleSampledProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
-        var times = property._property._times;
-
+    function subSampleSampledProperty(property, start, stop, times, updateTime, referenceFrame, maximumStep, startingIndex, result) {
         var r = startingIndex;
         //Always step exactly on start (but only use it if it exists.)
         var tmp;
@@ -221,24 +221,36 @@ define([
                     sampleStop = intervalStop;
                 }
 
-                var intervalProperty = interval.data;
-                if (intervalProperty instanceof ReferenceProperty) {
-                    intervalProperty = intervalProperty.resolvedProperty;
-                }
-
-                if (intervalProperty instanceof SampledPositionProperty) {
-                    index = subSampleSampledProperty(intervalProperty, sampleStart, sampleStop, updateTime, referenceFrame, maximumStep, index, result);
-                } else if (intervalProperty instanceof CompositePositionProperty) {
-                    index = subSampleCompositeProperty(intervalProperty, sampleStart, sampleStop, updateTime, referenceFrame, maximumStep, index, result);
-                } else if (intervalProperty instanceof TimeIntervalCollectionPositionProperty) {
-                    index = subSampleIntervalProperty(intervalProperty, sampleStart, sampleStop, updateTime, referenceFrame, maximumStep, index, result);
-                } else if (intervalProperty instanceof ConstantPositionProperty) {
-                    index = subSampleConstantProperty(intervalProperty, sampleStart, sampleStop, updateTime, referenceFrame, maximumStep, index, result);
-                } else {
-                    //Fallback to generic sampling.
-                    index = subSampleGenericProperty(intervalProperty, sampleStart, sampleStop, updateTime, referenceFrame, maximumStep, index, result);
-                }
+                index = reallySubSample(interval.data, sampleStart, sampleStop, updateTime, referenceFrame, maximumStep, index, result);
             }
+        }
+        return index;
+    }
+
+    function reallySubSample(property, start, stop, updateTime, referenceFrame, maximumStep, index, result) {
+        var innerProperty = property;
+
+        while (innerProperty instanceof ReferenceProperty || innerProperty instanceof ScaledPositionProperty) {
+            if (innerProperty instanceof ReferenceProperty) {
+                innerProperty = innerProperty.resolvedProperty;
+            }
+            if (innerProperty instanceof ScaledPositionProperty) {
+                innerProperty = innerProperty._value;
+            }
+        }
+
+        if (innerProperty instanceof SampledPositionProperty) {
+            var times = innerProperty._property._times;
+            index = subSampleSampledProperty(property, start, stop, times, updateTime, referenceFrame, maximumStep, index, result);
+        } else if (innerProperty instanceof CompositePositionProperty) {
+            index = subSampleCompositeProperty(property, start, stop, updateTime, referenceFrame, maximumStep, index, result);
+        } else if (innerProperty instanceof TimeIntervalCollectionPositionProperty) {
+            index = subSampleIntervalProperty(property, start, stop, updateTime, referenceFrame, maximumStep, index, result);
+        } else if (innerProperty instanceof ConstantPositionProperty) {
+            index = subSampleConstantProperty(property, start, stop, updateTime, referenceFrame, maximumStep, index, result);
+        } else {
+            //Fallback to generic sampling.
+            index = subSampleGenericProperty(property, start, stop, updateTime, referenceFrame, maximumStep, index, result);
         }
         return index;
     }
@@ -248,23 +260,7 @@ define([
             result = [];
         }
 
-        if (property instanceof ReferenceProperty) {
-            property = property.resolvedProperty;
-        }
-
-        var length = 0;
-        if (property instanceof SampledPositionProperty) {
-            length = subSampleSampledProperty(property, start, stop, updateTime, referenceFrame, maximumStep, 0, result);
-        } else if (property instanceof CompositePositionProperty) {
-            length = subSampleCompositeProperty(property, start, stop, updateTime, referenceFrame, maximumStep, 0, result);
-        } else if (property instanceof TimeIntervalCollectionPositionProperty) {
-            length = subSampleIntervalProperty(property, start, stop, updateTime, referenceFrame, maximumStep, 0, result);
-        } else if (property instanceof ConstantPositionProperty) {
-            length = subSampleConstantProperty(property, start, stop, updateTime, referenceFrame, maximumStep, 0, result);
-        } else {
-            //Fallback to generic sampling.
-            length = subSampleGenericProperty(property, start, stop, updateTime, referenceFrame, maximumStep, 0, result);
-        }
+        var length = reallySubSample(property, start, stop, updateTime, referenceFrame, maximumStep, 0, result);
         result.length = length;
         return result;
     }
