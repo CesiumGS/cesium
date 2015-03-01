@@ -53,7 +53,7 @@ define([
      * @private
      */
     function createPropertyDescriptor(name, configurable, createPropertyCallback) {
-        return createProperty(name, '_' + name, '_' + name + 'Subscription', defaultValue(configurable, false), defaultValue(createPropertyCallback, createConstantProperty));
+        return createProperty(name, '_' + name, '_' + name.toString() + 'Subscription', defaultValue(configurable, false), defaultValue(createPropertyCallback, createConstantProperty));
     }
 
     return createPropertyDescriptor;
