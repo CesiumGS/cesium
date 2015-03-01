@@ -20,6 +20,7 @@ Change Log
 * `InfoBox` sanitization now relies on [iframe sandboxing](http://www.html5rocks.com/en/tutorials/security/sandboxed-iframes/). This allows for much more content to be displayed in the InfoBox (and still be secure).
 * Added `InfoBox.frame` which is the instance of the iframe that is used to host description content. Sanitization can be controlled via the frame's `sandbox` attribute.  See the above link for additional information. 
 * Fixed incorrect ellipse texture coordinates. [#2363](https://github.com/AnalyticalGraphicsInc/cesium/issues/2363) and [#2465](https://github.com/AnalyticalGraphicsInc/cesium/issues/2465)
+* Fixed a bug that would cause incorrect geometry for long Corridors and Polyline Volumes. [#2513](https://github.com/AnalyticalGraphicsInc/cesium/issues/2513)
 * Fixed a bug in imagery loading that could cause some or all of the globe to be missing when using an imagery layer that does not cover the entire globe.
 * Fixed some styling issues with `InfoBox` and `BaseLayerPicker` caused by using Bootstrap with Cesium. [#2487](https://github.com/AnalyticalGraphicsInc/cesium/issues/2479)
 * Added support for rendering a water effect on Quantized-Mesh terrain tiles.
