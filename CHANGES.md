@@ -23,6 +23,7 @@ Change Log
   * Deprecated `CzmlDataSource.prototype.loadUrl`, it will be removed in 1.10.  Instead, pass a url as the first parameter to `CzmlDataSource.prototype.load`.
   * Deprecated `CzmlDataSource.prototype.processUrl`, it will be removed in 1.10.  Instead, pass a url as the first parameter to `CzmlDataSource.prototype.process`.
   * Deprecated the `sourceUri` parameter to all `CzmlDataSource` load and process functions. Support will be removed in 1.10.  Instead pass an `options` object with `sourceUri` property.
+* Added initial support for [KML 2.2](https://developers.google.com/kml/) via `KmlDataSource`. Check out the new [Sandcastle Demo](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=KML.html) and the [reference documentation](http://cesiumjs.org/Cesium/Build/Documentation/KmlDataSource.html) for more details.
 * `InfoBox` sanitization now relies on [iframe sandboxing](http://www.html5rocks.com/en/tutorials/security/sandboxed-iframes/). This allows for much more content to be displayed in the InfoBox (and still be secure).
 * Added `InfoBox.frame` which is the instance of the iframe that is used to host description content. Sanitization can be controlled via the frame's `sandbox` attribute.  See the above link for additional information. 
 * Fixed incorrect ellipse texture coordinates. [#2363](https://github.com/AnalyticalGraphicsInc/cesium/issues/2363) and [#2465](https://github.com/AnalyticalGraphicsInc/cesium/issues/2465)
