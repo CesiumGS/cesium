@@ -32,6 +32,7 @@ Change Log
 * Added the ability to pass a `Promise` to a target to `viewer.zoomTo` and `viewer.flyTo`.
 * All `CzmlDataSource` and `GeoJsonDataSource` loading functions now return `Promise` instances that resolve to the instances after data is loaded.
 * Error handling in all `CzmlDataSource` and `GeoJsonDataSource` loading functions is now more consistent.  Rather than a mix of exceptions and `Promise` rejections, all errors are raised via `Promise` rejections.
+* In addition to addresses, the `Geocoder` widget now allows input of longitude, latitude, and an optional height in degrees and meters.  Example: `-75.596, 40.038, 1000` or `-75.596 40.038`.
 
 ### 1.6 - 2015-02-02
 
