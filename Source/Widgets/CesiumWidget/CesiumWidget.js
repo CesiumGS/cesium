@@ -145,6 +145,7 @@ define([
      * @param {Boolean} [options.scene3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
      * @param {Boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
      * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
+     * @param {Globe} [options.globe=new Globe(mapProjection.ellipsoid)] The globe to use in the scene.  If set to <code>false</code>, no globe will be added, and <code>imageryProvider</code> must also be set <code>false</code>.
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
      * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
@@ -189,6 +190,9 @@ define([
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
+        }
+        if (defined(options) && defined(options.globe) && options.globe === false && options.imageryProvider !== false) {
+            throw new DeveloperError('To turn off the globe, options.imageryProvider must be set to false.');
         }
         //>>includeEnd('debug');
 
@@ -252,9 +256,13 @@ define([
             var cesiumCredit = new Credit('Cesium', cesiumLogoData, 'http://cesiumjs.org/');
             creditDisplay.addDefaultCredit(cesiumCredit);
 
-            var globe = new Globe(ellipsoid);
-            this._globe = globe;
-            scene.globe = globe;
+            var globe = options.globe;
+            if (!defined(globe)) {
+                globe = new Globe(ellipsoid);
+            }
+            if (globe !== false) {
+                scene.globe = globe;
+            }
 
             var skyBox = options.skyBox;
             if (!defined(skyBox)) {

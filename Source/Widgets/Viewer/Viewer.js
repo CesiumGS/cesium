@@ -95,7 +95,9 @@ define([
         }
 
         // No regular entity picked.  Try picking features from imagery layers.
-        return pickImageryLayerFeature(viewer, e.position);
+        if (defined(viewer.scene.globe)) {
+            return pickImageryLayerFeature(viewer, e.position);
+        }
     }
 
     function trackDataSourceClock(timeline, clock, dataSource) {
@@ -222,6 +224,7 @@ define([
      * @param {Object} [options.contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
      * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
+     * @param {Globe} [options.globe=new Globe(mapProjection.ellipsoid)] The globe to use in the scene.  If set to <code>false</code>, no globe will be added, and <code>imageryProvider</code> and <code>baseLayerPicker</code> must also be set <code>false</code>.
      * @param {Boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
      * @param {Element|String} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added to the bottom of the widget itself.
      * @param {DataSourceCollection} [options.dataSources=new DataSourceCollection()] The collection of data sources visualized by the widget.  If this parameter is provided,
@@ -296,6 +299,12 @@ define([
         var createBaseLayerPicker = !defined(options.baseLayerPicker) || options.baseLayerPicker !== false;
 
         //>>includeStart('debug', pragmas.debug);
+        // If using BaseLayerPicker, globe must be present.
+        if (createBaseLayerPicker && defined(options.globe) && options.globe === false) {
+            throw new DeveloperError('A globe must be available to use the BaseLayerPicker widget. \
+Either ensure options.globe != false, or set options.baseLayerPicker to false.');
+        }
+
         // If using BaseLayerPicker, imageryProvider is an invalid option
         if (createBaseLayerPicker && defined(options.imageryProvider)) {
             throw new DeveloperError('options.imageryProvider is not available when using the BaseLayerPicker widget. \
@@ -346,6 +355,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             skyBox : options.skyBox,
             sceneMode : options.sceneMode,
             mapProjection : options.mapProjection,
+            globe : options.globe,
             orderIndependentTranslucency : options.orderIndependentTranslucency,
             contextOptions : options.contextOptions,
             useDefaultRenderLoop : options.useDefaultRenderLoop,
@@ -1630,7 +1640,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         }
 
         var bs = state !== BoundingSphereState.FAILED ? boundingSphereScratch : undefined;
-        viewer._entityView = new EntityView(trackedEntity, scene, scene.globe.ellipsoid, bs);
+        viewer._entityView = new EntityView(trackedEntity, scene, scene.mapProjection.ellipsoid, bs);
         viewer._entityView.update(viewer.clock.currentTime);
         viewer._needTrackedEntityUpdate = false;
     }
