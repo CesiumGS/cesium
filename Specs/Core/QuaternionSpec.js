@@ -1024,6 +1024,18 @@ defineSuite([
             Quaternion.fastSquad(new Quaternion(), new Quaternion(), new Quaternion(), new Quaternion(), 3);
         }).toThrowDeveloperError();
     });
+    
+    it('convert quaternion to heading pitch and roll ', function() {
+        var deg2rad=Math.PI/180;
+        var testingTab=[[0,0,0],[90*deg2rad,0,0],[-90*deg2rad,0,0],[0,85*deg2rad,0],[0,-85*deg2rad,0],[0,0,90*deg2rad],[0,0,-90*deg2rad],[30*deg2rad,30*deg2rad,30*deg2rad],[-30*deg2rad,-30*deg2rad,45*deg2rad]];
+        for (var i=0;i<testingTab.length;i++){
+            var init=testingTab[i];
+            var result=Quaternion.toHeadingPitchRoll(Quaternion.fromHeadingPitchRoll(init[0],init[1],init[2]));
+            expect(init[0]).toBeCloseTo(result.heading);
+            expect(init[1]).toBeCloseTo(result.pitch);
+            expect(init[2]).toBeCloseTo(result.roll);
+        }
+    });
 
     createPackableSpecs(Quaternion, new Quaternion(1, 2, 3, 4), [1, 2, 3, 4]);
 });
