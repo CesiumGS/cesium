@@ -52,21 +52,19 @@ define([
     };
 
     Batch.prototype.update = function(time) {
-        var show = true;
         var isUpdated = true;
         var removedCount = 0;
         var primitive = this.primitive;
         var primitives = this.primitives;
         if (this.createPrimitive) {
-            this.attributes.removeAll();
             if (defined(primitive)) {
-                if (primitive.ready) {
+                if (!defined(this.oldPrimitive)) {
                     this.oldPrimitive = primitive;
                 } else {
                     primitives.remove(primitive);
                 }
-                show = false;
             }
+            this.attributes.removeAll();
             var geometry = this.geometry.values;
             if (geometry.length > 0) {
                 primitive = new Primitive({
@@ -77,7 +75,6 @@ define([
                         closed : this.closed
                     })
                 });
-                primitive.show = show;
                 primitives.add(primitive);
                 isUpdated = false;
             }
@@ -87,9 +84,7 @@ define([
             if (defined(this.oldPrimitive)) {
                 primitives.remove(this.oldPrimitive);
                 this.oldPrimitive = undefined;
-                primitive.show = true;
             }
-
             var updatersWithAttributes = this.updatersWithAttributes.values;
             var length = updatersWithAttributes.length;
             for (var i = 0; i < length; i++) {
@@ -115,7 +110,7 @@ define([
                 }
 
                 if (!updater.hasConstantFill) {
-                    show = updater.isFilled(time);
+                    var show = updater.isFilled(time);
                     var currentShow = attributes.show[0] === 1;
                     if (show !== currentShow) {
                         attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
@@ -148,12 +143,20 @@ define([
     };
 
     Batch.prototype.removeAllPrimitives = function() {
+        var primitives = this.primitives;
+
         var primitive = this.primitive;
         if (defined(primitive)) {
-            this.primitives.remove(primitive);
+            primitives.remove(primitive);
             this.primitive = undefined;
             this.geometry.removeAll();
             this.updaters.removeAll();
+        }
+
+        var oldPrimitive = this.oldPrimitive;
+        if (defined(oldPrimitive)) {
+            primitives.remove(oldPrimitive);
+            this.oldPrimitive = undefined;
         }
     };
 

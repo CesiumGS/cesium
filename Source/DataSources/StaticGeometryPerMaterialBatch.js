@@ -67,19 +67,17 @@ define([
     };
 
     Batch.prototype.update = function(time) {
-        var show = true;
         var isUpdated = true;
         var primitive = this.primitive;
         var primitives = this.primitives;
         var geometries = this.geometry.values;
         if (this.createPrimitive) {
             if (defined(primitive)) {
-                if (primitive.ready) {
+                if (!defined(this.oldPrimitive)) {
                     this.oldPrimitive = primitive;
                 } else {
                     primitives.remove(primitive);
                 }
-                show = false;
             }
             if (geometries.length > 0) {
                 this.material = MaterialProperty.getValue(time, this.materialProperty, this.material);
@@ -93,7 +91,6 @@ define([
                     })
                 });
 
-                primitive.show = show;
                 primitives.add(primitive);
                 isUpdated = false;
             }
@@ -103,7 +100,6 @@ define([
             if (defined(this.oldPrimitive)) {
                 primitives.remove(this.oldPrimitive);
                 this.oldPrimitive = undefined;
-                primitive.show = true;
             }
 
             this.material = MaterialProperty.getValue(time, this.materialProperty, this.material);
@@ -122,7 +118,7 @@ define([
                 }
 
                 if (!updater.hasConstantFill) {
-                    show = updater.isFilled(time);
+                    var show = updater.isFilled(time);
                     var currentShow = attributes.show[0] === 1;
                     if (show !== currentShow) {
                         attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
@@ -158,6 +154,10 @@ define([
         var primitives = this.primitives;
         if (defined(primitive)) {
             primitives.remove(primitive);
+        }
+        var oldPrimitive = this.oldPrimitive;
+        if (defined(oldPrimitive)) {
+            primitives.remove(oldPrimitive);
         }
         this.removeMaterialSubscription();
     };
