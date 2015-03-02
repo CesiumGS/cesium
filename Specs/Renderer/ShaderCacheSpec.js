@@ -1,12 +1,10 @@
 /*global defineSuite*/
 defineSuite([
         'Renderer/ShaderCache',
-        'Specs/createContext',
-        'Specs/destroyContext'
+        'Specs/createContext'
     ], function(
         ShaderCache,
-        createContext,
-        destroyContext) {
+        createContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -17,7 +15,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     it('adds and removes', function() {

@@ -705,7 +705,7 @@ define([
 
         /**
          * <code>true</code> if the OES_standard_derivatives extension is supported.  This
-         * extension provides access to <code>dFdx<code>, <code>dFdy<code>, and <code>fwidth<code>
+         * extension provides access to <code>dFdx</code>, <code>dFdy</code>, and <code>fwidth</code>
          * functions from GLSL.  A shader using these functions still needs to explicitly enable the
          * extension with <code>#extension GL_OES_standard_derivatives : enable</code>.
          * @memberof Context.prototype
@@ -786,7 +786,7 @@ define([
 
         /**
          * <code>true</code> if the EXT_frag_depth extension is supported.  This
-         * extension provides access to the <code>gl_FragDepthEXT<code> built-in output variable
+         * extension provides access to the <code>gl_FragDepthEXT</code> built-in output variable
          * from GLSL fragment shaders.  A shader using these functions still needs to explicitly enable the
          * extension with <code>#extension GL_EXT_frag_depth : enable</code>.
          * @memberof Context.prototype

@@ -6,8 +6,7 @@ defineSuite([
         'Core/JulianDate',
         'DataSources/ConstantPositionProperty',
         'DataSources/Entity',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], function(
         EntityView,
         Cartesian3,
@@ -15,8 +14,7 @@ defineSuite([
         JulianDate,
         ConstantPositionProperty,
         Entity,
-        createScene,
-        destroyScene) {
+        createScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -27,7 +25,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     it('default constructor sets expected values', function() {

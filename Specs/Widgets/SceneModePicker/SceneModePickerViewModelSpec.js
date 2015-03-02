@@ -4,15 +4,13 @@ defineSuite([
         'Core/Ellipsoid',
         'Scene/Globe',
         'Scene/SceneMode',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], function(
         SceneModePickerViewModel,
         Ellipsoid,
         Globe,
         SceneMode,
-        createScene,
-        destroyScene) {
+        createScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
     var scene;
@@ -24,7 +22,7 @@ defineSuite([
     });
 
     afterEach(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     it('Can construct and destroy', function() {

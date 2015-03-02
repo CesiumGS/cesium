@@ -4,15 +4,13 @@ defineSuite([
         'Core/PrimitiveType',
         'Renderer/BufferUsage',
         'Renderer/DrawCommand',
-        'Specs/createContext',
-        'Specs/destroyContext'
+        'Specs/createContext'
     ], 'Renderer/VertexArray', function(
         ComponentDatatype,
         PrimitiveType,
         BufferUsage,
         DrawCommand,
-        createContext,
-        destroyContext) {
+        createContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -23,7 +21,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     it('binds', function() {

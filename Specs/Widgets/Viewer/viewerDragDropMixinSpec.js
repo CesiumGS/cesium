@@ -395,6 +395,16 @@ defineSuite([
         expect(dropTarget2.events.dragexit).toBeDefined();
     });
 
+    it('can set proxy.', function() {
+        var proxy = {};
+
+        viewer = new Viewer(container);
+        viewer.extend(viewerDragDropMixin, {
+            proxy : proxy
+        });
+        expect(viewer.proxy).toBe(proxy);
+    });
+
     it('throws with undefined viewer', function() {
         expect(function() {
             viewerDragDropMixin(undefined);

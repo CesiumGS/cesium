@@ -115,7 +115,7 @@ define([
         var positions = options.positions;
         var colors = options.colors;
         var width = defaultValue(options.width, 1.0);
-        var perVertex = defaultValue(options.colorsPerVertex, false);
+        var colorsPerVertex = defaultValue(options.colorsPerVertex, false);
 
         //>>includeStart('debug', pragmas.debug);
         if ((!defined(positions)) || (positions.length < 2)) {
@@ -124,7 +124,7 @@ define([
         if (width < 1.0) {
             throw new DeveloperError('width must be greater than or equal to one.');
         }
-        if (defined(colors) && ((perVertex && colors.length < positions.length) || (!perVertex && colors.length < positions.length - 1))) {
+        if (defined(colors) && ((colorsPerVertex && colors.length < positions.length) || (!colorsPerVertex && colors.length < positions.length - 1))) {
             throw new DeveloperError('colors has an invalid length.');
         }
         //>>includeEnd('debug');
@@ -132,7 +132,7 @@ define([
         this._positions = positions;
         this._colors = colors;
         this._width = width;
-        this._perVertex = perVertex;
+        this._colorsPerVertex = colorsPerVertex;
         this._vertexFormat = VertexFormat.clone(defaultValue(options.vertexFormat, VertexFormat.DEFAULT));
         this._followSurface = defaultValue(options.followSurface, true);
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
@@ -194,7 +194,7 @@ define([
         startingIndex += VertexFormat.packedLength;
 
         array[startingIndex++] = value._width;
-        array[startingIndex++] = value._perVertex ? 1.0 : 0.0;
+        array[startingIndex++] = value._colorsPerVertex ? 1.0 : 0.0;
         array[startingIndex++] = value._followSurface ? 1.0 : 0.0;
         array[startingIndex]   = value._granularity;
     };
@@ -207,7 +207,7 @@ define([
         ellipsoid : scratchEllipsoid,
         vertexFormat : scratchVertexFormat,
         width : undefined,
-        perVertex : undefined,
+        colorsPerVertex : undefined,
         followSurface : undefined,
         granularity : undefined
     };
@@ -251,7 +251,7 @@ define([
         startingIndex += VertexFormat.packedLength;
 
         var width = array[startingIndex++];
-        var perVertex = array[startingIndex++] === 1.0;
+        var colorsPerVertex = array[startingIndex++] === 1.0;
         var followSurface = array[startingIndex++] === 1.0;
         var granularity = array[startingIndex];
 
@@ -259,7 +259,7 @@ define([
             scratchOptions.positions = positions;
             scratchOptions.colors = colors;
             scratchOptions.width = width;
-            scratchOptions.perVertex = perVertex;
+            scratchOptions.colorsPerVertex = colorsPerVertex;
             scratchOptions.followSurface = followSurface;
             scratchOptions.granularity = granularity;
             return new PolylineGeometry(scratchOptions);
@@ -270,7 +270,7 @@ define([
         result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
         result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
         result._width = width;
-        result._perVertex = perVertex;
+        result._colorsPerVertex = colorsPerVertex;
         result._followSurface = followSurface;
         result._granularity = granularity;
 
@@ -292,7 +292,7 @@ define([
         var width = polylineGeometry._width;
         var vertexFormat = polylineGeometry._vertexFormat;
         var colors = polylineGeometry._colors;
-        var perVertex = polylineGeometry._perVertex;
+        var colorsPerVertex = polylineGeometry._colorsPerVertex;
         var followSurface = polylineGeometry._followSurface;
         var granularity = polylineGeometry._granularity;
         var ellipsoid = polylineGeometry._ellipsoid;
@@ -331,7 +331,7 @@ define([
                     var c0 = colors[i];
 
                     var numColors = PolylinePipeline.numberOfPoints(p0, p1, minDistance);
-                    if (perVertex && i < colorLength) {
+                    if (colorsPerVertex && i < colorLength) {
                         var c1 = colors[i+1];
                         var interpolatedColors = interpolateColors(p0, p1, c0, c1, numColors);
                         var interpolatedColorsLength = interpolatedColors.length;
@@ -403,7 +403,7 @@ define([
 
             var color0, color1;
             if (defined(finalColors)) {
-                if (j !== 0 && !perVertex) {
+                if (j !== 0 && !colorsPerVertex) {
                     color0 = colors[j - 1];
                 } else {
                     color0 = colors[j];

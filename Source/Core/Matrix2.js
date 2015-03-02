@@ -39,6 +39,65 @@ define([
     };
 
     /**
+     * The number of elements used to pack the object into an array.
+     * @type {Number}
+     */
+    Matrix2.packedLength = 4;
+
+    /**
+     * Stores the provided instance into the provided array.
+     *
+     * @param {Matrix2} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     */
+    Matrix2.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        array[startingIndex++] = value[0];
+        array[startingIndex++] = value[1];
+        array[startingIndex++] = value[2];
+        array[startingIndex++] = value[3];
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {Matrix2} [result] The object into which to store the result.
+     */
+    Matrix2.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        if (!defined(result)) {
+            result = new Matrix2();
+        }
+
+        result[0] = array[startingIndex++];
+        result[1] = array[startingIndex++];
+        result[2] = array[startingIndex++];
+        result[3] = array[startingIndex++];
+        return result;
+    };
+
+    /**
      * Duplicates a Matrix2 instance.
      *
      * @param {Matrix2} matrix The matrix to duplicate.
@@ -706,6 +765,16 @@ define([
                 left[1] === right[1] &&
                 left[2] === right[2] &&
                 left[3] === right[3]);
+    };
+
+    /**
+     * @private
+     */
+    Matrix2.equalsArray = function(matrix, array, offset) {
+        return matrix[0] === array[offset] &&
+               matrix[1] === array[offset + 1] &&
+               matrix[2] === array[offset + 2] &&
+               matrix[3] === array[offset + 3];
     };
 
     /**

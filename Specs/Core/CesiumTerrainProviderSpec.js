@@ -63,8 +63,32 @@ defineSuite([
         return returnTileJson('Data/CesiumTerrainTileJson/OctVertexNormals.tile.json');
     }
 
+    function returnWaterMaskTileJson() {
+        return returnTileJson('Data/CesiumTerrainTileJson/WaterMask.tile.json');
+    }
+
     function returnPartialAvailabilityTileJson() {
         return returnTileJson('Data/CesiumTerrainTileJson/PartialAvailability.tile.json');
+    }
+
+    function waitForTile(level, x, y, requestNormals, requestWaterMask, f) {
+        var terrainProvider = new CesiumTerrainProvider({
+            url : 'made/up/url',
+            requestVertexNormals : requestNormals,
+            requestWaterMask: requestWaterMask
+        });
+
+        waitsFor(function() {
+            return terrainProvider.ready;
+        });
+
+        runs(function() {
+            var promise = terrainProvider.requestTileGeometry(level, x, y);
+
+            when(promise, f, function(error) {
+                expect('requestTileGeometry').toBe('returning a tile.'); // test failure
+            });
+        });
     }
 
     it('conforms to TerrainProvider interface', function() {
@@ -391,29 +415,7 @@ defineSuite([
 
             returnHeightmapTileJson();
 
-            var terrainProvider = new CesiumTerrainProvider({
-                url : baseUrl
-            });
-
-            waitsFor(function() {
-                return terrainProvider.ready;
-            });
-
-            var loadedData;
-
-            runs(function() {
-                var promise = terrainProvider.requestTileGeometry(0, 0, 0);
-
-                when(promise, function(terrainData) {
-                    loadedData = terrainData;
-                });
-            });
-
-            waitsFor(function() {
-                return defined(loadedData);
-            }, 'request to complete');
-
-            runs(function() {
+            waitForTile(0, 0, 0, false, false, function(loadedData) {
                 expect(loadedData).toBeInstanceOf(HeightmapTerrainData);
             });
         });
@@ -427,29 +429,7 @@ defineSuite([
 
             returnQuantizedMeshTileJson();
 
-            var terrainProvider = new CesiumTerrainProvider({
-                url : baseUrl
-            });
-
-            waitsFor(function() {
-                return terrainProvider.ready;
-            });
-
-            var loadedData;
-
-            runs(function() {
-                var promise = terrainProvider.requestTileGeometry(0, 0, 0);
-
-                when(promise, function(terrainData) {
-                    loadedData = terrainData;
-                });
-            });
-
-            waitsFor(function() {
-                return defined(loadedData);
-            }, 'request to complete');
-
-            runs(function() {
+            waitForTile(0, 0, 0, false, false, function(loadedData) {
                 expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
             });
         });
@@ -463,29 +443,7 @@ defineSuite([
 
             returnQuantizedMeshTileJson();
 
-            var terrainProvider = new CesiumTerrainProvider({
-                url : baseUrl
-            });
-
-            waitsFor(function() {
-                return terrainProvider.ready;
-            });
-
-            var loadedData;
-
-            runs(function() {
-                var promise = terrainProvider.requestTileGeometry(0, 0, 0);
-
-                when(promise, function(terrainData) {
-                    loadedData = terrainData;
-                });
-            });
-
-            waitsFor(function() {
-                return defined(loadedData);
-            }, 'request to complete');
-
-            runs(function() {
+            waitForTile(0, 0, 0, false, false, function(loadedData) {
                 expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
                 expect(loadedData._indices.BYTES_PER_ELEMENT).toBe(4);
             });
@@ -500,32 +458,40 @@ defineSuite([
 
             returnVertexNormalTileJson();
 
-            var terrainProvider = new CesiumTerrainProvider({
-                url : baseUrl,
-                requestVertexNormals : true
-            });
-
-            waitsFor(function() {
-                return terrainProvider.ready;
-            });
-
-            var loadedData;
-
-            runs(function() {
-                var promise = terrainProvider.requestTileGeometry(0, 0, 0);
-
-                when(promise, function(terrainData) {
-                    loadedData = terrainData;
-                });
-            });
-
-            waitsFor(function() {
-                return defined(loadedData);
-            }, 'request to complete');
-
-            runs(function() {
+            waitForTile(0, 0, 0, true, false, function(loadedData) {
                 expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
                 expect(loadedData._encodedNormals).toBeDefined();
+            });
+        });
+
+        it('provides QuantizedMeshTerrainData with WaterMask', function() {
+            var baseUrl = 'made/up/url';
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.watermask.terrain', responseType, method, data, headers, deferred);
+            };
+
+            returnWaterMaskTileJson();
+
+            waitForTile(0, 0, 0, false, true, function(loadedData) {
+                expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
+                expect(loadedData._waterMask).toBeDefined();
+            });
+        });
+
+        it('provides QuantizedMeshTerrainData with VertexNormals and WaterMask', function() {
+            var baseUrl = 'made/up/url';
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.octvertexnormals.watermask.terrain', responseType, method, data, headers, deferred);
+            };
+
+            returnWaterMaskTileJson();
+
+            waitForTile(0, 0, 0, true, true, function(loadedData) {
+                expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
+                expect(loadedData._encodedNormals).toBeDefined();
+                expect(loadedData._waterMask).toBeDefined();
             });
         });
 
@@ -538,30 +504,7 @@ defineSuite([
 
             returnOctVertexNormalTileJson();
 
-            var terrainProvider = new CesiumTerrainProvider({
-                url : baseUrl,
-                requestVertexNormals : true
-            });
-
-            waitsFor(function() {
-                return terrainProvider.ready;
-            });
-
-            var loadedData;
-
-            runs(function() {
-                var promise = terrainProvider.requestTileGeometry(0, 0, 0);
-
-                when(promise, function(terrainData) {
-                    loadedData = terrainData;
-                });
-            });
-
-            waitsFor(function() {
-                return defined(loadedData);
-            }, 'request to complete');
-
-            runs(function() {
+            waitForTile(0, 0, 0, true, false, function(loadedData) {
                 expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
                 expect(loadedData._encodedNormals).toBeDefined();
             });
@@ -576,30 +519,7 @@ defineSuite([
 
             returnVertexNormalTileJson();
 
-            var terrainProvider = new CesiumTerrainProvider({
-                url : baseUrl,
-                requestVertexNormals : true
-            });
-
-            waitsFor(function() {
-                return terrainProvider.ready;
-            });
-
-            var loadedData;
-
-            runs(function() {
-                var promise = terrainProvider.requestTileGeometry(0, 0, 0);
-
-                when(promise, function(terrainData) {
-                    loadedData = terrainData;
-                });
-            });
-
-            waitsFor(function() {
-                return defined(loadedData);
-            }, 'request to complete');
-
-            runs(function() {
+            waitForTile(0, 0, 0, true, false, function(loadedData) {
                 expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
                 expect(loadedData._encodedNormals).toBeDefined();
             });
@@ -614,30 +534,7 @@ defineSuite([
 
             returnOctVertexNormalTileJson();
 
-            var terrainProvider = new CesiumTerrainProvider({
-                url : baseUrl,
-                requestVertexNormals : true
-            });
-
-            waitsFor(function() {
-                return terrainProvider.ready;
-            });
-
-            var loadedData;
-
-            runs(function() {
-                var promise = terrainProvider.requestTileGeometry(0, 0, 0);
-
-                when(promise, function(terrainData) {
-                    loadedData = terrainData;
-                });
-            });
-
-            waitsFor(function() {
-                return defined(loadedData);
-            }, 'request to complete');
-
-            runs(function() {
+            waitForTile(0, 0, 0, true, false, function(loadedData) {
                 expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
                 expect(loadedData._encodedNormals).toBeDefined();
             });
@@ -652,30 +549,7 @@ defineSuite([
 
             returnOctVertexNormalTileJson();
 
-            var terrainProvider = new CesiumTerrainProvider({
-                url : baseUrl,
-                requestVertexNormals : true
-            });
-
-            waitsFor(function() {
-                return terrainProvider.ready;
-            });
-
-            var loadedData;
-
-            runs(function() {
-                var promise = terrainProvider.requestTileGeometry(0, 0, 0);
-
-                when(promise, function(terrainData) {
-                    loadedData = terrainData;
-                });
-            });
-
-            waitsFor(function() {
-                return defined(loadedData);
-            }, 'request to complete');
-
-            runs(function() {
+            waitForTile(0, 0, 0, false, false, function(loadedData) {
                 expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
             });
         });
@@ -734,20 +608,6 @@ defineSuite([
             waitsFor(function() {
                 return terrainProvider.ready;
             });
-
-            var loadedData;
-
-            runs(function() {
-                var promise = terrainProvider.requestTileGeometry(0, 0, 0);
-
-                when(promise, function(terrainData) {
-                    loadedData = terrainData;
-                });
-            });
-
-            waitsFor(function() {
-                return defined(loadedData);
-            }, 'request to complete');
 
             runs(function() {
                 expect(terrainProvider.getTileDataAvailable(0, 0, 0)).toBe(true);

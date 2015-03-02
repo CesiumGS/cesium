@@ -120,7 +120,7 @@ define([
 
         var id = options.id;
         if (typeof options === 'string') {
-            deprecationWarning('Entity', 'The Entity constructor taking a string was deprecated in Cesium 1.5.  It will be removed in 1.7.  Use "new Entity({ id : \'id\'})" instead.');
+            deprecationWarning('Entity', 'The Entity constructor taking a string was deprecated in Cesium 1.5.  It will be removed in 1.9.  Use "new Entity({ id : \'id\'})" instead.');
             id = options;
             options = defaultValue.EMPTY_OBJECT;
         }

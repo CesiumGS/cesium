@@ -467,7 +467,7 @@ define([
 
         var positionsProperty = polyline.positions;
         var positions = Property.getValueOrUndefined(positionsProperty, time, this._positions);
-        if (!defined(positions)) {
+        if (!defined(positions) || positions.length < 2) {
             line.show = false;
             return;
         }

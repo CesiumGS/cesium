@@ -112,7 +112,7 @@
 
 	<!-- Inputs -->
 	<!-- this version should be set to the upcoming version, so it can be tagged without requiring a bump first -->
-	<property name="version" value="1.6" />
+	<property name="version" value="1.7" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />
@@ -158,6 +158,7 @@
 			<include name="**/*.js" />
 			<exclude name="*.js" />
 			<exclude name="Workers/**" />
+			<exclude name="ThirdParty/Workers/**" />
 			<exclude name="**/*.profile.js" />
 		</fileset>
 		<fileset dir="${sourceDirectory}">
@@ -373,16 +374,16 @@
 			<arg value="baseUrl=." />
 			<arg value="skipModuleInsertion=true" />
 			<arg value="wrap=false" />
-			<srcfile prefix="include=Workers/" />
+			<srcfile prefix="include=" />
 			<targetfile prefix="out=" />
-			<globmapper from="*" to="${relativeCombineOutputDirectory}/Workers/*.js" />
+			<globmapper from="*" to="${relativeCombineOutputDirectory}/*.js" />
 			<mappedresources>
-				<fileset dir="${sourceDirectory}/Workers">
-					<include name="cesiumWorkerBootstrapper.js" />
-					<include name="transferTypedArrayTest.js" />
+				<fileset dir="${sourceDirectory}">
+					<include name="Workers/cesiumWorkerBootstrapper.js" />
+					<include name="Workers/transferTypedArrayTest.js" />
+					<include name="ThirdParty/Workers/*.js" />
 				</fileset>
 				<chainedmapper>
-					<flattenmapper />
 					<globmapper from="*.js" to="*" />
 				</chainedmapper>
 			</mappedresources>
@@ -582,6 +583,7 @@
 			<fileset dir="${buildOutputDirectory}">
 				<include name="Assets/**" />
 				<include name="Workers/**" />
+				<include name="ThirdParty/Workers/**" />
 				<include name="Widgets/**" />
 				<exclude name="Widgets/**/*.css" />
 			</fileset>
