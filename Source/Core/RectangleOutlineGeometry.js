@@ -201,7 +201,7 @@ define([
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var surfaceHeight = defaultValue(options.height, 0.0);
         var rotation = defaultValue(options.rotation, 0.0);
-        var extrudedHeight = defaultValue(options.extrudedHeight, surfaceHeight);
+        var extrudedHeight = options.extrudedHeight;
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(rectangle)) {
@@ -226,7 +226,7 @@ define([
      * The number of elements used to pack the object into an array.
      * @type {Number}
      */
-    RectangleOutlineGeometry.packedLength = Rectangle.packedLength + Ellipsoid.packedLength + 4;
+    RectangleOutlineGeometry.packedLength = Rectangle.packedLength + Ellipsoid.packedLength + 5;
 
     /**
      * Stores the provided instance into the provided array.
@@ -257,7 +257,8 @@ define([
         array[startingIndex++] = value._granularity;
         array[startingIndex++] = value._surfaceHeight;
         array[startingIndex++] = value._rotation;
-        array[startingIndex]   = value._extrudedHeight;
+        array[startingIndex++] = defined(value._extrudedHeight) ? 1.0 : 0.0;
+        array[startingIndex] = defaultValue(value._extrudedHeight, 0.0);
     };
 
     var scratchRectangle = new Rectangle();
@@ -296,13 +297,14 @@ define([
         var granularity = array[startingIndex++];
         var height = array[startingIndex++];
         var rotation = array[startingIndex++];
+        var hasExtrudedHeight = array[startingIndex++];
         var extrudedHeight = array[startingIndex];
 
         if (!defined(result)) {
             scratchOptions.granularity = granularity;
             scratchOptions.height = height;
             scratchOptions.rotation = rotation;
-            scratchOptions.extrudedHeight = extrudedHeight;
+            scratchOptions.extrudedHeight = hasExtrudedHeight ? extrudedHeight : undefined;
             return new RectangleOutlineGeometry(scratchOptions);
         }
 
@@ -310,7 +312,7 @@ define([
         result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
         result._surfaceHeight = height;
         result._rotation = rotation;
-        result._extrudedHeight = extrudedHeight;
+        result._extrudedHeight = hasExtrudedHeight ? extrudedHeight : undefined;
 
         return result;
     };
