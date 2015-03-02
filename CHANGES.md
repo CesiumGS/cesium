@@ -19,9 +19,12 @@ Change Log
 * Added initial support for [KML 2.2](https://developers.google.com/kml/) via `KmlDataSource`. Check out the new [Sandcastle Demo](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=KML.html) and the [reference documentation](http://cesiumjs.org/Cesium/Build/Documentation/KmlDataSource.html) for more details.
 * `InfoBox` sanitization now relies on [iframe sandboxing](http://www.html5rocks.com/en/tutorials/security/sandboxed-iframes/). This allows for much more content to be displayed in the InfoBox (and still be secure).
 * Added `InfoBox.frame` which is the instance of the iframe that is used to host description content. Sanitization can be controlled via the frame's `sandbox` attribute.  See the above link for additional information. 
+* Worked around a bug in Safari that caused most of Cesium to be broken. Cesium should now work much better on Safari for both desktop and mobile.
 * Fixed incorrect ellipse texture coordinates. [#2363](https://github.com/AnalyticalGraphicsInc/cesium/issues/2363) and [#2465](https://github.com/AnalyticalGraphicsInc/cesium/issues/2465)
 * Fixed a bug that would cause incorrect geometry for long Corridors and Polyline Volumes. [#2513](https://github.com/AnalyticalGraphicsInc/cesium/issues/2513)
 * Fixed a bug in imagery loading that could cause some or all of the globe to be missing when using an imagery layer that does not cover the entire globe.
+* Fixed a bug that caused `ElipseOutlineGeometry` and `CircleOutlineGeometry` to be extruded to the ground when they should have instead been drawn at height. [#2499](https://github.com/AnalyticalGraphicsInc/cesium/issues/2499).
+* Fixed a bug that prevented per-vertex colors from working with `PolylineGeometry` and `SimplePolylineGeometry` when used asynchronously. [#2516](https://github.com/AnalyticalGraphicsInc/cesium/issues/2516)
 * Fixed some styling issues with `InfoBox` and `BaseLayerPicker` caused by using Bootstrap with Cesium. [#2487](https://github.com/AnalyticalGraphicsInc/cesium/issues/2479)
 * Added support for rendering a water effect on Quantized-Mesh terrain tiles.
 * Added `pack` and `unpack` functions to `Matrix2` and `Matrix3`.
@@ -32,6 +35,7 @@ Change Log
 * Added the ability to pass a `Promise` to a target to `viewer.zoomTo` and `viewer.flyTo`.
 * All `CzmlDataSource` and `GeoJsonDataSource` loading functions now return `Promise` instances that resolve to the instances after data is loaded.
 * Error handling in all `CzmlDataSource` and `GeoJsonDataSource` loading functions is now more consistent.  Rather than a mix of exceptions and `Promise` rejections, all errors are raised via `Promise` rejections.
+* In addition to addresses, the `Geocoder` widget now allows input of longitude, latitude, and an optional height in degrees and meters.  Example: `-75.596, 40.038, 1000` or `-75.596 40.038`.
 
 ### 1.6 - 2015-02-02
 
