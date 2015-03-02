@@ -293,7 +293,6 @@ define([
         for (var i = 0, len = lastIndex - startingIndex + 1; i < len; i++) {
             var offset = i * 3;
             Quaternion.unpack(packedArray, (startingIndex + i) * 4, sampledQuaternionTempQuaternion);
-            Quaternion.normalize(sampledQuaternionTempQuaternion, sampledQuaternionTempQuaternion);
 
             Quaternion.multiply(sampledQuaternionTempQuaternion, sampledQuaternionQuaternion0Conjugate, sampledQuaternionTempQuaternion);
 
@@ -333,8 +332,7 @@ define([
             Quaternion.fromAxisAngle(sampledQuaternionRotation, magnitude, sampledQuaternionTempQuaternion);
         }
 
-        Quaternion.multiply(sampledQuaternionTempQuaternion, sampledQuaternionQuaternion0, result);
-        return Quaternion.normalize(result, result);
+        return Quaternion.multiply(sampledQuaternionTempQuaternion, sampledQuaternionQuaternion0, result);
     };
 
     /**
