@@ -110,20 +110,20 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var positions = options.positions;
         var colors = options.colors;
-        var perVertex = defaultValue(options.colorsPerVertex, false);
+        var colorsPerVertex = defaultValue(options.colorsPerVertex, false);
 
         //>>includeStart('debug', pragmas.debug);
         if ((!defined(positions)) || (positions.length < 2)) {
             throw new DeveloperError('At least two positions are required.');
         }
-        if (defined(colors) && ((perVertex && colors.length < positions.length) || (!perVertex && colors.length < positions.length - 1))) {
+        if (defined(colors) && ((colorsPerVertex && colors.length < positions.length) || (!colorsPerVertex && colors.length < positions.length - 1))) {
             throw new DeveloperError('colors has an invalid length.');
         }
         //>>includeEnd('debug');
 
         this._positions = positions;
         this._colors = colors;
-        this._perVertex = perVertex;
+        this._colorsPerVertex = colorsPerVertex;
         this._followSurface = defaultValue(options.followSurface, true);
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
@@ -180,7 +180,7 @@ define([
         Ellipsoid.pack(value._ellipsoid, array, startingIndex);
         startingIndex += Ellipsoid.packedLength;
 
-        array[startingIndex++] = value._perVertex ? 1.0 : 0.0;
+        array[startingIndex++] = value._colorsPerVertex ? 1.0 : 0.0;
         array[startingIndex++] = value._followSurface ? 1.0 : 0.0;
         array[startingIndex]   = value._granularity;
     };
@@ -220,7 +220,7 @@ define([
         var ellipsoid = Ellipsoid.unpack(array, startingIndex);
         startingIndex += Ellipsoid.packedLength;
 
-        var perVertex = array[startingIndex++] === 1.0;
+        var colorsPerVertex = array[startingIndex++] === 1.0;
         var followSurface = array[startingIndex++] === 1.0;
         var granularity = array[startingIndex];
 
@@ -229,7 +229,7 @@ define([
                 positions : positions,
                 colors : colors,
                 ellipsoid : ellipsoid,
-                perVertex : perVertex,
+                colorsPerVertex : colorsPerVertex,
                 followSurface : followSurface,
                 granularity : granularity
             });
@@ -238,7 +238,7 @@ define([
         result._positions = positions;
         result._colors = colors;
         result._ellipsoid = ellipsoid;
-        result._perVertex = perVertex;
+        result._colorsPerVertex = colorsPerVertex;
         result._followSurface = followSurface;
         result._granularity = granularity;
 
@@ -263,13 +263,13 @@ define([
     SimplePolylineGeometry.createGeometry = function(simplePolylineGeometry) {
         var positions = simplePolylineGeometry._positions;
         var colors = simplePolylineGeometry._colors;
-        var perVertex = simplePolylineGeometry._perVertex;
+        var colorsPerVertex = simplePolylineGeometry._colorsPerVertex;
         var followSurface = simplePolylineGeometry._followSurface;
         var granularity = simplePolylineGeometry._granularity;
         var ellipsoid = simplePolylineGeometry._ellipsoid;
 
         var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
-        var perSegmentColors = defined(colors) && !perVertex;
+        var perSegmentColors = defined(colors) && !colorsPerVertex;
 
         var i;
         var length = positions.length;
