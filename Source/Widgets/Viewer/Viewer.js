@@ -216,6 +216,7 @@ define([
      * @param {ImageryProvider} [options.imageryProvider=new BingMapsImageryProvider()] The imagery provider to use.  This value is only valid if options.baseLayerPicker is set to false.
      * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
      * @param {SkyBox} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used.
+     * @param {SkyAtmosphere} [options.skyAtmosphere] Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
      * @param {Element|String} [options.fullscreenElement=document.body] The element or id to be placed into fullscreen mode when the full screen button is pressed.
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
      * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
@@ -353,6 +354,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             imageryProvider : createBaseLayerPicker ? false : options.imageryProvider,
             clock : options.clock,
             skyBox : options.skyBox,
+            skyAtmosphere : options.skyAtmosphere,
             sceneMode : options.sceneMode,
             mapProjection : options.mapProjection,
             globe : options.globe,
