@@ -8,7 +8,6 @@ defineSuite([
         'DataSources/DataSourceCollection',
         'DataSources/Entity',
         'Specs/createScene',
-        'Specs/destroyScene',
         'Specs/MockDataSource'
     ], function(
         DataSourceDisplay,
@@ -19,7 +18,6 @@ defineSuite([
         DataSourceCollection,
         Entity,
         createScene,
-        destroyScene,
         MockDataSource) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -33,7 +31,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     afterEach(function() {

@@ -2,13 +2,13 @@
 defineSuite([
         'Widgets/Geocoder/GeocoderViewModel',
         'Core/Cartesian3',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Scene/Camera',
+        'Specs/createScene'
     ], function(
         GeocoderViewModel,
         Cartesian3,
-        createScene,
-        destroyScene) {
+        Camera,
+        createScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -18,7 +18,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     it('constructor sets expected properties', function() {
@@ -74,6 +74,27 @@ defineSuite([
             scene.tweens.update();
             return !Cartesian3.equals(cameraPosition, scene.camera.position);
         });
+    });
+
+    it('Zooms to longitude, latitude, height', function() {
+        var viewModel = new GeocoderViewModel({
+            scene : scene
+        });
+
+        spyOn(Camera.prototype, 'flyTo');
+
+        viewModel.searchText = ' 1.0, 2.0, 3.0 ';
+        viewModel.search();
+        expect(Camera.prototype.flyTo).toHaveBeenCalled();
+        expect(Camera.prototype.flyTo.mostRecentCall.args[0].destination).toEqual(Cartesian3.fromDegrees(1.0, 2.0, 3.0));
+
+        viewModel.searchText = '1.0   2.0   3.0';
+        viewModel.search();
+        expect(Camera.prototype.flyTo.mostRecentCall.args[0].destination).toEqual(Cartesian3.fromDegrees(1.0, 2.0, 3.0));
+
+        viewModel.searchText = '-1.0, -2.0';
+        viewModel.search();
+        expect(Camera.prototype.flyTo.mostRecentCall.args[0].destination).toEqual(Cartesian3.fromDegrees(-1.0, -2.0, 300.0));
     });
 
     it('constructor throws without scene', function() {

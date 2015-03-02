@@ -1,6 +1,40 @@
 Change Log
 ==========
 
+### 1.7 - 2015-03-02
+
+* Breaking changes
+  * Removed `viewerEntityMixin`, which was deprecated in Cesium 1.5. Its functionality is now directly part of the `Viewer` widget.
+  * Removed `Camera.tilt`, which was deprecated in Cesium 1.6. Use `Camera.pitch`.
+  * Removed `Camera.heading` and `Camera.tilt`. They were deprecated in Cesium 1.6. Use `Camera.setView`.
+  * Removed `Camera.setPositionCartographic`, which was was deprecated in Cesium 1.6. Use `Camera.setView`.
+* Deprecated
+  * Deprecated `InfoBoxViewModel.defaultSanitizer`, `InfoBoxViewModel.sanitizer`, and `Cesium.sanitize`. They will be removed in 1.10.
+  * Deprecated `InfoBoxViewModel.descriptionRawHtml`, it will be removed in 1.10.  Use `InfoBoxViewModel.description` instead.
+  * Deprecated `GeoJsonDataSource.fromUrl`, it will be removed in 1.10. Use `GeoJsonDataSource.load` instead. Unlike fromUrl, load can take either a url or parsed JSON object and returns a promise to a new instance, rather than a new instance.
+  * Deprecated `GeoJsonDataSource.prototype.loadUrl`, it will be removed in 1.10.  Instead, pass a url as the first parameter to `GeoJsonDataSource.prototype.load`.
+  * Deprecated `CzmlDataSource.prototype.loadUrl`, it will be removed in 1.10.  Instead, pass a url as the first parameter to `CzmlDataSource.prototype.load`.
+  * Deprecated `CzmlDataSource.prototype.processUrl`, it will be removed in 1.10.  Instead, pass a url as the first parameter to `CzmlDataSource.prototype.process`.
+  * Deprecated the `sourceUri` parameter to all `CzmlDataSource` load and process functions. Support will be removed in 1.10.  Instead pass an `options` object with `sourceUri` property.
+* Added initial support for [KML 2.2](https://developers.google.com/kml/) via `KmlDataSource`. Check out the new [Sandcastle Demo](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=KML.html) and the [reference documentation](http://cesiumjs.org/Cesium/Build/Documentation/KmlDataSource.html) for more details.
+* `InfoBox` sanitization now relies on [iframe sandboxing](http://www.html5rocks.com/en/tutorials/security/sandboxed-iframes/). This allows for much more content to be displayed in the InfoBox (and still be secure).
+* Added `InfoBox.frame` which is the instance of the iframe that is used to host description content. Sanitization can be controlled via the frame's `sandbox` attribute.  See the above link for additional information. 
+* Fixed incorrect ellipse texture coordinates. [#2363](https://github.com/AnalyticalGraphicsInc/cesium/issues/2363) and [#2465](https://github.com/AnalyticalGraphicsInc/cesium/issues/2465)
+* Fixed a bug that would cause incorrect geometry for long Corridors and Polyline Volumes. [#2513](https://github.com/AnalyticalGraphicsInc/cesium/issues/2513)
+* Fixed a bug in imagery loading that could cause some or all of the globe to be missing when using an imagery layer that does not cover the entire globe.
+* Fixed a bug that caused `ElipseOutlineGeometry` and `CircleOutlineGeometry` to be extruded to the ground when they should have instead been drawn at height. [#2499](https://github.com/AnalyticalGraphicsInc/cesium/issues/2499).
+* Fixed some styling issues with `InfoBox` and `BaseLayerPicker` caused by using Bootstrap with Cesium. [#2487](https://github.com/AnalyticalGraphicsInc/cesium/issues/2479)
+* Added support for rendering a water effect on Quantized-Mesh terrain tiles.
+* Added `pack` and `unpack` functions to `Matrix2` and `Matrix3`.
+* Added camera-terrain collision detection/response when the camera reference frame is set.
+* Added `ScreenSpaceCameraController.enableCollisionDetection` to enable/disable camera collision detection with terrain.
+* Added `CzmlDataSource.load` and `GeoJsonDataSource.load` to make it easy to create and load data in a single line.
+* Added the ability to pass a `Promise` to a `DataSource` to `DataSourceCollection.add`.  The `DataSource` will not actually be added until the promise resolves.
+* Added the ability to pass a `Promise` to a target to `viewer.zoomTo` and `viewer.flyTo`.
+* All `CzmlDataSource` and `GeoJsonDataSource` loading functions now return `Promise` instances that resolve to the instances after data is loaded.
+* Error handling in all `CzmlDataSource` and `GeoJsonDataSource` loading functions is now more consistent.  Rather than a mix of exceptions and `Promise` rejections, all errors are raised via `Promise` rejections.
+* In addition to addresses, the `Geocoder` widget now allows input of longitude, latitude, and an optional height in degrees and meters.  Example: `-75.596, 40.038, 1000` or `-75.596 40.038`.
+
 ### 1.6 - 2015-02-02
 
 * Breaking changes

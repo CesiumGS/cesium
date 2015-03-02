@@ -31,7 +31,7 @@ define([
      * @example
      * // Query the terrain height of two Cartographic positions
      * var terrainProvider = new Cesium.CesiumTerrainProvider({
-     *     url : '//cesiumjs.org/smallterrain'
+     *     url : '//cesiumjs.org/stk-terrain/world'
      * });
      * var positions = [
      *     Cesium.Cartographic.fromDegrees(86.925145, 27.988257),
