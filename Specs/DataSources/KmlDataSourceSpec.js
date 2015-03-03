@@ -1728,7 +1728,7 @@ defineSuite([
         expect(label.eyeOffset).toBeUndefined();
         expect(label.pixelOffsetScaleByDistance).toBeUndefined();
 
-        expect(label.font.getValue()).toEqual('16px san-serif');
+        expect(label.font.getValue()).toEqual('16px sans-serif');
         expect(label.style.getValue()).toEqual(LabelStyle.FILL_AND_OUTLINE);
         expect(label.horizontalOrigin.getValue()).toEqual(HorizontalOrigin.LEFT);
         expect(label.pixelOffset.getValue()).toEqual(new Cartesian2(17, 0));
