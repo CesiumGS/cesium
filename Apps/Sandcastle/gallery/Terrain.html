@@ -34,24 +34,20 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 
-var scene = viewer.scene;
-var globe = scene.globe;
-globe.depthTestAgainstTerrain = true;
-
 var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
     url : '//assets.agi.com/stk-terrain/world',
     requestWaterMask : true,
     requestVertexNormals : true
 });
+viewer.terrainProvider = cesiumTerrainProviderMeshes;
 
+// setup alternative terrain providers
 var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
 
 var vrTheWorldProvider = new Cesium.VRTheWorldTerrainProvider({
     url : '//www.vr-theworld.com/vr-theworld/tiles1.0.0/73/',
     credit : 'Terrain data courtesy VT MÄK'
 });
-
-viewer.terrainProvider = cesiumTerrainProviderMeshes;
 
 Sandcastle.addToolbarMenu([{
     text : 'CesiumTerrainProvider - STK World Terrain',
@@ -95,41 +91,29 @@ Sandcastle.addToolbarMenu([{
     }
 }], 'terrainMenu');
 
-Sandcastle.addToolbarMenu([{
+Sandcastle.addDefaultToolbarMenu([{
     text : 'Mount Everest',
     onselect : function() {
-        if (scene.mode === Cesium.SceneMode.SCENE3D || scene.mode === Cesium.SceneMode.COLUMBUS_VIEW) {
-            var target = new Cesium.Cartesian3(300770.50872389384, 5634912.131394585, 2978152.2865545116);
-            var offset = new Cesium.Cartesian3(6344.974098678562, -793.3419798081741, 2499.9508860763162);
-            viewer.camera.lookAt(target, offset);
-            viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-        } else {
-            viewer.camera.viewRectangle(new Cesium.Rectangle(1.516102969, 0.48744464, 1.518102969, 0.48944464));
-        }
+        var target = new Cesium.Cartesian3(300770.50872389384, 5634912.131394585, 2978152.2865545116);
+        var offset = new Cesium.Cartesian3(6344.974098678562, -793.3419798081741, 2499.9508860763162);
+        viewer.camera.lookAt(target, offset);
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
     }
 }, {
     text : 'Half Dome',
     onselect : function() {
-        if (scene.mode === Cesium.SceneMode.SCENE3D || scene.mode === Cesium.SceneMode.COLUMBUS_VIEW) {
-            var target = new Cesium.Cartesian3(-2489625.0836225147, -4393941.44443024, 3882535.9454173897);
-            var offset = new Cesium.Cartesian3(-6857.40902037546, 412.3284835694358, 2147.5545426812023);
-            viewer.camera.lookAt(target, offset);
-            viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-        } else {
-            viewer.camera.viewRectangle(new Cesium.Rectangle(-2.08724538, 0.6577939, -2.08524538, 0.6597939));
-        }
+        var target = new Cesium.Cartesian3(-2489625.0836225147, -4393941.44443024, 3882535.9454173897);
+        var offset = new Cesium.Cartesian3(-6857.40902037546, 412.3284835694358, 2147.5545426812023);
+        viewer.camera.lookAt(target, offset);
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
     }
 }, {
     text : 'San Francisco Bay',
     onselect : function() {
-        if (scene.mode === Cesium.SceneMode.SCENE3D || scene.mode === Cesium.SceneMode.COLUMBUS_VIEW) {
-            var target = new Cesium.Cartesian3(-2708814.85583248, -4254159.450845907, 3891403.9457429945);
-            var offset = new Cesium.Cartesian3(70642.66030209465, -31661.517948317807, 35505.179997143336);
-            viewer.camera.lookAt(target, offset);
-            viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-        } else {
-            viewer.camera.viewRectangle(new Cesium.Rectangle(-2.147621889, 0.64829691, -2.125621889, 0.67029691));
-        }
+        var target = new Cesium.Cartesian3(-2708814.85583248, -4254159.450845907, 3891403.9457429945);
+        var offset = new Cesium.Cartesian3(70642.66030209465, -31661.517948317807, 35505.179997143336);
+        viewer.camera.lookAt(target, offset);
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
     }
 }], 'zoomButtons');
 
@@ -137,6 +121,11 @@ var terrainSamplePositions;
 
 function sampleTerrainSuccess() {
     var ellipsoid = Cesium.Ellipsoid.WGS84;
+
+    //By default, Cesium does not obsure geometry
+    //behind terrain. Setting this flag enables that.
+    viewer.scene.globe.depthTestAgainstTerrain = true;
+
     viewer.entities.suspendEvents();
     viewer.entities.removeAll();
 

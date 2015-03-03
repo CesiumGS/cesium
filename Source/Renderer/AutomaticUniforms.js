@@ -162,7 +162,7 @@ define([
 
         /**
          * An automatic GLSL uniform representing a the depth texture after
-         * after only the globe has been rendered.
+         * only the globe has been rendered.
          *
          * @alias czm_globeDepthTexture
          * @glslUniform
