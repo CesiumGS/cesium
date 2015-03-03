@@ -1081,35 +1081,7 @@ define([
                 (Math.abs(left.z - right.z) <= epsilon) &&
                 (Math.abs(left.w - right.w) <= epsilon));
     };
-    
-    /**
-     * Computes the heading, pitch and roll from a quaternion (see http://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles )
-     *
-     * @param {Quaternion} quaternion The quaternion to retrieve heading,pitch and roll in radians.
-     * @returns {Object} an object that contains three attributs (in radians): roll,pitch and heading.
-     */
-    Quaternion.toHeadingPitchRoll = function(quaternion) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(quaternion)) {
-            throw new DeveloperError('quaternion is required');
-        }
-        //>>includeEnd('debug');
-
-        var result = {};
-        
-        var test = 2 * (quaternion.w * quaternion.y - quaternion.z * quaternion.x);
-        var denumRoll = 1 - 2 * (quaternion.x * quaternion.x + quaternion.y * quaternion.y);
-        var numRoll = 2 * (quaternion.w * quaternion.x + quaternion.y * quaternion.z);
-        var denumHeading = 1 - 2 * (quaternion.y * quaternion.y + quaternion.z * quaternion.z);
-        var numHeading = 2 * (quaternion.w * quaternion.z + quaternion.x * quaternion.y);
-        
-        result.heading = -Math.atan2(numHeading, denumHeading);
-        result.roll = Math.atan2(numRoll, denumRoll);
-        result.pitch = -Math.asin(test);
-
-        return result;
-    };
-
+ 
     /**
      * An immutable Quaternion instance initialized to (0.0, 0.0, 0.0, 0.0).
      *
