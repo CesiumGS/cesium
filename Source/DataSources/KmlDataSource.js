@@ -1171,10 +1171,6 @@ define([
             text = defaultValue(balloonStyle.text, description);
         }
 
-        if (!defined(text) && !defined(extendedData)) {
-            return;
-        }
-
         var value;
         if (defined(text)) {
             text = text.replace('$[name]', defaultValue(entity.name, ''));
@@ -1207,7 +1203,7 @@ define([
                     }
                 }
             }
-        } else {
+        } else if (defined(extendedData)) {
             //If no description exists, build a table out of the extended data
             keys = Object.keys(extendedData);
             if (keys.length > 0) {
@@ -1219,6 +1215,11 @@ define([
                 }
                 text += '</tbody></table>';
             }
+        }
+
+        if (!defined(text)) {
+            //No description
+            return;
         }
 
         //Turns non-explicit links into clickable links.

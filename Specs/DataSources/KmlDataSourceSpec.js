@@ -1541,6 +1541,19 @@ defineSuite([
         expect(table.rows[2].cells[1].textContent).toEqual('');
     });
 
+    it('BalloonStyle: does not create a description for empty ExtendedData', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Placemark>\
+                <ExtendedData>\
+                </ExtendedData>\
+            </Placemark>';
+
+        waitsForPromise(KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.description).toBeUndefined();
+        }));
+    });
+
     it('BalloonStyle: description creates links from text', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
         <Placemark>\
