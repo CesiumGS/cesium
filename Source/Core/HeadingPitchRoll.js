@@ -101,15 +101,15 @@ define([
         var numRoll = 2 * (quaternion.w * quaternion.x + quaternion.y * quaternion.z);
         var denumHeading = 1 - 2 * (quaternion.y * quaternion.y + quaternion.z * quaternion.z);
         var numHeading = 2 * (quaternion.w * quaternion.z + quaternion.x * quaternion.y);
-        
+
         result.heading = -Math.atan2(numHeading, denumHeading);
         result.roll = Math.atan2(numRoll, denumRoll);
         result.pitch = -Math.asin(test);
 
         return result;
     };
-    
-     /**
+
+    /**
      * generate a HeadingPitchRoll instance from angles in degrees.
      *
      * @param {Number} heading the heading in degrees
@@ -117,7 +117,7 @@ define([
      * @param {Number} roll the heading in degrees
      * @returns {HeadingPitchRoll} A new HeadingPitchRoll instance
      */
-    HeadingPitchRoll.fromDegrees = function (heading,pitch,roll) {
+    HeadingPitchRoll.fromDegrees = function (heading, pitch, roll) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(heading)) {
             throw new DeveloperError('heading is required');
@@ -129,11 +129,11 @@ define([
             throw new DeveloperError('roll is required');
         }
         //>>includeEnd('debug');
-        
+
         var result = new HeadingPitchRoll();
-        result.heading=heading*CesiumMath.RADIANS_PER_DEGREE;
-        result.pitch=pitch*CesiumMath.RADIANS_PER_DEGREE;
-        result.roll=roll*CesiumMath.RADIANS_PER_DEGREE;
+        result.heading = heading * CesiumMath.RADIANS_PER_DEGREE;
+        result.pitch = pitch * CesiumMath.RADIANS_PER_DEGREE;
+        result.roll = roll * CesiumMath.RADIANS_PER_DEGREE;
 
         return result;
     };
