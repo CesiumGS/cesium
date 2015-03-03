@@ -826,8 +826,6 @@ define([
     }
 
     function createTextures(scene, context, width, height) {
-        destroyTextures(scene);
-
         scene._colorTexture = context.createTexture2D({
             width : width,
             height : height,
@@ -853,20 +851,26 @@ define([
         });
     }
 
-    function createFramebuffers(scene, context) {
+    function createFramebuffers(scene, context, width, height) {
+        destroyTextures(scene);
         destroyFramebuffers(scene);
+
+        createTextures(scene, context, width, height);
 
         scene._framebuffer = context.createFramebuffer({
             colorTextures : [scene._colorTexture],
-            depthStencilTexture : scene._depthStencilTexture
+            depthStencilTexture : scene._depthStencilTexture,
+            destroyAttachments : false
         });
 
         scene._copyDepthFramebuffer = context.createFramebuffer({
-            colorTextures : [scene._depthStencilCopyTexture]
+            colorTextures : [scene._depthStencilCopyTexture],
+            destroyAttachments : false
         });
 
         var complete = WebGLRenderingContext.FRAMEBUFFER_COMPLETE;
         if (scene._framebuffer.status !== complete || scene._copyDepthFramebuffer.status !== complete) {
+            destroyTextures(scene);
             destroyFramebuffers(scene);
             return false;
         }
@@ -885,12 +889,8 @@ define([
 
         var colorTexture = scene._colorTexture;
         var textureChanged = !defined(colorTexture) || colorTexture.width !== width || colorTexture.height !== height;
-        if (textureChanged) {
-            createTextures(scene, context, width, height);
-        }
-
         if (!defined(scene._framebuffer) || textureChanged) {
-            if (!createFramebuffers(scene, context)) {
+            if (!createFramebuffers(scene, context, width, height)) {
                 // framebuffer creation failed
                 return;
             }
@@ -900,6 +900,8 @@ define([
 
         if (!defined(scene._oit) && scene._useOIT) {
             scene._oit = new OIT(context, scene._framebuffer);
+        } else if (textureChanged) {
+            scene._oit.setColorFramebuffer(scene._framebuffer);
         }
     }
 
@@ -918,10 +920,11 @@ define([
             scene._copyDepthCommand = context.createViewportQuadCommand(copyDepthFS, {
                 renderState : context.createRenderState(),
                 uniformMap : {},
-                framebuffer : scene._copyDepthFramebuffer,
                 owner : scene
             });
         }
+
+        scene._copyDepthCommand.framebuffer = scene._copyDepthFramebuffer;
 
         var uniformMap = scene._copyDepthCommand.uniformMap;
         if (!defined(uniformMap.depthTexture) || uniformMap.depthTexture() !== scene._depthStencilTexture) {
