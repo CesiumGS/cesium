@@ -519,6 +519,51 @@ defineSuite([
         expect(entity.availability.stop).toEqual(Iso8601.MAXIMUM_VALUE);
     });
 
+    it('Feature: TimeStamp works', function() {
+        var date = JulianDate.fromIso8601('1941-12-07');
+
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Placemark>\
+            <TimeStamp>\
+              <when>1941-12-07</when>\
+            </TimeStamp>\
+        </Placemark>';
+
+        waitsForPromise(KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.availability).toBeDefined();
+            expect(entity.availability.start).toEqual(date);
+            expect(entity.availability.stop).toEqual(Iso8601.MAXIMUM_VALUE);
+        }));
+    });
+
+    it('Feature: TimeStamp gracefully handles empty fields', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Placemark>\
+            <TimeStamp>\
+            </TimeStamp>\
+        </Placemark>';
+
+        waitsForPromise(KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.availability).toBeUndefined();
+        }));
+    });
+
+    it('Feature: TimeStamp gracefully handles empty when field', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Placemark>\
+            <TimeStamp>\
+              <when></when>\
+            </TimeStamp>\
+        </Placemark>';
+
+        waitsForPromise(KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.availability).toBeUndefined();
+        }));
+    });
+
     it('Feature: ExtendedData <Data> schema', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
         <Placemark>\
@@ -700,6 +745,26 @@ defineSuite([
         var entities = dataSource.entities.values;
         expect(entities.length).toEqual(1);
         expect(entities[0].billboard.scale.getValue()).toEqual(3.0);
+    });
+
+    it('Styles: supports local styles with styleUrl mssing #', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Document>\
+            <Style id="testStyle">\
+              <IconStyle>\
+                  <scale>3</scale>\
+              </IconStyle>\
+            </Style>\
+            <Placemark>\
+              <styleUrl>testStyle</styleUrl>\
+            </Placemark>\
+            </Document>';
+
+        waitsForPromise(KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entities = dataSource.entities.values;
+            expect(entities.length).toEqual(1);
+            expect(entities[0].billboard.scale.getValue()).toEqual(3.0);
+        }));
     });
 
     it('Styles: supports external styles with styleUrl', function() {
