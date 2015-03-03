@@ -397,7 +397,7 @@ define([
     function queryStringValue(node, tagName, namespace) {
         var result = queryFirstNode(node, tagName, namespace);
         if (defined(result)) {
-            return result.textContent;
+            return result.textContent.trim();
         }
         return undefined;
     }
@@ -472,6 +472,28 @@ define([
             return undefined;
         }
         return parseColorString(value, queryStringValue(node, 'colorMode', namespace) === 'random');
+    }
+
+    function processTimeStamp(featureNode) {
+        var node = queryFirstNode(featureNode, 'TimeStamp', namespaces.kmlgx);
+        var whenString = queryStringValue(node, 'when', namespaces.kmlgx);
+
+        if (!defined(node) || !defined(whenString) || whenString.length === 0) {
+            return undefined;
+        }
+
+        //According to the KML spec, a TimeStamp represents a "single moment in time"
+        //However, since Cesium animates much differently than Google Earth, that doesn't
+        //Make much sense here.  Instead, we use the TimeStamp as the moment the feature
+        //comes into existence.  This works much better and gives a similar feel to
+        //GE's experience.
+        var when = JulianDate.fromIso8601(whenString);
+        var result = new TimeIntervalCollection();
+        result.addInterval(new TimeInterval({
+            start : when,
+            stop : Iso8601.MAXIMUM_VALUE
+        }));
+        return result;
     }
 
     function processTimeSpan(featureNode) {
@@ -676,10 +698,17 @@ define([
         }
 
         //Google earth seems to always use the first external style only.
-        var externalStyle = queryFirstNode(placeMark, 'styleUrl', namespaces.kml);
+        var externalStyle = queryStringValue(placeMark, 'styleUrl', namespaces.kml);
         if (defined(externalStyle)) {
-            var styleEntity = styleCollection.getById(externalStyle.textContent);
-            if (typeof styleEntity !== 'undefined') {
+            //Google Earth ignores leading and trailing whitespace for styleUrls
+            //Without the below trim, some docs that load in Google Earth won't load
+            //in cesium.
+            var id = externalStyle;
+            var styleEntity = styleCollection.getById(id);
+            if (!defined(styleEntity)) {
+                styleEntity = styleCollection.getById('#' + id);
+            }
+            if (defined(styleEntity)) {
                 result.merge(styleEntity);
             }
         }
@@ -769,18 +798,21 @@ define([
         for (i = 0; i < styleUrlNodesLength; i++) {
             var styleReference = styleUrlNodes[i].textContent;
             if (styleReference[0] !== '#') {
+                //According to the spec, all local styles should start with a #
+                //and everything else is an external style that has a # seperating
+                //the URL of the document and the style.  However, Google Earth
+                //also accepts styleUrls without a # as meaning a local style.
                 var tokens = styleReference.split('#');
-                if (tokens.length !== 2) {
-                    window.console.log('KML - Invalid style reference: ' + styleReference);
-                }
-                var uri = tokens[0];
-                if (!defined(externalStyleHash[uri])) {
-                    if (defined(sourceUri)) {
-                        var baseUri = new Uri(document.location.href);
-                        sourceUri = new Uri(sourceUri);
-                        uri = new Uri(uri).resolve(sourceUri.resolve(baseUri)).toString();
+                if (tokens.length === 2) {
+                    var uri = tokens[0];
+                    if (!defined(externalStyleHash[uri])) {
+                        if (defined(sourceUri)) {
+                            var baseUri = new Uri(document.location.href);
+                            sourceUri = new Uri(sourceUri);
+                            uri = new Uri(uri).resolve(sourceUri.resolve(baseUri)).toString();
+                        }
+                        promises.push(processExternalStyles(dataSource, uri, styleCollection, sourceUri));
                     }
-                    promises.push(processExternalStyles(dataSource, uri, styleCollection, sourceUri));
                 }
             }
         }
@@ -1171,10 +1203,6 @@ define([
             text = defaultValue(balloonStyle.text, description);
         }
 
-        if (!defined(text) && !defined(extendedData)) {
-            return;
-        }
-
         var value;
         if (defined(text)) {
             text = text.replace('$[name]', defaultValue(entity.name, ''));
@@ -1207,7 +1235,7 @@ define([
                     }
                 }
             }
-        } else {
+        } else if (defined(extendedData)) {
             //If no description exists, build a table out of the extended data
             keys = Object.keys(extendedData);
             if (keys.length > 0) {
@@ -1219,6 +1247,11 @@ define([
                 }
                 text += '</tbody></table>';
             }
+        }
+
+        if (!defined(text)) {
+            //No description
+            return;
         }
 
         //Turns non-explicit links into clickable links.
@@ -1259,7 +1292,12 @@ define([
         var name = queryStringValue(featureNode, 'name', namespaces.kml);
         entity.name = name;
         entity.parent = parent;
-        entity.availability = processTimeSpan(featureNode);
+
+        var availability = processTimeSpan(featureNode);
+        if (!defined(availability)) {
+            availability = processTimeStamp(featureNode);
+        }
+        entity.availability = availability;
 
         //var visibility = queryBooleanValue(featureNode, 'visibility', namespaces.kml);
         //entity.uiShow = defaultValue(visibility, true);
