@@ -8,7 +8,9 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/NearFarScalar',
+        '../Core/writeTextToCanvas',
         '../Scene/HorizontalOrigin',
+        '../Scene/BillboardCollection',
         '../Scene/LabelCollection',
         '../Scene/LabelStyle',
         '../Scene/VerticalOrigin',
@@ -23,7 +25,9 @@ define([
         destroyObject,
         DeveloperError,
         NearFarScalar,
+        writeTextToCanvas,
         HorizontalOrigin,
+        BillboardCollection,
         LabelCollection,
         LabelStyle,
         VerticalOrigin,
@@ -65,7 +69,7 @@ define([
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {EntityCollection} entityCollection The entityCollection to visualize.
      */
-    var LabelVisualizer = function(scene, entityCollection) {
+    var LabelVisualizer = function(scene, entityCollection, useBillboardCollection) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
@@ -84,6 +88,8 @@ define([
         this._items = new AssociativeArray();
 
         this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
+        this._cache = {};
+        this.useBillboardCollection = useBillboardCollection;
     };
 
     /**
@@ -125,7 +131,11 @@ define([
             if (!defined(label)) {
                 var labelCollection = this._labelCollection;
                 if (!defined(labelCollection)) {
-                    labelCollection = new LabelCollection();
+                    if (!this.useBillboardCollection) {
+                        labelCollection = new LabelCollection();
+                    } else {
+                        labelCollection = new BillboardCollection();
+                    }
                     this._labelCollection = labelCollection;
                     this._scene.primitives.add(labelCollection);
                 }
@@ -143,19 +153,68 @@ define([
                 item.label = label;
             }
 
+            var font = Property.getValueOrDefault(labelGraphics._font, time, defaultFont);
+            var style = Property.getValueOrDefault(labelGraphics._style, time, defaultStyle);
+            var fillColor = Property.getValueOrDefault(labelGraphics._fillColor, time, defaultFillColor, fillColor);
+            var outlineColor = Property.getValueOrDefault(labelGraphics._outlineColor, time, defaultOutlineColor, outlineColor);
+            var outlineWidth = Property.getValueOrDefault(labelGraphics._outlineWidth, time, defaultOutlineWidth);
+            var verticalOrigin = Property.getValueOrDefault(labelGraphics._verticalOrigin, time, defaultVerticalOrigin);
+
+            if (!this.useBillboardCollection) {
+                label.text = text;
+                label.font = font;
+                label.style = style;
+                label.fillColor = fillColor;
+                label.outlineColor = outlineColor;
+                label.outlineWidth = outlineWidth;
+                label.verticalOrigin = verticalOrigin;
+            } else {
+                var key = JSON.stringify({
+                    text : text,
+                    font : font,
+                    style : style,
+                    fill : style !== LabelStyle.OUTLINE,
+                    stroke : style !== LabelStyle.FILL,
+                    fillColor : fillColor,
+                    strokeColor : outlineColor,
+                    strokeWidth : outlineWidth,
+                    verticalOrigin : verticalOrigin
+                });
+                var image = this._cache[key];
+                if (!defined(image)) {
+                    var textBaseline;
+                    if (verticalOrigin === VerticalOrigin.BOTTOM) {
+                        textBaseline = 'bottom';
+                    } else if (verticalOrigin === VerticalOrigin.TOP) {
+                        textBaseline = 'top';
+                    } else {
+                        // VerticalOrigin.CENTER
+                        textBaseline = 'middle';
+                    }
+
+                    image = writeTextToCanvas(text, {
+                        font : font,
+                        style : style,
+                        fill : style !== LabelStyle.OUTLINE,
+                        stroke : style !== LabelStyle.FILL,
+                        fillColor : fillColor,
+                        strokeColor : outlineColor,
+                        strokeWidth : outlineWidth,
+                        textBaseline : textBaseline
+                    }).toDataURL();
+                    this._cache[key] = image;
+                }
+                if (label.image !== image) {
+                    label.image = image;
+                }
+            }
+
             label.show = true;
             label.position = position;
-            label.text = text;
             label.scale = Property.getValueOrDefault(labelGraphics._scale, time, defaultScale);
-            label.font = Property.getValueOrDefault(labelGraphics._font, time, defaultFont);
-            label.style = Property.getValueOrDefault(labelGraphics._style, time, defaultStyle);
-            label.fillColor = Property.getValueOrDefault(labelGraphics._fillColor, time, defaultFillColor, fillColor);
-            label.outlineColor = Property.getValueOrDefault(labelGraphics._outlineColor, time, defaultOutlineColor, outlineColor);
-            label.outlineWidth = Property.getValueOrDefault(labelGraphics._outlineWidth, time, defaultOutlineWidth);
             label.pixelOffset = Property.getValueOrDefault(labelGraphics._pixelOffset, time, defaultPixelOffset, pixelOffset);
             label.eyeOffset = Property.getValueOrDefault(labelGraphics._eyeOffset, time, defaultEyeOffset, eyeOffset);
             label.horizontalOrigin = Property.getValueOrDefault(labelGraphics._horizontalOrigin, time, defaultHorizontalOrigin);
-            label.verticalOrigin = Property.getValueOrDefault(labelGraphics._verticalOrigin, time, defaultVerticalOrigin);
             label.translucencyByDistance = Property.getValueOrUndefined(labelGraphics._translucencyByDistance, time, translucencyByDistance);
             label.pixelOffsetScaleByDistance = Property.getValueOrUndefined(labelGraphics._pixelOffsetScaleByDistance, time, pixelOffsetScaleByDistance);
         }
