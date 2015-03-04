@@ -33,7 +33,7 @@ var base = 'http://localhost:8002/tilesets/';
 
 function getFlyToCityFunction(city) {
     return function() {
-        var source = base + city.czml;
+        var source = base + city.root + '/0/0/0.czml';
         
         var dataSource = new Cesium.CzmlDataSource(Cesium.getFilenameFromUri(source));
         dataSource.loadUrl(source);
@@ -58,15 +58,16 @@ Cesium.loadJson(base + 'cities.json').then(function(jsonData) {
         text : 'Fly to a city'
     }];
 
-    var length = jsonData.length;
-    for (var i = 0; i < length; ++i) {
-        var city = jsonData[i];
-        cities.push({
-            text : city.name,
-            onselect : getFlyToCityFunction(city)
-        });
+    for (var name in jsonData) {
+        if (jsonData.hasOwnProperty(name)) {
+            var city = jsonData[name];
+            cities.push({
+                text : name,
+                onselect : getFlyToCityFunction(city)
+            });
+        }
     }
-
+    
     Sandcastle.addToolbarMenu(cities);
 }).otherwise(function(error) {
     console.log('Not good!');
