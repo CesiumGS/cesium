@@ -6,6 +6,7 @@ Change Log
   *
 * Deprecated
   *
+* Added font kerning support to labels, improving visual quality and legibility.
 * Improved KML compatibility to work with non-specification compliant KML files that still happen to load in Google Earth.
 * Fixed a crash when loading KML features that have no description and an empty `ExtendedData` node.
 * Added support for KML `TimeStamp` nodes.
