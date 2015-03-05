@@ -13,9 +13,11 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/getStringFromTypedArray',
         '../Core/IndexDatatype',
         '../Core/loadArrayBuffer',
         '../Core/loadImage',
+        '../Core/loadImageFromTypedArray',
         '../Core/loadText',
         '../Core/Math',
         '../Core/Matrix2',
@@ -55,9 +57,11 @@ define([
         destroyObject,
         DeveloperError,
         Event,
+        getStringFromTypedArray,
         IndexDatatype,
         loadArrayBuffer,
         loadImage,
+        loadImageFromTypedArray,
         loadText,
         CesiumMath,
         Matrix2,
@@ -108,6 +112,9 @@ define([
         this.texturesToCreate = new Queue();
         this.pendingTextureLoads = 0;
 
+        this.texturesToCreateFromBufferView = new Queue();
+        this.pendingBufferViewToImage = 0;
+
         this.createSamplers = true;
         this.createSkins = true;
         this.createRuntimeAnimations = true;
@@ -128,7 +135,9 @@ define([
     LoadResources.prototype.finishedResourceCreation = function() {
         return ((this.buffersToCreate.length === 0) &&
                 (this.programsToCreate.length === 0) &&
-                (this.texturesToCreate.length === 0));
+                (this.texturesToCreate.length === 0) &&
+                (this.texturesToCreateFromBufferView.length === 0) &&
+                (this.pendingBufferViewToImage === 0));
     };
 
     LoadResources.prototype.finishedBuffersCreation = function() {
@@ -140,10 +149,18 @@ define([
     };
 
     LoadResources.prototype.finishedTextureCreation = function() {
-        return ((this.pendingTextureLoads === 0) && (this.texturesToCreate.length === 0));
+        return ((this.pendingTextureLoads === 0) &&
+                (this.texturesToCreate.length === 0) &&
+                (this.texturesToCreateFromBufferView.length === 0) &&
+                (this.pendingBufferViewToImage === 0));
     };
 
     ///////////////////////////////////////////////////////////////////////////
+
+    function setCachedGltf(model, cachedGltf) {
+        model._cachedGltf = cachedGltf;
+        model._animationIds = getAnimationIds(cachedGltf);
+    }
 
     // glTF JSON can be big given embedded geometry, textures, and animations, so we
     // cache it across all models using the same url/cache-key.  This also reduces the
@@ -153,6 +170,7 @@ define([
     // are cached per context.
     var CachedGltf = function(options) {
         this._gltf = gltfDefaults(options.gltf);
+        this._bgltf = options.bgltf;
         this.ready = options.ready;
         this.modelsToLoad = [];
         this.count = 0;
@@ -167,10 +185,30 @@ define([
             get : function() {
                 return this._gltf;
             }
+        },
+
+        bgltf : {
+            get : function() {
+                return this._bgltf;
+            }
         }
     });
 
-    var gltfCache = {};
+    CachedGltf.prototype.makeReady = function(gltfJson, bgltf) {
+        this.gltf = gltfJson;
+        this._bgltf = bgltf;
+
+        var models = this.modelsToLoad;
+        var length = models.length;
+        for (var i = 0; i < length; ++i) {
+            var m = models[i];
+            if (!m.isDestroyed()) {
+                setCachedGltf(m, this);
+            }
+        }
+        this.modelsToLoad = undefined;
+        this.ready = true;
+    };
 
     function getAnimationIds(cachedGltf) {
         var animationIds = [];
@@ -185,6 +223,8 @@ define([
 
         return animationIds;
     }
+
+    var gltfCache = {};
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -424,11 +464,6 @@ define([
         this._pickIds = [];
     };
 
-    function setCachedGltf(model, cachedGltf) {
-        model._cachedGltf = cachedGltf;
-        model._animationIds = getAnimationIds(cachedGltf);
-    }
-
     defineProperties(Model.prototype, {
         /**
          * The object for the glTF JSON, including properties with default values omitted
@@ -447,6 +482,7 @@ define([
             }
         },
 
+// TODO: update doc and maybe rename this since it is more than JSON
         /**
          * When <code>true</code>, the glTF JSON is not stored with the model once the model is
          * loaded (when {@link Model#ready} is <code>true</code>).  This saves memory when
@@ -660,6 +696,25 @@ define([
         }
     });
 
+    function getBasePath(url) {
+        var basePath = '';
+        var i = url.lastIndexOf('/');
+        if (i !== -1) {
+            basePath = url.substring(0, i + 1);
+        }
+
+        return basePath;
+    }
+
+    function getAbsoluteURL(url) {
+        var docUri = new Uri(document.location.href);
+        var modelUri = new Uri(url);
+        return modelUri.resolve(docUri).toString();
+    }
+
+    var sizeOfUnit32 = Uint32Array.BYTES_PER_ELEMENT;
+
+// TODO: update doc to include .bgltf
     /**
      * Creates a model from a glTF asset.  When the model is ready to render, i.e., when the external binary, image,
      * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyPromise} is resolved.
@@ -716,22 +771,12 @@ define([
         //>>includeEnd('debug');
 
         var url = options.url;
-        var basePath = '';
-        var i = url.lastIndexOf('/');
-        if (i !== -1) {
-            basePath = url.substring(0, i + 1);
-        }
-
-        var cacheKey = options.cacheKey;
-        if (!defined(cacheKey)) {
-            // Use absolute URL, since two URLs with different relative paths could point to the same model.
-            var docUri = new Uri(document.location.href);
-            var modelUri = new Uri(url);
-            cacheKey = modelUri.resolve(docUri).toString();
-        }
+        // If no cache key is provided, use the absolute URL, since two URLs with
+        // different relative paths could point to the same model.
+        var cacheKey = defaultValue(options.cacheKey, getAbsoluteURL(url));
 
         options = clone(options);
-        options.basePath = basePath;
+        options.basePath = getBasePath(url);
         options.cacheKey = cacheKey;
         var model = new Model(options);
 
@@ -745,22 +790,38 @@ define([
             setCachedGltf(model, cachedGltf);
             gltfCache[cacheKey] = cachedGltf;
 
-            loadText(url, options.headers).then(function(data) {
-                cachedGltf.gltf = JSON.parse(data);
-                var models = cachedGltf.modelsToLoad;
-                var length = models.length;
-                for (var i = 0; i < length; ++i) {
-                    var m = models[i];
-                    if (!m.isDestroyed()) {
-                        setCachedGltf(m, cachedGltf);
+            if (url.toLowerCase().indexOf('.bgltf', url.length - 6) !== -1) {
+                // Load binary glTF
+                loadArrayBuffer(url, options.headers).then(function(arrayBuffer) {
+                    var magic = getStringFromTypedArray(arrayBuffer, 0, 4);
+                    if (magic !== 'glTF') {
+                        throw new RuntimeError('bgltf is not a valid binary glTF file.');
                     }
-                }
-                cachedGltf.modelsToLoad = undefined;
-                cachedGltf.ready = true;
-            }).otherwise(getFailedLoadFunction(model, 'gltf', url));
 
+                    var view = new DataView(arrayBuffer);
+                    var byteOffset = 0;
+
+// TODO: no need for version since it is in JSON.
+                    byteOffset += sizeOfUnit32;  // Skip magic number
+                    byteOffset += sizeOfUnit32;  // Skip version
+
+                    var jsonOffset = view.getUint32(byteOffset, true);
+                    byteOffset += sizeOfUnit32;
+
+                    var jsonLength = view.getUint32(byteOffset, true);
+                    byteOffset += sizeOfUnit32;
+
+                    var jsonString = getStringFromTypedArray(arrayBuffer, jsonOffset, jsonLength);
+                    cachedGltf.makeReady(JSON.parse(jsonString), arrayBuffer);
+                }).otherwise(getFailedLoadFunction(model, 'bgltf', url));
+            } else {
+                // Load text (JSON) glTF
+                loadText(url, options.headers).then(function(data) {
+                    cachedGltf.makeReady(JSON.parse(data));
+                }).otherwise(getFailedLoadFunction(model, 'gltf', url));
+            }
         } else if (!cachedGltf.ready) {
-            // Cache hit but the loadText() request is still pending
+            // Cache hit but the loadArrayBuffer() or loadText() request is still pending
             ++cachedGltf.count;
             cachedGltf.modelsToLoad.push(model);
         }
@@ -902,7 +963,7 @@ define([
 
     function getFailedLoadFunction(model, type, path) {
         return function() {
-            model._loadError = new RuntimeError('Failed to load external ' + type + ': ' + path);
+            model._loadError = new RuntimeError('Failed to load ' + type + ': ' + path);
             model._state = ModelState.FAILED;
         };
     }
@@ -921,7 +982,13 @@ define([
             if (buffers.hasOwnProperty(name)) {
                 var buffer = buffers[name];
 
-                if (buffer.type === 'arraybuffer') {
+// TODO: Best semantic for this?
+                if (name === 'self') {
+                    // Buffer is the binary glTF file itself that is already loaded
+                    var loadResources = model._loadResources;
+                    loadResources.buffers[name] = model._cachedGltf.bgltf;
+                }
+                else if (buffer.type === 'arraybuffer') {
                     ++model._loadResources.pendingBufferLoads;
                     var uri = new Uri(buffer.uri);
                     var bufferPath = uri.resolve(model._baseUri).toString();
@@ -937,7 +1004,9 @@ define([
         var bufferViews = model.gltf.bufferViews;
         for (var name in bufferViews) {
             if (bufferViews.hasOwnProperty(name)) {
-                model._loadResources.buffersToCreate.enqueue(name);
+                if (bufferViews[name].target === WebGLRenderingContext.ARRAY_BUFFER) {
+                    model._loadResources.buffersToCreate.enqueue(name);
+                }
             }
         }
     }
@@ -945,7 +1014,10 @@ define([
     function shaderLoad(model, name) {
         return function(source) {
             var loadResources = model._loadResources;
-            loadResources.shaders[name] = source;
+            loadResources.shaders[name] = {
+                source : source,
+                bufferView : undefined
+            };
             --loadResources.pendingShaderLoads;
          };
     }
@@ -954,11 +1026,20 @@ define([
         var shaders = model.gltf.shaders;
         for (var name in shaders) {
             if (shaders.hasOwnProperty(name)) {
-                ++model._loadResources.pendingShaderLoads;
                 var shader = shaders[name];
-                var uri = new Uri(shader.uri);
-                var shaderPath = uri.resolve(model._baseUri).toString();
-                loadText(shaderPath).then(shaderLoad(model, name)).otherwise(getFailedLoadFunction(model, 'shader', shaderPath));
+
+                // Shader references either uri (external or base64-encoded) or bufferView
+                if (defined(shader.extensions) && defined(shader.extensions.binaryGltf)) {
+                    model._loadResources.shaders[name] = {
+                        source : undefined,
+                        bufferView : shader.extensions.binaryGltf.bufferView
+                    };
+                } else {
+                    ++model._loadResources.pendingShaderLoads;
+                    var uri = new Uri(shader.uri);
+                    var shaderPath = uri.resolve(model._baseUri).toString();
+                    loadText(shaderPath).then(shaderLoad(model, name)).otherwise(getFailedLoadFunction(model, 'shader', shaderPath));
+                }
             }
         }
     }
@@ -978,7 +1059,8 @@ define([
             --loadResources.pendingTextureLoads;
             loadResources.texturesToCreate.enqueue({
                  name : name,
-                 image : image
+                 image : image,
+                 bufferView : undefined
              });
          };
     }
@@ -988,11 +1070,23 @@ define([
         var textures = model.gltf.textures;
         for (var name in textures) {
             if (textures.hasOwnProperty(name)) {
-                ++model._loadResources.pendingTextureLoads;
-                var texture = textures[name];
-                var uri = new Uri(images[texture.source].uri);
-                var imagePath = uri.resolve(model._baseUri).toString();
-                loadImage(imagePath).then(imageLoad(model, name)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
+                var gltfImage = images[textures[name].source];
+
+                // Image references either uri (external or base64-encoded) or bufferView
+                if (defined(gltfImage.extensions) && defined(gltfImage.extensions.binaryGltf)) {
+                    var binary = gltfImage.extensions.binaryGltf;
+                    model._loadResources.texturesToCreateFromBufferView.enqueue({
+                        name : name,
+                        image : undefined,
+                        bufferView : binary.bufferView,
+                        mimeType : binary.mimeType
+                    });
+                } else {
+                    ++model._loadResources.pendingTextureLoads;
+                    var uri = new Uri(gltfImage.uri);
+                    var imagePath = uri.resolve(model._baseUri).toString();
+                    loadImage(imagePath).then(imageLoad(model, name)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
+                }
             }
         }
     }
@@ -1152,16 +1246,11 @@ define([
             var bufferViewName = loadResources.buffersToCreate.dequeue();
             bufferView = bufferViews[bufferViewName];
 
-            if (bufferView.target === WebGLRenderingContext.ARRAY_BUFFER) {
-                // Only ARRAY_BUFFER here.  ELEMENT_ARRAY_BUFFER created below.
-                raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
-                var vertexBuffer = context.createVertexBuffer(raw, BufferUsage.STATIC_DRAW);
-                vertexBuffer.vertexArrayDestroyable = false;
-                rendererBuffers[bufferViewName] = vertexBuffer;
-            }
-
-            // bufferViews referencing animations are ignored here and handled in createRuntimeAnimations.
-            // bufferViews referencing skins are ignored here and handled in createSkins.
+            // Only ARRAY_BUFFER here.  ELEMENT_ARRAY_BUFFER created below.
+            raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
+            var vertexBuffer = context.createVertexBuffer(raw, BufferUsage.STATIC_DRAW);
+            vertexBuffer.vertexArrayDestroyable = false;
+            rendererBuffers[bufferViewName] = vertexBuffer;
         }
 
         // The Cesium Renderer requires knowing the datatype for an index buffer
@@ -1197,14 +1286,26 @@ define([
         return attributeLocations;
     }
 
+    function getShaderSource(model, shader) {
+        if (defined(shader.source)) {
+            return shader.source;
+        }
+
+        var buffers = model._loadResources.buffers;
+        var gltf = model.gltf;
+        var bufferView = gltf.bufferViews[shader.bufferView];
+
+        return getStringFromTypedArray(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
+    }
+
     function createProgram(name, model, context) {
         var programs = model.gltf.programs;
         var shaders = model._loadResources.shaders;
         var program = programs[name];
 
         var attributeLocations = createAttributeLocations(program.attributes);
-        var vs = shaders[program.vertexShader];
-        var fs = shaders[program.fragmentShader];
+        var vs = getShaderSource(model, shaders[program.vertexShader]);
+        var fs = getShaderSource(model, shaders[program.fragmentShader]);
 
         model._rendererResources.programs[name] = context.createShaderProgram(vs, fs, attributeLocations);
 
@@ -1226,6 +1327,12 @@ define([
             return;
         }
 
+        // PERFORMANCE_IDEA: this could be more fine-grained by looking
+        // at the shader's bufferView's to determine the buffer dependencies.
+        if (loadResources.pendingBufferLoads !== 0) {
+            return;
+        }
+
         if (model.asynchronous) {
             // Create one program per frame
             if (loadResources.programsToCreate.length > 0) {
@@ -1238,6 +1345,41 @@ define([
                 name = loadResources.programsToCreate.dequeue();
                 createProgram(name, model, context);
             }
+        }
+    }
+
+    function getOnImageCreatedFromTypedArray(loadResources, gltfTexture) {
+        return function(image) {
+            loadResources.texturesToCreate.enqueue({
+                name : gltfTexture.name,
+                image : image,
+                bufferView : undefined
+            });
+
+            --loadResources.pendingBufferViewToImage;
+        };
+    }
+
+    function loadTexturesFromBufferViews(model) {
+        var loadResources = model._loadResources;
+
+        if (loadResources.pendingBufferLoads !== 0) {
+            return;
+        }
+
+        while (loadResources.texturesToCreateFromBufferView.length > 0) {
+            var gltfTexture = loadResources.texturesToCreateFromBufferView.dequeue();
+
+            var buffers = loadResources.buffers;
+            var gltf = model.gltf;
+            var bufferView = gltf.bufferViews[gltfTexture.bufferView];
+
+            var onload = getOnImageCreatedFromTypedArray(loadResources, gltfTexture);
+            var onerror = getFailedLoadFunction(model, 'image', 'name: ' + gltfTexture.name + ', bufferView: ' + gltfTexture.bufferView);
+            loadImageFromTypedArray(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength, gltfTexture.mimeType).
+                then(onload).otherwise(onerror);
+
+            ++loadResources.pendingBufferViewToImage;
         }
     }
 
@@ -1424,7 +1566,7 @@ define([
     function createSkins(model) {
         var loadResources = model._loadResources;
 
-        if (!loadResources.finishedBuffersCreation()) {
+        if (loadResources.pendingBufferLoads !== 0) {
             return;
         }
 
@@ -2211,6 +2353,7 @@ define([
             createBuffers(model, context);      // using glTF bufferViews
             createPrograms(model, context);
             createSamplers(model, context);
+            loadTexturesFromBufferViews(model);
             createTextures(model, context);
         }
 
