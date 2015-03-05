@@ -391,11 +391,18 @@ define([
      * @returns {Visibility} The visibility of the tile.
      */
     GlobeSurfaceTileProvider.prototype.computeTileVisibility = function(tile, frameState, occluders) {
+        if (!defined(tile.data)) {
+            return true;
+        }
+
         var surfaceTile = tile.data;
 
         var cullingVolume = frameState.cullingVolume;
 
         var boundingVolume = surfaceTile.boundingSphere3D;
+        if (boundingVolume.radius === 0.0) {
+            return true;
+        }
 
         if (frameState.mode !== SceneMode.SCENE3D) {
             boundingVolume = boundingSphereScratch;
@@ -414,7 +421,7 @@ define([
 
         if (frameState.mode === SceneMode.SCENE3D) {
             var occludeePointInScaledSpace = surfaceTile.occludeePointInScaledSpace;
-            if (!defined(occludeePointInScaledSpace)) {
+            if (!defined(occludeePointInScaledSpace) || Cartesian3.magnitudeSquared(occludeePointInScaledSpace) === 0.0) {
                 return intersection;
             }
 
@@ -487,6 +494,9 @@ define([
      */
     GlobeSurfaceTileProvider.prototype.computeDistanceToTile = function(tile, frameState) {
         var surfaceTile = tile.data;
+        if (!defined(surfaceTile)) {
+            return 0.0;
+        }
 
         var southwestCornerCartesian = surfaceTile.southwestCornerCartesian;
         var northeastCornerCartesian = surfaceTile.northeastCornerCartesian;

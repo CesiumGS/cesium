@@ -78,6 +78,7 @@ define([
         surfaceTile.minimumHeight = mesh.minimumHeight;
         surfaceTile.maximumHeight = mesh.maximumHeight;
         surfaceTile.boundingSphere3D = BoundingSphere.clone(mesh.boundingSphere3D, surfaceTile.boundingSphere3D);
+        surfaceTile.boundingSphereSource = 'publishToTile - ' + (this.data.wasCreatedByUpsampling() ? 'upsampled' : 'loaded');
 
         tile.data.occludeePointInScaledSpace = Cartesian3.clone(mesh.occludeePointInScaledSpace, surfaceTile.occludeePointInScaledSpace);
 

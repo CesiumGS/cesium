@@ -427,6 +427,23 @@ define([
         var northwestCornerNormal = ellipsoid.geodeticSurfaceNormalCartographic(Rectangle.northwest(rectangle), cartesian3Scratch2);
         var northNormal = Cartesian3.cross(westVector, northwestCornerNormal, cartesian3Scratch2);
         Cartesian3.normalize(northNormal, surfaceTile.northNormal);
+
+        var parent = tile.parent;
+        if (defined(parent) && defined(parent.data) && defined(parent.data.terrainData)) {
+            surfaceTile.maximumHeight = parent.data.maximumHeight;
+            surfaceTile.minimumHeight = parent.data.minimumHeight;
+            estimateBoundingSphere(parent.data, tile.tilingScheme.ellipsoid, parent.rectangle, tile.rectangle, surfaceTile.boundingSphere3D);
+            surfaceTile.boundingSphereSource = 'prepareNewTile - from parent';
+        } else {
+            BoundingSphere.fromRectangle3D(tile.rectangle, ellipsoid, 8900.0, surfaceTile.boundingSphere3D);
+            surfaceTile.boundingSphereSource = 'prepareNewTile - from rectangle';
+        }
+
+        if (defined(tile.occludeePointInScaledSpace)) {
+            tile.occludeePointInScaledSpace.x = 0.0;
+            tile.occludeePointInScaledSpace.y = 0.0;
+            tile.occludeePointInScaledSpace.z = 0.0;
+        }
     }
 
     function processTerrainStateMachine(tile, context, terrainProvider) {
@@ -534,6 +551,8 @@ define([
         // new data.
 
         if (defined(tile._children)) {
+            var ellipsoid = tile.tilingScheme.ellipsoid;
+
             for (var childIndex = 0; childIndex < 4; ++childIndex) {
                 var childTile = tile._children[childIndex];
                 if (childTile.state !== QuadtreeTileLoadState.START) {
@@ -556,10 +575,55 @@ define([
                         level : tile.level
                     });
 
+                    // Generate a new estimate of this tile's bounding sphere.
+                    childSurfaceTile.maximumHeight = surfaceTile.maximumHeight;
+                    childSurfaceTile.minimumHeight = surfaceTile.minimumHeight;
+                    estimateBoundingSphere(surfaceTile, ellipsoid, tile.rectangle, childTile.rectangle, childSurfaceTile.boundingSphere3D);
+                    childSurfaceTile.boundingSphereSource = 'propagateNewUpsampledDataToChildren';
+
                     childTile.state = QuadtreeTileLoadState.LOADING;
                 }
             }
         }
+    }
+
+    var vertices = [];
+
+    function estimateBoundingSphere(surfaceTile, ellipsoid, parentRectangle, childRectangle, result) {
+        vertices.length = 0;
+
+        var terrainData = surfaceTile.terrainData;
+
+        addVertex(vertices, terrainData, parentRectangle, ellipsoid, childRectangle.west, childRectangle.south, surfaceTile.minimumHeight);
+        addVertex(vertices, terrainData, parentRectangle, ellipsoid, childRectangle.west, childRectangle.south, surfaceTile.maximumHeight);
+        addVertex(vertices, terrainData, parentRectangle, ellipsoid, childRectangle.west, childRectangle.north, surfaceTile.minimumHeight);
+        addVertex(vertices, terrainData, parentRectangle, ellipsoid, childRectangle.west, childRectangle.north, surfaceTile.maximumHeight);
+        addVertex(vertices, terrainData, parentRectangle, ellipsoid, childRectangle.east, childRectangle.south, surfaceTile.minimumHeight);
+        addVertex(vertices, terrainData, parentRectangle, ellipsoid, childRectangle.east, childRectangle.south, surfaceTile.maximumHeight);
+        addVertex(vertices, terrainData, parentRectangle, ellipsoid, childRectangle.east, childRectangle.north, surfaceTile.minimumHeight);
+        addVertex(vertices, terrainData, parentRectangle, ellipsoid, childRectangle.east, childRectangle.north, surfaceTile.maximumHeight);
+
+        BoundingSphere.fromVertices(vertices, Cartesian3.ZERO, 3, result);
+
+        // if (terrainData instanceof QuantizedMeshTerrainData) {
+        //     var quantizedVertices = terrainData._quantizedVertices;
+
+        // } else if (terrainData instanceof HeightmapTerrainData) {
+        //     throw new DeveloperError('Unsupported TerrainData type.');
+        // } else {
+        //     throw new DeveloperError('Unsupported TerrainData type.');
+        // }
+    }
+
+    function addVertex(vertices, terrainData, rectangle, ellipsoid, longitude, latitude, height) {
+        cartographicScratch.longitude = longitude;
+        cartographicScratch.latitude = latitude;
+        cartographicScratch.height = height; //terrainData.interpolateHeight(rectangle, longitude, latitude);
+
+        var cartesian = ellipsoid.cartographicToCartesian(cartographicScratch, cartesian3Scratch);
+        vertices.push(cartesian.x);
+        vertices.push(cartesian.y);
+        vertices.push(cartesian.z);
     }
 
     function propagateNewLoadedDataToChildren(tile) {
@@ -570,6 +634,8 @@ define([
         //  - child tiles that were previously deemed unavailable may now be available.
 
         if (defined(tile.children)) {
+            var ellipsoid = tile.tilingScheme.ellipsoid;
+
             for (var childIndex = 0; childIndex < 4; ++childIndex) {
                 var childTile = tile.children[childIndex];
                 if (childTile.state !== QuadtreeTileLoadState.START) {
@@ -591,6 +657,12 @@ define([
                         y : tile.y,
                         level : tile.level
                     });
+
+                    // Generate a new estimate of this tile's bounding sphere.
+                    childSurfaceTile.maximumHeight = surfaceTile.maximumHeight;
+                    childSurfaceTile.minimumHeight = surfaceTile.minimumHeight;
+                    estimateBoundingSphere(surfaceTile, ellipsoid, tile.rectangle, childTile.rectangle, childSurfaceTile.boundingSphere3D);
+                    childSurfaceTile.boundingSphereSource = 'propagateNewLoadedDataToChildren';
 
                     if (surfaceTile.terrainData.isChildAvailable(tile.x, tile.y, childTile.x, childTile.y)) {
                         // Data is available for the child now.  It might have been before, too.

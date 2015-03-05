@@ -35,7 +35,7 @@ define([
         var cesiumInspectorContainer = document.createElement('div');
         cesiumInspectorContainer.className = 'cesium-viewer-cesiumInspectorContainer';
         viewer.container.appendChild(cesiumInspectorContainer);
-        var cesiumInspector = new CesiumInspector(cesiumInspectorContainer, viewer.scene);
+        var cesiumInspector = new CesiumInspector(cesiumInspectorContainer, viewer.scene, viewer);
 
         defineProperties(viewer, {
             cesiumInspector : {

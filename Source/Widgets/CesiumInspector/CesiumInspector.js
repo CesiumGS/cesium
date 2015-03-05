@@ -31,7 +31,7 @@ define([
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cesium%20Inspector.html|Cesium Sandcastle Cesium Inspector Demo}
      */
-    var CesiumInspector = function(container, scene) {
+    var CesiumInspector = function(container, scene, viewer) {
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
         }
@@ -44,7 +44,7 @@ define([
 
         var performanceContainer = document.createElement('div');
 
-        var viewModel = new CesiumInspectorViewModel(scene, performanceContainer);
+        var viewModel = new CesiumInspectorViewModel(scene, performanceContainer, viewer);
         this._viewModel = viewModel;
         this._container = container;
 
@@ -284,6 +284,14 @@ define([
         coordCheck.setAttribute('data-bind', 'checked: tileCoordinates, click: showTileCoordinates');
         tileCoords.appendChild(coordCheck);
         tileCoords.appendChild(document.createTextNode('Show tile coordinates'));
+
+        var tileEvents = document.createElement('div');
+        terrainSection.appendChild(tileEvents);
+        var eventsCheck = document.createElement('input');
+        eventsCheck.type = 'checkbox';
+        eventsCheck.setAttribute('data-bind', 'checked: tileEvents');
+        tileEvents.appendChild(eventsCheck);
+        tileEvents.appendChild(document.createTextNode('Record load events'));
 
         knockout.applyBindings(viewModel, this._element);
     };

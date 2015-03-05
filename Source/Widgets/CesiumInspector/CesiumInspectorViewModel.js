@@ -4,10 +4,16 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
+        '../../Core/GeographicTilingScheme',
+        '../../Core/Iso8601',
+        '../../Core/JulianDate',
         '../../Core/Rectangle',
+        '../../Core/TimeInterval',
+        '../../Core/TimeStandard',
         '../../Scene/DebugModelMatrixPrimitive',
         '../../Scene/PerformanceDisplay',
         '../../Scene/TileCoordinatesImageryProvider',
+        '../../DataSources/TimeIntervalCollectionProperty',
         '../../ThirdParty/knockout',
         '../createCommand'
     ], function(
@@ -15,10 +21,16 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        GeographicTilingScheme,
+        Iso8601,
+        JulianDate,
         Rectangle,
+        TimeInterval,
+        TimeStandard,
         DebugModelMatrixPrimitive,
         PerformanceDisplay,
         TileCoordinatesImageryProvider,
+        TimeIntervalCollectionProperty,
         knockout,
         createCommand) {
     "use strict";
@@ -65,7 +77,7 @@ define([
      *
      * @exception {DeveloperError} scene is required.
      */
-    var CesiumInspectorViewModel = function(scene, performanceContainer) {
+    var CesiumInspectorViewModel = function(scene, performanceContainer, viewer) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required');
@@ -79,6 +91,7 @@ define([
         var that = this;
         var canvas = scene.canvas;
         this._scene = scene;
+        this._viewer = viewer;
         this._canvas = canvas;
         this._primitive = undefined;
         this._tile = undefined;
@@ -87,7 +100,7 @@ define([
         this._performanceContainer = performanceContainer;
 
         var globe = this._scene.globe;
-        globe.depthTestAgainstTerrain = true;
+        //globe.depthTestAgainstTerrain = true;
 
         /**
          * Gets or sets the show frustums state.  This property is observable.
@@ -158,6 +171,8 @@ define([
          * @default false
          */
         this.tileCoordinates = false;
+
+        this.tileEvents = false;
 
         /**
          * Gets or sets the frustum statistic text.  This property is observable.
@@ -253,7 +268,7 @@ define([
         knockout.track(this, ['filterTile', 'suspendUpdates', 'dropDownVisible', 'frustums',
                               'frustumStatisticText', 'pickTileActive', 'pickPrimitiveActive', 'hasPickedPrimitive',
                               'hasPickedTile', 'tileText', 'generalVisible', 'generalSwitchText',
-                              'primitivesVisible', 'primitivesSwitchText', 'terrainVisible', 'terrainSwitchText']);
+                              'primitivesVisible', 'primitivesSwitchText', 'terrainVisible', 'terrainSwitchText', 'tileEvents']);
 
         this._toggleDropDown = createCommand(function() {
             that.dropDownVisible = !that.dropDownVisible;
@@ -355,6 +370,111 @@ define([
                 tileBoundariesLayer = undefined;
             }
             return true;
+        });
+
+        knockout.getObservable(this, 'tileEvents').subscribe(function() {
+            scene.globe._surface._debug.recordLoadEvents = that.tileEvents;
+
+            if (scene.globe._surface._debug.recordLoadEvents) {
+                scene.globe._surface._debug.loadEvents.length = 0;
+            } else {
+                var events = scene.globe._surface._debug.loadEvents;
+
+                var tiles = {};
+
+                var tilingScheme = new GeographicTilingScheme();
+
+                var entities = that._viewer.entities;
+
+                var lastFrame = 0;
+                var currentFrame = 0;
+
+                var epoch = new JulianDate(2451545, 0.0, TimeStandard.TAI);
+
+                for (var i = 0; i < events.length; ++i) {
+                    var evt = events[i];
+
+                    if (evt.time !== currentFrame) {
+                        lastFrame = currentFrame;
+                        currentFrame = evt.time;
+                    }
+
+                    var entity = entities.getOrCreateEntity(evt.tile);
+                    if (!defined(entity.point)) {
+                        entity.position = scene.globe.ellipsoid.cartographicToCartesian(Rectangle.center(evt.rectangle));
+                        entity.point = {
+                            description: evt.tile,
+                            pixelSize: 5,
+                            show: new TimeIntervalCollectionProperty(),
+                            color: new TimeIntervalCollectionProperty()
+                        };
+
+                        entity.rectangle = {
+                            coordinates: evt.rectangle,
+                            fill: false,
+                            outline: true,
+                            outlineColor: new TimeIntervalCollectionProperty(),
+                            show: new TimeIntervalCollectionProperty()
+                        };
+
+                        entity.point.show.intervals.addInterval(new TimeInterval({
+                            start: Iso8601.MINIMUM_VALUE,
+                            stop: Iso8601.MAXIMUM_VALUE,
+                            data: false
+                        }));
+
+                        entity.rectangle.show.intervals.addInterval(new TimeInterval({
+                            start: Iso8601.MINIMUM_VALUE,
+                            stop: Iso8601.MAXIMUM_VALUE,
+                            data: false
+                        }));
+
+                        entity.point.color.intervals.addInterval(new TimeInterval({
+                            start: Iso8601.MINIMUM_VALUE,
+                            stop: Iso8601.MAXIMUM_VALUE,
+                            data: Color.RED
+                        }));
+
+                        entity.rectangle.outlineColor.intervals.addInterval(new TimeInterval({
+                            start: Iso8601.MINIMUM_VALUE,
+                            stop: Iso8601.MAXIMUM_VALUE,
+                            data: Color.RED
+                        }));
+                    }
+
+                    var stop = evt.done ? Iso8601.MAXIMUM_VALUE : JulianDate.addSeconds(epoch, evt.time, new JulianDate());
+
+                    entity.point.show.intervals.addInterval(new TimeInterval({
+                        start: JulianDate.addSeconds(epoch, lastFrame, new JulianDate()),
+                        stop: stop,
+                        data: true
+                    }));
+
+                    entity.rectangle.show.intervals.addInterval(new TimeInterval({
+                        start: JulianDate.addSeconds(epoch, lastFrame, new JulianDate()),
+                        stop: stop,
+                        data: true
+                    }));
+
+                    entity.point.color.intervals.addInterval(new TimeInterval({
+                        start: JulianDate.addSeconds(epoch, lastFrame, new JulianDate()),
+                        stop: stop,
+                        data: evt.done ? Color.YELLOW : Color.RED
+                    }));
+
+                    entity.rectangle.outlineColor.intervals.addInterval(new TimeInterval({
+                        start: JulianDate.addSeconds(epoch, lastFrame, new JulianDate()),
+                        stop: stop,
+                        data: evt.done ? Color.YELLOW : Color.RED
+                    }));
+                }
+
+                var clock = that._viewer.clock;
+                clock.startTime = clock.currentTime = JulianDate.addSeconds(epoch, events.length > 0 ? events[0].time : 0, new JulianDate());
+                clock.stopTime = JulianDate.addSeconds(epoch, currentFrame, new JulianDate());
+                that._viewer.timeline.zoomTo(clock.startTime, clock.stopTime);
+                that._viewer.timeline.updateFromClock();
+            }
         });
 
         this._showTileBoundingSphere = createCommand(function() {

@@ -62,6 +62,8 @@ define([
         // QuadtreePrimitive gets/sets this private property.
         this._distance = 0.0;
 
+        this._isVisible = false;
+
         /**
          * Gets or sets the current state of the tile in the tile load pipeline.
          * @type {QuadtreeTileLoadState}

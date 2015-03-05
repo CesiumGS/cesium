@@ -6,6 +6,7 @@ define([
         '../Core/DeveloperError',
         '../Core/getTimestamp',
         '../Core/Queue',
+        '../Core/Rectangle',
         '../Core/Visibility',
         './QuadtreeOccluders',
         './QuadtreeTile',
@@ -19,6 +20,7 @@ define([
         DeveloperError,
         getTimestamp,
         Queue,
+        Rectangle,
         Visibility,
         QuadtreeOccluders,
         QuadtreeTile,
@@ -76,7 +78,10 @@ define([
             lastTilesRendered : -1,
             lastTilesWaitingForChildren : -1,
 
-            suspendLodUpdate : false
+            suspendLodUpdate : false,
+
+            recordLoadEvents : false,
+            loadEvents : []
         };
 
         var tilingScheme = this._tileProvider.tilingScheme;
@@ -89,6 +94,8 @@ define([
         this._levelZeroTiles = undefined;
         this._levelZeroTilesReady = false;
         this._loadQueueTimeSlice = 5.0;
+
+        this._frameNumber = 0;
 
         /**
          * Gets or sets the maximum screen-space error, in pixels, that is allowed.
@@ -191,6 +198,8 @@ define([
      *        commands to this array during the update call.
      */
     QuadtreePrimitive.prototype.update = function(context, frameState, commandList) {
+        ++this._frameNumber;
+
         this._tileProvider.beginUpdate(context, frameState, commandList);
 
         selectTilesForRendering(this, context, frameState);
@@ -239,7 +248,143 @@ define([
         this._tileProvider = this._tileProvider && this._tileProvider.destroy();
     };
 
+    var SelectionResult = {
+        RENDERED : 0,
+        NOT_RENDERABLE : 1,
+        NOT_VISIBLE : 2
+    };
+
     function selectTilesForRendering(primitive, context, frameState) {
+        var debug = primitive._debug;
+
+        if (debug.suspendLodUpdate) {
+            return;
+        }
+
+        var i;
+        var len;
+
+        // Clear the render list.
+        var tilesToRender = primitive._tilesToRender;
+        tilesToRender.length = 0;
+
+        debug.maxDepth = 0;
+        debug.tilesVisited = 0;
+        debug.tilesCulled = 0;
+        debug.tilesRendered = 0;
+        debug.tilesWaitingForChildren = 0;
+
+        primitive._tileLoadQueue.length = 0;
+        primitive._tileReplacementQueue.markStartOfRenderFrame();
+
+        // We can't render anything before the level zero tiles exist.
+        if (!defined(primitive._levelZeroTiles)) {
+            if (primitive._tileProvider.ready) {
+                var terrainTilingScheme = primitive._tileProvider.tilingScheme;
+                primitive._levelZeroTiles = QuadtreeTile.createLevelZeroTiles(terrainTilingScheme);
+            } else {
+                // Nothing to do until the provider is ready.
+                return;
+            }
+        }
+
+        primitive._occluders.ellipsoid.cameraPosition = frameState.camera.positionWC;
+
+        var tileProvider = primitive._tileProvider;
+        var occluders = primitive._occluders;
+
+        var tile;
+
+        var levelZeroTiles = primitive._levelZeroTiles;
+        for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
+            tile = levelZeroTiles[i];
+            primitive._tileReplacementQueue.markTileRendered(tile);
+
+            tile._distance = primitive._tileProvider.computeDistanceToTile(tile, frameState);
+
+            if (tile.needsLoading) {
+                queueTileLoad(primitive, tile);
+            }
+            if (tile.renderable && tileProvider.computeTileVisibility(tile, frameState, occluders) !== Visibility.NONE) {
+                selectTilesRecursively(primitive, context, frameState, tile, tileProvider, occluders);
+            } else {
+                ++debug.tilesCulled;
+                if (!tile.renderable) {
+                    ++debug.tilesWaitingForChildren;
+                }
+            }
+        }
+
+        // primitive.forEachLoadedTile(function(item) {
+        //     if (Rectangle.contains(item.rectangle, frameState.camera.positionCartographic) && item._wasAddedToLoadQueue && item.needsLoading && primitive._tileLoadQueue.indexOf(item) < 0) {
+        //         /*global console*/
+        //         console.log('Uh oh: L' + item.level + 'X' + item.x + 'Y' + item.y);
+        //     }
+        // });
+    }
+
+    function selectTilesRecursively(primitive, context, frameState, tile, tileProvider, occluders) {
+        // By the time this function is called, the tile is known to be renderable and visible.  We only need to
+        // determine whether to render this tile or its children.
+
+        primitive._tileReplacementQueue.markTileRendered(tile);
+
+        if (screenSpaceError(primitive, context, frameState, tile) < primitive.maximumScreenSpaceError) {
+            // This tile meets SSE requirements, so render it.
+            addTileToRenderList(primitive, tile);
+        } else {
+            // Tile does not meet SSE requirements, so render children if possible.
+            var allVisibleAreRenderable = true;
+            var allRenderableAndVisibleAreUpsampledOnly = true;
+            var allRenderable = true;
+            var allUpsampledOnly = true;
+
+            var children = tile.children;
+
+            var i;
+            var len;
+            var child;
+            for (i = 0, len = children.length; i < len; ++i) {
+                child = children[i];
+
+                primitive._tileReplacementQueue.markTileRendered(child);
+
+                child._distance = primitive._tileProvider.computeDistanceToTile(child, frameState);
+
+                if (child.needsLoading) {
+                    queueTileLoad(primitive, child);
+                }
+
+                var visible = tileProvider.computeTileVisibility(child, frameState, occluders) !== Visibility.NONE;
+                child._isVisible = visible;
+
+                allVisibleAreRenderable = allVisibleAreRenderable && (child.renderable || !visible);
+
+                var renderableAndVisible = child.renderable && visible;
+                allRenderableAndVisibleAreUpsampledOnly = allRenderableAndVisibleAreUpsampledOnly && (!renderableAndVisible || child.upsampledFromParent);
+            }
+
+            if (allRenderableAndVisibleAreUpsampledOnly) {
+                // Rendering children rather than this tile would add nothing, because all renderable children were just upsampled from this tile.
+                // So render this tile.
+                addTileToRenderList(primitive, tile);
+            } else if (allVisibleAreRenderable) {
+                // Render visible children instead of this tile.
+                for (i = 0, len = children.length; i < len; ++i) {
+                    child = children[i];
+                    if (child.renderable && child._isVisible) {
+                        selectTilesRecursively(primitive, context, frameState, child, tileProvider, occluders);
+                    }
+                }
+            } else {
+                // Some of the visibile children are not renderable yet, so render the parent for now.
+                ++primitive._debug.tilesWaitingForChildren;
+                addTileToRenderList(primitive, tile);
+            }
+        }
+    }
+
+    function selectTilesForRenderingOld(primitive, context, frameState) {
         var debug = primitive._debug;
 
         if (debug.suspendLodUpdate) {
@@ -365,9 +510,6 @@ define([
 
         var maxGeometricError = primitive._tileProvider.getLevelMaximumGeometricError(tile.level);
 
-        var distance = primitive._tileProvider.computeDistanceToTile(tile, frameState);
-        tile._distance = distance;
-
         var height = context.drawingBufferHeight;
 
         var camera = frameState.camera;
@@ -375,7 +517,7 @@ define([
         var fovy = frustum.fovy;
 
         // PERFORMANCE_IDEA: factor out stuff that's constant across tiles.
-        return (maxGeometricError * height) / (2 * distance * Math.tan(0.5 * fovy));
+        return (maxGeometricError * height) / (2 * tile._distance * Math.tan(0.5 * fovy));
     }
 
     function screenSpaceError2D(primitive, context, frameState, tile) {
@@ -421,6 +563,13 @@ define([
     }
 
     function queueTileLoad(primitive, tile) {
+        // if (!defined(tile._firstLoad)) {
+        //     tile._firstLoad = primitive._frameNumber;
+        //     console.log('(' + tile._firstLoad + ') loading L'  + tile.level + 'X' + tile.x + 'Y' + tile.y);
+        // }
+        // tile._lastLoad = primitive._frameNumber;
+
+        tile._wasAddedToLoadQueue = true;
         primitive._tileLoadQueue.push(tile);
     }
 
@@ -432,6 +581,10 @@ define([
             return;
         }
 
+        tileLoadQueue.sort(tileLoadSortFunction);
+
+        var len, i, tile;
+
         // Remove any tiles that were not used this frame beyond the number
         // we're allowed to keep.
         primitive._tileReplacementQueue.trimTiles(primitive.tileCacheSize);
@@ -440,13 +593,47 @@ define([
         var timeSlice = primitive._loadQueueTimeSlice;
         var endTime = startTime + timeSlice;
 
-        for (var len = tileLoadQueue.length - 1, i = len; i >= 0; --i) {
-            var tile = tileLoadQueue[i];
+        for (len = tileLoadQueue.length - 1, i = len; i >= 0; --i) {
+            tile = tileLoadQueue[i];
+            if (tile._isVisible) {
+                console.log('visible L' + tile.level + 'X' + tile.x + 'Y' + tile.y);
+            } else {
+                console.log('not visible L' + tile.level + 'X' + tile.x + 'Y' + tile.y);
+            }
             primitive._tileReplacementQueue.markTileRendered(tile);
             tileProvider.loadTile(context, frameState, tile);
             if (getTimestamp() >= endTime) {
                 break;
             }
+        }
+
+        if (primitive._debug.recordLoadEvents) {
+            var now = getTimestamp();
+
+            var events = primitive._debug.loadEvents;
+            for (len = tileLoadQueue.length - 1, i = len; i >= 0; --i) {
+                tile = tileLoadQueue[i];
+                events.push({
+                    tile: 'L' + tile.level + 'X' + tile.x + 'Y' + tile.y,
+                    rectangle: tile.rectangle,
+                    time: now,
+                    distance: tile._distance,
+                    isVisible: tile._isVisible,
+                    done: tile.state === QuadtreeTileLoadState.DONE || tile.state === QuadtreeTileLoadState.FAILED,
+                    failed: tile.state === QuadtreeTileLoadState.FAILED
+                });
+            }
+        }
+    }
+
+    function tileLoadSortFunction(a, b) {
+        var aVisible = a._isVisible ? 1 : 0;
+        var bVisible = b._isVisible ? 1 : 0;
+        var aMinusB = aVisible - bVisible;
+        if (aMinusB !== 0) {
+            return aMinusB;
+        } else {
+            return b._distance - a._distance;
         }
     }
 
