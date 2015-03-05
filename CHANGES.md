@@ -9,6 +9,7 @@ Change Log
 * Improved KML compatibility to work with non-specification compliant KML files that still happen to load in Google Earth.
 * Fixed a crash when loading KML features that have no description and an empty `ExtendedData` node.
 * Added support for KML `TimeStamp` nodes.
+* All data sources now print errors to the console in addition to raising the `errorEvent` and rejecting their load promise.
 
 ### 1.7 - 2015-03-02
 
