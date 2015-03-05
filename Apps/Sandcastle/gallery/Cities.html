@@ -35,10 +35,8 @@ function getFlyToCityFunction(city) {
     return function() {
         var source = base + city.root + '/0/0/0.czml';
         
-        var dataSource = new Cesium.CzmlDataSource(Cesium.getFilenameFromUri(source));
-        dataSource.loadUrl(source);
         viewer.dataSources.removeAll();
-        viewer.dataSources.add(dataSource);
+        viewer.dataSources.add(Cesium.CzmlDataSource.load(source));
         
         var longitude = (city.rectangle.west + city.rectangle.east) * 0.5;
         var latitude = city.rectangle.south - ((city.rectangle.north - city.rectangle.south) * 0.5);
