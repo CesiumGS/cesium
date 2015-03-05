@@ -1015,16 +1015,16 @@ define([
                 var shader = shaders[name];
 
                 // Shader references either uri (external or base64-encoded) or bufferView
-                if (defined(shader.uri)) {
+                if (defined(shader.extensions) && defined(shader.extensions.binaryGltf)) {
+                    model._loadResources.shaders[name] = {
+                        source : undefined,
+                        bufferView : shader.extensions.binaryGltf.bufferView
+                    };
+                } else {
                     ++model._loadResources.pendingShaderLoads;
                     var uri = new Uri(shader.uri);
                     var shaderPath = uri.resolve(model._baseUri).toString();
                     loadText(shaderPath).then(shaderLoad(model, name)).otherwise(getFailedLoadFunction(model, 'shader', shaderPath));
-                } else {
-                    model._loadResources.shaders[name] = {
-                        source : undefined,
-                        bufferView : shader.bufferView
-                    };
                 }
             }
         }
@@ -1059,18 +1059,19 @@ define([
                 var gltfImage = images[textures[name].source];
 
                 // Image references either uri (external or base64-encoded) or bufferView
-                if (defined(gltfImage.uri)) {
+                if (defined(gltfImage.extensions) && defined(gltfImage.extensions.binaryGltf)) {
+                    var binary = gltfImage.extensions.binaryGltf;
+                    model._loadResources.texturesToCreateFromBufferView.enqueue({
+                        name : name,
+                        image : undefined,
+                        bufferView : binary.bufferView,
+                        mimeType : binary.mimeType
+                    });
+                } else {
                     ++model._loadResources.pendingTextureLoads;
                     var uri = new Uri(gltfImage.uri);
                     var imagePath = uri.resolve(model._baseUri).toString();
                     loadImage(imagePath).then(imageLoad(model, name)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
-                } else {
-                    model._loadResources.texturesToCreateFromBufferView.enqueue({
-                         name : name,
-                         image : undefined,
-                         bufferView : gltfImage.bufferView,
-                         mimeType : gltfImage.mimeType
-                     });
                 }
             }
         }
