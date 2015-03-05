@@ -2432,7 +2432,7 @@ define([
             right = heightRatio;
         }
 
-        return Math.max(right, top) * 1.25;
+        return Math.max(right, top) * 1.50;
     }
 
     var scratchDefaultOffset = new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_FOUR, 0.0);
@@ -2440,15 +2440,17 @@ define([
 
     function adjustBoundingSphereOffset(camera, boundingSphere, offset) {
         if (!defined(offset)) {
-            offset = scratchDefaultOffset;
-            offset.range = 0.0;
+            offset = HeadingPitchRange.clone(scratchDefaultOffset);
         }
 
-        if (boundingSphere.radius === 0.0) {
-            offset.range = MINIMUM_ZOOM;
-        } else if (defined(offset.range) && offset.range === 0.0) {
+        var range = offset.range;
+        if (!defined(range) || range === 0.0) {
             var radius = boundingSphere.radius;
-            offset.range = camera._mode === SceneMode.SCENE2D ? distanceToBoundingSphere2D(camera, radius) : distanceToBoundingSphere3D(camera, radius);
+            if (radius === 0.0) {
+                offset.range = MINIMUM_ZOOM;
+            } else {
+                offset.range = camera._mode === SceneMode.SCENE2D ? distanceToBoundingSphere2D(camera, radius) : distanceToBoundingSphere3D(camera, radius);
+            }
         }
 
         return offset;

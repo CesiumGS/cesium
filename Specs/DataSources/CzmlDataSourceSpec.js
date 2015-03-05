@@ -23,6 +23,7 @@ defineSuite([
         'Scene/HorizontalOrigin',
         'Scene/LabelStyle',
         'Scene/VerticalOrigin',
+        'Specs/waitsForPromise',
         'ThirdParty/when'
     ], function(
         CzmlDataSource,
@@ -48,6 +49,7 @@ defineSuite([
         HorizontalOrigin,
         LabelStyle,
         VerticalOrigin,
+        waitsForPromise,
         when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -313,20 +315,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('processUrl throws with undefined Url', function() {
-        var dataSource = new CzmlDataSource();
-        expect(function() {
-            dataSource.processUrl(undefined);
-        }).toThrowDeveloperError();
-    });
-
-    it('loadUrl throws with undefined Url', function() {
-        var dataSource = new CzmlDataSource();
-        expect(function() {
-            dataSource.loadUrl(undefined);
-        }).toThrowDeveloperError();
-    });
-
     it('raises changed event when loading CZML', function() {
         var dataSource = new CzmlDataSource();
 
@@ -421,13 +409,13 @@ defineSuite([
         expect(spy).not.toHaveBeenCalled();
     });
 
-    it('raises error when an error occurs in loadUrl', function() {
+    it('raises error when an error occurs in load', function() {
         var dataSource = new CzmlDataSource();
 
         var spy = jasmine.createSpy('errorEvent');
         dataSource.errorEvent.addEventListener(spy);
 
-        var promise = dataSource.loadUrl('Data/Images/Blue.png'); //not JSON
+        var promise = dataSource.load('Data/Images/Blue.png'); //not JSON
 
         var resolveSpy = jasmine.createSpy('resolve');
         var rejectSpy = jasmine.createSpy('reject');
@@ -444,13 +432,13 @@ defineSuite([
         });
     });
 
-    it('raises error when an error occurs in processUrl', function() {
+    it('raises error when an error occurs in process', function() {
         var dataSource = new CzmlDataSource();
 
         var spy = jasmine.createSpy('errorEvent');
         dataSource.errorEvent.addEventListener(spy);
 
-        var promise = dataSource.processUrl('Data/Images/Blue.png'); //not JSON
+        var promise = dataSource.process('Data/Images/Blue.png'); //not JSON
 
         var resolveSpy = jasmine.createSpy('resolve');
         var rejectSpy = jasmine.createSpy('reject');
@@ -1093,6 +1081,44 @@ defineSuite([
         dataSource.load(makePacket(packet));
         var entity = dataSource.entities.values[0];
         expect(entity.orientation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Quaternion(0.0, 0.0, 0.0, 1.0));
+    });
+
+    it('CZML Orientation is normalized on load.', function() {
+        var packet = {
+            orientation : {
+                unitQuaternion : [0.0, 0.0, 0.7071067, 0.7071067]
+            }
+        };
+
+        var expected = new Quaternion(0.0, 0.0, 0.7071067, 0.7071067);
+        Quaternion.normalize(expected, expected);
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+        var entity = dataSource.entities.values[0];
+        expect(entity.orientation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expected);
+    });
+
+    it('CZML Orientation is normalized on load.', function() {
+        var time1 = '2000-01-01T00:00:00Z';
+        var time2 = '2000-01-01T00:00:01Z';
+        var packet = {
+            orientation : {
+                unitQuaternion : [time1, 0.0, 0.0, 0.7071067, 0.7071067, time2, 0.7071067, 0.7071067, 0.0, 0.0]
+            }
+        };
+
+        var expected1 = new Quaternion(0.0, 0.0, 0.7071067, 0.7071067);
+        Quaternion.normalize(expected1, expected1);
+
+        var expected2 = new Quaternion(0.7071067, 0.7071067, 0.0, 0.0);
+        Quaternion.normalize(expected2, expected2);
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+        var entity = dataSource.entities.values[0];
+        expect(entity.orientation.getValue(JulianDate.fromIso8601(time1))).toEqual(expected1);
+        expect(entity.orientation.getValue(JulianDate.fromIso8601(time2))).toEqual(expected2);
     });
 
     it('positions work with cartesians.', function() {
@@ -2081,37 +2107,22 @@ defineSuite([
         expect(position.backwardExtrapolationDuration).toEqual(1.0);
     });
 
-    it('throws if first document packet lacks version information', function() {
-        var packet = {
+    it('rejects if first document packet lacks version information', function() {
+        waitsForPromise.toReject(CzmlDataSource.load({
             id : 'document'
-        };
-
-        var dataSource = new CzmlDataSource();
-        expect(function() {
-            dataSource.load(packet);
-        }).toThrowRuntimeError();
+        }));
     });
 
-    it('throws if first packet is not document', function() {
-        var packet = {
+    it('rejects if first packet is not document', function() {
+        waitsForPromise.toReject(CzmlDataSource.load({
             id : 'someId'
-        };
-
-        var dataSource = new CzmlDataSource();
-        expect(function() {
-            dataSource.load(packet);
-        }).toThrowRuntimeError();
+        }));
     });
 
-    it('throws if document packet contains bad version', function() {
-        var packet = {
+    it('rejects if document packet contains bad version', function() {
+        waitsForPromise.toReject(CzmlDataSource.load({
             id : 'document',
             version : 12
-        };
-
-        var dataSource = new CzmlDataSource();
-        expect(function() {
-            dataSource.load(packet);
-        }).toThrowRuntimeError();
+        }));
     });
 });

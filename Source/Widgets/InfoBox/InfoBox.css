@@ -4,7 +4,7 @@
     top: 50px;
     right: 0;
     width: 40%;
-    max-width: 360px;
+    max-width: 480px;
     background: rgba(38, 38, 38, 0.95);
     color: #edffff;
     border: 1px solid #444;
@@ -37,12 +37,15 @@
     display: block;
     height: 20px;
     padding: 5px 30px 5px 25px;
-    background: rgba(84, 84, 84, 0.8);
+    background: rgba(84, 84, 84, 1.0);
     border-top-left-radius: 7px;
     text-align: center;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+    -moz-box-sizing: content-box;
+    -webkit-box-sizing: content-box;
+    box-sizing: content-box;
 }
 
 .cesium-infoBox-bodyless .cesium-infoBox-title {
@@ -73,7 +76,7 @@ button.cesium-infoBox-close {
     border: none;
     border-radius: 2px;
     font-weight: bold;
-    font-size:16px;
+    font-size: 16px;
     padding: 0 5px;
     margin: 0;
     color: #edffff;
@@ -94,13 +97,7 @@ button.cesium-infoBox-close:active {
     color: #000;
 }
 
-.cesium-infoBox-body {
-    padding: 4px 10px;
-    margin-right: 4px;
-    overflow: auto;
-}
-
-.cesium-infoBox-bodyless .cesium-infoBox-body {
+.cesium-infoBox-bodyless .cesium-infoBox-iframe {
     display: none;
 }
 
@@ -116,31 +113,8 @@ button.cesium-infoBox-close:active {
     height: 11px;
 }
 
-.cesium-infoBox-description {
-    font-size: 13px;
-}
-
-.cesium-infoBox-defaultTable {
-    width: 100%;
-}
-
-.cesium-infoBox-defaultTable tr:nth-child(odd) {
-    background-color: rgba(84, 84, 84, 0.8);
-}
-
-.cesium-infoBox-defaultTable tr:nth-child(even) {
-    background-color: rgba(84, 84, 84, 0.25);
-}
-
-.cesium-infoBox-defaultTable th {
-    font-weight: normal;
-    padding: 3px;
-    vertical-align: middle;
-    text-align: center;
-}
-
-.cesium-infoBox-defaultTable td {
-    padding: 3px;
-    vertical-align: middle;
-    text-align: left;
+.cesium-infoBox-iframe {
+    border: none;
+    width: 100%; /* Fallback */
+    width: calc(100% - 2px);
 }
