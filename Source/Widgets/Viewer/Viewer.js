@@ -1426,7 +1426,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     /**
      * Asynchronously sets the camera to view the provided entity, entities, or data source.
      * If the data source is still in the process of loading or the visualization is otherwise still loading,
-     * this method ways for the data to be ready before performing the zoom.
+     * this method waits for the data to be ready before performing the zoom.
      *
      * <p>The offset is heading/pitch/range in the local east-north-up reference frame centered at the center of the bounding sphere.
      * The heading and the pitch angles are defined in the local east-north-up reference frame.
