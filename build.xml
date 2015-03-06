@@ -587,6 +587,9 @@
 				<include name="Widgets/**" />
 				<exclude name="Widgets/**/*.css" />
 			</fileset>
+			<fileset dir="${buildOutputDirectory}">
+				<include name="Widgets/InfoBox/InfoBoxDescription.css" />
+			</fileset>
 		</copy>
 
 		<!-- Copy web.config -->
