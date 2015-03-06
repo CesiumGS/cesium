@@ -118,15 +118,19 @@ click: function () { closeClicked.raiseEvent(this); }');
                 //If the snippet is a single element, then use its background
                 //color for the body of the InfoBox. This makes the padding match
                 //the content and produces much nicer results.
-                if (frameContent.childNodes.length === 1) {
-                    var style = window.getComputedStyle(frameContent.firstChild);
-                    var color = Color.fromCssColorString(style['background-color']);
-                    if (color.alpha !== 0) {
-                        infoElement.style['background-color'] = style['background-color'];
+                var background = null;
+                var firstElementChild = frameContent.firstElementChild;
+                if (firstElementChild !== null && frameContent.childNodes.length === 1) {
+                    var style = window.getComputedStyle(firstElementChild);
+                    if (style !== null) {
+                        var backgroundColor = style['background-color'];
+                        var color = Color.fromCssColorString(backgroundColor);
+                        if (defined(color) && color.alpha !== 0) {
+                            background = style['background-color'];
+                        }
                     }
-                } else {
-                    infoElement.style['background-color'] = null;
                 }
+                infoElement.style['background-color'] = background;
 
                 // Measure and set the new custom height, based on text wrapped above.
                 var height = frameContent.getBoundingClientRect().height;
