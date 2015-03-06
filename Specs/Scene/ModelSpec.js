@@ -34,15 +34,13 @@ defineSuite([
 
     var boxUrl = './Data/Models/Box/CesiumBoxTest.gltf';
     var texturedBoxUrl = './Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf';
-    var customDuckUrl = './Data/Models/customDuck/duck.gltf';
-    var separateDuckUrl = './Data/Models/separateDuck/duck.gltf';
+    var texturedBoxSeparateUrl = './Data/Models/Box-Textured-Separate/CesiumTexturedBoxTest.gltf';
+    var texturedBoxCustomUrl = './Data/Models/Box-Textured-Custom/CesiumTexturedBoxTest.gltf';
     var cesiumAirUrl = './Data/Models/CesiumAir/Cesium_Air.gltf';
     var animBoxesUrl = './Data/Models/anim-test-1-boxes/anim-test-1-boxes.gltf';
     var riggedFigureUrl = './Data/Models/rigged-figure-test/rigged-figure-test.gltf';
 
     var texturedBoxModel;
-    var customDuckModel;
-    var separateDuckModel;
     var cesiumAirModel;
     var animBoxesModel;
     var riggedFigureModel;
@@ -429,32 +427,33 @@ defineSuite([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    it('loads customDuck', function() {
-        customDuckModel = loadModel(customDuckUrl);
-    });
+    it('renders texturedBoxCustom (all uniform semantics)', function() {
+        var m = loadModel(texturedBoxCustomUrl);
+return;
+        runs(function() {
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-    it('renders customDuckModel (NPOT textures and all uniform semantics)', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-
-        customDuckModel.show = true;
-        customDuckModel.zoomTo();
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
-        customDuckModel.show = false;
+            m.show = true;
+            m.zoomTo();
+            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            primitives.remove(m);
+        });
     });
 
     ///////////////////////////////////////////////////////////////////////////
 
-    it('loads separateDuck', function() {
-        separateDuckModel = loadModel(separateDuckUrl);
-    });
+    it('renders textured box with external resources: .glsl, .bin, and .png files', function() {
+        var m = loadModel(texturedBoxSeparateUrl);
 
-    it('renders separateDuckModel (external .glsl, .bin, and .png files)', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        runs(function() {
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        separateDuckModel.show = true;
-        separateDuckModel.zoomTo();
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
-        separateDuckModel.show = false;
+            m.show = true;
+            m.zoomTo();
+            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+
+            primitives.remove(m);
+        });
     });
 
     ///////////////////////////////////////////////////////////////////////////
