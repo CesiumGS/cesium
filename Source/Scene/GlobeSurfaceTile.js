@@ -291,6 +291,13 @@ define([
         }
     };
 
+    GlobeSurfaceTile.prepareNewTile = function(tile, terrainProvider, imageryLayerCollection) {
+        if (tile.state === QuadtreeTileLoadState.START) {
+            prepareNewTile(tile, terrainProvider, imageryLayerCollection);
+            tile.state = QuadtreeTileLoadState.LOADING;
+        }
+    };
+
     GlobeSurfaceTile.processStateMachine = function(tile, context, terrainProvider, imageryLayerCollection) {
         var surfaceTile = tile.data;
         if (!defined(surfaceTile)) {
@@ -566,6 +573,8 @@ define([
                     // We create a new instance rather than just restarting the existing one
                     // because there could be an asynchronous operation pending on the existing one.
                     if (defined(childSurfaceTile.upsampledTerrain)) {
+                        /*global console*/
+                        console.log('replacing existing upsampled instance.');
                         childSurfaceTile.upsampledTerrain.freeResources();
                     }
                     childSurfaceTile.upsampledTerrain = new TileTerrain({
@@ -649,6 +658,7 @@ define([
                     // We create a new instance rather than just restarting the existing one
                     // because there could be an asynchronous operation pending on the existing one.
                     if (defined(childSurfaceTile.upsampledTerrain)) {
+                        console.log('replacing existing upsampled instance.');
                         childSurfaceTile.upsampledTerrain.freeResources();
                     }
                     childSurfaceTile.upsampledTerrain = new TileTerrain({

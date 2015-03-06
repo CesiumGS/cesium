@@ -8,6 +8,7 @@ define([
         '../Core/defined',
         '../Core/Ellipsoid',
         '../Core/EllipsoidalOccluder',
+        '../Core/getTimestamp',
         '../Core/IndexDatatype',
         '../Core/Intersections2D',
         '../Core/Math',
@@ -21,6 +22,7 @@ define([
         defined,
         Ellipsoid,
         EllipsoidalOccluder,
+        getTimestamp,
         IndexDatatype,
         Intersections2D,
         CesiumMath,
@@ -43,7 +45,14 @@ define([
     var horizonOcclusionPointScratch = new Cartesian3();
     var boundingSphereScratch = new BoundingSphere();
 
+    var calls = 0;
+    var total = 0;
+    var min = 999999999;
+    var max = 0;
+
     function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
+        var startTime = getTimestamp();
+
         var isEastChild = parameters.isEastChild;
         var isNorthChild = parameters.isNorthChild;
 
@@ -272,6 +281,25 @@ define([
             encodedNormals = normalArray.buffer;
         } else {
             transferableObjects.push(vertices.buffer, indicesTypedArray.buffer);
+        }
+
+        var stopTime = getTimestamp();
+        var span = stopTime - startTime;
+
+        ++calls;
+        total += span;
+
+        if (span > max) {
+            max = span;
+        }
+        if (span < min) {
+            min = span;
+        }
+
+        var average = total / calls;
+        if ((calls % 10) === 0) {
+            /*global console*/
+            console.log('Calls: ' + calls + ' Average: ' + average + ' Min: ' + min + ' Max: ' + max);
         }
 
         return {

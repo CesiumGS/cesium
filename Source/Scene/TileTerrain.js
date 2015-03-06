@@ -169,6 +169,9 @@ define([
 
             var that = this;
             when(this.data, function(terrainData) {
+                if (that.state !== TerrainState.RECEIVING) {
+                    console.log('upsample no longer relevant!');
+                }
                 that.data = terrainData;
                 that.state = TerrainState.RECEIVED;
             }, function() {
