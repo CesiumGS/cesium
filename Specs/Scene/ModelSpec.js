@@ -32,14 +32,15 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor,WebGLRenderingContext*/
 
-    var duckUrl = './Data/Models/duck/duck.gltf';
+    var boxUrl = './Data/Models/Box/CesiumBoxTest.gltf';
+    var texturedBoxUrl = './Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf';
     var customDuckUrl = './Data/Models/customDuck/duck.gltf';
     var separateDuckUrl = './Data/Models/separateDuck/duck.gltf';
     var cesiumAirUrl = './Data/Models/CesiumAir/Cesium_Air.gltf';
     var animBoxesUrl = './Data/Models/anim-test-1-boxes/anim-test-1-boxes.gltf';
     var riggedFigureUrl = './Data/Models/rigged-figure-test/rigged-figure-test.gltf';
 
-    var duckModel;
+    var texturedBoxModel;
     var customDuckModel;
     var separateDuckModel;
     var cesiumAirModel;
@@ -100,8 +101,8 @@ defineSuite([
         model.show = false;
     }
 
-    it('loads duck', function() {
-        duckModel = loadModel(duckUrl);
+    it('loads textured box', function() {
+        texturedBoxModel = loadModel(texturedBoxUrl);
     });
 
     it('fromGltf throws without options', function() {
@@ -119,29 +120,29 @@ defineSuite([
     it('sets model properties', function() {
         var modelMatrix = Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0));
 
-       expect(duckModel.gltf).toBeDefined();
-       expect(duckModel.basePath).toEqual('./Data/Models/duck/');
-       expect(duckModel.show).toEqual(false);
-       expect(duckModel.modelMatrix).toEqual(modelMatrix);
-       expect(duckModel.scale).toEqual(1.0);
-       expect(duckModel.minimumPixelSize).toEqual(0.0);
-       expect(duckModel.id).toEqual(duckUrl);
-       expect(duckModel.allowPicking).toEqual(true);
-       expect(duckModel.activeAnimations).toBeDefined();
-       expect(duckModel.ready).toEqual(true);
-       expect(duckModel.asynchronous).toEqual(true);
-       expect(duckModel.releaseGltfJson).toEqual(false);
-       expect(duckModel.cacheKey).toEndWith('Data/Models/duck/duck.gltf');
-       expect(duckModel.debugShowBoundingVolume).toEqual(false);
-       expect(duckModel.debugWireframe).toEqual(false);
+       expect(texturedBoxModel.gltf).toBeDefined();
+       expect(texturedBoxModel.basePath).toEqual('./Data/Models/Box-Textured/');
+       expect(texturedBoxModel.show).toEqual(false);
+       expect(texturedBoxModel.modelMatrix).toEqual(modelMatrix);
+       expect(texturedBoxModel.scale).toEqual(1.0);
+       expect(texturedBoxModel.minimumPixelSize).toEqual(0.0);
+       expect(texturedBoxModel.id).toEqual(texturedBoxUrl);
+       expect(texturedBoxModel.allowPicking).toEqual(true);
+       expect(texturedBoxModel.activeAnimations).toBeDefined();
+       expect(texturedBoxModel.ready).toEqual(true);
+       expect(texturedBoxModel.asynchronous).toEqual(true);
+       expect(texturedBoxModel.releaseGltfJson).toEqual(false);
+       expect(texturedBoxModel.cacheKey).toEndWith('Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf');
+       expect(texturedBoxModel.debugShowBoundingVolume).toEqual(false);
+       expect(texturedBoxModel.debugWireframe).toEqual(false);
     });
 
     it('renders', function() {
-        verifyRender(duckModel);
+        verifyRender(texturedBoxModel);
     });
 
     it('resolves readyPromise', function() {
-        waitsForPromise(duckModel.readyPromise, function(model) {
+        waitsForPromise(texturedBoxModel.readyPromise, function(model) {
             verifyRender(model);
         });
     });
@@ -149,7 +150,7 @@ defineSuite([
     it('renders from glTF', function() {
         // Simulate using procedural glTF as opposed to loading it from a file
         var model = primitives.add(new Model({
-            gltf : duckModel.gltf,
+            gltf : texturedBoxModel.gltf,
             modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
             show : false
         }));
@@ -170,7 +171,7 @@ defineSuite([
     it('Applies the right render state', function() {
         // Simulate using procedural glTF as opposed to loading it from a file
         var model = primitives.add(new Model({
-            gltf : duckModel.gltf
+            gltf : texturedBoxModel.gltf
         }));
 
         spyOn(scene.context, 'createRenderState').andCallThrough();
@@ -241,71 +242,27 @@ defineSuite([
     });
 
     it('renders bounding volume', function() {
-        duckModel.debugShowBoundingVolume = true;
-        verifyRender(duckModel);
-        duckModel.debugShowBoundingVolume = false;
+        texturedBoxModel.debugShowBoundingVolume = true;
+        verifyRender(texturedBoxModel);
+        texturedBoxModel.debugShowBoundingVolume = false;
     });
 
     it('renders in wireframe', function() {
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        duckModel.show = true;
-        duckModel.debugWireframe = true;
-        duckModel.zoomTo();
+        texturedBoxModel.show = true;
+        texturedBoxModel.debugWireframe = true;
+        texturedBoxModel.zoomTo();
         scene.renderForSpecs();
 
-        var commands = duckModel._nodeCommands;
+        var commands = texturedBoxModel._nodeCommands;
         var length = commands.length;
         for (var i = 0; i < length; ++i) {
             expect(commands[i].command.primitiveType).toEqual(PrimitiveType.LINES);
         }
 
-        duckModel.show = false;
-        duckModel.debugWireframe = false;
-    });
-
-    it('is picked', function() {
-        if (FeatureDetection.isInternetExplorer()) {
-            // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
-            return;
-        }
-
-        duckModel.show = true;
-        duckModel.zoomTo();
-
-        var pick = scene.pick(new Cartesian2(0, 0));
-        expect(pick.primitive).toEqual(duckModel);
-        expect(pick.id).toEqual(duckUrl);
-        expect(pick.node).toEqual(duckModel.getNode('LOD3sp'));
-        expect(pick.mesh).toEqual(duckModel.getMesh('LOD3spShape'));
-
-        duckModel.show = false;
-    });
-
-    it('is picked with a new pick id', function() {
-        if (FeatureDetection.isInternetExplorer()) {
-            // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
-            return;
-        }
-
-        var oldId = duckModel.id;
-        duckModel.id = 'id';
-        duckModel.show = true;
-        duckModel.zoomTo();
-
-        var pick = scene.pick(new Cartesian2(0, 0));
-        expect(pick.primitive).toEqual(duckModel);
-        expect(pick.id).toEqual('id');
-
-        duckModel.id = oldId;
-        duckModel.show = false;
-    });
-
-    it('is not picked (show === false)', function() {
-        duckModel.zoomTo();
-
-        var pick = scene.pick(new Cartesian2(0, 0));
-        expect(pick).not.toBeDefined();
+        texturedBoxModel.show = false;
+        texturedBoxModel.debugWireframe = false;
     });
 
     it('getNode throws when model is not loaded', function() {
@@ -317,29 +274,29 @@ defineSuite([
 
     it('getNode throws when name is not provided', function() {
         expect(function() {
-            return duckModel.getNode();
+            return texturedBoxModel.getNode();
         }).toThrowDeveloperError();
     });
 
     it('getNode returns undefined when node does not exist', function() {
-        expect(duckModel.getNode('name-of-node-that-does-not-exist')).not.toBeDefined();
+        expect(texturedBoxModel.getNode('name-of-node-that-does-not-exist')).not.toBeDefined();
     });
 
     it('getNode returns a node', function() {
-        var node = duckModel.getNode('LOD3sp');
+        var node = texturedBoxModel.getNode('Mesh');
         expect(node).toBeDefined();
-        expect(node.name).toEqual('LOD3sp');
-        expect(node.id).toEqual('LOD3sp');
+        expect(node.name).toEqual('Mesh');
+        expect(node.id).toEqual('Geometry-mesh002Node');
         expect(node.show).toEqual(true);
 
         // Change node transform and render
-        expect(duckModel._cesiumAnimationsDirty).toEqual(false);
+        expect(texturedBoxModel._cesiumAnimationsDirty).toEqual(false);
         node.matrix = Matrix4.fromUniformScale(1.01, new Matrix4());
-        expect(duckModel._cesiumAnimationsDirty).toEqual(true);
+        expect(texturedBoxModel._cesiumAnimationsDirty).toEqual(true);
 
-        verifyRender(duckModel);
+        verifyRender(texturedBoxModel);
 
-        expect(duckModel._cesiumAnimationsDirty).toEqual(false);
+        expect(texturedBoxModel._cesiumAnimationsDirty).toEqual(false);
 
         node.matrix = Matrix4.fromUniformScale(1.0, new Matrix4());
     });
@@ -353,20 +310,20 @@ defineSuite([
 
     it('getMesh throws when name is not provided', function() {
         expect(function() {
-            return duckModel.getMesh();
+            return texturedBoxModel.getMesh();
         }).toThrowDeveloperError();
     });
 
     it('getMesh returns undefined when mesh does not exist', function() {
-        expect(duckModel.getMesh('name-of-mesh-that-does-not-exist')).not.toBeDefined();
+        expect(texturedBoxModel.getMesh('name-of-mesh-that-does-not-exist')).not.toBeDefined();
     });
 
     it('getMesh returns returns a mesh', function() {
-        var mesh = duckModel.getMesh('LOD3spShape');
+        var mesh = texturedBoxModel.getMesh('Mesh');
         expect(mesh).toBeDefined();
-        expect(mesh.name).toEqual('LOD3spShape');
-        expect(mesh.id).toEqual('LOD3spShape-lib');
-        expect(mesh.materials[0].name).toEqual('blinn3');
+        expect(mesh.name).toEqual('Mesh');
+        expect(mesh.id).toEqual('Geometry-mesh002');
+        expect(mesh.materials[0].name).toEqual('Texture');
     });
 
     it('getMaterial throws when model is not loaded', function() {
@@ -378,57 +335,50 @@ defineSuite([
 
     it('getMaterial throws when name is not provided', function() {
         expect(function() {
-            return duckModel.getMaterial();
+            return texturedBoxModel.getMaterial();
         }).toThrowDeveloperError();
     });
 
     it('getMaterial returns undefined when mesh does not exist', function() {
-        expect(duckModel.getMaterial('name-of-material-that-does-not-exist')).not.toBeDefined();
+        expect(texturedBoxModel.getMaterial('name-of-material-that-does-not-exist')).not.toBeDefined();
     });
 
     it('getMaterial returns returns a material', function() {
-        var material = duckModel.getMaterial('blinn3');
+        var material = texturedBoxModel.getMaterial('Texture');
         expect(material).toBeDefined();
-        expect(material.name).toEqual('blinn3');
-        expect(material.id).toEqual('blinn3-fx');
+        expect(material.name).toEqual('Texture');
+        expect(material.id).toEqual('Effect-Texture');
     });
 
     it('ModelMaterial.setValue throws when name is not provided', function() {
-        var material = duckModel.getMaterial('blinn3');
+        var material = texturedBoxModel.getMaterial('Texture');
         expect(function() {
             material.setValue();
         }).toThrowDeveloperError();
     });
 
     it('ModelMaterial.setValue sets a scalar parameter', function() {
-        var material = duckModel.getMaterial('blinn3');
+        var material = texturedBoxModel.getMaterial('Texture');
         material.setValue('shininess', 12.34);
         expect(material.getValue('shininess')).toEqual(12.34);
     });
 
-    it('ModelMaterial.setValue sets a Cartesian3 parameter not overriden in the material (defined in technique only)', function() {
-        var material = duckModel.getMaterial('blinn3');
-        var light0Color = new Cartesian3(0.33, 0.66, 1.0);
-        material.setValue('light0Color', light0Color);
-        expect(material.getValue('light0Color')).toEqual(light0Color);
-    });
-
     it('ModelMaterial.setValue sets a Cartesian4 parameter', function() {
-        var material = duckModel.getMaterial('blinn3');
+        var material = texturedBoxModel.getMaterial('Texture');
         var specular = new Cartesian4(0.25, 0.5, 0.75, 1.0);
         material.setValue('specular', specular);
         expect(material.getValue('specular')).toEqual(specular);
     });
 
     it('ModelMaterial.getValue throws when name is not provided', function() {
-        var material = duckModel.getMaterial('blinn3');
+        var material = texturedBoxModel.getMaterial('Texture');
         expect(function() {
             material.getValue();
         }).toThrowDeveloperError();
     });
 
     it('ModelMaterial.getValue returns undefined when parameter does not exist', function() {
-        var material = duckModel.getMaterial('blinn3');
+        var material = texturedBoxModel.getMaterial('Texture');
         expect(material.getValue('name-of-parameter-that-does-not-exist')).not.toBeDefined();
     });
 
@@ -440,35 +390,35 @@ defineSuite([
     });
 
     it('boundingSphere returns the bounding sphere', function() {
-        var boundingSphere = duckModel.boundingSphere;
-        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.134, 0.037, 0.869), CesiumMath.EPSILON3);
-        expect(boundingSphere.radius).toEqualEpsilon(1.268, CesiumMath.EPSILON3);
+        var boundingSphere = texturedBoxModel.boundingSphere;
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.0, -0.25, 0.0), CesiumMath.EPSILON3);
+        expect(boundingSphere.radius).toEqualEpsilon(0.75, CesiumMath.EPSILON3);
     });
 
     it('boundingSphere returns the bounding sphere when scale property is set', function() {
-        var originalScale = duckModel.scale;
-        duckModel.scale = 10;
+        var originalScale = texturedBoxModel.scale;
+        texturedBoxModel.scale = 10;
 
-        var boundingSphere = duckModel.boundingSphere;
-        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(1.343, 0.370, 8.694), CesiumMath.EPSILON3);
-        expect(boundingSphere.radius).toEqualEpsilon(12.688, CesiumMath.EPSILON3);
+        var boundingSphere = texturedBoxModel.boundingSphere;
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.0, -2.5, 0.0), CesiumMath.EPSILON3);
+        expect(boundingSphere.radius).toEqualEpsilon(7.5, CesiumMath.EPSILON3);
 
-        duckModel.scale = originalScale;
+        texturedBoxModel.scale = originalScale;
     });
 
     it('boundingSphere returns the bounding sphere when modelMatrix has non-uniform scale', function() {
-        var originalMatrix = Matrix4.clone(duckModel.modelMatrix);
-        Matrix4.multiplyByScale(duckModel.modelMatrix, new Cartesian3(2, 5, 10), duckModel.modelMatrix);
+        var originalMatrix = Matrix4.clone(texturedBoxModel.modelMatrix);
+        Matrix4.multiplyByScale(texturedBoxModel.modelMatrix, new Cartesian3(2, 5, 10), texturedBoxModel.modelMatrix);
 
-        var boundingSphere = duckModel.boundingSphere;
-        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.268, 0.185, 8.694), CesiumMath.EPSILON3);
-        expect(boundingSphere.radius).toEqualEpsilon(12.688, CesiumMath.EPSILON3);
+        var boundingSphere = texturedBoxModel.boundingSphere;
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.0, -1.25, 0.0), CesiumMath.EPSILON3);
+        expect(boundingSphere.radius).toEqualEpsilon(7.5, CesiumMath.EPSILON3);
 
-        duckModel.modelMatrix = originalMatrix;
+        texturedBoxModel.modelMatrix = originalMatrix;
     });
 
     it('destroys', function() {
-        var m = loadModel(duckUrl);
+        var m = loadModel(boxUrl);
 
         runs(function() {
             expect(m.isDestroyed()).toEqual(false);
@@ -605,6 +555,32 @@ defineSuite([
         expect(pick.mesh).toBeDefined();
 
         cesiumAirModel.show = false;
+    });
+
+    it('cesiumAir is picked with a new pick id', function() {
+        if (FeatureDetection.isInternetExplorer()) {
+            // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
+            return;
+        }
+
+        var oldId = cesiumAirModel.id;
+        cesiumAirModel.id = 'id';
+        cesiumAirModel.show = true;
+        cesiumAirModel.zoomTo();
+
+        var pick = scene.pick(new Cartesian2(0, 0));
+        expect(pick.primitive).toEqual(cesiumAirModel);
+        expect(pick.id).toEqual('id');
+
+        cesiumAirModel.id = oldId;
+        cesiumAirModel.show = false;
+    });
+
+    it('cesiumAir is not picked (show === false)', function() {
+        cesiumAirModel.zoomTo();
+
+        var pick = scene.pick(new Cartesian2(0, 0));
+        expect(pick).not.toBeDefined();
     });
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1023,7 +999,7 @@ defineSuite([
     });
 
     it('releaseGltfJson releases glTFJSON when constructed with fromGltf', function() {
-        var m = loadModel(duckUrl, {
+        var m = loadModel(boxUrl, {
             releaseGltfJson : true
         });
 
@@ -1038,7 +1014,7 @@ defineSuite([
 
     it('releaseGltfJson releases glTF JSON when constructed with Model constructor function', function() {
         var m = primitives.add(new Model({
-            gltf : duckModel.gltf,
+            gltf : texturedBoxModel.gltf,
             modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
             show : false,
             releaseGltfJson : true,
@@ -1072,7 +1048,7 @@ defineSuite([
         expect(modelRendererResourceCache[key]).not.toBeDefined();
 
         // Use a custom cache key to avoid conflicting with previous tests
-        var m = loadModel(duckUrl, {
+        var m = loadModel(boxUrl, {
             cacheKey : key
         });
 
@@ -1082,7 +1058,7 @@ defineSuite([
 
         // This is a cache hit, but the JSON request is still pending.
         // In the test below, the cache hit occurs after the request completes.
-        var m2 = loadModel(duckUrl, {
+        var m2 = loadModel(boxUrl, {
             cacheKey : key
         });
 
@@ -1128,7 +1104,7 @@ defineSuite([
         expect(gltfCache[key]).not.toBeDefined();
 
         // Use a custom cache key to avoid conflicting with previous tests
-        var m = loadModel(duckUrl, {
+        var m = loadModel(boxUrl, {
             cacheKey : key
         });
         var m2;
@@ -1143,7 +1119,7 @@ defineSuite([
 
             if (m.ready) {
                 // Cache hit after JSON request completed.
-                m2 = loadModel(duckUrl, {
+                m2 = loadModel(boxUrl, {
                     cacheKey : key
                 });
 
@@ -1179,7 +1155,7 @@ defineSuite([
         expect(modelRendererResourceCache[key]).not.toBeDefined();
 
         var m = primitives.add(new Model({
-            gltf : duckModel.gltf,
+            gltf : texturedBoxModel.gltf,
             modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
             show : false,
             cacheKey : key,
@@ -1225,7 +1201,7 @@ defineSuite([
         expect(modelRendererResourceCache[key3]).not.toBeDefined();
 
         var m = primitives.add(new Model({
-            gltf : duckModel.gltf,
+            gltf : texturedBoxModel.gltf,
             modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
             show : false,
             cacheKey : key,
@@ -1250,7 +1226,7 @@ defineSuite([
 
         // Should be cache miss.
         var m3 = primitives.add(new Model({
-            gltf : duckModel.gltf,
+            gltf : texturedBoxModel.gltf,
             modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
             show : false,
             cacheKey : key3,
