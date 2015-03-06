@@ -116,7 +116,7 @@ define([
                 }
                 model = Model.fromGltf({
                     url : uri,
-                    displayCondition : new DistanceDisplayCondition(0, 2000.0),
+                    displayCondition : new DistanceDisplayCondition(0, 4500.0),
                     loadOnlyIfDisplayCondition : true
                 });
 
