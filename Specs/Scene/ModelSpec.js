@@ -429,7 +429,7 @@ defineSuite([
 
     it('renders texturedBoxCustom (all uniform semantics)', function() {
         var m = loadModel(texturedBoxCustomUrl);
-return;
+
         runs(function() {
             expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
