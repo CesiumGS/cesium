@@ -152,6 +152,7 @@ require({
     var searchRegExp;
     var hintTimer;
     var currentTab = '';
+    var newDemo;
 
     var galleryErrorMsg = document.createElement('span');
     galleryErrorMsg.className = 'galleryError';
@@ -810,6 +811,14 @@ require({
         }
     }
 
+    registry.byId('buttonNew').on('click', function() {
+        loadFromGallery(newDemo);
+        var demoSrc = newDemo.name + '.html';
+        if (demoSrc !== window.location.search.substring(1)) {
+            window.history.pushState(newDemo, newDemo.name, '?src=' + demoSrc + '&label=' + currentTab);
+        }
+        document.title = newDemo.name + ' - Cesium Sandcastle';
+    });
     // Clicking the 'Run' button simply reloads the iframe.
     registry.byId('buttonRun').on('click', function() {
         CodeMirror.commands.runCesium(jsEditor);
@@ -1004,6 +1013,9 @@ require({
         demoLink.href = 'gallery/' + encodeURIComponent(demo.name) + '.html';
         tab.appendChild(demoLink);
 
+        if(demo.name === "Hello World") {
+            newDemo = demo;
+        }
         demoLink.onclick = function(e) {
             if (mouse.isMiddle(e)) {
                 window.open('gallery/' + demo.name + '.html');
