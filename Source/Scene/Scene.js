@@ -1811,11 +1811,13 @@ define([
 
             //If the picked object has a show attribute, use it.
             if (typeof primitive.getGeometryInstanceAttributes === 'function') {
-                attributes = primitive.getGeometryInstanceAttributes(pickedResult.id);
-                if (defined(attributes) && defined(attributes.show)) {
-                    hasShowAttribute = true;
-                    attributes.show = ShowGeometryInstanceAttribute.toValue(false, attributes.show);
-                    pickedAttributes.push(attributes);
+                if (defined(pickedResult.id)) {
+                    attributes = primitive.getGeometryInstanceAttributes(pickedResult.id);
+                    if (defined(attributes) && defined(attributes.show)) {
+                        hasShowAttribute = true;
+                        attributes.show = ShowGeometryInstanceAttribute.toValue(false, attributes.show);
+                        pickedAttributes.push(attributes);
+                    }
                 }
             }
 

@@ -163,13 +163,17 @@ defineSuite([
 
     it('name uses source name if CZML name is undefined', function() {
         var dataSource = new CzmlDataSource();
-        dataSource.load(clockCzml, 'Gallery/simple.czml?asd=true');
+        dataSource.load(clockCzml, {
+            sourceUri : 'Gallery/simple.czml?asd=true'
+        });
         expect(dataSource.name).toEqual('simple.czml');
     });
 
     it('does not overwrite existing name if CZML name is undefined', function() {
         var dataSource = new CzmlDataSource('myName');
-        dataSource.load(clockCzml, 'Gallery/simple.czml');
+        dataSource.load(clockCzml, {
+            sourceUri : 'Gallery/simple.czml'
+        });
         expect(dataSource.name).toEqual('myName');
     });
 
@@ -266,7 +270,9 @@ defineSuite([
 
         runs(function() {
             var dataSource = new CzmlDataSource();
-            dataSource.process(simple, simpleUrl);
+            dataSource.process(simple, {
+                sourceUri : simpleUrl
+            });
             expect(dataSource.entities.values.length).toEqual(10);
         });
     });
@@ -278,10 +284,14 @@ defineSuite([
 
         runs(function() {
             var dataSource = new CzmlDataSource();
-            dataSource.process(simple, simpleUrl);
+            dataSource.process(simple, {
+                sourceUri : simpleUrl
+            });
             expect(dataSource.entities.values.length === 10);
 
-            dataSource.process(vehicle, vehicleUrl);
+            dataSource.process(vehicle, {
+                sourceUri : vehicleUrl
+            });
             expect(dataSource.entities.values.length === 11);
         });
     });
@@ -293,10 +303,14 @@ defineSuite([
 
         runs(function() {
             var dataSource = new CzmlDataSource();
-            dataSource.process(simple, simpleUrl);
+            dataSource.process(simple, {
+                sourceUri : simpleUrl
+            });
             expect(dataSource.entities.values.length).toEqual(10);
 
-            dataSource.load(vehicle, vehicleUrl);
+            dataSource.load(vehicle, {
+                sourceUri : vehicleUrl
+            });
             expect(dataSource.entities.values.length).toEqual(1);
         });
     });
@@ -477,7 +491,9 @@ defineSuite([
         };
 
         var dataSource = new CzmlDataSource();
-        dataSource.load(makePacket(billboardPacket), sourceUri);
+        dataSource.load(makePacket(billboardPacket), {
+            sourceUri : sourceUri
+        });
         var entity = dataSource.entities.values[0];
 
         expect(entity.billboard).toBeDefined();
@@ -506,7 +522,9 @@ defineSuite([
         };
 
         var dataSource = new CzmlDataSource();
-        dataSource.load(makePacket(packet), source);
+        dataSource.load(makePacket(packet), {
+            sourceUri : source
+        });
         var entity = dataSource.entities.values[0];
         var imageProperty = entity.billboard.image;
         expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual(source + 'image.png');
