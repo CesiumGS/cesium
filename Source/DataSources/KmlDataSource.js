@@ -1814,6 +1814,7 @@ define([
         }).otherwise(function(error) {
             DataSource.setLoading(that, false);
             that._error.raiseEvent(that, error);
+            window.console.log(error);
             return when.reject(error);
         });
     };
