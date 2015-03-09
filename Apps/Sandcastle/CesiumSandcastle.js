@@ -152,6 +152,8 @@ require({
     var searchRegExp;
     var hintTimer;
     var currentTab = '';
+    var demoHtml = '';
+    var demoJs = '';
 
     var galleryErrorMsg = document.createElement('span');
     galleryErrorMsg.className = 'galleryError';
@@ -479,6 +481,16 @@ require({
         }
     });
 
+    window.onbeforeunload = function (e) {
+        var htmlText = (htmlEditor.getValue()).replace(/\s/g, '');
+        var jsText = (jsEditor.getValue()).replace(/\s/g, '');
+        if (demoHtml === htmlText && demoJs === jsText) {
+            return ;
+        }
+
+        return 'Changes made by you are not saved.';
+    }
+
     registry.byId('codeContainer').watch('selectedChildWidget', function(name, oldPane, newPane) {
         if (newPane.id === 'jsContainer') {
             jsEditor.focus();
@@ -669,6 +681,7 @@ require({
         }
 
         var scriptCode = scriptMatch[1];
+        demoJs = scriptCode.replace(/\s/g, '');
         jsEditor.setValue(scriptCode);
         jsEditor.clearHistory();
 
@@ -680,7 +693,7 @@ require({
             childNode = doc.body.childNodes[++childIndex];
         }
         htmlText = htmlText.replace(/^\s+/, '');
-
+        demoHtml = htmlText.replace(/\s/g, '');
         htmlEditor.setValue(htmlText);
         htmlEditor.clearHistory();
 
