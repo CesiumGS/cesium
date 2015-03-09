@@ -703,11 +703,13 @@ define([
                     Material._textureCache.releaseTexture(material._texturePaths[uniformId]);
                     material._textures[uniformId] = newTexture;
                 } else {
-                    when(loadImage(uniformValue), function(image) {
+                    loadImage(uniformValue).then(function(image) {
                         material._loadedImages.push({
                             id : uniformId,
                             image : image
                         });
+                    }).otherwise(function(error) {
+                        window.console.error('Unable to load image: ' + uniformValue);
                     });
                 }
 
