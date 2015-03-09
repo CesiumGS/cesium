@@ -401,7 +401,7 @@ define([
 
         var boundingVolume = surfaceTile.boundingSphere3D;
         if (boundingVolume.radius === 0.0) {
-            return true;
+            return false;
         }
 
         if (frameState.mode !== SceneMode.SCENE3D) {

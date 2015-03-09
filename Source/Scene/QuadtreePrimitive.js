@@ -310,18 +310,47 @@ define([
 
         var visibleNonRenderableLeafTiles = [];
 
+        // First pass.
         var levelZeroTiles = primitive._levelZeroTiles;
         for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
             tile = levelZeroTiles[i];
-            visitTile(primitive, tile, context, frameState, visibleNonRenderableLeafTiles);
+            tile._covered = visitTile(primitive, tile, tileProvider, occluders, context, frameState, visibleNonRenderableLeafTiles);
+        }
+
+        // First pass: mark the visible, non-renderable leaf tiles as high priority for load.
+        // TODO: if there are too many of them, we should consider loading their parents instead.
+        for (i = 0, len = visibleNonRenderableLeafTiles; i < len; ++i) {
+            tile = visibleNonRenderableLeafTiles[i];
+            tile._highPriorityForLoad = true;
+        }
+
+        // Second pass
+        for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
+            tile = levelZeroTiles[i];
+            if (tile._covered) {
+                visitTileToAddToRenderList(primitive, tile, tilesToRender);
+            }
+        }
+    }
+
+    function visitTileToAddToRenderList(primitive, tile, tilesToRender) {
+        if (tile._render) {
+            tilesToRender.push(tile);
+            return;
+        }
+
+        var children = tile.children;
+        for (var i = 0, len = children.length; i < len; ++i) {
+            visitTileToAddToRenderList(primitive, children[i], tilesToRender);
         }
     }
 
     // returns true if the visited tile or its children completely cover the visible extent of this tile
     // with renderable tiles.
-    function visitTile(primitive, tile, context, frameState, visibleNonRenderableLeafTiles) {
-        // Initially assume we will not render this tile.
+    function visitTile(primitive, tile, tileProvider, occluders, context, frameState, visibleNonRenderableLeafTiles) {
+        // Initially assume we will not render this tile and it is not high priority for load.
         tile._render = false;
+        tile._highPriorityForLoad = false;
 
         primitive._tileReplacementQueue.markTileRendered(tile); // TODO: rename to markTileVisited
 
@@ -334,12 +363,12 @@ define([
             return true;
         }
 
-        tile._distance = primitive._tileProvider.computeDistanceToTile(descendant, frameState);
+        tile._distance = primitive._tileProvider.computeDistanceToTile(tile, frameState);
         var sse = screenSpaceError(primitive, context, frameState, tile);
         if (sse < primitive.maximumScreenSpaceError) {
-            tile._highPriorityForLoad = true;
             if (tile.renderable) {
                 tile._render = true;
+                tile._highPriorityForLoad = true;
                 return true;
             } else {
                 visibleNonRenderableLeafTiles.push(tile);
@@ -350,11 +379,11 @@ define([
 
             var children = tile.children;
             for (var i = 0, len = children.length; i < len; ++i) {
-                covered = covered && visitTile(primitive, children[i], context, frameState, visibleNonRenderableLeafTiles);
+                covered = visitTile(primitive, children[i], tileProvider, occluders, context, frameState, visibleNonRenderableLeafTiles) && covered;
             }
 
             // If this tile's children do not cover its extent, render this tile if we can and report that we're
-            // covered.  Otherwise, we're not covered.
+            // covered.  If this tile is not renderable, we're not covered.
             if (!covered) {
                 covered = tile._render = tile.renderable;
             }
@@ -566,9 +595,9 @@ define([
     }
 
     function tileLoadSortFunction(a, b) {
-        var aVisible = a._isVisible ? 1 : 0;
-        var bVisible = b._isVisible ? 1 : 0;
-        var aMinusB = aVisible - bVisible;
+        var aHighPriority = a._highPriorityForLoad ? 1 : 0;
+        var bHighPriority = b._highPriorityForLoad ? 1 : 0;
+        var aMinusB = aHighPriority - bHighPriority;
         if (aMinusB !== 0) {
             return aMinusB;
         } else {
