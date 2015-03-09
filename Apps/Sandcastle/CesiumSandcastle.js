@@ -484,12 +484,10 @@ require({
     window.onbeforeunload = function (e) {
         var htmlText = (htmlEditor.getValue()).replace(/\s/g, '');
         var jsText = (jsEditor.getValue()).replace(/\s/g, '');
-        if (demoHtml === htmlText && demoJs === jsText) {
-            return ;
+        if (demoHtml !== htmlText || demoJs !== jsText) {
+            return 'Be sure to save a copy of any important edits before leaving this page.';
         }
-
-        return 'Changes made by you are not saved.';
-    }
+    };
 
     registry.byId('codeContainer').watch('selectedChildWidget', function(name, oldPane, newPane) {
         if (newPane.id === 'jsContainer') {
@@ -1021,13 +1019,21 @@ require({
             if (mouse.isMiddle(e)) {
                 window.open('gallery/' + demo.name + '.html');
             } else {
-                loadFromGallery(demo);
-                var demoSrc = demo.name + '.html';
-                if (demoSrc !== window.location.search.substring(1)) {
-                    window.history.pushState(demo, demo.name, '?src=' + demoSrc + '&label=' + currentTab);
-                }
-                document.title = demo.name + ' - Cesium Sandcastle';
-            }
+				var htmlText = (htmlEditor.getValue()).replace(/\s/g, '');
+				var jsText = (jsEditor.getValue()).replace(/\s/g, '');
+				var confirmChange = true;
+				if (demoHtml !== htmlText || demoJs !== jsText) {
+					confirmChange = window.confirm('You have unsaved changes. Are you sure you want to navigate away from this demo?');
+				}
+				if (confirmChange) {
+					loadFromGallery(demo);
+					var demoSrc = demo.name + '.html';
+					if (demoSrc !== window.location.search.substring(1)) {
+						window.history.pushState(demo, demo.name, '?src=' + demoSrc + '&label=' + currentTab);
+					}
+					document.title = demo.name + ' - Cesium Sandcastle';
+				}
+			}
             e.preventDefault();
         };
 
