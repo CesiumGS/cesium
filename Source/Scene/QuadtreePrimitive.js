@@ -248,11 +248,7 @@ define([
         this._tileProvider = this._tileProvider && this._tileProvider.destroy();
     };
 
-    var SelectionResult = {
-        RENDERED : 0,
-        NOT_RENDERABLE : 1,
-        NOT_VISIBLE : 2
-    };
+    var greatGrandChildrenScratch = [];
 
     function selectTilesForRendering(primitive, context, frameState) {
         var debug = primitive._debug;
@@ -299,89 +295,189 @@ define([
 
         var tile;
 
-        // Enqueue the root tiles that are renderable and visible.
+        // Select tiles in two passes:
+        //   First pass, depth first, to depth that meets SSE:
+        //     * Compute tile visibility (possibly estimated if the tile is not yet loaded)
+        //     * Compute estimated distance to tile
+        //     * Determine if a given tile is the deepest that completely covers the visible portion of its extent and
+        //       set its _render flag if so.
+        //     * Queue loading of all tiles along the way.
+        //     * Record leaf tiles (those at meet the SSE) that are visible but not yet fully loaded.
+        //   Second pass:
+        //     * Count visible leaves.  If less than or equal to 16, all leaves get load priority.
+        //     * Otherwise, get the unique parent of each leaf and count those.
+        //     * Repeat until the number of tiles is less than 16 or equal to, and give them load priority
+
+        var visibleNonRenderableLeafTiles = [];
+
         var levelZeroTiles = primitive._levelZeroTiles;
         for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
             tile = levelZeroTiles[i];
-            primitive._tileReplacementQueue.markTileRendered(tile);
-            if (tile.needsLoading) {
-                queueTileLoad(primitive, tile);
-            }
-            if (tile.renderable && tileProvider.computeTileVisibility(tile, frameState, occluders) !== Visibility.NONE) {
-                traversalQueue.enqueue(tile);
-            } else {
-                ++debug.tilesCulled;
-                if (!tile.renderable) {
-                    ++debug.tilesWaitingForChildren;
-                }
-            }
-        }
-
-        // Traverse the tiles in breadth-first order
-        while (defined((tile = traversalQueue.dequeue()))) {
-            ++debug.tilesVisited;
-
-            primitive._tileReplacementQueue.markTileRendered(tile);
-
-            if (tile.level > debug.maxDepth) {
-                debug.maxDepth = tile.level;
-            }
-
-            if (screenSpaceError(primitive, context, frameState, tile) < primitive.maximumScreenSpaceError) {
-                // This tile meets SSE requirements, so render it.
-                addTileToRenderList(primitive, tile);
-            } else {
-                // Tile does not meet SSE requirements, so render children if possible.
-                var allVisibleAreRenderable = true;
-                var allRenderableAndVisibleAreUpsampledOnly = true;
-                var allRenderable = true;
-                var allUpsampledOnly = true;
-
-                var children = tile.children;
-
-                var child;
-                for (i = 0, len = children.length; i < len; ++i) {
-                    child = children[i];
-
-                    primitive._tileReplacementQueue.markTileRendered(child);
-
-                    child._distance = primitive._tileProvider.computeDistanceToTile(child, frameState);
-
-                    if (child.needsLoading) {
-                        queueTileLoad(primitive, child);
-                    }
-
-                    var visible = tileProvider.computeTileVisibility(child, frameState, occluders) !== Visibility.NONE;
-                    child._isVisible = visible;
-
-                    allVisibleAreRenderable = allVisibleAreRenderable && (child.renderable || !visible);
-
-                    var renderableAndVisible = child.renderable && visible;
-                    allRenderableAndVisibleAreUpsampledOnly = allRenderableAndVisibleAreUpsampledOnly && (!renderableAndVisible || child.upsampledFromParent);
-                }
-
-                if (allRenderableAndVisibleAreUpsampledOnly) {
-                    // Rendering children rather than this tile would add nothing, because all renderable children were just upsampled from this tile.
-                    // So render this tile.
-                    addTileToRenderList(primitive, tile);
-                } else if (allVisibleAreRenderable) {
-                    // Render visible children instead of this tile.
-                    for (i = 0, len = children.length; i < len; ++i) {
-                        child = children[i];
-                        if (child.renderable && child._isVisible) {
-                            traversalQueue.enqueue(child);
-                        } else {
-                            ++debug.tilesCulled;
-                        }
-                    }
-                } else {
-                    // Some of the visibile children are not renderable yet, so render the parent for now.
-                    ++debug.tilesWaitingForChildren;
-                    addTileToRenderList(primitive, tile);
-                }
-            }
+            visitTile(primitive, tile, context, frameState, visibleNonRenderableLeafTiles);
         }
     }
+
+    // returns true if the visited tile or its children completely cover the visible extent of this tile
+    // with renderable tiles.
+    function visitTile(primitive, tile, context, frameState, visibleNonRenderableLeafTiles) {
+        // Initially assume we will not render this tile.
+        tile._render = false;
+
+        primitive._tileReplacementQueue.markTileRendered(tile); // TODO: rename to markTileVisited
+
+        if (tile.needsLoading) {
+            queueTileLoad(primitive, tile);
+        }
+
+        if (tileProvider.computeTileVisibility(tile, frameState, occluders) === Visibility.NONE) {
+            ++primitive._debug.tilesCulled;
+            return true;
+        }
+
+        tile._distance = primitive._tileProvider.computeDistanceToTile(descendant, frameState);
+        var sse = screenSpaceError(primitive, context, frameState, tile);
+        if (sse < primitive.maximumScreenSpaceError) {
+            tile._highPriorityForLoad = true;
+            if (tile.renderable) {
+                tile._render = true;
+                return true;
+            } else {
+                visibleNonRenderableLeafTiles.push(tile);
+                return false;
+            }
+        } else {
+            var covered = true;
+
+            var children = tile.children;
+            for (var i = 0, len = children.length; i < len; ++i) {
+                covered = covered && visitTile(primitive, children[i], context, frameState, visibleNonRenderableLeafTiles);
+            }
+
+            // If this tile's children do not cover its extent, render this tile if we can and report that we're
+            // covered.  Otherwise, we're not covered.
+            if (!covered) {
+                covered = tile._render = tile.renderable;
+            }
+
+            return covered;
+        }
+    }
+
+        // // Enqueue the root tiles that are renderable and visible.
+        // var levelZeroTiles = primitive._levelZeroTiles;
+        // for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
+        //     tile = levelZeroTiles[i];
+        //     primitive._tileReplacementQueue.markTileRendered(tile);
+        //     if (tile.needsLoading) {
+        //         queueTileLoad(primitive, tile);
+        //     }
+        //     if (tile.renderable && tileProvider.computeTileVisibility(tile, frameState, occluders) !== Visibility.NONE) {
+        //         traversalQueue.enqueue(tile);
+        //     } else {
+        //         ++debug.tilesCulled;
+        //         if (!tile.renderable) {
+        //             ++debug.tilesWaitingForChildren;
+        //         }
+        //     }
+        // }
+
+        // // Traverse the tiles in breadth-first order
+        // while (defined((tile = traversalQueue.dequeue()))) {
+        //     ++debug.tilesVisited;
+
+        //     primitive._tileReplacementQueue.markTileRendered(tile);
+
+        //     if (tile.level > debug.maxDepth) {
+        //         debug.maxDepth = tile.level;
+        //     }
+
+        //     var sse = screenSpaceError(primitive, context, frameState, tile);
+
+        //     if (sse < primitive.maximumScreenSpaceError) {
+        //         // This tile meets SSE requirements, so render it.
+        //         addTileToRenderList(primitive, tile);
+        //     } else {
+        //         // Tile does not meet SSE requirements, so render children if possible.
+        //         var allVisibleAreRenderable = true;
+        //         var allRenderableAndVisibleAreUpsampledOnly = true;
+
+        //         var children = tile.children;
+
+        //         var descendants = [tile];
+        //         var descendant;
+
+        //         do {
+        //             var lastAllVisibleAreRenderable = allVisibleAreRenderable;
+        //             var lastAllRenderableAndVisibleAreUpsampledOnly = allRenderableAndVisibleAreUpsampledOnly;
+        //             allVisibleAreRenderable = true;
+        //             allRenderableAndVisibleAreUpsampledOnly = true;
+
+        //             var nextDescendants = [];
+
+        //             for (var j = 0, jlen = descendants.length; j < jlen; ++j) {
+        //                 var parent = descendants[j];
+
+        //                 children = parent.children;
+        //                 for (i = 0, len = children.length; i < len; ++i) {
+        //                     descendant = children[i];
+
+        //                     primitive._tileReplacementQueue.markTileRendered(descendant);
+
+        //                     var visible = tileProvider.computeTileVisibility(descendant, frameState, occluders) !== Visibility.NONE;
+        //                     descendant._isVisible = false; // for low load priority.  TODO: do this a clearer way.
+
+        //                     if (descendant.needsLoading) {
+        //                         queueTileLoad(primitive, descendant);
+        //                     }
+
+        //                     descendant._distance = primitive._tileProvider.computeDistanceToTile(descendant, frameState);
+        //                     sse = Math.min(sse, screenSpaceError(primitive, context, frameState, descendant));
+
+        //                     allVisibleAreRenderable = allVisibleAreRenderable && (descendant.renderable || !visible);
+
+        //                     var renderableAndVisible = descendant.renderable && visible;
+        //                     allRenderableAndVisibleAreUpsampledOnly = allRenderableAndVisibleAreUpsampledOnly && (!renderableAndVisible || descendant.upsampledFromParent);
+
+        //                     if (visible) {
+        //                         nextDescendants.push(descendant);
+        //                     }
+        //                 }
+        //             }
+
+        //             if (allVisibleAreRenderable && allRenderableAndVisibleAreUpsampledOnly) {
+        //                 if (descendants.length !== 0 || descendants[0] !== tile) {
+        //                     allRenderableAndVisibleAreUpsampledOnly = lastAllRenderableAndVisibleAreUpsampledOnly;
+        //                     allVisibleAreRenderable = lastAllVisibleAreRenderable;
+        //                 }
+        //                 break;
+        //             }
+
+        //             descendants = nextDescendants;
+        //         } while (sse > primitive.maximumScreenSpaceError && descendants.length > 0 && descendants.length < 16);
+
+        //         for (i = 0, len = descendants.length; i < len; ++i) {
+        //             descendant = descendants[i];
+        //             descendant._isVisible = true; // for high priority loading.
+        //         }
+
+        //         if (allRenderableAndVisibleAreUpsampledOnly) {
+        //             // Rendering descendants rather than this tile would add nothing, because all renderable children were just upsampled from this tile.
+        //             // So render this tile.
+        //             addTileToRenderList(primitive, tile);
+        //         } else if (allVisibleAreRenderable) {
+        //             // Render visible descendants instead of this tile.
+        //             for (i = 0, len = descendants.length; i < len; ++i) {
+        //                 descendant = descendants[i];
+        //                 traversalQueue.enqueue(descendant);
+        //             }
+        //         } else {
+        //             // Some of the visibile children are not renderable yet, so render the parent for now.
+        //             ++debug.tilesWaitingForChildren;
+        //             addTileToRenderList(primitive, tile);
+        //         }
+        //     }
+        // }
+    //}
 
     function screenSpaceError(primitive, context, frameState, tile) {
         if (frameState.mode === SceneMode.SCENE2D) {
@@ -462,7 +558,7 @@ define([
                     time: now,
                     distance: tile._distance,
                     isVisible: tile._isVisible,
-                    done: tile.state === QuadtreeTileLoadState.DONE || tile.state === QuadtreeTileLoadState.FAILED,
+                    done: tile.state === QuadtreeTileLoadState.DONE,
                     failed: tile.state === QuadtreeTileLoadState.FAILED
                 });
             }

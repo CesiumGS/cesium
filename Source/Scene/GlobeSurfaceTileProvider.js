@@ -392,7 +392,7 @@ define([
      */
     GlobeSurfaceTileProvider.prototype.computeTileVisibility = function(tile, frameState, occluders) {
         if (!defined(tile.data)) {
-            return true;
+            GlobeSurfaceTile.prepareNewTile(tile, this._terrainProvider, this._imageryLayers);
         }
 
         var surfaceTile = tile.data;

@@ -299,11 +299,6 @@ define([
     };
 
     GlobeSurfaceTile.processStateMachine = function(tile, context, terrainProvider, imageryLayerCollection) {
-        var surfaceTile = tile.data;
-        if (!defined(surfaceTile)) {
-            surfaceTile = tile.data = new GlobeSurfaceTile();
-        }
-
         if (tile.state === QuadtreeTileLoadState.START) {
             prepareNewTile(tile, terrainProvider, imageryLayerCollection);
             tile.state = QuadtreeTileLoadState.LOADING;
@@ -312,6 +307,8 @@ define([
         if (tile.state === QuadtreeTileLoadState.LOADING) {
             processTerrainStateMachine(tile, context, terrainProvider);
         }
+
+        var surfaceTile = tile.data;
 
         // The terrain is renderable as soon as we have a valid vertex array.
         var isRenderable = defined(surfaceTile.vertexArray);
@@ -380,6 +377,9 @@ define([
 
     function prepareNewTile(tile, terrainProvider, imageryLayerCollection) {
         var surfaceTile = tile.data;
+        if (!defined(surfaceTile)) {
+            surfaceTile = tile.data = new GlobeSurfaceTile();
+        }
 
         var upsampleTileDetails = getUpsampleTileDetails(tile);
         if (defined(upsampleTileDetails)) {
@@ -530,11 +530,11 @@ define([
     function getUpsampleTileDetails(tile) {
         // Find the nearest ancestor with loaded terrain.
         var sourceTile = tile.parent;
-        while (defined(sourceTile) && defined(sourceTile.data) && !defined(sourceTile.data.terrainData)) {
-            sourceTile = sourceTile.parent;
-        }
+        // while (defined(sourceTile) && defined(sourceTile.data) && !defined(sourceTile.data.terrainData)) {
+        //     sourceTile = sourceTile.parent;
+        // }
 
-        if (!defined(sourceTile) || !defined(sourceTile.data)) {
+        if (!defined(sourceTile) || !defined(sourceTile.data) || !defined(sourceTile.data.terrainData)) {
             // No ancestors have loaded terrain - try again later.
             return undefined;
         }
