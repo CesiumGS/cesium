@@ -1,7 +1,17 @@
 Change Log
 ==========
 
-### 1.7.1 - 2015-04-06
+### 1.8 -2015-04-01
+
+* Breaking changes
+  * Removed the `eye`, `target`, and `up` parameters to `Camera.lookAt` which were deprecated in Cesium 1.6. Use the `target` and `offset`.
+  * Removed `Camera.setTransform`, which was deprecated in Cesium 1.6. Use `Camera.lookAtTransform`.
+  * Removed `Camera.transform`, which was deprecated in Cesium 1.6. Use `Camera.lookAtTransform`.
+  * Removed the `direction` and `up` options to `Camera.flyTo`, which were deprecated in Cesium 1.6. Use the `orientation` option.
+  * Removed `Camera.flyToRectangle`, which was deprecated in Cesium 1.6. Use `Camera.flyTo`.
+
+### 1.7.1 - 2015-03-06
+
 * Fixed a crash in `InfoBox` that would occur when attempting to display plain text.
 * Fixed a crash when loading KML features that have no description and an empty `ExtendedData` node.
 * Fixed a bug `in Color.fromCssColorString` where undefined would be returned for the CSS color `transparent`.
