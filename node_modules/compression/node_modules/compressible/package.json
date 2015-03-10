@@ -1,0 +1,82 @@
+{
+  "name": "compressible",
+  "description": "Compressible Content-Type / mime checking",
+  "version": "1.1.0",
+  "author": {
+    "name": "Jonathan Ong",
+    "email": "me@jongleberry.com",
+    "url": "http://jongleberry.com"
+  },
+  "contributors": [
+    {
+      "name": "Jeremiah Senkpiel",
+      "email": "fishrock123@rocketmail.com",
+      "url": "https://searchbeam.jit.su"
+    }
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/expressjs/compressible.git"
+  },
+  "bugs": {
+    "url": "https://github.com/expressjs/compressible/issues"
+  },
+  "keywords": [
+    "compress",
+    "gzip",
+    "mime",
+    "content-type"
+  ],
+  "devDependencies": {
+    "mocha": "~1.20.1"
+  },
+  "scripts": {
+    "test": "mocha --reporter spec test/"
+  },
+  "homepage": "https://github.com/expressjs/compressible",
+  "_id": "compressible@1.1.0",
+  "_shasum": "124d8a7bba18a05a410a2f25bad413b1b94aff67",
+  "_from": "compressible@1.1.0",
+  "_npmVersion": "1.4.9",
+  "_npmUser": {
+    "name": "fishrock123",
+    "email": "fishrock123@rocketmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "jongleberry",
+      "email": "jonathanrichardong@gmail.com"
+    },
+    {
+      "name": "fishrock123",
+      "email": "fishrock123@rocketmail.com"
+    },
+    {
+      "name": "federomero",
+      "email": "federomero@gmail.com"
+    },
+    {
+      "name": "dougwilson",
+      "email": "doug@somethingdoug.com"
+    },
+    {
+      "name": "tjholowaychuk",
+      "email": "tj@vision-media.ca"
+    },
+    {
+      "name": "shtylman",
+      "email": "shtylman@gmail.com"
+    },
+    {
+      "name": "mscdex",
+      "email": "mscdex@mscdex.net"
+    }
+  ],
+  "dist": {
+    "shasum": "124d8a7bba18a05a410a2f25bad413b1b94aff67",
+    "tarball": "http://registry.npmjs.org/compressible/-/compressible-1.1.0.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/compressible/-/compressible-1.1.0.tgz"
+}

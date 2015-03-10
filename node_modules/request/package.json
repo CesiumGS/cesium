@@ -1,0 +1,74 @@
+{
+  "name": "request",
+  "description": "Simplified HTTP request client.",
+  "tags": [
+    "http",
+    "simple",
+    "util",
+    "utility"
+  ],
+  "version": "2.36.0",
+  "author": {
+    "name": "Mikeal Rogers",
+    "email": "mikeal.rogers@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/mikeal/request.git"
+  },
+  "bugs": {
+    "url": "http://github.com/mikeal/request/issues"
+  },
+  "license": "Apache, Version 2.0",
+  "engines": [
+    "node >= 0.8.0"
+  ],
+  "main": "index.js",
+  "dependencies": {
+    "qs": "~0.6.0",
+    "json-stringify-safe": "~5.0.0",
+    "mime": "~1.2.9",
+    "forever-agent": "~0.5.0",
+    "node-uuid": "~1.4.0",
+    "tough-cookie": ">=0.12.0",
+    "form-data": "~0.1.0",
+    "tunnel-agent": "~0.4.0",
+    "http-signature": "~0.10.0",
+    "oauth-sign": "~0.3.0",
+    "hawk": "~1.0.0",
+    "aws-sign2": "~0.5.0"
+  },
+  "optionalDependencies": {
+    "tough-cookie": ">=0.12.0",
+    "form-data": "~0.1.0",
+    "tunnel-agent": "~0.4.0",
+    "http-signature": "~0.10.0",
+    "oauth-sign": "~0.3.0",
+    "hawk": "~1.0.0",
+    "aws-sign2": "~0.5.0"
+  },
+  "scripts": {
+    "test": "node tests/run.js"
+  },
+  "homepage": "https://github.com/mikeal/request",
+  "_id": "request@2.36.0",
+  "dist": {
+    "shasum": "28c6c04262c7b9ffdd21b9255374517ee6d943f5",
+    "tarball": "http://registry.npmjs.org/request/-/request-2.36.0.tgz"
+  },
+  "_from": "request@2.36.0",
+  "_npmVersion": "1.4.4",
+  "_npmUser": {
+    "name": "mikeal",
+    "email": "mikeal.rogers@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "mikeal",
+      "email": "mikeal.rogers@gmail.com"
+    }
+  ],
+  "directories": {},
+  "_shasum": "28c6c04262c7b9ffdd21b9255374517ee6d943f5",
+  "_resolved": "https://registry.npmjs.org/request/-/request-2.36.0.tgz"
+}

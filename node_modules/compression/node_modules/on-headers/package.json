@@ -1,0 +1,55 @@
+{
+  "name": "on-headers",
+  "description": "Execute a listener when a response is about to write headers",
+  "version": "0.0.0",
+  "author": {
+    "name": "Douglas Christopher Wilson",
+    "email": "doug@somethingdoug.com"
+  },
+  "license": "MIT",
+  "keywords": [
+    "event",
+    "headers",
+    "http",
+    "onheaders"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/expressjs/on-headers.git"
+  },
+  "bugs": {
+    "url": "https://github.com/expressjs/on-headers/issues"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "mocha": "~1.18.2",
+    "supertest": "~0.12.1"
+  },
+  "engines": {
+    "node": ">= 0.8.0"
+  },
+  "scripts": {
+    "test": "mocha --reporter spec test/"
+  },
+  "homepage": "https://github.com/expressjs/on-headers",
+  "_id": "on-headers@0.0.0",
+  "dist": {
+    "shasum": "ee2817f8344325785cd9c2df2b242bbc17caf4c4",
+    "tarball": "http://registry.npmjs.org/on-headers/-/on-headers-0.0.0.tgz"
+  },
+  "_from": "on-headers@0.0.0",
+  "_npmVersion": "1.4.3",
+  "_npmUser": {
+    "name": "dougwilson",
+    "email": "doug@somethingdoug.com"
+  },
+  "maintainers": [
+    {
+      "name": "dougwilson",
+      "email": "doug@somethingdoug.com"
+    }
+  ],
+  "directories": {},
+  "_shasum": "ee2817f8344325785cd9c2df2b242bbc17caf4c4",
+  "_resolved": "https://registry.npmjs.org/on-headers/-/on-headers-0.0.0.tgz"
+}

@@ -1,0 +1,78 @@
+{
+  "name": "type-is",
+  "description": "Infer the content-type of a request.",
+  "version": "1.2.1",
+  "author": {
+    "name": "Jonathan Ong",
+    "email": "me@jongleberry.com",
+    "url": "http://jongleberry.com"
+  },
+  "contributors": [
+    {
+      "name": "Douglas Christopher Wilson",
+      "email": "doug@somethingdoug.com"
+    }
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/expressjs/type-is"
+  },
+  "dependencies": {
+    "mime-types": "1.0.0"
+  },
+  "devDependencies": {
+    "mocha": "*",
+    "should": "*"
+  },
+  "engines": {
+    "node": ">= 0.8"
+  },
+  "scripts": {
+    "test": "mocha --require should --reporter spec --bail"
+  },
+  "bugs": {
+    "url": "https://github.com/expressjs/type-is/issues"
+  },
+  "homepage": "https://github.com/expressjs/type-is",
+  "_id": "type-is@1.2.1",
+  "_shasum": "73d448080a4f1dd18acb1eefff62968c5b5d54a2",
+  "_from": "type-is@1.2.1",
+  "_npmVersion": "1.4.9",
+  "_npmUser": {
+    "name": "jongleberry",
+    "email": "jonathanrichardong@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "jongleberry",
+      "email": "jonathanrichardong@gmail.com"
+    },
+    {
+      "name": "dougwilson",
+      "email": "doug@somethingdoug.com"
+    },
+    {
+      "name": "tjholowaychuk",
+      "email": "tj@vision-media.ca"
+    },
+    {
+      "name": "shtylman",
+      "email": "shtylman@gmail.com"
+    },
+    {
+      "name": "mscdex",
+      "email": "mscdex@mscdex.net"
+    },
+    {
+      "name": "fishrock123",
+      "email": "fishrock123@rocketmail.com"
+    }
+  ],
+  "dist": {
+    "shasum": "73d448080a4f1dd18acb1eefff62968c5b5d54a2",
+    "tarball": "http://registry.npmjs.org/type-is/-/type-is-1.2.1.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/type-is/-/type-is-1.2.1.tgz"
+}

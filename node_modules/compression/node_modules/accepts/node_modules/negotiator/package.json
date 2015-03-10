@@ -1,0 +1,66 @@
+{
+  "name": "negotiator",
+  "description": "HTTP content negotiation",
+  "version": "0.4.7",
+  "author": {
+    "name": "Federico Romero",
+    "email": "federico.romero@outboxlabs.com"
+  },
+  "contributors": [
+    {
+      "name": "Isaac Z. Schlueter",
+      "email": "i@izs.me",
+      "url": "http://blog.izs.me/"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/federomero/negotiator.git"
+  },
+  "keywords": [
+    "http",
+    "content negotiation",
+    "accept",
+    "accept-language",
+    "accept-encoding",
+    "accept-charset"
+  ],
+  "engine": "node >= 0.6",
+  "license": "MIT",
+  "devDependencies": {
+    "nodeunit": "0.8.x"
+  },
+  "scripts": {
+    "test": "nodeunit test"
+  },
+  "optionalDependencies": {},
+  "engines": {
+    "node": "*"
+  },
+  "main": "lib/negotiator.js",
+  "bugs": {
+    "url": "https://github.com/federomero/negotiator/issues"
+  },
+  "homepage": "https://github.com/federomero/negotiator",
+  "dependencies": {},
+  "_id": "negotiator@0.4.7",
+  "dist": {
+    "shasum": "a4160f7177ec806738631d0d3052325da42abdc8",
+    "tarball": "http://registry.npmjs.org/negotiator/-/negotiator-0.4.7.tgz"
+  },
+  "_from": "negotiator@0.4.7",
+  "_npmVersion": "1.4.3",
+  "_npmUser": {
+    "name": "federomero",
+    "email": "federomero@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "federomero",
+      "email": "federomero@gmail.com"
+    }
+  ],
+  "directories": {},
+  "_shasum": "a4160f7177ec806738631d0d3052325da42abdc8",
+  "_resolved": "https://registry.npmjs.org/negotiator/-/negotiator-0.4.7.tgz"
+}

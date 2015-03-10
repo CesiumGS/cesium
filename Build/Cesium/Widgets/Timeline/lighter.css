@@ -1,0 +1,22 @@
+.cesium-lighter .cesium-timeline-bar {
+    background: -moz-linear-gradient(top, #eeeeee 0%, #ffffff 50%, #fafafa 100%); /* FF3.6+ */
+    background: -webkit-linear-gradient(top, #eeeeee 0%,#ffffff 50%,#fafafa 100%); /* Chrome10+,Safari5.1+ */
+    background: linear-gradient(to bottom, #eeeeee 0%,#ffffff 50%,#fafafa 100%); /* W3C */
+}
+
+.cesium-lighter .cesium-timeline-ticLabel {
+    color: #000;
+}
+
+.cesium-lighter .cesium-timeline-ticMain {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 1px;
+    height: 50%;
+    background: #000;
+}
+
+.cesium-lighter .cesium-timeline-ticSub {
+    background: #444;
+}

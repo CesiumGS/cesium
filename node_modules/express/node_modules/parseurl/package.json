@@ -1,0 +1,40 @@
+{
+  "name": "parseurl",
+  "description": "parse a url with memoization",
+  "version": "1.0.1",
+  "author": {
+    "name": "Jonathan Ong",
+    "email": "me@jongleberry.com",
+    "url": "http://jongleberry.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/expressjs/parseurl.git"
+  },
+  "bugs": {
+    "url": "https://github.com/expressjs/parseurl/issues",
+    "email": "me@jongleberry.com"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/expressjs/parseurl",
+  "_id": "parseurl@1.0.1",
+  "dist": {
+    "shasum": "2e57dce6efdd37c3518701030944c22bf388b7b4",
+    "tarball": "http://registry.npmjs.org/parseurl/-/parseurl-1.0.1.tgz"
+  },
+  "_from": "parseurl@1.0.1",
+  "_npmVersion": "1.4.4",
+  "_npmUser": {
+    "name": "jongleberry",
+    "email": "jonathanrichardong@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "jongleberry",
+      "email": "jonathanrichardong@gmail.com"
+    }
+  ],
+  "directories": {},
+  "_shasum": "2e57dce6efdd37c3518701030944c22bf388b7b4",
+  "_resolved": "https://registry.npmjs.org/parseurl/-/parseurl-1.0.1.tgz"
+}

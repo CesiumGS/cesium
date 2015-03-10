@@ -1,0 +1,9 @@
+test
+.travis.yml
+
+npm-debug.log
+
+# Sublime Text #
+##############
+*.sublime-project
+*.sublime-workspace

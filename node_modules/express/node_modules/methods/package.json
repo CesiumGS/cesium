@@ -1,0 +1,48 @@
+{
+  "name": "methods",
+  "version": "1.0.1",
+  "description": "HTTP methods that node supports",
+  "main": "index.js",
+  "scripts": {
+    "test": "./node_modules/mocha/bin/mocha"
+  },
+  "keywords": [
+    "http",
+    "methods"
+  ],
+  "author": {
+    "name": "TJ Holowaychuk"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/visionmedia/node-methods.git"
+  },
+  "devDependencies": {
+    "mocha": "1.17.x"
+  },
+  "bugs": {
+    "url": "https://github.com/visionmedia/node-methods/issues"
+  },
+  "homepage": "https://github.com/visionmedia/node-methods",
+  "_id": "methods@1.0.1",
+  "dist": {
+    "shasum": "75bc91943dffd7da037cf3eeb0ed73a0037cd14b",
+    "tarball": "http://registry.npmjs.org/methods/-/methods-1.0.1.tgz"
+  },
+  "_from": "methods@1.0.1",
+  "_npmVersion": "1.4.3",
+  "_npmUser": {
+    "name": "tjholowaychuk",
+    "email": "tj@vision-media.ca"
+  },
+  "maintainers": [
+    {
+      "name": "tjholowaychuk",
+      "email": "tj@vision-media.ca"
+    }
+  ],
+  "directories": {},
+  "_shasum": "75bc91943dffd7da037cf3eeb0ed73a0037cd14b",
+  "_resolved": "https://registry.npmjs.org/methods/-/methods-1.0.1.tgz"
+}

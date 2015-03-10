@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+
+<head>
+  <meta charset="utf-8" />
+  <title>Esprima: Operator Precedence</title>
+  <meta name="viewport" content="width=device-width" />
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="stylesheet" href="../assets/foundation/foundation.min.css">
+<style>
+#a, #b, #expr {
+    font-size: 16px;
+    padding: 5px;
+    margin: 5px;
+    border: 1px solid #ccc;
+    background-color: white;
+}
+
+#a {
+    border: 2px solid #99ccff;
+}
+
+#b {
+    border: 2px solid #00cc00;
+}
+
+#expr {
+    border: none;
+}
+
+#answer {
+    color: white;
+    padding: 5px;
+    margin: 20px;
+}
+
+.yes {
+    background-color: #228B22;
+}
+
+.no {
+    background-color: #8B2500;
+}
+
+.lightred {
+    background-color: #FFC0CB;
+}
+</style>
+</head>
+
+<body>
+
+  <!-- Navigation bar -->
+  <div class="row">
+    <div class="twelve columns">
+      <nav class="top-bar">
+        <ul>
+          <li class="name">
+             <h1><a href="../index.html">Esprima</a></h1>
+          </li>
+        </ul>
+        <section>
+          <ul class="right">
+            <li class="divider show-for-medium-and-up"></li>
+            <li class="has-dropdown">
+              <a href="../demo/index.html">Demo</a>
+              <ul class="dropdown">
+                <li><label>Static Analysis</label></li>
+                <li><a href="../demo/parse.html">Online Parsing</a></li>
+                <li><a href="../demo/validate.html">Syntax Validator</a></li>
+                <li><a href="../demo/precedence.html">Operator Precedence</a></li>
+                <li><a href="../demo/collector.html">Regex Collector</a></li>
+                <li><label>Dynamic Tracing</label></li>
+                <li><a href="../demo/functiontrace.html">Function Instrumentation</a></li>
+                <li><label>Code Transformation</label></li>
+                <li><a href="../demo/rewrite.html">Source Rewrite</a></li>
+                <li><a href="../demo/minify.html">Minifiy &amp; Obfuscate</a></li>
+                <li><label>Editing Tools</label></li>
+                <li><a href="../demo/highlight.html">Identifier Highlight</a></li>
+                <li><a href="../demo/autocomplete.html">Autocomplete</a></li>
+              </ul>
+            </li>
+            <li class="has-dropdown">
+              <a href="#">Project</a>
+              <ul class="dropdown">
+                <li><a href="http://github.com/ariya/esprima">Git Repository</a></li>
+                <li><a href="https://travis-ci.org/ariya/esprima">Continuous Integration</a></li>
+                <li><a href="http://groups.google.com/group/esprima">Mailing List</a></li>
+                <li><a href="http://issues.esprima.org/">Issue Tracker</a></li>
+                <li class="divider"></li>
+                <li><label>QA</label></li>
+                <li><a href="../test/index.html">Unit Tests</a></li>
+                <li><a href="../test/benchmarks.html">Benchmarks Suite</a></li>
+                <li><a href="../test/compat.html">Compatibility Tests</a></li>
+                <li><a href="../test/compare.html">Speed Comparison</a></li>
+                <li><a href="../test/module.html">Module Loading</a></li>
+                <li><a href="../test/coverage.html">Coverage Analysis</a></li>
+              </ul>
+            </li>
+            <li><a href="../doc/index.html">Documentation</a></li>
+          </ul>
+        </section>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Title and subtitle -->
+  <div class="row">
+    <div class="twelve columns">
+       <h3 class="subheader"><strong>Operator Precedence</strong> is not always easy</h3>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="row">
+      <div class="eight columns">
+
+<p></p>
+<p>Is <code id="a" contenteditable="true">1 &lt;&lt; 2 * 3</code> semantically equivalent to
+<code id="b" contenteditable="true">(1 &lt;&lt; 2) * 3</code>?  <span id="answer"></span></p>
+<p style="margin-top: 40px;"><span id="status"></span> <code id="expr"></code></p>
+    </div>
+
+    <div class="four columns">
+      <div class="panel">
+        <p>Deciphering a convoluted expression is far from trivial. The expression
+        in the <strong>blue box</strong> is compared to the expression in
+        the <strong>green box</strong> to determine if they are syntatically equivalent.</p>
+        <p>This demo is inspired by <a href="http://mothereff.in/operator-precedence">mothereff.in/operator-precedence</a>.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="row copyright">
+    <div class="six columns">
+      <p>Esprima is created and mantained by <a href="http://ariya.ofilabs.com/about">Ariya Hidayat</a>.</p>
+    </div>
+    <div class="six columns">
+      <ul class="link-list right">
+        <li><a href="http://twitter.com/esprima">@Esprima</a></li>
+        <li><a href="https://github.com/ariya/esprima">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+
+<script src="../esprima.js"></script>
+<script src="precedence.js"></script>
+</body>
+</html>

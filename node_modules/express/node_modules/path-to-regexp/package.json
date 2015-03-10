@@ -1,0 +1,129 @@
+{
+  "name": "path-to-regexp",
+  "description": "Express style path to RegExp utility",
+  "version": "0.1.2",
+  "scripts": {
+    "test": "istanbul cover _mocha -- -R spec"
+  },
+  "keywords": [
+    "express",
+    "regexp"
+  ],
+  "component": {
+    "scripts": {
+      "path-to-regexp": "index.js"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/component/path-to-regexp.git"
+  },
+  "devDependencies": {
+    "mocha": "^1.17.1",
+    "istanbul": "^0.2.6"
+  },
+  "bugs": {
+    "url": "https://github.com/component/path-to-regexp/issues"
+  },
+  "homepage": "https://github.com/component/path-to-regexp",
+  "_id": "path-to-regexp@0.1.2",
+  "dist": {
+    "shasum": "9b2b151f9cc3018c9eea50ca95729e05781712b4",
+    "tarball": "http://registry.npmjs.org/path-to-regexp/-/path-to-regexp-0.1.2.tgz"
+  },
+  "_from": "path-to-regexp@0.1.2",
+  "_npmVersion": "1.4.4",
+  "_npmUser": {
+    "name": "blakeembrey",
+    "email": "hello@blakeembrey.com"
+  },
+  "maintainers": [
+    {
+      "name": "tjholowaychuk",
+      "email": "tj@vision-media.ca"
+    },
+    {
+      "name": "jongleberry",
+      "email": "jonathanrichardong@gmail.com"
+    },
+    {
+      "name": "dominicbarnes",
+      "email": "dominic@dbarnes.info"
+    },
+    {
+      "name": "tootallnate",
+      "email": "nathan@tootallnate.net"
+    },
+    {
+      "name": "rauchg",
+      "email": "rauchg@gmail.com"
+    },
+    {
+      "name": "retrofox",
+      "email": "rdsuarez@gmail.com"
+    },
+    {
+      "name": "coreh",
+      "email": "thecoreh@gmail.com"
+    },
+    {
+      "name": "forbeslindesay",
+      "email": "forbes@lindesay.co.uk"
+    },
+    {
+      "name": "kelonye",
+      "email": "kelonyemitchel@gmail.com"
+    },
+    {
+      "name": "mattmueller",
+      "email": "mattmuelle@gmail.com"
+    },
+    {
+      "name": "yields",
+      "email": "yields@icloud.com"
+    },
+    {
+      "name": "anthonyshort",
+      "email": "antshort@gmail.com"
+    },
+    {
+      "name": "ianstormtaylor",
+      "email": "ian@ianstormtaylor.com"
+    },
+    {
+      "name": "cristiandouce",
+      "email": "cristian@gravityonmars.com"
+    },
+    {
+      "name": "swatinem",
+      "email": "arpad.borsos@googlemail.com"
+    },
+    {
+      "name": "stagas",
+      "email": "gstagas@gmail.com"
+    },
+    {
+      "name": "amasad",
+      "email": "amjad.masad@gmail.com"
+    },
+    {
+      "name": "juliangruber",
+      "email": "julian@juliangruber.com"
+    },
+    {
+      "name": "shtylman",
+      "email": "shtylman@gmail.com"
+    },
+    {
+      "name": "calvinfo",
+      "email": "calvin@calv.info"
+    },
+    {
+      "name": "blakeembrey",
+      "email": "hello@blakeembrey.com"
+    }
+  ],
+  "directories": {},
+  "_shasum": "9b2b151f9cc3018c9eea50ca95729e05781712b4",
+  "_resolved": "https://registry.npmjs.org/path-to-regexp/-/path-to-regexp-0.1.2.tgz"
+}

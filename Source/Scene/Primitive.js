@@ -706,6 +706,7 @@ define([
      *
      * @exception {DeveloperError} All instance geometries must have the same primitiveType.
      * @exception {DeveloperError} Appearance and material have a uniform with the same name.
+     * @exception {DeveloperError} If the model matrix is changed after creation, it only affects primitives with one instance and only in 3D mode.
      */
     Primitive.prototype.update = function(context, frameState, commandList) {
         if (((!defined(this.geometryInstances)) && (this._va.length === 0)) ||
@@ -1215,6 +1216,10 @@ define([
             modelMatrix = Matrix4.IDENTITY;
         } else {
             modelMatrix = this.modelMatrix;
+        }
+
+        if (!Matrix4.equals(this.modelMatrix, Matrix4.IDENTITY) && ((this._numberOfInstances > 1 && !this._validModelMatrix) || (frameState.mode === SceneMode.SCENE2D || frameState.mode === SceneMode.COLUMBUS_VIEW))) {
+            throw new DeveloperError("If the model matrix is changed after creation, it only affects primitives with one instance and only in 3D mode.");
         }
 
         if (!Matrix4.equals(modelMatrix, this._modelMatrix)) {

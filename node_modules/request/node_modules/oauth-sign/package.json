@@ -1,0 +1,43 @@
+{
+  "author": {
+    "name": "Mikeal Rogers",
+    "email": "mikeal.rogers@gmail.com",
+    "url": "http://www.futurealoof.com"
+  },
+  "name": "oauth-sign",
+  "description": "OAuth 1 signing. Formerly a vendor lib in mikeal/request, now a standalone module.",
+  "version": "0.3.0",
+  "repository": {
+    "url": "https://github.com/mikeal/oauth-sign"
+  },
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {},
+  "optionalDependencies": {},
+  "engines": {
+    "node": "*"
+  },
+  "scripts": {
+    "test": "node test.js"
+  },
+  "_id": "oauth-sign@0.3.0",
+  "dist": {
+    "shasum": "cb540f93bb2b22a7d5941691a288d60e8ea9386e",
+    "tarball": "http://registry.npmjs.org/oauth-sign/-/oauth-sign-0.3.0.tgz"
+  },
+  "_from": "oauth-sign@>=0.3.0 <0.4.0",
+  "_npmVersion": "1.2.14",
+  "_npmUser": {
+    "name": "mikeal",
+    "email": "mikeal.rogers@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "mikeal",
+      "email": "mikeal.rogers@gmail.com"
+    }
+  ],
+  "directories": {},
+  "_shasum": "cb540f93bb2b22a7d5941691a288d60e8ea9386e",
+  "_resolved": "https://registry.npmjs.org/oauth-sign/-/oauth-sign-0.3.0.tgz"
+}

@@ -1,0 +1,473 @@
+{
+  "application/atom+xml": {
+    "compressible": true,
+    "sources": [
+      "http://en.wikipedia.org/wiki/Atom_(standard)"
+    ]
+  },
+  "application/dart": {
+    "compressible": true
+  },
+  "application/EDI-X12": {
+    "compressible": false
+  },
+  "application/EDIFACT": {
+    "compressible": false
+  },
+  "application/ecmascript": {
+    "compressible": true
+  },
+  "application/font-woff": {
+    "compressible": false
+  },
+  "application/gzip": {
+    "compressible": false
+  },
+  "application/java-archive": {
+    "compressible": false
+  },
+  "application/java-serialized-object": {
+    "compressible": false
+  },
+  "application/java-vm": {
+    "compressible": false
+  },
+  "application/javascript": {
+    "compressible": true
+  },
+  "application/json": {
+    "compressible": true
+  },
+  "application/msword": {
+    "compressible": false
+  },
+  "application/octet-stream": {
+    "compressible": false,
+    "sources": [
+      "https://github.com/broofa/node-mime/blob/master/types/mime.types#L154"
+    ]
+  },
+  "application/ogg": {
+    "compressible": false
+  },
+  "application/pdf": {
+    "compressible": false
+  },
+  "application/pgp-encrypted": {
+    "compressible": false
+  },
+  "application/postscript": {
+    "compressible": true
+  },
+  "application/rdf+xml": {
+    "compressible": true,
+    "sources": [
+      "http://en.wikipedia.org/wiki/RDF/XML"
+    ]
+  },
+  "application/rss+xml": {
+    "compressible": true
+  },
+  "application/rtf": {
+    "compressible": true
+  },
+  "application/soap+xml": {
+    "compressible": true,
+    "sources": [
+      "http://en.wikipedia.org/wiki/SOAP"
+    ]
+  },
+  "application/tar": {
+    "compressible": true
+  },
+  "application/vnd.android.package-archive": {
+    "compressible": false
+  },
+  "application/vnd.dart": {
+    "compressible": true
+  },
+  "application/vnd.google-earth.kml+xml": {
+    "compressible": true,
+    "sources": [
+      "https://developers.google.com/kml/documentation/kml_tut"
+    ]
+  },
+  "application/vnd.google-earth.kmz": {
+    "compressible": false
+  },
+  "application/vnd.mozilla.xul+xml": {
+    "compressible": true,
+    "sources": [
+      "http://en.wikipedia.org/wiki/XUL"
+    ]
+  },
+  "application/vnd.ms-excel": {
+    "compressible": false
+  },
+  "application/vnd.ms-fontobject": {
+    "compressible": true,
+    "sources": [
+      "http://www.phpied.com/gzip-your-font-face-files/"
+    ]
+  },
+  "application/vnd.ms-opentype": {
+    "compressible": true,
+    "sources": [
+      "http://www.phpied.com/gzip-your-font-face-files/"
+    ]
+  },
+  "application/vnd.ms-powerpoint": {
+    "compressible": false
+  },
+  "application/vnd.ms-xpsdocument": {
+    "compressible": false
+  },
+  "application/vnd.oasis.opendocument.graphics": {
+    "compressible": false
+  },
+  "application/vnd.oasis.opendocument.presentation": {
+    "compressible": false
+  },
+  "application/vnd.oasis.opendocument.spreadsheet": {
+    "compressible": false
+  },
+  "application/vnd.oasis.opendocument.text": {
+    "compressible": false,
+    "sources": [
+      "http://en.wikipedia.org/wiki/OpenDocument_technical_specification#File_types"
+    ]
+  },
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation": {
+    "compressible": false
+  },
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+    "compressible": false
+  },
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {
+    "compressible": false
+  },
+  "application/x-7z-compressed": {
+    "compressible": false
+  },
+  "application/x-bzip": {
+    "compressible": false
+  },
+  "application/x-bzip2": {
+    "compressible": false
+  },
+  "application/x-deb": {
+    "compressible": false
+  },
+  "application/x-dvi": {
+    "compressible": false
+  },
+  "application/x-font-otf": {
+    "compressible": true,
+    "sources": [
+      "http://www.phpied.com/gzip-your-font-face-files/"
+    ]
+  },
+  "application/x-font-ttf": {
+    "compressible": true,
+    "sources": [
+      "http://www.phpied.com/gzip-your-font-face-files/"
+    ]
+  },
+  "application/x-java-jnlp-file": {
+    "compressible": false
+  },
+  "application/x-javascript": {
+    "compressible": true
+  },
+  "application/x-latex": {
+    "compressible": false
+  },
+  "application/x-mpegURL": {
+    "compressible": false
+  },
+  "application/x-pkcs12": {
+    "compressible": false
+  },
+  "application/x-rar-compressed": {
+    "compressible": false
+  },
+  "application/x-sh": {
+    "compressible": true
+  },
+  "application/x-shockwave-flash": {
+    "compressible": false
+  },
+  "application/x-stuffit": {
+    "compressible": false
+  },
+  "application/x-tar": {
+    "compressible": true
+  },
+  "application/x-www-form-urlencode": {
+    "compressible": false
+  },
+  "application/x-xpinstall": {
+    "compressible": false
+  },
+  "application/xhtml+xml": {
+    "compressible": true
+  },
+  "application/xml": {
+    "compressible": true
+  },
+  "application/xml-dtd": {
+    "compressible": true,
+    "sources": [
+      "http://en.wikipedia.org/wiki/Document_type_definition"
+    ]
+  },
+  "application/xop+xml": {
+    "compressible": true
+  },
+  "application/zip": {
+    "compressible": false
+  },
+  "audio/L24": {
+    "compressible": false
+  },
+  "audio/basic": {
+    "compressible": false
+  },
+  "audio/mp4": {
+    "compressible": false
+  },
+  "audio/mpeg": {
+    "compressible": false
+  },
+  "audio/ogg": {
+    "compressible": false
+  },
+  "audio/vnd.rn-realaudio": {
+    "compressible": false
+  },
+  "audio/vnd.wave": {
+    "compressible": false
+  },
+  "audio/vorbis": {
+    "compressible": false
+  },
+  "audio/webm": {
+    "compressible": false
+  },
+  "audio/x-aac": {
+    "compressible": false
+  },
+  "audio/x-caf": {
+    "compressible": false
+  },
+  "font/opentype": {
+    "compressible": true,
+    "sources": [
+      "http://www.phpied.com/gzip-your-font-face-files/"
+    ]
+  },
+  "image/bmp": {
+    "compressible": true,
+    "sources": [
+      "http://stackoverflow.com/a/12770116"
+    ]
+  },
+  "image/gif": {
+    "compressible": false
+  },
+  "image/jpeg": {
+    "compressible": false
+  },
+  "image/pjpeg": {
+    "compressible": false
+  },
+  "image/png": {
+    "compressible": false
+  },
+  "image/svg+xml": {
+    "compressible": true
+  },
+  "image/tiff": {
+    "compressible": false,
+    "sources": [
+      "http://stackoverflow.com/a/12770116"
+    ],
+    "notes": "Gains insignificant in testing."
+  },
+  "image/vnd.adobe.photoshop": {
+    "compressible": true
+  },
+  "image/x-icon": {
+    "compressible": true,
+    "sources": [
+      "http://en.wikipedia.org/wiki/ICO_(file_format)"
+    ],
+    "notes": "Usually a wrapper for .bmp formated images."
+  },
+  "image/x-xcf": {
+    "compressible": false
+  },
+  "message/http": {
+    "compressible": false,
+    "sources": [
+      "http://stackoverflow.com/a/1450163"
+    ],
+    "notes": "It is safest to leave these uncompressed."
+  },
+  "message/imdn+xml": {
+    "compressible": true,
+    "sources": [
+      "http://tools.ietf.org/html/rfc5438"
+    ]
+  },
+  "message/partial": {
+    "compressible": false
+  },
+  "message/rfc822": {
+    "compressible": true,
+    "sources": [
+      "http://en.wikipedia.org/wiki/MIME#Multipart_subtypes"
+    ]
+  },
+  "model/example": {
+    "compressible": false
+  },
+  "model/iges": {
+    "compressible": false
+  },
+  "model/mesh": {
+    "compressible": false
+  },
+  "model/vrml": {
+    "compressible": false
+  },
+  "model/x3d+binary": {
+    "compressible": false
+  },
+  "model/x3d+vrml": {
+    "compressible": false
+  },
+  "model/x3d+xml": {
+    "compressible": true,
+    "sources": [
+      "http://edutechwiki.unige.ch/en/X3D_file_structure"
+    ]
+  },
+  "multipart/alternative": {
+    "compressible": false
+  },
+  "multipart/encrypted": {
+    "compressible": false
+  },
+  "multipart/form-data": {
+    "compressible": false
+  },
+  "multipart/mixed": {
+    "compressible": false
+  },
+  "multipart/related": {
+    "compressible": false
+  },
+  "multipart/signed": {
+    "compressible": false
+  },
+  "text/cache-manifest": {
+    "compressible": true,
+    "sources": [
+      "https://bugzilla.mozilla.org/show_bug.cgi?id=715191#c2"
+    ],
+    "notes": "I think so."
+  },
+  "text/calender": {
+    "compressible": true,
+    "sources": [
+      "http://en.wikipedia.org/wiki/ICalendar"
+    ],
+    "notes": "Probably needs to be uncompressed before sent to iCalender."
+  },
+  "text/cmd": {
+    "compressible": true
+  },
+  "text/css": {
+    "compressible": true
+  },
+  "text/csv": {
+    "compressible": true
+  },
+  "text/html": {
+    "compressible": true
+  },
+  "text/javascript": {
+    "compressible": true
+  },
+  "text/n3": {
+    "compressible": true,
+    "sources": [
+      "http://en.wikipedia.org/wiki/Notation3"
+    ]
+  },
+  "text/plain": {
+    "compressible": true
+  },
+  "text/richtext": {
+    "compressible": true
+  },
+  "text/tab-separated-values": {
+    "compressible": true
+  },
+  "text/uri-list": {
+    "compressible": true
+  },
+  "text/vcard": {
+    "compressible": true
+  },
+  "text/x-gwt-rpc": {
+    "compressible": true
+  },
+  "text/x-jquery-tmpl": {
+    "compressible": true
+  },
+  "text/x-markdown": {
+    "compressible": true
+  },
+  "text/xml": {
+    "compressible": true
+  },
+  "video/mp4": {
+    "compressible": false
+  },
+  "video/mpeg": {
+    "compressible": false
+  },
+  "video/ogg": {
+    "compressible": false
+  },
+  "video/quicktime": {
+    "compressible": false
+  },
+  "video/webm": {
+    "compressible": false
+  },
+  "video/x-flv": {
+    "compressible": false
+  },
+  "video/x-matroska": {
+    "compressible": false
+  },
+  "video/x-ms-wmv": {
+    "compressible": false
+  },
+  "x-shader/x-fragment": {
+    "compressible": true,
+    "sources": [
+      "https://developer.mozilla.org/en-US/docs/Web/WebGL/Adding_2D_content_to_a_WebGL_context",
+      "https://bugzilla.mozilla.org/show_bug.cgi?id=715191#c2"
+    ]
+  },
+  "x-shader/x-vertex": {
+    "compressible": true,
+    "sources": [
+      "https://developer.mozilla.org/en-US/docs/Web/WebGL/Adding_2D_content_to_a_WebGL_context"
+    ]
+  }
+}
