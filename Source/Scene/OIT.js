@@ -47,6 +47,7 @@ define([
         this._opaqueFBO = framebuffer;
         this._opaqueTexture = framebuffer.getColorTexture(0);
         this._depthStencilTexture = framebuffer.depthStencilTexture;
+        this._opaqueFBODirty = false;
 
         this._accumulationTexture = undefined;
 
@@ -176,6 +177,13 @@ define([
         return supported;
     }
 
+    OIT.prototype.setColorFramebuffer = function(framebuffer) {
+        this._opaqueFBO = framebuffer;
+        this._opaqueTexture = framebuffer.getColorTexture(0);
+        this._depthStencilTexture = framebuffer.depthStencilTexture;
+        this._opaqueFBODirty = true;
+    };
+
     OIT.prototype.update = function(context) {
         if (!this.isSupported()) {
             return;
@@ -185,8 +193,9 @@ define([
         var height = context.drawingBufferHeight;
 
         var accumulationTexture = this._accumulationTexture;
-        var textureChanged = !defined(accumulationTexture) || accumulationTexture.width !== width || accumulationTexture.height !== height;
+        var textureChanged = !defined(accumulationTexture) || accumulationTexture.width !== width || accumulationTexture.height !== height || this._opaqueFBODirty;
         if (textureChanged) {
+            this._opaqueFBODirty = false;
             updateTextures(this, context, width, height);
         }
 

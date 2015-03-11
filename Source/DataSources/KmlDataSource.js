@@ -557,7 +557,7 @@ define([
         label.translucencyByDistance = new NearFarScalar(3000000, 1.0, 5000000, 0.0);
         label.pixelOffset = new Cartesian2(17, 0);
         label.horizontalOrigin = HorizontalOrigin.LEFT;
-        label.font = '16px san-serif';
+        label.font = '16px sans-serif';
         label.style = LabelStyle.FILL_AND_OUTLINE;
         return label;
     }
@@ -1814,6 +1814,7 @@ define([
         }).otherwise(function(error) {
             DataSource.setLoading(that, false);
             that._error.raiseEvent(that, error);
+            window.console.log(error);
             return when.reject(error);
         });
     };

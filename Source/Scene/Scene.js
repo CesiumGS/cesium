@@ -224,7 +224,8 @@ define([
         this._overlayCommandList = [];
 
         this._colorTexture = undefined;
-        this._depthTexture = undefined;
+        this._depthStencilTexture = undefined;
+        this._depthStencilGlobeTest = undefined;
 
         this._framebuffer = undefined;
         this._copyDepthFramebuffer = undefined;
@@ -818,7 +819,7 @@ define([
     function destroyTextures(scene) {
         scene._colorTexture = scene._colorTexture && !scene._colorTexture.isDestroyed() && scene._colorTexture.destroy();
         scene._depthStencilTexture = scene._depthStencilTexture && !scene._depthStencilTexture.isDestroyed() && scene._depthStencilTexture.destroy();
-        scene._depthStencilCopyTexture = scene._depthStencilCopyTexture && !scene._depthStencilCopyTexture.isDestroyed() && scene._depthStencilCopyTexture.destroy();
+        scene._depthStencilGlobeTest = scene._depthStencilGlobeTest && !scene._depthStencilGlobeTest.isDestroyed() && scene._depthStencilGlobeTest.destroy();
     }
 
     function destroyFramebuffers(scene) {
@@ -827,8 +828,6 @@ define([
     }
 
     function createTextures(scene, context, width, height) {
-        destroyTextures(scene);
-
         scene._colorTexture = context.createTexture2D({
             width : width,
             height : height,
@@ -846,7 +845,7 @@ define([
             pixelFormat : PixelFormat.DEPTH_STENCIL,
             pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8_WEBGL
         });
-        scene._depthStencilCopyTexture = context.createTexture2D({
+        scene._depthStencilGlobeTest = context.createTexture2D({
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGBA,
@@ -854,20 +853,26 @@ define([
         });
     }
 
-    function createFramebuffers(scene, context) {
+    function createFramebuffers(scene, context, width, height) {
+        destroyTextures(scene);
         destroyFramebuffers(scene);
+
+        createTextures(scene, context, width, height);
 
         scene._framebuffer = context.createFramebuffer({
             colorTextures : [scene._colorTexture],
-            depthStencilTexture : scene._depthStencilTexture
+            depthStencilTexture : scene._depthStencilTexture,
+            destroyAttachments : false
         });
 
         scene._copyDepthFramebuffer = context.createFramebuffer({
-            colorTextures : [scene._depthStencilCopyTexture]
+            colorTextures : [scene._depthStencilGlobeTest],
+            destroyAttachments : false
         });
 
         var complete = WebGLRenderingContext.FRAMEBUFFER_COMPLETE;
         if (scene._framebuffer.status !== complete || scene._copyDepthFramebuffer.status !== complete) {
+            destroyTextures(scene);
             destroyFramebuffers(scene);
             return false;
         }
@@ -886,21 +891,19 @@ define([
 
         var colorTexture = scene._colorTexture;
         var textureChanged = !defined(colorTexture) || colorTexture.width !== width || colorTexture.height !== height;
-        if (textureChanged) {
-            createTextures(scene, context, width, height);
-        }
-
         if (!defined(scene._framebuffer) || textureChanged) {
-            if (!createFramebuffers(scene, context)) {
+            if (!createFramebuffers(scene, context, width, height)) {
                 // framebuffer creation failed
                 return;
             }
         }
 
-        context.uniformState.globeDepthTexture = scene._depthStencilCopyTexture;
+        context.uniformState.globeDepthTexture = scene._depthStencilGlobeTest;
 
         if (!defined(scene._oit) && scene._useOIT) {
             scene._oit = new OIT(context, scene._framebuffer);
+        } else if (textureChanged && defined(scene._oit) && scene._useOIT) {
+            scene._oit.setColorFramebuffer(scene._framebuffer);
         }
     }
 
@@ -918,18 +921,16 @@ define([
                 'void main() { gl_FragColor = vec4(texture2D(depthTexture, v_textureCoordinates).r); }\n';
             scene._copyDepthCommand = context.createViewportQuadCommand(copyDepthFS, {
                 renderState : context.createRenderState(),
-                uniformMap : {},
-                framebuffer : scene._copyDepthFramebuffer,
+                uniformMap : {
+                    depthTexture : function() {
+                        return scene._depthStencilTexture;
+                    }
+                },
                 owner : scene
             });
         }
 
-        var uniformMap = scene._copyDepthCommand.uniformMap;
-        if (!defined(uniformMap.depthTexture) || uniformMap.depthTexture() !== scene._depthStencilTexture) {
-            uniformMap.depthTexture = function() {
-                return scene._depthStencilTexture;
-            };
-        }
+        scene._copyDepthCommand.framebuffer = scene._copyDepthFramebuffer;
 
         if (!defined(scene._copyColorCommand)) {
             var copyColorFS =
@@ -938,16 +939,13 @@ define([
                 'void main() { gl_FragColor = texture2D(colorTexture, v_textureCoordinates); }\n';
             scene._copyColorCommand = context.createViewportQuadCommand(copyColorFS, {
                 renderState : context.createRenderState(),
-                uniformMap : {},
+                uniformMap : {
+                    colorTexture : function() {
+                        return scene._colorTexture;
+                    }
+                },
                 owner : scene
             });
-        }
-
-        uniformMap = scene._copyColorCommand.uniformMap;
-        if (!defined(uniformMap.colorTexture) || uniformMap.colorTexture() !== scene._colorTexture) {
-            uniformMap.colorTexture = function() {
-                return scene._colorTexture;
-            };
         }
     }
 
@@ -1814,11 +1812,13 @@ define([
 
             //If the picked object has a show attribute, use it.
             if (typeof primitive.getGeometryInstanceAttributes === 'function') {
-                attributes = primitive.getGeometryInstanceAttributes(pickedResult.id);
-                if (defined(attributes) && defined(attributes.show)) {
-                    hasShowAttribute = true;
-                    attributes.show = ShowGeometryInstanceAttribute.toValue(false, attributes.show);
-                    pickedAttributes.push(attributes);
+                if (defined(pickedResult.id)) {
+                    attributes = primitive.getGeometryInstanceAttributes(pickedResult.id);
+                    if (defined(attributes) && defined(attributes.show)) {
+                        hasShowAttribute = true;
+                        attributes.show = ShowGeometryInstanceAttribute.toValue(false, attributes.show);
+                        pickedAttributes.push(attributes);
+                    }
                 }
             }
 

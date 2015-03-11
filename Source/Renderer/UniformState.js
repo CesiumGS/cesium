@@ -35,13 +35,16 @@ define([
      * @private
      */
     var UniformState = function() {
+        /**
+         * @type {Texture}
+         */
+        this.globeDepthTexture = undefined;
+
         this._viewport = new BoundingRectangle();
         this._viewportCartesian4 = new Cartesian4();
         this._viewportDirty = false;
         this._viewportOrthographicMatrix = Matrix4.clone(Matrix4.IDENTITY);
         this._viewportTransformation = Matrix4.clone(Matrix4.IDENTITY);
-
-        this._globeDepthTexture = undefined;
 
         this._boundingVolume = undefined;
 
@@ -205,19 +208,6 @@ define([
             get : function() {
                 cleanViewport(this);
                 return this._viewportTransformation;
-            }
-        },
-
-        /**
-         * @memberof UniformState.prototype
-         * @type {Texture}
-         */
-        globeDepthTexture : {
-            get : function() {
-                return this._globeDepthTexture;
-            },
-            set : function(texture) {
-                this._globeDepthTexture = texture;
             }
         },
 
