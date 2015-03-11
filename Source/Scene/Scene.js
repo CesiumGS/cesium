@@ -901,7 +901,7 @@ define([
 
         if (!defined(scene._oit) && scene._useOIT) {
             scene._oit = new OIT(context, scene._framebuffer);
-        } else if (textureChanged) {
+        } else if (textureChanged && defined(scene._oit) && scene._useOIT) {
             scene._oit.setColorFramebuffer(scene._framebuffer);
         }
     }
