@@ -216,12 +216,6 @@ define([
         this._frustumCommandsList = [];
         this._overlayCommandList = [];
 
-        this._colorTexture = undefined;
-        this._depthStencilTexture = undefined;
-        this._depthStencilGlobeTest = undefined;
-
-        this._framebuffer = undefined;
-        this._copyDepthFramebuffer = undefined;
         this._pickFramebuffer = undefined;
 
         this._useOIT = defaultValue(options.orderIndependentTranslucency, true);
