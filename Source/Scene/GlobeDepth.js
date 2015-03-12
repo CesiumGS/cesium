@@ -160,7 +160,8 @@ define([
 
         if (!defined(globeDepth._clearColorCommand)) {
             globeDepth._clearColorCommand = new ClearCommand({
-                color : new Color(0.0, 0.0, 0.0, 0.0)
+                color : new Color(0.0, 0.0, 0.0, 0.0),
+                owner : globeDepth
             });
         }
 

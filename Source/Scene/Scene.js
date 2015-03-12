@@ -1333,9 +1333,9 @@ define([
         }
 
         if (useFXAA) {
-            if (!useOIT && defined(scene._copyColorCommand)) {
+            if (!useOIT && defined(scene._globeDepth.supported)) {
                 passState.framebuffer = scene._fxaa.getColorFramebuffer();
-                scene._copyColorCommand.execute(context, passState);
+                scene._globeDepth.executeCopyColor(context, passState);
             }
 
             passState.framebuffer = originalFramebuffer;
