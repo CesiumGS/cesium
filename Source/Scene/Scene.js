@@ -24,20 +24,17 @@ define([
         '../Core/Matrix4',
         '../Core/mergeSort',
         '../Core/Occluder',
-        '../Core/PixelFormat',
         '../Core/ShowGeometryInstanceAttribute',
         '../Renderer/ClearCommand',
         '../Renderer/Context',
         '../Renderer/PassState',
-        '../Renderer/PixelDatatype',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
         './Camera',
         './CreditDisplay',
         './CullingVolume',
         './FrameState',
         './FrustumCommands',
         './FXAA',
+        './GlobeDepth',
         './OIT',
         './OrthographicFrustum',
         './Pass',
@@ -78,20 +75,17 @@ define([
         Matrix4,
         mergeSort,
         Occluder,
-        PixelFormat,
         ShowGeometryInstanceAttribute,
         ClearCommand,
         Context,
         PassState,
-        PixelDatatype,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
         Camera,
         CreditDisplay,
         CullingVolume,
         FrameState,
         FrustumCommands,
         FXAA,
+        GlobeDepth,
         OIT,
         OrthographicFrustum,
         Pass,
@@ -108,7 +102,6 @@ define([
         SunPostProcess,
         TweenCollection) {
     "use strict";
-    /*global WebGLRenderingContext*/
 
     /**
      * The container for all 3D graphical objects and state in a Cesium virtual scene.  Generally,
@@ -232,8 +225,14 @@ define([
         this._pickFramebuffer = undefined;
 
         this._useOIT = defaultValue(options.orderIndependentTranslucency, true);
-        this._oit =  undefined;
         this._executeOITFunction = undefined;
+
+        this._globeDepth = new GlobeDepth(context);
+
+        this._oit =  undefined;
+        if (this._useOIT && this._globeDepth.supported) {
+            this._oit = new OIT(context, this._globeDepth.framebuffer);
+        }
 
         this._fxaa = new FXAA();
 
@@ -245,8 +244,6 @@ define([
             depth : 1.0,
             owner : this
         });
-        this._copyDepthCommand = undefined;
-        this._copyColorCommand = undefined;
 
         this._transitioner = new SceneTransitioner(this);
 
@@ -459,9 +456,6 @@ define([
         var camera = new Camera(this);
         this._camera = camera;
         this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
-
-        updateFramebuffers(this);
-        updateCopyCommands(this);
 
         // initial guess at frustums.
         var near = camera.frustum.near;
@@ -814,139 +808,6 @@ define([
             }
         }
     });
-
-    function destroyTextures(scene) {
-        scene._colorTexture = scene._colorTexture && !scene._colorTexture.isDestroyed() && scene._colorTexture.destroy();
-        scene._depthStencilTexture = scene._depthStencilTexture && !scene._depthStencilTexture.isDestroyed() && scene._depthStencilTexture.destroy();
-        scene._depthStencilGlobeTest = scene._depthStencilGlobeTest && !scene._depthStencilGlobeTest.isDestroyed() && scene._depthStencilGlobeTest.destroy();
-    }
-
-    function destroyFramebuffers(scene) {
-        scene._framebuffer = scene._framebuffer && !scene._framebuffer.isDestroyed() && scene._framebuffer.destroy();
-        scene._copyDepthFramebuffer = scene._copyDepthFramebuffer && !scene._copyDepthFramebuffer.isDestroyed() && scene._copyDepthFramebuffer.destroy();
-    }
-
-    function createTextures(scene, context, width, height) {
-        scene._colorTexture = context.createTexture2D({
-            width : width,
-            height : height,
-            pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.UNSIGNED_BYTE
-        });
-        scene._colorTexture.sampler = context.createSampler({
-            minificationFilter : TextureMinificationFilter.NEAREST,
-            magnificationFilter : TextureMagnificationFilter.NEAREST
-        });
-
-        scene._depthStencilTexture = context.createTexture2D({
-            width : width,
-            height : height,
-            pixelFormat : PixelFormat.DEPTH_STENCIL,
-            pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8_WEBGL
-        });
-        scene._depthStencilGlobeTest = context.createTexture2D({
-            width : width,
-            height : height,
-            pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.FLOAT
-        });
-    }
-
-    function createFramebuffers(scene, context, width, height) {
-        destroyTextures(scene);
-        destroyFramebuffers(scene);
-
-        createTextures(scene, context, width, height);
-
-        scene._framebuffer = context.createFramebuffer({
-            colorTextures : [scene._colorTexture],
-            depthStencilTexture : scene._depthStencilTexture,
-            destroyAttachments : false
-        });
-
-        scene._copyDepthFramebuffer = context.createFramebuffer({
-            colorTextures : [scene._depthStencilGlobeTest],
-            destroyAttachments : false
-        });
-
-        var complete = WebGLRenderingContext.FRAMEBUFFER_COMPLETE;
-        if (scene._framebuffer.status !== complete || scene._copyDepthFramebuffer.status !== complete) {
-            destroyTextures(scene);
-            destroyFramebuffers(scene);
-            return false;
-        }
-
-        return true;
-    }
-
-    function updateFramebuffers(scene) {
-        var context = scene._context;
-        if (!context.depthTexture) {
-            return;
-        }
-
-        var width = context.drawingBufferWidth;
-        var height = context.drawingBufferHeight;
-
-        var colorTexture = scene._colorTexture;
-        var textureChanged = !defined(colorTexture) || colorTexture.width !== width || colorTexture.height !== height;
-        if (!defined(scene._framebuffer) || textureChanged) {
-            if (!createFramebuffers(scene, context, width, height)) {
-                // framebuffer creation failed
-                return;
-            }
-        }
-
-        context.uniformState.globeDepthTexture = scene._depthStencilGlobeTest;
-
-        if (!defined(scene._oit) && scene._useOIT) {
-            scene._oit = new OIT(context, scene._framebuffer);
-        } else if (textureChanged && defined(scene._oit) && scene._useOIT) {
-            scene._oit.setColorFramebuffer(scene._framebuffer);
-        }
-    }
-
-    function updateCopyCommands(scene) {
-        if (!defined(scene._framebuffer)) {
-            return;
-        }
-
-        var context = scene._context;
-
-        if (!defined(scene._copyDepthCommand)) {
-            var copyDepthFS =
-                'uniform sampler2D depthTexture;\n' +
-                'varying vec2 v_textureCoordinates;\n' +
-                'void main() { gl_FragColor = vec4(texture2D(depthTexture, v_textureCoordinates).r); }\n';
-            scene._copyDepthCommand = context.createViewportQuadCommand(copyDepthFS, {
-                renderState : context.createRenderState(),
-                uniformMap : {
-                    depthTexture : function() {
-                        return scene._depthStencilTexture;
-                    }
-                },
-                owner : scene
-            });
-        }
-
-        scene._copyDepthCommand.framebuffer = scene._copyDepthFramebuffer;
-
-        if (!defined(scene._copyColorCommand)) {
-            var copyColorFS =
-                'uniform sampler2D colorTexture;\n' +
-                'varying vec2 v_textureCoordinates;\n' +
-                'void main() { gl_FragColor = texture2D(colorTexture, v_textureCoordinates); }\n';
-            scene._copyColorCommand = context.createViewportQuadCommand(copyColorFS, {
-                renderState : context.createRenderState(),
-                uniformMap : {
-                    colorTexture : function() {
-                        return scene._colorTexture;
-                    }
-                },
-                owner : scene
-            });
-        }
-    }
 
     var scratchOccluderBoundingSphere = new BoundingSphere();
     var scratchOccluder;
@@ -1363,9 +1224,6 @@ define([
         Color.clone(clearColor, clear.color);
         clear.execute(context, passState);
 
-        passState.framebuffer = scene._framebuffer;
-        clear.execute(context, passState);
-
         var renderTranslucentCommands = false;
         var frustumCommandsList = scene._frustumCommandsList;
         var numFrustums = frustumCommandsList.length;
@@ -1376,9 +1234,16 @@ define([
             }
         }
 
+        passState.framebuffer = scene._globeDepth.framebuffer;
+
+        if (scene._globeDepth.supported) {
+            scene._globeDepth.update(context);
+            scene._globeDepth.clear(context, passState, clearColor);
+        }
+
         var useOIT = !picking && renderTranslucentCommands && defined(scene._oit) && scene._oit.isSupported();
         if (useOIT) {
-            scene._oit.update(context);
+            scene._oit.update(context, scene._globeDepth.framebuffer);
             scene._oit.clear(context, passState, clearColor);
             useOIT = useOIT && scene._oit.isSupported();
         }
@@ -1389,7 +1254,7 @@ define([
             scene._fxaa.clear(context, passState, clearColor);
         }
 
-        passState.framebuffer = (sunVisible && scene.sunBloom) ? scene._sunPostProcess.update(context) : scene._framebuffer;
+        passState.framebuffer = (sunVisible && scene.sunBloom) ? scene._sunPostProcess.update(context) : scene._globeDepth.framebuffer;
 
         // Ideally, we would render the sky box and atmosphere last for
         // early-z, but we would have to draw it in each frustum
@@ -1408,8 +1273,8 @@ define([
         if (defined(sunCommand) && sunVisible) {
             sunCommand.execute(context, passState);
             if (scene.sunBloom) {
-                scene._sunPostProcess.execute(context, scene._framebuffer);
-                passState.framebuffer = scene._framebuffer;
+                scene._sunPostProcess.execute(context, scene._globeDepth.framebuffer);
+                passState.framebuffer = scene._globeDepth.framebuffer;
             }
         }
 
@@ -1446,9 +1311,7 @@ define([
                 executeCommand(commands[j], scene, context, passState);
             }
 
-            if (defined(scene._copyDepthCommand)) {
-                scene._copyDepthCommand.execute(context, passState);
-            }
+            scene._globeDepth.executeCopyDepth(context, passState);
 
             // Execute commands in order by pass up to the translucent pass.
             // Translucent geometry needs special handling (sorting/OIT).
@@ -1485,9 +1348,9 @@ define([
             scene._fxaa.execute(context, passState);
         }
 
-        if (!useOIT && !useFXAA && defined(scene._copyColorCommand)) {
+        if (!useOIT && !useFXAA) {
             passState.framebuffer = originalFramebuffer;
-            scene._copyColorCommand.execute(context, passState);
+            scene._globeDepth.executeCopyColor(context, passState);
         }
     }
 
@@ -1562,8 +1425,6 @@ define([
         scene._commandList.length = 0;
         scene._overlayCommandList.length = 0;
 
-        updateFramebuffers(scene);
-        updateCopyCommands(scene);
         updatePrimitives(scene);
         createPotentiallyVisibleSet(scene);
 

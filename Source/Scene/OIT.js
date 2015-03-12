@@ -47,7 +47,6 @@ define([
         this._opaqueFBO = framebuffer;
         this._opaqueTexture = framebuffer.getColorTexture(0);
         this._depthStencilTexture = framebuffer.depthStencilTexture;
-        this._opaqueFBODirty = false;
 
         this._accumulationTexture = undefined;
 
@@ -177,25 +176,21 @@ define([
         return supported;
     }
 
-    OIT.prototype.setColorFramebuffer = function(framebuffer) {
-        this._opaqueFBO = framebuffer;
-        this._opaqueTexture = framebuffer.getColorTexture(0);
-        this._depthStencilTexture = framebuffer.depthStencilTexture;
-        this._opaqueFBODirty = true;
-    };
-
-    OIT.prototype.update = function(context) {
+    OIT.prototype.update = function(context, framebuffer) {
         if (!this.isSupported()) {
             return;
         }
 
-        var width = context.drawingBufferWidth;
-        var height = context.drawingBufferHeight;
+        this._opaqueFBO = framebuffer;
+        this._opaqueTexture = framebuffer.getColorTexture(0);
+        this._depthStencilTexture = framebuffer.depthStencilTexture;
+
+        var width = this._opaqueTexture.width;
+        var height = this._opaqueTexture.height;
 
         var accumulationTexture = this._accumulationTexture;
-        var textureChanged = !defined(accumulationTexture) || accumulationTexture.width !== width || accumulationTexture.height !== height || this._opaqueFBODirty;
+        var textureChanged = !defined(accumulationTexture) || accumulationTexture.width !== width || accumulationTexture.height !== height;
         if (textureChanged) {
-            this._opaqueFBODirty = false;
             updateTextures(this, context, width, height);
         }
 
