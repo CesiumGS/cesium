@@ -1,6 +1,8 @@
 /*global define*/
 define([
         '../Core/Cartesian2',
+        '../Core/Cartographic',
+        '../Core/Math',
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
@@ -10,15 +12,19 @@ define([
         '../Core/GeographicProjection',
         '../Core/GeographicTilingScheme',
         '../Core/jsonp',
+        '../Core/loadJson',
         '../Core/Rectangle',
         '../Core/TileProviderError',
         '../Core/WebMercatorProjection',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/when',
         './DiscardMissingTileImagePolicy',
+        './ImageryLayerFeatureInfo',
         './ImageryProvider'
     ], function(
         Cartesian2,
+        Cartographic,
+        CesiumMath,
         Credit,
         defaultValue,
         defined,
@@ -28,12 +34,14 @@ define([
         GeographicProjection,
         GeographicTilingScheme,
         jsonp,
+        loadJson,
         Rectangle,
         TileProviderError,
         WebMercatorProjection,
         WebMercatorTilingScheme,
         when,
         DiscardMissingTileImagePolicy,
+        ImageryLayerFeatureInfo,
         ImageryProvider) {
     "use strict";
 
@@ -63,6 +71,11 @@ define([
      *        tiles are used if they are available.  If false, any pre-cached tiles are ignored and the
      *        'export' service is used.
      * @param {String} [layers] A comma-separated list of the layers to show, or undefined if all layers should be shown.
+     * @param {Boolean} [options.enablePickFeatures=true] If true, {@link ArcGisMapServerImageryProvider#pickFeatures} will invoke
+     *        the Identify service on the MapServer and return the features included in the response.  If false,
+     *        {@link ArcGisMapServerImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
+     *        without communicating with the server.  Set this property to false if you don't want this provider's features to
+     *        be pickable.
      *
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
@@ -100,6 +113,7 @@ define([
         this._useTiles = defaultValue(options.usePreCachedTilesIfAvailable, true);
         this._rectangle = undefined;
         this._layers = options.layers;
+        this._enablePickFeatures = defaultValue(options.enablePickFeatures, true);
 
         this._errorEvent = new Event();
 
@@ -505,8 +519,9 @@ define([
     };
 
     /**
-     * Picking features is not currently supported by this imagery provider, so this function simply returns
-     * undefined.
+    /**
+     * Asynchronously determines what features, if any, are located at a given longitude and latitude within
+     * a tile.  This function should not be called before {@link ImageryProvider#ready} returns true.
      *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
@@ -516,10 +531,57 @@ define([
      * @return {Promise} A promise for the picked features that will resolve when the asynchronous
      *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
      *                   instances.  The array may be empty if no features are found at the given location.
-     *                   It may also be undefined if picking is not supported.
+     *
+     * @exception {DeveloperError} <code>pickFeatures</code> must not be called before the imagery provider is ready.
      */
-    ArcGisMapServerImageryProvider.prototype.pickFeatures = function() {
-        return undefined;
+    ArcGisMapServerImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!this._ready) {
+            throw new DeveloperError('pickFeatures must not be called before the imagery provider is ready.');
+        }
+        //>>includeEnd('debug');
+
+        if (!this._enablePickFeatures) {
+            return undefined;
+        }
+
+        var rectangle = this._tilingScheme.tileXYToRectangle(x, y, level);
+        var west = CesiumMath.toDegrees(rectangle.west);
+        var south = CesiumMath.toDegrees(rectangle.south);
+        var east = CesiumMath.toDegrees(rectangle.east);
+        var north = CesiumMath.toDegrees(rectangle.north);
+
+        var url = this._url + '/identify?f=json&sr=4326&tolerance=2&layers=visible&geometryType=esriGeometryPoint';
+        url += '&geometry=' + CesiumMath.toDegrees(longitude) + ',' + CesiumMath.toDegrees(latitude);
+        url += '&mapExtent=' + west + ',' + south + ',' + east + ',' + north;
+        url += '&imageDisplay=' + this._tileWidth + ',' + this._tileHeight + ',96';
+
+        return loadJson(url).then(function(json) {
+            var result = [];
+
+            var features = json.results;
+            if (!defined(features)) {
+                return result;
+            }
+
+            for (var i = 0; i < features.length; ++i) {
+                var feature = features[i];
+
+                var featureInfo = new ImageryLayerFeatureInfo();
+                featureInfo.data = feature;
+                featureInfo.name = feature.value;
+                featureInfo.configureDescriptionFromProperties(feature.attributes);
+
+                // If this is a point feature, use the coordinates of the point.
+                if (feature.geometryType === 'esriGeometryPoint') {
+                    featureInfo.position = Cartographic.fromDegrees(feature.geometry.x, feature.geometry.y, feature.geometry.z);
+                }
+
+                result.push(featureInfo);
+            }
+
+            return result;
+        });
     };
 
     return ArcGisMapServerImageryProvider;
