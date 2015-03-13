@@ -76,6 +76,12 @@ define([
      *        {@link ArcGisMapServerImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
      *        without communicating with the server.  Set this property to false if you don't want this provider's features to
      *        be pickable.
+     * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.  This parameter is ignored when accessing
+     *                    a tiled layer.
+     * @param {TilingScheme} [options.tilingScheme=new GeographicTilingScheme()] The tiling scheme to use to divide the world into tiles.
+     *                       This parameter is ignored when accessing a tiled server.
+     * @param {Number} [options.tileWidth=256] The width of each tile in pixels.  This parameter is ignored when accessing a tiled server.
+     * @param {Number} [options.tileHeight=256] The height of each tile in pixels.  This parameter is ignored when accessing a tiled server.
      *
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
@@ -105,13 +111,13 @@ define([
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._proxy = options.proxy;
 
-        this._tileWidth = undefined;
-        this._tileHeight = undefined;
+        this._tileWidth = 256;
+        this._tileHeight = 256;
         this._maximumLevel = undefined;
-        this._tilingScheme = undefined;
+        this._tilingScheme = defaultValue(options.tilingScheme, new GeographicTilingScheme());
         this._credit = undefined;
         this._useTiles = defaultValue(options.usePreCachedTilesIfAvailable, true);
-        this._rectangle = undefined;
+        this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
         this._layers = options.layers;
         this._enablePickFeatures = defaultValue(options.enablePickFeatures, true);
 
@@ -125,11 +131,7 @@ define([
 
         function metadataSuccess(data) {
             var tileInfo = data.tileInfo;
-            if (!that._useTiles || !defined(tileInfo)) {
-                that._tileWidth = 256;
-                that._tileHeight = 256;
-                that._tilingScheme = new GeographicTilingScheme();
-                that._rectangle = that._tilingScheme.rectangle;
+            if (!defined(tileInfo)) {
                 that._useTiles = false;
             } else {
                 that._tileWidth = tileInfo.rows;
@@ -205,7 +207,11 @@ define([
             when(metadata, metadataSuccess, metadataFailure);
         }
 
-        requestMetadata();
+        if (this._useTiles) {
+            requestMetadata();
+        } else {
+            this._ready = true;
+        }
     };
 
     function buildImageUrl(imageryProvider, x, y, level) {
@@ -218,7 +224,13 @@ define([
 
             url = imageryProvider._url + '/export?';
             url += 'bbox=' + bbox;
-            url += '&bboxSR=4326&size=256%2C256&imageSR=4326&format=png&transparent=true&f=image';
+            if (imageryProvider._tilingScheme instanceof GeographicTilingScheme) {
+                url += '&bboxSR=4326&imageSR=4326';
+            } else {
+                url += '&bboxSR=3857&imageSR=3857';
+            }
+            url += '&size=' + imageryProvider._tileWidth + '%2C' + imageryProvider._tileHeight;
+            url += '&format=png&transparent=true&f=image';
 
             if (imageryProvider.layers) {
                 url += '&layers=show:' + imageryProvider.layers;
@@ -545,16 +557,27 @@ define([
             return undefined;
         }
 
-        var rectangle = this._tilingScheme.tileXYToRectangle(x, y, level);
-        var west = CesiumMath.toDegrees(rectangle.west);
-        var south = CesiumMath.toDegrees(rectangle.south);
-        var east = CesiumMath.toDegrees(rectangle.east);
-        var north = CesiumMath.toDegrees(rectangle.north);
+        var rectangle = this._tilingScheme.tileXYToNativeRectangle(x, y, level);
 
-        var url = this._url + '/identify?f=json&sr=4326&tolerance=2&layers=visible&geometryType=esriGeometryPoint';
-        url += '&geometry=' + CesiumMath.toDegrees(longitude) + ',' + CesiumMath.toDegrees(latitude);
-        url += '&mapExtent=' + west + ',' + south + ',' + east + ',' + north;
+        var horizontal;
+        var vertical;
+        var sr;
+        if (this._tilingScheme instanceof GeographicTilingScheme) {
+            horizontal = CesiumMath.toDegrees(longitude);
+            vertical = CesiumMath.toDegrees(latitude);
+            sr = '4326';
+        } else {
+            var projected = this._tilingScheme.projection.project(new Cartographic(longitude, latitude, 0.0));
+            horizontal = projected.x;
+            vertical = projected.y;
+            sr = '3857';
+        }
+
+        var url = this._url + '/identify?f=json&tolerance=2&layers=visible&geometryType=esriGeometryPoint';
+        url += '&geometry=' + horizontal + ',' + vertical;
+        url += '&mapExtent=' + rectangle.west + ',' + rectangle.south + ',' + rectangle.east + ',' + rectangle.north;
         url += '&imageDisplay=' + this._tileWidth + ',' + this._tileHeight + ',96';
+        url += '&sr=' + sr;
 
         return loadJson(url).then(function(json) {
             var result = [];
