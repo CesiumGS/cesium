@@ -62,6 +62,7 @@ define([
      * @param {Boolean} [options.usePreCachedTilesIfAvailable=true] If true, the server's pre-cached
      *        tiles are used if they are available.  If false, any pre-cached tiles are ignored and the
      *        'export' service is used.
+     * @param {String} [layers] A comma-separated list of the layers to show, or undefined if all layers should be shown.
      *
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
@@ -98,6 +99,7 @@ define([
         this._credit = undefined;
         this._useTiles = defaultValue(options.usePreCachedTilesIfAvailable, true);
         this._rectangle = undefined;
+        this._layers = options.layers;
 
         this._errorEvent = new Event();
 
@@ -203,6 +205,10 @@ define([
             url = imageryProvider._url + '/export?';
             url += 'bbox=' + bbox;
             url += '&bboxSR=4326&size=256%2C256&imageSR=4326&format=png&transparent=true&f=image';
+
+            if (imageryProvider.layers) {
+                url += '&layers=show:' + imageryProvider.layers;
+            }
         }
 
         var proxy = imageryProvider._proxy;
@@ -444,6 +450,16 @@ define([
         hasAlphaChannel : {
             get : function() {
                 return true;
+            }
+        },
+
+        /**
+         * Gets the comma-separated list of layer IDs to show.
+         * @type {String}
+         */
+        layers : {
+            get : function() {
+                return this._layers;
             }
         }
     });
