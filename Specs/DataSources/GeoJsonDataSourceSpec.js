@@ -317,6 +317,23 @@ defineSuite([
         });
     });
 
+    it('Handles null description', function() {
+        var featureWithNullDescription = {
+            type : 'Feature',
+            geometry : point,
+            properties : {
+                description : null
+            }
+        };
+
+        var dataSource = new GeoJsonDataSource();
+        waitsForPromise(dataSource.load(featureWithNullDescription), function() {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.description).toBeUndefined();
+        });
+    });
+
     it('Does not use "name" property as the object\'s name if it is null', function() {
         var dataSource = new GeoJsonDataSource();
         waitsForPromise(dataSource.load(featureWithNullName), function() {
@@ -340,6 +357,36 @@ defineSuite([
         });
     });
 
+    it('Works with null id', function() {
+        var geojson = {
+            id : null,
+            type : 'Feature',
+            geometry : null
+        };
+
+        var dataSource = new GeoJsonDataSource();
+        waitsForPromise(dataSource.load(geojson), function() {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.id).not.toEqual(null);
+        });
+    });
+
+    it('Works with null properties', function() {
+        var geojson = {
+            type : 'Feature',
+            geometry : null,
+            properties : null
+        };
+
+        var dataSource = new GeoJsonDataSource();
+        waitsForPromise(dataSource.load(geojson), function() {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.properties).toBeUndefined();
+        });
+    });
+
     it('Works with point geometry', function() {
         var dataSource = new GeoJsonDataSource();
         waitsForPromise(dataSource.load(point), function() {
@@ -349,6 +396,49 @@ defineSuite([
             expect(entity.position.getValue(time)).toEqual(coordinatesToCartesian(point.coordinates));
             expect(entity.billboard).toBeDefined();
             expect(entity.billboard.image).toBeDefined();
+        });
+    });
+
+    it('Works with point geometry with simplystyle', function() {
+        var geojson = {
+            type : 'Point',
+            coordinates : [102.0, 0.5],
+            properties : {
+                'marker-size' : 'large',
+                'marker-symbol' : 'bus',
+                'marker-color' : '#ffffff'
+            }
+        };
+
+        var dataSource = new GeoJsonDataSource();
+        waitsForPromise(dataSource.load(geojson), function() {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.billboard).toBeDefined();
+            waitsForPromise(dataSource._pinBuilder.fromMakiIconId('bus', Color.WHITE, 64), function(image) {
+                expect(entity.billboard.image.getValue()).toBe(image);
+            });
+        });
+    });
+
+    it('Works with point geometry with null simplystyle', function() {
+        var geojson = {
+            type : 'Point',
+            coordinates : [102.0, 0.5],
+            properties : {
+                'marker-size' : null,
+                'marker-symbol' : null,
+                'marker-color' : null
+            }
+        };
+
+        var dataSource = new GeoJsonDataSource();
+        waitsForPromise(dataSource.load(geojson), function() {
+            var image = dataSource._pinBuilder.fromColor(GeoJsonDataSource.markerColor, GeoJsonDataSource.markerSize);
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.billboard).toBeDefined();
+            expect(entity.billboard.image.getValue()).toBe(image);
         });
     });
 
@@ -618,6 +708,33 @@ defineSuite([
         });
     });
 
+    it('Works with polyline using null simplestyle values', function() {
+        var geoJson = {
+            type : 'Feature',
+            geometry : {
+                type : 'LineString',
+                coordinates : [[100.0, 0.0], [101.0, 1.0]]
+            },
+            properties : {
+                title : null,
+                description : null,
+                stroke : null,
+                'stroke-opacity' : null,
+                'stroke-width' : null
+            }
+        };
+
+        var dataSource = new GeoJsonDataSource();
+        waitsForPromise(dataSource.load(geoJson), function() {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.name).toBeUndefined();
+            expect(entity.description).toBeUndefined();
+            expect(entity.polyline.material.color.getValue(time)).toEqual(GeoJsonDataSource.stroke);
+            expect(entity.polyline.width.getValue(time)).toEqual(GeoJsonDataSource.strokeWidth);
+        });
+    });
+
     it('Works with polygon using simplestyle', function() {
         var geoJson = {
             type : 'Feature',
@@ -653,6 +770,37 @@ defineSuite([
             expect(entity.polygon.outline.getValue(time)).toEqual(true);
             expect(entity.polygon.outlineWidth.getValue(time)).toEqual(5);
             expect(entity.polygon.outlineColor.getValue(time)).toEqual(expectedOutlineColor);
+        });
+    });
+
+    it('Works with polygon using null simplestyle', function() {
+        var geoJson = {
+            type : 'Feature',
+            geometry : {
+                type : 'Polygon',
+                coordinates : [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]]]
+            },
+            properties : {
+                title : null,
+                description : null,
+                stroke : null,
+                'stroke-opacity' : null,
+                'stroke-width' : null,
+                fill : null,
+                'fill-opacity' : null
+            }
+        };
+
+        var dataSource = new GeoJsonDataSource();
+        waitsForPromise(dataSource.load(geoJson), function() {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.name).toBeUndefined();
+            expect(entity.description).toBeUndefined();
+            expect(entity.polygon.material.color.getValue(time)).toEqual(GeoJsonDataSource.fill);
+            expect(entity.polygon.outline.getValue(time)).toEqual(true);
+            expect(entity.polygon.outlineWidth.getValue(time)).toEqual(GeoJsonDataSource.strokeWidth);
+            expect(entity.polygon.outlineColor.getValue(time)).toEqual(GeoJsonDataSource.stroke);
         });
     });
 
