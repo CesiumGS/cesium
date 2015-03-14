@@ -5,6 +5,7 @@ define([
         '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/definedNotNull',
         '../Core/defineProperties',
         '../Core/deprecationWarning',
         '../Core/DeveloperError',
@@ -32,6 +33,7 @@ define([
         createGuid,
         defaultValue,
         defined,
+        definedNotNull,
         defineProperties,
         deprecationWarning,
         DeveloperError,
@@ -97,7 +99,7 @@ define([
                     continue;
                 }
                 var value = properties[key];
-                if (defined(value)) {
+                if (definedNotNull(value)) {
                     if (typeof value === 'object') {
                         html += '<tr><th>' + key + '</th><td>' + describe(value) + '</td></tr>';
                     } else {
@@ -129,7 +131,7 @@ define([
     //we can't use it for them either.
     function createObject(geoJson, entityCollection) {
         var id = geoJson.id;
-        if (!defined(id) || geoJson.type !== 'Feature') {
+        if (!definedNotNull(id) || geoJson.type !== 'Feature') {
             id = createGuid();
         } else {
             var i = 2;
@@ -143,7 +145,7 @@ define([
 
         var entity = entityCollection.getOrCreateEntity(id);
         var properties = geoJson.properties;
-        if (defined(properties)) {
+        if (definedNotNull(properties)) {
             entity.addProperty('properties');
             entity.properties = properties;
 
@@ -151,7 +153,7 @@ define([
 
             //Check for the simplestyle specified name first.
             var name = properties.title;
-            if (defined(name)) {
+            if (definedNotNull(name)) {
                 entity.name = name;
                 nameProperty = 'title';
             } else {
@@ -182,7 +184,7 @@ define([
                         }
                     }
                 }
-                if (defined(nameProperty)) {
+                if (definedNotNull(nameProperty)) {
                     entity.name = properties[nameProperty];
                 }
             }
@@ -190,7 +192,7 @@ define([
             var description = properties.description;
             if (!defined(description)) {
                 entity.description = new CallbackProperty(createDescriptionCallback(properties, nameProperty), true);
-            } else {
+            } else if (description !== null) {
                 entity.description = new ConstantProperty(description);
             }
         }
@@ -217,7 +219,7 @@ define([
         } else {
             var geometryType = feature.geometry.type;
             var geometryHandler = geometryTypes[geometryType];
-            if (!defined(geometryHandler)) {
+            if (!definedNotNull(geometryHandler)) {
                 throw new RuntimeError('Unknown geometry type: ' + geometryType);
             }
             geometryHandler(dataSource, feature, feature.geometry, crsFunction, options);
@@ -237,7 +239,7 @@ define([
             var geometry = geometries[i];
             var geometryType = geometry.type;
             var geometryHandler = geometryTypes[geometryType];
-            if (!defined(geometryHandler)) {
+            if (!definedNotNull(geometryHandler)) {
                 throw new RuntimeError('Unknown geometry type: ' + geometryType);
             }
             geometryHandler(dataSource, geoJson, geometry, crsFunction, options);
@@ -250,14 +252,17 @@ define([
         var size = options.markerSize;
 
         var properties = geoJson.properties;
-        if (defined(properties)) {
+        if (definedNotNull(properties)) {
             var cssColor = properties['marker-color'];
-            if (defined(cssColor)) {
+            if (definedNotNull(cssColor)) {
                 color = Color.fromCssColorString(cssColor);
             }
 
             size = defaultValue(sizes[properties['marker-size']], size);
-            symbol = defaultValue(properties['marker-symbol'], symbol);
+            var markerSymbol = properties['marker-symbol'];
+            if (definedNotNull(markerSymbol)) {
+                symbol = markerSymbol;
+            }
         }
 
         stringifyScratch[0] = symbol;
@@ -303,19 +308,19 @@ define([
         var widthProperty = options.strokeWidthProperty;
 
         var properties = geoJson.properties;
-        if (defined(properties)) {
+        if (definedNotNull(properties)) {
             var width = properties['stroke-width'];
-            if (defined(width)) {
+            if (definedNotNull(width)) {
                 widthProperty = new ConstantProperty(width);
             }
 
             var color;
             var stroke = properties.stroke;
-            if (defined(stroke)) {
+            if (definedNotNull(stroke)) {
                 color = Color.fromCssColorString(stroke);
             }
             var opacity = properties['stroke-opacity'];
-            if (defined(opacity) && opacity !== 1.0) {
+            if (definedNotNull(opacity) && opacity !== 1.0) {
                 if (!defined(color)) {
                     color = material.color.clone();
                 }
@@ -356,19 +361,19 @@ define([
         var widthProperty = options.strokeWidthProperty;
 
         var properties = geoJson.properties;
-        if (defined(properties)) {
+        if (definedNotNull(properties)) {
             var width = properties['stroke-width'];
-            if (defined(width)) {
+            if (definedNotNull(width)) {
                 widthProperty = new ConstantProperty(width);
             }
 
             var color;
             var stroke = properties.stroke;
-            if (defined(stroke)) {
+            if (definedNotNull(stroke)) {
                 color = Color.fromCssColorString(stroke);
             }
             var opacity = properties['stroke-opacity'];
-            if (defined(opacity) && opacity !== 1.0) {
+            if (definedNotNull(opacity) && opacity !== 1.0) {
                 if (!defined(color)) {
                     color = options.strokeMaterialProperty.color.clone();
                 }
@@ -381,12 +386,12 @@ define([
 
             var fillColor;
             var fill = properties.fill;
-            if (defined(fill)) {
+            if (definedNotNull(fill)) {
                 fillColor = Color.fromCssColorString(fill);
                 fillColor.alpha = material.color.alpha;
             }
             opacity = properties['fill-opacity'];
-            if (defined(opacity) && opacity !== material.color.alpha) {
+            if (definedNotNull(opacity) && opacity !== material.color.alpha) {
                 if (!defined(fillColor)) {
                     fillColor = material.color.clone();
                 }
