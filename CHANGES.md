@@ -10,6 +10,7 @@ Change Log
   * Removed the `direction` and `up` options to `Camera.flyTo`, which were deprecated in Cesium 1.6. Use the `orientation` option.
   * Removed `Camera.flyToRectangle`, which was deprecated in Cesium 1.6. Use `Camera.flyTo`.
 * Fixed an issue with transparency. [#2572](https://github.com/AnalyticalGraphicsInc/cesium/issues/2572)
+* Cesium is now tested using Jasmine 2.2.0.
 
 ### 1.7.1 - 2015-03-06
 
@@ -58,7 +59,6 @@ Change Log
 * All `CzmlDataSource` and `GeoJsonDataSource` loading functions now return `Promise` instances that resolve to the instances after data is loaded.
 * Error handling in all `CzmlDataSource` and `GeoJsonDataSource` loading functions is now more consistent.  Rather than a mix of exceptions and `Promise` rejections, all errors are raised via `Promise` rejections.
 * In addition to addresses, the `Geocoder` widget now allows input of longitude, latitude, and an optional height in degrees and meters.  Example: `-75.596, 40.038, 1000` or `-75.596 40.038`.
-* Cesium is now tested using Jasmine 2.2.0.
 
 ### 1.6 - 2015-02-02
 
