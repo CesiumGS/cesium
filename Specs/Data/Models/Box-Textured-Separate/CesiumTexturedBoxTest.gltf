@@ -5,7 +5,7 @@
             "byteOffset": 0,
             "byteStride": 0,
             "componentType": 5123,
-            "count": 12636,
+            "count": 36,
             "type": "SCALAR"
         },
         "accessor_23": {
@@ -13,146 +13,108 @@
             "byteOffset": 0,
             "byteStride": 12,
             "componentType": 5126,
-            "count": 2399,
+            "count": 24,
             "max": [
-                0.961799,
-                1.6397,
-                0.539252
+                0.5,
+                0.5,
+                0.5
             ],
             "min": [
-                -0.692985,
-                0.0992937,
-                -0.613282
+                -0.5,
+                -0.5,
+                -0.5
             ],
             "type": "VEC3"
         },
         "accessor_25": {
             "bufferView": "bufferView_30",
-            "byteOffset": 28788,
+            "byteOffset": 288,
             "byteStride": 12,
             "componentType": 5126,
-            "count": 2399,
+            "count": 24,
             "max": [
-                0.999599,
-                0.999581,
-                0.998436
+                1,
+                1,
+                1
             ],
             "min": [
-                -0.999084,
                 -1,
-                -0.999832
+                -1,
+                -1
             ],
             "type": "VEC3"
         },
         "accessor_27": {
             "bufferView": "bufferView_30",
-            "byteOffset": 57576,
+            "byteOffset": 576,
             "byteStride": 8,
             "componentType": 5126,
-            "count": 2399,
+            "count": 24,
             "max": [
-                0.983346,
-                0.980037
+                6,
+                1
             ],
             "min": [
-                0.026409,
-                0.019963
+                0,
+                0
             ],
             "type": "VEC2"
         }
     },
     "animations": {},
     "asset": {
-        "generator": "collada2gltf@df4892809111a8c6dbff4fab6c386a24745d344e",
+        "generator": "collada2gltf@",
         "premultipliedAlpha": true,
-        "profile": {
-            "api" : "WebGL",
-            "version" : "1.0.2"
-        },
-        "version": "0.9"
+        "profile": "WebGL 1.0.2",
+        "version": 0.8
     },
     "bufferViews": {
         "bufferView_29": {
-            "buffer": "duck",
-            "byteLength": 25272,
+            "buffer": "CesiumTexturedBoxTest",
+            "byteLength": 72,
             "byteOffset": 0,
             "target": 34963
         },
         "bufferView_30": {
-            "buffer": "duck",
-            "byteLength": 76768,
-            "byteOffset": 25272,
+            "buffer": "CesiumTexturedBoxTest",
+            "byteLength": 768,
+            "byteOffset": 72,
             "target": 34962
         }
     },
     "buffers": {
-        "duck": {
-            "byteLength": 102040,
+        "CesiumTexturedBoxTest": {
+            "byteLength": 840,
             "type": "arraybuffer",
-            "uri": "duck.bin"
-        }
-    },
-    "cameras": {
-        "camera_0": {
-            "perspective": {
-                "aspect_ratio": 1.5,
-                "yfov": 37.8492,
-                "zfar": 100,
-                "znear": 0.01
-            },
-            "type": "perspective"
+            "uri": "CesiumTexturedBoxTest.bin"
         }
     },
     "images": {
-        "file2": {
-            "uri": "duckCM.png"
-        }
-    },
-    "lights": {
-        "directionalLightShape1-lib": {
-            "directional": {
-                "color": [
-                    1,
-                    1,
-                    1
-                ]
-            },
-            "type": "directional"
+        "Image0001": {
+            "uri": "Cesium_Logo_Flat.png"
         }
     },
     "materials": {
-        "blinn3-fx": {
+        "Effect-Texture": {
             "instanceTechnique": {
-                "technique": "technique1",
+                "technique": "technique0",
                 "values": {
-                    "ambient": [
-                        0,
-                        0,
-                        0,
-                        1
-                    ],
-                    "diffuse": "texture_file2",
-                    "emission": [
-                        0,
-                        0,
-                        0,
-                        1
-                    ],
-                    "shininess": 38.4,
+                    "diffuse": "texture_Image0001",
+                    "shininess": 256,
                     "specular": [
-                        0,
-                        0,
-                        0,
+                        0.2,
+                        0.2,
+                        0.2,
                         1
                     ]
                 }
             },
-            "name": "blinn3"
+            "name": "Texture"
         }
     },
     "meshes": {
-        "LOD3spShape-lib": {
-            "name": "LOD3spShape",
+        "Geometry-mesh002": {
+            "name": "Mesh",
             "primitives": [
                 {
                     "attributes": {
@@ -161,14 +123,14 @@
                         "TEXCOORD_0": "accessor_27"
                     },
                     "indices": "accessor_21",
-                    "material": "blinn3-fx",
+                    "material": "Effect-Texture",
                     "primitive": 4
                 }
             ]
         }
     },
     "nodes": {
-        "LOD3sp": {
+        "Geometry-mesh002Node": {
             "children": [],
             "matrix": [
                 1,
@@ -189,55 +151,80 @@
                 1
             ],
             "meshes": [
-                "LOD3spShape-lib"
+                "Geometry-mesh002"
             ],
-            "name": "LOD3sp"
+            "name": "Mesh"
         },
-        "camera1": {
-            "camera": "camera_0",
-            "children": [],
+        "groupLocator030Node": {
+            "children": [
+                "txtrLocator026Node"
+            ],
             "matrix": [
-                -0.728969,
+                1,
                 0,
-                -0.684547,
                 0,
-                -0.425205,
-                0.783693,
-                0.452797,
                 0,
-                0.536475,
-                0.621148,
-                -0.571288,
                 0,
-                4.00113,
-                4.63264,
-                -4.31078,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
                 1
             ],
-            "name": "camera1"
+            "name": "Texture_Group"
         },
-        "directionalLight1": {
-            "children": [],
-            "light": "directionalLightShape1-lib",
+        "node_3": {
+            "children": [
+                "Geometry-mesh002Node",
+                "groupLocator030Node"
+            ],
             "matrix": [
-                -0.954692,
-                0.218143,
-                -0.202428,
+                1,
                 0,
-                0.0146721,
-                0.713885,
-                0.700109,
                 0,
-                0.297235,
-                0.665418,
-                -0.684741,
                 0,
-                1.48654,
-                1.83672,
-                -2.92179,
+                0,
+                0,
+                -1,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
                 1
             ],
-            "name": "directionalLight1"
+            "name": "Y_UP_Transform"
+        },
+        "txtrLocator026Node": {
+            "children": [],
+            "matrix": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+            ],
+            "name": "Cesium_Logo_Flat__Image___Texture_"
         }
     },
     "programs": {
@@ -247,8 +234,8 @@
                 "a_position",
                 "a_texcoord0"
             ],
-            "fragmentShader": "duck0FS",
-            "vertexShader": "duck0VS"
+            "fragmentShader": "CesiumTexturedBoxTest0FS",
+            "vertexShader": "CesiumTexturedBoxTest0VS"
         }
     },
     "samplers": {
@@ -263,47 +250,26 @@
     "scenes": {
         "defaultScene": {
             "nodes": [
-                "LOD3sp",
-                "camera1",
-                "directionalLight1"
+                "node_3"
             ]
         }
     },
     "shaders": {
-        "duck0FS": {
+        "CesiumTexturedBoxTest0FS": {
             "type": 35632,
-            "uri": "duck0FS.glsl"
+            "uri": "CesiumTexturedBoxTest0FS.glsl"
         },
-        "duck0VS": {
+        "CesiumTexturedBoxTest0VS": {
             "type": 35633,
-            "uri": "duck0VS.glsl"
+            "uri": "CesiumTexturedBoxTest0VS.glsl"
         }
     },
     "skins": {},
     "techniques": {
-        "technique1": {
+        "technique0": {
             "parameters": {
-                "ambient": {
-                    "type": 35666
-                },
                 "diffuse": {
                     "type": 35678
-                },
-                "emission": {
-                    "type": 35666
-                },
-                "light0Color": {
-                    "type": 35665,
-                    "value": [
-                        1,
-                        1,
-                        1
-                    ]
-                },
-                "light0Transform": {
-                    "semantic": "MODELVIEW",
-                    "source": "directionalLight1",
-                    "type": 35676
                 },
                 "modelViewMatrix": {
                     "semantic": "MODELVIEW",
@@ -344,13 +310,9 @@
                             "extras": {
                                 "doubleSided": false
                             },
-                            "lightingModel": "Blinn",
+                            "lightingModel": "Phong",
                             "parameters": [
-                                "ambient",
                                 "diffuse",
-                                "emission",
-                                "light0Color",
-                                "light0Transform",
                                 "modelViewMatrix",
                                 "normalMatrix",
                                 "projectionMatrix",
@@ -371,11 +333,7 @@
                         },
                         "program": "program_0",
                         "uniforms": {
-                            "u_ambient": "ambient",
                             "u_diffuse": "diffuse",
-                            "u_emission": "emission",
-                            "u_light0Color": "light0Color",
-                            "u_light0Transform": "light0Transform",
                             "u_modelViewMatrix": "modelViewMatrix",
                             "u_normalMatrix": "normalMatrix",
                             "u_projectionMatrix": "projectionMatrix",
@@ -394,11 +352,11 @@
         }
     },
     "textures": {
-        "texture_file2": {
+        "texture_Image0001": {
             "format": 6408,
             "internalFormat": 6408,
             "sampler": "sampler_0",
-            "source": "file2",
+            "source": "Image0001",
             "target": 3553,
             "type": 5121
         }

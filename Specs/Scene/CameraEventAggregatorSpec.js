@@ -20,7 +20,7 @@ defineSuite([
         destroyCanvas,
         DomEventSimulator) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var usePointerEvents = defined(window.PointerEvent);
     var canvas;

@@ -148,12 +148,8 @@ function icrf(scene, time) {
     var icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(time);
     if (Cesium.defined(icrfToFixed)) {
         var camera = viewer.camera;
-        
-        var offset = Cesium.Matrix4.multiplyByPoint(camera.transform, camera.position, new Cesium.Cartesian3());
+        var offset = Cesium.Cartesian3.clone(camera.position);
         var transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed);
-        var inverseTransform = Cesium.Matrix4.inverseTransformation(transform, new Cesium.Matrix4());
-        Cesium.Matrix4.multiplyByPoint(inverseTransform, offset, offset);
-        
         camera.lookAtTransform(transform, offset);
     }
 }

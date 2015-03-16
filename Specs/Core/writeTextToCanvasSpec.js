@@ -6,7 +6,7 @@ defineSuite([
         writeTextToCanvas,
         Color) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('returns undefined when text is blank', function() {
         var canvas = writeTextToCanvas('');
