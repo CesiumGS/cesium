@@ -1218,7 +1218,18 @@ define([
                     vs.defines.push('EYE_DISTANCE_PIXEL_OFFSET');
                 }
 
-                this._sp = context.replaceShaderProgram(this._sp, vs, BillboardCollectionFS, attributeLocations);
+                fs = new ShaderSource({
+                    defines : ['OPAQUE'],
+                    sources : [BillboardCollectionFS]
+                });
+                this._sp = context.replaceShaderProgram(this._sp, vs, fs, attributeLocations);
+
+                fs = new ShaderSource({
+                    defines : ['TRANSLUCENT'],
+                    sources : [BillboardCollectionFS]
+                });
+                this._spTranslucent = context.replaceShaderProgram(this._spTranslucent, vs, fs, attributeLocations);
+
                 this._compiledShaderRotation = this._shaderRotation;
                 this._compiledShaderAlignedAxis = this._shaderAlignedAxis;
                 this._compiledShaderScaleByDistance = this._shaderScaleByDistance;
@@ -1230,21 +1241,28 @@ define([
             vaLength = va.length;
 
             colorList.length = vaLength;
-            for (j = 0; j < vaLength; ++j) {
+            for (j = 0; j < vaLength * 2; ++j) {
                 command = colorList[j];
                 if (!defined(command)) {
+                    /*
                     command = colorList[j] = new DrawCommand({
-                        pass : Pass.OPAQUE,
+                        pass : (j % 2 === 0) ? Pass.OPAQUE : Pass.TRANSLUCENT,
                         owner : this
                     });
+                    */
+                    command = colorList[j] = new DrawCommand();
                 }
 
+                command.pass = (j % 2 === 0) ? Pass.OPAQUE : Pass.TRANSLUCENT;
+                command.owner = this;
+
+                var index = Math.floor(j / 2.0);
                 command.boundingVolume = boundingVolume;
                 command.modelMatrix = modelMatrix;
-                command.count = va[j].indicesCount;
-                command.shaderProgram = this._sp;
+                command.count = va[index].indicesCount;
+                command.shaderProgram = (j % 2 === 0) ? this._sp : this._spTranslucent;
                 command.uniformMap = this._uniforms;
-                command.vertexArray = va[j].va;
+                command.vertexArray = va[index].va;
                 command.renderState = this._rs;
                 command.debugShowBoundingVolume = this.debugShowBoundingVolume;
 
