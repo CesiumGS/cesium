@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
         'DataSources/DataSourceCollection',
-        'ThirdParty/when',
-        'Specs/MockDataSource'
+        'Specs/MockDataSource',
+        'ThirdParty/when'
     ], function(
         DataSourceCollection,
-        when,
-        MockDataSource) {
+        MockDataSource,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 

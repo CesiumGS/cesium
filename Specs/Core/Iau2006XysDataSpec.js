@@ -1,13 +1,13 @@
 /*global defineSuite*/
 defineSuite([
         'Core/Iau2006XysData',
-        'Core/Iau2006XysSample',
         'Core/defined',
+        'Core/Iau2006XysSample',
         'Specs/pollToPromise'
     ], function(
         Iau2006XysData,
-        Iau2006XysSample,
         defined,
+        Iau2006XysSample,
         pollToPromise) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/

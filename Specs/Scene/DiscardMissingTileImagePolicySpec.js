@@ -5,16 +5,16 @@ defineSuite([
         'Core/defined',
         'Core/loadImage',
         'Core/loadWithXhr',
-        'ThirdParty/when',
-        'Specs/pollToPromise'
+        'Specs/pollToPromise',
+        'ThirdParty/when'
     ], function(
         DiscardMissingTileImagePolicy,
         Cartesian2,
         defined,
         loadImage,
         loadWithXhr,
-        when,
-        pollToPromise) {
+        pollToPromise,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
