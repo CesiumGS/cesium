@@ -43,9 +43,6 @@ defineSuite([
     var riggedFigureUrl = './Data/Models/rigged-figure-test/rigged-figure-test.gltf';
 
     var texturedBoxModel;
-    var cesiumAirModel;
-    var animBoxesModel;
-    var riggedFigureModel;
 
     var scene;
     var primitives;
@@ -54,8 +51,8 @@ defineSuite([
         scene = createScene();
         primitives = scene.primitives;
 
-        return loadModel(duckUrl).then(function(model) {
-            duckModel = model;
+        return loadModel(texturedBoxUrl).then(function(model) {
+            texturedBoxModel = model;
         });
     });
 
@@ -121,7 +118,7 @@ defineSuite([
         var modelMatrix = Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0));
 
        expect(texturedBoxModel.gltf).toBeDefined();
-       expect(texturedBoxModel.basePath).toEqual('./Data/Models/Box-Textured/');
+       expect(texturedBoxModel.basePath).toEqual('./Data/Models/duck/');
        expect(texturedBoxModel.show).toEqual(false);
        expect(texturedBoxModel.modelMatrix).toEqual(modelMatrix);
        expect(texturedBoxModel.scale).toEqual(1.0);
@@ -132,7 +129,7 @@ defineSuite([
        expect(texturedBoxModel.ready).toEqual(true);
        expect(texturedBoxModel.asynchronous).toEqual(true);
        expect(texturedBoxModel.releaseGltfJson).toEqual(false);
-       expect(texturedBoxModel.cacheKey).toEndWith('Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf');
+       expect(texturedBoxModel.cacheKey).toEndWith('Data/Models/duck/duck.gltf');
        expect(texturedBoxModel.debugShowBoundingVolume).toEqual(false);
        expect(texturedBoxModel.debugWireframe).toEqual(false);
     });
@@ -142,7 +139,7 @@ defineSuite([
     });
 
     it('resolves readyPromise', function() {
-        return duckModel.readyPromise.then(function(model) {
+        return texturedBoxModel.readyPromise.then(function(model) {
             verifyRender(model);
         });
     });
@@ -261,6 +258,50 @@ defineSuite([
         texturedBoxModel.debugWireframe = false;
     });
 
+    it('is picked', function() {
+        if (FeatureDetection.isInternetExplorer()) {
+            // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
+            return;
+        }
+
+        texturedBoxModel.show = true;
+        texturedBoxModel.zoomTo();
+
+        var pick = scene.pick(new Cartesian2(0, 0));
+        expect(pick.primitive).toEqual(texturedBoxModel);
+        expect(pick.id).toEqual(texturedBoxUrl);
+        expect(pick.node).toEqual(texturedBoxModel.getNode('LOD3sp'));
+        expect(pick.mesh).toEqual(texturedBoxModel.getMesh('LOD3spShape'));
+
+        texturedBoxModel.show = false;
+    });
+
+    it('is picked with a new pick id', function() {
+        if (FeatureDetection.isInternetExplorer()) {
+            // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
+            return;
+        }
+
+        var oldId = texturedBoxModel.id;
+        texturedBoxModel.id = 'id';
+        texturedBoxModel.show = true;
+        texturedBoxModel.zoomTo();
+
+        var pick = scene.pick(new Cartesian2(0, 0));
+        expect(pick.primitive).toEqual(texturedBoxModel);
+        expect(pick.id).toEqual('id');
+
+        texturedBoxModel.id = oldId;
+        texturedBoxModel.show = false;
+    });
+
+    it('is not picked (show === false)', function() {
+        texturedBoxModel.zoomTo();
+
+        var pick = scene.pick(new Cartesian2(0, 0));
+        expect(pick).not.toBeDefined();
+    });
+
     it('getNode throws when model is not loaded', function() {
         var m = new Model();
         expect(function() {
@@ -279,10 +320,10 @@ defineSuite([
     });
 
     it('getNode returns a node', function() {
-        var node = texturedBoxModel.getNode('Mesh');
+        var node = texturedBoxModel.getNode('LOD3sp');
         expect(node).toBeDefined();
-        expect(node.name).toEqual('Mesh');
-        expect(node.id).toEqual('Geometry-mesh002Node');
+        expect(node.name).toEqual('LOD3sp');
+        expect(node.id).toEqual('LOD3sp');
         expect(node.show).toEqual(true);
 
         // Change node transform and render
@@ -315,11 +356,11 @@ defineSuite([
     });
 
     it('getMesh returns returns a mesh', function() {
-        var mesh = texturedBoxModel.getMesh('Mesh');
+        var mesh = texturedBoxModel.getMesh('LOD3spShape');
         expect(mesh).toBeDefined();
-        expect(mesh.name).toEqual('Mesh');
-        expect(mesh.id).toEqual('Geometry-mesh002');
-        expect(mesh.materials[0].name).toEqual('Texture');
+        expect(mesh.name).toEqual('LOD3spShape');
+        expect(mesh.id).toEqual('LOD3spShape-lib');
+        expect(mesh.materials[0].name).toEqual('blinn3');
     });
 
     it('getMaterial throws when model is not loaded', function() {
@@ -340,41 +381,48 @@ defineSuite([
     });
 
     it('getMaterial returns returns a material', function() {
-        var material = texturedBoxModel.getMaterial('Texture');
+        var material = texturedBoxModel.getMaterial('blinn3');
         expect(material).toBeDefined();
-        expect(material.name).toEqual('Texture');
-        expect(material.id).toEqual('Effect-Texture');
+        expect(material.name).toEqual('blinn3');
+        expect(material.id).toEqual('blinn3-fx');
     });
 
     it('ModelMaterial.setValue throws when name is not provided', function() {
-        var material = texturedBoxModel.getMaterial('Texture');
+        var material = texturedBoxModel.getMaterial('blinn3');
         expect(function() {
             material.setValue();
         }).toThrowDeveloperError();
     });
 
     it('ModelMaterial.setValue sets a scalar parameter', function() {
-        var material = texturedBoxModel.getMaterial('Texture');
+        var material = texturedBoxModel.getMaterial('blinn3');
         material.setValue('shininess', 12.34);
         expect(material.getValue('shininess')).toEqual(12.34);
     });
 
+    it('ModelMaterial.setValue sets a Cartesian3 parameter not overriden in the material (defined in technique only)', function() {
+        var material = texturedBoxModel.getMaterial('blinn3');
+        var light0Color = new Cartesian3(0.33, 0.66, 1.0);
+        material.setValue('light0Color', light0Color);
+        expect(material.getValue('light0Color')).toEqual(light0Color);
+    });
+
     it('ModelMaterial.setValue sets a Cartesian4 parameter', function() {
-        var material = texturedBoxModel.getMaterial('Texture');
+        var material = texturedBoxModel.getMaterial('blinn3');
         var specular = new Cartesian4(0.25, 0.5, 0.75, 1.0);
         material.setValue('specular', specular);
         expect(material.getValue('specular')).toEqual(specular);
     });
 
     it('ModelMaterial.getValue throws when name is not provided', function() {
-        var material = texturedBoxModel.getMaterial('Texture');
+        var material = texturedBoxModel.getMaterial('blinn3');
         expect(function() {
             material.getValue();
         }).toThrowDeveloperError();
     });
 
     it('ModelMaterial.getValue returns undefined when parameter does not exist', function() {
-        var material = texturedBoxModel.getMaterial('Texture');
+        var material = texturedBoxModel.getMaterial('blinn3');
         expect(material.getValue('name-of-parameter-that-does-not-exist')).not.toBeDefined();
     });
 
@@ -387,8 +435,8 @@ defineSuite([
 
     it('boundingSphere returns the bounding sphere', function() {
         var boundingSphere = texturedBoxModel.boundingSphere;
-        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.0, -0.25, 0.0), CesiumMath.EPSILON3);
-        expect(boundingSphere.radius).toEqualEpsilon(0.75, CesiumMath.EPSILON3);
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.134, 0.037, 0.869), CesiumMath.EPSILON3);
+        expect(boundingSphere.radius).toEqualEpsilon(1.268, CesiumMath.EPSILON3);
     });
 
     it('boundingSphere returns the bounding sphere when scale property is set', function() {
@@ -396,8 +444,8 @@ defineSuite([
         texturedBoxModel.scale = 10;
 
         var boundingSphere = texturedBoxModel.boundingSphere;
-        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.0, -2.5, 0.0), CesiumMath.EPSILON3);
-        expect(boundingSphere.radius).toEqualEpsilon(7.5, CesiumMath.EPSILON3);
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(1.343, 0.370, 8.694), CesiumMath.EPSILON3);
+        expect(boundingSphere.radius).toEqualEpsilon(12.688, CesiumMath.EPSILON3);
 
         texturedBoxModel.scale = originalScale;
     });
@@ -407,14 +455,14 @@ defineSuite([
         Matrix4.multiplyByScale(texturedBoxModel.modelMatrix, new Cartesian3(2, 5, 10), texturedBoxModel.modelMatrix);
 
         var boundingSphere = texturedBoxModel.boundingSphere;
-        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.0, -1.25, 0.0), CesiumMath.EPSILON3);
-        expect(boundingSphere.radius).toEqualEpsilon(7.5, CesiumMath.EPSILON3);
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.268, 0.185, 8.694), CesiumMath.EPSILON3);
+        expect(boundingSphere.radius).toEqualEpsilon(12.688, CesiumMath.EPSILON3);
 
         texturedBoxModel.modelMatrix = originalMatrix;
     });
 
     it('destroys', function() {
-        loadModel(duckUrl).then(function(m) {
+        loadModel(texturedBoxUrl).then(function(m) {
             expect(m.isDestroyed()).toEqual(false);
             primitives.remove(m);
             expect(m.isDestroyed()).toEqual(true);
@@ -423,16 +471,10 @@ defineSuite([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    describe('customDuck', function() {
-        var customDuckModel;
+    it('renders texturedBoxCustom (all uniform semantics)', function() {
+        var m = loadModel(texturedBoxCustomUrl);
 
-        beforeAll(function() {
-            return loadModel(customDuckUrl).then(function(model) {
-                customDuckModel = model;
-            });
-        });
-
-        it('renders customDuckModel (NPOT textures and all uniform semantics)', function() {
+        return m.readyPromise.then(function() {
             expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
             m.show = true;
@@ -444,17 +486,22 @@ defineSuite([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    it('renders textured box with external resources: .glsl, .bin, and .png files', function() {
-        var m = loadModel(texturedBoxSeparateUrl);
+    describe('separateDuck', function() {
+        var separateDuckModel;
 
-        runs(function() {
+        beforeAll(function() {
+            return loadModel(texturedBoxSeparateUrl).then(function(model) {
+                separateDuckModel = model;
+            });
+        });
+
+        it('renders separateDuckModel (external .glsl, .bin, and .png files)', function() {
             expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-            m.show = true;
-            m.zoomTo();
+            separateDuckModel.show = true;
+            separateDuckModel.zoomTo();
             expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
-
-            primitives.remove(m);
+            separateDuckModel.show = false;
         });
     });
 
@@ -562,32 +609,6 @@ defineSuite([
 
             cesiumAirModel.show = false;
         });
-    });
-
-    it('cesiumAir is picked with a new pick id', function() {
-        if (FeatureDetection.isInternetExplorer()) {
-            // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
-            return;
-        }
-
-        var oldId = cesiumAirModel.id;
-        cesiumAirModel.id = 'id';
-        cesiumAirModel.show = true;
-        cesiumAirModel.zoomTo();
-
-        var pick = scene.pick(new Cartesian2(0, 0));
-        expect(pick.primitive).toEqual(cesiumAirModel);
-        expect(pick.id).toEqual('id');
-
-        cesiumAirModel.id = oldId;
-        cesiumAirModel.show = false;
-    });
-
-    it('cesiumAir is not picked (show === false)', function() {
-        cesiumAirModel.zoomTo();
-
-        var pick = scene.pick(new Cartesian2(0, 0));
-        expect(pick).not.toBeDefined();
     });
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1068,7 +1089,7 @@ defineSuite([
     });
 
     it('releaseGltfJson releases glTFJSON when constructed with fromGltf', function() {
-        return loadModel(duckUrl, {
+        return loadModel(texturedBoxUrl, {
             releaseGltfJson : true
         }).then(function(m) {
             expect(m.releaseGltfJson).toEqual(true);
@@ -1113,7 +1134,7 @@ defineSuite([
         expect(modelRendererResourceCache[key]).not.toBeDefined();
 
         // Use a custom cache key to avoid conflicting with previous tests
-        var promise = loadModel(duckUrl, {
+        var promise = loadModel(texturedBoxUrl, {
             cacheKey : key
         });
 
@@ -1123,7 +1144,7 @@ defineSuite([
 
         // This is a cache hit, but the JSON request is still pending.
         // In the test below, the cache hit occurs after the request completes.
-        var promise2 = loadModel(duckUrl, {
+        var promise2 = loadModel(texturedBoxUrl, {
             cacheKey : key
         });
 
@@ -1161,7 +1182,7 @@ defineSuite([
         expect(gltfCache[key]).not.toBeDefined();
 
         // Use a custom cache key to avoid conflicting with previous tests
-        var promise = loadModel(duckUrl, {
+        var promise = loadModel(texturedBoxUrl, {
             cacheKey : key
         });
 
@@ -1172,7 +1193,7 @@ defineSuite([
         return promise.then(function(m) {
             // Cache hit after JSON request completed.
             var m2;
-            loadModel(duckUrl, {
+            loadModel(texturedBoxUrl, {
                 cacheKey : key
             }).then(function(model) {
                 m2 = model;

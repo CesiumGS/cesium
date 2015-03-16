@@ -502,6 +502,11 @@ defineSuite([
         </Placemark>';
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.availability).toBeDefined();
+            expect(entity.availability.start).toEqual(date);
+            expect(entity.availability.stop).toEqual(Iso8601.MAXIMUM_VALUE);
+        });
     });
 
     it('Feature: TimeStamp works', function() {
@@ -514,12 +519,12 @@ defineSuite([
             </TimeStamp>\
         </Placemark>';
 
-        waitsForPromise(KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.availability).toBeDefined();
             expect(entity.availability.start).toEqual(date);
             expect(entity.availability.stop).toEqual(Iso8601.MAXIMUM_VALUE);
-        }));
+        });
     });
 
     it('Feature: TimeStamp gracefully handles empty fields', function() {
@@ -529,10 +534,10 @@ defineSuite([
             </TimeStamp>\
         </Placemark>';
 
-        waitsForPromise(KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.availability).toBeUndefined();
-        }));
+        });
     });
 
     it('Feature: TimeStamp gracefully handles empty when field', function() {
@@ -543,10 +548,10 @@ defineSuite([
             </TimeStamp>\
         </Placemark>';
 
-        waitsForPromise(KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.availability).toBeUndefined();
-        }));
+        });
     });
 
     it('Feature: ExtendedData <Data> schema', function() {
@@ -717,6 +722,10 @@ defineSuite([
             </Document>';
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entities = dataSource.entities.values;
+            expect(entities.length).toEqual(1);
+            expect(entities[0].billboard.scale.getValue()).toEqual(3.0);
+        });
     });
 
     it('Styles: supports local styles with styleUrl mssing #', function() {
@@ -732,7 +741,7 @@ defineSuite([
             </Placemark>\
             </Document>';
 
-        waitsForPromise(KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
             expect(entities[0].billboard.scale.getValue()).toEqual(3.0);
@@ -1557,10 +1566,10 @@ defineSuite([
                 </ExtendedData>\
             </Placemark>';
 
-        waitsForPromise(KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.description).toBeUndefined();
-        }));
+        });
     });
 
     it('BalloonStyle: description creates links from text', function() {
