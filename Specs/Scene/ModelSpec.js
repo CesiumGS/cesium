@@ -1104,7 +1104,7 @@ defineSuite([
                 cacheKey : key
             }).then(function(model) {
                 m2 = model;
-            })
+            });
 
             expect(gltfCache[key].ready).toEqual(true);
             expect(gltfCache[key].count).toEqual(2);
