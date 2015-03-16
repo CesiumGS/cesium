@@ -30,7 +30,7 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
-    var duckUrl = 'Data/Models/duck/duck.gltf';
+    var boxUrl = './Data/Models/Box/CesiumBoxTest.gltf';
 
     var scene;
     var visualizer;
@@ -95,7 +95,7 @@ defineSuite([
 
         var testObject = entityCollection.getOrCreateEntity('test');
         var model = testObject.model = new ModelGraphics();
-        model.uri = new ConstantProperty(duckUrl);
+        model.uri = new ConstantProperty(boxUrl);
 
         visualizer.update(JulianDate.now());
         expect(scene.primitives.length).toEqual(0);
@@ -110,7 +110,7 @@ defineSuite([
         model.show = new ConstantProperty(true);
         model.scale = new ConstantProperty(2);
         model.minimumPixelSize = new ConstantProperty(24.0);
-        model.uri = new ConstantProperty(duckUrl);
+        model.uri = new ConstantProperty(boxUrl);
 
         var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantPositionProperty(Cartesian3.fromDegrees(1, 2, 3));
@@ -133,7 +133,7 @@ defineSuite([
         visualizer = new ModelVisualizer(scene, entityCollection);
 
         var model = new ModelGraphics();
-        model.uri = new ConstantProperty(duckUrl);
+        model.uri = new ConstantProperty(boxUrl);
 
         var time = JulianDate.now();
         var testObject = entityCollection.getOrCreateEntity('test');
@@ -158,7 +158,7 @@ defineSuite([
         testObject.model = model;
 
         testObject.position = new ConstantProperty(new Cartesian3(5678, 1234, 1101112));
-        model.uri = new ConstantProperty(duckUrl);
+        model.uri = new ConstantProperty(boxUrl);
         visualizer.update(time);
 
         var modelPrimitive = scene.primitives.get(0);
@@ -175,7 +175,7 @@ defineSuite([
         testObject.model = model;
 
         testObject.position = new ConstantProperty(new Cartesian3(5678, 1234, 1101112));
-        model.uri = new ConstantProperty(duckUrl);
+        model.uri = new ConstantProperty(boxUrl);
         visualizer.update(time);
 
         var modelPrimitive = scene.primitives.get(0);

@@ -166,13 +166,17 @@ defineSuite([
 
     it('name uses source name if CZML name is undefined', function() {
         var dataSource = new CzmlDataSource();
-        dataSource.load(clockCzml, 'Gallery/simple.czml?asd=true');
+        dataSource.load(clockCzml, {
+            sourceUri : 'Gallery/simple.czml?asd=true'
+        });
         expect(dataSource.name).toEqual('simple.czml');
     });
 
     it('does not overwrite existing name if CZML name is undefined', function() {
         var dataSource = new CzmlDataSource('myName');
-        dataSource.load(clockCzml, 'Gallery/simple.czml');
+        dataSource.load(clockCzml, {
+            sourceUri : 'Gallery/simple.czml'
+        });
         expect(dataSource.name).toEqual('myName');
     });
 
@@ -439,7 +443,9 @@ defineSuite([
         };
 
         var dataSource = new CzmlDataSource();
-        dataSource.load(makePacket(billboardPacket), sourceUri);
+        dataSource.load(makePacket(billboardPacket), {
+            sourceUri : sourceUri
+        });
         var entity = dataSource.entities.values[0];
 
         expect(entity.billboard).toBeDefined();
@@ -468,7 +474,9 @@ defineSuite([
         };
 
         var dataSource = new CzmlDataSource();
-        dataSource.load(makePacket(packet), source);
+        dataSource.load(makePacket(packet), {
+            sourceUri : source
+        });
         var entity = dataSource.entities.values[0];
         var imageProperty = entity.billboard.image;
         expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual(source + 'image.png');
@@ -1043,6 +1051,44 @@ defineSuite([
         dataSource.load(makePacket(packet));
         var entity = dataSource.entities.values[0];
         expect(entity.orientation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Quaternion(0.0, 0.0, 0.0, 1.0));
+    });
+
+    it('CZML Orientation is normalized on load.', function() {
+        var packet = {
+            orientation : {
+                unitQuaternion : [0.0, 0.0, 0.7071067, 0.7071067]
+            }
+        };
+
+        var expected = new Quaternion(0.0, 0.0, 0.7071067, 0.7071067);
+        Quaternion.normalize(expected, expected);
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+        var entity = dataSource.entities.values[0];
+        expect(entity.orientation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expected);
+    });
+
+    it('CZML Orientation is normalized on load.', function() {
+        var time1 = '2000-01-01T00:00:00Z';
+        var time2 = '2000-01-01T00:00:01Z';
+        var packet = {
+            orientation : {
+                unitQuaternion : [time1, 0.0, 0.0, 0.7071067, 0.7071067, time2, 0.7071067, 0.7071067, 0.0, 0.0]
+            }
+        };
+
+        var expected1 = new Quaternion(0.0, 0.0, 0.7071067, 0.7071067);
+        Quaternion.normalize(expected1, expected1);
+
+        var expected2 = new Quaternion(0.7071067, 0.7071067, 0.0, 0.0);
+        Quaternion.normalize(expected2, expected2);
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+        var entity = dataSource.entities.values[0];
+        expect(entity.orientation.getValue(JulianDate.fromIso8601(time1))).toEqual(expected1);
+        expect(entity.orientation.getValue(JulianDate.fromIso8601(time2))).toEqual(expected2);
     });
 
     it('positions work with cartesians.', function() {

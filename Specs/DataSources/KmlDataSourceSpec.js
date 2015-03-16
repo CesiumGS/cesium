@@ -502,11 +502,51 @@ defineSuite([
         </Placemark>';
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+    });
+
+    it('Feature: TimeStamp works', function() {
+        var date = JulianDate.fromIso8601('1941-12-07');
+
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Placemark>\
+            <TimeStamp>\
+              <when>1941-12-07</when>\
+            </TimeStamp>\
+        </Placemark>';
+
+        waitsForPromise(KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.availability).toBeDefined();
             expect(entity.availability.start).toEqual(date);
             expect(entity.availability.stop).toEqual(Iso8601.MAXIMUM_VALUE);
-        });
+        }));
+    });
+
+    it('Feature: TimeStamp gracefully handles empty fields', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Placemark>\
+            <TimeStamp>\
+            </TimeStamp>\
+        </Placemark>';
+
+        waitsForPromise(KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.availability).toBeUndefined();
+        }));
+    });
+
+    it('Feature: TimeStamp gracefully handles empty when field', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Placemark>\
+            <TimeStamp>\
+              <when></when>\
+            </TimeStamp>\
+        </Placemark>';
+
+        waitsForPromise(KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.availability).toBeUndefined();
+        }));
     });
 
     it('Feature: ExtendedData <Data> schema', function() {
@@ -677,6 +717,22 @@ defineSuite([
             </Document>';
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+    });
+
+    it('Styles: supports local styles with styleUrl mssing #', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Document>\
+            <Style id="testStyle">\
+              <IconStyle>\
+                  <scale>3</scale>\
+              </IconStyle>\
+            </Style>\
+            <Placemark>\
+              <styleUrl>testStyle</styleUrl>\
+            </Placemark>\
+            </Document>';
+
+        waitsForPromise(KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
             expect(entities[0].billboard.scale.getValue()).toEqual(3.0);
@@ -1494,6 +1550,19 @@ defineSuite([
         });
     });
 
+    it('BalloonStyle: does not create a description for empty ExtendedData', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Placemark>\
+                <ExtendedData>\
+                </ExtendedData>\
+            </Placemark>';
+
+        waitsForPromise(KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.description).toBeUndefined();
+        }));
+    });
+
     it('BalloonStyle: description creates links from text', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
         <Placemark>\
@@ -1596,11 +1665,21 @@ defineSuite([
             expect(label.eyeOffset).toBeUndefined();
             expect(label.pixelOffsetScaleByDistance).toBeUndefined();
 
-            expect(label.font.getValue()).toEqual('16px san-serif');
-            expect(label.style.getValue()).toEqual(LabelStyle.FILL_AND_OUTLINE);
-            expect(label.horizontalOrigin.getValue()).toEqual(HorizontalOrigin.LEFT);
-            expect(label.pixelOffset.getValue()).toEqual(new Cartesian2(17, 0));
-            expect(label.translucencyByDistance.getValue()).toEqual(new NearFarScalar(3000000, 1.0, 5000000, 0.0));
+        expect(label.text).toBeUndefined();
+        expect(label.fillColor).toBeUndefined();
+        expect(label.outlineColor).toBeUndefined();
+        expect(label.outlineWidth).toBeUndefined();
+        expect(label.show).toBeUndefined();
+        expect(label.scale).toBeUndefined();
+        expect(label.verticalOrigin).toBeUndefined();
+        expect(label.eyeOffset).toBeUndefined();
+        expect(label.pixelOffsetScaleByDistance).toBeUndefined();
+
+        expect(label.font.getValue()).toEqual('16px sans-serif');
+        expect(label.style.getValue()).toEqual(LabelStyle.FILL_AND_OUTLINE);
+        expect(label.horizontalOrigin.getValue()).toEqual(HorizontalOrigin.LEFT);
+        expect(label.pixelOffset.getValue()).toEqual(new Cartesian2(17, 0));
+        expect(label.translucencyByDistance.getValue()).toEqual(new NearFarScalar(3000000, 1.0, 5000000, 0.0));
         });
     });
 

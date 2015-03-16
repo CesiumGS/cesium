@@ -161,6 +161,10 @@ defineSuite([
         expect(new Color(0.1, 0.2, 0.3, 0.4).toCssColorString()).toEqual('rgba(25,51,76,0.4)');
     });
 
+    it('fromCssColorString supports transparent', function() {
+        expect(Color.fromCssColorString('transparent')).toEqual(new Color(0.0, 0.0, 0.0, 0.0));
+    });
+
     it('fromCssColorString supports the #rgb format', function() {
         expect(Color.fromCssColorString('#369')).toEqual(new Color(0.2, 0.4, 0.6, 1.0));
     });

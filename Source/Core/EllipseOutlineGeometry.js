@@ -201,7 +201,7 @@ define([
         this._rotation = defaultValue(options.rotation, 0.0);
         this._height = height;
         this._granularity = granularity;
-        this._extrudedHeight = defaultValue(extrudedHeight, 0.0);
+        this._extrudedHeight = extrudedHeight;
         this._extrude = extrude;
         this._numberOfVerticalLines = Math.max(defaultValue(options.numberOfVerticalLines, 16), 0);
         this._workerName = 'createEllipseOutlineGeometry';
@@ -211,7 +211,7 @@ define([
      * The number of elements used to pack the object into an array.
      * @type {Number}
      */
-    EllipseOutlineGeometry.packedLength = Cartesian3.packedLength + Ellipsoid.packedLength + 8;
+    EllipseOutlineGeometry.packedLength = Cartesian3.packedLength + Ellipsoid.packedLength + 9;
 
     /**
      * Stores the provided instance into the provided array.
@@ -244,7 +244,8 @@ define([
         array[startingIndex++] = value._rotation;
         array[startingIndex++] = value._height;
         array[startingIndex++] = value._granularity;
-        array[startingIndex++] = value._extrudedHeight;
+        array[startingIndex++] = defined(value._extrudedHeight) ? 1.0 : 0.0;
+        array[startingIndex++] = defaultValue(value._extrudedHeight, 0.0);
         array[startingIndex++] = value._extrude ? 1.0 : 0.0;
         array[startingIndex]   = value._numberOfVerticalLines;
     };
@@ -290,13 +291,14 @@ define([
         var rotation = array[startingIndex++];
         var height = array[startingIndex++];
         var granularity = array[startingIndex++];
+        var hasExtrudedHeight = array[startingIndex++];
         var extrudedHeight = array[startingIndex++];
         var extrude = array[startingIndex++] === 1.0;
         var numberOfVerticalLines = array[startingIndex];
 
         if (!defined(result)) {
             scratchOptions.height = height;
-            scratchOptions.extrudedHeight = extrudedHeight;
+            scratchOptions.extrudedHeight = hasExtrudedHeight ? extrudedHeight : undefined;
             scratchOptions.granularity = granularity;
             scratchOptions.rotation = rotation;
             scratchOptions.semiMajorAxis = semiMajorAxis;
@@ -312,7 +314,7 @@ define([
         result._rotation = rotation;
         result._height = height;
         result._granularity = granularity;
-        result._extrudedHeight = extrudedHeight;
+        result._extrudedHeight = hasExtrudedHeight ? extrudedHeight : undefined;
         result._extrude = extrude;
         result._numberOfVerticalLines = numberOfVerticalLines;
 

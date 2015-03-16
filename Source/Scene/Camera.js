@@ -7,7 +7,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/EasingFunction',
         '../Core/Ellipsoid',
@@ -31,7 +30,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         EasingFunction,
         Ellipsoid,
@@ -519,11 +517,6 @@ define([
         transform : {
             get : function() {
                 return this._transform;
-            },
-            set : function(value) {
-                deprecationWarning('Camera.transform', 'Camera.transform was deprecated in Cesium 1.6. It will be removed in Cesium 1.8. Use Camera.lookAtTransform.');
-                this._transform = value;
-                this._transformChanged = true;
             }
         },
 
@@ -779,18 +772,6 @@ define([
             frustum.top = ratio * frustum.right;
             frustum.bottom = -frustum.top;
         }
-    };
-
-    /**
-     * Sets the camera's transform without changing the current view.
-     *
-     * @deprecated
-     *
-     * @param {Matrix4} transform The camera transform.
-     */
-    Camera.prototype.setTransform = function(transform) {
-        deprecationWarning('Camera.setTransform', 'Camera.setTransform was deprecated in Cesium 1.6. It will be removed in Cesium 1.8. Use Camera.lookAtTransform.');
-        this._setTransform(transform);
     };
 
     var setTransformPosition = new Cartesian3();
@@ -1521,65 +1502,15 @@ define([
      * viewer.camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, range));
      */
     Camera.prototype.lookAt = function(target, offset) {
-        if (arguments.length > 2) {
-            deprecationWarning('Camera.lookAt', 'The eye, target, and up parameters to Camera.lookAt were deprecated in Cesium 1.6. It will be removed in Cesium 1.8. Use the target and offset parameters.');
-
-            var eye = arguments[0];
-            target = arguments[1];
-            var up = arguments[2];
-
-            //>>includeStart('debug', pragmas.debug);
-            if (!defined(eye)) {
-                throw new DeveloperError('eye is required');
-            }
-            if (!defined(target)) {
-                throw new DeveloperError('target is required');
-            }
-            if (!defined(up)) {
-                throw new DeveloperError('up is required');
-            }
-            if (this._mode === SceneMode.MORPHING) {
-                throw new DeveloperError('lookAt is not supported while morphing.');
-            }
-            //>>includeEnd('debug');
-
-            if (this._mode === SceneMode.SCENE2D) {
-                Cartesian2.clone(target, this.position);
-                Cartesian3.negate(Cartesian3.UNIT_Z, this.direction);
-
-                Cartesian3.clone(up, this.up);
-                this.up.z = 0.0;
-
-                if (Cartesian3.magnitudeSquared(this.up) < CesiumMath.EPSILON10) {
-                    Cartesian3.clone(Cartesian3.UNIT_Y, this.up);
-                }
-
-                Cartesian3.cross(this.direction, this.up, this.right);
-
-                var frustum = this.frustum;
-                var ratio = frustum.top / frustum.right;
-                frustum.right = eye.z;
-                frustum.left = -frustum.right;
-                frustum.top = ratio * frustum.right;
-                frustum.bottom = -frustum.top;
-
-                return;
-            }
-
-            this.position = Cartesian3.clone(eye, this.position);
-            this.direction = Cartesian3.normalize(Cartesian3.subtract(target, eye, this.direction), this.direction);
-            this.right = Cartesian3.normalize(Cartesian3.cross(this.direction, up, this.right), this.right);
-            this.up = Cartesian3.cross(this.right, this.direction, this.up);
-
-            return;
-        }
-
         //>>includeStart('debug', pragmas.debug);
         if (!defined(target)) {
             throw new DeveloperError('target is required');
         }
         if (!defined(offset)) {
             throw new DeveloperError('offset is required');
+        }
+        if (this._mode === SceneMode.MORPHING) {
+            throw new DeveloperError('lookAt is not supported while morphing.');
         }
         //>>includeEnd('debug');
 
@@ -2353,10 +2284,6 @@ define([
         } else if (defined(orientation.direction)) {
             direction = orientation.direction;
             up = orientation.up;
-        } else if (defined(options.direction) || defined(options.up)) {
-            deprecationWarning('Camera.flyTo', 'The direction and up options to Camera.flyTo have been deprecated in Cesium 1.6. They will be removed in Cesium 1.8. Use the orientation option.');
-            direction = options.direction;
-            up = options.up;
         }
 
         newOptions.destination = destination;
@@ -2369,24 +2296,6 @@ define([
         newOptions.convert = isRectangle ? false : options.convert;
 
         scene.tweens.add(CameraFlightPath.createTween(scene, newOptions));
-    };
-
-    /**
-     * Flies the camera from its current position to a position where the entire rectangle is visible.
-     *
-     * @deprecated
-     *
-     * @param {Object} options Object with the following properties:
-     * @param {Rectangle} options.destination The rectangle to view, in WGS84 (world) coordinates, which determines the final position of the camera.
-     * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
-     * @param {Camera~FlightCompleteCallback} [options.complete] The function to execute when the flight is complete.
-     * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
-     * @param {Matrix4} [endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
-     */
-    Camera.prototype.flyToRectangle = function(options) {
-        deprecationWarning('Camera.flyToRectangle', 'Camera.flyToRectangle has been deprecated in Cesium 1.6. They will be removed in Cesium 1.8. Use Camera.flyTo.');
-        var scene = this._scene;
-        scene.tweens.add(CameraFlightPath.createTweenRectangle(scene, options));
     };
 
     function distanceToBoundingSphere3D(camera, radius) {
@@ -2410,7 +2319,7 @@ define([
             right = heightRatio;
         }
 
-        return Math.max(right, top) * 1.25;
+        return Math.max(right, top) * 1.50;
     }
 
     var scratchDefaultOffset = new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_FOUR, 0.0);
@@ -2418,15 +2327,17 @@ define([
 
     function adjustBoundingSphereOffset(camera, boundingSphere, offset) {
         if (!defined(offset)) {
-            offset = scratchDefaultOffset;
-            offset.range = 0.0;
+            offset = HeadingPitchRange.clone(scratchDefaultOffset);
         }
 
-        if (boundingSphere.radius === 0.0) {
-            offset.range = MINIMUM_ZOOM;
-        } else if (defined(offset.range) && offset.range === 0.0) {
+        var range = offset.range;
+        if (!defined(range) || range === 0.0) {
             var radius = boundingSphere.radius;
-            offset.range = camera._mode === SceneMode.SCENE2D ? distanceToBoundingSphere2D(camera, radius) : distanceToBoundingSphere3D(camera, radius);
+            if (radius === 0.0) {
+                offset.range = MINIMUM_ZOOM;
+            } else {
+                offset.range = camera._mode === SceneMode.SCENE2D ? distanceToBoundingSphere2D(camera, radius) : distanceToBoundingSphere3D(camera, radius);
+            }
         }
 
         return offset;

@@ -1,6 +1,26 @@
 Change Log
 ==========
 
+### 1.8 -2015-04-01
+
+* Breaking changes
+  * Removed the `eye`, `target`, and `up` parameters to `Camera.lookAt` which were deprecated in Cesium 1.6. Use the `target` and `offset`.
+  * Removed `Camera.setTransform`, which was deprecated in Cesium 1.6. Use `Camera.lookAtTransform`.
+  * Removed `Camera.transform`, which was deprecated in Cesium 1.6. Use `Camera.lookAtTransform`.
+  * Removed the `direction` and `up` options to `Camera.flyTo`, which were deprecated in Cesium 1.6. Use the `orientation` option.
+  * Removed `Camera.flyToRectangle`, which was deprecated in Cesium 1.6. Use `Camera.flyTo`.
+* Fixed an issue with transparency. [#2572](https://github.com/AnalyticalGraphicsInc/cesium/issues/2572)
+
+### 1.7.1 - 2015-03-06
+
+* Fixed a crash in `InfoBox` that would occur when attempting to display plain text.
+* Fixed a crash when loading KML features that have no description and an empty `ExtendedData` node.
+* Fixed a bug `in Color.fromCssColorString` where undefined would be returned for the CSS color `transparent`.
+* Added `Color.TRANSPARENT`.
+* Added support for KML `TimeStamp` nodes.
+* Improved KML compatibility to work with non-specification compliant KML files that still happen to load in Google Earth.
+* All data sources now print errors to the console in addition to raising the `errorEvent` and rejecting their load promise.
+
 ### 1.7 - 2015-03-02
 
 * Breaking changes
@@ -19,9 +39,14 @@ Change Log
 * Added initial support for [KML 2.2](https://developers.google.com/kml/) via `KmlDataSource`. Check out the new [Sandcastle Demo](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=KML.html) and the [reference documentation](http://cesiumjs.org/Cesium/Build/Documentation/KmlDataSource.html) for more details.
 * `InfoBox` sanitization now relies on [iframe sandboxing](http://www.html5rocks.com/en/tutorials/security/sandboxed-iframes/). This allows for much more content to be displayed in the InfoBox (and still be secure).
 * Added `InfoBox.frame` which is the instance of the iframe that is used to host description content. Sanitization can be controlled via the frame's `sandbox` attribute.  See the above link for additional information. 
+* Worked around a bug in Safari that caused most of Cesium to be broken. Cesium should now work much better on Safari for both desktop and mobile.
 * Fixed incorrect ellipse texture coordinates. [#2363](https://github.com/AnalyticalGraphicsInc/cesium/issues/2363) and [#2465](https://github.com/AnalyticalGraphicsInc/cesium/issues/2465)
 * Fixed a bug that would cause incorrect geometry for long Corridors and Polyline Volumes. [#2513](https://github.com/AnalyticalGraphicsInc/cesium/issues/2513)
 * Fixed a bug in imagery loading that could cause some or all of the globe to be missing when using an imagery layer that does not cover the entire globe.
+* Fixed a bug that caused `ElipseOutlineGeometry` and `CircleOutlineGeometry` to be extruded to the ground when they should have instead been drawn at height. [#2499](https://github.com/AnalyticalGraphicsInc/cesium/issues/2499).
+* Fixed a bug that prevented per-vertex colors from working with `PolylineGeometry` and `SimplePolylineGeometry` when used asynchronously. [#2516](https://github.com/AnalyticalGraphicsInc/cesium/issues/2516)
+* Fixed a bug that would caused duplicate graphics if non-time-dynamic `Entity` objects were modified in quick succession. [#2514](https://github.com/AnalyticalGraphicsInc/cesium/issues/2514).  
+* Fixed a bug where `camera.flyToBoundingSphere` would ignore range if the bounding sphere radius was 0. [#2519](https://github.com/AnalyticalGraphicsInc/cesium/issues/2519)
 * Fixed some styling issues with `InfoBox` and `BaseLayerPicker` caused by using Bootstrap with Cesium. [#2487](https://github.com/AnalyticalGraphicsInc/cesium/issues/2479)
 * Added support for rendering a water effect on Quantized-Mesh terrain tiles.
 * Added `pack` and `unpack` functions to `Matrix2` and `Matrix3`.
