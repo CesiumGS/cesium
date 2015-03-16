@@ -1,0 +1,68 @@
+{
+  "name": "hawk",
+  "description": "HTTP Hawk Authentication Scheme",
+  "version": "1.0.0",
+  "author": {
+    "name": "Eran Hammer",
+    "email": "eran@hueniverse.com",
+    "url": "http://hueniverse.com"
+  },
+  "contributors": [],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/hueniverse/hawk"
+  },
+  "main": "index",
+  "keywords": [
+    "http",
+    "authentication",
+    "scheme",
+    "hawk"
+  ],
+  "engines": {
+    "node": ">=0.8.0"
+  },
+  "dependencies": {
+    "hoek": "0.9.x",
+    "boom": "0.4.x",
+    "cryptiles": "0.2.x",
+    "sntp": "0.2.x"
+  },
+  "devDependencies": {
+    "lab": "0.1.x",
+    "complexity-report": "0.x.x",
+    "localStorage": "1.0.x"
+  },
+  "scripts": {
+    "test": "make test-cov"
+  },
+  "licenses": [
+    {
+      "type": "BSD",
+      "url": "http://github.com/hueniverse/hawk/raw/master/LICENSE"
+    }
+  ],
+  "bugs": {
+    "url": "https://github.com/hueniverse/hawk/issues"
+  },
+  "_id": "hawk@1.0.0",
+  "dist": {
+    "shasum": "b90bb169807285411da7ffcb8dd2598502d3b52d",
+    "tarball": "http://registry.npmjs.org/hawk/-/hawk-1.0.0.tgz"
+  },
+  "_from": "hawk@>=1.0.0 <1.1.0",
+  "_npmVersion": "1.2.32",
+  "_npmUser": {
+    "name": "hueniverse",
+    "email": "eran@hueniverse.com"
+  },
+  "maintainers": [
+    {
+      "name": "hueniverse",
+      "email": "eran@hueniverse.com"
+    }
+  ],
+  "directories": {},
+  "_shasum": "b90bb169807285411da7ffcb8dd2598502d3b52d",
+  "_resolved": "https://registry.npmjs.org/hawk/-/hawk-1.0.0.tgz"
+}

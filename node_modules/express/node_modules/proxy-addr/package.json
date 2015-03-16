@@ -1,0 +1,82 @@
+{
+  "name": "proxy-addr",
+  "description": "Determine address of proxied request",
+  "version": "1.0.1",
+  "author": {
+    "name": "Douglas Christopher Wilson",
+    "email": "doug@somethingdoug.com"
+  },
+  "license": "MIT",
+  "keywords": [
+    "ip",
+    "proxy",
+    "x-forwarded-for"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/expressjs/proxy-addr.git"
+  },
+  "bugs": {
+    "url": "https://github.com/expressjs/proxy-addr/issues"
+  },
+  "dependencies": {
+    "ipaddr.js": "0.1.2"
+  },
+  "devDependencies": {
+    "benchmark": "1.0.0",
+    "beautify-benchmark": "0.2.4",
+    "istanbul": "0.2.10",
+    "mocha": "~1.20.0",
+    "should": "~4.0.0"
+  },
+  "engines": {
+    "node": ">= 0.8.0"
+  },
+  "scripts": {
+    "bench": "node benchmark/index.js",
+    "test": "mocha --reporter dot test/",
+    "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter dot test/",
+    "test-travis": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- --reporter spec test/"
+  },
+  "homepage": "https://github.com/expressjs/proxy-addr",
+  "_id": "proxy-addr@1.0.1",
+  "dist": {
+    "shasum": "c7c566d5eb4e3fad67eeb9c77c5558ccc39b88a8",
+    "tarball": "http://registry.npmjs.org/proxy-addr/-/proxy-addr-1.0.1.tgz"
+  },
+  "_from": "proxy-addr@1.0.1",
+  "_npmVersion": "1.4.3",
+  "_npmUser": {
+    "name": "dougwilson",
+    "email": "doug@somethingdoug.com"
+  },
+  "maintainers": [
+    {
+      "name": "dougwilson",
+      "email": "doug@somethingdoug.com"
+    },
+    {
+      "name": "jongleberry",
+      "email": "jonathanrichardong@gmail.com"
+    },
+    {
+      "name": "shtylman",
+      "email": "shtylman@gmail.com"
+    },
+    {
+      "name": "tjholowaychuk",
+      "email": "tj@vision-media.ca"
+    },
+    {
+      "name": "mscdex",
+      "email": "mscdex@mscdex.net"
+    },
+    {
+      "name": "fishrock123",
+      "email": "fishrock123@rocketmail.com"
+    }
+  ],
+  "directories": {},
+  "_shasum": "c7c566d5eb4e3fad67eeb9c77c5558ccc39b88a8",
+  "_resolved": "https://registry.npmjs.org/proxy-addr/-/proxy-addr-1.0.1.tgz"
+}

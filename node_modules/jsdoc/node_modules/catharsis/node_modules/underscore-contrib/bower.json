@@ -1,0 +1,28 @@
+{
+  "name": "underscore-contrib",
+  "version": "0.3.0",
+  "main": "dist/underscore-contrib.min.js",
+  "homepage": "https://github.com/documentcloud/underscore-contrib",
+  "authors": [
+    "fogus <me@fogus.me>"
+  ],
+  "description": "The brass buckles on Underscore's utility belt",
+  "keywords": [
+    "underscore",
+    "underscorejs",
+    "documentcloud",
+    "functional",
+    "javascript"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies"  : {
+    "underscore"  : ">=1.6.0"
+  }
+}

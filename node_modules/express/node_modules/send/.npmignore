@@ -1,0 +1,5 @@
+coverage
+test
+examples
+.travis.yml
+*.sock

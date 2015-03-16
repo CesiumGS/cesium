@@ -1,0 +1,11 @@
+.git*
+benchmarks/
+coverage/
+docs/
+examples/
+support/
+test/
+testing.js
+.DS_Store
+.travis.yml
+Contributing.md

@@ -1,0 +1,122 @@
+.cesium-navigationHelpButton-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.cesium-navigation-help {
+    visibility: hidden;
+    position: absolute;
+    top: 38px;
+    right: 2px;
+    width: 250px;
+    border-radius: 10px;
+    -webkit-transform: scale(0.01);
+    -moz-transform: scale(0.01);
+    transform: scale(0.01);
+    -webkit-transform-origin: 234px -10px;
+    -moz-transform-origin: 234px -10px;
+    transform-origin: 234px -10px;
+    -webkit-transition: visibility 0s 0.25s, -webkit-transform 0.25s ease-in;
+    -moz-transition: visibility 0s 0.25s, -moz-transform 0.25s ease-in;
+    transition: visibility 0s 0.25s, transform 0.25s ease-in;
+}
+
+.cesium-navigation-help-visible {
+    visibility: visible;
+    -webkit-transform: scale(1);
+    -moz-transform: scale(1);
+    transform: scale(1);
+    -webkit-transition: -webkit-transform 0.25s ease-out;
+    -moz-transition: -moz-transform 0.25s ease-out;
+    transition: transform 0.25s ease-out;
+}
+
+.cesium-navigation-help-instructions {
+    border: 1px solid #444;
+    background-color: rgba(38, 38, 38, 0.75);
+    padding-bottom: 5px;
+    border-radius: 0 0 10px 10px;
+}
+
+.cesium-click-navigation-help {
+    display: none;
+}
+
+.cesium-touch-navigation-help {
+    display: none;
+    padding-top: 5px;
+}
+
+.cesium-click-navigation-help-visible {
+    display: block;
+}
+
+.cesium-touch-navigation-help-visible {
+    display: block;
+}
+
+.cesium-navigation-help-pan {
+    color: #66ccff;
+    font-weight: bold;
+}
+
+.cesium-navigation-help-zoom {
+    color: #65fd00;
+    font-weight: bold;
+}
+
+.cesium-navigation-help-rotate {
+    color: #ffd800;
+    font-weight: bold;
+}
+
+.cesium-navigation-help-tilt {
+    color: #d800d8;
+    font-weight: bold;
+}
+
+.cesium-navigation-help-details {
+    color: #ffffff;
+}
+
+.cesium-navigation-button {
+    color: #fff;
+    background-color: transparent;
+    border-bottom: none;
+    border-top: 1px solid #444;
+    border-right: 1px solid #444;
+    margin: 0;
+    width: 50%;
+    cursor: pointer;
+}
+
+.cesium-navigation-button-icon {
+    vertical-align: middle;
+    padding: 5px 1px;
+}
+
+.cesium-navigation-button:focus {
+    outline: none;
+}
+
+.cesium-navigation-button-left {
+    border-radius: 10px 0 0 0;
+    border-left: 1px solid #444;
+}
+
+.cesium-navigation-button-right {
+    border-radius: 0 10px 0 0;
+    border-left: none;
+}
+
+.cesium-navigation-button-selected {
+    background-color: rgba(38, 38, 38, 0.75);
+}
+
+.cesium-navigation-button-unselected {
+    background-color: rgba(0, 0, 0, 0.75);
+}
+
+.cesium-navigation-button-unselected:hover {
+    background-color: rgba(76, 76, 76, 0.75);
+}

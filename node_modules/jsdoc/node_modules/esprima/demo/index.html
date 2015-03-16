@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+
+<head>
+  <meta charset="utf-8" />
+  <title>Esprima: Demos</title>
+  <meta name="viewport" content="width=device-width" />
+  <link rel="stylesheet" type="text/css" href="../assets/foundation/foundation.min.css"/>
+  <link rel="stylesheet" type="text/css" href="../assets/style.css"/>
+</head>
+
+<body>
+
+  <!-- Navigation bar -->
+  <div class="row">
+    <div class="twelve columns">
+      <nav class="top-bar">
+        <ul>
+          <li class="name">
+             <h1><a href="../index.html">Esprima</a></h1>
+          </li>
+        </ul>
+        <section>
+          <ul class="right">
+            <li class="divider show-for-medium-and-up"></li>
+            <li class="has-dropdown">
+              <a href="../demo/index.html">Demo</a>
+              <ul class="dropdown">
+                <li><label>Static Analysis</label></li>
+                <li><a href="../demo/parse.html">Online Parsing</a></li>
+                <li><a href="../demo/validate.html">Syntax Validator</a></li>
+                <li><a href="../demo/precedence.html">Operator Precedence</a></li>
+                <li><a href="../demo/collector.html">Regex Collector</a></li>
+                <li><label>Dynamic Tracing</label></li>
+                <li><a href="../demo/functiontrace.html">Function Instrumentation</a></li>
+                <li><label>Code Transformation</label></li>
+                <li><a href="../demo/rewrite.html">Source Rewrite</a></li>
+                <li><a href="../demo/minify.html">Minifiy &amp; Obfuscate</a></li>
+                <li><label>Editing Tools</label></li>
+                <li><a href="../demo/highlight.html">Identifier Highlight</a></li>
+                <li><a href="../demo/autocomplete.html">Autocomplete</a></li>
+              </ul>
+            </li>
+            <li class="has-dropdown">
+              <a href="#">Project</a>
+              <ul class="dropdown">
+                <li><a href="http://github.com/ariya/esprima">Git Repository</a></li>
+                <li><a href="https://travis-ci.org/ariya/esprima">Continuous Integration</a></li>
+                <li><a href="http://groups.google.com/group/esprima">Mailing List</a></li>
+                <li><a href="http://issues.esprima.org/">Issue Tracker</a></li>
+                <li class="divider"></li>
+                <li><label>QA</label></li>
+                <li><a href="../test/index.html">Unit Tests</a></li>
+                <li><a href="../test/benchmarks.html">Benchmarks Suite</a></li>
+                <li><a href="../test/compat.html">Compatibility Tests</a></li>
+                <li><a href="../test/compare.html">Speed Comparison</a></li>
+                <li><a href="../test/module.html">Module Loading</a></li>
+                <li><a href="../test/coverage.html">Coverage Analysis</a></li>
+              </ul>
+            </li>
+            <li><a href="../doc/index.html">Documentation</a></li>
+          </ul>
+        </section>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Title and subtitle -->
+  <div class="row">
+    <div class="twelve columns">
+       <h3 class="subheader"><strong>Demos</strong> are worth a thousand words</h3>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="row">
+    <div class="six columns">
+      <h4>Static Analysis</h4>
+      <p>Once Esprima produces the
+        <a href="http://en.wikipedia.org/wiki/Abstract_syntax_tree">abstract syntax tree</a> (AST),
+        various types of static analysis can give a useful insight.
+        The code can be seen from a different perspective via a syntax
+        <a href="parse.html">visualization</a>. For testing purposes,
+        it can be checked against the language specification using
+        the code <a href="validate.html">validator</a>.
+      </p>
+      <p>Other analysis tools:</p>
+      <ul class="square">
+        <li>Scan and spot <a href="collector.html">regular expressions</a></li>
+        <li>Equivalency of different <a href="precedence.htm">operator precedences</a></li>
+      </ul>
+    </div>
+    <div class="six columns">
+      <h4>Dynamic Tracing</h4>
+      <p>Analyzing the run-time behavior is essential to ensure a consistent
+        application performance. One practical usage is by monitoring
+        the <a href="functiontrace.html">function execution</a>,
+        it will reveal how many times each function is being invoked.</p>
+      <h4>Code Transformation</h4>
+      <p>Regenerative transformation is made possibly by recreating the code
+        from its AST. This permits both <a href="rewrite.html">source rewriting</a>
+        (following particular coding style) as well as
+        <a href="minify.html">code minification</a> (for size reduction).</p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="eight columns">
+      <h4>Editing Tools</h4>
+      <p>Semantic information about the code (as being edited) can be used
+        to give an important assistance, from a simple
+        <a href="highlight.html">identifier highlighting</a>
+        to a more complex intelligent <a href="autocomplete.html">autocompletion</a>.</p>
+      <p><img src="../assets/images/autocomplete.png" width="562" height="295" alt="Autocomplete"></p>
+    </div>
+  </div>
+
+
+  <!-- Footer -->
+  <div class="row copyright">
+    <div class="six columns">
+      <p>Esprima is created and mantained by <a href="http://ariya.ofilabs.com/about">Ariya Hidayat</a>.</p>
+    </div>
+    <div class="six columns">
+      <ul class="link-list right">
+        <li><a href="http://twitter.com/esprima">@Esprima</a></li>
+        <li><a href="https://github.com/ariya/esprima">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+
+</body>
+</html>

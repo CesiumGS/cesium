@@ -1,0 +1,76 @@
+{
+  "name": "send",
+  "description": "Better streaming static file server with Range and conditional-GET support",
+  "version": "0.4.3",
+  "author": {
+    "name": "TJ Holowaychuk",
+    "email": "tj@vision-media.ca"
+  },
+  "contributors": [
+    {
+      "name": "Douglas Christopher Wilson",
+      "email": "doug@somethingdoug.com"
+    }
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/visionmedia/send"
+  },
+  "keywords": [
+    "static",
+    "file",
+    "server"
+  ],
+  "dependencies": {
+    "debug": "1.0.2",
+    "escape-html": "1.0.1",
+    "finished": "1.2.2",
+    "fresh": "0.2.2",
+    "mime": "1.2.11",
+    "range-parser": "~1.0.0"
+  },
+  "devDependencies": {
+    "istanbul": "0.2.10",
+    "mocha": "~1.20.0",
+    "should": "~4.0.0",
+    "supertest": "~0.13.0"
+  },
+  "engines": {
+    "node": ">= 0.8.0"
+  },
+  "scripts": {
+    "test": "mocha --reporter dot",
+    "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter dot",
+    "test-travis": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- --reporter spec"
+  },
+  "gitHead": "ffac4f5c4eca470a041ff328e425a8050a4d792c",
+  "bugs": {
+    "url": "https://github.com/visionmedia/send/issues"
+  },
+  "homepage": "https://github.com/visionmedia/send",
+  "_id": "send@0.4.3",
+  "_shasum": "9627b23b7707fbf6373831cac5793330b594b640",
+  "_from": "send@0.4.3",
+  "_npmVersion": "1.4.14",
+  "_npmUser": {
+    "name": "dougwilson",
+    "email": "doug@somethingdoug.com"
+  },
+  "maintainers": [
+    {
+      "name": "tjholowaychuk",
+      "email": "tj@vision-media.ca"
+    },
+    {
+      "name": "dougwilson",
+      "email": "doug@somethingdoug.com"
+    }
+  ],
+  "dist": {
+    "shasum": "9627b23b7707fbf6373831cac5793330b594b640",
+    "tarball": "http://registry.npmjs.org/send/-/send-0.4.3.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/send/-/send-0.4.3.tgz"
+}

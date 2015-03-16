@@ -1,0 +1,49 @@
+{
+  "name": "ee-first",
+  "description": "return the first event in a set of ee/event pairs",
+  "version": "1.0.3",
+  "author": {
+    "name": "Jonathan Ong",
+    "email": "me@jongleberry.com",
+    "url": "http://jongleberry.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jonathanong/ee-first"
+  },
+  "devDependencies": {
+    "mocha": "1"
+  },
+  "scripts": {
+    "test": "mocha --reporter spec"
+  },
+  "bugs": {
+    "url": "https://github.com/jonathanong/ee-first/issues"
+  },
+  "homepage": "https://github.com/jonathanong/ee-first",
+  "_id": "ee-first@1.0.3",
+  "_shasum": "6c98c4089abecb5a7b85c1ac449aa603d3b3dabe",
+  "_from": "ee-first@1.0.3",
+  "_npmVersion": "1.4.9",
+  "_npmUser": {
+    "name": "jongleberry",
+    "email": "jonathanrichardong@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "jongleberry",
+      "email": "jonathanrichardong@gmail.com"
+    },
+    {
+      "name": "dougwilson",
+      "email": "doug@somethingdoug.com"
+    }
+  ],
+  "dist": {
+    "shasum": "6c98c4089abecb5a7b85c1ac449aa603d3b3dabe",
+    "tarball": "http://registry.npmjs.org/ee-first/-/ee-first-1.0.3.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/ee-first/-/ee-first-1.0.3.tgz"
+}

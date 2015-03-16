@@ -1,0 +1,75 @@
+{
+  "name": "finished",
+  "description": "Execute a callback when a request closes, finishes, or errors",
+  "version": "1.2.2",
+  "author": {
+    "name": "Jonathan Ong",
+    "email": "me@jongleberry.com",
+    "url": "http://jongleberry.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/expressjs/finished"
+  },
+  "dependencies": {
+    "ee-first": "1.0.3"
+  },
+  "devDependencies": {
+    "istanbul": "0.2.10",
+    "mocha": "~1.20.1",
+    "should": "~4.0.1"
+  },
+  "engine": {
+    "node": ">= 0.8.0"
+  },
+  "scripts": {
+    "test": "mocha --reporter spec test/",
+    "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter dot test/",
+    "test-travis": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- --reporter spec test/"
+  },
+  "bugs": {
+    "url": "https://github.com/expressjs/finished/issues"
+  },
+  "homepage": "https://github.com/expressjs/finished",
+  "_id": "finished@1.2.2",
+  "_shasum": "41608eafadfd65683b46a1220bc4b1ec3daedcd8",
+  "_from": "finished@1.2.2",
+  "_npmVersion": "1.4.9",
+  "_npmUser": {
+    "name": "jongleberry",
+    "email": "jonathanrichardong@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "jongleberry",
+      "email": "jonathanrichardong@gmail.com"
+    },
+    {
+      "name": "dougwilson",
+      "email": "doug@somethingdoug.com"
+    },
+    {
+      "name": "tjholowaychuk",
+      "email": "tj@vision-media.ca"
+    },
+    {
+      "name": "shtylman",
+      "email": "shtylman@gmail.com"
+    },
+    {
+      "name": "mscdex",
+      "email": "mscdex@mscdex.net"
+    },
+    {
+      "name": "fishrock123",
+      "email": "fishrock123@rocketmail.com"
+    }
+  ],
+  "dist": {
+    "shasum": "41608eafadfd65683b46a1220bc4b1ec3daedcd8",
+    "tarball": "http://registry.npmjs.org/finished/-/finished-1.2.2.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/finished/-/finished-1.2.2.tgz"
+}

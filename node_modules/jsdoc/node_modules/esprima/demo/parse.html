@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+
+<head>
+  <meta charset="utf-8" />
+  <title>Esprima: Parser</title>
+  <meta name="viewport" content="width=device-width" />
+  <link rel="stylesheet" type="text/css" href="../assets/orion/built-editor.css"/>
+  <link rel="stylesheet" type="text/css" href="../assets/style.css"/>
+  <link rel="stylesheet" href="../assets/foundation/foundation.min.css">
+  <script src="http://yui.yahooapis.com/3.9.0/build/yui/yui-min.js"></script>
+<style>
+textarea {
+    white-space: pre;
+    overflow: scroll;
+    font-size: 10pt;
+    font-family: 'Droid Sans Mono', Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+}
+
+.yui3-treeview-icon {
+    display: none;
+}
+</style>
+</head>
+
+<body>
+
+  <!-- Navigation bar -->
+  <div class="row">
+    <div class="twelve columns">
+      <nav class="top-bar">
+        <ul>
+          <li class="name">
+             <h1><a href="../index.html">Esprima</a></h1>
+          </li>
+        </ul>
+        <section>
+          <ul class="right">
+            <li class="divider show-for-medium-and-up"></li>
+            <li class="has-dropdown">
+              <a href="../demo/index.html">Demo</a>
+              <ul class="dropdown">
+                <li><label>Static Analysis</label></li>
+                <li><a href="../demo/parse.html">Online Parsing</a></li>
+                <li><a href="../demo/validate.html">Syntax Validator</a></li>
+                <li><a href="../demo/precedence.html">Operator Precedence</a></li>
+                <li><a href="../demo/collector.html">Regex Collector</a></li>
+                <li><label>Dynamic Tracing</label></li>
+                <li><a href="../demo/functiontrace.html">Function Instrumentation</a></li>
+                <li><label>Code Transformation</label></li>
+                <li><a href="../demo/rewrite.html">Source Rewrite</a></li>
+                <li><a href="../demo/minify.html">Minifiy &amp; Obfuscate</a></li>
+                <li><label>Editing Tools</label></li>
+                <li><a href="../demo/highlight.html">Identifier Highlight</a></li>
+                <li><a href="../demo/autocomplete.html">Autocomplete</a></li>
+              </ul>
+            </li>
+            <li class="has-dropdown">
+              <a href="#">Project</a>
+              <ul class="dropdown">
+                <li><a href="http://github.com/ariya/esprima">Git Repository</a></li>
+                <li><a href="https://travis-ci.org/ariya/esprima">Continuous Integration</a></li>
+                <li><a href="http://groups.google.com/group/esprima">Mailing List</a></li>
+                <li><a href="http://issues.esprima.org/">Issue Tracker</a></li>
+                <li class="divider"></li>
+                <li><label>QA</label></li>
+                <li><a href="../test/index.html">Unit Tests</a></li>
+                <li><a href="../test/benchmarks.html">Benchmarks Suite</a></li>
+                <li><a href="../test/compat.html">Compatibility Tests</a></li>
+                <li><a href="../test/compare.html">Speed Comparison</a></li>
+                <li><a href="../test/module.html">Module Loading</a></li>
+                <li><a href="../test/coverage.html">Coverage Analysis</a></li>
+              </ul>
+            </li>
+            <li><a href="../doc/index.html">Documentation</a></li>
+          </ul>
+        </section>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Title and subtitle -->
+  <div class="row">
+    <div class="twelve columns">
+       <h3 class="subheader"><strong>Parser</strong> produces the (beautiful) syntax tree</h3>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="row">
+    <div class="six columns">
+
+<pre id="editor" spellcheck="false" style="height: 350px">
+// Life, Universe, and Everything
+var answer = 6 * 7;
+</pre>
+      <div id="info" class="alert-box secondary">Ready.</div>
+
+      <div class="twelve columns">
+       <p>Syntax node location info (start, end):
+       <label><input type="checkbox" id="range">Index-based range</label>
+       <label><input type="checkbox" id="loc">Line and column-based</label></p>
+       <label><input type="checkbox" id="comment"> Include comments</label>
+       <label><input type="checkbox" id="tolerant"> Tolerate errors (<a href="https://code.google.com/p/esprima/issues/detail?id=130">experimental</a>)</label></p>
+      </div>
+
+    </div>
+
+    <div class="six columns">
+      <dl class="tabs">
+        <dd id="show_syntax" class="active"><a href="#">Syntax</a></dd>
+        <dd id="show_tree"><a href="#">Tree</a></dd>
+        <dd id="show_tokens"><a href="#">Tokens</a></dd>
+      </dl>
+      <ul class="tabs-content">
+        <li class="active" id="tab_syntax"><textarea wrap="off" id="syntax" rows="30" readonly></textarea><li>
+        <li id="tab_tree" style="display:none">
+          <input class="small radius button secondary right" type="button" value="Collapse All" id="collapse">&nbsp;
+          <input class="small radius button secondary right" type="button" value="Expand All" id="expand">
+          <div class="yui3-skin-sam"><div id="treeview"></div>
+        </li>
+        <li id="tab_tokens" style="display:none"><textarea id="tokens" rows="30" readonly></textarea><li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="row">
+    <p></p>
+    <p>For a command-line usage, check <tt>esvalidate</tt> from <a href="https://npmjs.org/package/esprima">Esprima package</a> for Node.js.</p>
+  </div>
+
+  <div class="row">
+    <div class="two columns">
+      <label class="inline right">URL for this code:</label>
+    </div>
+    <div class="ten columns">
+      <input id="url" type="text" readonly onclick="this.select()">
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="row copyright">
+    <div class="six columns">
+      <p>Esprima is created and mantained by <a href="http://ariya.ofilabs.com/about">Ariya Hidayat</a>.</p>
+    </div>
+    <div class="six columns">
+      <ul class="link-list right">
+        <li><a href="http://twitter.com/esprima">@Esprima</a></li>
+        <li><a href="https://github.com/ariya/esprima">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+
+<script src="../esprima.js"></script>
+<script src="../test/3rdparty/escodegen.browser.js"></script>
+<script src="../test/3rdparty/esmangle.browser.js"></script>
+<script src="../assets/orion/built-editor.min.js"></script>
+<script src="../assets/orion/customeditor.js"></script>
+<script src="parse.js"></script>
+</body>
+</html>

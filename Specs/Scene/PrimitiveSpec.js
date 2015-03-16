@@ -512,7 +512,7 @@ defineSuite([
         frameState.scene3DOnly = false;
     });
 
-    it('does not update model matrix for more than one instance in 3D with different model matrices', function() {
+    it('update model matrix throws for more than one instance in 3D with different model matrices', function() {
         var primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
@@ -528,14 +528,14 @@ defineSuite([
         primitive.modelMatrix = modelMatrix;
 
         commands.length = 0;
-        primitive.update(context, frameState, commands);
-        expect(commands.length).toEqual(1);
-        expect(commands[0].modelMatrix).toEqual(Matrix4.IDENTITY);
+        expect(function() {
+            primitive.update(context, frameState, commands);
+        }).toThrowDeveloperError();
 
         primitive = primitive && primitive.destroy();
     });
 
-    it('does not update model matrix in Columbus view', function() {
+    it('update model matrix throws in Columbus view', function() {
         var primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
@@ -553,15 +553,15 @@ defineSuite([
         primitive.modelMatrix = modelMatrix;
 
         commands.length = 0;
-        primitive.update(context, frameState, commands);
-        expect(commands.length).toEqual(1);
-        expect(commands[0].modelMatrix).toEqual(Matrix4.IDENTITY);
+        expect(function() {
+            primitive.update(context, frameState, commands);
+        }).toThrowDeveloperError();
 
         frameState = createFrameState(); // reset frame state
         primitive = primitive && primitive.destroy();
     });
 
-    it('does not update model matrix in 2D', function() {
+    it('update model matrix throws in 2D', function() {
         var primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
@@ -579,9 +579,9 @@ defineSuite([
         primitive.modelMatrix = modelMatrix;
 
         commands.length = 0;
-        primitive.update(context, frameState, commands);
-        expect(commands.length).toEqual(1);
-        expect(commands[0].modelMatrix).toEqual(Matrix4.IDENTITY);
+        expect(function() {
+            primitive.update(context, frameState, commands);
+        }).toThrowDeveloperError();
 
         frameState = createFrameState(); // reset frame state
         primitive = primitive && primitive.destroy();

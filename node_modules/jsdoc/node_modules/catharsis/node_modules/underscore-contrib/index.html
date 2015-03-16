@@ -1,0 +1,1993 @@
+<!doctype html>
+<html>
+<head>
+<title></title>
+<link rel="stylesheet" type="text/css" href="tocdoc.css" />
+</head>
+<body>
+<div class="toc"><ul><li><a href="#introduction">Introduction</a><ul><li><a href="#places">Places</a></li><li><a href="#why-underscore-contrib">Why underscore-contrib?</a></li><li><a href="#use">Use</a><ul><li><a href="#in-the-browser">In the Browser</a></li><li><a href="#in-node.js">In Node.js</a></li></ul></li><li><a href="#license">License</a></li></ul></li><li><a href="#sub-libraries">Sub-libraries</a><ul><li><a href="#array.builders">array.builders</a><ul><li><a href="#cat">cat</a></li><li><a href="#chunk">chunk</a></li><li><a href="#chunkall">chunkAll</a></li><li><a href="#cons">cons</a></li><li><a href="#cycle">cycle</a></li><li><a href="#interpose">interpose</a></li><li><a href="#iterateuntil">iterateUntil</a></li><li><a href="#keepindexed">keepIndexed</a></li><li><a href="#mapcat">mapcat</a></li><li><a href="#reductions">reductions</a></li><li><a href="#repeat">repeat</a></li><li><a href="#splitat">splitAt</a></li><li><a href="#takeskipping">takeSkipping</a></li><li><a href="#weave">weave</a></li></ul></li><li><a href="#array.selectors">array.selectors</a><ul><li><a href="#best">best</a></li><li><a href="#dropwhile">dropWhile</a></li><li><a href="#keep">keep</a></li><li><a href="#nth">nth</a></li><li><a href="#partitionby">partitionBy</a></li><li><a href="#second">second</a></li><li><a href="#takewhile">takeWhile</a></li><li><a href="#third">third</a></li></ul></li><li><a href="#collections.walk">collections.walk</a></li><li><a href="#function.arity">function.arity</a><ul><li><a href="#arity">arity</a></li><li><a href="#binary">binary</a></li><li><a href="#curry">curry</a></li><li><a href="#curry2">curry2</a></li><li><a href="#curry3">curry3</a></li><li><a href="#fix">fix</a></li><li><a href="#quaternary">quaternary</a></li><li><a href="#ternary">ternary</a></li><li><a href="#unary">unary</a></li><li><a href="#rcurry">rCurry</a></li><li><a href="#rcurry2">rcurry2</a></li><li><a href="#rcurry3">rcurry3</a></li></ul></li><li><a href="#function.combinators">function.combinators</a><ul><li><a href="#always">always</a></li><li><a href="#bound">bound</a></li><li><a href="#comparator">comparator</a></li><li><a href="#complement">complement</a></li><li><a href="#conjoin">conjoin</a></li><li><a href="#disjoin">disjoin</a></li><li><a href="#juxt">juxt</a></li><li><a href="#flip">flip</a></li><li><a href="#flip2">flip2</a></li><li><a href="#fnull">fnull</a></li><li><a href="#functionalize">functionalize</a></li><li><a href="#mapargs">mapArgs</a></li><li><a href="#mapargswith">mapArgsWith</a></li><li><a href="#methodize">methodize</a></li><li><a href="#pipeline">pipeline</a></li><li><a href="#splat">splat</a></li><li><a href="#unsplat">unsplat</a></li><li><a href="#unsplatl">unsplatl</a></li></ul></li><li><a href="#function.iterators">function.iterators</a><ul><li><a href="#iterators.accumulate">iterators.accumulate</a></li><li><a href="#iterators.accumulatewithreturn">iterators.accumulateWithReturn</a></li><li><a href="#iterators.drop">iterators.drop</a></li><li><a href="#iterators.foldl">iterators.foldl</a></li><li><a href="#iterators.k">iterators.K</a></li><li><a href="#iterators.list">iterators.List</a></li><li><a href="#iterators.map">iterators.map</a></li><li><a href="#iterators.mapcat">iterators.mapcat</a></li><li><a href="#iterators.numbers">iterators.numbers</a></li><li><a href="#iterators.range">iterators.range</a></li><li><a href="#iterators.reject">iterators.reject</a></li><li><a href="#iterators.select">iterators.select</a></li><li><a href="#iterators.slice">iterators.slice</a></li><li><a href="#iterators.take">iterators.take</a></li><li><a href="#iterators.tree">iterators.Tree</a></li><li><a href="#iterators.unfold">iterators.unfold</a></li><li><a href="#iterators.unfoldwithreturn">iterators.unfoldWithReturn</a></li></ul></li><li><a href="#function.predicates">function.predicates</a><ul><li><a href="#isassociative">isAssociative</a></li><li><a href="#isdecreasing">isDecreasing</a></li><li><a href="#iseven">isEven</a></li><li><a href="#isfloat">isFloat</a></li><li><a href="#isincreasing">isIncreasing</a></li><li><a href="#isindexed">isIndexed</a></li><li><a href="#isinstanceof">isInstanceOf</a></li><li><a href="#isinteger">isInteger</a></li><li><a href="#isjson">isJSON</a></li><li><a href="#isnegative">isNegative</a></li><li><a href="#isnumeric">isNumeric</a></li><li><a href="#isodd">isOdd</a></li><li><a href="#isplainobject">isPlainObject</a></li><li><a href="#ispositive">isPositive</a></li><li><a href="#issequential">isSequential</a></li><li><a href="#isvaliddate">isValidDate</a></li><li><a href="#iszero">isZero</a></li></ul></li><li><a href="#object.builders">object.builders</a><ul><li><a href="#frequencies">frequencies</a></li><li><a href="#merge">merge</a></li><li><a href="#renamekeys">renameKeys</a></li><li><a href="#setpath">setPath</a></li><li><a href="#snapshot">snapshot</a></li></ul></li><li><a href="#object.selectors">object.selectors</a><ul><li><a href="#accessor">accessor</a></li><li><a href="#dictionary">dictionary</a></li><li><a href="#getpath">getPath</a></li><li><a href="#haspath">hasPath</a></li><li><a href="#kv">kv</a></li><li><a href="#omitwhen">omitWhen</a></li><li><a href="#pickwhen">pickWhen</a></li><li><a href="#selectkeys">selectKeys</a></li></ul></li><li><a href="#util.existential">util.existential</a><ul><li><a href="#exists">exists</a></li><li><a href="#falsey">falsey</a></li><li><a href="#firstexisting">firstExisting</a></li><li><a href="#not">not</a></li><li><a href="#truthy">truthy</a></li></ul></li><li><a href="#util.operators">util.operators</a><ul><li><a href="#add">add</a></li><li><a href="#bitwiseand">bitwiseAnd</a></li><li><a href="#bitwiseleft">bitwiseLeft</a></li><li><a href="#bitwiseright">bitwiseRight</a></li><li><a href="#bitwisenot">bitwiseNot</a></li><li><a href="#bitwiseor">bitwiseOr</a></li><li><a href="#bitwisexor">bitwiseXor</a></li><li><a href="#bitwisez">bitwiseZ</a></li><li><a href="#dec">dec</a></li><li><a href="#div">div</a></li><li><a href="#eq">eq</a></li><li><a href="#gt">gt</a></li><li><a href="#gte">gte</a></li><li><a href="#inc">inc</a></li><li><a href="#lt">lt</a></li><li><a href="#lte">lte</a></li><li><a href="#mul">mul</a></li><li><a href="#mod">mod</a></li><li><a href="#neg">neg</a></li><li><a href="#neq">neq</a></li><li><a href="#not-1">not</a></li><li><a href="#seq">seq</a></li><li><a href="#sneq">sneq</a></li><li><a href="#sub">sub</a></li></ul></li><li><a href="#util.strings">util.strings</a><ul><li><a href="#camelcase">camelCase</a></li><li><a href="#explode">explode</a></li><li><a href="#fromquery">fromQuery</a></li><li><a href="#implode">implode</a></li><li><a href="#strcontains">strContains</a></li><li><a href="#todash">toDash</a></li><li><a href="#toquery">toQuery</a></li></ul></li><li><a href="#util.trampolines">util.trampolines</a></li><li><a href="#changelog">Changelog</a><ul><li><a href="#0.3.0">0.3.0</a></li></ul></li></ul></li></ul></div>
+<h1 id="underscore-contrib-0-3-0-">Underscore-contrib (0.3.0)</h1>
+<blockquote>
+<p>The brass buckles on Underscore&#39;s utility belt - a contributors&#39; library for <a href="http://underscorejs.org/">Underscore</a>.</p>
+</blockquote>
+<h2 id="introduction"><a href="#introduction" name="introduction">Introduction</a></h2>
+<h3 id="places"><a href="#places" name="places">Places</a></h3>
+<ul>
+<li><a href="http://documentcloud.github.io/underscore-contrib/">Documentation</a></li>
+<li><a href="https://github.com/documentcloud/underscore-contrib">Source repository</a></li>
+<li><a href="https://github.com/documentcloud/underscore-contrib/issues?state=open">Tickets and bug reports</a></li>
+<li><a href="http://www.fogus.me">Maintainer&#39;s website</a></li>
+</ul>
+<h3 id="why-underscore-contrib-"><a href="#why-underscore-contrib" name="why-underscore-contrib">Why underscore-contrib?</a></h3>
+<p>While Underscore provides a bevy of useful tools to support functional programming in JavaScript, it can&#39;t
+(and shouldn&#39;t) be everything to everyone. Underscore-contrib is intended as a home for functions that, for
+various reasons, don&#39;t belong in Underscore proper. In particular, it aims to be:</p>
+<ul>
+<li>a home for functions that are limited in scope, but solve certain point problems, and</li>
+<li>a proving ground for features that belong in Underscore proper, but need some advocacy and/or evolution
+(or devolution) to get them there.</li>
+</ul>
+<h3 id="use"><a href="#use" name="use">Use</a></h3>
+<h4 id="in-the-browser"><a href="#in-the-browser" name="in-the-browser">In the Browser</a></h4>
+<p>First, you&#39;ll need Underscore <strong>version 1.6.0 or higher</strong>. Then you can grab the relevant underscore-contrib sub-libraries and simply add something like
+the following to your pages:</p>
+<pre><code class="lang-html">&lt;script type=&quot;text/javascript&quot; src=&quot;underscore.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;underscore.object.builders.js&quot;&gt;&lt;/script&gt;</code></pre>
+<p>At the moment there are no cross-contrib dependencies (i.e. each sub-library
+can stand by itself), but that may change in the future.</p>
+<h4 id="in-node-js"><a href="#in-node.js" name="in-node.js">In Node.js</a></h4>
+<p>Using contrib in Node is very simple. Just install it with npm:</p>
+<pre><code>npm install underscore-contrib --save</code></pre>
+<p>Then require it within your project like so:</p>
+<pre><code class="lang-javascript">var _ = require(&#39;underscore-contrib&#39;);</code></pre>
+<p>The <code>_</code> variable will be a copy of Underscore with contrib&#39;s methods already
+mixed in.</p>
+<h3 id="license"><a href="#license" name="license">License</a></h3>
+<p>_.contrib is open sourced under the <a href="https://github.com/documentcloud/underscore-contrib/blob/master/LICENSE">MIT license</a>.</p>
+<h2 id="sub-libraries"><a href="#sub-libraries" name="sub-libraries">Sub-libraries</a></h2>
+<p>The _.contrib library currently contains a number of related capabilities, aggregated into the following files.</p>
+<ul>
+<li><a href="#array.builders">underscore.array.builders</a> - functions to build arrays</li>
+<li><a href="#array.selectors">underscore.array.selectors</a> - functions to take things from arrays</li>
+<li><a href="#collections.walk">underscore.collections.walk</a> - functions to walk and transform nested JavaScript objects</li>
+<li><a href="#function.arity">underscore.function.arity</a> - functions to manipulate and fix function argument arity</li>
+<li><a href="#function.combinators">underscore.function.combinators</a> - functions to combine functions to make new functions</li>
+<li><a href="#function.iterators">underscore.function.iterators</a> - functions to lazily produce, manipulate and consume sequence iterators</li>
+<li><a href="#function.predicates">underscore.function.predicates</a> - functions that return <code>true</code> or <code>false</code> based on some criteria</li>
+<li><a href="#object.builders">underscore.object.builders</a> - functions to build JavaScript objects</li>
+<li><a href="#object.selectors">underscore.object.selectors</a> - functions to pick things from JavaScript objects</li>
+<li><a href="#util.existential">underscore.util.existential</a> - functions that check for the existence or truthiness of JavaScript data types</li>
+<li><a href="#util.operators">underscore.util.operators</a> - functions that wrap common (or missing) JavaScript operators</li>
+<li><a href="#util.strings">underscore.util.strings</a> - functions to work with strings</li>
+<li><a href="#util.trampolines">underscore.util.trampolines</a> - functions to facilitate calling functions recursively without blowing the stack</li>
+</ul>
+<p>The links above are to the annotated source code.  Full-blown _.contrib documentation is in the works.  Contributors welcomed.</p>
+<h3 id="array-builders"><a href="#array.builders" name="array.builders">array.builders</a></h3>
+<blockquote>
+<p>Functions to build arrays. <a href="docs/underscore.array.builders.js.html" class="btn btn-primary btn-xs">View Annotated Source</a></p>
+</blockquote>
+<hr>
+<h4 id="cat"><a href="#cat" name="cat">cat</a></h4>
+<p>Signature: <code>_.cat(... arrays:Array ...)</code></p>
+<p>The <code>_.cat</code> function provides a way to concatenate zero or more heterogeneous arrays into one.</p>
+<pre><code class="lang-javascript">_.cat();                    // 0-args
+//=&gt; []
+
+_.cat([]);                  // 1-arg, empty array
+//=&gt; []
+
+_.cat([1,2,3]);             // 1-arg
+//=&gt; [1,2,3]
+
+_.cat([1,2,3],[4,5,6]);     // 2-args
+//=&gt; [1,2,3,4,5,6]
+
+_.cat([1,2,3],[4,5,6],[7]); // 3+ args
+//=&gt; [1,2,3,4,5,6,7]</code></pre>
+<p>Not every argument to <code>_.cat</code> needs to be an array; other types are accepted.</p>
+<p>Signature: <code>_.cat(... elems:Any ...)</code></p>
+<pre><code class="lang-javascript">_.cat(1,[2],3,4);           // mixed args
+//=&gt; [1,2,3,4]</code></pre>
+<p>The <code>_.cat</code> function will also work with the <code>arguments</code> object as if it were an array.</p>
+<p>Signature: <code>_.cat(... elems:Arguments ...)</code></p>
+<pre><code class="lang-javascript">function f(){ return _.cat(arguments, 4,5,6); }
+
+f(1,2,3);
+//=&gt; [1,2,3,4,5,6]</code></pre>
+<hr>
+<h4 id="chunk"><a href="#chunk" name="chunk">chunk</a></h4>
+<p>The <code>_.chunk</code> function, by default, accepts an array and a number and splits and returns a new array representing the original array split into some number of arrays of the given size:</p>
+<pre><code class="lang-javascript">_.chunk([0,1,2,3], 2);
+//=&gt; , [[0,1],[2,3]]</code></pre>
+<p>If the original array cannot completely fulfill the chunk scheme then the array returned will drop the undersized final chunk:</p>
+<pre><code class="lang-javascript">_.chunk([0,1,2,3,4], 2);
+//=&gt; , [[0,1],[2,3]]</code></pre>
+<p>You can pass an optional third argument to <code>_.chunk</code> to pad out the final array chunk should it fall short.  If the value given as the third argument is <em>not</em> an array then it is repeated the needed number of times:</p>
+<pre><code class="lang-javascript">_.chunk([0,1,2,3,4], 3, &#39;_&#39;);
+//=&gt; , [[0,1,2],[3,&#39;_&#39;,&#39;_&#39;]]</code></pre>
+<p>If you given an array as the optional third argument then that array is used to pad in-place as needed:</p>
+<pre><code class="lang-javascript">_.chunk([0,1,2,3,4], 3, [&#39;a&#39;, &#39;b&#39;]);
+//=&gt; , [[0,1,2],[3,&#39;a&#39;,&#39;b&#39;]]</code></pre>
+<hr>
+<h4 id="chunkall"><a href="#chunkall" name="chunkall">chunkAll</a></h4>
+<p>The <code>_.chunkAll</code> function is similar to <code>_.chunk</code> except for the following.  First, <code>_.chunkAll</code> will never drop short chunks from the end:</p>
+<pre><code class="lang-javascript">_.chunkAll([0,1,2,3,4], 3);
+//=&gt; , [[0,1,2],[3]]</code></pre>
+<p>Also, <code>_.chunkAll</code> takes an optional third argument signifying that paritions should be built from skipped regions:</p>
+<pre><code class="lang-javascript">_.chunkAll(_.range(1), 2, 4);
+//=&gt; [[0,1],[4,5],[8,9]]</code></pre>
+<hr>
+<h4 id="cons"><a href="#cons" name="cons">cons</a></h4>
+<p>Signature: <code>_.cons(head:Any, tail:Array)</code></p>
+<p>The <code>_.cons</code> function provides a way to &quot;construct&quot; a new array by taking some element and putting it at the front of another array.</p>
+<pre><code class="lang-javascript">_.cons(0, []);
+//=&gt; [0]
+
+_.cons(1, [2]);
+//=&gt; [1,2]
+
+_.cons([0], [1,2,3]);
+//=&gt; [0,1,2,3]</code></pre>
+<p>The <code>_.cons</code> function also can be used to create pairs if the second argument is not an array.</p>
+<p>Signature: <code>_.cons(head:Any, tail:Any)</code></p>
+<pre><code class="lang-javascript">_.cons(1, 2);
+//=&gt; [1,2]
+
+_.cons([1], 2);
+//=&gt; [[1],2]</code></pre>
+<p>Finally, <code>_.cons</code> will operate with the <code>arguments</code> object.</p>
+<p>Signature: <code>_.cons(head:Any, tail:Arguments)</code></p>
+<pre><code class="lang-javascript">function f() { return _.cons(0, arguments) }
+
+f(1,2,3);
+//=&gt; [0,1,2,3]</code></pre>
+<hr>
+<h4 id="cycle"><a href="#cycle" name="cycle">cycle</a></h4>
+<p>The <code>_.cycle</code> function takes an integer value used to build an array of that size containing the number of iterations through the given array, strung end-to-end as many times as needed.  An example is probably more instructive:</p>
+<pre><code class="lang-javascript">_.cycle(5, [1,2,3]);
+//=&gt; [1,2,3,1,2]</code></pre>
+<hr>
+<h4 id="interpose"><a href="#interpose" name="interpose">interpose</a></h4>
+<p>The <code>_.interpose</code> function takes an array and an element and returns a new array with the given element inserted betwixt every element in the original array:</p>
+<pre><code class="lang-javascript">_.interpose([1,2,3], 0);
+//=&gt; [1,0,2,0,3]</code></pre>
+<p>If there are no betweens (i.e. empty and single-element arrays), then the original array is returned:</p>
+<pre><code class="lang-javascript">_.interpose([1], 0);
+//=&gt; [1]
+
+_.interpose([], 0);
+//=&gt; []</code></pre>
+<hr>
+<h4 id="iterateuntil"><a href="#iterateuntil" name="iterateuntil">iterateUntil</a></h4>
+<p>The <code>_.iterateUntil</code> function takes a function used as a result generator, a function used as a stop-check and a seed value and returns an array of each generated result.  The operation of <code>_.iterateUntil</code> is such that the result generator is passed the seed to start and each subsequent result which will continue <strong>until</strong> a result fails the check function (i.e. returns falsey).  An example is best:</p>
+<pre><code class="lang-javascript">var dec = function(n) { return n - 1; };
+var isPos = function(n) { return n &gt; 0; };</code></pre>
+<p>The <code>dec</code> result generator takes a number and decrements it by one.  The <code>isPos</code> predicate takes a number and returns <code>true</code> if it&#39;s positive.  Using these two functions you can build an array of every number from <code>6</code> to <code>0</code>, inclusive:</p>
+<pre><code class="lang-javascript">_.iterateUntil(dec, isPos, 6);
+//=&gt; [5,4,3,2,1]</code></pre>
+<p>That is, the array only contains every number from <code>5</code> down to <code>1</code> because when the result of <code>dec</code> got to <code>0</code> the <code>isPos</code> check failed (i.e. went falsey) thus terminating the execution.</p>
+<hr>
+<h4 id="keepindexed"><a href="#keepindexed" name="keepindexed">keepIndexed</a></h4>
+<p>The <code>_.keepIndexed</code> function takes an array and a function and returns a new array filled with the <em>non-null</em> return results of the given function on the elements or keys in the given array:</p>
+<pre><code class="lang-javascript">_.keepIndexed([1,2,3], function(k) { 
+  return i === 1 || i === 2;
+});
+
+//=&gt; [false, true, true]</code></pre>
+<p>If you return either <code>null</code> or <code>undefined</code> then the result is dropped from the resulting array:</p>
+<pre><code class="lang-javascript">_.keepIndexed([&#39;a&#39;,&#39;b&#39;,&#39;c&#39;], function(k, v) { 
+  if (k === 1) return v; 
+});
+
+//=&gt; [&#39;b&#39;]</code></pre>
+<hr>
+<h4 id="mapcat"><a href="#mapcat" name="mapcat">mapcat</a></h4>
+<p>There are times when a mapping operation produces results contained in arrays, but the final result should be flattened one level.  For these circumstances you can use <code>_.mapcat</code> to produce results:</p>
+<pre><code class="lang-javascript">var array = [1,2,null,4,undefined,6];
+
+var errors = _.mapcat(array, function(e,i) {
+  if (e == null) {
+    return [&quot;Element @&quot; + i + &quot; is bad&quot;];
+  }
+  else {
+    return [];
+  }
+});</code></pre>
+<p>Inspecting the contents of <code>errors</code> shows:</p>
+<pre><code class="lang-javascript">[&quot;Element @2 is bad&quot;, &quot;Element @4 is bad&quot;]</code></pre>
+<p>The <code>_.mapcat</code> function is equivalent to <code>_.cat.apply(array, _.map(array,fun))</code>.</p>
+<hr>
+<h4 id="reductions"><a href="#reductions" name="reductions">reductions</a></h4>
+<p>The <code>_.reductions</code> function is similar to Underscore&#39;s builtin <code>_.reduce</code> function except that it returns an array of every intermediate value in the folding operation:</p>
+<pre><code class="lang-javascript">_.reductions([1,2,3,4,5], function(agg, n) {
+  return agg + n;
+}, 0);
+
+//=&gt; [1,3,6,10,15]</code></pre>
+<p>The last element in the array returned from <code>_.reductions</code> is the answer that you would get if you had just chosen to use <code>_.reduce</code>.</p>
+<hr>
+<h4 id="repeat"><a href="#repeat" name="repeat">repeat</a></h4>
+<p>Signature: <code>_.repeat(t:Integer, value:Any)</code></p>
+<p>The <code>_.repeat</code> function takes an integer value used to build an array of that size containing the value given:</p>
+<pre><code class="lang-javascript">_.repeat(5, &#39;a&#39;);
+//=&gt; [&#39;a&#39;,&#39;a&#39;,&#39;a&#39;,&#39;a&#39;,&#39;a&#39;]</code></pre>
+<hr>
+<h4 id="splitat"><a href="#splitat" name="splitat">splitAt</a></h4>
+<p>The <code>_.splitAt</code> function takes an array and a numeric index and returns a new array with two embedded arrays representing a split of the original array at the index provided:</p>
+<pre><code class="lang-javascript">_.splitAt([1,2,3,4,5], 2);
+//=&gt; [[1,2],[3,4,5]]
+
+_.splitAt([1,2,3,4,5], 0);
+//=&gt; [[],[1,2,3,4,5]]</code></pre>
+<p>The operation of <code>_.splitAt</code> is safe if the index provided is outside the range of legal indices:</p>
+<pre><code class="lang-javascript">_.splitAt([1,2,3,4,5], 20000);
+//=&gt; [[1,2,3,4,5],[]]
+
+_.splitAt([1,2,3,4,5], -1000);
+//=&gt; [[],[1,2,3,4,5]]    
+
+_.splitAt([], 0);
+//=&gt; [[],[]]</code></pre>
+<hr>
+<h4 id="takeskipping"><a href="#takeskipping" name="takeskipping">takeSkipping</a></h4>
+<p>The <code>_.takeSkipping</code> function takes an array and a number and returns a new array containing every nth element in the original array:</p>
+<pre><code class="lang-javascript">_.takeSkipping(_.range(10), 2);
+//=&gt; [0,2,4,6,8]</code></pre>
+<p>The <code>_.takeSkipping</code> function is safe against numbers larger or smaller than the array size:</p>
+<pre><code class="lang-javascript">_.takeSkipping(_.range(10), 100000);
+//=&gt; [0]
+
+_.takeSkipping(_.range(10), -100);
+//=&gt; []</code></pre>
+<hr>
+<h4 id="weave"><a href="#weave" name="weave">weave</a></h4>
+<p>The <code>_.weave</code> function works similarly to <code>_.interpose</code> (shown above) except that it accepts an array used as the interposition values.  In other words, <code>_.weave</code> takes two arrays and returns a new array with the original elements woven together.  An example would help:</p>
+<pre><code class="lang-javascript">_.weave([&#39;a&#39;,&#39;b&#39;,&#39;c&#39;], [1,2,3]);
+//=&gt; [&#39;a&#39;,1,&#39;b&#39;,2,&#39;c&#39;,3]</code></pre>
+<p>The array returned from <code>_.weave</code> will be as long as the longest array given with the woven entries stopping according to the shortest array:</p>
+<pre><code class="lang-javascript">_.weave([&#39;a&#39;,&#39;b&#39;,&#39;c&#39;], [1]);
+//=&gt; [&#39;a&#39;,1,&#39;b&#39;,&#39;c&#39;]</code></pre>
+<p>The <code>_.interleave</code> function is an alias for <code>_.weave</code>.</p>
+<hr>
+<h3 id="array-selectors"><a href="#array.selectors" name="array.selectors">array.selectors</a></h3>
+<blockquote>
+<p>Functions to take things from arrays. <a href="docs/underscore.array.selectors.js.html" class="btn btn-primary btn-xs">View Annotated Source</a></p>
+</blockquote>
+<hr>
+<h4 id="best"><a href="#best" name="best">best</a></h4>
+<p><strong>Signature:</strong> <code>_.best(array:Array, fun:Function)</code></p>
+<p>Returns the &quot;best&quot; value in an array based on the result of a given function.</p>
+<pre><code class="lang-javascript">_.best([1, 2, 3, 4, 5], function(x, y) {
+  return x &gt; y;
+});
+//=&gt; 5</code></pre>
+<hr>
+<h4 id="dropwhile"><a href="#dropwhile" name="dropwhile">dropWhile</a></h4>
+<p><strong>Signature:</strong> <code>_.dropWhile(array:Array, pred:Function)</code></p>
+<p>Drops elements for which the given function returns a truthy value.</p>
+<pre><code class="lang-javascript">_.dropWhile([-2,-1,0,1,2], isNeg);
+//=&gt; [0,1,2]</code></pre>
+<hr>
+<h4 id="keep"><a href="#keep" name="keep">keep</a></h4>
+<p><strong>Signature:</strong> <code>_.keep(array:Array, fun:Function)</code></p>
+<p>Returns an array of existy results of a function over a source array.</p>
+<pre><code class="lang-javascript">_.keep([1, 2, 3, 4, 5], function(val) {
+  if (val % 3 === 0) {
+    return val;
+  }
+});
+// =&gt; [3]</code></pre>
+<hr>
+<h4 id="nth"><a href="#nth" name="nth">nth</a></h4>
+<p><strong>Signature:</strong> <code>_.nth(array:Array, index:Number[, guard:Any])</code></p>
+<p>The <code>_.nth</code> function is a convenience for the equivalent <code>array[n]</code>. The
+optional <code>guard</code> value allows <code>_.nth</code> to work correctly as a callback for
+<code>_.map</code>.</p>
+<pre><code class="lang-javascript">_.nth([&#39;a&#39;,&#39;b&#39;,&#39;c&#39;], 2);
+//=&gt; &#39;c&#39;</code></pre>
+<p>If given an index out of bounds then <code>_.nth</code> will return <code>undefined</code>:</p>
+<pre><code class="lang-javascript">_.nth([&#39;a&#39;,&#39;b&#39;,&#39;c&#39;], 2000);
+//=&gt; undefined</code></pre>
+<p>The <code>_.nth</code> function can also be used in conjunction with <code>_.map</code> and <code>_.compact</code> like so:</p>
+<pre><code class="lang-javascript">var b = [[&#39;a&#39;],[&#39;b&#39;],[]];
+
+_.compact(_.map(b, function(e) { return _.nth(e,0) }));
+//=&gt; [&#39;a&#39;,&#39;b&#39;]</code></pre>
+<p>If wrapping a function around <code>_.nth</code> is too tedious or you&#39;d like to partially apply the index then Underscore-contrib offers any of <code>_.flip2</code>, <code>_.fix</code> or <code>rcurry2</code> to solve this.</p>
+<hr>
+<h4 id="partitionby"><a href="#partitionby" name="partitionby">partitionBy</a></h4>
+<p><strong>Signature:</strong> <code>_.keep(array:Array, fun:Function)</code></p>
+<p>Takes an array and partitions it into sub-arrays as the given predicate changes
+truth sense.</p>
+<pre><code class="lang-javascript">_.partitionBy([1,2,2,3,1,1,5], _.isEven);
+// =&gt; [[1],[2,2],[3,1,1,5]]
+
+_.partitionBy([1,2,2,3,1,1,5], _.identity);
+// =&gt; [[1],[2,2],[3],[1,1],[5]]</code></pre>
+<hr>
+<h4 id="second"><a href="#second" name="second">second</a></h4>
+<p><strong>Signature:</strong> <code>_.second(array:Array, index:Number[, guard:Any])</code></p>
+<p>The <code>_.second</code> function is a convenience for the equivalent <code>array[1]</code>. The
+optional <code>guard</code> value allows <code>_.second</code> to work correctly as a callback for
+<code>_.map</code>.</p>
+<pre><code class="lang-javascript">_.second([&#39;a&#39;,&#39;b&#39;]);
+//=&gt; &#39;b&#39;
+
+_.map([[&#39;a&#39;,&#39;b&#39;], _.range(10,20)], _.second);
+//=&gt; [&#39;b&#39;,11]</code></pre>
+<p>You can also pass an optional number to the <code>_.second</code> function to take a number of elements from an array starting with the second element and ending at the given index:</p>
+<pre><code class="lang-javascript">_.second(_.range(10), 5)
+//=&gt; [1, 2, 3, 4]</code></pre>
+<hr>
+<h4 id="takewhile"><a href="#takewhile" name="takewhile">takeWhile</a></h4>
+<p><strong>Signature:</strong> <code>_.takeWhile(array:Array, pred:Function)</code></p>
+<p>The <code>_.takeWhile</code> function takes an array and a function and returns a new array containing the first n elements in the original array for which the given function returns a truthy value:</p>
+<pre><code class="lang-javascript">var isNeg = function(n) { return n &lt; 0; };
+
+_.takeWhile([-2,-1,0,1,2], isNeg);
+//=&gt; [-2,-1]</code></pre>
+<hr>
+<h4 id="third"><a href="#third" name="third">third</a></h4>
+<p><strong>Signature:</strong> <code>_.third(array:Array, index:Number[, guard:Any])</code></p>
+<p>The <code>_.third</code> function is a convenience for the equivalent <code>array[2]</code>. The
+optional <code>guard</code> value allows <code>_.third</code> to work correctly as a callback for
+<code>_.map</code>.</p>
+<pre><code class="lang-javascript">_.third([&#39;a&#39;,&#39;b&#39;,&#39;c&#39;]);
+//=&gt; &#39;c&#39;
+
+_.map([[&#39;a&#39;,&#39;b&#39;,&#39;c&#39;], _.range(10,20)], _.third);
+//=&gt; [&#39;c&#39;,12]</code></pre>
+<p>You can also pass an optional number to the <code>_.third</code> function to take a number of elements from an array starting with the third element and ending at the given index:</p>
+<pre><code class="lang-javascript">_.third(_.range(10), 5)
+//=&gt; [2, 3, 4]</code></pre>
+<hr>
+<h3 id="collections-walk"><a href="#collections.walk" name="collections.walk">collections.walk</a></h3>
+<blockquote>
+<p>Functions to recursively walk collections which are trees.</p>
+</blockquote>
+<p>Documentation should use <a href="https://github.com/jashkenas/journo">Journo</a> formats and standards.</p>
+<pre><code>  _.walk = walk;
+  postorder: function(obj, visitor, context)
+  preorder: function(obj, visitor, context)
+  walk(obj, visitor, null, context)
+  map: function(obj, strategy, visitor, context)
+  pluck: function(obj, propertyName)
+  pluckRec: function(obj, propertyName)
+  _.walk.collect = _.walk.map;</code></pre>
+<h3 id="function-arity"><a href="#function.arity" name="function.arity">function.arity</a></h3>
+<blockquote>
+<p>Functions which manipulate the way functions work with their arguments.</p>
+</blockquote>
+<hr>
+<h4 id="arity"><a href="#arity" name="arity">arity</a></h4>
+<p><strong>Signature:</strong> <code>_.arity(numberOfArgs:Number, fun:Function)</code></p>
+<p>Returns a new function which is equivalent to <code>fun</code>, except that the new
+function&#39;s <code>length</code> property is equal to <code>numberOfArgs</code>. This does <strong>not</strong> limit
+the function to using that number of arguments. It&#39;s only effect is on the
+reported length.</p>
+<pre><code class="lang-javascript">function addAll() {
+     var sum = 0;
+     for (var i = 0; i &lt; arguments.length; i++) {
+         sum = sum + arguments[i];
+     }
+     return sum;
+}
+
+addAll.length
+// =&gt; 0
+
+var addAllWithFixedLength = _.arity(2, addAll);
+
+addAllWithFixedLength.length
+// =&gt; 2
+
+addAllWithFixedLength(1, 1, 1, 1);
+// =&gt; 4</code></pre>
+<hr>
+<h4 id="binary"><a href="#binary" name="binary">binary</a></h4>
+<p><strong>Signature:</strong> <code>_.binary(fun:Function)</code></p>
+<p>Returns a new function which accepts only two arguments and passes these
+arguments to <code>fun</code>. Additional arguments are discarded.</p>
+<pre><code class="lang-javascript">function addAll() {
+     var sum = 0;
+     for (var i = 0; i &lt; arguments.length; i++) {
+         sum = sum + arguments[i];
+     }
+     return sum;
+}
+
+var add2 = _.binary(addAll);
+
+add2(1, 1);
+// =&gt; 2
+
+add2(1, 1, 1, 1);
+// =&gt; 2</code></pre>
+<hr>
+<h4 id="curry"><a href="#curry" name="curry">curry</a></h4>
+<p><strong>Signature:</strong> <code>_.curry(func:Function[, reverse:Boolean])</code></p>
+<p>Returns a curried version of <code>func</code>. If <code>reverse</code> is true, arguments will be
+processed from right to left.</p>
+<pre><code class="lang-javascript">function add3 (x, y, z) {
+    return x + y + z;
+}
+
+var curried = _.curry(add3);
+// =&gt; function
+
+curried(1);
+// =&gt; function
+
+curried(1)(2);
+// =&gt; function
+
+curried(1)(2)(3);
+// =&gt; 6</code></pre>
+<hr>
+<h4 id="curry2"><a href="#curry2" name="curry2">curry2</a></h4>
+<p><strong>Signature:</strong> <code>_.curry2(fun:Function)</code></p>
+<p>Returns a curried version of <code>func</code>, but will curry exactly two arguments, no
+more or less.</p>
+<pre><code class="lang-javascript">function add2 (a, b) {
+    return a + b;
+}
+
+var curried = _.curry2(add2);
+// =&gt; function
+
+curried(1);
+// =&gt; function
+
+curried(1)(2);
+// =&gt; 3</code></pre>
+<hr>
+<h4 id="curry3"><a href="#curry3" name="curry3">curry3</a></h4>
+<p><strong>Signature:</strong> <code>_.curry3(fun:Function)</code></p>
+<p>Returns a curried version of <code>func</code>, but will curry exactly three arguments, no
+more or less.</p>
+<pre><code class="lang-javascript">function add3 (a, b, c) {
+    return a + b + c;
+}
+
+var curried = _.curry3(add3);
+// =&gt; function
+
+curried(1);
+// =&gt; function
+
+curried(1)(2);
+// =&gt; function
+
+curried(1)(2)(3);
+// =&gt; 6</code></pre>
+<hr>
+<h4 id="fix"><a href="#fix" name="fix">fix</a></h4>
+<p><strong>Signature:</strong> <code>_.fix(fun:Function[, value:Any...])</code></p>
+<p>Fixes the arguments to a function based on the parameter template defined by
+the presence of values and the <code>_</code> placeholder.</p>
+<pre><code class="lang-javascript">function add3 (a, b, c) {
+    return a + b + c;
+}
+
+var fixedFirstAndLast = _.fix(add3, 1, _, 3);
+// =&gt; function
+
+fixedFirstAndLast(2);
+// =&gt; 6
+
+fixedFirstAndLast(10);
+// =&gt; 14</code></pre>
+<hr>
+<h4 id="quaternary"><a href="#quaternary" name="quaternary">quaternary</a></h4>
+<p><strong>Signature:</strong> <code>_.quaternary(fun:Function)</code></p>
+<p>Returns a new function which accepts only four arguments and passes these
+arguments to <code>fun</code>. Additional arguments are discarded.</p>
+<pre><code class="lang-javascript">function addAll() {
+     var sum = 0;
+     for (var i = 0; i &lt; arguments.length; i++) {
+         sum = sum + arguments[i];
+     }
+     return sum;
+}
+
+var add4 = _.quaternary(addAll);
+
+add4(1, 1, 1, 1);
+// =&gt; 4
+
+add4(1, 1, 1, 1, 1, 1);
+// =&gt; 4</code></pre>
+<hr>
+<h4 id="ternary"><a href="#ternary" name="ternary">ternary</a></h4>
+<p><strong>Signature:</strong> <code>_.ternary(fun:Function)</code></p>
+<p>Returns a new function which accepts only three arguments and passes these
+arguments to <code>fun</code>. Additional arguments are discarded.</p>
+<pre><code class="lang-javascript">function addAll() {
+     var sum = 0;
+     for (var i = 0; i &lt; arguments.length; i++) {
+         sum = sum + arguments[i];
+     }
+     return sum;
+}
+
+var add3 = _.ternary(addAll);
+
+add3(1, 1, 1);
+// =&gt; 3
+
+add3(1, 1, 1, 1, 1, 1);
+// =&gt; 3</code></pre>
+<hr>
+<h4 id="unary"><a href="#unary" name="unary">unary</a></h4>
+<p><strong>Signature:</strong> <code>_.unary(fun:Function)</code></p>
+<p>Returns a new function which accepts only one argument and passes this
+argument to <code>fun</code>. Additional arguments are discarded.</p>
+<pre><code class="lang-javascript">function logArgs() {
+    console.log(arguments);
+}
+
+var logOneArg = _.unary(logArgs);
+
+logOneArg(&quot;first&quot;);
+// =&gt; [&quot;first&quot;]
+
+logOneArg(&quot;first&quot;, &quot;second&quot;);
+// =&gt; [&quot;first&quot;]</code></pre>
+<hr>
+<h4 id="rcurry"><a href="#rcurry" name="rcurry">rCurry</a></h4>
+<p><strong>Signature:</strong> <code>_.rCurry(func:Function)</code></p>
+<p>Returns a curried version of <code>func</code> where arguments are processed from right
+to left.</p>
+<pre><code class="lang-javascript">function divide (a, b) {
+    return a / b;
+}
+
+var curried = _.rCurry(divide);
+// =&gt; function
+
+curried(1);
+// =&gt; function
+
+curried(1)(2);
+// =&gt; 2
+
+curried(2)(1);
+// =&gt; 0.5</code></pre>
+<hr>
+<h4 id="rcurry2"><a href="#rcurry2" name="rcurry2">rcurry2</a></h4>
+<p><strong>Signature:</strong> <code>_.rcurry2(func:Function)</code></p>
+<p>Returns a curried version of <code>func</code> where a maxium of two arguments are
+processed from right to left.</p>
+<pre><code class="lang-javascript">function concat () {
+    var str = &quot;&quot;;
+
+    for (var i = 0; i &lt; arguments.length; i++) {
+        str = str + arguments[i];
+    }
+
+    return str;
+}
+
+var curried = _.rcurry2(concat);
+// =&gt; function
+
+curried(&quot;a&quot;);
+// =&gt; function
+
+curried(&quot;a&quot;)(&quot;b&quot;);
+// =&gt; &quot;ba&quot;</code></pre>
+<hr>
+<h4 id="rcurry3"><a href="#rcurry3" name="rcurry3">rcurry3</a></h4>
+<p><strong>Signature:</strong> <code>_.rcurry3(func:Function)</code></p>
+<p>Returns a curried version of <code>func</code> where a maxium of three arguments are
+processed from right to left.</p>
+<pre><code class="lang-javascript">function concat () {
+    var str = &quot;&quot;;
+
+    for (var i = 0; i &lt; arguments.length; i++) {
+        str = str + arguments[i];
+    }
+
+    return str;
+}
+
+var curried = _.rcurry3(concat);
+// =&gt; function
+
+curried(&quot;a&quot;);
+// =&gt; function
+
+curried(&quot;a&quot;)(&quot;b&quot;);
+// =&gt; function
+
+curried(&quot;a&quot;)(&quot;b&quot;)(&quot;c&quot;);
+// =&gt; &quot;cba&quot;</code></pre>
+<h3 id="function-combinators"><a href="#function.combinators" name="function.combinators">function.combinators</a></h3>
+<blockquote>
+<p>Functions that are combinators.</p>
+</blockquote>
+<hr>
+<h4 id="always"><a href="#always" name="always">always</a></h4>
+<p><strong>Signature:</strong> <code>_.always(value:Any)</code></p>
+<p><strong>Aliases:</strong> <code>_.k</code></p>
+<p>Takes <code>value</code> and returns a function that will always return <code>value</code>.</p>
+<pre><code class="lang-javascript">var platonicForm = _.always(&quot;Eternal &amp; Unchangeable&quot;);
+
+platonicForm();
+// =&gt; &quot;Eternal &amp; Unchangeable&quot;</code></pre>
+<hr>
+<h4 id="bound"><a href="#bound" name="bound">bound</a></h4>
+<p><strong>Signature:</strong> <code>_.bound(obj:Object, fname:String)</code></p>
+<p>Returns function property of an object by name, bound to object.</p>
+<pre><code class="lang-javascript">var aristotle = {
+    name: &quot;Aristotle&quot;,
+    telos: &quot;flourishing&quot;,
+    stateTelos: function() {
+        return this.name + &quot;&#39;s telos is &quot; + this.telos;
+    }
+};
+
+var stateAristotlesTelos = _.bound(aristotle, &quot;stateTelos&quot;);
+
+stateAristotlesTelos();
+// =&gt; &quot;Aristotle&#39;s Telos is flourishing&quot;</code></pre>
+<hr>
+<h4 id="comparator"><a href="#comparator" name="comparator">comparator</a></h4>
+<p><strong>Signature:</strong> <code>_.comparator(fun:Function)</code></p>
+<p>Takes a binary predicate-like function and returns a comparator function (return
+values of <code>-1</code>, <code>0</code>, <code>1</code>) which can be used as a callback for <code>_.sort</code> or
+<code>Array.prototype.sort</code>.</p>
+<pre><code class="lang-javascript">var lessOrEqual = function(x, y) { return x &lt;= y; };
+
+var arr = [0, 1, -2];
+
+arr.sort(_.comparator(lessOrEqual));
+// =&gt; [-2, 0, 1]</code></pre>
+<hr>
+<h4 id="complement"><a href="#complement" name="complement">complement</a></h4>
+<p><strong>Signature:</strong> <code>_.complement(pred:Function)</code></p>
+<p>Returns a function that reverses the sense of a given predicate-like.</p>
+<pre><code class="lang-javascript">function isAugustine (val) {
+    return val === &quot;Augustine&quot;;
+}
+
+isNotAugustine = _.complement(isAugustine);
+
+isNotAugustine(&quot;Dionysius&quot;);
+// =&gt; True</code></pre>
+<hr>
+<h4 id="conjoin"><a href="#conjoin" name="conjoin">conjoin</a></h4>
+<p><strong>Signature:</strong> <code>_.conjoin(pred:Function...)</code></p>
+<p>Composes multiple predicates into a single predicate that checks all elements
+of an array for conformance to <strong>all</strong> of the original predicates.</p>
+<pre><code class="lang-javascript">function startsWithA (val) {
+    return val[0] === &quot;A&quot;;
+}
+
+function endsWithE (val) {
+    return val[val.length - 1] === &quot;e&quot;;
+}
+
+var names = [&quot;Aristotle&quot;, &quot;Aquinas&quot;, &quot;Plato&quot;, &quot;Augustine&quot;];
+
+var startsAAndEndsE = _.conjoin(startsWithA, endsWithE);
+
+startsAAndEndsE(names);
+// =&gt; [&quot;Aristotle&quot;, &quot;Augustine&quot;]</code></pre>
+<hr>
+<h4 id="disjoin"><a href="#disjoin" name="disjoin">disjoin</a></h4>
+<p><strong>Signature:</strong> <code>_.disjoin(pred:Function...)</code></p>
+<p>Composes multiple predicates into a single predicate that checks all elements
+of an array for conformance to <strong>any</strong> of the original predicates.</p>
+<pre><code class="lang-javascript">function startsWithA (val) {
+    return val[0] === &quot;A&quot;;
+}
+
+function endsWithE (val) {
+    return val[val.length - 1] === &quot;e&quot;;
+}
+
+var names = [&quot;Aristotle&quot;, &quot;Aquinas&quot;, &quot;Plato&quot;, &quot;Augustine&quot;];
+
+var startsAOrEndsE = _.disjoin(startsWithA, endsWithE);
+
+startsAOrEndsE(names);
+// =&gt; [&quot;Aristotle&quot;, &quot;Aquinas&quot;, &quot;Augustine&quot;]</code></pre>
+<hr>
+<h4 id="juxt"><a href="#juxt" name="juxt">juxt</a></h4>
+<p><strong>Signature:</strong> <code>_.juxt(fun:Function...)</code></p>
+<p>Returns a function whose return value is an array of the results of calling
+each of the original functions with the arguments.</p>
+<pre><code class="lang-javascript">function firstChar (val) {
+    return val[0];
+}
+
+function lastChar (val) {
+    return val[val.length - 1];
+}
+
+var firstAndLastChars = _.juxt(firstChar, lastChar);
+
+firstAndLastChars(&quot;Etruria&quot;);
+// =&gt; [&quot;E&quot;, &quot;a&quot;]</code></pre>
+<hr>
+<h4 id="flip"><a href="#flip" name="flip">flip</a></h4>
+<p><strong>Signature:</strong> <code>_.flip(fun:Function)</code></p>
+<p>Returns a function that works identically to <code>fun</code>, but accepts the arguments
+in reverse order.</p>
+<pre><code class="lang-javascript">function regionCapitol (region, capitol) {
+    return &quot;The capitol of &quot; + region + &quot; is &quot; + capitol;
+}
+
+capitolRegion = _.flip(regionCapitol);
+
+capitolRegion(&quot;Thessalonica&quot;, &quot;Illyrica&quot;);
+// =&gt; &quot;The capitol of Illyrica is Thessalonica&quot;</code></pre>
+<hr>
+<h4 id="flip2"><a href="#flip2" name="flip2">flip2</a></h4>
+<p><strong>Signature:</strong> <code>_.flip2(fun:Function)</code></p>
+<p>Returns a function that works identically to <code>fun</code>, but accepts the first two
+arguments in reverse order. The order of all other arguments remains the same.</p>
+<pre><code class="lang-javascript">function regionCapitol (region, capitol) {
+    return &quot;The capitol of &quot; + region + &quot; is &quot; + capitol;
+}
+
+capitolRegion = _.flip2(regionCapitol);
+
+capitolRegion(&quot;Thessalonica&quot;, &quot;Illyrica&quot;);
+// =&gt; &quot;The capitol of Illyrica is Thessalonica&quot;</code></pre>
+<hr>
+<h4 id="fnull"><a href="#fnull" name="fnull">fnull</a></h4>
+<p><strong>Signature:</strong> <code>_.fnull(fun:Function[, default:Any...])</code></p>
+<p>Returns a function that protects <code>fun</code> from receiving non-existy values.  Each
+subsequent value provided to <code>fnull</code> acts as the default to the original
+<code>fun</code> should a call receive non-existy values in the defaulted arg slots.</p>
+<pre><code class="lang-javascript">function getLength (val) {
+    return val.length;
+}
+
+safeGetLength = _.fnull(getLength, []);
+
+safeGetLength([1, 2, 3]);
+// =&gt; 3
+
+safeGetLength(null);
+// =&gt; 0</code></pre>
+<hr>
+<h4 id="functionalize"><a href="#functionalize" name="functionalize">functionalize</a></h4>
+<p><strong>Signature:</strong> <code>_.functionalize(fun:Function[, default:Any...])</code></p>
+<p>Takes a method-style function (one which uses <code>this</code>) and pushes <code>this</code> into the
+argument list. The returned function uses its first argument as the
+receiver/context of the original function, and the rest of the arguments are
+used as the original&#39;s entire argument list.</p>
+<pre><code class="lang-javascript">var militaryUnits = {
+    centuria: &quot;80 men&quot;,
+    cohort: &quot;480 men&quot;,
+    getDescription: function (unitName) {
+        return this[unitName];
+    }
+};
+
+var getDescription = _.functionalize(militaryUnits.getDescription);
+
+var rulers = {
+    Leonidas: &quot;King of Sparta&quot;,
+    Augustus: &quot;First Roman Emperor&quot;
+};
+
+getDescription(rulers, &quot;Augustus&quot;);
+// =&gt; &quot;First Roman Emperor&quot;</code></pre>
+<hr>
+<h4 id="mapargs"><a href="#mapargs" name="mapargs">mapArgs</a></h4>
+<p><strong>Signature:</strong> <code>_.mapArgs(fun:Function)</code></p>
+<p>Takes a target function and returns a new function which accepts a mapping
+function, which in turn returns a function that will map its arguments before
+calling the original target function.</p>
+<pre><code class="lang-javascript">function doubleNum (x) { return 2 * x; }
+
+function squareNum (x) { return x * x; }
+
+var squareThenDouble = _.mapArgs(doubleNum)(squareNum);
+
+squareThenDouble(3);
+// =&gt; 18</code></pre>
+<hr>
+<h4 id="mapargswith"><a href="#mapargswith" name="mapargswith">mapArgsWith</a></h4>
+<p><strong>Signature:</strong> <code>_.mapArgs(mapFun:Function)</code></p>
+<p>Takes a mapping function and returns a new combinator function which will take
+a target function and return a new version which maps its arguments with the
+mapping function before executing the body of the target function.</p>
+<pre><code class="lang-javascript">function doubleNum (x) { return 2 * x; }
+
+function squareNum (x) { return x * x; }
+
+var squareArgs = _.mapArgsWith(squareNum);
+
+var squareThenDouble = squareArgs(doubleNum);
+
+squareThenDouble(3);
+// =&gt; 18</code></pre>
+<hr>
+<h4 id="methodize"><a href="#methodize" name="methodize">methodize</a></h4>
+<p><strong>Signature:</strong> <code>_.methodize(func:Function)</code></p>
+<p>Takes a function and pulls the first argument out of the argument list and into
+<code>this</code> position. The returned function calls the original with its receiver
+(<code>this</code>) prepending the argument list. The original is called with a receiver
+of <code>null</code>.</p>
+<pre><code class="lang-javascript">function describe (obj) {
+    return obj.name + &quot;: &quot; + obj.description;
+}
+
+var democritus = {
+    name: &quot;Democritus&quot;,
+    description: &quot;originator of the atomic hypothesis&quot;,
+    describe: _.methodize(describe)
+};
+
+democritus.describe();
+// =&gt; &quot;Democritus: originator of the atomic hypothesis&quot;</code></pre>
+<hr>
+<h4 id="pipeline"><a href="#pipeline" name="pipeline">pipeline</a></h4>
+<p><strong>Signature:</strong> <code>_.pipeline(func:Function[, func2:Function...])</code> or <code>_.pipeline(funcArr:Array)</code></p>
+<p><strong>Aliases:</strong> <code>_.t</code></p>
+<p>Takes a list of functions, either as an array or as individual arguments
+and returns a function that takes some value as its first argument and runs it
+through a pipeline of the original functions given.</p>
+<pre><code class="lang-javascript">function halveNum (x) { return x / 2; };
+function squareNum (x) { return x * x; };
+function doubleNum (x) { return 2 * x; };
+
+var halveSquareDouble = _.pipeline(halveNum, squareNum, doubleNum);
+
+halveSquareDouble(1);
+// =&gt; 0.5
+
+var doubleSquareHalve = _.pipeline([doubleNum, squareNum, halveNum]);
+
+doubleSquareHalve(1);
+// =&gt; 2</code></pre>
+<hr>
+<h4 id="splat"><a href="#splat" name="splat">splat</a></h4>
+<p><strong>Signature:</strong> <code>_.splat(fun:Function)</code></p>
+<p>Takes a function expecting one or more arguments and returns a function
+that takes an array and uses its elements as the arguments to the original
+function. This roughly corresponds to the <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_operator">spread operator</a> in
+ECMAScript 6.</p>
+<pre><code class="lang-javascript">function listTwoNames (a, b) {
+    return a.name + &quot; &amp; &quot; + b.name;
+}
+
+var listTwoNamesFromArray = _.splat(listTwoNames);
+
+listTwoNamesFromArray([{ name: &quot;Zeno&quot; }, { name: &quot;Parmenides&quot;}]);
+// =&gt; &quot;Zeno &amp; Parmenides&quot;</code></pre>
+<hr>
+<h4 id="unsplat"><a href="#unsplat" name="unsplat">unsplat</a></h4>
+<p><strong>Signature:</strong> <code>_.unsplat(fun:Function)</code></p>
+<p><strong>Aliases:</strong> <code>_.unsplatr</code></p>
+<p>Takes a function expecting an array as its <em>last</em> argument and returns a function
+which works identically, but takes a list of trailing arguments instead. Roughly
+corresponds to <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions_and_function_scope/rest_parameters">rest parameters</a> in ECMAScript 6.</p>
+<pre><code class="lang-javascript">function joinWith (joiner, arr) {
+    return arr.join(joiner);
+}
+
+var joinArgsWith = _.unsplat(joinWith);
+
+joinArgsWith(&quot; &amp; &quot;, &quot;Plutarch&quot;, &quot;Proclus&quot;);
+// =&gt; &quot;Plutarch &amp; Proclus&quot;</code></pre>
+<hr>
+<h4 id="unsplatl"><a href="#unsplatl" name="unsplatl">unsplatl</a></h4>
+<p><strong>Signature:</strong> <code>_.unsplatl(fun:Function)</code></p>
+<p>Similar to <a href="#unsplat">unsplat</a>, but takes a function expecting an array as its
+<em>first</em> argument and returns a function which works identically, but takes a
+list of leading arguments instead. Roughly corresponds to
+<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions_and_function_scope/rest_parameters">rest parameters</a> in ECMAScript 6.</p>
+<pre><code class="lang-javascript">function joinWith (arr, joiner) {
+    return arr.join(joiner);
+}
+
+var joinArgsWith = _.unsplat(joinWith);
+
+joinArgsWith(&quot;Olympiodorus&quot;, &quot;Syrianus&quot;, &quot; &amp; &quot;);
+// =&gt; &quot;Olympiodorus &amp; Syrianus&quot;</code></pre>
+<hr>
+<h3 id="function-iterators"><a href="#function.iterators" name="function.iterators">function.iterators</a></h3>
+<blockquote>
+<p>Functions to iterate over collections.</p>
+</blockquote>
+<hr>
+<h4 id="iterators-accumulate"><a href="#iterators.accumulate" name="iterators.accumulate">iterators.accumulate</a></h4>
+<p><strong>Signature:</strong> <code>_.iterators.accumulate(iter:Function, binaryFn:Function, initial:Any)</code></p>
+<p>Returns a function that when called will iterate one step with <code>iter</code> and return
+the value currently accumulated by using <code>binaryFn</code>. The function will return <code>undefined</code> once all values have been iterated over.</p>
+<pre><code class="lang-javascript">var generalsIterator = _.iterators.List([&quot;Hannibal&quot;, &quot;Scipio&quot;]);
+
+function countLetters(memo, element) {
+     return memo + element.length;
+}
+
+var generalsAcc = _.iterators.accumulate(generalsIterator, countLetters, 0);
+
+generalsAcc();
+// =&gt; 8
+
+generalsAcc();
+// =&gt; 14
+
+generalsAcc();
+// =&gt; undefined</code></pre>
+<hr>
+<h4 id="iterators-accumulatewithreturn"><a href="#iterators.accumulatewithreturn" name="iterators.accumulatewithreturn">iterators.accumulateWithReturn</a></h4>
+<p><strong>Signature:</strong> <code>_.iterators.accumulateWithReturn(iter:Function, binaryFn:Function, initial:Any)</code></p>
+<p>Acts similarly to accumulate, except that <code>binaryFn</code> is expected to return an
+array of two elements. The value of the first element is given to the next run
+of <code>binaryFn</code>. The value of the second element is yielded by the iterator.</p>
+<pre><code class="lang-javascript">var fiveIter = _.iterators.List([1, 2, 3, 4, 5]);
+
+function adderWithMessage (state, element) {
+    return [state + element, &#39;Total is &#39; + (state + element)];
+}
+
+var i = _.iterators.accumulateWithReturn(fiveIter, adderWithMessage, 0);
+
+i();
+// =&gt; &quot;Total is 1&quot;
+
+i();
+// =&gt; &quot;Total is 3&quot;
+
+i();
+// =&gt; &quot;Total is 6&quot;</code></pre>
+<hr>
+<h4 id="iterators-drop"><a href="#iterators.drop" name="iterators.drop">iterators.drop</a></h4>
+<p><strong>Signature:</strong> <code>_.iterators.drop(iter:Function[, numberToDrop:Number])</code></p>
+<p>Given an iterator function <code>iter</code>, will return a new iterator which iterates
+over the same values as <code>iter</code>, except that the first <code>numberToDrop</code> values
+will be omitted. If <code>numberToDrop</code> is not provided, it will default to <code>1</code>.</p>
+<pre><code class="lang-javascript">var deityIter = _.iterators.List([&quot;Zeus&quot;, &quot;Apollo&quot;, &quot;Athena&quot;, &quot;Aphrodite&quot;]);
+
+var goddessIter = _.iterators.drop(deityIter, 2);
+
+goddessIter();
+// =&gt; &quot;Athena&quot;
+
+goddessIter();
+// =&gt; &quot;Aphrodite&quot;</code></pre>
+<hr>
+<h4 id="iterators-foldl"><a href="#iterators.foldl" name="iterators.foldl">iterators.foldl</a></h4>
+<p><strong>Signature:</strong> <code>_.iterators.foldl(iter:Function, binaryFn:Function[, seed:Any])</code></p>
+<p><strong>Aliases:</strong> <code>iterators.reduce</code></p>
+<p>Boils down the values given by <code>iter</code> into a single value. The <code>seed</code> is the
+initial state. The <code>binaryFn</code> is given two arguments: the <code>seed</code> and the
+current value yielded by <code>iter</code>.</p>
+<pre><code class="lang-javascript">var sybylIter = _.iterators.List([&quot;cumaean&quot;, &quot;tiburtine&quot;]);
+
+function commaString (a, b) { return a + &quot;, &quot; + b; }
+
+_.iterators.foldl(sybylIter, commaString);
+// =&gt; &quot;cumaean, tiburtine&quot;</code></pre>
+<hr>
+<h4 id="iterators-k"><a href="#iterators.k" name="iterators.k">iterators.K</a></h4>
+<p><strong>Signature:</strong> <code>_.iterators.K(value:Any)</code></p>
+<p><strong>Aliases:</strong> <code>iterators.constant</code></p>
+<p>Returns a function that when invoked will always return <code>value</code>.</p>
+<pre><code class="lang-javascript">var ceasar = _.iterators.K(&quot;Ceasar&quot;);
+
+ceasar();
+// =&gt; &quot;ceasar&quot;</code></pre>
+<hr>
+<h4 id="iterators-list"><a href="#iterators.list" name="iterators.list">iterators.List</a></h4>
+<p><strong>Signature:</strong> <code>_.iterators.List(array:Array)</code></p>
+<p>Returns an iterater that when invoked will iterate over the contents of <code>array</code>.</p>
+<pre><code class="lang-javascript">var triumvirIter = _.iterators.List([&quot;Ceasar&quot;, &quot;Pompey&quot;, &quot;Crassus&quot;];
+
+triumvirIter();
+// =&gt; &quot;Ceasar&quot;
+
+triumvirIter();
+// =&gt; &quot;Pompey&quot;
+
+triumvirIter();
+// =&gt; &quot;Crassus&quot;</code></pre>
+<hr>
+<h4 id="iterators-map"><a href="#iterators.map" name="iterators.map">iterators.map</a></h4>
+<p><strong>Signature:</strong> <code>_.iterators.map(iter:Function, unaryFn:Function)</code></p>
+<p>Returns a new iterator function which on each iteration will return the result
+of running <code>iter</code>&#39;s current value through <code>unaryFn</code>.</p>
+<pre><code class="lang-javascript">var notablesIter = _.iterators.List([&quot;Socrates&quot;, &quot;Plato&quot;]);
+
+function postfixAthenian (val) {
+    return val + &quot;, Athenian&quot;;
+}
+
+var notableAtheniansIter = _.iterators.map(notablesIter, postfixAthenian);
+
+notableAtheniansIter();
+// =&gt; &quot;Socrates, Athenian&quot;
+
+notableAtheniansIter();
+// =&gt; &quot;Plato, Athenian&quot;</code></pre>
+<hr>
+<h4 id="iterators-mapcat"><a href="#iterators.mapcat" name="iterators.mapcat">iterators.mapcat</a></h4>
+<p><strong>Signature:</strong> <code>_.iterators.mapcat(iter:Function, unaryFn:Function)</code></p>
+<p>Returns an iterator which is the result of flattening the contents of <code>iter</code>,
+and mapping the results with <code>unaryFn</code>.</p>
+<pre><code class="lang-javascript">function naturalSmallerThan (x)  {
+    return _.iterators.List(_.range(0, x));
+}
+
+var treeIter = _.iterators.Tree([1, [2]]);
+
+var smallerThanIter = _.iterators.mapcat(treeIter, naturalSmallerThan);
+
+smallerThanIter();
+// =&gt; 0
+
+smallerThanIter();
+// =&gt; 0
+
+smallerThanIter();
+// =&gt; 1</code></pre>
+<hr>
+<h4 id="iterators-numbers"><a href="#iterators.numbers" name="iterators.numbers">iterators.numbers</a></h4>
+<p><strong>Signature:</strong> <code>_.iterators.numbers([start:Number])</code></p>
+<p>Returns an iterator of integers which will begin with <code>start</code> and increment by
+one for each invocation. If <code>start</code> is not provided it will default to <code>1</code>.</p>
+<pre><code class="lang-javascript">var twoAndUp = _.iterators.numbers(2);
+
+twoAndUp();
+// =&gt; 2
+
+twoAndUp();
+// =&gt; 3
+
+twoAndUp();
+// =&gt; 4</code></pre>
+<hr>
+<h4 id="iterators-range"><a href="#iterators.range" name="iterators.range">iterators.range</a></h4>
+<p><strong>Signature:</strong> `_.iterators.range([from:Number, to:Number, by:Number]);</p>
+<p>Returns an iterator whose values consist of numbers beginning with <code>from</code>, ending with <code>to</code>, in steps of size <code>by</code>.</p>
+<pre><code class="lang-javascript">var by5 = _.iterators.range(5, Infinity, 5);
+
+by5();
+// =&gt; 5
+
+by5();
+// =&gt; 10
+
+by5();
+// =&gt; 15</code></pre>
+<hr>
+<h4 id="iterators-reject"><a href="#iterators.reject" name="iterators.reject">iterators.reject</a></h4>
+<p><strong>Signature:</strong> <code>_.iterators.reject(iter:Function, unaryPredicatFn:Function)</code></p>
+<p>Returns an iterator consisting of the values of <code>iter</code> which are not flagged
+<code>true</code> by <code>unaryPredicateFn</code>.</p>
+<pre><code class="lang-javascript">var philosophers = [&quot;Anaximander&quot;, &quot;Socrates&quot;, &quot;Heraclitus&quot;];
+
+var philosophersIter = _.iterators.List(philosophers);
+
+function isSocrates (val) {
+    return val === &quot;Socrates&quot;;
+}
+
+var preSocraticsIter = _.iterators.reject(philosophersIter, isSocrates);
+
+preSocraticsIter()
+// =&gt; &quot;Anaximander&quot;
+
+preSocraticsIter()
+// =&gt; &quot;Heraclitus&quot;</code></pre>
+<hr>
+<h4 id="iterators-select"><a href="#iterators.select" name="iterators.select">iterators.select</a></h4>
+<p><strong>Signature:</strong> <code>_.iterators.select(iter:Function, unaryPredicatFn:Function)</code></p>
+<p><strong>Aliases:</strong> <code>iterators.find</code>, <code>iteraters.filter</code></p>
+<p>Returns an iterator consisting of the values of <code>iter</code> which are flagged
+<code>true</code> by <code>unaryPredicateFn</code>.</p>
+<pre><code class="lang-javascript">var philosophers = [&quot;Anaximander&quot;, &quot;Socrates&quot;, &quot;Heraclitus&quot;];
+
+var philosophersIter = _.iterators.List(philosophers);
+
+function isSocrates (val) {
+    return val === &quot;Socrates&quot;;
+}
+
+var socraticIter = _.iterators.select(philosophersIter, isSocrates);
+
+socraticIter()
+// =&gt; &quot;Socrates&quot;</code></pre>
+<hr>
+<h4 id="iterators-slice"><a href="#iterators.slice" name="iterators.slice">iterators.slice</a></h4>
+<p><strong>Signature:</strong> <code>_.iterators.slice(iter:Function, numberToDrop:Number, numberToTake:Number)</code></p>
+<p>Returns an iterator whose values consist of <code>iter</code>&#39;s after removing
+<code>numberToDrop</code> from the head, and a maxiumum of <code>numberToTake</code> of the remaining.
+If <code>numberToTake</code> is not specified, all of <code>iter</code>&#39;s remaining values will be
+used.</p>
+<pre><code class="lang-javascript">var emperors = [&quot;Augustus&quot;, &quot;Tiberius&quot;, &quot;Caligula&quot;, &quot;Claudius&quot;];
+
+var emperorsIter = _.iterators.List(emperors);
+
+var middleEmperorsIter = _.iterators.slice(emperorsIter, 1, 2);
+
+middleEmperorsIter();
+// =&gt; &quot;Tiberius&quot;
+
+middleEmperorsIter();
+// =&gt; &quot;Caligula&quot;
+
+middleEmperorsIter();
+// =&gt; undefined</code></pre>
+<hr>
+<h4 id="iterators-take"><a href="#iterators.take" name="iterators.take">iterators.take</a></h4>
+<p><strong>Signature:</strong> <code>_.iterators.take(iter:Function[, numberToTake:Number])</code></p>
+<p>Returns an iterator consisting of the first <code>numberToTake</code> values yielded by
+<code>iter</code>. If <code>numberToTake</code> is not provided, it will default to <code>1</code>.</p>
+<pre><code class="lang-javascript">var byzantineEmperors = [&quot;Constantine&quot;, &quot;Constantius&quot;, &quot;Constans&quot;];
+
+var byzantineEmperorsIter = _.iterators.List(byzantineEmperors);
+
+var firstTwoEmperorsIter = _.iterators.take(byzantineEmperorsIter, 2);
+
+firstTwoEmperorsIter();
+// =&gt; &quot;Constantine&quot;
+
+firstTwoEmperorsIter();
+// =&gt; &quot;Constantius&quot;
+
+firstTwoEmperorsIter();
+// =&gt; undefined</code></pre>
+<hr>
+<h4 id="iterators-tree"><a href="#iterators.tree" name="iterators.tree">iterators.Tree</a></h4>
+<p><strong>Signature:</strong> <code>_.iterators.Tree(array:Array);</code></p>
+<p>Returns an iterator that yields the individual values of a tree <code>array</code>.</p>
+<pre><code class="lang-javascript">var rulers = [&quot;Augustus&quot;, [&quot;Constantine&quot;], [&quot;Leo&quot;, [&quot;Charlemagne&quot;]]];
+
+var rulersIter = _.iterators.Tree(rulers);
+
+rulersIter();
+// =&gt; &quot;Augustus&quot;
+
+rulersIter();
+// =&gt; &quot;Constantine&quot;
+
+rulersIter();
+// =&gt; &quot;Leo&quot;
+
+rulersIter();
+// =&gt; &quot;Charlemagne&quot;</code></pre>
+<hr>
+<h4 id="iterators-unfold"><a href="#iterators.unfold" name="iterators.unfold">iterators.unfold</a></h4>
+<p><strong>Signature:</strong> <code>_.iterators.unfold(seed:Any, unaryFn:Function)</code></p>
+<pre><code class="lang-javascript">function greatify (val) {
+    return val + &quot; the Great&quot;;
+}
+
+var greatIter = _.iterators.unfold(&quot;Constantine&quot;, greatify);
+
+greatIter();
+// =&gt; &quot;Constantine the Great&quot;
+
+greatIter();
+// =&gt; &quot;Constantine the Great the Great&quot;
+
+greatIter();
+// =&gt; &quot;Constantine the Great the Great the Great&quot;</code></pre>
+<hr>
+<h4 id="iterators-unfoldwithreturn"><a href="#iterators.unfoldwithreturn" name="iterators.unfoldwithreturn">iterators.unfoldWithReturn</a></h4>
+<p><strong>Signature:</strong> <code>_.iterators.unfold(seed:Any, unaryFn:Function)</code></p>
+<p>Acts similarly to unfold, except that <code>unaryFn</code> is expected to return an array
+with two elements. The value of the first element is given to the next run of
+<code>unaryFn</code>. The value of the second element is yielded by the iterator.</p>
+<pre><code class="lang-javascript">var i = _.iterators.unfoldWithReturn(1, function(n) {
+    return [n + 1, n * n];
+});
+
+i();
+// =&gt; 1
+
+i();
+// =&gt; 4
+
+i();
+// =&gt; 9</code></pre>
+<h3 id="function-predicates"><a href="#function.predicates" name="function.predicates">function.predicates</a></h3>
+<blockquote>
+<p>Functions which return whether the input meets a condition.</p>
+</blockquote>
+<hr>
+<h4 id="isassociative"><a href="#isassociative" name="isassociative">isAssociative</a></h4>
+<p><strong>Signature:</strong> <code>isAssociative(value:Any)</code></p>
+<p>Returns a boolean indicating whether or not the value is an associative object.
+An associative object is one where its elements can be accessed via a key or
+index (e.g. arrays, <code>arguments</code>, objects).</p>
+<pre><code class="lang-javascript">_.isAssociative([&quot;Athens&quot;, &quot;Sparta&quot;]);
+// =&gt; true
+
+_.isAssociative(42);
+// =&gt; false</code></pre>
+<hr>
+<h4 id="isdecreasing"><a href="#isdecreasing" name="isdecreasing">isDecreasing</a></h4>
+<p><strong>Signature:</strong> <code>_.isDecreasing(values:Any...)</code></p>
+<p>Checks whether the arguments are monotonically decreasing values (i.e. whether
+each argument is less than the previous argument.)</p>
+<pre><code class="lang-javascript">_.isDecreasing(3, 2, 1);
+// =&gt; true
+
+_.isDecreasing(15, 12, 2);
+// =&gt; true
+
+_.isDecreasing(2, 3);
+// =&gt; false</code></pre>
+<hr>
+<h4 id="iseven"><a href="#iseven" name="iseven">isEven</a></h4>
+<p><strong>Signature:</strong> <code>_.isEven(value:Any)</code></p>
+<p>Checks whether the value is an even number.</p>
+<pre><code class="lang-javascript">_.isEven(12);
+// =&gt; true
+
+_.isEven(3);
+// =&gt; false
+
+_.isEven({});
+// =&gt; false</code></pre>
+<hr>
+<h4 id="isfloat"><a href="#isfloat" name="isfloat">isFloat</a></h4>
+<p><strong>Signature:</strong> <code>_.isFloat(value:Any)</code></p>
+<p>Checks whether the value is a &quot;float.&quot; For the purposes of this function, a float
+is a numeric value that is not an integer. A numeric value may be a number, a
+string containing a number, a <code>Number</code> object, etc.</p>
+<p><strong>NOTE:</strong> JavaScript itself makes no distinction between integers and floats. For
+the purposes of this function both <code>1</code> and <code>1.0</code> are considered integers.</p>
+<pre><code class="lang-javascript">_.isFloat(1.1);
+// =&gt; true
+
+_.isFloat(1);
+// =&gt; false
+
+_.isFloat(1.0);
+// =&gt; false
+
+_.isFloat(&quot;2.15&quot;);
+// =&gt; true</code></pre>
+<hr>
+<h4 id="isincreasing"><a href="#isincreasing" name="isincreasing">isIncreasing</a></h4>
+<p><strong>Signature:</strong> <code>_.isIncreasing(value:Any...)</code></p>
+<p>Checks whether the arguments are monotonically increasing values (i.e. each
+argument is greater than the previous argument.)</p>
+<pre><code class="lang-javascript">_.isIncreasing(1, 12, 15);
+// =&gt; true
+
+_.isIncreasing(1);
+// =&gt; true
+
+_.isIncreasing(5, 4);
+// =&gt; false</code></pre>
+<hr>
+<h4 id="isindexed"><a href="#isindexed" name="isindexed">isIndexed</a></h4>
+<p><strong>Signature:</strong> <code>_.isIndexed(value:Any)</code></p>
+<p>Checks whether the value is &quot;indexed.&quot; An indexed value is one which accepts a
+numerical index to access its elements. (e.g. arrays and strings)</p>
+<p><strong>NOTE:</strong> Underscore does not support cross-browser consistent use of strings as
+array-like values, so be wary in IE 8 when using string objects and in IE7 and
+earlier when using string literals &amp; objects.</p>
+<pre><code class="lang-javascript">_.isIndexed(&quot;Socrates&quot;);
+// =&gt; true
+
+_.isIndexed({poison: &quot;hemlock&quot;});
+// =&gt; false</code></pre>
+<hr>
+<h4 id="isinstanceof"><a href="#isinstanceof" name="isinstanceof">isInstanceOf</a></h4>
+<p><strong>Signature:</strong> <code>_.isInstanceOf(value:Any, constructor:Function)</code></p>
+<p>Checks whether the value is an instance of the constructor.</p>
+<pre><code class="lang-javascript">_.isInstanceOf(new Date(), Date);
+// =&gt; true
+
+_.isInstanceOf(&quot;Hippocrates&quot;, RegExp);
+// =&gt; false</code></pre>
+<hr>
+<h4 id="isinteger"><a href="#isinteger" name="isinteger">isInteger</a></h4>
+<p><strong>Signature:</strong> <code>_.isInteger(value:Any)</code></p>
+<p>Checks whether the value is a numeric integer. A numeric value can be a string
+containing a number, a <code>Number</code> object, etc.</p>
+<pre><code class="lang-javascript">_.isInteger(18);
+// =&gt; true
+
+_.isInteger(&quot;18&quot;);
+// =&gt; true
+
+_.isInteger(2.5);
+// =&gt; false
+
+_.isInteger(-1);
+// =&gt; true</code></pre>
+<hr>
+<h4 id="isjson"><a href="#isjson" name="isjson">isJSON</a></h4>
+<p><strong>Signature:</strong> <code>_.isJSON(value:Any)</code></p>
+<p>Checks whether the value is valid JSON. <a href="http://www.json.org/">See the spec</a> for
+more information on what constitutes valid JSON.</p>
+<p><strong>NOTE:</strong> This function relies on <code>JSON.parse</code> which is not available in IE7 and
+earlier.</p>
+<pre><code class="lang-javascript">_.isJSON(&#39;{ &quot;name&quot;: &quot;Crockford&quot; }&#39;);
+// =&gt; true
+
+_.isJSON({ name: &quot;Crocket&quot; });
+// =&gt; false</code></pre>
+<hr>
+<h4 id="isnegative"><a href="#isnegative" name="isnegative">isNegative</a></h4>
+<p><strong>Signature:</strong> <code>_.isNegative(value:Any)</code></p>
+<p>Checks whether the value is a negative number.</p>
+<pre><code class="lang-javascript">_.isNegative(-2);
+// =&gt; true
+
+_.isNegative(5);
+// =&gt; false</code></pre>
+<hr>
+<h4 id="isnumeric"><a href="#isnumeric" name="isnumeric">isNumeric</a></h4>
+<p><strong>Signature:</strong> <code>_.isNumeric(value:Any)</code></p>
+<p>A numeric is something that contains a numeric value, regardless of its type. It
+can be a string containing a numeric value, exponential notation, a <code>Number</code>
+object, etc.</p>
+<pre><code class="lang-javascript">_.isNumeric(&quot;14&quot;);
+// =&gt; true
+
+_.isNumeric(&quot;fourteen&quot;);
+// =&gt; false</code></pre>
+<hr>
+<h4 id="isodd"><a href="#isodd" name="isodd">isOdd</a></h4>
+<p><strong>Signature:</strong> <code>_.isOdd(value:Any)</code></p>
+<p>Checks whether the value is an odd number.</p>
+<pre><code class="lang-javascript">_.isOdd(3);
+// =&gt; true
+
+_.isOdd(2);
+// =&gt; false
+
+_.isOdd({});
+// =&gt; false</code></pre>
+<hr>
+<h4 id="isplainobject"><a href="#isplainobject" name="isplainobject">isPlainObject</a></h4>
+<p><strong>Signature:</strong> <code>_.isPlainObject(value:Any);</code></p>
+<p>Checks whether the value is a &quot;plain&quot; object created as an object literal (<code>{}</code>)
+or explicitly constructed with <code>new Object()</code>. Instances of other constructors
+are <strong>not</strong> plain objects.</p>
+<pre><code class="lang-javascript">_.isPlainObject({});
+// =&gt; true
+
+_.isPlainObject(new Date());
+// =&gt; false
+
+_.isPlainObject([]);
+// =&gt; false</code></pre>
+<hr>
+<h4 id="ispositive"><a href="#ispositive" name="ispositive">isPositive</a></h4>
+<p><strong>Signature:</strong> <code>_.isPositive(value:Any)</code></p>
+<p>Checks whether the value is a positive number.</p>
+<pre><code class="lang-javascript">_.isPositive(21);
+// =&gt; true
+
+_.isPositive(-3);
+// =&gt; false</code></pre>
+<hr>
+<h4 id="issequential"><a href="#issequential" name="issequential">isSequential</a></h4>
+<p><strong>Signature:</strong> <code>_.isSequential(value:Any)</code></p>
+<p>Checks whether the value is a sequential composite type (i.e. arrays and
+<code>arguments</code>).</p>
+<pre><code class="lang-javascript">_.isSequential([&quot;Herodotus&quot;, &quot;Thucidydes&quot;);
+// =&gt; true
+
+_.isSequential(new Date);
+// =&gt; false</code></pre>
+<hr>
+<h4 id="isvaliddate"><a href="#isvaliddate" name="isvaliddate">isValidDate</a></h4>
+<p><strong>Signature:</strong> <code>_.isValidDate(value:Any)</code></p>
+<p>Checks whether the value is a valid date. That is, the value is both an instance
+of <code>Date</code> and it represents an actual date.</p>
+<p><span class="label label-danger">Warning:</span> This function does not verify
+whether the original input to <code>Date</code> is a real date. For instance,
+<code>new Date(&quot;02/30/2014&quot;)</code> is considered a valid date because <code>Date</code> coerces that
+into a representation of 03/02/2014. To validate strings representing a date,
+consider using a date/time library like <a href="http://momentjs.com/">Moment.js.</a></p>
+<pre><code class="lang-javascript">_.isValidDate(new Date(&quot;January 1, 1900&quot;));
+// =&gt; true
+
+_.isValidDate(new Date(&quot;The Last Great Time War&quot;));
+// =&gt; false</code></pre>
+<hr>
+<h4 id="iszero"><a href="#iszero" name="iszero">isZero</a></h4>
+<p><strong>Signature:</strong> <code>_.isZero(value:Any)</code></p>
+<p>Checks whether the value is <code>0</code>.</p>
+<pre><code class="lang-javascript">_.isZero(0);
+// =&gt; true
+
+_.isZero(&quot;Pythagoras&quot;);
+// =&gt; false</code></pre>
+<hr>
+<h3 id="object-builders"><a href="#object.builders" name="object.builders">object.builders</a></h3>
+<blockquote>
+<p>Functions to build objects.</p>
+</blockquote>
+<hr>
+<h4 id="frequencies"><a href="#frequencies" name="frequencies">frequencies</a></h4>
+<p><strong>Signature:</strong> <code>_.frequencies(arr:Array)</code></p>
+<p>Returns an object whose property keys are the values of <code>arr</code>&#39;s elements. The
+property values are a count of how many times that value appeared in <code>arr</code>.</p>
+<pre><code class="lang-javascript">var citations = [&quot;Plato&quot;, &quot;Aristotle&quot;, &quot;Plotinus&quot;, &quot;Plato&quot;];
+
+_.frequencies(citations);
+// =&gt; { Plato: 2, Aristotle: 1, Plotinus: 1 }</code></pre>
+<hr>
+<h4 id="merge"><a href="#merge" name="merge">merge</a></h4>
+<p><strong>Signature:</strong> <code>_.merge(obj1:Object[, obj:Object...])</code></p>
+<p>Merges two or more objects starting with the left-most and applying the keys
+rightward.</p>
+<pre><code class="lang-javascript">_.merge({ a: &quot;alpha&quot; }, { b: &quot;beta&quot; });
+// =&gt; { a: &quot;alpha&quot;, b: &quot;beta&quot; }</code></pre>
+<hr>
+<h4 id="renamekeys"><a href="#renamekeys" name="renamekeys">renameKeys</a></h4>
+<p><strong>Signature:</strong> <code>_.renameKeys(obj:Object, keyMap:Object)</code></p>
+<p>Takes an object (<code>obj</code>) and a map of keys (<code>keyMap</code>) and returns a new object
+where the keys of <code>obj</code> have been renamed as specified in <code>keyMap</code>.</p>
+<pre><code class="lang-javascript">_.renameKeys({ a: 1, b: 2 }, { a: &quot;alpha&quot;, b: &quot;beta&quot; });
+// =&gt; { alpha: 1, beta: 2 }</code></pre>
+<hr>
+<h4 id="setpath"><a href="#setpath" name="setpath">setPath</a></h4>
+<p><strong>Signature:</strong> <code>_.setPath(obj:Object, value:Any, ks:Array, defaultValue:Any)</code></p>
+<p>Sets the value of a property at any depth in <code>obj</code> based on the path described
+by the <code>ks</code> array. If any of the properties in the <code>ks</code> path don&#39;t exist, they
+will be created with <code>defaultValue</code>.</p>
+<pre><code class="lang-javascript">_.setPath({}, &quot;Plotinus&quot;, [&quot;Platonism&quot;, &quot;Neoplatonism&quot;], {});
+// =&gt; { Platonism: { Neoplatonism: &quot;Plotinus&quot; } }</code></pre>
+<hr>
+<h4 id="snapshot"><a href="#snapshot" name="snapshot">snapshot</a></h4>
+<p><strong>Signature:</strong> <code>_.snapshot(obj:Object)</code></p>
+<p>Snapshots/clones an object deeply.</p>
+<pre><code class="lang-javascript">var schools = { plato: &quot;Academy&quot;, aristotle: &quot;Lyceum&quot; };
+
+_.snapshot(schools);
+// =&gt; { plato: &quot;Academy&quot;, aristotle: &quot;Lyceum&quot; }
+
+schools === _.snapshot(schools);
+// =&gt; false</code></pre>
+<hr>
+<p><strong>Signature:</strong> <code>_.updatePath(obj:Object, fun:Function, ks:Array, defaultValue:Any)</code></p>
+<p>Updates the value at any depth in a nested object based on the path described by
+the <code>ks</code> array.  The function <code>fun</code> is called with the current value and is
+expected to return a replacement value.  If no keys are provided, then the
+object itself is presented to <code>fun</code>. If a property in the path is missing, then
+it will be created with <code>defaultValue</code>.</p>
+<pre><code class="lang-javascript">var imperialize = function (val) {
+    if (val == &quot;Republic) return &quot;Empire&quot;;
+    else return val;
+};
+
+_.updatePath({ rome: &quot;Republic&quot; }, imperialize,  [&quot;rome&quot;]);
+// =&gt; { rome: &quot;Empire&quot; }</code></pre>
+<h3 id="object-selectors"><a href="#object.selectors" name="object.selectors">object.selectors</a></h3>
+<blockquote>
+<p>Functions to select values from an object.</p>
+</blockquote>
+<hr>
+<h4 id="accessor"><a href="#accessor" name="accessor">accessor</a></h4>
+<p><strong>Signature:</strong> <code>_.accessor(field:String)</code></p>
+<p>Returns a function that will attempt to look up a named field in any object
+that it is given.</p>
+<pre><code class="lang-javascript">var getName = _.accessor(&#39;name&#39;);
+
+getName({ name: &#39;Seneca&#39; });
+// =&gt; &#39;Seneca&#39;</code></pre>
+<hr>
+<h4 id="dictionary"><a href="#dictionary" name="dictionary">dictionary</a></h4>
+<p><strong>Signature:</strong> <code>_.dictionary(obj:Object)</code></p>
+<p>Given an object, returns a function that will attempt to look up a field that
+it is given.</p>
+<pre><code class="lang-javascript">var generals = {
+    rome: &quot;Scipio&quot;,
+    carthage: &quot;Hannibal&quot;
+};
+
+var getGeneralOf = _.dictionary(generals);
+
+_.getGeneralOf(&quot;rome&quot;);
+// =&gt; &quot;Scipio&quot;</code></pre>
+<hr>
+<h4 id="getpath"><a href="#getpath" name="getpath">getPath</a></h4>
+<p><strong>Signature:</strong> <code>_.getPath(obj:Object, ks:String|Array)</code></p>
+<p>Gets the value at any depth in a nested object based on the path described by
+the keys given. Keys may be given as an array or as a dot-separated string.
+Returns <code>undefined</code> if the path cannot be reached.</p>
+<pre><code class="lang-javascript">var countries = {
+        greece: {
+            athens: {
+                playwright:  &quot;Sophocles&quot;
+            }
+        }
+    }
+};
+
+_.getPath(countries, &quot;greece.athens.playwright&quot;);
+// =&gt; &quot;Sophocles&quot;
+
+_.getPath(countries, &quot;greece.sparta.playwright&quot;);
+// =&gt; undefined
+
+_.getPath(countries, [&quot;greece&quot;, &quot;athens&quot;, &quot;playwright&quot;]);
+// =&gt; &quot;Sophocles&quot;
+
+_.getPath(countries, [&quot;greece&quot;, &quot;sparta&quot;, &quot;playwright&quot;]);
+// =&gt; undefined</code></pre>
+<hr>
+<h4 id="haspath"><a href="#haspath" name="haspath">hasPath</a></h4>
+<p><strong>Signature:</strong> <code>_.hasPath(obj:Object, ks:String|Array)</code></p>
+<p>Returns a boolean indicating whether there is a property at the path described
+by the keys given. Keys may be given as an array or as a dot-separated string.</p>
+<pre><code class="lang-javascript">var countries = {
+        greece: {
+            athens: {
+                playwright:  &quot;Sophocles&quot;
+            }
+        }
+    }
+};
+
+_.hasPath(countries, &quot;greece.athens.playwright&quot;);
+// =&gt; true
+
+_.hasPath(countries, &quot;greece.sparta.playwright&quot;);
+// =&gt; false
+
+_.hasPath(countries, [&quot;greece&quot;, &quot;athens&quot;, &quot;playwright&quot;]);
+// =&gt; true
+
+_.hasPath(countries, [&quot;greece&quot;, &quot;sparta&quot;, &quot;playwright&quot;]);
+// =&gt; false</code></pre>
+<hr>
+<h4 id="kv"><a href="#kv" name="kv">kv</a></h4>
+<p><strong>Signature:</strong> <code>_.kv(obj:Object, key:String)</code></p>
+<p>Returns the key/value pair for a given property in an object, undefined if not found.</p>
+<pre><code class="lang-javascript">var playAuthor = {
+    &quot;Medea&quot;: &quot;Aeschylus&quot;
+};
+
+_.kv(playAuthor, &quot;Medea&quot;);
+// =&gt; [&quot;Medea&quot;, &quot;Aeschylus&quot;]
+
+_.kv(playAuthor, &quot;Hamlet&quot;);
+// =&gt; undefined</code></pre>
+<hr>
+<h4 id="omitwhen"><a href="#omitwhen" name="omitwhen">omitWhen</a></h4>
+<p><strong>Signature:</strong> <code>_.omitWhen(obj, pred:Function)</code></p>
+<p>Returns a copy of <code>obj</code> omitting any properties that the predicate (<code>pred</code>)
+function returns <code>true</code> for. The predicat function is invoked with each
+property value, like so: <code>pred(propValue)</code>.</p>
+<pre><code class="lang-javascript">var playwrights = {
+    euripedes: &quot;Greece&quot;,
+    shakespere: &quot;England&quot;
+};
+
+_.omitWhen(obj, function (country) { return country == &quot;England&quot; });
+// =&gt; { euripedes: &quot;Greece&quot; }</code></pre>
+<hr>
+<h4 id="pickwhen"><a href="#pickwhen" name="pickwhen">pickWhen</a></h4>
+<p><strong>Signature:</strong> <code>_.pickWhen(obj:Object, pred:Function)</code></p>
+<p>Returns a copy of <code>obj</code> containing only properties that the predicate (<code>pred</code>)
+function returns <code>true</code> for. The predicate function is invoked with each
+property value, like so: <code>pred(propValue)</code>.</p>
+<pre><code class="lang-javascript">var playwrights = {
+    euripedes: &quot;Greece&quot;,
+    shakespere: &quot;England&quot;
+};
+
+_.pickWhen(obj, function (country) { return country == &quot;England&quot; });
+// =&gt; { shakespeare: &quot;England&quot; }</code></pre>
+<hr>
+<h4 id="selectkeys"><a href="#selectkeys" name="selectkeys">selectKeys</a></h4>
+<p><strong>Signature:</strong> `_.selectKeys(obj:Object, ks:Array);</p>
+<p>Returns a copy of <code>obj</code> containing only the properties listed in the <code>ks</code> array.</p>
+<pre><code class="lang-javascript">var philosopherCities = {
+    Philo: &quot;Alexandria&quot;,
+    Plato: &quot;Athens&quot;,
+    Plotinus: &quot;Rome&quot;
+}
+
+_.selectKeys(philosopherCities, [&quot;Plato&quot;, &quot;Plotinus&quot;]);
+// =&gt; { Plato: &quot;Athens&quot;, Plotinus: &quot;Rome&quot; }</code></pre>
+<h3 id="util-existential"><a href="#util.existential" name="util.existential">util.existential</a></h3>
+<blockquote>
+<p>Functions which deal with whether a value &quot;exists.&quot;</p>
+</blockquote>
+<hr>
+<h4 id="exists"><a href="#exists" name="exists">exists</a></h4>
+<p><strong>Signature:</strong> <code>_.exists(value:Any)</code></p>
+<p>Checks whether or not the value is &quot;existy.&quot; Both <code>null</code> and <code>undefined</code> are
+considered non-existy values. All other values are existy.</p>
+<pre><code class="lang-javascript">_.exists(null);
+// =&gt; false
+
+_.exists(undefined);
+// =&gt; false
+
+_.exists({});
+// = &gt; true
+
+_.exists(&quot;Sparta&quot;);
+// =&gt; true</code></pre>
+<hr>
+<h4 id="falsey"><a href="#falsey" name="falsey">falsey</a></h4>
+<p><strong>Signature:</strong> <code>_.falsey(value:Any)</code></p>
+<p>Checks whether the value is falsey. A falsey value is one which coerces to
+<code>false</code> in a boolean context.</p>
+<pre><code class="lang-javascript">_.falsey(0);
+// =&gt; true
+
+_.falsey(&quot;&quot;);
+// =&gt; true
+
+_.falsey({});
+// =&gt; false
+
+_.falsey(&quot;Corinth&quot;);
+// =&gt; false</code></pre>
+<hr>
+<h4 id="firstexisting"><a href="#firstexisting" name="firstexisting">firstExisting</a></h4>
+<p><strong>Signature:</strong> <code>_.firstExisting(value:Any[, value:Any...])</code></p>
+<p>Returns the first existy argument from the argument list.</p>
+<pre><code class="lang-javascript">_.firstExisting(&quot;Socrates&quot;, &quot;Plato&quot;);
+// =&gt; &quot;Socrates&quot;
+
+_.firstExisting(null, undefined, &quot;Heraclitus&quot;);
+// =&gt; &quot;Heraclitus&quot;</code></pre>
+<hr>
+<h4 id="not"><a href="#not" name="not">not</a></h4>
+<p><strong>Signature:</strong> <code>_.not(value:Any)</code></p>
+<p>Returns a boolean which is the opposite of the truthiness of the original value.</p>
+<pre><code class="lang-javascript">_.not(0);
+// =&gt; true
+
+_.not(1);
+// =&gt; false
+
+_.not(true);
+// =&gt; false
+
+_.not(false);
+// =&gt; true
+
+_.not({});
+// =&gt; false
+
+_.not(null);
+// =&gt; true</code></pre>
+<hr>
+<h4 id="truthy"><a href="#truthy" name="truthy">truthy</a></h4>
+<p><strong>Signature:</strong> <code>_.truthy(value:Any)</code></p>
+<p>Checks whether the value is truthy. A truthy value is one which coerces to
+<code>true</code> in a boolean context.</p>
+<pre><code class="lang-javascript">_.truthy({});
+// =&gt; true
+
+_.truthy(&quot;Athens&quot;);
+// =&gt; true
+
+_.truthy(0);
+// =&gt; false
+
+_.truthy(&quot;&quot;);
+// =&gt; false</code></pre>
+<hr>
+<h3 id="util-operators"><a href="#util.operators" name="util.operators">util.operators</a></h3>
+<blockquote>
+<p>Functions which wrap JavaScript&#39;s operators.</p>
+</blockquote>
+<hr>
+<h4 id="add"><a href="#add" name="add">add</a></h4>
+<p><strong>Signature:</strong> <code>_.add(value:Number, value:Number[, value:Number...])</code></p>
+<p>Returns the sum of the arguments.</p>
+<pre><code class="lang-javascript">_.add(1, 2, 3, 4);
+// =&gt; 10</code></pre>
+<hr>
+<h4 id="bitwiseand"><a href="#bitwiseand" name="bitwiseand">bitwiseAnd</a></h4>
+<p><strong>Signature:</strong> <code>_.bitwiseAnd(value:Any, value:Any[, value:Any...])</code></p>
+<p>Returns the result of using the <code>&amp;</code> operator on the arguments.</p>
+<pre><code class="lang-javascript">_.bitwiseAnd(1, 3);
+// =&gt; 1
+
+_.bitwiseAnd(1, 3, 2);
+// =&gt; 0</code></pre>
+<hr>
+<h4 id="bitwiseleft"><a href="#bitwiseleft" name="bitwiseleft">bitwiseLeft</a></h4>
+<p><strong>Signature:</strong> <code>_.bitwiseLeft(value:Any, value:Any[, value:Any...])</code></p>
+<p>Returns the result of using the <code>&lt;&lt;</code> operator on the arguments.</p>
+<pre><code class="lang-javascript">_.bitwiseLeft(1, 3);
+// =&gt; 8
+
+_.bitwiseLeft(1, 3, 2);
+// =&gt; 32</code></pre>
+<hr>
+<h4 id="bitwiseright"><a href="#bitwiseright" name="bitwiseright">bitwiseRight</a></h4>
+<p><strong>Signature:</strong> <code>_.bitwiseRight(value:Any, value:Any[, value:Any...])</code></p>
+<p>Returns the result of using the <code>&gt;&gt;</code> operator on the arguments.</p>
+<pre><code class="lang-javascript">_.bitwiseRight(3, 1);
+// =&gt; 1
+
+_.bitwiseRight(3, 1, 3);
+// =&gt; 0</code></pre>
+<hr>
+<h4 id="bitwisenot"><a href="#bitwisenot" name="bitwisenot">bitwiseNot</a></h4>
+<p><strong>Signature:</strong> <code>_.bitwiseNot(value:Any)</code></p>
+<p>Returns the result of using the <code>~</code> operator on the value.</p>
+<pre><code class="lang-javascript">_.bitwiseNot(1);
+// =&gt; -2
+
+_.bitwiseOr(2);
+// =&gt; -3</code></pre>
+<hr>
+<h4 id="bitwiseor"><a href="#bitwiseor" name="bitwiseor">bitwiseOr</a></h4>
+<p><strong>Signature:</strong> <code>_.bitwiseOr(value:Any, value:Any[, value:Any...])</code></p>
+<p>Returns the result of using the <code>|</code> operator on the arguments.</p>
+<pre><code class="lang-javascript">_.bitwiseOr(1, 3);
+// =&gt; 3
+
+_.bitwiseOr(1, 3, 4);
+// =&gt; 7</code></pre>
+<hr>
+<h4 id="bitwisexor"><a href="#bitwisexor" name="bitwisexor">bitwiseXor</a></h4>
+<p><strong>Signature:</strong> <code>_.bitwiseXor(value:Any, value:Any[, value:Any...])</code></p>
+<p>Returns the result of using the <code>^</code> operator on the arguments.</p>
+<pre><code class="lang-javascript">_.bitwiseXor(1, 3);
+// =&gt; 2
+
+_.bitwiseXor(1, 3, 3);
+// =&gt; 1</code></pre>
+<hr>
+<h4 id="bitwisez"><a href="#bitwisez" name="bitwisez">bitwiseZ</a></h4>
+<p><strong>Signature:</strong> <code>_.bitwiseZ(value:Any, value:Any[, value:Any...])</code></p>
+<p>Returns the result of using the <code>&gt;&gt;&gt;</code> operator on the arguments.</p>
+<pre><code class="lang-javascript">_.bitwiseZ(72, 32);
+// =&gt; 72
+
+_.bitwiseZ(72, 32, 2);
+// =&gt; 18</code></pre>
+<hr>
+<h4 id="dec"><a href="#dec" name="dec">dec</a></h4>
+<p><strong>Signature:</strong> <code>_.dec(value:Number)</code></p>
+<p>Returns the result of decrementing the value by <code>1</code>.</p>
+<pre><code class="lang-javascript">_.dec(2);
+// =&gt; 1</code></pre>
+<hr>
+<h4 id="div"><a href="#div" name="div">div</a></h4>
+<p><strong>Signature:</strong> <code>_.div(value:Number, value:Number[, value:Number...])</code></p>
+<p>Returns the quotient of the arguments.</p>
+<pre><code class="lang-javascript">_.div(8, 2);
+// =&gt; 4
+
+_.div(8, 2, 2);
+// =&gt; 2</code></pre>
+<hr>
+<h4 id="eq"><a href="#eq" name="eq">eq</a></h4>
+<p><strong>Signature:</strong> <code>_.eq(value:Any, value:Any[, value:Any...])</code></p>
+<p>Compares the arguments with loose equality (<code>==</code>).</p>
+<pre><code class="lang-javascript">_.eq(1, &quot;1&quot;);
+// =&gt; true
+
+_.eq(1, 15);
+// =&gt; false
+
+_.eq(1, true, &quot;1&quot;);
+// =&gt; true
+
+_.eq(1, 1, 15);
+// =&gt; false</code></pre>
+<hr>
+<h4 id="gt"><a href="#gt" name="gt">gt</a></h4>
+<p><strong>Signature:</strong> <code>_.gt(value:Any, value:Any[, value:Any...])</code></p>
+<p>Checks whether each argument is greater than the previous argument.</p>
+<pre><code class="lang-javascript">_.gt(1, 2);
+// =&gt; true
+
+_.gt(1, 2, 3);
+// =&gt; true
+
+_.gt(1, 6, 2);
+// =&gt; false</code></pre>
+<hr>
+<h4 id="gte"><a href="#gte" name="gte">gte</a></h4>
+<p><strong>Signature:</strong> <code>_.gte(value:Any, value:Any[, value:Any...])</code></p>
+<p>Checks whether each argument is greater than or equal to the previous argument.</p>
+<pre><code class="lang-javascript">_.gte(1, 2);
+// =&gt; true
+
+_.gte(1, 1, 3);
+// =&gt; true
+
+_.gte(1, 6, 2);
+// =&gt; false</code></pre>
+<hr>
+<h4 id="inc"><a href="#inc" name="inc">inc</a></h4>
+<p><strong>Signature:</strong> <code>_.inc(value:Number)</code></p>
+<p>Returns the result of incrementing the value by <code>1</code>.</p>
+<pre><code class="lang-javascript">_.inc(2);
+// =&gt; 3</code></pre>
+<hr>
+<h4 id="lt"><a href="#lt" name="lt">lt</a></h4>
+<p><strong>Signature:</strong> <code>_.lt(value:Any, value:Any[, value:Any...])</code></p>
+<p>Checks whether each argument is less than the previous argument.</p>
+<pre><code class="lang-javascript">_.lt(2, 1);
+// =&gt; true
+
+_.lt(2, 1, 0);
+// =&gt; true
+
+_.lt(2, 1, 12);
+// =&gt; false</code></pre>
+<hr>
+<h4 id="lte"><a href="#lte" name="lte">lte</a></h4>
+<p><strong>Signature:</strong> <code>_.lte(value:Any, value:Any[, value:Any...])</code></p>
+<p>Checks whether each argument is less than or equal to the previous argument.</p>
+<pre><code class="lang-javascript">_.lte(2, 1);
+// =&gt; true
+
+_.lte(2, 1, 1);
+// =&gt; true
+
+_.lte(2, 1, 12);
+// =&gt; false</code></pre>
+<hr>
+<h4 id="mul"><a href="#mul" name="mul">mul</a></h4>
+<p><strong>Signature:</strong> <code>_.mul(value:Number, value:Number[, value:Number...])</code></p>
+<p>Returns the product of the arguments.</p>
+<pre><code class="lang-javascript">_.mul(1, 2, 3, 4);
+// =&gt; 24</code></pre>
+<hr>
+<h4 id="mod"><a href="#mod" name="mod">mod</a></h4>
+<p><strong>Signature:</strong> <code>_.mod(dividend:Number, divisor:Number)</code></p>
+<p>Returns the remainder of dividing <code>dividend</code> by <code>divisor</code>.</p>
+<pre><code class="lang-javascript">_.mod(26, 5);
+// =&gt; 1
+
+_.mod(14, 3);
+// =&gt; 2</code></pre>
+<hr>
+<h4 id="neg"><a href="#neg" name="neg">neg</a></h4>
+<p><strong>Signature:</strong> <code>_.neg(num:Number)</code></p>
+<p>Returns a new number with the opposite sign value of <code>num</code>.</p>
+<pre><code class="lang-javascript">_.neg(5);
+// =&gt; -5
+
+_.neg(-3);
+// =&gt; 3</code></pre>
+<hr>
+<h4 id="neq"><a href="#neq" name="neq">neq</a></h4>
+<p><strong>Signature:</strong> <code>_.neq(value:Any, value:Any[, value:Any...])</code></p>
+<p>Checks whether each argument is not equal to the previous argument, using loose
+inequality (<code>!=</code>).</p>
+<pre><code class="lang-javascript">_.neq(2, 1);
+// =&gt; true
+
+_.neq(2, 1, 1);
+// =&gt; true
+
+_.neq(1, 1);
+// =&gt; false</code></pre>
+<hr>
+<h4 id="not"><a href="#not-1" name="not-1">not</a></h4>
+<p><strong>Signature:</strong> <code>_.not(value:Any)</code></p>
+<p>Returns a boolean which is the opposite of the truthiness of the original value.</p>
+<pre><code class="lang-javascript">_.not(0);
+// =&gt; true
+
+_.not(1);
+// =&gt; false
+
+_.not(true);
+// =&gt; false
+
+_.not(false);
+// =&gt; true
+
+_.not({});
+// =&gt; false
+
+_.not(null);
+// =&gt; true</code></pre>
+<hr>
+<h4 id="seq"><a href="#seq" name="seq">seq</a></h4>
+<p><strong>Signature:</strong> <code>_.seq(value:Any, value:Any[, value:Any...])</code></p>
+<p>Checks whether the arguments are strictly equal (<code>===</code>) to each other.</p>
+<pre><code class="lang-javascript">_.seq(2, 2);
+// =&gt; true
+
+_.seq(2, &quot;2&quot;);
+// =&gt; false
+
+_.seq(2, 2, 2);
+// =&gt; true</code></pre>
+<hr>
+<h4 id="sneq"><a href="#sneq" name="sneq">sneq</a></h4>
+<p><strong>Signature:</strong> <code>_.sneq(value:Any, value:Any[, value:Any...])</code></p>
+<p>Checks whether the arguments are strictly not equal (<code>!==</code>) to each other.</p>
+<pre><code class="lang-javascript">_.sneq(2, 2);
+// =&gt; false
+
+_.sneq(2, &quot;2&quot;);
+// =&gt; true
+
+_.sneq(2, 2, 2);
+// =&gt; false</code></pre>
+<hr>
+<h4 id="sub"><a href="#sub" name="sub">sub</a></h4>
+<p><strong>Signature:</strong> <code>_.sub(value:Number, value:Number[, value:Number...])</code></p>
+<p>Returns the difference of the arguments.</p>
+<pre><code class="lang-javascript">_.sub(10, 3);
+// =&gt; 7
+
+_.sub(10, 3, 5);
+// =&gt; 2</code></pre>
+<h3 id="util-strings"><a href="#util.strings" name="util.strings">util.strings</a></h3>
+<blockquote>
+<p>Functions for working with strings.</p>
+</blockquote>
+<hr>
+<h4 id="camelcase"><a href="#camelcase" name="camelcase">camelCase</a></h4>
+<p><strong>Signature:</strong> <code>_.camelCase(string:String)</code></p>
+<p>Converts a dash-separated string to camel case. Opposite of <a href="#todash">toDash</a>.</p>
+<pre><code class="lang-javascript">_.camelCase(&quot;ancient-greece&quot;);
+// =&gt; &quot;ancientGreece&quot;</code></pre>
+<hr>
+<h4 id="explode"><a href="#explode" name="explode">explode</a></h4>
+<p><strong>Signature:</strong> <code>_.explode(s:String)</code></p>
+<p>Explodes a string into an array of characters. Opposite of <a href="#implode">implode</a>.</p>
+<pre><code class="lang-javascript">_.explode(&quot;Plato&quot;);
+// =&gt; [&quot;P&quot;, &quot;l&quot;, &quot;a&quot;, &quot;t&quot;, &quot;o&quot;]</code></pre>
+<hr>
+<h4 id="fromquery"><a href="#fromquery" name="fromquery">fromQuery</a></h4>
+<p><strong>Signature:</strong> <code>_.fromQuery(str:String)</code></p>
+<p>Takes a URL query string and converts it into an equivalent JavaScript object.
+Opposite of <a href="#toquery">toQuery</a></p>
+<pre><code class="lang-javascript">_.fromQuery(&quot;forms%5Bperfect%5D=circle&amp;forms%5Bimperfect%5D=square&quot;);
+// =&gt; { forms: { perfect: &quot;circle&quot;, imperfect: &quot;square&quot; } }</code></pre>
+<hr>
+<h4 id="implode"><a href="#implode" name="implode">implode</a></h4>
+<p><strong>Signature:</strong> <code>_.implode(a:Array)</code></p>
+<p>Implodes an array of strings into a single string. Opposite of <a href="#explode">explode</a>.</p>
+<pre><code class="lang-javascript">_.implode([&quot;H&quot;, &quot;o&quot;, &quot;m&quot;, &quot;e&quot;, &quot;r&quot;]);
+// =&gt; &quot;Homer&quot;</code></pre>
+<hr>
+<h4 id="strcontains"><a href="#strcontains" name="strcontains">strContains</a></h4>
+<p><strong>Signature:</strong> <code>_.strContains(str:String, search:String)</code></p>
+<p>Reports whether a string contains a search string.</p>
+<pre><code class="lang-javascript">_.strContains(&quot;Acropolis&quot;, &quot;polis&quot;);
+// =&gt; true</code></pre>
+<hr>
+<h4 id="todash"><a href="#todash" name="todash">toDash</a></h4>
+<p><strong>Signature:</strong> <code>_.toDash(string:String)</code></p>
+<p>Converts a camel case string to a dashed string. Opposite of <a href="#camelcase">camelCase</a>.</p>
+<pre><code class="lang-javascript">_.toDash(&quot;thisIsSparta&quot;);
+// =&gt; &quot;this-is-sparta&quot;</code></pre>
+<hr>
+<h4 id="toquery"><a href="#toquery" name="toquery">toQuery</a></h4>
+<p><strong>Signature:</strong> <code>_.toQuery(obj:Object)</code></p>
+<p>Takes an object and converts it into an equivalent URL query string. Opposite
+of <a href="#fromquery">fromQuery</a>.</p>
+<pre><code class="lang-javascript">_.toQuery({ forms: { perfect: &quot;circle&quot;, imperfect: &quot;square&quot; } });
+// =&gt; &quot;forms%5Bperfect%5D=circle&amp;forms%5Bimperfect%5D=square&quot;</code></pre>
+<hr>
+<h3 id="util-trampolines"><a href="#util.trampolines" name="util.trampolines">util.trampolines</a></h3>
+<blockquote>
+<p>Trampoline functions.</p>
+</blockquote>
+<p>Documentation should use <a href="https://github.com/jashkenas/journo">Journo</a> formats and standards.</p>
+<pre><code>done: function(value) {
+trampoline: function(fun /*, args */) {</code></pre>
+<hr>
+<h3 id="changelog"><a href="#changelog" name="changelog">Changelog</a></h3>
+<h4 id="0-3-0"><a href="#0.3.0" name="0.3.0">0.3.0</a></h4>
+<ul>
+<li>Contrib now requires Underscore 1.6.0 or higher.</li>
+<li>Rename <code>partition</code> and <code>partitionAll</code> to <code>chunk</code> and <code>chunkAll</code> to avoid name conflicts with Underscore&#39;s <code>partition</code> - <a href="https://github.com/documentcloud/underscore-contrib/issues/115">#115</a></li>
+<li>Added <code>toQuery</code> and <code>fromQuery</code> - <a href="https://github.com/documentcloud/underscore-contrib/issues/134">#134</a></li>
+<li>Switch <code>always</code> to an alias of Underscore&#39;s <code>constant</code>. - <a href="https://github.com/documentcloud/underscore-contrib/issues/132">#132</a></li>
+<li>The combinators sub-library now supports method combinators - <a href="https://github.com/documentcloud/underscore-contrib/issues/14">#14</a></li>
+</ul>
+
+</body>
+</html>
