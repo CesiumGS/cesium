@@ -112,6 +112,7 @@ getJasmineRequireObj().base = function(j$, jasmineGlobal) {
 
   j$.MAX_PRETTY_PRINT_DEPTH = 40;
   j$.MAX_PRETTY_PRINT_ARRAY_LENGTH = 100;
+  j$.MAX_PRETTY_PRINT_TOTAL_LENGTH = 5000;
   j$.DEFAULT_TIMEOUT_INTERVAL = 5000;
 
   j$.getGlobal = function() {
@@ -1571,6 +1572,7 @@ getJasmineRequireObj().pp = function(j$) {
   function PrettyPrinter() {
     this.ppNestLevel_ = 0;
     this.seen = [];
+    this.abort = false;
   }
 
   PrettyPrinter.prototype.format = function(value) {
@@ -1619,6 +1621,9 @@ getJasmineRequireObj().pp = function(j$) {
   PrettyPrinter.prototype.iterateObject = function(obj, fn) {
     for (var property in obj) {
       if (!Object.prototype.hasOwnProperty.call(obj, property)) { continue; }
+      if (this.abort) {
+        break;
+      }
       fn(property, obj.__lookupGetter__ ? (!j$.util.isUndefined(obj.__lookupGetter__(property)) &&
           obj.__lookupGetter__(property) !== null) : false);
     }
@@ -1652,7 +1657,7 @@ getJasmineRequireObj().pp = function(j$) {
     }
     var length = Math.min(array.length, j$.MAX_PRETTY_PRINT_ARRAY_LENGTH);
     this.append('[ ');
-    for (var i = 0; i < length; i++) {
+    for (var i = 0; !this.abort && i < length; i++) {
       if (i > 0) {
         this.append(', ');
       }
@@ -1696,6 +1701,10 @@ getJasmineRequireObj().pp = function(j$) {
   };
 
   StringPrettyPrinter.prototype.append = function(value) {
+    if (this.string.length > j$.MAX_PRETTY_PRINT_TOTAL_LENGTH) {
+      this.string += '...';
+      this.abort = true;
+    }
     this.string += value;
   };
 
