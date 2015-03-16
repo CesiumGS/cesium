@@ -11,6 +11,7 @@ Change Log
   * Removed `Camera.flyToRectangle`, which was deprecated in Cesium 1.6. Use `Camera.flyTo`.
 * Fixed an issue with transparency. [#2572](https://github.com/AnalyticalGraphicsInc/cesium/issues/2572)
 * Fixed improper handling of null values when loading `GeoJSON` data.
+* Cesium is now tested using Jasmine 2.2.0.
 
 ### 1.7.1 - 2015-03-06
 

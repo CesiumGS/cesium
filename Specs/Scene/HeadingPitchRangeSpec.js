@@ -4,7 +4,7 @@ defineSuite([
     ], function(
         HeadingPitchRange) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('construct with default values', function() {
         var hpr = new HeadingPitchRange();
@@ -24,7 +24,7 @@ defineSuite([
         var hpr = new HeadingPitchRange(1.0, 2.0, 3.0);
         var result = new HeadingPitchRange();
         var returnedResult = HeadingPitchRange.clone(hpr, result);
-        expect(hpr).toNotBe(result);
+        expect(hpr).not.toBe(result);
         expect(result).toBe(returnedResult);
         expect(hpr).toEqual(result);
     });

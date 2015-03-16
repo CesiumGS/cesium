@@ -14,7 +14,7 @@ defineSuite([
         ConstantProperty,
         TimeIntervalCollectionProperty) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('constructor provides the expected defaults', function() {
         var property = new PolylineOutlineMaterialProperty();
@@ -123,39 +123,39 @@ defineSuite([
         var oldValue = property.color;
         property.color = new ConstantProperty(Color.RED);
         expect(listener).toHaveBeenCalledWith(property, 'color', property.color, oldValue);
-        listener.reset();
+        listener.calls.reset();
 
         property.color.setValue(Color.YELLOW);
         expect(listener).toHaveBeenCalledWith(property, 'color', property.color, property.color);
-        listener.reset();
+        listener.calls.reset();
 
         property.color = property.color;
-        expect(listener.callCount).toEqual(0);
-        listener.reset();
+        expect(listener.calls.count()).toEqual(0);
+        listener.calls.reset();
 
         oldValue = property.outlineColor;
         property.outlineColor = new ConstantProperty(Color.BLUE);
         expect(listener).toHaveBeenCalledWith(property, 'outlineColor', property.outlineColor, oldValue);
-        listener.reset();
+        listener.calls.reset();
 
         property.outlineColor.setValue(Color.GREEN);
         expect(listener).toHaveBeenCalledWith(property, 'outlineColor', property.outlineColor, property.outlineColor);
-        listener.reset();
+        listener.calls.reset();
 
         property.outlineColor = property.outlineColor;
-        expect(listener.callCount).toEqual(0);
+        expect(listener.calls.count()).toEqual(0);
 
         oldValue = property.outlineWidth;
         property.outlineWidth = new ConstantProperty(2.5);
         expect(listener).toHaveBeenCalledWith(property, 'outlineWidth', property.outlineWidth, oldValue);
-        listener.reset();
+        listener.calls.reset();
 
         property.outlineWidth.setValue(1.5);
         expect(listener).toHaveBeenCalledWith(property, 'outlineWidth', property.outlineWidth, property.outlineWidth);
-        listener.reset();
+        listener.calls.reset();
 
         property.outlineWidth = property.outlineWidth;
-        expect(listener.callCount).toEqual(0);
+        expect(listener.calls.count()).toEqual(0);
     });
 
     it('isConstant is only true when all properties are constant or undefined', function() {

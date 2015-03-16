@@ -2,6 +2,7 @@
 defineSuite([
         'Core/Cartesian3',
         'Core/Color',
+        'Core/loadImage',
         'Core/PixelFormat',
         'Core/PrimitiveType',
         'Renderer/BufferUsage',
@@ -11,10 +12,12 @@ defineSuite([
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
         'Renderer/TextureWrap',
-        'Specs/createContext'
+        'Specs/createContext',
+        'ThirdParty/when'
     ], 'Renderer/CubeMap', function(
         Cartesian3,
         Color,
+        loadImage,
         PixelFormat,
         PrimitiveType,
         BufferUsage,
@@ -24,9 +27,10 @@ defineSuite([
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
-        createContext) {
+        createContext,
+        when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var context;
     var sp;
@@ -40,6 +44,22 @@ defineSuite([
 
     beforeAll(function() {
         context = createContext();
+
+        var promises = [];
+        promises.push(loadImage('./Data/Images/Green.png').then(function(result) {
+            greenImage = result;
+        }));
+        promises.push(loadImage('./Data/Images/Blue.png').then(function(result) {
+            blueImage = result;
+        }));
+        promises.push(loadImage('./Data/Images/BlueAlpha.png').then(function(result) {
+            blueAlphaImage = result;
+        }));
+        promises.push(loadImage('./Data/Images/BlueOverRed.png').then(function(result) {
+            blueOverRedImage = result;
+        }));
+
+        return when.all(promises);
     });
 
     afterAll(function() {
@@ -50,24 +70,6 @@ defineSuite([
         sp = sp && sp.destroy();
         va = va && va.destroy();
         cubeMap = cubeMap && cubeMap.destroy();
-    });
-
-    it('create images', function() {
-        greenImage = new Image();
-        greenImage.src = './Data/Images/Green.png';
-
-        blueImage = new Image();
-        blueImage.src = './Data/Images/Blue.png';
-
-        blueAlphaImage = new Image();
-        blueAlphaImage.src = './Data/Images/BlueAlpha.png';
-
-        blueOverRedImage = new Image();
-        blueOverRedImage.src = './Data/Images/BlueOverRed.png';
-
-        waitsFor(function() {
-            return greenImage.complete && blueImage.complete && blueAlphaImage.complete && blueOverRedImage.complete;
-        }, 'Load .png file(s) for texture test.', 3000);
     });
 
     it('gets the pixel format', function() {

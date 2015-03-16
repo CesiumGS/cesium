@@ -44,7 +44,7 @@ defineSuite([
         createDynamicProperty,
         createScene) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
     var time;
@@ -466,27 +466,27 @@ defineSuite([
         updater.geometryChanged.addEventListener(listener);
 
         entity.position = new ConstantPositionProperty(Cartesian3.UNIT_Z);
-        expect(listener.callCount).toEqual(1);
+        expect(listener.calls.count()).toEqual(1);
 
         entity.ellipse.semiMajorAxis = new ConstantProperty(82);
-        expect(listener.callCount).toEqual(2);
+        expect(listener.calls.count()).toEqual(2);
 
         entity.availability = new TimeIntervalCollection();
-        expect(listener.callCount).toEqual(3);
+        expect(listener.calls.count()).toEqual(3);
 
         entity.ellipse.semiMajorAxis = undefined;
-        expect(listener.callCount).toEqual(4);
+        expect(listener.calls.count()).toEqual(4);
 
         //Since there's no valid geometry, changing another property should not raise the event.
         entity.ellipse.semiMinorAxis = undefined;
 
         //Modifying an unrelated property should not have any effect.
         entity.viewFrom = new ConstantProperty(Cartesian3.UNIT_X);
-        expect(listener.callCount).toEqual(4);
+        expect(listener.calls.count()).toEqual(4);
 
         entity.ellipse.semiMajorAxis = new SampledProperty(Number);
         entity.ellipse.semiMinorAxis = new SampledProperty(Number);
-        expect(listener.callCount).toEqual(5);
+        expect(listener.calls.count()).toEqual(5);
     });
 
     it('createFillGeometryInstance throws if object is not filled', function() {

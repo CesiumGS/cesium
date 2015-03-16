@@ -9,6 +9,7 @@ defineSuite([
         'Core/Math',
         'Core/QuantizedMeshTerrainData',
         'Core/TerrainProvider',
+        'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
         CesiumTerrainProvider,
@@ -20,9 +21,10 @@ defineSuite([
         CesiumMath,
         QuantizedMeshTerrainData,
         TerrainProvider,
+        pollToPromise,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     afterEach(function() {
         loadWithXhr.load = loadWithXhr.defaultLoad;
@@ -78,14 +80,12 @@ defineSuite([
             requestWaterMask: requestWaterMask
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return terrainProvider.ready;
-        });
-
-        runs(function() {
+        }).then(function() {
             var promise = terrainProvider.requestTileGeometry(level, x, y);
 
-            when(promise, f, function(error) {
+            return when(promise, f, function(error) {
                 expect('requestTileGeometry').toBe('returning a tile.'); // test failure
             });
         });
@@ -113,11 +113,9 @@ defineSuite([
             url : 'made/up/url'
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        });
-
-        runs(function() {
+        }).then(function() {
             var tilingScheme = provider.tilingScheme;
             expect(tilingScheme instanceof GeographicTilingScheme).toBe(true);
         });
@@ -148,11 +146,9 @@ defineSuite([
             url : 'made/up/url'
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        });
-
-        runs(function() {
+        }).then(function() {
             expect(provider.credit).toBeUndefined();
         });
     });
@@ -165,11 +161,9 @@ defineSuite([
             credit : 'thanks to our awesome made up contributors!'
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        });
-
-        runs(function() {
+        }).then(function() {
             expect(provider.credit).toBeDefined();
         });
     });
@@ -181,11 +175,9 @@ defineSuite([
             url : 'made/up/url'
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        });
-
-        runs(function() {
+        }).then(function() {
             expect(provider.hasWaterMask).toBe(true);
         });
     });
@@ -198,11 +190,9 @@ defineSuite([
             requestVertexNormals : true
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        });
-
-        runs(function() {
+        }).then(function() {
             expect(provider.requestVertexNormals).toBe(true);
             expect(provider.hasVertexNormals).toBe(true);
         });
@@ -216,11 +206,9 @@ defineSuite([
             requestVertexNormals : false
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        });
-
-        runs(function() {
+        }).then(function() {
             expect(provider.requestVertexNormals).toBe(false);
             expect(provider.hasVertexNormals).toBe(false);
         });
@@ -233,16 +221,13 @@ defineSuite([
             url : 'made/up/url'
         });
 
-        var error;
+        var deferred = when.defer();
+
         provider.errorEvent.addEventListener(function(e) {
-            error = e;
+            deferred.resolve(e);
         });
 
-        waitsFor(function() {
-            return defined(error);
-        }, 'error to be raised');
-
-        runs(function() {
+        return deferred.promise.then(function(error) {
             expect(error.message).toContain('format is not specified');
         });
     });
@@ -254,16 +239,13 @@ defineSuite([
             url : 'made/up/url'
         });
 
-        var error;
+        var deferred = when.defer();
+
         provider.errorEvent.addEventListener(function(e) {
-            error = e;
+            deferred.resolve(e);
         });
 
-        waitsFor(function() {
-            return defined(error);
-        }, 'error to be raised');
-
-        runs(function() {
+        return deferred.promise.then(function(error) {
             expect(error.message).toContain('invalid or not supported');
         });
     });
@@ -275,16 +257,13 @@ defineSuite([
             url : 'made/up/url'
         });
 
-        var error;
+        var deferred = when.defer();
+
         provider.errorEvent.addEventListener(function(e) {
-            error = e;
+            deferred.resolve(e);
         });
 
-        waitsFor(function() {
-            return defined(error);
-        }, 'error to be raised');
-
-        runs(function() {
+        return deferred.promise.then(function(error) {
             expect(error.message).toContain('invalid or not supported');
         });
     });
@@ -296,17 +275,13 @@ defineSuite([
             url : 'made/up/url'
         });
 
-        var error;
-        provider.errorEvent.addEventListener(function(e) {
-            error = e;
-        });
+        var errorListener = jasmine.createSpy('error');
+        provider.errorEvent.addEventListener(errorListener);
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        });
-
-        runs(function() {
-            expect(error).not.toBeDefined();
+        }).then(function() {
+            expect(errorListener).not.toHaveBeenCalled();
         });
     });
 
@@ -317,16 +292,13 @@ defineSuite([
             url : 'made/up/url'
         });
 
-        var error;
+        var deferred = when.defer();
+
         provider.errorEvent.addEventListener(function(e) {
-            error = e;
+            deferred.resolve(e);
         });
 
-        waitsFor(function() {
-            return defined(error);
-        }, 'error to be raised');
-
-        runs(function() {
+        return deferred.promise.then(function(error) {
             expect(error.message).toContain('does not specify any tile URL templates');
         });
     });
@@ -338,16 +310,13 @@ defineSuite([
             url : 'made/up/url'
         });
 
-        var error;
+        var deferred = when.defer();
+
         provider.errorEvent.addEventListener(function(e) {
-            error = e;
+            deferred.resolve(e);
         });
 
-        waitsFor(function() {
-            return defined(error);
-        }, 'error to be raised');
-
-        runs(function() {
+        return deferred.promise.then(function(error) {
             expect(error.message).toContain('does not specify any tile URL templates');
         });
     });
@@ -359,11 +328,9 @@ defineSuite([
             url : 'made/up/url'
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        });
-
-        runs(function() {
+        }).then(function() {
             expect(provider.credit.text).toBe('This amazing data is courtesy The Amazing Data Source!');
         });
     });
@@ -386,23 +353,11 @@ defineSuite([
                 proxy : new DefaultProxy('/proxy/')
             });
 
-            waitsFor(function() {
+            return pollToPromise(function() {
                 return terrainProvider.ready;
+            }).then(function() {
+                return terrainProvider.requestTileGeometry(0, 0, 0);
             });
-
-            var loaded = false;
-
-            runs(function() {
-                var promise = terrainProvider.requestTileGeometry(0, 0, 0);
-
-                when(promise, function(terrainData) {
-                    loaded = true;
-                });
-            });
-
-            waitsFor(function() {
-                return loaded;
-            }, 'request to complete');
         });
 
         it('provides HeightmapTerrainData', function() {
@@ -415,7 +370,7 @@ defineSuite([
 
             returnHeightmapTileJson();
 
-            waitForTile(0, 0, 0, false, false, function(loadedData) {
+            return waitForTile(0, 0, 0, false, false, function(loadedData) {
                 expect(loadedData).toBeInstanceOf(HeightmapTerrainData);
             });
         });
@@ -429,7 +384,7 @@ defineSuite([
 
             returnQuantizedMeshTileJson();
 
-            waitForTile(0, 0, 0, false, false, function(loadedData) {
+            return waitForTile(0, 0, 0, false, false, function(loadedData) {
                 expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
             });
         });
@@ -443,7 +398,7 @@ defineSuite([
 
             returnQuantizedMeshTileJson();
 
-            waitForTile(0, 0, 0, false, false, function(loadedData) {
+            return waitForTile(0, 0, 0, false, false, function(loadedData) {
                 expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
                 expect(loadedData._indices.BYTES_PER_ELEMENT).toBe(4);
             });
@@ -458,7 +413,7 @@ defineSuite([
 
             returnVertexNormalTileJson();
 
-            waitForTile(0, 0, 0, true, false, function(loadedData) {
+            return waitForTile(0, 0, 0, true, false, function(loadedData) {
                 expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
                 expect(loadedData._encodedNormals).toBeDefined();
             });
@@ -473,7 +428,7 @@ defineSuite([
 
             returnWaterMaskTileJson();
 
-            waitForTile(0, 0, 0, false, true, function(loadedData) {
+            return waitForTile(0, 0, 0, false, true, function(loadedData) {
                 expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
                 expect(loadedData._waterMask).toBeDefined();
             });
@@ -488,7 +443,7 @@ defineSuite([
 
             returnWaterMaskTileJson();
 
-            waitForTile(0, 0, 0, true, true, function(loadedData) {
+            return waitForTile(0, 0, 0, true, true, function(loadedData) {
                 expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
                 expect(loadedData._encodedNormals).toBeDefined();
                 expect(loadedData._waterMask).toBeDefined();
@@ -504,7 +459,7 @@ defineSuite([
 
             returnOctVertexNormalTileJson();
 
-            waitForTile(0, 0, 0, true, false, function(loadedData) {
+            return waitForTile(0, 0, 0, true, false, function(loadedData) {
                 expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
                 expect(loadedData._encodedNormals).toBeDefined();
             });
@@ -519,7 +474,7 @@ defineSuite([
 
             returnVertexNormalTileJson();
 
-            waitForTile(0, 0, 0, true, false, function(loadedData) {
+            return waitForTile(0, 0, 0, true, false, function(loadedData) {
                 expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
                 expect(loadedData._encodedNormals).toBeDefined();
             });
@@ -534,7 +489,7 @@ defineSuite([
 
             returnOctVertexNormalTileJson();
 
-            waitForTile(0, 0, 0, true, false, function(loadedData) {
+            return waitForTile(0, 0, 0, true, false, function(loadedData) {
                 expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
                 expect(loadedData._encodedNormals).toBeDefined();
             });
@@ -549,7 +504,7 @@ defineSuite([
 
             returnOctVertexNormalTileJson();
 
-            waitForTile(0, 0, 0, false, false, function(loadedData) {
+            return waitForTile(0, 0, 0, false, false, function(loadedData) {
                 expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
             });
         });
@@ -570,11 +525,9 @@ defineSuite([
                 url : baseUrl
             });
 
-            waitsFor(function() {
+            return pollToPromise(function() {
                 return terrainProvider.ready;
-            });
-
-            runs(function() {
+            }).then(function() {
                 var promise = terrainProvider.requestTileGeometry(0, 0, 0);
                 expect(promise).toBeDefined();
 
@@ -605,11 +558,9 @@ defineSuite([
                 url : baseUrl
             });
 
-            waitsFor(function() {
+            return pollToPromise(function() {
                 return terrainProvider.ready;
-            });
-
-            runs(function() {
+            }).then(function() {
                 expect(terrainProvider.getTileDataAvailable(0, 0, 0)).toBe(true);
                 expect(terrainProvider.getTileDataAvailable(0, 0, 2)).toBe(false);
             });
@@ -624,11 +575,9 @@ defineSuite([
                 url : baseUrl
             });
 
-            waitsFor(function() {
+            return pollToPromise(function() {
                 return terrainProvider.ready;
-            });
-
-            runs(function() {
+            }).then(function() {
                 expect(terrainProvider.getTileDataAvailable(1, 3, 2)).toBe(true);
                 expect(terrainProvider.getTileDataAvailable(1, 0, 2)).toBe(false);
             });
