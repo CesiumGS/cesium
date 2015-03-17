@@ -44,7 +44,7 @@ defineSuite([
         SceneMode,
         TweenCollection) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
     var camera;
@@ -1933,7 +1933,7 @@ defineSuite([
     });
 
     it('flyTo uses CameraFlightPath', function() {
-        spyOn(CameraFlightPath, 'createTween').andReturn({
+        spyOn(CameraFlightPath, 'createTween').and.returnValue({
             startObject : {},
             stopObject: {},
             duration : 0.0
@@ -1944,7 +1944,18 @@ defineSuite([
         };
         camera.flyTo(options);
 
-        expect(CameraFlightPath.createTween).toHaveBeenCalledWith(scene, options);
+        var expectedOptions = {
+            destination : options.destination,
+            direction : undefined,
+            up : undefined,
+            duration : undefined,
+            complete : undefined,
+            cancel : undefined,
+            endTransform : undefined,
+            convert : undefined
+        };
+
+        expect(CameraFlightPath.createTween).toHaveBeenCalledWith(scene, expectedOptions);
     });
 
     it('flyTo with heading, pitch and roll', function() {
@@ -2008,7 +2019,7 @@ defineSuite([
     });
 
     it('flyToBoundingSphere uses CameraFlightPath', function() {
-        spyOn(CameraFlightPath, 'createTween').andReturn({
+        spyOn(CameraFlightPath, 'createTween').and.returnValue({
             startObject : {},
             stopObject: {},
             duration : 0.0

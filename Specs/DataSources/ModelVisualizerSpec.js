@@ -12,7 +12,7 @@ defineSuite([
         'DataSources/ModelGraphics',
         'Scene/Globe',
         'Specs/createScene',
-        'Specs/waitsForPromise'
+        'Specs/pollToPromise'
     ], function(
         ModelVisualizer,
         BoundingSphere,
@@ -26,9 +26,9 @@ defineSuite([
         ModelGraphics,
         Globe,
         createScene,
-        waitsForPromise) {
+        pollToPromise) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var boxUrl = './Data/Models/Box/CesiumBoxTest.gltf';
 
@@ -183,13 +183,11 @@ defineSuite([
         var state = visualizer.getBoundingSphere(testObject, result);
         expect(state).toBe(BoundingSphereState.PENDING);
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             scene.render();
             state = visualizer.getBoundingSphere(testObject, result);
             return state !== BoundingSphereState.PENDING;
-        });
-
-        runs(function() {
+        }).then(function() {
             expect(state).toBe(BoundingSphereState.DONE);
             var expected = BoundingSphere.transform(modelPrimitive.boundingSphere, modelPrimitive.modelMatrix, new BoundingSphere());
             expect(result).toEqual(expected);

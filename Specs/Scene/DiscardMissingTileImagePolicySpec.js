@@ -5,6 +5,7 @@ defineSuite([
         'Core/defined',
         'Core/loadImage',
         'Core/loadWithXhr',
+        'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
         DiscardMissingTileImagePolicy,
@@ -12,9 +13,10 @@ defineSuite([
         defined,
         loadImage,
         loadWithXhr,
+        pollToPromise,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -43,7 +45,7 @@ defineSuite([
         it('requests the missing image url', function() {
             var missingImageUrl = 'http://some.host.invalid/missingImage.png';
 
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 if (/^blob:/.test(url)) {
                     // load blob url normally
                     loadImage.defaultCreateImage(url, crossOrigin, deferred);
@@ -63,11 +65,9 @@ defineSuite([
                 pixelsToCheck : [new Cartesian2(0, 0)]
             });
 
-            waitsFor(function() {
+            return pollToPromise(function() {
                 return policy.isReady();
-            }, 'policy to become ready');
-
-            runs(function() {
+            }).then(function() {
                 expect(loadImage.createImage).toHaveBeenCalled();
             });
         });
@@ -75,90 +75,70 @@ defineSuite([
 
     describe('shouldDiscardImage', function() {
         it('discards an image that is identical to the missing image', function() {
+            var promises = [];
+
+            promises.push(loadImage('Data/Images/Red16x16.png'));
+            promises.push(loadImage('Data/Images/Green4x4.png'));
+
             var missingImageUrl = 'Data/Images/Red16x16.png';
-
-            var redImage;
-            when(loadImage('Data/Images/Red16x16.png'), function(image) {
-                redImage = image;
-            });
-
-            var greenImage;
-            when(loadImage('Data/Images/Green4x4.png'), function(image) {
-                greenImage = image;
-            });
-
             var policy = new DiscardMissingTileImagePolicy({
                 missingImageUrl : missingImageUrl,
                 pixelsToCheck : [new Cartesian2(0, 0)]
             });
 
-            waitsFor(function() {
+            promises.push(pollToPromise(function() {
                 return policy.isReady();
-            }, 'policy to become ready');
+            }));
 
-            waitsFor(function() {
-                return defined(redImage);
-            });
+            return when.all(promises, function(results) {
+                var redImage = results[0];
+                var greenImage = results[1];
 
-            waitsFor(function() {
-                return defined(greenImage);
-            });
-
-            runs(function() {
                 expect(policy.shouldDiscardImage(redImage)).toEqual(true);
                 expect(policy.shouldDiscardImage(greenImage)).toEqual(false);
             });
         });
 
         it('discards an image that is identical to the missing image even if the missing image is transparent', function() {
-            var missingImageUrl = 'Data/Images/Transparent.png';
+            var promises = [];
 
             var transparentImage;
-            when(loadImage('Data/Images/Transparent.png'), function(image) {
-                transparentImage = image;
-            });
+            promises.push(loadImage('Data/Images/Transparent.png'));
 
+            var missingImageUrl = 'Data/Images/Transparent.png';
             var policy = new DiscardMissingTileImagePolicy({
                 missingImageUrl : missingImageUrl,
                 pixelsToCheck : [new Cartesian2(0, 0)]
             });
 
-            waitsFor(function() {
+            promises.push(pollToPromise(function() {
                 return policy.isReady();
-            }, 'policy to become ready');
+            }));
 
-            waitsFor(function() {
-                return defined(transparentImage);
-            });
-
-            runs(function() {
+            return when.all(promises, function(results) {
+                var transparentImage = results[0];
                 expect(policy.shouldDiscardImage(transparentImage)).toEqual(true);
             });
         });
 
         it('does not discard at all when the missing image is transparent and disableCheckIfAllPixelsAreTransparent is set', function() {
+            var promises = [];
+
+            promises.push(loadImage('Data/Images/Transparent.png'));
+
             var missingImageUrl = 'Data/Images/Transparent.png';
-
-            var transparentImage;
-            when(loadImage('Data/Images/Transparent.png'), function(image) {
-                transparentImage = image;
-            });
-
             var policy = new DiscardMissingTileImagePolicy({
                 missingImageUrl : missingImageUrl,
                 pixelsToCheck : [new Cartesian2(0, 0)],
                 disableCheckIfAllPixelsAreTransparent : true
             });
 
-            waitsFor(function() {
+            promises.push(pollToPromise(function() {
                 return policy.isReady();
-            }, 'policy to become ready');
+            }));
 
-            waitsFor(function() {
-                return defined(transparentImage);
-            });
-
-            runs(function() {
+            return when.all(promises, function(results) {
+                var transparentImage = results[0];
                 expect(policy.shouldDiscardImage(transparentImage)).toEqual(false);
             });
         });

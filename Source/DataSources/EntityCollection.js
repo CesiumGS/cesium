@@ -232,7 +232,7 @@ define([
     /**
      * Removes an entity from the collection.
      *
-     * @param {Entity} entity The entity to be added.
+     * @param {Entity} entity The entity to be removed.
      * @returns {Boolean} true if the item was removed, false if it did not exist in the collection.
      */
     EntityCollection.prototype.remove = function(entity) {
