@@ -706,7 +706,7 @@ define([
      *
      * @exception {DeveloperError} All instance geometries must have the same primitiveType.
      * @exception {DeveloperError} Appearance and material have a uniform with the same name.
-     * @exception {DeveloperError} If the model matrix is changed after creation, it only affects primitives with one instance and only in 3D mode.
+     * @exception {DeveloperError} Primitive.modelMatrix is only supported in 3D mode and only for single geometry instances.
      */
     Primitive.prototype.update = function(context, frameState, commandList) {
         if (((!defined(this.geometryInstances)) && (this._va.length === 0)) ||
@@ -1222,9 +1222,11 @@ define([
             modelMatrix = this.modelMatrix;
         }
 
-        if (!Matrix4.equals(this.modelMatrix, Matrix4.IDENTITY) && ((this._numberOfInstances > 1 && !this._validModelMatrix) || (frameState.mode === SceneMode.SCENE2D || frameState.mode === SceneMode.COLUMBUS_VIEW))) {
-            throw new DeveloperError('If the model matrix is changed after creation, it only affects primitives with one instance and only in 3D mode.');
+        //>>includeStart('debug', pragmas.debug);
+        if (!Matrix4.equals(this.modelMatrix, Matrix4.IDENTITY) && ((this._numberOfInstances > 1 && !this._validModelMatrix) || frameState.mode !== SceneMode.SCENE3D)) {
+            throw new DeveloperError('Primitive.modelMatrix is only supported in 3D mode and only for single geometry instances.');
         }
+        //>>includeEnd('debug');
 
         if (!Matrix4.equals(modelMatrix, this._modelMatrix)) {
             Matrix4.clone(modelMatrix, this._modelMatrix);
