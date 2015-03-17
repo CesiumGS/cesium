@@ -138,6 +138,7 @@ cesiumSvgPath: { path: _columbusViewPath, width: 64, height: 64 }');
 
         document.addEventListener('mousedown', this._closeDropDown, true);
         document.addEventListener('touchstart', this._closeDropDown, true);
+        document.addEventListener('pointerdown', this._closeDropDown, true);
     };
 
     defineProperties(SceneModePicker.prototype, {
@@ -182,6 +183,7 @@ cesiumSvgPath: { path: _columbusViewPath, width: 64, height: 64 }');
 
         document.removeEventListener('mousedown', this._closeDropDown, true);
         document.removeEventListener('touchstart', this._closeDropDown, true);
+        document.removeEventListener('pointerdown', this._closeDropDown, true);
 
         knockout.cleanNode(this._wrapper);
         this._container.removeChild(this._wrapper);

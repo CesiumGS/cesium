@@ -185,6 +185,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
 
         document.addEventListener('mousedown', this._closeInstructions, true);
         document.addEventListener('touchstart', this._closeInstructions, true);
+        document.addEventListener('pointerdown', this._closeInstructions, true);
     };
 
     defineProperties(NavigationHelpButton.prototype, {
@@ -227,6 +228,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
     NavigationHelpButton.prototype.destroy = function() {
         document.removeEventListener('mousedown', this._closeInstructions, true);
         document.removeEventListener('touchstart', this._closeInstructions, true);
+        document.removeEventListener('pointerdown', this._closeInstructions, true);
 
         knockout.cleanNode(this._wrapper);
         this._container.removeChild(this._wrapper);

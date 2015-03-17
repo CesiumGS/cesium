@@ -103,6 +103,8 @@ cesiumSvgPath: { path: isSearchInProgress ? _stopSearchPath : _startSearchPath, 
         document.addEventListener('mouseup', this._onInputEnd, true);
         document.addEventListener('touchstart', this._onInputBegin, true);
         document.addEventListener('touchend', this._onInputEnd, true);
+        document.addEventListener('pointerdown', this._onInputBegin, true);
+        document.addEventListener('pointerup', this._onInputEnd, true);
     };
 
     defineProperties(Geocoder.prototype, {
@@ -147,6 +149,8 @@ cesiumSvgPath: { path: isSearchInProgress ? _stopSearchPath : _startSearchPath, 
         document.removeEventListener('mouseup', this._onInputEnd, true);
         document.removeEventListener('touchstart', this._onInputBegin, true);
         document.removeEventListener('touchend', this._onInputEnd, true);
+        document.removeEventListener('pointerdown', this._onInputBegin, true);
+        document.removeEventListener('pointerup', this._onInputEnd, true);
 
         knockout.cleanNode(this._form);
         this._container.removeChild(this._form);
