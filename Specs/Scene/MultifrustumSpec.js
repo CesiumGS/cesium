@@ -186,7 +186,7 @@ defineSuite([
 
         expect(DrawCommand.prototype.execute).toHaveBeenCalled();
 
-        var calls = DrawCommand.prototype.execute.calls;
+        var calls = DrawCommand.prototype.execute.calls.all();
         var billboardCall;
         for (var i = 0; i < calls.length; ++i) {
             if (calls[i].object.owner instanceof BillboardCollection) {
