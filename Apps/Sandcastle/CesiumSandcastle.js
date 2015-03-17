@@ -814,8 +814,14 @@ require({
     registry.byId('buttonNew').on('click', function() {
         loadFromGallery(newDemo);
         var demoSrc = newDemo.name + '.html';
-        if (demoSrc !== window.location.search.substring(1)) {
-            window.history.pushState(newDemo, newDemo.name, '?src=' + demoSrc + '&label=' + currentTab);
+        var queries = window.location.search.substring(1).split('&');
+        for(var i = 0; i < queries.length; i++){
+            var key = queries.split('=')[0];
+            if(key === "src"){
+                if (demoSrc !== queries.split('=')[1]) {
+                    window.history.pushState(newDemo, newDemo.name, '?src=' + demoSrc + '&label=' + currentTab);
+                }
+            }
         }
         document.title = newDemo.name + ' - Cesium Sandcastle';
     });
