@@ -111,8 +111,8 @@ define([
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._proxy = options.proxy;
 
-        this._tileWidth = 256;
-        this._tileHeight = 256;
+        this._tileWidth = defaultValue(options.tileWidth, 256);
+        this._tileHeight = defaultValue(options.tileHeight, 256);
         this._maximumLevel = undefined;
         this._tilingScheme = defaultValue(options.tilingScheme, new GeographicTilingScheme());
         this._credit = undefined;
