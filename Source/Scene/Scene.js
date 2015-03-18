@@ -427,22 +427,13 @@ define([
         this.debugShowFramesPerSecond = false;
 
         /**
-         * If <code>true</code>, enables Fast Aproximate Anti-aliasing only if order independent translucency
-         * is supported.
-         *
-         * @type Boolean
-         * @default true
-         */
-        this.fxaaOrderIndependentTranslucency = true;
-
-        /**
          * When <code>true</code>, enables Fast Approximate Anti-aliasing even when order independent translucency
          * is unsupported.
          *
          * @type Boolean
-         * @default false
+         * @default true
          */
-        this.fxaa = false;
+        this.fxaa = true;
 
         this._performanceDisplay = undefined;
         this._debugSphere = undefined;
@@ -1228,8 +1219,6 @@ define([
             }
         }
 
-        passState.framebuffer = scene._globeDepth.framebuffer;
-
         if (scene._globeDepth.supported) {
             scene._globeDepth.update(context);
             scene._globeDepth.clear(context, passState, clearColor);
@@ -1242,13 +1231,19 @@ define([
             useOIT = useOIT && scene._oit.isSupported();
         }
 
-        var useFXAA = !picking && (scene.fxaa || (useOIT && scene.fxaaOrderIndependentTranslucency));
+        var useFXAA = !picking && scene.fxaa;
         if (useFXAA) {
             scene._fxaa.update(context);
             scene._fxaa.clear(context, passState, clearColor);
         }
 
-        passState.framebuffer = (sunVisible && scene.sunBloom) ? scene._sunPostProcess.update(context) : scene._globeDepth.framebuffer;
+        if (sunVisible && scene.sunBloom) {
+            passState.framebuffer = scene._sunPostProcess.update(context);
+        } else if (scene._globeDepth.supported) {
+            passState.framebuffer = scene._globeDepth.framebuffer;
+        } else if (useFXAA) {
+            passState.framebuffer = scene._fxaa.getColorFramebuffer();
+        }
 
         // Ideally, we would render the sky box and atmosphere last for
         // early-z, but we would have to draw it in each frustum
@@ -1267,8 +1262,16 @@ define([
         if (defined(sunCommand) && sunVisible) {
             sunCommand.execute(context, passState);
             if (scene.sunBloom) {
-                scene._sunPostProcess.execute(context, scene._globeDepth.framebuffer);
-                passState.framebuffer = scene._globeDepth.framebuffer;
+                var framebuffer;
+                if (scene._globeDepth.supported) {
+                    framebuffer = scene._globeDepth.framebuffer;
+                } else if (scene.fxaa) {
+                    framebuffer = scene._fxaa.getColorFramebuffer();
+                } else {
+                    framebuffer = originalFramebuffer;
+                }
+                scene._sunPostProcess.execute(context, framebuffer);
+                passState.framebuffer = framebuffer;
             }
         }
 

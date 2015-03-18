@@ -6,8 +6,7 @@ define([
         '../Core/PixelFormat',
         '../Renderer/ClearCommand',
         '../Renderer/PixelDatatype',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter'
+        '../Shaders/PostProcessFilters/PassThrough'
     ], function(
         Color,
         defined,
@@ -15,8 +14,7 @@ define([
         PixelFormat,
         ClearCommand,
         PixelDatatype,
-        TextureMagnificationFilter,
-        TextureMinificationFilter) {
+        PassThrough) {
     "use strict";
     /*global WebGLRenderingContext*/
 
@@ -56,10 +54,6 @@ define([
             height : height,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE
-        });
-        globeDepth._colorTexture.sampler = context.createSampler({
-            minificationFilter : TextureMinificationFilter.NEAREST,
-            magnificationFilter : TextureMagnificationFilter.NEAREST
         });
 
         globeDepth._depthStencilTexture = context.createTexture2D({
@@ -145,14 +139,10 @@ define([
         globeDepth._copyDepthCommand.framebuffer = globeDepth._copyDepthFramebuffer;
 
         if (!defined(globeDepth._copyColorCommand)) {
-            var copyColorFS =
-                'uniform sampler2D colorTexture;\n' +
-                'varying vec2 v_textureCoordinates;\n' +
-                'void main() { gl_FragColor = texture2D(colorTexture, v_textureCoordinates); }\n';
-            globeDepth._copyColorCommand = context.createViewportQuadCommand(copyColorFS, {
+            globeDepth._copyColorCommand = context.createViewportQuadCommand(PassThrough, {
                 renderState : context.createRenderState(),
                 uniformMap : {
-                    colorTexture : function() {
+                    u_texture : function() {
                         return globeDepth._colorTexture;
                     }
                 },
