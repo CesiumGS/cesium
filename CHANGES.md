@@ -13,6 +13,7 @@ Change Log
 * Fixed an issue with transparency. [#2572](https://github.com/AnalyticalGraphicsInc/cesium/issues/2572)
 * Fixed improper handling of null values when loading `GeoJSON` data.
 * Cesium is now tested using Jasmine 2.2.0.
+* Removed `Scene.fxaaOrderIndependentTranslucency`. Use `Scene.fxaa` which is now `true` by default.
 
 ### 1.7.1 - 2015-03-06
 
