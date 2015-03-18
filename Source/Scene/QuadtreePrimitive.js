@@ -319,7 +319,7 @@ define([
 
         // First pass: mark the visible, non-renderable leaf tiles as high priority for load.
         // TODO: if there are too many of them, we should consider loading their parents instead.
-        for (i = 0, len = visibleNonRenderableLeafTiles; i < len; ++i) {
+        for (i = 0, len = visibleNonRenderableLeafTiles.length; i < len; ++i) {
             tile = visibleNonRenderableLeafTiles[i];
             tile._highPriorityForLoad = true;
         }
@@ -336,6 +336,8 @@ define([
     function visitTileToAddToRenderList(primitive, tile, tilesToRender) {
         if (tile._render) {
             tilesToRender.push(tile);
+            return;
+        } else if (!tile._isVisible) {
             return;
         }
 
@@ -358,7 +360,9 @@ define([
             queueTileLoad(primitive, tile);
         }
 
-        if (tileProvider.computeTileVisibility(tile, frameState, occluders) === Visibility.NONE) {
+        tile._isVisible = tileProvider.computeTileVisibility(tile, frameState, occluders) !== Visibility.NONE;
+
+        if (!tile._isVisible) {
             ++primitive._debug.tilesCulled;
             return true;
         }
