@@ -121,14 +121,10 @@ define([
 
     function updateCopyCommands(globeDepth, context) {
         if (!defined(globeDepth._copyDepthCommand)) {
-            var copyDepthFS =
-                'uniform sampler2D depthTexture;\n' +
-                'varying vec2 v_textureCoordinates;\n' +
-                'void main() { gl_FragColor = vec4(texture2D(depthTexture, v_textureCoordinates).r); }\n';
-            globeDepth._copyDepthCommand = context.createViewportQuadCommand(copyDepthFS, {
+            globeDepth._copyDepthCommand = context.createViewportQuadCommand(PassThrough, {
                 renderState : context.createRenderState(),
                 uniformMap : {
-                    depthTexture : function() {
+                    u_texture : function() {
                         return globeDepth._depthStencilTexture;
                     }
                 },
