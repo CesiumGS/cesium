@@ -61,7 +61,7 @@ var orangePolygon = viewer.entities.add({
                                                                -108.0, 30.0, 300000]),
         extrudedHeight: 0,
         perPositionHeight : true,
-        material : Cesium.Color.ORANGE,
+        material : Cesium.Color.ORANGE.withAlpha(0.5),
         outline : true,
         outlineColor : Cesium.Color.BLACK
     }
@@ -100,7 +100,7 @@ var bluePolygon = viewer.entities.add({
                 }]
             }]
         },
-        material : Cesium.Color.BLUE,
+        material : Cesium.Color.BLUE.withAlpha(0.5),
         outline : true,
         outlineColor : Cesium.Color.BLACK
     }

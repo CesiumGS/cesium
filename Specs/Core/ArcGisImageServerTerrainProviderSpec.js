@@ -9,8 +9,8 @@ defineSuite([
         'Core/Math',
         'Core/queryToObject',
         'Core/TerrainProvider',
-        'Specs/waitsForPromise',
-        'ThirdParty/Uri'
+        'ThirdParty/Uri',
+        'ThirdParty/when'
     ], function(
         ArcGisImageServerTerrainProvider,
         DefaultProxy,
@@ -21,10 +21,10 @@ defineSuite([
         CesiumMath,
         queryToObject,
         TerrainProvider,
-        waitsForPromise,
-        Uri) {
+        Uri,
+        when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -122,7 +122,7 @@ defineSuite([
                 url : baseUrl
             });
 
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var uri = new Uri(url);
                 var params = queryToObject(uri.query);
 
@@ -134,7 +134,7 @@ defineSuite([
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
-            waitsForPromise(terrainProvider.requestTileGeometry(0, 0, 0), function(terrainData) {
+            return when(terrainProvider.requestTileGeometry(0, 0, 0), function(terrainData) {
                 expect(loadImage.createImage).toHaveBeenCalled();
                 expect(terrainData).toBeDefined();
             });
@@ -148,7 +148,7 @@ defineSuite([
                 token : 'foofoofoo'
             });
 
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var uri = new Uri(url);
                 var params = queryToObject(uri.query);
 
@@ -160,7 +160,7 @@ defineSuite([
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
-            waitsForPromise(terrainProvider.requestTileGeometry(0, 0, 0), function(terrainData) {
+            return when(terrainProvider.requestTileGeometry(0, 0, 0), function(terrainData) {
                 expect(loadImage.createImage).toHaveBeenCalled();
                 expect(terrainData).toBeDefined();
             });
@@ -174,7 +174,7 @@ defineSuite([
                 proxy : new DefaultProxy('/proxy/')
             });
 
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var uri = new Uri(url);
                 var params = queryToObject(uri.query);
 
@@ -188,7 +188,7 @@ defineSuite([
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
-            waitsForPromise(terrainProvider.requestTileGeometry(0, 0, 0), function(terrainData) {
+            return when(terrainProvider.requestTileGeometry(0, 0, 0), function(terrainData) {
                 expect(loadImage.createImage).toHaveBeenCalled();
                 expect(terrainData).toBeDefined();
             });
@@ -201,7 +201,7 @@ defineSuite([
                 url : baseUrl
             });
 
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var uri = new Uri(url);
                 expect(uri.path).toMatch(/exportImage$/);
 
@@ -209,7 +209,7 @@ defineSuite([
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
-            waitsForPromise(terrainProvider.requestTileGeometry(0, 0, 0), function(terrainData) {
+            return when(terrainProvider.requestTileGeometry(0, 0, 0), function(terrainData) {
                 expect(loadImage.createImage).toHaveBeenCalled();
                 expect(terrainData).toBeInstanceOf(HeightmapTerrainData);
             });

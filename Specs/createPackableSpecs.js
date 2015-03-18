@@ -6,11 +6,9 @@ define([
         defaultValue,
         defined) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     function createPackableSpecs(packable, instance, packedInstance, namePrefix) {
-        instance = JSON.parse(JSON.stringify(instance));
-        packedInstance = JSON.parse(JSON.stringify(packedInstance));
         namePrefix = defaultValue(namePrefix, '');
 
         it(namePrefix + ' can pack', function() {

@@ -8,7 +8,7 @@ defineSuite([
         JulianDate,
         TimeInterval) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     function TestObject(value) {
         this.value = value;
@@ -912,13 +912,13 @@ defineSuite([
 
         intervals.addInterval(interval);
         expect(listener).toHaveBeenCalledWith(intervals);
-        listener.reset();
+        listener.calls.reset();
 
         intervals.removeInterval(interval);
         expect(listener).toHaveBeenCalledWith(intervals);
 
         intervals.addInterval(interval);
-        listener.reset();
+        listener.calls.reset();
         intervals.removeAll();
         expect(listener).toHaveBeenCalledWith(intervals);
     });

@@ -4,7 +4,7 @@ defineSuite([
     ], function(
         queryToObject) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('can decode data', function() {
         var str = 'key1=some%20value&key2=a%2Fb';
