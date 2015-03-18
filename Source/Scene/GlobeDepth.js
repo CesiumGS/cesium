@@ -29,6 +29,10 @@ define([
         this.framebuffer = undefined;
         this._copyDepthFramebuffer = undefined;
 
+        this._clearColorCommand = undefined;
+        this._copyColorCommand = undefined;
+        this._copyDepthCommand = undefined;
+
         var supported = updateFramebuffers(this, context);
         if (supported) {
             updateCopyCommands(this, context);
@@ -220,6 +224,10 @@ define([
     GlobeDepth.prototype.destroy = function() {
         destroyTextures(this);
         destroyFramebuffers(this);
+
+        this._copyColorCommand.shaderProgram = defined(this._copyColorCommand.shaderProgram) && this._copyColorCommand.shaderProgram.destroy();
+        this._copyDepthCommand.shaderProgram = defined(this._copyDepthCommand.shaderProgram) && this._copyDepthCommand.shaderProgram.destroy();
+
         return destroyObject(this);
     };
 
