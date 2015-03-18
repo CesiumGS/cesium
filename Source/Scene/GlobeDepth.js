@@ -2,6 +2,7 @@
 define([
         '../Core/Color',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/PixelFormat',
         '../Renderer/ClearCommand',
@@ -10,6 +11,7 @@ define([
     ], function(
         Color,
         defined,
+        defineProperties,
         destroyObject,
         PixelFormat,
         ClearCommand,
@@ -38,8 +40,16 @@ define([
             updateCopyCommands(this, context);
         }
 
-        this.supported = supported;
+        this._supported = supported;
     };
+
+    defineProperties(GlobeDepth.prototype, {
+        supported : {
+            get : function() {
+                return this._supported;
+            }
+        }
+    });
 
     function destroyTextures(globeDepth) {
         globeDepth._colorTexture = globeDepth._colorTexture && !globeDepth._colorTexture.isDestroyed() && globeDepth._colorTexture.destroy();
@@ -169,10 +179,6 @@ define([
         updateCopyCommands(this, context);
     };
 
-    GlobeDepth.prototype.getFramebuffer = function() {
-        return this._frambuffer;
-    };
-
     GlobeDepth.prototype.executeCopyDepth = function(context, passState) {
         if (this.supported && defined(this._copyDepthCommand)) {
             this._copyDepthCommand.execute(context, passState);
@@ -193,34 +199,10 @@ define([
         }
     };
 
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
-     *
-     * @see GlobeDepth#destroy
-     */
     GlobeDepth.prototype.isDestroyed = function() {
         return false;
     };
 
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @returns {undefined}
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see GlobeDepth#isDestroyed
-     */
     GlobeDepth.prototype.destroy = function() {
         destroyTextures(this);
         destroyFramebuffers(this);

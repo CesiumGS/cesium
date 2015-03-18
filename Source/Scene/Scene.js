@@ -1219,13 +1219,12 @@ define([
             }
         }
 
-        if (scene._globeDepth.supported) {
-            scene._globeDepth.update(context);
-            scene._globeDepth.clear(context, passState, clearColor);
-        }
+        scene._globeDepth.update(context);
+        scene._globeDepth.clear(context, passState, clearColor);
 
         var useOIT = !picking && renderTranslucentCommands && defined(scene._oit) && scene._oit.isSupported();
         if (useOIT) {
+            // OIT is only defined when globe depth is supported so the framebuffer will be defined.
             scene._oit.update(context, scene._globeDepth.framebuffer);
             scene._oit.clear(context, passState, clearColor);
             useOIT = useOIT && scene._oit.isSupported();
