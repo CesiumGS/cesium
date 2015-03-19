@@ -1232,7 +1232,8 @@ define([
 
         var useFXAA = !picking && scene.fxaa;
         if (useFXAA) {
-            scene._fxaa.update(context);
+            var fxaaTexture = !useOIT ? scene._globeDepth._colorTexture : undefined;
+            scene._fxaa.update(context, fxaaTexture);
             scene._fxaa.clear(context, passState, clearColor);
         }
 
@@ -1335,11 +1336,6 @@ define([
         }
 
         if (useFXAA) {
-            if (!useOIT && defined(scene._globeDepth.supported)) {
-                passState.framebuffer = scene._fxaa.getColorFramebuffer();
-                scene._globeDepth.executeCopyColor(context, passState);
-            }
-
             passState.framebuffer = originalFramebuffer;
             scene._fxaa.execute(context, passState);
         }
