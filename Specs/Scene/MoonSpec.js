@@ -24,7 +24,7 @@ defineSuite([
         createFrameState,
         createScene) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
 
@@ -67,7 +67,7 @@ defineSuite([
         var camera = scene.camera;
         lookAtMoon(camera, date);
 
-        expect(scene.renderForSpecs()).toNotEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('does not render when show is false', function() {

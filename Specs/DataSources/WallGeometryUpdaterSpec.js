@@ -44,7 +44,7 @@ defineSuite([
         createDynamicProperty,
         createScene) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var time;
     var time2;
@@ -386,23 +386,23 @@ defineSuite([
         updater.geometryChanged.addEventListener(listener);
 
         entity.wall.positions = new ConstantProperty([]);
-        expect(listener.callCount).toEqual(1);
+        expect(listener.calls.count()).toEqual(1);
 
         entity.wall.granularity = new ConstantProperty(82);
-        expect(listener.callCount).toEqual(2);
+        expect(listener.calls.count()).toEqual(2);
 
         entity.availability = new TimeIntervalCollection();
-        expect(listener.callCount).toEqual(3);
+        expect(listener.calls.count()).toEqual(3);
 
         entity.wall.positions = undefined;
-        expect(listener.callCount).toEqual(4);
+        expect(listener.calls.count()).toEqual(4);
 
         //Since there's no valid geometry, changing another property should not raise the event.
         entity.wall.granularity = undefined;
 
         //Modifying an unrelated property should not have any effect.
         entity.viewFrom = new ConstantProperty(Cartesian3.UNIT_X);
-        expect(listener.callCount).toEqual(4);
+        expect(listener.calls.count()).toEqual(4);
     });
 
     it('createFillGeometryInstance throws if object is not filled', function() {

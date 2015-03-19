@@ -10,6 +10,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Event',
@@ -78,6 +79,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Ellipsoid,
         Event,
@@ -309,6 +311,34 @@ define([
         return result;
     }
 
+    function normalizePackedQuaternionArray(array, startingIndex) {
+        var x = array[startingIndex];
+        var y = array[startingIndex + 1];
+        var z = array[startingIndex + 2];
+        var w = array[startingIndex + 3];
+
+        var inverseMagnitude = 1.0 / Math.sqrt(x * x + y * y + z * z + w * w);
+        array[startingIndex] = x * inverseMagnitude;
+        array[startingIndex + 1] = y * inverseMagnitude;
+        array[startingIndex + 2] = z * inverseMagnitude;
+        array[startingIndex + 3] = w * inverseMagnitude;
+    }
+
+    function unwrapQuaternionInterval(czmlInterval) {
+        var unitQuaternion = czmlInterval.unitQuaternion;
+        if (defined(unitQuaternion)) {
+            if (unitQuaternion.length === 4) {
+                normalizePackedQuaternionArray(unitQuaternion, 0);
+                return unitQuaternion;
+            }
+
+            for (var i = 1; i < unitQuaternion.length; i += 5) {
+                normalizePackedQuaternionArray(unitQuaternion, i);
+            }
+        }
+        return unitQuaternion;
+    }
+
     function unwrapInterval(type, czmlInterval, sourceUri) {
         /*jshint sub:true*/
         switch (type) {
@@ -337,7 +367,7 @@ define([
         case Array:
             return czmlInterval.array;
         case Quaternion:
-            return czmlInterval.unitQuaternion;
+            return unwrapQuaternionInterval(czmlInterval);
         case Rectangle:
             return unwrapRectangleInterval(czmlInterval);
         case Uri:
@@ -345,7 +375,7 @@ define([
         case VerticalOrigin:
             return VerticalOrigin[defaultValue(czmlInterval.verticalOrigin, czmlInterval)];
         default:
-            throw new DeveloperError(type);
+            throw new RuntimeError(type);
         }
     }
 
@@ -1413,6 +1443,34 @@ define([
         return false;
     }
 
+    function load(dataSource, czml, options, clear) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(czml)) {
+            throw new DeveloperError('czml is required.');
+        }
+        //>>includeEnd('debug');
+
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        var promise = czml;
+        var sourceUri = options.sourceUri;
+        if (typeof czml === 'string') {
+            promise = loadJson(czml);
+            sourceUri = defaultValue(sourceUri, czml);
+        }
+
+        DataSource.setLoading(dataSource, true);
+
+        return when(promise, function(czml) {
+            return loadCzml(dataSource, czml, sourceUri, clear);
+        }).otherwise(function(error) {
+            DataSource.setLoading(dataSource, false);
+            dataSource._error.raiseEvent(dataSource, error);
+            window.console.log(error);
+            return when.reject(error);
+        });
+    }
+
     function loadCzml(dataSource, czml, sourceUri, clear) {
         DataSource.setLoading(dataSource, true);
         var entityCollection = dataSource._entityCollection;
@@ -1440,6 +1498,8 @@ define([
         if (raiseChangedEvent) {
             dataSource._changed.raiseEvent(dataSource);
         }
+
+        return dataSource;
     }
 
     var DocumentPacket = function() {
@@ -1448,7 +1508,7 @@ define([
     };
 
     /**
-     * A {@link DataSource} which processes CZML.
+     * A {@link DataSource} which processes {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/CZML-Guide|CZML}.
      * @alias CzmlDataSource
      * @constructor
      *
@@ -1466,6 +1526,18 @@ define([
         this._documentPacket = new DocumentPacket();
         this._version = undefined;
         this._entityCollection = new EntityCollection();
+    };
+
+    /**
+     * Creates a Promise to a new instance loaded with the provided CZML data.
+     *
+     * @param {String|Object} data A url or CZML object to be processed.
+     * @param {Object} [options] An object with the following properties:
+     * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
+     * @returns {Promise} A promise that resolves to the new instance once the data is processed.
+     */
+    CzmlDataSource.load = function(czml, options) {
+        return new CzmlDataSource().load(czml, options);
     };
 
     defineProperties(CzmlDataSource.prototype, {
@@ -1568,85 +1640,49 @@ define([
     processAvailability];
 
     /**
-     * Processes the provided CZML without clearing any existing data.
+     * Processes the provided url or CZML object without clearing any existing data.
      *
-     * @param {Object} czml The CZML to be processed.
-     * @param {String} sourceUri The source URI of the CZML.
+     * @param {String|Object} data A url or CZML object to be processed.
+     * @param {Object} [options] An object with the following properties:
+     * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
+     * @returns {Promise} A promise that resolves to this instances once the data is processed.
      */
-    CzmlDataSource.prototype.process = function(czml, sourceUri) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(czml)) {
-            throw new DeveloperError('czml is required.');
+    CzmlDataSource.prototype.process = function(czml, options) {
+        if (typeof options === 'string') {
+            options = {
+                sourceUri : options
+            };
+            deprecationWarning('CzmlDataSource.process.options', 'Passing a sourceUri string as the second paraameter to CzmlDataSource.process has been deprecated. Pass an options object instead.');
         }
-        //>>includeEnd('debug');
-
-        loadCzml(this, czml, sourceUri, false);
+        return load(this, czml, options, false);
     };
 
     /**
-     * Replaces any existing data with the provided CZML.
+     * Loads the provided url or CZML object, replacing any existing data.
      *
-     * @param {Object} czml The CZML to be processed.
-     * @param {String} source The source URI of the CZML.
+     * @param {String|Object} data A url or CZML object to be processed.
+     * @param {Object} [options] An object with the following properties:
+     * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
+     * @returns {Promise} A promise that resolves to this instances once the data is processed.
      */
-    CzmlDataSource.prototype.load = function(czml, sourceUri) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(czml)) {
-            throw new DeveloperError('czml is required.');
+    CzmlDataSource.prototype.load = function(czml, options) {
+        if (typeof options === 'string') {
+            options = {
+                sourceUri : options
+            };
+            deprecationWarning('CzmlDataSource.process.load', 'Passing a sourceUri string as the second paraameter to CzmlDataSource.load has been deprecated. Pass an options object instead.');
         }
-        //>>includeEnd('debug');
-
-        loadCzml(this, czml, sourceUri, true);
+        return load(this, czml, options, true);
     };
 
-    /**
-     * Asynchronously processes the CZML at the provided url without clearing any existing data.
-     *
-     * @param {Object} url The url to be processed.
-     * @returns {Promise} a promise that will resolve when the CZML is processed.
-     */
     CzmlDataSource.prototype.processUrl = function(url) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(url)) {
-            throw new DeveloperError('url is required.');
-        }
-        //>>includeEnd('debug');
-
-        DataSource.setLoading(this, true);
-
-        var dataSource = this;
-        return when(loadJson(url), function(czml) {
-            loadCzml(dataSource, czml, url, false);
-        }).otherwise(function(error) {
-            DataSource.setLoading(dataSource, false);
-            dataSource._error.raiseEvent(dataSource, error);
-            return when.reject(error);
-        });
+        deprecationWarning('CzmlDataSource.prototype.processUrl', 'CzmlDataSource.processUrl has been deprecated.  Use CzmlDataSource.process instead.');
+        return this.process(url);
     };
 
-    /**
-     * Asynchronously loads the CZML at the provided url, replacing any existing data.
-     *
-     * @param {Object} url The url to be processed.
-     * @returns {Promise} a promise that will resolve when the CZML is processed.
-     */
     CzmlDataSource.prototype.loadUrl = function(url) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(url)) {
-            throw new DeveloperError('url is required.');
-        }
-        //>>includeEnd('debug');
-
-        DataSource.setLoading(this, true);
-
-        var dataSource = this;
-        return when(loadJson(url), function(czml) {
-            loadCzml(dataSource, czml, url, true);
-        }).otherwise(function(error) {
-            DataSource.setLoading(dataSource, false);
-            dataSource._error.raiseEvent(dataSource, error);
-            return when.reject(error);
-        });
+        deprecationWarning('CzmlDataSource.prototype.loadUrl', 'CzmlDataSource.loadUrl has been deprecated.  Use CzmlDataSource.load instead.');
+        return this.load(url);
     };
 
     /**

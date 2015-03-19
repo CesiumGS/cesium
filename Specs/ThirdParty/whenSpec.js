@@ -4,7 +4,7 @@ defineSuite([
     ], function(
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     // These tests are from my original attempt to write my own promise implementation.
     // When I switched to cujojs/when, I figured I may as well leave these here since

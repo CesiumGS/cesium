@@ -1208,7 +1208,7 @@ define([
         var frustumCommandsList = scene._frustumCommandsList;
         var numFrustums = frustumCommandsList.length;
         for (i = 0; i < numFrustums; ++i) {
-            if (frustumCommandsList[i].translucentIndex > 0) {
+            if (frustumCommandsList[i].indices[Pass.TRANSLUCENT] > 0) {
                 renderTranslucentCommands = true;
                 break;
             }
@@ -1642,11 +1642,13 @@ define([
 
             //If the picked object has a show attribute, use it.
             if (typeof primitive.getGeometryInstanceAttributes === 'function') {
-                attributes = primitive.getGeometryInstanceAttributes(pickedResult.id);
-                if (defined(attributes) && defined(attributes.show)) {
-                    hasShowAttribute = true;
-                    attributes.show = ShowGeometryInstanceAttribute.toValue(false, attributes.show);
-                    pickedAttributes.push(attributes);
+                if (defined(pickedResult.id)) {
+                    attributes = primitive.getGeometryInstanceAttributes(pickedResult.id);
+                    if (defined(attributes) && defined(attributes.show)) {
+                        hasShowAttribute = true;
+                        attributes.show = ShowGeometryInstanceAttribute.toValue(false, attributes.show);
+                        pickedAttributes.push(attributes);
+                    }
                 }
             }
 

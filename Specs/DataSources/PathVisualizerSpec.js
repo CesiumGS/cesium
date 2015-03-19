@@ -15,6 +15,7 @@ defineSuite([
         'DataSources/PolylineOutlineMaterialProperty',
         'DataSources/ReferenceProperty',
         'DataSources/SampledPositionProperty',
+        'DataSources/ScaledPositionProperty',
         'DataSources/TimeIntervalCollectionPositionProperty',
         'Specs/createScene'
     ], function(
@@ -33,10 +34,11 @@ defineSuite([
         PolylineOutlineMaterialProperty,
         ReferenceProperty,
         SampledPositionProperty,
+        ScaledPositionProperty,
         TimeIntervalCollectionPositionProperty,
         createScene) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
     var visualizer;
@@ -488,6 +490,7 @@ defineSuite([
         var t3 = new JulianDate(2, 0);
         var t4 = new JulianDate(3, 0);
         var t5 = new JulianDate(4, 0);
+        var t6 = new JulianDate(5, 0);
 
         var constantProperty = new ConstantPositionProperty(new Cartesian3(0, 0, 1));
 
@@ -521,6 +524,8 @@ defineSuite([
         targetEntity.position = new ConstantPositionProperty(new Cartesian3(0, 0, 5));
         var referenceProperty = new ReferenceProperty(entities, 'target', ['position']);
 
+        var scaledProperty = new ScaledPositionProperty(referenceProperty);
+
         var property = new CompositePositionProperty();
         property.intervals.addInterval(new TimeInterval({
             start : t1,
@@ -546,18 +551,26 @@ defineSuite([
             isStopIncluded : true,
             data : referenceProperty
         }));
+        property.intervals.addInterval(new TimeInterval({
+            start : t5,
+            stop : t6,
+            isStartIncluded : false,
+            isStopIncluded : true,
+            data : scaledProperty
+        }));
 
         var updateTime = new JulianDate(0, 0);
         var referenceFrame = ReferenceFrame.FIXED;
         var maximumStep = 43200;
         var result = [];
-        PathVisualizer._subSample(property, t1, t5, updateTime, referenceFrame, maximumStep, result);
+        PathVisualizer._subSample(property, t1, t6, updateTime, referenceFrame, maximumStep, result);
         expect(result).toEqual([intervalProperty.intervals.get(0).data,
                                 constantProperty.getValue(t1),
                                 sampledProperty.getValue(t3),
                                 sampledProperty.getValue(JulianDate.addSeconds(t3, maximumStep, new JulianDate())),
                                 sampledProperty.getValue(t4),
-                                targetEntity.position.getValue(t5)]);
+                                targetEntity.position.getValue(t5),
+                                scaledProperty.getValue(t6)]);
     });
 
 }, 'WebGL');

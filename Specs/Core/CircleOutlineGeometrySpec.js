@@ -10,7 +10,7 @@ defineSuite([
         Ellipsoid,
         createPackableSpecs) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('throws without a center', function() {
         expect(function() {
@@ -87,15 +87,29 @@ defineSuite([
         expect(m.indices.length).toEqual(2 * 6 * 2);
     });
 
-    var center = Cartesian3.fromDegrees(0,0);
-    var ellipsoid = Ellipsoid.WGS84;
+    var center = new Cartesian3(8, 9, 10);
+    var ellipsoid = new Ellipsoid(11, 12, 13);
     var packableInstance = new CircleOutlineGeometry({
         ellipsoid : ellipsoid,
         center : center,
-        granularity : 0.1,
-        radius : 1.0,
-        numberOfVerticalLines : 0
+        granularity : 1,
+        radius : 2,
+        numberOfVerticalLines : 4,
+        height : 5,
+        extrudedHeight : 7
     });
-    var packedInstance = [center.x, center.y, center.z, ellipsoid.radii.x, ellipsoid.radii.y, ellipsoid.radii.z, 1.0, 1.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0];
-    createPackableSpecs(CircleOutlineGeometry, packableInstance, packedInstance);
+    var packedInstance = [center.x, center.y, center.z, ellipsoid.radii.x, ellipsoid.radii.y, ellipsoid.radii.z, 2, 2, 0, 5, 1, 1, 7, 1, 4];
+    createPackableSpecs(CircleOutlineGeometry, packableInstance, packedInstance, 'extruded');
+
+    //Because extrudedHeight is optional and has to be taken into account when packing, we have a second test without it.
+    packableInstance = new CircleOutlineGeometry({
+        ellipsoid : ellipsoid,
+        center : center,
+        granularity : 1,
+        radius : 2,
+        numberOfVerticalLines : 4,
+        height : 5
+    });
+    packedInstance = [center.x, center.y, center.z, ellipsoid.radii.x, ellipsoid.radii.y, ellipsoid.radii.z, 2, 2, 0, 5, 1, 0, 0, 0, 4];
+    createPackableSpecs(CircleOutlineGeometry, packableInstance, packedInstance, 'at height');
 });

@@ -27,8 +27,8 @@ defineSuite([
         'Specs/createFrameState',
         'Specs/createScene',
         'Specs/pick',
-        'Specs/render',
-        'Specs/waitsForPromise'
+        'Specs/pollToPromise',
+        'Specs/render'
     ], function(
         Primitive,
         BoxGeometry,
@@ -57,10 +57,10 @@ defineSuite([
         createFrameState,
         createScene,
         pick,
-        render,
-        waitsForPromise) {
+        pollToPromise,
+        render) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
 
     var context;
     var frameState;
@@ -214,13 +214,14 @@ defineSuite([
             asynchronous : false
         });
 
-        waitsForPromise(primitive.readyPromise, function(param) {
-            expect(param.ready).toBe(true);
-            primitive = primitive && primitive.destroy();
-        });
         primitive.update(context, frameState, []);
         expect(frameState.afterRender.length).toEqual(1);
         frameState.afterRender[0]();
+
+        return primitive.readyPromise.then(function(param) {
+            expect(param.ready).toBe(true);
+            primitive = primitive && primitive.destroy();
+        });
     });
 
     it('does not render when geometryInstances is an empty array', function() {
@@ -904,24 +905,24 @@ defineSuite([
             compressVertices : false
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             if (frameState.afterRender.length > 0) {
                 frameState.afterRender[0]();
                 return true;
             }
             primitive.update(context, frameState, []);
             return false;
+        }).then(function() {
+            return primitive.readyPromise.then(function() {
+                fail('should not be called');
+            }).otherwise(function(e) {
+                expect(e).toBe(primitive._error);
+                expect(function() {
+                    primitive.update(context, frameState, []);
+                }).toThrowRuntimeError();
+            });
         });
 
-        waitsForPromise.toReject(primitive.readyPromise, function(e) {
-            expect(e).toBe(primitive._error);
-        });
-
-        runs(function() {
-            expect(function() {
-                primitive.update(context, frameState, []);
-            }).toThrowRuntimeError();
-        });
     });
 
     it('shader validation', function() {
@@ -964,15 +965,13 @@ defineSuite([
             allowPicking : false
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             primitive.update(context, frameState, []);
             if (frameState.afterRender.length > 0) {
                 frameState.afterRender[0]();
             }
             return primitive.ready;
-        });
-
-        runs(function() {
+        }).then(function() {
             var attributes = primitive.getGeometryInstanceAttributes('rectangle1');
             expect(function() {
                 attributes.color = undefined;
@@ -1044,11 +1043,9 @@ defineSuite([
         frameState.camera.viewRectangle(rectangle1);
         us.update(context, frameState);
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return render(context, frameState, primitive) > 0;
-        });
-
-        runs(function() {
+        }).then(function() {
             ClearCommand.ALL.execute(context);
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 

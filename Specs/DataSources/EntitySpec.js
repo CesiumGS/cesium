@@ -54,7 +54,7 @@ defineSuite([
         RectangleGraphics,
         WallGraphics) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('constructor sets expected properties.', function() {
         var entity = new Entity();
@@ -151,7 +151,7 @@ defineSuite([
         var object = new Entity();
         var object2 = new Entity();
         expect(object.id).toBeDefined();
-        expect(object.id).toNotEqual(object2.id);
+        expect(object.id).not.toEqual(object2.id);
     });
 
     it('isAvailable works.', function() {
@@ -226,7 +226,7 @@ defineSuite([
         });
 
         //Merging should actually call addProperty for the customProperty.
-        spyOn(target, 'addProperty').andCallThrough();
+        spyOn(target, 'addProperty').and.callThrough();
         target.merge(source);
 
         expect(target.addProperty).toHaveBeenCalledWith(propertyName);

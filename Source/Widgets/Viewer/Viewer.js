@@ -1322,9 +1322,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             infoBoxViewModel.isCameraTracking = (this.trackedEntity === this.selectedEntity);
 
             if (showSelection && defined(selectedEntity.description)) {
-                infoBoxViewModel.descriptionRawHtml = defaultValue(selectedEntity.description.getValue(time), '');
+                infoBoxViewModel.description = defaultValue(selectedEntity.description.getValue(time), '');
             } else {
-                infoBoxViewModel.descriptionRawHtml = '';
+                infoBoxViewModel.description = '';
             }
         }
     };
@@ -1426,7 +1426,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     /**
      * Asynchronously sets the camera to view the provided entity, entities, or data source.
      * If the data source is still in the process of loading or the visualization is otherwise still loading,
-     * this method ways for the data to be ready before performing the zoom.
+     * this method waits for the data to be ready before performing the zoom.
      *
      * <p>The offset is heading/pitch/range in the local east-north-up reference frame centered at the center of the bounding sphere.
      * The heading and the pitch angles are defined in the local east-north-up reference frame.
@@ -1438,7 +1438,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * target will be the range. The heading will be determined from the offset. If the heading cannot be
      * determined from the offset, the heading will be north.</p>
      *
-     * @param {Entity|Entity[]|EntityCollection|DataSource} target The entity, array of entities, entity collection or data source to view.
+     * @param {Entity|Entity[]|EntityCollection|DataSource|Promise} target The entity, array of entities, entity collection or data source to view. You can also pass a promise that resolves to one of the previously mentioned types.
      * @param {HeadingPitchRange} [offset] The offset from the center of the entity in the local east-north-up reference frame.
      * @returns {Promise} A Promise that resolves to true if the zoom was successful or false if the entity is not currently visualized in the scene or the zoom was cancelled.
      */
@@ -1449,7 +1449,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     /**
      * Flies the camera to the provided entity, entities, or data source.
      * If the data source is still in the process of loading or the visualization is otherwise still loading,
-     * this method ways for the data to be ready before performing the flight.
+     * this method waits for the data to be ready before performing the flight.
      *
      * <p>The offset is heading/pitch/range in the local east-north-up reference frame centered at the center of the bounding sphere.
      * The heading and the pitch angles are defined in the local east-north-up reference frame.
@@ -1461,7 +1461,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * target will be the range. The heading will be determined from the offset. If the heading cannot be
      * determined from the offset, the heading will be north.</p>
      *
-     * @param {Entity|Entity[]|EntityCollection|DataSource} target The entity, array of entities, entity collection or data source to view.
+     * @param {Entity|Entity[]|EntityCollection|DataSource|Promise} target The entity, array of entities, entity collection or data source to view. You can also pass a promise that resolves to one of the previously mentioned types.
      * @param {Object} [options] Object with the following properties:
      * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
      * @param {HeadingPitchRange} [options.offset] The offset from the target in the local east-north-up reference frame centered at the target.
@@ -1489,32 +1489,39 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         that._zoomIsFlight = isFlight;
         that._zoomOptions = options;
 
-        //If the zoom target is a data source, and it's in the middle of loading, wait for it to finish loading.
-        if (zoomTarget.isLoading && defined(zoomTarget.loadingEvent)) {
-            var removeEvent = zoomTarget.loadingEvent.addEventListener(function() {
-                removeEvent();
-
-                //Only perform the zoom if it wasn't cancelled before the data source finished.
-                if (that._zoomPromise === zoomPromise) {
-                    that._zoomTarget = zoomTarget.entities.values.slice(0);
-                }
-            });
-        } else {
-            //zoomTarget is now an EntityCollection, this will retrieve the array
-            zoomTarget = defaultValue(zoomTarget.values, zoomTarget);
-
-            //If zoomTarget is a DataSource, this will retrieve the EntityCollection.
-            if (defined(zoomTarget.entities)) {
-                zoomTarget = zoomTarget.entities.values;
+        when(zoomTarget, function(zoomTarget) {
+            //Only perform the zoom if it wasn't cancelled before the promise resolved.
+            if (that._zoomPromise !== zoomPromise) {
+                return;
             }
 
-            if (isArray(zoomTarget)) {
-                that._zoomTarget = zoomTarget.slice(0);
+            //If the zoom target is a data source, and it's in the middle of loading, wait for it to finish loading.
+            if (zoomTarget.isLoading && defined(zoomTarget.loadingEvent)) {
+                var removeEvent = zoomTarget.loadingEvent.addEventListener(function() {
+                    removeEvent();
+
+                    //Only perform the zoom if it wasn't cancelled before the data source finished.
+                    if (that._zoomPromise === zoomPromise) {
+                        that._zoomTarget = zoomTarget.entities.values.slice(0);
+                    }
+                });
             } else {
-                //Single entity
-                that._zoomTarget = [zoomTarget];
+                //zoomTarget is now an EntityCollection, this will retrieve the array
+                zoomTarget = defaultValue(zoomTarget.values, zoomTarget);
+
+                //If zoomTarget is a DataSource, this will retrieve the EntityCollection.
+                if (defined(zoomTarget.entities)) {
+                    zoomTarget = zoomTarget.entities.values;
+                }
+
+                if (isArray(zoomTarget)) {
+                    that._zoomTarget = zoomTarget.slice(0);
+                } else {
+                    //Single entity
+                    that._zoomTarget = [zoomTarget];
+                }
             }
-        }
+        });
 
         return zoomPromise;
     }
