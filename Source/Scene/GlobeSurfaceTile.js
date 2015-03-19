@@ -439,10 +439,12 @@ define([
         if (defined(parent) && defined(parent.data) && defined(parent.data.terrainData)) {
             surfaceTile.maximumHeight = parent.data.maximumHeight;
             surfaceTile.minimumHeight = parent.data.minimumHeight;
-            estimateBoundingSphere(parent.data, tile.tilingScheme.ellipsoid, parent.rectangle, tile.rectangle, surfaceTile.boundingSphere3D);
+            estimateBoundingSphere(tile.tilingScheme.ellipsoid, tile.rectangle, surfaceTile.minimumHeight, surfaceTile.maximumHeight, surfaceTile.boundingSphere3D);
             surfaceTile.boundingSphereSource = 'prepareNewTile - from parent';
         } else {
-            BoundingSphere.fromRectangle3D(tile.rectangle, ellipsoid, 8900.0, surfaceTile.boundingSphere3D);
+            surfaceTile.maximumHeight = 8800;
+            surfaceTile.minimumHeight = -100;
+            estimateBoundingSphere(tile.tilingScheme.ellipsoid, tile.rectangle, surfaceTile.minimumHeight, surfaceTile.maximumHeight, surfaceTile.boundingSphere3D);
             surfaceTile.boundingSphereSource = 'prepareNewTile - from rectangle';
         }
 
@@ -587,7 +589,7 @@ define([
                     // Generate a new estimate of this tile's bounding sphere.
                     childSurfaceTile.maximumHeight = surfaceTile.maximumHeight;
                     childSurfaceTile.minimumHeight = surfaceTile.minimumHeight;
-                    estimateBoundingSphere(surfaceTile, ellipsoid, tile.rectangle, childTile.rectangle, childSurfaceTile.boundingSphere3D);
+                    estimateBoundingSphere(tile.tilingScheme.ellipsoid, tile.rectangle, childSurfaceTile.minimumHeight, childSurfaceTile.maximumHeight, childSurfaceTile.boundingSphere3D);
                     childSurfaceTile.boundingSphereSource = 'propagateNewUpsampledDataToChildren';
 
                     childTile.state = QuadtreeTileLoadState.LOADING;
@@ -598,33 +600,28 @@ define([
 
     var vertices = [];
 
-    function estimateBoundingSphere(surfaceTile, ellipsoid, parentRectangle, childRectangle, result) {
+    function estimateBoundingSphere(ellipsoid, rectangle, minimumHeight, maximumHeight, result) {
         vertices.length = 0;
 
-        var terrainData = surfaceTile.terrainData;
+        addVertex(ellipsoid, rectangle.west, rectangle.south, minimumHeight);
+        addVertex(ellipsoid, rectangle.west, rectangle.south, maximumHeight);
+        addVertex(ellipsoid, rectangle.west, rectangle.north, minimumHeight);
+        addVertex(ellipsoid, rectangle.west, rectangle.north, maximumHeight);
+        addVertex(ellipsoid, rectangle.east, rectangle.south, minimumHeight);
+        addVertex(ellipsoid, rectangle.east, rectangle.south, maximumHeight);
+        addVertex(ellipsoid, rectangle.east, rectangle.north, minimumHeight);
+        addVertex(ellipsoid, rectangle.east, rectangle.north, maximumHeight);
 
-        addVertex(vertices, terrainData, parentRectangle, ellipsoid, childRectangle.west, childRectangle.south, surfaceTile.minimumHeight);
-        addVertex(vertices, terrainData, parentRectangle, ellipsoid, childRectangle.west, childRectangle.south, surfaceTile.maximumHeight);
-        addVertex(vertices, terrainData, parentRectangle, ellipsoid, childRectangle.west, childRectangle.north, surfaceTile.minimumHeight);
-        addVertex(vertices, terrainData, parentRectangle, ellipsoid, childRectangle.west, childRectangle.north, surfaceTile.maximumHeight);
-        addVertex(vertices, terrainData, parentRectangle, ellipsoid, childRectangle.east, childRectangle.south, surfaceTile.minimumHeight);
-        addVertex(vertices, terrainData, parentRectangle, ellipsoid, childRectangle.east, childRectangle.south, surfaceTile.maximumHeight);
-        addVertex(vertices, terrainData, parentRectangle, ellipsoid, childRectangle.east, childRectangle.north, surfaceTile.minimumHeight);
-        addVertex(vertices, terrainData, parentRectangle, ellipsoid, childRectangle.east, childRectangle.north, surfaceTile.maximumHeight);
+        var centerLongitude = (rectangle.east + rectangle.west) * 0.5; 
+        addVertex(ellipsoid, centerLongitude, rectangle.north, minimumHeight);
+        addVertex(ellipsoid, centerLongitude, rectangle.north, maximumHeight);
+        addVertex(ellipsoid, centerLongitude, rectangle.south, minimumHeight);
+        addVertex(ellipsoid, centerLongitude, rectangle.south, maximumHeight);
 
         BoundingSphere.fromVertices(vertices, Cartesian3.ZERO, 3, result);
-
-        // if (terrainData instanceof QuantizedMeshTerrainData) {
-        //     var quantizedVertices = terrainData._quantizedVertices;
-
-        // } else if (terrainData instanceof HeightmapTerrainData) {
-        //     throw new DeveloperError('Unsupported TerrainData type.');
-        // } else {
-        //     throw new DeveloperError('Unsupported TerrainData type.');
-        // }
     }
 
-    function addVertex(vertices, terrainData, rectangle, ellipsoid, longitude, latitude, height) {
+    function addVertex(ellipsoid, longitude, latitude, height) {
         cartographicScratch.longitude = longitude;
         cartographicScratch.latitude = latitude;
         cartographicScratch.height = height; //terrainData.interpolateHeight(rectangle, longitude, latitude);
@@ -671,7 +668,8 @@ define([
                     // Generate a new estimate of this tile's bounding sphere.
                     childSurfaceTile.maximumHeight = surfaceTile.maximumHeight;
                     childSurfaceTile.minimumHeight = surfaceTile.minimumHeight;
-                    estimateBoundingSphere(surfaceTile, ellipsoid, tile.rectangle, childTile.rectangle, childSurfaceTile.boundingSphere3D);
+
+                    estimateBoundingSphere(tile.tilingScheme.ellipsoid, tile.rectangle, childSurfaceTile.minimumHeight, childSurfaceTile.maximumHeight, childSurfaceTile.boundingSphere3D);
                     childSurfaceTile.boundingSphereSource = 'propagateNewLoadedDataToChildren';
 
                     if (surfaceTile.terrainData.isChildAvailable(tile.x, tile.y, childTile.x, childTile.y)) {

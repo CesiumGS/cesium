@@ -74,6 +74,32 @@ define([
         var surfaceTile = tile.data;
 
         var mesh = this.mesh;
+
+        // // Does the existing bounding sphere contain this data?
+        // if (!this.data.wasCreatedByUpsampling()) {
+        //     var vertices = mesh.vertices;
+        //     var vertex = new Cartesian3();
+        //     for (var i = 0; i < vertices.length; i += mesh.stride) {
+        //         vertex.x = vertices[i] + mesh.center.x;
+        //         vertex.y = vertices[i + 1] + mesh.center.y;
+        //         vertex.z = vertices[i + 2] + mesh.center.z;
+                
+        //         var vector = Cartesian3.subtract(vertex, mesh.boundingSphere3D.center, vertex);
+        //         if (Math.sqrt(Cartesian3.magnitudeSquared(vector)) - mesh.boundingSphere3D.radius > 1) {
+        //             console.log('Mesh vertex isnt contained by mesh bounding sphere?? ' + tile.level);
+        //         }
+
+        //         vertex.x = vertices[i] + mesh.center.x;
+        //         vertex.y = vertices[i + 1] + mesh.center.y;
+        //         vertex.z = vertices[i + 2] + mesh.center.z;
+
+        //         vector = Cartesian3.subtract(vertex, surfaceTile.boundingSphere3D.center, vertex);
+        //         if (Math.sqrt(Cartesian3.magnitudeSquared(vector)) - surfaceTile.boundingSphere3D.radius > 1) {
+        //             console.log('Estimated bounding sphere doesnt contain vertex! ' + tile.level);
+        //         }
+        //     }
+        // }
+
         Cartesian3.clone(mesh.center, surfaceTile.center);
         surfaceTile.minimumHeight = mesh.minimumHeight;
         surfaceTile.maximumHeight = mesh.maximumHeight;

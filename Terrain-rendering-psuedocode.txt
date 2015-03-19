@@ -1,0 +1,22 @@
+For each tile, depth first
+    Determine tile min/max height, from: 1) loaded tile data, 2) separate index if available, 3) parent
+    Determine tile bounding sphere, from: 1) loaded tile data, 2) separate index if available, 3) min/max height determined above.
+    Add tile to load queue
+
+    Determine tile visibility
+    If not visible
+        Return, stop tree traversal
+
+    Determine vertex array, render extent, and textures from 1) loaded tile data, 2) subset of parent
+    If vertex array came from more than 4 (?) ancestors away
+        Increase load priority
+        Render tile
+        Return, stop tree traversal
+
+    Compute tile SSE.
+    If SSE < max
+        Increase load priority
+        Render tile
+        Return, stop tree traversal
+    Else
+        Continue tree traversal

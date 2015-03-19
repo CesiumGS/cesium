@@ -314,11 +314,16 @@ define([
         var levelZeroTiles = primitive._levelZeroTiles;
         for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
             tile = levelZeroTiles[i];
-            tile._covered = visitTile(primitive, tile, tileProvider, occluders, context, frameState, visibleNonRenderableLeafTiles);
+            if (tile.x === 0 && !tile.renderable) {
+                console.log(tile.x + ' is not renderable');
+            }
+            tile._covered = visitTile(primitive, tile, tileProvider, occluders, context, frameState, visibleNonRenderableLeafTiles, 0);
+            tile._highPriorityForLoad = true;
         }
 
         // First pass: mark the visible, non-renderable leaf tiles as high priority for load.
         // TODO: if there are too many of them, we should consider loading their parents instead.
+        console.log('visible, non-renderable: ' + visibleNonRenderableLeafTiles.length);
         for (i = 0, len = visibleNonRenderableLeafTiles.length; i < len; ++i) {
             tile = visibleNonRenderableLeafTiles[i];
             tile._highPriorityForLoad = true;
@@ -349,7 +354,7 @@ define([
 
     // returns true if the visited tile or its children completely cover the visible extent of this tile
     // with renderable tiles.
-    function visitTile(primitive, tile, tileProvider, occluders, context, frameState, visibleNonRenderableLeafTiles) {
+    function visitTile(primitive, tile, tileProvider, occluders, context, frameState, visibleNonRenderableLeafTiles, nonRenderableDepth) {
         // Initially assume we will not render this tile and it is not high priority for load.
         tile._render = false;
         tile._highPriorityForLoad = false;
@@ -369,7 +374,7 @@ define([
 
         tile._distance = primitive._tileProvider.computeDistanceToTile(tile, frameState);
         var sse = screenSpaceError(primitive, context, frameState, tile);
-        if (sse < primitive.maximumScreenSpaceError) {
+        if (sse < primitive.maximumScreenSpaceError || nonRenderableDepth > 4) {
             if (tile.renderable) {
                 tile._render = true;
                 tile._highPriorityForLoad = true;
@@ -380,10 +385,11 @@ define([
             }
         } else {
             var covered = true;
+            var nonRenderableDepthForChildren = tile.renderable ? 0 : nonRenderableDepth + 1;
 
             var children = tile.children;
             for (var i = 0, len = children.length; i < len; ++i) {
-                covered = visitTile(primitive, children[i], tileProvider, occluders, context, frameState, visibleNonRenderableLeafTiles) && covered;
+                covered = visitTile(primitive, children[i], tileProvider, occluders, context, frameState, visibleNonRenderableLeafTiles, nonRenderableDepthForChildren) && covered;
             }
 
             // If this tile's children do not cover its extent, render this tile if we can and report that we're
