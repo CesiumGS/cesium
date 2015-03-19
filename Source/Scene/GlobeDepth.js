@@ -26,7 +26,7 @@ define([
     var GlobeDepth = function(context) {
         this._colorTexture = undefined;
         this._depthStencilTexture = undefined;
-        this._depthStencilGlobeTest = undefined;
+        this._globeDepthTexture = undefined;
 
         this.framebuffer = undefined;
         this._copyDepthFramebuffer = undefined;
@@ -54,7 +54,7 @@ define([
     function destroyTextures(globeDepth) {
         globeDepth._colorTexture = globeDepth._colorTexture && !globeDepth._colorTexture.isDestroyed() && globeDepth._colorTexture.destroy();
         globeDepth._depthStencilTexture = globeDepth._depthStencilTexture && !globeDepth._depthStencilTexture.isDestroyed() && globeDepth._depthStencilTexture.destroy();
-        globeDepth._depthStencilGlobeTest = globeDepth._depthStencilGlobeTest && !globeDepth._depthStencilGlobeTest.isDestroyed() && globeDepth._depthStencilGlobeTest.destroy();
+        globeDepth._globeDepthTexture = globeDepth._globeDepthTexture && !globeDepth._globeDepthTexture.isDestroyed() && globeDepth._globeDepthTexture.destroy();
     }
 
     function destroyFramebuffers(globeDepth) {
@@ -76,7 +76,7 @@ define([
             pixelFormat : PixelFormat.DEPTH_STENCIL,
             pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8_WEBGL
         });
-        globeDepth._depthStencilGlobeTest = context.createTexture2D({
+        globeDepth._globeDepthTexture = context.createTexture2D({
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGBA,
@@ -97,7 +97,7 @@ define([
         });
 
         globeDepth._copyDepthFramebuffer = context.createFramebuffer({
-            colorTextures : [globeDepth._depthStencilGlobeTest],
+            colorTextures : [globeDepth._globeDepthTexture],
             destroyAttachments : false
         });
 
@@ -128,7 +128,7 @@ define([
             }
         }
 
-        context.uniformState.globeDepthTexture = globeDepth._depthStencilGlobeTest;
+        context.uniformState.globeDepthTexture = globeDepth._globeDepthTexture;
 
         return true;
     }
