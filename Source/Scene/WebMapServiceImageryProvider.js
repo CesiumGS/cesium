@@ -641,6 +641,7 @@ define([
 
             var featureInfo = new ImageryLayerFeatureInfo();
             featureInfo.data = feature;
+            featureInfo.properties = feature.properties;
             featureInfo.configureNameFromProperties(feature.properties);
             featureInfo.configureDescriptionFromProperties(feature.properties);
 
@@ -705,6 +706,7 @@ define([
 
             var featureInfo = new ImageryLayerFeatureInfo();
             featureInfo.data = feature;
+            featureInfo.properties = properties;
             featureInfo.configureNameFromProperties(properties);
             featureInfo.configureDescriptionFromProperties(properties);
             result.push(featureInfo);
@@ -732,6 +734,7 @@ define([
 
             var featureInfo = new ImageryLayerFeatureInfo();
             featureInfo.data = feature;
+            featureInfo.properties = properties;
             featureInfo.configureNameFromProperties(properties);
             featureInfo.configureDescriptionFromProperties(properties);
             result.push(featureInfo);
@@ -755,6 +758,7 @@ define([
 
             var featureInfo = new ImageryLayerFeatureInfo();
             featureInfo.data = featureMember;
+            featureInfo.properties = properties;
             featureInfo.configureNameFromProperties(properties);
             featureInfo.configureDescriptionFromProperties(properties);
             result.push(featureInfo);

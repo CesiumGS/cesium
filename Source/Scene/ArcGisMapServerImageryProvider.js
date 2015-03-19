@@ -593,6 +593,7 @@ define([
                 var featureInfo = new ImageryLayerFeatureInfo();
                 featureInfo.data = feature;
                 featureInfo.name = feature.value;
+                featureInfo.properties = feature.attributes;
                 featureInfo.configureDescriptionFromProperties(feature.attributes);
 
                 // If this is a point feature, use the coordinates of the point.
