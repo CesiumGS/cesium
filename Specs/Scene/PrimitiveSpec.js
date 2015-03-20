@@ -967,9 +967,16 @@ defineSuite([
             asynchronous : false,
             compressVertices : false
         });
-        primitive.update(context, frameState, []);
 
-        return primitive.readyPromise.then(function(arg) {
+        return pollToPromise(function() {
+            if (frameState.afterRender.length > 0) {
+                frameState.afterRender[0]();
+                return true;
+            }
+            primitive.update(context, frameState, []);
+            return false;
+        }).then(function() {
+            return primitive.readyPromise.then(function(arg) {
                 expect(arg).toBe(primitive);
                 expect(primitive.ready).toBe(true);
             });
