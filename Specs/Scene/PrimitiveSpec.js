@@ -11,6 +11,7 @@ defineSuite([
         'Core/GeometryInstance',
         'Core/GeometryInstanceAttribute',
         'Core/Matrix4',
+        'Core/PolygonGeometry',
         'Core/PrimitiveType',
         'Core/Rectangle',
         'Core/RectangleGeometry',
@@ -41,6 +42,7 @@ defineSuite([
         GeometryInstance,
         GeometryInstanceAttribute,
         Matrix4,
+        PolygonGeometry,
         PrimitiveType,
         Rectangle,
         RectangleGeometry,
@@ -922,7 +924,56 @@ defineSuite([
                 }).toThrowRuntimeError();
             });
         });
+    });
 
+    it('internally invalid asynchronous geometry resolves promise and sets ready', function() {
+        var primitive = new Primitive({
+            geometryInstances : [new GeometryInstance({
+                geometry : PolygonGeometry.fromPositions({
+                    positions : []
+                })
+            })],
+            appearance : new MaterialAppearance({
+                materialSupport : MaterialAppearance.MaterialSupport.ALL
+            }),
+            compressVertices : false
+        });
+
+        return pollToPromise(function() {
+            if (frameState.afterRender.length > 0) {
+                frameState.afterRender[0]();
+                return true;
+            }
+            primitive.update(context, frameState, []);
+            return false;
+        }).then(function() {
+            return primitive.readyPromise.then(function(arg) {
+                expect(arg).toBe(primitive);
+                expect(primitive.ready).toBe(true);
+            });
+        });
+    });
+
+    it('internally invalid synchronous geometry resolves promise and sets ready', function() {
+        var primitive = new Primitive({
+            geometryInstances : [new GeometryInstance({
+                geometry : PolygonGeometry.fromPositions({
+                    positions : []
+                })
+            })],
+            appearance : new MaterialAppearance({
+                materialSupport : MaterialAppearance.MaterialSupport.ALL
+            }),
+            asynchronous : false,
+            compressVertices : false
+        });
+        primitive.update(context, frameState, []);
+
+        return primitive.readyPromise.then(function(arg) {
+                expect(arg).toBe(primitive);
+                expect(primitive.ready).toBe(true);
+            });
+        });
     });
 
     it('shader validation', function() {
