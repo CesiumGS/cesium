@@ -47,6 +47,8 @@ uniform sampler2D u_oceanNormalMap;
 uniform vec2 u_lightingFadeDistance;
 #endif
 
+uniform vec4 u_textureCoordinateSubset;
+
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 varying vec2 v_textureCoordinates;
@@ -117,6 +119,14 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
 
 void main()
 {
+    if (v_textureCoordinates.x < u_textureCoordinateSubset.x ||
+        v_textureCoordinates.y < u_textureCoordinateSubset.y ||
+        v_textureCoordinates.x > u_textureCoordinateSubset.z ||
+        v_textureCoordinates.y > u_textureCoordinateSubset.w)
+    {
+        discard;
+    }
+
     // The clamp below works around an apparent bug in Chrome Canary v23.0.1241.0
     // where the fragment shader sees textures coordinates < 0.0 and > 1.0 for the
     // fragments on the edges of tiles even though the vertex shader is outputting

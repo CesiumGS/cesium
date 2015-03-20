@@ -133,6 +133,9 @@ define([
         this.pickTerrain = undefined;
 
         this.surfaceShader = undefined;
+
+        this.dataFromTile = undefined;
+        this.textureCoordinateSubset = undefined;
     };
 
     defineProperties(GlobeSurfaceTile.prototype, {
@@ -265,14 +268,16 @@ define([
         var indexBuffer;
 
         if (defined(this.vertexArray)) {
-            indexBuffer = this.vertexArray.indexBuffer;
+            --this.vertexArray.referenceCount;
+            if (this.vertexArray.referenceCount === 0) {
+                indexBuffer = this.vertexArray.indexBuffer;
+                this.vertexArray = this.vertexArray.destroy();
 
-            this.vertexArray = this.vertexArray.destroy();
-
-            if (!indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
-                --indexBuffer.referenceCount;
-                if (indexBuffer.referenceCount === 0) {
-                    indexBuffer.destroy();
+                if (!indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
+                    --indexBuffer.referenceCount;
+                    if (indexBuffer.referenceCount === 0) {
+                        indexBuffer.destroy();
+                    }
                 }
             }
         }

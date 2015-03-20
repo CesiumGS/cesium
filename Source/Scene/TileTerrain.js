@@ -75,31 +75,6 @@ define([
 
         var mesh = this.mesh;
 
-        // // Does the existing bounding sphere contain this data?
-        // if (!this.data.wasCreatedByUpsampling()) {
-        //     var vertices = mesh.vertices;
-        //     var vertex = new Cartesian3();
-        //     for (var i = 0; i < vertices.length; i += mesh.stride) {
-        //         vertex.x = vertices[i] + mesh.center.x;
-        //         vertex.y = vertices[i + 1] + mesh.center.y;
-        //         vertex.z = vertices[i + 2] + mesh.center.z;
-                
-        //         var vector = Cartesian3.subtract(vertex, mesh.boundingSphere3D.center, vertex);
-        //         if (Math.sqrt(Cartesian3.magnitudeSquared(vector)) - mesh.boundingSphere3D.radius > 1) {
-        //             console.log('Mesh vertex isnt contained by mesh bounding sphere?? ' + tile.level);
-        //         }
-
-        //         vertex.x = vertices[i] + mesh.center.x;
-        //         vertex.y = vertices[i + 1] + mesh.center.y;
-        //         vertex.z = vertices[i + 2] + mesh.center.z;
-
-        //         vector = Cartesian3.subtract(vertex, surfaceTile.boundingSphere3D.center, vertex);
-        //         if (Math.sqrt(Cartesian3.magnitudeSquared(vector)) - surfaceTile.boundingSphere3D.radius > 1) {
-        //             console.log('Estimated bounding sphere doesnt contain vertex! ' + tile.level);
-        //         }
-        //     }
-        // }
-
         Cartesian3.clone(mesh.center, surfaceTile.center);
         surfaceTile.minimumHeight = mesh.minimumHeight;
         surfaceTile.maximumHeight = mesh.maximumHeight;
@@ -114,6 +89,8 @@ define([
         // Transfer ownership of the vertex array to the tile itself.
         surfaceTile.vertexArray = this.vertexArray;
         this.vertexArray = undefined;
+
+        surfaceTile.dataFromTile = tile;
     };
 
     TileTerrain.prototype.processLoadStateMachine = function(context, terrainProvider, x, y, level) {
@@ -195,9 +172,6 @@ define([
 
             var that = this;
             when(this.data, function(terrainData) {
-                if (that.state !== TerrainState.RECEIVING) {
-                    console.log('upsample no longer relevant!');
-                }
                 that.data = terrainData;
                 that.state = TerrainState.RECEIVED;
             }, function() {
@@ -282,6 +256,7 @@ define([
         }
 
         tileTerrain.vertexArray = context.createVertexArray(attributes, indexBuffer);
+        tileTerrain.vertexArray.referenceCount = 1;
 
         tileTerrain.state = TerrainState.READY;
     }

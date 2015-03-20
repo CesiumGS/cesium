@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Cartographic',
         '../Core/Color',
         '../Core/defined',
         '../Core/defineProperties',
@@ -35,6 +36,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        Cartographic,
         Color,
         defined,
         defineProperties,
@@ -351,6 +353,110 @@ define([
         }
     };
 
+    GlobeSurfaceTileProvider.prototype.visitTileDepthFirst = function(tile) {
+        if (!defined(tile.data)) {
+            GlobeSurfaceTile.prepareNewTile(tile, this._terrainProvider, this._imageryLayers);
+        }
+
+        var surfaceTile = tile.data;
+
+        if (surfaceTile.dataFromTile !== tile) {
+            var newMin;
+            var newMax;
+
+            var parent = tile.parent;
+            if (defined(parent) && defined(parent.data)) {
+                newMin = parent.data.minimumHeight;
+                newMax = parent.data.maximumHeight;
+            } else {
+                newMin = -100;
+                newMax = 8800;
+            }
+
+            if (newMin !== surfaceTile.minimumHeight || newMax !== surfaceTile.maximumHeight) {
+                surfaceTile.minimumHeight = newMin;
+                surfaceTile.maximumHeight = newMax;
+                estimateBoundingSphere(tile.tilingScheme.ellipsoid, tile.rectangle, surfaceTile.minimumHeight, surfaceTile.maximumHeight, surfaceTile.boundingSphere3D);
+            }
+        }
+    };
+
+    var vertices = [];
+
+    function estimateBoundingSphere(ellipsoid, rectangle, minimumHeight, maximumHeight, result) {
+        vertices.length = 0;
+
+        addVertex(ellipsoid, rectangle.west, rectangle.south, minimumHeight);
+        addVertex(ellipsoid, rectangle.west, rectangle.south, maximumHeight);
+        addVertex(ellipsoid, rectangle.west, rectangle.north, minimumHeight);
+        addVertex(ellipsoid, rectangle.west, rectangle.north, maximumHeight);
+        addVertex(ellipsoid, rectangle.east, rectangle.south, minimumHeight);
+        addVertex(ellipsoid, rectangle.east, rectangle.south, maximumHeight);
+        addVertex(ellipsoid, rectangle.east, rectangle.north, minimumHeight);
+        addVertex(ellipsoid, rectangle.east, rectangle.north, maximumHeight);
+
+        var centerLongitude = (rectangle.east + rectangle.west) * 0.5; 
+        addVertex(ellipsoid, centerLongitude, rectangle.north, minimumHeight);
+        addVertex(ellipsoid, centerLongitude, rectangle.north, maximumHeight);
+        addVertex(ellipsoid, centerLongitude, rectangle.south, minimumHeight);
+        addVertex(ellipsoid, centerLongitude, rectangle.south, maximumHeight);
+
+        BoundingSphere.fromVertices(vertices, Cartesian3.ZERO, 3, result);
+    }
+
+    var cartesian3Scratch = new Cartesian3();
+    var cartographicScratch = new Cartographic();
+
+    function addVertex(ellipsoid, longitude, latitude, height) {
+        cartographicScratch.longitude = longitude;
+        cartographicScratch.latitude = latitude;
+        cartographicScratch.height = height; //terrainData.interpolateHeight(rectangle, longitude, latitude);
+
+        var cartesian = ellipsoid.cartographicToCartesian(cartographicScratch, cartesian3Scratch);
+        vertices.push(cartesian.x);
+        vertices.push(cartesian.y);
+        vertices.push(cartesian.z);
+    }
+
+    GlobeSurfaceTileProvider.prototype.visitVisibleTileDepthFirst = function(tile) {
+        var surfaceTile = tile.data;
+
+        if (surfaceTile.dataFromTile !== tile) {
+            var parent = tile.parent;
+            if (defined(parent) && defined(parent.data)) {
+                surfaceTile.dataFromTile = parent.data.dataFromTile;
+
+                if (surfaceTile.vertexArray !== parent.data.vertexArray) {
+                    if (defined(surfaceTile.vertexArray)) {
+                        --surfaceTile.vertexArray.referenceCount;
+                        if (surfaceTile.vertexArray.referenceCount === 0) {
+                            surfaceTile.vertexArray.destroy();
+                        }
+                    }
+
+                    surfaceTile.vertexArray = parent.data.vertexArray;
+                    ++surfaceTile.vertexArray.referenceCount;
+
+                    var vaRectangle = surfaceTile.dataFromTile.rectangle;
+                    var tileRectangle = tile.rectangle;
+                    surfaceTile.textureCoordinateSubset = new Cartesian4(
+                        (tileRectangle.west - vaRectangle.west) / (vaRectangle.east - vaRectangle.west),
+                        (tileRectangle.south - vaRectangle.south) / (vaRectangle.north - vaRectangle.south),
+                        (tileRectangle.east - vaRectangle.west) / (vaRectangle.east - vaRectangle.west),
+                        (tileRectangle.north - vaRectangle.south) / (vaRectangle.north - vaRectangle.south));
+                }
+
+                var childrenRenderable = tile.level - surfaceTile.dataFromTile.level > 4;
+
+                var children = tile.children;
+                for (var i = 0; i < children.length; ++i) {
+                    var child = children[i];
+                    child.renderable = childrenRenderable;
+                }
+            }
+        }
+    };
+
     /**
      * Gets the maximum geometric error allowed in a tile at a given level, in meters.  This function should not be
      * called before {@link GlobeSurfaceTileProvider#ready} returns true.
@@ -391,10 +497,6 @@ define([
      * @returns {Visibility} The visibility of the tile.
      */
     GlobeSurfaceTileProvider.prototype.computeTileVisibility = function(tile, frameState, occluders) {
-        if (!defined(tile.data)) {
-            GlobeSurfaceTile.prepareNewTile(tile, this._terrainProvider, this._imageryLayers);
-        }
-
         var surfaceTile = tile.data;
 
         var cullingVolume = frameState.cullingVolume;
@@ -722,6 +824,9 @@ define([
             u_waterMaskTranslationAndScale : function() {
                 return this.waterMaskTranslationAndScale;
             },
+            u_textureCoordinateSubset : function() {
+                return this.textureCoordinateSubset;
+            },
 
             initialColor : new Cartesian4(0.0, 0.0, 0.5, 1.0),
             zoomedOutOceanSpecularIntensity : 0.5,
@@ -747,7 +852,8 @@ define([
             southMercatorYLowAndHighAndOneOverHeight : new Cartesian3(),
 
             waterMask : undefined,
-            waterMaskTranslationAndScale : new Cartesian4()
+            waterMaskTranslationAndScale : new Cartesian4(),
+            textureCoordinateSubset : new Cartesian4()
         };
 
         return uniformMap;
@@ -940,6 +1046,15 @@ define([
             uniformMap.southMercatorYLowAndHighAndOneOverHeight.y = southMercatorYHigh;
             uniformMap.southMercatorYLowAndHighAndOneOverHeight.z = oneOverMercatorHeight;
             Matrix4.clone(modifiedModelViewScratch, uniformMap.modifiedModelView);
+
+            if (defined(surfaceTile.textureCoordinateSubset)) {
+                Cartesian4.clone(surfaceTile.textureCoordinateSubset, uniformMap.textureCoordinateSubset);
+            } else {
+                uniformMap.textureCoordinateSubset.x = 0.0;
+                uniformMap.textureCoordinateSubset.y = 0.0;
+                uniformMap.textureCoordinateSubset.z = 1.0;
+                uniformMap.textureCoordinateSubset.w = 1.0;
+            }
 
             var applyBrightness = false;
             var applyContrast = false;
