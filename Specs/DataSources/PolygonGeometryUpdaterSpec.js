@@ -5,6 +5,7 @@ defineSuite([
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
         'Core/JulianDate',
+        'Core/PolygonHierarchy',
         'Core/ShowGeometryInstanceAttribute',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
@@ -18,14 +19,16 @@ defineSuite([
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/PrimitiveCollection',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createDynamicGeometryBoundingSphereSpecs',
+        'Specs/createDynamicProperty',
+        'Specs/createScene'
     ], function(
         PolygonGeometryUpdater,
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
         JulianDate,
+        PolygonHierarchy,
         ShowGeometryInstanceAttribute,
         TimeInterval,
         TimeIntervalCollection,
@@ -39,10 +42,11 @@ defineSuite([
         SampledProperty,
         TimeIntervalCollectionProperty,
         PrimitiveCollection,
-        createScene,
-        destroyScene) {
+        createDynamicGeometryBoundingSphereSpecs,
+        createDynamicProperty,
+        createScene) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
     var time;
@@ -53,17 +57,17 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     function createBasicPolygon() {
         var polygon = new PolygonGraphics();
-        polygon.positions = new ConstantProperty(Cartesian3.fromRadiansArray([
+        polygon.hierarchy = new ConstantProperty(new PolygonHierarchy(Cartesian3.fromRadiansArray([
             0, 0,
             1, 0,
             1, 1,
             0, 1
-        ]));
+        ])));
         var entity = new Entity();
         entity.polygon = polygon;
         return entity;
@@ -117,7 +121,7 @@ defineSuite([
 
         expect(updater.isClosed).toBe(false);
         expect(updater.fillEnabled).toBe(true);
-        expect(updater.fillMaterialProperty).toEqual(ColorMaterialProperty.fromColor(Color.WHITE));
+        expect(updater.fillMaterialProperty).toEqual(new ColorMaterialProperty(Color.WHITE));
         expect(updater.outlineEnabled).toBe(false);
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
@@ -158,8 +162,8 @@ defineSuite([
         var point3 = new SampledPositionProperty();
         point3.addSample(time, new Cartesian3());
 
-        entity.polygon.positions = new PropertyArray();
-        entity.polygon.positions.setValue([point1, point2, point3]);
+        entity.polygon.hierarchy = new PropertyArray();
+        entity.polygon.hierarchy.setValue([point1, point2, point3]);
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -258,7 +262,7 @@ defineSuite([
     it('Creates expected per-color geometry', function() {
         validateGeometryInstance({
             show : true,
-            material : ColorMaterialProperty.fromColor(Color.RED),
+            material : new ColorMaterialProperty(Color.RED),
             height : 431,
             extrudedHeight : 123,
             granularity : 0.97,
@@ -354,52 +358,58 @@ defineSuite([
     });
 
     it('dynamic updater sets properties', function() {
-        //This test is mostly a smoke screen for now.
-        var time1 = new JulianDate(0, 0);
-        var time2 = new JulianDate(1, 0);
-        var time3 = new JulianDate(2, 0);
+        var polygon = new PolygonGraphics();
+        polygon.hierarchy = createDynamicProperty(new PolygonHierarchy(Cartesian3.fromRadiansArray([
+            0, 0,
+            1, 0,
+            1, 1,
+            0, 1
+        ])));
+        polygon.show = createDynamicProperty(true);
+        polygon.height = createDynamicProperty(3);
+        polygon.extrudedHeight = createDynamicProperty(2);
+        polygon.outline = createDynamicProperty(true);
+        polygon.fill = createDynamicProperty(true);
+        polygon.perPositionHeight = createDynamicProperty(false);
+        polygon.granularity = createDynamicProperty(2);
+        polygon.stRotation = createDynamicProperty(1);
 
-        function makeProperty(value1, value2) {
-            var property = new TimeIntervalCollectionProperty();
-            property.intervals.addInterval(new TimeInterval({
-                start : time1,
-                stop : time2,
-                isStopIncluded : false,
-                data : value1
-            }));
-            property.intervals.addInterval(new TimeInterval({
-                start : time2,
-                stop : time3,
-                isStopIncluded : false,
-                data : value2
-            }));
-            return property;
-        }
-
-        var entity = createBasicPolygon();
-
-        var polygon = entity.polygon;
-        polygon.height = makeProperty(2, 12);
-        polygon.extrudedHeight = makeProperty(1, 11);
-        polygon.outline = makeProperty(true, false);
-        polygon.fill = makeProperty(false, true);
-
-        entity.availability = new TimeIntervalCollection();
-        entity.availability.addInterval(new TimeInterval({
-            start : time1,
-            stop : time3,
-            isStopIncluded : false
-        }));
+        var entity = new Entity();
+        entity.polygon = polygon;
 
         var updater = new PolygonGeometryUpdater(entity, scene);
         var primitives = new PrimitiveCollection();
         var dynamicUpdater = updater.createDynamicUpdater(primitives);
         expect(dynamicUpdater.isDestroyed()).toBe(false);
         expect(primitives.length).toBe(0);
-        dynamicUpdater.update(time1);
-        expect(primitives.length).toBe(1);
-        dynamicUpdater.destroy();
+
+        dynamicUpdater.update(time);
+        expect(primitives.length).toBe(2);
+
+        var options = dynamicUpdater._options;
+        expect(options.id).toEqual(entity);
+        expect(options.polygonHierarchy).toEqual(polygon.hierarchy.getValue());
+        expect(options.height).toEqual(polygon.height.getValue());
+        expect(options.extrudedHeight).toEqual(polygon.extrudedHeight.getValue());
+        expect(options.perPositionHeight).toEqual(polygon.perPositionHeight.getValue());
+        expect(options.granularity).toEqual(polygon.granularity.getValue());
+        expect(options.stRotation).toEqual(polygon.stRotation.getValue());
+
+        //If a dynamic show returns false, the primitive should go away.
+        polygon.show.setValue(false);
+        dynamicUpdater.update(time);
         expect(primitives.length).toBe(0);
+
+        polygon.show.setValue(true);
+        dynamicUpdater.update(time);
+        expect(primitives.length).toBe(2);
+
+        //If a dynamic position returns undefined, the primitive should go away.
+        polygon.hierarchy.setValue(undefined);
+        dynamicUpdater.update(time);
+        expect(primitives.length).toBe(0);
+
+        dynamicUpdater.destroy();
         updater.destroy();
     });
 
@@ -409,24 +419,24 @@ defineSuite([
         var listener = jasmine.createSpy('listener');
         updater.geometryChanged.addEventListener(listener);
 
-        entity.polygon.positions = new ConstantProperty([]);
-        expect(listener.callCount).toEqual(1);
+        entity.polygon.hierarchy = new ConstantProperty([]);
+        expect(listener.calls.count()).toEqual(1);
 
         entity.polygon.height = new ConstantProperty(82);
-        expect(listener.callCount).toEqual(2);
+        expect(listener.calls.count()).toEqual(2);
 
         entity.availability = new TimeIntervalCollection();
-        expect(listener.callCount).toEqual(3);
+        expect(listener.calls.count()).toEqual(3);
 
-        entity.polygon.positions = undefined;
-        expect(listener.callCount).toEqual(4);
+        entity.polygon.hierarchy = undefined;
+        expect(listener.calls.count()).toEqual(4);
 
         //Since there's no valid geometry, changing another property should not raise the event.
         entity.polygon.height = undefined;
 
         //Modifying an unrelated property should not have any effect.
         entity.viewFrom = new ConstantProperty(Cartesian3.UNIT_X);
-        expect(listener.callCount).toEqual(4);
+        expect(listener.calls.count()).toEqual(4);
     });
 
     it('createFillGeometryInstance throws if object is not filled', function() {
@@ -503,5 +513,11 @@ defineSuite([
         expect(function() {
             return new PolygonGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
+    });
+
+    var entity = createBasicPolygon();
+    entity.polygon.extrudedHeight = createDynamicProperty(2);
+    createDynamicGeometryBoundingSphereSpecs(PolygonGeometryUpdater, entity, entity.polygon, function() {
+        return scene;
     });
 });

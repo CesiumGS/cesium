@@ -2,15 +2,13 @@
 defineSuite([
         'Widgets/SceneModePicker/SceneModePicker',
         'Specs/createScene',
-        'Specs/destroyScene',
         'Specs/DomEventSimulator'
     ], function(
         SceneModePicker,
         createScene,
-        destroyScene,
         DomEventSimulator) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
 
@@ -19,7 +17,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     it('can create and destroy', function() {

@@ -5,12 +5,12 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Math'
     ], function(
-            AttributeCompression,
+        AttributeCompression,
         Cartesian2,
         Cartesian3,
         CesiumMath) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var negativeUnitZ = new Cartesian3(0.0, 0.0, -1.0);
     it('oct decode(0, 0)', function() {

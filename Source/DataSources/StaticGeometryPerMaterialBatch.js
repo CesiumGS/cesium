@@ -4,12 +4,14 @@ define([
         '../Core/defined',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/Primitive',
+        './BoundingSphereState',
         './MaterialProperty'
     ], function(
         AssociativeArray,
         defined,
         ShowGeometryInstanceAttribute,
         Primitive,
+        BoundingSphereState,
         MaterialProperty) {
     "use strict";
 
@@ -65,19 +67,17 @@ define([
     };
 
     Batch.prototype.update = function(time) {
-        var show = true;
         var isUpdated = true;
         var primitive = this.primitive;
         var primitives = this.primitives;
         var geometries = this.geometry.values;
         if (this.createPrimitive) {
             if (defined(primitive)) {
-                if (primitive.ready) {
+                if (!defined(this.oldPrimitive)) {
                     this.oldPrimitive = primitive;
                 } else {
                     primitives.remove(primitive);
                 }
-                show = false;
             }
             if (geometries.length > 0) {
                 this.material = MaterialProperty.getValue(time, this.materialProperty, this.material);
@@ -91,7 +91,6 @@ define([
                     })
                 });
 
-                primitive.show = show;
                 primitives.add(primitive);
                 isUpdated = false;
             }
@@ -101,7 +100,6 @@ define([
             if (defined(this.oldPrimitive)) {
                 primitives.remove(this.oldPrimitive);
                 this.oldPrimitive = undefined;
-                primitive.show = true;
             }
 
             this.material = MaterialProperty.getValue(time, this.materialProperty, this.material);
@@ -120,9 +118,9 @@ define([
                 }
 
                 if (!updater.hasConstantFill) {
-                    show = updater.isFilled(time);
-                    if (show !== attributes._lastShow) {
-                        attributes._lastShow = show;
+                    var show = updater.isFilled(time);
+                    var currentShow = attributes.show[0] === 1;
+                    if (show !== currentShow) {
                         attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
                     }
                 }
@@ -133,11 +131,33 @@ define([
         return isUpdated;
     };
 
+    Batch.prototype.contains = function(entity) {
+        return this.updaters.contains(entity.id);
+    };
+
+    Batch.prototype.getBoundingSphere = function(entity, result) {
+        var primitive = this.primitive;
+        if (!primitive.ready) {
+            return BoundingSphereState.PENDING;
+        }
+        var attributes = primitive.getGeometryInstanceAttributes(entity);
+        if (!defined(attributes) || !defined(attributes.boundingSphere) ||//
+            (defined(attributes.show) && attributes.show[0] === 0)) {
+            return BoundingSphereState.FAILED;
+        }
+        attributes.boundingSphere.clone(result);
+        return BoundingSphereState.DONE;
+    };
+
     Batch.prototype.destroy = function(time) {
         var primitive = this.primitive;
         var primitives = this.primitives;
         if (defined(primitive)) {
             primitives.remove(primitive);
+        }
+        var oldPrimitive = this.oldPrimitive;
+        if (defined(oldPrimitive)) {
+            primitives.remove(oldPrimitive);
         }
         this.removeMaterialSubscription();
     };
@@ -205,6 +225,18 @@ define([
             isUpdated = items[i].update(time) && isUpdated;
         }
         return isUpdated;
+    };
+
+    StaticGeometryPerMaterialBatch.prototype.getBoundingSphere = function(entity, result) {
+        var items = this._items;
+        var length = items.length;
+        for (var i = 0; i < length; i++) {
+            var item = items[i];
+            if(item.contains(entity)){
+                return item.getBoundingSphere(entity, result);
+            }
+        }
+        return BoundingSphereState.FAILED;
     };
 
     StaticGeometryPerMaterialBatch.prototype.removeAllPrimitives = function() {

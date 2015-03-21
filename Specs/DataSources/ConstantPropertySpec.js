@@ -8,7 +8,7 @@ defineSuite([
         Cartesian3,
         JulianDate) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var time = JulianDate.now();
 
@@ -27,6 +27,15 @@ defineSuite([
         expect(result).toEqual(value);
     });
 
+    it('works with objects without clone', function() {
+        var value = {};
+        var property = new ConstantProperty(value);
+
+        var result = property.getValue(time);
+        expect(result).toBe(value);
+        expect(result).toEqual(value);
+    });
+
     it('setValue raises definitionChanged event', function() {
         var property = new ConstantProperty();
         var listener = jasmine.createSpy('listener');
@@ -40,7 +49,7 @@ defineSuite([
         var listener = jasmine.createSpy('listener');
         property.definitionChanged.addEventListener(listener);
         property.setValue(new Cartesian3(0, 0, 0));
-        expect(listener.callCount).toBe(0);
+        expect(listener.calls.count()).toBe(0);
     });
 
     it('works with objects with result parameter', function() {
@@ -58,33 +67,24 @@ defineSuite([
         expect(property.getValue()).toBeUndefined();
     });
 
-    it('constructor throws with undefined clone function on non-basic type', function() {
-        expect(function() {
-            return new ConstantProperty({
-                equals : function() {
-                    return true;
-                }
-            });
-        }).toThrowDeveloperError();
-    });
-
-    it('constructor throws with undefined equals function on non-basic type', function() {
-        expect(function() {
-            return new ConstantProperty({
-                clone : function() {
-                    return {};
-                }
-            });
-        }).toThrowDeveloperError();
-    });
-
-    it('equals works for object types', function() {
+    it('equals works for object types with "equals" function', function() {
         var left = new ConstantProperty(new Cartesian3(1, 2, 3));
         var right = new ConstantProperty(new Cartesian3(1, 2, 3));
 
         expect(left.equals(right)).toEqual(true);
 
         right = new ConstantProperty(new Cartesian3(1, 2, 4));
+        expect(left.equals(right)).toEqual(false);
+    });
+
+    it('equals works for object types without "equals" function', function() {
+        var value = {};
+        var left = new ConstantProperty(value);
+        var right = new ConstantProperty(value);
+
+        expect(left.equals(right)).toEqual(true);
+
+        right = new ConstantProperty({});
         expect(left.equals(right)).toEqual(false);
     });
 

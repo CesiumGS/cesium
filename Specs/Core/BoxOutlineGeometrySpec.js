@@ -1,12 +1,14 @@
 /*global defineSuite*/
 defineSuite([
         'Core/BoxOutlineGeometry',
-        'Core/Cartesian3'
+        'Core/Cartesian3',
+        'Specs/createPackableSpecs'
     ], function(
         BoxOutlineGeometry,
-        Cartesian3) {
+        Cartesian3,
+        createPackableSpecs) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('constructor throws without minimum corner', function() {
         expect(function() {
@@ -56,4 +58,9 @@ defineSuite([
         expect(m.attributes.position.values.length).toEqual(8 * 3);
         expect(m.indices.length).toEqual(12 * 2);
     });
+
+    createPackableSpecs(BoxOutlineGeometry, new BoxOutlineGeometry({
+        minimumCorner : new Cartesian3(1.0, 2.0, 3.0),
+        maximumCorner : new Cartesian3(4.0, 5.0, 6.0)
+    }), [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
 });

@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>ccooper</author>
+      <authoring_tool>OpenCOLLADA2015</authoring_tool>
+      <comments>
+			ColladaMaya export options: 
+			bakeTransforms=0;relativePaths=0;copyTextures=0;exportTriangles=0;exportCgfxFileReferences=1;
+			isSampling=0;curveConstrainSampling=0;removeStaticCurves=1;exportPolygonMeshes=1;exportLights=1;
+			exportCameras=1;exportJointsAndSkin=1;exportAnimations=1;exportInvisibleNodes=0;exportDefaultCameras=0;
+			exportTexCoords=1;exportNormals=1;exportNormalsPerVertex=1;exportVertexColors=1;exportVertexColorsPerVertex=1;
+			exportTexTangents=0;exportTangents=0;exportReferencedMaterials=0;exportMaterialsOnly=0;
+			exportXRefs=1;dereferenceXRefs=1;exportCameraAsLookat=0;cameraXFov=0;cameraYFov=1;doublePrecision=0
+		</comments>
+      <source_data>file:///C:/Users/ccooper/Downloads/fbx/export-repro.ma</source_data>
+    </contributor>
+    <created>2014-11-27T08:46:19</created>
+    <modified>2014-11-27T08:46:19</modified>
+    <unit name="centimeter" meter="0.01"/>
+    <up_axis>Z_UP</up_axis>
+  </asset>
+  <library_materials>
+    <material id="terrain_detail" name="terrain_detail">
+      <instance_effect url="#terrain_detail-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="terrain_detail-fx">
+      <profile_COMMON>
+        <newparam sid="file2-surface">
+          <surface type="2D">
+            <init_from>file2</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="file2-sampler">
+          <sampler2D>
+            <source>file2-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <constant>
+            <emission>
+              <texture texture="file2-sampler" texcoord="TEX0">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </emission>
+            <transparent opaque="RGB_ZERO">
+              <color>0 0 0 1</color>
+            </transparent>
+          </constant>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images>
+    <image id="file2" name="file2">
+      <init_from>./test-shader-optimize.jpg</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>file2</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+  </library_images>
+  <library_geometries>
+    <geometry id="Plane001Shape" name="Plane001Shape">
+      <mesh>
+        <source id="Plane001Shape-positions" name="Plane001Shape-positions">
+          <float_array id="Plane001Shape-positions-array" count="15">-159.375 -142.0625 14.323 -157.8125 -142.0625 13.54175 -157.8125 -140.5 14.323 -159.375 -140.5 15.49487 -157.8125 -140.5 15.10425</float_array>
+          <technique_common>
+            <accessor source="#Plane001Shape-positions-array" count="5" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="Plane001Shape-normals" name="Plane001Shape-normals">
+          <float_array id="Plane001Shape-normals-array" count="27">-0.4082483 0.4082483 -0.8164966 -0.4082483 0.4082483 -0.8164966 -0.4082483 0.4082483 -0.8164966 -0.5144957 0.5144957 -0.6859943 -0.5144957 0.5144957 -0.6859943 -0.5144957 0.5144957 -0.6859943 0 1 0 0 0.9999999 0 0 1 0</float_array>
+          <technique_common>
+            <accessor source="#Plane001Shape-normals-array" count="9" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="Plane001Shape-map1" name="Plane001Shape-map1">
+          <float_array id="Plane001Shape-map1-array" count="10">5e-4 0.00542 0.005495 0.00542 0.005495 0.00296 5e-4 5e-4 0.007992 5e-4</float_array>
+          <technique_common>
+            <accessor source="#Plane001Shape-map1-array" count="5" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="Plane001Shape-vertices" name="Plane001Shape-vertices">
+          <input semantic="POSITION" source="#Plane001Shape-positions"/>
+        </vertices>
+        <triangles material="surfaceShader4SG" count="3">
+          <input semantic="VERTEX" source="#Plane001Shape-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#Plane001Shape-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#Plane001Shape-map1" offset="2" set="0"/>
+          <p>2 0 2 1 1 4 0 2 3 2 3 2 0 4 3 3 5 0 4 6 1 2 7 2 3 8 0</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>Plane001Shape</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="VisualSceneNode" name="export-repro">
+      <node id="Teimnan_montain_01_Plane001" name="Plane001" type="NODE">
+        <translate sid="translate">-12.10967 84.01086 0</translate>
+        <translate sid="rotatePivot">0 34.4655 43.89872</translate>
+        <rotate sid="rotateZ">0 0 1 0</rotate>
+        <rotate sid="rotateY">0 1 0 0</rotate>
+        <rotate sid="rotateX">1 0 0 0</rotate>
+        <translate sid="rotatePivotInverse">0 -34.4655 -43.89872</translate>
+        <translate sid="scalePivot">0 34.4655 43.89872</translate>
+        <scale sid="scale">1 1 1</scale>
+        <translate sid="scalePivotInverse">0 -34.4655 -43.89872</translate>
+        <instance_geometry url="#Plane001Shape">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="surfaceShader4SG" target="#terrain_detail">
+                <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>Plane001</originalMayaNodeId>
+          </technique>
+        </extra>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#VisualSceneNode"/>
+  </scene>
+</COLLADA>

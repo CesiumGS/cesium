@@ -243,7 +243,7 @@ define([
 
     function createMorphHandler(transitioner, completeMorphFunction) {
         if (transitioner._scene.completeMorphOnUserInput) {
-            transitioner._morphHandler = new ScreenSpaceEventHandler(transitioner._scene.canvas);
+            transitioner._morphHandler = new ScreenSpaceEventHandler(transitioner._scene.canvas, false);
 
             var completeMorph = function() {
                 transitioner._morphCancelled = true;
@@ -271,7 +271,7 @@ define([
         var scene = transitioner._scene;
 
         var camera = scene.camera;
-        camera.setTransform(Matrix4.IDENTITY);
+        camera._setTransform(Matrix4.IDENTITY);
 
         var startPos = camera.position;
         var startDir = camera.direction;
@@ -309,7 +309,7 @@ define([
         duration *= 0.5;
 
         var camera = transitioner._scene.camera;
-        camera.setTransform(Matrix4.IDENTITY);
+        camera._setTransform(Matrix4.IDENTITY);
 
         morphOrthographicToPerspective(transitioner, duration, ellipsoid, function() {
             camera.frustum = transitioner._cameraCV.frustum.clone();
@@ -361,7 +361,7 @@ define([
     function morphFromColumbusViewTo2D(transitioner, duration, ellipsoid, complete) {
         var scene = transitioner._scene;
         var camera = scene.camera;
-        camera.setTransform(Matrix4.IDENTITY);
+        camera._setTransform(Matrix4.IDENTITY);
         var maxRadii = ellipsoid.maximumRadius;
 
         var startPos = Cartesian3.clone(camera.position);
@@ -496,7 +496,7 @@ define([
     function morphFrom2DToColumbusView(transitioner, duration, ellipsoid, complete) {
         var scene = transitioner._scene;
         var camera = scene.camera;
-        camera.setTransform(Matrix4.IDENTITY);
+        camera._setTransform(Matrix4.IDENTITY);
 
         duration *= 0.5;
 
@@ -541,7 +541,7 @@ define([
     function morphFrom3DToColumbusView(transitioner, duration, endCamera, complete) {
         var scene = transitioner._scene;
         var camera = scene.camera;
-        camera.setTransform(Matrix4.IDENTITY);
+        camera._setTransform(Matrix4.IDENTITY);
 
         var startPos = Cartesian3.clone(camera.position);
         var startDir = Cartesian3.clone(camera.direction);

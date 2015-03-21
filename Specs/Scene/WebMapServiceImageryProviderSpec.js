@@ -7,6 +7,7 @@ defineSuite([
         'Core/GeographicTilingScheme',
         'Core/loadImage',
         'Core/loadWithXhr',
+        'Core/Math',
         'Core/queryToObject',
         'Core/Rectangle',
         'Core/WebMercatorTilingScheme',
@@ -15,7 +16,7 @@ defineSuite([
         'Scene/ImageryLayerFeatureInfo',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
-        'Specs/waitsForPromise',
+        'Specs/pollToPromise',
         'ThirdParty/Uri',
         'ThirdParty/when'
     ], function(
@@ -26,6 +27,7 @@ defineSuite([
         GeographicTilingScheme,
         loadImage,
         loadWithXhr,
+        CesiumMath,
         queryToObject,
         Rectangle,
         WebMercatorTilingScheme,
@@ -34,11 +36,11 @@ defineSuite([
         ImageryLayerFeatureInfo,
         ImageryProvider,
         ImageryState,
-        waitsForPromise,
+        pollToPromise,
         Uri,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -73,11 +75,9 @@ defineSuite([
             layers : 'someLayer'
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        runs(function() {
+        }).then(function() {
             expect(typeof provider.hasAlphaChannel).toBe('boolean');
         });
     });
@@ -92,12 +92,10 @@ defineSuite([
             }
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        runs(function() {
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+        }).then(function() {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var uri = new Uri(url);
                 var params = queryToObject(uri.query);
                 expect(params.something).toEqual('foo');
@@ -116,12 +114,10 @@ defineSuite([
             layers : 'someLayer'
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        runs(function() {
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+        }).then(function() {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var questionMarkCount = url.match(/\?/g).length;
                 expect(questionMarkCount).toEqual(1);
             });
@@ -138,12 +134,10 @@ defineSuite([
             layers : 'someLayer'
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        runs(function() {
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+        }).then(function() {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var questionMarkCount = url.match(/\?/g).length;
                 expect(questionMarkCount).toEqual(1);
 
@@ -162,12 +156,10 @@ defineSuite([
             layers : 'someLayer'
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        runs(function() {
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+        }).then(function() {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var questionMarkCount = url.match(/\?/g).length;
                 expect(questionMarkCount).toEqual(1);
 
@@ -191,23 +183,21 @@ defineSuite([
         expect(provider.url).toEqual('made/up/wms/server');
         expect(provider.layers).toEqual('someLayer');
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        runs(function() {
+        }).then(function() {
             expect(provider.tileWidth).toEqual(256);
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toBeUndefined();
             expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
             expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
 
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 // Just return any old image.
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
-            waitsForPromise(provider.requestImage(0, 0, 0), function(image) {
+            return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(loadImage.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
@@ -225,18 +215,16 @@ defineSuite([
         expect(provider.url).toEqual('made/up/wms/server');
         expect(provider.layers).toEqual('someLayer');
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        runs(function() {
+        }).then(function() {
             expect(provider.tileWidth).toEqual(256);
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toBeUndefined();
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
 
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var uri = new Uri(url);
                 var params = queryToObject(uri.query);
 
@@ -248,7 +236,7 @@ defineSuite([
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
-            waitsForPromise(provider.requestImage(0, 0, 0), function(image) {
+            return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(loadImage.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
@@ -264,12 +252,10 @@ defineSuite([
             }
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        runs(function() {
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+        }).then(function() {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var uri = new Uri(url);
                 var params = queryToObject(uri.query);
 
@@ -306,21 +292,19 @@ defineSuite([
             proxy : proxy
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        runs(function() {
+        }).then(function() {
             expect(provider.proxy).toEqual(proxy);
 
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 expect(url.indexOf(proxy.getURL('made/up/wms/server'))).toEqual(0);
 
                 // Just return any old image.
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
-            waitsForPromise(provider.requestImage(0, 0, 0), function(image) {
+            return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(loadImage.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
@@ -335,16 +319,14 @@ defineSuite([
             rectangle : rectangle
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        runs(function() {
+        }).then(function() {
             expect(provider.tileWidth).toEqual(256);
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toBeUndefined();
             expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
-            expect(provider.rectangle).toEqual(rectangle);
+            expect(provider.rectangle).toEqualEpsilon(rectangle, CesiumMath.EPSILON14);
             expect(provider.tileDiscardPolicy).toBeUndefined();
         });
     });
@@ -403,48 +385,43 @@ defineSuite([
             layers : 'someLayer'
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
+        }).then(function() {
+            var layer = new ImageryLayer(provider);
 
-        var layer = new ImageryLayer(provider);
+            var tries = 0;
+            provider.errorEvent.addEventListener(function(error) {
+                expect(error.timesRetried).toEqual(tries);
+                ++tries;
+                if (tries < 3) {
+                    error.retry = true;
+                }
+            });
 
-        var tries = 0;
-        provider.errorEvent.addEventListener(function(error) {
-            expect(error.timesRetried).toEqual(tries);
-            ++tries;
-            if (tries < 3) {
-                error.retry = true;
-            }
-        });
+            loadImage.createImage = function(url, crossOrigin, deferred) {
+                if (tries === 2) {
+                    // Succeed after 2 tries
+                    loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                } else {
+                    // fail
+                    setTimeout(function() {
+                        deferred.reject();
+                    }, 1);
+                }
+            };
 
-        loadImage.createImage = function(url, crossOrigin, deferred) {
-            if (tries === 2) {
-                // Succeed after 2 tries
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
-            } else {
-                // fail
-                setTimeout(function() {
-                    deferred.reject();
-                }, 1);
-            }
-        };
-
-        var imagery;
-        runs(function() {
-            imagery = new Imagery(layer, 0, 0, 0);
+            var imagery = new Imagery(layer, 0, 0, 0);
             imagery.addReference();
             layer._requestImagery(imagery);
-        });
 
-        waitsFor(function() {
-            return imagery.state === ImageryState.RECEIVED;
-        }, 'image to load');
-
-        runs(function() {
-            expect(imagery.image).toBeInstanceOf(Image);
-            expect(tries).toEqual(2);
-            imagery.releaseReference();
+            return pollToPromise(function() {
+                return imagery.state === ImageryState.RECEIVED;
+            }).then(function() {
+                expect(imagery.image).toBeInstanceOf(Image);
+                expect(tries).toEqual(2);
+                imagery.releaseReference();
+            });
         });
     });
 
@@ -460,14 +437,10 @@ defineSuite([
                 loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-GeoJSON.json', responseType, method, data, headers, deferred, overrideMimeType);
             };
 
-            waitsFor(function() {
+            return pollToPromise(function() {
                 return provider.ready;
-            }, 'imagery provider to become ready');
-
-            runs(function() {
-                var asyncResult = provider.pickFeatures(0, 0, 0, 0.5, 0.5);
-
-                waitsForPromise(asyncResult, function(pickResult) {
+            }).then(function() {
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(pickResult) {
                     expect(pickResult.length).toBe(1);
 
                     var firstResult = pickResult[0];
@@ -490,14 +463,10 @@ defineSuite([
                 loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-MapInfoMXP.xml', responseType, method, data, headers, deferred, overrideMimeType);
             };
 
-            waitsFor(function() {
+            return pollToPromise(function() {
                 return provider.ready;
-            }, 'imagery provider to become ready');
-
-            runs(function() {
-                var asyncResult = provider.pickFeatures(0, 0, 0, 0.5, 0.5);
-
-                waitsForPromise(asyncResult, function(pickResult) {
+            }).then(function() {
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(pickResult) {
                     expect(pickResult.length).toBe(1);
 
                     var firstResult = pickResult[0];
@@ -519,14 +488,10 @@ defineSuite([
                 loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-Esri.xml', responseType, method, data, headers, deferred, overrideMimeType);
             };
 
-            waitsFor(function() {
+            return pollToPromise(function() {
                 return provider.ready;
-            }, 'imagery provider to become ready');
-
-            runs(function() {
-                var asyncResult = provider.pickFeatures(0, 0, 0, 0.5, 0.5);
-
-                waitsForPromise(asyncResult, function(pickResult) {
+            }).then(function() {
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(pickResult) {
                     expect(pickResult.length).toBe(1);
 
                     var firstResult = pickResult[0];
@@ -548,14 +513,10 @@ defineSuite([
                 loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-Unknown.xml', responseType, method, data, headers, deferred, overrideMimeType);
             };
 
-            waitsFor(function() {
+            return pollToPromise(function() {
                 return provider.ready;
-            }, 'imagery provider to become ready');
-
-            runs(function() {
-                var asyncResult = provider.pickFeatures(0, 0, 0, 0.5, 0.5);
-
-                waitsForPromise(asyncResult, function(pickResult) {
+            }).then(function() {
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(pickResult) {
                     expect(pickResult.length).toBe(1);
 
                     var firstResult = pickResult[0];
@@ -577,14 +538,10 @@ defineSuite([
                 loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-ServiceException.xml', responseType, method, data, headers, deferred, overrideMimeType);
             };
 
-            waitsFor(function() {
+            return pollToPromise(function() {
                 return provider.ready;
-            }, 'imagery provider to become ready');
-
-            runs(function() {
-                var asyncResult = provider.pickFeatures(0, 0, 0, 0.5, 0.5);
-
-                waitsForPromise(asyncResult, function(pickResult) {
+            }).then(function() {
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(pickResult) {
                     expect(pickResult).toBeUndefined();
                 });
             });
@@ -598,11 +555,9 @@ defineSuite([
                 getFeatureInfoAsXml : false
             });
 
-            waitsFor(function() {
+            return pollToPromise(function() {
                 return provider.ready;
-            }, 'imagery provider to become ready');
-
-            runs(function() {
+            }).then(function() {
                 expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).toBeUndefined();
             });
         });
@@ -614,11 +569,9 @@ defineSuite([
                 enablePickFeatures : false
             });
 
-            waitsFor(function() {
+            return pollToPromise(function() {
                 return provider.ready;
-            }, 'imagery provider to become ready');
-
-            runs(function() {
+            }).then(function() {
                 expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).toBeUndefined();
             });
         });
@@ -636,14 +589,10 @@ defineSuite([
                 loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-MapInfoMXP.xml', responseType, method, data, headers, deferred, overrideMimeType);
             };
 
-            waitsFor(function() {
+            return pollToPromise(function() {
                 return provider.ready;
-            }, 'imagery provider to become ready');
-
-            runs(function() {
-                var asyncResult = provider.pickFeatures(0, 0, 0, 0.5, 0.5);
-
-                waitsForPromise(asyncResult, function(pickResult) {
+            }).then(function() {
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(pickResult) {
                     expect(pickResult.length).toBe(1);
 
                     var firstResult = pickResult[0];
@@ -661,24 +610,24 @@ defineSuite([
                 getFeatureInfoAsXml : false
             });
 
-            waitsFor(function() {
+            return pollToPromise(function() {
                 return provider.ready;
-            }, 'imagery provider to become ready');
+            }).then(function() {
+                loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                    expect(url).toContain('GetFeatureInfo');
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-                expect(url).toContain('GetFeatureInfo');
+                    if (url.indexOf('json') >= 0) {
+                        deferred.reject();
+                    } else {
+                        // this should not happen
+                        loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-MapInfoMXP.xml', responseType, method, data, headers, deferred, overrideMimeType);
+                    }
+                };
 
-                if (url.indexOf('json') >= 0) {
-                    deferred.reject();
-                } else {
-                    // this should not happen
-                    loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-MapInfoMXP.xml', responseType, method, data, headers, deferred, overrideMimeType);
-                }
-            };
-
-            runs(function() {
-                var asyncResult = provider.pickFeatures(0, 0, 0, 0.5, 0.5);
-                waitsForPromise.toReject(asyncResult);
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function() {
+                    fail('should not be called');
+                }).otherwise(function() {
+                });
             });
         });
     });

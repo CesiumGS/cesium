@@ -12,7 +12,7 @@ defineSuite([
         TerrainData,
         when) {
      "use strict";
-     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
      it('conforms to TerrainData interface', function() {
          expect(HeightmapTerrainData).toConformToInterface(TerrainData);
@@ -151,17 +151,7 @@ defineSuite([
          });
 
          it('upsamples by subsetting when number of samples is odd in each direction', function() {
-             var promise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
-             var upsampled;
-             when(promise, function(data) {
-                 upsampled = data;
-             });
-
-             waitsFor(function() {
-                 return defined(upsampled);
-             }, 'data to be upsampled');
-
-             runs(function() {
+             return when(data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1), function(upsampled) {
                  expect(upsampled.wasCreatedByUpsampling()).toBe(true);
                  expect(upsampled._width).toBe(2);
                  expect(upsampled._height).toBe(2);
@@ -176,17 +166,7 @@ defineSuite([
                  height : 4
              });
 
-             var promise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
-             var upsampled;
-             when(promise, function(data) {
-                 upsampled = data;
-             });
-
-             waitsFor(function() {
-                 return defined(upsampled);
-             }, 'data to be upsampled');
-
-             runs(function() {
+             return when(data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1), function(upsampled) {
                  expect(upsampled.wasCreatedByUpsampling()).toBe(true);
                  expect(upsampled._width).toBe(4);
                  expect(upsampled._height).toBe(4);
@@ -205,17 +185,7 @@ defineSuite([
                  }
              });
 
-             var promise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
-             var upsampled;
-             when(promise, function(data) {
-                 upsampled = data;
-             });
-
-             waitsFor(function() {
-                 return defined(upsampled);
-             }, 'data to be upsampled');
-
-             runs(function() {
+             return when(data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1), function(upsampled) {
                  expect(upsampled.wasCreatedByUpsampling()).toBe(true);
                  expect(upsampled._width).toBe(2);
                  expect(upsampled._height).toBe(2);
@@ -234,17 +204,7 @@ defineSuite([
                  }
              });
 
-             var promise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
-             var upsampled;
-             when(promise, function(data) {
-                 upsampled = data;
-             });
-
-             waitsFor(function() {
-                 return defined(upsampled);
-             }, 'data to be upsampled');
-
-             runs(function() {
+             return when(data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1), function(upsampled) {
                  expect(upsampled.wasCreatedByUpsampling()).toBe(true);
                  expect(upsampled._width).toBe(4);
                  expect(upsampled._height).toBe(4);
@@ -264,17 +224,7 @@ defineSuite([
                  }
              });
 
-             var promise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
-             var upsampled;
-             when(promise, function(data) {
-                 upsampled = data;
-             });
-
-             waitsFor(function() {
-                 return defined(upsampled);
-             }, 'data to be upsampled');
-
-             runs(function() {
+             return when(data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1), function(upsampled) {
                  expect(upsampled.wasCreatedByUpsampling()).toBe(true);
                  expect(upsampled._width).toBe(4);
                  expect(upsampled._height).toBe(4);
@@ -289,17 +239,7 @@ defineSuite([
                  height : 4
              });
 
-             var promise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
-             var upsampled;
-             when(promise, function(data) {
-                 upsampled = data;
-             });
-
-             waitsFor(function() {
-                 return defined(upsampled);
-             }, 'data to be upsampled');
-
-             runs(function() {
+             return when(data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1), function(upsampled) {
                  expect(upsampled.wasCreatedByUpsampling()).toBe(true);
                  expect(upsampled._width).toBe(4);
                  expect(upsampled._height).toBe(4);
@@ -318,17 +258,7 @@ defineSuite([
                  }
              });
 
-             var promise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
-             var upsampled;
-             when(promise, function(data) {
-                 upsampled = data;
-             });
-
-             waitsFor(function() {
-                 return defined(upsampled);
-             }, 'data to be upsampled');
-
-             runs(function() {
+             return when(data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1), function(upsampled) {
                  expect(upsampled.wasCreatedByUpsampling()).toBe(true);
                  expect(upsampled._width).toBe(4);
                  expect(upsampled._height).toBe(4);

@@ -5,14 +5,16 @@ define([
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defined',
         '../Core/ShowGeometryInstanceAttribute',
-        '../Scene/Primitive'
+        '../Scene/Primitive',
+        './BoundingSphereState'
     ], function(
         AssociativeArray,
         Color,
         ColorGeometryInstanceAttribute,
         defined,
         ShowGeometryInstanceAttribute,
-        Primitive) {
+        Primitive,
+        BoundingSphereState) {
     "use strict";
 
     var colorScratch = new Color();
@@ -50,21 +52,19 @@ define([
     };
 
     Batch.prototype.update = function(time) {
-        var show = true;
         var isUpdated = true;
         var removedCount = 0;
         var primitive = this.primitive;
         var primitives = this.primitives;
         if (this.createPrimitive) {
-            this.attributes.removeAll();
             if (defined(primitive)) {
-                if (primitive.ready) {
+                if (!defined(this.oldPrimitive)) {
                     this.oldPrimitive = primitive;
                 } else {
                     primitives.remove(primitive);
                 }
-                show = false;
             }
+            this.attributes.removeAll();
             var geometry = this.geometry.values;
             if (geometry.length > 0) {
                 primitive = new Primitive({
@@ -75,7 +75,6 @@ define([
                         closed : this.closed
                     })
                 });
-                primitive.show = show;
                 primitives.add(primitive);
                 isUpdated = false;
             }
@@ -85,9 +84,7 @@ define([
             if (defined(this.oldPrimitive)) {
                 primitives.remove(this.oldPrimitive);
                 this.oldPrimitive = undefined;
-                primitive.show = true;
             }
-
             var updatersWithAttributes = this.updatersWithAttributes.values;
             var length = updatersWithAttributes.length;
             for (var i = 0; i < length; i++) {
@@ -113,9 +110,9 @@ define([
                 }
 
                 if (!updater.hasConstantFill) {
-                    show = updater.isFilled(time);
-                    if (show !== attributes._lastShow) {
-                        attributes._lastShow = show;
+                    var show = updater.isFilled(time);
+                    var currentShow = attributes.show[0] === 1;
+                    if (show !== currentShow) {
                         attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
                     }
                 }
@@ -127,13 +124,39 @@ define([
         return isUpdated;
     };
 
+    Batch.prototype.contains = function(entity) {
+        return this.updaters.contains(entity.id);
+    };
+
+    Batch.prototype.getBoundingSphere = function(entity, result) {
+        var primitive = this.primitive;
+        if (!primitive.ready) {
+            return BoundingSphereState.PENDING;
+        }
+        var attributes = primitive.getGeometryInstanceAttributes(entity);
+        if (!defined(attributes) || !defined(attributes.boundingSphere) ||//
+            (defined(attributes.show) && attributes.show[0] === 0)) {
+            return BoundingSphereState.FAILED;
+        }
+        attributes.boundingSphere.clone(result);
+        return BoundingSphereState.DONE;
+    };
+
     Batch.prototype.removeAllPrimitives = function() {
+        var primitives = this.primitives;
+
         var primitive = this.primitive;
         if (defined(primitive)) {
-            this.primitives.remove(primitive);
+            primitives.remove(primitive);
             this.primitive = undefined;
             this.geometry.removeAll();
             this.updaters.removeAll();
+        }
+
+        var oldPrimitive = this.oldPrimitive;
+        if (defined(oldPrimitive)) {
+            primitives.remove(oldPrimitive);
+            this.oldPrimitive = undefined;
         }
     };
 
@@ -197,6 +220,15 @@ define([
         }
 
         return isUpdated;
+    };
+
+    StaticGeometryColorBatch.prototype.getBoundingSphere = function(entity, result) {
+        if (this._solidBatch.contains(entity)) {
+            return this._solidBatch.getBoundingSphere(entity, result);
+        } else if (this._translucentBatch.contains(entity)) {
+            return this._translucentBatch.getBoundingSphere(entity, result);
+        }
+        return BoundingSphereState.FAILED;
     };
 
     StaticGeometryColorBatch.prototype.removeAllPrimitives = function() {

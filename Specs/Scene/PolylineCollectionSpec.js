@@ -12,8 +12,6 @@ defineSuite([
         'Specs/createContext',
         'Specs/createFrameState',
         'Specs/createScene',
-        'Specs/destroyContext',
-        'Specs/destroyScene',
         'Specs/pick',
         'Specs/render'
     ], function(
@@ -29,8 +27,6 @@ defineSuite([
         createContext,
         createFrameState,
         createScene,
-        destroyContext,
-        destroyScene,
         pick,
         render) {
     "use strict";
@@ -47,7 +43,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     beforeEach(function() {
@@ -398,7 +394,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('does not crash if polyline has one position', function() {
@@ -429,7 +425,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('renders polylines with duplicate positions after setting positions', function() {
@@ -445,7 +441,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('A polyline that used to cross the IDL but now does not, triggers vertex creation (This code used to crash)', function() {
@@ -518,7 +514,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('creates two vertex arrays and renders', function() {
@@ -543,7 +539,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -560,7 +556,7 @@ defineSuite([
         });
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
     });
 
@@ -596,7 +592,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('renders a polyline with no positions', function() {
@@ -621,7 +617,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         polylines.add({
             positions : []
@@ -631,7 +627,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('renders an updated polyline with no positions using set positions', function() {
@@ -656,7 +652,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         var p2 = polylines.add({
             positions : []
@@ -666,7 +662,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         //recreates vertex array because buffer usage changed
         p2.positions = [];
@@ -675,7 +671,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         //should call PolylineCollection.writePositionsUpdate
         p2.positions = [];
@@ -684,7 +680,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('renders an updated polyline with no positions using show', function() {
@@ -709,7 +705,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         var p2 = polylines.add({
             positions : []
@@ -719,7 +715,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         //recreates vertex array because buffer usage changed
         p2.show = false;
@@ -728,7 +724,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         //should call PolylineCollection.writeMiscUpdate
         p2.show = true;
@@ -737,7 +733,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
     });
 
@@ -763,7 +759,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         var p2 = polylines.add({
             positions : []
@@ -773,7 +769,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         //recreates vertex array because buffer usage changed
         p2.material = Material.fromType(Material.PolylineOutlineType);
@@ -782,7 +778,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('changes buffer usage after 100 iterations of not changing', function() {
@@ -807,7 +803,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         // changes buffer usage, recreates vertex arrays
         p.positions = positions;
@@ -819,7 +815,7 @@ defineSuite([
         for(var j = 0; j < 101; ++j){
             render(context, frameState, polylines);
         }
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
     });
 
@@ -860,7 +856,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('renders bounding volume with debugShowBoundingVolume', function() {
@@ -880,9 +876,9 @@ defineSuite([
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
 
-        expect(scene.renderForSpecs()).toNotEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 0]);
 
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     it('does not render', function() {
@@ -902,7 +898,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
         p.show = false;
 
         ClearCommand.ALL.execute(context);
@@ -929,7 +925,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         polylines.remove(p);
 
@@ -957,7 +953,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('adds and renders a polyline', function() {
@@ -977,7 +973,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         polylines.add({
             positions : [{
@@ -992,7 +988,7 @@ defineSuite([
         });
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('removes and renders a polyline', function() {
@@ -1023,14 +1019,14 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         polylines.remove(bluePolyline);
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('removes all polylines and renders', function() {
@@ -1050,7 +1046,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -1077,7 +1073,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -1096,7 +1092,7 @@ defineSuite([
         });
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('renders using polyline positions property', function() {
@@ -1116,7 +1112,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -1143,7 +1139,7 @@ defineSuite([
             z : 0.0
         }]; // Back in front of viewer
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('renders and updates one polyline from many polylines using show property', function() {
@@ -1191,7 +1187,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -1205,7 +1201,7 @@ defineSuite([
 
         p.show = true;
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
     });
 
@@ -1227,7 +1223,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -1242,7 +1238,7 @@ defineSuite([
 
         p.show = true;
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('renders four polylines with different widths', function() {
@@ -1286,7 +1282,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('renders three polylines with different widths and updates one', function() {
@@ -1326,15 +1322,15 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         p2.material = Material.fromType(Material.PolylineOutlineType);
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         p2.material = Material.fromType(Material.ColorType);
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('does not render with width 0.0', function() {
@@ -1355,7 +1351,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -1386,12 +1382,12 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         p.positions = positions;
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         positions.push({
                 x : 0.0,
@@ -1401,7 +1397,7 @@ defineSuite([
 
         p.positions = positions;
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('changes polyline width property', function() {
@@ -1431,19 +1427,19 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         p1.width = 2;
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         p2.width = 2;
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         p1.width = 1;
         render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
     });
 
@@ -1529,7 +1525,7 @@ defineSuite([
 
     it('does not equal undefined', function() {
         var polyline = polylines.add();
-        expect(polyline).toNotEqual(undefined);
+        expect(polyline).not.toEqual(undefined);
     });
 
     it('throws when accessing without an index', function() {

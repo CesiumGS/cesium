@@ -59,25 +59,24 @@ define([
         var size = (extrude) ? positions.length / 3 * 2 : positions.length / 3;
 
         var finalPositions = new Float64Array(size * 3);
-        var normal = scratchNormal;
 
         var length = positions.length;
         var bottomOffset = (extrude) ? length : 0;
         for (var i = 0; i < length; i += 3) {
             var i1 = i + 1;
             var i2 = i + 2;
-            var position = Cartesian3.fromArray(positions, i, scratchCartesian1);
-            var extrudedPosition;
 
-            position = ellipsoid.scaleToGeodeticSurface(position, position);
-            extrudedPosition = Cartesian3.clone(position, scratchCartesian2);
-            normal = ellipsoid.geodeticSurfaceNormal(position, normal);
+            var position = Cartesian3.fromArray(positions, i, scratchCartesian1);
+            ellipsoid.scaleToGeodeticSurface(position, position);
+
+            var extrudedPosition = Cartesian3.clone(position, scratchCartesian2);
+            var normal = ellipsoid.geodeticSurfaceNormal(position, scratchNormal);
             var scaledNormal = Cartesian3.multiplyByScalar(normal, height, scratchCartesian3);
-            position = Cartesian3.add(position, scaledNormal, position);
+            Cartesian3.add(position, scaledNormal, position);
 
             if (extrude) {
-                scaledNormal = Cartesian3.multiplyByScalar(normal, extrudedHeight, scaledNormal);
-                extrudedPosition = Cartesian3.add(extrudedPosition, scaledNormal, extrudedPosition);
+                Cartesian3.multiplyByScalar(normal, extrudedHeight, scaledNormal);
+                Cartesian3.add(extrudedPosition, scaledNormal, extrudedPosition);
 
                 finalPositions[i + bottomOffset] = extrudedPosition.x;
                 finalPositions[i1 + bottomOffset] = extrudedPosition.y;
@@ -104,9 +103,12 @@ define([
         var semiMajorAxis = options.semiMajorAxis;
         var rotation = options.rotation;
         var center = options.center;
-        var granularity = options.granularity;
 
-        var MAX_ANOMALY_LIMIT = 2.31;
+        // Computing the arc-length of the ellipse is too expensive to be practical. Estimating it using the
+        // arc length of the sphere is too inaccurate and creates sharp edges when either the semi-major or
+        // semi-minor axis is much bigger than the other. Instead, scale the angle delta to make
+        // the distance along the ellipse boundary more closely match the granularity.
+        var granularity = options.granularity * 8.0;
 
         var aSqr = semiMinorAxis * semiMinorAxis;
         var bSqr = semiMajorAxis * semiMajorAxis;
@@ -121,7 +123,11 @@ define([
 
         // The number of points in the first quadrant
         var numPts = 1 + Math.ceil(CesiumMath.PI_OVER_TWO / granularity);
-        var deltaTheta = MAX_ANOMALY_LIMIT / (numPts - 1);
+        var deltaTheta = CesiumMath.PI_OVER_TWO / (numPts - 1);
+        var theta = CesiumMath.PI_OVER_TWO - numPts * deltaTheta;
+        if (theta < 0.0) {
+            numPts -= Math.ceil(Math.abs(theta) / deltaTheta);
+        }
 
         // If the number of points were three, the ellipse
         // would be tessellated like below:
@@ -139,16 +145,17 @@ define([
         //         *---*
         // Notice each vertical column contains an even number of positions.
         // The sum of the first n even numbers is n * (n + 1). Double it for the number of points
-        // for the whole ellipse. Note: this is just an estimate and may actually be less depending
-        // on the number of iterations before the angle reaches pi/2.
+        // for the whole ellipse.
         var size = 2 * numPts * (numPts + 1);
         var positions = (addFillPositions) ? new Array(size * 3) : undefined;
         var positionIndex = 0;
         var position = scratchCartesian1;
         var reflectedPosition = scratchCartesian2;
 
-        var outerLeft = (addEdgePositions) ? [] : undefined;
-        var outerRight = (addEdgePositions) ? [] : undefined;
+        var outerPositionsLength = (2 * numPts + 2 * (numPts - 1)) * 3;
+        var outerRightIndex = outerPositionsLength - 1;
+        var outerLeftIndex = 0;
+        var outerPositions = (addEdgePositions) ? new Array(outerPositionsLength) : undefined;
 
         var i;
         var j;
@@ -157,8 +164,8 @@ define([
         var interiorPosition;
 
         // Compute points in the 'northern' half of the ellipse
-        var theta = CesiumMath.PI_OVER_TWO;
-        for (i = 0; i < numPts && theta > 0; ++i) {
+        theta = CesiumMath.PI_OVER_TWO;
+        for (i = 0; i < numPts; ++i) {
             position = pointOnEllipsoid(theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, position);
             reflectedPosition = pointOnEllipsoid(Math.PI - theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, reflectedPosition);
 
@@ -182,17 +189,18 @@ define([
             }
 
             if (addEdgePositions) {
-                outerRight.unshift(position.x, position.y, position.z);
+                outerPositions[outerRightIndex--] = position.z;
+                outerPositions[outerRightIndex--] = position.y;
+                outerPositions[outerRightIndex--] = position.x;
                 if (i !== 0) {
-                    outerLeft.push(reflectedPosition.x, reflectedPosition.y, reflectedPosition.z);
+                    outerPositions[outerLeftIndex++] = reflectedPosition.x;
+                    outerPositions[outerLeftIndex++] = reflectedPosition.y;
+                    outerPositions[outerLeftIndex++] = reflectedPosition.z;
                 }
             }
 
             theta = CesiumMath.PI_OVER_TWO - (i + 1) * deltaTheta;
         }
-
-        // Set numPts if theta reached zero
-        numPts = i;
 
         // Compute points in the 'southern' half of the ellipse
         for (i = numPts; i > 0; --i) {
@@ -221,26 +229,25 @@ define([
             }
 
             if (addEdgePositions) {
-                outerRight.unshift(position.x, position.y, position.z);
+                outerPositions[outerRightIndex--] = position.z;
+                outerPositions[outerRightIndex--] = position.y;
+                outerPositions[outerRightIndex--] = position.x;
                 if (i !== 1) {
-                    outerLeft.push(reflectedPosition.x, reflectedPosition.y, reflectedPosition.z);
+                    outerPositions[outerLeftIndex++] = reflectedPosition.x;
+                    outerPositions[outerLeftIndex++] = reflectedPosition.y;
+                    outerPositions[outerLeftIndex++] = reflectedPosition.z;
                 }
             }
         }
 
         var r = {};
         if (addFillPositions) {
-            // The original length may have been an over-estimate
-            if (positions.length !== positionIndex) {
-                size = positionIndex / 3;
-                positions.length = positionIndex;
-            }
             r.positions = positions;
             r.numPts = numPts;
         }
 
         if (addEdgePositions) {
-            r.outerPositions = outerRight.concat(outerLeft);
+            r.outerPositions = outerPositions;
         }
 
         return r;

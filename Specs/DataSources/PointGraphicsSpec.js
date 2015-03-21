@@ -10,7 +10,33 @@ defineSuite([
         NearFarScalar,
         ConstantProperty) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+
+    it('creates expected instance from raw assignment and construction', function() {
+        var options = {
+            color : Color.RED,
+            pixelSize : 1,
+            outlineColor : Color.BLUE,
+            outlineWidth : 2,
+            show : false,
+            scaleByDistance : new NearFarScalar(3, 4, 5, 6)
+        };
+
+        var point = new PointGraphics(options);
+        expect(point.color).toBeInstanceOf(ConstantProperty);
+        expect(point.pixelSize).toBeInstanceOf(ConstantProperty);
+        expect(point.outlineColor).toBeInstanceOf(ConstantProperty);
+        expect(point.outlineWidth).toBeInstanceOf(ConstantProperty);
+        expect(point.show).toBeInstanceOf(ConstantProperty);
+        expect(point.scaleByDistance).toBeInstanceOf(ConstantProperty);
+
+        expect(point.color.getValue()).toEqual(options.color);
+        expect(point.pixelSize.getValue()).toEqual(options.pixelSize);
+        expect(point.outlineColor.getValue()).toEqual(options.outlineColor);
+        expect(point.outlineWidth.getValue()).toEqual(options.outlineWidth);
+        expect(point.show.getValue()).toEqual(options.show);
+        expect(point.scaleByDistance.getValue()).toEqual(options.scaleByDistance);
+    });
 
     it('merge assigns unassigned properties', function() {
         var source = new PointGraphics();

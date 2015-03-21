@@ -159,7 +159,7 @@ Object.defineProperties(WebGLGlobeDataSource.prototype, {
             //Iterate over all polylines and set their show property
             //to true only if they are part of the current series.
             var collection = this._entityCollection;
-            var entities = collection.entities;
+            var entities = collection.values;
             collection.suspendEvents();
             for (var i = 0; i < entities.length; i++) {
                 var entity = entities[i];
@@ -275,6 +275,12 @@ WebGLGlobeDataSource.prototype.load = function(data) {
             var latitude = coordinates[i];
             var longitude = coordinates[i + 1];
             var height = coordinates[i + 2];
+
+            //Ignore lines of zero height.
+            if(height === 0) {
+                continue;
+            }
+
             var color = Cesium.Color.fromHsl((0.6 - (height * 0.5)), 1.0, 0.5);
             var surfacePosition = Cesium.Cartesian3.fromDegrees(longitude, latitude, 0);
             var heightPosition = Cesium.Cartesian3.fromDegrees(longitude, latitude, height * heightScale);
@@ -282,18 +288,17 @@ WebGLGlobeDataSource.prototype.load = function(data) {
             //WebGL Globe only contains lines, so that's the only graphics we create.
             var polyline = new Cesium.PolylineGraphics();
             polyline.show = new Cesium.ConstantProperty(show);
-            polyline.material = Cesium.ColorMaterialProperty.fromColor(color);
+            polyline.material = new Cesium.ColorMaterialProperty(color);
             polyline.width = new Cesium.ConstantProperty(2);
             polyline.followSurface = new Cesium.ConstantProperty(false);
             polyline.positions = new Cesium.ConstantProperty([surfacePosition, heightPosition]);
 
             //The polyline instance itself needs to be on an entity.
-            var entity = new Cesium.Entity(seriesName + ' index ' + i.toString());
-            entity.polyline = polyline;
-
-            //Add a property to the entity that indicates the series name.
-            entity.addProperty('seriesName');
-            entity.seriesName = seriesName;
+            var entity = new Cesium.Entity({
+                id : seriesName + ' index ' + i.toString(),
+                polyline : polyline,
+                seriesName : seriesName //Custom property to indicate series name
+            });
 
             //Add the entity to the collection.
             entities.add(entity);

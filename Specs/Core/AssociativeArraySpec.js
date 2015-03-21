@@ -4,7 +4,7 @@ defineSuite([
     ], function(
         AssociativeArray) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('constructor has expected default values', function() {
         var associativeArray = new AssociativeArray();
@@ -73,10 +73,8 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('remove throws with undefined key', function() {
+    it('remove returns false with undefined key', function() {
         var associativeArray = new AssociativeArray();
-        expect(function() {
-            associativeArray.remove(undefined);
-        }).toThrowDeveloperError();
+        expect(associativeArray.remove(undefined)).toBe(false);
     });
 });

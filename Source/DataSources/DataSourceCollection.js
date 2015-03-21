@@ -5,14 +5,16 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/Event'
+        '../Core/Event',
+        '../ThirdParty/when'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         destroyObject,
         DeveloperError,
-        Event) {
+        Event,
+        when) {
     "use strict";
 
     /**
@@ -69,7 +71,10 @@ define([
     /**
      * Adds a data source to the collection.
      *
-     * @param {DataSource} dataSource The data source to add.
+     * @param {DataSource|Promise} dataSource A data source or a promise to a data source to add to the collection.
+     *                                        When passing a promise, the data source will not actually be added
+     *                                        to the collection until the promise resolves successfully.
+     * @returns {Promise} A Promise that resolves once the data source has been added to the collection.
      */
     DataSourceCollection.prototype.add = function(dataSource) {
         //>>includeStart('debug', pragmas.debug);
@@ -78,8 +83,17 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._dataSources.push(dataSource);
-        this._dataSourceAdded.raiseEvent(this, dataSource);
+        var that = this;
+        var dataSources = this._dataSources;
+        return when(dataSource, function(value) {
+            //Only add the data source if removeAll has not been called
+            //Since it was added.
+            if (dataSources === that._dataSources) {
+                that._dataSources.push(value);
+                that._dataSourceAdded.raiseEvent(that, value);
+            }
+            return value;
+        });
     };
 
     /**
@@ -125,7 +139,7 @@ define([
                 dataSource.destroy();
             }
         }
-        dataSources.length = 0;
+        this._dataSources = [];
     };
 
     /**

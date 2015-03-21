@@ -41,7 +41,6 @@ define([
      * @param {Uint16Array} options.quantizedVertices The buffer containing the quantized mesh.
      * @param {Uint16Array|Uint32Array} options.indices The indices specifying how the quantized vertices are linked
      *                      together into triangles.  Each three indices specifies one triangle.
-     * @param {Uint8Array} options.encodedNormals The buffer containing per vertex normals, encoded using 'oct' encoding
      * @param {Number} options.minimumHeight The minimum terrain height within the tile, in meters above the ellipsoid.
      * @param {Number} options.maximumHeight The maximum terrain height within the tile, in meters above the ellipsoid.
      * @param {BoundingSphere} options.boundingSphere A sphere bounding all of the vertices in the mesh.
@@ -69,6 +68,8 @@ define([
      *                 </table>
      * @param {Boolean} [options.createdByUpsampling=false] True if this instance was created by upsampling another instance;
      *                  otherwise, false.
+     * @param {Uint8Array} [options.encodedNormals] The buffer containing per vertex normals, encoded using 'oct' encoding
+     * @param {Uint8Array} [options.waterMask] The buffer containing the watermask.
      *
      * @see TerrainData
      * @see HeightmapTerrainData
@@ -373,14 +374,15 @@ define([
         var northSkirtHeight = isNorthChild ? this._northSkirtHeight : (shortestSkirt * 0.5);
 
         return when(upsamplePromise, function(result) {
-            var indicesTypedArray = IndexDatatype.createTypedArray(result.vertices.length / 3, result.indices);
+            var quantizedVertices = new Uint16Array(result.vertices);
+            var indicesTypedArray = IndexDatatype.createTypedArray(quantizedVertices.length / 3, result.indices);
             var encodedNormals;
             if (defined(result.encodedNormals)) {
                 encodedNormals = new Uint8Array(result.encodedNormals);
             }
 
             return new QuantizedMeshTerrainData({
-                quantizedVertices : new Uint16Array(result.vertices),
+                quantizedVertices : quantizedVertices,
                 indices : indicesTypedArray,
                 encodedNormals : encodedNormals,
                 minimumHeight : result.minimumHeight,
@@ -414,9 +416,9 @@ define([
      *          the rectangle, so expect incorrect results for positions far outside the rectangle.
      */
     QuantizedMeshTerrainData.prototype.interpolateHeight = function(rectangle, longitude, latitude) {
-        var u = CesiumMath.clamp((longitude - rectangle.west) / (rectangle.east - rectangle.west), 0.0, 1.0);
+        var u = CesiumMath.clamp((longitude - rectangle.west) / rectangle.width, 0.0, 1.0);
         u *= maxShort;
-        var v = CesiumMath.clamp((latitude - rectangle.south) / (rectangle.north - rectangle.south), 0.0, 1.0);
+        var v = CesiumMath.clamp((latitude - rectangle.south) / rectangle.height, 0.0, 1.0);
         v *= maxShort;
 
         var uBuffer = this._uValues;

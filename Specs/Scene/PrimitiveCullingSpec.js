@@ -5,6 +5,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/defaultValue',
         'Core/Ellipsoid',
+        'Core/loadImage',
         'Core/Math',
         'Core/Occluder',
         'Renderer/TextureMagnificationFilter',
@@ -23,7 +24,6 @@ defineSuite([
         'Specs/createCamera',
         'Specs/createContext',
         'Specs/createFrameState',
-        'Specs/destroyContext',
         'Specs/render'
     ], 'Scene/PrimitiveCulling', function(
         BoundingSphere,
@@ -31,6 +31,7 @@ defineSuite([
         Cartesian3,
         defaultValue,
         Ellipsoid,
+        loadImage,
         CesiumMath,
         Occluder,
         TextureMagnificationFilter,
@@ -49,34 +50,34 @@ defineSuite([
         createCamera,
         createContext,
         createFrameState,
-        destroyContext,
         render) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var context;
     var frameState;
     var primitives;
     var us;
     var camera;
+    var greenImage;
 
     beforeAll(function() {
         context = createContext();
         frameState = createFrameState();
+
+        return loadImage('./Data/Images/Green.png').then(function(image) {
+            greenImage = image;
+        });
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     beforeEach(function() {
         primitives = new PrimitiveCollection();
 
-        camera = createCamera({
-            eye : new Cartesian3(1.02, 0.0, 0.0),
-            target : Cartesian3.UNIT_Z,
-            up : new Cartesian3(-1.0, 0.0, 0.0)
-        });
+        camera = createCamera();
 
         us = context.uniformState;
         us.update(context, createFrameState(camera));
@@ -349,17 +350,6 @@ defineSuite([
         });
 
         testBillboardOcclusion(labels);
-    });
-
-    var greenImage;
-
-    it('initialize billboard image for culling tests', function() {
-        greenImage = new Image();
-        greenImage.src = './Data/Images/Green.png';
-
-        waitsFor(function() {
-            return greenImage.complete;
-        }, 'Load .png file(s) for billboard collection culling tests.', 3000);
     });
 
     function createBillboard() {

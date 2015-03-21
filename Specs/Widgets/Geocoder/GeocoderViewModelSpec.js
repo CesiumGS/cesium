@@ -2,15 +2,17 @@
 defineSuite([
         'Widgets/Geocoder/GeocoderViewModel',
         'Core/Cartesian3',
+        'Scene/Camera',
         'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/pollToPromise'
     ], function(
         GeocoderViewModel,
         Cartesian3,
+        Camera,
         createScene,
-        destroyScene) {
+        pollToPromise) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
     beforeAll(function() {
@@ -18,7 +20,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     it('constructor sets expected properties', function() {
@@ -70,10 +72,31 @@ defineSuite([
         viewModel.searchText = '220 Valley Creek Blvd, Exton, PA';
         viewModel.search();
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             scene.tweens.update();
             return !Cartesian3.equals(cameraPosition, scene.camera.position);
         });
+    });
+
+    it('Zooms to longitude, latitude, height', function() {
+        var viewModel = new GeocoderViewModel({
+            scene : scene
+        });
+
+        spyOn(Camera.prototype, 'flyTo');
+
+        viewModel.searchText = ' 1.0, 2.0, 3.0 ';
+        viewModel.search();
+        expect(Camera.prototype.flyTo).toHaveBeenCalled();
+        expect(Camera.prototype.flyTo.calls.mostRecent().args[0].destination).toEqual(Cartesian3.fromDegrees(1.0, 2.0, 3.0));
+
+        viewModel.searchText = '1.0   2.0   3.0';
+        viewModel.search();
+        expect(Camera.prototype.flyTo.calls.mostRecent().args[0].destination).toEqual(Cartesian3.fromDegrees(1.0, 2.0, 3.0));
+
+        viewModel.searchText = '-1.0, -2.0';
+        viewModel.search();
+        expect(Camera.prototype.flyTo.calls.mostRecent().args[0].destination).toEqual(Cartesian3.fromDegrees(-1.0, -2.0, 300.0));
     });
 
     it('constructor throws without scene', function() {

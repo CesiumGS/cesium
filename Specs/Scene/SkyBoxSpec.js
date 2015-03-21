@@ -2,42 +2,37 @@
 defineSuite([
         'Scene/SkyBox',
         'Core/Cartesian3',
+        'Core/loadImage',
         'Renderer/ClearCommand',
         'Scene/SceneMode',
         'Specs/createCamera',
         'Specs/createContext',
-        'Specs/createFrameState',
-        'Specs/destroyContext'
+        'Specs/createFrameState'
     ], function(
         SkyBox,
         Cartesian3,
+        loadImage,
         ClearCommand,
         SceneMode,
         createCamera,
         createContext,
-        createFrameState,
-        destroyContext) {
+        createFrameState) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var context;
     var loadedImage;
 
     beforeAll(function() {
         context = createContext();
+
+        return loadImage('./Data/Images/Blue.png').then(function(image) {
+            loadedImage = image;
+        });
     });
 
     afterAll(function() {
-        destroyContext(context);
-    });
-
-    it('create images', function() {
-        loadedImage = new Image();
-        loadedImage.src = './Data/Images/Blue.png';
-
-        waitsFor(function() {
-            return loadedImage.complete;
-        }, 'The image should load.', 5000);
+        context.destroyForSpecs();
     });
 
     it('draws a sky box from Images', function() {
@@ -57,9 +52,7 @@ defineSuite([
 
         var us = context.uniformState;
         var frameState = createFrameState(createCamera({
-            eye : new Cartesian3(7000000.0, 0.0, 0.0),
-            target : Cartesian3.ZERO,
-            up : Cartesian3.UNIT_Z,
+            offset : new Cartesian3(7000000.0, 0.0, 0.0),
             near : 1.0,
             far : 20000000.0
         }));
@@ -87,9 +80,7 @@ defineSuite([
 
         var us = context.uniformState;
         var frameState = createFrameState(createCamera({
-            eye : new Cartesian3(7000000.0, 0.0, 0.0),
-            target : Cartesian3.ZERO,
-            up : Cartesian3.UNIT_Z,
+            offset : new Cartesian3(7000000.0, 0.0, 0.0),
             near : 1.0,
             far : 20000000.0
         }));
@@ -113,9 +104,7 @@ defineSuite([
 
         var us = context.uniformState;
         var frameState = createFrameState(createCamera({
-            eye : new Cartesian3(7000000.0, 0.0, 0.0),
-            target : Cartesian3.ZERO,
-            up : Cartesian3.UNIT_Z,
+            offset : new Cartesian3(7000000.0, 0.0, 0.0),
             near : 1.0,
             far : 20000000.0
         }));
@@ -140,9 +129,7 @@ defineSuite([
 
         var us = context.uniformState;
         var frameState = createFrameState(createCamera({
-            eye : new Cartesian3(7000000.0, 0.0, 0.0),
-            target : Cartesian3.ZERO,
-            up : Cartesian3.UNIT_Z,
+            offset : new Cartesian3(7000000.0, 0.0, 0.0),
             near : 1.0,
             far : 20000000.0
         }));

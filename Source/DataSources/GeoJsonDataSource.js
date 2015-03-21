@@ -5,6 +5,7 @@ define([
         '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/definedNotNull',
         '../Core/defineProperties',
         '../Core/deprecationWarning',
         '../Core/DeveloperError',
@@ -12,17 +13,18 @@ define([
         '../Core/getFilenameFromUri',
         '../Core/loadJson',
         '../Core/PinBuilder',
+        '../Core/PolygonHierarchy',
         '../Core/RuntimeError',
         '../Scene/VerticalOrigin',
         '../ThirdParty/topojson',
         '../ThirdParty/when',
         './BillboardGraphics',
+        './CallbackProperty',
         './ColorMaterialProperty',
         './ConstantPositionProperty',
         './ConstantProperty',
         './DataSource',
         './EntityCollection',
-        './CallbackProperty',
         './PolygonGraphics',
         './PolylineGraphics'
     ], function(
@@ -31,6 +33,7 @@ define([
         createGuid,
         defaultValue,
         defined,
+        definedNotNull,
         defineProperties,
         deprecationWarning,
         DeveloperError,
@@ -38,17 +41,18 @@ define([
         getFilenameFromUri,
         loadJson,
         PinBuilder,
+        PolygonHierarchy,
         RuntimeError,
         VerticalOrigin,
         topojson,
         when,
         BillboardGraphics,
+        CallbackProperty,
         ColorMaterialProperty,
         ConstantPositionProperty,
         ConstantProperty,
         DataSource,
         EntityCollection,
-        CallbackProperty,
         PolygonGraphics,
         PolylineGraphics) {
     "use strict";
@@ -72,8 +76,8 @@ define([
     var defaultFill = Color.fromBytes(255, 255, 0, 100);
 
     var defaultStrokeWidthProperty = new ConstantProperty(defaultStrokeWidth);
-    var defaultStrokeMaterialProperty = ColorMaterialProperty.fromColor(defaultStroke);
-    var defaultFillMaterialProperty = ColorMaterialProperty.fromColor(defaultFill);
+    var defaultStrokeMaterialProperty = new ColorMaterialProperty(defaultStroke);
+    var defaultFillMaterialProperty = new ColorMaterialProperty(defaultFill);
 
     var sizes = {
         small : 24,
@@ -85,15 +89,17 @@ define([
     'marker-size', 'marker-symbol', 'marker-color', 'stroke', //
     'stroke-opacity', 'stroke-width', 'fill', 'fill-opacity'];
 
+    var stringifyScratch = new Array(4);
+
     function describe(properties, nameProperty) {
-        var html = '<table class="cesium-infoBox-defaultTable"><tbody>';
+        var html = '';
         for ( var key in properties) {
             if (properties.hasOwnProperty(key)) {
                 if (key === nameProperty || simpleStyleIdentifiers.indexOf(key) !== -1) {
                     continue;
                 }
                 var value = properties[key];
-                if (defined(value)) {
+                if (definedNotNull(value)) {
                     if (typeof value === 'object') {
                         html += '<tr><th>' + key + '</th><td>' + describe(value) + '</td></tr>';
                     } else {
@@ -102,7 +108,11 @@ define([
                 }
             }
         }
-        html += '</tbody></table>';
+
+        if (html.length > 0) {
+            html = '<table class="cesium-infoBox-defaultTable"><tbody>' + html + '</tbody></table>';
+        }
+
         return html;
     }
 
@@ -121,7 +131,7 @@ define([
     //we can't use it for them either.
     function createObject(geoJson, entityCollection) {
         var id = geoJson.id;
-        if (!defined(id) || geoJson.type !== 'Feature') {
+        if (!definedNotNull(id) || geoJson.type !== 'Feature') {
             id = createGuid();
         } else {
             var i = 2;
@@ -135,7 +145,7 @@ define([
 
         var entity = entityCollection.getOrCreateEntity(id);
         var properties = geoJson.properties;
-        if (defined(properties)) {
+        if (definedNotNull(properties)) {
             entity.addProperty('properties');
             entity.properties = properties;
 
@@ -143,7 +153,7 @@ define([
 
             //Check for the simplestyle specified name first.
             var name = properties.title;
-            if (defined(name)) {
+            if (definedNotNull(name)) {
                 entity.name = name;
                 nameProperty = 'title';
             } else {
@@ -174,7 +184,7 @@ define([
                         }
                     }
                 }
-                if (defined(nameProperty)) {
+                if (definedNotNull(nameProperty)) {
                     entity.name = properties[nameProperty];
                 }
             }
@@ -182,7 +192,7 @@ define([
             var description = properties.description;
             if (!defined(description)) {
                 entity.description = new CallbackProperty(createDescriptionCallback(properties, nameProperty), true);
-            } else {
+            } else if (description !== null) {
                 entity.description = new ConstantProperty(description);
             }
         }
@@ -209,7 +219,7 @@ define([
         } else {
             var geometryType = feature.geometry.type;
             var geometryHandler = geometryTypes[geometryType];
-            if (!defined(geometryHandler)) {
+            if (!definedNotNull(geometryHandler)) {
                 throw new RuntimeError('Unknown geometry type: ' + geometryType);
             }
             geometryHandler(dataSource, feature, feature.geometry, crsFunction, options);
@@ -229,7 +239,7 @@ define([
             var geometry = geometries[i];
             var geometryType = geometry.type;
             var geometryHandler = geometryTypes[geometryType];
-            if (!defined(geometryHandler)) {
+            if (!definedNotNull(geometryHandler)) {
                 throw new RuntimeError('Unknown geometry type: ' + geometryType);
             }
             geometryHandler(dataSource, geoJson, geometry, crsFunction, options);
@@ -242,15 +252,23 @@ define([
         var size = options.markerSize;
 
         var properties = geoJson.properties;
-        if (defined(properties)) {
+        if (definedNotNull(properties)) {
             var cssColor = properties['marker-color'];
-            if (defined(cssColor)) {
+            if (definedNotNull(cssColor)) {
                 color = Color.fromCssColorString(cssColor);
             }
 
             size = defaultValue(sizes[properties['marker-size']], size);
-            symbol = defaultValue(properties['marker-symbol'], symbol);
+            var markerSymbol = properties['marker-symbol'];
+            if (definedNotNull(markerSymbol)) {
+                symbol = markerSymbol;
+            }
         }
+
+        stringifyScratch[0] = symbol;
+        stringifyScratch[1] = color;
+        stringifyScratch[2] = size;
+        var id = JSON.stringify(stringifyScratch);
 
         var canvasOrPromise;
         if (defined(symbol)) {
@@ -263,10 +281,10 @@ define([
             canvasOrPromise = dataSource._pinBuilder.fromColor(color, size);
         }
 
-        dataSource._promises.push(when(canvasOrPromise, function(canvas) {
+        dataSource._promises.push(when(canvasOrPromise, function(dataUrl) {
             var billboard = new BillboardGraphics();
             billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
-            billboard.image = new ConstantProperty(canvas.toDataURL());
+            billboard.image = new ConstantProperty(dataUrl);
 
             var entity = createObject(geoJson, dataSource._entityCollection);
             entity.billboard = billboard;
@@ -290,26 +308,26 @@ define([
         var widthProperty = options.strokeWidthProperty;
 
         var properties = geoJson.properties;
-        if (defined(properties)) {
+        if (definedNotNull(properties)) {
             var width = properties['stroke-width'];
-            if (defined(width)) {
+            if (definedNotNull(width)) {
                 widthProperty = new ConstantProperty(width);
             }
 
             var color;
             var stroke = properties.stroke;
-            if (defined(stroke)) {
+            if (definedNotNull(stroke)) {
                 color = Color.fromCssColorString(stroke);
             }
             var opacity = properties['stroke-opacity'];
-            if (defined(opacity) && opacity !== 1.0) {
+            if (definedNotNull(opacity) && opacity !== 1.0) {
                 if (!defined(color)) {
                     color = material.color.clone();
                 }
                 color.alpha = opacity;
             }
             if (defined(color)) {
-                material = ColorMaterialProperty.fromColor(color);
+                material = new ColorMaterialProperty(color);
             }
         }
 
@@ -334,24 +352,28 @@ define([
     }
 
     function createPolygon(dataSource, geoJson, crsFunction, coordinates, options) {
+        if (coordinates.length === 0 || coordinates[0].length === 0) {
+            return;
+        }
+
         var outlineColorProperty = options.strokeMaterialProperty.color;
         var material = options.fillMaterialProperty;
         var widthProperty = options.strokeWidthProperty;
 
         var properties = geoJson.properties;
-        if (defined(properties)) {
+        if (definedNotNull(properties)) {
             var width = properties['stroke-width'];
-            if (defined(width)) {
+            if (definedNotNull(width)) {
                 widthProperty = new ConstantProperty(width);
             }
 
             var color;
             var stroke = properties.stroke;
-            if (defined(stroke)) {
+            if (definedNotNull(stroke)) {
                 color = Color.fromCssColorString(stroke);
             }
             var opacity = properties['stroke-opacity'];
-            if (defined(opacity) && opacity !== 1.0) {
+            if (definedNotNull(opacity) && opacity !== 1.0) {
                 if (!defined(color)) {
                     color = options.strokeMaterialProperty.color.clone();
                 }
@@ -364,19 +386,19 @@ define([
 
             var fillColor;
             var fill = properties.fill;
-            if (defined(fill)) {
+            if (definedNotNull(fill)) {
                 fillColor = Color.fromCssColorString(fill);
                 fillColor.alpha = material.color.alpha;
             }
             opacity = properties['fill-opacity'];
-            if (defined(opacity) && opacity !== material.color.alpha) {
+            if (definedNotNull(opacity) && opacity !== material.color.alpha) {
                 if (!defined(fillColor)) {
                     fillColor = material.color.clone();
                 }
                 fillColor.alpha = opacity;
             }
             if (defined(fillColor)) {
-                material = ColorMaterialProperty.fromColor(fillColor);
+                material = new ColorMaterialProperty(fillColor);
             }
         }
 
@@ -385,8 +407,15 @@ define([
         polygon.outlineColor = outlineColorProperty;
         polygon.outlineWidth = widthProperty;
         polygon.material = material;
-        polygon.positions = new ConstantProperty(coordinatesArrayToCartesianArray(coordinates, crsFunction));
-        if (coordinates.length > 0 && coordinates[0].length > 2) {
+
+        var holes = [];
+        for (var i = 1, len = coordinates.length; i < len; i++) {
+            holes.push(new PolygonHierarchy(coordinatesArrayToCartesianArray(coordinates[i], crsFunction)));
+        }
+
+        var positions = coordinates[0];
+        polygon.hierarchy = new ConstantProperty(new PolygonHierarchy(coordinatesArrayToCartesianArray(positions, crsFunction), holes));
+        if (positions[0].length > 2) {
             polygon.perPositionHeight = new ConstantProperty(true);
         }
 
@@ -395,13 +424,13 @@ define([
     }
 
     function processPolygon(dataSource, geoJson, geometry, crsFunction, options) {
-        createPolygon(dataSource, geoJson, crsFunction, geometry.coordinates[0], options);
+        createPolygon(dataSource, geoJson, crsFunction, geometry.coordinates, options);
     }
 
     function processMultiPolygon(dataSource, geoJson, geometry, crsFunction, options) {
         var polygons = geometry.coordinates;
         for (var i = 0; i < polygons.length; i++) {
-            createPolygon(dataSource, geoJson, crsFunction, polygons[i][0], options);
+            createPolygon(dataSource, geoJson, crsFunction, polygons[i], options);
         }
     }
 
@@ -442,7 +471,7 @@ define([
     /**
      * A {@link DataSource} which processes both
      * {@link http://www.geojson.org/|GeoJSON} and {@link https://github.com/mbostock/topojson|TopoJSON} data.
-     * {@link https://github.com/mapbox/simplestyle-spec|Simplestyle} properties will also be used if they
+     * {@link https://github.com/mapbox/simplestyle-spec|simplestyle-spec} properties will also be used if they
      * are present.
      *
      * @alias GeoJsonDataSource
@@ -456,7 +485,7 @@ define([
      *
      * @example
      * var viewer = new Cesium.Viewer('cesiumContainer');
-     * viewer.dataSources.add(Cesium.GeoJsonDataSource.fromUrl('../../SampleData/ne_10m_us_states.topojson', {
+     * viewer.dataSources.add(Cesium.GeoJsonDataSource.load('../../SampleData/ne_10m_us_states.topojson', {
      *   stroke: Cesium.Color.HOTPINK,
      *   fill: Cesium.Color.PINK,
      *   strokeWidth: 3,
@@ -474,11 +503,19 @@ define([
         this._pinBuilder = new PinBuilder();
     };
 
+    GeoJsonDataSource.fromUrl = function(url, options) {
+        deprecationWarning('GeoJsonDataSource.fromUrl', 'GeoJsonDataSource.fromUrl has been deprecated.  Use GeoJsonDataSource.load instead.');
+        var result = new GeoJsonDataSource();
+        result.load(url, options);
+        return result;
+    };
+
     /**
-     * Creates a new instance and asynchronously loads the provided url.
+     * Creates a Promise to a new instance loaded with the provided GeoJSON or TopoJSON data.
      *
-     * @param {Object} url The url to be processed.
+     * @param {String|Object} data A url, GeoJSON object, or TopoJSON object to be loaded.
      * @param {Object} [options] An object with the following properties:
+     * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
      * @param {Number} [options.markerSize=GeoJsonDataSource.markerSize] The default size of the map pin created for each point, in pixels.
      * @param {String} [options.markerSymbol=GeoJsonDataSource.markerSymbol] The default symbol of the map pin created for each point.
      * @param {Color} [options.markerColor=GeoJsonDataSource.markerColor] The default color of the map pin created for each point.
@@ -486,12 +523,10 @@ define([
      * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
      * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
      *
-     * @returns {GeoJsonDataSource} A new instance set to load the specified url.
+     * @returns {Promise} A promise that will resolve when the data is loaded.
      */
-    GeoJsonDataSource.fromUrl = function(url, options) {
-        var result = new GeoJsonDataSource();
-        result.loadUrl(url, options);
-        return result;
+    GeoJsonDataSource.load = function(data, options) {
+        return new GeoJsonDataSource().load(data, options);
     };
 
     defineProperties(GeoJsonDataSource, {
@@ -580,7 +615,7 @@ define([
             },
             set : function(value) {
                 defaultFill = value;
-                defaultFillMaterialProperty = ColorMaterialProperty.fromColor(defaultFill);
+                defaultFillMaterialProperty = new ColorMaterialProperty(defaultFill);
             }
         },
 
@@ -700,11 +735,17 @@ define([
         }
     });
 
+    GeoJsonDataSource.prototype.loadUrl = function(url, options) {
+        deprecationWarning('GeoJsonDataSource.prototype.loadUrl', 'GeoJsonDataSource.loadUrl has been deprecated.  You can now pass a url to GeoJsonDataSource.load.');
+        return this.load(url, options);
+    };
+
     /**
-     * Asynchronously loads the GeoJSON at the provided url, replacing any existing data.
+     * Asynchronously loads the provided GeoJSON or TopoJSON data, replacing any existing data.
      *
-     * @param {Object} url The url to be processed.
+     * @param {String|Object} data A url, GeoJSON object, or TopoJSON object to be loaded.
      * @param {Object} [options] An object with the following properties:
+     * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
      * @param {Number} [options.markerSize=GeoJsonDataSource.markerSize] The default size of the map pin created for each point, in pixels.
      * @param {String} [options.markerSymbol=GeoJsonDataSource.markerSymbol] The default symbol of the map pin created for each point.
      * @param {Color} [options.markerColor=GeoJsonDataSource.markerColor] The default color of the map pin created for each point.
@@ -714,76 +755,46 @@ define([
      *
      * @returns {Promise} a promise that will resolve when the GeoJSON is loaded.
      */
-    GeoJsonDataSource.prototype.loadUrl = function(url, options) {
+    GeoJsonDataSource.prototype.load = function(data, options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(url)) {
-            throw new DeveloperError('url is required.');
+        if (!defined(data)) {
+            throw new DeveloperError('data is required.');
         }
         //>>includeEnd('debug');
 
         DataSource.setLoading(this, true);
 
-        var that = this;
-        return when(loadJson(url), function(geoJson) {
-            return load(that, geoJson, url, options);
-        }).otherwise(function(error) {
-            DataSource.setLoading(that, false);
-            that._error.raiseEvent(that, error);
-            return when.reject(error);
-        });
-    };
-
-    /**
-     * Asynchronously loads the provided GeoJSON object, replacing any existing data.
-     *
-     * @param {Object} geoJson The object to be processed.
-     * @param {Object} [options] An object with the following properties:
-     * @param {String} [options.sourceUri] The base URI of any relative links in the geoJson object.
-     * @param {Number} [options.markerSize=GeoJsonDataSource.markerSize] The default size of the map pin created for each point, in pixels.
-     * @param {String} [options.markerSymbol=GeoJsonDataSource.markerSymbol] The default symbol of the map pin created for each point.
-     * @param {Color} [options.markerColor=GeoJsonDataSource.markerColor] The default color of the map pin created for each point.
-     * @param {Color} [options.stroke=GeoJsonDataSource.stroke] The default color of polylines and polygon outlines.
-     * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
-     * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
-     * @returns {Promise} a promise that will resolve when the GeoJSON is loaded.
-     *
-     * @exception {DeveloperError} Unsupported GeoJSON object type.
-     * @exception {RuntimeError} crs is null.
-     * @exception {RuntimeError} crs.properties is undefined.
-     * @exception {RuntimeError} Unknown crs name.
-     * @exception {RuntimeError} Unable to resolve crs link.
-     * @exception {RuntimeError} Unknown crs type.
-     */
-    GeoJsonDataSource.prototype.load = function(geoJson, options) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(geoJson)) {
-            throw new DeveloperError('geoJson is required.');
-        }
-        //>>includeEnd('debug');
-
-        var sourceUri = options;
-        if (typeof options === 'string') {
-            sourceUri = options;
-            deprecationWarning('GeoJsonDataSource.load', 'GeoJsonDataSource.load now takes an options object instead of a string as its second parameter.  Support for passing a string parameter will be removed in Cesium 1.6');
-        } else if (defined(options)) {
-            sourceUri = options.sourceUri;
-        }
-
-        return load(this, geoJson, sourceUri, options);
-    };
-
-    function load(that, geoJson, sourceUri, options) {
+        var promise = data;
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var sourceUri = options.sourceUri;
+        if (typeof data === 'string') {
+            if (!defined(sourceUri)) {
+                sourceUri = data;
+            }
+            promise = loadJson(data);
+        }
 
         options = {
             markerSize : defaultValue(options.markerSize, defaultMarkerSize),
             markerSymbol : defaultValue(options.markerSymbol, defaultMarkerSymbol),
             markerColor : defaultValue(options.markerColor, defaultMarkerColor),
             strokeWidthProperty : new ConstantProperty(defaultValue(options.strokeWidth, defaultStrokeWidth)),
-            strokeMaterialProperty : ColorMaterialProperty.fromColor(defaultValue(options.stroke, defaultStroke)),
-            fillMaterialProperty : ColorMaterialProperty.fromColor(defaultValue(options.fill, defaultFill))
+            strokeMaterialProperty : new ColorMaterialProperty(defaultValue(options.stroke, defaultStroke)),
+            fillMaterialProperty : new ColorMaterialProperty(defaultValue(options.fill, defaultFill))
         };
 
+        var that = this;
+        return when(promise, function(geoJson) {
+            return load(that, geoJson, options, sourceUri);
+        }).otherwise(function(error) {
+            DataSource.setLoading(that, false);
+            that._error.raiseEvent(that, error);
+            window.console.log(error);
+            return when.reject(error);
+        });
+    };
+
+    function load(that, geoJson, options, sourceUri) {
         var name;
         if (defined(sourceUri)) {
             name = getFilenameFromUri(sourceUri);
@@ -796,7 +807,7 @@ define([
 
         var typeHandler = geoJsonObjectTypes[geoJson.type];
         if (!defined(typeHandler)) {
-            throw new DeveloperError('Unsupported GeoJSON object type: ' + geoJson.type);
+            throw new RuntimeError('Unsupported GeoJSON object type: ' + geoJson.type);
         }
 
         //Check for a Coordinate Reference System.
@@ -837,8 +848,6 @@ define([
             }
         }
 
-        DataSource.setLoading(that, true);
-
         return when(crsFunction, function(crsFunction) {
             that._entityCollection.removeAll();
             typeHandler(that, geoJson, geoJson, crsFunction, options);
@@ -846,11 +855,8 @@ define([
             return when.all(that._promises, function() {
                 that._promises.length = 0;
                 DataSource.setLoading(that, false);
+                return that;
             });
-        }).otherwise(function(error) {
-            DataSource.setLoading(that, false);
-            that._error.raiseEvent(that, error);
-            return when.reject(error);
         });
     }
 

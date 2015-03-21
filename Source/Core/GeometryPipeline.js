@@ -10,7 +10,6 @@ define([
         './ComponentDatatype',
         './defaultValue',
         './defined',
-        './deprecationWarning',
         './DeveloperError',
         './EncodedCartesian3',
         './GeographicProjection',
@@ -38,7 +37,6 @@ define([
         ComponentDatatype,
         defaultValue,
         defined,
-        deprecationWarning,
         DeveloperError,
         EncodedCartesian3,
         GeographicProjection,
@@ -181,7 +179,7 @@ define([
      * @param {Geometry} geometry The <code>Geometry</code> instance with the attribute.
      * @param {String} [attributeName='normal'] The name of the attribute.
      * @param {Number} [length=10000.0] The length of each line segment in meters.  This can be negative to point the vector in the opposite direction.
-     * @returns {Geometry} A new <code>Geometry<code> instance with line segments for the vector.
+     * @returns {Geometry} A new <code>Geometry</code> instance with line segments for the vector.
      *
      * @exception {DeveloperError} geometry.attributes must have an attribute with the same name as the attributeName parameter.
      *
@@ -1046,80 +1044,15 @@ define([
 
         var geometries = [];
         if (instanceGeometry.length > 0) {
-            geometries.push(combineGeometries(instances, 'geometry'));
+            geometries.push(combineGeometries(instanceGeometry, 'geometry'));
         }
 
         if (instanceSplitGeometry.length > 0) {
-            geometries.push(combineGeometries(instances, 'westHemisphereGeometry'));
-            geometries.push(combineGeometries(instances, 'eastHemisphereGeometry'));
+            geometries.push(combineGeometries(instanceSplitGeometry, 'westHemisphereGeometry'));
+            geometries.push(combineGeometries(instanceSplitGeometry, 'eastHemisphereGeometry'));
         }
 
         return geometries;
-    };
-
-    /**
-     * Combines geometry from several {@link GeometryInstance} objects into one geometry.
-     * This concatenates the attributes, concatenates and adjusts the indices, and creates
-     * a bounding sphere encompassing all instances.
-     * <p>
-     * If the instances do not have the same attributes, a subset of attributes common
-     * to all instances is used, and the others are ignored.
-     * </p>
-     * <p>
-     * This is used by {@link Primitive} to efficiently render a large amount of static data.
-     * </p>
-     *
-     * @deprecated
-     *
-     * @param {GeometryInstance[]} [instances] The array of {@link GeometryInstance} objects whose geometry will be combined.
-     * @returns {Geometry} A single geometry created from the provided geometry instances.
-     *
-     * @exception {DeveloperError} All instances must have the same modelMatrix.
-     * @exception {DeveloperError} All instance geometries must have an indices or not have one.
-     * @exception {DeveloperError} All instance geometries must have the same primitiveType.
-     *
-     * @see GeometryPipeline.transformToWorldCoordinates
-     *
-     * @example
-     * for (var i = 0; i < instances.length; ++i) {
-     *   Cesium.GeometryPipeline.transformToWorldCoordinates(instances[i]);
-     * }
-     * var geometry = Cesium.GeometryPipeline.combine(instances);
-     */
-    GeometryPipeline.combine = function(instances) {
-        deprecationWarning('GeometryPipeline.combine', 'GeometryPipeline.combine was deprecated in Cesium 1.4. It will be removed in Cesium 1.5. Use GeometryPipeline.combineInstances.');
-
-        //>>includeStart('debug', pragmas.debug);
-        if ((!defined(instances)) || (instances.length < 1)) {
-            throw new DeveloperError('instances is required and must have length greater than zero.');
-        }
-        //>>includeEnd('debug');
-
-        var instanceGeometry = [];
-        var length = instances.length;
-        for (var i = 0; i < length; ++i) {
-            var instance = instances[i];
-            if (defined(instance.geometry)) {
-                instanceGeometry.push(instance);
-            } else {
-                instanceGeometry.push(new GeometryInstance({
-                    geometry : instance.westHemisphereGeometry,
-                    attributes : instance.attributes,
-                    modelMatrix : instance.modelMatrix,
-                    id : instance.id,
-                    pickPrimitive : instance.pickPrimitive
-                }));
-                instanceGeometry.push(new GeometryInstance({
-                    geometry : instance.eastHemisphereGeometry,
-                    attributes : instance.attributes,
-                    modelMatrix : instance.modelMatrix,
-                    id : instance.id,
-                    pickPrimitive : instance.pickPrimitive
-                }));
-            }
-        }
-
-        return combineGeometries(instanceGeometry, 'geometry');
     };
 
     var normal = new Cartesian3();
@@ -2470,7 +2403,7 @@ define([
         if (defined(boundingSphere)) {
             var minX = boundingSphere.center.x - boundingSphere.radius;
             if (minX > 0 || BoundingSphere.intersect(boundingSphere, Cartesian4.UNIT_Y) !== Intersect.INTERSECTING) {
-                return geometry;
+                return instance;
             }
         }
 
@@ -2496,48 +2429,6 @@ define([
         }
 
         return instance;
-    };
-
-    /**
-     * Splits the geometry's primitives, by introducing new vertices and indices,that
-     * intersect the International Date Line so that no primitives cross longitude
-     * -180/180 degrees.  This is not required for 3D drawing, but is required for
-     * correcting drawing in 2D and Columbus view.
-     *
-     * @deprecated
-     *
-     * @param {Geometry} geometry The geometry to modify.
-     * @returns {Geometry} The modified <code>geometry</code> argument, with it's primitives split at the International Date Line.
-     *
-     * @example
-     * geometry = Cesium.GeometryPipeline.wrapLongitude(geometry);
-     */
-    GeometryPipeline.wrapLongitude = function(geometry) {
-        deprecationWarning('GeometryPipeline.wrapLongitude', 'GeometryPipeline.wrapLongitude was deprecated in Cesium 1.4. It will be removed in Cesium 1.5. Use GeometryPipeline.splitLongitude.');
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(geometry)) {
-            throw new DeveloperError('geometry is required.');
-        }
-        //>>includeEnd('debug');
-
-        var instance = GeometryPipeline.splitLongitude(new GeometryInstance({
-            geometry : geometry
-        }));
-
-        if (defined(instance.geometry)) {
-            return instance.geometry;
-        }
-
-        var instances = [instance, new GeometryInstance({
-            geometry : instance.westHemisphereGeometry
-        })];
-
-        instance.geometry = instance.eastHemisphereGeometry;
-        delete instance.eastHemisphereGeometry;
-        delete instance.westHemisphereGeometry;
-
-        return GeometryPipeline.combine(instances);
     };
 
     return GeometryPipeline;

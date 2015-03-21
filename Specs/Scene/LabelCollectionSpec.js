@@ -16,7 +16,6 @@ defineSuite([
         'Specs/createCamera',
         'Specs/createContext',
         'Specs/createFrameState',
-        'Specs/destroyContext',
         'Specs/pick',
         'Specs/render'
     ], function(
@@ -36,11 +35,10 @@ defineSuite([
         createCamera,
         createContext,
         createFrameState,
-        destroyContext,
         pick,
         render) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     // TODO: rendering tests for pixel offset, eye offset, horizontal origin, vertical origin, font, style, outlineColor, outlineWidth, and fillColor properties
 
@@ -64,7 +62,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     beforeEach(function() {
@@ -589,24 +587,16 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
         var us = context.uniformState;
-        var eye = new Cartesian3(0.0, 0.0, 1.0);
-        var target = Cartesian3.ZERO;
-        var up = Cartesian3.UNIT_Y;
         us.update(context, createFrameState(createCamera({
-            eye : eye,
-            target : target,
-            up : up
+            offset : new Cartesian3(0.0, 0.0, 1.0)
         })));
         render(context, frameState, labels);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        eye = new Cartesian3(0.0, 0.0, 6.0);
         us.update(context, createFrameState(createCamera({
-            eye : eye,
-            target : target,
-            up : up
+            offset : new Cartesian3(0.0, 0.0, 6.0)
         })));
         render(context, frameState, labels);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -626,24 +616,16 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
         var us = context.uniformState;
-        var eye = new Cartesian3(0.0, 0.0, 1.0);
-        var target = Cartesian3.ZERO;
-        var up = Cartesian3.UNIT_Y;
         us.update(context, createFrameState(createCamera({
-            eye : eye,
-            target : target,
-            up : up
+            offset : new Cartesian3(0.0, 0.0, 1.0)
         })));
         render(context, frameState, labels);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        eye = new Cartesian3(0.0, 0.0, 6.0);
         us.update(context, createFrameState(createCamera({
-            eye : eye,
-            target : target,
-            up : up
+            offset : new Cartesian3(0.0, 0.0, 6.0)
         })));
         render(context, frameState, labels);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);

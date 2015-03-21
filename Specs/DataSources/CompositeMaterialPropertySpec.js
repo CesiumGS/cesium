@@ -16,7 +16,7 @@ defineSuite([
         ColorMaterialProperty,
         GridMaterialProperty) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('default constructor has expected values', function() {
         var property = new CompositeMaterialProperty();
@@ -113,13 +113,13 @@ defineSuite([
         var interval1 = new TimeInterval({
             start : new JulianDate(10, 0),
             stop : new JulianDate(12, 0),
-            data : ColorMaterialProperty.fromColor(Color.RED)
+            data : new ColorMaterialProperty(Color.RED)
         });
         var interval2 = new TimeInterval({
             start : new JulianDate(12, 0),
             stop : new JulianDate(14, 0),
             isStartIncluded : false,
-            data : ColorMaterialProperty.fromColor(Color.YELLOW)
+            data : new ColorMaterialProperty(Color.YELLOW)
         });
 
         var property = new CompositeMaterialProperty();
@@ -128,36 +128,36 @@ defineSuite([
 
         property.intervals.addInterval(interval1);
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
 
         property.intervals.addInterval(interval2);
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
 
         property.intervals.removeInterval(interval2);
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
 
         interval1.data.color.setValue(Color.BLUE);
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
 
         property.intervals.removeAll();
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
     });
 
     it('does not raise definitionChanged for an overwritten interval', function() {
         var interval1 = new TimeInterval({
             start : new JulianDate(11, 0),
             stop : new JulianDate(13, 0),
-            data : ColorMaterialProperty.fromColor(Color.RED)
+            data : new ColorMaterialProperty(Color.RED)
         });
         var interval2 = new TimeInterval({
             start : new JulianDate(10, 0),
             stop : new JulianDate(14, 0),
             isStartIncluded : false,
-            data : ColorMaterialProperty.fromColor(Color.YELLOW)
+            data : new ColorMaterialProperty(Color.YELLOW)
         });
 
         var property = new CompositeMaterialProperty();
@@ -166,11 +166,11 @@ defineSuite([
 
         property.intervals.addInterval(interval1);
         property.intervals.addInterval(interval2);
-        expect(listener.callCount).toBe(2);
+        expect(listener.calls.count()).toBe(2);
 
-        //interval2 overwrites interval1, so callCount should not increase.
+        //interval2 overwrites interval1, so calls.count() should not increase.
         interval1.data.color.setValue(Color.BLUE);
-        expect(listener.callCount).toBe(2);
+        expect(listener.calls.count()).toBe(2);
     });
 
     it('getValue throws with no time parameter', function() {

@@ -6,7 +6,8 @@ defineSuite([
         'Core/Color',
         'Core/Ellipsoid',
         'Core/Math',
-        'Core/PrimitiveType'
+        'Core/PrimitiveType',
+        'Specs/createPackableSpecs'
     ], function(
         SimplePolylineGeometry,
         BoundingSphere,
@@ -14,9 +15,10 @@ defineSuite([
         Color,
         Ellipsoid,
         CesiumMath,
-        PrimitiveType) {
+        PrimitiveType,
+        createPackableSpecs) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('constructor throws with no positions', function() {
         expect(function() {
@@ -132,4 +134,26 @@ defineSuite([
         var numVertices = positions.length;
         expect(line.attributes.color.values.length).toEqual(numVertices * 4);
     });
+
+    var positions = [new Cartesian3(1, 2, 3), new Cartesian3(4, 5, 6), new Cartesian3(7, 8, 9)];
+    var line = new SimplePolylineGeometry({
+        positions : positions,
+        colors : [Color.RED, Color.LIME, Color.BLUE],
+        colorsPerVertex : true,
+        followSurface : false,
+        granularity : 11,
+        ellipsoid : new Ellipsoid(12, 13, 14)
+    });
+    var packedInstance = [3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 3, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 12, 13, 14, 1, 0, 11];
+    createPackableSpecs(SimplePolylineGeometry, line, packedInstance, "per vertex colors");
+
+    line = new SimplePolylineGeometry({
+        positions : positions,
+        colorsPerVertex : false,
+        followSurface : false,
+        granularity : 11,
+        ellipsoid : new Ellipsoid(12, 13, 14)
+    });
+    packedInstance = [3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 12, 13, 14, 0, 0, 11];
+    createPackableSpecs(SimplePolylineGeometry, line, packedInstance);
 });

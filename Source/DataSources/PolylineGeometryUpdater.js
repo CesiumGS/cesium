@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/BoundingSphere',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
@@ -17,11 +18,13 @@ define([
         '../Scene/PolylineCollection',
         '../Scene/PolylineColorAppearance',
         '../Scene/PolylineMaterialAppearance',
+        './BoundingSphereState',
         './ColorMaterialProperty',
         './ConstantProperty',
         './MaterialProperty',
         './Property'
     ], function(
+        BoundingSphere,
         Color,
         ColorGeometryInstanceAttribute,
         defaultValue,
@@ -39,6 +42,7 @@ define([
         PolylineCollection,
         PolylineColorAppearance,
         PolylineMaterialAppearance,
+        BoundingSphereState,
         ColorMaterialProperty,
         ConstantProperty,
         MaterialProperty,
@@ -48,7 +52,7 @@ define([
     //We use this object to create one polyline collection per-scene.
     var polylineCollections = {};
 
-    var defaultMaterial = ColorMaterialProperty.fromColor(Color.WHITE);
+    var defaultMaterial = new ColorMaterialProperty(Color.WHITE);
     var defaultShow = new ConstantProperty(true);
 
     var GeometryOptions = function(entity) {
@@ -427,9 +431,11 @@ define([
         var sceneId = geometryUpdater._scene.id;
 
         var polylineCollection = polylineCollections[sceneId];
-        if (!defined(polylineCollection)) {
+        if (!defined(polylineCollection) || polylineCollection.isDestroyed()) {
             polylineCollection = new PolylineCollection();
             polylineCollections[sceneId] = polylineCollection;
+            primitives.add(polylineCollection);
+        } else if (!primitives.contains(polylineCollection)) {
             primitives.add(polylineCollection);
         }
 
@@ -442,35 +448,60 @@ define([
         this._positions = [];
     };
 
+    var generateCartesianArcOptions = {
+        positions : undefined,
+        granularity : undefined,
+        height : undefined
+    };
+
     DynamicGeometryUpdater.prototype.update = function(time) {
         var geometryUpdater = this._geometryUpdater;
         var entity = geometryUpdater._entity;
         var polyline = entity.polyline;
-        var primitive = this._line;
+        var line = this._line;
 
-        var show = entity.isAvailable(time) && Property.getValueOrDefault(polyline._show, time, true);
-        if (!show) {
-            primitive.show = false;
+        if (!entity.isAvailable(time) || !Property.getValueOrDefault(polyline._show, time, true)) {
+            line.show = false;
             return;
         }
 
         var positionsProperty = polyline.positions;
-        var positions = positionsProperty.getValue(time, this._positions);
+        var positions = Property.getValueOrUndefined(positionsProperty, time, this._positions);
+        if (!defined(positions) || positions.length < 2) {
+            line.show = false;
+            return;
+        }
 
         var followSurface = Property.getValueOrDefault(polyline._followSurface, time, true);
         if (followSurface) {
-            var granularity = Property.getValueOrUndefined(polyline._granularity, time);
-            positions = PolylinePipeline.generateCartesianArc({
-                positions : positions,
-                granularity : granularity,
-                height : PolylinePipeline.extractHeights(positions, Ellipsoid.WGS84)
-            });
+            generateCartesianArcOptions.positions = positions;
+            generateCartesianArcOptions.granularity = Property.getValueOrUndefined(polyline._granularity, time);
+            generateCartesianArcOptions.height = PolylinePipeline.extractHeights(positions, this._geometryUpdater._scene.globe.ellipsoid);
+            positions = PolylinePipeline.generateCartesianArc(generateCartesianArcOptions);
         }
 
-        primitive.show = true;
-        primitive.positions = positions;
-        primitive.material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, primitive.material);
-        primitive.width = Property.getValueOrDefault(polyline._width, time, 1);
+        line.show = true;
+        line.positions = positions;
+        line.material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, line.material);
+        line.width = Property.getValueOrDefault(polyline._width, time, 1);
+    };
+
+    DynamicGeometryUpdater.prototype.getBoundingSphere = function(entity, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(entity)) {
+            throw new DeveloperError('entity is required.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required.');
+        }
+        //>>includeEnd('debug');
+
+        var line = this._line;
+        if (line.show && line.positions.length > 0) {
+            BoundingSphere.fromPoints(line.positions, result);
+            return BoundingSphereState.DONE;
+        }
+        return BoundingSphereState.FAILED;
     };
 
     DynamicGeometryUpdater.prototype.isDestroyed = function() {
@@ -483,10 +514,7 @@ define([
         var polylineCollection = polylineCollections[sceneId];
         polylineCollection.remove(this._line);
         if (polylineCollection.length === 0) {
-            this._primitives.remove(polylineCollection);
-            if (!polylineCollection.isDestroyed()) {
-                polylineCollection.destroy();
-            }
+            this._primitives.removeAndDestroy(polylineCollection);
             delete polylineCollections[sceneId];
         }
         destroyObject(this);

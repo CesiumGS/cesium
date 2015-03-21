@@ -5,6 +5,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
+        './createMaterialPropertyDescriptor',
         './createPropertyDescriptor'
     ], function(
         defaultValue,
@@ -12,16 +13,38 @@ define([
         defineProperties,
         DeveloperError,
         Event,
+        createMaterialPropertyDescriptor,
         createPropertyDescriptor) {
     "use strict";
 
     /**
-     * An optionally time-dynamic Rectangle.
+     * Describes graphics for a {@link Rectangle}.
+     * The rectangle conforms to the curvature of the globe and can be placed on the surface or
+     * at altitude and can optionally be extruded into a volume.
      *
      * @alias RectangleGraphics
      * @constructor
+     *
+     * @param {Object} [options] Object with the following properties:
+     * @param {Property} [options.coordinates] The Property specifying the {@link Rectangle}.
+     * @param {Property} [options.height=0] A numeric Property specifying the altitude of the rectangle.
+     * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the rectangle extrusion.
+     * @param {Property} [options.closeTop=true] A boolean Property specifying whether the rectangle has a top cover when extruded
+     * @param {Property} [options.closeBottom=true] A boolean Property specifying whether the rectangle has a bottom cover when extruded.
+     * @param {Property} [options.show=true] A boolean Property specifying the visibility of the rectangle.
+     * @param {Property} [options.fill=true] A boolean Property specifying whether the rectangle is filled with the provided material.
+     * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the rectangle.
+     * @param {Property} [options.outline=false] A boolean Property specifying whether the rectangle is outlined.
+     * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
+     * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
+     * @param {Property} [options.rotation=0.0] A numeric property specifying the rotation of the rectangle clockwise from north.
+     * @param {Property} [options.stRotation=0.0] A numeric property specifying the rotation of the rectangle texture counter-clockwise from north.
+     * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between points on the rectangle.
+     *
+     * @see Entity
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Rectangle.html|Cesium Sandcastle Rectangle Demo}
      */
-    var RectangleGraphics = function() {
+    var RectangleGraphics = function(options) {
         this._show = undefined;
         this._showSubscription = undefined;
         this._material = undefined;
@@ -42,6 +65,8 @@ define([
         this._closeTopSubscription = undefined;
         this._closeBottom = undefined;
         this._closeBottomSubscription = undefined;
+        this._fill = undefined;
+        this._fillSubscription = undefined;
         this._outline = undefined;
         this._outlineSubscription = undefined;
         this._outlineColor = undefined;
@@ -49,11 +74,13 @@ define([
         this._outlineWidth = undefined;
         this._outlineWidthSubscription = undefined;
         this._definitionChanged = new Event();
+
+        this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     };
 
     defineProperties(RectangleGraphics.prototype, {
         /**
-         * Gets the event that is raised whenever a new property is assigned.
+         * Gets the event that is raised whenever a property or sub-property is changed or modified.
          * @memberof RectangleGraphics.prototype
          *
          * @type {Event}
@@ -66,119 +93,126 @@ define([
         },
 
         /**
-         * Gets or sets the boolean {@link Property} specifying the rectangle's visibility.
+         * Gets or sets the boolean Property specifying the visibility of the rectangle.
          * @memberof RectangleGraphics.prototype
          * @type {Property}
+         * @default true
          */
         show : createPropertyDescriptor('show'),
 
         /**
-         * Gets or sets the {@link Rectangle} {@link Property} specifying the extent.
+         * Gets or sets the Property specifying the {@link Rectangle}.
          * @memberof RectangleGraphics.prototype
          * @type {Property}
          */
         coordinates : createPropertyDescriptor('coordinates'),
 
         /**
-         * Gets or sets the {@link MaterialProperty} specifying the appearance of the rectangle.
+         * Gets or sets the Property specifying the material used to fill the rectangle.
          * @memberof RectangleGraphics.prototype
          * @type {MaterialProperty}
+         * @default Color.WHITE
          */
-        material : createPropertyDescriptor('material'),
+        material : createMaterialPropertyDescriptor('material'),
 
         /**
-         * Gets or sets the Number {@link Property} specifying the height of the rectangle.
-         * If undefined, the rectangle will be on the surface.
+         * Gets or sets the numeric Property specifying the altitude of the rectangle.
          * @memberof RectangleGraphics.prototype
          * @type {Property}
+         * @default 0.0
          */
         height : createPropertyDescriptor('height'),
 
         /**
-         * Gets or sets the Number {@link Property} specifying the extruded height of the rectangle.
-         * Setting this property creates a rectangle shaped volume starting at height and ending
-         * at the extruded height.
+         * Gets or sets the numeric Property specifying the altitude of the rectangle extrusion.
+         * Setting this property creates volume starting at height and ending at this altitude.
          * @memberof RectangleGraphics.prototype
          * @type {Property}
          */
         extrudedHeight : createPropertyDescriptor('extrudedHeight'),
 
         /**
-         * Gets or sets the Number {@link Property} specifying the sampling distance, in radians,
-         * between each latitude and longitude point.
+         * Gets or sets the numeric Property specifying the angular distance between points on the rectangle.
          * @memberof RectangleGraphics.prototype
          * @type {Property}
+         * @default {CesiumMath.RADIANS_PER_DEGREE}
          */
         granularity : createPropertyDescriptor('granularity'),
 
         /**
-         * Gets or sets the Number {@link Property} specifying the rotation of the texture coordinates,
-         * in radians. A positive rotation is counter-clockwise.
+         * Gets or sets the numeric property specifying the rotation of the rectangle texture counter-clockwise from north.
          * @memberof RectangleGraphics.prototype
          * @type {Property}
+         * @default 0
          */
         stRotation : createPropertyDescriptor('stRotation'),
 
         /**
-         * Gets or sets the Number {@link Property} specifying the rotation of the texture coordinates,
-         * in radians. A positive rotation is counter-clockwise.
+         * Gets or sets the numeric property specifying the rotation of the rectangle clockwise from north.
          * @memberof RectangleGraphics.prototype
          * @type {Property}
+         * @default 0
          */
         rotation : createPropertyDescriptor('rotation'),
 
         /**
-         * Gets or sets the Boolean {@link Property} specifying whether the rectangle should be filled.
+         * Gets or sets the boolean Property specifying whether the rectangle is filled with the provided material.
          * @memberof RectangleGraphics.prototype
          * @type {Property}
+         * @default true
          */
         fill : createPropertyDescriptor('fill'),
 
         /**
-         * Gets or sets the Boolean {@link Property} specifying whether the rectangle should be outlined.
+         * Gets or sets the Property specifying whether the rectangle is outlined.
          * @memberof RectangleGraphics.prototype
          * @type {Property}
+         * @default false
          */
         outline : createPropertyDescriptor('outline'),
 
         /**
-         * Gets or sets the Color {@link Property} specifying whether the color of the outline.
+         * Gets or sets the Property specifying the {@link Color} of the outline.
          * @memberof RectangleGraphics.prototype
          * @type {Property}
+         * @default Color.BLACK
          */
         outlineColor : createPropertyDescriptor('outlineColor'),
 
         /**
-         * Gets or sets the Number {@link Property} specifying the width of the outline.
-         * @memberof EllipseGraphics.prototype
+         * Gets or sets the numeric Property specifying the width of the outline.
+         * @memberof RectangleGraphics.prototype
          * @type {Property}
+         * @default 1.0
          */
         outlineWidth : createPropertyDescriptor('outlineWidth'),
 
         /**
-         * Gets or sets the Boolean {@link Property} specifying whether an extruded rectangle should have a closed top.
+         * Gets or sets the boolean Property specifying whether the rectangle has a top cover when extruded.
          * @memberof RectangleGraphics.prototype
          * @type {Property}
+         * @default true
          */
         closeTop : createPropertyDescriptor('closeTop'),
 
         /**
-         * Gets or sets the Boolean {@link Property} specifying whether an extruded rectangle should have a closed bottom.
+         * Gets or sets the boolean Property specifying whether the rectangle has a bottom cover when extruded.
          * @memberof RectangleGraphics.prototype
          * @type {Property}
+         * @default true
          */
         closeBottom : createPropertyDescriptor('closeBottom')
     });
 
     /**
-     * Duplicates a RectangleGraphics instance.
+     * Duplicates this instance.
      *
      * @param {RectangleGraphics} [result] The object onto which to store the result.
      * @returns {RectangleGraphics} The modified result parameter or a new instance if one was not provided.
      */
     RectangleGraphics.prototype.clone = function(result) {
         if (!defined(result)) {
-            result = new RectangleGraphics();
+            return new RectangleGraphics(this);
         }
         result.show = this.show;
         result.coordinates = this.coordinates;

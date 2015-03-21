@@ -11,6 +11,7 @@ define([
         '../Core/GeographicProjection',
         '../Core/Geometry',
         '../Core/GeometryAttribute',
+        '../Core/GeometryAttributes',
         '../Core/GeometryPipeline',
         '../Core/IndexDatatype',
         '../Core/Matrix4',
@@ -27,6 +28,7 @@ define([
         GeographicProjection,
         Geometry,
         GeometryAttribute,
+        GeometryAttributes,
         GeometryPipeline,
         IndexDatatype,
         Matrix4,
@@ -61,7 +63,7 @@ define([
             }
         } else {
             // Leave geometry in local coordinate system; auto update model-matrix.
-            Matrix4.clone(instances[0].modelMatrix, primitiveModelMatrix);
+            Matrix4.multiplyTransformation(primitiveModelMatrix, instances[0].modelMatrix, primitiveModelMatrix);
         }
     }
 
@@ -329,6 +331,13 @@ define([
     function computePerInstanceAttributeLocationsForGeometry(instanceIndex, geometry, instanceAttributes, names, attributeLocations, vertexArrays, indices, offsets, vaIndices) {
         var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
 
+        if (!defined(indices[instanceIndex])) {
+            indices[instanceIndex] = {
+                boundingSphere : geometry.boundingSphere,
+                boundingSphereCV : geometry.boundingSphereCV
+            };
+        }
+
         var namesLength = names.length;
         for (var j = 0; j < namesLength; ++j) {
             var name = names[j];
@@ -348,13 +357,10 @@ define([
                     }
                 }
 
-                if (!defined(indices[instanceIndex])) {
-                    indices[instanceIndex] = {};
-                }
-
                 if (!defined(indices[instanceIndex][name])) {
                     indices[instanceIndex][name] = {
                         dirty : false,
+                        valid : true,
                         value : instanceAttributes[name].value,
                         indices : []
                     };
@@ -388,23 +394,58 @@ define([
         }
     }
 
-    function computePerInstanceAttributeLocations(instances, vertexArrays, attributeLocations) {
+    function computePerInstanceAttributeLocations(instances, invalidInstances, vertexArrays, attributeLocations, names) {
         var indices = [];
 
-        var names = getCommonPerInstanceAttributeNames(instances);
         var length = instances.length;
         var offsets = {};
         var vaIndices = {};
 
-        for (var i = 0; i < length; ++i) {
-            var instance = instances[i];
-            var attributes = instance.attributes;
+        var i;
+        var instance;
+        var attributes;
 
+        for (i = 0; i < length; ++i) {
+            instance = instances[i];
+            attributes = instance.attributes;
             if (defined(instance.geometry)) {
                 computePerInstanceAttributeLocationsForGeometry(i, instance.geometry, attributes, names, attributeLocations, vertexArrays, indices, offsets, vaIndices);
-            } else {
+            }
+        }
+
+        for (i = 0; i < length; ++i) {
+            instance = instances[i];
+            attributes = instance.attributes;
+            if (defined(instance.westHemisphereGeometry)) {
                 computePerInstanceAttributeLocationsForGeometry(i, instance.westHemisphereGeometry, attributes, names, attributeLocations, vertexArrays, indices, offsets, vaIndices);
+            }
+        }
+
+        for (i = 0; i < length; ++i) {
+            instance = instances[i];
+            attributes = instance.attributes;
+            if (defined(instance.eastHemisphereGeometry)) {
                 computePerInstanceAttributeLocationsForGeometry(i, instance.eastHemisphereGeometry, attributes, names, attributeLocations, vertexArrays, indices, offsets, vaIndices);
+            }
+        }
+
+        length = invalidInstances.length;
+        for (i = 0; i < length; ++i) {
+            instance = invalidInstances[i];
+            attributes = instance.attributes;
+
+            var instanceAttributes = {};
+            indices.push(instanceAttributes);
+
+            var namesLength = names.length;
+            for (var j = 0; j < namesLength; ++j) {
+                var name = names[j];
+                instanceAttributes[name] = {
+                    dirty : false,
+                    valid : false,
+                    value : attributes[name].value,
+                    indices : []
+                };
             }
         }
 
@@ -420,27 +461,40 @@ define([
      * @private
      */
     PrimitivePipeline.combineGeometry = function(parameters) {
-        var geometries = geometryPipeline(parameters);
-        var attributeLocations = GeometryPipeline.createAttributeLocations(geometries[0]);
+        var geometries;
+        var attributeLocations;
+        var perInstanceAttributes;
+        var perInstanceAttributeNames;
+        var length;
 
         var instances = parameters.instances;
-        var perInstanceAttributeNames = getCommonPerInstanceAttributeNames(instances);
+        var invalidInstances = parameters.invalidInstances;
 
-        var perInstanceAttributes = [];
-        var length = geometries.length;
-        for (var i = 0; i < length; ++i) {
-            var geometry = geometries[i];
-            perInstanceAttributes.push(createPerInstanceVAAttributes(geometry, attributeLocations, perInstanceAttributeNames));
+        if (instances.length > 0) {
+            geometries = geometryPipeline(parameters);
+            attributeLocations = GeometryPipeline.createAttributeLocations(geometries[0]);
+
+            perInstanceAttributeNames = getCommonPerInstanceAttributeNames(instances);
+
+            perInstanceAttributes = [];
+            length = geometries.length;
+            for (var i = 0; i < length; ++i) {
+                var geometry = geometries[i];
+                perInstanceAttributes.push(createPerInstanceVAAttributes(geometry, attributeLocations, perInstanceAttributeNames));
+            }
         }
 
-        var indices = computePerInstanceAttributeLocations(instances, perInstanceAttributes, attributeLocations);
+        perInstanceAttributeNames = defined(perInstanceAttributeNames) ? perInstanceAttributeNames : getCommonPerInstanceAttributeNames(invalidInstances);
+        var indices = computePerInstanceAttributeLocations(instances, invalidInstances, perInstanceAttributes, attributeLocations, perInstanceAttributeNames);
 
         return {
             geometries : geometries,
             modelMatrix : parameters.modelMatrix,
             attributeLocations : attributeLocations,
             vaAttributes : perInstanceAttributes,
-            vaAttributeLocations : indices
+            vaAttributeLocations : indices,
+            validInstancesIndices : parameters.validInstancesIndices,
+            invalidInstancesIndices : parameters.invalidInstancesIndices
         };
     };
 
@@ -488,6 +542,12 @@ define([
         var length = items.length;
         for (var i = 0; i < length; i++) {
             var geometry = items[i];
+            ++count;
+
+            if (!defined(geometry)) {
+                continue;
+            }
+
             var attributes = geometry.attributes;
 
             count += 6 + 2 * BoundingSphere.packedLength + (defined(geometry.indices) ? geometry.indices.length : 0);
@@ -516,6 +576,13 @@ define([
         packedData[count++] = length;
         for (var i = 0; i < length; i++) {
             var geometry = items[i];
+
+            var validGeometry = defined(geometry);
+            packedData[count++] = validGeometry ? 1.0 : 0.0;
+
+            if (!validGeometry) {
+                continue;
+            }
 
             packedData[count++] = geometry.primitiveType;
             packedData[count++] = geometry.geometryType;
@@ -591,6 +658,12 @@ define([
 
         var packedGeometryIndex = 1;
         while (packedGeometryIndex < packedGeometry.length) {
+            var valid = packedGeometry[packedGeometryIndex++] === 1.0;
+            if (!valid) {
+                result[resultIndex++] = undefined;
+                continue;
+            }
+
             var primitiveType = packedGeometry[packedGeometryIndex++];
             var geometryType = packedGeometry[packedGeometryIndex++];
 
@@ -614,7 +687,7 @@ define([
             var length;
             var values;
             var componentsPerAttribute;
-            var attributes = {};
+            var attributes = new GeometryAttributes();
             var numAttributes = packedGeometry[packedGeometryIndex++];
             for (i = 0; i < numAttributes; i++) {
                 var name = stringTable[packedGeometry[packedGeometryIndex++]];
@@ -788,10 +861,16 @@ define([
         var count = 1 + length;
         for (var i = 0; i < length; i++) {
             var instance = attributeLocations[i];
+
+            count += 2;
+            count += defined(instance.boundingSphere) ? BoundingSphere.packedLength : 0.0;
+            count += defined(instance.boundingSphereCV) ? BoundingSphere.packedLength : 0.0;
+
             for ( var propertyName in instance) {
-                if (instance.hasOwnProperty(propertyName) && defined(instance[propertyName])) {
+                if (instance.hasOwnProperty(propertyName) && defined(instance[propertyName]) &&
+                        propertyName !== 'boundingSphere' && propertyName !== 'boundingSphereCV') {
                     var property = instance[propertyName];
-                    count += 3 + (property.indices.length * 3) + property.value.length;
+                    count += 4 + (property.indices.length * 3) + property.value.length;
                 }
             }
         }
@@ -810,9 +889,26 @@ define([
         for (var i = 0; i < length; i++) {
             var instance = attributeLocations[i];
 
+            var boundingSphere = instance.boundingSphere;
+            var hasBoundingSphere = defined(boundingSphere);
+            packedData[count++] = hasBoundingSphere ? 1.0 : 0.0;
+            if (hasBoundingSphere) {
+                BoundingSphere.pack(boundingSphere, packedData, count);
+                count += BoundingSphere.packedLength;
+            }
+
+            boundingSphere = instance.boundingSphereCV;
+            hasBoundingSphere = defined(boundingSphere);
+            packedData[count++] = hasBoundingSphere ? 1.0 : 0.0;
+            if (hasBoundingSphere) {
+                BoundingSphere.pack(boundingSphere, packedData, count);
+                count += BoundingSphere.packedLength;
+            }
+
             var propertiesToWrite = [];
             for ( var propertyName in instance) {
-                if (instance.hasOwnProperty(propertyName) && defined(instance[propertyName])) {
+                if (instance.hasOwnProperty(propertyName) && defined(instance[propertyName]) &&
+                        propertyName !== 'boundingSphere' && propertyName !== 'boundingSphereCV') {
                     propertiesToWrite.push(propertyName);
                     if (!defined(stringHash[propertyName])) {
                         stringHash[propertyName] = stringTable.length;
@@ -826,6 +922,7 @@ define([
                 var name = propertiesToWrite[q];
                 var property = instance[name];
                 packedData[count++] = stringHash[name];
+                packedData[count++] = property.valid ? 1.0 : 0.0;
 
                 var indices = property.indices;
                 var indicesLength = indices.length;
@@ -868,12 +965,27 @@ define([
         var packedDataLength = packedData.length;
         while (i < packedDataLength) {
             var instance = {};
+
+            var hasBoundingSphere = packedData[i++] === 1.0;
+            if (hasBoundingSphere) {
+                instance.boundingSphere = BoundingSphere.unpack(packedData, i);
+                i += BoundingSphere.packedLength;
+            }
+
+            hasBoundingSphere = packedData[i++] === 1.0;
+            if (hasBoundingSphere) {
+                instance.boundingSphereCV = BoundingSphere.unpack(packedData, i);
+                i += BoundingSphere.packedLength;
+            }
+
             var numAttributes = packedData[i++];
             for (var x = 0; x < numAttributes; x++) {
                 var name = stringTable[packedData[i++]];
+                var valid = packedData[i++] === 1.0;
 
-                var indices = new Array(packedData[i++]);
-                for (var indicesIndex = 0; indicesIndex < indices.length; indicesIndex++) {
+                var indicesLength = packedData[i++];
+                var indices = indicesLength > 0 ? new Array(indicesLength) : undefined;
+                for (var indicesIndex = 0; indicesIndex < indicesLength; indicesIndex++) {
                     var index = {};
                     index.count = packedData[i++];
                     index.offset = packedData[i++];
@@ -882,13 +994,14 @@ define([
                 }
 
                 var valueLength = packedData[i++];
-                var value = ComponentDatatype.createTypedArray(indices[0].attribute.componentDatatype, valueLength);
+                var value = valid ? ComponentDatatype.createTypedArray(indices[0].attribute.componentDatatype, valueLength) : new Array(valueLength);
                 for (var valueIndex = 0; valueIndex < valueLength; valueIndex++) {
                     value[valueIndex] = packedData[i++];
                 }
 
                 instance[name] = {
                     dirty : false,
+                    valid : valid,
                     indices : indices,
                     value : value
                 };
@@ -935,16 +1048,38 @@ define([
      */
     PrimitivePipeline.unpackCombineGeometryParameters = function(packedParameters) {
         var instances = unpackInstancesForCombine(packedParameters.packedInstances);
-        var pickIds = packedParameters.allowPicking ? unpackPickIds(packedParameters.packedPickIds) : undefined;
+        var allowPicking = packedParameters.allowPicking;
+        var pickIds = allowPicking ? unpackPickIds(packedParameters.packedPickIds) : undefined;
         var createGeometryResults = packedParameters.createGeometryResults;
         var length = createGeometryResults.length;
         var instanceIndex = 0;
+
+        var validInstances = [];
+        var invalidInstances = [];
+        var validInstancesIndices = [];
+        var invalidInstancesIndices = [];
+        var validPickIds = [];
 
         for (var resultIndex = 0; resultIndex < length; resultIndex++) {
             var geometries = PrimitivePipeline.unpackCreateGeometryResults(createGeometryResults[resultIndex]);
             var geometriesLength = geometries.length;
             for (var geometryIndex = 0; geometryIndex < geometriesLength; geometryIndex++) {
-                instances[instanceIndex++].geometry = geometries[geometryIndex];
+                var geometry = geometries[geometryIndex];
+                var instance = instances[instanceIndex];
+
+                if (defined(geometry)) {
+                    instance.geometry = geometry;
+                    validInstances.push(instance);
+                    validInstancesIndices.push(instanceIndex);
+                    if (allowPicking) {
+                        validPickIds.push(pickIds[instanceIndex]);
+                    }
+                } else {
+                    invalidInstances.push(instance);
+                    invalidInstancesIndices.push(instanceIndex);
+                }
+
+                ++instanceIndex;
             }
         }
 
@@ -952,8 +1087,11 @@ define([
         var projection = packedParameters.isGeographic ? new GeographicProjection(ellipsoid) : new WebMercatorProjection(ellipsoid);
 
         return {
-            instances : instances,
-            pickIds : pickIds,
+            instances : validInstances,
+            invalidInstances : invalidInstances,
+            validInstancesIndices : validInstancesIndices,
+            invalidInstancesIndices : invalidInstancesIndices,
+            pickIds : validPickIds,
             ellipsoid : ellipsoid,
             projection : projection,
             elementIndexUintSupported : packedParameters.elementIndexUintSupported,
@@ -969,15 +1107,19 @@ define([
      * @private
      */
     PrimitivePipeline.packCombineGeometryResults = function(results, transferableObjects) {
-        transferGeometries(results.geometries, transferableObjects);
-        transferPerInstanceAttributes(results.vaAttributes, transferableObjects);
+        if (defined(results.geometries)) {
+            transferGeometries(results.geometries, transferableObjects);
+            transferPerInstanceAttributes(results.vaAttributes, transferableObjects);
+        }
 
         return {
             geometries : results.geometries,
             attributeLocations : results.attributeLocations,
             vaAttributes : results.vaAttributes,
             packedVaAttributeLocations : packAttributeLocations(results.vaAttributeLocations, transferableObjects),
-            modelMatrix : results.modelMatrix
+            modelMatrix : results.modelMatrix,
+            validInstancesIndices : results.validInstancesIndices,
+            invalidInstancesIndices : results.invalidInstancesIndices
         };
     };
 

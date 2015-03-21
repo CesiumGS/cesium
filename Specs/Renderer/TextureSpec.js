@@ -14,7 +14,7 @@ defineSuite([
         'Renderer/TextureMinificationFilter',
         'Renderer/TextureWrap',
         'Specs/createContext',
-        'Specs/destroyContext'
+        'ThirdParty/when'
     ], function(
         Texture,
         Cartesian2,
@@ -30,9 +30,9 @@ defineSuite([
         TextureMinificationFilter,
         TextureWrap,
         createContext,
-        destroyContext) {
+        when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var context;
     var greenImage;
@@ -46,10 +46,26 @@ defineSuite([
 
     beforeAll(function() {
         context = createContext();
+
+        var promises = [];
+        promises.push(loadImage('./Data/Images/Green.png').then(function(image) {
+            greenImage = image;
+        }));
+        promises.push(loadImage('./Data/Images/Blue.png').then(function(image) {
+            blueImage = image;
+        }));
+        promises.push(loadImage('./Data/Images/BlueAlpha.png').then(function(image) {
+            blueAlphaImage = image;
+        }));
+        promises.push(loadImage('./Data/Images/BlueOverRed.png').then(function(image) {
+            blueOverRedImage = image;
+        }));
+
+        return when.all(promises);
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     afterEach(function() {
@@ -86,28 +102,6 @@ defineSuite([
 
         return context.readPixels();
     }
-
-    it('loads images for the test', function() {
-        loadImage('./Data/Images/Green.png').then(function(image) {
-            greenImage = image;
-        });
-
-        loadImage('./Data/Images/Blue.png').then(function(image) {
-            blueImage = image;
-        });
-
-        loadImage('./Data/Images/BlueAlpha.png').then(function(image) {
-            blueAlphaImage = image;
-        });
-
-        loadImage('./Data/Images/BlueOverRed.png').then(function(image) {
-            blueOverRedImage = image;
-        });
-
-        waitsFor(function() {
-            return greenImage && blueImage && blueAlphaImage && blueOverRedImage;
-        }, 'Load .png file(s) for texture test.', 3000);
-    });
 
     it('has expected default values for pixel format and datatype', function() {
         texture = context.createTexture2D({

@@ -170,9 +170,9 @@ define([
             var p = Cartesian3.fromArray(positions, i, positionScratch);
 
             if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
-                var p1 = Cartesian3.fromArray(positions, i + 6, v1Scratch);
+                var p1 = Cartesian3.fromArray(positions, (i + 6) % length, v1Scratch);
                 if (recomputeNormal) {
-                    var p2 = Cartesian3.fromArray(positions, i + 3, v2Scratch);
+                    var p2 = Cartesian3.fromArray(positions, (i + 3) % length, v2Scratch);
                     Cartesian3.subtract(p1, p, p1);
                     Cartesian3.subtract(p2, p, p2);
                     normal = Cartesian3.normalize(Cartesian3.cross(p2, p1, normal), normal);
@@ -468,14 +468,14 @@ define([
         var index = 0;
         for (i = 0; i < length - 1; i+=2) {
             upperLeft = i;
-            upperRight = upperLeft + 2;
+            upperRight = (upperLeft + 2) % length;
             var p1 = Cartesian3.fromArray(wallPositions, upperLeft * 3, v1Scratch);
             var p2 = Cartesian3.fromArray(wallPositions, upperRight * 3, v2Scratch);
             if (Cartesian3.equalsEpsilon(p1, p2, CesiumMath.EPSILON10)) {
                 continue;
             }
-            lowerLeft = upperLeft + 1;
-            lowerRight = lowerLeft + 2;
+            lowerLeft = (upperLeft + 1) % length;
+            lowerRight = (lowerLeft + 2) % length;
             wallIndices[index++] = upperLeft;
             wallIndices[index++] = lowerLeft;
             wallIndices[index++] = upperRight;
@@ -519,7 +519,6 @@ define([
      * @exception {DeveloperError} <code>options.rectangle.east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
      * @exception {DeveloperError} <code>options.rectangle.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
      * @exception {DeveloperError} <code>options.rectangle.north</code> must be greater than <code>options.rectangle.south</code>.
-     * @exception {DeveloperError} <code>options.rectangle.east</code> must be greater than <code>options.rectangle.west</code>.
      *
      * @see RectangleGeometry#createGeometry
      *
@@ -551,9 +550,13 @@ define([
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var surfaceHeight = defaultValue(options.height, 0.0);
-        var rotation = options.rotation;
-        var stRotation = options.stRotation;
+        var rotation = defaultValue(options.rotation, 0.0);
+        var stRotation = defaultValue(options.stRotation, 0.0);
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+        var extrudedHeight = options.extrudedHeight;
+        var extrude = (defined(extrudedHeight) && Math.abs(surfaceHeight - extrudedHeight) > 1.0);
+        var closeTop = defaultValue(options.closeTop, true);
+        var closeBottom = defaultValue(options.closeBottom, true);
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(rectangle)) {
@@ -567,15 +570,137 @@ define([
 
         this._rectangle = rectangle;
         this._granularity = granularity;
-        this._ellipsoid = ellipsoid;
+        this._ellipsoid = Ellipsoid.clone(ellipsoid);
         this._surfaceHeight = surfaceHeight;
         this._rotation = rotation;
         this._stRotation = stRotation;
-        this._vertexFormat = vertexFormat;
-        this._extrudedHeight = options.extrudedHeight;
-        this._closeTop = options.closeTop;
-        this._closeBottom = options.closeBottom;
+        this._vertexFormat = VertexFormat.clone(vertexFormat);
+        this._extrudedHeight = defaultValue(extrudedHeight, 0.0);
+        this._extrude = extrude;
+        this._closeTop = closeTop;
+        this._closeBottom = closeBottom;
         this._workerName = 'createRectangleGeometry';
+    };
+
+    /**
+     * The number of elements used to pack the object into an array.
+     * @type {Number}
+     */
+    RectangleGeometry.packedLength = Rectangle.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 8;
+
+    /**
+     * Stores the provided instance into the provided array.
+     *
+     * @param {BoundingSphere} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     */
+    RectangleGeometry.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        Rectangle.pack(value._rectangle, array, startingIndex);
+        startingIndex += Rectangle.packedLength;
+
+        Ellipsoid.pack(value._ellipsoid, array, startingIndex);
+        startingIndex += Ellipsoid.packedLength;
+
+        VertexFormat.pack(value._vertexFormat, array, startingIndex);
+        startingIndex += VertexFormat.packedLength;
+
+        array[startingIndex++] = value._granularity;
+        array[startingIndex++] = value._surfaceHeight;
+        array[startingIndex++] = value._rotation;
+        array[startingIndex++] = value._stRotation;
+        array[startingIndex++] = value._extrudedHeight;
+        array[startingIndex++] = value._extrude ? 1.0 : 0.0;
+        array[startingIndex++] = value._closeTop ? 1.0 : 0.0;
+        array[startingIndex]   = value._closeBottom ? 1.0 : 0.0;
+    };
+
+    var scratchRectangle = new Rectangle();
+    var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
+    var scratchVertexFormat = new VertexFormat();
+    var scratchOptions = {
+        rectangle : scratchRectangle,
+        ellipsoid : scratchEllipsoid,
+        vertexFormat : scratchVertexFormat,
+        granularity : undefined,
+        height : undefined,
+        rotation : undefined,
+        stRotation : undefined,
+        extrudedHeight : undefined,
+        closeTop : undefined,
+        closeBottom : undefined
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {RectangleGeometry} [result] The object into which to store the result.
+     */
+    RectangleGeometry.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        var rectangle = Rectangle.unpack(array, startingIndex, scratchRectangle);
+        startingIndex += Rectangle.packedLength;
+
+        var ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
+        startingIndex += Ellipsoid.packedLength;
+
+        var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
+        startingIndex += VertexFormat.packedLength;
+
+        var granularity = array[startingIndex++];
+        var surfaceHeight = array[startingIndex++];
+        var rotation = array[startingIndex++];
+        var stRotation = array[startingIndex++];
+        var extrudedHeight = array[startingIndex++];
+        var extrude = array[startingIndex++] === 1.0;
+        var closeTop = array[startingIndex++] === 1.0;
+        var closeBottom = array[startingIndex] === 1.0;
+
+        if (!defined(result)) {
+            scratchOptions.granularity = granularity;
+            scratchOptions.height = surfaceHeight;
+            scratchOptions.rotation = rotation;
+            scratchOptions.stRotation = stRotation;
+            scratchOptions.extrudedHeight = extrude ? extrudedHeight : undefined;
+            scratchOptions.closeTop = closeTop;
+            scratchOptions.closeBottom = closeBottom;
+            return new RectangleGeometry(scratchOptions);
+        }
+
+        result._rectangle = Rectangle.clone(rectangle, result._rectangle);
+        result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
+        result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
+        result._granularity = granularity;
+        result._surfaceHeight = surfaceHeight;
+        result._rotation = rotation;
+        result._stRotation = stRotation;
+        result._extrudedHeight = extrude ? extrudedHeight : undefined;
+        result._extrude = extrude;
+        result._closeTop = closeTop;
+        result._closeBottom = closeBottom;
+
+        return result;
     };
 
     var textureMatrixScratch = new Matrix2();
@@ -595,6 +720,7 @@ define([
         var rectangle = Rectangle.clone(rectangleGeometry._rectangle, rectangleScratch);
         var ellipsoid = rectangleGeometry._ellipsoid;
         var surfaceHeight = rectangleGeometry._surfaceHeight;
+        var extrude = rectangleGeometry._extrude;
         var extrudedHeight = rectangleGeometry._extrudedHeight;
         var stRotation = rectangleGeometry._stRotation;
         var vertexFormat = rectangleGeometry._vertexFormat;
@@ -616,8 +742,8 @@ define([
             Matrix3.clone(Matrix3.IDENTITY, tangentRotationMatrix);
         }
 
-        options.lonScalar = 1.0 / (rectangle.east - rectangle.west);
-        options.latScalar = 1.0 / (rectangle.north - rectangle.south);
+        options.lonScalar = 1.0 / rectangle.width;
+        options.latScalar = 1.0 / rectangle.height;
         options.vertexFormat = vertexFormat;
         options.textureMatrix = textureMatrix;
         options.tangentRotationMatrix = tangentRotationMatrix;
@@ -626,7 +752,7 @@ define([
         var geometry;
         var boundingSphere;
         rectangle = rectangleGeometry._rectangle;
-        if (defined(extrudedHeight)) {
+        if (extrude) {
             geometry = constructExtrudedRectangle(options);
             var topBS = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, surfaceHeight, topBoundingSphere);
             var bottomBS = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, extrudedHeight, bottomBoundingSphere);

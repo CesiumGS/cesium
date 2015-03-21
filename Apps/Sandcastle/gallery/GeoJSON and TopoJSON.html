@@ -28,16 +28,15 @@ function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
-Cesium.viewerEntityMixin(viewer);
 
 //Example 1: Load with default styling.
 Sandcastle.addDefaultToolbarButton('Default styling', function() {
-    viewer.dataSources.add(Cesium.GeoJsonDataSource.fromUrl('../../SampleData/ne_10m_us_states.topojson'));
+    viewer.dataSources.add(Cesium.GeoJsonDataSource.load('../../SampleData/ne_10m_us_states.topojson'));
 });
 
 //Example 2: Load with basic styling options.
 Sandcastle.addToolbarButton('Basic styling', function() {
-    viewer.dataSources.add(Cesium.GeoJsonDataSource.fromUrl('../../SampleData/ne_10m_us_states.topojson', {
+    viewer.dataSources.add(Cesium.GeoJsonDataSource.load('../../SampleData/ne_10m_us_states.topojson', {
         stroke: Cesium.Color.HOTPINK,
         fill: Cesium.Color.PINK,
         strokeWidth: 3
@@ -49,14 +48,12 @@ Sandcastle.addToolbarButton('Custom styling', function() {
     //Seed the random number generator for repeatable results.
     Cesium.Math.setRandomNumberSeed(0);
 
-    //Create a new GeoJSON data source and add it to the list.
-    var dataSource = new Cesium.GeoJsonDataSource();
-    viewer.dataSources.add(dataSource);
-    
-    //Load the document into the data source and then set custom graphics
-    dataSource.loadUrl('../../SampleData/ne_10m_us_states.topojson').then(function() {
+    var promise = Cesium.GeoJsonDataSource.load('../../SampleData/ne_10m_us_states.topojson');
+    promise.then(function(dataSource) {
+        viewer.dataSources.add(dataSource);
+
         //Get the array of entities
-        var entities = dataSource.entities.entities;
+        var entities = dataSource.entities.values;
         
         var colorHash = {};
         for (var i = 0; i < entities.length; i++) {
@@ -74,15 +71,18 @@ Sandcastle.addToolbarButton('Custom styling', function() {
             }
             
             //Set the polygon material to our random color.
-            entity.polygon.material = Cesium.ColorMaterialProperty.fromColor(color);
+            entity.polygon.material = color;
             //Outline each polygon in black.
-            entity.polygon.outlineColor = new Cesium.ConstantProperty(Cesium.Color.BLACK);
+            entity.polygon.outlineColor = Cesium.Color.BLACK;
 
             //Extrude the polygon based on the state's population.  Each entity
             //stores the properties for the GeoJSON feature it was created from
             //Since the population is a huge number, we divide by 50.
-            entity.polygon.extrudedHeight = new Cesium.ConstantProperty(entity.properties.Population / 50.0);
+            entity.polygon.extrudedHeight = entity.properties.Population / 50.0;
         }
+    }).otherwise(function(error){
+        //Display any errrors encountered while loading.
+        window.alert(error);
     });
 });
 
@@ -90,10 +90,9 @@ Sandcastle.addToolbarButton('Custom styling', function() {
 Sandcastle.reset = function() {
   viewer.dataSources.removeAll();
   
-  //Set the camera to a US centered tilted view.
-  var camera = viewer.scene.camera;
-  camera.lookAt(Cesium.Cartesian3.fromDegrees(-98, 15.0, 5000000),
-      Cesium.Cartesian3.fromDegrees(-98, 40.0, 0), Cesium.Cartesian3.UNIT_Z);
+  //Set the camera to a US centered tilted view and switch back to moving in world coordinates.
+  viewer.camera.lookAt(Cesium.Cartesian3.fromDegrees(-98.0, 40.0), new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0));
+  viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 };
 //Sandcastle_End
     Sandcastle.finishedLoading();

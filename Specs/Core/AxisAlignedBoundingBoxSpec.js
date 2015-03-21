@@ -10,7 +10,7 @@ defineSuite([
         Cartesian4,
         Intersect) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var positions = [
                      new Cartesian3(3, -1, -3),
@@ -77,7 +77,7 @@ defineSuite([
     it('clone without a result parameter', function() {
         var box = new AxisAlignedBoundingBox(Cartesian3.UNIT_Y, Cartesian3.UNIT_X);
         var result = box.clone();
-        expect(box).toNotBe(result);
+        expect(box).not.toBe(result);
         expect(box).toEqual(result);
     });
 
@@ -86,7 +86,7 @@ defineSuite([
         var result = new AxisAlignedBoundingBox(Cartesian3.ZERO, Cartesian3.UNIT_Z);
         var returnedResult = box.clone(result);
         expect(result).toBe(returnedResult);
-        expect(box).toNotBe(result);
+        expect(box).not.toBe(result);
         expect(box).toEqual(result);
     });
 

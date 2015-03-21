@@ -14,7 +14,7 @@ defineSuite([
         Matrix3,
         Quaternion) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('default constructor creates values array with all zeros.', function() {
         var matrix = new Matrix4();
@@ -100,6 +100,12 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('unpack throws with undefined array', function() {
+        expect(function() {
+            Matrix4.unpack(undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('fromArray works without a result parameter', function() {
         var expected = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
         var matrix = Matrix4.fromArray([1.0, 5.0, 9.0, 13.0, 2.0, 6.0, 10.0, 14.0, 3.0, 7.0, 11.0, 15.0, 4.0, 8.0, 12.0, 16.0]);
@@ -153,7 +159,7 @@ defineSuite([
     it('clone works without a result parameter', function() {
         var expected = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
         var returnedResult = expected.clone();
-        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).not.toBe(expected);
         expect(returnedResult).toEqual(expected);
     });
 
@@ -162,14 +168,14 @@ defineSuite([
         var result = new Matrix4();
         var returnedResult = expected.clone(result);
         expect(returnedResult).toBe(result);
-        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).not.toBe(expected);
         expect(returnedResult).toEqual(expected);
     });
 
     it('fromRotationTranslation works without a result parameter', function() {
         var expected = new Matrix4(1.0, 2.0, 3.0, 10.0, 4.0, 5.0, 6.0, 11.0, 7.0, 8.0, 9.0, 12.0, 0.0, 0.0, 0.0, 1.0);
         var returnedResult = Matrix4.fromRotationTranslation(new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0), new Cartesian3(10.0, 11.0, 12.0));
-        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).not.toBe(expected);
         expect(returnedResult).toEqual(expected);
     });
 
@@ -178,14 +184,14 @@ defineSuite([
         var result = new Matrix4();
         var returnedResult = Matrix4.fromRotationTranslation(new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0), new Cartesian3(10.0, 11.0, 12.0), result);
         expect(returnedResult).toBe(result);
-        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).not.toBe(expected);
         expect(returnedResult).toEqual(expected);
     });
 
     it('fromTranslation works without a result parameter', function() {
         var expected = new Matrix4(1.0, 0.0, 0.0, 10.0, 0.0, 1.0, 0.0, 11.0, 0.0, 0.0, 1.0, 12.0, 0.0, 0.0, 0.0, 1.0);
         var returnedResult = Matrix4.fromTranslation(new Cartesian3(10.0, 11.0, 12.0));
-        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).not.toBe(expected);
         expect(returnedResult).toEqual(expected);
     });
 
@@ -199,7 +205,7 @@ defineSuite([
             new Cartesian3(1.0, 2.0, 3.0),                                            // translation
             Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.toRadians(-90.0)), // rotation
             new Cartesian3(7.0, 8.0, 9.0));                                           // scale
-        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).not.toBe(expected);
         expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON14);
     });
 
@@ -216,7 +222,7 @@ defineSuite([
             new Cartesian3(7.0, 8.0, 9.0),                                            // scale
             result);
         expect(returnedResult).toBe(result);
-        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).not.toBe(expected);
         expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON14);
     });
 
@@ -225,7 +231,7 @@ defineSuite([
         var result = new Matrix4();
         var returnedResult = Matrix4.fromTranslation(new Cartesian3(10.0, 11.0, 12.0), result);
         expect(returnedResult).toBe(result);
-        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).not.toBe(expected);
         expect(returnedResult).toEqual(expected);
     });
 
@@ -236,7 +242,7 @@ defineSuite([
                 0.0, 0.0, 9.0, 0.0,
                 0.0, 0.0, 0.0, 1.0);
         var returnedResult = Matrix4.fromScale(new Cartesian3(7.0, 8.0, 9.0));
-        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).not.toBe(expected);
         expect(returnedResult).toEqual(expected);
     });
 
@@ -249,7 +255,7 @@ defineSuite([
         var result = new Matrix4();
         var returnedResult = Matrix4.fromScale(new Cartesian3(7.0, 8.0, 9.0), result);
         expect(returnedResult).toBe(result);
-        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).not.toBe(expected);
         expect(returnedResult).toEqual(expected);
     });
 
@@ -349,7 +355,7 @@ defineSuite([
     it('toArray works without a result parameter', function() {
         var expected = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0];
         var returnedResult = Matrix4.toArray(Matrix4.fromColumnMajorArray(expected));
-        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).not.toBe(expected);
         expect(returnedResult).toEqual(expected);
     });
 
@@ -358,7 +364,7 @@ defineSuite([
         var result = [];
         var returnedResult = Matrix4.toArray(Matrix4.fromColumnMajorArray(expected), result);
         expect(returnedResult).toBe(result);
-        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).not.toBe(expected);
         expect(returnedResult).toEqual(expected);
     });
 
@@ -574,6 +580,27 @@ defineSuite([
         var right = new Matrix4(17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 0, 0, 0, 1);
         var expected = new Matrix4(134, 140, 146, 156, 386, 404, 422, 448, 638, 668, 698, 740, 0, 0, 0, 1);
         var returnedResult = Matrix4.multiplyTransformation(left, right, left);
+        expect(returnedResult).toBe(left);
+        expect(left).toEqual(expected);
+    });
+
+    it('multiplyByMatrix3 works', function() {
+        var left = Matrix4.fromRotationTranslation(Matrix3.fromRotationZ(CesiumMath.toRadians(45.0)), new Cartesian3(1.0, 2.0, 3.0));
+        var rightRotation = Matrix3.fromRotationX(CesiumMath.toRadians(30.0));
+        var right = Matrix4.fromRotationTranslation(rightRotation);
+        var expected = new Matrix4.multiplyTransformation(left, right, new Matrix4());
+        var result = new Matrix4();
+        var returnedResult = Matrix4.multiplyByMatrix3(left, rightRotation, result);
+        expect(returnedResult).toBe(result);
+        expect(result).toEqual(expected);
+    });
+
+    it('multiplyByMatrix3 works with a result parameter that is an input result parameter', function() {
+        var left = Matrix4.fromRotationTranslation(Matrix3.fromRotationZ(CesiumMath.toRadians(45.0)), new Cartesian3(1.0, 2.0, 3.0));
+        var rightRotation = Matrix3.fromRotationX(CesiumMath.toRadians(30.0));
+        var right = Matrix4.fromRotationTranslation(rightRotation);
+        var expected = new Matrix4.multiplyTransformation(left, right, new Matrix4());
+        var returnedResult = Matrix4.multiplyByMatrix3(left, rightRotation, left);
         expect(returnedResult).toBe(left);
         expect(left).toEqual(expected);
     });
@@ -1512,6 +1539,24 @@ defineSuite([
     it('multiplyTransformation throws without result parameter', function() {
         expect(function() {
             Matrix4.multiplyTransformation(new Matrix4(), new Matrix4());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyByMatrix3 throws without left parameter', function() {
+        expect(function() {
+            Matrix4.multiplyByMatrix3();
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyByMatrix3 throws without matrix parameter', function() {
+        expect(function() {
+            Matrix4.multiplyByMatrix3(new Matrix4());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyByMatrix3 throws without rotation parameter', function() {
+        expect(function() {
+            Matrix4.multiplyByMatrix3(new Matrix4(), new Matrix3());
         }).toThrowDeveloperError();
     });
 

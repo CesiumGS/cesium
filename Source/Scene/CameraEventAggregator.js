@@ -262,7 +262,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._eventHandler = new ScreenSpaceEventHandler(canvas);
+        this._eventHandler = new ScreenSpaceEventHandler(canvas, true);
 
         this._update = {};
         this._movement = {};

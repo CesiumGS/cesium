@@ -18,7 +18,7 @@ defineSuite([
         TimeIntervalCollectionProperty,
         testDefinitionChanged) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('constructor provides the expected defaults', function() {
         var property = new StripeMaterialProperty();
@@ -36,6 +36,29 @@ defineSuite([
         expect(result.oddColor).toEqual(Color.BLACK);
         expect(result.offset).toEqual(0);
         expect(result.repeat).toEqual(1);
+    });
+
+    it('constructor sets options and allows raw assignment', function() {
+        var options = {
+            orientation : StripeOrientation.VERTICAL,
+            evenColor : Color.RED,
+            oddColor : Color.BLUE,
+            offset : 1,
+            repeat : 2
+        };
+
+        var property = new StripeMaterialProperty(options);
+        expect(property.orientation).toBeInstanceOf(ConstantProperty);
+        expect(property.evenColor).toBeInstanceOf(ConstantProperty);
+        expect(property.oddColor).toBeInstanceOf(ConstantProperty);
+        expect(property.offset).toBeInstanceOf(ConstantProperty);
+        expect(property.repeat).toBeInstanceOf(ConstantProperty);
+
+        expect(property.orientation.getValue()).toEqual(options.orientation);
+        expect(property.evenColor.getValue()).toEqual(options.evenColor);
+        expect(property.oddColor.getValue()).toEqual(options.oddColor);
+        expect(property.offset.getValue()).toEqual(options.offset);
+        expect(property.repeat.getValue()).toEqual(options.repeat);
     });
 
     it('works with constant values', function() {

@@ -59,7 +59,18 @@ define([
         if (!defined(gltf.asset)) {
             gltf.asset = {};
         }
-        gltf.asset.premultipliedAlpha = defaultValue(gltf.asset.premultipliedAlpha, false);
+        var asset = gltf.asset;
+
+        // Backwards compatibility for glTF 0.8. profile was a string.
+        if (!defined(asset.profile) || (typeof asset.profile === 'string')) {
+            asset.profile = {};
+        }
+        var profile = asset.profile;
+
+        asset.premultipliedAlpha = defaultValue(gltf.asset.premultipliedAlpha, false);
+        profile.api = defaultValue(profile.api, 'WebGL');
+        profile.version = defaultValue(profile.version, '1.0.2');
+        asset.version = defaultValue(gltf.version, '0.9');
     }
 
     function bufferDefaults(gltf) {
@@ -193,7 +204,10 @@ define([
                         primitive.attributes = {};
                     }
 
-                    primitive.primitive = defaultValue(primitive.primitive, WebGLRenderingContext.TRIANGLES);
+                    // Backwards compatibility for glTF 0.8. primitive was renamed to mode.
+                    var defaultMode = defaultValue(primitive.primitive, WebGLRenderingContext.TRIANGLES);
+
+                    primitive.mode = defaultValue(primitive.mode, defaultMode);
                 }
             }
         }
@@ -411,8 +425,6 @@ define([
         shaderDefaults(gltf);
         skinDefaults(gltf);
         techniqueDefaults(gltf);
-        gltf.profile = defaultValue(gltf.profile, 'WebGL 1.0.2');
-        gltf.version = defaultValue(gltf.version, '1.0');
         textureDefaults(gltf);
 
         return gltf;

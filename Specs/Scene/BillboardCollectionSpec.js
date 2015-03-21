@@ -6,6 +6,7 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/loadImage',
         'Core/Math',
         'Core/NearFarScalar',
         'Renderer/ClearCommand',
@@ -17,9 +18,10 @@ defineSuite([
         'Specs/createCamera',
         'Specs/createContext',
         'Specs/createFrameState',
-        'Specs/destroyContext',
         'Specs/pick',
-        'Specs/render'
+        'Specs/pollToPromise',
+        'Specs/render',
+        'ThirdParty/when'
     ], function(
         BillboardCollection,
         BoundingRectangle,
@@ -27,6 +29,7 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Color,
+        loadImage,
         CesiumMath,
         NearFarScalar,
         ClearCommand,
@@ -38,11 +41,12 @@ defineSuite([
         createCamera,
         createContext,
         createFrameState,
-        destroyContext,
         pick,
-        render) {
+        pollToPromise,
+        render,
+        when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var context;
     var frameState;
@@ -66,32 +70,28 @@ defineSuite([
             camera : frameState.camera,
             frameState : frameState
         };
+
+        return when.join(
+            loadImage('./Data/Images/Green.png').then(function(result) {
+                greenImage = result;
+            }),
+            loadImage('./Data/Images/Blue.png').then(function(result) {
+                blueImage = result;
+            }),
+            loadImage('./Data/Images/White.png').then(function(result) {
+                whiteImage = result;
+            }),
+            loadImage('./Data/Images/Blue10x10.png').then(function(result) {
+                largeBlueImage = result;
+            }));
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     beforeEach(function() {
         billboards = new BillboardCollection();
-
-        if (!greenImage) {
-            greenImage = new Image();
-            greenImage.src = './Data/Images/Green.png';
-
-            blueImage = new Image();
-            blueImage.src = './Data/Images/Blue.png';
-
-            whiteImage = new Image();
-            whiteImage.src = './Data/Images/White.png';
-
-            largeBlueImage = new Image();
-            largeBlueImage.src = './Data/Images/Blue10x10.png';
-
-            waitsFor(function() {
-                return greenImage.complete && blueImage.complete && whiteImage.complete && largeBlueImage.complete;
-            }, 'Load .png file(s) for billboard collection test.', 3000);
-        }
     });
 
     afterEach(function() {
@@ -245,24 +245,16 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         var us = context.uniformState;
-        var eye = new Cartesian3(0.0, 0.0, 1.0);
-        var target = Cartesian3.ZERO;
-        var up = Cartesian3.UNIT_Y;
         us.update(context, createFrameState(createCamera({
-            eye : eye,
-            target : target,
-            up : up
+            offset : new Cartesian3(0.0, 0.0, 1.0)
         })));
         render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        eye = new Cartesian3(0.0, 0.0, 6.0);
         us.update(context, createFrameState(createCamera({
-            eye : eye,
-            target : target,
-            up : up
+            offset : new Cartesian3(0.0, 0.0, 6.0)
         })));
         render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -280,28 +272,22 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         var us = context.uniformState;
-        var eye = new Cartesian3(0.0, 0.0, 1.0);
-        var target = Cartesian3.ZERO;
-        var up = Cartesian3.UNIT_Y;
+        var offset = new Cartesian3(0.0, 0.0, 1.0);
         us.update(context, createFrameState(createCamera({
-            eye : eye,
-            target : target,
-            up : up
+            offset : offset
         })));
         render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        eye = new Cartesian3(0.0, 0.0, 6.0);
+        offset = new Cartesian3(0.0, 0.0, 6.0);
         us.update(context, createFrameState(createCamera({
-            eye : eye,
-            target : target,
-            up : up
+            offset : offset
         })));
         render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-        us.update(context, createFrameState(createCamera(context)));
+        us.update(context, createFrameState(createCamera()));
     });
 
     it('render billboard with pixelOffsetScaleByDistance', function() {
@@ -315,24 +301,18 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
         var us = context.uniformState;
-        var eye = new Cartesian3(0.0, 0.0, 1.0);
-        var target = Cartesian3.ZERO;
-        var up = Cartesian3.UNIT_Y;
+        var offset = new Cartesian3(0.0, 0.0, 1.0);
         us.update(context, createFrameState(createCamera({
-            eye : eye,
-            target : target,
-            up : up
+            offset : offset
         })));
         render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        eye = new Cartesian3(0.0, 0.0, 6.0);
+        offset = new Cartesian3(0.0, 0.0, 6.0);
         us.update(context, createFrameState(createCamera({
-            eye : eye,
-            target : target,
-            up : up
+            offset : offset
         })));
         render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -1375,11 +1355,9 @@ defineSuite([
         expect(one.ready).toEqual(false);
         expect(one.image).toEqual('./Data/Images/Green.png');
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return one.ready;
-        });
-
-        runs(function() {
+        }).then(function() {
             ClearCommand.ALL.execute(context);
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
@@ -1398,24 +1376,20 @@ defineSuite([
         expect(one.width).toBeUndefined();
         expect(one.height).toBeUndefined();
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return one.ready;
-        });
-
-        runs(function() {
+        }).then(function() {
             expect(one.width).toEqual(1);
             expect(one.height).toEqual(4);
 
             one.image = './Data/Images/Blue10x10.png';
-        });
 
-        waitsFor(function() {
-            return one.ready;
-        });
-
-        runs(function() {
-            expect(one.width).toEqual(10);
-            expect(one.height).toEqual(10);
+            return pollToPromise(function() {
+                return one.ready;
+            }).then(function() {
+                expect(one.width).toEqual(10);
+                expect(one.height).toEqual(10);
+            });
         });
     });
 
@@ -1433,7 +1407,7 @@ defineSuite([
         one.image = './Data/Images/Green.png';
         one.image = './Data/Images/Green.png';
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return one.ready;
         });
     });
@@ -1448,11 +1422,9 @@ defineSuite([
         expect(one.ready).toEqual(false);
         expect(one.image).toEqual('./Data/Images/Green.png');
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return one.ready;
-        });
-
-        runs(function() {
+        }).then(function() {
             ClearCommand.ALL.execute(context);
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
@@ -1507,7 +1479,7 @@ defineSuite([
     });
 
     it('can create a billboard using another billboard image', function() {
-        var createImage = jasmine.createSpy('createImage').andReturn(greenImage);
+        var createImage = jasmine.createSpy('createImage').and.returnValue(greenImage);
 
         var one = billboards.add({
             image : createImage
@@ -1515,7 +1487,7 @@ defineSuite([
 
         render(context, frameState, billboards);
 
-        expect(createImage.callCount).toEqual(1);
+        expect(createImage.calls.count()).toEqual(1);
 
         var two = billboards.add({
             image : one.image
@@ -1524,7 +1496,7 @@ defineSuite([
         render(context, frameState, billboards);
 
         expect(two.image).toEqual(one.image);
-        expect(createImage.callCount).toEqual(1);
+        expect(createImage.calls.count()).toEqual(1);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -1543,11 +1515,9 @@ defineSuite([
 
         expect(one.ready).toEqual(false);
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return one.ready;
-        });
-
-        runs(function() {
+        }).then(function() {
             ClearCommand.ALL.execute(context);
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
@@ -1567,11 +1537,9 @@ defineSuite([
         expect(one.width).toBeUndefined();
         expect(one.height).toBeUndefined();
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return one.ready;
-        });
-
-        runs(function() {
+        }).then(function() {
             expect(one.width).toEqual(1);
             expect(one.height).toEqual(2);
         });
@@ -1594,23 +1562,34 @@ defineSuite([
         expect(one.ready).toEqual(false);
         expect(one.image).toEqual('./Data/Images/Blue.png');
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return one.ready;
-        });
+        }).then(function() {
+            var deferred = when.defer();
 
-        for (var i = 0; i < 10; ++i) {
-            /*jshint loopfunc: true */
             // render and yield control several times to make sure the
             // green image doesn't clobber the blue
+            var iterations = 10;
 
-            runs(function() {
+            function renderAndCheck() {
                 ClearCommand.ALL.execute(context);
                 expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
                 render(context, frameState, billboards);
                 expect(context.readPixels()).toEqual([0, 0, 255, 255]);
-            });
-        }
+
+                if (iterations > 0) {
+                    --iterations;
+                    setTimeout(renderAndCheck, 1);
+                } else {
+                    deferred.resolve();
+                }
+            }
+
+            renderAndCheck();
+
+            return deferred.promise;
+        });
     });
 
     it('can set image to undefined while an image is loading', function() {
@@ -1630,19 +1609,30 @@ defineSuite([
         expect(one.ready).toEqual(false);
         expect(one.image).toBeUndefined();
 
-        for (var i = 0; i < 10; ++i) {
-            /*jshint loopfunc: true */
-            // render and yield control several times to make sure the
-            // green image never loads
+        var deferred = when.defer();
 
-            runs(function() {
-                ClearCommand.ALL.execute(context);
-                expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        // render and yield control several times to make sure the
+        // green image never loads
+        var iterations = 10;
 
-                render(context, frameState, billboards);
-                expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-            });
+        function renderAndCheck() {
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+            render(context, frameState, billboards);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+            if (iterations > 0) {
+                --iterations;
+                setTimeout(renderAndCheck, 1);
+            } else {
+                deferred.resolve();
+            }
         }
+
+        renderAndCheck();
+
+        return deferred.promise;
     });
 
     it('does not crash when removing a billboard that is loading', function() {
@@ -1654,17 +1644,29 @@ defineSuite([
 
         billboards.remove(one);
 
-        for (var i = 0; i < 10; ++i) {
-            /*jshint loopfunc: true */
-            // render and yield control several times to make sure the
-            // green image doesn't crash when it loads
-            runs(function() {
+        var deferred = when.defer();
+
+        // render and yield control several times to make sure the
+        // green image doesn't crash when it loads
+        var iterations = 10;
+
+        function renderAndCheck() {
                 ClearCommand.ALL.execute(context);
                 expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
                 render(context, frameState, billboards);
                 expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-            });
+
+            if (iterations > 0) {
+                --iterations;
+                setTimeout(renderAndCheck, 1);
+            } else {
+                deferred.resolve();
+            }
         }
+
+        renderAndCheck();
+
+        return deferred.promise;
     });
 }, 'WebGL');

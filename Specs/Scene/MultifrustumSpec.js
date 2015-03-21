@@ -9,6 +9,7 @@ defineSuite([
         'Core/defined',
         'Core/destroyObject',
         'Core/GeometryPipeline',
+        'Core/loadImage',
         'Core/Math',
         'Core/Matrix4',
         'Renderer/BufferUsage',
@@ -20,7 +21,7 @@ defineSuite([
         'Scene/Pass',
         'Scene/TextureAtlas',
         'Specs/createScene',
-        'Specs/destroyScene'
+        'ThirdParty/when'
     ], 'Scene/Multifrustum', function(
         BoundingSphere,
         BoxGeometry,
@@ -31,6 +32,7 @@ defineSuite([
         defined,
         destroyObject,
         GeometryPipeline,
+        loadImage,
         CesiumMath,
         Matrix4,
         BufferUsage,
@@ -42,9 +44,9 @@ defineSuite([
         Pass,
         TextureAtlas,
         createScene,
-        destroyScene) {
+        when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
     var context;
@@ -54,6 +56,19 @@ defineSuite([
     var greenImage;
     var blueImage;
     var whiteImage;
+
+    beforeAll(function() {
+        return when.join(
+            loadImage('./Data/Images/Green.png').then(function(image) {
+                greenImage = image;
+            }),
+            loadImage('./Data/Images/Blue.png').then(function(image) {
+                blueImage = image;
+            }),
+            loadImage('./Data/Images/White.png').then(function(image) {
+                whiteImage = image;
+            }));
+    });
 
     beforeEach(function() {
         scene = createScene();
@@ -70,24 +85,11 @@ defineSuite([
         camera.frustum.far = 1000000000.0;
         camera.frustum.fov = CesiumMath.toRadians(60.0);
         camera.frustum.aspectRatio = 1.0;
-
-        greenImage = new Image();
-        greenImage.src = './Data/Images/Green.png';
-
-        blueImage = new Image();
-        blueImage.src = './Data/Images/Blue.png';
-
-        whiteImage = new Image();
-        whiteImage.src = './Data/Images/White.png';
-
-        waitsFor(function() {
-            return greenImage.complete && blueImage.complete && whiteImage.complete;
-        }, 'Load .png file(s) for billboard collection test.', 3000);
     });
 
     afterEach(function() {
         atlas = atlas && atlas.destroy();
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     var billboard0;
@@ -183,9 +185,9 @@ defineSuite([
         scene.renderForSpecs();
 
         expect(DrawCommand.prototype.execute).toHaveBeenCalled();
-        expect(DrawCommand.prototype.execute.mostRecentCall.args.length).toEqual(4);
-        expect(DrawCommand.prototype.execute.mostRecentCall.args[3]).toBeDefined();
-        expect(DrawCommand.prototype.execute.mostRecentCall.args[3].fragmentShaderSource.sources[1]).toContain('czm_Debug_main');
+        expect(DrawCommand.prototype.execute.calls.mostRecent().args.length).toEqual(4);
+        expect(DrawCommand.prototype.execute.calls.mostRecent().args[3]).toBeDefined();
+        expect(DrawCommand.prototype.execute.calls.mostRecent().args[3].fragmentShaderSource.sources[1]).toContain('czm_Debug_main');
     });
 
     function createPrimitive(bounded, closestFrustum) {

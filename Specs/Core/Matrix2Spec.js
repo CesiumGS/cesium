@@ -8,7 +8,7 @@ defineSuite([
         Cartesian2,
         CesiumMath) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('default constructor creates values array with all zeros.', function() {
         var matrix = new Matrix2();
@@ -24,6 +24,52 @@ defineSuite([
         expect(matrix[Matrix2.COLUMN1ROW0]).toEqual(2.0);
         expect(matrix[Matrix2.COLUMN0ROW1]).toEqual(3.0);
         expect(matrix[Matrix2.COLUMN1ROW1]).toEqual(4.0);
+    });
+
+    it('can pack and unpack', function() {
+        var array = [];
+        var matrix = new Matrix2(
+                1.0, 2.0,
+                3.0, 4.0);
+        Matrix2.pack(matrix, array);
+        expect(array.length).toEqual(Matrix2.packedLength);
+        expect(Matrix2.unpack(array)).toEqual(matrix);
+    });
+
+    it('can pack and unpack with offset', function() {
+        var packed = new Array(3);
+        var offset = 3;
+        var matrix = new Matrix2(
+                1.0, 2.0,
+                3.0, 4.0);
+
+        Matrix2.pack(matrix, packed, offset);
+        expect(packed.length).toEqual(offset + Matrix2.packedLength);
+
+        var result = new Matrix2();
+        var returnedResult = Matrix2.unpack(packed, offset, result);
+        expect(returnedResult).toBe(result);
+        expect(result).toEqual(matrix);
+    });
+
+    it('pack throws with undefined matrix', function() {
+        var array = [];
+        expect(function() {
+            Matrix2.pack(undefined, array);
+        }).toThrowDeveloperError();
+    });
+
+    it('pack throws with undefined array', function() {
+        var matrix = new Matrix2();
+        expect(function() {
+            Matrix2.pack(matrix, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('unpack throws with undefined array', function() {
+        expect(function() {
+            Matrix2.unpack(undefined);
+        }).toThrowDeveloperError();
     });
 
     it('fromArray works without a result parameter', function() {
@@ -81,7 +127,7 @@ defineSuite([
                 7.0, 0.0,
                 0.0, 8.0);
         var returnedResult = Matrix2.fromScale(new Cartesian2(7.0, 8.0));
-        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).not.toBe(expected);
         expect(returnedResult).toEqual(expected);
     });
 
@@ -100,7 +146,7 @@ defineSuite([
                 2.0, 0.0,
                 0.0, 2.0);
         var returnedResult = Matrix2.fromUniformScale(2.0);
-        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).not.toBe(expected);
         expect(returnedResult).toEqual(expected);
     });
 
@@ -136,7 +182,7 @@ defineSuite([
     it('clone works without a result parameter', function() {
         var expected = new Matrix2(1.0, 2.0, 3.0, 4.0);
         var returnedResult = expected.clone();
-        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).not.toBe(expected);
         expect(returnedResult).toEqual(expected);
     });
 
@@ -145,14 +191,14 @@ defineSuite([
         var result = new Matrix2();
         var returnedResult = expected.clone(result);
         expect(returnedResult).toBe(result);
-        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).not.toBe(expected);
         expect(returnedResult).toEqual(expected);
     });
 
     it('toArray works without a result parameter', function() {
         var expected = [1.0, 2.0, 3.0, 4.0];
         var returnedResult = Matrix2.toArray(Matrix2.fromColumnMajorArray(expected));
-        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).not.toBe(expected);
         expect(returnedResult).toEqual(expected);
     });
 
@@ -161,7 +207,7 @@ defineSuite([
         var result = [];
         var returnedResult = Matrix2.toArray(Matrix2.fromColumnMajorArray(expected), result);
         expect(returnedResult).toBe(result);
-        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).not.toBe(expected);
         expect(returnedResult).toEqual(expected);
     });
 
