@@ -4,7 +4,7 @@ defineSuite([
     ], function(
         parseResponseHeaders) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('returns an empty object literal when given falsy input', function() {
         expect(parseResponseHeaders()).toEqual({});

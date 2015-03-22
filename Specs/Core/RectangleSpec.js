@@ -14,7 +14,7 @@ defineSuite([
         CesiumMath,
         createPackableSpecs) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var west = -0.9;
     var south = 0.5;
@@ -116,7 +116,7 @@ defineSuite([
         var rectangle = new Rectangle(west, south, east, north);
         var returnedResult = rectangle.clone();
         expect(returnedResult).toEqual(rectangle);
-        expect(returnedResult).toNotBe(rectangle);
+        expect(returnedResult).not.toBe(rectangle);
     });
 
     it('clone works with a result parameter.', function() {
@@ -124,7 +124,7 @@ defineSuite([
         var result = new Rectangle();
         var returnedResult = rectangle.clone(result);
         expect(returnedResult).toEqual(rectangle);
-        expect(returnedResult).toNotBe(rectangle);
+        expect(returnedResult).not.toBe(rectangle);
         expect(returnedResult).toBe(result);
     });
 

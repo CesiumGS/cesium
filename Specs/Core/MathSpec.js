@@ -4,7 +4,7 @@ defineSuite([
     ], function(
         CesiumMath) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('sign of -2', function() {
         expect(CesiumMath.sign(-2)).toEqual(-1);

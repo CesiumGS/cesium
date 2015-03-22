@@ -867,7 +867,11 @@ define([
 
                         that._instanceIds = reorderedInstanceIds;
 
-                        that._state = defined(that._geometries) ? PrimitiveState.COMBINED : PrimitiveState.FAILED;
+                        if (defined(that._geometries)) {
+                            that._state = PrimitiveState.COMBINED;
+                        } else {
+                            setReady(that, frameState, PrimitiveState.FAILED, undefined);
+                        }
                     }).otherwise(function(error) {
                         setReady(that, frameState, PrimitiveState.FAILED, error);
                     });

@@ -9,6 +9,7 @@ defineSuite([
         'Core/loadWithXhr',
         'Core/Math',
         'Core/TerrainProvider',
+        'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
         VRTheWorldTerrainProvider,
@@ -20,9 +21,10 @@ defineSuite([
         loadWithXhr,
         CesiumMath,
         TerrainProvider,
+        pollToPromise,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     beforeEach(function() {
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
@@ -87,11 +89,9 @@ defineSuite([
             url : 'made/up/url'
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'provider to be ready');
-
-        runs(function() {
+        }).then(function() {
             expect(provider.getLevelMaximumGeometricError(0)).toBeGreaterThan(0.0);
             expect(provider.getLevelMaximumGeometricError(0)).toEqualEpsilon(provider.getLevelMaximumGeometricError(1) * 2.0, CesiumMath.EPSILON10);
             expect(provider.getLevelMaximumGeometricError(1)).toEqualEpsilon(provider.getLevelMaximumGeometricError(2) * 2.0, CesiumMath.EPSILON10);
@@ -180,14 +180,13 @@ defineSuite([
             url : 'made/up/url'
         });
 
-        var errorRaised = false;
+        var deferred = when.defer();
+
         terrainProvider.errorEvent.addEventListener(function() {
-            errorRaised = true;
+            deferred.resolve();
         });
 
-        waitsFor(function() {
-            return errorRaised;
-        }, 'error to be raised');
+        return deferred.promise;
     });
 
     describe('requestTileGeometry', function() {
@@ -218,21 +217,10 @@ defineSuite([
                 proxy : new DefaultProxy('/proxy/')
             });
 
-            waitsFor(function() {
+            return pollToPromise(function() {
                 return terrainProvider.ready;
-            });
-
-            runs(function() {
-                var promise = terrainProvider.requestTileGeometry(0, 0, 0);
-
-                var loaded = false;
-                when(promise, function(terrainData) {
-                    loaded = true;
-                });
-
-                waitsFor(function() {
-                    return loaded;
-                }, 'request to complete');
+            }).then(function() {
+                return terrainProvider.requestTileGeometry(0, 0, 0);
             });
         });
 
@@ -250,27 +238,13 @@ defineSuite([
                 url : baseUrl
             });
 
-            waitsFor(function() {
+            return pollToPromise(function() {
                 return terrainProvider.ready;
-            });
-
-            var loadedData;
-
-            runs(function() {
+            }).then(function() {
                 expect(terrainProvider.tilingScheme instanceof GeographicTilingScheme).toBe(true);
-                var promise = terrainProvider.requestTileGeometry(0, 0, 0);
-
-                when(promise, function(terrainData) {
-                    loadedData = terrainData;
+                return terrainProvider.requestTileGeometry(0, 0, 0).then(function(loadedData) {
+                    expect(loadedData).toBeInstanceOf(HeightmapTerrainData);
                 });
-            });
-
-            waitsFor(function() {
-                return defined(loadedData);
-            }, 'request to complete');
-
-            runs(function() {
-                expect(loadedData).toBeInstanceOf(HeightmapTerrainData);
             });
         });
 
@@ -288,11 +262,9 @@ defineSuite([
                 url : baseUrl
             });
 
-            waitsFor(function() {
+            return pollToPromise(function() {
                return terrainProvider.ready;
-            });
-
-            runs(function() {
+            }).then(function() {
                 var promise = terrainProvider.requestTileGeometry(0, 0, 0);
                 expect(promise).toBeDefined();
 

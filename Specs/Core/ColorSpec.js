@@ -10,7 +10,7 @@ defineSuite([
         CesiumMath,
         createPackableSpecs) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('Constructing without arguments produces expected defaults', function() {
         var v = new Color();
@@ -159,6 +159,10 @@ defineSuite([
         expect(Color.LIME.toCssColorString()).toEqual('rgb(0,255,0)');
         expect(new Color(0.0, 0.0, 0.0, 1.0).toCssColorString()).toEqual('rgb(0,0,0)');
         expect(new Color(0.1, 0.2, 0.3, 0.4).toCssColorString()).toEqual('rgba(25,51,76,0.4)');
+    });
+
+    it('fromCssColorString supports transparent', function() {
+        expect(Color.fromCssColorString('transparent')).toEqual(new Color(0.0, 0.0, 0.0, 0.0));
     });
 
     it('fromCssColorString supports the #rgb format', function() {
