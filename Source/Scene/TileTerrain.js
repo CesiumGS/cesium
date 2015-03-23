@@ -90,7 +90,8 @@ define([
         surfaceTile.vertexArray = this.vertexArray;
         this.vertexArray = undefined;
 
-        surfaceTile.dataFromTile = tile;
+        surfaceTile.vertexArrayFromTile = tile;
+        surfaceTile.boundingDataFromTile = tile;
     };
 
     TileTerrain.prototype.processLoadStateMachine = function(context, terrainProvider, x, y, level) {

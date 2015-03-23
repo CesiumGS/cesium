@@ -360,19 +360,27 @@ define([
 
         var surfaceTile = tile.data;
 
-        if (surfaceTile.dataFromTile !== tile) {
+        // If the bounding data previously came from an ancestor, make sure it is up-to-date.
+        // E.g. the parent tile may have been loaded and so now has a new, more accurate min/max height.
+        if (surfaceTile.boundingDataFromTile !== tile) {
             var newMin;
             var newMax;
 
             var parent = tile.parent;
             if (defined(parent) && defined(parent.data)) {
+                // Use min/max heights from parent tile.  Parent tile may have gotten its height extrema
+                // from one of its ancestors.
                 newMin = parent.data.minimumHeight;
                 newMax = parent.data.maximumHeight;
+                surfaceTile.boundingDataFromTile = parent.data.boundingDataFromTile;
             } else {
-                newMin = -100;
+                // Root tile, so use a really rough estimate of the min/max heights.
+                newMin = -200;
                 newMax = 8800;
+                surfaceTile.boundingDataFromTile = tile;
             }
 
+            // Recompute the bounding sphere if the min/max height estimates changed.
             if (newMin !== surfaceTile.minimumHeight || newMax !== surfaceTile.maximumHeight) {
                 surfaceTile.minimumHeight = newMin;
                 surfaceTile.maximumHeight = newMax;
@@ -410,7 +418,7 @@ define([
     function addVertex(ellipsoid, longitude, latitude, height) {
         cartographicScratch.longitude = longitude;
         cartographicScratch.latitude = latitude;
-        cartographicScratch.height = height; //terrainData.interpolateHeight(rectangle, longitude, latitude);
+        cartographicScratch.height = height;
 
         var cartesian = ellipsoid.cartographicToCartesian(cartographicScratch, cartesian3Scratch);
         vertices.push(cartesian.x);
@@ -421,37 +429,50 @@ define([
     GlobeSurfaceTileProvider.prototype.visitVisibleTileDepthFirst = function(tile) {
         var surfaceTile = tile.data;
 
-        if (surfaceTile.dataFromTile !== tile) {
+        // If the vertex array came from an ancestor tile, make sure it is up-to-date.
+        // E.g. the parent tile may have been loaded and now has its own vertex array, instead of
+        // inheriting its parent's.
+        if (surfaceTile.vertexArrayFromTile !== tile) {
             var parent = tile.parent;
-            if (defined(parent) && defined(parent.data)) {
-                surfaceTile.dataFromTile = parent.data.dataFromTile;
+            if (!defined(parent) || !defined(parent.data)) {
+                // no parent.  This shouldn't happen because a non-loaded root tile should
+                // never be deemed visible.
+                throw new DeveloperError('bug');
+            }
 
-                if (surfaceTile.vertexArray !== parent.data.vertexArray) {
-                    if (defined(surfaceTile.vertexArray)) {
-                        --surfaceTile.vertexArray.referenceCount;
-                        if (surfaceTile.vertexArray.referenceCount === 0) {
-                            surfaceTile.vertexArray.destroy();
-                        }
+            surfaceTile.vertexArrayFromTile = parent.data.vertexArrayFromTile;
+
+            if (surfaceTile.vertexArray !== parent.data.vertexArray) {
+                // Parent has a new vertex array, so switch to it.
+                if (defined(surfaceTile.vertexArray)) {
+                    --surfaceTile.vertexArray.referenceCount;
+                    if (surfaceTile.vertexArray.referenceCount === 0) {
+                        surfaceTile.vertexArray.destroy();
                     }
-
-                    surfaceTile.vertexArray = parent.data.vertexArray;
-                    ++surfaceTile.vertexArray.referenceCount;
-
-                    var vaRectangle = surfaceTile.dataFromTile.rectangle;
-                    var tileRectangle = tile.rectangle;
-                    surfaceTile.textureCoordinateSubset = new Cartesian4(
-                        (tileRectangle.west - vaRectangle.west) / (vaRectangle.east - vaRectangle.west),
-                        (tileRectangle.south - vaRectangle.south) / (vaRectangle.north - vaRectangle.south),
-                        (tileRectangle.east - vaRectangle.west) / (vaRectangle.east - vaRectangle.west),
-                        (tileRectangle.north - vaRectangle.south) / (vaRectangle.north - vaRectangle.south));
                 }
 
-                var childrenRenderable = tile.level - surfaceTile.dataFromTile.level > 4;
+                surfaceTile.vertexArray = parent.data.vertexArray;
+                ++surfaceTile.vertexArray.referenceCount;
+
+                Cartesian3.clone(parent.data.center, surfaceTile.center);
+
+                // Recompute the portion of the parent's vertex array that applies to this tile.
+                var vaRectangle = surfaceTile.vertexArrayFromTile.rectangle;
+                var tileRectangle = tile.rectangle;
+                surfaceTile.textureCoordinateSubset.x = (tileRectangle.west - vaRectangle.west) / (vaRectangle.east - vaRectangle.west);
+                surfaceTile.textureCoordinateSubset.y = (tileRectangle.south - vaRectangle.south) / (vaRectangle.north - vaRectangle.south);
+                surfaceTile.textureCoordinateSubset.z = (tileRectangle.east - vaRectangle.west) / (vaRectangle.east - vaRectangle.west);
+                surfaceTile.textureCoordinateSubset.w = (tileRectangle.north - vaRectangle.south) / (vaRectangle.north - vaRectangle.south);
+
+                // Limit how many levels we can skip without real data.  If the vertex array came from an ancestor 4+
+                // generations back, we don't want to refine to the children unless they actually have data.
+                // (i.e. don't use this data for this tile's children, too)
+                var childrenRenderable = tile.level - surfaceTile.vertexArrayFromTile.level <= 4;
 
                 var children = tile.children;
                 for (var i = 0; i < children.length; ++i) {
                     var child = children[i];
-                    child.renderable = childrenRenderable;
+                    child.renderable = child.vertexArrayFromTile === child || childrenRenderable;
                 }
             }
         }
@@ -1047,14 +1068,9 @@ define([
             uniformMap.southMercatorYLowAndHighAndOneOverHeight.z = oneOverMercatorHeight;
             Matrix4.clone(modifiedModelViewScratch, uniformMap.modifiedModelView);
 
-            if (defined(surfaceTile.textureCoordinateSubset)) {
-                Cartesian4.clone(surfaceTile.textureCoordinateSubset, uniformMap.textureCoordinateSubset);
-            } else {
-                uniformMap.textureCoordinateSubset.x = 0.0;
-                uniformMap.textureCoordinateSubset.y = 0.0;
-                uniformMap.textureCoordinateSubset.z = 1.0;
-                uniformMap.textureCoordinateSubset.w = 1.0;
-            }
+            Cartesian4.clone(surfaceTile.textureCoordinateSubset, uniformMap.textureCoordinateSubset);
+
+            var renderPartialTile = surfaceTile.vertexArrayFromTile !== tile;
 
             var applyBrightness = false;
             var applyContrast = false;
@@ -1117,7 +1133,7 @@ define([
             uniformMap.waterMask = waterMaskTexture;
             Cartesian4.clone(surfaceTile.waterMaskTranslationAndScale, uniformMap.waterMaskTranslationAndScale);
 
-            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(context, frameState.mode, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection);
+            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(context, frameState.mode, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, renderPartialTile);
             command.renderState = renderState;
             command.primitiveType = PrimitiveType.TRIANGLES;
             command.vertexArray = surfaceTile.vertexArray;

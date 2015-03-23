@@ -1,4 +1,4 @@
-//#define SHOW_TILE_BOUNDARIES
+#define SHOW_TILE_BOUNDARIES
 
 uniform vec4 u_initialColor;
 
@@ -119,6 +119,7 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
 
 void main()
 {
+#ifdef RENDER_PARTIAL_TILE
     if (v_textureCoordinates.x < u_textureCoordinateSubset.x ||
         v_textureCoordinates.y < u_textureCoordinateSubset.y ||
         v_textureCoordinates.x > u_textureCoordinateSubset.z ||
@@ -127,15 +128,20 @@ void main()
         discard;
     }
 
+    vec2 coordinates = clamp((v_textureCoordinates.xy - u_textureCoordinateSubset.xy) / (u_textureCoordinateSubset.zw - u_textureCoordinateSubset.xy), 0.0, 1.0);
+#else
+    vec2 coordinates = clamp(v_textureCoordinates, 0.0, 1.0);
+#endif
+
     // The clamp below works around an apparent bug in Chrome Canary v23.0.1241.0
     // where the fragment shader sees textures coordinates < 0.0 and > 1.0 for the
     // fragments on the edges of tiles even though the vertex shader is outputting
     // coordinates strictly in the 0-1 range.
-    vec4 color = computeDayColor(u_initialColor, clamp(v_textureCoordinates, 0.0, 1.0));
+    vec4 color = computeDayColor(u_initialColor, coordinates);
 
 #ifdef SHOW_TILE_BOUNDARIES
-    if (v_textureCoordinates.x < (1.0/256.0) || v_textureCoordinates.x > (255.0/256.0) ||
-        v_textureCoordinates.y < (1.0/256.0) || v_textureCoordinates.y > (255.0/256.0))
+    if (coordinates.x < (1.0/256.0) || coordinates.x > (255.0/256.0) ||
+        coordinates.y < (1.0/256.0) || coordinates.y > (255.0/256.0))
     {
         color = vec4(1.0, 0.0, 0.0, 1.0);
     }
@@ -149,7 +155,7 @@ void main()
 #ifdef SHOW_REFLECTIVE_OCEAN
     vec2 waterMaskTranslation = u_waterMaskTranslationAndScale.xy;
     vec2 waterMaskScale = u_waterMaskTranslationAndScale.zw;
-    vec2 waterMaskTextureCoordinates = v_textureCoordinates * waterMaskScale + waterMaskTranslation;
+    vec2 waterMaskTextureCoordinates = coordinates * waterMaskScale + waterMaskTranslation;
 
     float mask = texture2D(u_waterMask, waterMaskTextureCoordinates).r;
 

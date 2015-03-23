@@ -346,7 +346,7 @@ define([
 
             if (childrenRenderable) {
                 // Children are renderable, so visit them instead.
-                for (i = 0, len = children.length; childrenRenderable && i < len; ++i) {
+                for (i = 0, len = children.length; i < len; ++i) {
                     visitTile(primitive, children[i], tileProvider, occluders, context, frameState);
                 }
             } else {
