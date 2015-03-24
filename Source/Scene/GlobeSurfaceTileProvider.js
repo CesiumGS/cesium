@@ -354,9 +354,7 @@ define([
     };
 
     GlobeSurfaceTileProvider.prototype.visitTileDepthFirst = function(tile) {
-        if (!defined(tile.data)) {
-            GlobeSurfaceTile.prepareNewTile(tile, this._terrainProvider, this._imageryLayers);
-        }
+        GlobeSurfaceTile.prepareNewTile(tile, this._terrainProvider, this._imageryLayers);
 
         var surfaceTile = tile.data;
 
@@ -475,6 +473,12 @@ define([
                     child.renderable = child.vertexArrayFromTile === child || childrenRenderable;
                 }
             }
+        }
+
+        var imageryList = surfaceTile.imagery;
+        for (var j = 0; j < imageryList.length; ++j) {
+            var imagery = imageryList[j];
+            imagery.inheritParentImagery(tile);
         }
     };
 

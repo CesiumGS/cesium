@@ -37,6 +37,50 @@ define([
         }
     };
 
+    TileImagery.prototype.inheritParentImagery = function(tile) {
+        var loadingImagery = this.loadingImagery;
+
+        if (!defined(loadingImagery)) {
+            return;
+        }
+
+        var imageryLayer = loadingImagery.imageryLayer;
+
+        if (loadingImagery.state === ImageryState.READY) {
+            if (defined(this.readyImagery)) {
+                this.readyImagery.releaseReference();
+            }
+            this.readyImagery = this.loadingImagery;
+            this.loadingImagery = undefined;
+            this.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(tile, this);
+            return;
+        }
+
+        // Find some ancestor imagery we can use while this imagery is still loading.
+        var ancestor = loadingImagery.parent;
+        var closestAncestorThatNeedsLoading;
+        while (defined(ancestor) && ancestor.state !== ImageryState.READY) {
+            if (ancestor.state !== ImageryState.FAILED && ancestor.state !== ImageryState.INVALID) {
+                // ancestor is still loading
+                closestAncestorThatNeedsLoading = closestAncestorThatNeedsLoading || ancestor;
+            }
+            ancestor = ancestor.parent;
+        }
+
+        if (this.readyImagery !== ancestor) {
+            if (defined(this.readyImagery)) {
+                this.readyImagery.releaseReference();
+            }
+
+            this.readyImagery = ancestor;
+
+            if (defined(ancestor)) {
+                ancestor.addReference();
+                this.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(tile, this);
+            }
+        }
+    };
+
     /**
      * Processes the load state machine for this instance.
      *

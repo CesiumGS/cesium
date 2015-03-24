@@ -8,6 +8,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/getTimestamp',
         '../Core/IndexDatatype',
         '../Core/IntersectionTests',
         '../Core/PixelFormat',
@@ -34,6 +35,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        getTimestamp,
         IndexDatatype,
         IntersectionTests,
         PixelFormat,
@@ -261,8 +263,6 @@ define([
             }
             this.waterMaskTexture = undefined;
         }
-
-        this.terrainData = undefined;
 
         if (defined(this.pickTerrain)) {
             this.pickTerrain.freeResources();
