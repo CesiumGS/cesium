@@ -229,16 +229,14 @@ define([
             position = Cartesian3.unpack(bottomPositions, i, scratchPosition);
             ellipsoid.scaleToGeodeticSurface(position, position);
             normal = ellipsoid.geodeticSurfaceNormal(position, scratchNormal);
-
-            topPosition = Cartesian3.multiplyByScalar(normal, upDelta, scratchDeltaNormal);
-            Cartesian3.add(position, topPosition, topPosition);
+            Cartesian3.multiplyByScalar(normal, upDelta, normal);
 
             EncodedCartesian3.writeElements(position, vbPositions, index);
-            EncodedCartesian3.writeElements(topPosition, vbPositions, index + 6);
+            EncodedCartesian3.writeElements(position, vbPositions, index + 6);
             index += 12;
 
-            Cartesian3.pack(normal, vbNormals, normalIndex);
-            Cartesian3.pack(Cartesian3.ZERO, vbNormals, normalIndex + 3);
+            Cartesian3.pack(Cartesian3.ZERO, vbNormals, normalIndex);
+            Cartesian3.pack(normal, vbNormals, normalIndex + 3);
             normalIndex += 6;
         }
 
@@ -255,16 +253,14 @@ define([
                 position = Cartesian3.unpack(wallPositions, j, scratchPosition);
                 ellipsoid.scaleToGeodeticSurface(position, position);
                 normal = ellipsoid.geodeticSurfaceNormal(position, scratchNormal);
+                Cartesian3.multiplyByScalar(normal, upDelta, normal);
 
-                topPosition = Cartesian3.multiplyByScalar(normal, upDelta, scratchDeltaNormal);
-                Cartesian3.add(position, topPosition, topPosition);
-
-                EncodedCartesian3.writeElements(topPosition, vbPositions, index);
+                EncodedCartesian3.writeElements(position, vbPositions, index);
                 EncodedCartesian3.writeElements(position, vbPositions, index + wallLength * 2);
                 index += 6;
 
-                Cartesian3.pack(Cartesian3.ZERO, vbNormals, normalIndex);
-                Cartesian3.pack(normal, vbNormals, normalIndex + wallLength);
+                Cartesian3.pack(normal, vbNormals, normalIndex);
+                Cartesian3.pack(Cartesian3.ZERO, vbNormals, normalIndex + wallLength);
                 normalIndex += 3;
             }
 
@@ -349,6 +345,9 @@ define([
         polygon._wallCount = numWallIndices;
 
         polygon._boundingSphere = BoundingSphere.fromPoints(outerRing);
+
+        // TODO: Correct bounding sphere
+        polygon._boundingSphere.radius = upDelta;
     }
 
     function latitudePlane(north, theta, xy, z, center, plane) {

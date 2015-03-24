@@ -17,6 +17,7 @@ vec4 czm_depthClampNearFarPlane(vec4 vertexInClipCoordinates)
 uniform vec3 u_cameraPosition;
 uniform vec3 u_cameraDirection;
 
+/*
 vec4 clipPointToNearPlane(vec3 p0, vec3 p1)
 {
     vec3 cameraPosition = u_cameraPosition;
@@ -38,16 +39,20 @@ vec4 clipPointToNearPlane(vec3 p0, vec3 p1)
     if (abs(denominator) > czm_epsilon6) {
 	    float t = (-planeDistance - dot(planeNormal, origin)) / denominator;
 	    if (t >= 0.0 && t <= magnitude) {
-	        return czm_modelViewProjection * vec4(origin + t * direction, 1.0);
+	        //return czm_modelViewProjection * vec4(origin + t * direction, 1.0);
+	        return vec4(vec3(0.0), 1.0);
 	    }
     } // else segment is parallel to plane (handle culling);
     
     return czm_modelViewProjectionRelativeToEye * vec4(p0, 1.0);
 }
+*/
 
-/*
 vec4 clipPointToNearPlane(vec3 p0, vec3 p1)
 {
+    p0 = (czm_modelViewRelativeToEye * vec4(p0, 1.0)).xyz;
+    p1 = (czm_modelViewRelativeToEye * vec4(p1, 1.0)).xyz;
+    
     vec3 p1ToP0 = p1 - p0;
     float magnitude = length(p1ToP0);
     vec3 direction = normalize(p1ToP0);
@@ -81,7 +86,6 @@ vec4 clipPointToNearPlane(vec3 p0, vec3 p1)
     
     return czm_projection * vec4(p0, 1.0);
 }
-*/
 
 void main()
 {
@@ -90,7 +94,7 @@ void main()
     //
     // Make sure the vertex is moved down far enough to cover the central body
     //
-    float delta = min(centralBodyMinimumAltitude, LODNegativeToleranceOverDistance * length(position.xyz));
+    float delta = 1.0;//min(centralBodyMinimumAltitude, LODNegativeToleranceOverDistance * length(position.xyz));
     
     //
     // Move vertex down. This is not required if it belongs to a top
@@ -101,7 +105,6 @@ void main()
     // it is done here to avoid buring CPU time.
     //
     
-    /*
     vec3 eyePosition = position.xyz;
     vec3 movedPosition = eyePosition + normal * delta;
     
@@ -113,7 +116,6 @@ void main()
     {
         gl_Position = clipPointToNearPlane(movedPosition, eyePosition);
     }
-    */
     
-    gl_Position = czm_modelViewProjectionRelativeToEye * (position + vec4(normal * delta, 0.0));
+    //gl_Position = czm_modelViewProjectionRelativeToEye * (position + vec4(normal * delta, 0.0));
 }
