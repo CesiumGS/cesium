@@ -15,7 +15,8 @@ define([
         RECEIVED : 3,
         TRANSFORMING : 4,
         TRANSFORMED : 5,
-        READY : 6
+        UPSAMPLING : 6,
+        READY : 7
     };
 
     return freezeObject(TerrainState);

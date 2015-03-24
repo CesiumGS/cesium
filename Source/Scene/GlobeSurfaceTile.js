@@ -409,6 +409,13 @@ define([
             surfaceTile = tile.data = new GlobeSurfaceTile();
         }
 
+        // If this tile is not available, start in the INVALID state so we'll upsample without
+        // wasting time trying to load first.
+        var tileDataAvailable = terrainProvider.getTileDataAvailable(tile.x, tile.y, tile.level);
+        if (defined(tileDataAvailable) && !tileDataAvailable) {
+            surfaceTile.terrainState = TerrainState.INVALID;
+        }
+
         // Map imagery tiles to this terrain tile
         for (var i = 0, len = imageryLayerCollection.length; i < len; ++i) {
             var layer = imageryLayerCollection.get(i);
@@ -469,6 +476,10 @@ define([
         if (surfaceTile.terrainState === TerrainState.TRANSFORMED) {
             createResources(tile, context, terrainProvider);
         }
+
+        if (surfaceTile.terrainState === TerrainState.FAILED || surfaceTile.terrainState === TerrainState.INVALID) {
+            upsample(tile, terrainProvider);
+        }
     }
 
     function requestTileGeometry(tile, terrainProvider) {
@@ -494,14 +505,14 @@ define([
 
         function doRequest() {
             // Request the terrain from the terrain provider.
-            tile.data.terrainData = terrainProvider.requestTileGeometry(tile.x, tile.y, tile.level);
+            var promise = terrainProvider.requestTileGeometry(tile.x, tile.y, tile.level);
 
             // If the request method returns undefined (instead of a promise), the request
             // has been deferred.
-            if (defined(tile.data.terrainData)) {
+            if (defined(promise)) {
                 tile.data.terrainState = TerrainState.RECEIVING;
 
-                when(tile.data.terrainData, success, failure);
+                when(promise, success, failure);
             } else {
                 // Deferred - try again later.
                 tile.data.terrainState = TerrainState.UNLOADED;
@@ -594,6 +605,31 @@ define([
         }
 
         tile.data.terrainState = TerrainState.READY;
+    }
+
+    function upsample(tile, terrainProvider) {
+        var parent = tile.parent;
+
+        if (!defined(parent) || !defined(parent.data) || !defined(parent.data.terrainData)) {
+            // Can't upsample until our parent has data to upsample from.
+            return;
+        }
+
+        var parentData = parent.data.terrainData;
+        var promise = parentData.upsample(terrainProvider.tilingScheme, parent.x, parent.y, parent.level, tile.x, tile.y, tile.level);
+        if (!defined(promise)) {
+            // Postponed.
+            return;
+        }
+
+        tile.data.terrainState = TerrainState.UPSAMPLING;
+
+        promise.then(function(upsampledTerrainData) {
+            tile.data.terrainData = upsampledTerrainData;
+            tile.data.terrainState = TerrainState.RECEIVED;
+        }).otherwise(function() {
+            tile.data.terrainState = TerrainState.FAILED;
+        });
     }
 
     var vertices = [];

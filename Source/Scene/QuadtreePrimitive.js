@@ -354,6 +354,7 @@ define([
                 // error requirements.
                 for (i = 0, len = children.length; i < len; ++i) {
                     var child = children[i];
+                    primitive._tileReplacementQueue.markTileRendered(child); // TODO: rename to markTileVisited
                     if (child.needsLoading) {
                         queueTileLoad(primitive, child);
                         child._highPriorityForLoad = true;
