@@ -221,7 +221,17 @@ define([
     var scratchResult = new Cartesian3();
 
     GlobeSurfaceTile.prototype.pick = function(ray, scene, cullBackFaces, result) {
-        var mesh = this.mesh;
+        var geometryTile = this.vertexArrayFromTile;
+        if (!defined(geometryTile)) {
+            return undefined;
+        }
+
+        var geometrySurfaceTile = geometryTile.data;
+        if (!defined(geometrySurfaceTile)) {
+            return undefined;
+        }
+
+        var mesh = geometrySurfaceTile.mesh;
         if (!defined(mesh)) {
             return undefined;
         }
