@@ -2,6 +2,7 @@
 define([
         '../Core/Color',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/PixelFormat',
         '../Renderer/ClearCommand',
@@ -10,6 +11,7 @@ define([
     ], function(
         Color,
         defined,
+        defineProperties,
         destroyObject,
         PixelFormat,
         ClearCommand,
@@ -24,7 +26,7 @@ define([
     var GlobeDepth = function(context) {
         this._colorTexture = undefined;
         this._depthStencilTexture = undefined;
-        this._depthStencilGlobeTest = undefined;
+        this._globeDepthTexture = undefined;
 
         this.framebuffer = undefined;
         this._copyDepthFramebuffer = undefined;
@@ -38,13 +40,21 @@ define([
             updateCopyCommands(this, context);
         }
 
-        this.supported = supported;
+        this._supported = supported;
     };
+
+    defineProperties(GlobeDepth.prototype, {
+        supported : {
+            get : function() {
+                return this._supported;
+            }
+        }
+    });
 
     function destroyTextures(globeDepth) {
         globeDepth._colorTexture = globeDepth._colorTexture && !globeDepth._colorTexture.isDestroyed() && globeDepth._colorTexture.destroy();
         globeDepth._depthStencilTexture = globeDepth._depthStencilTexture && !globeDepth._depthStencilTexture.isDestroyed() && globeDepth._depthStencilTexture.destroy();
-        globeDepth._depthStencilGlobeTest = globeDepth._depthStencilGlobeTest && !globeDepth._depthStencilGlobeTest.isDestroyed() && globeDepth._depthStencilGlobeTest.destroy();
+        globeDepth._globeDepthTexture = globeDepth._globeDepthTexture && !globeDepth._globeDepthTexture.isDestroyed() && globeDepth._globeDepthTexture.destroy();
     }
 
     function destroyFramebuffers(globeDepth) {
@@ -66,7 +76,7 @@ define([
             pixelFormat : PixelFormat.DEPTH_STENCIL,
             pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8_WEBGL
         });
-        globeDepth._depthStencilGlobeTest = context.createTexture2D({
+        globeDepth._globeDepthTexture = context.createTexture2D({
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGBA,
@@ -87,7 +97,7 @@ define([
         });
 
         globeDepth._copyDepthFramebuffer = context.createFramebuffer({
-            colorTextures : [globeDepth._depthStencilGlobeTest],
+            colorTextures : [globeDepth._globeDepthTexture],
             destroyAttachments : false
         });
 
@@ -118,7 +128,7 @@ define([
             }
         }
 
-        context.uniformState.globeDepthTexture = globeDepth._depthStencilGlobeTest;
+        context.uniformState.globeDepthTexture = globeDepth._globeDepthTexture;
 
         return true;
     }
@@ -169,10 +179,6 @@ define([
         updateCopyCommands(this, context);
     };
 
-    GlobeDepth.prototype.getFramebuffer = function() {
-        return this._frambuffer;
-    };
-
     GlobeDepth.prototype.executeCopyDepth = function(context, passState) {
         if (this.supported && defined(this._copyDepthCommand)) {
             this._copyDepthCommand.execute(context, passState);
@@ -193,34 +199,10 @@ define([
         }
     };
 
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
-     *
-     * @see GlobeDepth#destroy
-     */
     GlobeDepth.prototype.isDestroyed = function() {
         return false;
     };
 
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @returns {undefined}
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see GlobeDepth#isDestroyed
-     */
     GlobeDepth.prototype.destroy = function() {
         destroyTextures(this);
         destroyFramebuffers(this);

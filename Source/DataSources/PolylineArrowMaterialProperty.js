@@ -22,43 +22,25 @@ define([
     "use strict";
 
     /**
-     * A {@link MaterialProperty} that maps to solid color {@link Material} uniforms.
+     * A {@link MaterialProperty} that maps to PolylineArrow {@link Material} uniforms.
      *
      * @param {Property} [color=Color.WHITE] The {@link Color} Property to be used.
      *
-     * @alias ColorMaterialProperty
+     * @alias PolylineArrowMaterialProperty
      * @constructor
      */
-    var ColorMaterialProperty = function(color) {
+    var PolylineArrowMaterialProperty = function(color) {
         this._definitionChanged = new Event();
         this._color = undefined;
         this._colorSubscription = undefined;
         this.color = color;
     };
 
-    /**
-     * Creates a new instance that represents a constant color.
-     *
-     * @param {Color} color The color.
-     * @returns {ColorMaterialProperty} A new instance configured to represent the provided color.
-     * @deprecated
-     */
-    ColorMaterialProperty.fromColor = function(color) {
-        deprecationWarning('ColorMaterialProperty.fromColor', 'ColorMaterialProperty.fromColor was deprecated in Cesium 1.6.  It will be removed in 1.9.  Use "new ColorMaterialProperty(color)" instead.');
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(color)) {
-            throw new DeveloperError('color is required');
-        }
-        //>>includeEnd('debug');
-        return new ColorMaterialProperty(color);
-    };
-
-    defineProperties(ColorMaterialProperty.prototype, {
+    defineProperties(PolylineArrowMaterialProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.
-         * @memberof ColorMaterialProperty.prototype
+         * @memberof PolylineArrowMaterialProperty.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -72,7 +54,7 @@ define([
          * Gets the event that is raised whenever the definition of this property changes.
          * The definition is considered to have changed if a call to getValue would return
          * a different result for the same time.
-         * @memberof ColorMaterialProperty.prototype
+         * @memberof PolylineArrowMaterialProperty.prototype
          *
          * @type {Event}
          * @readonly
@@ -84,7 +66,7 @@ define([
         },
         /**
          * Gets or sets the {@link Color} {@link Property}.
-         * @memberof ColorMaterialProperty.prototype
+         * @memberof PolylineArrowMaterialProperty.prototype
          * @type {Property}
          * @default Color.WHITE
          */
@@ -97,8 +79,8 @@ define([
      * @param {JulianDate} time The time for which to retrieve the type.
      * @returns {String} The type of material.
      */
-    ColorMaterialProperty.prototype.getType = function(time) {
-        return 'Color';
+    PolylineArrowMaterialProperty.prototype.getType = function(time) {
+        return 'PolylineArrow';
     };
 
     /**
@@ -108,7 +90,7 @@ define([
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
      */
-    ColorMaterialProperty.prototype.getValue = function(time, result) {
+    PolylineArrowMaterialProperty.prototype.getValue = function(time, result) {
         if (!defined(result)) {
             result = {};
         }
@@ -123,11 +105,11 @@ define([
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
-    ColorMaterialProperty.prototype.equals = function(other) {
+    PolylineArrowMaterialProperty.prototype.equals = function(other) {
         return this === other || //
-               (other instanceof ColorMaterialProperty && //
+               (other instanceof PolylineArrowMaterialProperty && //
                 Property.equals(this._color, other._color));
     };
 
-    return ColorMaterialProperty;
+    return PolylineArrowMaterialProperty;
 });
