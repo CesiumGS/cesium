@@ -14,6 +14,38 @@ vec4 czm_depthClampNearFarPlane(vec4 vertexInClipCoordinates)
     return vertexInClipCoordinates;
 }
 
+uniform vec3 u_cameraPosition;
+uniform vec3 u_cameraDirection;
+
+vec4 clipPointToNearPlane(vec3 p0, vec3 p1)
+{
+    vec3 cameraPosition = u_cameraPosition;
+    vec3 cameraDirection = -u_cameraDirection;
+    float near = czm_entireFrustum.x + 1.0;
+    
+    //cameraPosition += cameraDirection * near;
+    
+    vec3 origin = p0 + cameraPosition;
+    vec3 diff = p1 + cameraPosition - origin;
+    vec3 direction = normalize(diff);
+    float magnitude = length(diff);
+    
+    vec3 planeNormal = cameraDirection;
+    float planeDistance = -dot(planeNormal, cameraPosition);
+    
+    float denominator = dot(planeNormal, direction);
+
+    if (abs(denominator) > czm_epsilon6) {
+	    float t = (-planeDistance - dot(planeNormal, origin)) / denominator;
+	    if (t >= 0.0 && t <= magnitude) {
+	        return czm_modelViewProjection * vec4(origin + t * direction, 1.0);
+	    }
+    } // else segment is parallel to plane (handle culling);
+    
+    return czm_modelViewProjectionRelativeToEye * vec4(p0, 1.0);
+}
+
+/*
 vec4 clipPointToNearPlane(vec3 p0, vec3 p1)
 {
     vec3 p1ToP0 = p1 - p0;
@@ -49,6 +81,7 @@ vec4 clipPointToNearPlane(vec3 p0, vec3 p1)
     
     return czm_projection * vec4(p0, 1.0);
 }
+*/
 
 void main()
 {
@@ -68,8 +101,9 @@ void main()
     // it is done here to avoid buring CPU time.
     //
     
-    vec3 eyePosition = (czm_modelViewRelativeToEye * position).xyz;
-    vec3 movedPosition = (czm_modelViewRelativeToEye * (position + vec4(normal * delta, 0.0))).xyz;
+    /*
+    vec3 eyePosition = position.xyz;
+    vec3 movedPosition = eyePosition + normal * delta;
     
     if (all(equal(normal, vec3(0.0))))
     {
@@ -79,4 +113,7 @@ void main()
     {
         gl_Position = clipPointToNearPlane(movedPosition, eyePosition);
     }
+    */
+    
+    gl_Position = czm_modelViewProjectionRelativeToEye * (position + vec4(normal * delta, 0.0));
 }

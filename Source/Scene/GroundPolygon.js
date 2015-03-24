@@ -20,6 +20,7 @@ define([
         '../Core/WindingOrder',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/ShaderSource',
         '../Shaders/ShadowVolumeFS',
         '../Shaders/ShadowVolumeVS',
         './BlendingState',
@@ -49,6 +50,7 @@ define([
         WindingOrder,
         BufferUsage,
         DrawCommand,
+        ShaderSource,
         ShadowVolumeFS,
         ShadowVolumeVS,
         BlendingState,
@@ -86,6 +88,18 @@ define([
         this._sp = undefined;
         this._rs = undefined;
 
+        this.debugVolume = defaultValue(options.debugVolume, false);
+        this._debugVolumeCommand = undefined;
+
+        this.debugPauseCamera = false;
+        this._debugPauseCamera = this.debugPauseCamera;
+
+        this._debugCameraPosition = new Cartesian3();
+        this._debugCameraDirection = new Cartesian3();
+
+        this._cameraPosition = undefined;
+        this._cameraDirection = undefined;
+
         var that = this;
         this._uniformMap = {
             centralBodyMinimumAltitude : function() {
@@ -114,6 +128,12 @@ define([
             },
             centerAzimuthFromWest : function () {
                 return that._centerAzimuthFromWest;
+            },
+            u_cameraPosition : function() {
+                return that._cameraPosition;
+            },
+            u_cameraDirection : function() {
+                return that._cameraDirection;
             }
         };
 
@@ -571,7 +591,7 @@ define([
                 pass : Pass.OPAQUE
             });
 
-            var coloRenderState = context.createRenderState({
+            var colorRenderState = context.createRenderState({
                 stencilTest : {
                     enabled : true,
                     frontFunction : StencilFunction.NOT_EQUAL,
@@ -603,7 +623,7 @@ define([
             this._colorPassCommand = new DrawCommand({
                 primitiveType : PrimitiveType.TRIANGLES,
                 vertexArray : this._va,
-                renderState : coloRenderState,
+                renderState : colorRenderState,
                 shaderProgram : this._sp,
                 uniformMap : this._uniformMap,
                 boundingVolume : this._boundingSphere,
@@ -613,9 +633,65 @@ define([
             });
         }
 
+        if (this.debugVolume && !defined(this._debugVolumeCommand)) {
+            var pauseRS = context.createRenderState({
+                cull : {
+                    enabled : false
+                },
+                depthTest : {
+                    enabled : true
+                },
+                depthMask : false,
+                blending : BlendingState.ALPHA_BLEND
+            });
+
+            var pauseVS = new ShaderSource({
+                sources : [ShadowVolumeVS],
+                defined : ['DEBUG_PAUSE']
+            });
+            var pauseFS = new ShaderSource({
+                sources : [ShadowVolumeFS]
+            });
+            var sp = context.createShaderProgram(pauseVS, pauseFS, attributeLocations);
+
+            this._debugVolumeCommand = new DrawCommand({
+                primitiveType : PrimitiveType.TRIANGLES,
+                vertexArray : this._va,
+                renderState : pauseRS,
+                shaderProgram : sp,
+                uniformMap : this._uniformMap,
+                boundingVolume : this._boundingSphere,
+                owner : this,
+                modelMatrix : Matrix4.IDENTITY,
+                pass : Pass.OPAQUE
+            });
+        }
+
+        var camera = frameState.camera;
+
+        if (this.debugPauseCamera !== this._debugPauseCamera) {
+            if (this.debugPauseCamera) {
+                Cartesian3.clone(camera.position, this._debugCameraPosition);
+                Cartesian3.clone(camera.direction, this._debugCameraDirection);
+            }
+            this._debugPauseCamera = this.debugPauseCamera;
+        }
+
+        if (this.debugPauseCamera) {
+            this._cameraPosition = this._debugCameraPosition;
+            this._cameraDirection = this._debugCameraDirection;
+        } else {
+            this._cameraPosition = camera.position;
+            this._cameraDirection = camera.direction;
+        }
+
         var pass = frameState.passes;
         if (pass.render) {
-            commandList.push(this._stencilPassCommand, this._colorPassCommand);
+            if (this.debugVolume) {
+                commandList.push(this._debugVolumeCommand);
+            } else {
+                commandList.push(this._stencilPassCommand, this._colorPassCommand);
+            }
         }
     };
 
