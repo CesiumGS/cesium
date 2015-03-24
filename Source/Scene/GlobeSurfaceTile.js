@@ -300,6 +300,8 @@ define([
                     }
                 }
             }
+
+            this.vertexArray = undefined;
         }
 
         if (defined(this.wireframeVertexArray)) {
@@ -314,6 +316,9 @@ define([
                 }
             }
         }
+
+        this.vertexArrayFromTile = undefined;
+        this.boundingDataFromTile = undefined;
     };
 
     GlobeSurfaceTile.prepareNewTile = function(tile, terrainProvider, imageryLayerCollection) {
