@@ -9,6 +9,7 @@ Change Log
   * Removed `Camera.transform`, which was deprecated in Cesium 1.6. Use `Camera.lookAtTransform`.
   * Removed the `direction` and `up` options to `Camera.flyTo`, which were deprecated in Cesium 1.6. Use the `orientation` option.
   * Removed `Camera.flyToRectangle`, which was deprecated in Cesium 1.6. Use `Camera.flyTo`.
+* Added `PolylineArrowMaterialProperty` to allow entities materials to use polyline arrows.
 * Fixed `PointerEvent` detection so that it works with older implementations of the specification. This also fixes lack of mouse handling when detection failed, such as when using Cesium in the Windows `WebBrowser` control.
 * Fixed an issue with transparency. [#2572](https://github.com/AnalyticalGraphicsInc/cesium/issues/2572)
 * Fixed improper handling of null values when loading `GeoJSON` data.
