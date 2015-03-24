@@ -75,6 +75,7 @@ vec4 clipPointToNearPlane(vec3 p0, vec3 p1)
         }
         else
         {
+            t += 0.01;
             p0 = p0 + t * direction;
             //clipped = true;
         }
@@ -110,7 +111,8 @@ void main()
     
     if (all(equal(normal, vec3(0.0))))
     {
-        gl_Position = clipPointToNearPlane(eyePosition, movedPosition);
+        //gl_Position = clipPointToNearPlane(eyePosition, movedPosition);
+        gl_Position = czm_modelViewProjectionRelativeToEye * position;
     }
     else
     {
