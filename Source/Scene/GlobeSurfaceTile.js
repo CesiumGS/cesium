@@ -147,7 +147,6 @@ define([
         this.occludeePointInScaledSpace = new Cartesian3();
 
         this.pickBoundingSphere = new BoundingSphere();
-        this.pickTerrain = undefined;
 
         this.surfaceShader = undefined;
 
@@ -222,12 +221,7 @@ define([
     var scratchResult = new Cartesian3();
 
     GlobeSurfaceTile.prototype.pick = function(ray, scene, cullBackFaces, result) {
-        var terrain = this.pickTerrain;
-        if (!defined(terrain)) {
-            return undefined;
-        }
-
-        var mesh = terrain.mesh;
+        var mesh = this.mesh;
         if (!defined(mesh)) {
             return undefined;
         }
@@ -262,11 +256,6 @@ define([
                 this.waterMaskTexture.destroy();
             }
             this.waterMaskTexture = undefined;
-        }
-
-        if (defined(this.pickTerrain)) {
-            this.pickTerrain.freeResources();
-            this.pickTerrain = undefined;
         }
 
         this.terrainState = TerrainState.UNLOADED;
