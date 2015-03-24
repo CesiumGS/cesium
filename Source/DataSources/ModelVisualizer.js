@@ -84,7 +84,7 @@ define([
 
             var uri;
             var modelData = modelHash[entity.id];
-            var show = entity.isAvailable(time) && Property.getValueOrDefault(modelGraphics._show, time, true);
+            var show = entity.isAvailableAndShowing(time) && Property.getValueOrDefault(modelGraphics._show, time, true);
 
             var modelMatrix;
             if (show) {
