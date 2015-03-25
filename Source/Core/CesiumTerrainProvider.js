@@ -66,7 +66,7 @@ define([
      * // Construct a terrain provider that uses per vertex normals for lighting
      * // to add shading detail to an imagery provider.
      * var terrainProvider = new Cesium.CesiumTerrainProvider({
-     *     url : '//cesiumjs.org/stk-terrain/tilesets/world/tiles',
+     *     url : '//assets.agi.com/stk-terrain/world',
      *     requestVertexNormals : true
      * });
      *
