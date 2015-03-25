@@ -179,7 +179,8 @@ define([
             return BoundingSphereState.PENDING;
         }
         var attributes = primitive.getGeometryInstanceAttributes(entity);
-        if (!defined(attributes) || !defined(attributes.boundingSphere)) {
+        if (!defined(attributes) || !defined(attributes.boundingSphere) ||//
+            (defined(attributes.show) && attributes.show[0] === 0)) {
             return BoundingSphereState.FAILED;
         }
         attributes.boundingSphere.clone(result);
