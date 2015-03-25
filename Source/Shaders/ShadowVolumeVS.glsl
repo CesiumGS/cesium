@@ -10,7 +10,7 @@ varying float v_z;
 vec4 czm_depthClampNearFarPlane(vec4 vertexInClipCoordinates)
 {
     v_z = (0.5 * (vertexInClipCoordinates.z / vertexInClipCoordinates.w) + 0.5) * vertexInClipCoordinates.w;
-    vertexInClipCoordinates.z = max(min(vertexInClipCoordinates.z, vertexInClipCoordinates.w), -vertexInClipCoordinates.w);
+    vertexInClipCoordinates.z = min(vertexInClipCoordinates.z, vertexInClipCoordinates.w);
     return vertexInClipCoordinates;
 }
 
@@ -52,36 +52,43 @@ vec4 clipPointToNearPlane(vec3 p0, vec3 p1)
     p0 = (czm_modelViewRelativeToEye * vec4(p0, 1.0)).xyz;
     p1 = (czm_modelViewRelativeToEye * vec4(p1, 1.0)).xyz;
     
-    vec3 p1ToP0 = p1 - p0;
-    float magnitude = length(p1ToP0);
-    vec3 direction = normalize(p1ToP0);
-    float endPoint0Distance =  -(czm_entireFrustum.x + p0.z);
+    vec3 diff = p1 - p0;
+    float magnitude = length(diff);
+    vec3 direction = normalize(diff);
     float denominator = -direction.z;
+    float near = czm_entireFrustum.x;
+    bool behindPlane = -(near + p0.z) < 0.0;
     
     bool culledByNearPlane = false;
     
-    if (endPoint0Distance < 0.0 && abs(denominator) < czm_epsilon7)
+    if (behindPlane && abs(denominator) < czm_epsilon7)
     {
+        // point is behind and parallel to the near plane
         culledByNearPlane = true;
     }
-    else if (endPoint0Distance < 0.0 && abs(denominator) > czm_epsilon7)
+    else if (behindPlane && abs(denominator) > czm_epsilon7)
     {
+        // find intersection of ray and near plane
         // t = (-plane distance - dot(plane normal, ray origin)) / dot(plane normal, ray direction)
-        float t = (czm_entireFrustum.x + p0.z) / denominator;
+        float t = (near + p0.z) / denominator;
         if (t < 0.0 || t > magnitude)
         {
+            // entire segment is behind the near plane
             culledByNearPlane = true;
         }
         else
         {
+            // compute intersection with plane slightly offset
+            // to prevent precision artifacts
             t += 0.001;
             p0 = p0 + t * direction;
-            //clipped = true;
         }
     }
     
     if (culledByNearPlane) {
-        //p0.z = min(p0.z, -czm_entireFrustum.x);
+        // the segment is behind the near plane. push to near plane and
+        // slightly offset to prevent precision artifacts
+        p0.z = min(p0.z, -(near + 0.001));
     }
     
     return czm_projection * vec4(p0, 1.0);
@@ -114,12 +121,15 @@ void main()
         //gl_Position = czm_modelViewProjectionRelativeToEye * position;
         
         eyePosition = (czm_modelViewRelativeToEye * position).xyz;
-        eyePosition.z = min(eyePosition.z, -czm_entireFrustum.x);
-        gl_Position = czm_projection * vec4(eyePosition, 1.0);
+        //eyePosition.z = min(eyePosition.z, -czm_entireFrustum.x);
+        //eyePosition.z = max(eyePosition.z, -czm_currentFrustum.y);
+        //gl_Position = czm_projection * vec4(eyePosition, 1.0);
+        gl_Position = czm_depthClampNearFarPlane(czm_projection * vec4(eyePosition, 1.0));
     }
     else
     {
-        gl_Position = clipPointToNearPlane(movedPosition, eyePosition);
+        //gl_Position = clipPointToNearPlane(movedPosition, eyePosition);
+        gl_Position = czm_depthClampNearFarPlane(clipPointToNearPlane(movedPosition, eyePosition));
     }
     
     //gl_Position = czm_modelViewProjectionRelativeToEye * (position + vec4(normal * delta, 0.0));
