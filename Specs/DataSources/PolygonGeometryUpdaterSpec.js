@@ -395,6 +395,11 @@ defineSuite([
         expect(options.granularity).toEqual(polygon.granularity.getValue());
         expect(options.stRotation).toEqual(polygon.stRotation.getValue());
 
+        entity.show = false;
+        dynamicUpdater.update(JulianDate.now());
+        expect(primitives.length).toBe(0);
+        entity.show = true;
+
         //If a dynamic show returns false, the primitive should go away.
         polygon.show.setValue(false);
         dynamicUpdater.update(time);

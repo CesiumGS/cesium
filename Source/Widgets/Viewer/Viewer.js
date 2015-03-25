@@ -1298,7 +1298,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var selectedEntity = this.selectedEntity;
         var showSelection = defined(selectedEntity) && this._enableInfoOrSelection;
 
-        if (showSelection && selectedEntity.isAvailable(time)) {
+        if (showSelection && selectedEntity.isShowing && selectedEntity.isAvailable(time)) {
             var state = this._dataSourceDisplay.getBoundingSphere(selectedEntity, true, boundingSphereScratch);
             if (state !== BoundingSphereState.FAILED) {
                 position = boundingSphereScratch.center;
@@ -1561,12 +1561,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
             if (state === BoundingSphereState.PENDING) {
                 return;
-            } else if (state === BoundingSphereState.FAILED) {
-                cancelZoom(viewer);
-                return;
+            } else if (state !== BoundingSphereState.FAILED) {
+                boundingSpheres.push(BoundingSphere.clone(boundingSphereScratch));
             }
-
-            boundingSpheres.push(BoundingSphere.clone(boundingSphereScratch));
         }
 
         if (boundingSpheres.length === 0) {
