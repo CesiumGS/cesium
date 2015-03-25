@@ -160,6 +160,7 @@ define([
                 attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
             }
         }
+        this.showsUpdated.removeAll();
     };
 
     Batch.prototype.contains = function(entity) {

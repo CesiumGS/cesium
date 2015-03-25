@@ -303,7 +303,7 @@ define([
                 }
 
                 this._parent = value;
-                value._children.push(value);
+                value._children.push(this);
 
                 var isShowing = this.isShowing;
 
@@ -459,16 +459,6 @@ define([
     };
 
     /**
-     * Given a time, returns true if this entity should be displayed at that time.
-     *
-     * @param {JulianDate} time The time to check availability for.
-     * @returns true if this entity should be displayed during the provided time, false otherwise.
-     */
-    Entity.prototype.isAvailableAndShowing = function(time) {
-        return this._show && this.isAvailable(time) && (!defined(this._parent) || this._parent.isAvailableAndShowing(time));
-    };
-
-    /**
      * Adds a property to this object.  Once a property is added, it can be
      * observed with {@link Entity#definitionChanged} and composited
      * with {@link CompositeEntityCollection}
@@ -534,9 +524,10 @@ define([
         }
         //>>includeEnd('debug');
 
-        //Name and availability are not Property objects and are currently handled differently.
+        //Name, show, and availability are not Property objects and are currently handled differently.
         this.name = defaultValue(this.name, source.name);
         this.availability = defaultValue(source.availability, this.availability);
+        this.show = defaultValue(source.show, this.show);
 
         var propertyNames = this._propertyNames;
         var sourcePropertyNames = defined(source._propertyNames) ? source._propertyNames : Object.keys(source);
