@@ -39,8 +39,7 @@ vec4 clipPointToNearPlane(vec3 p0, vec3 p1)
     if (abs(denominator) > czm_epsilon6) {
 	    float t = (-planeDistance - dot(planeNormal, origin)) / denominator;
 	    if (t >= 0.0 && t <= magnitude) {
-	        //return czm_modelViewProjection * vec4(origin + t * direction, 1.0);
-	        return vec4(vec3(0.0), 1.0);
+	        return czm_modelViewProjection * vec4(origin + t * direction, 1.0);
 	    }
     } // else segment is parallel to plane (handle culling);
     
@@ -75,7 +74,7 @@ vec4 clipPointToNearPlane(vec3 p0, vec3 p1)
         }
         else
         {
-            t += 0.01;
+            t += 0.001;
             p0 = p0 + t * direction;
             //clipped = true;
         }
@@ -112,7 +111,11 @@ void main()
     if (all(equal(normal, vec3(0.0))))
     {
         //gl_Position = clipPointToNearPlane(eyePosition, movedPosition);
-        gl_Position = czm_modelViewProjectionRelativeToEye * position;
+        //gl_Position = czm_modelViewProjectionRelativeToEye * position;
+        
+        eyePosition = (czm_modelViewRelativeToEye * position).xyz;
+        eyePosition.z = min(eyePosition.z, -czm_entireFrustum.x);
+        gl_Position = czm_projection * vec4(eyePosition, 1.0);
     }
     else
     {

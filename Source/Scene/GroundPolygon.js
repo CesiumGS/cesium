@@ -228,6 +228,7 @@ define([
         for (i = 0; i < numBottomCapVertices * 3; i += 3) {
             position = Cartesian3.unpack(bottomPositions, i, scratchPosition);
             ellipsoid.scaleToGeodeticSurface(position, position);
+
             normal = ellipsoid.geodeticSurfaceNormal(position, scratchNormal);
             Cartesian3.multiplyByScalar(normal, upDelta, normal);
 
@@ -252,6 +253,7 @@ define([
             for (j = 0; j < wallLength; j += 3) {
                 position = Cartesian3.unpack(wallPositions, j, scratchPosition);
                 ellipsoid.scaleToGeodeticSurface(position, position);
+
                 normal = ellipsoid.geodeticSurfaceNormal(position, scratchNormal);
                 Cartesian3.multiplyByScalar(normal, upDelta, normal);
 
@@ -587,7 +589,7 @@ define([
                 boundingVolume : this._boundingSphere,
                 owner : this,
                 modelMatrix : Matrix4.IDENTITY,
-                pass : Pass.OPAQUE
+                pass : Pass.GROUND
             });
 
             var colorRenderState = context.createRenderState({
@@ -628,7 +630,7 @@ define([
                 boundingVolume : this._boundingSphere,
                 owner : this,
                 modelMatrix : Matrix4.IDENTITY,
-                pass : Pass.OPAQUE
+                pass : Pass.GROUND
             });
         }
 
@@ -662,7 +664,7 @@ define([
                 boundingVolume : this._boundingSphere,
                 owner : this,
                 modelMatrix : Matrix4.IDENTITY,
-                pass : Pass.OPAQUE
+                pass : Pass.GROUND
             });
         }
 
