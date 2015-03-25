@@ -111,6 +111,8 @@ define([
                         var error = 'No entity with id "' + lookAt + '" exists in the provided data source.';
                         showLoadError(source, error);
                     }
+                } else {
+                    viewer.flyTo(dataSource);
                 }
             }).otherwise(function(error) {
                 showLoadError(source, error);
