@@ -92,6 +92,7 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {String} [options.id] A unique identifier for this object. If none is provided, a GUID is generated.
      * @param {String} [options.name] A human readable name to display to users. It does not have to be unique.
+     * @param {Boolean} [options.show] A boolean value indicating if the entity and its children are displayed.
      * @param {Property} [options.description] A string Property specifying an HTML description for this entity.
      * @param {PositionProperty} [options.position] A Property specifying the entity position.
      * @param {Property} [options.orientation] A Property specifying the entity orientation.
@@ -132,9 +133,9 @@ define([
         this._availability = undefined;
         this._id = id;
         this._definitionChanged = new Event();
-        this._name = undefined;
-        this._show = true;
-        this._parent = options.parent;
+        this._name = options.name;
+        this._show = defaultValue(options.show, true);
+        this._parent = undefined;
         this._propertyNames = ['billboard', 'box', 'corridor', 'cylinder', 'description', 'ellipse', //
                                'ellipsoid', 'label', 'model', 'orientation', 'path', 'point', 'polygon', //
                                'polyline', 'polylineVolume', 'position', 'rectangle', 'viewFrom', 'wall'];
@@ -179,7 +180,8 @@ define([
         this._wallSubscription = undefined;
         this._children = [];
 
-        this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
+        this.parent = options.parent;
+        this.merge(options);
     };
 
     function updateShow(entity, isShowing) {
@@ -238,8 +240,8 @@ define([
          */
         name : createRawPropertyDescriptor('name'),
         /**
-         * Gets or sets the name of the object.  The name is intended for end-user
-         * consumption and does not need to be unique.
+         * Gets or sets whether this entity should be displayed. When set to true,
+         * the entity is only displayed if the parent entity's show property is also true.
          * @memberof Entity.prototype
          * @type {Boolean}
          */
@@ -270,8 +272,8 @@ define([
             }
         },
         /**
-         * Gets or sets the name of the object.  The name is intended for end-user
-         * consumption and does not need to be unique.
+         * Gets whether this entity is being displayed, taking into account
+         * the visibility of any ancestor entities.
          * @memberof Entity.prototype
          * @type {Boolean}
          */
@@ -525,9 +527,9 @@ define([
         //>>includeEnd('debug');
 
         //Name, show, and availability are not Property objects and are currently handled differently.
+        //source.show is intentionally ignored because this.show always has a value.
         this.name = defaultValue(this.name, source.name);
         this.availability = defaultValue(source.availability, this.availability);
-        this.show = defaultValue(source.show, this.show);
 
         var propertyNames = this._propertyNames;
         var sourcePropertyNames = defined(source._propertyNames) ? source._propertyNames : Object.keys(source);

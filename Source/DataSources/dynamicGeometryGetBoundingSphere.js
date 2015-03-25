@@ -27,7 +27,7 @@ define([
         var attributes;
 
         //Outline and Fill geometries have the same bounding sphere, so just use whichever one is defined and ready
-        if (defined(primitive) && primitive.show && primitive.ready) {
+        if (defined(primitive) && primitive.ready) {
             attributes = primitive.getGeometryInstanceAttributes(entity);
             if (defined(attributes) && defined(attributes.boundingSphere)) {
                 BoundingSphere.transform(attributes.boundingSphere, primitive.modelMatrix, result);
@@ -35,7 +35,7 @@ define([
             }
         }
 
-        if (defined(outlinePrimitive) && outlinePrimitive.show && outlinePrimitive.ready) {
+        if (defined(outlinePrimitive) && outlinePrimitive.ready) {
             attributes = outlinePrimitive.getGeometryInstanceAttributes(entity);
             if (defined(attributes) && defined(attributes.boundingSphere)) {
                 BoundingSphere.transform(attributes.boundingSphere, outlinePrimitive.modelMatrix, result);

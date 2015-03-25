@@ -125,7 +125,7 @@ define([
                 }
 
                 if (!updater.hasConstantFill) {
-                    var show = updater.isFilled(time);
+                    var show = updater.entity.isShowing && updater.isFilled(time);
                     var currentShow = attributes.show[0] === 1;
                     if (show !== currentShow) {
                         attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
@@ -173,8 +173,7 @@ define([
             return BoundingSphereState.PENDING;
         }
         var attributes = primitive.getGeometryInstanceAttributes(entity);
-        if (!defined(attributes) || !defined(attributes.boundingSphere) ||//
-            (defined(attributes.show) && attributes.show[0] === 0)) {
+        if (!defined(attributes) || !defined(attributes.boundingSphere)) {
             return BoundingSphereState.FAILED;
         }
         attributes.boundingSphere.clone(result);

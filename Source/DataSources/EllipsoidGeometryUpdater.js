@@ -535,7 +535,7 @@ define([
 
         var entity = this._entity;
         var ellipsoid = entity.ellipsoid;
-        if (!entity.isAvailable(time) || !Property.getValueOrDefault(ellipsoid.show, time, true)) {
+        if (!entity.isShowing || !entity.isAvailable(time) || !Property.getValueOrDefault(ellipsoid.show, time, true)) {
             if (defined(this._primitive)) {
                 this._primitive.show = false;
             }

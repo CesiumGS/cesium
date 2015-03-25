@@ -460,7 +460,7 @@ define([
         var polyline = entity.polyline;
         var line = this._line;
 
-        if (!entity.isAvailable(time) || !Property.getValueOrDefault(polyline._show, time, true)) {
+        if (!entity.isShowing || !entity.isAvailable(time) || !Property.getValueOrDefault(polyline._show, time, true)) {
             line.show = false;
             return;
         }

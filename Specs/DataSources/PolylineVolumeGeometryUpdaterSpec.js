@@ -354,6 +354,11 @@ defineSuite([
         expect(options.granularity).toEqual(polylineVolume.granularity.getValue());
         expect(options.cornerType).toEqual(polylineVolume.cornerType.getValue());
 
+        entity.show = false;
+        dynamicUpdater.update(JulianDate.now());
+        expect(primitives.length).toBe(0);
+        entity.show = true;
+
         //If a dynamic show returns false, the primitive should go away.
         polylineVolume.show.setValue(false);
         dynamicUpdater.update(time);
