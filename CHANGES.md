@@ -18,6 +18,10 @@ Change Log
 * Fixed an issue with transparency. [#2572](https://github.com/AnalyticalGraphicsInc/cesium/issues/2572)
 * Fixed improper handling of null values when loading `GeoJSON` data.
 * Cesium is now tested using Jasmine 2.2.0.
+* Added support for automatic raster feature picking from `ArcGisMapServerImagerProvider`.
+* Added the ability to specify the desired tiling scheme, rectangle, and width and height of tiles to the `ArcGisMapServerImagerProvider` constructor.
+* Added the ability to access dynamic ArcGIS MapServer layers by specifying the `layers` parameter to the `ArcGisMapServerImagerProvider` constructor.
+* Fixed a bug that could cause incorrect rendering of an `ArcGisMapServerImageProvider` with a "singleFusedMapCache" in the geographic projection (EPSG:4326).
 
 ### 1.7.1 - 2015-03-06
 
