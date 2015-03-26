@@ -10,6 +10,7 @@ define([
         '../Core/JulianDate',
         '../Core/Matrix3',
         '../Core/Quaternion',
+        '../Core/Transforms',
         './Property'
     ], function(
         Cartesian3,
@@ -22,6 +23,7 @@ define([
         JulianDate,
         Matrix3,
         Quaternion,
+        Transforms,
         Property) {
     "use strict";
 
@@ -130,12 +132,9 @@ define([
 
     var position1Scratch = new Cartesian3();
     var position2Scratch = new Cartesian3();
-    var normalScratch = new Cartesian3();
-    var directionScratch = new Cartesian3();
-    var rightScratch = new Cartesian3();
-    var upScratch = new Cartesian3();
+    var velocityScratch = new Cartesian3();
     var timeScratch = new JulianDate();
-    var basisScratch = new Matrix3();
+    var rotationScratch = new Matrix3();
     var step = 1.0 / 60.0;
 
     /**
@@ -175,27 +174,15 @@ define([
             }
         }
 
-        var normal = defaultValue(this._ellipsoid, Ellipsoid.WGS84).geodeticSurfaceNormal(position1, normalScratch);
+        if (Cartesian3.equals(position1, position2)) {
+            return undefined;
+        }
 
-        var direction = Cartesian3.subtract(position2, position1, directionScratch);
-        Cartesian3.normalize(direction, direction);
+        var velocity = Cartesian3.subtract(position2, position1, velocityScratch);
+        Cartesian3.normalize(velocity, velocity);
 
-        var right = Cartesian3.cross(direction, normal, rightScratch);
-        var up = Cartesian3.cross(right, direction, upScratch);
-        Cartesian3.cross(direction, up, right);
-        Cartesian3.negate(right, right);
-
-        basisScratch[0] = direction.x;
-        basisScratch[1] = direction.y;
-        basisScratch[2] = direction.z;
-        basisScratch[3] = right.x;
-        basisScratch[4] = right.y;
-        basisScratch[5] = right.z;
-        basisScratch[6] = up.x;
-        basisScratch[7] = up.y;
-        basisScratch[8] = up.z;
-
-        return Quaternion.fromRotationMatrix(basisScratch, result);
+        var rotation = Transforms.rotationMatrixFromPositionVelocity(position1, velocity, this._ellipsoid, rotationScratch);
+        return Quaternion.fromRotationMatrix(rotationScratch, result);
     };
 
     /**

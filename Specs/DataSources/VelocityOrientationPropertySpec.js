@@ -7,6 +7,8 @@ defineSuite([
         'Core/ExtrapolationType',
         'Core/JulianDate',
         'Core/Quaternion',
+        'Core/Transforms',
+        'DataSources/CallbackProperty',
         'DataSources/SampledPositionProperty'
     ], function(
         VelocityOrientationProperty,
@@ -16,6 +18,8 @@ defineSuite([
         ExtrapolationType,
         JulianDate,
         Quaternion,
+        Transforms,
+        CallbackProperty,
         SampledPositionProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
@@ -103,21 +107,28 @@ defineSuite([
     });
 
     it('works without result parameter', function() {
-        var times = [new JulianDate(0, 0), new JulianDate(1, 0)];
+        var times = [new JulianDate(0, 0), new JulianDate(0, 1.0 / 60.0)];
         var values = [Cartesian3.fromDegrees(0, 0, 0), Cartesian3.fromDegrees(1, 0, 0)];
+        var velocity = Cartesian3.subtract(values[1], values[0], new Cartesian3());
+        Cartesian3.normalize(velocity, velocity);
 
         var position = new SampledPositionProperty();
         position.addSamples(times, values);
 
         var property = new VelocityOrientationProperty(position);
 
-        expect(property.getValue(times[0])).toEqual(new Quaternion(-0.49781357154789996, -0.5021769090497131, -0.50215778744446, -0.49779461608731784));
-        expect(property.getValue(times[1])).toEqual(new Quaternion(-0.49781359332642117, -0.5021768874604212, -0.5021577659852654, -0.4977946379931618));
+        var matrix = Transforms.rotationMatrixFromPositionVelocity(position.getValue(times[0]), velocity);
+        expect(property.getValue(times[0])).toEqual(Quaternion.fromRotationMatrix(matrix));
+
+        matrix = Transforms.rotationMatrixFromPositionVelocity(position.getValue(times[0]), velocity);
+        expect(property.getValue(times[1])).toEqual(Quaternion.fromRotationMatrix(matrix));
     });
 
     it('works with result parameter', function() {
-        var times = [new JulianDate(0, 0), new JulianDate(1, 0)];
+        var times = [new JulianDate(0, 0), new JulianDate(0, 1.0 / 60.0)];
         var values = [Cartesian3.fromDegrees(0, 0, 0), Cartesian3.fromDegrees(1, 0, 0)];
+        var velocity = Cartesian3.subtract(values[1], values[0], new Cartesian3());
+        Cartesian3.normalize(velocity, velocity);
 
         var position = new SampledPositionProperty();
         position.addSamples(times, values);
@@ -127,7 +138,18 @@ defineSuite([
         var expected = new Cartesian3();
         var result = property.getValue(times[0], expected);
         expect(result).toBe(expected);
-        expect(expected).toEqual(new Quaternion(-0.49781357154789996, -0.5021769090497131, -0.50215778744446, -0.49779461608731784));
+
+        var matrix = Transforms.rotationMatrixFromPositionVelocity(position.getValue(times[0]), velocity);
+        expect(expected).toEqual(Quaternion.fromRotationMatrix(matrix));
+    });
+
+    it('is undefined at zero velocity', function() {
+        var position = new CallbackProperty(function() {
+            return Cartesian3.fromDegrees(0, 0, 0);
+        }, false);
+
+        var property = new VelocityOrientationProperty(position);
+        expect(property.getValue(new JulianDate())).toBeUndefined();
     });
 
     it('returns undefined when position value is undefined', function() {
