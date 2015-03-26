@@ -1,24 +1,30 @@
 /*global define*/
 define([
+        '../../Core/BoundingRectangle',
         '../../Core/Color',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/Rectangle',
         '../../Scene/DebugModelMatrixPrimitive',
+        '../../Scene/Material',
         '../../Scene/PerformanceDisplay',
         '../../Scene/TileCoordinatesImageryProvider',
+        '../../Scene/ViewportQuad',
         '../../ThirdParty/knockout',
         '../createCommand'
     ], function(
+        BoundingRectangle,
         Color,
         defined,
         defineProperties,
         DeveloperError,
         Rectangle,
         DebugModelMatrixPrimitive,
+        Material,
         PerformanceDisplay,
         TileCoordinatesImageryProvider,
+        ViewportQuad,
         knockout,
         createCommand) {
     "use strict";
@@ -144,6 +150,13 @@ define([
          * @default false
          */
         this.wireframe = false;
+
+        /**
+         * Gets or sets the show globe depth state.  This property is observable.
+         * @type {Boolean}
+         * @default false
+         */
+        this.globeDepth = false;
 
         /**
          * Gets or sets the suspend updates state.  This property is observable.
@@ -333,6 +346,36 @@ define([
 
         this._showWireframe = createCommand(function() {
             globe._surface.tileProvider._debug.wireframe = that.wireframe;
+            return true;
+        });
+
+        var globeDepthVertexQuad;
+        this._showGlobeDepth = createCommand(function() {
+            if (that.globeDepth && !defined(globeDepthVertexQuad)) {
+                var canvas = that._canvas;
+                var rectangle = new BoundingRectangle(0, 0, canvas.clientWidth, canvas.clientHeight);
+
+                var DepthFS =
+                    'czm_material czm_getMaterial(czm_materialInput materialInput)\n' +
+                    '{\n' +
+                    '    czm_material material = czm_getDefaultMaterial(materialInput);\n' +
+                    '    vec2 st = materialInput.st;\n' +
+                    '    material.diffuse = mix(vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0), vec3(texture2D(czm_globeDepthTexture, st).r));\n' +
+                    '    material.alpha = 0.75;\n' +
+                    '    return material;\n' +
+                    '}\n';
+
+                var material = new Material({
+                    fabric : {
+                        source : DepthFS
+                    }
+                });
+                globeDepthVertexQuad = new ViewportQuad(rectangle, material);
+                that._scene.primitives.add(globeDepthVertexQuad);
+            } else if (!that.globeDepth && defined(globeDepthVertexQuad)) {
+                that._scene.primitives.remove(globeDepthVertexQuad);
+                globeDepthVertexQuad = undefined;
+            }
             return true;
         });
 
@@ -553,6 +596,18 @@ define([
         showWireframe : {
             get : function() {
                 return this._showWireframe;
+            }
+        },
+
+        /**
+         * Gets the command to toggle the view of the Globe depth buffer
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
+        showGlobeDepth : {
+            get : function() {
+                return this._showGlobeDepth;
             }
         },
 
