@@ -13,8 +13,8 @@ Change Log
 * Added `Entity.isShowing` which is a read-only property that indicates if an entity is currently being drawn.
 * Added support for the KML `visibility` element.
 * Added `PolylineArrowMaterialProperty` to allow entities materials to use polyline arrows.
-* Added `OrientDirectionOfTravelProperty` which can be used to easily orient Entity graphics (such as a model) along the direction it is moving.
-* Added a new Sandcastle demo, [Interpolation](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Interpolation.html&label=Showcases), which not only illustrates time-dynamic position interpolation options, but also uses the new `OrientDirectionOfTravelProperty` to orient an aircraft in flight.
+* Added `VelocityOrientationProperty` which can be used to easily orient Entity graphics (such as a model) along the direction it is moving.
+* Added a new Sandcastle demo, [Interpolation](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Interpolation.html&label=Showcases), which not only illustrates time-dynamic position interpolation options, but also uses the new `VelocityOrientationProperty` to orient an aircraft in flight.
 * Improved `viewer.zoomTo` and `viewer.flyTo` so they are now "best effort" and work even if some entities being zoomed to are not currently in the scene.
 * Fixed `PointerEvent` detection so that it works with older implementations of the specification. This also fixes lack of mouse handling when detection failed, such as when using Cesium in the Windows `WebBrowser` control.
 * Fixed an issue with transparency. [#2572](https://github.com/AnalyticalGraphicsInc/cesium/issues/2572)

@@ -27,9 +27,9 @@ define([
 
     /**
      * A {@link Property} which evaluates to a {@link Quaternion} rotation
-     * oriented along the direction of travel of the provided {@link PositionProperty}.
+     * based on the velocity of the provided {@link PositionProperty}.
      *
-     * @alias OrientDirectionOfTravelProperty
+     * @alias VelocityOrientationProperty
      * @constructor
      *
      * @param {Property} [position] The position property used to compute the orientation.
@@ -41,10 +41,10 @@ define([
      * position.addSamples(...);
      * var entity = viewer.entities.add({
      *   position : position,
-     *   orientation : new Cesium.OrientDirectionOfTravelProperty(position)
+     *   orientation : new Cesium.VelocityOrientationProperty(position)
      * }));
      */
-    var OrientDirectionOfTravelProperty = function(position, ellipsoid) {
+    var VelocityOrientationProperty = function(position, ellipsoid) {
         this._position = undefined;
         this._subscription = undefined;
         this._ellipsoid = undefined;
@@ -54,10 +54,10 @@ define([
         this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
     };
 
-    defineProperties(OrientDirectionOfTravelProperty.prototype, {
+    defineProperties(VelocityOrientationProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.
-         * @memberof OrientDirectionOfTravelProperty.prototype
+         * @memberof VelocityOrientationProperty.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -69,7 +69,7 @@ define([
         },
         /**
          * Gets the event that is raised whenever the definition of this property changes.
-         * @memberof OrientDirectionOfTravelProperty.prototype
+         * @memberof VelocityOrientationProperty.prototype
          *
          * @type {Event}
          * @readonly
@@ -81,7 +81,7 @@ define([
         },
         /**
          * Gets or sets the position property used to compute orientation.
-         * @memberof OrientDirectionOfTravelProperty.prototype
+         * @memberof VelocityOrientationProperty.prototype
          *
          * @type {Property}
          */
@@ -110,7 +110,7 @@ define([
         },
         /**
          * Gets or sets the ellipsoid used to determine which way is up.
-         * @memberof OrientDirectionOfTravelProperty.prototype
+         * @memberof VelocityOrientationProperty.prototype
          *
          * @type {Property}
          */
@@ -139,13 +139,13 @@ define([
     var step = 1.0 / 60.0;
 
     /**
-     * Gets the value of the property.
+     * Gets the value of the property at the provided time.
      *
      * @param {JulianDate} [time] The time for which to retrieve the value.
      * @param {Quaternion} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Quaternion} The modified result parameter or a new instance if the result parameter was not supplied.
      */
-    OrientDirectionOfTravelProperty.prototype.getValue = function(time, result) {
+    VelocityOrientationProperty.prototype.getValue = function(time, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required');
@@ -205,13 +205,13 @@ define([
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
-    OrientDirectionOfTravelProperty.prototype.equals = function(other) {
+    VelocityOrientationProperty.prototype.equals = function(other) {
         return this === other ||//
-               (other instanceof OrientDirectionOfTravelProperty &&
+               (other instanceof VelocityOrientationProperty &&
                 Property.equals(this._position, other._position) &&
                 (this._ellipsoid === other._ellipsoid ||
                  this._ellipsoid.equals(other._ellipsoid)));
     };
 
-    return OrientDirectionOfTravelProperty;
+    return VelocityOrientationProperty;
 });

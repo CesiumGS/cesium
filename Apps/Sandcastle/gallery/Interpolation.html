@@ -104,7 +104,7 @@ var entity = viewer.entities.add({
     position : position,
 
     //Automatically compute orientation based on position movement.
-    orientation : new Cesium.OrientDirectionOfTravelProperty(position),
+    orientation : new Cesium.VelocityOrientationProperty(position),
 
     //Load the Cesium plane model to represent the entity
     model : {
