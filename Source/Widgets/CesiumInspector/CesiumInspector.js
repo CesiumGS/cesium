@@ -101,6 +101,14 @@ define([
         performanceContainer.className = 'cesium-cesiumInspector-performanceDisplay';
         generalSection.appendChild(performanceContainer);
 
+        var globeDepth = document.createElement('div');
+        generalSection.appendChild(globeDepth);
+        var gCheckbox = document.createElement('input');
+        gCheckbox.type = 'checkbox';
+        gCheckbox.setAttribute('data-bind', 'checked: globeDepth, click: showGlobeDepth');
+        globeDepth.appendChild(gCheckbox);
+        globeDepth.appendChild(document.createTextNode('Show globe depth'));
+
         // Primitives
         var prim = document.createElement('div');
         prim.className = 'cesium-cesiumInspector-sectionHeader';
