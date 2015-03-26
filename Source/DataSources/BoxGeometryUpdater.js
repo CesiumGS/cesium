@@ -509,7 +509,7 @@ define([
         var geometryUpdater = this._geometryUpdater;
         var entity = geometryUpdater._entity;
         var box = entity.box;
-        if (!entity.isAvailable(time) || !Property.getValueOrDefault(box.show, time, true)) {
+        if (!entity.isShowing || !entity.isAvailable(time) || !Property.getValueOrDefault(box.show, time, true)) {
             return;
         }
 
