@@ -9,46 +9,17 @@ varying float v_z;
 
 vec4 czm_depthClampNearFarPlane(vec4 vertexInClipCoordinates)
 {
-    v_z = (0.5 * (vertexInClipCoordinates.z / vertexInClipCoordinates.w) + 0.5) * vertexInClipCoordinates.w;
-    vertexInClipCoordinates.z = min(vertexInClipCoordinates.z, vertexInClipCoordinates.w);
+    //v_z = (0.5 * (vertexInClipCoordinates.z / vertexInClipCoordinates.w) + 0.5) * vertexInClipCoordinates.w;
+    //vertexInClipCoordinates.z = min(vertexInClipCoordinates.z, vertexInClipCoordinates.w);
     return vertexInClipCoordinates;
 }
 
-uniform vec3 u_cameraPosition;
-uniform vec3 u_cameraDirection;
-
-/*
-vec4 clipPointToNearPlane(vec3 p0, vec3 p1)
+vec4 clipPointToPlane(vec3 p0, vec3 p1, bool nearPlane)
 {
-    vec3 cameraPosition = u_cameraPosition;
-    vec3 cameraDirection = -u_cameraDirection;
-    float near = czm_entireFrustum.x + 1.0;
+    float planeDistance = nearPlane ? czm_entireFrustum.x : czm_entireFrustum.y;
+    //float offset = nearPlane ? 0.001 : -0.001;
+    float offset = 0.001;
     
-    //cameraPosition += cameraDirection * near;
-    
-    vec3 origin = p0 + cameraPosition;
-    vec3 diff = p1 + cameraPosition - origin;
-    vec3 direction = normalize(diff);
-    float magnitude = length(diff);
-    
-    vec3 planeNormal = cameraDirection;
-    float planeDistance = -dot(planeNormal, cameraPosition);
-    
-    float denominator = dot(planeNormal, direction);
-
-    if (abs(denominator) > czm_epsilon6) {
-	    float t = (-planeDistance - dot(planeNormal, origin)) / denominator;
-	    if (t >= 0.0 && t <= magnitude) {
-	        return czm_modelViewProjection * vec4(origin + t * direction, 1.0);
-	    }
-    } // else segment is parallel to plane (handle culling);
-    
-    return czm_modelViewProjectionRelativeToEye * vec4(p0, 1.0);
-}
-*/
-
-vec4 clipPointToNearPlane(vec3 p0, vec3 p1)
-{
     p0 = (czm_modelViewRelativeToEye * vec4(p0, 1.0)).xyz;
     p1 = (czm_modelViewRelativeToEye * vec4(p1, 1.0)).xyz;
     
@@ -56,39 +27,39 @@ vec4 clipPointToNearPlane(vec3 p0, vec3 p1)
     float magnitude = length(diff);
     vec3 direction = normalize(diff);
     float denominator = -direction.z;
-    float near = czm_entireFrustum.x;
-    bool behindPlane = -(near + p0.z) < 0.0;
+    float pointDistance = -(planeDistance + p0.z);
+    bool behindPlane = nearPlane ? pointDistance < 0.0 : pointDistance > 0.0;
     
-    bool culledByNearPlane = false;
+    bool culledByPlane = false;
     
     if (behindPlane && abs(denominator) < czm_epsilon7)
     {
-        // point is behind and parallel to the near plane
-        culledByNearPlane = true;
+        // point is behind and parallel to the plane
+        culledByPlane = true;
     }
     else if (behindPlane && abs(denominator) > czm_epsilon7)
     {
-        // find intersection of ray and near plane
-        // t = (-plane distance - dot(plane normal, ray origin)) / dot(plane normal, ray direction)
-        float t = (near + p0.z) / denominator;
+        // find intersection of ray and the plane
+        // t = (-dot(plane normal, point on plane) - dot(plane normal, ray origin)) / dot(plane normal, ray direction)
+        float t = (planeDistance + p0.z) / denominator;
         if (t < 0.0 || t > magnitude)
         {
-            // entire segment is behind the near plane
-            culledByNearPlane = true;
+            // entire segment is behind the plane
+            culledByPlane = true;
         }
         else
         {
             // compute intersection with plane slightly offset
             // to prevent precision artifacts
-            t += 0.001;
+            t += offset;
             p0 = p0 + t * direction;
         }
     }
     
-    if (culledByNearPlane) {
-        // the segment is behind the near plane. push to near plane and
+    if (culledByPlane) {
+        // the segment is behind the plane. push to plane and
         // slightly offset to prevent precision artifacts
-        p0.z = min(p0.z, -(near + 0.001));
+        //p0.z = min(p0.z, -(planeDistance + offset));
     }
     
     return czm_projection * vec4(p0, 1.0);
@@ -113,24 +84,27 @@ void main()
     //
     
     vec3 eyePosition = position.xyz;
-    vec3 movedPosition = eyePosition + normal * delta;
+    vec3 movedPosition = position.xyz + normal * delta;
     
     if (all(equal(normal, vec3(0.0))))
     {
-        //gl_Position = clipPointToNearPlane(eyePosition, movedPosition);
-        //gl_Position = czm_modelViewProjectionRelativeToEye * position;
+        //gl_Position = clipPointToPlane(eyePosition, movedPosition, false);
+        gl_Position = czm_depthClampNearFarPlane(clipPointToPlane(eyePosition, movedPosition, false));
+        //gl_Position = czm_depthClampNearFarPlane(clipPointToPlane(movedPosition, eyePosition, false));
         
-        eyePosition = (czm_modelViewRelativeToEye * position).xyz;
-        //eyePosition.z = min(eyePosition.z, -czm_entireFrustum.x);
-        //eyePosition.z = max(eyePosition.z, -czm_currentFrustum.y);
+        //gl_Position = czm_modelViewProjectionRelativeToEye * (position + vec4(normal * delta, 0.0));
+        //gl_Position = czm_depthClampNearFarPlane(czm_modelViewProjectionRelativeToEye * (position + vec4(normal * delta, 0.0)));
+        
+        //eyePosition = (czm_modelViewRelativeToEye * vec4(eyePosition, 1.0)).xyz;
+        //eyePosition.z = max(eyePosition.z, -(czm_currentFrustum.y + 0.001));
         //gl_Position = czm_projection * vec4(eyePosition, 1.0);
-        gl_Position = czm_depthClampNearFarPlane(czm_projection * vec4(eyePosition, 1.0));
     }
     else
     {
         //gl_Position = clipPointToNearPlane(movedPosition, eyePosition);
-        gl_Position = czm_depthClampNearFarPlane(clipPointToNearPlane(movedPosition, eyePosition));
+        gl_Position = czm_depthClampNearFarPlane(clipPointToPlane(movedPosition, eyePosition, true));
+        
+        //gl_Position = czm_modelViewProjectionRelativeToEye * (position + vec4(normal * delta, 0.0));
+        //gl_Position = czm_depthClampNearFarPlane(czm_modelViewProjectionRelativeToEye * (position + vec4(normal * delta, 0.0)));
     }
-    
-    //gl_Position = czm_modelViewProjectionRelativeToEye * (position + vec4(normal * delta, 0.0));
 }

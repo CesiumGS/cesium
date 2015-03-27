@@ -48,7 +48,7 @@ varying float v_z;
 void czm_writeDepthClampedToFarPlane()
 {
     // That is really 1/w
-    gl_FragDepthEXT = min(v_z * gl_FragCoord.w, 1.0);   
+    //gl_FragDepthEXT = min(v_z * gl_FragCoord.w, 1.0);   
     //gl_FragDepthEXT = clamp(v_z * gl_FragCoord.w, 0.0, 1.0);
 }
 
