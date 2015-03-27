@@ -311,6 +311,34 @@ define([
         return result;
     }
 
+    function normalizePackedQuaternionArray(array, startingIndex) {
+        var x = array[startingIndex];
+        var y = array[startingIndex + 1];
+        var z = array[startingIndex + 2];
+        var w = array[startingIndex + 3];
+
+        var inverseMagnitude = 1.0 / Math.sqrt(x * x + y * y + z * z + w * w);
+        array[startingIndex] = x * inverseMagnitude;
+        array[startingIndex + 1] = y * inverseMagnitude;
+        array[startingIndex + 2] = z * inverseMagnitude;
+        array[startingIndex + 3] = w * inverseMagnitude;
+    }
+
+    function unwrapQuaternionInterval(czmlInterval) {
+        var unitQuaternion = czmlInterval.unitQuaternion;
+        if (defined(unitQuaternion)) {
+            if (unitQuaternion.length === 4) {
+                normalizePackedQuaternionArray(unitQuaternion, 0);
+                return unitQuaternion;
+            }
+
+            for (var i = 1; i < unitQuaternion.length; i += 5) {
+                normalizePackedQuaternionArray(unitQuaternion, i);
+            }
+        }
+        return unitQuaternion;
+    }
+
     function unwrapInterval(type, czmlInterval, sourceUri) {
         /*jshint sub:true*/
         switch (type) {
@@ -339,7 +367,7 @@ define([
         case Array:
             return czmlInterval.array;
         case Quaternion:
-            return czmlInterval.unitQuaternion;
+            return unwrapQuaternionInterval(czmlInterval);
         case Rectangle:
             return unwrapRectangleInterval(czmlInterval);
         case Uri:
@@ -1438,6 +1466,7 @@ define([
         }).otherwise(function(error) {
             DataSource.setLoading(dataSource, false);
             dataSource._error.raiseEvent(dataSource, error);
+            window.console.log(error);
             return when.reject(error);
         });
     }

@@ -11,6 +11,7 @@ define([
         '../Core/GeographicProjection',
         '../Core/Geometry',
         '../Core/GeometryAttribute',
+        '../Core/GeometryAttributes',
         '../Core/GeometryPipeline',
         '../Core/IndexDatatype',
         '../Core/Matrix4',
@@ -27,6 +28,7 @@ define([
         GeographicProjection,
         Geometry,
         GeometryAttribute,
+        GeometryAttributes,
         GeometryPipeline,
         IndexDatatype,
         Matrix4,
@@ -685,7 +687,7 @@ define([
             var length;
             var values;
             var componentsPerAttribute;
-            var attributes = {};
+            var attributes = new GeometryAttributes();
             var numAttributes = packedGeometry[packedGeometryIndex++];
             for (i = 0; i < numAttributes; i++) {
                 var name = stringTable[packedGeometry[packedGeometryIndex++]];

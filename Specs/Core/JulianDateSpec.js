@@ -10,7 +10,7 @@ defineSuite([
         TimeConstants,
         TimeStandard) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     // All exact Julian Dates found using NASA's Time Conversion Tool: http://ssd.jpl.nasa.gov/tc.cgi
     it('Construct a default date', function() {
@@ -50,7 +50,7 @@ defineSuite([
         var julianDate = JulianDate.now();
         var returnedResult = julianDate.clone();
         expect(returnedResult).toEqual(julianDate);
-        expect(returnedResult).toNotBe(julianDate);
+        expect(returnedResult).not.toBe(julianDate);
     });
 
     it('clone works with result parameter', function() {
@@ -58,7 +58,7 @@ defineSuite([
         var result = JulianDate.now();
         var returnedResult = julianDate.clone(result);
         expect(returnedResult).toBe(result);
-        expect(returnedResult).toNotBe(julianDate);
+        expect(returnedResult).not.toBe(julianDate);
         expect(returnedResult).toEqual(julianDate);
     });
 

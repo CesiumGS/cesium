@@ -16,7 +16,7 @@ defineSuite([
         VertexFormat,
         createPackableSpecs) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('constructor throws with no positions', function() {
         expect(function() {
@@ -161,14 +161,29 @@ defineSuite([
         expect(geometry).not.toBeDefined();
     });
 
-    var positions = [new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(0.0, 1.0, 0.0), new Cartesian3(0.0, 0.0, 1.0)];
+    var positions = [new Cartesian3(1, 2, 3), new Cartesian3(4, 5, 6), new Cartesian3(7, 8, 9)];
     var line = new PolylineGeometry({
         positions : positions,
         width : 10.0,
+        colors : [Color.RED, Color.LIME, Color.BLUE],
+        colorsPerVertex : true,
+        followSurface : false,
+        granularity : 11,
         vertexFormat : VertexFormat.POSITION_ONLY,
-        granularity : Math.PI,
-        ellipsoid: Ellipsoid.UNIT_SPHERE
+        ellipsoid : new Ellipsoid(12, 13, 14)
     });
-    var packedInstance = [3.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 10.0, 0.0, 1.0, Math.PI];
+    var packedInstance = [3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 3, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 12, 13, 14, 1, 0, 0, 0, 0, 0, 10, 1, 0, 11];
+    createPackableSpecs(PolylineGeometry, line, packedInstance, "per vertex colors");
+
+    line = new PolylineGeometry({
+        positions : positions,
+        width : 10.0,
+        colorsPerVertex : false,
+        followSurface : false,
+        granularity : 11,
+        vertexFormat : VertexFormat.POSITION_ONLY,
+        ellipsoid : new Ellipsoid(12, 13, 14)
+    });
+    packedInstance = [3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 12, 13, 14, 1, 0, 0, 0, 0, 0, 10, 0, 0, 11];
     createPackableSpecs(PolylineGeometry, line, packedInstance);
 });

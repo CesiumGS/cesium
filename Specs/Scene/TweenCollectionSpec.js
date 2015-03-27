@@ -8,7 +8,7 @@ defineSuite([
         Color,
         EasingFunction) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('add() adds a tween', function() {
         var startObject = {
@@ -190,7 +190,7 @@ defineSuite([
 
         tweens.removeAll();
         expect(tweens.length).toEqual(0);
-        expect(cancel.calls.length).toEqual(2);
+        expect(cancel.calls.count()).toEqual(2);
     });
 
     it('contains() throws without an index', function() {

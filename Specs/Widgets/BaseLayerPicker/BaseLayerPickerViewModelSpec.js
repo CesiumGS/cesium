@@ -10,7 +10,7 @@ defineSuite([
         ImageryLayerCollection,
         ProviderViewModel) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var MockGlobe = function() {
         this.imageryLayers = new ImageryLayerCollection();
@@ -74,8 +74,8 @@ defineSuite([
             terrainProviderViewModels : terrainViewModels
         });
         expect(viewModel.globe).toBe(globe);
-        expect(viewModel.imageryProviderViewModels).toEqual(imageryViewModels);
-        expect(viewModel.terrainProviderViewModels).toEqual(terrainViewModels);
+        expect(viewModel.imageryProviderViewModels.length).toBe(0);
+        expect(viewModel.terrainProviderViewModels.length).toBe(0);
     });
 
     it('selecting imagery closes the dropDown', function() {

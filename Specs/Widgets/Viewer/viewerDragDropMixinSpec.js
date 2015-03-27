@@ -4,15 +4,17 @@ defineSuite([
         'Core/defined',
         'Core/TimeInterval',
         'Specs/DomEventSimulator',
+        'Specs/pollToPromise',
         'Widgets/Viewer/Viewer'
     ], function(
         viewerDragDropMixin,
         defined,
         TimeInterval,
         DomEventSimulator,
+        pollToPromise,
         Viewer) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var container;
     var viewer;
@@ -39,7 +41,7 @@ defineSuite([
                 });
             }
         };
-        spyOn(window, 'FileReader').andReturn(fakeFileReader);
+        spyOn(window, 'FileReader').and.returnValue(fakeFileReader);
     });
 
     afterEach(function() {
@@ -124,11 +126,9 @@ defineSuite([
 
         DomEventSimulator.fireMockEvent(viewer._handleDrop, mockEvent);
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return viewer.dataSources.length === 1;
-        });
-
-        runs(function() {
+        }).then(function() {
             var dataSource = viewer.dataSources.get(0);
             var interval = TimeInterval.fromIso8601({
                 iso8601 : czml1[0].clock.interval
@@ -161,11 +161,9 @@ defineSuite([
 
         DomEventSimulator.fireMockEvent(viewer._handleDrop, mockEvent);
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return viewer.dataSources.length === 2;
-        });
-
-        runs(function() {
+        }).then(function() {
             var source1 = viewer.dataSources.get(0);
             var source2 = viewer.dataSources.get(1);
             expect(source1.entities.getById('test')).toBeDefined();
@@ -201,11 +199,9 @@ defineSuite([
 
         DomEventSimulator.fireMockEvent(viewer._handleDrop, mockEvent);
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return viewer.dataSources.length === 2;
-        });
-
-        runs(function() {
+        }).then(function() {
             var source1 = viewer.dataSources.get(0);
             var source2 = viewer.dataSources.get(1);
             expect(source1.entities.getById('test')).toBeDefined();
@@ -219,42 +215,38 @@ defineSuite([
 
             viewer.clearOnDrop = false;
             DomEventSimulator.fireMockEvent(viewer._handleDrop, mockEvent);
-        });
 
-        waitsFor(function() {
-            return viewer.dataSources.length === 4;
-        });
+            return pollToPromise(function() {
+                return viewer.dataSources.length === 4;
+            }).then(function() {
+                var source1 = viewer.dataSources.get(0);
+                var source2 = viewer.dataSources.get(1);
+                var source3 = viewer.dataSources.get(2);
+                var source4 = viewer.dataSources.get(3);
 
-        runs(function() {
-            var source1 = viewer.dataSources.get(0);
-            var source2 = viewer.dataSources.get(1);
-            var source3 = viewer.dataSources.get(2);
-            var source4 = viewer.dataSources.get(3);
+                expect(source1.entities.getById('test')).toBeDefined();
+                expect(source2.entities.getById('test2')).toBeDefined();
+                expect(source3.entities.getById('test')).toBeDefined();
+                expect(source4.entities.getById('test2')).toBeDefined();
 
-            expect(source1.entities.getById('test')).toBeDefined();
-            expect(source2.entities.getById('test2')).toBeDefined();
-            expect(source3.entities.getById('test')).toBeDefined();
-            expect(source4.entities.getById('test2')).toBeDefined();
+                viewer.clearOnDrop = true;
+                DomEventSimulator.fireMockEvent(viewer._handleDrop, mockEvent);
 
-            viewer.clearOnDrop = true;
-            DomEventSimulator.fireMockEvent(viewer._handleDrop, mockEvent);
-        });
-
-        waitsFor(function() {
-            return viewer.dataSources.length === 2;
-        });
-
-        runs(function() {
-            var source1 = viewer.dataSources.get(0);
-            var source2 = viewer.dataSources.get(1);
-            expect(source1.entities.getById('test')).toBeDefined();
-            expect(source2.entities.getById('test2')).toBeDefined();
-            //Interval of first file should be used.
-            var interval = TimeInterval.fromIso8601({
-                iso8601 : czml1[0].clock.interval
+                return pollToPromise(function() {
+                    return viewer.dataSources.length === 2;
+                }).then(function() {
+                    var source1 = viewer.dataSources.get(0);
+                    var source2 = viewer.dataSources.get(1);
+                    expect(source1.entities.getById('test')).toBeDefined();
+                    expect(source2.entities.getById('test2')).toBeDefined();
+                    //Interval of first file should be used.
+                    var interval = TimeInterval.fromIso8601({
+                        iso8601 : czml1[0].clock.interval
+                    });
+                    expect(source1.clock.startTime).toEqual(interval.start);
+                    expect(source1.clock.stopTime).toEqual(interval.stop);
+                });
             });
-            expect(source1.clock.startTime).toEqual(interval.start);
-            expect(source1.clock.stopTime).toEqual(interval.stop);
         });
     });
 
@@ -280,11 +272,9 @@ defineSuite([
         viewer.dropError.addEventListener(spyListener);
         DomEventSimulator.fireMockEvent(viewer._handleDrop, mockEvent);
 
-        waitsFor(function() {
-            return spyListener.wasCalled;
-        });
-
-        runs(function() {
+        return pollToPromise(function() {
+            return spyListener.calls.any();
+        }).then(function() {
             expect(spyListener).toHaveBeenCalledWith(viewer, 'czml1.czml', jasmine.any(SyntaxError));
 
             viewer.dropError.removeEventListener(spyListener);
@@ -313,11 +303,9 @@ defineSuite([
         viewer.dropError.addEventListener(spyListener);
         DomEventSimulator.fireMockEvent(viewer._handleDrop, mockEvent);
 
-        waitsFor(function() {
-            return spyListener.wasCalled;
-        });
-
-        runs(function() {
+        return pollToPromise(function() {
+            return spyListener.calls.any();
+        }).then(function() {
             expect(spyListener).toHaveBeenCalledWith(viewer, mockEvent.dataTransfer.files[0].name, mockEvent.dataTransfer.files[0].errorMessage);
 
             viewer.dropError.removeEventListener(spyListener);
@@ -393,6 +381,16 @@ defineSuite([
         expect(dropTarget2.events.dragenter).toBeDefined();
         expect(dropTarget2.events.dragover).toBeDefined();
         expect(dropTarget2.events.dragexit).toBeDefined();
+    });
+
+    it('can set proxy.', function() {
+        var proxy = {};
+
+        viewer = new Viewer(container);
+        viewer.extend(viewerDragDropMixin, {
+            proxy : proxy
+        });
+        expect(viewer.proxy).toBe(proxy);
     });
 
     it('throws with undefined viewer', function() {

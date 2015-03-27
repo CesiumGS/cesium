@@ -16,7 +16,7 @@ defineSuite([
         createContext,
         createFrameState) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var context;
     var frameState;
@@ -69,14 +69,14 @@ defineSuite([
         });
 
         var tilingScheme = new GeographicTilingScheme();
-        result.getTilingScheme.andReturn(tilingScheme);
+        result.getTilingScheme.and.returnValue(tilingScheme);
 
         return result;
     }
 
     it('calls beginUpdate, loadTile, and endUpdate', function() {
         var tileProvider = createSpyTileProvider();
-        tileProvider.getReady.andReturn(true);
+        tileProvider.getReady.and.returnValue(true);
 
         var quadtree = new QuadtreePrimitive({
             tileProvider : tileProvider
@@ -91,9 +91,9 @@ defineSuite([
 
     it('shows the root tiles when they are ready and visible', function() {
         var tileProvider = createSpyTileProvider();
-        tileProvider.getReady.andReturn(true);
-        tileProvider.computeTileVisibility.andReturn(Visibility.FULL);
-        tileProvider.loadTile.andCallFake(function(context, frameState, tile) {
+        tileProvider.getReady.and.returnValue(true);
+        tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
+        tileProvider.loadTile.and.callFake(function(context, frameState, tile) {
             tile.renderable = true;
         });
 
@@ -109,11 +109,11 @@ defineSuite([
 
     it('stops loading a tile that moves to the DONE state', function() {
         var tileProvider = createSpyTileProvider();
-        tileProvider.getReady.andReturn(true);
-        tileProvider.computeTileVisibility.andReturn(Visibility.FULL);
+        tileProvider.getReady.and.returnValue(true);
+        tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
 
         var calls = 0;
-        tileProvider.loadTile.andCallFake(function(context, frameState, tile) {
+        tileProvider.loadTile.and.callFake(function(context, frameState, tile) {
             ++calls;
             tile.state = QuadtreeTileLoadState.DONE;
         });
@@ -131,12 +131,12 @@ defineSuite([
 
     it('forEachLoadedTile does not enumerate tiles in the START state', function() {
         var tileProvider = createSpyTileProvider();
-        tileProvider.getReady.andReturn(true);
-        tileProvider.computeTileVisibility.andReturn(Visibility.FULL);
-        tileProvider.computeDistanceToTile.andReturn(1e-15);
+        tileProvider.getReady.and.returnValue(true);
+        tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
+        tileProvider.computeDistanceToTile.and.returnValue(1e-15);
 
         // Load the root tiles.
-        tileProvider.loadTile.andCallFake(function(context, frameState, tile) {
+        tileProvider.loadTile.and.callFake(function(context, frameState, tile) {
             tile.state = QuadtreeTileLoadState.DONE;
             tile.renderable = true;
         });
@@ -148,7 +148,7 @@ defineSuite([
         quadtree.update(context, frameState, []);
 
         // Don't load further tiles.
-        tileProvider.loadTile.andCallFake(function(context, frameState, tile) {
+        tileProvider.loadTile.and.callFake(function(context, frameState, tile) {
             tile.state = QuadtreeTileLoadState.START;
         });
 
