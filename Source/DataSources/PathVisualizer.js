@@ -441,7 +441,7 @@ define([
             var entity = item.entity;
             var positionProperty = entity._position;
 
-            var lastUpdater = entity._pathUpdater;
+            var lastUpdater = item.updater;
 
             var frameToVisualize = ReferenceFrame.FIXED;
             if (this._scene.mode === SceneMode.SCENE3D) {
