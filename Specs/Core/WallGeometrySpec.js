@@ -145,6 +145,32 @@ defineSuite([
         expect(cartographic.height).toEqualEpsilon(2000.0, CesiumMath.EPSILON8);
     });
 
+    it('does not clean positions that add up past EPSILON14', function() {
+        var eightyPercentOfEpsilon14 = 0.8 * CesiumMath.EPSILON14;
+        var inputPositions = Cartesian3.fromRadiansArrayHeights([
+            1.0, 1.0, 1000.0,
+            1.0, 1.0 + eightyPercentOfEpsilon14, 1000.0,
+            1.0, 1.0 + (2 * eightyPercentOfEpsilon14), 1000.0,
+            1.0, 1.0 + (3 * eightyPercentOfEpsilon14), 1000.0
+        ]);
+        var w = WallGeometry.createGeometry(new WallGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            positions    : inputPositions
+        }));
+        expect(w).toBeDefined();
+
+        var expectedPositions = Cartesian3.fromRadiansArrayHeights([
+            1.0, 1.0, 1000.0,
+            1.0, 1.0 + (2 * eightyPercentOfEpsilon14), 1000.0
+        ]);
+        var expectedW = WallGeometry.createGeometry(new WallGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            positions    : expectedPositions
+        }));
+        var positions = w.attributes.position.values;
+        expect(positions.length).toEqual(expectedW.attributes.position.values.length);
+    });
+
     it('cleans selects maximum height from duplicates', function() {
         var w = WallGeometry.createGeometry(new WallGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
