@@ -287,7 +287,8 @@ define([
      */
     SampledPositionProperty.prototype.equals = function(other) {
         return this === other || //
-               (Property.equals(this._property, other._property) && //
+               (other instanceof SampledPositionProperty &&
+                Property.equals(this._property, other._property) && //
                 this._referenceFrame === other._referenceFrame);
     };
 
