@@ -9,6 +9,8 @@ Change Log
   * Removed `Camera.transform`, which was deprecated in Cesium 1.6. Use `Camera.lookAtTransform`.
   * Removed the `direction` and `up` options to `Camera.flyTo`, which were deprecated in Cesium 1.6. Use the `orientation` option.
   * Removed `Camera.flyToRectangle`, which was deprecated in Cesium 1.6. Use `Camera.flyTo`.
+* Deprecated
+  * The `smallterrain` tileset has been deprecated and will be removed in 1.11. Use the [STK World Terrain](http://cesiumjs.org/data-and-assets/terrain/stk-world-terrain.html) tileset instead.
 * Added `Entity.show` which is a boolean for easily hiding or showing an entity and its children.
 * Added `Entity.isShowing` which is a read-only property that indicates if an entity is currently being drawn.
 * Added support for the KML `visibility` element.
