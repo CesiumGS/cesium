@@ -34,10 +34,10 @@ define([
         return array;
     }
 
-    function equals(env, a, b) {
+    function equals(util, customEqualiyTesters, a, b) {
         a = typedArrayToArray(a);
         b = typedArrayToArray(b);
-        return env.equals_(a, b);
+        return util.equals(a, b, customEqualiyTesters);
     }
 
     return equals;

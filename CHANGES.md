@@ -1,7 +1,30 @@
 Change Log
 ==========
 
-### 1.7.1 - 2015-04-06
+### 1.8 -2015-04-01
+
+* Breaking changes
+  * Removed the `eye`, `target`, and `up` parameters to `Camera.lookAt` which were deprecated in Cesium 1.6. Use the `target` and `offset`.
+  * Removed `Camera.setTransform`, which was deprecated in Cesium 1.6. Use `Camera.lookAtTransform`.
+  * Removed `Camera.transform`, which was deprecated in Cesium 1.6. Use `Camera.lookAtTransform`.
+  * Removed the `direction` and `up` options to `Camera.flyTo`, which were deprecated in Cesium 1.6. Use the `orientation` option.
+  * Removed `Camera.flyToRectangle`, which was deprecated in Cesium 1.6. Use `Camera.flyTo`.
+* Deprecated
+  * Deprecated the `smallterrain` tileset.  It will be removed in 1.11. Use the [STK World Terrain](http://cesiumjs.org/data-and-assets/terrain/stk-world-terrain.html) tileset.
+* Added `Entity.show`, a boolean for hiding or showing an entity and its children.
+* Added `Entity.isShowing`, a read-only property that indicates if an entity is currently being drawn.
+* Added support for the KML `visibility` element.
+* Added `PolylineArrowMaterialProperty` to allow entities materials to use polyline arrows.
+* Added `VelocityOrientationProperty` to easily orient Entity graphics (such as a model) along the direction it is moving.
+* Added a new Sandcastle demo, [Interpolation](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Interpolation.html&label=Showcases), which illustrates time-dynamic position interpolation options and uses the new `VelocityOrientationProperty` to orient an aircraft in flight.
+* Improved `viewer.zoomTo` and `viewer.flyTo` so they are now "best effort" and work even if some entities being zoomed to are not currently in the scene.
+* Fixed `PointerEvent` detection so that it works with older implementations of the specification. This also fixes lack of mouse handling when detection failed, such as when using Cesium in the Windows `WebBrowser` control.
+* Fixed an issue with transparency. [#2572](https://github.com/AnalyticalGraphicsInc/cesium/issues/2572)
+* Fixed improper handling of null values when loading `GeoJSON` data.
+* Cesium is now tested using Jasmine 2.2.0.
+
+### 1.7.1 - 2015-03-06
+
 * Fixed a crash in `InfoBox` that would occur when attempting to display plain text.
 * Fixed a crash when loading KML features that have no description and an empty `ExtendedData` node.
 * Fixed a bug `in Color.fromCssColorString` where undefined would be returned for the CSS color `transparent`.

@@ -6,7 +6,7 @@ defineSuite([
         Fullscreen,
         FeatureDetection) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('can tell if fullscreen is supported', function() {
         // just make sure the function runs, the test can't expect a particular result.

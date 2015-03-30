@@ -6,6 +6,7 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../../Core/FeatureDetection',
         '../../ThirdParty/knockout',
         '../getElement',
         './NavigationHelpButtonViewModel'
@@ -16,6 +17,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        FeatureDetection,
         knockout,
         getElement,
         NavigationHelpButtonViewModel) {
@@ -183,8 +185,12 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
             }
         };
 
-        document.addEventListener('mousedown', this._closeInstructions, true);
-        document.addEventListener('touchstart', this._closeInstructions, true);
+        if (FeatureDetection.supportsPointerEvents()) {
+            document.addEventListener('pointerdown', this._closeInstructions, true);
+        } else {
+            document.addEventListener('mousedown', this._closeInstructions, true);
+            document.addEventListener('touchstart', this._closeInstructions, true);
+        }
     };
 
     defineProperties(NavigationHelpButton.prototype, {
@@ -225,8 +231,12 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
      * removing the widget from layout.
      */
     NavigationHelpButton.prototype.destroy = function() {
-        document.removeEventListener('mousedown', this._closeInstructions, true);
-        document.removeEventListener('touchstart', this._closeInstructions, true);
+        if (FeatureDetection.supportsPointerEvents()) {
+            document.removeEventListener('pointerdown', this._closeInstructions, true);
+        } else {
+            document.removeEventListener('mousedown', this._closeInstructions, true);
+            document.removeEventListener('touchstart', this._closeInstructions, true);
+        }
 
         knockout.cleanNode(this._wrapper);
         this._container.removeChild(this._wrapper);

@@ -8,7 +8,7 @@ defineSuite([
         JulianDate,
         TimeInterval) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     function TestObject(value) {
         this.value = value;
@@ -30,6 +30,28 @@ defineSuite([
         expect(intervals.isStartIncluded).toEqual(false);
         expect(intervals.isStopIncluded).toEqual(false);
         expect(intervals.isEmpty).toEqual(true);
+        expect(intervals.changedEvent).toBeDefined();
+    });
+
+    it('constructing an interval collection from array.', function() {
+        var arg = [new TimeInterval({
+            start : new JulianDate(1),
+            stop : new JulianDate(2),
+            isStartIncluded : true,
+            isStopIncluded : false
+        }), new TimeInterval({
+            start : new JulianDate(2),
+            stop : new JulianDate(3),
+            isStartIncluded : false,
+            isStopIncluded : true
+        })];
+        var intervals = new TimeIntervalCollection(arg);
+        expect(intervals.length).toEqual(2);
+        expect(intervals.start).toEqual(arg[0].start);
+        expect(intervals.stop).toEqual(arg[1].stop);
+        expect(intervals.isStartIncluded).toEqual(true);
+        expect(intervals.isStopIncluded).toEqual(true);
+        expect(intervals.isEmpty).toEqual(false);
         expect(intervals.changedEvent).toBeDefined();
     });
 
@@ -912,13 +934,13 @@ defineSuite([
 
         intervals.addInterval(interval);
         expect(listener).toHaveBeenCalledWith(intervals);
-        listener.reset();
+        listener.calls.reset();
 
         intervals.removeInterval(interval);
         expect(listener).toHaveBeenCalledWith(intervals);
 
         intervals.addInterval(interval);
-        listener.reset();
+        listener.calls.reset();
         intervals.removeAll();
         expect(listener).toHaveBeenCalledWith(intervals);
     });

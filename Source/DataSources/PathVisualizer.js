@@ -293,7 +293,7 @@ define([
         var sampleStop;
         var showProperty = pathGraphics._show;
         var polyline = item.polyline;
-        var show = !defined(showProperty) || showProperty.getValue(time);
+        var show = entity.isShowing && (!defined(showProperty) || showProperty.getValue(time));
 
         //While we want to show the path, there may not actually be anything to show
         //depending on lead/trail settings.  Compute the interval of the path to
@@ -441,7 +441,7 @@ define([
             var entity = item.entity;
             var positionProperty = entity._position;
 
-            var lastUpdater = entity._pathUpdater;
+            var lastUpdater = item.updater;
 
             var frameToVisualize = ReferenceFrame.FIXED;
             if (this._scene.mode === SceneMode.SCENE3D) {

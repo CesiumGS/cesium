@@ -48,7 +48,7 @@ defineSuite([
         createDynamicProperty,
         createScene) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
     beforeAll(function(){
@@ -334,23 +334,23 @@ defineSuite([
             0, 0,
             1, 0
         ]));
-        expect(listener.callCount).toEqual(1);
+        expect(listener.calls.count()).toEqual(1);
 
         entity.polyline.width = new ConstantProperty(82);
-        expect(listener.callCount).toEqual(2);
+        expect(listener.calls.count()).toEqual(2);
 
         entity.availability = new TimeIntervalCollection();
-        expect(listener.callCount).toEqual(3);
+        expect(listener.calls.count()).toEqual(3);
 
         entity.polyline.positions = undefined;
-        expect(listener.callCount).toEqual(4);
+        expect(listener.calls.count()).toEqual(4);
 
         //Since there's no valid geometry, changing another property should not raise the event.
         entity.polyline.width = undefined;
 
         //Modifying an unrelated property should not have any effect.
         entity.viewFrom = new ConstantProperty(Cartesian3.UNIT_X);
-        expect(listener.callCount).toEqual(4);
+        expect(listener.calls.count()).toEqual(4);
     });
 
     it('createFillGeometryInstance throws if object is not shown', function() {
