@@ -1202,7 +1202,7 @@ define([
             scene._sunBloom = false;
         }
 
-        // Manage celestial and terrestrail environment effects.
+        // Manage celestial and terrestrial environment effects.
         var skyBoxCommand = (frameState.passes.render && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
         var skyAtmosphereCommand = (frameState.passes.render && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
         var sunCommand = (frameState.passes.render && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
@@ -1220,11 +1220,12 @@ define([
             frustum = camera.frustum.clone(scratchOrthographicFrustum);
         }
 
-        // Clear the color buffer.
+        // Clear the pass state color buffer.
         var clearColorCommand = scene._clearColorCommand;
         Color.clone(clearColor, clearColorCommand.color);
         clearColorCommand.execute(context, passState);
 
+        // Update globe depth rendering based on the current context and clear the globe depth color buffer.
         scene._globeDepth.update(context);
         scene._globeDepth.clear(context, passState, clearColor);
 
@@ -1239,14 +1240,15 @@ define([
             }
         }
 
+        // If supported, configure OIT to use the globe depth frame buffer and clear the OIT frame buffer.
         var useOIT = !picking && renderTranslucentCommands && defined(scene._oit) && scene._oit.isSupported();
         if (useOIT) {
-            // OIT is only defined when globe depth is supported so the framebuffer will be defined.
             scene._oit.update(context, scene._globeDepth.framebuffer);
             scene._oit.clear(context, passState, clearColor);
             useOIT = useOIT && scene._oit.isSupported();
         }
 
+        // If supported, configure FXAA to use the globe depth color texture and clear the FXAA frame buffer.
         var useFXAA = !picking && scene.fxaa;
         if (useFXAA) {
             var fxaaTexture = !useOIT ? scene._globeDepth._colorTexture : undefined;
@@ -1293,6 +1295,7 @@ define([
             }
         }
 
+        // Determine how translucent surfaces will be handled.
         var executeTranslucentCommands;
         if (useOIT) {
             if (!defined(scene._executeOITFunction)) {
