@@ -427,6 +427,19 @@ define([
         this.debugShowFramesPerSecond = false;
 
         /**
+         * This property is for debugging only; it is not for production use.
+         * <p>
+         * Displays depth information from one or more view frustums.
+         * </p>
+         *
+         * @type Boolean
+         *
+         * @default false
+         */
+        this.debugShowGlobeDepth = false;
+        this._debugfrustumDepthCommands = undefined;
+
+        /**
          * When <code>true</code>, enables Fast Approximate Anti-aliasing even when order independent translucency
          * is unsupported.
          *
