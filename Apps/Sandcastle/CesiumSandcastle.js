@@ -1019,21 +1019,21 @@ require({
             if (mouse.isMiddle(e)) {
                 window.open('gallery/' + demo.name + '.html');
             } else {
-				var htmlText = (htmlEditor.getValue()).replace(/\s/g, '');
-				var jsText = (jsEditor.getValue()).replace(/\s/g, '');
-				var confirmChange = true;
-				if (demoHtml !== htmlText || demoJs !== jsText) {
-					confirmChange = window.confirm('You have unsaved changes. Are you sure you want to navigate away from this demo?');
-				}
-				if (confirmChange) {
-					loadFromGallery(demo);
-					var demoSrc = demo.name + '.html';
-					if (demoSrc !== window.location.search.substring(1)) {
-						window.history.pushState(demo, demo.name, '?src=' + demoSrc + '&label=' + currentTab);
-					}
-					document.title = demo.name + ' - Cesium Sandcastle';
-				}
-			}
+                var htmlText = (htmlEditor.getValue()).replace(/\s/g, '');
+                var jsText = (jsEditor.getValue()).replace(/\s/g, '');
+                var confirmChange = true;
+                if (demoHtml !== htmlText || demoJs !== jsText) {
+                    confirmChange = window.confirm('You have unsaved changes. Are you sure you want to navigate away from this demo?');
+                }
+                if (confirmChange) {
+                    loadFromGallery(demo);
+                    var demoSrc = demo.name + '.html';
+                    if (demoSrc !== window.location.search.substring(1)) {
+                        window.history.pushState(demo, demo.name, '?src=' + demoSrc + '&label=' + currentTab);
+                    }
+                    document.title = demo.name + ' - Cesium Sandcastle';
+                }
+            }
             e.preventDefault();
         };
 
