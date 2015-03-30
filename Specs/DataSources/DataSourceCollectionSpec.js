@@ -1,14 +1,14 @@
 /*global defineSuite*/
 defineSuite([
         'DataSources/DataSourceCollection',
-        'ThirdParty/when',
-        'Specs/MockDataSource'
+        'Specs/MockDataSource',
+        'ThirdParty/when'
     ], function(
         DataSourceCollection,
-        when,
-        MockDataSource) {
+        MockDataSource,
+        when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('contains, get, getLength, and indexOf work', function() {
         var collection = new DataSourceCollection();
@@ -47,8 +47,8 @@ defineSuite([
         expect(addSpy).toHaveBeenCalledWith(collection, source);
         expect(removeSpy).not.toHaveBeenCalled();
 
-        addSpy.reset();
-        removeSpy.reset();
+        addSpy.calls.reset();
+        removeSpy.calls.reset();
 
         expect(collection.remove(source)).toEqual(true);
         expect(addSpy).not.toHaveBeenCalled();
@@ -117,7 +117,7 @@ defineSuite([
         var removeCalled = 0;
         collection.dataSourceRemoved.addEventListener(function(sender, dataSource) {
             expect(sender).toBe(collection);
-            expect(sources.indexOf(dataSource)).toNotEqual(-1);
+            expect(sources.indexOf(dataSource)).not.toEqual(-1);
             removeCalled++;
         });
 

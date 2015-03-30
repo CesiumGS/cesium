@@ -156,14 +156,14 @@ Object.defineProperties(WebGLGlobeDataSource.prototype, {
         set : function(value) {
             this._seriesToDisplay = value;
             
-            //Iterate over all polylines and set their show property
+            //Iterate over all entities and set their show property
             //to true only if they are part of the current series.
             var collection = this._entityCollection;
             var entities = collection.values;
             collection.suspendEvents();
             for (var i = 0; i < entities.length; i++) {
                 var entity = entities[i];
-                entity.polyline.show.setValue(value === entity.seriesName);
+                entity.show = value === entity.seriesName;
             }
             collection.resumeEvents();
         }
@@ -287,7 +287,6 @@ WebGLGlobeDataSource.prototype.load = function(data) {
 
             //WebGL Globe only contains lines, so that's the only graphics we create.
             var polyline = new Cesium.PolylineGraphics();
-            polyline.show = new Cesium.ConstantProperty(show);
             polyline.material = new Cesium.ColorMaterialProperty(color);
             polyline.width = new Cesium.ConstantProperty(2);
             polyline.followSurface = new Cesium.ConstantProperty(false);
@@ -296,6 +295,7 @@ WebGLGlobeDataSource.prototype.load = function(data) {
             //The polyline instance itself needs to be on an entity.
             var entity = new Cesium.Entity({
                 id : seriesName + ' index ' + i.toString(),
+                show : show,
                 polyline : polyline,
                 seriesName : seriesName //Custom property to indicate series name
             });

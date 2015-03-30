@@ -6,6 +6,7 @@ defineSuite([
         'Core/combine',
         'Core/defined',
         'Core/Ellipsoid',
+        'Core/FeatureDetection',
         'Core/GeographicProjection',
         'Core/IntersectionTests',
         'Core/KeyboardEventModifier',
@@ -26,6 +27,7 @@ defineSuite([
         combine,
         defined,
         Ellipsoid,
+        FeatureDetection,
         GeographicProjection,
         IntersectionTests,
         KeyboardEventModifier,
@@ -40,9 +42,9 @@ defineSuite([
         destroyCanvas,
         DomEventSimulator) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
-    var usePointerEvents = defined(window.PointerEvent);
+    var usePointerEvents = FeatureDetection.supportsPointerEvents();
     var scene;
     var canvas;
     var camera;

@@ -10,6 +10,7 @@ defineSuite([
         'Scene/SingleTileImageryProvider',
         'Specs/createContext',
         'Specs/createFrameState',
+        'Specs/pollToPromise',
         'Specs/render'
     ], function(
         Globe,
@@ -22,9 +23,10 @@ defineSuite([
         SingleTileImageryProvider,
         createContext,
         createFrameState,
+        pollToPromise,
         render) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var context;
     var frameState;
@@ -64,17 +66,17 @@ defineSuite([
     }
 
     /**
-     * Repeatedly calls update until the load queue is empty.  You must wrap any code to follow
-     * this in a "runs" function.
+     * Repeatedly calls update until the load queue is empty.  Returns a promise that resolves
+     * when the load queue is empty.
      */
     function updateUntilDone(globe) {
         // update until the load queue is empty.
-        waitsFor(function() {
+        return pollToPromise(function() {
             globe._surface._debug.enableDebugOutput = true;
             var commandList = [];
             globe.update(context, frameState, commandList);
             return globe._surface.tileProvider.ready && !defined(globe._surface._tileLoadQueue.head) && globe._surface._debug.tilesWaitingForChildren === 0;
-        }, 'updating to complete');
+        });
     }
 
     it('renders with enableLighting', function() {
@@ -86,14 +88,12 @@ defineSuite([
 
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
-        updateUntilDone(globe);
-
-        runs(function() {
+        return updateUntilDone(globe).then(function() {
             ClearCommand.ALL.execute(context);
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
             render(context, frameState, globe);
-            expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
         });
     });
 
@@ -106,14 +106,12 @@ defineSuite([
 
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
-        updateUntilDone(globe);
-
-        runs(function() {
+        return updateUntilDone(globe).then(function() {
             ClearCommand.ALL.execute(context);
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
             render(context, frameState, globe);
-            expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
         });
     });
 
@@ -137,20 +135,18 @@ defineSuite([
 
         globe.terrainProvider = terrainProvider;
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return terrainProvider.ready;
-        });
+        }).then(function() {
+            frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+            return updateUntilDone(globe).then(function() {
+                ClearCommand.ALL.execute(context);
+                expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        updateUntilDone(globe);
-
-        runs(function() {
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-            render(context, frameState, globe);
-            expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+                render(context, frameState, globe);
+                expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+            });
         });
     });
 }, 'WebGL');

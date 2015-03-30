@@ -10,7 +10,7 @@ defineSuite([
         ClockStep,
         JulianDate) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('merge assigns unassigned properties', function() {
         var source = new DataSourceClock();

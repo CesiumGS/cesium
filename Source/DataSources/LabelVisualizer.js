@@ -108,7 +108,7 @@ define([
             var labelGraphics = entity._label;
             var text;
             var label = item.label;
-            var show = entity.isAvailable(time) && Property.getValueOrDefault(labelGraphics._show, time, true);
+            var show = entity.isShowing && entity.isAvailable(time) && Property.getValueOrDefault(labelGraphics._show, time, true);
 
             if (show) {
                 position = Property.getValueOrUndefined(entity._position, time, position);

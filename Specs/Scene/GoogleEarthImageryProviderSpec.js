@@ -12,7 +12,7 @@ defineSuite([
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
-        'Specs/waitsForPromise'
+        'Specs/pollToPromise'
     ], function(
         GoogleEarthImageryProvider,
         DefaultProxy,
@@ -26,9 +26,9 @@ defineSuite([
         ImageryLayer,
         ImageryProvider,
         ImageryState,
-        waitsForPromise) {
+        pollToPromise) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -73,11 +73,9 @@ defineSuite([
             path : path
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        runs(function() {
+        }).then(function() {
             expect(typeof provider.hasAlphaChannel).toBe('boolean');
         });
     });
@@ -102,11 +100,9 @@ defineSuite([
         expect(provider.path).toEqual(path);
         expect(provider.channel).toEqual(channel);
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        runs(function() {
+        }).then(function() {
             expect(provider.tileWidth).toEqual(256);
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toEqual(23);
@@ -115,13 +111,6 @@ defineSuite([
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.tileDiscardPolicy).toBeUndefined();
             expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
-        });
-
-        waitsFor(function() {
-            return defined(provider.credit);
-        }, 'logo to become ready');
-
-        runs(function() {
             expect(provider.credit).toBeInstanceOf(Object);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
@@ -143,7 +132,7 @@ defineSuite([
                 loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
             };
 
-            waitsForPromise(provider.requestImage(0, 0, 0), function(image) {
+            return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -192,9 +181,9 @@ defineSuite([
         expect(provider.version).toEqual(version);
         expect(provider.channel).toEqual(channel);
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
+        });
     });
 
     it('routes requests through a proxy if one is specified', function() {
@@ -216,11 +205,9 @@ defineSuite([
         expect(provider.path).toEqual(path);
         expect(provider.proxy).toEqual(proxy);
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        runs(function() {
+        }).then(function() {
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 if (/^blob:/.test(url)) {
                     // load blob url normally
@@ -240,7 +227,7 @@ defineSuite([
                 loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
             };
 
-            waitsForPromise(provider.requestImage(0, 0, 0), function(image) {
+            return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -259,11 +246,9 @@ defineSuite([
             errorEventRaised = true;
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready || errorEventRaised;
-        }, 'imagery provider to become ready or raise error event');
-
-        runs(function() {
+        }).then(function() {
             expect(provider.ready).toEqual(false);
             expect(errorEventRaised).toEqual(true);
         });
@@ -317,25 +302,20 @@ defineSuite([
             }
         };
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        var imagery;
-        runs(function() {
-            imagery = new Imagery(layer, 0, 0, 0);
+        }).then(function() {
+            var imagery = new Imagery(layer, 0, 0, 0);
             imagery.addReference();
             layer._requestImagery(imagery);
-        });
 
-        waitsFor(function() {
-            return imagery.state === ImageryState.RECEIVED;
-        }, 'image to load');
-
-        runs(function() {
-            expect(imagery.image).toBeInstanceOf(Image);
-            expect(tries).toEqual(2);
-            imagery.releaseReference();
+            return pollToPromise(function() {
+                return imagery.state === ImageryState.RECEIVED;
+            }).then(function() {
+                expect(imagery.image).toBeInstanceOf(Image);
+                expect(tries).toEqual(2);
+                imagery.releaseReference();
+            });
         });
     });
 
@@ -361,11 +341,9 @@ defineSuite([
             channel : 1234
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        runs(function() {
+        }).then(function() {
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
         });
@@ -394,11 +372,9 @@ defineSuite([
             channel : 1234
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        runs(function() {
+        }).then(function() {
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
         });
@@ -427,11 +403,9 @@ defineSuite([
             channel : 1234
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        runs(function() {
+        }).then(function() {
             expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
             expect(provider.rectangle).toEqual(new Rectangle(-Math.PI, -Math.PI, Math.PI, Math.PI));
         });
@@ -453,11 +427,9 @@ defineSuite([
             errorEventRaised = true;
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready || errorEventRaised;
-        }, 'imagery provider to become ready or raise error event');
-
-        runs(function() {
+        }).then(function() {
             expect(provider.ready).toEqual(false);
             expect(errorEventRaised).toEqual(true);
         });
@@ -479,11 +451,9 @@ defineSuite([
             errorEventRaised = true;
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready || errorEventRaised;
-        }, 'imagery provider to become ready or raise error event');
-
-        runs(function() {
+        }).then(function() {
             expect(provider.ready).toEqual(false);
             expect(errorEventRaised).toEqual(true);
         });
@@ -505,11 +475,9 @@ defineSuite([
             errorEventRaised = true;
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready || errorEventRaised;
-        }, 'imagery provider to become ready or raise error event');
-
-        runs(function() {
+        }).then(function() {
             expect(provider.ready).toEqual(false);
             expect(errorEventRaised).toEqual(true);
         });

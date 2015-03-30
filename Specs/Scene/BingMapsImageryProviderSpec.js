@@ -13,7 +13,7 @@ defineSuite([
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
-        'Specs/waitsForPromise'
+        'Specs/pollToPromise'
     ], function(
         BingMapsImageryProvider,
         DefaultProxy,
@@ -28,9 +28,9 @@ defineSuite([
         ImageryLayer,
         ImageryProvider,
         ImageryState,
-        waitsForPromise) {
+        pollToPromise) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     afterEach(function() {
         jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
@@ -193,11 +193,9 @@ defineSuite([
             mapStyle : mapStyle
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        runs(function() {
+        }).then(function() {
             expect(typeof provider.hasAlphaChannel).toBe('boolean');
         });
     });
@@ -218,11 +216,9 @@ defineSuite([
         expect(provider.key).toBeDefined();
         expect(provider.mapStyle).toEqual(mapStyle);
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        runs(function() {
+        }).then(function() {
             expect(provider.tileWidth).toEqual(256);
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toEqual(20);
@@ -233,7 +229,7 @@ defineSuite([
 
             installFakeImageRequest('http://ecn.t0.tiles.virtualearth.net.fake.invalid/tiles/r0.jpeg?g=3031&mkt=');
 
-            waitsForPromise(provider.requestImage(0, 0, 0), function(image) {
+            return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -256,14 +252,12 @@ defineSuite([
 
         expect(provider.culture).toEqual(culture);
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        runs(function() {
+        }).then(function() {
             installFakeImageRequest('http://ecn.t0.tiles.virtualearth.net.fake.invalid/tiles/h0.jpeg?g=3031&mkt=ja-jp');
 
-            waitsForPromise(provider.requestImage(0, 0, 0), function(image) {
+            return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -287,14 +281,12 @@ defineSuite([
         expect(provider.url).toEqual(url);
         expect(provider.proxy).toEqual(proxy);
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        runs(function() {
+        }).then(function() {
             installFakeImageRequest(proxy.getURL('http://ecn.t0.tiles.virtualearth.net.fake.invalid/tiles/r0.jpeg?g=3031&mkt='));
 
-            waitsForPromise(provider.requestImage(0, 0, 0), function(image) {
+            return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -312,11 +304,9 @@ defineSuite([
             errorEventRaised = true;
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready || errorEventRaised;
-        }, 'imagery provider to become ready or raise error event');
-
-        runs(function() {
+        }).then(function() {
             expect(provider.ready).toEqual(false);
             expect(errorEventRaised).toEqual(true);
         });
@@ -372,25 +362,20 @@ defineSuite([
             }
         };
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        var imagery;
-        runs(function() {
-            imagery = new Imagery(layer, 0, 0, 0);
+        }).then(function() {
+            var imagery = new Imagery(layer, 0, 0, 0);
             imagery.addReference();
             layer._requestImagery(imagery);
-        });
 
-        waitsFor(function() {
-            return imagery.state === ImageryState.RECEIVED;
-        }, 'image to load');
-
-        runs(function() {
-            expect(imagery.image).toBeInstanceOf(Image);
-            expect(tries).toEqual(2);
-            imagery.releaseReference();
+            return pollToPromise(function() {
+                return imagery.state === ImageryState.RECEIVED;
+            }).then(function() {
+                expect(imagery.image).toBeInstanceOf(Image);
+                expect(tries).toEqual(2);
+                imagery.releaseReference();
+            });
         });
     });
 });

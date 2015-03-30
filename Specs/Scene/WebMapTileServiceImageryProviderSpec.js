@@ -12,7 +12,7 @@ defineSuite([
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
-        'Specs/waitsForPromise',
+        'Specs/pollToPromise',
         'ThirdParty/Uri'
     ], function(
         WebMapTileServiceImageryProvider,
@@ -27,10 +27,10 @@ defineSuite([
         ImageryLayer,
         ImageryProvider,
         ImageryState,
-        waitsForPromise,
+        pollToPromise,
         Uri) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -58,7 +58,7 @@ defineSuite([
         var tilerow = 5;
         var level = 1;
         provider.requestImage(tilecol, tilerow, level);
-        var uri = new Uri(ImageryProvider.loadImage.mostRecentCall.args[1]);
+        var uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1]);
         var queryObject = queryToObject(uri.query);
 
         expect(queryObject.request).toEqual('GetTile');
@@ -76,7 +76,7 @@ defineSuite([
         tilerow = 3;
         level = 2;
         provider.requestImage(tilecol, tilerow, level);
-        uri = new Uri(ImageryProvider.loadImage.mostRecentCall.args[1]);
+        uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1]);
         queryObject = queryToObject(uri.query);
 
         expect(queryObject.request).toEqual('GetTile');
@@ -109,7 +109,7 @@ defineSuite([
         var tilerow = 5;
         var level = 1;
         provider.requestImage(tilecol, tilerow, level);
-        var uri = new Uri(ImageryProvider.loadImage.mostRecentCall.args[1]);
+        var uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1]);
         expect(uri.toString()).toEqual('http://wmts.invalid/someStyle/someTMS/second/5/12.png');
     });
 
@@ -222,21 +222,20 @@ defineSuite([
             tileMatrixSetID : 'someTMS'
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider1.ready && provider2.ready;
-        }, 'imagery providers to become ready');
-
-        runs(function() {
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+        }).then(function() {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 // Just return any old image.
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
-            waitsForPromise(provider1.requestImage(0, 0, 0), function(image) {
-                waitsForPromise(provider2.requestImage(0, 0, 0), function(image) {
-                    expect(loadImage.createImage.calls.length).toEqual(2);
+            return provider1.requestImage(0, 0, 0).then(function(image) {
+                return provider2.requestImage(0, 0, 0).then(function(image) {
+                    expect(loadImage.createImage.calls.count()).toEqual(2);
                     //expect the two image URLs to be the same between the two providers
-                    expect(loadImage.createImage.calls[1].args[0]).toEqual(loadImage.createImage.calls[0].args[0]);
+                    var allCalls = loadImage.createImage.calls.all();
+                    expect(allCalls[1].args[0]).toEqual(allCalls[0].args[0]);
                 });
             });
         });
@@ -250,17 +249,15 @@ defineSuite([
             tileMatrixSetID : 'someTMS'
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        runs(function() {
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+        }).then(function() {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 // Just return any old image.
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
-            waitsForPromise(provider.requestImage(0, 0, 0), function(image) {
+            return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(loadImage.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
@@ -277,19 +274,17 @@ defineSuite([
             proxy : proxy
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        runs(function() {
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+        }).then(function() {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 expect(url.indexOf(proxy.getURL('http://wmts.invalid'))).toEqual(0);
 
                 // Just return any old image.
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
-            waitsForPromise(provider.requestImage(0, 0, 0), function(image) {
+            return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(loadImage.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
@@ -327,25 +322,20 @@ defineSuite([
             }
         };
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        var imagery;
-        runs(function() {
-            imagery = new Imagery(layer, 0, 0, 0);
+        }).then(function() {
+            var imagery = new Imagery(layer, 0, 0, 0);
             imagery.addReference();
             layer._requestImagery(imagery);
-        });
 
-        waitsFor(function() {
-            return imagery.state === ImageryState.RECEIVED;
-        }, 'image to load');
-
-        runs(function() {
-            expect(imagery.image).toBeInstanceOf(Image);
-            expect(tries).toEqual(2);
-            imagery.releaseReference();
+            return pollToPromise(function() {
+                return imagery.state === ImageryState.RECEIVED;
+            }).then(function() {
+                expect(imagery.image).toBeInstanceOf(Image);
+                expect(tries).toEqual(2);
+                imagery.releaseReference();
+            });
         });
     });
 });
