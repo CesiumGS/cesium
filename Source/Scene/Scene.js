@@ -1179,23 +1179,16 @@ define([
     var scratchOrthographicFrustum = new OrthographicFrustum();
 
     function executeCommands(scene, passState, clearColor, picking) {
+        // Local looping indices.
+        var i;
+        var j;
+
         var frameState = scene._frameState;
         var camera = scene._camera;
         var context = scene.context;
         var us = context.uniformState;
 
-        var i;
-        var j;
-
-        var frustum;
-        if (defined(camera.frustum.fov)) {
-            frustum = camera.frustum.clone(scratchPerspectiveFrustum);
-        } else if (defined(camera.frustum.infiniteProjectionMatrix)){
-            frustum = camera.frustum.clone(scratchPerspectiveOffCenterFrustum);
-        } else {
-            frustum = camera.frustum.clone(scratchOrthographicFrustum);
-        }
-
+        // Manage sun bloom post-processing effect.
         if (defined(scene.sun) && scene.sunBloom !== scene._sunBloom) {
             if (scene.sunBloom) {
                 scene._sunPostProcess = new SunPostProcess();
@@ -1209,19 +1202,33 @@ define([
             scene._sunBloom = false;
         }
 
+        // Manage celestial and terrestrail environment effects.
         var skyBoxCommand = (frameState.passes.render && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
         var skyAtmosphereCommand = (frameState.passes.render && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
         var sunCommand = (frameState.passes.render && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
-        var sunVisible = isVisible(sunCommand, frameState);
 
+        // Preserve the reference to the original frame buffer.
         var originalFramebuffer = passState.framebuffer;
 
-        var clear = scene._clearColorCommand;
-        var clearDepth = scene._depthClearCommand;
+        // Create a working frustum from the original camera frustum.
+        var frustum;
+        if (defined(camera.frustum.fov)) {
+            frustum = camera.frustum.clone(scratchPerspectiveFrustum);
+        } else if (defined(camera.frustum.infiniteProjectionMatrix)){
+            frustum = camera.frustum.clone(scratchPerspectiveOffCenterFrustum);
+        } else {
+            frustum = camera.frustum.clone(scratchOrthographicFrustum);
+        }
 
-        Color.clone(clearColor, clear.color);
-        clear.execute(context, passState);
+        // Clear the color buffer.
+        var clearColorCommand = scene._clearColorCommand;
+        Color.clone(clearColor, clearColorCommand.color);
+        clearColorCommand.execute(context, passState);
 
+        scene._globeDepth.update(context);
+        scene._globeDepth.clear(context, passState, clearColor);
+
+        // Determine if there are any translucent surfaces in any of the frustum slices.
         var renderTranslucentCommands = false;
         var frustumCommandsList = scene._frustumCommandsList;
         var numFrustums = frustumCommandsList.length;
@@ -1231,9 +1238,6 @@ define([
                 break;
             }
         }
-
-        scene._globeDepth.update(context);
-        scene._globeDepth.clear(context, passState, clearColor);
 
         var useOIT = !picking && renderTranslucentCommands && defined(scene._oit) && scene._oit.isSupported();
         if (useOIT) {
@@ -1250,6 +1254,7 @@ define([
             scene._fxaa.clear(context, passState, clearColor);
         }
 
+        var sunVisible = isVisible(sunCommand, frameState);
         if (sunVisible && scene.sunBloom) {
             passState.framebuffer = scene._sunPostProcess.update(context);
         } else if (scene._globeDepth.supported) {
@@ -1258,8 +1263,8 @@ define([
             passState.framebuffer = scene._fxaa.getColorFramebuffer();
         }
 
-        // Ideally, we would render the sky box and atmosphere last for
-        // early-z, but we would have to draw it in each frustum
+        // Ideally, we would render the sky box and atmosphere last for early-z,
+        // but we would have to draw it in each frustum
         frustum.near = camera.frustum.near;
         frustum.far = camera.frustum.far;
         us.updateFrustum(frustum);
@@ -1301,6 +1306,7 @@ define([
         }
 
         // Execute commands in each frustum in back to front order
+        var depthClearCommand = scene._depthClearCommand;
         for (i = 0; i < numFrustums; ++i) {
             var index = numFrustums - i - 1;
             var frustumCommands = frustumCommandsList[index];
@@ -1313,7 +1319,7 @@ define([
             }
 
             us.updateFrustum(frustum);
-            clearDepth.execute(context, passState);
+            depthClearCommand.execute(context, passState);
 
             var commands = frustumCommands.commands[Pass.GLOBE];
             var length = frustumCommands.indices[Pass.GLOBE];
