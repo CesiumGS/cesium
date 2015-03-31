@@ -16,12 +16,18 @@ Change Log
 * Added support for the KML `visibility` element.
 * Added `PolylineArrowMaterialProperty` to allow entities materials to use polyline arrows.
 * Added `VelocityOrientationProperty` to easily orient Entity graphics (such as a model) along the direction it is moving.
+* Added new construction options to `CesiumWidget` and `Viewer`, for `skyBox`, `skyAtmosphere`, and `globe`.
 * Added a new Sandcastle demo, [Interpolation](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Interpolation.html&label=Showcases), which illustrates time-dynamic position interpolation options and uses the new `VelocityOrientationProperty` to orient an aircraft in flight.
 * Improved `viewer.zoomTo` and `viewer.flyTo` so they are now "best effort" and work even if some entities being zoomed to are not currently in the scene.
 * Fixed `PointerEvent` detection so that it works with older implementations of the specification. This also fixes lack of mouse handling when detection failed, such as when using Cesium in the Windows `WebBrowser` control.
 * Fixed an issue with transparency. [#2572](https://github.com/AnalyticalGraphicsInc/cesium/issues/2572)
 * Fixed improper handling of null values when loading `GeoJSON` data.
 * Cesium is now tested using Jasmine 2.2.0.
+* Added support for automatic raster feature picking from `ArcGisMapServerImagerProvider`.
+* Added the ability to specify the desired tiling scheme, rectangle, and width and height of tiles to the `ArcGisMapServerImagerProvider` constructor.
+* Added the ability to access dynamic ArcGIS MapServer layers by specifying the `layers` parameter to the `ArcGisMapServerImagerProvider` constructor.
+* Fixed a bug that could cause incorrect rendering of an `ArcGisMapServerImageProvider` with a "singleFusedMapCache" in the geographic projection (EPSG:4326).
+* Fixed a bug that prevented Cesium from working in browser configurations that explicitly disabled localStorage, such as Safari's private browsing mode.
 
 ### 1.7.1 - 2015-03-06
 
