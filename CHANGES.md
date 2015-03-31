@@ -26,6 +26,7 @@ Change Log
 * Added the ability to specify the desired tiling scheme, rectangle, and width and height of tiles to the `ArcGisMapServerImagerProvider` constructor.
 * Added the ability to access dynamic ArcGIS MapServer layers by specifying the `layers` parameter to the `ArcGisMapServerImagerProvider` constructor.
 * Fixed a bug that could cause incorrect rendering of an `ArcGisMapServerImageProvider` with a "singleFusedMapCache" in the geographic projection (EPSG:4326).
+* Fixed a bug that prevented Cesium from working in browser configurations that explicitly disabled localStorage, such as Safari's private browsing mode.
 
 ### 1.7.1 - 2015-03-06
 
