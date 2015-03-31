@@ -303,7 +303,7 @@ define([
             }
 
             //Set the terrain provider if one is provided.
-            if (defined(options.terrainProvider)) {
+            if (defined(options.terrainProvider) && options.globe !== false) {
                 scene.terrainProvider = options.terrainProvider;
             }
 
