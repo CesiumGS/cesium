@@ -33,6 +33,28 @@ defineSuite([
         expect(intervals.changedEvent).toBeDefined();
     });
 
+    it('constructing an interval collection from array.', function() {
+        var arg = [new TimeInterval({
+            start : new JulianDate(1),
+            stop : new JulianDate(2),
+            isStartIncluded : true,
+            isStopIncluded : false
+        }), new TimeInterval({
+            start : new JulianDate(2),
+            stop : new JulianDate(3),
+            isStartIncluded : false,
+            isStopIncluded : true
+        })];
+        var intervals = new TimeIntervalCollection(arg);
+        expect(intervals.length).toEqual(2);
+        expect(intervals.start).toEqual(arg[0].start);
+        expect(intervals.stop).toEqual(arg[1].stop);
+        expect(intervals.isStartIncluded).toEqual(true);
+        expect(intervals.isStopIncluded).toEqual(true);
+        expect(intervals.isEmpty).toEqual(false);
+        expect(intervals.changedEvent).toBeDefined();
+    });
+
     it('isStartIncluded/isStopIncluded works.', function() {
         var intervals = new TimeIntervalCollection();
         var interval1 = new TimeInterval({

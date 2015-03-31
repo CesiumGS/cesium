@@ -27,10 +27,19 @@ define([
      * A non-overlapping collection of {@link TimeInterval} instances sorted by start time.
      * @alias TimeIntervalCollection
      * @constructor
+     *
+     * @param {TimeInterval[]} [intervals] An array of intervals to add to the collection.
      */
-    var TimeIntervalCollection = function() {
+    var TimeIntervalCollection = function(intervals) {
         this._intervals = [];
         this._changedEvent = new Event();
+
+        if (defined(intervals)) {
+            var length = intervals.length;
+            for (var i = 0; i < length; i++) {
+                this.addInterval(intervals[i]);
+            }
+        }
     };
 
     defineProperties(TimeIntervalCollection.prototype, {

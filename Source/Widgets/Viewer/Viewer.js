@@ -251,7 +251,7 @@ define([
      *     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
      *     //Use standard Cesium terrain
      *     terrainProvider : new Cesium.CesiumTerrainProvider({
-     *         url : '//cesiumjs.org/stk-terrain/world'
+     *         url : '//assets.agi.com/stk-terrain/world'
      *     }),
      *     //Hide the base layer picker
      *     baseLayerPicker : false,
