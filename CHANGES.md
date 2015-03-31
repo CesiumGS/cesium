@@ -16,6 +16,7 @@ Change Log
 * Added support for the KML `visibility` element.
 * Added `PolylineArrowMaterialProperty` to allow entities materials to use polyline arrows.
 * Added `VelocityOrientationProperty` to easily orient Entity graphics (such as a model) along the direction it is moving.
+* Added new construction options to `CesiumWidget` and `Viewer`, for `skyBox`, `skyAtmosphere`, and `globe`.
 * Added a new Sandcastle demo, [Interpolation](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Interpolation.html&label=Showcases), which illustrates time-dynamic position interpolation options and uses the new `VelocityOrientationProperty` to orient an aircraft in flight.
 * Improved `viewer.zoomTo` and `viewer.flyTo` so they are now "best effort" and work even if some entities being zoomed to are not currently in the scene.
 * Fixed `PointerEvent` detection so that it works with older implementations of the specification. This also fixes lack of mouse handling when detection failed, such as when using Cesium in the Windows `WebBrowser` control.
