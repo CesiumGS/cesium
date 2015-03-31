@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Cartesian2',
+        '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Math',
         '../Core/Credit',
@@ -23,6 +24,7 @@ define([
         './ImageryProvider'
     ], function(
         Cartesian2,
+        Cartesian3,
         Cartographic,
         CesiumMath,
         Credit,
@@ -597,8 +599,14 @@ define([
                 featureInfo.configureDescriptionFromProperties(feature.attributes);
 
                 // If this is a point feature, use the coordinates of the point.
-                if (feature.geometryType === 'esriGeometryPoint') {
-                    featureInfo.position = Cartographic.fromDegrees(feature.geometry.x, feature.geometry.y, feature.geometry.z);
+                if (feature.geometryType === 'esriGeometryPoint' && feature.geometry) {
+                    var wkid = feature.geometry.spatialReference && feature.geometry.spatialReference.wkid ? feature.geometry.spatialReference.wkid : 4326;
+                    if (wkid === 4326 || wkid === 4283) {
+                        featureInfo.position = Cartographic.fromDegrees(feature.geometry.x, feature.geometry.y, feature.geometry.z);
+                    } else if (wkid === 102100 || wkid === 900913 || wkid === 3857) {
+                        var projection = new WebMercatorProjection();
+                        featureInfo.position = projection.unproject(new Cartesian3(feature.geometry.x, feature.geometry.y, feature.geometry.z));
+                    }
                 }
 
                 result.push(featureInfo);
