@@ -2,6 +2,8 @@
 defineSuite([
         'Scene/ArcGisMapServerImageryProvider',
         'Core/Cartesian2',
+        'Core/Cartesian3',
+        'Core/Cartographic',
         'Core/DefaultProxy',
         'Core/GeographicProjection',
         'Core/GeographicTilingScheme',
@@ -15,6 +17,7 @@ defineSuite([
         'Scene/DiscardMissingTileImagePolicy',
         'Scene/Imagery',
         'Scene/ImageryLayer',
+        'Scene/ImageryLayerFeatureInfo',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
         'Specs/pollToPromise',
@@ -22,6 +25,8 @@ defineSuite([
     ], function(
         ArcGisMapServerImageryProvider,
         Cartesian2,
+        Cartesian3,
+        Cartographic,
         DefaultProxy,
         GeographicProjection,
         GeographicTilingScheme,
@@ -35,12 +40,13 @@ defineSuite([
         DiscardMissingTileImagePolicy,
         Imagery,
         ImageryLayer,
+        ImageryLayerFeatureInfo,
         ImageryProvider,
         ImageryState,
         pollToPromise,
         Uri) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
 
     afterEach(function() {
         jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
@@ -718,6 +724,72 @@ defineSuite([
         }).then(function() {
             expect(provider.ready).toEqual(false);
             expect(tries).toEqual(3);
+        });
+    });
+
+    describe('pickFeatures', function() {
+        it('works with WebMercator geometry', function() {
+            var provider = new ArcGisMapServerImageryProvider({
+                url : 'made/up/map/server',
+                usePreCachedTilesIfAvailable : false
+            });
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                expect(url).toContain('identify');
+                loadWithXhr.defaultLoad('Data/ArcGIS/identify-WebMercator.json', responseType, method, data, headers, deferred, overrideMimeType);
+            };
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(pickResult) {
+                    expect(pickResult.length).toBe(1);
+
+                    var firstResult = pickResult[0];
+                    expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
+                    expect(firstResult.description).toContain('Hummock Grasses');
+                    expect(firstResult.position).toEqual(new WebMercatorProjection().unproject(new Cartesian3(1.481682457042425E7, -2710890.117898505)));
+                });
+            });
+        });
+
+        it('works with Geographic geometry', function() {
+            var provider = new ArcGisMapServerImageryProvider({
+                url : 'made/up/map/server',
+                usePreCachedTilesIfAvailable : false
+            });
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                expect(url).toContain('identify');
+                loadWithXhr.defaultLoad('Data/ArcGIS/identify-Geographic.json', responseType, method, data, headers, deferred, overrideMimeType);
+            };
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(pickResult) {
+                    expect(pickResult.length).toBe(1);
+
+                    var firstResult = pickResult[0];
+                    expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
+                    expect(firstResult.description).toContain('Hummock Grasses');
+                    expect(firstResult.position).toEqual(Cartographic.fromDegrees(123.45, -34.2));
+                });
+            });
+        });
+
+        it('returns undefined if enablePickFeatures is false', function() {
+            var provider = new ArcGisMapServerImageryProvider({
+                url : 'made/up/map/server',
+                usePreCachedTilesIfAvailable : false,
+                enablePickFeatures : false
+            });
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).toBeUndefined();
+            });
         });
     });
 });
