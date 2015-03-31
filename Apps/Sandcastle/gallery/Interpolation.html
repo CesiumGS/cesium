@@ -60,7 +60,7 @@ viewer.clock.startTime = start.clone();
 viewer.clock.stopTime = stop.clone();
 viewer.clock.currentTime = start.clone();
 viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP; //Loop at the end
-viewer.clock.multiplier = 1; //Animate in real time
+viewer.clock.multiplier = 10;
 
 //Set timeline to simulation bounds
 viewer.timeline.zoomTo(start, stop);
@@ -71,17 +71,17 @@ function computeCirclularFlight(lon, lat, radius) {
     for (var i = 0; i <= 360; i += 45) {
         var radians = Cesium.Math.toRadians(i);
         var time = Cesium.JulianDate.addSeconds(start, i, new Cesium.JulianDate());
-        var position = Cesium.Cartesian3.fromDegrees(lon + (radius * Math.cos(radians)), lat + (radius * Math.sin(radians)), Cesium.Math.nextRandomNumber() * 500 + 1750);
+        var position = Cesium.Cartesian3.fromDegrees(lon + (radius * 1.5 * Math.cos(radians)), lat + (radius * Math.sin(radians)), Cesium.Math.nextRandomNumber() * 500 + 1750);
         property.addSample(time, position);
 
         //Also create a point for each sample we generate.
         viewer.entities.add({
             position : position,
             point : {
-                pixelSize : 10,
-                color : Cesium.Color.HOT_PINK,
-                outlineColor : Cesium.Color.ORANGE,
-                outlineWidth : 2
+                pixelSize : 8,
+                color : Cesium.Color.TRANSPARENT,
+                outlineColor : Cesium.Color.YELLOW,
+                outlineWidth : 3
             }
         });
     }
@@ -115,8 +115,11 @@ var entity = viewer.entities.add({
     //Show the path as a pink line sampled in 1 second increments.
     path : {
         resolution : 1,
-        material : Cesium.Color.HOTPINK,
-        width : 2
+        material : new Cesium.PolylineGlowMaterialProperty({
+            glowPower : 0.1,
+            color : Cesium.Color.YELLOW
+        }),
+        width : 10
     }
 });
 
@@ -133,7 +136,7 @@ Sandcastle.addToolbarButton('View Side', function() {
 });
 
 //Add button to track the entity as it moves
-Sandcastle.addToolbarButton('View Plane', function() {
+Sandcastle.addToolbarButton('View Aircraft', function() {
     viewer.trackedEntity = entity;
 });
 
@@ -164,7 +167,7 @@ Sandcastle.addToolbarMenu([{
     }
 }], 'interpolationMenu');
 //Sandcastle_End
-Sandcastle.finishedLoading();
+    Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {
     startup(Cesium);
