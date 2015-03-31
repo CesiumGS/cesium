@@ -149,7 +149,6 @@ defineSuite([
 
     it('does not create a globe if option is false', function() {
         widget = new CesiumWidget(container, {
-            imageryProvider : false,
             globe : false
         });
         expect(widget.scene.globe).not.toBeDefined();
