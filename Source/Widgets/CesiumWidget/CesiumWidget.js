@@ -192,10 +192,6 @@ define([
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
         }
-        if (defined(options) && defined(options.globe) && options.globe === false &&
-                defined(options.imageryProvider) && options.imageryProvider !== false) {
-            throw new DeveloperError('Specifying options.imageryProvider is not useful without a globe.');
-        }
         //>>includeEnd('debug');
 
         container = getElement(container);

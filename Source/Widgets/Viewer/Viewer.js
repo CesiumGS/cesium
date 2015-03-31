@@ -303,11 +303,6 @@ define([
             (!defined(options.baseLayerPicker) || options.baseLayerPicker !== false);
 
         //>>includeStart('debug', pragmas.debug);
-        // If using BaseLayerPicker, globe must be present.
-        if (defined(options.globe) && options.globe === false && defined(options.baseLayerPicker) && options.baseLayerPicker === true) {
-            throw new DeveloperError('A globe must be available to use the BaseLayerPicker widget.');
-        }
-
         // If using BaseLayerPicker, imageryProvider is an invalid option
         if (createBaseLayerPicker && defined(options.imageryProvider)) {
             throw new DeveloperError('options.imageryProvider is not available when using the BaseLayerPicker widget. \
