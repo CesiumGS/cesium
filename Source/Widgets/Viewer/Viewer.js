@@ -4,6 +4,7 @@ define([
         '../../Core/Cartesian3',
         '../../Core/defaultValue',
         '../../Core/defined',
+        '../../Core/definedNotNull',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
@@ -42,6 +43,7 @@ define([
         Cartesian3,
         defaultValue,
         defined,
+        definedNotNull,
         defineProperties,
         destroyObject,
         DeveloperError,
@@ -479,13 +481,19 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var navigationHelpButton;
         if (!defined(options.navigationHelpButton) || options.navigationHelpButton !== false) {
             var showNavHelp = true;
-            if (defined(window.localStorage)) {
-                var hasSeenNavHelp = window.localStorage.getItem('cesium-hasSeenNavHelp');
-                if (defined(hasSeenNavHelp) && Boolean(hasSeenNavHelp)) {
-                    showNavHelp = false;
-                } else {
-                    window.localStorage.setItem('cesium-hasSeenNavHelp', 'true');
+            try {
+                //window.localStorage is null if disabled in Firefox or undefined in browsers with implementation
+                if (definedNotNull(window.localStorage)) {
+                    var hasSeenNavHelp = window.localStorage.getItem('cesium-hasSeenNavHelp');
+                    if (defined(hasSeenNavHelp) && Boolean(hasSeenNavHelp)) {
+                        showNavHelp = false;
+                    } else {
+                        window.localStorage.setItem('cesium-hasSeenNavHelp', 'true');
+                    }
                 }
+            } catch (e) {
+                //Accessing window.localStorage throws if disabled in Chrome
+                //window.localStorage.setItem throws if in Safari private browsing mode or in any browser if we are over quota.
             }
             navigationHelpButton = new NavigationHelpButton({
                 container : toolbar,
