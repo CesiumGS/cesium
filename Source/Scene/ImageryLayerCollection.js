@@ -403,6 +403,10 @@ define([
                 continue;
             }
 
+            if (!Rectangle.contains(imagery.rectangle, pickedLocation)) {
+                continue;
+            }
+
             var promise = provider.pickFeatures(imagery.x, imagery.y, imagery.level, pickedLocation.longitude, pickedLocation.latitude);
             if (!defined(promise)) {
                 continue;
