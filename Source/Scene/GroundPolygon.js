@@ -395,14 +395,7 @@ define([
                 blending : BlendingState.ALPHA_BLEND
             });
 
-            var pauseVS = new ShaderSource({
-                sources : [ShadowVolumeVS],
-                defined : ['DEBUG_PAUSE']
-            });
-            var pauseFS = new ShaderSource({
-                sources : [ShadowVolumeFS]
-            });
-            var sp = context.createShaderProgram(pauseVS, pauseFS, attributeLocations);
+            var sp = context.createShaderProgram(ShadowVolumeVS, ShadowVolumeFS, attributeLocations);
 
             this._debugVolumeCommand = new DrawCommand({
                 primitiveType : PrimitiveType.TRIANGLES,
