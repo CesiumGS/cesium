@@ -146,7 +146,7 @@ define([
      * @param {Boolean} [options.scene3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
      * @param {Boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
      * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
-     * @param {Globe} [options.globe=new Globe(mapProjection.ellipsoid)] The globe to use in the scene.  If set to <code>false</code>, no globe will be added, and <code>imageryProvider</code> must also be set <code>false</code>.
+     * @param {Globe} [options.globe=new Globe(mapProjection.ellipsoid)] The globe to use in the scene.  If set to <code>false</code>, no globe will be added.
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
      * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
@@ -191,9 +191,6 @@ define([
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
-        }
-        if (defined(options) && defined(options.globe) && options.globe === false && options.imageryProvider !== false) {
-            throw new DeveloperError('To turn off the globe, options.imageryProvider must be set to false.');
         }
         //>>includeEnd('debug');
 
@@ -294,7 +291,7 @@ define([
             }
 
             //Set the base imagery layer
-            var imageryProvider = options.imageryProvider;
+            var imageryProvider = (options.globe === false) ? false : options.imageryProvider;
             if (!defined(imageryProvider)) {
                 imageryProvider = new BingMapsImageryProvider({
                     url : '//dev.virtualearth.net'
@@ -306,7 +303,7 @@ define([
             }
 
             //Set the terrain provider if one is provided.
-            if (defined(options.terrainProvider)) {
+            if (defined(options.terrainProvider) && options.globe !== false) {
                 scene.terrainProvider = options.terrainProvider;
             }
 

@@ -445,8 +445,6 @@ defineSuite([
 
     it('does not create a globe if option is false', function() {
         viewer = new Viewer(container, {
-            imageryProvider : false,
-            baseLayerPicker : false,
             globe : false
         });
         expect(viewer.scene.globe).not.toBeDefined();
