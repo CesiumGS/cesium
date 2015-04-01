@@ -67,6 +67,58 @@ define([
         viewer.extend(viewerCesiumInspectorMixin);
     }
 
+    document.addEventListener('paste', function (e) {
+        var data = e.clipboardData.getData('text/plain');
+
+        var validateKml = function (kml) {
+            var doc = (new DOMParser()).parseFromString(kml, 'text/xml');
+            if (doc.documentElement.nodeName === "kml" && doc.nodeName === "#document") {
+               return true;
+            }
+            return false;
+        };
+
+        var validateCzml = function (czml) {
+            var doc;
+            try {
+                doc = JSON.parse(czml);
+            } catch (e) {
+                return false;
+            }
+            if (doc.hasOwnProperty('0') && doc[0].hasOwnProperty('id') && doc[0].id === "document") {
+                return true;
+            }
+            return false;
+        };
+
+        var validateGeoJson = function (geojson) {
+            var doc;
+            try {
+                doc = JSON.parse(geojson);
+            } catch (e) {
+                return false;
+            }
+            var objectTypes = ["Point", "MultiPoint", "LineString", "MultiLineString", "Polygon", "MultiPolygon", "GeometryCollection", "Feature", "FeatureCollection", "Topology"];
+            if (doc.hasOwnProperty('type') && objectTypes.indexOf(doc.type) !== -1) {
+                return true;
+            }
+            return false;
+        };
+
+        var loadPromise;
+        if (validateKml(data)) {
+            loadPromise = KmlDataSource.load((new DOMParser()).parseFromString(data, 'text/xml'));
+        } else if (validateCzml(data)) {
+            loadPromise = CzmlDataSource.load(JSON.parse(data));
+        } else if(validateGeoJson(data)) {
+            loadPromise = GeoJsonDataSource.load(JSON.parse(data));
+        }
+
+        if (defined(loadPromise)) {
+            viewer.dataSources.add(loadPromise);
+        }
+    });
+
     var showLoadError = function(name, error) {
         var title = 'An error occurred while loading the file: ' + name;
         var message = 'An error occurred while loading the file, which may indicate that it is invalid.  A detailed error report is below:';
