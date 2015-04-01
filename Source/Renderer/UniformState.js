@@ -46,8 +46,6 @@ define([
         this._viewportOrthographicMatrix = Matrix4.clone(Matrix4.IDENTITY);
         this._viewportTransformation = Matrix4.clone(Matrix4.IDENTITY);
 
-        this._boundingVolume = undefined;
-
         this._model = Matrix4.clone(Matrix4.IDENTITY);
         this._view = Matrix4.clone(Matrix4.IDENTITY);
         this._inverseView = Matrix4.clone(Matrix4.IDENTITY);
@@ -92,9 +90,6 @@ define([
 
         this._modelViewRelativeToEyeDirty = true;
         this._modelViewRelativeToEye = new Matrix4();
-
-        this._modelViewProjectionRelativeToPrimitiveCenterInverseTransposeDirty = true;
-        this._modelViewProjectionRelativeToPrimitiveCenterInverseTranspose = new Matrix4();
 
         this._inverseModelViewDirty = true;
         this._inverseModelView = new Matrix4();
@@ -213,21 +208,6 @@ define([
 
         /**
          * @memberof UniformState.prototype
-         * @type {BoundingSphere|undefined}
-         */
-        boundingVolume : {
-            get : function() {
-                return this._boundingVolume;
-            },
-            set : function(volume) {
-                this._boundingVolume = volume;
-
-                this._modelViewProjectionRelativeToPrimitiveCenterInverseTransposeDirty = true;
-            }
-        },
-
-        /**
-         * @memberof UniformState.prototype
          * @type {Matrix4}
          */
         model : {
@@ -250,7 +230,6 @@ define([
                 this._modelViewProjectionDirty = true;
                 this._inverseModelViewProjectionDirty = true;
                 this._modelViewProjectionRelativeToEyeDirty = true;
-                this._modelViewProjectionRelativeToPrimitiveCenterInverseTransposeDirty = true;
                 this._modelViewInfiniteProjectionDirty = true;
                 this._normalDirty = true;
                 this._inverseNormalDirty = true;
@@ -562,19 +541,6 @@ define([
         },
 
         /**
-         * Model-view-projection relative to the primitive center inverse transpose matrix.
-         *
-         * @memberof UniformState.prototype
-         * @type {Matrix4}
-         */
-        modelViewProjectionRelativeToPrimitiveCenterInverseTranspose : {
-            get : function() {
-                cleanModelViewProjectionRelativeToPrimitiveCenterInverseTranspose(this);
-                return this._modelViewProjectionRelativeToPrimitiveCenterInverseTranspose;
-            }
-        },
-
-        /**
          * @memberof UniformState.prototype
          * @type {Matrix4}
          */
@@ -802,7 +768,6 @@ define([
         uniformState._viewProjectionDirty = true;
         uniformState._modelViewProjectionDirty = true;
         uniformState._modelViewProjectionRelativeToEyeDirty = true;
-        uniformState._modelViewProjectionRelativeToPrimitiveCenterInverseTransposeDirty = true;
         uniformState._modelViewInfiniteProjectionDirty = true;
         uniformState._normalDirty = true;
         uniformState._inverseNormalDirty = true;
@@ -823,7 +788,6 @@ define([
         uniformState._viewProjectionDirty = true;
         uniformState._modelViewProjectionDirty = true;
         uniformState._modelViewProjectionRelativeToEyeDirty = true;
-        uniformState._modelViewProjectionRelativeToPrimitiveCenterInverseTransposeDirty = true;
     }
 
     function setInfiniteProjection(uniformState, matrix) {
@@ -1046,45 +1010,6 @@ define([
             uniformState._modelViewProjectionRelativeToEyeDirty = false;
 
             Matrix4.multiply(uniformState._projection, uniformState.modelViewRelativeToEye, uniformState._modelViewProjectionRelativeToEye);
-        }
-    }
-
-    function cleanModelViewProjectionRelativeToPrimitiveCenterInverseTranspose(uniformState) {
-        if (uniformState._modelViewProjectionRelativeToPrimitiveCenterInverseTransposeDirty) {
-            uniformState._modelViewProjectionRelativeToPrimitiveCenterInverseTransposeDirty = false;
-
-            var mvpRTP = uniformState._modelViewProjectionRelativeToPrimitiveCenterInverseTranspose;
-            var boundingVolume = uniformState._boundingVolume;
-            if (!defined(boundingVolume)) {
-                Matrix4.clone(uniformState.inverseModelViewProjection, mvpRTP);
-                Matrix4.transpose(mvpRTP, mvpRTP);
-            } else {
-                var mv = uniformState.modelView;
-                var center = boundingVolume.center;
-
-                center = Matrix4.multiplyByPoint(mv, center, new Cartesian3());
-
-                mvpRTP[0] = mv[0];
-                mvpRTP[1] = mv[1];
-                mvpRTP[2] = mv[2];
-                mvpRTP[3] = mv[3];
-                mvpRTP[4] = mv[4];
-                mvpRTP[5] = mv[5];
-                mvpRTP[6] = mv[6];
-                mvpRTP[7] = mv[7];
-                mvpRTP[8] = mv[8];
-                mvpRTP[9] = mv[9];
-                mvpRTP[10] = mv[10];
-                mvpRTP[11] = mv[11];
-                mvpRTP[12] = center.x;
-                mvpRTP[13] = center.y;
-                mvpRTP[14] = center.z;
-                mvpRTP[15] = mv[15];
-
-                Matrix4.multiply(uniformState.projection, mvpRTP, mvpRTP);
-                Matrix4.inverse(mvpRTP, mvpRTP);
-                Matrix4.transpose(mvpRTP, mvpRTP);
-            }
         }
     }
 

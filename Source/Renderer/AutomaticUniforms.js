@@ -654,27 +654,6 @@ define([
         }),
 
         /**
-         * An automatic GLSL uniform representing a 4x4 model-view-projection transformation matrix that
-         * transforms model coordinates, relative to the primitive center, to eye coordinates.
-         *
-         * @alias czm_modelViewProjectionRelativeToPrimitiveCenterInverseTranspose
-         * @glslUniform
-         *
-         * @example
-         * // GLSL declaration
-         * uniform mat4 czm_modelViewProjectionRelativeToPrimitiveCenterInverseTranspose;
-         *
-         * @see czm_modelViewProjectionRelativeToEye
-         */
-        czm_modelViewProjectionRelativeToPrimitiveCenterInverseTranspose : new AutomaticUniform({
-            size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT4,
-            getValue : function(uniformState) {
-                return uniformState.modelViewProjectionRelativeToPrimitiveCenterInverseTranspose;
-            }
-        }),
-
-        /**
          * An automatic GLSL uniform representing a 4x4 transformation matrix that
          * transforms from eye coordinates to model coordinates.
          *

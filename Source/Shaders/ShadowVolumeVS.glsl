@@ -69,42 +69,17 @@ void main()
 {
     vec4 position = czm_translateRelativeToEye(positionHigh, positionLow);
     
-    //
-    // Make sure the vertex is moved down far enough to cover the central body
-    //
-    float delta = 1.0;//min(centralBodyMinimumAltitude, LODNegativeToleranceOverDistance * length(position.xyz));
-    
-    //
-    // Move vertex down. This is not required if it belongs to a top
-    // cap or top of the wall, in which case it was already moved up just
-    // once on the CPU so the normal will be (0, 0, 0).
-    //
-    // Moving the vertex down is a function of the view parameters so
-    // it is done here to avoid buring CPU time.
-    //
+    float delta = 1.0; // TODO: moving the vertex is a function of the view
     
     vec3 eyePosition = position.xyz;
     vec3 movedPosition = position.xyz + normal * delta;
     
     if (all(equal(normal, vec3(0.0))))
     {
-        //gl_Position = clipPointToPlane(eyePosition, movedPosition, false);
         gl_Position = czm_depthClampNearFarPlane(clipPointToPlane(eyePosition, movedPosition, false));
-        //gl_Position = czm_depthClampNearFarPlane(clipPointToPlane(movedPosition, eyePosition, false));
-        
-        //gl_Position = czm_modelViewProjectionRelativeToEye * (position + vec4(normal * delta, 0.0));
-        //gl_Position = czm_depthClampNearFarPlane(czm_modelViewProjectionRelativeToEye * (position + vec4(normal * delta, 0.0)));
-        
-        //eyePosition = (czm_modelViewRelativeToEye * vec4(eyePosition, 1.0)).xyz;
-        //eyePosition.z = max(eyePosition.z, -(czm_currentFrustum.y + 0.001));
-        //gl_Position = czm_projection * vec4(eyePosition, 1.0);
     }
     else
     {
-        //gl_Position = clipPointToNearPlane(movedPosition, eyePosition);
         gl_Position = czm_depthClampNearFarPlane(clipPointToPlane(movedPosition, eyePosition, true));
-        
-        //gl_Position = czm_modelViewProjectionRelativeToEye * (position + vec4(normal * delta, 0.0));
-        //gl_Position = czm_depthClampNearFarPlane(czm_modelViewProjectionRelativeToEye * (position + vec4(normal * delta, 0.0)));
     }
 }
