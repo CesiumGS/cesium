@@ -436,6 +436,11 @@ defineSuite([
         expect(dynamicUpdater._options.semiMajorAxis).toEqual(ellipse.semiMajorAxis.getValue());
         expect(dynamicUpdater._options.semiMinorAxis).toEqual(ellipse.semiMinorAxis.getValue());
 
+        entity.show = false;
+        dynamicUpdater.update(JulianDate.now());
+        expect(primitives.length).toBe(0);
+        entity.show = true;
+
         ellipse.show.setValue(false);
         dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(0);
