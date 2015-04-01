@@ -443,6 +443,27 @@ defineSuite([
         expect(viewer.targetFrameRate).toBe(23);
     });
 
+    it('does not create a globe if option is false', function() {
+        viewer = new Viewer(container, {
+            globe : false
+        });
+        expect(viewer.scene.globe).not.toBeDefined();
+    });
+
+    it('does not create a skyBox if option is false', function() {
+        viewer = new Viewer(container, {
+            skyBox : false
+        });
+        expect(viewer.scene.skyBox).not.toBeDefined();
+    });
+
+    it('does not create a skyAtmosphere if option is false', function() {
+        viewer = new Viewer(container, {
+            skyAtmosphere : false
+        });
+        expect(viewer.scene.skyAtmosphere).not.toBeDefined();
+    });
+
     it('can set dataSources at construction', function() {
         var collection = new DataSourceCollection();
         viewer = new Viewer(container, {

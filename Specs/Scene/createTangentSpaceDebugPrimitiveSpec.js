@@ -32,6 +32,7 @@ defineSuite([
 
         expect(primitive.geometryInstances).toBeDefined();
         expect(primitive.appearance).toBeDefined();
+        expect(primitive.asynchronous).toBe(false);
 
         var instances = primitive.geometryInstances;
         expect(instances.length).toEqual(3);

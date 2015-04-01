@@ -147,6 +147,27 @@ defineSuite([
         expect(widget.terrainProvider).toBe(anotherProvider);
     });
 
+    it('does not create a globe if option is false', function() {
+        widget = new CesiumWidget(container, {
+            globe : false
+        });
+        expect(widget.scene.globe).not.toBeDefined();
+    });
+
+    it('does not create a skyBox if option is false', function() {
+        widget = new CesiumWidget(container, {
+            skyBox : false
+        });
+        expect(widget.scene.skyBox).not.toBeDefined();
+    });
+
+    it('does not create a skyAtmosphere if option is false', function() {
+        widget = new CesiumWidget(container, {
+            skyAtmosphere : false
+        });
+        expect(widget.scene.skyAtmosphere).not.toBeDefined();
+    });
+
     it('sets expected options skyBox', function() {
         var options = {
             skyBox : new SkyBox({
