@@ -140,13 +140,15 @@ define([
      * @param {Element|String} container The DOM element or ID that will contain the widget.
      * @param {Object} [options] Object with the following properties:
      * @param {Clock} [options.clock=new Clock()] The clock to use to control current time.
-     * @param {ImageryProvider} [options.imageryProvider=new BingMapsImageryProvider()] The imagery provider to serve as the base layer. If set to false, no imagery provider will be added.
+     * @param {ImageryProvider} [options.imageryProvider=new BingMapsImageryProvider()] The imagery provider to serve as the base layer. If set to <code>false</code>, no imagery provider will be added.
      * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider] The terrain provider.
-     * @param {SkyBox} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used.
+     * @param {SkyBox} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used. If set to <code>false</code>, no skyBox, Sun, or Moon will be added.
+     * @param {SkyAtmosphere} [options.skyAtmosphere] Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
      * @param {Boolean} [options.scene3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
      * @param {Boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
      * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
+     * @param {Globe} [options.globe=new Globe(mapProjection.ellipsoid)] The globe to use in the scene.  If set to <code>false</code>, no globe will be added.
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
      * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
@@ -169,7 +171,7 @@ define([
      * var widget = new Cesium.CesiumWidget('cesiumContainer', {
      *     imageryProvider : new Cesium.OpenStreetMapImageryProvider(),
      *     terrainProvider : new Cesium.CesiumTerrainProvider({
-     *         url : '//cesiumjs.org/stk-terrain/world'
+     *         url : '//assets.agi.com/stk-terrain/world'
      *     }),
      *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets
      *     skyBox : new Cesium.SkyBox({
@@ -248,7 +250,7 @@ define([
 
             configureCameraFrustum(this);
 
-            var ellipsoid = Ellipsoid.WGS84;
+            var ellipsoid = defaultValue(scene.mapProjection.ellipsoid, Ellipsoid.WGS84);
             var creditDisplay = scene.frameState.creditDisplay;
 
             var cesiumCredit = new Credit('Cesium', cesiumLogoData, 'http://cesiumjs.org/');
@@ -257,9 +259,13 @@ define([
             var agiCredit = new Credit('AGI', agiLogoData, 'http://www.agi.com/');
             creditDisplay.addDefaultCredit(agiCredit);
 
-            var globe = new Globe(ellipsoid);
-            this._globe = globe;
-            scene.globe = globe;
+            var globe = options.globe;
+            if (!defined(globe)) {
+                globe = new Globe(ellipsoid);
+            }
+            if (globe !== false) {
+                scene.globe = globe;
+            }
 
             var skyBox = options.skyBox;
             if (!defined(skyBox)) {
@@ -274,14 +280,23 @@ define([
                     }
                 });
             }
+            if (skyBox !== false) {
+                scene.skyBox = skyBox;
+                scene.sun = new Sun();
+                scene.moon = new Moon();
+            }
 
-            scene.skyBox = skyBox;
-            scene.skyAtmosphere = new SkyAtmosphere(ellipsoid);
-            scene.sun = new Sun();
-            scene.moon = new Moon();
+            // Blue sky, and the glow around the Earth's limb.
+            var skyAtmosphere = options.skyAtmosphere;
+            if (!defined(skyAtmosphere)) {
+                skyAtmosphere = new SkyAtmosphere(ellipsoid);
+            }
+            if (skyAtmosphere !== false) {
+                scene.skyAtmosphere = skyAtmosphere;
+            }
 
             //Set the base imagery layer
-            var imageryProvider = options.imageryProvider;
+            var imageryProvider = (options.globe === false) ? false : options.imageryProvider;
             if (!defined(imageryProvider)) {
                 imageryProvider = new BingMapsImageryProvider({
                     url : '//dev.virtualearth.net'
@@ -293,7 +308,7 @@ define([
             }
 
             //Set the terrain provider if one is provided.
-            if (defined(options.terrainProvider)) {
+            if (defined(options.terrainProvider) && options.globe !== false) {
                 scene.terrainProvider = options.terrainProvider;
             }
 

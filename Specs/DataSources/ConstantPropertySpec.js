@@ -8,7 +8,7 @@ defineSuite([
         Cartesian3,
         JulianDate) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var time = JulianDate.now();
 
@@ -49,7 +49,7 @@ defineSuite([
         var listener = jasmine.createSpy('listener');
         property.definitionChanged.addEventListener(listener);
         property.setValue(new Cartesian3(0, 0, 0));
-        expect(listener.callCount).toBe(0);
+        expect(listener.calls.count()).toBe(0);
     });
 
     it('works with objects with result parameter', function() {

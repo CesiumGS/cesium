@@ -773,5 +773,50 @@ define([
         return Cartesian2.fromCartesian4(tmp, result);
     };
 
+    var normalScratch = new Cartesian3();
+    var rightScratch = new Cartesian3();
+    var upScratch = new Cartesian3();
+
+    /**
+     * @private
+     */
+    Transforms.rotationMatrixFromPositionVelocity = function(position, velocity, ellipsoid, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(position)) {
+            throw new DeveloperError('position is required.');
+        }
+
+        if (!defined(velocity)) {
+            throw new DeveloperError('velocity is required.');
+        }
+        //>>includeEnd('debug');
+
+        var normal = defaultValue(ellipsoid, Ellipsoid.WGS84).geodeticSurfaceNormal(position, normalScratch);
+        var right = Cartesian3.cross(velocity, normal, rightScratch);
+        if (Cartesian3.equalsEpsilon(right, Cartesian3.ZERO, CesiumMath.EPSILON6)) {
+            right = Cartesian3.clone(Cartesian3.UNIT_X, right);
+        }
+
+        var up = Cartesian3.cross(right, velocity, upScratch);
+        Cartesian3.cross(velocity, up, right);
+        Cartesian3.negate(right, right);
+
+        if (!defined(result)) {
+            result = new Matrix3();
+        }
+
+        result[0] = velocity.x;
+        result[1] = velocity.y;
+        result[2] = velocity.z;
+        result[3] = right.x;
+        result[4] = right.y;
+        result[5] = right.z;
+        result[6] = up.x;
+        result[7] = up.y;
+        result[8] = up.z;
+
+        return result;
+    };
+
     return Transforms;
 });

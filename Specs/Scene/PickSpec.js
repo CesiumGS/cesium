@@ -10,8 +10,8 @@ defineSuite([
         'Core/Rectangle',
         'Core/RectangleGeometry',
         'Core/ShowGeometryInstanceAttribute',
-        'Scene/OrthographicFrustum',
         'Scene/EllipsoidSurfaceAppearance',
+        'Scene/OrthographicFrustum',
         'Scene/PerspectiveFrustum',
         'Scene/Primitive',
         'Scene/RectanglePrimitive',
@@ -28,15 +28,15 @@ defineSuite([
         Rectangle,
         RectangleGeometry,
         ShowGeometryInstanceAttribute,
-        OrthographicFrustum,
         EllipsoidSurfaceAppearance,
+        OrthographicFrustum,
         PerspectiveFrustum,
         Primitive,
         RectanglePrimitive,
         SceneMode,
         createScene) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
     var primitives;

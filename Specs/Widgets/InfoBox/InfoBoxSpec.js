@@ -1,12 +1,14 @@
 /*global defineSuite*/
 defineSuite([
         'Widgets/InfoBox/InfoBox',
-        'Core/defined'
+        'Core/defined',
+        'Specs/pollToPromise'
     ], function(
         InfoBox,
-        defined) {
+        defined,
+        pollToPromise) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var testContainer;
     var infoBox;
@@ -39,29 +41,21 @@ defineSuite([
         var infoElement = testContainer.firstChild;
 
         infoBox.viewModel.description = 'Please do not crash';
-        waitsFor(function() {
+        return pollToPromise(function() {
             node = infoBox.frame.contentDocument.body.firstChild;
             return node !== null;
-        });
-
-        runs(function() {
+        }).then(function() {
             expect(infoElement.style['background-color']).toEqual('');
-        });
-
-        waitsFor(function() {
-            return node.innerHTML === infoBox.viewModel.description;
-        });
-
-        runs(function() {
+            return pollToPromise(function() {
+                return node.innerHTML === infoBox.viewModel.description;
+            });
+        }).then(function() {
             infoBox.viewModel.description = '<div style="background-color: rgb(255, 255, 255);">Please do not crash</div>';
             expect(infoElement.style['background-color']).toEqual('rgb(255, 255, 255)');
-        });
-
-        waitsFor(function() {
-            return node.innerHTML === infoBox.viewModel.description;
-        });
-
-        runs(function() {
+            return pollToPromise(function() {
+                return node.innerHTML === infoBox.viewModel.description;
+            });
+        }).then(function() {
             expect(infoElement['background-color']).toBeUndefined();
         });
     });

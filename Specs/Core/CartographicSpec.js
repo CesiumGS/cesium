@@ -4,7 +4,7 @@ defineSuite([
     ], function(
         Cartographic) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('default constructor sets expected properties', function() {
         var c = new Cartographic();
@@ -81,7 +81,7 @@ defineSuite([
     it('clone without a result parameter', function() {
         var cartographic = new Cartographic(1.0, 2.0, 3.0);
         var result = cartographic.clone();
-        expect(cartographic).toNotBe(result);
+        expect(cartographic).not.toBe(result);
         expect(cartographic).toEqual(result);
     });
 
@@ -89,7 +89,7 @@ defineSuite([
         var cartographic = new Cartographic(1.0, 2.0, 3.0);
         var result = new Cartographic();
         var returnedResult = cartographic.clone(result);
-        expect(cartographic).toNotBe(result);
+        expect(cartographic).not.toBe(result);
         expect(result).toBe(returnedResult);
         expect(cartographic).toEqual(result);
     });
