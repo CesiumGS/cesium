@@ -1299,8 +1299,8 @@ define([
         }
         entity.availability = availability;
 
-        //var visibility = queryBooleanValue(featureNode, 'visibility', namespaces.kml);
-        //entity.uiShow = defaultValue(visibility, true);
+        var visibility = queryBooleanValue(featureNode, 'visibility', namespaces.kml);
+        entity.show = defaultValue(visibility, true);
         //var open = queryBooleanValue(featureNode, 'open', namespaces.kml);
 
         var authorNode = queryFirstNode(featureNode, 'author', namespaces.atom);

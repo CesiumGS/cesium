@@ -361,6 +361,11 @@ defineSuite([
         expect(options.maximumHeights).toEqual(wall.maximumHeights.getValue());
         expect(options.granularity).toEqual(wall.granularity.getValue());
 
+        entity.show = false;
+        dynamicUpdater.update(JulianDate.now());
+        expect(primitives.length).toBe(0);
+        entity.show = true;
+
         //If a dynamic show returns false, the primitive should go away.
         wall.show.setValue(false);
         dynamicUpdater.update(time);
