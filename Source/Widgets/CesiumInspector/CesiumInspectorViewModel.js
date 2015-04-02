@@ -349,44 +349,8 @@ define([
             return true;
         });
 
-        var globeDepthVertexQuad;
-        var resizeGlobeDepthVertexQuad = function(e) {
-            var canvas = that._canvas;
-            globeDepthVertexQuad.rectangle.width = canvas.clientWidth;
-            globeDepthVertexQuad.rectangle.height = canvas.clientHeight;
-        };
-
         this._showGlobeDepth = createCommand(function() {
-            if (that.globeDepth && !defined(globeDepthVertexQuad)) {
-                that._canvas.addEventListener('resize', resizeGlobeDepthVertexQuad, false);
-                var canvas = that._canvas;
-                var rectangle = new BoundingRectangle(0, 0, canvas.clientWidth, canvas.clientHeight);
-
-                var DepthFS =
-                    'czm_material czm_getMaterial(czm_materialInput materialInput)\n' +
-                    '{\n' +
-                    '    float n = czm_depthRange.near;\n' +
-                    '    float f = czm_depthRange.far;\n' +
-                    '    czm_material material = czm_getDefaultMaterial(materialInput);\n' +
-                    '    vec2 st = materialInput.st;\n' +
-                    '    float z = texture2D(czm_globeDepthTexture, st).r;\n' +
-                    '    float d = (2.0 * z - n - f) / (f - n);\n' +
-                    '    material.diffuse = mix(vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0), vec3(d * 0.5 + 0.5));\n' +
-                    '    material.alpha = 0.75;\n' +
-                    '    return material;\n' +
-                    '}\n';
-
-                var material = new Material({
-                    fabric : {
-                        source : DepthFS
-                    }
-                });
-                globeDepthVertexQuad = new ViewportQuad(rectangle, material);
-                that._scene.primitives.add(globeDepthVertexQuad);
-            } else if (!that.globeDepth && defined(globeDepthVertexQuad)) {
-                that._scene.primitives.remove(globeDepthVertexQuad);
-                globeDepthVertexQuad = undefined;
-            }
+            that._scene.debugShowGlobeDepth = that.globeDepth;
             return true;
         });
 

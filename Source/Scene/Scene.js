@@ -24,10 +24,13 @@ define([
         '../Core/Matrix4',
         '../Core/mergeSort',
         '../Core/Occluder',
+        '../Core/PixelFormat',
         '../Core/ShowGeometryInstanceAttribute',
         '../Renderer/ClearCommand',
         '../Renderer/Context',
         '../Renderer/PassState',
+        '../Renderer/PixelDatatype',
+        '../Shaders/PostProcessFilters/PassThrough',
         './Camera',
         './CreditDisplay',
         './CullingVolume',
@@ -37,6 +40,7 @@ define([
         './GlobeDepth',
         './OIT',
         './OrthographicFrustum',
+        './Material',
         './Pass',
         './PerformanceDisplay',
         './PerInstanceColorAppearance',
@@ -49,7 +53,8 @@ define([
         './SceneTransitioner',
         './ScreenSpaceCameraController',
         './SunPostProcess',
-        './TweenCollection'
+        './TweenCollection',
+        './ViewportQuad'
     ], function(
         BoundingRectangle,
         BoundingSphere,
@@ -75,10 +80,13 @@ define([
         Matrix4,
         mergeSort,
         Occluder,
+        PixelFormat,
         ShowGeometryInstanceAttribute,
         ClearCommand,
         Context,
         PassState,
+        PixelDatatype,
+        PassThrough,
         Camera,
         CreditDisplay,
         CullingVolume,
@@ -88,6 +96,7 @@ define([
         GlobeDepth,
         OIT,
         OrthographicFrustum,
+        Material,
         Pass,
         PerformanceDisplay,
         PerInstanceColorAppearance,
@@ -100,8 +109,10 @@ define([
         SceneTransitioner,
         ScreenSpaceCameraController,
         SunPostProcess,
-        TweenCollection) {
+        TweenCollection,
+        ViewportQuad) {
     "use strict";
+    /*global WebGLRenderingContext*/
 
     /**
      * The container for all 3D graphical objects and state in a Cesium virtual scene.  Generally,
@@ -437,7 +448,6 @@ define([
          * @default false
          */
         this.debugShowGlobeDepth = false;
-        this._debugfrustumDepthCommands = undefined;
 
         /**
          * When <code>true</code>, enables Fast Approximate Anti-aliasing even when order independent translucency
@@ -1174,6 +1184,110 @@ define([
         }
     }
 
+    var debugGlobeDepthTextures = [];
+    var debugGlobeDepthFramebuffers = [];
+    var debugGlobeDepthCommands = [];
+
+    function destroyDebugGlobeDepthTexture(textureIndex) {
+        var texture = debugGlobeDepthTextures[textureIndex];
+        texture = texture && !texture.isDestroyed() && texture.destroy();
+    }
+
+    function destroyDebugGlobeDepthFramebuffer(textureIndex) {
+        var framebuffer = debugGlobeDepthFramebuffers[textureIndex];
+        framebuffer = framebuffer && !framebuffer.isDestroyed() && framebuffer.destroy();
+    }
+
+    function destroyDebugGlobeDepthShaderProgram(textureIndex) {
+        var command = debugGlobeDepthCommands[textureIndex];
+        command = defined(command.shaderProgram) && command.shaderProgram.destroy();
+    }
+
+    function updateDebugGlobeDepth(scene, context, index) {
+        if (!context.depthTexture) {
+            return;
+        }
+
+        var texture = debugGlobeDepthTextures[index];
+        var framebuffer = debugGlobeDepthFramebuffers[index];
+        var command = debugGlobeDepthCommands[index];
+
+        var width = context.drawingBufferWidth;
+        var height = context.drawingBufferHeight;
+
+        var textureChanged = !defined(texture) || texture.width !== width || texture.height !== height;
+        if (!defined(framebuffer) || textureChanged) {
+            destroyDebugGlobeDepthTexture(index);
+            destroyDebugGlobeDepthFramebuffer(index);
+
+            texture = context.createTexture2D({
+                width : width,
+                height : height,
+                pixelFormat : PixelFormat.RGBA,
+                pixelDatatype : PixelDatatype.FLOAT
+            });
+
+            framebuffer = context.createFramebuffer({
+                colorTextures : [texture],
+                destroyAttachments : false
+            });
+
+            command = context.createViewportQuadCommand(PassThrough, {
+                renderState : context.createRenderState(),
+                uniformMap : {
+                    u_texture : function() {
+                        return debugGlobeDepthTextures[index];
+                    }
+                },
+                owner : scene
+            });
+        }
+
+        debugGlobeDepthTextures[index] = texture;
+        debugGlobeDepthFramebuffers[index] = framebuffer;
+        debugGlobeDepthCommands[index] = command;
+    }
+
+    var debugGlobeDepthPrimitive;
+
+    function updateDebugGlobeDepthPrimitive(scene, context, index) {
+        if (defined(debugGlobeDepthPrimitive)) {
+            scene.primitives.remove(debugGlobeDepthPrimitive);
+        }
+
+        var width = context.drawingBufferWidth;
+        var height = context.drawingBufferHeight;
+
+        var rectangle = new BoundingRectangle(0, 0, width, height);
+
+        var DepthFS =
+            'czm_material czm_getMaterial(czm_materialInput materialInput)\n' +
+            '{\n' +
+            '    float n = czm_depthRange.near;\n' +
+            '    float f = czm_depthRange.far;\n' +
+            '    czm_material material = czm_getDefaultMaterial(materialInput);\n' +
+            '    vec2 st = materialInput.st;\n' +
+            '    float z = texture2D(czm_globeDepthTexture, st).r;\n' +
+            '    float d = (2.0 * z - n - f) / (f - n);\n' +
+            '    material.diffuse = mix(vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0), vec3(d * 0.5 + 0.5));\n' +
+            '    material.alpha = 0.75;\n' +
+            '    return material;\n' +
+            '}\n';
+
+        var material = new Material({
+            fabric : {
+                source : DepthFS
+            },
+            uniforms : {
+                u_texture : function() {
+                    return debugGlobeDepthTextures[index];
+                }
+            }
+        });
+        debugGlobeDepthPrimitive = new ViewportQuad(rectangle, material);
+        scene.primitives.add(debugGlobeDepthPrimitive);
+    }
+
     var scratchPerspectiveFrustum = new PerspectiveFrustum();
     var scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
     var scratchOrthographicFrustum = new OrthographicFrustum();
@@ -1183,6 +1297,7 @@ define([
         var i;
         var j;
 
+        // Create local references.
         var frameState = scene._frameState;
         var camera = scene._camera;
         var context = scene.context;
@@ -1220,12 +1335,12 @@ define([
             frustum = camera.frustum.clone(scratchOrthographicFrustum);
         }
 
-        // Clear the pass state color buffer.
+        // Clear the pass state frame buffer.
         var clearColorCommand = scene._clearColorCommand;
         Color.clone(clearColor, clearColorCommand.color);
         clearColorCommand.execute(context, passState);
 
-        // Update globe depth rendering based on the current context and clear the globe depth color buffer.
+        // Update globe depth rendering based on the current context and clear the globe depth frame buffer.
         scene._globeDepth.update(context);
         scene._globeDepth.clear(context, passState, clearColor);
 
@@ -1265,12 +1380,11 @@ define([
             passState.framebuffer = scene._fxaa.getColorFramebuffer();
         }
 
-        // Ideally, we would render the sky box and atmosphere last for early-z,
-        // but we would have to draw it in each frustum
-        frustum.near = camera.frustum.near;
-        frustum.far = camera.frustum.far;
+        // Update the uniforms based on the original frustum.
         us.updateFrustum(frustum);
 
+        // Ideally, we would render the sky box and atmosphere last for early-z,
+        // but we would have to draw it in each frustum
         if (defined(skyBoxCommand)) {
             executeCommand(skyBoxCommand, scene, context, passState);
         }
@@ -1331,6 +1445,15 @@ define([
             }
 
             scene._globeDepth.executeCopyDepth(context, passState);
+
+            if (scene.debugShowGlobeDepth) {
+                var orignal = passState.framebuffer;
+                updateDebugGlobeDepth(scene, context, index);
+                passState.framebuffer = debugGlobeDepthFramebuffers[index];
+                var command = debugGlobeDepthCommands[index];
+                command.execute(context, passState);
+                passState.framebuffer = orignal;
+            }
 
             // Execute commands in order by pass up to the translucent pass.
             // Translucent geometry needs special handling (sorting/OIT).
@@ -1438,6 +1561,12 @@ define([
 
         scene._commandList.length = 0;
         scene._overlayCommandList.length = 0;
+
+        if (scene.debugShowGlobeDepth) {
+            updateDebugGlobeDepthPrimitive(scene, context, 1);
+        } else if (defined(debugGlobeDepthPrimitive)) {
+            scene.primitives.remove(debugGlobeDepthPrimitive);
+        }
 
         updatePrimitives(scene);
         createPotentiallyVisibleSet(scene);
