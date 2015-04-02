@@ -105,7 +105,7 @@ define([
             var billboardGraphics = entity._billboard;
             var textureValue;
             var billboard = item.billboard;
-            var show = entity.isAvailable(time) && Property.getValueOrDefault(billboardGraphics._show, time, true);
+            var show = entity.isShowing && entity.isAvailable(time) && Property.getValueOrDefault(billboardGraphics._show, time, true);
 
             if (show) {
                 position = Property.getValueOrUndefined(entity._position, time, position);

@@ -245,10 +245,11 @@ define([
 
         var cleanedPositions = positions.slice(0, i);
         for (; i < length; ++i) {
-            v0 = positions[i - 1];
+            // v0 is set by either the previous loop, or the previous clean point.
             v1 = positions[i];
             if (!Cartesian3.equalsEpsilon(v0, v1, removeDuplicatesEpsilon)) {
                 cleanedPositions.push(Cartesian3.clone(v1));
+                v0 = v1;
             }
         }
 

@@ -29,11 +29,11 @@ define([
      * @alias ColorMaterialProperty
      * @constructor
      */
-    var ColorMaterialProperty = function(colorProperty) {
+    var ColorMaterialProperty = function(color) {
         this._definitionChanged = new Event();
         this._color = undefined;
         this._colorSubscription = undefined;
-        this.color = colorProperty;
+        this.color = color;
     };
 
     /**

@@ -11,7 +11,8 @@ defineSuite([
         'Scene/SceneMode',
         'Scene/SkyBox',
         'Scene/TileCoordinatesImageryProvider',
-        'Specs/DomEventSimulator'
+        'Specs/DomEventSimulator',
+        'Specs/pollToPromise'
     ], function(
         CesiumWidget,
         Clock,
@@ -24,9 +25,10 @@ defineSuite([
         SceneMode,
         SkyBox,
         TileCoordinatesImageryProvider,
-        DomEventSimulator) {
+        DomEventSimulator,
+        pollToPromise) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var container;
     var widget;
@@ -145,6 +147,27 @@ defineSuite([
         expect(widget.terrainProvider).toBe(anotherProvider);
     });
 
+    it('does not create a globe if option is false', function() {
+        widget = new CesiumWidget(container, {
+            globe : false
+        });
+        expect(widget.scene.globe).not.toBeDefined();
+    });
+
+    it('does not create a skyBox if option is false', function() {
+        widget = new CesiumWidget(container, {
+            skyBox : false
+        });
+        expect(widget.scene.skyBox).not.toBeDefined();
+    });
+
+    it('does not create a skyAtmosphere if option is false', function() {
+        widget = new CesiumWidget(container, {
+            skyAtmosphere : false
+        });
+        expect(widget.scene.skyAtmosphere).not.toBeDefined();
+    });
+
     it('sets expected options skyBox', function() {
         var options = {
             skyBox : new SkyBox({
@@ -247,7 +270,7 @@ defineSuite([
             throw error;
         };
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return !widget.useDefaultRenderLoop;
         }, 'render loop to be disabled.');
     });
@@ -260,11 +283,9 @@ defineSuite([
             throw error;
         };
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return !widget.useDefaultRenderLoop;
-        });
-
-        runs(function() {
+        }).then(function() {
             expect(widget._element.querySelector('.cesium-widget-errorPanel')).not.toBeNull();
 
             var messages = widget._element.querySelectorAll('.cesium-widget-errorPanel-message');
@@ -295,11 +316,9 @@ defineSuite([
             throw error;
         };
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return !widget.useDefaultRenderLoop;
-        });
-
-        runs(function() {
+        }).then(function() {
             expect(widget._element.querySelector('.cesium-widget-errorPanel')).toBeNull();
         });
     });
