@@ -4,6 +4,7 @@ define([
         '../../Core/Cartesian3',
         '../../Core/defaultValue',
         '../../Core/defined',
+        '../../Core/definedNotNull',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
@@ -42,6 +43,7 @@ define([
         Cartesian3,
         defaultValue,
         defined,
+        definedNotNull,
         defineProperties,
         destroyObject,
         DeveloperError,
@@ -95,7 +97,9 @@ define([
         }
 
         // No regular entity picked.  Try picking features from imagery layers.
-        return pickImageryLayerFeature(viewer, e.position);
+        if (defined(viewer.scene.globe)) {
+            return pickImageryLayerFeature(viewer, e.position);
+        }
     }
 
     function trackDataSourceClock(timeline, clock, dataSource) {
@@ -214,6 +218,7 @@ define([
      * @param {ImageryProvider} [options.imageryProvider=new BingMapsImageryProvider()] The imagery provider to use.  This value is only valid if options.baseLayerPicker is set to false.
      * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
      * @param {SkyBox} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used.
+     * @param {SkyAtmosphere} [options.skyAtmosphere] Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
      * @param {Element|String} [options.fullscreenElement=document.body] The element or id to be placed into fullscreen mode when the full screen button is pressed.
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
      * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
@@ -222,6 +227,7 @@ define([
      * @param {Object} [options.contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
      * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
+     * @param {Globe} [options.globe=new Globe(mapProjection.ellipsoid)] The globe to use in the scene.  If set to <code>false</code>, no globe will be added.
      * @param {Boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
      * @param {Element|String} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added to the bottom of the widget itself.
      * @param {DataSourceCollection} [options.dataSources=new DataSourceCollection()] The collection of data sources visualized by the widget.  If this parameter is provided,
@@ -252,7 +258,7 @@ define([
      *     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
      *     //Use standard Cesium terrain
      *     terrainProvider : new Cesium.CesiumTerrainProvider({
-     *         url : '//cesiumjs.org/stk-terrain/world'
+     *         url : '//assets.agi.com/stk-terrain/world'
      *     }),
      *     //Hide the base layer picker
      *     baseLayerPicker : false,
@@ -294,7 +300,8 @@ define([
         container = getElement(container);
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        var createBaseLayerPicker = !defined(options.baseLayerPicker) || options.baseLayerPicker !== false;
+        var createBaseLayerPicker = (!defined(options.globe) || options.globe !== false) &&
+            (!defined(options.baseLayerPicker) || options.baseLayerPicker !== false);
 
         //>>includeStart('debug', pragmas.debug);
         // If using BaseLayerPicker, imageryProvider is an invalid option
@@ -345,8 +352,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             imageryProvider : createBaseLayerPicker ? false : options.imageryProvider,
             clock : options.clock,
             skyBox : options.skyBox,
+            skyAtmosphere : options.skyAtmosphere,
             sceneMode : options.sceneMode,
             mapProjection : options.mapProjection,
+            globe : options.globe,
             orderIndependentTranslucency : options.orderIndependentTranslucency,
             contextOptions : options.contextOptions,
             useDefaultRenderLoop : options.useDefaultRenderLoop,
@@ -468,13 +477,19 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var navigationHelpButton;
         if (!defined(options.navigationHelpButton) || options.navigationHelpButton !== false) {
             var showNavHelp = true;
-            if (defined(window.localStorage)) {
-                var hasSeenNavHelp = window.localStorage.getItem('cesium-hasSeenNavHelp');
-                if (defined(hasSeenNavHelp) && Boolean(hasSeenNavHelp)) {
-                    showNavHelp = false;
-                } else {
-                    window.localStorage.setItem('cesium-hasSeenNavHelp', 'true');
+            try {
+                //window.localStorage is null if disabled in Firefox or undefined in browsers with implementation
+                if (definedNotNull(window.localStorage)) {
+                    var hasSeenNavHelp = window.localStorage.getItem('cesium-hasSeenNavHelp');
+                    if (defined(hasSeenNavHelp) && Boolean(hasSeenNavHelp)) {
+                        showNavHelp = false;
+                    } else {
+                        window.localStorage.setItem('cesium-hasSeenNavHelp', 'true');
+                    }
                 }
+            } catch (e) {
+                //Accessing window.localStorage throws if disabled in Chrome
+                //window.localStorage.setItem throws if in Safari private browsing mode or in any browser if we are over quota.
             }
             navigationHelpButton = new NavigationHelpButton({
                 container : toolbar,
@@ -1299,7 +1314,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var selectedEntity = this.selectedEntity;
         var showSelection = defined(selectedEntity) && this._enableInfoOrSelection;
 
-        if (showSelection && selectedEntity.isAvailable(time)) {
+        if (showSelection && selectedEntity.isShowing && selectedEntity.isAvailable(time)) {
             var state = this._dataSourceDisplay.getBoundingSphere(selectedEntity, true, boundingSphereScratch);
             if (state !== BoundingSphereState.FAILED) {
                 position = boundingSphereScratch.center;
@@ -1323,9 +1338,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             infoBoxViewModel.isCameraTracking = (this.trackedEntity === this.selectedEntity);
 
             if (showSelection && defined(selectedEntity.description)) {
-                infoBoxViewModel.descriptionRawHtml = defaultValue(selectedEntity.description.getValue(time), '');
+                infoBoxViewModel.description = defaultValue(selectedEntity.description.getValue(time), '');
             } else {
-                infoBoxViewModel.descriptionRawHtml = '';
+                infoBoxViewModel.description = '';
             }
         }
     };
@@ -1427,7 +1442,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     /**
      * Asynchronously sets the camera to view the provided entity, entities, or data source.
      * If the data source is still in the process of loading or the visualization is otherwise still loading,
-     * this method ways for the data to be ready before performing the zoom.
+     * this method waits for the data to be ready before performing the zoom.
      *
      * <p>The offset is heading/pitch/range in the local east-north-up reference frame centered at the center of the bounding sphere.
      * The heading and the pitch angles are defined in the local east-north-up reference frame.
@@ -1439,7 +1454,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * target will be the range. The heading will be determined from the offset. If the heading cannot be
      * determined from the offset, the heading will be north.</p>
      *
-     * @param {Entity|Entity[]|EntityCollection|DataSource} target The entity, array of entities, entity collection or data source to view.
+     * @param {Entity|Entity[]|EntityCollection|DataSource|Promise} target The entity, array of entities, entity collection or data source to view. You can also pass a promise that resolves to one of the previously mentioned types.
      * @param {HeadingPitchRange} [offset] The offset from the center of the entity in the local east-north-up reference frame.
      * @returns {Promise} A Promise that resolves to true if the zoom was successful or false if the entity is not currently visualized in the scene or the zoom was cancelled.
      */
@@ -1450,7 +1465,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     /**
      * Flies the camera to the provided entity, entities, or data source.
      * If the data source is still in the process of loading or the visualization is otherwise still loading,
-     * this method ways for the data to be ready before performing the flight.
+     * this method waits for the data to be ready before performing the flight.
      *
      * <p>The offset is heading/pitch/range in the local east-north-up reference frame centered at the center of the bounding sphere.
      * The heading and the pitch angles are defined in the local east-north-up reference frame.
@@ -1462,7 +1477,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * target will be the range. The heading will be determined from the offset. If the heading cannot be
      * determined from the offset, the heading will be north.</p>
      *
-     * @param {Entity|Entity[]|EntityCollection|DataSource} target The entity, array of entities, entity collection or data source to view.
+     * @param {Entity|Entity[]|EntityCollection|DataSource|Promise} target The entity, array of entities, entity collection or data source to view. You can also pass a promise that resolves to one of the previously mentioned types.
      * @param {Object} [options] Object with the following properties:
      * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
      * @param {HeadingPitchRange} [options.offset] The offset from the target in the local east-north-up reference frame centered at the target.
@@ -1490,32 +1505,39 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         that._zoomIsFlight = isFlight;
         that._zoomOptions = options;
 
-        //If the zoom target is a data source, and it's in the middle of loading, wait for it to finish loading.
-        if (zoomTarget.isLoading && defined(zoomTarget.loadingEvent)) {
-            var removeEvent = zoomTarget.loadingEvent.addEventListener(function() {
-                removeEvent();
-
-                //Only perform the zoom if it wasn't cancelled before the data source finished.
-                if (that._zoomPromise === zoomPromise) {
-                    that._zoomTarget = zoomTarget.entities.values.slice(0);
-                }
-            });
-        } else {
-            //zoomTarget is now an EntityCollection, this will retrieve the array
-            zoomTarget = defaultValue(zoomTarget.values, zoomTarget);
-
-            //If zoomTarget is a DataSource, this will retrieve the EntityCollection.
-            if (defined(zoomTarget.entities)) {
-                zoomTarget = zoomTarget.entities.values;
+        when(zoomTarget, function(zoomTarget) {
+            //Only perform the zoom if it wasn't cancelled before the promise resolved.
+            if (that._zoomPromise !== zoomPromise) {
+                return;
             }
 
-            if (isArray(zoomTarget)) {
-                that._zoomTarget = zoomTarget.slice(0);
+            //If the zoom target is a data source, and it's in the middle of loading, wait for it to finish loading.
+            if (zoomTarget.isLoading && defined(zoomTarget.loadingEvent)) {
+                var removeEvent = zoomTarget.loadingEvent.addEventListener(function() {
+                    removeEvent();
+
+                    //Only perform the zoom if it wasn't cancelled before the data source finished.
+                    if (that._zoomPromise === zoomPromise) {
+                        that._zoomTarget = zoomTarget.entities.values.slice(0);
+                    }
+                });
             } else {
-                //Single entity
-                that._zoomTarget = [zoomTarget];
+                //zoomTarget is now an EntityCollection, this will retrieve the array
+                zoomTarget = defaultValue(zoomTarget.values, zoomTarget);
+
+                //If zoomTarget is a DataSource, this will retrieve the EntityCollection.
+                if (defined(zoomTarget.entities)) {
+                    zoomTarget = zoomTarget.entities.values;
+                }
+
+                if (isArray(zoomTarget)) {
+                    that._zoomTarget = zoomTarget.slice(0);
+                } else {
+                    //Single entity
+                    that._zoomTarget = [zoomTarget];
+                }
             }
-        }
+        });
 
         return zoomPromise;
     }
@@ -1555,12 +1577,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
             if (state === BoundingSphereState.PENDING) {
                 return;
-            } else if (state === BoundingSphereState.FAILED) {
-                cancelZoom(viewer);
-                return;
+            } else if (state !== BoundingSphereState.FAILED) {
+                boundingSpheres.push(BoundingSphere.clone(boundingSphereScratch));
             }
-
-            boundingSpheres.push(BoundingSphere.clone(boundingSphereScratch));
         }
 
         if (boundingSpheres.length === 0) {
@@ -1624,7 +1643,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         }
 
         var bs = state !== BoundingSphereState.FAILED ? boundingSphereScratch : undefined;
-        viewer._entityView = new EntityView(trackedEntity, scene, scene.globe.ellipsoid, bs);
+        viewer._entityView = new EntityView(trackedEntity, scene, scene.mapProjection.ellipsoid, bs);
         viewer._entityView.update(viewer.clock.currentTime);
         viewer._needTrackedEntityUpdate = false;
     }

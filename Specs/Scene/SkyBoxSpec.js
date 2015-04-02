@@ -2,6 +2,7 @@
 defineSuite([
         'Scene/SkyBox',
         'Core/Cartesian3',
+        'Core/loadImage',
         'Renderer/ClearCommand',
         'Scene/SceneMode',
         'Specs/createCamera',
@@ -10,32 +11,28 @@ defineSuite([
     ], function(
         SkyBox,
         Cartesian3,
+        loadImage,
         ClearCommand,
         SceneMode,
         createCamera,
         createContext,
         createFrameState) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var context;
     var loadedImage;
 
     beforeAll(function() {
         context = createContext();
+
+        return loadImage('./Data/Images/Blue.png').then(function(image) {
+            loadedImage = image;
+        });
     });
 
     afterAll(function() {
         context.destroyForSpecs();
-    });
-
-    it('create images', function() {
-        loadedImage = new Image();
-        loadedImage.src = './Data/Images/Blue.png';
-
-        waitsFor(function() {
-            return loadedImage.complete;
-        }, 'The image should load.', 5000);
     });
 
     it('draws a sky box from Images', function() {

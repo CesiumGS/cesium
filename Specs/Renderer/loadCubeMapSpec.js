@@ -18,7 +18,7 @@ defineSuite([
         createContext,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
 
     var context;
 
@@ -31,23 +31,14 @@ defineSuite([
     });
 
     it('loads a cube map', function() {
-        var cm;
-        when(loadCubeMap(context, {
+        return loadCubeMap(context, {
             positiveX : './Data/Images/Green.png',
             negativeX : './Data/Images/Blue.png',
             positiveY : './Data/Images/Green.png',
             negativeY : './Data/Images/Blue.png',
             positiveZ : './Data/Images/Green.png',
             negativeZ : './Data/Images/Blue.png'
-        }), function(cubeMap) {
-            cm = cubeMap;
-        });
-
-        waitsFor(function() {
-            return defined(cm);
-        }, 'The cube map should load.', 5000);
-
-        runs(function() {
+        }).then(function(cm) {
             expect(cm.width).toEqual(1);
             expect(cm.height).toEqual(1);
 
@@ -109,117 +100,87 @@ defineSuite([
     });
 
     it('calls error function when positiveX does not exist', function() {
-        var exception = false;
-        when(loadCubeMap(context, {
+        return loadCubeMap(context, {
             positiveX : 'not.found',
             negativeX : './Data/Images/Blue.png',
             positiveY : './Data/Images/Blue.png',
             negativeY : './Data/Images/Blue.png',
             positiveZ : './Data/Images/Blue.png',
             negativeZ : './Data/Images/Blue.png'
-        }), function(cubeMap) {
-        }, function() {
-            exception = true;
+        }).then(function(cubeMap) {
+            fail('should not be called');
+        }).otherwise(function() {
         });
-
-        waitsFor(function() {
-            return exception;
-        }, 'The cube map should load.', 5000);
     });
 
     it('calls error function when negativeX does not exist', function() {
-        var exception = false;
-        when(loadCubeMap(context, {
+        return loadCubeMap(context, {
             positiveX : './Data/Images/Blue.png',
             negativeX : 'not.found',
             positiveY : './Data/Images/Blue.png',
             negativeY : './Data/Images/Blue.png',
             positiveZ : './Data/Images/Blue.png',
             negativeZ : './Data/Images/Blue.png'
-        }), function(cubeMap) {
-        }, function() {
-            exception = true;
+        }).then(function(cubeMap) {
+            fail('should not be called');
+        }).otherwise(function() {
         });
-
-        waitsFor(function() {
-            return exception;
-        }, 'The cube map should load.', 5000);
     });
 
     it('calls error function when positiveY does not exist', function() {
-        var exception = false;
-        when(loadCubeMap(context, {
+        return loadCubeMap(context, {
             positiveX : './Data/Images/Blue.png',
             negativeX : './Data/Images/Blue.png',
             positiveY : 'not.found',
             negativeY : './Data/Images/Blue.png',
             positiveZ : './Data/Images/Blue.png',
             negativeZ : './Data/Images/Blue.png'
-        }), function(cubeMap) {
-        }, function() {
-            exception = true;
+        }).then(function(cubeMap) {
+            fail('should not be called');
+        }).otherwise(function() {
         });
-
-        waitsFor(function() {
-            return exception;
-        }, 'The cube map should load.', 5000);
     });
 
     it('calls error function when negativeY does not exist', function() {
-        var exception = false;
-        when(loadCubeMap(context, {
+        return loadCubeMap(context, {
             positiveX : './Data/Images/Blue.png',
             negativeX : './Data/Images/Blue.png',
             positiveY : './Data/Images/Blue.png',
             negativeY : 'not.found',
             positiveZ : './Data/Images/Blue.png',
             negativeZ : './Data/Images/Blue.png'
-        }), function(cubeMap) {
-        }, function() {
-            exception = true;
+        }).then(function(cubeMap) {
+            fail('should not be called');
+        }).otherwise(function() {
         });
-
-        waitsFor(function() {
-            return exception;
-        }, 'The cube map should load.', 5000);
     });
 
     it('calls error function when positiveZ does not exist', function() {
-        var exception = false;
-        when(loadCubeMap(context, {
+        return loadCubeMap(context, {
             positiveX : './Data/Images/Blue.png',
             negativeX : './Data/Images/Blue.png',
             positiveY : './Data/Images/Blue.png',
             negativeY : './Data/Images/Blue.png',
             positiveZ : 'not.found',
             negativeZ : './Data/Images/Blue.png'
-        }), function(cubeMap) {
-        }, function() {
-            exception = true;
+        }).then(function(cubeMap) {
+            fail('should not be called');
+        }).otherwise(function() {
         });
-
-        waitsFor(function() {
-            return exception;
-        }, 'The cube map should load.', 5000);
     });
 
     it('calls error function when negativeZ does not exist', function() {
-        var exception = false;
-        when(loadCubeMap(context, {
+        return loadCubeMap(context, {
             positiveX : './Data/Images/Blue.png',
             negativeX : './Data/Images/Blue.png',
             positiveY : './Data/Images/Blue.png',
             negativeY : './Data/Images/Blue.png',
             positiveZ : './Data/Images/Blue.png',
             negativeZ : 'not.found'
-        }), function(cubeMap) {
-        }, function() {
-            exception = true;
+        }).then(function(cubeMap) {
+            fail('should not be called');
+        }).otherwise(function() {
         });
-
-        waitsFor(function() {
-            return exception;
-        }, 'The cube map should load.', 5000);
     });
 
     it('throws without a context', function() {

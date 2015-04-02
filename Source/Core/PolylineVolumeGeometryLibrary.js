@@ -290,6 +290,9 @@ define([
         return cleanedPositions;
     };
 
+    var scratchForwardProjection = new Cartesian3();
+    var scratchBackwardProjection = new Cartesian3();
+
     PolylineVolumeGeometryLibrary.computePositions = function(positions, shape2D, boundingRectangle, geometry, duplicatePoints) {
         var ellipsoid = geometry._ellipsoid;
         var heights = scaleToSurface(positions, ellipsoid);
@@ -338,7 +341,17 @@ define([
             cornerDirection = Cartesian3.add(forward, backward, cornerDirection);
             cornerDirection = Cartesian3.normalize(cornerDirection, cornerDirection);
             surfaceNormal = ellipsoid.geodeticSurfaceNormal(position, surfaceNormal);
-            var doCorner = !Cartesian3.equalsEpsilon(Cartesian3.negate(cornerDirection, scratch1), surfaceNormal, CesiumMath.EPSILON2);
+
+            var forwardProjection = Cartesian3.multiplyByScalar(surfaceNormal, Cartesian3.dot(forward, surfaceNormal), scratchForwardProjection);
+            Cartesian3.subtract(forward, forwardProjection, forwardProjection);
+            Cartesian3.normalize(forwardProjection, forwardProjection);
+
+            var backwardProjection = Cartesian3.multiplyByScalar(surfaceNormal, Cartesian3.dot(backward, surfaceNormal), scratchBackwardProjection);
+            Cartesian3.subtract(backward, backwardProjection, backwardProjection);
+            Cartesian3.normalize(backwardProjection, backwardProjection);
+
+            var doCorner = !CesiumMath.equalsEpsilon(Math.abs(Cartesian3.dot(forwardProjection, backwardProjection)), 1.0, CesiumMath.EPSILON1);
+
             if (doCorner) {
                 cornerDirection = Cartesian3.cross(cornerDirection, surfaceNormal, cornerDirection);
                 cornerDirection = Cartesian3.cross(surfaceNormal, cornerDirection, cornerDirection);

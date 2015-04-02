@@ -152,24 +152,22 @@ define([
                 that._maximumLevel = data.tileInfo.lods.length - 1;
 
                 if (defined(data.fullExtent)) {
-                    var projection = that._tilingScheme.projection;
-
                     if (defined(data.fullExtent.spatialReference) && defined(data.fullExtent.spatialReference.wkid)) {
                         if (data.fullExtent.spatialReference.wkid === 102100 ||
                             data.fullExtent.spatialReference.wkid === 102113) {
-                            projection = new WebMercatorProjection();
+
+                            var projection = new WebMercatorProjection();
+                            var sw = projection.unproject(new Cartesian2(data.fullExtent.xmin, data.fullExtent.ymin));
+                            var ne = projection.unproject(new Cartesian2(data.fullExtent.xmax, data.fullExtent.ymax));
+                            that._rectangle = new Rectangle(sw.longitude, sw.latitude, ne.longitude, ne.latitude);
                         } else if (data.fullExtent.spatialReference.wkid === 4326) {
-                            projection = new GeographicProjection();
+                            that._rectangle = Rectangle.fromDegrees(data.fullExtent.xmin, data.fullExtent.ymin, data.fullExtent.xmax, data.fullExtent.ymax);
                         } else {
                             var extentMessage = 'fullExtent.spatialReference WKID ' + data.fullExtent.spatialReference.wkid + ' is not supported.';
                             metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, extentMessage, undefined, undefined, undefined, requestMetadata);
                             return;
                         }
                     }
-
-                    var sw = projection.unproject(new Cartesian2(data.fullExtent.xmin, data.fullExtent.ymin));
-                    var ne = projection.unproject(new Cartesian2(data.fullExtent.xmax, data.fullExtent.ymax));
-                    that._rectangle = new Rectangle(sw.longitude, sw.latitude, ne.longitude, ne.latitude);
                 } else {
                     that._rectangle = that._tilingScheme.rectangle;
                 }
@@ -488,6 +486,21 @@ define([
         layers : {
             get : function() {
                 return this._layers;
+            }
+        },
+
+        /**
+         * Gets a value indicating whether feature picking is enabled.  If true, {@link ArcGisMapServerImageryProvider#pickFeatures} will
+         * invoke the "identify" operation on the ArcGIS server and return the features included in the response.  If false,
+         * {@link ArcGisMapServerImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
+         * without communicating with the server.
+         * @type {Boolean}
+         * @readonly
+         * @default true
+         */
+        enablePickFeatures : {
+            get : function() {
+                return this._enablePickFeatures;
             }
         }
     });

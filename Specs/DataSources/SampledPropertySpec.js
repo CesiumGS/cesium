@@ -22,7 +22,7 @@ defineSuite([
         CesiumMath,
         Quaternion) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('constructor sets expected defaults', function() {
         var property = new SampledProperty(Cartesian3);
@@ -81,15 +81,15 @@ defineSuite([
 
         property.addSample(times[0], values[0]);
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
 
         property.addSample(times[1], values[1]);
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
 
         property.addSample(times[2], values[2]);
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
 
         expect(property.getValue(times[0])).toEqual(values[0]);
         expect(property.getValue(times[1])).toEqual(values[1]);
@@ -716,6 +716,14 @@ defineSuite([
         expect(property.getValue(time4)).toBeUndefined();
     });
 
+    it('getValue returns undefined for empty extrapolated property', function() {
+        var sampledPosition = new SampledProperty(Cartesian3);
+        sampledPosition.backwardExtrapolationType = ExtrapolationType.HOLD;
+        sampledPosition.forwardExtrapolationType = ExtrapolationType.HOLD;
+        var result = sampledPosition.getValue(JulianDate.now());
+        expect(result).toBeUndefined();
+    });
+
     it('raises definitionChanged when extrapolation options change', function() {
         var property = new SampledProperty(Number);
         var listener = jasmine.createSpy('listener');
@@ -723,19 +731,19 @@ defineSuite([
 
         property.forwardExtrapolationType = ExtrapolationType.EXTRAPOLATE;
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
 
         property.forwardExtrapolationDuration = 1.0;
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
 
         property.backwardExtrapolationType = ExtrapolationType.HOLD;
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
 
         property.backwardExtrapolationDuration = 1.0;
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
 
         //No events when reassigning to the same value.
         property.forwardExtrapolationType = ExtrapolationType.EXTRAPOLATE;

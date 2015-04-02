@@ -10,8 +10,8 @@ defineSuite([
         'Core/Rectangle',
         'Core/RectangleGeometry',
         'Core/ShowGeometryInstanceAttribute',
-        'Scene/OrthographicFrustum',
         'Scene/EllipsoidSurfaceAppearance',
+        'Scene/OrthographicFrustum',
         'Scene/PerspectiveFrustum',
         'Scene/Primitive',
         'Scene/RectanglePrimitive',
@@ -28,15 +28,15 @@ defineSuite([
         Rectangle,
         RectangleGeometry,
         ShowGeometryInstanceAttribute,
-        OrthographicFrustum,
         EllipsoidSurfaceAppearance,
+        OrthographicFrustum,
         PerspectiveFrustum,
         Primitive,
         RectanglePrimitive,
         SceneMode,
         createScene) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
     var primitives;
@@ -221,6 +221,39 @@ defineSuite([
         expect(pickedObjects[0].id).toEqual(3);
         expect(pickedObjects[1].primitive).toEqual(primitive);
         expect(pickedObjects[1].id).toEqual(1);
+    });
+
+    it('can drill pick without ID', function() {
+        var geometry = new RectangleGeometry({
+            rectangle : Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
+            ellipsoid : Ellipsoid.UNIT_SPHERE,
+            granularity : CesiumMath.toRadians(20.0),
+            vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT
+        });
+
+        var instance1 = new GeometryInstance({
+            geometry : geometry,
+            attributes : {
+                show : new ShowGeometryInstanceAttribute(true)
+            }
+        });
+
+        var instance2 = new GeometryInstance({
+            geometry : geometry,
+            attributes : {
+                show : new ShowGeometryInstanceAttribute(true)
+            }
+        });
+
+        var primitive = primitives.add(new Primitive({
+            geometryInstances : [instance1, instance2],
+            asynchronous : false,
+            appearance : new EllipsoidSurfaceAppearance()
+        }));
+
+        var pickedObjects = scene.drillPick(new Cartesian2(0, 0));
+        expect(pickedObjects.length).toEqual(1);
+        expect(pickedObjects[0].primitive).toEqual(primitive);
     });
 
     it('drill pick batched Primitives without show attribute', function() {

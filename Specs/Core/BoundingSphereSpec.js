@@ -26,7 +26,7 @@ defineSuite([
         Rectangle,
         createPackableSpecs) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var positionsRadius = 1.0;
     var positionsCenter = new Cartesian3(10000001.0, 0.0, 0.0);
@@ -86,7 +86,7 @@ defineSuite([
     it('clone without a result parameter', function() {
         var sphere = new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 4.0);
         var result = sphere.clone();
-        expect(sphere).toNotBe(result);
+        expect(sphere).not.toBe(result);
         expect(sphere).toEqual(result);
     });
 
@@ -94,7 +94,7 @@ defineSuite([
         var sphere = new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 4.0);
         var result = new BoundingSphere();
         var returnedResult = sphere.clone(result);
-        expect(result).toNotBe(sphere);
+        expect(result).not.toBe(sphere);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(sphere);
     });

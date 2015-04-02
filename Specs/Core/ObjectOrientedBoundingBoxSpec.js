@@ -14,7 +14,7 @@ defineSuite([
         Matrix3,
         Quaternion) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var positions = [
         new Cartesian3(2.0, 0.0, 0.0),
@@ -296,7 +296,7 @@ defineSuite([
     it('clone without a result parameter', function() {
         var box = new ObjectOrientedBoundingBox();
         var result = ObjectOrientedBoundingBox.clone(box);
-        expect(box).toNotBe(result);
+        expect(box).not.toBe(result);
         expect(box).toEqual(result);
     });
 
@@ -305,7 +305,7 @@ defineSuite([
         var result = new ObjectOrientedBoundingBox();
         var returnedResult = ObjectOrientedBoundingBox.clone(box, result);
         expect(result).toBe(returnedResult);
-        expect(box).toNotBe(result);
+        expect(box).not.toBe(result);
         expect(box).toEqual(result);
     });
 

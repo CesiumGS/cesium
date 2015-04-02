@@ -1,12 +1,14 @@
 /*global defineSuite*/
 defineSuite([
         'DataSources/DataSourceCollection',
-        'Specs/MockDataSource'
+        'Specs/MockDataSource',
+        'ThirdParty/when'
     ], function(
         DataSourceCollection,
-        MockDataSource) {
+        MockDataSource,
+        when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('contains, get, getLength, and indexOf work', function() {
         var collection = new DataSourceCollection();
@@ -35,27 +37,57 @@ defineSuite([
         var source = new MockDataSource();
         var collection = new DataSourceCollection();
 
-        var addCalled = 0;
-        collection.dataSourceAdded.addEventListener(function(sender, dataSource) {
-            addCalled++;
-            expect(sender).toBe(collection);
-            expect(dataSource).toBe(source);
-        });
+        var addSpy = jasmine.createSpy('dataSourceAdded');
+        collection.dataSourceAdded.addEventListener(addSpy);
 
-        var removeCalled = 0;
-        collection.dataSourceRemoved.addEventListener(function(sender, dataSource) {
-            removeCalled++;
-            expect(sender).toBe(collection);
-            expect(dataSource).toBe(source);
-        });
+        var removeSpy = jasmine.createSpy('dataSourceRemoved');
+        collection.dataSourceRemoved.addEventListener(removeSpy);
 
         collection.add(source);
-        expect(addCalled).toEqual(1);
-        expect(removeCalled).toEqual(0);
+        expect(addSpy).toHaveBeenCalledWith(collection, source);
+        expect(removeSpy).not.toHaveBeenCalled();
+
+        addSpy.calls.reset();
+        removeSpy.calls.reset();
 
         expect(collection.remove(source)).toEqual(true);
-        expect(addCalled).toEqual(1);
-        expect(removeCalled).toEqual(1);
+        expect(addSpy).not.toHaveBeenCalled();
+        expect(removeSpy).toHaveBeenCalledWith(collection, source);
+    });
+
+    it('add works with promise', function() {
+        var promise = when.defer();
+        var source = new MockDataSource();
+        var collection = new DataSourceCollection();
+
+        var addSpy = jasmine.createSpy('dataSourceAdded');
+        collection.dataSourceAdded.addEventListener(addSpy);
+        collection.add(promise);
+
+        expect(collection.length).toEqual(0);
+        expect(addSpy).not.toHaveBeenCalled();
+
+        promise.resolve(source);
+        expect(addSpy).toHaveBeenCalledWith(collection, source);
+        expect(collection.length).toEqual(1);
+    });
+
+    it('promise does not get added if not resolved before removeAll', function() {
+        var promise = when.defer();
+        var source = new MockDataSource();
+        var collection = new DataSourceCollection();
+
+        var addSpy = jasmine.createSpy('dataSourceAdded');
+        collection.dataSourceAdded.addEventListener(addSpy);
+        collection.add(promise);
+        expect(collection.length).toEqual(0);
+
+        expect(addSpy).not.toHaveBeenCalled();
+        collection.removeAll();
+
+        promise.resolve(source);
+        expect(addSpy).not.toHaveBeenCalled();
+        expect(collection.length).toEqual(0);
     });
 
     it('removeAll triggers events', function() {
@@ -65,7 +97,7 @@ defineSuite([
         var removeCalled = 0;
         collection.dataSourceRemoved.addEventListener(function(sender, dataSource) {
             expect(sender).toBe(collection);
-            expect(sources.indexOf(dataSource)).toNotEqual(-1);
+            expect(sources.indexOf(dataSource)).not.toEqual(-1);
             removeCalled++;
         });
 
@@ -85,7 +117,7 @@ defineSuite([
         var removeCalled = 0;
         collection.dataSourceRemoved.addEventListener(function(sender, dataSource) {
             expect(sender).toBe(collection);
-            expect(sources.indexOf(dataSource)).toNotEqual(-1);
+            expect(sources.indexOf(dataSource)).not.toEqual(-1);
             removeCalled++;
         });
 

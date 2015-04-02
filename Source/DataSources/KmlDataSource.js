@@ -185,8 +185,6 @@ define([
 
     var BILLBOARD_SIZE = 32;
 
-    var scratchCartesian = new Cartesian3();
-
     function isZipFile(blob) {
         var magicBlob = blob.slice(0, Math.min(4, blob.size));
         var deferred = when.defer();
@@ -230,7 +228,7 @@ define([
     }
 
     function replaceAttributes(div, elementType, attributeName, uriResolver) {
-        var keys = Object.keys(uriResolver);
+        var keys = uriResolver.keys;
         var baseUri = new Uri('.');
         var elements = div.querySelectorAll(elementType);
         for (var i = 0; i < elements.length; i++) {
@@ -250,22 +248,26 @@ define([
 
     function proxyUrl(url, proxy) {
         if (defined(proxy)) {
-            if ((new Uri(url)).scheme) {
+            if (new Uri(url).isAbsolute()) {
                 url = proxy.getURL(url);
             }
         }
         return url;
     }
 
-    function getOrCreateEntity(node, entityCollection){
+    function getOrCreateEntity(node, entityCollection) {
         var id = queryStringAttribute(node, 'id');
         id = defined(id) ? id : createGuid();
         var entity = entityCollection.getOrCreateEntity(id);
         if (!defined(entity.kml)) {
             entity.addProperty('kml');
-            entity.kml = {};
+            entity.kml = new KmlFeatureData();
         }
         return entity;
+    }
+
+    function isExtrudable(altitudeMode, gxAltitudeMode) {
+        return altitudeMode === 'absolute' || altitudeMode === 'relativeToGround' || gxAltitudeMode === 'relativeToSeaFloor';
     }
 
     function readCoordinate(value) {
@@ -273,7 +275,7 @@ define([
             return undefined;
         }
 
-        var digits = value.trim().split(/[\s,\n]+/g);
+        var digits = value.match(/[^\s,\n]+/g);
         if (digits.length !== 2 && digits.length !== 3) {
             window.console.log('KML - Invalid coordinates: ' + value);
             return undefined;
@@ -290,16 +292,12 @@ define([
         return Cartesian3.fromDegrees(longitude, latitude, height);
     }
 
-    function isExtrudable(altitudeMode, gxAltitudeMode) {
-        return altitudeMode === 'absolute' || altitudeMode === 'relativeToGround' || gxAltitudeMode === 'relativeToSeaFloor';
-    }
-
     function readCoordinates(element) {
         if (!defined(element)) {
             return undefined;
         }
 
-        var tuples = element.textContent.trim().split(/[\s\n]+/g);
+        var tuples = element.textContent.match(/[^\s\n]+/g);
         var length = tuples.length;
         var result = new Array(length);
         var resultIndex = 0;
@@ -399,7 +397,7 @@ define([
     function queryStringValue(node, tagName, namespace) {
         var result = queryFirstNode(node, tagName, namespace);
         if (defined(result)) {
-            return result.textContent;
+            return result.textContent.trim();
         }
         return undefined;
     }
@@ -431,18 +429,21 @@ define([
     }
 
     var colorOptions = {};
-    function queryColorValue(node, tagName, namespace) {
-        var colorString = queryStringValue(node, tagName, namespace);
-        if (!defined(colorString)) {
+    function parseColorString(value, isRandom) {
+        if (!defined(value)) {
             return undefined;
         }
 
-        var alpha = parseInt(colorString.substring(0, 2), 16) / 255.0;
-        var blue = parseInt(colorString.substring(2, 4), 16) / 255.0;
-        var green = parseInt(colorString.substring(4, 6), 16) / 255.0;
-        var red = parseInt(colorString.substring(6, 8), 16) / 255.0;
+        if(value[0] === '#'){
+            value = value.substring(1);
+        }
 
-        if (queryStringValue(node, 'colorMode', namespace) !== 'random') {
+        var alpha = parseInt(value.substring(0, 2), 16) / 255.0;
+        var blue = parseInt(value.substring(2, 4), 16) / 255.0;
+        var green = parseInt(value.substring(4, 6), 16) / 255.0;
+        var red = parseInt(value.substring(6, 8), 16) / 255.0;
+
+        if (!isRandom) {
             return new Color(red, green, blue, alpha);
         }
 
@@ -463,6 +464,36 @@ define([
         }
         colorOptions.alpha = alpha;
         return Color.fromRandom(colorOptions);
+    }
+
+    function queryColorValue(node, tagName, namespace) {
+        var value = queryStringValue(node, tagName, namespace);
+        if (!defined(value)) {
+            return undefined;
+        }
+        return parseColorString(value, queryStringValue(node, 'colorMode', namespace) === 'random');
+    }
+
+    function processTimeStamp(featureNode) {
+        var node = queryFirstNode(featureNode, 'TimeStamp', namespaces.kmlgx);
+        var whenString = queryStringValue(node, 'when', namespaces.kmlgx);
+
+        if (!defined(node) || !defined(whenString) || whenString.length === 0) {
+            return undefined;
+        }
+
+        //According to the KML spec, a TimeStamp represents a "single moment in time"
+        //However, since Cesium animates much differently than Google Earth, that doesn't
+        //Make much sense here.  Instead, we use the TimeStamp as the moment the feature
+        //comes into existence.  This works much better and gives a similar feel to
+        //GE's experience.
+        var when = JulianDate.fromIso8601(whenString);
+        var result = new TimeIntervalCollection();
+        result.addInterval(new TimeInterval({
+            start : when,
+            stop : Iso8601.MAXIMUM_VALUE
+        }));
+        return result;
     }
 
     function processTimeSpan(featureNode) {
@@ -523,16 +554,15 @@ define([
 
     function createDefaultLabel() {
         var label = new LabelGraphics();
-        label.translucencyByDistance = new NearFarScalar(1500000, 1.0, 3400000, 0.0);
-        label.pixelOffset = new Cartesian2(16, 0);
+        label.translucencyByDistance = new NearFarScalar(3000000, 1.0, 5000000, 0.0);
+        label.pixelOffset = new Cartesian2(17, 0);
         label.horizontalOrigin = HorizontalOrigin.LEFT;
-        label.font = '14pt sans-serif';
+        label.font = '16px sans-serif';
         label.style = LabelStyle.FILL_AND_OUTLINE;
         return label;
     }
 
     function processBillboardIcon(dataSource, node, targetEntity, sourceUri, uriResolver) {
-        //Map style to billboard properties
         var scale = queryNumericValue(node, 'scale', namespaces.kml);
         var heading = queryNumericValue(node, 'heading', namespaces.kml);
         var color = queryColorValue(node, 'color', namespaces.kml);
@@ -640,8 +670,8 @@ define([
                 polygon.fill = defaultValue(queryBooleanValue(node, 'fill', namespaces.kml), polygon.fill);
                 polygon.outline = defaultValue(queryBooleanValue(node, 'outline', namespaces.kml), polygon.outline);
             } else if (node.nodeName === 'BalloonStyle') {
-                var bgColor = queryColorValue(node, 'bgColor', namespaces.kml);
-                var textColor = queryColorValue(node, 'textColor', namespaces.kml);
+                var bgColor = defaultValue(parseColorString(queryStringValue(node, 'bgColor', namespaces.kml)), Color.WHITE);
+                var textColor = defaultValue(parseColorString(queryStringValue(node, 'textColor', namespaces.kml)), Color.BLACK);
                 var text = queryStringValue(node, 'text', namespaces.kml);
 
                 //This is purely an internal property used in style processing,
@@ -668,10 +698,17 @@ define([
         }
 
         //Google earth seems to always use the first external style only.
-        var externalStyle = queryFirstNode(placeMark, 'styleUrl', namespaces.kml);
+        var externalStyle = queryStringValue(placeMark, 'styleUrl', namespaces.kml);
         if (defined(externalStyle)) {
-            var styleEntity = styleCollection.getById(externalStyle.textContent);
-            if (typeof styleEntity !== 'undefined') {
+            //Google Earth ignores leading and trailing whitespace for styleUrls
+            //Without the below trim, some docs that load in Google Earth won't load
+            //in cesium.
+            var id = externalStyle;
+            var styleEntity = styleCollection.getById(id);
+            if (!defined(styleEntity)) {
+                styleEntity = styleCollection.getById('#' + id);
+            }
+            if (defined(styleEntity)) {
                 result.merge(styleEntity);
             }
         }
@@ -725,12 +762,9 @@ define([
                 var styleMap = styleMaps[i];
                 id = queryStringAttribute(styleMap, 'id');
                 if (defined(id)) {
-                    var pairs = styleMap.childNodes;
+                    var pairs = queryChildNodes(styleMap, 'Pair', namespaces.kml);
                     for (var p = 0; p < pairs.length; p++) {
                         var pair = pairs[p];
-                        if (pair.nodeName !== 'Pair') {
-                            continue;
-                        }
                         if (queryStringValue(pair, 'key', namespaces.kml) === 'normal') {
                             id = '#' + id;
                             if (isExternal && defined(sourceUri)) {
@@ -764,18 +798,21 @@ define([
         for (i = 0; i < styleUrlNodesLength; i++) {
             var styleReference = styleUrlNodes[i].textContent;
             if (styleReference[0] !== '#') {
+                //According to the spec, all local styles should start with a #
+                //and everything else is an external style that has a # seperating
+                //the URL of the document and the style.  However, Google Earth
+                //also accepts styleUrls without a # as meaning a local style.
                 var tokens = styleReference.split('#');
-                if (tokens.length !== 2) {
-                    window.console.log('KML - Invalid style reference: ' + styleReference);
-                }
-                var uri = tokens[0];
-                if (!defined(externalStyleHash[uri])) {
-                    if (defined(sourceUri)) {
-                        var baseUri = new Uri(document.location.href);
-                        sourceUri = new Uri(sourceUri);
-                        uri = new Uri(uri).resolve(sourceUri.resolve(baseUri)).toString();
+                if (tokens.length === 2) {
+                    var uri = tokens[0];
+                    if (!defined(externalStyleHash[uri])) {
+                        if (defined(sourceUri)) {
+                            var baseUri = new Uri(document.location.href);
+                            sourceUri = new Uri(sourceUri);
+                            uri = new Uri(uri).resolve(sourceUri.resolve(baseUri)).toString();
+                        }
+                        promises.push(processExternalStyles(dataSource, uri, styleCollection, sourceUri));
                     }
-                    promises.push(processExternalStyles(dataSource, uri, styleCollection, sourceUri));
                 }
             }
         }
@@ -830,6 +867,13 @@ define([
     }
 
     function processPositionGraphics(dataSource, entity, styleEntity) {
+        var label = entity.label;
+        if (!defined(label)) {
+            label = defined(styleEntity.label) ? styleEntity.label.clone() : createDefaultLabel();
+            entity.label = label;
+        }
+        label.text = entity.name;
+
         var billboard = entity.billboard;
         if (!defined(billboard)) {
             billboard = defined(styleEntity.billboard) ? styleEntity.billboard.clone() : createDefaultBillboard();
@@ -840,12 +884,16 @@ define([
             billboard.image = dataSource._pinBuilder.fromColor(Color.YELLOW, 64);
         }
 
-        var label = entity.label;
-        if (!defined(label)) {
-            label = defined(styleEntity.label) ? styleEntity.label.clone() : createDefaultLabel();
-            entity.label = label;
+        if (defined(billboard.scale)) {
+            var scale = billboard.scale.getValue();
+            if (scale !== 0) {
+                label.pixelOffset = new Cartesian2((scale * 16) + 1, 0);
+            } else {
+                //Minor tweaks to better match Google Earth.
+                label.pixelOffset = undefined;
+                label.horizontalOrigin = undefined;
+            }
         }
-        label.text = entity.name;
     }
 
     function processPathGraphics(dataSource, entity, styleEntity) {
@@ -1133,6 +1181,7 @@ define([
         entity.kml.extendedData = result;
     }
 
+    var scratchDiv = document.createElement('div');
     function processDescription(node, entity, styleEntity, uriResolver) {
         var i;
         var key;
@@ -1154,82 +1203,85 @@ define([
             text = defaultValue(balloonStyle.text, description);
         }
 
-        if (defined(text) || defined(extendedData)) {
-            var value;
+        var value;
+        if (defined(text)) {
+            text = text.replace('$[name]', defaultValue(entity.name, ''));
+            text = text.replace('$[description]', defaultValue(description, ''));
+            text = text.replace('$[address]', defaultValue(kmlData.address, ''));
+            text = text.replace('$[Snippet]', defaultValue(kmlData.snippet, ''));
+            text = text.replace('$[id]', entity.id);
 
-            var tmp = '<div style="';
-            tmp += 'overflow:auto;';
-            tmp += 'padding: 4px 5px;';
-            tmp += 'word-wrap:break-word;';
-            tmp += 'background-color:' + background.toCssColorString() + ';';
-            tmp += 'color:' + foreground.toCssColorString() + ';';
-            tmp += '">';
+            //While not explicitly defined by the OGC spec, in Google Earth
+            //The appearance of geDirections adds the directions to/from links
+            //We simply replace this string with nothing.
+            text = text.replace('$[geDirections]', '');
 
-            if (defined(text)) {
-                text = text.replace('$[name]', defaultValue(entity.name, ''));
-                text = text.replace('$[description]', defaultValue(description, ''));
-                text = text.replace('$[address]', defaultValue(kmlData.address, ''));
-                text = text.replace('$[Snippet]', defaultValue(kmlData.Snippet, ''));
-                text = text.replace('$[id]', entity.id);
+            if (defined(extendedData)) {
+                var matches = text.match(/\$\[.+?\]/g);
+                if (matches !== null) {
+                    for (i = 0; i < matches.length; i++) {
+                        var token = matches[i];
+                        var propertyName = token.substr(2, token.length - 3);
+                        var isDisplayName = /\/displayName$/.test(propertyName);
+                        propertyName = propertyName.replace(/\/displayName$/, '');
 
-                //While not explicitly defined by the OGC spec, in Google Earth
-                //The appearance of geDirections adds the directions to/from links
-                //We simply replace this string with nothing.
-                text = text.replace('$[geDirections]', '');
-
-                if (defined(extendedData)) {
-                    var matches = text.match(/\$\[.+?\]/g);
-                    if (matches !== null) {
-                        for (i = 0; i < matches.length; i++) {
-                            var token = matches[i];
-                            var propertyName = token.substr(2, token.length - 3);
-                            var isDisplayName = /\/displayName$/.test(propertyName);
-                            propertyName = propertyName.replace(/\/displayName$/, '');
-
-                            value = extendedData[propertyName];
-                            if (defined(value)) {
-                                value = isDisplayName ? value.displayName : value.value;
-                            }
-                            if (defined(value)) {
-                                text = text.replace(token, defaultValue(value, ''));
-                            }
+                        value = extendedData[propertyName];
+                        if (defined(value)) {
+                            value = isDisplayName ? value.displayName : value.value;
+                        }
+                        if (defined(value)) {
+                            text = text.replace(token, defaultValue(value, ''));
                         }
                     }
                 }
-                tmp = tmp + text + '</div>';
-            } else {
-                //If no description exists, build a table out of the extended data
-                tmp += '<table class="cesium-infoBox-defaultTable"><tbody>';
-                keys = Object.keys(extendedData);
+            }
+        } else if (defined(extendedData)) {
+            //If no description exists, build a table out of the extended data
+            keys = Object.keys(extendedData);
+            if (keys.length > 0) {
+                text = '<table class="cesium-infoBox-defaultTable cesium-infoBox-defaultTable-lighter"><tbody>';
                 for (i = 0; i < keys.length; i++) {
                     key = keys[i];
                     value = extendedData[key];
-                    tmp += '<tr><th>' + defaultValue(value.displayName, key) + '</th><td>' + defaultValue(value.value, '') + '</td></tr>';
+                    text += '<tr><th>' + defaultValue(value.displayName, key) + '</th><td>' + defaultValue(value.value, '') + '</td></tr>';
                 }
-                tmp += '</tbody></table></div>';
+                text += '</tbody></table>';
             }
-
-            //Turns non-explicit links into clickable links.
-            tmp = autolinker.link(tmp);
-
-            //Use a temporary div to manipulate the links
-            //so that they open in a new window.
-            var div = document.createElement('div');
-            div.innerHTML = tmp;
-            var links = div.querySelectorAll('a');
-            for (i = 0; i < links.length; i++) {
-                links[i].setAttribute('target', '_blank');
-            }
-
-            //Rewrite any KMZ embedded urls
-            if (defined(uriResolver)) {
-                replaceAttributes(div, 'a', 'href', uriResolver);
-                replaceAttributes(div, 'img', 'src', uriResolver);
-            }
-
-            //Set the final HTML as the description.
-            entity.description = div.innerHTML;
         }
+
+        if (!defined(text)) {
+            //No description
+            return;
+        }
+
+        //Turns non-explicit links into clickable links.
+        text = autolinker.link(text);
+
+        //Use a temporary div to manipulate the links
+        //so that they open in a new window.
+        scratchDiv.innerHTML = text;
+        var links = scratchDiv.querySelectorAll('a');
+        for (i = 0; i < links.length; i++) {
+            links[i].setAttribute('target', '_blank');
+        }
+
+        //Rewrite any KMZ embedded urls
+        if (defined(uriResolver) && uriResolver.keys.length > 1) {
+            replaceAttributes(scratchDiv, 'a', 'href', uriResolver);
+            replaceAttributes(scratchDiv, 'img', 'src', uriResolver);
+        }
+
+        var tmp = '<div class="cesium-infoBox-description-lighter" style="';
+        tmp += 'overflow:auto;';
+        tmp += 'word-wrap:break-word;';
+        tmp += 'background-color:' + background.toCssColorString() + ';';
+        tmp += 'color:' + foreground.toCssColorString() + ';';
+        tmp += '">';
+        tmp += scratchDiv.innerHTML + '</div>';
+        scratchDiv.innerHTML = '';
+
+        //Set the final HTML as the description.
+        entity.description = tmp;
     }
 
     function processFeature(dataSource, parent, featureNode, entityCollection, styleCollection, sourceUri, uriResolver) {
@@ -1240,32 +1292,35 @@ define([
         var name = queryStringValue(featureNode, 'name', namespaces.kml);
         entity.name = name;
         entity.parent = parent;
-        entity.availability = processTimeSpan(featureNode);
 
-        //var visibility = queryBooleanValue(featureNode, 'visibility', namespaces.kml);
-        //entity.uiShow = defaultValue(visibility, true);
+        var availability = processTimeSpan(featureNode);
+        if (!defined(availability)) {
+            availability = processTimeStamp(featureNode);
+        }
+        entity.availability = availability;
+
+        var visibility = queryBooleanValue(featureNode, 'visibility', namespaces.kml);
+        entity.show = defaultValue(visibility, true);
         //var open = queryBooleanValue(featureNode, 'open', namespaces.kml);
 
         var authorNode = queryFirstNode(featureNode, 'author', namespaces.atom);
-        kmlData.author = {
-            name : queryStringValue(authorNode, 'name', namespaces.atom),
-            uri : queryStringValue(authorNode, 'uri', namespaces.atom),
-            email : queryStringValue(authorNode, 'email', namespaces.atom)
-        };
+        var author = kmlData.author;
+        author.name = queryStringValue(authorNode, 'name', namespaces.atom);
+        author.uri = queryStringValue(authorNode, 'uri', namespaces.atom);
+        author.email = queryStringValue(authorNode, 'email', namespaces.atom);
 
         var linkNode = queryFirstNode(featureNode, 'link', namespaces.atom);
-        kmlData.link = {
-            href : queryStringAttribute(linkNode, 'href'),
-            hreflang : queryStringAttribute(linkNode, 'hreflang'),
-            rel : queryStringAttribute(linkNode, 'rel'),
-            type : queryStringAttribute(linkNode, 'type'),
-            title : queryStringAttribute(linkNode, 'title'),
-            length : queryStringAttribute(linkNode, 'length')
-        };
+        var link = kmlData.link;
+        link.href = queryStringAttribute(linkNode, 'href');
+        link.hreflang = queryStringAttribute(linkNode, 'hreflang');
+        link.rel = queryStringAttribute(linkNode, 'rel');
+        link.type = queryStringAttribute(linkNode, 'type');
+        link.title = queryStringAttribute(linkNode, 'title');
+        link.length = queryStringAttribute(linkNode, 'length');
 
         kmlData.address = queryStringValue(featureNode, 'address', namespaces.kml);
         kmlData.phoneNumber = queryStringValue(featureNode, 'phoneNumber', namespaces.kml);
-        kmlData.Snippet = queryStringValue(featureNode, 'Snippet', namespaces.kml);
+        kmlData.snippet = queryStringValue(featureNode, 'Snippet', namespaces.kml);
 
         processExtendedData(featureNode, entity);
         processDescription(featureNode, entity, styleEntity, uriResolver);
@@ -1487,14 +1542,35 @@ define([
             return when.all(dataSource._promises, function() {
                 var clock;
                 var availability = entityCollection.computeAvailability();
-                if (!availability.equals(Iso8601.MAXIMUM_INTERVAL)) {
+
+                var start = availability.start;
+                var stop = availability.stop;
+                var isMinStart = JulianDate.equals(start, Iso8601.MINIMUM_VALUE);
+                var isMaxStop = JulianDate.equals(stop, Iso8601.MAXIMUM_VALUE);
+                if (!isMinStart || !isMaxStop) {
+                    var date;
+
+                    //If start is min time just start at midnight this morning, local time
+                    if (isMinStart) {
+                        date = new Date();
+                        date.setHours(0, 0, 0, 0);
+                        start = JulianDate.fromDate(date);
+                    }
+
+                    //If stop is max value just stop at midnight tonight, local time
+                    if (isMaxStop) {
+                        date = new Date();
+                        date.setHours(24, 0, 0, 0);
+                        stop = JulianDate.fromDate(date);
+                    }
+
                     clock = new DataSourceClock();
-                    clock.startTime = availability.start;
-                    clock.stopTime = availability.stop;
-                    clock.currentTime = availability.start;
+                    clock.startTime = start;
+                    clock.stopTime = stop;
+                    clock.currentTime = JulianDate.clone(start);
                     clock.clockRange = ClockRange.LOOP_STOP;
                     clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-                    clock.multiplier = Math.min(Math.max(JulianDate.secondsDifference(availability.stop, availability.start) / 60, 1), 3.15569e7);
+                    clock.multiplier = Math.round(Math.min(Math.max(JulianDate.secondsDifference(stop, start) / 60, 1), 3.15569e7));
                 }
                 var changed = false;
                 if (dataSource._name !== name) {
@@ -1545,8 +1621,9 @@ define([
                         deferred.reject(new RuntimeError('KMZ file does not contain a KML document.'));
                         return;
                     }
-                    return loadKml(dataSource, uriResolver.kml, sourceUri, uriResolver).then(deferred.resolve);
-                }).otherwise(deferred.reject);
+                    uriResolver.keys = Object.keys(uriResolver);
+                    return loadKml(dataSource, uriResolver.kml, sourceUri, uriResolver);
+                }).then(deferred.resolve).otherwise(deferred.reject);
             });
         }, function(e) {
             deferred.reject(e);
@@ -1556,19 +1633,33 @@ define([
     }
 
     /**
-     * A {@link DataSource} which processes KML.
+     * A {@link DataSource} which processes Keyhole Markup Language 2.2 (KML).
+     * <p>
+     * KML support in Cesium is incomplete, but a large amount of the standard,
+     * as well as Google's <code>gx</code> extension namespace, is supported. See Github issue
+     * {@link https://github.com/AnalyticalGraphicsInc/cesium/issues/873|#873} for a
+     * detailed list of what is and isn't support. Cesium will also write information to the
+     * console when it encounters most unsupported features.
+     * </p>
+     * <p>
+     * Non visual feature data, such as <code>atom:author</code> and <code>ExtendedData</code>
+     * is exposed via an instance of {@link KmlFeatureData}, which is added to each {@link Entity}
+     * under the <code>kml</code> property.
+     * </p>
+     *
      * @alias KmlDataSource
      * @constructor
      *
      * @param {DefaultProxy} [proxy] A proxy to be used for loading external data.
      *
-     * @see https://developers.google.com/kml/
-     * @see http://www.opengeospatial.org/standards/kml/
+     * @see {@link http://www.opengeospatial.org/standards/kml/|Open Geospatial Consortium KML Standard}
+     * @see {@link https://developers.google.com/kml/|Google KML Documentation}
+     *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=KML.html|Cesium Sandcastle KML Demo}
      *
      * @example
      * var viewer = new Cesium.Viewer('cesiumContainer');
-     * viewer.dataSources.add(new Cesium.KmlDataSource({ data : '../../SampleData/facilities.kmz' });
+     * viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/facilities.kmz'));
      */
     var KmlDataSource = function(proxy) {
         this._changed = new Event();
@@ -1584,7 +1675,7 @@ define([
     };
 
     /**
-     * Asynchronously loads the provided KML data, replacing any existing data.
+     * Creates a Promise to a new instance loaded with the provided KML data.
      *
      * @param {String|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
      * @param {Object} [options] An object with the following properties:
@@ -1601,6 +1692,7 @@ define([
     defineProperties(KmlDataSource.prototype, {
         /**
          * Gets a human-readable name for this instance.
+         * This will be automatically be set to the KML document name on load.
          * @memberof KmlDataSource.prototype
          * @type {String}
          */
@@ -1707,11 +1799,31 @@ define([
                         return loadKmz(that, dataToLoad, sourceUri);
                     }
                     return when(readBlobAsText(dataToLoad)).then(function(text) {
-                        var kml = parser.parseFromString(text, 'application/xml');
-                        //There's no official way to validate if the parse was successful.
-                        //The following if check seems to detect the error on all supported browsers.
-                        if ((defined(kml.body) && kml.body !== null) || kml.documentElement.tagName === 'parsererror') {
-                            throw new RuntimeError(kml.body.innerText);
+                        //There's no official way to validate if a parse was successful.
+                        //The following check detects the error on various browsers.
+
+                        //IE raises an exception
+                        var kml;
+                        var error;
+                        try {
+                            kml = parser.parseFromString(text, 'application/xml');
+                        } catch (e) {
+                            error = e.toString();
+                        }
+
+                        //The pase succeeds on Chrome and Firefox, but the error
+                        //handling is different in each.
+                        if (defined(error) || kml.body || kml.documentElement.tagName === 'parsererror') {
+                            //Firefox has error information as the firstChild nodeValue.
+                            var msg = defined(error) ? error : kml.documentElement.firstChild.nodeValue;
+
+                            //Chrome has it in the body text.
+                            if (!msg) {
+                                msg = kml.body.innerText;
+                            }
+
+                            //Return the error
+                            throw new RuntimeError(msg);
                         }
                         return loadKml(that, kml, sourceUri, undefined);
                     });
@@ -1722,8 +1834,125 @@ define([
         }).otherwise(function(error) {
             DataSource.setLoading(that, false);
             that._error.raiseEvent(that, error);
+            window.console.log(error);
             return when.reject(error);
         });
+    };
+
+    /**
+     * Contains KML Feature data loaded into the <code>Entity.kml</code> property by {@link KmlDataSource}.
+     * @alias KmlFeatureData
+     * @constructor
+     */
+    var KmlFeatureData = function() {
+        /**
+         * Gets the atom syndication format author field.
+         * @type Object
+         */
+        this.author = {
+            /**
+             * Gets the name.
+             * @type String
+             * @alias author.name
+             * @memberof! KmlFeatureData#
+             * @property author.name
+             */
+            name : undefined,
+            /**
+             * Gets the URI.
+             * @type String
+             * @alias author.uri
+             * @memberof! KmlFeatureData#
+             * @property author.uri
+             */
+            uri : undefined,
+            /**
+             * Gets the email.
+             * @type String
+             * @alias author.email
+             * @memberof! KmlFeatureData#
+             * @property author.email
+             */
+            email : undefined
+        };
+
+        /**
+         * Gets the link.
+         * @type Object
+         */
+        this.link = {
+            /**
+             * Gets the href.
+             * @type String
+             * @alias link.href
+             * @memberof! KmlFeatureData#
+             * @property link.href
+             */
+            href : undefined,
+            /**
+             * Gets the language of the linked resource.
+             * @type String
+             * @alias link.hreflang
+             * @memberof! KmlFeatureData#
+             * @property link.hreflang
+             */
+            hreflang : undefined,
+            /**
+             * Gets the link relation.
+             * @type String
+             * @alias link.rel
+             * @memberof! KmlFeatureData#
+             * @property link.rel
+             */
+            rel : undefined,
+            /**
+             * Gets the link type.
+             * @type String
+             * @alias link.type
+             * @memberof! KmlFeatureData#
+             * @property link.type
+             */
+            type : undefined,
+            /**
+             * Gets the link title.
+             * @type String
+             * @alias link.title
+             * @memberof! KmlFeatureData#
+             * @property link.title
+             */
+            title : undefined,
+            /**
+             * Gets the link length.
+             * @type String
+             * @alias link.length
+             * @memberof! KmlFeatureData#
+             * @property link.length
+             */
+            length : undefined
+        };
+
+        /**
+         * Gets the unstructured address field.
+         * @type String
+         */
+        this.address = undefined;
+        /**
+         * Gets the phone number.
+         * @type String
+         */
+        this.phoneNumber = undefined;
+        /**
+         * Gets the snippet.
+         * @type String
+         */
+        this.snippet = undefined;
+        /**
+         * Gets the extended data, parsed into a JSON object.
+         * Currently only the <code>Data</code> property is supported.
+         * <code>SchemaData</code> and custom data are ignored.
+         * @type String
+         */
+        this.extendedData = undefined;
     };
 
     return KmlDataSource;

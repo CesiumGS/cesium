@@ -88,26 +88,20 @@ define([
 
     var source = endUserOptions.source;
     if (defined(source)) {
-        var dataSource;
         var loadPromise;
 
         if (/\.czml$/i.test(source)) {
-            dataSource = new CzmlDataSource(getFilenameFromUri(source));
-            loadPromise = dataSource.loadUrl(source);
+            loadPromise = CzmlDataSource.load(source);
         } else if (/\.geojson$/i.test(source) || /\.json$/i.test(source) || /\.topojson$/i.test(source)) {
-            dataSource = new GeoJsonDataSource(getFilenameFromUri(source));
-            loadPromise = dataSource.loadUrl(source);
+            loadPromise = GeoJsonDataSource.load(source);
         } else if (/\.kml$/i.test(source) || /\.kmz$/i.test(source)) {
-            dataSource = new KmlDataSource();
-            loadPromise = dataSource.load(source);
+            loadPromise = KmlDataSource.load(source);
         } else {
             showLoadError(source, 'Unknown format.');
         }
 
-        if (defined(dataSource)) {
-            viewer.dataSources.add(dataSource);
-
-            loadPromise.then(function() {
+        if (defined(loadPromise)) {
+            viewer.dataSources.add(loadPromise).then(function(dataSource) {
                 var lookAt = endUserOptions.lookAt;
                 if (defined(lookAt)) {
                     var entity = dataSource.entities.getById(lookAt);

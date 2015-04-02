@@ -28,20 +28,14 @@
 function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
-var gallery = '../../SampleData/';
-
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 Sandcastle.addDefaultToolbarButton('Satellites', function() {
-    var czmlDataSource = new Cesium.CzmlDataSource();
-    czmlDataSource.loadUrl(gallery + 'simple.czml');
-    viewer.dataSources.add(czmlDataSource);
+    viewer.dataSources.add(Cesium.CzmlDataSource.load('../../SampleData/simple.czml'));
 });
 
 Sandcastle.addToolbarButton('Vehicle', function() {
-    var czmlDataSource = new Cesium.CzmlDataSource();
-    czmlDataSource.loadUrl(gallery + 'Vehicle.czml');
-    viewer.dataSources.add(czmlDataSource);
+    viewer.dataSources.add(Cesium.CzmlDataSource.load('../../SampleData/Vehicle.czml'));
 });
 
 Sandcastle.reset = function() {
