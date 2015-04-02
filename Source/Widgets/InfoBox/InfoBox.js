@@ -119,11 +119,13 @@ click: function () { closeClicked.raiseEvent(this); }');
                 //color for the body of the InfoBox. This makes the padding match
                 //the content and produces much nicer results.
                 var background = null;
-                if (frameContent.childNodes.length === 1) {
-                    var style = window.getComputedStyle(frameContent.firstChild);
+                var firstElementChild = frameContent.firstElementChild;
+                if (firstElementChild !== null && frameContent.childNodes.length === 1) {
+                    var style = window.getComputedStyle(firstElementChild);
                     if (style !== null) {
-                        var color = Color.fromCssColorString(style['background-color']);
-                        if (color.alpha !== 0) {
+                        var backgroundColor = style['background-color'];
+                        var color = Color.fromCssColorString(backgroundColor);
+                        if (defined(color) && color.alpha !== 0) {
                             background = style['background-color'];
                         }
                     }

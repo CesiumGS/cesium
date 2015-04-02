@@ -642,7 +642,6 @@ define([
          * });
          *
          * @see Model#ready
-         * @deprecated
          */
         readyPromise : {
             get : function() {

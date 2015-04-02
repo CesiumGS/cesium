@@ -18,7 +18,7 @@ defineSuite([
         SceneMode,
         createScene) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
 
@@ -77,20 +77,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('create animation with rectangle throws without a scene', function() {
-        expect(function() {
-            CameraFlightPath.createTweenRectangle(undefined, {
-                destination : new Cartographic(0.0, 0.0, 1e6)
-            });
-        }).toThrowDeveloperError();
-    });
-
-    it('create animation with rectangle throws without a destination', function() {
-        expect(function() {
-            CameraFlightPath.createTweenRectangle(scene, {});
-        }).toThrowDeveloperError();
-    });
-
     it('creates an animation', function() {
         var destination = new Cartesian3(1e9, 1e9, 1e9);
         var duration = 5.0;
@@ -100,30 +86,6 @@ defineSuite([
         };
 
         var flight = CameraFlightPath.createTween(scene, {
-            destination : destination,
-            duration : duration,
-            complete : complete,
-            cancel: cancel
-        });
-
-        expect(flight.duration).toEqual(duration);
-        expect(typeof flight.complete).toEqual('function');
-        expect(typeof flight.cancel).toEqual('function');
-        expect(typeof flight.update).toEqual('function');
-        expect(flight.startObject).toBeDefined();
-        expect(flight.stopObject).toBeDefined();
-        expect(flight.easingFunction).toBeDefined();
-    });
-
-    it('creates an animation with rectangle', function() {
-        var destination = new Rectangle(-1, -1, 1, 1);
-        var duration = 5.0;
-        var complete = function() {
-        };
-        var cancel = function() {
-        };
-
-        var flight = CameraFlightPath.createTweenRectangle(scene, {
             destination : destination,
             duration : duration,
             complete : complete,
@@ -169,39 +131,6 @@ defineSuite([
         expect(camera.up).toEqualEpsilon(endUp, CesiumMath.EPSILON12);
     });
 
-    it('creates an animation in 3d with rectangle', function() {
-        var camera = scene.camera;
-
-        var startPosition = Cartesian3.fromDegrees(CesiumMath.PI, 0, 20, scene.mapProjection.ellipsoid);
-        camera.position = startPosition;
-        var startDirection = Cartesian3.clone(camera.direction);
-        var startUp = Cartesian3.clone(camera.up);
-
-        var endPosition = Cartesian3.negate(startPosition, new Cartesian3());
-        var endCartographic = scene.mapProjection.ellipsoid.cartesianToCartographic(endPosition);
-        var rectangle = new Rectangle(endCartographic.longitude - 0.0000019, endCartographic.latitude - 0.0000019, endCartographic.longitude + 0.0000019, endCartographic.latitude + 0.0000019);
-        var endDirection = Cartesian3.negate(startDirection, new Cartesian3());
-        var endUp = Cartesian3.negate(startUp, new Cartesian3());
-
-        var duration = 5.0;
-        var flight = CameraFlightPath.createTweenRectangle(scene, {
-            destination : rectangle,
-            direction : endDirection,
-            up : endUp,
-            duration : duration
-        });
-
-        flight.update({ time : 0.0 });
-        expect(camera.position).toEqualEpsilon(startPosition, CesiumMath.EPSILON12);
-        expect(camera.direction).toEqualEpsilon(startDirection, CesiumMath.EPSILON12);
-        expect(camera.up).toEqualEpsilon(startUp, CesiumMath.EPSILON12);
-
-        flight.update({ time : duration });
-        expect(camera.position).toEqualEpsilon(endPosition, 1);
-        expect(camera.direction).toEqualEpsilon(endDirection, CesiumMath.EPSILON12);
-        expect(camera.up).toEqualEpsilon(endUp, CesiumMath.EPSILON12);
-    });
-
     it('creates an animation in Columbus view', function() {
         scene.mode = SceneMode.COLUMBUS_VIEW;
         var camera = scene.camera;
@@ -238,46 +167,6 @@ defineSuite([
         expect(camera.position).toEqualEpsilon(destination, CesiumMath.EPSILON4);
         expect(camera.direction).toEqualEpsilon(endDirection, CesiumMath.EPSILON12);
         expect(camera.up).toEqualEpsilon(endUp, CesiumMath.EPSILON12);
-    });
-
-    it('creates an animation in Columbus view with rectangle', function() {
-        scene.mode = SceneMode.COLUMBUS_VIEW;
-        var camera = scene.camera;
-        camera._mode = SceneMode.COLUMBUS_VIEW;
-
-        var startPosition = scene.mapProjection.project(new Cartographic(0.0, 0.0, 20.0));
-        camera.position = startPosition;
-        camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
-        camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
-        camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
-
-        var startDirection = Cartesian3.clone(camera.direction);
-        var startUp = Cartesian3.clone(camera.up);
-
-        var endCartographic = Cartographic.fromDegrees(-75.0, 42.0, 20.0);
-        var rectangle = new Rectangle(endCartographic.longitude - 0.01, endCartographic.latitude - 0.01, endCartographic.longitude + 0.01, endCartographic.latitude + 0.01);
-        var endDirection = Cartesian3.clone(startDirection);
-        var endUp = Cartesian3.negate(startUp, new Cartesian3());
-
-        var endPosition = camera.getRectangleCameraCoordinates(rectangle);
-
-        var duration = 5.0;
-        var flight = CameraFlightPath.createTweenRectangle(scene, {
-            destination : rectangle,
-            direction : endDirection,
-            up : endUp,
-            duration : duration
-        });
-
-        flight.update({ time : 0.0 });
-        expect(camera.position).toEqualEpsilon(startPosition, CesiumMath.EPSILON6);
-        expect(camera.direction).toEqualEpsilon(startDirection, CesiumMath.EPSILON6);
-        expect(camera.up).toEqualEpsilon(startUp, CesiumMath.EPSILON6);
-
-        flight.update({ time : duration });
-        expect(camera.position).toEqualEpsilon(endPosition, CesiumMath.EPSILON6);
-        expect(camera.direction).toEqualEpsilon(endDirection, CesiumMath.EPSILON6);
-        expect(camera.up).toEqualEpsilon(endUp, CesiumMath.EPSILON6);
     });
 
     it('creates an animation in 2D', function() {
@@ -322,50 +211,6 @@ defineSuite([
         expect(camera.direction).toEqualEpsilon(endDirection, CesiumMath.EPSILON8);
         expect(camera.up).toEqualEpsilon(endUp, CesiumMath.EPSILON8);
         expect(camera.frustum.right - camera.frustum.left).toEqualEpsilon(destination.z, CesiumMath.EPSILON8);
-    });
-
-    it('creates an animation in 2D with rectangle', function() {
-        scene.mode = SceneMode.SCENE2D;
-        var camera = scene.camera;
-        camera._mode = SceneMode.SCENE2D;
-
-        camera.position = new Cartesian3(CesiumMath.PI, 0.0, 20.0);
-        camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
-        camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
-        camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
-        camera.frustum = createOrthographicFrustum();
-
-        var startHeight = camera.frustum.right - camera.frustum.left;
-        var startPosition = Cartesian3.clone(camera.position);
-        var startDirection = Cartesian3.clone(camera.direction);
-        var startUp = Cartesian3.clone(camera.up);
-
-        var endPosition = Cartesian3.add(startPosition, new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 0.0), new Cartesian3());
-        var endCartographic = scene.mapProjection.unproject(endPosition);
-        var rectangle = new Rectangle(endCartographic.longitude - 0.0000019, endCartographic.latitude - 0.0000019, endCartographic.longitude + 0.0000019, endCartographic.latitude + 0.0000019);
-        var endDirection = Cartesian3.clone(startDirection);
-        var endUp = Cartesian3.negate(startUp, new Cartesian3());
-
-        var duration = 5.0;
-        var flight = CameraFlightPath.createTweenRectangle(scene, {
-            destination : rectangle,
-            direction : endDirection,
-            up : endUp,
-            duration : duration
-        });
-
-        flight.update({ time : 0.0 });
-        expect(camera.position).toEqualEpsilon(startPosition, CesiumMath.EPSILON12);
-        expect(camera.direction).toEqualEpsilon(startDirection, CesiumMath.EPSILON12);
-        expect(camera.up).toEqualEpsilon(startUp, CesiumMath.EPSILON12);
-        expect(camera.frustum.right - camera.frustum.left).toEqual(startHeight);
-
-        flight.update({ time : duration });
-        expect(camera.position.x).toEqualEpsilon(endPosition.x, CesiumMath.EPSILON8);
-        expect(camera.position.y).toEqualEpsilon(endPosition.y, CesiumMath.EPSILON8);
-        expect(camera.position.z).toEqualEpsilon(startPosition.z, CesiumMath.EPSILON8);
-        expect(camera.direction).toEqualEpsilon(endDirection, CesiumMath.EPSILON8);
-        expect(camera.up).toEqualEpsilon(endUp, CesiumMath.EPSILON8);
     });
 
     it('creates a path where the start and end points only differ in height', function() {
@@ -578,4 +423,4 @@ defineSuite([
         expect(camera.up).toEqualEpsilon(endUp, CesiumMath.EPSILON12);
     });
 
-},'WebGL');
+});

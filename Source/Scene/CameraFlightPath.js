@@ -552,26 +552,5 @@ define([
         };
     };
 
-    CameraFlightPath.createTweenRectangle = function(scene, options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var rectangle = options.destination;
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(scene)) {
-            throw new DeveloperError('scene is required.');
-        }
-        if (!defined(rectangle)) {
-            throw new DeveloperError('options.destination is required.');
-        }
-        //>>includeEnd('debug');
-
-        var createAnimationoptions = clone(options);
-        scene.camera.getRectangleCameraCoordinates(rectangle, c3destination);
-
-        createAnimationoptions.destination = c3destination;
-        createAnimationoptions.convert = false;
-        return this.createTween(scene, createAnimationoptions);
-    };
-
     return CameraFlightPath;
 });
