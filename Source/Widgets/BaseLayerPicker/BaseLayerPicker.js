@@ -4,6 +4,7 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../../Core/FeatureDetection',
         '../../ThirdParty/knockout',
         '../getElement',
         './BaseLayerPickerViewModel'
@@ -12,6 +13,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        FeatureDetection,
         knockout,
         getElement,
         BaseLayerPickerViewModel) {
@@ -210,8 +212,12 @@ click: function($data) { $parent.selectedTerrain = $data; }');
             }
         };
 
-        document.addEventListener('mousedown', this._closeDropDown, true);
-        document.addEventListener('touchstart', this._closeDropDown, true);
+        if (FeatureDetection.supportsPointerEvents()) {
+            document.addEventListener('pointerdown', this._closeDropDown, true);
+        } else {
+            document.addEventListener('mousedown', this._closeDropDown, true);
+            document.addEventListener('touchstart', this._closeDropDown, true);
+        }
     };
 
     defineProperties(BaseLayerPicker.prototype, {
@@ -252,8 +258,13 @@ click: function($data) { $parent.selectedTerrain = $data; }');
      * removing the widget from layout.
      */
     BaseLayerPicker.prototype.destroy = function() {
-        document.removeEventListener('mousedown', this._closeDropDown, true);
-        document.removeEventListener('touchstart', this._closeDropDown, true);
+        if (FeatureDetection.supportsPointerEvents()) {
+            document.removeEventListener('pointerdown', this._closeDropDown, true);
+        } else {
+            document.removeEventListener('mousedown', this._closeDropDown, true);
+            document.removeEventListener('touchstart', this._closeDropDown, true);
+        }
+
         knockout.cleanNode(this._element);
         knockout.cleanNode(this._dropPanel);
         this._container.removeChild(this._element);

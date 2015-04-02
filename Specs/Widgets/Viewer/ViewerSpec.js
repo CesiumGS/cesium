@@ -20,6 +20,7 @@ defineSuite([
         'Scene/SceneMode',
         'Specs/DomEventSimulator',
         'Specs/MockDataSource',
+        'Specs/pollToPromise',
         'Widgets/Animation/Animation',
         'Widgets/BaseLayerPicker/BaseLayerPicker',
         'Widgets/BaseLayerPicker/ProviderViewModel',
@@ -51,6 +52,7 @@ defineSuite([
         SceneMode,
         DomEventSimulator,
         MockDataSource,
+        pollToPromise,
         Animation,
         BaseLayerPicker,
         ProviderViewModel,
@@ -62,7 +64,7 @@ defineSuite([
         SelectionIndicator,
         Timeline) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var testProvider = {
         isReady : function() {
@@ -423,7 +425,8 @@ defineSuite([
         expect(viewer.scene.imageryLayers.length).toEqual(1);
         expect(viewer.scene.imageryLayers.get(0).imageryProvider).toBe(testProvider);
         expect(viewer.baseLayerPicker.viewModel.selectedImagery).toBe(testProviderViewModel);
-        expect(viewer.baseLayerPicker.viewModel.imageryProviderViewModels).toEqual(models);
+        expect(viewer.baseLayerPicker.viewModel.imageryProviderViewModels.length).toBe(models.length);
+        expect(viewer.baseLayerPicker.viewModel.imageryProviderViewModels[0]).toEqual(models[0]);
     });
 
     it('can disable render loop', function() {
@@ -438,6 +441,27 @@ defineSuite([
             targetFrameRate : 23
         });
         expect(viewer.targetFrameRate).toBe(23);
+    });
+
+    it('does not create a globe if option is false', function() {
+        viewer = new Viewer(container, {
+            globe : false
+        });
+        expect(viewer.scene.globe).not.toBeDefined();
+    });
+
+    it('does not create a skyBox if option is false', function() {
+        viewer = new Viewer(container, {
+            skyBox : false
+        });
+        expect(viewer.scene.skyBox).not.toBeDefined();
+    });
+
+    it('does not create a skyAtmosphere if option is false', function() {
+        viewer = new Viewer(container, {
+            skyAtmosphere : false
+        });
+        expect(viewer.scene.skyAtmosphere).not.toBeDefined();
     });
 
     it('can set dataSources at construction', function() {
@@ -529,7 +553,7 @@ defineSuite([
             throw error;
         };
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return !viewer.useDefaultRenderLoop;
         }, 'render loop to be disabled.');
     });
@@ -675,11 +699,9 @@ defineSuite([
             throw error;
         };
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return !viewer.useDefaultRenderLoop;
-        });
-
-        runs(function() {
+        }).then(function() {
             expect(viewer._element.querySelector('.cesium-widget-errorPanel')).not.toBeNull();
 
             var messages = viewer._element.querySelectorAll('.cesium-widget-errorPanel-message');
@@ -710,11 +732,9 @@ defineSuite([
             throw error;
         };
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return !viewer.useDefaultRenderLoop;
-        });
-
-        runs(function() {
+        }).then(function() {
             expect(viewer._element.querySelector('.cesium-widget-errorPanel')).toBeNull();
         });
     });
@@ -762,7 +782,7 @@ defineSuite([
         expect(viewer.trackedEntity).toBe(entity);
 
         //Needed to avoid actually creating a flight when we issue the home command.
-        spyOn(CameraFlightPath, 'createTween').andReturn({
+        spyOn(CameraFlightPath, 'createTween').and.returnValue({
             startObject : {},
             stopObject: {},
             duration : 0.0
@@ -785,12 +805,11 @@ defineSuite([
         viewer.trackedEntity = entity;
 
         expect(viewer.trackedEntity).toBe(entity);
-        waitsFor(function() {
+
+        return pollToPromise(function() {
             viewer.render();
             return Cartesian3.equals(Matrix4.getTranslation(viewer.scene.camera.transform, new Cartesian3()), entity.position.getValue());
-        });
-
-        runs(function() {
+        }).then(function() {
             dataSource.entities.remove(entity);
 
             expect(viewer.trackedEntity).toBeUndefined();
@@ -800,19 +819,17 @@ defineSuite([
             viewer.trackedEntity = entity;
 
             expect(viewer.trackedEntity).toBe(entity);
-        });
 
-        waitsFor(function() {
-            viewer.render();
-            viewer.render();
-            return Cartesian3.equals(Matrix4.getTranslation(viewer.scene.camera.transform, new Cartesian3()), entity.position.getValue());
-        });
+            return pollToPromise(function() {
+                viewer.render();
+                viewer.render();
+                return Cartesian3.equals(Matrix4.getTranslation(viewer.scene.camera.transform, new Cartesian3()), entity.position.getValue());
+            }).then(function() {
+                viewer.dataSources.remove(dataSource);
 
-        runs(function() {
-            viewer.dataSources.remove(dataSource);
-
-            expect(viewer.trackedEntity).toBeUndefined();
-            expect(viewer.scene.camera.transform).toEqual(Matrix4.IDENTITY);
+                expect(viewer.trackedEntity).toBeUndefined();
+                expect(viewer.scene.camera.transform).toEqual(Matrix4.IDENTITY);
+            });
         });
     });
 

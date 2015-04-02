@@ -4,6 +4,7 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../../Core/FeatureDetection',
         '../../ThirdParty/knockout',
         '../getElement',
         './GeocoderViewModel'
@@ -12,6 +13,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        FeatureDetection,
         knockout,
         getElement,
         GeocoderViewModel) {
@@ -99,10 +101,17 @@ cesiumSvgPath: { path: isSearchInProgress ? _stopSearchPath : _startSearchPath, 
 
         //We subscribe to both begin and end events in order to give the text box
         //focus no matter where on the widget is clicked.
-        document.addEventListener('mousedown', this._onInputBegin, true);
-        document.addEventListener('mouseup', this._onInputEnd, true);
-        document.addEventListener('touchstart', this._onInputBegin, true);
-        document.addEventListener('touchend', this._onInputEnd, true);
+
+        if (FeatureDetection.supportsPointerEvents()) {
+            document.addEventListener('pointerdown', this._onInputBegin, true);
+            document.addEventListener('pointerup', this._onInputEnd, true);
+        } else {
+            document.addEventListener('mousedown', this._onInputBegin, true);
+            document.addEventListener('mouseup', this._onInputEnd, true);
+            document.addEventListener('touchstart', this._onInputBegin, true);
+            document.addEventListener('touchend', this._onInputEnd, true);
+        }
+
     };
 
     defineProperties(Geocoder.prototype, {
@@ -143,10 +152,15 @@ cesiumSvgPath: { path: isSearchInProgress ? _stopSearchPath : _startSearchPath, 
      * removing the widget from layout.
      */
     Geocoder.prototype.destroy = function() {
-        document.removeEventListener('mousedown', this._onInputBegin, true);
-        document.removeEventListener('mouseup', this._onInputEnd, true);
-        document.removeEventListener('touchstart', this._onInputBegin, true);
-        document.removeEventListener('touchend', this._onInputEnd, true);
+        if (FeatureDetection.supportsPointerEvents()) {
+            document.removeEventListener('pointerdown', this._onInputBegin, true);
+            document.removeEventListener('pointerup', this._onInputEnd, true);
+        } else {
+            document.removeEventListener('mousedown', this._onInputBegin, true);
+            document.removeEventListener('mouseup', this._onInputEnd, true);
+            document.removeEventListener('touchstart', this._onInputBegin, true);
+            document.removeEventListener('touchend', this._onInputEnd, true);
+        }
 
         knockout.cleanNode(this._form);
         this._container.removeChild(this._form);

@@ -1466,6 +1466,7 @@ define([
         }).otherwise(function(error) {
             DataSource.setLoading(dataSource, false);
             dataSource._error.raiseEvent(dataSource, error);
+            window.console.log(error);
             return when.reject(error);
         });
     }

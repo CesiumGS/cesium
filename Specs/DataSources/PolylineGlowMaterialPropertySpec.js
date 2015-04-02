@@ -16,7 +16,7 @@ defineSuite([
         TimeIntervalCollectionProperty,
         testDefinitionChanged) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('constructor provides the expected defaults', function() {
         var property = new PolylineGlowMaterialProperty();
@@ -121,14 +121,14 @@ defineSuite([
         var oldValue = property.color;
         property.color = new ConstantProperty(Color.WHITE);
         expect(listener).toHaveBeenCalledWith(property, 'color', property.color, oldValue);
-        listener.reset();
+        listener.calls.reset();
 
         property.color.setValue(Color.BLACK);
         expect(listener).toHaveBeenCalledWith(property, 'color', property.color, property.color);
-        listener.reset();
+        listener.calls.reset();
 
         property.color = property.color;
-        expect(listener.callCount).toEqual(0);
+        expect(listener.calls.count()).toEqual(0);
     });
 
     it('raises definitionChanged when glow property is assigned or modified', function() {

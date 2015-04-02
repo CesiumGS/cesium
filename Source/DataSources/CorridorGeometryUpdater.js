@@ -529,7 +529,7 @@ define([
         var geometryUpdater = this._geometryUpdater;
         var entity = geometryUpdater._entity;
         var corridor = entity.corridor;
-        if (!entity.isAvailable(time) || !Property.getValueOrDefault(corridor.show, time, true)) {
+        if (!entity.isShowing || !entity.isAvailable(time) || !Property.getValueOrDefault(corridor.show, time, true)) {
             return;
         }
 
