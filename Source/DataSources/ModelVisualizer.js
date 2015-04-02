@@ -117,6 +117,7 @@ define([
                 model = Model.fromGltf({
                     url : uri,
                     displayCondition : new DistanceDisplayCondition(0, 4500.0),
+// TODO: this makes this test fail: http://localhost:8080/Specs/SpecRunner.html?spec=DataSources%2FModelVisualizer%20Computes%20bounding%20sphere.
                     loadOnlyIfDisplayCondition : true
                 });
 
