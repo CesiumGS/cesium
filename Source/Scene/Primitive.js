@@ -706,6 +706,7 @@ define([
      *
      * @exception {DeveloperError} All instance geometries must have the same primitiveType.
      * @exception {DeveloperError} Appearance and material have a uniform with the same name.
+     * @exception {DeveloperError} Primitive.modelMatrix is only supported in 3D mode and only for single geometry instances.
      */
     Primitive.prototype.update = function(context, frameState, commandList) {
         if (((!defined(this.geometryInstances)) && (this._va.length === 0)) ||
@@ -1217,6 +1218,13 @@ define([
         var modelMatrix;
         if ((this._numberOfInstances > 1 && !this._validModelMatrix) || frameState.mode !== SceneMode.SCENE3D) {
             modelMatrix = Matrix4.IDENTITY;
+
+            //>>includeStart('debug', pragmas.debug);
+            if (!Matrix4.equals(this.modelMatrix, Matrix4.IDENTITY)) {
+                throw new DeveloperError('Primitive.modelMatrix is only supported in 3D mode and only for single geometry instances.');
+            }
+            //>>includeEnd('debug');
+            
         } else {
             modelMatrix = this.modelMatrix;
         }
