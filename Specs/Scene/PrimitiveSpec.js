@@ -514,29 +514,6 @@ defineSuite([
         frameState.scene3DOnly = false;
     });
 
-    it('update model matrix throws for more than one instance in 3D with different model matrices', function() {
-        var primitive = new Primitive({
-            geometryInstances : [rectangleInstance1, rectangleInstance2],
-            appearance : new PerInstanceColorAppearance(),
-            asynchronous : false
-        });
-
-        var commands = [];
-        primitive.update(context, frameState, commands);
-        expect(commands.length).toEqual(1);
-        expect(commands[0].modelMatrix).toEqual(Matrix4.IDENTITY);
-
-        var modelMatrix = Matrix4.fromUniformScale(10.0);
-        primitive.modelMatrix = modelMatrix;
-
-        commands.length = 0;
-        expect(function() {
-            primitive.update(context, frameState, commands);
-        }).toThrowDeveloperError();
-
-        primitive = primitive && primitive.destroy();
-    });
-
     it('update model matrix throws in Columbus view', function() {
         var primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
