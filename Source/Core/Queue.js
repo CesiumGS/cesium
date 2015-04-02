@@ -66,7 +66,7 @@ define([
         array[offset] = undefined;
 
         offset++;
-        if (this._compact && offset > 10 && offset * 2 > array.length) {
+        if (this.compact && offset > 10 && offset * 2 > array.length) {
             //compact array
             this._array = array.slice(offset);
             offset = 0;
