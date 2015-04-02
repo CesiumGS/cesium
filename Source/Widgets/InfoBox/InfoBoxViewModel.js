@@ -5,7 +5,6 @@ define([
         '../../Core/defineProperties',
         '../../Core/deprecationWarning',
         '../../Core/Event',
-        '../../Core/FeatureDetection',
         '../../Core/formatError',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when'
@@ -15,7 +14,6 @@ define([
         defineProperties,
         deprecationWarning,
         Event,
-        FeatureDetection,
         formatError,
         knockout,
         when) {
