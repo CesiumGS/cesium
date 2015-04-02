@@ -178,6 +178,25 @@ define([
         var id;
         var updater;
 
+        for (i = changed.length - 1; i > -1; i--) {
+            entity = changed[i];
+            id = entity.id;
+            updater = this._updaters.get(id);
+
+            //If in a single update, an entity gets removed and a new instance
+            //re-added with the same id, the updater no longer tracks the
+            //correct entity, we need to both remove the old one and
+            //add the new one, which is done by pushing the entity
+            //onto the removed/added lists.
+            if (updater.entity === entity) {
+                removeUpdater(this, updater);
+                insertUpdaterIntoBatch(this, time, updater);
+            } else {
+                removed.push(entity);
+                added.push(entity);
+            }
+        }
+
         for (i = removed.length - 1; i > -1; i--) {
             entity = removed[i];
             id = entity.id;
@@ -196,14 +215,6 @@ define([
             this._updaters.set(id, updater);
             insertUpdaterIntoBatch(this, time, updater);
             this._subscriptions.set(id, updater.geometryChanged.addEventListener(GeometryVisualizer._onGeometryChanged, this));
-        }
-
-        for (i = changed.length - 1; i > -1; i--) {
-            entity = changed[i];
-            id = entity.id;
-            updater = this._updaters.get(id);
-            removeUpdater(this, updater);
-            insertUpdaterIntoBatch(this, time, updater);
         }
 
         addedObjects.removeAll();
