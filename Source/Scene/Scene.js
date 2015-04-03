@@ -1455,27 +1455,14 @@ define([
             var fs =
                 'uniform sampler2D u_texture;\n' +
                 'varying vec2 v_textureCoordinates;\n' +
-                'czm_material getMaterial(czm_materialInput materialInput)\n' +
-                '{\n' +
-                '    float n = czm_depthRange.near;\n' +
-                '    float f = czm_depthRange.far;\n' +
-                '    czm_material material = czm_getDefaultMaterial(materialInput);\n' +
-                '    vec2 st = materialInput.st;\n' +
-                '    float z = texture2D(u_texture, st).r;\n' +
-                '    float d = (2.0 * z - n - f) / (f - n);\n' +
-                '    material.diffuse = mix(vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0), vec3(d * 0.5 + 0.5));\n' +
-                '    material.alpha = 0.25;\n' +
-                '    return material;\n' +
-                '}\n' +
                 'void main()\n' +
                 '{\n' +
-                '    czm_materialInput materialInput;\n' +
-                '    materialInput.s = v_textureCoordinates.s;\n' +
-                '    materialInput.st = v_textureCoordinates;\n' +
-                '    materialInput.str = vec3(v_textureCoordinates, 0.0);\n' +
-                '    materialInput.normalEC = vec3(0.0, 0.0, -1.0);\n' +
-                '    czm_material material = getMaterial(materialInput);\n' +
-                '    gl_FragColor = vec4(material.diffuse + material.emission, material.alpha);\n' +
+                '    float z = texture2D(u_texture, v_textureCoordinates).r;\n' +
+                '    float n = czm_depthRange.near;\n' +
+                '    float f = czm_depthRange.far;\n' +
+                '    float d = (2.0 * z - n - f) / (f - n);\n' +
+                '    gl_FragColor = mix(vec4(1.0, 0.0, 0.0, 1.0), vec4(0.0, 0.0, 1.0, 1.0), d * 0.5 + 0.5);\n' +
+                '    gl_FragColor.a = 0.25;\n' +
                 '}\n';
 
             var c = context.createViewportQuadCommand(fs, {
