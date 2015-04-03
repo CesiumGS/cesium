@@ -1,7 +1,14 @@
 Change Log
 ==========
 
-### 1.8 -2015-04-01
+### 1.9 - 2015-05-01
+* Breaking changes
+  *
+* Deprecated
+  *
+* An exception is now thrown if `Primitive.modelMatrix` is not the identity matrix when in in 2D or Columbus View.
+
+### 1.8 - 2015-04-01
 
 * Breaking changes
   * Removed the `eye`, `target`, and `up` parameters to `Camera.lookAt` which were deprecated in Cesium 1.6. Use the `target` and `offset`.
