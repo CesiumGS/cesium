@@ -1198,16 +1198,27 @@ define([
         framebuffer = framebuffer && !framebuffer.isDestroyed() && framebuffer.destroy();
     }
 
-    function destroyDebugGlobeDepthShaderProgram(textureIndex) {
+    function destroyDebugGlobeDepthCommand(textureIndex) {
         var command = debugGlobeDepthCommands[textureIndex];
-        command = defined(command.shaderProgram) && command.shaderProgram.destroy();
+        command = command && defined(command.shaderProgram) && command.shaderProgram.destroy();
     }
 
-    function updateDebugGlobeDepth(scene, context, index) {
-        if (!context.depthTexture) {
-            return;
+    function destroyGlobeDepthObjects() {
+        for (var i = 0; i < debugGlobeDepthTextures.length; ++i) {
+            destroyDebugGlobeDepthTexture(i);
         }
+        debugGlobeDepthTextures.length = 0;
+        for (var j = 0; j < debugGlobeDepthFramebuffers.length; ++j) {
+            destroyDebugGlobeDepthFramebuffer(j);
+        }
+        debugGlobeDepthFramebuffers.length = 0;
+        for (var k = 0; k < debugGlobeDepthCommands.length; ++k) {
+            destroyDebugGlobeDepthCommand(k);
+        }
+        debugGlobeDepthCommands.length = 0;
+    }
 
+    function updateDebugGlobeDepth(scene, context, uniformState, index) {
         var texture = debugGlobeDepthTextures[index];
         var framebuffer = debugGlobeDepthFramebuffers[index];
         var command = debugGlobeDepthCommands[index];
@@ -1216,9 +1227,10 @@ define([
         var height = context.drawingBufferHeight;
 
         var textureChanged = !defined(texture) || texture.width !== width || texture.height !== height;
-        if (!defined(framebuffer) || textureChanged) {
+        if (textureChanged) {
             destroyDebugGlobeDepthTexture(index);
             destroyDebugGlobeDepthFramebuffer(index);
+            destroyDebugGlobeDepthCommand(index);
 
             texture = context.createTexture2D({
                 width : width,
@@ -1227,65 +1239,27 @@ define([
                 pixelDatatype : PixelDatatype.FLOAT
             });
 
+            debugGlobeDepthTextures[index] = texture;
+
             framebuffer = context.createFramebuffer({
                 colorTextures : [texture],
                 destroyAttachments : false
             });
 
+            debugGlobeDepthFramebuffers[index] = framebuffer;
+
             command = context.createViewportQuadCommand(PassThrough, {
                 renderState : context.createRenderState(),
                 uniformMap : {
                     u_texture : function() {
-                        return debugGlobeDepthTextures[index];
+                        return uniformState.globeDepthTexture;
                     }
                 },
                 owner : scene
             });
+
+            debugGlobeDepthCommands[index] = command;
         }
-
-        debugGlobeDepthTextures[index] = texture;
-        debugGlobeDepthFramebuffers[index] = framebuffer;
-        debugGlobeDepthCommands[index] = command;
-    }
-
-    var debugGlobeDepthPrimitive;
-
-    function updateDebugGlobeDepthPrimitive(scene, context, index) {
-        if (defined(debugGlobeDepthPrimitive)) {
-            scene.primitives.remove(debugGlobeDepthPrimitive);
-        }
-
-        var width = context.drawingBufferWidth;
-        var height = context.drawingBufferHeight;
-
-        var rectangle = new BoundingRectangle(0, 0, width, height);
-
-        var DepthFS =
-            'czm_material czm_getMaterial(czm_materialInput materialInput)\n' +
-            '{\n' +
-            '    float n = czm_depthRange.near;\n' +
-            '    float f = czm_depthRange.far;\n' +
-            '    czm_material material = czm_getDefaultMaterial(materialInput);\n' +
-            '    vec2 st = materialInput.st;\n' +
-            '    float z = texture2D(czm_globeDepthTexture, st).r;\n' +
-            '    float d = (2.0 * z - n - f) / (f - n);\n' +
-            '    material.diffuse = mix(vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0), vec3(d * 0.5 + 0.5));\n' +
-            '    material.alpha = 0.75;\n' +
-            '    return material;\n' +
-            '}\n';
-
-        var material = new Material({
-            fabric : {
-                source : DepthFS
-            },
-            uniforms : {
-                u_texture : function() {
-                    return debugGlobeDepthTextures[index];
-                }
-            }
-        });
-        debugGlobeDepthPrimitive = new ViewportQuad(rectangle, material);
-        scene.primitives.add(debugGlobeDepthPrimitive);
     }
 
     var scratchPerspectiveFrustum = new PerspectiveFrustum();
@@ -1447,8 +1421,10 @@ define([
             scene._globeDepth.executeCopyDepth(context, passState);
 
             if (scene.debugShowGlobeDepth) {
+                destroyGlobeDepthObjects();
+
                 var orignal = passState.framebuffer;
-                updateDebugGlobeDepth(scene, context, index);
+                updateDebugGlobeDepth(scene, context, us, index);
                 passState.framebuffer = debugGlobeDepthFramebuffers[index];
                 var command = debugGlobeDepthCommands[index];
                 command.execute(context, passState);
@@ -1473,6 +1449,45 @@ define([
             commands = frustumCommands.commands[Pass.TRANSLUCENT];
             commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
             executeTranslucentCommands(scene, executeCommand, passState, commands);
+        }
+
+        if (scene.debugShowGlobeDepth) {
+            var fs =
+                'uniform sampler2D u_texture;\n' +
+                'varying vec2 v_textureCoordinates;\n' +
+                'czm_material getMaterial(czm_materialInput materialInput)\n' +
+                '{\n' +
+                '    float n = czm_depthRange.near;\n' +
+                '    float f = czm_depthRange.far;\n' +
+                '    czm_material material = czm_getDefaultMaterial(materialInput);\n' +
+                '    vec2 st = materialInput.st;\n' +
+                '    float z = texture2D(u_texture, st).r;\n' +
+                '    float d = (2.0 * z - n - f) / (f - n);\n' +
+                '    material.diffuse = mix(vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0), vec3(d * 0.5 + 0.5));\n' +
+                '    material.alpha = 0.25;\n' +
+                '    return material;\n' +
+                '}\n' +
+                'void main()\n' +
+                '{\n' +
+                '    czm_materialInput materialInput;\n' +
+                '    materialInput.s = v_textureCoordinates.s;\n' +
+                '    materialInput.st = v_textureCoordinates;\n' +
+                '    materialInput.str = vec3(v_textureCoordinates, 0.0);\n' +
+                '    materialInput.normalEC = vec3(0.0, 0.0, -1.0);\n' +
+                '    czm_material material = getMaterial(materialInput);\n' +
+                '    gl_FragColor = vec4(material.diffuse + material.emission, material.alpha);\n' +
+                '}\n';
+
+            var c = context.createViewportQuadCommand(fs, {
+                uniformMap : {
+                    u_texture : function() {
+                        return debugGlobeDepthTextures[0];
+                    }
+                },
+                owner : scene
+            });
+
+            c.execute(context, passState);
         }
 
         if (useOIT) {
@@ -1561,12 +1576,6 @@ define([
 
         scene._commandList.length = 0;
         scene._overlayCommandList.length = 0;
-
-        if (scene.debugShowGlobeDepth) {
-            updateDebugGlobeDepthPrimitive(scene, context, 1);
-        } else if (defined(debugGlobeDepthPrimitive)) {
-            scene.primitives.remove(debugGlobeDepthPrimitive);
-        }
 
         updatePrimitives(scene);
         createPotentiallyVisibleSet(scene);
