@@ -1,10 +1,12 @@
 /*global defineSuite*/
 defineSuite([
     'Core/HeadingPitchRoll',
-    'Core/Quaternion'
+    'Core/Quaternion',
+    'Core/Math'
 ], function (
         HeadingPitchRoll,
-        Quaternion
+        Quaternion,
+        CesiumMath
         ) {
     "use strict";
     /*global it,expect*/
@@ -23,9 +25,9 @@ defineSuite([
         for (var i = 0; i < testingTab.length; i++) {
             var init = testingTab[i];
             var result = HeadingPitchRoll.fromQuaternion(Quaternion.fromHeadingPitchRoll(init[0], init[1], init[2]));
-            expect(init[0]).toBeCloseTo(result.heading);
-            expect(init[1]).toBeCloseTo(result.pitch);
-            expect(init[2]).toBeCloseTo(result.roll);
+            expect(init[0]).toEqualEpsilon(result.heading, CesiumMath.EPSILON11);
+            expect(init[1]).toEqualEpsilon(result.pitch, CesiumMath.EPSILON11);
+            expect(init[2]).toEqualEpsilon(result.roll, CesiumMath.EPSILON11);
         }
     });
 
@@ -43,9 +45,9 @@ defineSuite([
         for (var i = 0; i < testingTab.length; i++) {
             var init = testingTab[i];
             var result = HeadingPitchRoll.fromDegrees(init[0], init[1], init[2]);
-            expect(init[0] * deg2rad).toBeCloseTo(result.heading);
-            expect(init[1] * deg2rad).toBeCloseTo(result.pitch);
-            expect(init[2] * deg2rad).toBeCloseTo(result.roll);
+            expect(init[0] * deg2rad).toEqualEpsilon(result.heading, CesiumMath.EPSILON11);
+            expect(init[1] * deg2rad).toEqualEpsilon(result.pitch, CesiumMath.EPSILON11);
+            expect(init[2] * deg2rad).toEqualEpsilon(result.roll, CesiumMath.EPSILON11);
         }
     });
 
