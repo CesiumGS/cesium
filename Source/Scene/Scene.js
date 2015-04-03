@@ -1461,8 +1461,7 @@ define([
                 '    float n = czm_depthRange.near;\n' +
                 '    float f = czm_depthRange.far;\n' +
                 '    float d = (2.0 * z - n - f) / (f - n);\n' +
-                '    gl_FragColor = mix(vec4(1.0, 0.0, 0.0, 1.0), vec4(0.0, 0.0, 1.0, 1.0), d * 0.5 + 0.5);\n' +
-                '    gl_FragColor.a = 0.25;\n' +
+                '    gl_FragColor = vec4(mix(vec3(1.0), vec3(0.0), d), 0.25);\n' +
                 '}\n';
 
             var c = context.createViewportQuadCommand(fs, {
