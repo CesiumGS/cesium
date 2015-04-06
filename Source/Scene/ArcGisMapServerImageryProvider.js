@@ -1,6 +1,9 @@
 /*global define*/
 define([
         '../Core/Cartesian2',
+        '../Core/Cartesian3',
+        '../Core/Cartographic',
+        '../Core/Math',
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
@@ -10,15 +13,20 @@ define([
         '../Core/GeographicProjection',
         '../Core/GeographicTilingScheme',
         '../Core/jsonp',
+        '../Core/loadJson',
         '../Core/Rectangle',
         '../Core/TileProviderError',
         '../Core/WebMercatorProjection',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/when',
         './DiscardMissingTileImagePolicy',
+        './ImageryLayerFeatureInfo',
         './ImageryProvider'
     ], function(
         Cartesian2,
+        Cartesian3,
+        Cartographic,
+        CesiumMath,
         Credit,
         defaultValue,
         defined,
@@ -28,12 +36,14 @@ define([
         GeographicProjection,
         GeographicTilingScheme,
         jsonp,
+        loadJson,
         Rectangle,
         TileProviderError,
         WebMercatorProjection,
         WebMercatorTilingScheme,
         when,
         DiscardMissingTileImagePolicy,
+        ImageryLayerFeatureInfo,
         ImageryProvider) {
     "use strict";
 
@@ -62,6 +72,18 @@ define([
      * @param {Boolean} [options.usePreCachedTilesIfAvailable=true] If true, the server's pre-cached
      *        tiles are used if they are available.  If false, any pre-cached tiles are ignored and the
      *        'export' service is used.
+     * @param {String} [layers] A comma-separated list of the layers to show, or undefined if all layers should be shown.
+     * @param {Boolean} [options.enablePickFeatures=true] If true, {@link ArcGisMapServerImageryProvider#pickFeatures} will invoke
+     *        the Identify service on the MapServer and return the features included in the response.  If false,
+     *        {@link ArcGisMapServerImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
+     *        without communicating with the server.  Set this property to false if you don't want this provider's features to
+     *        be pickable.
+     * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.  This parameter is ignored when accessing
+     *                    a tiled layer.
+     * @param {TilingScheme} [options.tilingScheme=new GeographicTilingScheme()] The tiling scheme to use to divide the world into tiles.
+     *                       This parameter is ignored when accessing a tiled server.
+     * @param {Number} [options.tileWidth=256] The width of each tile in pixels.  This parameter is ignored when accessing a tiled server.
+     * @param {Number} [options.tileHeight=256] The height of each tile in pixels.  This parameter is ignored when accessing a tiled server.
      *
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
@@ -91,13 +113,15 @@ define([
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._proxy = options.proxy;
 
-        this._tileWidth = undefined;
-        this._tileHeight = undefined;
+        this._tileWidth = defaultValue(options.tileWidth, 256);
+        this._tileHeight = defaultValue(options.tileHeight, 256);
         this._maximumLevel = undefined;
-        this._tilingScheme = undefined;
+        this._tilingScheme = defaultValue(options.tilingScheme, new GeographicTilingScheme());
         this._credit = undefined;
         this._useTiles = defaultValue(options.usePreCachedTilesIfAvailable, true);
-        this._rectangle = undefined;
+        this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
+        this._layers = options.layers;
+        this._enablePickFeatures = defaultValue(options.enablePickFeatures, true);
 
         this._errorEvent = new Event();
 
@@ -109,11 +133,7 @@ define([
 
         function metadataSuccess(data) {
             var tileInfo = data.tileInfo;
-            if (!that._useTiles || !defined(tileInfo)) {
-                that._tileWidth = 256;
-                that._tileHeight = 256;
-                that._tilingScheme = new GeographicTilingScheme();
-                that._rectangle = that._tilingScheme.rectangle;
+            if (!defined(tileInfo)) {
                 that._useTiles = false;
             } else {
                 that._tileWidth = tileInfo.rows;
@@ -132,24 +152,22 @@ define([
                 that._maximumLevel = data.tileInfo.lods.length - 1;
 
                 if (defined(data.fullExtent)) {
-                    var projection = that._tilingScheme.projection;
-
                     if (defined(data.fullExtent.spatialReference) && defined(data.fullExtent.spatialReference.wkid)) {
                         if (data.fullExtent.spatialReference.wkid === 102100 ||
                             data.fullExtent.spatialReference.wkid === 102113) {
-                            projection = new WebMercatorProjection();
+
+                            var projection = new WebMercatorProjection();
+                            var sw = projection.unproject(new Cartesian2(data.fullExtent.xmin, data.fullExtent.ymin));
+                            var ne = projection.unproject(new Cartesian2(data.fullExtent.xmax, data.fullExtent.ymax));
+                            that._rectangle = new Rectangle(sw.longitude, sw.latitude, ne.longitude, ne.latitude);
                         } else if (data.fullExtent.spatialReference.wkid === 4326) {
-                            projection = new GeographicProjection();
+                            that._rectangle = Rectangle.fromDegrees(data.fullExtent.xmin, data.fullExtent.ymin, data.fullExtent.xmax, data.fullExtent.ymax);
                         } else {
                             var extentMessage = 'fullExtent.spatialReference WKID ' + data.fullExtent.spatialReference.wkid + ' is not supported.';
                             metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, extentMessage, undefined, undefined, undefined, requestMetadata);
                             return;
                         }
                     }
-
-                    var sw = projection.unproject(new Cartesian2(data.fullExtent.xmin, data.fullExtent.ymin));
-                    var ne = projection.unproject(new Cartesian2(data.fullExtent.xmax, data.fullExtent.ymax));
-                    that._rectangle = new Rectangle(sw.longitude, sw.latitude, ne.longitude, ne.latitude);
                 } else {
                     that._rectangle = that._tilingScheme.rectangle;
                 }
@@ -189,7 +207,11 @@ define([
             when(metadata, metadataSuccess, metadataFailure);
         }
 
-        requestMetadata();
+        if (this._useTiles) {
+            requestMetadata();
+        } else {
+            this._ready = true;
+        }
     };
 
     function buildImageUrl(imageryProvider, x, y, level) {
@@ -202,7 +224,17 @@ define([
 
             url = imageryProvider._url + '/export?';
             url += 'bbox=' + bbox;
-            url += '&bboxSR=4326&size=256%2C256&imageSR=4326&format=png&transparent=true&f=image';
+            if (imageryProvider._tilingScheme instanceof GeographicTilingScheme) {
+                url += '&bboxSR=4326&imageSR=4326';
+            } else {
+                url += '&bboxSR=3857&imageSR=3857';
+            }
+            url += '&size=' + imageryProvider._tileWidth + '%2C' + imageryProvider._tileHeight;
+            url += '&format=png&transparent=true&f=image';
+
+            if (imageryProvider.layers) {
+                url += '&layers=show:' + imageryProvider.layers;
+            }
         }
 
         var proxy = imageryProvider._proxy;
@@ -445,6 +477,31 @@ define([
             get : function() {
                 return true;
             }
+        },
+
+        /**
+         * Gets the comma-separated list of layer IDs to show.
+         * @type {String}
+         */
+        layers : {
+            get : function() {
+                return this._layers;
+            }
+        },
+
+        /**
+         * Gets a value indicating whether feature picking is enabled.  If true, {@link ArcGisMapServerImageryProvider#pickFeatures} will
+         * invoke the "identify" operation on the ArcGIS server and return the features included in the response.  If false,
+         * {@link ArcGisMapServerImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
+         * without communicating with the server.
+         * @type {Boolean}
+         * @readonly
+         * @default true
+         */
+        enablePickFeatures : {
+            get : function() {
+                return this._enablePickFeatures;
+            }
         }
     });
 
@@ -489,8 +546,9 @@ define([
     };
 
     /**
-     * Picking features is not currently supported by this imagery provider, so this function simply returns
-     * undefined.
+    /**
+     * Asynchronously determines what features, if any, are located at a given longitude and latitude within
+     * a tile.  This function should not be called before {@link ImageryProvider#ready} returns true.
      *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
@@ -500,10 +558,75 @@ define([
      * @return {Promise} A promise for the picked features that will resolve when the asynchronous
      *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
      *                   instances.  The array may be empty if no features are found at the given location.
-     *                   It may also be undefined if picking is not supported.
+     *
+     * @exception {DeveloperError} <code>pickFeatures</code> must not be called before the imagery provider is ready.
      */
-    ArcGisMapServerImageryProvider.prototype.pickFeatures = function() {
-        return undefined;
+    ArcGisMapServerImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!this._ready) {
+            throw new DeveloperError('pickFeatures must not be called before the imagery provider is ready.');
+        }
+        //>>includeEnd('debug');
+
+        if (!this._enablePickFeatures) {
+            return undefined;
+        }
+
+        var rectangle = this._tilingScheme.tileXYToNativeRectangle(x, y, level);
+
+        var horizontal;
+        var vertical;
+        var sr;
+        if (this._tilingScheme instanceof GeographicTilingScheme) {
+            horizontal = CesiumMath.toDegrees(longitude);
+            vertical = CesiumMath.toDegrees(latitude);
+            sr = '4326';
+        } else {
+            var projected = this._tilingScheme.projection.project(new Cartographic(longitude, latitude, 0.0));
+            horizontal = projected.x;
+            vertical = projected.y;
+            sr = '3857';
+        }
+
+        var url = this._url + '/identify?f=json&tolerance=2&layers=visible&geometryType=esriGeometryPoint';
+        url += '&geometry=' + horizontal + ',' + vertical;
+        url += '&mapExtent=' + rectangle.west + ',' + rectangle.south + ',' + rectangle.east + ',' + rectangle.north;
+        url += '&imageDisplay=' + this._tileWidth + ',' + this._tileHeight + ',96';
+        url += '&sr=' + sr;
+
+        return loadJson(url).then(function(json) {
+            var result = [];
+
+            var features = json.results;
+            if (!defined(features)) {
+                return result;
+            }
+
+            for (var i = 0; i < features.length; ++i) {
+                var feature = features[i];
+
+                var featureInfo = new ImageryLayerFeatureInfo();
+                featureInfo.data = feature;
+                featureInfo.name = feature.value;
+                featureInfo.properties = feature.attributes;
+                featureInfo.configureDescriptionFromProperties(feature.attributes);
+
+                // If this is a point feature, use the coordinates of the point.
+                if (feature.geometryType === 'esriGeometryPoint' && feature.geometry) {
+                    var wkid = feature.geometry.spatialReference && feature.geometry.spatialReference.wkid ? feature.geometry.spatialReference.wkid : 4326;
+                    if (wkid === 4326 || wkid === 4283) {
+                        featureInfo.position = Cartographic.fromDegrees(feature.geometry.x, feature.geometry.y, feature.geometry.z);
+                    } else if (wkid === 102100 || wkid === 900913 || wkid === 3857) {
+                        var projection = new WebMercatorProjection();
+                        featureInfo.position = projection.unproject(new Cartesian3(feature.geometry.x, feature.geometry.y, feature.geometry.z));
+                    }
+                }
+
+                result.push(featureInfo);
+            }
+
+            return result;
+        });
     };
 
     return ArcGisMapServerImageryProvider;
