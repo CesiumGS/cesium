@@ -834,9 +834,9 @@ require({
             var demoSrc = newDemo.name + '.html';
             var queries = window.location.search.substring(1).split('&');
             for(var i = 0; i < queries.length; i++){
-                var key = queries.split('=')[0];
+                var key = queries[i].split('=')[0];
                 if(key === "src"){
-                    if (demoSrc !== queries.split('=')[1]) {
+                    if (demoSrc !== queries[i].split('=')[1].replace('%20', ' ')) {
                         window.history.pushState(newDemo, newDemo.name, '?src=' + demoSrc + '&label=' + currentTab);
                     }
                 }
