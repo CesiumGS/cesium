@@ -39,7 +39,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     animation : false
 });
 
-var dataSource = Cesium.GeoJsonDataSource.fromUrl('../../SampleData/simplestyles.geojson');
+var dataSource = Cesium.GeoJsonDataSource.load('../../SampleData/simplestyles.geojson');
 viewer.dataSources.add(dataSource);
 viewer.zoomTo(dataSource);
 //Sandcastle_End

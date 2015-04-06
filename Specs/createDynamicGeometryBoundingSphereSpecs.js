@@ -3,14 +3,16 @@ define([
         'Core/BoundingSphere',
         'Core/JulianDate',
         'Core/Math',
-        'DataSources/BoundingSphereState'
+        'DataSources/BoundingSphereState',
+        'Specs/pollToPromise'
     ], function(
         BoundingSphere,
         JulianDate,
         CesiumMath,
-        BoundingSphereState) {
+        BoundingSphereState,
+        pollToPromise) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var time = new JulianDate();
     function createDynamicGeometryBoundingSphereSpecs(Updater, entity, graphics, getScene) {
@@ -24,14 +26,13 @@ define([
 
             var state;
             var result = new BoundingSphere();
-            waitsFor(function() {
+
+            return pollToPromise(function() {
                 scene.initializeFrame();
                 scene.render();
                 state = dynamicUpdater.getBoundingSphere(entity, result);
                 return state !== BoundingSphereState.PENDING;
-            });
-
-            runs(function() {
+            }).then(function() {
                 var primitive = scene.primitives.get(0);
                 expect(state).toBe(BoundingSphereState.DONE);
                 var attributes = primitive.getGeometryInstanceAttributes(entity);
@@ -53,14 +54,12 @@ define([
 
             var state;
             var result = new BoundingSphere();
-            waitsFor(function() {
+            return pollToPromise(function() {
                 scene.initializeFrame();
                 scene.render();
                 state = dynamicUpdater.getBoundingSphere(entity, result);
                 return state !== BoundingSphereState.PENDING;
-            });
-
-            runs(function() {
+            }).then(function() {
                 var primitive = scene.primitives.get(0);
                 expect(state).toBe(BoundingSphereState.DONE);
                 var attributes = primitive.getGeometryInstanceAttributes(entity);

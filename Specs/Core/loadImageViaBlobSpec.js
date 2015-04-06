@@ -8,37 +8,19 @@ defineSuite([
         defined,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var dataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2Nk+M/wHwAEBgIA5agATwAAAABJRU5ErkJggg==';
 
     it('can load an image', function() {
-        var loadedImage;
-        when(loadImageViaBlob('./Data/Images/Green.png'), function(image) {
-            loadedImage = image;
-        });
-
-        waitsFor(function() {
-            return defined(loadedImage);
-        }, 'The image should load.', 5000);
-
-        runs(function() {
+        return loadImageViaBlob('./Data/Images/Green.png').then(function(loadedImage) {
             expect(loadedImage.width).toEqual(1);
             expect(loadedImage.height).toEqual(1);
         });
     });
 
     it('can load an image from a data URI', function() {
-        var loadedImage;
-        when(loadImageViaBlob(dataUri), function(image) {
-            loadedImage = image;
-        });
-
-        waitsFor(function() {
-            return defined(loadedImage);
-        }, 'The image should load.');
-
-        runs(function() {
+        return loadImageViaBlob(dataUri).then(function(loadedImage) {
             expect(loadedImage.width).toEqual(1);
             expect(loadedImage.height).toEqual(1);
         });
@@ -52,7 +34,7 @@ defineSuite([
 
     it('resolves the promise when the image loads', function() {
         var fakeImage = {};
-        spyOn(window, 'Image').andReturn(fakeImage);
+        spyOn(window, 'Image').and.returnValue(fakeImage);
 
         var success = false;
         var failure = false;
@@ -77,7 +59,7 @@ defineSuite([
 
     it('rejects the promise when the image errors', function() {
         var fakeImage = {};
-        spyOn(window, 'Image').andReturn(fakeImage);
+        spyOn(window, 'Image').and.returnValue(fakeImage);
 
         var success = false;
         var failure = false;

@@ -3,6 +3,7 @@ defineSuite([
         'Scene/ViewportQuad',
         'Core/BoundingRectangle',
         'Core/Color',
+        'Core/loadImage',
         'Renderer/ClearCommand',
         'Scene/Material',
         'Specs/createCamera',
@@ -13,6 +14,7 @@ defineSuite([
         ViewportQuad,
         BoundingRectangle,
         Color,
+        loadImage,
         ClearCommand,
         Material,
         createCamera,
@@ -20,7 +22,7 @@ defineSuite([
         createFrameState,
         render) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var context;
     var frameState;
@@ -31,8 +33,10 @@ defineSuite([
     beforeAll(function() {
         context = createContext();
         frameState = createFrameState();
-        testImage = new Image();
-        testImage.src = './Data/Images/Red16x16.png';
+
+        return loadImage('./Data/Images/Red16x16.png').then(function(image) {
+            testImage = image;
+        });
     });
 
     afterAll(function() {
@@ -103,25 +107,18 @@ defineSuite([
     });
 
     it('renders user created texture', function() {
-
-        waitsFor( function() {
-            return testImage.complete;
-        }, 'Load test image for texture test.', 3000);
-
-        runs( function() {
-            var texture = context.createTexture2D({
-                source : testImage
-            });
-
-            viewportQuad.material = Material.fromType(Material.ImageType);
-            viewportQuad.material.uniforms.image = texture;
-
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-            render(context, frameState, viewportQuad);
-            expect(context.readPixels()).toEqual([255, 0, 0, 255]);
+        var texture = context.createTexture2D({
+            source : testImage
         });
+
+        viewportQuad.material = Material.fromType(Material.ImageType);
+        viewportQuad.material.uniforms.image = texture;
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        render(context, frameState, viewportQuad);
+        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
     });
 
     it('isDestroyed', function() {

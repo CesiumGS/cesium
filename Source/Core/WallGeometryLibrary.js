@@ -76,12 +76,11 @@ define([
                     cleanedBottomHeights[index] = 0.0;
                 }
 
+                Cartographic.clone(c1, c0);
                 ++index;
             } else if (c0.height < c1.height) {
                 cleanedTopHeights[index - 1] = c1.height;
             }
-
-            Cartographic.clone(c1, c0);
         }
 
         cleanedPositions.length = index;

@@ -4,6 +4,7 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../../Core/FeatureDetection',
         '../../ThirdParty/knockout',
         '../getElement',
         './SceneModePickerViewModel'
@@ -12,6 +13,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        FeatureDetection,
         knockout,
         getElement,
         SceneModePickerViewModel) {
@@ -135,9 +137,12 @@ cesiumSvgPath: { path: _columbusViewPath, width: 64, height: 64 }');
                 viewModel.dropDownVisible = false;
             }
         };
-
-        document.addEventListener('mousedown', this._closeDropDown, true);
-        document.addEventListener('touchstart', this._closeDropDown, true);
+        if (FeatureDetection.supportsPointerEvents()) {
+            document.addEventListener('pointerdown', this._closeDropDown, true);
+        } else {
+            document.addEventListener('mousedown', this._closeDropDown, true);
+            document.addEventListener('touchstart', this._closeDropDown, true);
+        }
     };
 
     defineProperties(SceneModePicker.prototype, {
@@ -180,8 +185,12 @@ cesiumSvgPath: { path: _columbusViewPath, width: 64, height: 64 }');
     SceneModePicker.prototype.destroy = function() {
         this._viewModel.destroy();
 
-        document.removeEventListener('mousedown', this._closeDropDown, true);
-        document.removeEventListener('touchstart', this._closeDropDown, true);
+        if (FeatureDetection.supportsPointerEvents()) {
+            document.removeEventListener('pointerdown', this._closeDropDown, true);
+        } else {
+            document.removeEventListener('mousedown', this._closeDropDown, true);
+            document.removeEventListener('touchstart', this._closeDropDown, true);
+        }
 
         knockout.cleanNode(this._wrapper);
         this._container.removeChild(this._wrapper);

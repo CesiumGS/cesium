@@ -4,7 +4,7 @@ defineSuite([
     ], function(
         Queue) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var queue;
     beforeEach(function() {
@@ -36,15 +36,19 @@ defineSuite([
     });
 
     it('compacts underlying array', function() {
+        var q = new Queue({
+            compact : true
+        });
+
         var i;
         for (i = 0; i < 1000; i++) {
-            queue.enqueue(i);
+            q.enqueue(i);
         }
         for (i = 0; i < 1000; i++) {
-            queue.dequeue();
+            q.dequeue();
         }
 
-        expect(queue._array.length).toBeLessThan(1000);
+        expect(q._array.length).toBeLessThan(1000);
     });
 
     it('can check if it contains an item', function() {

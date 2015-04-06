@@ -92,7 +92,7 @@ define([
 
             var uri;
             var modelData = modelHash[entity.id];
-            var show = entity.isAvailable(time) && Property.getValueOrDefault(modelGraphics._show, time, true);
+            var show = entity.isShowing && entity.isAvailable(time) && Property.getValueOrDefault(modelGraphics._show, time, true);
 
             var modelMatrix;
             if (show) {
@@ -116,7 +116,8 @@ define([
                 }
                 model = Model.fromGltf({
                     url : uri,
-                    displayCondition : new DistanceDisplayCondition(0, 2000.0),
+                    displayCondition : new DistanceDisplayCondition(0, 4500.0),
+// TODO: this makes this test fail: http://localhost:8080/Specs/SpecRunner.html?spec=DataSources%2FModelVisualizer%20Computes%20bounding%20sphere.
                     loadOnlyIfDisplayCondition : true
                 });
 

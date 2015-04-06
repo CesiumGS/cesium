@@ -2,13 +2,13 @@
 defineSuite([
         'Core/TaskProcessor',
         'require',
-        'Specs/waitsForPromise'
+        'ThirdParty/when'
     ], function(
         TaskProcessor,
         require,
-        waitsForPromise) {
+        when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
 
     var taskProcessor;
 
@@ -45,9 +45,8 @@ defineSuite([
                 val : true
             }
         };
-        var promise = taskProcessor.scheduleTask(parameters);
 
-        waitsForPromise(promise, function(result) {
+        return taskProcessor.scheduleTask(parameters).then(function(result) {
             expect(result).toEqual(parameters);
         });
     });
@@ -69,7 +68,7 @@ defineSuite([
         var parameters = new ArrayBuffer(byteLength);
         expect(parameters.byteLength).toEqual(byteLength);
 
-        waitsForPromise(TaskProcessor._canTransferArrayBuffer, function(canTransferArrayBuffer) {
+        return when(TaskProcessor._canTransferArrayBuffer, function(canTransferArrayBuffer) {
             var promise = taskProcessor.scheduleTask(parameters, [parameters]);
 
             if (canTransferArrayBuffer) {
@@ -78,7 +77,7 @@ defineSuite([
             }
 
             // the worker should see the array with proper byte length
-            waitsForPromise(promise, function(result) {
+            return promise.then(function(result) {
                 expect(result).toEqual(byteLength);
             });
         });
@@ -92,10 +91,8 @@ defineSuite([
             byteLength : byteLength
         };
 
-        var promise = taskProcessor.scheduleTask(parameters);
-
         // the worker should see the array with proper byte length
-        waitsForPromise(promise, function(result) {
+        return taskProcessor.scheduleTask(parameters).then(function(result) {
             expect(result.byteLength).toEqual(100);
         });
     });
@@ -108,9 +105,9 @@ defineSuite([
             message : message
         };
 
-        var promise = taskProcessor.scheduleTask(parameters);
-
-        waitsForPromise.toReject(promise, function(error) {
+        return taskProcessor.scheduleTask(parameters).then(function() {
+            fail('should not be called');
+        }).otherwise(function(error) {
             expect(error.message).toEqual(message);
         });
     });
@@ -123,9 +120,9 @@ defineSuite([
             message : message
         };
 
-        var promise = taskProcessor.scheduleTask(parameters);
-
-        waitsForPromise.toReject(promise, function(error) {
+        return taskProcessor.scheduleTask(parameters).then(function() {
+            fail('should not be called');
+        }).otherwise(function(error) {
             expect(error).toContain('postMessage failed');
         });
     });

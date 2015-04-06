@@ -529,7 +529,7 @@ define([
         var geometryUpdater = this._geometryUpdater;
         var entity = geometryUpdater._entity;
         var cylinder = entity.cylinder;
-        if (!entity.isAvailable(time) || !Property.getValueOrDefault(cylinder.show, time, true)) {
+        if (!entity.isShowing || !entity.isAvailable(time) || !Property.getValueOrDefault(cylinder.show, time, true)) {
             return;
         }
 

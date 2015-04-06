@@ -42,7 +42,7 @@ defineSuite([
         createDynamicProperty,
         createScene) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var time;
     var time2;
@@ -399,6 +399,11 @@ defineSuite([
         expect(options.granularity).toEqual(rectangle.granularity.getValue());
         expect(options.stRotation).toEqual(rectangle.stRotation.getValue());
 
+        entity.show = false;
+        dynamicUpdater.update(JulianDate.now());
+        expect(primitives.length).toBe(0);
+        entity.show = true;
+
         //If a dynamic show returns false, the primitive should go away.
         rectangle.show.setValue(false);
         dynamicUpdater.update(time);
@@ -424,20 +429,20 @@ defineSuite([
         updater.geometryChanged.addEventListener(listener);
 
         entity.rectangle.height = new ConstantProperty(82);
-        expect(listener.callCount).toEqual(1);
+        expect(listener.calls.count()).toEqual(1);
 
         entity.availability = new TimeIntervalCollection();
-        expect(listener.callCount).toEqual(2);
+        expect(listener.calls.count()).toEqual(2);
 
         entity.rectangle.coordinates = undefined;
-        expect(listener.callCount).toEqual(3);
+        expect(listener.calls.count()).toEqual(3);
 
         //Since there's no valid geometry, changing another property should not raise the event.
         entity.rectangle.height = undefined;
 
         //Modifying an unrelated property should not have any effect.
         entity.viewFrom = new ConstantProperty(Cartesian3.UNIT_X);
-        expect(listener.callCount).toEqual(3);
+        expect(listener.calls.count()).toEqual(3);
     });
 
     it('createFillGeometryInstance throws if object is not filled', function() {
