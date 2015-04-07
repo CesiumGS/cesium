@@ -15,6 +15,7 @@ define([
         '../Core/IndexDatatype',
         '../Core/Math',
         '../Core/Matrix4',
+        '../Core/PrimitiveType',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/ShaderSource',
@@ -41,6 +42,7 @@ define([
         IndexDatatype,
         CesiumMath,
         Matrix4,
+        PrimitiveType,
         BufferUsage,
         DrawCommand,
         ShaderSource,
@@ -878,6 +880,7 @@ define([
                 command = colorList[j];
                 if (!defined(command)) {
                     command = colorList[j] = new DrawCommand({
+                        primitiveType : PrimitiveType.POINTS,
                         pass : Pass.OPAQUE,
                         owner : this
                     });
@@ -933,6 +936,7 @@ define([
                 command = pickList[j];
                 if (!defined(command)) {
                     command = pickList[j] = new DrawCommand({
+                        primitiveType : PrimitiveType.POINTS,
                         pass : Pass.OPAQUE,
                         owner : this
                     });
