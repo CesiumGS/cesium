@@ -13,7 +13,7 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var terrainProvider = new CesiumTerrainProvider({
-        url : '//cesiumjs.org/stk-terrain/world'
+        url : '//assets.agi.com/stk-terrain/world'
     });
 
     it('queries heights', function() {
@@ -98,11 +98,11 @@ defineSuite([
 
     it('works for a dodgy point right near the edge of a tile', function() {
         var stkWorldTerrain = new CesiumTerrainProvider({
-            url : 'http://cesiumjs.org/stk-terrain/tilesets/world/tiles'
+            url : '//assets.agi.com/stk-terrain/world'
         });
 
         var positions = [new Cartographic(0.33179290856829535, 0.7363107781851078)];
-        
+
         return sampleTerrain(stkWorldTerrain, 12, positions).then(function() {
             expect(positions[0].height).toBeDefined();
         });

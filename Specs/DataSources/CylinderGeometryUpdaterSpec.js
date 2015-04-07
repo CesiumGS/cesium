@@ -384,6 +384,11 @@ defineSuite([
         expect(dynamicUpdater._options.topRadius).toEqual(cylinder.topRadius.getValue());
         expect(dynamicUpdater._options.bottomRadius).toEqual(cylinder.bottomRadius.getValue());
 
+        entity.show = false;
+        dynamicUpdater.update(JulianDate.now());
+        expect(primitives.length).toBe(0);
+        entity.show = true;
+
         cylinder.show.setValue(false);
         dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(0);

@@ -126,8 +126,11 @@ define([
      * Clears the collection.
      */
     AssociativeArray.prototype.removeAll = function() {
-        this._hash = {};
-        this._array.length = 0;
+        var array = this._array;
+        if (array.length > 0) {
+            this._hash = {};
+            array.length = 0;
+        }
     };
 
     return AssociativeArray;

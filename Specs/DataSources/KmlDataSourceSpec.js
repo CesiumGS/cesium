@@ -527,6 +527,18 @@ defineSuite([
         });
     });
 
+    it('Feature: visibility works', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Placemark>\
+            <visibility>0</visibility>\
+        </Placemark>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.show).toBe(false);
+        });
+    });
+
     it('Feature: TimeStamp gracefully handles empty fields', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
         <Placemark>\
