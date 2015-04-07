@@ -435,7 +435,7 @@ define([
                 bitNumber -= 2; // south child
             }
 
-            if ((surfaceTile.childTileMask & (1 << bitNumber)) === 0) {
+            if ((tile.parent.data.childTileMask & (1 << bitNumber)) === 0) {
                 surfaceTile.terrainState = TerrainState.FAILED;
             }
         }

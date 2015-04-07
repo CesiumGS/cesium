@@ -470,7 +470,10 @@ define([
                 // - We know this tile to have data available, and we know that at least one child does not.
                 var tooManyLevels = tile.level - surfaceTile.vertexArrayFromTile.level > 4;
                 var childAvailabilityUnknown = !defined(surfaceTile.childTileMask);
-                var isAvailabilityLeaf = (surfaceTile.terrainState === TerrainState.FAILED || surfaceTile.terrainState === TerrainState.UPSAMPLING) && surfaceTile.childTileMask !== 15;
+
+                var isUpsampled = surfaceTile.terrainState === TerrainState.FAILED || surfaceTile.terrainState === TerrainState.UPSAMPLING ||
+                                  (defined(surfaceTile.terrainData) && surfaceTile.terrainData.wasCreatedByUpsampling());
+                var isAvailabilityLeaf = !isUpsampled && surfaceTile.childTileMask !== 15;
                 var mustNotRefine = tooManyLevels || childAvailabilityUnknown || isAvailabilityLeaf;
 
                 if (mustNotRefine) {
