@@ -88,7 +88,6 @@ define([
         var ellipsoid = tilingScheme.ellipsoid;
 
         this._tilesToRender = [];
-        this._tileTraversalQueue = new Queue();
         this._tileLoadQueue = [];
         this._tileReplacementQueue = new TileReplacementQueue();
         this._levelZeroTiles = undefined;
@@ -248,7 +247,7 @@ define([
         this._tileProvider = this._tileProvider && this._tileProvider.destroy();
     };
 
-    var greatGrandChildrenScratch = [];
+    var traversalStack = [];
 
     function selectTilesForRendering(primitive, context, frameState) {
         var debug = primitive._debug;
@@ -289,11 +288,9 @@ define([
         var tileProvider = primitive._tileProvider;
         var occluders = primitive._occluders;
 
-
-        var traversalQueue = primitive._tileTraversalQueue;
-        traversalQueue.clear();
-
         var tile;
+
+        traversalStack.length = 0;
 
         var levelZeroTiles = primitive._levelZeroTiles;
         for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
@@ -301,68 +298,69 @@ define([
             if (tile.needsLoading) {
                 queueTileLoad(primitive, tile);
             } else {
-                visitTile(primitive, tile, tileProvider, occluders, context, frameState);
+                traversalStack.push(tile);
             }
         }
-    }
 
-    function visitTile(primitive, tile, tileProvider, occluders, context, frameState) {
-        primitive._tileReplacementQueue.markTileRendered(tile); // TODO: rename to markTileVisited
+        while (traversalStack.length > 0) {
+            tile = traversalStack.pop();
 
-        // Give the provider a chance to update the tile this frame.
-        tileProvider.visitTileDepthFirst(tile);
+            primitive._tileReplacementQueue.markTileRendered(tile); // TODO: rename to markTileVisited
 
-        if (tile.needsLoading) {
-            // Initially assume this tile is not high priorty for load.
-            tile._highPriorityForLoad = false;
+            // Give the provider a chance to update the tile this frame.
+            tileProvider.visitTileDepthFirst(tile);
 
-            queueTileLoad(primitive, tile);
-        }
+            if (tile.needsLoading) {
+                // Initially assume this tile is not high priorty for load.
+                tile._highPriorityForLoad = false;
 
-        // If the tile is not visible, consider it no more.
-        if (tileProvider.computeTileVisibility(tile, frameState, occluders) === Visibility.NONE) {
-            ++primitive._debug.tilesCulled;
-            return;
-        }
-
-        // Give the provider another chance to update this tile, now that it is known to be visible.
-        tileProvider.visitVisibleTileDepthFirst(tile);
-
-        // Determine if this tile meets our error requirements.
-        tile._distance = tileProvider.computeDistanceToTile(tile, frameState);
-        var sse = screenSpaceError(primitive, context, frameState, tile);
-        if (sse < primitive.maximumScreenSpaceError) {
-            // It does, so render it.
-            tile._highPriorityForLoad = true;
-            addTileToRenderList(primitive, tile);
-        } else {
-            // Tile does not meet error requirements, so render children instead (if possible).
-            var children = tile.children;
-            var childrenRenderable = true;
-            var i, len;
-            for (i = 0, len = children.length; childrenRenderable && i < len; ++i) {
-                childrenRenderable = children[i].renderable;
+                queueTileLoad(primitive, tile);
             }
 
-            if (childrenRenderable) {
-                // Children are renderable, so visit them instead.
-                for (i = 0, len = children.length; i < len; ++i) {
-                    visitTile(primitive, children[i], tileProvider, occluders, context, frameState);
-                }
-            } else {
-                // Children are not renderable, so render this tile even though it doesn't meet
-                // error requirements.
-                for (i = 0, len = children.length; i < len; ++i) {
-                    var child = children[i];
-                    primitive._tileReplacementQueue.markTileRendered(child); // TODO: rename to markTileVisited
-                    if (child.needsLoading) {
-                        queueTileLoad(primitive, child);
-                        child._highPriorityForLoad = true;
-                    }
-                }
+            // If the tile is not visible, consider it no more.
+            if (tileProvider.computeTileVisibility(tile, frameState, occluders) === Visibility.NONE) {
+                ++primitive._debug.tilesCulled;
+                continue;
+            }
 
+            // Give the provider another chance to update this tile, now that it is known to be visible.
+            tileProvider.visitVisibleTileDepthFirst(tile);
+
+            // Determine if this tile meets our error requirements.
+            tile._distance = tileProvider.computeDistanceToTile(tile, frameState);
+            var sse = screenSpaceError(primitive, context, frameState, tile);
+            if (sse < primitive.maximumScreenSpaceError) {
+                // It does, so render it.
                 tile._highPriorityForLoad = true;
                 addTileToRenderList(primitive, tile);
+            } else {
+                // Tile does not meet error requirements, so render children instead (if possible).
+                var children = tile.children;
+                var childrenRenderable = true;
+                for (i = 0, len = children.length; childrenRenderable && i < len; ++i) {
+                    childrenRenderable = children[i].renderable;
+                }
+
+                if (childrenRenderable) {
+                    // Children are renderable, so visit them instead.
+                    for (i = 0, len = children.length; i < len; ++i) {
+                        traversalStack.push(children[i]);
+                    }
+                } else {
+                    // Children are not renderable, so render this tile even though it doesn't meet
+                    // error requirements.
+                    for (i = 0, len = children.length; i < len; ++i) {
+                        var child = children[i];
+                        primitive._tileReplacementQueue.markTileRendered(child); // TODO: rename to markTileVisited
+                        if (child.needsLoading) {
+                            queueTileLoad(primitive, child);
+                            child._highPriorityForLoad = true;
+                        }
+                    }
+
+                    tile._highPriorityForLoad = true;
+                    addTileToRenderList(primitive, tile);
+                }
             }
         }
     }
