@@ -69,12 +69,14 @@ define([
             maxDepth : 0,
             tilesVisited : 0,
             tilesCulled : 0,
+            tilesRefined : 0,
             tilesRendered : 0,
             tilesWaitingForChildren : 0,
 
             lastMaxDepth : -1,
             lastTilesVisited : -1,
             lastTilesCulled : -1,
+            lastTilesRefined : -1,
             lastTilesRendered : -1,
             lastTilesWaitingForChildren : -1,
             lastTilesInLoadQueue : -1,
@@ -267,6 +269,7 @@ define([
         debug.maxDepth = 0;
         debug.tilesVisited = 0;
         debug.tilesCulled = 0;
+        debug.tilesRefined = 0;
         debug.tilesRendered = 0;
         debug.tilesWaitingForChildren = 0;
 
@@ -304,7 +307,7 @@ define([
         }
 
         while (traversalStack.length > 0) {
-            ++primitive._debug.tilesVisited;
+            ++debug.tilesVisited;
 
             tile = traversalStack.pop();
 
@@ -322,7 +325,7 @@ define([
 
             // If the tile is not visible, consider it no more.
             if (tileProvider.computeTileVisibility(tile, frameState, occluders) === Visibility.NONE) {
-                ++primitive._debug.tilesCulled;
+                ++debug.tilesCulled;
                 continue;
             }
 
@@ -345,8 +348,10 @@ define([
                 }
 
                 if (childrenRenderable) {
-                    if (tile.level >= primitive._debug.maxDepth) {
-                        primitive._debug.maxDepth = tile.level + 1;
+                    ++debug.tilesRefined;
+
+                    if (tile.level >= debug.maxDepth) {
+                        debug.maxDepth = tile.level + 1;
                     }
 
                     // Children are renderable, so visit them instead.
@@ -367,7 +372,7 @@ define([
 
                     tile._highPriorityForLoad = true;
                     addTileToRenderList(primitive, tile);
-                    ++primitive._debug.tilesWaitingForChildren;
+                    ++debug.tilesWaitingForChildren;
                 }
             }
         }
@@ -375,17 +380,19 @@ define([
         if (debug.enableDebugOutput) {
             if (debug.tilesVisited !== debug.lastTilesVisited ||
                 debug.tilesRendered !== debug.lastTilesRendered ||
+                debug.tilesRefined !== debug.lastTilesRefined ||
                 debug.tilesCulled !== debug.lastTilesCulled ||
                 debug.maxDepth !== debug.lastMaxDepth ||
                 debug.tilesWaitingForChildren !== debug.lastTilesWaitingForChildren || 
                 primitive._tileLoadQueue.length !== debug.lastTilesInLoadQueue) {
 
                 /*global console*/
-                console.log('Visited ' + debug.tilesVisited + ', Rendered: ' + debug.tilesRendered + ', Culled: ' + debug.tilesCulled + ', Max Depth: ' + debug.maxDepth + ', Waiting for children: ' + debug.tilesWaitingForChildren + ', Loading: ' + primitive._tileLoadQueue.length);
+                console.log('Visited ' + debug.tilesVisited + ', Rendered: ' + debug.tilesRendered + ', Culled: ' + debug.tilesCulled + ', Refined: ' + debug.tilesRefined + ', Max Depth: ' + debug.maxDepth + ', Waiting for children: ' + debug.tilesWaitingForChildren + ', Loading: ' + primitive._tileLoadQueue.length);
 
                 debug.lastTilesVisited = debug.tilesVisited;
                 debug.lastTilesRendered = debug.tilesRendered;
                 debug.lastTilesCulled = debug.tilesCulled;
+                debug.lastTilesRefined = debug.tilesRefined;
                 debug.lastMaxDepth = debug.maxDepth;
                 debug.lastTilesWaitingForChildren = debug.tilesWaitingForChildren;
                 debug.lastTilesInLoadQueue = primitive._tileLoadQueue.length;

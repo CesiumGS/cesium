@@ -468,9 +468,22 @@ define([
                 // - The closest ancestor tile that is actually loaded is > 4 levels away.
                 // - We don't know if data is available for this tile's children.
                 // - We know this tile to have data available, and we know that at least one child does not.
-                var mustNotRefine = tile.level - surfaceTile.vertexArrayFromTile.level > 4 ||
-                                    !defined(surfaceTile.childTileMask) ||
-                                    ((surfaceTile.terrainState === TerrainState.FAILED || surfaceTile.terrainState === TerrainState.UPSAMPLING) && surfaceTile.childTileMask !== 15);
+                var tooManyLevels = tile.level - surfaceTile.vertexArrayFromTile.level > 4;
+                var childAvailabilityUnknown = !defined(surfaceTile.childTileMask);
+                var isAvailabilityLeaf = (surfaceTile.terrainState === TerrainState.FAILED || surfaceTile.terrainState === TerrainState.UPSAMPLING) && surfaceTile.childTileMask !== 15;
+                var mustNotRefine = tooManyLevels || childAvailabilityUnknown || isAvailabilityLeaf;
+
+                if (mustNotRefine) {
+                    var reason;
+                    if (tooManyLevels) {
+                        reason = '(too many levels)';
+                    } else if (childAvailabilityUnknown) {
+                        reason = '(child availability unknown)';
+                    } else if (isAvailabilityLeaf) {
+                        reason = '(availability leaf)';
+                    }
+                    console.log('Must not refine past L' + tile.level + 'X' + tile.x + 'Y' + tile.y + ' ' + reason);
+                }
 
                 var childrenRenderable = !mustNotRefine;
 
