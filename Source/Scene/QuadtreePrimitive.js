@@ -64,7 +64,7 @@ define([
         this._tileProvider.quadtree = this;
 
         this._debug = {
-            enableDebugOutput : false,
+            enableDebugOutput : true,
 
             maxDepth : 0,
             tilesVisited : 0,
@@ -77,6 +77,7 @@ define([
             lastTilesCulled : -1,
             lastTilesRendered : -1,
             lastTilesWaitingForChildren : -1,
+            lastTilesInLoadQueue : -1,
 
             suspendLodUpdate : false,
 
@@ -303,6 +304,8 @@ define([
         }
 
         while (traversalStack.length > 0) {
+            ++primitive._debug.tilesVisited;
+
             tile = traversalStack.pop();
 
             primitive._tileReplacementQueue.markTileRendered(tile); // TODO: rename to markTileVisited
@@ -342,6 +345,10 @@ define([
                 }
 
                 if (childrenRenderable) {
+                    if (tile.level >= primitive._debug.maxDepth) {
+                        primitive._debug.maxDepth = tile.level + 1;
+                    }
+
                     // Children are renderable, so visit them instead.
                     for (i = 0, len = children.length; i < len; ++i) {
                         traversalStack.push(children[i]);
@@ -360,7 +367,28 @@ define([
 
                     tile._highPriorityForLoad = true;
                     addTileToRenderList(primitive, tile);
+                    ++primitive._debug.tilesWaitingForChildren;
                 }
+            }
+        }
+
+        if (debug.enableDebugOutput) {
+            if (debug.tilesVisited !== debug.lastTilesVisited ||
+                debug.tilesRendered !== debug.lastTilesRendered ||
+                debug.tilesCulled !== debug.lastTilesCulled ||
+                debug.maxDepth !== debug.lastMaxDepth ||
+                debug.tilesWaitingForChildren !== debug.lastTilesWaitingForChildren || 
+                primitive._tileLoadQueue.length !== debug.lastTilesInLoadQueue) {
+
+                /*global console*/
+                console.log('Visited ' + debug.tilesVisited + ', Rendered: ' + debug.tilesRendered + ', Culled: ' + debug.tilesCulled + ', Max Depth: ' + debug.maxDepth + ', Waiting for children: ' + debug.tilesWaitingForChildren + ', Loading: ' + primitive._tileLoadQueue.length);
+
+                debug.lastTilesVisited = debug.tilesVisited;
+                debug.lastTilesRendered = debug.tilesRendered;
+                debug.lastTilesCulled = debug.tilesCulled;
+                debug.lastMaxDepth = debug.maxDepth;
+                debug.lastTilesWaitingForChildren = debug.tilesWaitingForChildren;
+                debug.lastTilesInLoadQueue = primitive._tileLoadQueue.length;
             }
         }
     }

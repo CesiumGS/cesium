@@ -172,6 +172,8 @@ define([
          * @type {Cartesian4}
          */
         this.textureCoordinateSubset = new Cartesian4(0.0, 0.0, 1.0, 1.0);
+
+        this.childTileMask = undefined;
     };
 
     defineProperties(GlobeSurfaceTile.prototype, {
@@ -408,11 +410,34 @@ define([
             surfaceTile = tile.data = new GlobeSurfaceTile();
         }
 
+        var childLevel = tile.level + 1;
+        var x = tile.x;
+        var y = tile.y;
+        var nw = terrainProvider.getTileDataAvailable(2 * x, 2 * y, childLevel);
+        var ne = terrainProvider.getTileDataAvailable(2 * x + 1, 2 * y, childLevel);
+        var sw = terrainProvider.getTileDataAvailable(2 * x, 2 * y + 1, childLevel);
+        var se = terrainProvider.getTileDataAvailable(2 * x + 1, 2 * y + 1, childLevel);
+
+        if (defined(nw) && defined(ne) && defined(sw) && defined(se)) {
+            surfaceTile.childTileMask = nw + (ne << 1) + (sw << 2) + (se << 3);
+        } else {
+            surfaceTile.childTileMask = undefined;
+        }
+
         // If this tile is not available, start in the INVALID state so we'll upsample without
         // wasting time trying to load first.
-        var tileDataAvailable = terrainProvider.getTileDataAvailable(tile.x, tile.y, tile.level);
-        if (defined(tileDataAvailable) && !tileDataAvailable) {
-            surfaceTile.terrainState = TerrainState.INVALID;
+        if (defined(tile.parent) && defined(tile.parent.data) && defined(tile.parent.data.childTileMask)) {
+            var bitNumber = 2; // northwest child
+            if (tile.x !== tile.parent.x * 2) {
+                ++bitNumber; // east child
+            }
+            if (tile.y !== tile.parent.y * 2) {
+                bitNumber -= 2; // south child
+            }
+
+            if ((surfaceTile.childTileMask & (1 << bitNumber)) === 0) {
+                surfaceTile.terrainState = TerrainState.FAILED;
+            }
         }
 
         // Map imagery tiles to this terrain tile
@@ -476,7 +501,7 @@ define([
             createResources(tile, context, terrainProvider);
         }
 
-        if (surfaceTile.terrainState === TerrainState.FAILED || surfaceTile.terrainState === TerrainState.INVALID) {
+        if (surfaceTile.terrainState === TerrainState.FAILED) {
             upsample(tile, terrainProvider);
         }
     }

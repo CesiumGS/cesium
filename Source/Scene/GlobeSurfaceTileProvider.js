@@ -30,7 +30,8 @@ define([
         './ImageryLayer',
         './ImageryState',
         './QuadtreeTileLoadState',
-        './SceneMode'
+        './SceneMode',
+        './TerrainState'
     ], function(
         BoundingSphere,
         Cartesian2,
@@ -62,7 +63,8 @@ define([
         ImageryLayer,
         ImageryState,
         QuadtreeTileLoadState,
-        SceneMode) {
+        SceneMode,
+        TerrainState) {
     "use strict";
 
     /**
@@ -462,10 +464,15 @@ define([
                 surfaceTile.textureCoordinateSubset.z = (tileRectangle.east - vaRectangle.west) / (vaRectangle.east - vaRectangle.west);
                 surfaceTile.textureCoordinateSubset.w = (tileRectangle.north - vaRectangle.south) / (vaRectangle.north - vaRectangle.south);
 
-                // Limit how many levels we can skip without real data.  If the vertex array came from an ancestor 4+
-                // generations back, we don't want to refine to the children unless they actually have data.
-                // (i.e. don't use this data for this tile's children, too)
-                var childrenRenderable = tile.level - surfaceTile.vertexArrayFromTile.level <= 4;
+                // We must not refine past this tile without loading it when any of the following are true:
+                // - The closest ancestor tile that is actually loaded is > 4 levels away.
+                // - We don't know if data is available for this tile's children.
+                // - We know this tile to have data available, and we know that at least one child does not.
+                var mustNotRefine = tile.level - surfaceTile.vertexArrayFromTile.level > 4 ||
+                                    !defined(surfaceTile.childTileMask) ||
+                                    ((surfaceTile.terrainState === TerrainState.FAILED || surfaceTile.terrainState === TerrainState.UPSAMPLING) && surfaceTile.childTileMask !== 15);
+
+                var childrenRenderable = !mustNotRefine;
 
                 var children = tile.children;
                 for (var i = 0; i < children.length; ++i) {
