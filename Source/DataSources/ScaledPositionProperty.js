@@ -14,8 +14,7 @@ define([
         Ellipsoid,
         Event,
         ReferenceFrame,
-        Property
-        ) {
+        Property) {
     "use strict";
 
     /**

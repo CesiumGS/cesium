@@ -4,7 +4,7 @@ defineSuite([
     ], function(
         createGuid) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('creates GUIDs', function() {
         var isGuidRegex = /^(\{){0,1}[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}(\}){0,1}$/;
@@ -15,9 +15,9 @@ defineSuite([
         var guid3 = createGuid();
 
         //Make sure they are all unique
-        expect(guid1).toNotEqual(guid2);
-        expect(guid1).toNotEqual(guid3);
-        expect(guid2).toNotEqual(guid3);
+        expect(guid1).not.toEqual(guid2);
+        expect(guid1).not.toEqual(guid3);
+        expect(guid2).not.toEqual(guid3);
 
         //Make sure they are all properly formatted
         expect(isGuidRegex.test(guid1)).toEqual(true);

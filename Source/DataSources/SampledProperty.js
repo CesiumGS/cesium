@@ -377,9 +377,14 @@ define([
         }
         //>>includeEnd('debug');
 
+        var times = this._times;
+        var timesLength = times.length;
+        if (timesLength === 0) {
+            return undefined;
+        }
+
         var timeout;
         var innerType = this._innerType;
-        var times = this._times;
         var values = this._values;
         var index = binarySearch(times, time, JulianDate.compare);
 
@@ -393,20 +398,20 @@ define([
                     return undefined;
                 }
                 if (this._backwardExtrapolationType === ExtrapolationType.HOLD) {
-                    return innerType.unpack(this._values, 0, result);
+                    return innerType.unpack(values, 0, result);
                 }
             }
 
-            if (index >= times.length) {
-                index = times.length - 1;
+            if (index >= timesLength) {
+                index = timesLength - 1;
                 var endTime = times[index];
                 timeout = this._forwardExtrapolationDuration;
                 if (this._forwardExtrapolationType === ExtrapolationType.NONE || (timeout !== 0 && JulianDate.secondsDifference(time, endTime) > timeout)) {
                     return undefined;
                 }
                 if (this._forwardExtrapolationType === ExtrapolationType.HOLD) {
-                    index = times.length - 1;
-                    return innerType.unpack(this._values, index * innerType.packedLength, result);
+                    index = timesLength - 1;
+                    return innerType.unpack(values, index * innerType.packedLength, result);
                 }
             }
 
@@ -418,7 +423,7 @@ define([
 
             if (this._updateTableLength) {
                 this._updateTableLength = false;
-                var numberOfPoints = Math.min(interpolationAlgorithm.getRequiredDataPoints(this._interpolationDegree, inputOrder), times.length);
+                var numberOfPoints = Math.min(interpolationAlgorithm.getRequiredDataPoints(this._interpolationDegree, inputOrder), timesLength);
                 if (numberOfPoints !== this._numberOfPoints) {
                     this._numberOfPoints = numberOfPoints;
                     xTable.length = numberOfPoints;
@@ -432,7 +437,7 @@ define([
             }
 
             var firstIndex = 0;
-            var lastIndex = times.length - 1;
+            var lastIndex = timesLength - 1;
             var pointsInCollection = lastIndex - firstIndex + 1;
 
             if (pointsInCollection < degree + 1) {
@@ -491,7 +496,7 @@ define([
             }
             return innerType.unpackInterpolationResult(interpolationResult, values, firstIndex, lastIndex, result);
         }
-        return innerType.unpack(this._values, index * this._packedLength, result);
+        return innerType.unpack(values, index * this._packedLength, result);
     };
 
     /**

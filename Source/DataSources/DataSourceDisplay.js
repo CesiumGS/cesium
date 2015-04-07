@@ -96,8 +96,6 @@ define([
         }
 
         var defaultDataSource = new CustomDataSource();
-        var visualizers = this._visualizersCallback(this._scene, defaultDataSource);
-        defaultDataSource._visualizers = visualizers;
         this._onDataSourceAdded(undefined, defaultDataSource);
         this._defaultDataSource = defaultDataSource;
     };

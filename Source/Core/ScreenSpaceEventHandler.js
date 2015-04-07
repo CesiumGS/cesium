@@ -6,6 +6,7 @@ define([
         './defined',
         './destroyObject',
         './DeveloperError',
+        './FeatureDetection',
         './KeyboardEventModifier',
         './ScreenSpaceEventType'
     ], function(
@@ -15,6 +16,7 @@ define([
         defined,
         destroyObject,
         DeveloperError,
+        FeatureDetection,
         KeyboardEventModifier,
         ScreenSpaceEventType) {
     "use strict";
@@ -79,7 +81,7 @@ define([
         // this is affected by the existence of an undocumented disableRootEvents property on element.
         var alternateElement = !defined(element.disableRootEvents) ? document : element;
 
-        if (defined(window.PointerEvent)) {
+        if (FeatureDetection.supportsPointerEvents()) {
             registerListener(screenSpaceEventHandler, 'pointerdown', element, handlePointerDown);
             registerListener(screenSpaceEventHandler, 'pointerup', element, handlePointerUp);
             registerListener(screenSpaceEventHandler, 'pointermove', element, handlePointerMove);

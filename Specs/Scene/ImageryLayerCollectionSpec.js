@@ -13,7 +13,7 @@ defineSuite([
         'Scene/ImageryLayerFeatureInfo',
         'Scene/ImageryProvider',
         'Specs/createScene',
-        'Specs/waitsForPromise',
+        'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
         ImageryLayerCollection,
@@ -29,10 +29,10 @@ defineSuite([
         ImageryLayerFeatureInfo,
         ImageryProvider,
         createScene,
-        waitsForPromise,
+        pollToPromise,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var fakeProvider = {
             isReady : function() { return false; }
@@ -293,17 +293,17 @@ defineSuite([
         });
 
         /**
-         * Repeatedly calls update until the load queue is empty.  You must wrap any code to follow
-         * this in a "runs" function.
+         * Repeatedly calls update until the load queue is empty.  Returns a promise that resolves
+         * once the load queue is empty.
          */
         function updateUntilDone(globe) {
             // update until the load queue is empty.
-            waitsFor(function() {
+            return pollToPromise(function() {
                 globe._surface._debug.enableDebugOutput = true;
                 var commandList = [];
                 globe.update(scene.context, scene.frameState, commandList);
                 return globe._surface.tileProvider.ready && globe._surface._tileLoadQueue.length === 0 && globe._surface._debug.tilesWaitingForChildren === 0;
-            }, 'updating to complete');
+            });
         }
 
         it('returns undefined when pick ray does not intersect surface', function() {
@@ -343,11 +343,7 @@ defineSuite([
 
             globe.imageryLayers.addImageryProvider(provider);
 
-            updateUntilDone(globe);
-
-            var features;
-
-            runs(function() {
+            return updateUntilDone(globe).then(function() {
                 var ellipsoid = Ellipsoid.WGS84;
                 camera.lookAt(new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0), new Cartesian3(0.0, 0.0, 100.0));
 
@@ -380,11 +376,7 @@ defineSuite([
 
             globe.imageryLayers.addImageryProvider(provider);
 
-            updateUntilDone(globe);
-
-            var features;
-
-            runs(function() {
+            return updateUntilDone(globe).then(function() {
                 var ellipsoid = Ellipsoid.WGS84;
                 camera.lookAt(new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0), new Cartesian3(0.0, 0.0, 100.0));
 
@@ -424,9 +416,7 @@ defineSuite([
 
             globe.imageryLayers.addImageryProvider(provider);
 
-            updateUntilDone(globe);
-
-            runs(function() {
+            return updateUntilDone(globe).then(function() {
                 var ellipsoid = Ellipsoid.WGS84;
                 camera.lookAt(new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0), new Cartesian3(0.0, 0.0, 100.0));
                 camera.lookAtTransform(Matrix4.IDENTITY);
@@ -436,7 +426,7 @@ defineSuite([
 
                 expect(featuresPromise).toBeDefined();
 
-                waitsForPromise(featuresPromise, function(features) {
+                return featuresPromise.then(function(features) {
                     expect(features.length).toBe(1);
                     expect(features[0].name).toEqual('Foo');
                     expect(features[0].description).toContain('Foo!');
@@ -503,11 +493,7 @@ defineSuite([
 
             globe.imageryLayers.addImageryProvider(provider2);
 
-            updateUntilDone(globe);
-
-            var features;
-
-            runs(function() {
+            return updateUntilDone(globe).then(function() {
                 var ellipsoid = Ellipsoid.WGS84;
                 camera.lookAt(new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0), new Cartesian3(0.0, 0.0, 100.0));
                 camera.lookAtTransform(Matrix4.IDENTITY);
@@ -517,7 +503,7 @@ defineSuite([
 
                 expect(featuresPromise).toBeDefined();
 
-                waitsForPromise(featuresPromise, function(features) {
+                return featuresPromise.then(function(features) {
                     expect(features.length).toBe(2);
                     expect(features[0].name).toEqual('Bar');
                     expect(features[0].description).toContain('Bar!');
