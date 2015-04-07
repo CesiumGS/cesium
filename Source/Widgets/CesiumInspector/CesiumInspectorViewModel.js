@@ -362,12 +362,18 @@ define([
         });
 
         this._incrementGlobeDepthFrustum = createCommand(function() {
-            ++that.globeDepthFrustum;
+            var numberOfFrustums = that._scene.debugFrustumStatistics.numberOfFrustums;
+            var next = that.globeDepthFrustum + 1;
+            that.globeDepthFrustum = Math.min(next, numberOfFrustums);
+            that.scene.debugShowGlobeDepthFrustum = that.globeDepthFrustum;
             return true;
         });
 
         this._decrementGlobeDepthFrustum = createCommand(function() {
-            --that.globeDepthFrustum;
+            var numberOfFrustums = that._scene.debugFrustumStatistics.numberOfFrustums;
+            var next = that.globeDepthFrustum - 1;
+            that.globeDepthFrustum = Math.max(next, 1);
+            that.scene.debugShowGlobeDepthFrustum = that.globeDepthFrustum;
             return true;
         });
 

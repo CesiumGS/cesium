@@ -449,7 +449,7 @@ define([
          */
         this.debugShowGlobeDepth = false;
 
-        this._debugShowGlobeDepthFrustum = 1;
+        this.debugShowGlobeDepthFrustum = 1;
 
         /**
          * When <code>true</code>, enables Fast Approximate Anti-aliasing even when order independent translucency
@@ -911,6 +911,7 @@ define([
             var cf = scene._debugFrustumStatistics.commandsInFrustums;
             cf[command.debugOverlappingFrustums] = defined(cf[command.debugOverlappingFrustums]) ? cf[command.debugOverlappingFrustums] + 1 : 1;
             ++scene._debugFrustumStatistics.totalCommands;
+            scene._debugFrustumStatistics.numberOfFrustums = length;
         }
     }
 
@@ -930,7 +931,8 @@ define([
         if (scene.debugShowFrustums || scene.debugShowGlobeDepth) {
             scene._debugFrustumStatistics = {
                 totalCommands : 0,
-                commandsInFrustums : {}
+                numberOfFrustums : 0,
+                commandsInFrustums : []
             };
         }
 
@@ -1453,8 +1455,6 @@ define([
             scene._globeDepth.executeCopyDepth(context, passState);
 
             if (scene.debugShowGlobeDepth) {
-                destroyGlobeDepthObjects();
-
                 var orignal = passState.framebuffer;
                 updateDebugGlobeDepth(scene, context, us, index);
                 passState.framebuffer = debugGlobeDepthFramebuffers[index];
@@ -1484,7 +1484,7 @@ define([
         }
 
         if (scene.debugShowGlobeDepth) {
-            executeDebugGlobeDepth(scene, context, passState, scene._debugShowGlobeDepthFrustum - 1);
+            executeDebugGlobeDepth(scene, context, passState, scene.debugShowGlobeDepthFrustum - 1);
         }
 
         if (useOIT) {
