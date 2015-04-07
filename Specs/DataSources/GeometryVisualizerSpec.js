@@ -485,4 +485,67 @@ defineSuite([
 
         visualizer.destroy();
     });
+
+    it('Can remove and entity and then add a new new instance with the same id.', function() {
+        var objects = new EntityCollection();
+        var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, objects);
+
+        var entity = new Entity({
+            id : 'test',
+            position : Cartesian3.fromDegrees(0, 0, 0),
+            ellipse : {
+                semiMajorAxis : 2,
+                semiMinorAxis : 1,
+                material : Color.ORANGE
+            }
+        });
+        objects.add(entity);
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = visualizer.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            objects.remove(entity);
+
+            var entity2 = new Entity({
+                id : 'test',
+                position : Cartesian3.fromDegrees(0, 0, 0),
+                ellipse : {
+                    semiMajorAxis : 2,
+                    semiMinorAxis : 1,
+                    material : Color.BLUE
+                }
+            });
+            objects.add(entity2);
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                var isUpdated = visualizer.update(time);
+                scene.render(time);
+                return isUpdated;
+            }).then(function() {
+
+                var primitive = scene.primitives.get(0);
+                var attributes = primitive.getGeometryInstanceAttributes(entity2);
+                expect(attributes).toBeDefined();
+                expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
+                expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(Color.BLUE));
+                expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.perInstanceColorAppearanceType);
+
+                objects.remove(entity);
+
+                return pollToPromise(function() {
+                    scene.initializeFrame();
+                    expect(visualizer.update(time)).toBe(true);
+                    scene.render(time);
+                    return scene.primitives.length === 0;
+                }).then(function() {
+                    visualizer.destroy();
+                });
+            });
+        });
+    });
+
 }, 'WebGL');

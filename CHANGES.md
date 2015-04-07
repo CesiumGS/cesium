@@ -1,7 +1,14 @@
 Change Log
 ==========
 
-### 1.8 -2015-04-01
+### 1.9 - 2015-05-01
+* Breaking changes
+  *
+* Deprecated
+  *
+* An exception is now thrown if `Primitive.modelMatrix` is not the identity matrix when in in 2D or Columbus View.
+
+### 1.8 - 2015-04-01
 
 * Breaking changes
   * Removed the `eye`, `target`, and `up` parameters to `Camera.lookAt` which were deprecated in Cesium 1.6. Use the `target` and `offset`.
@@ -21,6 +28,12 @@ Change Log
 * Fixed `PointerEvent` detection so that it works with older implementations of the specification. This also fixes lack of mouse handling when detection failed, such as when using Cesium in the Windows `WebBrowser` control.
 * Fixed an issue with transparency. [#2572](https://github.com/AnalyticalGraphicsInc/cesium/issues/2572)
 * Fixed improper handling of null values when loading `GeoJSON` data.
+* Added support for automatic raster feature picking from `ArcGisMapServerImagerProvider`.
+* Added the ability to specify the desired tiling scheme, rectangle, and width and height of tiles to the `ArcGisMapServerImagerProvider` constructor.
+* Added the ability to access dynamic ArcGIS MapServer layers by specifying the `layers` parameter to the `ArcGisMapServerImagerProvider` constructor.
+* Fixed a bug that could cause incorrect rendering of an `ArcGisMapServerImageProvider` with a "singleFusedMapCache" in the geographic projection (EPSG:4326).
+* Added new construction options to `CesiumWidget` and `Viewer`, for `skyBox`, `skyAtmosphere`, and `globe`.
+* Fixed a bug that prevented Cesium from working in browser configurations that explicitly disabled localStorage, such as Safari's private browsing mode.
 * Cesium is now tested using Jasmine 2.2.0.
 
 ### 1.7.1 - 2015-03-06

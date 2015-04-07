@@ -42,7 +42,7 @@ define([
      *    modelMatrix : instance.modelMatrix
      * }));
      */
-    function createTangentSpaceDebugPrimitive(options) {
+    var createTangentSpaceDebugPrimitive = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var instances = [];
         var geometry = options.geometry;
@@ -95,6 +95,7 @@ define([
 
         if (instances.length > 0) {
             return new Primitive({
+                asynchronous : false,
                 geometryInstances : instances,
                 appearance : new PerInstanceColorAppearance({
                     flat : true,
@@ -104,7 +105,7 @@ define([
         }
 
         return undefined;
-    }
+    };
 
     return createTangentSpaceDebugPrimitive;
 });
