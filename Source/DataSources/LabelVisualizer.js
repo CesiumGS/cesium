@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -21,6 +22,7 @@ define([
         Cartesian2,
         Cartesian3,
         Color,
+        defaultValue,
         defined,
         destroyObject,
         DeveloperError,
@@ -89,7 +91,7 @@ define([
 
         this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
         this._cache = {};
-        this.useBillboardCollection = useBillboardCollection;
+        this.useBillboardCollection = defaultValue(useBillboardCollection, true);
     };
 
     /**
