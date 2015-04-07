@@ -109,6 +109,25 @@ define([
         globeDepth.appendChild(gCheckbox);
         globeDepth.appendChild(document.createTextNode('Show globe depth'));
 
+        var globeDepthFrustum = document.createElement('div');
+        globeDepth.appendChild(globeDepthFrustum);
+        var gMinusButton = document.createElement('input');
+        gMinusButton.type = 'button';
+        gMinusButton.value = '-';
+        gMinusButton.className = 'cesium-cesiumInspector-pickButton';
+        gMinusButton.setAttribute('data-bind', 'click: decrementGlobeDepthFrustum');
+        var globeDepthFrustumNumber = document.createElement('span');
+        globeDepthFrustumNumber.setAttribute('data-bind', 'text: globeDepthFrustum');
+        var gPlusButton = document.createElement('input');
+        gPlusButton.type = 'button';
+        gPlusButton.value = '+';
+        gPlusButton.className = 'cesium-cesiumInspector-pickButton';
+        gPlusButton.setAttribute('data-bind', 'click: incrementGlobeDepthFrustum');
+        globeDepthFrustum.appendChild(document.createTextNode('Frustum:'));
+        globeDepthFrustum.appendChild(gMinusButton);
+        globeDepthFrustum.appendChild(globeDepthFrustumNumber);
+        globeDepthFrustum.appendChild(gPlusButton);
+
         // Primitives
         var prim = document.createElement('div');
         prim.className = 'cesium-cesiumInspector-sectionHeader';

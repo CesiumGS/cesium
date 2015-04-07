@@ -159,6 +159,13 @@ define([
         this.globeDepth = false;
 
         /**
+         * Gets or sets the index of the globe depth frustum to display.  This property is observable.
+         * @type {Number}
+         * @default 1
+         */
+        this.globeDepthFrustum = 1;
+
+        /**
          * Gets or sets the suspend updates state.  This property is observable.
          * @type {Boolean}
          * @default false
@@ -266,7 +273,7 @@ define([
         knockout.track(this, ['filterTile', 'suspendUpdates', 'dropDownVisible', 'frustums',
                               'frustumStatisticText', 'pickTileActive', 'pickPrimitiveActive', 'hasPickedPrimitive',
                               'hasPickedTile', 'tileText', 'generalVisible', 'generalSwitchText',
-                              'primitivesVisible', 'primitivesSwitchText', 'terrainVisible', 'terrainSwitchText']);
+                              'primitivesVisible', 'primitivesSwitchText', 'terrainVisible', 'terrainSwitchText', 'globeDepthFrustum']);
 
         this._toggleDropDown = createCommand(function() {
             that.dropDownVisible = !that.dropDownVisible;
@@ -351,6 +358,16 @@ define([
 
         this._showGlobeDepth = createCommand(function() {
             that._scene.debugShowGlobeDepth = that.globeDepth;
+            return true;
+        });
+
+        this._incrementGlobeDepthFrustum = createCommand(function() {
+            ++that.globeDepthFrustum;
+            return true;
+        });
+
+        this._decrementGlobeDepthFrustum = createCommand(function() {
+            --that.globeDepthFrustum;
             return true;
         });
 
@@ -583,6 +600,30 @@ define([
         showGlobeDepth : {
             get : function() {
                 return this._showGlobeDepth;
+            }
+        },
+
+        /**
+         * Gets the command to increment the globe depth frustum index to be shown
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
+        incrementGlobeDepthFrustum : {
+            get : function() {
+                return this._incrementGlobeDepthFrustum;
+            }
+        },
+
+        /**
+         * Gets the command to decrement the globe depth frustum index to be shown
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
+        decrementGlobeDepthFrustum : {
+            get : function() {
+                return this._decrementGlobeDepthFrustum;
             }
         },
 
