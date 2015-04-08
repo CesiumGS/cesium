@@ -90,7 +90,8 @@ define([
     var attributeLocations = {
         positionHigh : 0,
         positionLow : 1,
-        normal : 2
+        normal : 2,
+        extrude : 3
     };
 
     function getSurfaceDelta(ellipsoid, granularity) {
@@ -163,6 +164,7 @@ define([
 
         var vbPositions = new Float32Array(numVertices * 3 * 2);
         var vbNormals = new Float32Array(numVertices * 3);
+        var vbExtrude = new Float32Array(numVertices);
 
         var position;
         var normal;
@@ -170,6 +172,7 @@ define([
 
         var index = 0;
         var normalIndex = 0;
+        var extrudeIndex = 0;
 
         for (i = 0; i < numBottomCapVertices * 3; i += 3) {
             position = Cartesian3.unpack(bottomPositions, i, scratchPosition);
@@ -182,9 +185,12 @@ define([
             EncodedCartesian3.writeElements(position, vbPositions, index + 6);
             index += 12;
 
-            Cartesian3.pack(Cartesian3.ZERO, vbNormals, normalIndex);
+            Cartesian3.pack(normal, vbNormals, normalIndex);
             Cartesian3.pack(normal, vbNormals, normalIndex + 3);
             normalIndex += 6;
+
+            vbExtrude[extrudeIndex++] = 0.0;
+            vbExtrude[extrudeIndex++] = 1.0;
         }
 
         var numWalls = walls.length;
@@ -208,12 +214,17 @@ define([
                 index += 6;
 
                 Cartesian3.pack(normal, vbNormals, normalIndex);
-                Cartesian3.pack(Cartesian3.ZERO, vbNormals, normalIndex + wallLength);
+                Cartesian3.pack(normal, vbNormals, normalIndex + wallLength);
                 normalIndex += 3;
+
+                vbExtrude[extrudeIndex] = 1.0;
+                vbExtrude[extrudeIndex + wallLength / 3] = 0.0;
+                extrudeIndex += 1;
             }
 
             index += wallLength * 2;
             normalIndex += wallLength;
+            extrudeIndex += wallLength / 3;
         }
 
         var numIndices = numCapIndices + numWallIndices;
@@ -258,6 +269,7 @@ define([
 
         var positionBuffer = context.createVertexBuffer(vbPositions, BufferUsage.STATIC_DRAW);
         var normalBuffer = context.createVertexBuffer(vbNormals, BufferUsage.STATIC_DRAW);
+        var extrudeBuffer = context.createVertexBuffer(vbExtrude, BufferUsage.STATIC_DRAW);
 
         var indexDatatype = (ibIndices.BYTES_PER_ELEMENT === 2) ?  IndexDatatype.UNSIGNED_SHORT : IndexDatatype.UNSIGNED_INT;
         var indexBuffer = context.createIndexBuffer(ibIndices, BufferUsage.STATIC_DRAW, indexDatatype);
@@ -280,6 +292,11 @@ define([
             index                  : attributeLocations.normal,
             vertexBuffer           : normalBuffer,
             componentsPerAttribute : 3,
+            componentDatatype      : ComponentDatatype.FLOAT
+        },{
+            index                  : attributeLocations.extrude,
+            vertexBuffer           : extrudeBuffer,
+            componentsPerAttribute : 1,
             componentDatatype      : ComponentDatatype.FLOAT
         }];
 
@@ -386,10 +403,11 @@ define([
         if (this.debugVolume && !defined(this._debugVolumeCommand)) {
             var pauseRS = context.createRenderState({
                 cull : {
-                    enabled : false
+                    //enabled : true,
+                    //face : CullFace.BACK
                 },
                 depthTest : {
-                    enabled : true
+                    //enabled : true
                 },
                 depthMask : false,
                 blending : BlendingState.ALPHA_BLEND
