@@ -117,7 +117,7 @@ define([
         gMinusButton.className = 'cesium-cesiumInspector-pickButton';
         gMinusButton.setAttribute('data-bind', 'click: decrementGlobeDepthFrustum');
         var globeDepthFrustumNumber = document.createElement('span');
-        globeDepthFrustumNumber.setAttribute('data-bind', 'text: globeDepthFrustum');
+        globeDepthFrustumNumber.setAttribute('data-bind', 'text: globeDepthFrustumText');
         var gPlusButton = document.createElement('input');
         gPlusButton.type = 'button';
         gPlusButton.value = '+';

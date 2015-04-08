@@ -62,6 +62,12 @@ define([
 
     var bc = new Color(0.15, 0.15, 0.15, 0.75);
 
+    function boundGlobeDepthFrustum(lower, upper, proposed) {
+        var bounded = Math.min(proposed, upper);
+        bounded = Math.max(bounded, lower);
+        return bounded;
+    }
+
     /**
      * The view model for {@link CesiumInspector}.
      * @alias CesiumInspectorViewModel
@@ -164,6 +170,14 @@ define([
          * @default 1
          */
         this.globeDepthFrustum = 1;
+        this._numberOfFrustums = 1;
+
+        /**
+         * Gets or sets the index of the globe depth frustum text.  This property is observable.
+         * @type {String}
+         * @default '1 of 1'
+         */
+        this.globeDepthFrustumText = '1 of 1';
 
         /**
          * Gets or sets the suspend updates state.  This property is observable.
@@ -273,7 +287,7 @@ define([
         knockout.track(this, ['filterTile', 'suspendUpdates', 'dropDownVisible', 'frustums',
                               'frustumStatisticText', 'pickTileActive', 'pickPrimitiveActive', 'hasPickedPrimitive',
                               'hasPickedTile', 'tileText', 'generalVisible', 'generalSwitchText',
-                              'primitivesVisible', 'primitivesSwitchText', 'terrainVisible', 'terrainSwitchText', 'globeDepthFrustum']);
+                              'primitivesVisible', 'primitivesSwitchText', 'terrainVisible', 'terrainSwitchText', 'globeDepthFrustumText']);
 
         this._toggleDropDown = createCommand(function() {
             that.dropDownVisible = !that.dropDownVisible;
@@ -362,17 +376,15 @@ define([
         });
 
         this._incrementGlobeDepthFrustum = createCommand(function() {
-            var numberOfFrustums = that._scene.debugFrustumStatistics.numberOfFrustums;
             var next = that.globeDepthFrustum + 1;
-            that.globeDepthFrustum = Math.min(next, numberOfFrustums);
+            that.globeDepthFrustum = boundGlobeDepthFrustum(1, that._numberOfFrustums, next);
             that.scene.debugShowGlobeDepthFrustum = that.globeDepthFrustum;
             return true;
         });
 
         this._decrementGlobeDepthFrustum = createCommand(function() {
-            var numberOfFrustums = that._scene.debugFrustumStatistics.numberOfFrustums;
             var next = that.globeDepthFrustum - 1;
-            that.globeDepthFrustum = Math.max(next, 1);
+            that.globeDepthFrustum = boundGlobeDepthFrustum(1, that._numberOfFrustums, next);
             that.scene.debugShowGlobeDepthFrustum = that.globeDepthFrustum;
             return true;
         });
@@ -888,6 +900,17 @@ define([
                 return function() {
                     if (that.frustums) {
                         that.frustumStatisticText = frustumStatsToString(that._scene.debugFrustumStatistics);
+                    }
+                    if (that.globeDepth) {
+                        // Determine the number of frustums being used.
+                        var numberOfFrustums = that._scene._frustumCommandsList.length;
+                        that._numberOfFrustums = numberOfFrustums;
+                        // Bound the frustum to be displayed.
+                        var globeDepthFrustum = boundGlobeDepthFrustum(1, numberOfFrustums, that.globeDepthFrustum);
+                        that.globeDepthFrustum = globeDepthFrustum;
+                        that.scene.debugShowGlobeDepthFrustum = globeDepthFrustum;
+                        // Update the displayed text.
+                        that.globeDepthFrustumText = that.globeDepthFrustum + ' of ' + numberOfFrustums;
                     }
                     if (that.performance) {
                         that._performanceDisplay.update();

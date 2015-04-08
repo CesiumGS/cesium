@@ -874,7 +874,7 @@ define([
     }
 
     function insertIntoBin(scene, command, distance) {
-        if (scene.debugShowFrustums || scene.debugShowGlobeDepth) {
+        if (scene.debugShowFrustums) {
             command.debugOverlappingFrustums = 0;
         }
 
@@ -898,7 +898,7 @@ define([
             var index = frustumCommands.indices[pass]++;
             frustumCommands.commands[pass][index] = command;
 
-            if (scene.debugShowFrustums || scene.debugShowGlobeDepth) {
+            if (scene.debugShowFrustums) {
                 command.debugOverlappingFrustums |= (1 << i);
             }
 
@@ -907,11 +907,10 @@ define([
             }
         }
 
-        if (scene.debugShowFrustums || scene.debugShowGlobeDepth) {
+        if (scene.debugShowFrustums) {
             var cf = scene._debugFrustumStatistics.commandsInFrustums;
             cf[command.debugOverlappingFrustums] = defined(cf[command.debugOverlappingFrustums]) ? cf[command.debugOverlappingFrustums] + 1 : 1;
             ++scene._debugFrustumStatistics.totalCommands;
-            scene._debugFrustumStatistics.numberOfFrustums = length;
         }
     }
 
@@ -928,10 +927,9 @@ define([
         var direction = camera.directionWC;
         var position = camera.positionWC;
 
-        if (scene.debugShowFrustums || scene.debugShowGlobeDepth) {
+        if (scene.debugShowFrustums) {
             scene._debugFrustumStatistics = {
                 totalCommands : 0,
-                numberOfFrustums : 0,
                 commandsInFrustums : []
             };
         }
