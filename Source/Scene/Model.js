@@ -423,6 +423,12 @@ define([
         this.debugWireframe = defaultValue(options.debugWireframe, false);
         this._debugWireframe = false;
 
+        /**
+         * @private
+         * @readonly
+         */
+        this.cull = defaultValue(options.cull, true);
+
         this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
         this._initialRadius = undefined;           // Radius without model's scale property, model-matrix scale, animations, or skins
         this._boundingSphere = undefined;
@@ -2208,6 +2214,7 @@ define([
 
                 var command = new DrawCommand({
                     boundingVolume : new BoundingSphere(), // updated in update()
+                    cull : model.cull,
                     modelMatrix : new Matrix4(),           // computed in update()
                     primitiveType : primitive.mode,
                     vertexArray : vertexArray,
@@ -2233,6 +2240,7 @@ define([
 
                     pickCommand = new DrawCommand({
                         boundingVolume : new BoundingSphere(), // updated in update()
+                        cull : model.cull,
                         modelMatrix : new Matrix4(),           // computed in update()
                         primitiveType : primitive.mode,
                         vertexArray : vertexArray,

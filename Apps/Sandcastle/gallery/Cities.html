@@ -27,6 +27,13 @@
 function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
+
+var viewer = new Cesium.Viewer('cesiumContainer');
+viewer.scene.primitives.add(new Cesium.Cesium3DTiles({
+    url : 'http://localhost:8002/tilesets/Seattle'
+}));
+
+/*
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 var base = 'http://localhost:8002/tilesets/';
@@ -70,6 +77,8 @@ Cesium.loadJson(base + 'cities.json').then(function(jsonData) {
 }).otherwise(function(error) {
     console.log('Not good!');
 });
+*/
+
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

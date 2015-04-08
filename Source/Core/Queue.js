@@ -19,7 +19,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.compact = defaultValue(options.compact, false);
+        this.compact = defaultValue(options.compact, true);
 
         this._array = [];
         this._offset = 0;

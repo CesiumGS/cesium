@@ -43,6 +43,8 @@ define([
         this._fov = undefined;
         this._fovy = undefined;
 
+        this._sseDenominator = undefined;
+
         /**
          * The aspect ratio of the frustum's width to it's height.
          * @type {Number}
@@ -98,6 +100,7 @@ define([
             frustum._fovy = (frustum.aspectRatio <= 1) ? frustum.fov : Math.atan(Math.tan(frustum.fov * 0.5) / frustum.aspectRatio) * 2.0;
             frustum._near = frustum.near;
             frustum._far = frustum.far;
+            frustum._sseDenominator = 2.0 * Math.tan(0.5 * frustum._fovy);
 
             f.top = frustum.near * Math.tan(0.5 * frustum._fovy);
             f.bottom = -f.top;
@@ -147,6 +150,17 @@ define([
             get : function() {
                 update(this);
                 return this._fovy;
+            }
+        },
+
+        /**
+         * @readonly
+         * @private
+         */
+        sseDenominator : {
+            get : function () {
+                update(this);
+                return this._sseDenominator;
             }
         }
     });
