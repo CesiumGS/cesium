@@ -436,7 +436,7 @@ define([
         /**
          * This property is for debugging only; it is not for production use.
          * <p>
-         * Displays depth information from one or more view frustums.
+         * Displays depth information for the indicated view frustum slice.
          * </p>
          *
          * @type Boolean
@@ -445,7 +445,21 @@ define([
          */
         this.debugShowGlobeDepth = false;
 
+        /**
+         * This property is for debugging only; it is not for production use.
+         * <p>
+         * Indicates which frustum slice will have depth information displayed.
+         * </p>
+         *
+         * @type Number
+         *
+         * @default 1
+         */
         this.debugShowGlobeDepthFrustum = 1;
+
+        this._debugGlobeDepthTextures = [];
+        this._debugGlobeDepthFramebuffers = [];
+        this._debugGlobeDepthCommands = [];
 
         /**
          * When <code>true</code>, enables Fast Approximate Anti-aliasing even when order independent translucency
@@ -1182,53 +1196,49 @@ define([
         }
     }
 
-    var debugGlobeDepthTextures = [];
-    var debugGlobeDepthFramebuffers = [];
-    var debugGlobeDepthCommands = [];
-
-    function destroyDebugGlobeDepthTexture(textureIndex) {
-        var texture = debugGlobeDepthTextures[textureIndex];
+    function destroyDebugGlobeDepthTexture(scene, textureIndex) {
+        var texture = scene._debugGlobeDepthTextures[textureIndex];
         texture = texture && !texture.isDestroyed() && texture.destroy();
     }
 
-    function destroyDebugGlobeDepthFramebuffer(textureIndex) {
-        var framebuffer = debugGlobeDepthFramebuffers[textureIndex];
+    function destroyDebugGlobeDepthFramebuffer(scene, textureIndex) {
+        var framebuffer = scene._debugGlobeDepthFramebuffers[textureIndex];
         framebuffer = framebuffer && !framebuffer.isDestroyed() && framebuffer.destroy();
     }
 
-    function destroyDebugGlobeDepthCommand(textureIndex) {
-        var command = debugGlobeDepthCommands[textureIndex];
+    function destroyDebugGlobeDepthCommand(scene, textureIndex) {
+        var command = scene._debugGlobeDepthCommands[textureIndex];
         command = command && defined(command.shaderProgram) && command.shaderProgram.destroy();
     }
 
-    function destroyGlobeDepthObjects() {
-        for (var i = 0; i < debugGlobeDepthTextures.length; ++i) {
-            destroyDebugGlobeDepthTexture(i);
+    function destroyGlobeDepthObjects(scene) {
+        for (var i = 0; i < scene._debugGlobeDepthTextures.length; ++i) {
+            destroyDebugGlobeDepthTexture(scene, i);
         }
-        debugGlobeDepthTextures.length = 0;
-        for (var j = 0; j < debugGlobeDepthFramebuffers.length; ++j) {
-            destroyDebugGlobeDepthFramebuffer(j);
+        scene._debugGlobeDepthTextures.length = 0;
+        for (var j = 0; j < scene._debugGlobeDepthFramebuffers.length; ++j) {
+            destroyDebugGlobeDepthFramebuffer(scene, j);
         }
-        debugGlobeDepthFramebuffers.length = 0;
-        for (var k = 0; k < debugGlobeDepthCommands.length; ++k) {
-            destroyDebugGlobeDepthCommand(k);
+        scene._debugGlobeDepthFramebuffers.length = 0;
+        for (var k = 0; k < scene._debugGlobeDepthCommands.length; ++k) {
+            destroyDebugGlobeDepthCommand(scene, k);
         }
-        debugGlobeDepthCommands.length = 0;
+        scene._debugGlobeDepthCommands.length = 0;
     }
 
     function updateDebugGlobeDepth(scene, context, uniformState, index) {
-        var texture = debugGlobeDepthTextures[index];
-        var framebuffer = debugGlobeDepthFramebuffers[index];
-        var command = debugGlobeDepthCommands[index];
+        var texture = scene._debugGlobeDepthTextures[index];
+        var framebuffer = scene._debugGlobeDepthFramebuffers[index];
+        var command = scene._debugGlobeDepthCommands[index];
 
         var width = context.drawingBufferWidth;
         var height = context.drawingBufferHeight;
 
         var textureChanged = !defined(texture) || texture.width !== width || texture.height !== height;
         if (textureChanged) {
-            destroyDebugGlobeDepthTexture(index);
-            destroyDebugGlobeDepthFramebuffer(index);
-            destroyDebugGlobeDepthCommand(index);
+            destroyDebugGlobeDepthTexture(scene, index);
+            destroyDebugGlobeDepthFramebuffer(scene, index);
+            destroyDebugGlobeDepthCommand(scene, index);
 
             texture = context.createTexture2D({
                 width : width,
@@ -1237,14 +1247,14 @@ define([
                 pixelDatatype : PixelDatatype.FLOAT
             });
 
-            debugGlobeDepthTextures[index] = texture;
+            scene._debugGlobeDepthTextures[index] = texture;
 
             framebuffer = context.createFramebuffer({
                 colorTextures : [texture],
                 destroyAttachments : false
             });
 
-            debugGlobeDepthFramebuffers[index] = framebuffer;
+            scene._debugGlobeDepthFramebuffers[index] = framebuffer;
 
             command = context.createViewportQuadCommand(PassThrough, {
                 renderState : context.createRenderState(),
@@ -1256,7 +1266,7 @@ define([
                 owner : scene
             });
 
-            debugGlobeDepthCommands[index] = command;
+            scene._debugGlobeDepthCommands[index] = command;
         }
     }
 
@@ -1281,7 +1291,7 @@ define([
         var c = context.createViewportQuadCommand(fs, {
             uniformMap : {
                 u_texture : function() {
-                    return debugGlobeDepthTextures[index];
+                    return scene._debugGlobeDepthTextures[index];
                 }
             },
             owner : scene
@@ -1451,8 +1461,8 @@ define([
             if (scene.debugShowGlobeDepth) {
                 var orignal = passState.framebuffer;
                 updateDebugGlobeDepth(scene, context, us, index);
-                passState.framebuffer = debugGlobeDepthFramebuffers[index];
-                var command = debugGlobeDepthCommands[index];
+                passState.framebuffer = scene._debugGlobeDepthFramebuffers[index];
+                var command = scene._debugGlobeDepthCommands[index];
                 command.execute(context, passState);
                 passState.framebuffer = orignal;
             }
@@ -1959,6 +1969,8 @@ define([
             this._performanceDisplay = this._performanceDisplay && this._performanceDisplay.destroy();
             this._performanceContainer.parentNode.removeChild(this._performanceContainer);
         }
+
+        destroyGlobeDepthObjects(this);
 
         return destroyObject(this);
     };
