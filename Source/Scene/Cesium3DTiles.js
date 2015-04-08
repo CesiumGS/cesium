@@ -116,16 +116,13 @@ define([
     });
 
     function visible(tile, cullingVolume) {
-// TODO: some 3D tiles would benefit from horizon culling (like global vector data), but
-// more local 3D tiles, like cities and point clouds, will not.
-
         // Exploit temporal coherence: if a tile is completely in the view frustum
         // then so are its children so they do not need to be culled.
         if (tile.parentFullyVisible) {
             return Intersect.INSIDE;
         }
 
-        return cullingVolume.computeVisibility(tile.boundingSphere);
+        return tile.visibility(cullingVolume);
     }
 
     function visibleForRendering(tile, cullingVolume) {
@@ -133,14 +130,11 @@ define([
             return true;
         }
 
-        if (!defined(tile.renderBoundingSphere)) {
-            return true;
-        }
-
-        return cullingVolume.computeVisibility(tile.renderBoundingSphere) !== Intersect.OUTSIDE;
+        return tile.visibilityForRendering(cullingVolume) !== Intersect.OUTSIDE;
     }
 
     function getScreenSpaceError(tile, context, frameState) {
+// TODO: screenSpaceError2D like QuadtreePrimitive.js
         if (tile.geometricError === 0.0) {
             // Leaf nodes do not have any error so save the computation
             return tile.geometricError;

@@ -3,6 +3,7 @@ define([
         '../Core/BoundingSphere',
         '../Core/defined',
         '../Core/destroyObject',
+        '../Core/Intersect',
         '../Core/Rectangle',
         './Cesium3DTileContentProvider',
         './TileBoundingBox',
@@ -11,6 +12,7 @@ define([
         BoundingSphere,
         defined,
         destroyObject,
+        Intersect,
         Rectangle,
         Cesium3DTileContentProvider,
         TileBoundingBox,
@@ -30,11 +32,7 @@ define([
             minimumHeight : b.minimumHeight,
             maximumHeight : b.maximumHeight
         });
-
-        /**
-         * @readonly
-         */
-        this.boundingSphere = BoundingSphere.fromRectangle3D(rectangle);
+        this._boundingSphere = BoundingSphere.fromRectangle3D(rectangle);
 
         var rs;
         if (defined(tile.renderBox)) {
@@ -48,10 +46,7 @@ define([
 //TODO: Need to use minimumHeight and maximumHeight to get the correct sphere
         }
 
-        /**
-         * @readonly
-         */
-        this.renderBoundingSphere = rs;
+        this._renderBoundingSphere = rs;
 
         /**
          * @readonly
@@ -109,6 +104,20 @@ define([
 
     Cesium3DTile.prototype.request = function() {
         return this._content.request();
+    };
+
+    Cesium3DTile.prototype.visibility = function(cullingVolume) {
+       // TODO: some 3D tiles would benefit from horizon culling (like global vector data), but
+       // more local 3D tiles, like cities and point clouds, will not.
+        return cullingVolume.computeVisibility(this._boundingSphere);
+    };
+
+    Cesium3DTile.prototype.visibilityForRendering = function(cullingVolume) {
+        if (!defined(this._renderBoundingSphere)) {
+            return Intersect.INSIDE;
+        }
+
+        return cullingVolume.computeVisibility(this._renderBoundingSphere);
     };
 
     Cesium3DTile.prototype.distanceToTile = function(frameState) {
