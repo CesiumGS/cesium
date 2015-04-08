@@ -404,7 +404,9 @@ define([
         return this._pointPrimitives[index];
     };
 
-    /*
+    /* ***************************************************************** */
+    // TODO: Get rid of the index buffer.
+    /* ***************************************************************** */
     function getIndexBuffer(context) {
         var sixteenK = 16 * 1024;
 
@@ -415,14 +417,8 @@ define([
 
         var length = sixteenK * 6;
         var indices = new Uint16Array(length);
-        for (var i = 0, j = 0; i < length; i += 6, j += 4) {
-            indices[i] = j;
-            indices[i + 1] = j + 1;
-            indices[i + 2] = j + 2;
-
-            indices[i + 3] = j + 0;
-            indices[i + 4] = j + 2;
-            indices[i + 5] = j + 3;
+        for (var i = 0; i < length; ++i) {
+            indices[i] = i;
         }
 
         // PERFORMANCE_IDEA:  Should we reference count pointPrimitive collections, and eventually delete this?
@@ -432,7 +428,8 @@ define([
         context.cache.pointPrimitiveCollection_indexBuffer = indexBuffer;
         return indexBuffer;
     }
-    */
+    /* ***************************************************************** */
+    /* ***************************************************************** */
 
     PointPrimitiveCollection.prototype.computeNewBuffersUsage = function() {
         var buffersUsage = this._buffersUsage;
@@ -460,15 +457,15 @@ define([
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[POSITION_INDEX]
         }, {
+            index : attributeLocations.compressedAttribute0,
+            componentsPerAttribute : 4,
+            componentDatatype : ComponentDatatype.FLOAT,
+            usage : buffersUsage[COLOR_INDEX]
+        }, {
             index : attributeLocations.compressedAttribute1,
             componentsPerAttribute : 4,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[TRANSLUCENCY_BY_DISTANCE_INDEX]
-        }, {
-            index : attributeLocations.compressedAttribute2,
-            componentsPerAttribute : 4,
-            componentDatatype : ComponentDatatype.FLOAT,
-            usage : buffersUsage[COLOR_INDEX]
         }, {
             index : attributeLocations.scaleByDistance,
             componentsPerAttribute : 4,
@@ -515,16 +512,8 @@ define([
         positionLowWriter(i, low.x, low.y, low.z, (show ? 1.0 : 0.0));
     }
 
-    var scratchCartesian2 = new Cartesian2();
-
-    var UPPER_BOUND = 32768.0;  // 2^15
-
     var LEFT_SHIFT16 = 65536.0; // 2^16
     var LEFT_SHIFT8 = 256.0;    // 2^8
-    var LEFT_SHIFT7 = 128.0;
-    var LEFT_SHIFT5 = 32.0;
-    var LEFT_SHIFT3 = 8.0;
-    var LEFT_SHIFT2 = 4.0;
 
     var RIGHT_SHIFT8 = 1.0 / 256.0;
 
@@ -799,7 +788,7 @@ define([
                         for ( var o = 0; o < writers.length; ++o) {
                             writers[o](this, context, vafWriters, bb);
                         }
-                        this._vaf.subCommit(bb._index * 4, 4);
+                        this._vaf.subCommit(bb._index, 1);
                     }
                     this._vaf.endSubCommits();
                 }
