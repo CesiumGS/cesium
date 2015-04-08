@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.9 -2015-05-01
+
+* Fixed documentation for 'Context.drawingBufferHeight' and 'Context.drawingBufferWidth'.
+* Added debug option to 'Scene' to show the depth buffer information for a specified view frustum slice and exposed capability in 'CesiumInspector' widget.
+
 ### 1.8 -2015-04-01
 
 * Breaking changes
