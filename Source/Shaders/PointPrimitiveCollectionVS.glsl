@@ -154,7 +154,7 @@ void main()
     v_outlineColor.a *= translucency;
 
     v_innerPercent = 1.0 - outlinePercent;
-    v_pixelDistance = 1.0 / scale;
+    v_pixelDistance = 2.0 / scale;
     gl_PointSize = scale;
 
 #ifdef RENDER_FOR_PICK
