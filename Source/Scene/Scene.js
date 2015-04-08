@@ -40,7 +40,6 @@ define([
         './GlobeDepth',
         './OIT',
         './OrthographicFrustum',
-        './Material',
         './Pass',
         './PerformanceDisplay',
         './PerInstanceColorAppearance',
@@ -53,8 +52,7 @@ define([
         './SceneTransitioner',
         './ScreenSpaceCameraController',
         './SunPostProcess',
-        './TweenCollection',
-        './ViewportQuad'
+        './TweenCollection'
     ], function(
         BoundingRectangle,
         BoundingSphere,
@@ -96,7 +94,6 @@ define([
         GlobeDepth,
         OIT,
         OrthographicFrustum,
-        Material,
         Pass,
         PerformanceDisplay,
         PerInstanceColorAppearance,
@@ -109,8 +106,7 @@ define([
         SceneTransitioner,
         ScreenSpaceCameraController,
         SunPostProcess,
-        TweenCollection,
-        ViewportQuad) {
+        TweenCollection) {
     "use strict";
     /*global WebGLRenderingContext*/
 
@@ -930,7 +926,7 @@ define([
         if (scene.debugShowFrustums) {
             scene._debugFrustumStatistics = {
                 totalCommands : 0,
-                commandsInFrustums : []
+                commandsInFrustums : {}
             };
         }
 
