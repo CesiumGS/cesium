@@ -1,5 +1,3 @@
-uniform sampler2D u_atlas;
-
 varying vec4 v_color;
 varying vec4 v_outlineColor;
 varying float v_innerPercent;
