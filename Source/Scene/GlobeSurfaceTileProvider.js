@@ -426,7 +426,7 @@ define([
         vertices.push(cartesian.z);
     }
 
-    GlobeSurfaceTileProvider.prototype.visitVisibleTileDepthFirst = function(tile) {
+    GlobeSurfaceTileProvider.prototype.visitVisibleTileDepthFirst = function(tile, frameState) {
         var surfaceTile = tile.data;
 
         // If the vertex array came from an ancestor tile, make sure it is up-to-date.
@@ -468,13 +468,16 @@ define([
                 // - The closest ancestor tile that is actually loaded is > 4 levels away.
                 // - We don't know if data is available for this tile's children.
                 // - We know this tile to have data available, and we know that at least one child does not.
+                // - The camera is inside this tile's bounding sphere.
                 var tooManyLevels = tile.level - surfaceTile.vertexArrayFromTile.level > 4;
                 var childAvailabilityUnknown = !defined(surfaceTile.childTileMask);
+                var cameraInsideBoundingSphere = Cartesian3.distanceSquared(surfaceTile.boundingSphere3D.center, frameState.camera.positionWC) <= surfaceTile.boundingSphere3D.radius * surfaceTile.boundingSphere3D.radius;
 
                 var isUpsampled = surfaceTile.terrainState === TerrainState.FAILED || surfaceTile.terrainState === TerrainState.UPSAMPLING ||
                                   (defined(surfaceTile.terrainData) && surfaceTile.terrainData.wasCreatedByUpsampling());
                 var isAvailabilityLeaf = !isUpsampled && surfaceTile.childTileMask !== 15;
-                var mustNotRefine = tooManyLevels || childAvailabilityUnknown || isAvailabilityLeaf;
+
+                var mustNotRefine = tooManyLevels || childAvailabilityUnknown || isAvailabilityLeaf || cameraInsideBoundingSphere;
 
                 if (mustNotRefine) {
                     var reason;
@@ -484,6 +487,8 @@ define([
                         reason = '(child availability unknown)';
                     } else if (isAvailabilityLeaf) {
                         reason = '(availability leaf)';
+                    } else if (cameraInsideBoundingSphere) {
+                        reason = '(camera inside bounding sphere)';
                     }
                     console.log('Must not refine past L' + tile.level + 'X' + tile.x + 'Y' + tile.y + ' ' + reason);
                 }
@@ -551,7 +556,7 @@ define([
 
         var boundingVolume = surfaceTile.boundingSphere3D;
         if (boundingVolume.radius === 0.0) {
-            return false;
+            return Visibility.NONE;
         }
 
         if (frameState.mode !== SceneMode.SCENE3D) {
@@ -564,23 +569,48 @@ define([
             }
         }
 
+        var notVisibleByFrustum = false;
+        var notVisibleByOcclusion = false;
+
         var intersection = cullingVolume.computeVisibility(boundingVolume);
         if (intersection === Intersect.OUTSIDE) {
-            return Visibility.NONE;
-        }
-
-        if (frameState.mode === SceneMode.SCENE3D) {
+            notVisibleByFrustum = true;
+            intersection = Visibility.NONE;
+        } else if (frameState.mode === SceneMode.SCENE3D) {
             var occludeePointInScaledSpace = surfaceTile.occludeePointInScaledSpace;
             if (!defined(occludeePointInScaledSpace) || Cartesian3.magnitudeSquared(occludeePointInScaledSpace) === 0.0) {
-                return intersection;
+//                return intersection;
+            } else if (occluders.ellipsoid.isScaledSpacePointVisible(occludeePointInScaledSpace)) {
+//                return intersection;
+            } else {
+                notVisibleByOcclusion = true;
+                intersection = Visibility.NONE;
             }
-
-            if (occluders.ellipsoid.isScaledSpacePointVisible(occludeePointInScaledSpace)) {
-                return intersection;
-            }
-
-            return Visibility.NONE;
         }
+
+        if (intersection !== tile._lastIntersection && defined(tile._lastIntersection)) {
+            function visibilityToLabel(visibility) {
+                if (visibility === Visibility.NONE) {
+                    return 'none';
+                } else if (visibility === Visibility.PARTIAL) {
+                    return 'partial';
+                } else if (visibility === Visibility.FULL) {
+                    return 'full';
+                }
+            }
+
+            if (intersection === Visibility.NONE) {
+                if (notVisibleByOcclusion) {
+                    console.log('Visibility change (occlusion): L' + tile.level + 'X' + tile.x + 'Y' + tile.y + ': ' + visibilityToLabel(tile._lastIntersection) + ' -> ' + visibilityToLabel(intersection));
+                } else if (notVisibleByFrustum) {
+                    console.log('Visibility change (frustum): L' + tile.level + 'X' + tile.x + 'Y' + tile.y + ': ' + visibilityToLabel(tile._lastIntersection) + ' -> ' + visibilityToLabel(intersection));
+                }
+            }
+
+            //console.log('Visibility change: L' + tile.level + 'X' + tile.x + 'Y' + tile.y + ': ' + visibilityToLabel(tile._lastIntersection) + ' -> ' + visibilityToLabel(intersection));
+        }
+
+        tile._lastIntersection = intersection;
 
         return intersection;
     };

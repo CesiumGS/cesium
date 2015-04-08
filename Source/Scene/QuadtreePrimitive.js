@@ -314,7 +314,7 @@ define([
             primitive._tileReplacementQueue.markTileRendered(tile); // TODO: rename to markTileVisited
 
             // Give the provider a chance to update the tile this frame.
-            tileProvider.visitTileDepthFirst(tile);
+            tileProvider.visitTileDepthFirst(tile, frameState);
 
             if (tile.needsLoading) {
                 // Initially assume this tile is not high priorty for load.
@@ -330,7 +330,7 @@ define([
             }
 
             // Give the provider another chance to update this tile, now that it is known to be visible.
-            tileProvider.visitVisibleTileDepthFirst(tile);
+            tileProvider.visitVisibleTileDepthFirst(tile, frameState);
 
             // Determine if this tile meets our error requirements.
             tile._distance = tileProvider.computeDistanceToTile(tile, frameState);
