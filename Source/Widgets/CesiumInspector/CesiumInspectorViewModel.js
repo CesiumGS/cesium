@@ -910,7 +910,7 @@ define([
                         that.globeDepthFrustum = globeDepthFrustum;
                         that.scene.debugShowGlobeDepthFrustum = globeDepthFrustum;
                         // Update the displayed text.
-                        that.globeDepthFrustumText = that.globeDepthFrustum + ' of ' + numberOfFrustums;
+                        that.globeDepthFrustumText = globeDepthFrustum + ' of ' + numberOfFrustums;
                     }
                     if (that.performance) {
                         that._performanceDisplay.update();

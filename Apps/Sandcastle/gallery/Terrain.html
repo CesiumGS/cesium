@@ -34,8 +34,6 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 
-viewer.extend(Cesium.viewerCesiumInspectorMixin);
-
 var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
     url : '//assets.agi.com/stk-terrain/world',
     requestWaterMask : true,
