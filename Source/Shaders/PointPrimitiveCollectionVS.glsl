@@ -147,7 +147,6 @@ void main()
     //maybe?? scale *= czm_resolutionScale;
 
     gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
-    v_textureCoordinates = textureCoordinates;
 
     v_color = color;
     v_color.a *= translucency;

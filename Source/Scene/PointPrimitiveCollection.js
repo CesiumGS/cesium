@@ -404,33 +404,6 @@ define([
         return this._pointPrimitives[index];
     };
 
-    /* ***************************************************************** */
-    // TODO: Get rid of the index buffer.
-    /* ***************************************************************** */
-    function getIndexBuffer(context) {
-        var sixteenK = 16 * 1024;
-
-        var indexBuffer = context.cache.pointPrimitiveCollection_indexBuffer;
-        if (defined(indexBuffer)) {
-            return indexBuffer;
-        }
-
-        var length = sixteenK * 6;
-        var indices = new Uint16Array(length);
-        for (var i = 0; i < length; ++i) {
-            indices[i] = i;
-        }
-
-        // PERFORMANCE_IDEA:  Should we reference count pointPrimitive collections, and eventually delete this?
-        // Is this too much memory to allocate up front?  Should we dynamically grow it?
-        indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
-        indexBuffer.vertexArrayDestroyable = false;
-        context.cache.pointPrimitiveCollection_indexBuffer = indexBuffer;
-        return indexBuffer;
-    }
-    /* ***************************************************************** */
-    /* ***************************************************************** */
-
     PointPrimitiveCollection.prototype.computeNewBuffersUsage = function() {
         var buffersUsage = this._buffersUsage;
         var usageChanged = false;
@@ -739,7 +712,7 @@ define([
                 }
 
                 // Different pointPrimitive collections share the same index buffer.
-                this._vaf.commit(getIndexBuffer(context));
+                this._vaf.commit();
             }
 
             this._pointPrimitivesToUpdateIndex = 0;
@@ -779,7 +752,7 @@ define([
                             writers[n](this, context, vafWriters, b);
                         }
                     }
-                    this._vaf.commit(getIndexBuffer(context));
+                    this._vaf.commit();
                 } else {
                     for (var h = 0; h < pointPrimitivesToUpdateLength; ++h) {
                         var bb = pointPrimitivesToUpdate[h];
@@ -877,7 +850,6 @@ define([
 
                 command.boundingVolume = boundingVolume;
                 command.modelMatrix = modelMatrix;
-                command.count = va[j].indicesCount;
                 command.shaderProgram = this._sp;
                 command.uniformMap = this._uniforms;
                 command.vertexArray = va[j].va;
@@ -933,7 +905,6 @@ define([
 
                 command.boundingVolume = boundingVolume;
                 command.modelMatrix = modelMatrix;
-                command.count = va[j].indicesCount;
                 command.shaderProgram = this._spPick;
                 command.uniformMap = this._uniforms;
                 command.vertexArray = va[j].va;
