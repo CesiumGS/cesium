@@ -1,30 +1,24 @@
 /*global define*/
 define([
-        '../../Core/BoundingRectangle',
         '../../Core/Color',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/Rectangle',
         '../../Scene/DebugModelMatrixPrimitive',
-        '../../Scene/Material',
         '../../Scene/PerformanceDisplay',
         '../../Scene/TileCoordinatesImageryProvider',
-        '../../Scene/ViewportQuad',
         '../../ThirdParty/knockout',
         '../createCommand'
     ], function(
-        BoundingRectangle,
         Color,
         defined,
         defineProperties,
         DeveloperError,
         Rectangle,
         DebugModelMatrixPrimitive,
-        Material,
         PerformanceDisplay,
         TileCoordinatesImageryProvider,
-        ViewportQuad,
         knockout,
         createCommand) {
     "use strict";
