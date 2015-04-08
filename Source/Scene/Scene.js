@@ -1305,11 +1305,9 @@ define([
     var scratchOrthographicFrustum = new OrthographicFrustum();
 
     function executeCommands(scene, passState, clearColor, picking) {
-        // Local looping indices.
         var i;
         var j;
 
-        // Create local references.
         var frameState = scene._frameState;
         var camera = scene._camera;
         var context = scene.context;
