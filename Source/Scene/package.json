@@ -2,5 +2,8 @@
 	"name": "Scene",
 	"description": "Cesium Scene",
 	"version": "0.6.0",
-	"dojoBuild": "Scene.profile.js"
+	"dojoBuild": "Scene.profile.js",
+    "browserify": {
+        "transform": [ "deamdify" ]
+    }
 }

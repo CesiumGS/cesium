@@ -2,5 +2,8 @@
 	"name": "ThirdParty",
 	"description": "Cesium ThirdParty",
 	"version": "0.6.0",
-	"dojoBuild": "ThirdParty.profile.js"
+	"dojoBuild": "ThirdParty.profile.js",
+    "browserify": {
+        "transform": [ "deamdify" ]
+    }
 }
