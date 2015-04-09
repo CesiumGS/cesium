@@ -436,7 +436,7 @@ define([
         var timeSlice = primitive._loadQueueTimeSlice;
         var endTime = startTime + timeSlice;
 
-        for (var len = tileLoadQueue.length - 1, i = len; i >= 0; --i) {
+        for (var i = tileLoadQueue.length - 1; i >= 0; --i) {
             var tile = tileLoadQueue[i];
             primitive._tileReplacementQueue.markTileRendered(tile);
             tileProvider.loadTile(context, frameState, tile);
