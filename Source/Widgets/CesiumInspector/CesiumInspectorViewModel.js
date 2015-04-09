@@ -895,17 +895,17 @@ define([
                     if (that.frustums) {
                         that.frustumStatisticText = frustumStatsToString(that._scene.debugFrustumStatistics);
                     }
-                    if (that.globeDepth) {
-                        // Determine the number of frustums being used.
-                        var numberOfFrustums = that._scene.numberOfFrustums;
-                        that._numberOfFrustums = numberOfFrustums;
-                        // Bound the frustum to be displayed.
-                        var globeDepthFrustum = boundGlobeDepthFrustum(1, numberOfFrustums, that.globeDepthFrustum);
-                        that.globeDepthFrustum = globeDepthFrustum;
-                        that.scene.debugShowGlobeDepthFrustum = globeDepthFrustum;
-                        // Update the displayed text.
-                        that.globeDepthFrustumText = globeDepthFrustum + ' of ' + numberOfFrustums;
-                    }
+
+                    // Determine the number of frustums being used.
+                    var numberOfFrustums = that._scene.numberOfFrustums;
+                    that._numberOfFrustums = numberOfFrustums;
+                    // Bound the frustum to be displayed.
+                    var globeDepthFrustum = boundGlobeDepthFrustum(1, numberOfFrustums, that.globeDepthFrustum);
+                    that.globeDepthFrustum = globeDepthFrustum;
+                    that.scene.debugShowGlobeDepthFrustum = globeDepthFrustum;
+                    // Update the displayed text.
+                    that.globeDepthFrustumText = globeDepthFrustum + ' of ' + numberOfFrustums;
+
                     if (that.performance) {
                         that._performanceDisplay.update();
                     }
