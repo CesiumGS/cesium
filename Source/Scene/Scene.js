@@ -435,7 +435,7 @@ define([
         /**
          * This property is for debugging only; it is not for production use.
          * <p>
-         * Displays depth information for the indicated view frustum slice.
+         * Displays depth information for the indicated frustum.
          * </p>
          *
          * @type Boolean
@@ -447,7 +447,7 @@ define([
         /**
          * This property is for debugging only; it is not for production use.
          * <p>
-         * Indicates which frustum slice will have depth information displayed.
+         * Indicates which frustum will have depth information displayed.
          * </p>
          *
          * @type Number
@@ -1363,7 +1363,7 @@ define([
         scene._globeDepth.update(context);
         scene._globeDepth.clear(context, passState, clearColor);
 
-        // Determine if there are any translucent surfaces in any of the frustum slices.
+        // Determine if there are any translucent surfaces in any of the frustums.
         var renderTranslucentCommands = false;
         var frustumCommandsList = scene._frustumCommandsList;
         var numFrustums = frustumCommandsList.length;
