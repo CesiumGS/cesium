@@ -1278,15 +1278,10 @@ define([
             'void main()\n' +
             '{\n' +
             '    float z_window = texture2D(u_texture, v_textureCoordinates).r;\n' +
-//          '    gl_FragColor = vec4(mix(vec3(0.0), vec3(1.0), z_window), 1.0);\n' +
             '    float n_range = czm_depthRange.near;\n' +
             '    float f_range = czm_depthRange.far;\n' +
             '    float z_ndc = (2.0 * z_window - n_range - f_range) / (f_range - n_range);\n' +
             '    gl_FragColor = vec4(mix(vec3(0.0), vec3(1.0), z_ndc * 0.5 + 0.5), 1.0);\n' +
-//            '    float n = czm_currentFrustum.x;\n' +
-//            '    float f = czm_currentFrustum.y;\n' +
-//            '    float z_eye = (2.0 * n * f) / ((f - n) * z_ndc - f - n);\n' +
-//            '    gl_FragColor = vec4(mix(vec3(0.0), vec3(1.0), (-z_eye - n) / (f - n)), 1.0);\n' +
             '}\n';
 
         var c = context.createViewportQuadCommand(fs, {
