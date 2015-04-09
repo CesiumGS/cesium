@@ -108,7 +108,6 @@ define([
         SunPostProcess,
         TweenCollection) {
     "use strict";
-    /*global WebGLRenderingContext*/
 
     /**
      * The container for all 3D graphical objects and state in a Cesium virtual scene.  Generally,
