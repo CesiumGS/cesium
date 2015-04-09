@@ -8,10 +8,11 @@ uniform float LODNegativeToleranceOverDistance;
 
 vec4 clipPointToPlane(vec3 p0, vec3 p1, bool nearPlane)
 {
+    const float offset = 1.0;
+    const float denominatorEpsilon = czm_epsilon7;
+    
     vec2 frustum = czm_currentFrustum;
     float planeDistance = nearPlane ? frustum.x : frustum.y;
-    //float offset = nearPlane ? 0.001 : -0.001;
-    float offset = 0.001;
     
     p0 = (czm_modelViewRelativeToEye * vec4(p0, 1.0)).xyz;
     p1 = (czm_modelViewRelativeToEye * vec4(p1, 1.0)).xyz;
@@ -25,12 +26,12 @@ vec4 clipPointToPlane(vec3 p0, vec3 p1, bool nearPlane)
     
     bool culledByPlane = false;
     
-    if (behindPlane && abs(denominator) < czm_epsilon7)
+    if (behindPlane && abs(denominator) < denominatorEpsilon)
     {
         // point is behind and parallel to the plane
         culledByPlane = true;
     }
-    else if (behindPlane && abs(denominator) > czm_epsilon7)
+    else if (behindPlane && abs(denominator) > denominatorEpsilon)
     {
         // find intersection of ray and the plane
         // t = (-dot(plane normal, point on plane) - dot(plane normal, ray origin)) / dot(plane normal, ray direction)
