@@ -279,16 +279,15 @@ define([
         queue.clear();
     }
 
-    var scratchCommandList = [];
-
     function processTiles(tiles3D, context, frameState) {
         var tiles = tiles3D._processingQueue;
         var length = tiles.length;
 
         // Process tiles in the PROCESSING state so they will eventually move to the READY state.
         for (var i = 0; i < length; ++i) {
-            tiles[i].update(context, frameState, scratchCommandList);  // Pump updates
+            tiles[i].process(context, frameState);
         }
+// TODO: timeslice like QuadtreePrimitive.js (but with round robin?) Or should that happen at a lower-level, e.g., models/renderer?
     }
 
     /**

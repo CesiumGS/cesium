@@ -124,10 +124,6 @@ define([
     }
 
     Cesium3DTileContentProvider.prototype.update = function(context, frameState, commandList) {
-        if ((this.state !== Cesium3DTileContentState.PROCESSING) &&
-            (this.state !== Cesium3DTileContentState.READY)) {
-            return;
-        }
         // In the LOADED state we may be calling update() to move forward
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.

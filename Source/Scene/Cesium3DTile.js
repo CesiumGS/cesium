@@ -134,6 +134,12 @@ define([
         this._content.update(context, frameState, commandList);
     };
 
+    var scratchCommandList = [];
+
+    Cesium3DTile.prototype.process = function(context, frameState) {
+        this._content.update(context, frameState, scratchCommandList);
+    };
+
     Cesium3DTile.prototype.isDestroyed = function() {
         return false;
     };
