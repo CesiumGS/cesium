@@ -9,7 +9,6 @@ define([
         '../Core/Intersect',
         '../Core/loadJson',
         '../Core/Math',
-        '../Core/Queue',
         './Cesium3DTile',
         './SceneMode',
         '../ThirdParty/when'
@@ -23,7 +22,6 @@ define([
         Intersect,
         loadJson,
         CesiumMath,
-        Queue,
         Cesium3DTile,
         SceneMode,
         when) {
@@ -165,8 +163,8 @@ define([
 
 // TODO: is it worth exploiting frame-to-frame coherence in the sort?
     function sortChildrenByDistanceToCamera(a, b) {
-        // Sort by closest child first
-        return a.distanceToCamera - b.distanceToCamera;
+        // Sort by farthest child first since this is going on a stack
+        return b.distanceToCamera - a.distanceToCamera;
     }
 
     function requestChild(tiles3D, tile) {
@@ -202,9 +200,7 @@ define([
         }
     }
 
-    var scratchQueue = new Queue({
-        compact : false
-    });
+    var scratchStack = [];
 
     function spatialTraverse(tiles3D, context, frameState, commandList) {
         var maximumScreenSpaceError = tiles3D.maximumScreenSpaceError;
@@ -223,12 +219,12 @@ define([
             return;
         }
 
-        var queue = scratchQueue;
-        queue.enqueue(root);
+        var stack = scratchStack;
+        stack.push(root);
 //console.log('---');
-        while (queue.length > 0) {
-            // Level-order breath-first
-            var t = queue.dequeue();
+        while (stack.length > 0) {
+            // Depth first.  We want the high detail tiles first.
+            var t = stack.pop();
 
             var visibility = visible(t, cullingVolume);
             var fullyVisible = (visibility === Intersect.INSIDE);
@@ -261,7 +257,7 @@ define([
             } else {
                 // Tile does not meet SEE and its children are loaded.  Refine to them in front-to-back order.
 
-                // Distance is used for sorting now and for computing SSE when the tile comes off the queue.
+                // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
                 computeDistanceToCamera(children, frameState);
 
                 // Sort children by distance for (1) request ordering, and (2) early-z
@@ -272,12 +268,14 @@ define([
                 for (var k = 0; k < childrenLength; ++k) {
                     var child = children[k];
                     child.parentFullyVisible = fullyVisible;
-                    queue.enqueue(child);
+                    stack.push(child);
                 }
             }
         }
 
-        queue.clear();
+        if (stack.length !== 0) {
+            debugger;
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////
