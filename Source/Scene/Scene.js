@@ -459,6 +459,8 @@ define([
         this._debugGlobeDepthTextures = [];
         this._debugGlobeDepthFramebuffers = [];
         this._debugGlobeDepthCommands = [];
+        this._debugGlobeDepthTexture = undefined;
+        this._debugGlobeDepthViewportCommand = undefined;
 
         /**
          * When <code>true</code>, enables Fast Approximate Anti-aliasing even when order independent translucency
@@ -1285,28 +1287,32 @@ define([
     }
 
     function executeDebugGlobeDepth(scene, context, passState, index) {
-        var fs =
-            'uniform sampler2D u_texture;\n' +
-            'varying vec2 v_textureCoordinates;\n' +
-            'void main()\n' +
-            '{\n' +
-            '    float z_window = texture2D(u_texture, v_textureCoordinates).r;\n' +
-            '    float n_range = czm_depthRange.near;\n' +
-            '    float f_range = czm_depthRange.far;\n' +
-            '    float z_ndc = (2.0 * z_window - n_range - f_range) / (f_range - n_range);\n' +
-            '    gl_FragColor = vec4(mix(vec3(0.0), vec3(1.0), z_ndc * 0.5 + 0.5), 1.0);\n' +
-            '}\n';
+        scene._debugGlobeDepthTexture = scene._debugGlobeDepthTextures[index];
 
-        var c = context.createViewportQuadCommand(fs, {
-            uniformMap : {
-                u_texture : function() {
-                    return scene._debugGlobeDepthTextures[index];
-                }
-            },
-            owner : scene
-        });
+        if (!defined(scene._debugGlobeDepthViewportCommand)) {
+            var fs =
+                'uniform sampler2D u_texture;\n' +
+                'varying vec2 v_textureCoordinates;\n' +
+                'void main()\n' +
+                '{\n' +
+                '    float z_window = texture2D(u_texture, v_textureCoordinates).r;\n' +
+                '    float n_range = czm_depthRange.near;\n' +
+                '    float f_range = czm_depthRange.far;\n' +
+                '    float z_ndc = (2.0 * z_window - n_range - f_range) / (f_range - n_range);\n' +
+                '    gl_FragColor = vec4(mix(vec3(0.0), vec3(1.0), z_ndc * 0.5 + 0.5), 1.0);\n' +
+                '}\n';
 
-        c.execute(context, passState);
+            scene._debugGlobeDepthViewportCommand = context.createViewportQuadCommand(fs, {
+                uniformMap : {
+                    u_texture : function() {
+                        return scene._debugGlobeDepthTexture;
+                    }
+                },
+                owner : scene
+            });
+        }
+
+        scene._debugGlobeDepthViewportCommand.execute(context, passState);
     }
 
     var scratchPerspectiveFrustum = new PerspectiveFrustum();
