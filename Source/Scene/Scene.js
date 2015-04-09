@@ -444,6 +444,8 @@ define([
          */
         this.debugShowGlobeDepth = false;
 
+        this._debugGlobeDepths = [];
+
         /**
          * This property is for debugging only; it is not for production use.
          * <p>
@@ -1204,6 +1206,15 @@ define([
         }
     }
 
+    function getDebugGlobeDepth(scene, context, index) {
+        var globeDepth = scene._debugGlobeDepths[index];
+        if (!defined(globeDepth)) {
+            globeDepth = new GlobeDepth(context);
+            scene._debugGlobeDepths[index] = globeDepth;
+        }
+        return globeDepth;
+    }
+
     var scratchPerspectiveFrustum = new PerspectiveFrustum();
     var scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
     var scratchOrthographicFrustum = new OrthographicFrustum();
@@ -1358,8 +1369,11 @@ define([
                 executeCommand(commands[j], scene, context, passState);
             }
 
-            scene._globeDepth.executeCopyDepth(context, passState);
+            var globeDepth = scene._globeDepth;
+//            var globeDepth = scene.debugShowGlobeDepth ? getDebugGlobeDepth(scene, context, index) : scene._globeDepth;
+            globeDepth.executeCopyDepth(context, passState);
 
+            /*
             if (scene.debugShowGlobeDepth) {
                 var orignal = passState.framebuffer;
                 scene._globeDepth.updateDebugGlobeDepth(context, us, index);
@@ -1368,7 +1382,7 @@ define([
                 command.execute(context, passState);
                 passState.framebuffer = orignal;
             }
-
+*/
             // Execute commands in order by pass up to the translucent pass.
             // Translucent geometry needs special handling (sorting/OIT).
             var startPass = Pass.GLOBE + 1;
@@ -1390,7 +1404,8 @@ define([
         }
 
         if (scene.debugShowGlobeDepth) {
-            scene._globeDepth.executeDebugGlobeDepth(context, passState, scene.debugShowGlobeDepthFrustum - 1);
+            var gd = getDebugGlobeDepth(scene, context, scene.debugShowGlobeDepthFrustum - 1)
+            gd.executeDebugGlobeDepth(context, passState);
         }
 
         if (useOIT) {

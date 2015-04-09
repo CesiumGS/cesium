@@ -133,9 +133,7 @@ define([
         }
     }
 
-    function executeDebugGlobeDepth(globeDepth, context, passState, index) {
-        globeDepth._debugGlobeDepthTexture = globeDepth._debugGlobeDepthTextures[index];
-
+    function executeDebugGlobeDepth(globeDepth, context, passState) {
         if (!defined(globeDepth._debugGlobeDepthViewportCommand)) {
             var fs =
                 'uniform sampler2D u_texture;\n' +
@@ -152,7 +150,7 @@ define([
             globeDepth._debugGlobeDepthViewportCommand = context.createViewportQuadCommand(fs, {
                 uniformMap : {
                     u_texture : function() {
-                        return globeDepth._debugGlobeDepthTexture;
+                        return globeDepth._globeDepthTexture;
                     }
                 },
                 owner : globeDepth
@@ -290,12 +288,12 @@ define([
         updateDebugGlobeDepth(this, context, uniformState, index);
     };
 
-    GlobeDepth.prototype.executeDebugGlobeDepth = function(context, passState, index) {
+    GlobeDepth.prototype.executeDebugGlobeDepth = function(context, passState) {
         if (!this.supported) {
             return;
         }
 
-        executeDebugGlobeDepth(this, context, passState, index);
+        executeDebugGlobeDepth(this, context, passState);
     };
 
     GlobeDepth.prototype.update = function(context) {
