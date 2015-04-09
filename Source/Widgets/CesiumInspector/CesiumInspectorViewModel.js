@@ -897,7 +897,7 @@ define([
                     }
                     if (that.globeDepth) {
                         // Determine the number of frustums being used.
-                        var numberOfFrustums = that._scene._frustumCommandsList.length;
+                        var numberOfFrustums = that._scene.numberOfFrustums;
                         that._numberOfFrustums = numberOfFrustums;
                         // Bound the frustum to be displayed.
                         var globeDepthFrustum = boundGlobeDepthFrustum(1, numberOfFrustums, that.globeDepthFrustum);

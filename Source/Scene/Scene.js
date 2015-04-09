@@ -825,6 +825,19 @@ define([
                 }
                 this._mode = value;
             }
+        },
+
+        /**
+         * Gets the current number of frustums.
+         * @memberof Scene.prototype
+         * @type {Number}
+         *
+         * @private
+         */
+        numberOfFrustums : {
+            get : function() {
+                return this._frustumCommandsList.length;
+            }
         }
     });
 
