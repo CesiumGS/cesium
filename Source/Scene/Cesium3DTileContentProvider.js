@@ -5,6 +5,7 @@ define([
         '../Core/Color',
         '../Core/defined',
         '../Core/destroyObject',
+        '../Core/getBasePath',
         '../Core/loadJson',
         '../Core/Transforms',
         './Cesium3DTileContentState',
@@ -17,6 +18,7 @@ define([
         Color,
         defined,
         destroyObject,
+        getBasePath,
         loadJson,
         Transforms,
         Cesium3DTileContentState,
@@ -111,17 +113,6 @@ define([
 
         return true;
     };
-
-// TODO: duplicate in Model.js.  We should not need this once we have Model batching.
-    function getBasePath(url) {
-        var basePath = '';
-        var i = url.lastIndexOf('/');
-        if (i !== -1) {
-            basePath = url.substring(0, i + 1);
-        }
-
-        return basePath;
-    }
 
     Cesium3DTileContentProvider.prototype.update = function(context, frameState, commandList) {
         // In the LOADED state we may be calling update() to move forward

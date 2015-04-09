@@ -13,6 +13,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/getBasePath',
         '../Core/getStringFromTypedArray',
         '../Core/IndexDatatype',
         '../Core/loadArrayBuffer',
@@ -57,6 +58,7 @@ define([
         destroyObject,
         DeveloperError,
         Event,
+        getBasePath,
         getStringFromTypedArray,
         IndexDatatype,
         loadArrayBuffer,
@@ -700,16 +702,6 @@ define([
             }
         }
     });
-
-    function getBasePath(url) {
-        var basePath = '';
-        var i = url.lastIndexOf('/');
-        if (i !== -1) {
-            basePath = url.substring(0, i + 1);
-        }
-
-        return basePath;
-    }
 
     function getAbsoluteURL(url) {
         var docUri = new Uri(document.location.href);
