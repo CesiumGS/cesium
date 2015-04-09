@@ -1341,7 +1341,7 @@ define([
         var skyAtmosphereCommand = (frameState.passes.render && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
         var sunCommand = (frameState.passes.render && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
 
-        // Preserve the reference to the original frame buffer.
+        // Preserve the reference to the original framebuffer.
         var originalFramebuffer = passState.framebuffer;
 
         // Create a working frustum from the original camera frustum.
@@ -1354,12 +1354,12 @@ define([
             frustum = camera.frustum.clone(scratchOrthographicFrustum);
         }
 
-        // Clear the pass state frame buffer.
+        // Clear the pass state framebuffer.
         var clearColorCommand = scene._clearColorCommand;
         Color.clone(clearColor, clearColorCommand.color);
         clearColorCommand.execute(context, passState);
 
-        // Update globe depth rendering based on the current context and clear the globe depth frame buffer.
+        // Update globe depth rendering based on the current context and clear the globe depth framebuffer.
         scene._globeDepth.update(context);
         scene._globeDepth.clear(context, passState, clearColor);
 
@@ -1374,7 +1374,7 @@ define([
             }
         }
 
-        // If supported, configure OIT to use the globe depth frame buffer and clear the OIT frame buffer.
+        // If supported, configure OIT to use the globe depth framebuffer and clear the OIT framebuffer.
         var useOIT = !picking && renderTranslucentCommands && defined(scene._oit) && scene._oit.isSupported();
         if (useOIT) {
             scene._oit.update(context, scene._globeDepth.framebuffer);
@@ -1382,7 +1382,7 @@ define([
             useOIT = useOIT && scene._oit.isSupported();
         }
 
-        // If supported, configure FXAA to use the globe depth color texture and clear the FXAA frame buffer.
+        // If supported, configure FXAA to use the globe depth color texture and clear the FXAA framebuffer.
         var useFXAA = !picking && scene.fxaa;
         if (useFXAA) {
             var fxaaTexture = !useOIT ? scene._globeDepth._colorTexture : undefined;
