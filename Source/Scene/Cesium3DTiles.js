@@ -176,21 +176,29 @@ define([
         when(tile.readyPromise).then(removeFunction).otherwise(removeFunction);
     }
 
-    function requestChildren(tiles3D, parent, frameState, parentFullyVisible) {
-        var cullingVolume = frameState.cullingVolume;
+    function requestChildren(tiles3D, parent, frameState) {
         var children = parent.children;
         var length = children.length;
 
-        // Sort so we request tiles closest to the viewer first
+        // Sort to request tiles closest to the viewer first
         computeDistanceToCamera(children, frameState);
         children.sort(sortChildrenByDistanceToCamera);
+
         for (var i = 0; i < length; ++i) {
             var child = children[i];
-            // Use visible() instead of contentsVisible() since the child may have
-            // visible ancestors even if contents are not visible
-            if ((parentFullyVisible || (visible(child, cullingVolume) !== Intersect.OUTSIDE)) && child.isContentUnloaded()) {
+            if (child.isContentUnloaded()) {
                 requestChild(tiles3D, child);
             }
+ // TODO: when we don't require all four children for refinement and we don't require top-down rendering, we can only request visible children, e.g.,
+ //   (parentFullyVisible || (contentsVisible(child, frameState.cullingVolume) !== Intersect.OUTSIDE))
+        }
+    }
+
+    function addCommands(tile, fullyVisible, context, frameState, commandList) {
+        // There may also be a tight box around just the tile's contents, e.g., for a city, we may be
+        // zoomed into a neighborhood and can cull the skyscrapers in the root node.
+        if (tile.isReady() && (fullyVisible || contentsVisible(tile, frameState.cullingVolume))) {
+            tile.update(context, frameState, commandList);
         }
     }
 
@@ -217,7 +225,7 @@ define([
 
         var queue = scratchQueue;
         queue.enqueue(root);
-
+//console.log('---');
         while (queue.length > 0) {
             // Level-order breath-first
             var t = queue.dequeue();
@@ -230,27 +238,30 @@ define([
                 continue;
             }
 
-            // Tile is inside/interest the view frustum.  How many pixels is its error?
+            // Tile is inside/intersects the view frustum.  How many pixels is its geometric error?
             var sse = getScreenSpaceError(t, context, frameState);
 // TODO: refine also based on (1) occlusion/VMSSE and/or (2) center of viewport
 
             var children = t.children;
             var childrenLength = children.length;
-            var childrenNeedLoad = (t.numberOfChildrenWithoutContent !== 0);
+            var allChildrenLoaded = t.numberOfChildrenWithoutContent === 0;
 
-            // Check if the tile is a leaf (childrenLength === 0.0) for the
-            // potential case when the leaf node has a non-zero geometric error.
-            if ((sse <= maximumScreenSpaceError) || (childrenLength === 0.0) || (childrenNeedLoad)) {
-                // There may also be a tight box around just the models in the tile
-                if ((fullyVisible || contentsVisible(t, cullingVolume)) && t.isReady()) {
-                    t.update(context, frameState, commandList);
-                }
-
-                if ((sse > maximumScreenSpaceError) && childrenNeedLoad) {
-                    requestChildren(tiles3D, t, frameState, fullyVisible);
-                }
+            if ((sse <= maximumScreenSpaceError) || (childrenLength === 0.0)) {
+                // This tile meets the SSE so add its commands.
+                //
+                // We also checked if the tile is a leaf (childrenLength === 0.0) for the potential case when the leaf
+                // node has a non-zero geometric error, e.g., because its contents is another 3D Tiles tree.
+                addCommands(t, fullyVisible, context, frameState, commandList);
+//console.log(t._content._url);
+            } else if (!allChildrenLoaded) {
+                // Tile does not meet SSE.  Add its commands since it is the best we have and request its children.
+                addCommands(t, fullyVisible, context, frameState, commandList);
+//console.log(t._content._url);
+                requestChildren(tiles3D, t, frameState);
             } else {
-                // Distance is used for computing SSE and for sorting.
+                // Tile does not meet SEE and its children are loaded.  Refine to them in front-to-back order.
+
+                // Distance is used for sorting now and for computing SSE when the tile comes off the queue.
                 computeDistanceToCamera(children, frameState);
 
                 // Sort children by distance for (1) request ordering, and (2) early-z
@@ -322,6 +333,7 @@ define([
      * DOC_TBA
      */
     Cesium3DTiles.prototype.destroy = function() {
+// TODO: traverse and destroy...careful of pending loads/processing
         return destroyObject(this);
     };
 

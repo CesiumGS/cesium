@@ -57,6 +57,7 @@ define([
     };
 
     Cesium3DTileContentProvider.prototype.request = function() {
+// TODO: allow this to not change the state depending on if the request is actually made, e.g., with RequestsByServer.
         this.state = Cesium3DTileContentState.LOADING;
 
         var that = this;
