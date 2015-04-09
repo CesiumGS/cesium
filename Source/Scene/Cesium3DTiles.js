@@ -151,7 +151,7 @@ define([
         var height = context.drawingBufferHeight;
         var sseDenominator = frameState.camera.frustum.sseDenominator;
 
-        return (tile.geometricError * height) / (distance * sseDenominator);
+        return (geometricError * height) / (distance * sseDenominator);
     }
 
     function computeDistanceToCamera(children, frameState) {
@@ -169,17 +169,11 @@ define([
         return a.distanceToCamera - b.distanceToCamera;
     }
 
-    function addToProcessingQueue(tiles3D, tile) {
-        return function() {
-            tiles3D._processingQueue.push(tile);
-        };
-    }
-
-    function removeFromProcessingQueue(tiles3D, tile) {
-        return function() {
-            var index = tiles3D._processingQueue.indexOf(tile);
-            tiles3D._processingQueue.splice(index, 1);
-        };
+    function requestChild(tiles3D, tile) {
+        tile.requestContent();
+        var removeFunction = removeFromProcessingQueue(tiles3D, tile);
+        when(tile.processingPromise).then(addToProcessingQueue(tiles3D, tile));
+        when(tile.readyPromise).then(removeFunction).otherwise(removeFunction);
     }
 
     function requestChildren(tiles3D, parent, frameState, parentFullyVisible) {
@@ -195,10 +189,7 @@ define([
             // Use visible() instead of contentsVisible() since the child may have
             // visible ancestors even if contents are not visible
             if ((parentFullyVisible || (visible(child, cullingVolume) !== Intersect.OUTSIDE)) && child.isContentUnloaded()) {
-                child.requestContent();
-                var removeFunction = removeFromProcessingQueue(tiles3D, child);
-                when(child.processingPromise).then(addToProcessingQueue(tiles3D, child));
-                when(child.readyPromise).then(removeFunction).otherwise(removeFunction);
+                requestChild(tiles3D, child);
             }
         }
     }
@@ -220,7 +211,7 @@ define([
         }
 
         if (root.isContentUnloaded()) {
-            root.requestContent();
+            requestChild(tiles3D, root);
             return;
         }
 
@@ -251,7 +242,7 @@ define([
             // potential case when the leaf node has a non-zero geometric error.
             if ((sse <= maximumScreenSpaceError) || (childrenLength === 0.0) || (childrenNeedLoad)) {
                 // There may also be a tight box around just the models in the tile
-                if (fullyVisible || contentsVisible(t, cullingVolume)) {
+                if ((fullyVisible || contentsVisible(t, cullingVolume)) && t.isReady()) {
                     t.update(context, frameState, commandList);
                 }
 
@@ -278,16 +269,34 @@ define([
         queue.clear();
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+
+    function addToProcessingQueue(tiles3D, tile) {
+        return function() {
+            tiles3D._processingQueue.push(tile);
+        };
+    }
+
+    function removeFromProcessingQueue(tiles3D, tile) {
+        return function() {
+            var index = tiles3D._processingQueue.indexOf(tile);
+            tiles3D._processingQueue.splice(index, 1);
+        };
+    }
+
     function processTiles(tiles3D, context, frameState) {
         var tiles = tiles3D._processingQueue;
         var length = tiles.length;
 
         // Process tiles in the PROCESSING state so they will eventually move to the READY state.
-        for (var i = 0; i < length; ++i) {
+        // Traverse backwards in case a tile is removed as a result of calling process()
+        for (var i = length - 1; i >= 0; --i) {
             tiles[i].process(context, frameState);
         }
 // TODO: timeslice like QuadtreePrimitive.js (but with round robin?) Or should that happen at a lower-level, e.g., models/renderer?
     }
+
+    ///////////////////////////////////////////////////////////////////////////
 
     /**
      * DOC_TBA

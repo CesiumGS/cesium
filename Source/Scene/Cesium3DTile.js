@@ -114,6 +114,10 @@ define([
         }
     });
 
+    Cesium3DTile.prototype.isReady = function() {
+        return this._content.state === Cesium3DTileContentState.READY;
+    };
+
     Cesium3DTile.prototype.isContentUnloaded = function() {
         return this._content.state === Cesium3DTileContentState.UNLOADED;
     };
