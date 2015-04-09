@@ -1,7 +1,7 @@
-attribute vec4 positionHighAndScale;
-attribute vec4 positionLowAndShow;
+attribute vec4 positionHighAndSize;
+attribute vec4 positionLowAndOutline;
 attribute vec4 compressedAttribute0;        // color, outlineColor, pick color
-attribute vec4 compressedAttribute1;        // outlinePercent, translucency by distance, some free space
+attribute vec4 compressedAttribute1;        // show, translucency by distance, some free space
 attribute vec4 scaleByDistance;             // near, nearScale, far, farScale
 
 varying vec4 v_color;
@@ -35,13 +35,15 @@ void main()
     // Modifying this shader may also require modifications to PointPrimitive._computeScreenSpacePosition
 
     // unpack attributes
-    vec3 positionHigh = positionHighAndScale.xyz;
-    vec3 positionLow = positionLowAndShow.xyz;
-    float scale = positionHighAndScale.w;
-    float show = positionLowAndShow.w;
+    vec3 positionHigh = positionHighAndSize.xyz;
+    vec3 positionLow = positionLowAndOutline.xyz;
+    float outlineWidthBothSides = 2.0 * positionLowAndOutline.w;
+    float totalSize = positionHighAndSize.w + outlineWidthBothSides;
+    float outlinePercent = outlineWidthBothSides / totalSize;
+    totalSize += 2.0;  // padding for anti-aliasing, one pixel per side.
 
     float temp = compressedAttribute1.x * SHIFT_RIGHT8;
-    float outlinePercent = floor(temp) / 255.0;
+    float show = floor(temp);
 
 #ifdef EYE_DISTANCE_TRANSLUCENCY
     vec4 translucencyByDistance;
@@ -123,12 +125,12 @@ void main()
 #endif
 
 #ifdef EYE_DISTANCE_SCALING
-    scale *= getNearFarScalar(scaleByDistance, lengthSq);
+    totalSize *= getNearFarScalar(scaleByDistance, lengthSq);
     // push vertex behind near plane for clipping
-    if (scale < 0.1)
+    if (totalSize < 0.1)
     {
         positionEC.xyz = vec3(0.0);
-        scale = 1.0;
+        totalSize = 1.0;
     }
 #endif
 
@@ -154,8 +156,8 @@ void main()
     v_outlineColor.a *= translucency;
 
     v_innerPercent = 1.0 - outlinePercent;
-    v_pixelDistance = 2.0 / scale;
-    gl_PointSize = scale;
+    v_pixelDistance = 2.0 / totalSize;
+    gl_PointSize = totalSize;
 
 #ifdef RENDER_FOR_PICK
     v_pickColor = pickColor;

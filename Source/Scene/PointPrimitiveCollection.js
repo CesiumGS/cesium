@@ -59,17 +59,17 @@ define([
     var POSITION_INDEX = PointPrimitive.POSITION_INDEX;
     var COLOR_INDEX = PointPrimitive.COLOR_INDEX;
     var OUTLINE_COLOR_INDEX = PointPrimitive.OUTLINE_COLOR_INDEX;
-    var OUTLINE_PERCENT_INDEX = PointPrimitive.OUTLINE_PERCENT_INDEX;
-    var SCALE_INDEX = PointPrimitive.SCALE_INDEX;
+    var OUTLINE_WIDTH_INDEX = PointPrimitive.OUTLINE_WIDTH_INDEX;
+    var PIXEL_SIZE_INDEX = PointPrimitive.PIXEL_SIZE_INDEX;
     var SCALE_BY_DISTANCE_INDEX = PointPrimitive.SCALE_BY_DISTANCE_INDEX;
     var TRANSLUCENCY_BY_DISTANCE_INDEX = PointPrimitive.TRANSLUCENCY_BY_DISTANCE_INDEX;
     var NUMBER_OF_PROPERTIES = PointPrimitive.NUMBER_OF_PROPERTIES;
 
     var attributeLocations = {
-        positionHighAndScale : 0,
-        positionLowAndShow : 1,
+        positionHighAndSize : 0,
+        positionLowAndOutline : 1,
         compressedAttribute0 : 2,        // color, outlineColor, pick color
-        compressedAttribute1 : 3,        // outlinePercent, translucency by distance, some free space
+        compressedAttribute1 : 3,        // show, translucency by distance, some free space
         scaleByDistance : 4
     };
 
@@ -134,7 +134,7 @@ define([
 
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
 
-        this._maxScale = 1.0;
+        this._maxPixelSize = 1.0;
 
         this._baseVolume = new BoundingSphere();
         this._baseVolumeWC = new BoundingSphere();
@@ -199,8 +199,8 @@ define([
                               BufferUsage.STATIC_DRAW, // POSITION_INDEX
                               BufferUsage.STATIC_DRAW, // COLOR_INDEX
                               BufferUsage.STATIC_DRAW, // OUTLINE_COLOR_INDEX
-                              BufferUsage.STATIC_DRAW, // OUTLINE_PERCENT_INDEX
-                              BufferUsage.STATIC_DRAW, // SCALE_INDEX
+                              BufferUsage.STATIC_DRAW, // OUTLINE_WIDTH_INDEX
+                              BufferUsage.STATIC_DRAW, // PIXEL_SIZE_INDEX
                               BufferUsage.STATIC_DRAW, // SCALE_BY_DISTANCE_INDEX
                               BufferUsage.STATIC_DRAW  // TRANSLUCENCY_BY_DISTANCE_INDEX
                           ];
@@ -245,10 +245,10 @@ define([
      * var p = pointPrimitives.add({
      *   show : true,
      *   position : Cesium.Cartesian3.ZERO,
-     *   scale : 10.0,
+     *   pixelSize : 10.0,
      *   color : Cesium.Color.WHITE,
      *   outlineColor : Cesium.Color.TRANSPARENT,
-     *   outlinePercent : 0.0,
+     *   outlineWidth : 0.0,
      *   id : undefined
      * });
      *
@@ -420,7 +420,7 @@ define([
 
     function createVAF(context, numberOfPointPrimitives, buffersUsage) {
         return new VertexArrayFacade(context, [{
-            index : attributeLocations.positionHighAndScale,
+            index : attributeLocations.positionHighAndSize,
             componentsPerAttribute : 4,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[POSITION_INDEX]
@@ -454,7 +454,7 @@ define([
 
     var writePositionScratch = new EncodedCartesian3();
 
-    function writePositionScaleAndShow(pointPrimitiveCollection, context, vafWriters, pointPrimitive) {
+    function writePositionSizeAndOutline(pointPrimitiveCollection, context, vafWriters, pointPrimitive) {
         var i = pointPrimitive._index;
         var position = pointPrimitive._getActualPosition();
 
@@ -463,26 +463,19 @@ define([
             pointPrimitiveCollection._boundingVolumeDirty = true;
         }
 
-        var show = pointPrimitive.show;
-
-        // If the color alphas are zero, do not show this pointPrimitive.  This lets us avoid providing
-        // color during the pick pass and also eliminates a discard in the fragment shader.
-        if (pointPrimitive.color.alpha === 0.0 && pointPrimitive.outlineColor.alpha === 0.0) {
-            show = false;
-        }
-
         EncodedCartesian3.fromCartesian(position, writePositionScratch);
-        var scale = pointPrimitive.scale;
+        var pixelSize = pointPrimitive.pixelSize;
+        var outlineWidth = pointPrimitive.outlineWidth;
 
-        pointPrimitiveCollection._maxScale = Math.max(pointPrimitiveCollection._maxScale, scale);
+        pointPrimitiveCollection._maxPixelSize = Math.max(pointPrimitiveCollection._maxPixelSize, pixelSize + outlineWidth);
 
-        var positionHighWriter = vafWriters[attributeLocations.positionHighAndScale];
+        var positionHighWriter = vafWriters[attributeLocations.positionHighAndSize];
         var high = writePositionScratch.high;
-        positionHighWriter(i, high.x, high.y, high.z, scale);
+        positionHighWriter(i, high.x, high.y, high.z, pixelSize);
 
-        var positionLowWriter = vafWriters[attributeLocations.positionLowAndShow];
+        var positionLowWriter = vafWriters[attributeLocations.positionLowAndOutline];
         var low = writePositionScratch.low;
-        positionLowWriter(i, low.x, low.y, low.z, (show ? 1.0 : 0.0));
+        positionLowWriter(i, low.x, low.y, low.z, outlineWidth);
     }
 
     var LEFT_SHIFT16 = 65536.0; // 2^16
@@ -543,12 +536,17 @@ define([
             }
         }
 
-        var outlinePercent = CesiumMath.clamp(pointPrimitive.outlinePercent, 0.0, 1.0);
-        outlinePercent = outlinePercent === 1.0 ? 255.0 : (outlinePercent * 255.0) | 0;
+        var show = pointPrimitive.show;
+
+        // If the color alphas are zero, do not show this pointPrimitive.  This lets us avoid providing
+        // color during the pick pass and also eliminates a discard in the fragment shader.
+        if (pointPrimitive.color.alpha === 0.0 && pointPrimitive.outlineColor.alpha === 0.0) {
+            show = false;
+        }
 
         nearValue = CesiumMath.clamp(nearValue, 0.0, 1.0);
         nearValue = nearValue === 1.0 ? 255.0 : (nearValue * 255.0) | 0;
-        var compressed0 = outlinePercent * LEFT_SHIFT8 + nearValue;
+        var compressed0 = (show ? 1.0 : 0.0) * LEFT_SHIFT8 + nearValue;
 
         farValue = CesiumMath.clamp(farValue, 0.0, 1.0);
         farValue = farValue === 1.0 ? 255.0 : (farValue * 255.0) | 0;
@@ -584,7 +582,7 @@ define([
     }
 
     function writePointPrimitive(pointPrimitiveCollection, context, vafWriters, pointPrimitive) {
-        writePositionScaleAndShow(pointPrimitiveCollection, context, vafWriters, pointPrimitive);
+        writePositionSizeAndOutline(pointPrimitiveCollection, context, vafWriters, pointPrimitive);
         writeCompressedAttrib0(pointPrimitiveCollection, context, vafWriters, pointPrimitive);
         writeCompressedAttrib1(pointPrimitiveCollection, context, vafWriters, pointPrimitive);
         writeScaleByDistance(pointPrimitiveCollection, context, vafWriters, pointPrimitive);
@@ -662,7 +660,7 @@ define([
         var pixelSize = frustum.getPixelSize(scratchDrawingBufferDimensions, distance);
         var pixelScale = Math.max(pixelSize.x, pixelSize.y);
 
-        var size = pixelScale * collection._maxScale;
+        var size = pixelScale * collection._maxPixelSize;
         boundingVolume.radius += size;
     }
 
@@ -721,15 +719,15 @@ define([
             if (pointPrimitivesToUpdateLength > 0) {
                 var writers = [];
 
-                if (properties[POSITION_INDEX] || properties[SHOW_INDEX] || properties[SCALE_INDEX]) {
-                    writers.push(writePositionScaleAndShow);
+                if (properties[POSITION_INDEX] || properties[OUTLINE_WIDTH_INDEX] || properties[PIXEL_SIZE_INDEX]) {
+                    writers.push(writePositionSizeAndOutline);
                 }
 
                 if (properties[COLOR_INDEX] || properties[OUTLINE_COLOR_INDEX]) {
                     writers.push(writeCompressedAttrib0);
                 }
 
-                if (properties[OUTLINE_PERCENT_INDEX] || properties[TRANSLUCENCY_BY_DISTANCE_INDEX]) {
+                if (properties[SHOW_INDEX] || properties[TRANSLUCENCY_BY_DISTANCE_INDEX]) {
                     writers.push(writeCompressedAttrib1);
                 }
 

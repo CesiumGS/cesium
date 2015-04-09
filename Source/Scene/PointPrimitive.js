@@ -71,8 +71,8 @@ define([
         this._actualPosition = Cartesian3.clone(this._position); // For columbus view and 2D
         this._color = Color.clone(defaultValue(options.color, Color.WHITE));
         this._outlineColor = Color.clone(defaultValue(options.outlineColor, Color.TRANSPARENT));
-        this._outlinePercent = defaultValue(options.outlinePercent, 0.0);
-        this._scale = defaultValue(options.scale, 10.0);
+        this._outlineWidth = defaultValue(options.outlineWidth, 0.0);
+        this._pixelSize = defaultValue(options.pixelSize, 10.0);
         this._scaleByDistance = options.scaleByDistance;
         this._translucencyByDistance = options.translucencyByDistance;
         this._id = options.id;
@@ -89,8 +89,8 @@ define([
     var POSITION_INDEX = PointPrimitive.POSITION_INDEX = 1;
     var COLOR_INDEX = PointPrimitive.COLOR_INDEX = 2;
     var OUTLINE_COLOR_INDEX = PointPrimitive.OUTLINE_COLOR_INDEX = 3;
-    var OUTLINE_PERCENT_INDEX = PointPrimitive.OUTLINE_PERCENT_INDEX = 4;
-    var SCALE_INDEX = PointPrimitive.SCALE_INDEX = 5;
+    var OUTLINE_WIDTH_INDEX = PointPrimitive.OUTLINE_WIDTH_INDEX = 4;
+    var PIXEL_SIZE_INDEX = PointPrimitive.PIXEL_SIZE_INDEX = 5;
     var SCALE_BY_DISTANCE_INDEX = PointPrimitive.SCALE_BY_DISTANCE_INDEX = 6;
     var TRANSLUCENCY_BY_DISTANCE_INDEX = PointPrimitive.TRANSLUCENCY_BY_DISTANCE_INDEX = 7;
     PointPrimitive.NUMBER_OF_PROPERTIES = 8;
@@ -237,14 +237,13 @@ define([
         },
 
         /**
-         * Gets or sets the scale of the pointPrimitive in pixels.  This corresponds to
-         * the gl_PointSize value for the pointPrimitive.
+         * Gets or sets the inner size of the pointPrimitive in pixels.
          * @memberof PointPrimitive.prototype
          * @type {Number}
          */
-        scale : {
+        pixelSize : {
             get : function() {
-                return this._scale;
+                return this._pixelSize;
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
@@ -253,9 +252,9 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                if (this._scale !== value) {
-                    this._scale = value;
-                    makeDirty(this, SCALE_INDEX);
+                if (this._pixelSize !== value) {
+                    this._pixelSize = value;
+                    makeDirty(this, PIXEL_SIZE_INDEX);
                 }
             }
         },
@@ -320,15 +319,14 @@ define([
         },
 
         /**
-         * Gets or sets the outline width as a percentage of the total point size.
-         * For example, setting a point scale of 10 pixels and an outlinePercent
-         * of 0.4 would result in a 4 pixel outline around a 6 pixel point.
+         * Gets or sets the outline width in pixels.  This width adds with pixelSize,
+         * increasing the total size of the point.
          * @memberof PointPrimitive.prototype
          * @type {Number}
          */
-        outlinePercent : {
+        outlineWidth : {
             get : function() {
-                return this._outlinePercent;
+                return this._outlineWidth;
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
@@ -337,9 +335,9 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                if (this._outlinePercent !== value) {
-                    this._outlinePercent = value;
-                    makeDirty(this, OUTLINE_PERCENT_INDEX);
+                if (this._outlineWidth !== value) {
+                    this._outlineWidth = value;
+                    makeDirty(this, OUTLINE_WIDTH_INDEX);
                 }
             }
         },
@@ -470,8 +468,8 @@ define([
         return this === other ||
                defined(other) &&
                this._show === other._show &&
-               this._scale === other._scale &&
-               this._outlinePercent === other._outlinePercent &&
+               this._pixelSize === other._pixelSize &&
+               this._outlineWidth === other._outlineWidth &&
                this._id === other._id &&
                this._imageId === other._imageId &&
                Cartesian3.equals(this._position, other._position) &&
