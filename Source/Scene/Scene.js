@@ -456,12 +456,6 @@ define([
          */
         this.debugShowGlobeDepthFrustum = 1;
 
-        this._debugGlobeDepthTextures = [];
-        this._debugGlobeDepthFramebuffers = [];
-        this._debugGlobeDepthCommands = [];
-        this._debugGlobeDepthTexture = undefined;
-        this._debugGlobeDepthViewportCommand = undefined;
-
         /**
          * When <code>true</code>, enables Fast Approximate Anti-aliasing even when order independent translucency
          * is unsupported.
@@ -1210,111 +1204,6 @@ define([
         }
     }
 
-    function destroyDebugGlobeDepthTexture(scene, textureIndex) {
-        var texture = scene._debugGlobeDepthTextures[textureIndex];
-        texture = texture && !texture.isDestroyed() && texture.destroy();
-    }
-
-    function destroyDebugGlobeDepthFramebuffer(scene, textureIndex) {
-        var framebuffer = scene._debugGlobeDepthFramebuffers[textureIndex];
-        framebuffer = framebuffer && !framebuffer.isDestroyed() && framebuffer.destroy();
-    }
-
-    function destroyDebugGlobeDepthCommand(scene, textureIndex) {
-        var command = scene._debugGlobeDepthCommands[textureIndex];
-        if (defined(command)) {
-            command.shaderProgram = command.shaderProgram && command.shaderProgram.destroy();
-        }
-    }
-
-    function destroyGlobeDepthObjects(scene) {
-        for (var i = 0; i < scene._debugGlobeDepthTextures.length; ++i) {
-            destroyDebugGlobeDepthTexture(scene, i);
-        }
-        scene._debugGlobeDepthTextures.length = 0;
-        for (var j = 0; j < scene._debugGlobeDepthFramebuffers.length; ++j) {
-            destroyDebugGlobeDepthFramebuffer(scene, j);
-        }
-        scene._debugGlobeDepthFramebuffers.length = 0;
-        for (var k = 0; k < scene._debugGlobeDepthCommands.length; ++k) {
-            destroyDebugGlobeDepthCommand(scene, k);
-        }
-        scene._debugGlobeDepthCommands.length = 0;
-    }
-
-    function updateDebugGlobeDepth(scene, context, uniformState, index) {
-        var texture = scene._debugGlobeDepthTextures[index];
-        var framebuffer = scene._debugGlobeDepthFramebuffers[index];
-        var command = scene._debugGlobeDepthCommands[index];
-
-        var width = context.drawingBufferWidth;
-        var height = context.drawingBufferHeight;
-
-        var textureChanged = !defined(texture) || texture.width !== width || texture.height !== height;
-        if (textureChanged) {
-            destroyDebugGlobeDepthTexture(scene, index);
-            destroyDebugGlobeDepthFramebuffer(scene, index);
-            destroyDebugGlobeDepthCommand(scene, index);
-
-            texture = context.createTexture2D({
-                width : width,
-                height : height,
-                pixelFormat : PixelFormat.RGBA,
-                pixelDatatype : PixelDatatype.FLOAT
-            });
-
-            scene._debugGlobeDepthTextures[index] = texture;
-
-            framebuffer = context.createFramebuffer({
-                colorTextures : [texture],
-                destroyAttachments : false
-            });
-
-            scene._debugGlobeDepthFramebuffers[index] = framebuffer;
-
-            command = context.createViewportQuadCommand(PassThrough, {
-                renderState : context.createRenderState(),
-                uniformMap : {
-                    u_texture : function() {
-                        return uniformState.globeDepthTexture;
-                    }
-                },
-                owner : scene
-            });
-
-            scene._debugGlobeDepthCommands[index] = command;
-        }
-    }
-
-    function executeDebugGlobeDepth(scene, context, passState, index) {
-        scene._debugGlobeDepthTexture = scene._debugGlobeDepthTextures[index];
-
-        if (!defined(scene._debugGlobeDepthViewportCommand)) {
-            var fs =
-                'uniform sampler2D u_texture;\n' +
-                'varying vec2 v_textureCoordinates;\n' +
-                'void main()\n' +
-                '{\n' +
-                '    float z_window = texture2D(u_texture, v_textureCoordinates).r;\n' +
-                '    float n_range = czm_depthRange.near;\n' +
-                '    float f_range = czm_depthRange.far;\n' +
-                '    float z_ndc = (2.0 * z_window - n_range - f_range) / (f_range - n_range);\n' +
-                '    gl_FragColor = vec4(mix(vec3(0.0), vec3(1.0), z_ndc * 0.5 + 0.5), 1.0);\n' +
-                '}\n';
-
-            scene._debugGlobeDepthViewportCommand = context.createViewportQuadCommand(fs, {
-                uniformMap : {
-                    u_texture : function() {
-                        return scene._debugGlobeDepthTexture;
-                    }
-                },
-                owner : scene
-            });
-        }
-
-        scene._debugGlobeDepthViewportCommand.execute(context, passState);
-    }
-
     var scratchPerspectiveFrustum = new PerspectiveFrustum();
     var scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
     var scratchOrthographicFrustum = new OrthographicFrustum();
@@ -1473,9 +1362,9 @@ define([
 
             if (scene.debugShowGlobeDepth) {
                 var orignal = passState.framebuffer;
-                updateDebugGlobeDepth(scene, context, us, index);
-                passState.framebuffer = scene._debugGlobeDepthFramebuffers[index];
-                var command = scene._debugGlobeDepthCommands[index];
+                scene._globeDepth.updateDebugGlobeDepth(context, us, index);
+                passState.framebuffer = scene._globeDepth._debugGlobeDepthFramebuffers[index];
+                var command = scene._globeDepth._debugGlobeDepthCommands[index];
                 command.execute(context, passState);
                 passState.framebuffer = orignal;
             }
@@ -1501,7 +1390,7 @@ define([
         }
 
         if (scene.debugShowGlobeDepth) {
-            executeDebugGlobeDepth(scene, context, passState, scene.debugShowGlobeDepthFrustum - 1);
+            scene._globeDepth.executeDebugGlobeDepth(context, passState, scene.debugShowGlobeDepthFrustum - 1);
         }
 
         if (useOIT) {
@@ -1982,8 +1871,6 @@ define([
             this._performanceDisplay = this._performanceDisplay && this._performanceDisplay.destroy();
             this._performanceContainer.parentNode.removeChild(this._performanceContainer);
         }
-
-        destroyGlobeDepthObjects(this);
 
         return destroyObject(this);
     };
