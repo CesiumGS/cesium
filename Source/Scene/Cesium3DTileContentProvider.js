@@ -57,9 +57,6 @@ define([
     };
 
     Cesium3DTileContentProvider.prototype.request = function() {
-        if (this.state !== Cesium3DTileContentState.UNLOADED) {
-            return false;
-        }
         this.state = Cesium3DTileContentState.LOADING;
 
         var that = this;
@@ -110,8 +107,6 @@ define([
             that.state = Cesium3DTileContentState.FAILED;
             that.processingPromise.reject(error);
         });
-
-        return true;
     };
 
     Cesium3DTileContentProvider.prototype.update = function(context, frameState, commandList) {

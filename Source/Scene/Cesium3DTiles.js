@@ -194,12 +194,11 @@ define([
             var child = children[i];
             // Use visisble() instead of contentsVisible() since the child may have
             // visible ancestors even if contents are not visible
-            if (parentFullyVisible || (visible(child, cullingVolume) !== Intersect.OUTSIDE)) {
-                if (child.request()) {
-                    var removeFunction = removeFromProcessingQueue(tiles3D, child);
-                    when(child.processingPromise).then(addToProcessingQueue(tiles3D, child));
-                    when(child.readyPromise).then(removeFunction).otherwise(removeFunction);
-                }
+            if ((parentFullyVisible || (visible(child, cullingVolume) !== Intersect.OUTSIDE)) && child.isContentUnloaded()) {
+                child.requestContent();
+                var removeFunction = removeFromProcessingQueue(tiles3D, child);
+                when(child.processingPromise).then(addToProcessingQueue(tiles3D, child));
+                when(child.readyPromise).then(removeFunction).otherwise(removeFunction);
             }
         }
     }
@@ -220,8 +219,8 @@ define([
             return;
         }
 
-        if (root.isUnloaded()) {
-            root.request();
+        if (root.isContentUnloaded()) {
+            root.requestContent();
             return;
         }
 

@@ -2,6 +2,7 @@
 define([
         '../Core/BoundingSphere',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/Intersect',
         '../Core/Rectangle',
@@ -12,6 +13,7 @@ define([
     ], function(
         BoundingSphere,
         defined,
+        defineProperties,
         destroyObject,
         Intersect,
         Rectangle,
@@ -70,7 +72,10 @@ define([
          */
         this.numberOfChildrenWithoutContent = tile.children.length;
 
-        this.processingPromise = when.defer();
+        /**
+         * @type {Promise}
+         * @readonly
+         */
         this.readyPromise = when.defer();
 
 // TODO: how to know which content provider to use, e.g., a property in tree.json
@@ -79,13 +84,6 @@ define([
         this._content = content;
 
         var that = this;
-
-        // Content enters the PROCESSING state
-        when(content.processingPromise).then(function(content) {
-            that.processingPromise.resolve(that);
-        }).otherwise(function(error) {
-            that.processingPromise.reject(error);
-        });
 
         // Content enters the READY state
         when(content.readyPromise).then(function(content) {
@@ -104,12 +102,24 @@ define([
         this.parentFullyVisible = false;
     };
 
-    Cesium3DTile.prototype.isUnloaded = function() {
+    defineProperties(Cesium3DTile.prototype, {
+        /**
+         * @type {Promise}
+         * @readonly
+         */
+        processingPromise : {
+            get : function() {
+                return this._content.processingPromise;
+            }
+        }
+    });
+
+    Cesium3DTile.prototype.isContentUnloaded = function() {
         return this._content.state === Cesium3DTileContentState.UNLOADED;
     };
 
-    Cesium3DTile.prototype.request = function() {
-        return this._content.request();
+    Cesium3DTile.prototype.requestContent = function() {
+        this._content.request();
     };
 
     Cesium3DTile.prototype.visibility = function(cullingVolume) {
