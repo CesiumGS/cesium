@@ -10,8 +10,8 @@ define([
         '../Core/loadJson',
         '../Core/Math',
         '../Core/Queue',
-        '../Scene/Cesium3DTile',
-        '../Scene/SceneMode',
+        './Cesium3DTile',
+        './SceneMode',
         '../ThirdParty/when'
     ], function(
         appendForwardSlash,
@@ -56,6 +56,7 @@ define([
 
         this._url = url;
         this._root = undefined;
+        this._geometricError = undefined; // Geometric error when the tree is not rendered at all
 // TODO: a linked list would be better depending on how how it allocates/frees.
         this._processingQueue = [];
 
@@ -71,12 +72,13 @@ define([
 
         var that = this;
 
-        loadJson(baseUrl + 'tree.json').then(function(root) {
-            that._root = new Cesium3DTile(baseUrl, root, undefined);
+        loadJson(baseUrl + 'tree.json').then(function(tree) {
+            that._geometricError = tree.geometricError;
+            that._root = new Cesium3DTile(baseUrl, tree.root, undefined);
 
             var stack = [];
             stack.push({
-                skeletonTile : root,
+                skeletonTile : tree.root,
                 cesium3DTile : that._root
             });
 
@@ -125,12 +127,12 @@ define([
         return tile.visibility(cullingVolume);
     }
 
-    function visibleForRendering(tile, cullingVolume) {
+    function contentsVisible(tile, cullingVolume) {
         if (tile.parentFullyVisible) {
             return true;
         }
 
-        return tile.visibilityForRendering(cullingVolume) !== Intersect.OUTSIDE;
+        return tile.contentsVisibility(cullingVolume) !== Intersect.OUTSIDE;
     }
 
     function getScreenSpaceError(tile, context, frameState) {
@@ -140,6 +142,10 @@ define([
             return tile.geometricError;
         }
 
+        return getExplicitScreenSpaceError(tile.geometricError, tile, context, frameState);
+    }
+
+    function getExplicitScreenSpaceError(geometricError, tile, context, frameState) {
         // Avoid divide by zero when viewer is inside the tile
         var distance = Math.max(tile.distanceToCamera, CesiumMath.EPSILON7);
         var height = context.drawingBufferHeight;
@@ -186,7 +192,8 @@ define([
         children.sort(sortChildrenByDistanceToCamera);
         for (var i = 0; i < length; ++i) {
             var child = children[i];
-// TODO: could consider using renderBox, but it might not include grandchildren
+            // Use visisble() instead of contentsVisible() since the child may have
+            // visible ancestors even if contents are not visible
             if (parentFullyVisible || (visible(child, cullingVolume) !== Intersect.OUTSIDE)) {
                 if (child.request()) {
                     var removeFunction = removeFromProcessingQueue(tiles3D, child);
@@ -207,6 +214,16 @@ define([
 
         var root = tiles3D._root;
         root.distanceToCamera = root.distanceToTile(frameState);
+
+        if (getExplicitScreenSpaceError(tiles3D._geometricError, root, context, frameState) <= maximumScreenSpaceError) {
+            // The SSE of not rendering the tree is small enough that the tree does not need to be rendered
+            return;
+        }
+
+        if (root.isUnloaded()) {
+            root.request();
+            return;
+        }
 
         var queue = scratchQueue;
         queue.enqueue(root);
@@ -235,9 +252,7 @@ define([
             // potential case when the leaf node has a non-zero geometric error.
             if ((sse <= maximumScreenSpaceError) || (childrenLength === 0.0) || (childrenNeedLoad)) {
                 // There may also be a tight box around just the models in the tile
-                if (fullyVisible || visibleForRendering(t, cullingVolume)) {
-// TODO: request root node elsewhere
-                    t.request();
+                if (fullyVisible || contentsVisible(t, cullingVolume)) {
                     t.update(context, frameState, commandList);
                 }
 

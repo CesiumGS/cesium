@@ -37,17 +37,28 @@ define([
     var Cesium3DTileContentProvider = function(url) {
         this._primitives = undefined;
         this._url = url;
-        this._state = Cesium3DTileContentState.UNLOADED;
 
+        /**
+         * @readonly
+         */
+        this.state = Cesium3DTileContentState.UNLOADED;
+
+        /**
+         * @type {Promise}
+         */
         this.processingPromise = when.defer();
+
+        /**
+         * @type {Promise}
+         */
         this.readyPromise = when.defer();
     };
 
     Cesium3DTileContentProvider.prototype.request = function() {
-        if (this._state !== Cesium3DTileContentState.UNLOADED) {
+        if (this.state !== Cesium3DTileContentState.UNLOADED) {
             return false;
         }
-        this._state = Cesium3DTileContentState.LOADING;
+        this.state = Cesium3DTileContentState.LOADING;
 
         var that = this;
         loadJson(this._url).then(function(contents) {
@@ -83,7 +94,7 @@ define([
                         material.setValue('diffuse', debugColor);
 
                         if (--pendingModelLoads === 0) {
-                            that._state = Cesium3DTileContentState.READY;
+                            that.state = Cesium3DTileContentState.READY;
                             that.readyPromise.resolve(that);
                         }
                     });
@@ -91,10 +102,10 @@ define([
             }
 
             that._primitives = primitives;
-            that._state = Cesium3DTileContentState.PROCESSING;
+            that.state = Cesium3DTileContentState.PROCESSING;
             that.processingPromise.resolve(that);
         }).otherwise(function(error) {
-            that._state = Cesium3DTileContentState.FAILED;
+            that.state = Cesium3DTileContentState.FAILED;
             that.processingPromise.reject(error);
         });
 
@@ -113,8 +124,8 @@ define([
     }
 
     Cesium3DTileContentProvider.prototype.update = function(context, frameState, commandList) {
-        if ((this._state !== Cesium3DTileContentState.PROCESSING) &&
-            (this._state !== Cesium3DTileContentState.READY)) {
+        if ((this.state !== Cesium3DTileContentState.PROCESSING) &&
+            (this.state !== Cesium3DTileContentState.READY)) {
             return;
         }
         // In the LOADED state we may be calling update() to move forward

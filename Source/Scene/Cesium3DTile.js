@@ -6,6 +6,7 @@ define([
         '../Core/Intersect',
         '../Core/Rectangle',
         './Cesium3DTileContentProvider',
+        './Cesium3DTileContentState',
         './TileBoundingBox',
         '../ThirdParty/when'
     ], function(
@@ -15,6 +16,7 @@ define([
         Intersect,
         Rectangle,
         Cesium3DTileContentProvider,
+        Cesium3DTileContentState,
         TileBoundingBox,
         when) {
     "use strict";
@@ -35,18 +37,18 @@ define([
         this._boundingSphere = BoundingSphere.fromRectangle3D(rectangle);
 
         var rs;
-        if (defined(tile.renderBox)) {
+        if (defined(tile.contentsBox)) {
             // Non-leaf tiles may have a render-box bounding-volume, which is a tight-fit box
             // around only the models in the tile.  This box is useful for culling for rendering,
             // but not for culling for traversing the tree since it is not spatial coherence, i.e.,
             // since it only bounds models in the tile, not the entire tile, children may be
             // outside of this box.
-            var rb = tile.renderBox;
-            rs = BoundingSphere.fromRectangle3D(new Rectangle(rb.west, rb.south, rb.east, rb.north));
+            var cb = tile.contentsBox;
+            rs = BoundingSphere.fromRectangle3D(new Rectangle(cb.west, cb.south, cb.east, cb.north));
 //TODO: Need to use minimumHeight and maximumHeight to get the correct sphere
         }
 
-        this._renderBoundingSphere = rs;
+        this._contentsBoundingSphere = rs;
 
         /**
          * @readonly
@@ -102,6 +104,10 @@ define([
         this.parentFullyVisible = false;
     };
 
+    Cesium3DTile.prototype.isUnloaded = function() {
+        return this._content.state === Cesium3DTileContentState.UNLOADED;
+    };
+
     Cesium3DTile.prototype.request = function() {
         return this._content.request();
     };
@@ -112,12 +118,12 @@ define([
         return cullingVolume.computeVisibility(this._boundingSphere);
     };
 
-    Cesium3DTile.prototype.visibilityForRendering = function(cullingVolume) {
-        if (!defined(this._renderBoundingSphere)) {
+    Cesium3DTile.prototype.contentsVisibility = function(cullingVolume) {
+        if (!defined(this._contentsBoundingSphere)) {
             return Intersect.INSIDE;
         }
 
-        return cullingVolume.computeVisibility(this._renderBoundingSphere);
+        return cullingVolume.computeVisibility(this._contentsBoundingSphere);
     };
 
     Cesium3DTile.prototype.distanceToTile = function(frameState) {
