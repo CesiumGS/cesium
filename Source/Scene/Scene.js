@@ -1360,6 +1360,14 @@ define([
                 frustum.near *= 0.99;
             }
 
+            var globeDepth = scene.debugShowGlobeDepth ? getDebugGlobeDepth(scene, context, index) : scene._globeDepth;
+
+            var fb;
+            if (scene.debugShowGlobeDepth) {
+                fb = passState.framebuffer;
+                passState.framebuffer = globeDepth.framebuffer;
+            }
+
             us.updateFrustum(frustum);
             depthClearCommand.execute(context, passState);
 
@@ -1369,9 +1377,12 @@ define([
                 executeCommand(commands[j], scene, context, passState);
             }
 
-            var globeDepth = scene._globeDepth;
-//            var globeDepth = scene.debugShowGlobeDepth ? getDebugGlobeDepth(scene, context, index) : scene._globeDepth;
+            globeDepth.update(context);
             globeDepth.executeCopyDepth(context, passState);
+
+            if (scene.debugShowGlobeDepth) {
+                passState.framebuffer = fb;
+            }
 
             /*
             if (scene.debugShowGlobeDepth) {
@@ -1382,7 +1393,7 @@ define([
                 command.execute(context, passState);
                 passState.framebuffer = orignal;
             }
-*/
+             */
             // Execute commands in order by pass up to the translucent pass.
             // Translucent geometry needs special handling (sorting/OIT).
             var startPass = Pass.GLOBE + 1;
@@ -1404,7 +1415,7 @@ define([
         }
 
         if (scene.debugShowGlobeDepth) {
-            var gd = getDebugGlobeDepth(scene, context, scene.debugShowGlobeDepthFrustum - 1)
+            var gd = getDebugGlobeDepth(scene, context, scene.debugShowGlobeDepthFrustum - 1);
             gd.executeDebugGlobeDepth(context, passState);
         }
 

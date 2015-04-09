@@ -46,6 +46,7 @@ define([
         this._debugGlobeDepthFramebuffers = [];
         this._debugGlobeDepthCommands = [];
         this._debugGlobeDepthTexture = undefined;
+
         this._debugGlobeDepthViewportCommand = undefined;
     };
 
