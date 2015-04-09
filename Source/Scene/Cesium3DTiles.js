@@ -192,7 +192,7 @@ define([
         children.sort(sortChildrenByDistanceToCamera);
         for (var i = 0; i < length; ++i) {
             var child = children[i];
-            // Use visisble() instead of contentsVisible() since the child may have
+            // Use visible() instead of contentsVisible() since the child may have
             // visible ancestors even if contents are not visible
             if ((parentFullyVisible || (visible(child, cullingVolume) !== Intersect.OUTSIDE)) && child.isContentUnloaded()) {
                 child.requestContent();
