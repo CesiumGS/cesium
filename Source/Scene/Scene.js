@@ -1207,7 +1207,9 @@ define([
 
     function destroyDebugGlobeDepthCommand(scene, textureIndex) {
         var command = scene._debugGlobeDepthCommands[textureIndex];
-        command = command && defined(command.shaderProgram) && command.shaderProgram.destroy();
+        if (defined(command)) {
+            command.shaderProgram = command.shaderProgram && command.shaderProgram.destroy();
+        }
     }
 
     function destroyGlobeDepthObjects(scene) {
