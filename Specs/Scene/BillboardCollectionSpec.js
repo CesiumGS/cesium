@@ -122,6 +122,12 @@ defineSuite([
         expect(b.id).not.toBeDefined();
     });
 
+    it('can add and remove before first update.', function() {
+        var b = billboards.add();
+        billboards.remove(b);
+        billboards.update(context, frameState, []);
+    });
+
     it('explicitly constructs a billboard', function() {
         var b = billboards.add({
             show : false,
