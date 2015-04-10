@@ -127,7 +127,7 @@ defineSuite([
       expect(function() {
           return new Scene({});
       }).toThrowDeveloperError();
-  });
+    });
 
     it('draws background color', function() {
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
@@ -228,6 +228,12 @@ defineSuite([
         scene.renderForSpecs();
         expect(scene._performanceDisplay).toBeDefined();
         scene.debugShowFramesPerSecond = false;
+    });
+
+    it('debugShowGlobeDepth', function() {
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        scene.debugShowGlobeDepth = true;
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
     });
 
     it('opaque/translucent render order (1)', function() {
