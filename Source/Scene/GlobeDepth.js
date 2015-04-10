@@ -42,11 +42,6 @@ define([
 
         this._supported = supported;
 
-        this._debugGlobeDepthTextures = [];
-        this._debugGlobeDepthFramebuffers = [];
-        this._debugGlobeDepthCommands = [];
-        this._debugGlobeDepthTexture = undefined;
-
         this._debugGlobeDepthViewportCommand = undefined;
     };
 
@@ -58,38 +53,6 @@ define([
         }
     });
 
-    function destroyDebugGlobeDepthTexture(globeDepth, textureIndex) {
-        var texture = globeDepth._debugGlobeDepthTextures[textureIndex];
-        texture = texture && !texture.isDestroyed() && texture.destroy();
-    }
-
-    function destroyDebugGlobeDepthFramebuffer(globeDepth, textureIndex) {
-        var framebuffer = globeDepth._debugGlobeDepthFramebuffers[textureIndex];
-        framebuffer = framebuffer && !framebuffer.isDestroyed() && framebuffer.destroy();
-    }
-
-    function destroyDebugGlobeDepthCommand(globeDepth, textureIndex) {
-        var command = globeDepth._debugGlobeDepthCommands[textureIndex];
-        if (defined(command)) {
-            command.shaderProgram = command.shaderProgram && command.shaderProgram.destroy();
-        }
-    }
-
-    function destroyGlobeDepthObjects(globeDepth) {
-        for (var i = 0; i < globeDepth._debugGlobeDepthTextures.length; ++i) {
-            destroyDebugGlobeDepthTexture(globeDepth, i);
-        }
-        globeDepth._debugGlobeDepthTextures.length = 0;
-        for (var j = 0; j < globeDepth._debugGlobeDepthFramebuffers.length; ++j) {
-            destroyDebugGlobeDepthFramebuffer(globeDepth, j);
-        }
-        globeDepth._debugGlobeDepthFramebuffers.length = 0;
-        for (var k = 0; k < globeDepth._debugGlobeDepthCommands.length; ++k) {
-            destroyDebugGlobeDepthCommand(globeDepth, k);
-        }
-        globeDepth._debugGlobeDepthCommands.length = 0;
-    }
-
     function updateDebugGlobeDepth(globeDepth, context, uniformState, index) {
         var texture = globeDepth._debugGlobeDepthTextures[index];
         var framebuffer = globeDepth._debugGlobeDepthFramebuffers[index];
@@ -100,10 +63,6 @@ define([
 
         var textureChanged = !defined(texture) || texture.width !== width || texture.height !== height;
         if (textureChanged) {
-            destroyDebugGlobeDepthTexture(globeDepth, index);
-            destroyDebugGlobeDepthFramebuffer(globeDepth, index);
-            destroyDebugGlobeDepthCommand(globeDepth, index);
-
             texture = context.createTexture2D({
                 width : width,
                 height : height,
@@ -337,7 +296,10 @@ define([
         this._copyColorCommand.shaderProgram = defined(this._copyColorCommand.shaderProgram) && this._copyColorCommand.shaderProgram.destroy();
         this._copyDepthCommand.shaderProgram = defined(this._copyDepthCommand.shaderProgram) && this._copyDepthCommand.shaderProgram.destroy();
 
-        destroyGlobeDepthObjects(this);
+        var command = this._debugGlobeDepthViewportCommand;
+        if (defined(command)) {
+            command.shaderProgram = defined(command.shaderProgram) && command.shaderProgram.destroy();
+        }
 
         return destroyObject(this);
     };
