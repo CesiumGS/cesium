@@ -668,10 +668,11 @@ define([
      * @private
      */
     PointPrimitiveCollection.prototype.update = function(context, frameState, commandList) {
+        removePointPrimitives(this);
+
         var pointPrimitives = this._pointPrimitives;
         var pointPrimitivesLength = pointPrimitives.length;
 
-        removePointPrimitives(this);
         updateMode(this, frameState);
 
         pointPrimitives = this._pointPrimitives;
