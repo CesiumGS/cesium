@@ -314,7 +314,7 @@ define([
             primitive._tileReplacementQueue.markTileRendered(tile); // TODO: rename to markTileVisited
 
             // Give the provider a chance to update the tile this frame.
-            tileProvider.visitTileDepthFirst(tile, frameState);
+            tileProvider.visitTileDepthFirst(tile, frameState, occluders);
 
             if (tile.needsLoading) {
                 // Initially assume this tile is not high priorty for load.

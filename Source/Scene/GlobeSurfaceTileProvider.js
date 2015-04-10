@@ -355,7 +355,7 @@ define([
         }
     };
 
-    GlobeSurfaceTileProvider.prototype.visitTileDepthFirst = function(tile) {
+    GlobeSurfaceTileProvider.prototype.visitTileDepthFirst = function(tile, frameState, occluders) {
         GlobeSurfaceTile.prepareNewTile(tile, this._terrainProvider, this._imageryLayers);
 
         var surfaceTile = tile.data;
@@ -384,14 +384,14 @@ define([
             if (newMin !== surfaceTile.minimumHeight || newMax !== surfaceTile.maximumHeight) {
                 surfaceTile.minimumHeight = newMin;
                 surfaceTile.maximumHeight = newMax;
-                estimateBoundingSphere(tile.tilingScheme.ellipsoid, tile.rectangle, surfaceTile.minimumHeight, surfaceTile.maximumHeight, surfaceTile.boundingSphere3D);
+                estimateBoundingSphereAndOcclusionPoint(tile.tilingScheme.ellipsoid, occluders, tile.rectangle, surfaceTile.minimumHeight, surfaceTile.maximumHeight, surfaceTile.boundingSphere3D, surfaceTile.occludeePointInScaledSpace);
             }
         }
     };
 
     var vertices = [];
 
-    function estimateBoundingSphere(ellipsoid, rectangle, minimumHeight, maximumHeight, result) {
+    function estimateBoundingSphereAndOcclusionPoint(ellipsoid, occluders, rectangle, minimumHeight, maximumHeight, boundingSphereResult, occludeePointResult) {
         vertices.length = 0;
 
         addVertex(ellipsoid, rectangle.west, rectangle.south, minimumHeight);
@@ -409,7 +409,10 @@ define([
         addVertex(ellipsoid, centerLongitude, rectangle.south, minimumHeight);
         addVertex(ellipsoid, centerLongitude, rectangle.south, maximumHeight);
 
-        BoundingSphere.fromVertices(vertices, Cartesian3.ZERO, 3, result);
+        BoundingSphere.fromVertices(vertices, Cartesian3.ZERO, 3, boundingSphereResult);
+
+        var centerLatitude = (rectangle.north + rectangle.south) * 0.5;
+        occluders.ellipsoid.computeHorizonCullingPointFromVertices(boundingSphereResult.center, vertices, 3, Cartesian3.ZERO, occludeePointResult);
     }
 
     var cartesian3Scratch = new Cartesian3();
