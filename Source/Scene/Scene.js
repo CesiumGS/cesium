@@ -24,13 +24,10 @@ define([
         '../Core/Matrix4',
         '../Core/mergeSort',
         '../Core/Occluder',
-        '../Core/PixelFormat',
         '../Core/ShowGeometryInstanceAttribute',
         '../Renderer/ClearCommand',
         '../Renderer/Context',
         '../Renderer/PassState',
-        '../Renderer/PixelDatatype',
-        '../Shaders/PostProcessFilters/PassThrough',
         './Camera',
         './CreditDisplay',
         './CullingVolume',
@@ -78,13 +75,10 @@ define([
         Matrix4,
         mergeSort,
         Occluder,
-        PixelFormat,
         ShowGeometryInstanceAttribute,
         ClearCommand,
         Context,
         PassState,
-        PixelDatatype,
-        PassThrough,
         Camera,
         CreditDisplay,
         CullingVolume,
@@ -1384,16 +1378,6 @@ define([
                 passState.framebuffer = fb;
             }
 
-            /*
-            if (scene.debugShowGlobeDepth) {
-                var orignal = passState.framebuffer;
-                scene._globeDepth.updateDebugGlobeDepth(context, us, index);
-                passState.framebuffer = scene._globeDepth._debugGlobeDepthFramebuffers[index];
-                var command = scene._globeDepth._debugGlobeDepthCommands[index];
-                command.execute(context, passState);
-                passState.framebuffer = orignal;
-            }
-             */
             // Execute commands in order by pass up to the translucent pass.
             // Translucent geometry needs special handling (sorting/OIT).
             var startPass = Pass.GLOBE + 1;
