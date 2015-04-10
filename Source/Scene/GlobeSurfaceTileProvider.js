@@ -482,20 +482,6 @@ define([
 
                 var mustNotRefine = tooManyLevels || childAvailabilityUnknown || isAvailabilityLeaf || cameraInsideBoundingSphere;
 
-                if (mustNotRefine) {
-                    var reason;
-                    if (tooManyLevels) {
-                        reason = '(too many levels)';
-                    } else if (childAvailabilityUnknown) {
-                        reason = '(child availability unknown)';
-                    } else if (isAvailabilityLeaf) {
-                        reason = '(availability leaf)';
-                    } else if (cameraInsideBoundingSphere) {
-                        reason = '(camera inside bounding sphere)';
-                    }
-                    console.log('Must not refine past L' + tile.level + 'X' + tile.x + 'Y' + tile.y + ' ' + reason);
-                }
-
                 var childrenRenderable = !mustNotRefine;
 
                 var children = tile.children;
@@ -572,48 +558,19 @@ define([
             }
         }
 
-        var notVisibleByFrustum = false;
-        var notVisibleByOcclusion = false;
-
         var intersection = cullingVolume.computeVisibility(boundingVolume);
         if (intersection === Intersect.OUTSIDE) {
-            notVisibleByFrustum = true;
             intersection = Visibility.NONE;
         } else if (frameState.mode === SceneMode.SCENE3D) {
             var occludeePointInScaledSpace = surfaceTile.occludeePointInScaledSpace;
             if (!defined(occludeePointInScaledSpace) || Cartesian3.magnitudeSquared(occludeePointInScaledSpace) === 0.0) {
-//                return intersection;
+                return intersection;
             } else if (occluders.ellipsoid.isScaledSpacePointVisible(occludeePointInScaledSpace)) {
-//                return intersection;
+                return intersection;
             } else {
-                notVisibleByOcclusion = true;
                 intersection = Visibility.NONE;
             }
         }
-
-        if (intersection !== tile._lastIntersection && defined(tile._lastIntersection)) {
-            function visibilityToLabel(visibility) {
-                if (visibility === Visibility.NONE) {
-                    return 'none';
-                } else if (visibility === Visibility.PARTIAL) {
-                    return 'partial';
-                } else if (visibility === Visibility.FULL) {
-                    return 'full';
-                }
-            }
-
-            if (intersection === Visibility.NONE) {
-                if (notVisibleByOcclusion) {
-                    console.log('Visibility change (occlusion): L' + tile.level + 'X' + tile.x + 'Y' + tile.y + ': ' + visibilityToLabel(tile._lastIntersection) + ' -> ' + visibilityToLabel(intersection));
-                } else if (notVisibleByFrustum) {
-                    console.log('Visibility change (frustum): L' + tile.level + 'X' + tile.x + 'Y' + tile.y + ': ' + visibilityToLabel(tile._lastIntersection) + ' -> ' + visibilityToLabel(intersection));
-                }
-            }
-
-            //console.log('Visibility change: L' + tile.level + 'X' + tile.x + 'Y' + tile.y + ': ' + visibilityToLabel(tile._lastIntersection) + ' -> ' + visibilityToLabel(intersection));
-        }
-
-        tile._lastIntersection = intersection;
 
         return intersection;
     };

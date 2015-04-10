@@ -567,7 +567,6 @@ define([
             tile.data.occludeePointInScaledSpace = Cartesian3.clone(mesh.occludeePointInScaledSpace, tile.data.occludeePointInScaledSpace);
             tile.data.boundingDataFromTile = tile;
             tile.data.terrainState = TerrainState.TRANSFORMED;
-            console.log('Loaded L' + tile.level + 'X' + tile.x + 'Y' + tile.y + (tile._lastIntersection === -1 ? ' (not visible)' : ''));
         }, function() {
             tile.data.terrainState = TerrainState.FAILED;
         });

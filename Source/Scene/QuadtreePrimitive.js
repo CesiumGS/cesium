@@ -64,7 +64,7 @@ define([
         this._tileProvider.quadtree = this;
 
         this._debug = {
-            enableDebugOutput : true,
+            enableDebugOutput : false,
 
             maxDepth : 0,
             tilesVisited : 0,
