@@ -53,46 +53,6 @@ define([
         }
     });
 
-    function updateDebugGlobeDepth(globeDepth, context, uniformState, index) {
-        var texture = globeDepth._debugGlobeDepthTextures[index];
-        var framebuffer = globeDepth._debugGlobeDepthFramebuffers[index];
-        var command = globeDepth._debugGlobeDepthCommands[index];
-
-        var width = context.drawingBufferWidth;
-        var height = context.drawingBufferHeight;
-
-        var textureChanged = !defined(texture) || texture.width !== width || texture.height !== height;
-        if (textureChanged) {
-            texture = context.createTexture2D({
-                width : width,
-                height : height,
-                pixelFormat : PixelFormat.RGBA,
-                pixelDatatype : PixelDatatype.FLOAT
-            });
-
-            globeDepth._debugGlobeDepthTextures[index] = texture;
-
-            framebuffer = context.createFramebuffer({
-                colorTextures : [texture],
-                destroyAttachments : false
-            });
-
-            globeDepth._debugGlobeDepthFramebuffers[index] = framebuffer;
-
-            command = context.createViewportQuadCommand(PassThrough, {
-                renderState : context.createRenderState(),
-                uniformMap : {
-                    u_texture : function() {
-                        return uniformState.globeDepthTexture;
-                    }
-                },
-                owner : globeDepth
-            });
-
-            globeDepth._debugGlobeDepthCommands[index] = command;
-        }
-    }
-
     function executeDebugGlobeDepth(globeDepth, context, passState) {
         if (!defined(globeDepth._debugGlobeDepthViewportCommand)) {
             var fs =
@@ -239,14 +199,6 @@ define([
 
         globeDepth._clearColorCommand.framebuffer = globeDepth.framebuffer;
     }
-
-    GlobeDepth.prototype.updateDebugGlobeDepth = function(context, uniformState, index) {
-        if (!this.supported) {
-            return;
-        }
-
-        updateDebugGlobeDepth(this, context, uniformState, index);
-    };
 
     GlobeDepth.prototype.executeDebugGlobeDepth = function(context, passState) {
         if (!this.supported) {
