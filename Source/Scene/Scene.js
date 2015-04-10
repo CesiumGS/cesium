@@ -820,7 +820,7 @@ define([
         },
 
         /**
-         * Gets the current number of frustums.
+         * Gets the number of frustums used in the last frame.
          * @memberof Scene.prototype
          * @type {Number}
          *
