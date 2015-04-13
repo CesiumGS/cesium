@@ -1,4 +1,4 @@
-#define SHOW_TILE_BOUNDARIES
+//#define SHOW_TILE_BOUNDARIES
 
 uniform vec4 u_initialColor;
 

@@ -97,8 +97,6 @@ define([
         this._levelZeroTilesReady = false;
         this._loadQueueTimeSlice = 5.0;
 
-        this._frameNumber = 0;
-
         /**
          * Gets or sets the maximum screen-space error, in pixels, that is allowed.
          * A higher maximum error will render fewer tiles and improve performance, while a lower
@@ -200,8 +198,6 @@ define([
      *        commands to this array during the update call.
      */
     QuadtreePrimitive.prototype.update = function(context, frameState, commandList) {
-        ++this._frameNumber;
-
         this._tileProvider.beginUpdate(context, frameState, commandList);
 
         selectTilesForRendering(this, context, frameState);
@@ -478,7 +474,6 @@ define([
                     rectangle: tile.rectangle,
                     time: now,
                     distance: tile._distance,
-                    isVisible: tile._isVisible,
                     done: tile.state === QuadtreeTileLoadState.DONE,
                     failed: tile.state === QuadtreeTileLoadState.FAILED
                 });
