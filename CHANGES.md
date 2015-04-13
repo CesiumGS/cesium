@@ -7,6 +7,8 @@ Change Log
 * Deprecated
   *
 * An exception is now thrown if `Primitive.modelMatrix` is not the identity matrix when in in 2D or Columbus View.
+* Added new `PointPrimitive` and `PointPrimitiveCollection` as alternatives to billboards with circles.
+* Changed `Entity.point` back-end graphics to use the new `PointPrimitive` instead of billboards.  No change to the `Entity.point` API.
 
 ### 1.8 - 2015-04-01
 
