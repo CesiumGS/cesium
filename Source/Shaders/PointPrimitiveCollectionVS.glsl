@@ -40,7 +40,7 @@ void main()
     float outlineWidthBothSides = 2.0 * positionLowAndOutline.w;
     float totalSize = positionHighAndSize.w + outlineWidthBothSides;
     float outlinePercent = outlineWidthBothSides / totalSize;
-    totalSize += 2.0;  // padding for anti-aliasing, one pixel per side.
+    totalSize += 3.0;  // padding for anti-aliasing on both sides.
 
     float temp = compressedAttribute1.x * SHIFT_RIGHT8;
     float show = floor(temp);
