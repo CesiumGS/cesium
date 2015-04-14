@@ -41,6 +41,10 @@ Sandcastle.addToolbarButton('Freeze on/off', function() {
     city.debugFreezeFrame = !city.debugFreezeFrame;
 });
 
+Sandcastle.addToolbarButton('Colorize on/off', function() {
+    city.debugColorizeNodes = !city.debugColorizeNodes;
+});
+
 Sandcastle.addToolbarButton('SSE++', function() {
     ++city.maximumScreenSpaceError;
     console.log('New max SSE: ' + city.maximumScreenSpaceError);
