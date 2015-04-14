@@ -33,7 +33,7 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {String} options.url TODO
      * @param {Boolean} [options.show=true] TODO
-     * @param {Boolean} [options.maximumScreenSpaceError=2] TODO
+     * @param {Boolean} [options.maximumScreenSpaceError=32] TODO
      *
      * @alias Cesium3DTiles
      * @constructor
@@ -67,7 +67,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 100);
+        this.maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 32);
 
         /**
          * DOC_TBA
