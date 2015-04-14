@@ -1,3 +1,5 @@
+uniform float u_maxTotalPointSize;
+
 attribute vec4 positionHighAndSize;
 attribute vec4 positionLowAndOutline;
 attribute vec4 compressedAttribute0;        // color, outlineColor, pick color
@@ -40,7 +42,12 @@ void main()
     float outlineWidthBothSides = 2.0 * positionLowAndOutline.w;
     float totalSize = positionHighAndSize.w + outlineWidthBothSides;
     float outlinePercent = outlineWidthBothSides / totalSize;
-    totalSize += 3.0;  // padding for anti-aliasing on both sides.
+    // Scale in response to browser-zoom.
+    totalSize *= czm_resolutionScale;
+    // Add padding for anti-aliasing on both sides.
+    totalSize += 3.0;
+    // Clamp to max point size.
+    totalSize = min(totalSize, u_maxTotalPointSize);
 
     float temp = compressedAttribute1.x * SHIFT_RIGHT8;
     float show = floor(temp);
@@ -126,8 +133,9 @@ void main()
 
 #ifdef EYE_DISTANCE_SCALING
     totalSize *= getNearFarScalar(scaleByDistance, lengthSq);
-    // push vertex behind near plane for clipping
-    if (totalSize < 0.1)
+    // Push vertex behind near plane for clipping.
+    // Note that context.minimumAliasedPointSize "will be at most 1.0".
+    if (totalSize < 1.0)
     {
         positionEC.xyz = vec3(0.0);
         totalSize = 1.0;
@@ -145,8 +153,6 @@ void main()
 #endif
 
     vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
-
-    //maybe?? scale *= czm_resolutionScale;
 
     gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
 

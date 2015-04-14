@@ -192,6 +192,7 @@ define([
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
 
         this._mode = SceneMode.SCENE3D;
+        this._maxTotalPointSize = 1;
 
         // The buffer usage for each attribute is determined based on the usage of the attribute over time.
         this._buffersUsage = [
@@ -205,7 +206,12 @@ define([
                               BufferUsage.STATIC_DRAW  // TRANSLUCENCY_BY_DISTANCE_INDEX
                           ];
 
-        this._uniforms = {};
+        var that = this;
+        this._uniforms = {
+            u_maxTotalPointSize : function() {
+                return that._maxTotalPointSize;
+            }
+        };
     };
 
     defineProperties(PointPrimitiveCollection.prototype, {
@@ -669,6 +675,8 @@ define([
      */
     PointPrimitiveCollection.prototype.update = function(context, frameState, commandList) {
         removePointPrimitives(this);
+
+        this._maxTotalPointSize = context.maximumAliasedPointSize;
 
         var pointPrimitives = this._pointPrimitives;
         var pointPrimitivesLength = pointPrimitives.length;
