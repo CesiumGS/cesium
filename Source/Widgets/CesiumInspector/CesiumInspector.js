@@ -101,6 +101,40 @@ define([
         performanceContainer.className = 'cesium-cesiumInspector-performanceDisplay';
         generalSection.appendChild(performanceContainer);
 
+        var globeDepth = document.createElement('div');
+        generalSection.appendChild(globeDepth);
+        var gCheckbox = document.createElement('input');
+        gCheckbox.type = 'checkbox';
+        gCheckbox.setAttribute('data-bind', 'checked: globeDepth, click: showGlobeDepth');
+        globeDepth.appendChild(gCheckbox);
+        globeDepth.appendChild(document.createTextNode('Show globe depth'));
+
+        var globeDepthFrustum = document.createElement('div');
+        globeDepth.appendChild(globeDepthFrustum);
+
+        // Use a span with HTML binding so that we can indent with non-breaking spaces.
+        var gLabel = document.createElement('span');
+        gLabel.setAttribute('data-bind', 'html: "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Frustum:"');
+        globeDepthFrustum.appendChild(gLabel);
+
+        var gText = document.createElement('span');
+        gText.setAttribute('data-bind', 'text: globeDepthFrustumText');
+        globeDepthFrustum.appendChild(gText);
+
+        var gMinusButton = document.createElement('input');
+        gMinusButton.type = 'button';
+        gMinusButton.value = '-';
+        gMinusButton.className = 'cesium-cesiumInspector-pickButton';
+        gMinusButton.setAttribute('data-bind', 'click: decrementGlobeDepthFrustum');
+        globeDepthFrustum.appendChild(gMinusButton);
+
+        var gPlusButton = document.createElement('input');
+        gPlusButton.type = 'button';
+        gPlusButton.value = '+';
+        gPlusButton.className = 'cesium-cesiumInspector-pickButton';
+        gPlusButton.setAttribute('data-bind', 'click: incrementGlobeDepthFrustum');
+        globeDepthFrustum.appendChild(gPlusButton);
+
         // Primitives
         var prim = document.createElement('div');
         prim.className = 'cesium-cesiumInspector-sectionHeader';

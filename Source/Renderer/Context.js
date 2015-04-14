@@ -909,10 +909,10 @@ define([
         },
 
         /**
-         * The drawingBufferWidth of the underlying GL context.
+         * The drawingBufferHeight of the underlying GL context.
          * @memberof Context.prototype
          * @type {Number}
-         * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferWidth|drawingBufferWidth}
+         * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferHeight|drawingBufferHeight}
          */
         drawingBufferHeight : {
             get : function() {
@@ -921,10 +921,10 @@ define([
         },
 
         /**
-         * The drawingBufferHeight of the underlying GL context.
+         * The drawingBufferWidth of the underlying GL context.
          * @memberof Context.prototype
          * @type {Number}
-         * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferHeight|drawingBufferHeight}
+         * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferWidth|drawingBufferWidth}
          */
         drawingBufferWidth : {
             get : function() {

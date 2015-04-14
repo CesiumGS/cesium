@@ -56,6 +56,12 @@ define([
 
     var bc = new Color(0.15, 0.15, 0.15, 0.75);
 
+    function boundGlobeDepthFrustum(lower, upper, proposed) {
+        var bounded = Math.min(proposed, upper);
+        bounded = Math.max(bounded, lower);
+        return bounded;
+    }
+
     /**
      * The view model for {@link CesiumInspector}.
      * @alias CesiumInspectorViewModel
@@ -144,6 +150,28 @@ define([
          * @default false
          */
         this.wireframe = false;
+
+        /**
+         * Gets or sets the show globe depth state.  This property is observable.
+         * @type {Boolean}
+         * @default false
+         */
+        this.globeDepth = false;
+
+        /**
+         * Gets or sets the index of the globe depth frustum to display.  This property is observable.
+         * @type {Number}
+         * @default 1
+         */
+        this.globeDepthFrustum = 1;
+        this._numberOfFrustums = 1;
+
+        /**
+         * Gets or sets the index of the globe depth frustum text.  This property is observable.
+         * @type {String}
+         * @default '1 of 1'
+         */
+        this.globeDepthFrustumText = '1 of 1';
 
         /**
          * Gets or sets the suspend updates state.  This property is observable.
@@ -253,7 +281,7 @@ define([
         knockout.track(this, ['filterTile', 'suspendUpdates', 'dropDownVisible', 'frustums',
                               'frustumStatisticText', 'pickTileActive', 'pickPrimitiveActive', 'hasPickedPrimitive',
                               'hasPickedTile', 'tileText', 'generalVisible', 'generalSwitchText',
-                              'primitivesVisible', 'primitivesSwitchText', 'terrainVisible', 'terrainSwitchText']);
+                              'primitivesVisible', 'primitivesSwitchText', 'terrainVisible', 'terrainSwitchText', 'globeDepthFrustumText']);
 
         this._toggleDropDown = createCommand(function() {
             that.dropDownVisible = !that.dropDownVisible;
@@ -333,6 +361,25 @@ define([
 
         this._showWireframe = createCommand(function() {
             globe._surface.tileProvider._debug.wireframe = that.wireframe;
+            return true;
+        });
+
+        this._showGlobeDepth = createCommand(function() {
+            that._scene.debugShowGlobeDepth = that.globeDepth;
+            return true;
+        });
+
+        this._incrementGlobeDepthFrustum = createCommand(function() {
+            var next = that.globeDepthFrustum + 1;
+            that.globeDepthFrustum = boundGlobeDepthFrustum(1, that._numberOfFrustums, next);
+            that.scene.debugShowGlobeDepthFrustum = that.globeDepthFrustum;
+            return true;
+        });
+
+        this._decrementGlobeDepthFrustum = createCommand(function() {
+            var next = that.globeDepthFrustum - 1;
+            that.globeDepthFrustum = boundGlobeDepthFrustum(1, that._numberOfFrustums, next);
+            that.scene.debugShowGlobeDepthFrustum = that.globeDepthFrustum;
             return true;
         });
 
@@ -553,6 +600,42 @@ define([
         showWireframe : {
             get : function() {
                 return this._showWireframe;
+            }
+        },
+
+        /**
+         * Gets the command to toggle the view of the Globe depth buffer
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
+        showGlobeDepth : {
+            get : function() {
+                return this._showGlobeDepth;
+            }
+        },
+
+        /**
+         * Gets the command to increment the globe depth frustum index to be shown
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
+        incrementGlobeDepthFrustum : {
+            get : function() {
+                return this._incrementGlobeDepthFrustum;
+            }
+        },
+
+        /**
+         * Gets the command to decrement the globe depth frustum index to be shown
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
+        decrementGlobeDepthFrustum : {
+            get : function() {
+                return this._decrementGlobeDepthFrustum;
             }
         },
 
@@ -812,6 +895,17 @@ define([
                     if (that.frustums) {
                         that.frustumStatisticText = frustumStatsToString(that._scene.debugFrustumStatistics);
                     }
+
+                    // Determine the number of frustums being used.
+                    var numberOfFrustums = that._scene.numberOfFrustums;
+                    that._numberOfFrustums = numberOfFrustums;
+                    // Bound the frustum to be displayed.
+                    var globeDepthFrustum = boundGlobeDepthFrustum(1, numberOfFrustums, that.globeDepthFrustum);
+                    that.globeDepthFrustum = globeDepthFrustum;
+                    that.scene.debugShowGlobeDepthFrustum = globeDepthFrustum;
+                    // Update the displayed text.
+                    that.globeDepthFrustumText = globeDepthFrustum + ' of ' + numberOfFrustums;
+
                     if (that.performance) {
                         that._performanceDisplay.update();
                     }

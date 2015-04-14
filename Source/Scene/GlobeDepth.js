@@ -41,6 +41,8 @@ define([
         }
 
         this._supported = supported;
+
+        this._debugGlobeDepthViewportCommand = undefined;
     };
 
     defineProperties(GlobeDepth.prototype, {
@@ -50,6 +52,34 @@ define([
             }
         }
     });
+
+    function executeDebugGlobeDepth(globeDepth, context, passState) {
+        if (!defined(globeDepth._debugGlobeDepthViewportCommand)) {
+            var fs =
+                'uniform sampler2D u_texture;\n' +
+                'varying vec2 v_textureCoordinates;\n' +
+                'void main()\n' +
+                '{\n' +
+                '    float z_window = texture2D(u_texture, v_textureCoordinates).r;\n' +
+                '    float n_range = czm_depthRange.near;\n' +
+                '    float f_range = czm_depthRange.far;\n' +
+                '    float z_ndc = (2.0 * z_window - n_range - f_range) / (f_range - n_range);\n' +
+                '    float scale = pow(z_ndc * 0.5 + 0.5, 8.0);\n' +
+                '    gl_FragColor = vec4(mix(vec3(0.0), vec3(1.0), scale), 1.0);\n' +
+                '}\n';
+
+            globeDepth._debugGlobeDepthViewportCommand = context.createViewportQuadCommand(fs, {
+                uniformMap : {
+                    u_texture : function() {
+                        return globeDepth._globeDepthTexture;
+                    }
+                },
+                owner : globeDepth
+            });
+        }
+
+        globeDepth._debugGlobeDepthViewportCommand.execute(context, passState);
+    }
 
     function destroyTextures(globeDepth) {
         globeDepth._colorTexture = globeDepth._colorTexture && !globeDepth._colorTexture.isDestroyed() && globeDepth._colorTexture.destroy();
@@ -76,6 +106,7 @@ define([
             pixelFormat : PixelFormat.DEPTH_STENCIL,
             pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8_WEBGL
         });
+
         globeDepth._globeDepthTexture = context.createTexture2D({
             width : width,
             height : height,
@@ -170,6 +201,14 @@ define([
         globeDepth._clearColorCommand.framebuffer = globeDepth.framebuffer;
     }
 
+    GlobeDepth.prototype.executeDebugGlobeDepth = function(context, passState) {
+        if (!this.supported) {
+            return;
+        }
+
+        executeDebugGlobeDepth(this, context, passState);
+    };
+
     GlobeDepth.prototype.update = function(context) {
         if (!this.supported) {
             return;
@@ -209,6 +248,11 @@ define([
 
         this._copyColorCommand.shaderProgram = defined(this._copyColorCommand.shaderProgram) && this._copyColorCommand.shaderProgram.destroy();
         this._copyDepthCommand.shaderProgram = defined(this._copyDepthCommand.shaderProgram) && this._copyDepthCommand.shaderProgram.destroy();
+
+        var command = this._debugGlobeDepthViewportCommand;
+        if (defined(command)) {
+            command.shaderProgram = defined(command.shaderProgram) && command.shaderProgram.destroy();
+        }
 
         return destroyObject(this);
     };
