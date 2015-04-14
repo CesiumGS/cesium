@@ -64,7 +64,8 @@ define([
                 '    float n_range = czm_depthRange.near;\n' +
                 '    float f_range = czm_depthRange.far;\n' +
                 '    float z_ndc = (2.0 * z_window - n_range - f_range) / (f_range - n_range);\n' +
-                '    gl_FragColor = vec4(mix(vec3(0.0), vec3(1.0), z_ndc * 0.5 + 0.5), 1.0);\n' +
+                '    float scale = pow(z_ndc * 0.5 + 0.5, 1.0);\n' +
+                '    gl_FragColor = vec4(mix(vec3(0.0), vec3(1.0), scale), 1.0);\n' +
                 '}\n';
 
             globeDepth._debugGlobeDepthViewportCommand = context.createViewportQuadCommand(fs, {
