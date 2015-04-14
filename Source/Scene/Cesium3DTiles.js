@@ -57,6 +57,7 @@ define([
         this._geometricError = undefined; // Geometric error when the tree is not rendered at all
 // TODO: a linked list would be better depending on how how it allocates/frees.
         this._processingQueue = [];
+        this._selectedTiles = [];
 
         /**
          * DOC_TBA
@@ -67,6 +68,11 @@ define([
          * DOC_TBA
          */
         this.maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 100);
+
+        /**
+         * DOC_TBA
+         */
+        this.debugFreezeFrame = defaultValue(options.debugFreezeFrame, false);
 
         var that = this;
 
@@ -192,19 +198,26 @@ define([
         }
     }
 
-    function addCommands(tile, fullyVisible, context, frameState, commandList) {
+    function selectTile(selectedTiles, tile, fullyVisible, frameState) {
         // There may also be a tight box around just the tile's contents, e.g., for a city, we may be
         // zoomed into a neighborhood and can cull the skyscrapers in the root node.
         if (tile.isReady() && (fullyVisible || contentsVisible(tile, frameState.cullingVolume))) {
-            tile.update(context, frameState, commandList);
+            selectedTiles.push(tile);
         }
     }
 
     var scratchStack = [];
 
-    function spatialTraverse(tiles3D, context, frameState, commandList) {
+    function selectTiles(tiles3D, context, frameState, commandList) {
+        if (tiles3D.debugFreezeFrame) {
+            return;
+        }
+
         var maximumScreenSpaceError = tiles3D.maximumScreenSpaceError;
         var cullingVolume = frameState.cullingVolume;
+
+        var selectedTiles = tiles3D._selectedTiles;
+        selectedTiles.length = 0;
 
         var root = tiles3D._root;
         root.distanceToCamera = root.distanceToTile(frameState);
@@ -247,11 +260,11 @@ define([
                 //
                 // We also checked if the tile is a leaf (childrenLength === 0.0) for the potential case when the leaf
                 // node has a non-zero geometric error, e.g., because its contents is another 3D Tiles tree.
-                addCommands(t, fullyVisible, context, frameState, commandList);
+                selectTile(selectedTiles, t, fullyVisible, frameState);
 //console.log(t._content._url);
             } else if (!allChildrenLoaded) {
                 // Tile does not meet SSE.  Add its commands since it is the best we have and request its children.
-                addCommands(t, fullyVisible, context, frameState, commandList);
+                selectTile(selectedTiles, t, fullyVisible, frameState);
 //console.log(t._content._url);
                 requestChildren(tiles3D, t, frameState);
             } else {
@@ -313,7 +326,13 @@ define([
         }
 
         processTiles(this, context, frameState);
-        spatialTraverse(this, context, frameState, commandList);
+        selectTiles(this, context, frameState, commandList);
+
+        var selectedTiles = this._selectedTiles;
+        var length = selectedTiles.length;
+        for (var i = 0; i < length; ++i) {
+            selectedTiles[i].update(context, frameState, commandList);
+        }
     };
 
     /**
