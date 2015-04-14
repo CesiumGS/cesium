@@ -144,14 +144,14 @@ define([
         return this._tileBoundingBox.distanceToCamera(frameState);
     };
 
-    Cesium3DTile.prototype.update = function(context, frameState, commandList) {
-        this._content.update(context, frameState, commandList);
+    Cesium3DTile.prototype.update = function(owner, context, frameState, commandList) {
+        this._content.update(owner, context, frameState, commandList);
     };
 
     var scratchCommandList = [];
 
-    Cesium3DTile.prototype.process = function(context, frameState) {
-        this._content.update(context, frameState, scratchCommandList);
+    Cesium3DTile.prototype.process = function(owner, context, frameState) {
+        this._content.update(owner, context, frameState, scratchCommandList);
     };
 
     Cesium3DTile.prototype.isDestroyed = function() {

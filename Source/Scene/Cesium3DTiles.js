@@ -34,6 +34,8 @@ define([
      * @param {String} options.url TODO
      * @param {Boolean} [options.show=true] TODO
      * @param {Boolean} [options.maximumScreenSpaceError=32] TODO
+     * @param {Boolean} [options.debugFreezeFrame=false] TODO
+     * @param {Boolean} [options.debugColorizeNodes=false] TODO
      *
      * @alias Cesium3DTiles
      * @constructor
@@ -73,6 +75,11 @@ define([
          * DOC_TBA
          */
         this.debugFreezeFrame = defaultValue(options.debugFreezeFrame, false);
+
+        /**
+         * DOC_TBA
+         */
+        this.debugColorizeNodes = defaultValue(options.debugColorizeNodes, false);
 
         var that = this;
 
@@ -309,7 +316,7 @@ define([
         // Process tiles in the PROCESSING state so they will eventually move to the READY state.
         // Traverse backwards in case a tile is removed as a result of calling process()
         for (var i = length - 1; i >= 0; --i) {
-            tiles[i].process(context, frameState);
+            tiles[i].process(tiles3D, context, frameState);
         }
 // TODO: timeslice like QuadtreePrimitive.js (but with round robin?) Or should that happen at a lower-level, e.g., models/renderer?
     }
@@ -331,7 +338,7 @@ define([
         var selectedTiles = this._selectedTiles;
         var length = selectedTiles.length;
         for (var i = 0; i < length; ++i) {
-            selectedTiles[i].update(context, frameState, commandList);
+            selectedTiles[i].update(this, context, frameState, commandList);
         }
     };
 

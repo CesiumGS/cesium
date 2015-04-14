@@ -54,6 +54,9 @@ define([
          * @type {Promise}
          */
         this.readyPromise = when.defer();
+
+        this._debugColor = Cartesian4.fromColor(Color.fromRandom({ alpha : 1.0 }));
+        this._debugColorizeNodes = false;
     };
 
     Cesium3DTileContentProvider.prototype.request = function() {
@@ -62,7 +65,6 @@ define([
 
         var that = this;
         loadJson(this._url).then(function(contents) {
-            var debugColor = Cartesian4.fromColor(Color.fromRandom({ alpha : 1.0 }));
             var primitives = new PrimitiveCollection();
 
 // TODO: this assumes A LOT about the CZML.
@@ -85,14 +87,7 @@ define([
 
 // TODO: for debugging only
                     /*jshint loopfunc: true */
-                    /*jshint debug: true*/
                     when(model.readyPromise).then(function(model) {
-                        var material = model.getMaterial('material_RoofColor');
-                        if (!defined(material)) {
-                            debugger;
-                        }
-                        material.setValue('diffuse', debugColor);
-
                         if (--pendingModelLoads === 0) {
                             that.state = Cesium3DTileContentState.READY;
                             that.readyPromise.resolve(that);
@@ -110,11 +105,42 @@ define([
         });
     };
 
-    Cesium3DTileContentProvider.prototype.update = function(context, frameState, commandList) {
+    function setMaterialDiffuse(content, color) {
+        var primitives = content._primitives;
+        var length = primitives.length;
+        for (var i = 0; i < length; ++i) {
+            var material = primitives.get(i).getMaterial('material_RoofColor');
+            if (!defined(material)) {
+//TODO: consistent material name
+/*jshint debug: true*/
+                debugger;
+/*jshint debug: false*/
+            }
+            material.setValue('diffuse', color);
+        }
+    }
+
+    function applyDebugSettings(owner, content) {
+        if (content.state === Cesium3DTileContentState.READY) {
+            var primitives = content._primitives;
+            var length = primitives.length;
+
+            if (owner.debugColorizeNodes && !content._debugColorizeNodes) {
+                content._debugColorizeNodes = true;
+                setMaterialDiffuse(content, content._debugColor);
+            } else if (!owner.debugColorizeNodes && content._debugColorizeNodes) {
+                content._debugColorizeNodes = false;
+                setMaterialDiffuse(content, Cartesian4.fromColor(Color.WHITE));
+            }
+        }
+    }
+
+    Cesium3DTileContentProvider.prototype.update = function(owner, context, frameState, commandList) {
         // In the LOADED state we may be calling update() to move forward
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
 
+        applyDebugSettings(owner, this);
         this._primitives.update(context, frameState, commandList);
     };
 
