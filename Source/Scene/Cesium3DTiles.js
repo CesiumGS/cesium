@@ -35,7 +35,7 @@ define([
      * @param {Boolean} [options.show=true] TODO
      * @param {Boolean} [options.maximumScreenSpaceError=32] TODO
      * @param {Boolean} [options.debugFreezeFrame=false] TODO
-     * @param {Boolean} [options.debugColorizeNodes=false] TODO
+     * @param {Boolean} [options.debugColorizeTiles=false] TODO
      *
      * @alias Cesium3DTiles
      * @constructor
@@ -79,7 +79,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.debugColorizeNodes = defaultValue(options.debugColorizeNodes, false);
+        this.debugColorizeTiles = defaultValue(options.debugColorizeTiles, false);
 
         var that = this;
 

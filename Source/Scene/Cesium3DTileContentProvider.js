@@ -56,7 +56,7 @@ define([
         this.readyPromise = when.defer();
 
         this._debugColor = Cartesian4.fromColor(Color.fromRandom({ alpha : 1.0 }));
-        this._debugColorizeNodes = false;
+        this._debugColorizeTiles = false;
     };
 
     Cesium3DTileContentProvider.prototype.request = function() {
@@ -125,11 +125,11 @@ define([
             var primitives = content._primitives;
             var length = primitives.length;
 
-            if (owner.debugColorizeNodes && !content._debugColorizeNodes) {
-                content._debugColorizeNodes = true;
+            if (owner.debugColorizeTiles && !content._debugColorizeTiles) {
+                content._debugColorizeTiles = true;
                 setMaterialDiffuse(content, content._debugColor);
-            } else if (!owner.debugColorizeNodes && content._debugColorizeNodes) {
-                content._debugColorizeNodes = false;
+            } else if (!owner.debugColorizeTiles && content._debugColorizeTiles) {
+                content._debugColorizeTiles = false;
                 setMaterialDiffuse(content, Cartesian4.fromColor(Color.WHITE));
             }
         }
