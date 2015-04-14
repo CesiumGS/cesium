@@ -29,9 +29,18 @@ function startup(Cesium) {
 //Sandcastle_Begin
 
 var viewer = new Cesium.Viewer('cesiumContainer');
-viewer.scene.primitives.add(new Cesium.Cesium3DTiles({
-    url : 'http://localhost:8002/tilesets/Seattle'
+var tiles = viewer.scene.primitives.add(new Cesium.Cesium3DTiles({
+    url : 'http://localhost:8002/tilesets/Seattle',
+    debugFreezeFrame : false
 }));
+
+document.addEventListener('keyup', function(e) {
+    switch (e.keyCode) {
+    case '1'.charCodeAt(0):
+        tiles.debugFreezeFrame = !tiles.debugFreezeFrame;
+        break;
+    }
+}, false);
 
 /*
 var viewer = new Cesium.Viewer('cesiumContainer');
