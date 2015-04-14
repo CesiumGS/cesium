@@ -29,18 +29,27 @@ function startup(Cesium) {
 //Sandcastle_Begin
 
 var viewer = new Cesium.Viewer('cesiumContainer');
-var tiles = viewer.scene.primitives.add(new Cesium.Cesium3DTiles({
+var city = viewer.scene.primitives.add(new Cesium.Cesium3DTiles({
     url : 'http://localhost:8002/tilesets/Seattle',
+
+    // Defaults:
+    maximumScreenSpaceError : 32,
     debugFreezeFrame : false
 }));
 
-document.addEventListener('keyup', function(e) {
-    switch (e.keyCode) {
-    case '1'.charCodeAt(0):
-        tiles.debugFreezeFrame = !tiles.debugFreezeFrame;
-        break;
-    }
-}, false);
+Sandcastle.addToolbarButton('Freeze on/off', function() {
+    city.debugFreezeFrame = !city.debugFreezeFrame;
+});
+
+Sandcastle.addToolbarButton('SSE++', function() {
+    ++city.maximumScreenSpaceError;
+    console.log('New max SSE: ' + city.maximumScreenSpaceError);
+});
+
+Sandcastle.addToolbarButton('SSE--', function() {
+    city.maximumScreenSpaceError = Math.max(city.maximumScreenSpaceError - 1, 0);
+    console.log('New max SSE: ' + city.maximumScreenSpaceError);
+});
 
 /*
 var viewer = new Cesium.Viewer('cesiumContainer');
