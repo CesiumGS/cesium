@@ -416,7 +416,7 @@ define([
                 texture = context.createTexture2D({
                     source : image
                 });
-                Material._textureCache.addTexture(this._texturePaths[uniformId], texture);
+                Material._textureCache.addTexture(this._texturePaths[uniformId], texture, image);
             }
 
             this._textures[uniformId] = texture;
@@ -451,7 +451,7 @@ define([
                         negativeZ : images[5]
                     }
                 });
-                Material._textureCache.addTexture(this._texturePaths[uniformId], cubeMap);
+                Material._textureCache.addTexture(this._texturePaths[uniformId], cubeMap, images);
             }
 
             this._textures[uniformId] = cubeMap;
@@ -702,6 +702,10 @@ define([
                 if (defined(newTexture)) {
                     Material._textureCache.releaseTexture(material._texturePaths[uniformId]);
                     material._textures[uniformId] = newTexture;
+                    material._loadedImages.push({
+                        id : uniformId,
+                        image : Material._textureCache.getTextureSource(uniformValue)
+                    });
                 } else {
                     when(loadImage(uniformValue), function(image) {
                         material._loadedImages.push({
@@ -746,6 +750,10 @@ define([
                 if (defined(newTexture)) {
                     Material._textureCache.releaseTexture(material._texturePaths[uniformId]);
                     material._textures[uniformId] = newTexture;
+                    material._loadedCubeMaps.push({
+                        id : uniformId,
+                        images : Material._textureCache.getTextureSource(path)
+                    });
                 } else {
                     var promises = [
                         loadImage(uniformValue.positiveX),
@@ -943,10 +951,11 @@ define([
     Material._textureCache = {
         _textures : {},
 
-        addTexture : function(path, texture) {
+        addTexture : function(path, texture, source) {
             this._textures[path] = {
                 texture : texture,
-                count : 1
+                count : 1,
+                source : source
             };
         },
 
@@ -956,6 +965,16 @@ define([
             if (defined(entry)) {
                 entry.count++;
                 return entry.texture;
+            }
+
+            return undefined;
+        },
+
+        getTextureSource : function(path) {
+            var entry = this._textures[path];
+
+            if (defined(entry)) {
+                return entry.source;
             }
 
             return undefined;
