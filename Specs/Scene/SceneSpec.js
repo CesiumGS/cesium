@@ -237,6 +237,7 @@ defineSuite([
     });
 
     it('opaque/translucent render order (1)', function() {
+        var scene = createScene();
         var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
         var rectanglePrimitive1 = new RectanglePrimitive({
@@ -272,6 +273,7 @@ defineSuite([
     });
 
     it('opaque/translucent render order (2)', function() {
+        var scene = createScene();
         var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
         var rectanglePrimitive1 = new RectanglePrimitive({
@@ -307,6 +309,7 @@ defineSuite([
     });
 
     it('renders fast path with no translucent primitives', function() {
+        var scene = createScene();
         var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
         var rectanglePrimitive = new RectanglePrimitive({
@@ -328,6 +331,8 @@ defineSuite([
     });
 
     it('renders with OIT and without FXAA', function() {
+        var scene = createScene();
+
         var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
         var rectanglePrimitive = new RectanglePrimitive({
