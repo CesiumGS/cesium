@@ -43,7 +43,6 @@ define([
     var Cesium3DTile = function(baseUrl, tile, parent) {
         this._header = tile;
 
-// TODO: Need to use minimumHeight and maximumHeight to get the correct sphere
         var b = tile.box;
         var rectangle = new Rectangle(b.west, b.south, b.east, b.north);
 
@@ -52,7 +51,7 @@ define([
             minimumHeight : b.minimumHeight,
             maximumHeight : b.maximumHeight
         });
-        this._boundingSphere = BoundingSphere.fromRectangle3D(rectangle);
+        this._boundingSphere = BoundingSphere.fromRectangleWithHeights3D(rectangle, undefined, b.minimumHeight, b.maximumHeight);
 
         var rs;
         if (defined(tile.contentsBox)) {
@@ -62,8 +61,7 @@ define([
             // since it only bounds models in the tile, not the entire tile, children may be
             // outside of this box.
             var cb = tile.contentsBox;
-            rs = BoundingSphere.fromRectangle3D(new Rectangle(cb.west, cb.south, cb.east, cb.north));
-//TODO: Need to use minimumHeight and maximumHeight to get the correct sphere
+            rs = BoundingSphere.fromRectangleWithHeights3D(new Rectangle(cb.west, cb.south, cb.east, cb.north), undefined, cb.minimumHeight, cb.maximumHeight);
         }
 
         this._contentsBoundingSphere = rs;
