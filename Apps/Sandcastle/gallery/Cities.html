@@ -34,15 +34,24 @@ var city = viewer.scene.primitives.add(new Cesium.Cesium3DTiles({
 
     // Defaults:
     maximumScreenSpaceError : 32,
+    debugShowStatistics : false,
+    debugFreezeFrame : false,
     debugShowBox : false,
     debugShowContentsBox : false,
     debugShowBoundingVolume : false,
-    debugShowContentsBoundingVolume : false,
-    debugFreezeFrame : false
+    debugShowContentsBoundingVolume : false
 }));
+
+Sandcastle.addToolbarButton('Stats on/off', function() {
+    city.debugShowStatistics = !city.debugShowStatistics;
+});
 
 Sandcastle.addToolbarButton('Freeze on/off', function() {
     city.debugFreezeFrame = !city.debugFreezeFrame;
+});
+
+Sandcastle.addToolbarButton('Colorize on/off', function() {
+    city.debugColorizeTiles = !city.debugColorizeTiles;
 });
 
 Sandcastle.addToolbarButton('Box on/off', function() {
@@ -59,10 +68,6 @@ Sandcastle.addToolbarButton('BV on/off', function() {
 
 Sandcastle.addToolbarButton('Contents BV on/off', function() {
     city.debugShowContentsBoundingVolume = !city.debugShowContentsBoundingVolume;
-});
-
-Sandcastle.addToolbarButton('Colorize on/off', function() {
-    city.debugColorizeTiles = !city.debugColorizeTiles;
 });
 
 Sandcastle.addToolbarButton('SSE++', function() {
