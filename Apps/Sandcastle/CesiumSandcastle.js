@@ -264,7 +264,16 @@ require({
     function makeLineLabel(msg, className) {
         var element = document.createElement('abbr');
         element.className = className;
-        element.innerHTML = '&nbsp;';
+        switch (className) {
+        case 'hintMarker':
+            element.innerHTML = '&#9650;';
+            break;
+        case 'errorMarker':
+            element.innerHTML = '&times;';
+            break;
+        default:
+            element.innerHTML = '&#9654;';
+        }
         element.title = msg;
         return element;
     }
