@@ -1,12 +1,16 @@
 Change Log
 ==========
 
-### 1.9 -2015-05-01
-
+### 1.9 - 2015-05-01
+* Breaking changes
+  *
+* Deprecated
+  *
+* An exception is now thrown if `Primitive.modelMatrix` is not the identity matrix when in in 2D or Columbus View.
 * Fixed documentation for 'Context.drawingBufferHeight' and 'Context.drawingBufferWidth'.
 * Added debug option to 'Scene' to show the depth buffer information for a specified view frustum slice and exposed capability in 'CesiumInspector' widget.
 
-### 1.8 -2015-04-01
+### 1.8 - 2015-04-01
 
 * Breaking changes
   * Removed the `eye`, `target`, and `up` parameters to `Camera.lookAt` which were deprecated in Cesium 1.6. Use the `target` and `offset`.
