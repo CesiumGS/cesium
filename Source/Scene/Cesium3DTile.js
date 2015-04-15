@@ -184,7 +184,7 @@ define([
             asynchronous : false,
 
             // TODO: working around what I believe is a bounding volume bug in Primitive
-            cull : false
+            //cull : false
         });
     }
 
