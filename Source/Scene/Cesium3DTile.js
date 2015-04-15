@@ -10,6 +10,8 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/Intersect',
+        '../Core/Matrix4',
+        '../Core/SphereOutlineGeometry',
         '../Core/Rectangle',
         './Cesium3DTileContentProvider',
         './Cesium3DTileContentState',
@@ -28,6 +30,8 @@ define([
         defineProperties,
         destroyObject,
         Intersect,
+        Matrix4,
+        SphereOutlineGeometry,
         Rectangle,
         Cesium3DTileContentProvider,
         Cesium3DTileContentState,
@@ -117,6 +121,8 @@ define([
 
         this._debugBox = undefined;
         this._debugContentsBox = undefined;
+        this._debugSphere = undefined;
+        this._debugContentsSphere = undefined;
     };
 
     defineProperties(Cesium3DTile.prototype, {
@@ -161,13 +167,10 @@ define([
         return this._tileBoundingBox.distanceToCamera(frameState);
     };
 
-    function createDebugBox(box, color) {
+    function createDebugPrimitive(geometry, color, modelMatrix) {
         var instance = new GeometryInstance({
-            geometry : new RectangleOutlineGeometry({
-                rectangle : new Rectangle(box.west, box.south, box.east, box.north),
-                height : box.minimumHeight,
-                extrudedHeight: box.maximumHeight
-             }),
+            geometry : geometry,
+            modelMatrix : modelMatrix,
             attributes : {
                 color : ColorGeometryInstanceAttribute.fromColor(color)
             }
@@ -181,6 +184,22 @@ define([
             }),
             asynchronous : false
         });
+    }
+
+    function createDebugBox(box, color) {
+        var geometry = new RectangleOutlineGeometry({
+            rectangle : new Rectangle(box.west, box.south, box.east, box.north),
+            height : box.minimumHeight,
+            extrudedHeight: box.maximumHeight
+         });
+        return createDebugPrimitive(geometry, color);
+    }
+
+    function createDebugSphere(sphere, color) {
+        var geometry = new SphereOutlineGeometry({
+            radius : sphere.radius
+        });
+        return createDebugPrimitive(geometry, color, Matrix4.fromTranslation(sphere.center));
     }
 
     function applyDebugSettings(tile, owner, context, frameState, commandList) {
@@ -198,11 +217,29 @@ define([
 
         if (owner.debugShowContentsBox && hasContentsBox) {
             if (!defined(tile._debugContentsBox)) {
-                tile._debugContentsBox = createDebugBox(tile._header.contentsBox, Color.GREEN);
+                tile._debugContentsBox = createDebugBox(tile._header.contentsBox, Color.BLUE);
             }
             tile._debugContentsBox.update(context, frameState, commandList);
         } else if (!owner.debugShowContentsBox && defined(tile._debugContentsBox)) {
             tile._debugContentsBox = tile._debugContentsBox.destroy();
+        }
+
+        if (owner.debugShowBoundingVolume) {
+            if (!defined(tile._debugSphere)) {
+                tile._debugSphere = createDebugSphere(tile._boundingSphere, hasContentsBox ? Color.WHITE : Color.RED);
+            }
+            tile._debugSphere.update(context, frameState, commandList);
+        } else if (!owner.debugShowBoundingVolume && defined(tile._debugSphere)) {
+            tile._debugSphere = tile._debugSphere.destroy();
+        }
+
+        if (owner.debugShowContentsBoundingVolume && hasContentsBox) {
+            if (!defined(tile._debugContentsSphere)) {
+                tile._debugContentsSphere = createDebugSphere(tile._contentsBoundingSphere, Color.BLUE);
+            }
+            tile._debugContentsSphere.update(context, frameState, commandList);
+        } else if (!owner.debugShowContentsBoundingVolume && defined(tile._debugContentsSphere)) {
+            tile._debugContentsSphere = tile._debugContentsSphere.destroy();
         }
     }
 
@@ -225,6 +262,8 @@ define([
         this._content = this._content && this._content.destroy();
         this._debugBox = this._debugBox && this._debugBox.destroy();
         this._debugContentsBox = this._debugContentsBox && this._debugContentsBox.destroy();
+        this._debugSphere = this._debugSphere && this._debugSphere.destroy();
+        this._debugContentsSphere = this._debugContentsSphere && this._debugContentsSphere.destroy();
         return destroyObject(this);
     };
 

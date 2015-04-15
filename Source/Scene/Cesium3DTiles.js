@@ -90,6 +90,16 @@ define([
         /**
          * DOC_TBA
          */
+        this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
+
+        /**
+         * DOC_TBA
+         */
+        this.debugShowContentsBoundingVolume = defaultValue(options.debugShowContentsBoundingVolume, false);
+
+        /**
+         * DOC_TBA
+         */
         this.debugColorizeTiles = defaultValue(options.debugColorizeTiles, false);
 
         var that = this;
