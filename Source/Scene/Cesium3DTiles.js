@@ -34,9 +34,13 @@ define([
      * @param {String} options.url TODO
      * @param {Boolean} [options.show=true] TODO
      * @param {Boolean} [options.maximumScreenSpaceError=32] TODO
+     * @param {Boolean} [options.debugShowStatistics=false] TODO
      * @param {Boolean} [options.debugFreezeFrame=false] TODO
-     * @param {Boolean} [options.debugShowBox=false] TODO
      * @param {Boolean} [options.debugColorizeTiles=false] TODO
+     * @param {Boolean} [options.debugShowBox=false] TODO
+     * @param {Boolean} [options.debugShowContentsBox=false] TODO
+     * @param {Boolean} [options.debugShowBoundingVolume=false] TODO
+     * @param {Boolean} [options.debugShowContentsBoundingVolume=false] TODO
      *
      * @alias Cesium3DTiles
      * @constructor
@@ -75,7 +79,25 @@ define([
         /**
          * DOC_TBA
          */
+        this.debugShowStatistics = defaultValue(options.debugShowStatistics, false);
+        this._statistics = {
+            visited : 0,
+            frustumTests : 0,
+
+            lastSelected : -1,
+            lastVisited : -1,
+            lastFrustumTests : -1
+        };
+
+        /**
+         * DOC_TBA
+         */
         this.debugFreezeFrame = defaultValue(options.debugFreezeFrame, false);
+
+        /**
+         * DOC_TBA
+         */
+        this.debugColorizeTiles = defaultValue(options.debugColorizeTiles, false);
 
         /**
          * DOC_TBA
@@ -96,11 +118,6 @@ define([
          * DOC_TBA
          */
         this.debugShowContentsBoundingVolume = defaultValue(options.debugShowContentsBoundingVolume, false);
-
-        /**
-         * DOC_TBA
-         */
-        this.debugColorizeTiles = defaultValue(options.debugColorizeTiles, false);
 
         var that = this;
 
@@ -149,13 +166,14 @@ define([
         }
     });
 
-    function visible(tile, cullingVolume) {
+    function visible(tile, cullingVolume, stats) {
         // Exploit temporal coherence: if a tile is completely in the view frustum
         // then so are its children so they do not need to be culled.
         if (tile.parentFullyVisible) {
             return Intersect.INSIDE;
         }
 
+        ++stats.frustumTests;
         return tile.visibility(cullingVolume);
     }
 
@@ -260,14 +278,17 @@ define([
             return;
         }
 
+        var stats = tiles3D._statistics;
+
         var stack = scratchStack;
         stack.push(root);
 //console.log('---');
         while (stack.length > 0) {
             // Depth first.  We want the high detail tiles first.
             var t = stack.pop();
+            ++stats.visited;
 
-            var visibility = visible(t, cullingVolume);
+            var visibility = visible(t, cullingVolume, stats);
             var fullyVisible = (visibility === Intersect.INSIDE);
             if (visibility === Intersect.OUTSIDE) {
                 // Tile is completely outside of the view frustum; therefore
@@ -344,6 +365,39 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    function clearStats(tiles3D) {
+        var stats = tiles3D._statistics;
+        stats.visited = 0;
+        stats.frustumTests = 0;
+    }
+
+    function showStats(tiles3D) {
+        var stats = tiles3D._statistics;
+
+        if (tiles3D.debugShowStatistics && (
+            stats.lastVisited !== stats.visited ||
+            stats.lastFrustumTests !== stats.frustumTests ||
+            stats.lastSelected !== tiles3D._selectedTiles.length)) {
+
+            stats.lastVisited = stats.visited;
+            stats.lastFrustumTests = stats.frustumTests;
+            stats.lastSelected = tiles3D._selectedTiles.length;
+
+            var s =
+                'Visited: ' + stats.visited +
+                // Frustum tests do not include tests for child tile requests or culling the contents.
+                // This number can be less than the number of tiles visited since spatial coherence is
+                // exploited to avoid unnecessary checks.
+                ', Frustum Tests: ' + stats.frustumTests +
+                // Number of commands executed is likely to be higher than the number of tiles selected
+                // because of tiles that create multiple commands and/or overlap multiple frustums.
+                ', Selected: ' + tiles3D._selectedTiles.length;
+
+            /*global console*/
+            console.log(s);
+        }
+    }
+
     /**
      * DOC_TBA
      */
@@ -353,6 +407,8 @@ define([
             return;
         }
 
+        clearStats(this);
+
         processTiles(this, context, frameState);
         selectTiles(this, context, frameState, commandList);
 
@@ -361,6 +417,8 @@ define([
         for (var i = 0; i < length; ++i) {
             selectedTiles[i].update(this, context, frameState, commandList);
         }
+
+        showStats(this);
     };
 
     /**
