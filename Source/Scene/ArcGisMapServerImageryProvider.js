@@ -84,7 +84,8 @@ define([
      *                       This parameter is ignored when accessing a tiled server.
      * @param {Number} [options.tileWidth=256] The width of each tile in pixels.  This parameter is ignored when accessing a tiled server.
      * @param {Number} [options.tileHeight=256] The height of each tile in pixels.  This parameter is ignored when accessing a tiled server.
-     * @param {Number} [options.maximumLevel] The maximum tile level to request, or undefined if there is no maximum.
+     * @param {Number} [options.maximumLevel] The maximum tile level to request, or undefined if there is no maximum.  This parameter is ignored when accessing
+     *                                        a tiled server.
      *
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
