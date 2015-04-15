@@ -181,10 +181,7 @@ define([
                 translucent : false,
                 flat : true
             }),
-            asynchronous : false,
-
-            // TODO: working around what I believe is a bounding volume bug in Primitive
-            //cull : false
+            asynchronous : false
         });
     }
 
