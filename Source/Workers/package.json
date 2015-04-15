@@ -4,6 +4,5 @@
 	"version": "0.6.0",
 	"dojoBuild": "Workers.profile.js",
     "browserify": {
-        "transform": [ "deamdify" ]
     }
 }
