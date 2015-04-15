@@ -1,5 +1,10 @@
 /*global define*/
 define([
+        '../Core/RectangleOutlineGeometry',
+        '../Core/Cartesian3',
+        '../Core/Color',
+        '../Core/ColorGeometryInstanceAttribute',
+        '../Core/GeometryInstance',
         '../Core/BoundingSphere',
         '../Core/defined',
         '../Core/defineProperties',
@@ -8,9 +13,16 @@ define([
         '../Core/Rectangle',
         './Cesium3DTileContentProvider',
         './Cesium3DTileContentState',
+        './PerInstanceColorAppearance',
+        './Primitive',
         './TileBoundingBox',
         '../ThirdParty/when'
     ], function(
+        RectangleOutlineGeometry,
+        Cartesian3,
+        Color,
+        ColorGeometryInstanceAttribute,
+        GeometryInstance,
         BoundingSphere,
         defined,
         defineProperties,
@@ -19,6 +31,8 @@ define([
         Rectangle,
         Cesium3DTileContentProvider,
         Cesium3DTileContentState,
+        PerInstanceColorAppearance,
+        Primitive,
         TileBoundingBox,
         when) {
     "use strict";
@@ -27,6 +41,8 @@ define([
      * @private
      */
     var Cesium3DTile = function(baseUrl, tile, parent) {
+        this._header = tile;
+
 // TODO: Need to use minimumHeight and maximumHeight to get the correct sphere
         var b = tile.box;
         var rectangle = new Rectangle(b.west, b.south, b.east, b.north);
@@ -100,6 +116,9 @@ define([
         // Members that are updated every frame for rendering optimizations
         this.distanceToCamera = 0;
         this.parentFullyVisible = false;
+
+        this._debugBox = undefined;
+        this._debugContentsBox = undefined;
     };
 
     defineProperties(Cesium3DTile.prototype, {
@@ -144,7 +163,56 @@ define([
         return this._tileBoundingBox.distanceToCamera(frameState);
     };
 
+    function createDebugBox(box, color) {
+        var instance = new GeometryInstance({
+            geometry : new RectangleOutlineGeometry({
+                rectangle : new Rectangle(box.west, box.south, box.east, box.north),
+                height : box.minimumHeight,
+                extrudedHeight: box.maximumHeight
+             }),
+            attributes : {
+                color : ColorGeometryInstanceAttribute.fromColor(color)
+            }
+        });
+
+        return new Primitive({
+            geometryInstances : instance,
+            appearance : new PerInstanceColorAppearance({
+                translucent : false,
+                flat : true
+            }),
+            asynchronous : false,
+
+            // TODO: working around what I believe is a bounding volume bug in Primitive
+            cull : false
+        });
+    }
+
+    function applyDebugSettings(tile, owner, context, frameState, commandList) {
+        // Tiles do not have a contentsBox if it is the same as the tile's box.
+        var hasContentsBox = defined(tile._header.contentsBox);
+
+        if (owner.debugShowBox) {
+            if (!defined(tile._debugBox)) {
+                tile._debugBox = createDebugBox(tile._header.box, hasContentsBox ? Color.WHITE : Color.RED);
+            }
+            tile._debugBox.update(context, frameState, commandList);
+        } else if (!owner.debugShowBox && defined(tile._debugBox)) {
+            tile._debugBox = tile._debugBox.destroy();
+        }
+
+        if (owner.debugShowContentsBox && hasContentsBox) {
+            if (!defined(tile._debugContentsBox)) {
+                tile._debugContentsBox = createDebugBox(tile._header.contentsBox, Color.GREEN);
+            }
+            tile._debugContentsBox.update(context, frameState, commandList);
+        } else if (!owner.debugShowContentsBox && defined(tile._debugContentsBox)) {
+            tile._debugContentsBox = tile._debugContentsBox.destroy();
+        }
+    }
+
     Cesium3DTile.prototype.update = function(owner, context, frameState, commandList) {
+        applyDebugSettings(this, owner, context, frameState, commandList);
         this._content.update(owner, context, frameState, commandList);
     };
 
@@ -160,6 +228,8 @@ define([
 
     Cesium3DTile.prototype.destroy = function() {
         this._content = this._content && this._content.destroy();
+        this._debugBox = this._debugBox && this._debugBox.destroy();
+        this._debugContentsBox = this._debugContentsBox && this._debugContentsBox.destroy();
         return destroyObject(this);
     };
 

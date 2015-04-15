@@ -35,6 +35,7 @@ define([
      * @param {Boolean} [options.show=true] TODO
      * @param {Boolean} [options.maximumScreenSpaceError=32] TODO
      * @param {Boolean} [options.debugFreezeFrame=false] TODO
+     * @param {Boolean} [options.debugShowBox=false] TODO
      * @param {Boolean} [options.debugColorizeTiles=false] TODO
      *
      * @alias Cesium3DTiles
@@ -75,6 +76,16 @@ define([
          * DOC_TBA
          */
         this.debugFreezeFrame = defaultValue(options.debugFreezeFrame, false);
+
+        /**
+         * DOC_TBA
+         */
+        this.debugShowBox = defaultValue(options.debugShowBox, false);
+
+        /**
+         * DOC_TBA
+         */
+        this.debugShowContentsBox = defaultValue(options.debugShowContentsBox, false);
 
         /**
          * DOC_TBA
