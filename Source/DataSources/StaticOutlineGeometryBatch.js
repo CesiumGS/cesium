@@ -253,7 +253,7 @@ define([
         var translucentBatches = this._translucentBatches.values;
         var translucentBatchesLength = translucentBatches.length;
         for (i = 0; i < translucentBatchesLength; i++) {
-            if (translucentBatches.remove(updater)) {
+            if (translucentBatches[i].remove(updater)) {
                 return;
             }
         }

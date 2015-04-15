@@ -327,6 +327,53 @@ defineSuite([
         });
     });
 
+    it('Correctly handles modifying translucent outline color', function() {
+        var entities = new EntityCollection();
+        var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, entities);
+
+        var color = Color.BLUE.withAlpha(0.5);
+        var entity = entities.add({
+            position : new Cartesian3(1234, 5678, 9101112),
+            ellipse : {
+                semiMajorAxis : 2,
+                semiMinorAxis : 1,
+                fill : false,
+                outline : true,
+                outlineColor : color
+            }
+        });
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = visualizer.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            var primitive = scene.primitives.get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
+            expect(attributes).toBeDefined();
+            expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(color));
+
+            color = Color.RED.withAlpha(0.5);
+            entity.ellipse.outlineColor.setValue(color);
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                var isUpdated = visualizer.update(time);
+                scene.render(time);
+                return isUpdated;
+            });
+        }).then(function() {
+            var primitive = scene.primitives.get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
+            expect(attributes).toBeDefined();
+            expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(color));
+
+            entities.remove(entity);
+            visualizer.destroy();
+        });
+    });
+
     it('Creates and removes dynamic geometry', function() {
         var objects = new EntityCollection();
         var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, objects);
