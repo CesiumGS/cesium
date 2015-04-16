@@ -590,11 +590,16 @@ define([
             sr = '3857';
         }
 
-        var url = this._url + '/identify?f=json&tolerance=2&layers=visible&geometryType=esriGeometryPoint';
+        var url = this._url + '/identify?f=json&tolerance=2&geometryType=esriGeometryPoint';
         url += '&geometry=' + horizontal + ',' + vertical;
         url += '&mapExtent=' + rectangle.west + ',' + rectangle.south + ',' + rectangle.east + ',' + rectangle.north;
         url += '&imageDisplay=' + this._tileWidth + ',' + this._tileHeight + ',96';
         url += '&sr=' + sr;
+
+        url += '&layers=visible';
+        if (defined(this._layers)) {
+            url += ':' + this._layers;
+        }
 
         return loadJson(url).then(function(json) {
             var result = [];
