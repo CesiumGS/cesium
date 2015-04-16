@@ -464,6 +464,12 @@ define([
 
         tileSet.push(tile);
 
+        var callbacks = tile.callbacks;
+        var length = callbacks.length;
+        for (var j = 0; j < length; ++j) {
+            callbacks[j].func(tile);
+        }
+
         var debug = this._debug;
         ++debug.tilesRendered;
         debug.texturesRendered += readyTextureCount;

@@ -6,6 +6,7 @@ define([
         '../Core/DeveloperError',
         '../Core/getTimestamp',
         '../Core/Queue',
+        '../Core/Rectangle',
         '../Core/Visibility',
         './QuadtreeOccluders',
         './QuadtreeTile',
@@ -19,6 +20,7 @@ define([
         DeveloperError,
         getTimestamp,
         Queue,
+        Rectangle,
         Visibility,
         QuadtreeOccluders,
         QuadtreeTile,
@@ -89,6 +91,9 @@ define([
         this._levelZeroTiles = undefined;
         this._levelZeroTilesReady = false;
         this._loadQueueTimeSlice = 5.0;
+
+        this._callbacksAdded = [];
+        this._callbacksRemoved = [];
 
         /**
          * Gets or sets the maximum screen-space error, in pixels, that is allowed.
@@ -182,6 +187,14 @@ define([
         }
     };
 
+    QuadtreePrimitive.prototype.addTileLoadedCallback = function(callback) {
+        this._callbacksAdded.push(callback);
+    };
+
+    QuadtreePrimitive.prototype.removeTileLoadedCallback = function(callback) {
+        this._callbacksRemoved.push(callback);
+    };
+
     /**
      * Updates the primitive.
      *
@@ -247,6 +260,7 @@ define([
         }
 
         var i;
+        var j;
         var len;
 
         // Clear the render list.
@@ -282,9 +296,28 @@ define([
         var occluders = primitive._occluders;
 
         var tile;
+        var levelZeroTiles = primitive._levelZeroTiles;
+
+        var callbacksAdded = primitive._callbacksAdded;
+        var callbacksRemoved = primitive._callbacksRemoved;
+        var callback;
+
+        if (callbacksAdded.length > 0) {
+            for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
+                tile = levelZeroTiles[i];
+                for (j = 0; j < callbacksAdded.length; ++j) {
+                    callback = callbacksAdded[j];
+                    if (Rectangle.contains(tile.rectangle, callback.position)) {
+                        tile.callbacks.push(callback);
+                    }
+                }
+            }
+            callbacksAdded.length = 0;
+        } else if (callbacksRemoved.length > 0) {
+            // TODO
+        }
 
         // Enqueue the root tiles that are renderable and visible.
-        var levelZeroTiles = primitive._levelZeroTiles;
         for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
             tile = levelZeroTiles[i];
             primitive._tileReplacementQueue.markTileRendered(tile);

@@ -373,6 +373,23 @@ define([
         this._billboards.push(b);
         this._createVertexArray = true;
 
+        var globe = this._globe;
+        if (defined(globe) && billboard.clampToTerrain) {
+            var ellipsoid = globe.ellipsoid;
+            var surface = globe._surface;
+            surface.addTileLoadedCallback({
+                position : ellipsoid.cartesianToCartographic(b.position),
+                func : function (tile) {
+                    if (tile !== b._currentTile) {
+                        var ray = new Ray();
+                        Cartesian3.normalize(b.position, ray.direction);
+                        b.position = tile.data.pick(ray, undefined, false, new Cartesian3());
+                        b._currentTile = tile;
+                    }
+                }
+            });
+        }
+
         return b;
     };
 
@@ -1023,26 +1040,6 @@ define([
 
         var billboards = this._billboards;
         var billboardsLength = billboards.length;
-
-        var globe = this._globe;
-        if (defined(globe)) {
-            var ellipsoid = globe.ellipsoid;
-            var surface = globe._surface;
-            surface.forEachRenderedTile(function(tile) {
-                for (var i = 0; i < billboards.length; ++i) {
-                    var billboard = billboards[i];
-                    var position = billboard.position;
-                    var level = defaultValue(billboard.level, 0.0);
-                    var positionCartographic = ellipsoid.cartesianToCartographic(position);
-                    if (level < tile.level && Rectangle.contains(tile.rectangle, positionCartographic)) {
-                        var ray = new Ray();
-                        Cartesian3.normalize(position, ray.direction);
-                        billboard.position = tile.data.pick(ray, undefined, false, new Cartesian3());
-                        billboard.level = tile.level;
-                    }
-                }
-            });
-        }
 
         var textureAtlas = this._textureAtlas;
         if (!defined(textureAtlas)) {

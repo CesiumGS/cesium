@@ -3,11 +3,13 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/Rectangle',
         './QuadtreeTileLoadState'
     ], function(
         defined,
         defineProperties,
         DeveloperError,
+        Rectangle,
         QuadtreeTileLoadState) {
     "use strict";
 
@@ -61,6 +63,8 @@ define([
         // distance - for example, by using the natural ordering of a quadtree.
         // QuadtreePrimitive gets/sets this private property.
         this._distance = 0.0;
+
+        this._callbacks = undefined;
 
         /**
          * Gets or sets the current state of the tile in the tile load pipeline.
@@ -237,6 +241,28 @@ define([
                 }
 
                 return this._children;
+            }
+        },
+
+        callbacks : {
+            get : function() {
+                if (!defined(this._callbacks)) {
+                    this._callbacks = [];
+
+                    var parent = this._parent;
+                    if (defined(parent)) {
+                        var parentCallbacks = parent.callbacks;
+                        var length = parentCallbacks.length;
+                        for (var i = 0; i < length; ++i) {
+                            var parentCallback = parentCallbacks[i];
+                            if (Rectangle.contains(this._rectangle, parentCallback.position)) {
+                                this._callbacks.push(parentCallback);
+                            }
+                        }
+                    }
+                }
+
+                return this._callbacks;
             }
         },
 
