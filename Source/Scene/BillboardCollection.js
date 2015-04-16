@@ -15,6 +15,8 @@ define([
         '../Core/IndexDatatype',
         '../Core/Math',
         '../Core/Matrix4',
+        '../Core/Ray',
+        '../Core/Rectangle',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/ShaderSource',
@@ -43,6 +45,8 @@ define([
         IndexDatatype,
         CesiumMath,
         Matrix4,
+        Ray,
+        Rectangle,
         BufferUsage,
         DrawCommand,
         ShaderSource,
@@ -1020,6 +1024,26 @@ define([
         var billboards = this._billboards;
         var billboardsLength = billboards.length;
 
+        var globe = this._globe;
+        if (defined(globe)) {
+            var ellipsoid = globe.ellipsoid;
+            var surface = globe._surface;
+            surface.forEachRenderedTile(function(tile) {
+                for (var i = 0; i < billboards.length; ++i) {
+                    var billboard = billboards[i];
+                    var position = billboard.position;
+                    var level = defaultValue(billboard.level, 0.0);
+                    var positionCartographic = ellipsoid.cartesianToCartographic(position);
+                    if (level < tile.level && Rectangle.contains(tile.rectangle, positionCartographic)) {
+                        var ray = new Ray();
+                        Cartesian3.normalize(position, ray.direction);
+                        billboard.position = tile.data.pick(ray, undefined, false, new Cartesian3());
+                        billboard.level = tile.level;
+                    }
+                }
+            });
+        }
+
         var textureAtlas = this._textureAtlas;
         if (!defined(textureAtlas)) {
             textureAtlas = this._textureAtlas = new TextureAtlas({
@@ -1218,6 +1242,9 @@ define([
                 if (this._shaderPixelOffsetScaleByDistance) {
                     vs.defines.push('EYE_DISTANCE_PIXEL_OFFSET');
                 }
+                if (defined(this._globe)) {
+                    vs.defines.push('TEST_GLOBE_DEPTH');
+                }
 
                 this._sp = context.replaceShaderProgram(this._sp, vs, BillboardCollectionFS, attributeLocations);
                 this._compiledShaderRotation = this._shaderRotation;
@@ -1282,6 +1309,9 @@ define([
                 }
                 if (this._shaderPixelOffsetScaleByDistance) {
                     vs.defines.push('EYE_DISTANCE_PIXEL_OFFSET');
+                }
+                if (defined(this._globe)) {
+                    vs.defines.push('TEST_GLOBE_DEPTH');
                 }
 
                 fs = new ShaderSource({
