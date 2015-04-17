@@ -300,21 +300,16 @@ define([
 
         var callbacksAdded = primitive._callbacksAdded;
         var callbacksRemoved = primitive._callbacksRemoved;
-        var callback;
 
-        if (callbacksAdded.length > 0) {
+        if (callbacksAdded.length > 0 || callbacksRemoved.length > 0) {
             for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
                 tile = levelZeroTiles[i];
-                for (j = 0; j < callbacksAdded.length; ++j) {
-                    callback = callbacksAdded[j];
-                    if (Rectangle.contains(tile.rectangle, callback.position)) {
-                        tile.callbacks.push(callback);
-                    }
-                }
+                tile._makeDirty();
+                tile._updateCallbacks(callbacksAdded, callbacksRemoved);
             }
+
             callbacksAdded.length = 0;
-        } else if (callbacksRemoved.length > 0) {
-            // TODO
+            callbacksRemoved.length = 0;
         }
 
         // Enqueue the root tiles that are renderable and visible.

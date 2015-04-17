@@ -65,6 +65,7 @@ define([
         this._distance = 0.0;
 
         this._callbacks = undefined;
+        this._dirty = false;
 
         /**
          * Gets or sets the current state of the tile in the tile load pipeline.
@@ -131,6 +132,54 @@ define([
         }
 
         return result;
+    };
+
+    QuadtreeTile.prototype._makeDirty = function() {
+        var stack = [this];
+
+        while (stack.length > 0) {
+            var tile = stack.pop();
+
+            var children = tile._children;
+            if (defined(children)) {
+                var length = children.length;
+                for (var i = 0; i < length; ++i) {
+                    var child = children[i];
+                    if (!child._dirty) {
+                        stack.push(child);
+                    }
+                }
+            }
+
+            tile._dirty = true;
+        }
+    };
+
+    QuadtreeTile.prototype._updateCallbacks = function(added, removed) {
+        var callbacks = this.callbacks;
+
+        var i;
+        var callback;
+
+        for (i = 0; i < removed.length; ++i) {
+            callback = removed[i];
+            for (var j = 0; j < callbacks.length; ++j) {
+                if (callbacks[j] === callback) {
+                    callbacks.splice(j, 1);
+                    break;
+                }
+            }
+        }
+
+        var rectangle = this._rectangle;
+        for (i = 0; i < added.length; ++i) {
+            callback = added[i];
+            if (Rectangle.contains(rectangle, callback.position)) {
+                callbacks.push(callback);
+            }
+        }
+
+        this._dirty = false;
     };
 
     defineProperties(QuadtreeTile.prototype, {
@@ -246,23 +295,29 @@ define([
 
         callbacks : {
             get : function() {
-                if (!defined(this._callbacks)) {
-                    this._callbacks = [];
-
-                    var parent = this._parent;
-                    if (defined(parent)) {
-                        var parentCallbacks = parent.callbacks;
-                        var length = parentCallbacks.length;
-                        for (var i = 0; i < length; ++i) {
-                            var parentCallback = parentCallbacks[i];
-                            if (Rectangle.contains(this._rectangle, parentCallback.position)) {
-                                this._callbacks.push(parentCallback);
-                            }
-                        }
-                    }
+                var callbacks = this._callbacks;
+                if (!defined(callbacks)) {
+                    callbacks = this._callbacks = [];
+                    this._dirty = true;
                 }
 
-                return this._callbacks;
+                var parent = this._parent;
+                if (this._dirty && defined(parent)) {
+                    this._callbacks.length = 0;
+
+                    var parentCallbacks = parent.callbacks;
+                    var length = parentCallbacks.length;
+                    for (var i = 0; i < length; ++i) {
+                        var parentCallback = parentCallbacks[i];
+                        if (Rectangle.contains(this._rectangle, parentCallback.position)) {
+                            callbacks.push(parentCallback);
+                        }
+                    }
+
+                    this._dirty = false;
+                }
+
+                return callbacks;
             }
         },
 
