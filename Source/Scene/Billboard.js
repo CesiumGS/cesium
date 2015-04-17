@@ -149,6 +149,7 @@ define([
         this._globe = billboardCollection._globe;
         this._callback = undefined;
         this._currentTile = undefined;
+        this._clampedPosition = undefined;
 
         this._updateClamping();
     };
@@ -799,8 +800,9 @@ define([
         return function (tile) {
             if (tile !== billboard._currentTile) {
                 Cartesian3.normalize(billboard.position, ray.direction);
-                billboard.position = tile.data.pick(ray, undefined, false, new Cartesian3());
+                billboard._clampedPosition = tile.data.pick(ray, undefined, false, billboard._clampedPosition);
                 billboard._currentTile = tile;
+                makeDirty(billboard, POSITION_INDEX);
             }
         };
     }
@@ -991,7 +993,7 @@ define([
     };
 
     Billboard.prototype._getActualPosition = function() {
-        return this._actualPosition;
+        return defined(this._callback) && defined(this._clampedPosition) ? this._clampedPosition : this._actualPosition;
     };
 
     Billboard.prototype._setActualPosition = function(value) {
