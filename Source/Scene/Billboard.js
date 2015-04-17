@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Cartographic',
         '../Core/Color',
         '../Core/createGuid',
         '../Core/defaultValue',
@@ -12,6 +13,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Matrix4',
         '../Core/NearFarScalar',
+        '../Core/Ray',
         './HorizontalOrigin',
         './SceneMode',
         './SceneTransforms',
@@ -21,6 +23,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        Cartographic,
         Color,
         createGuid,
         defaultValue,
@@ -29,6 +32,7 @@ define([
         DeveloperError,
         Matrix4,
         NearFarScalar,
+        Ray,
         HorizontalOrigin,
         SceneMode,
         SceneTransforms,
@@ -98,6 +102,7 @@ define([
         this._scaleByDistance = options.scaleByDistance;
         this._translucencyByDistance = options.translucencyByDistance;
         this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
+        this._clampToGround = defaultValue(options.clampToGround, false);
         this._id = options.id;
         this._collection = defaultValue(options.collection, billboardCollection);
 
@@ -140,6 +145,12 @@ define([
         if (defined(this._billboardCollection._textureAtlas)) {
             this._loadImage();
         }
+
+        this._globe = billboardCollection._globe;
+        this._callback = undefined;
+        this._currentTile = undefined;
+
+        this._updateClamping();
     };
 
     var SHOW_INDEX = Billboard.SHOW_INDEX = 0;
@@ -212,6 +223,27 @@ define([
                     Cartesian3.clone(value, position);
                     Cartesian3.clone(value, this._actualPosition);
 
+                    this._updateClamping();
+                    makeDirty(this, POSITION_INDEX);
+                }
+            }
+        },
+
+        clampToGround : {
+            get : function() {
+                return this._clampToGround;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug)
+                if (!defined(value)) {
+                    throw new DeveloperError('value is required.');
+                }
+                //>>includeEnd('debug');
+
+                var clampToGround = this._clampToGround;
+                if (value !== clampToGround) {
+                    this._clampToGround = value;
+                    this._updateClamping();
                     makeDirty(this, POSITION_INDEX);
                 }
             }
@@ -760,6 +792,54 @@ define([
         }
 
         return this._pickId;
+    };
+
+    function createCallback(billboard, position) {
+        var ray = new Ray();
+        return function (tile) {
+            if (tile !== billboard._currentTile) {
+                Cartesian3.normalize(billboard.position, ray.direction);
+                billboard.position = tile.data.pick(ray, undefined, false, new Cartesian3());
+                billboard._currentTile = tile;
+            }
+        };
+    }
+
+    Billboard.prototype._updateClamping = function() {
+        var globe = this._globe;
+        if (!defined(globe)) {
+            if (defined(this._clampToGround)) {
+                throw new DeveloperError('Clamping a billboard to the ground is not supported.');
+            }
+            return;
+        }
+
+        var ellipsoid = globe.ellipsoid;
+        var surface = globe._surface;
+        var callback = this._callback;
+
+        if (defined(callback) && !this._clampToGround) {
+            surface.removeTileLoadedCallback(callback);
+            this._callback = undefined;
+        }
+
+        if (!this._clampToGround) {
+            return;
+        }
+
+        var position = ellipsoid.cartesianToCartographic(this._position);
+        if (defined(callback)) {
+            if (Cartographic.equals(position, callback.position)) {
+                return;
+            }
+            surface.removeTileLoadedCallback(callback);
+        }
+
+        this._callback = {
+            position : position,
+            func : createCallback(this, position)
+        };
+        surface.addTileLoadedCallback(this._callback);
     };
 
     Billboard.prototype._loadImage = function() {

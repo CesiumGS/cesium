@@ -15,8 +15,6 @@ define([
         '../Core/IndexDatatype',
         '../Core/Math',
         '../Core/Matrix4',
-        '../Core/Ray',
-        '../Core/Rectangle',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/ShaderSource',
@@ -45,8 +43,6 @@ define([
         IndexDatatype,
         CesiumMath,
         Matrix4,
-        Ray,
-        Rectangle,
         BufferUsage,
         DrawCommand,
         ShaderSource,
@@ -372,23 +368,6 @@ define([
 
         this._billboards.push(b);
         this._createVertexArray = true;
-
-        var globe = this._globe;
-        if (defined(globe) && billboard.clampToTerrain) {
-            var ellipsoid = globe.ellipsoid;
-            var surface = globe._surface;
-            surface.addTileLoadedCallback({
-                position : ellipsoid.cartesianToCartographic(b.position),
-                func : function (tile) {
-                    if (tile !== b._currentTile) {
-                        var ray = new Ray();
-                        Cartesian3.normalize(b.position, ray.direction);
-                        b.position = tile.data.pick(ray, undefined, false, new Cartesian3());
-                        b._currentTile = tile;
-                    }
-                }
-            });
-        }
 
         return b;
     };
