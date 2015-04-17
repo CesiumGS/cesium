@@ -129,12 +129,10 @@ define([
                     }
                 }
 
-                if (!updater.hasConstantOutline) {
-                    var show = updater.entity.isShowing && updater.isOutlineVisible(time);
-                    var currentShow = attributes.show[0] === 1;
-                    if (show !== currentShow) {
-                        attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
-                    }
+                var show = updater.entity.isShowing && (updater.hasConstantOutline || updater.isOutlineVisible(time));
+                var currentShow = attributes.show[0] === 1;
+                if (show !== currentShow) {
+                    attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
                 }
             }
 
