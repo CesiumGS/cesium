@@ -304,7 +304,6 @@ define([
         if (callbacksAdded.length > 0 || callbacksRemoved.length > 0) {
             for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
                 tile = levelZeroTiles[i];
-                tile._makeDirty();
                 tile._updateCallbacks(callbacksAdded, callbacksRemoved);
             }
 
@@ -337,6 +336,7 @@ define([
             ++debug.tilesVisited;
 
             primitive._tileReplacementQueue.markTileRendered(tile);
+            tile._updateCallbacks();
 
             if (tile.level > debug.maxDepth) {
                 debug.maxDepth = tile.level;
