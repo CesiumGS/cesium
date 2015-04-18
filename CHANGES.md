@@ -7,6 +7,7 @@ Change Log
 * Deprecated
   *
 * An exception is now thrown if `Primitive.modelMatrix` is not the identity matrix when in in 2D or Columbus View.
+* Fix a bug which caused `Entity.viewFrom` to be ignored when flying to, zooming to, or tracking an Entity.
 
 ### 1.8 - 2015-04-01
 
