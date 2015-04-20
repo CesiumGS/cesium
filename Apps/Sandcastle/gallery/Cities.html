@@ -80,52 +80,6 @@ Sandcastle.addToolbarButton('SSE--', function() {
     console.log('New max SSE: ' + city.maximumScreenSpaceError);
 });
 
-/*
-var viewer = new Cesium.Viewer('cesiumContainer');
-
-var base = 'http://localhost:8002/tilesets/';
-
-function getFlyToCityFunction(city) {
-    return function() {
-        var source = base + city.root + '/0/0/0.czml';
-        
-        viewer.dataSources.removeAll();
-        viewer.dataSources.add(Cesium.CzmlDataSource.load(source));
-        
-        var longitude = (city.rectangle.west + city.rectangle.east) * 0.5;
-        var latitude = city.rectangle.south - ((city.rectangle.north - city.rectangle.south) * 0.5);
-        viewer.camera.flyTo({
-            destination : Cesium.Cartesian3.fromRadians(longitude, latitude, 1000.0),
-            orientation : {
-                heading : 0.0,
-                pitch : Cesium.Math.toRadians(-45.0),
-                roll : 0.0
-            }
-        });
-    };
-}
-
-Cesium.loadJson(base + 'cities.json').then(function(jsonData) {
-    var cities = [{
-        text : 'Fly to a city'
-    }];
-
-    for (var name in jsonData) {
-        if (jsonData.hasOwnProperty(name)) {
-            var city = jsonData[name];
-            cities.push({
-                text : name,
-                onselect : getFlyToCityFunction(city)
-            });
-        }
-    }
-    
-    Sandcastle.addToolbarMenu(cities);
-}).otherwise(function(error) {
-    console.log('Not good!');
-});
-*/
-
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
