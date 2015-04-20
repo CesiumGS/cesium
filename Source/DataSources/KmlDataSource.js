@@ -1299,8 +1299,8 @@ define([
         }
         entity.availability = availability;
 
-        //var visibility = queryBooleanValue(featureNode, 'visibility', namespaces.kml);
-        //entity.uiShow = defaultValue(visibility, true);
+        var visibility = queryBooleanValue(featureNode, 'visibility', namespaces.kml);
+        entity.show = defaultValue(visibility, true);
         //var open = queryBooleanValue(featureNode, 'open', namespaces.kml);
 
         var authorNode = queryFirstNode(featureNode, 'author', namespaces.atom);
@@ -1413,13 +1413,13 @@ define([
                 var north = queryNumericValue(latLonBox, 'north', namespaces.kml);
 
                 if (defined(west)) {
-                    west = CesiumMath.convertLongitudeRange(CesiumMath.toRadians(west));
+                    west = CesiumMath.negativePiToPi(CesiumMath.toRadians(west));
                 }
                 if (defined(south)) {
                     south = CesiumMath.negativePiToPi(CesiumMath.toRadians(south));
                 }
                 if (defined(east)) {
-                    east = CesiumMath.convertLongitudeRange(CesiumMath.toRadians(east));
+                    east = CesiumMath.negativePiToPi(CesiumMath.toRadians(east));
                 }
                 if (defined(north)) {
                     north = CesiumMath.negativePiToPi(CesiumMath.toRadians(north));

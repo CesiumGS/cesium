@@ -542,7 +542,7 @@ define([
         var geometryUpdater = this._geometryUpdater;
         var entity = geometryUpdater._entity;
         var polygon = entity.polygon;
-        if (!entity.isAvailable(time) || !Property.getValueOrDefault(polygon.show, time, true)) {
+        if (!entity.isShowing || !entity.isAvailable(time) || !Property.getValueOrDefault(polygon.show, time, true)) {
             return;
         }
 

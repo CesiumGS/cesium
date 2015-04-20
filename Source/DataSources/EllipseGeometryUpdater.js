@@ -541,7 +541,7 @@ define([
         var geometryUpdater = this._geometryUpdater;
         var entity = geometryUpdater._entity;
         var ellipse = entity.ellipse;
-        if (!entity.isAvailable(time) || !Property.getValueOrDefault(ellipse.show, time, true)) {
+        if (!entity.isShowing || !entity.isAvailable(time) || !Property.getValueOrDefault(ellipse.show, time, true)) {
             return;
         }
 

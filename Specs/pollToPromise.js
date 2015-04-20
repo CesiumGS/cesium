@@ -1,12 +1,12 @@
 /*global define*/
 define([
-		'Core/defaultValue',
-		'Core/getTimestamp',
-		'ThirdParty/when'
-	], function(
-		defaultValue,
-		getTimestamp,
-		when) {
+        'Core/defaultValue',
+        'Core/getTimestamp',
+        'ThirdParty/when'
+    ], function(
+        defaultValue,
+        getTimestamp,
+        when) {
 	'use strict';
 
 	var pollToPromise = function(f, options) {

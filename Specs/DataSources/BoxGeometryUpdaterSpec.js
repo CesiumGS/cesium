@@ -298,6 +298,11 @@ defineSuite([
         expect(dynamicUpdater._options.id).toBe(entity);
         expect(dynamicUpdater._options.dimensions).toEqual(box.dimensions.getValue());
 
+        entity.show = false;
+        dynamicUpdater.update(JulianDate.now());
+        expect(primitives.length).toBe(0);
+        entity.show = true;
+
         box.show.setValue(false);
         dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(0);

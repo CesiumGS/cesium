@@ -204,7 +204,7 @@ define([
          * by {@link Transforms.eastNorthUpToFixedFrame}.
          *
          * <p>
-         * If the model matrix is changed after creation, it only affects primitives with one instance and only in 3D mode.
+         * This property is only supported in 3D mode.
          * </p>
          *
          * @type Matrix4
@@ -706,6 +706,7 @@ define([
      *
      * @exception {DeveloperError} All instance geometries must have the same primitiveType.
      * @exception {DeveloperError} Appearance and material have a uniform with the same name.
+     * @exception {DeveloperError} Primitive.modelMatrix is only supported in 3D mode.
      */
     Primitive.prototype.update = function(context, frameState, commandList) {
         if (((!defined(this.geometryInstances)) && (this._va.length === 0)) ||
@@ -867,7 +868,11 @@ define([
 
                         that._instanceIds = reorderedInstanceIds;
 
-                        that._state = defined(that._geometries) ? PrimitiveState.COMBINED : PrimitiveState.FAILED;
+                        if (defined(that._geometries)) {
+                            that._state = PrimitiveState.COMBINED;
+                        } else {
+                            setReady(that, frameState, PrimitiveState.FAILED, undefined);
+                        }
                     }).otherwise(function(error) {
                         setReady(that, frameState, PrimitiveState.FAILED, error);
                     });
@@ -1210,12 +1215,12 @@ define([
             attributes.length = 0;
         }
 
-        var modelMatrix;
-        if ((this._numberOfInstances > 1 && !this._validModelMatrix) || frameState.mode !== SceneMode.SCENE3D) {
-            modelMatrix = Matrix4.IDENTITY;
-        } else {
-            modelMatrix = this.modelMatrix;
+        var modelMatrix = this.modelMatrix;
+        //>>includeStart('debug', pragmas.debug);
+        if (frameState.mode !== SceneMode.SCENE3D && !Matrix4.equals(modelMatrix, Matrix4.IDENTITY)) {
+            throw new DeveloperError('Primitive.modelMatrix is only supported in 3D mode.');
         }
+        //>>includeEnd('debug');
 
         if (!Matrix4.equals(modelMatrix, this._modelMatrix)) {
             Matrix4.clone(modelMatrix, this._modelMatrix);

@@ -716,6 +716,14 @@ defineSuite([
         expect(property.getValue(time4)).toBeUndefined();
     });
 
+    it('getValue returns undefined for empty extrapolated property', function() {
+        var sampledPosition = new SampledProperty(Cartesian3);
+        sampledPosition.backwardExtrapolationType = ExtrapolationType.HOLD;
+        sampledPosition.forwardExtrapolationType = ExtrapolationType.HOLD;
+        var result = sampledPosition.getValue(JulianDate.now());
+        expect(result).toBeUndefined();
+    });
+
     it('raises definitionChanged when extrapolation options change', function() {
         var property = new SampledProperty(Number);
         var listener = jasmine.createSpy('listener');
