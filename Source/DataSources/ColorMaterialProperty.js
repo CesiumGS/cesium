@@ -3,7 +3,6 @@ define([
         '../Core/Color',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         './ConstantProperty',
@@ -13,7 +12,6 @@ define([
         Color,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         Event,
         ConstantProperty,
@@ -29,29 +27,11 @@ define([
      * @alias ColorMaterialProperty
      * @constructor
      */
-    var ColorMaterialProperty = function(colorProperty) {
+    var ColorMaterialProperty = function(color) {
         this._definitionChanged = new Event();
         this._color = undefined;
         this._colorSubscription = undefined;
-        this.color = colorProperty;
-    };
-
-    /**
-     * Creates a new instance that represents a constant color.
-     *
-     * @param {Color} color The color.
-     * @returns {ColorMaterialProperty} A new instance configured to represent the provided color.
-     * @deprecated
-     */
-    ColorMaterialProperty.fromColor = function(color) {
-        deprecationWarning('ColorMaterialProperty.fromColor', 'ColorMaterialProperty.fromColor was deprecated in Cesium 1.6.  It will be removed in 1.9.  Use "new ColorMaterialProperty(color)" instead.');
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(color)) {
-            throw new DeveloperError('color is required');
-        }
-        //>>includeEnd('debug');
-        return new ColorMaterialProperty(color);
+        this.color = color;
     };
 
     defineProperties(ColorMaterialProperty.prototype, {

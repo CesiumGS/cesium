@@ -527,6 +527,18 @@ defineSuite([
         });
     });
 
+    it('Feature: visibility works', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Placemark>\
+            <visibility>0</visibility>\
+        </Placemark>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.show).toBe(false);
+        });
+    });
+
     it('Feature: TimeStamp gracefully handles empty fields', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
         <Placemark>\
@@ -653,6 +665,24 @@ defineSuite([
             expect(entity.polygon).toBeUndefined();
             expect(entity.rectangle.coordinates.getValue()).toEqualEpsilon(Rectangle.fromDegrees(3, 1, 4, 2), CesiumMath.EPSILON14);
             expect(entity.rectangle.rotation.getValue()).toEqual(Math.PI / 4);
+        });
+    });
+
+    it('GroundOverlay: Handles wrapping longitude.', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <GroundOverlay>\
+            <LatLonBox>\
+                <west>-180</west>\
+                <south>-90</south>\
+                <east>180</east>\
+                <north>90</north>\
+            </LatLonBox>\
+        </GroundOverlay>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.polygon).toBeUndefined();
+            expect(entity.rectangle.coordinates.getValue()).toEqual(Rectangle.fromDegrees(-180, -90, 180, 90));
         });
     });
 

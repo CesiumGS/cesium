@@ -519,7 +519,7 @@ define([
         var geometryUpdater = this._geometryUpdater;
         var entity = geometryUpdater._entity;
         var wall = entity.wall;
-        if (!entity.isAvailable(time) || !Property.getValueOrDefault(wall.show, time, true)) {
+        if (!entity.isShowing || !entity.isAvailable(time) || !Property.getValueOrDefault(wall.show, time, true)) {
             return;
         }
 

@@ -5,6 +5,7 @@ defineSuite([
         'Core/clone',
         'Core/combine',
         'Core/defined',
+        'Core/FeatureDetection',
         'Core/KeyboardEventModifier',
         'Core/ScreenSpaceEventType',
         'Specs/DomEventSimulator'
@@ -14,13 +15,14 @@ defineSuite([
         clone,
         combine,
         defined,
+        FeatureDetection,
         KeyboardEventModifier,
         ScreenSpaceEventType,
         DomEventSimulator) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
-    var usePointerEvents = defined(window.PointerEvent);
+    var usePointerEvents = FeatureDetection.supportsPointerEvents();
     var element;
     var handler;
 

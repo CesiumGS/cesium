@@ -9,7 +9,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
@@ -51,7 +50,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         destroyObject,
         DeveloperError,
         Event,
@@ -220,7 +218,6 @@ define([
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      *
      * @see Model.fromGltf
-     * @see Model#readyPromise
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle Models Demo}
      */
@@ -331,7 +328,6 @@ define([
 
         this._allowPicking = defaultValue(options.allowPicking, true);
 
-        this._readyToRender = new Event();
         this._ready = false;
         this._readyPromise = when.defer();
 
@@ -546,41 +542,10 @@ define([
          * @readonly
          *
          * @default false
-         *
-         * @see Model#readyPromise
          */
         ready : {
             get : function() {
                 return this._ready;
-            }
-        },
-
-        /**
-         * The event fired when this model is ready to render, i.e., when the external binary, image,
-         * and shader files were downloaded and the WebGL resources were created.
-         * <p>
-         * This event is fired at the end of the frame before the first frame the model is rendered in.
-         * </p>
-         *
-         * @memberof Model.prototype
-         * @type {Event}
-         * @readonly
-         *
-         * @example
-         * // Play all animations at half-speed when the model is ready to render
-         * model.readyToRender.addEventListener(function(model) {
-         *   model.activeAnimations.addAll({
-         *     speedup : 0.5
-         *   });
-         * });
-         *
-         * @see Model#ready
-         * @deprecated
-         */
-        readyToRender : {
-            get : function() {
-                deprecationWarning('Model.readyToRender', 'Model.readyToRender was deprecated in Cesium 1.6 and will be removed in Cesium 1.9.  Use Model.readyPromise instead.');
-                return this._readyToRender;
             }
         },
 
@@ -606,7 +571,6 @@ define([
          * });
          *
          * @see Model#ready
-         * @deprecated
          */
         readyPromise : {
             get : function() {
@@ -664,8 +628,6 @@ define([
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @returns {Model} The newly created model.
-     *
-     * @see Model#readyPromise
      *
      * @example
      * // Example 1. Create a model from a glTF asset
@@ -2662,7 +2624,6 @@ define([
             var model = this;
             frameState.afterRender.push(function() {
                 model._ready = true;
-                model._readyToRender.raiseEvent(model);
                 model.readyPromise.resolve(model);
             });
             return;

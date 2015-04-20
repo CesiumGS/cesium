@@ -94,6 +94,20 @@ defineSuite([
         expect(noDuplicates).toEqual(expectedPositions);
     });
 
+    it('removeDuplicates keeps positions that add up past relative epsilon 7', function() {
+        var eightyPercentOfEpsilon7 = 0.8 * CesiumMath.EPSILON7;
+        var positions = [
+            new Cartesian3(0.0, 0.0, 1.0),
+            new Cartesian3(0.0, 0.0, 1.0 + eightyPercentOfEpsilon7),
+            new Cartesian3(0.0, 0.0, 1.0 + (2 * eightyPercentOfEpsilon7)),
+            new Cartesian3(0.0, 0.0, 1.0 + (3 * eightyPercentOfEpsilon7))];
+        var expectedPositions = [
+            new Cartesian3(0.0, 0.0, 1.0),
+            new Cartesian3(0.0, 0.0, 1.0 + (2 * eightyPercentOfEpsilon7))];
+        var noDuplicates = PolylinePipeline.removeDuplicates(positions);
+        expect(noDuplicates).toEqual(expectedPositions);
+    });
+
     it('removeDuplicates throws without positions', function() {
         expect(function() {
             PolylinePipeline.removeDuplicates();

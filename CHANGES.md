@@ -1,7 +1,23 @@
 Change Log
 ==========
 
-### 1.8 -2015-04-01
+### 1.9 - 2015-05-01
+* Breaking changes
+  * Removed `ColorMaterialProperty.fromColor`, previously deprecated in 1.6. Pass a `Color` directly to the `ColorMaterialProperty` constructor instead.
+  * Removed `CompositeEntityCollection.entities` and `EntityCollection.entities`, both previously deprecated in 1.6. Use `CompositeEntityCollection.values` and `EntityCollection.values` instead.
+  * Removed `DataSourceDisplay.getScene` and `DataSourceDisplay.getDataSources`, both previously deprecated in 1.6. Use `DataSourceDisplay.scene` and `DataSourceDisplay.dataSources` instead.
+  * `Entity` no longer takes a string id as it's constructor argument. Pass an options object with `id` property instead. This was previously deprecated in 1.6.
+  * Removed `Model.readyToRender`, previously deprecated in 1.6.  Use `Model.readyPromise` instead.
+* Deprecated
+  *
+* An exception is now thrown if `Primitive.modelMatrix` is not the identity matrix when in in 2D or Columbus View.
+* Fix a bug which caused `Entity.viewFrom` to be ignored when flying to, zooming to, or tracking an Entity.
+* The `InfoBox` title is now correctly updated if the name of `viewer.selectedEntity` changes on the fly. [#2644](https://github.com/AnalyticalGraphicsInc/cesium/pull/2644)
+* Fixed a bug that caused `Corridor` and `PolylineVolume` geometry to be incorrect for sharp corners [#2626](https://github.com/AnalyticalGraphicsInc/cesium/pull/2626)
+* Fixed crash when modifying a translucent entity geometry outline. [#2630](https://github.com/AnalyticalGraphicsInc/cesium/pull/2630)
+* Fixed crash when loading KML GroundOverlays that spanned 360 degrees. [#2639](https://github.com/AnalyticalGraphicsInc/cesium/pull/2639)
+
+### 1.8 - 2015-04-01
 
 * Breaking changes
   * Removed the `eye`, `target`, and `up` parameters to `Camera.lookAt` which were deprecated in Cesium 1.6. Use the `target` and `offset`.
@@ -9,8 +25,24 @@ Change Log
   * Removed `Camera.transform`, which was deprecated in Cesium 1.6. Use `Camera.lookAtTransform`.
   * Removed the `direction` and `up` options to `Camera.flyTo`, which were deprecated in Cesium 1.6. Use the `orientation` option.
   * Removed `Camera.flyToRectangle`, which was deprecated in Cesium 1.6. Use `Camera.flyTo`.
+* Deprecated
+  * Deprecated the `smallterrain` tileset.  It will be removed in 1.11. Use the [STK World Terrain](http://cesiumjs.org/data-and-assets/terrain/stk-world-terrain.html) tileset.
+* Added `Entity.show`, a boolean for hiding or showing an entity and its children.
+* Added `Entity.isShowing`, a read-only property that indicates if an entity is currently being drawn.
+* Added support for the KML `visibility` element.
+* Added `PolylineArrowMaterialProperty` to allow entities materials to use polyline arrows.
+* Added `VelocityOrientationProperty` to easily orient Entity graphics (such as a model) along the direction it is moving.
+* Added a new Sandcastle demo, [Interpolation](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Interpolation.html&label=Showcases), which illustrates time-dynamic position interpolation options and uses the new `VelocityOrientationProperty` to orient an aircraft in flight.
+* Improved `viewer.zoomTo` and `viewer.flyTo` so they are now "best effort" and work even if some entities being zoomed to are not currently in the scene.
+* Fixed `PointerEvent` detection so that it works with older implementations of the specification. This also fixes lack of mouse handling when detection failed, such as when using Cesium in the Windows `WebBrowser` control.
 * Fixed an issue with transparency. [#2572](https://github.com/AnalyticalGraphicsInc/cesium/issues/2572)
 * Fixed improper handling of null values when loading `GeoJSON` data.
+* Added support for automatic raster feature picking from `ArcGisMapServerImagerProvider`.
+* Added the ability to specify the desired tiling scheme, rectangle, and width and height of tiles to the `ArcGisMapServerImagerProvider` constructor.
+* Added the ability to access dynamic ArcGIS MapServer layers by specifying the `layers` parameter to the `ArcGisMapServerImagerProvider` constructor.
+* Fixed a bug that could cause incorrect rendering of an `ArcGisMapServerImageProvider` with a "singleFusedMapCache" in the geographic projection (EPSG:4326).
+* Added new construction options to `CesiumWidget` and `Viewer`, for `skyBox`, `skyAtmosphere`, and `globe`.
+* Fixed a bug that prevented Cesium from working in browser configurations that explicitly disabled localStorage, such as Safari's private browsing mode.
 * Cesium is now tested using Jasmine 2.2.0.
 
 ### 1.7.1 - 2015-03-06

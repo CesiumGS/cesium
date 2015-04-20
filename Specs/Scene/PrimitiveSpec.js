@@ -11,6 +11,7 @@ defineSuite([
         'Core/GeometryInstance',
         'Core/GeometryInstanceAttribute',
         'Core/Matrix4',
+        'Core/PolygonGeometry',
         'Core/PrimitiveType',
         'Core/Rectangle',
         'Core/RectangleGeometry',
@@ -41,6 +42,7 @@ defineSuite([
         GeometryInstance,
         GeometryInstanceAttribute,
         Matrix4,
+        PolygonGeometry,
         PrimitiveType,
         Rectangle,
         RectangleGeometry,
@@ -512,30 +514,7 @@ defineSuite([
         frameState.scene3DOnly = false;
     });
 
-    it('does not update model matrix for more than one instance in 3D with different model matrices', function() {
-        var primitive = new Primitive({
-            geometryInstances : [rectangleInstance1, rectangleInstance2],
-            appearance : new PerInstanceColorAppearance(),
-            asynchronous : false
-        });
-
-        var commands = [];
-        primitive.update(context, frameState, commands);
-        expect(commands.length).toEqual(1);
-        expect(commands[0].modelMatrix).toEqual(Matrix4.IDENTITY);
-
-        var modelMatrix = Matrix4.fromUniformScale(10.0);
-        primitive.modelMatrix = modelMatrix;
-
-        commands.length = 0;
-        primitive.update(context, frameState, commands);
-        expect(commands.length).toEqual(1);
-        expect(commands[0].modelMatrix).toEqual(Matrix4.IDENTITY);
-
-        primitive = primitive && primitive.destroy();
-    });
-
-    it('does not update model matrix in Columbus view', function() {
+    it('update model matrix throws in Columbus view', function() {
         var primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
@@ -553,15 +532,15 @@ defineSuite([
         primitive.modelMatrix = modelMatrix;
 
         commands.length = 0;
-        primitive.update(context, frameState, commands);
-        expect(commands.length).toEqual(1);
-        expect(commands[0].modelMatrix).toEqual(Matrix4.IDENTITY);
+        expect(function() {
+            primitive.update(context, frameState, commands);
+        }).toThrowDeveloperError();
 
         frameState = createFrameState(); // reset frame state
         primitive = primitive && primitive.destroy();
     });
 
-    it('does not update model matrix in 2D', function() {
+    it('update model matrix throws in 2D', function() {
         var primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
@@ -579,9 +558,9 @@ defineSuite([
         primitive.modelMatrix = modelMatrix;
 
         commands.length = 0;
-        primitive.update(context, frameState, commands);
-        expect(commands.length).toEqual(1);
-        expect(commands[0].modelMatrix).toEqual(Matrix4.IDENTITY);
+        expect(function() {
+            primitive.update(context, frameState, []);
+        }).toThrowDeveloperError();
 
         frameState = createFrameState(); // reset frame state
         primitive = primitive && primitive.destroy();
@@ -922,7 +901,63 @@ defineSuite([
                 }).toThrowRuntimeError();
             });
         });
+    });
 
+    it('internally invalid asynchronous geometry resolves promise and sets ready', function() {
+        var primitive = new Primitive({
+            geometryInstances : [new GeometryInstance({
+                geometry : PolygonGeometry.fromPositions({
+                    positions : []
+                })
+            })],
+            appearance : new MaterialAppearance({
+                materialSupport : MaterialAppearance.MaterialSupport.ALL
+            }),
+            compressVertices : false
+        });
+
+        return pollToPromise(function() {
+            if (frameState.afterRender.length > 0) {
+                frameState.afterRender[0]();
+                return true;
+            }
+            primitive.update(context, frameState, []);
+            return false;
+        }).then(function() {
+            return primitive.readyPromise.then(function(arg) {
+                expect(arg).toBe(primitive);
+                expect(primitive.ready).toBe(true);
+            });
+        });
+    });
+
+    it('internally invalid synchronous geometry resolves promise and sets ready', function() {
+        var primitive = new Primitive({
+            geometryInstances : [new GeometryInstance({
+                geometry : PolygonGeometry.fromPositions({
+                    positions : []
+                })
+            })],
+            appearance : new MaterialAppearance({
+                materialSupport : MaterialAppearance.MaterialSupport.ALL
+            }),
+            asynchronous : false,
+            compressVertices : false
+        });
+
+        return pollToPromise(function() {
+            if (frameState.afterRender.length > 0) {
+                frameState.afterRender[0]();
+                return true;
+            }
+            primitive.update(context, frameState, []);
+            return false;
+        }).then(function() {
+            return primitive.readyPromise.then(function(arg) {
+                expect(arg).toBe(primitive);
+                expect(primitive.ready).toBe(true);
+            });
+        });
     });
 
     it('shader validation', function() {

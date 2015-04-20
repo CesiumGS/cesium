@@ -5,7 +5,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/Matrix3',
@@ -37,7 +36,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         Event,
         Matrix3,
@@ -92,6 +90,7 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {String} [options.id] A unique identifier for this object. If none is provided, a GUID is generated.
      * @param {String} [options.name] A human readable name to display to users. It does not have to be unique.
+     * @param {Boolean} [options.show] A boolean value indicating if the entity and its children are displayed.
      * @param {Property} [options.description] A string Property specifying an HTML description for this entity.
      * @param {PositionProperty} [options.position] A Property specifying the entity position.
      * @param {Property} [options.orientation] A Property specifying the entity orientation.
@@ -119,12 +118,6 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var id = options.id;
-        if (typeof options === 'string') {
-            deprecationWarning('Entity', 'The Entity constructor taking a string was deprecated in Cesium 1.5.  It will be removed in 1.9.  Use "new Entity({ id : \'id\'})" instead.');
-            id = options;
-            options = defaultValue.EMPTY_OBJECT;
-        }
-
         if (!defined(id)) {
             id = createGuid();
         }
@@ -132,8 +125,9 @@ define([
         this._availability = undefined;
         this._id = id;
         this._definitionChanged = new Event();
-        this._name = undefined;
-        this._parent = options.parent;
+        this._name = options.name;
+        this._show = defaultValue(options.show, true);
+        this._parent = undefined;
         this._propertyNames = ['billboard', 'box', 'corridor', 'cylinder', 'description', 'ellipse', //
                                'ellipsoid', 'label', 'model', 'orientation', 'path', 'point', 'polygon', //
                                'polyline', 'polylineVolume', 'position', 'rectangle', 'viewFrom', 'wall'];
@@ -176,9 +170,26 @@ define([
         this._viewFromSubscription = undefined;
         this._wall = undefined;
         this._wallSubscription = undefined;
+        this._children = [];
 
-        this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
+        this.parent = options.parent;
+        this.merge(options);
     };
+
+    function updateShow(entity, isShowing) {
+        var children = entity._children;
+        var length = children.length;
+        for (var i = 0; i < length; i++) {
+            var child = children[i];
+            var childShow = child._show;
+            var oldValue = !isShowing && childShow;
+            var newValue = isShowing && childShow;
+            if (oldValue !== newValue) {
+                child._definitionChanged.raiseEvent(child, 'isShowing', newValue, oldValue);
+            }
+        }
+        entity._definitionChanged.raiseEvent(entity, 'isShowing', isShowing, !isShowing);
+    }
 
     defineProperties(Entity.prototype, {
         /**
@@ -219,17 +230,48 @@ define([
          * @memberof Entity.prototype
          * @type {String}
          */
-        name : {
-            configurable : false,
+        name : createRawPropertyDescriptor('name'),
+        /**
+         * Gets or sets whether this entity should be displayed. When set to true,
+         * the entity is only displayed if the parent entity's show property is also true.
+         * @memberof Entity.prototype
+         * @type {Boolean}
+         */
+        show : {
             get : function() {
-                return this._name;
+                return this._show;
             },
             set : function(value) {
-                var oldValue = this._name;
-                if (oldValue !== value) {
-                    this._name = value;
-                    this._definitionChanged.raiseEvent(this, 'name', value, oldValue);
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value)) {
+                    throw new DeveloperError('value is required.');
                 }
+                //>>includeEnd('debug');
+
+                if (value === this._show) {
+                    return;
+                }
+
+                var wasShowing = this.isShowing;
+                this._show = value;
+                var isShowing = this.isShowing;
+
+                if (wasShowing !== isShowing) {
+                    updateShow(this, isShowing);
+                }
+
+                this._definitionChanged.raiseEvent(this, 'show', value, !value);
+            }
+        },
+        /**
+         * Gets whether this entity is being displayed, taking into account
+         * the visibility of any ancestor entities.
+         * @memberof Entity.prototype
+         * @type {Boolean}
+         */
+        isShowing : {
+            get : function() {
+                return this._show && (!defined(this._parent) || this._parent._show);
             }
         },
         /**
@@ -237,7 +279,35 @@ define([
          * @memberof Entity.prototype
          * @type {Entity}
          */
-        parent : createRawPropertyDescriptor('parent'),
+        parent : {
+            get : function() {
+                return this._parent;
+            },
+            set : function(value) {
+                var oldValue = this._parent;
+
+                if (oldValue === value) {
+                    return;
+                }
+
+                var wasShowing = this.isShowing;
+                if (defined(oldValue)) {
+                    var index = oldValue._children.indexOf(this);
+                    oldValue._children.splice(index, 1);
+                }
+
+                this._parent = value;
+                value._children.push(this);
+
+                var isShowing = this.isShowing;
+
+                if (wasShowing !== isShowing) {
+                    updateShow(this, isShowing);
+                }
+
+                this._definitionChanged.raiseEvent(this, 'parent', value, oldValue);
+            }
+        },
         /**
          * Gets the names of all properties registered on this instance.
          * @memberof Entity.prototype
@@ -448,7 +518,8 @@ define([
         }
         //>>includeEnd('debug');
 
-        //Name and availability are not Property objects and are currently handled differently.
+        //Name, show, and availability are not Property objects and are currently handled differently.
+        //source.show is intentionally ignored because this.show always has a value.
         this.name = defaultValue(this.name, source.name);
         this.availability = defaultValue(source.availability, this.availability);
 
