@@ -18,6 +18,7 @@ defineSuite([
         'DataSources/GridMaterialProperty',
         'DataSources/SampledProperty',
         'DataSources/StaticGeometryPerMaterialBatch',
+        'Specs/createDynamicProperty',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
@@ -39,6 +40,7 @@ defineSuite([
         GridMaterialProperty,
         SampledProperty,
         StaticGeometryPerMaterialBatch,
+        createDynamicProperty,
         createScene,
         pollToPromise) {
     "use strict";
@@ -327,6 +329,53 @@ defineSuite([
         });
     });
 
+    it('Correctly handles modifying translucent outline color', function() {
+        var entities = new EntityCollection();
+        var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, entities);
+
+        var color = Color.BLUE.withAlpha(0.5);
+        var entity = entities.add({
+            position : new Cartesian3(1234, 5678, 9101112),
+            ellipse : {
+                semiMajorAxis : 2,
+                semiMinorAxis : 1,
+                fill : false,
+                outline : true,
+                outlineColor : color
+            }
+        });
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = visualizer.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            var primitive = scene.primitives.get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
+            expect(attributes).toBeDefined();
+            expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(color));
+
+            color = Color.RED.withAlpha(0.5);
+            entity.ellipse.outlineColor.setValue(color);
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                var isUpdated = visualizer.update(time);
+                scene.render(time);
+                return isUpdated;
+            });
+        }).then(function() {
+            var primitive = scene.primitives.get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
+            expect(attributes).toBeDefined();
+            expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(color));
+
+            entities.remove(entity);
+            visualizer.destroy();
+        });
+    });
+
     it('Creates and removes dynamic geometry', function() {
         var objects = new EntityCollection();
         var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, objects);
@@ -548,4 +597,136 @@ defineSuite([
         });
     });
 
+    it('Sets static geometry  primitive show attribute when using dynamic fill color', function() {
+        var entities = new EntityCollection();
+        var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, entities);
+
+        var entity = entities.add({
+            position : new Cartesian3(1234, 5678, 9101112),
+            ellipse : {
+                semiMajorAxis : 2,
+                semiMinorAxis : 1,
+                material : new ColorMaterialProperty(createDynamicProperty(Color.BLUE))
+            }
+        });
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = visualizer.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            var primitive = scene.primitives.get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
+            expect(attributes).toBeDefined();
+            expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
+
+            entity.show = false;
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                var isUpdated = visualizer.update(time);
+                scene.render(time);
+                return isUpdated;
+            });
+        }).then(function() {
+            var primitive = scene.primitives.get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
+            expect(attributes).toBeDefined();
+            expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(false));
+
+            entities.remove(entity);
+            visualizer.destroy();
+        });
+    });
+
+    it('Sets static geometry  primitive show attribute when using dynamic outline color', function() {
+        var entities = new EntityCollection();
+        var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, entities);
+
+        var entity = entities.add({
+            position : new Cartesian3(1234, 5678, 9101112),
+            ellipse : {
+                semiMajorAxis : 2,
+                semiMinorAxis : 1,
+                fill : false,
+                outline : true,
+                outlineColor : createDynamicProperty(Color.BLUE)
+            }
+        });
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = visualizer.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            var primitive = scene.primitives.get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
+            expect(attributes).toBeDefined();
+            expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
+
+            entity.show = false;
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                var isUpdated = visualizer.update(time);
+                scene.render(time);
+                return isUpdated;
+            });
+        }).then(function() {
+            var primitive = scene.primitives.get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
+            expect(attributes).toBeDefined();
+            expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(false));
+
+            entities.remove(entity);
+            visualizer.destroy();
+        });
+    });
+
+    it('Sets static geometry primitive show attribute when using dynamic fill material', function() {
+        var entities = new EntityCollection();
+        var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, entities);
+
+        var entity = entities.add({
+            position : new Cartesian3(1234, 5678, 9101112),
+            ellipse : {
+                semiMajorAxis : 2,
+                semiMinorAxis : 1,
+                material : new GridMaterialProperty({
+                    color : createDynamicProperty(Color.BLUE)
+                })
+            }
+        });
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = visualizer.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            var primitive = scene.primitives.get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
+            expect(attributes).toBeDefined();
+            expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
+
+            entity.show = false;
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                var isUpdated = visualizer.update(time);
+                scene.render(time);
+                return isUpdated;
+            });
+        }).then(function() {
+            var primitive = scene.primitives.get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
+            expect(attributes).toBeDefined();
+            expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(false));
+
+            entities.remove(entity);
+            visualizer.destroy();
+        });
+    });
 }, 'WebGL');
