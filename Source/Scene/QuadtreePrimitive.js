@@ -268,8 +268,8 @@ define([
         // We can't render anything before the level zero tiles exist.
         if (!defined(primitive._levelZeroTiles)) {
             if (primitive._tileProvider.ready) {
-                var terrainTilingScheme = primitive._tileProvider.tilingScheme;
-                primitive._levelZeroTiles = QuadtreeTile.createLevelZeroTiles(terrainTilingScheme);
+                var tilingScheme = primitive._tileProvider.tilingScheme;
+                primitive._levelZeroTiles = QuadtreeTile.createLevelZeroTiles(tilingScheme);
             } else {
                 // Nothing to do until the provider is ready.
                 return;

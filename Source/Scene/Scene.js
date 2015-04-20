@@ -916,6 +916,7 @@ define([
                 frustumCommandsList[n].indices[p] = 0;
             }
         }
+        overlayList.length = 0;
 
         var near = Number.MAX_VALUE;
         var far = Number.MIN_VALUE;

@@ -668,6 +668,24 @@ defineSuite([
         });
     });
 
+    it('GroundOverlay: Handles wrapping longitude.', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <GroundOverlay>\
+            <LatLonBox>\
+                <west>-180</west>\
+                <south>-90</south>\
+                <east>180</east>\
+                <north>90</north>\
+            </LatLonBox>\
+        </GroundOverlay>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.polygon).toBeUndefined();
+            expect(entity.rectangle.coordinates.getValue()).toEqual(Rectangle.fromDegrees(-180, -90, 180, 90));
+        });
+    });
+
     it('GroundOverlay: Sets polygon coordinates for gx:LatLonQuad', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
         <GroundOverlay xmlns="http://www.opengis.net/kml/2.2"\

@@ -152,6 +152,7 @@ require({
     var searchRegExp;
     var hintTimer;
     var currentTab = '';
+    var newDemo;
     var demoHtml = '';
     var demoJs = '';
 
@@ -263,7 +264,16 @@ require({
     function makeLineLabel(msg, className) {
         var element = document.createElement('abbr');
         element.className = className;
-        element.innerHTML = '&nbsp;';
+        switch (className) {
+        case 'hintMarker':
+            element.innerHTML = '&#9650;';
+            break;
+        case 'errorMarker':
+            element.innerHTML = '&times;';
+            break;
+        default:
+            element.innerHTML = '&#9654;';
+        }
         element.title = msg;
         return element;
     }
@@ -821,6 +831,28 @@ require({
         }
     }
 
+    registry.byId('buttonNew').on('click', function() {
+        var htmlText = (htmlEditor.getValue()).replace(/\s/g, '');
+        var jsText = (jsEditor.getValue()).replace(/\s/g, '');
+        var confirmChange = true;
+        if (demoHtml !== htmlText || demoJs !== jsText) {
+            confirmChange = window.confirm('You have unsaved changes. Are you sure you want to navigate away from this demo?');
+        }
+        if(confirmChange){
+            loadFromGallery(newDemo);
+            var demoSrc = newDemo.name + '.html';
+            var queries = window.location.search.substring(1).split('&');
+            for(var i = 0; i < queries.length; i++){
+                var key = queries[i].split('=')[0];
+                if(key === "src"){
+                    if (demoSrc !== queries[i].split('=')[1].replace('%20', ' ')) {
+                        window.history.pushState(newDemo, newDemo.name, '?src=' + demoSrc + '&label=' + currentTab);
+                    }
+                }
+            }
+            document.title = newDemo.name + ' - Cesium Sandcastle';
+        }
+    });
     // Clicking the 'Run' button simply reloads the iframe.
     registry.byId('buttonRun').on('click', function() {
         CodeMirror.commands.runCesium(jsEditor);
@@ -1015,6 +1047,9 @@ require({
         demoLink.href = 'gallery/' + encodeURIComponent(demo.name) + '.html';
         tab.appendChild(demoLink);
 
+        if(demo.name === "Hello World") {
+            newDemo = demo;
+        }
         demoLink.onclick = function(e) {
             if (mouse.isMiddle(e)) {
                 window.open('gallery/' + demo.name + '.html');
