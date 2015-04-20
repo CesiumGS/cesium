@@ -136,12 +136,10 @@ define([
                     this.attributes.set(instance.id.id, attributes);
                 }
 
-                if (!updater.hasConstantFill) {
-                    var show = entity.isShowing && updater.isFilled(time);
-                    var currentShow = attributes.show[0] === 1;
-                    if (show !== currentShow) {
-                        attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
-                    }
+                var show = entity.isShowing && (updater.hasConstantFill || updater.isFilled(time));
+                var currentShow = attributes.show[0] === 1;
+                if (show !== currentShow) {
+                    attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
                 }
             }
 
