@@ -800,38 +800,46 @@ define([
     var scratchPosition = new Cartesian3();
     var scratchCartographic = new Cartographic();
 
-    function createCallback(billboard, position) {
+    Billboard._clampPosition = function(billboard) {
+        var scene = billboard._billboardCollection._scene;
+        var mode = scene.mode;
+        var billboardMode = billboard._mode;
+        var modeChanged = mode !== SceneMode.MORPHING && mode !== billboardMode;
+
+        if (billboard._newTile !== billboard._currentTile || billboard._positionChanged || modeChanged) {
+            if (mode === SceneMode.SCENE3D) {
+                Cartesian3.clone(Cartesian3.ZERO, scratchRay.origin);
+                Cartesian3.normalize(billboard.position, scratchRay.direction);
+            } else {
+                var projection = scene.mapProjection;
+                var ellipsoid = projection.ellipsoid;
+
+                ellipsoid.cartesianToCartographic(billboard.position, scratchCartographic);
+                scratchCartographic.height = -1000.0; // TODO: get minimum height of entire terrain set
+                projection.project(scratchCartographic, scratchPosition);
+                Cartesian3.fromElements(scratchPosition.z, scratchPosition.x, scratchPosition.y, scratchPosition);
+                Cartesian3.clone(scratchPosition, scratchRay.origin);
+                Cartesian3.clone(Cartesian3.UNIT_X, scratchRay.direction);
+            }
+
+            var position = billboard._newTile.data.pick(scratchRay, scene, false, scratchPosition);
+            if (defined(position)) {
+                billboard._clampedPosition = Cartesian3.clone(position, billboard._clampedPosition);
+            }
+
+            billboard._positionChanged = false;
+            billboard._mode = mode;
+            billboard._currentTile = billboard._newTile;
+            makeDirty(billboard, POSITION_INDEX);
+        }
+    };
+
+    function createCallback(billboard) {
         return function (tile) {
-            var scene = billboard._billboardCollection._scene;
-            var mode = scene.mode;
-            var billboardMode = billboard._mode;
-            var modeChanged = mode !== SceneMode.MORPHING && mode !== billboardMode;
-
-            if (tile !== billboard._currentTile || billboard._positionChanged || modeChanged) {
-                if (mode === SceneMode.SCENE3D) {
-                    Cartesian3.clone(Cartesian3.ZERO, scratchRay.origin);
-                    Cartesian3.normalize(billboard.position, scratchRay.direction);
-                } else {
-                    var projection = scene.mapProjection;
-                    var ellipsoid = projection.ellipsoid;
-
-                    ellipsoid.cartesianToCartographic(billboard.position, scratchCartographic);
-                    scratchCartographic.height = -1000.0; // TODO: get minimum height of entire terrain set
-                    projection.project(scratchCartographic, scratchPosition);
-                    Cartesian3.fromElements(scratchPosition.z, scratchPosition.x, scratchPosition.y, scratchPosition);
-                    Cartesian3.clone(scratchPosition, scratchRay.origin);
-                    Cartesian3.clone(Cartesian3.UNIT_X, scratchRay.direction);
-                }
-
-                var position = tile.data.pick(scratchRay, scene, false, scratchPosition);
-                if (defined(position)) {
-                    billboard._clampedPosition = Cartesian3.clone(position, billboard._clampedPosition);
-                }
-
-                billboard._positionChanged = false;
-                billboard._mode = mode;
-                billboard._currentTile = tile;
-                makeDirty(billboard, POSITION_INDEX);
+            billboard._newTile = tile;
+            var clampList = billboard._billboardCollection._clampBillboardsToTerrain;
+            if (clampList.indexOf(billboard) === -1) {
+                clampList.push(billboard);
             }
         };
     }
@@ -868,7 +876,7 @@ define([
 
         this._callback = {
             position : position,
-            func : createCallback(this, position)
+            func : createCallback(this)
         };
         surface.addTileLoadedCallback(this._callback);
         this._positionChanged = true;

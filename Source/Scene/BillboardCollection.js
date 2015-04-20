@@ -12,6 +12,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EncodedCartesian3',
+        '../Core/getTimestamp',
         '../Core/IndexDatatype',
         '../Core/Math',
         '../Core/Matrix4',
@@ -40,6 +41,7 @@ define([
         destroyObject,
         DeveloperError,
         EncodedCartesian3,
+        getTimestamp,
         IndexDatatype,
         CesiumMath,
         Matrix4,
@@ -179,6 +181,9 @@ define([
         this._baseVolume2D = new BoundingSphere();
         this._boundingVolume = new BoundingSphere();
         this._boundingVolumeDirty = false;
+
+        this._clampBillboardsToTerrain = [];
+        this._clampTimeSlice = 5.0;
 
         this._colorCommands = [];
         this._pickCommands = [];
@@ -1015,6 +1020,18 @@ define([
      * @exception {RuntimeError} image with id must be in the atlas.
      */
     BillboardCollection.prototype.update = function(context, frameState, commandList) {
+        var startTime = getTimestamp();
+        var timeSlice = this._clampTimeSlice;
+        var endTime = startTime + timeSlice;
+
+        var clampList = this._clampBillboardsToTerrain;
+        while (clampList.length > 0) {
+            Billboard._clampPosition(clampList.shift());
+            if (getTimestamp() >= endTime) {
+                break;
+            }
+        }
+
         removeBillboards(this);
 
         var billboards = this._billboards;
