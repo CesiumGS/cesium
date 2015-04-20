@@ -33,6 +33,8 @@ define([
 // * Point Clouds: pure binary or in glTF
 // * CZML, preferably with a binary payload
 
+// TODO: replace this implementation with CzmlDataSource.
+
     /**
      * @private
      */
@@ -122,9 +124,6 @@ define([
 
     function applyDebugSettings(owner, content) {
         if (content.state === Cesium3DTileContentState.READY) {
-            var primitives = content._primitives;
-            var length = primitives.length;
-
             if (owner.debugColorizeTiles && !content._debugColorizeTiles) {
                 content._debugColorizeTiles = true;
                 setMaterialDiffuse(content, content._debugColor);

@@ -15,6 +15,7 @@ define([
         '../Core/Rectangle',
         './Cesium3DTileContentProvider',
         './Cesium3DTileContentState',
+        './Gltf3DTileContentProvider',
         './PerInstanceColorAppearance',
         './Primitive',
         './TileBoundingBox',
@@ -35,6 +36,7 @@ define([
         Rectangle,
         Cesium3DTileContentProvider,
         Cesium3DTileContentState,
+        Gltf3DTileContentProvider,
         PerInstanceColorAppearance,
         Primitive,
         TileBoundingBox,
@@ -99,6 +101,7 @@ define([
 // TODO: how to know which content provider to use, e.g., a property in tree.json
 // TODO: contents may come from a different server than tree.json
         var content = new Cesium3DTileContentProvider(baseUrl + tile.url);
+//      var content = new Gltf3DTileContentProvider(baseUrl + tile.url);
         this._content = content;
 
         var that = this;
