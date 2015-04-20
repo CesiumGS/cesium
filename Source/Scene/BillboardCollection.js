@@ -1011,6 +1011,8 @@ define([
      * @exception {RuntimeError} image with id must be in the atlas.
      */
     BillboardCollection.prototype.update = function(context, frameState, commandList) {
+        removeBillboards(this);
+
         var billboards = this._billboards;
         var billboardsLength = billboards.length;
 
@@ -1032,7 +1034,6 @@ define([
             return;
         }
 
-        removeBillboards(this);
         updateMode(this, frameState);
 
         billboards = this._billboards;

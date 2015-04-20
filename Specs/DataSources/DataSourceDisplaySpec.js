@@ -85,10 +85,6 @@ defineSuite([
         expect(display.isDestroyed()).toEqual(false);
         expect(display.defaultDataSource).toBeDefined();
 
-        //deprecated
-        expect(display.getScene()).toBe(scene);
-        expect(display.getDataSources()).toBe(dataSourceCollection);
-
         display.destroy();
     });
 
