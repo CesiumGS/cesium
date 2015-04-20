@@ -4,7 +4,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EventHelper',
@@ -31,7 +30,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         destroyObject,
         DeveloperError,
         EventHelper,
@@ -161,26 +159,6 @@ define([
             }
         }
     });
-
-    /**
-     * Gets the scene being used for display.
-     * @deprecated
-     * @returns {Scene} The scene.
-     */
-    DataSourceDisplay.prototype.getScene = function() {
-        deprecationWarning('DataSourceDisplay.getScene', 'DataSourceDisplay.getScene was deprecated on Cesium 1.5 and will be removed in Cesium 1.9, used the DataSourceDisplay.scene property instead.');
-        return this.scene;
-    };
-
-    /**
-     * Gets the collection of data sources to be displayed.
-     * @deprecated
-     * @returns {DataSourceCollection} The collection of data sources.
-     */
-    DataSourceDisplay.prototype.getDataSources = function() {
-        deprecationWarning('DataSourceDisplay.getDataSources', 'DataSourceDisplay.getDataSources was deprecated on Cesium 1.5 and will be removed in Cesium 1.9, used the DataSourceDisplay.dataSources property instead.');
-        return this.dataSources;
-    };
 
     /**
      * Returns true if this object was destroyed; otherwise, false.
