@@ -46,10 +46,10 @@ define([
     /**
      * @private
      */
-    var Cesium3DTile = function(baseUrl, tile, parent) {
-        this._header = tile;
+    var Cesium3DTile = function(baseUrl, header, parent) {
+        this._header = header;
 
-        var b = tile.box;
+        var b = header.box;
         var rectangle = new Rectangle(b.west, b.south, b.east, b.north);
 
         this._tileBoundingBox = new TileBoundingBox({
@@ -60,13 +60,13 @@ define([
         this._boundingSphere = BoundingSphere.fromRectangleWithHeights3D(rectangle, undefined, b.minimumHeight, b.maximumHeight);
 
         var rs;
-        if (defined(tile.contentsBox)) {
+        if (defined(header.contentsBox)) {
             // Non-leaf tiles may have a render-box bounding-volume, which is a tight-fit box
             // around only the models in the tile.  This box is useful for culling for rendering,
             // but not for culling for traversing the tree since it is not spatial coherence, i.e.,
             // since it only bounds models in the tile, not the entire tile, children may be
             // outside of this box.
-            var cb = tile.contentsBox;
+            var cb = header.contentsBox;
             rs = BoundingSphere.fromRectangleWithHeights3D(new Rectangle(cb.west, cb.south, cb.east, cb.north), undefined, cb.minimumHeight, cb.maximumHeight);
         }
 
@@ -75,7 +75,7 @@ define([
         /**
          * @readonly
          */
-        this.geometricError = tile.geometricError;
+        this.geometricError = header.geometricError;
 
         /**
          * @type {Array}
@@ -90,7 +90,7 @@ define([
         /**
          * @readonly
          */
-        this.numberOfChildrenWithoutContent = tile.children.length;
+        this.numberOfChildrenWithoutContent = header.children.length;
 
         /**
          * @type {Promise}
@@ -100,8 +100,8 @@ define([
 
 // TODO: how to know which content provider to use, e.g., a property in tree.json
 // TODO: contents may come from a different server than tree.json
-        var content = new Cesium3DTileContentProvider(baseUrl + tile.url);
-//      var content = new Gltf3DTileContentProvider(baseUrl + tile.url);
+        var content = new Cesium3DTileContentProvider(baseUrl + header.url);
+//      var content = new Gltf3DTileContentProvider(baseUrl + header.url);
         this._content = content;
 
         var that = this;

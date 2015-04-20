@@ -127,14 +127,14 @@ define([
 
             var stack = [];
             stack.push({
-                skeletonTile : tree.root,
+                header : tree.root,
                 cesium3DTile : that._root
             });
 
-// TODO: allow skeleton tree itself to be out-of-core
+// TODO: allow tree itself to be out-of-core?  Or have content-type that can be a tree?
             while (stack.length > 0) {
                 var n = stack.pop();
-                var skeletonChildren = n.skeletonTile.children;
+                var skeletonChildren = n.header.children;
                 var length = skeletonChildren.length;
                 for (var k = 0; k < length; ++k) {
                     var skeletonChild = skeletonChildren[k];
@@ -142,7 +142,7 @@ define([
                     n.cesium3DTile.children.push(cesium3DTileChild);
 
                     stack.push({
-                        skeletonTile : skeletonChild,
+                        header : skeletonChild,
                         cesium3DTile : cesium3DTileChild
                     });
                 }
