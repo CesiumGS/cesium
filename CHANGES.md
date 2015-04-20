@@ -3,11 +3,11 @@ Change Log
 
 ### 1.9 - 2015-05-01
 * Breaking changes
-  * Removed `ColorMaterialProperty.fromColor`. Pass a `Color` directly to the `ColorMaterialProperty` constructor instead.
-  * Removed `CompositeEntityCollection.entities` and `EntityCollection.entities`. Use `CompositeEntityCollection.values` and `EntityCollection.values` instead.
-  * Removed `DataSourceDisplay.getScene` and `DataSourceDisplay.getDataSources`. Use `DataSourceDisplay.scene` and `DataSourceDisplay.dataSources` instead.
-  * `Entity` no longer takes a string id as it's constructor argument.  Pass an options object with `id` property instead.
-  * `Model.readyToRender` was removed.  Use `Model.readyPromise` instead.
+  * Removed `ColorMaterialProperty.fromColor`, previously deprecated in 1.6. Pass a `Color` directly to the `ColorMaterialProperty` constructor instead.
+  * Removed `CompositeEntityCollection.entities` and `EntityCollection.entities`, both previously deprecated in 1.6. Use `CompositeEntityCollection.values` and `EntityCollection.values` instead.
+  * Removed `DataSourceDisplay.getScene` and `DataSourceDisplay.getDataSources`, both previously deprecated in 1.6. Use `DataSourceDisplay.scene` and `DataSourceDisplay.dataSources` instead.
+  * `Entity` no longer takes a string id as it's constructor argument. Pass an options object with `id` property instead. This was previously deprecated in 1.6.
+  * Removed `Model.readyToRender`, previously deprecated in 1.6.  Use `Model.readyPromise` instead.
 * Deprecated
   *
 * An exception is now thrown if `Primitive.modelMatrix` is not the identity matrix when in in 2D or Columbus View.

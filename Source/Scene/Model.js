@@ -218,7 +218,6 @@ define([
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      *
      * @see Model.fromGltf
-     * @see Model#readyPromise
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle Models Demo}
      */
@@ -543,8 +542,6 @@ define([
          * @readonly
          *
          * @default false
-         *
-         * @see Model#readyPromise
          */
         ready : {
             get : function() {
@@ -631,8 +628,6 @@ define([
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @returns {Model} The newly created model.
-     *
-     * @see Model#readyPromise
      *
      * @example
      * // Example 1. Create a model from a glTF asset
