@@ -11,6 +11,7 @@ Change Log
 * Deprecated
   *
 * An exception is now thrown if `Primitive.modelMatrix` is not the identity matrix when in in 2D or Columbus View.
+* Fix a bug which caused `Entity.viewFrom` to be ignored when flying to, zooming to, or tracking an Entity.
 * The `InfoBox` title is now correctly updated if the name of `viewer.selectedEntity` changes on the fly. [#2644](https://github.com/AnalyticalGraphicsInc/cesium/pull/2644)
 * Fixed a bug that caused `Corridor` and `PolylineVolume` geometry to be incorrect for sharp corners [#2626](https://github.com/AnalyticalGraphicsInc/cesium/pull/2626)
 * Fixed crash when modifying a translucent entity geometry outline. [#2630](https://github.com/AnalyticalGraphicsInc/cesium/pull/2630)
