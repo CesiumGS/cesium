@@ -936,7 +936,7 @@ define([
         for ( var i = 0; i < length; ++i) {
             var billboard = billboards[i];
             var position = billboard.position;
-            var actualPosition = Billboard._computeActualPosition(position, frameState, modelMatrix);
+            var actualPosition = Billboard._computeActualPosition(billboard, position, frameState, modelMatrix);
             if (defined(actualPosition)) {
                 billboard._setActualPosition(actualPosition);
 

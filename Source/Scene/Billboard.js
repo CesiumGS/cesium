@@ -146,10 +146,11 @@ define([
             this._loadImage();
         }
 
-        this._globe = billboardCollection._globe;
         this._callback = undefined;
         this._currentTile = undefined;
         this._clampedPosition = undefined;
+        this._positionChanged = false;
+        this._mode = undefined;
 
         this._updateClamping();
     };
@@ -795,12 +796,40 @@ define([
         return this._pickId;
     };
 
+    var scratchRay = new Ray();
+    var scratchPosition = new Cartesian3();
+    var scratchCartographic = new Cartographic();
+
     function createCallback(billboard, position) {
-        var ray = new Ray();
         return function (tile) {
-            if (tile !== billboard._currentTile) {
-                Cartesian3.normalize(billboard.position, ray.direction);
-                billboard._clampedPosition = tile.data.pick(ray, undefined, false, billboard._clampedPosition);
+            var scene = billboard._billboardCollection._scene;
+            var mode = scene.mode;
+            var billboardMode = billboard._mode;
+            var modeChanged = mode !== SceneMode.MORPHING && mode !== billboardMode;
+
+            if (tile !== billboard._currentTile || billboard._positionChanged || modeChanged) {
+                if (mode === SceneMode.SCENE3D) {
+                    Cartesian3.clone(Cartesian3.ZERO, scratchRay.origin);
+                    Cartesian3.normalize(billboard.position, scratchRay.direction);
+                } else {
+                    var projection = scene.mapProjection;
+                    var ellipsoid = projection.ellipsoid;
+
+                    ellipsoid.cartesianToCartographic(billboard.position, scratchCartographic);
+                    scratchCartographic.height = -1000.0; // TODO: get minimum height of entire terrain set
+                    projection.project(scratchCartographic, scratchPosition);
+                    Cartesian3.fromElements(scratchPosition.z, scratchPosition.x, scratchPosition.y, scratchPosition);
+                    Cartesian3.clone(scratchPosition, scratchRay.origin);
+                    Cartesian3.clone(Cartesian3.UNIT_X, scratchRay.direction);
+                }
+
+                var position = tile.data.pick(scratchRay, scene, false, scratchPosition);
+                if (defined(position)) {
+                    billboard._clampedPosition = Cartesian3.clone(position, billboard._clampedPosition);
+                }
+
+                billboard._positionChanged = false;
+                billboard._mode = mode;
                 billboard._currentTile = tile;
                 makeDirty(billboard, POSITION_INDEX);
             }
@@ -808,7 +837,7 @@ define([
     }
 
     Billboard.prototype._updateClamping = function() {
-        var globe = this._globe;
+        var globe = this._billboardCollection._globe;
         if (!defined(globe)) {
             if (defined(this._clampToGround)) {
                 throw new DeveloperError('Clamping a billboard to the ground is not supported.');
@@ -842,6 +871,7 @@ define([
             func : createCallback(this, position)
         };
         surface.addTileLoadedCallback(this._callback);
+        this._positionChanged = true;
     };
 
     Billboard.prototype._loadImage = function() {
@@ -993,7 +1023,7 @@ define([
     };
 
     Billboard.prototype._getActualPosition = function() {
-        return defined(this._callback) && defined(this._clampedPosition) ? this._clampedPosition : this._actualPosition;
+        return defined(this._callback) && defined(this._clampedPosition) && this._mode !== SceneMode.MORPHING ? this._clampedPosition : this._actualPosition;
     };
 
     Billboard.prototype._setActualPosition = function(value) {
@@ -1002,8 +1032,10 @@ define([
     };
 
     var tempCartesian3 = new Cartesian4();
-    Billboard._computeActualPosition = function(position, frameState, modelMatrix) {
-        if (frameState.mode === SceneMode.SCENE3D) {
+    Billboard._computeActualPosition = function(billboard, position, frameState, modelMatrix) {
+        if (defined(billboard._callback) && defined(billboard._clampedPosition) && this._mode !== SceneMode.MORPHING) {
+            return billboard._clampedPosition;
+        } else if (frameState.mode === SceneMode.SCENE3D) {
             return position;
         }
 
