@@ -100,7 +100,7 @@ define([
      * @param {ModelAnimationLoop} [options.loop=ModelAnimationLoop.NONE] Determines if and how the animation is looped.
      * @returns {ModelAnimation} The animation that was added to the collection.
      *
-     * @exception {DeveloperError} Animations are not loaded.  Wait for the {@link Model#readyToRender} event.
+     * @exception {DeveloperError} Animations are not loaded.  Wait for the {@link Model#readyPromise} to resolve.
      * @exception {DeveloperError} options.name must be a valid animation name.
      * @exception {DeveloperError} options.speedup must be greater than zero.
      *
@@ -143,7 +143,7 @@ define([
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(animations)) {
-            throw new DeveloperError('Animations are not loaded.  Wait for the model\'s readyToRender event or ready property.');
+            throw new DeveloperError('Animations are not loaded.  Wait for Model.readyPromise to resolve.');
         }
         //>>includeEnd('debug');
 
@@ -182,7 +182,7 @@ define([
      * @param {ModelAnimationLoop} [options.loop=ModelAnimationLoop.NONE] Determines if and how the animations are looped.
      * @returns {ModelAnimation[]} An array of {@link ModelAnimation} objects, one for each animation added to the collection.  If there are no glTF animations, the array is empty.
      *
-     * @exception {DeveloperError} Animations are not loaded.  Wait for the {@link Model#readyToRender} event.
+     * @exception {DeveloperError} Animations are not loaded.  Wait for the {@link Model#readyPromise} to resolve.
      * @exception {DeveloperError} options.speedup must be greater than zero.
      *
      * @example
@@ -196,7 +196,7 @@ define([
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(this._model._runtime.animations)) {
-            throw new DeveloperError('Animations are not loaded.  Wait for the model\'s readyToRender event or ready property.');
+            throw new DeveloperError('Animations are not loaded.  Wait for Model.readyPromise to resolve.');
         }
 
         if (defined(options.speedup) && (options.speedup <= 0.0)) {
