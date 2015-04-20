@@ -60,13 +60,13 @@ define([
         this._boundingSphere = BoundingSphere.fromRectangleWithHeights3D(rectangle, undefined, b.minimumHeight, b.maximumHeight);
 
         var rs;
-        if (defined(header.contentsBox)) {
+        if (defined(header.content.box)) {
             // Non-leaf tiles may have a render-box bounding-volume, which is a tight-fit box
             // around only the models in the tile.  This box is useful for culling for rendering,
             // but not for culling for traversing the tree since it is not spatial coherence, i.e.,
             // since it only bounds models in the tile, not the entire tile, children may be
             // outside of this box.
-            var cb = header.contentsBox;
+            var cb = header.content.box;
             rs = BoundingSphere.fromRectangleWithHeights3D(new Rectangle(cb.west, cb.south, cb.east, cb.north), undefined, cb.minimumHeight, cb.maximumHeight);
         }
 
@@ -100,8 +100,8 @@ define([
 
 // TODO: how to know which content provider to use, e.g., a property in tree.json
 // TODO: contents may come from a different server than tree.json
-        var content = new Cesium3DTileContentProvider(baseUrl + header.url);
-//      var content = new Gltf3DTileContentProvider(baseUrl + header.url);
+        var content = new Cesium3DTileContentProvider(baseUrl + header.content.url);
+//      var content = new Gltf3DTileContentProvider(baseUrl + header.content.url);
         this._content = content;
 
         var that = this;
@@ -123,7 +123,7 @@ define([
         this.parentFullyVisible = false;
 
         this._debugBox = undefined;
-        this._debugContentsBox = undefined;
+        this._debugcontentBox = undefined;
         this._debugSphere = undefined;
         this._debugContentsSphere = undefined;
     };
@@ -206,37 +206,37 @@ define([
     }
 
     function applyDebugSettings(tile, owner, context, frameState, commandList) {
-        // Tiles do not have a contentsBox if it is the same as the tile's box.
-        var hasContentsBox = defined(tile._header.contentsBox);
+        // Tiles do not have a content.box if it is the same as the tile's box.
+        var hascontentBox = defined(tile._header.content.box);
 
         if (owner.debugShowBox) {
             if (!defined(tile._debugBox)) {
-                tile._debugBox = createDebugBox(tile._header.box, hasContentsBox ? Color.WHITE : Color.RED);
+                tile._debugBox = createDebugBox(tile._header.box, hascontentBox ? Color.WHITE : Color.RED);
             }
             tile._debugBox.update(context, frameState, commandList);
         } else if (!owner.debugShowBox && defined(tile._debugBox)) {
             tile._debugBox = tile._debugBox.destroy();
         }
 
-        if (owner.debugShowContentsBox && hasContentsBox) {
-            if (!defined(tile._debugContentsBox)) {
-                tile._debugContentsBox = createDebugBox(tile._header.contentsBox, Color.BLUE);
+        if (owner.debugShowcontentBox && hascontentBox) {
+            if (!defined(tile._debugcontentBox)) {
+                tile._debugcontentBox = createDebugBox(tile._header.content.box, Color.BLUE);
             }
-            tile._debugContentsBox.update(context, frameState, commandList);
-        } else if (!owner.debugShowContentsBox && defined(tile._debugContentsBox)) {
-            tile._debugContentsBox = tile._debugContentsBox.destroy();
+            tile._debugcontentBox.update(context, frameState, commandList);
+        } else if (!owner.debugShowcontentBox && defined(tile._debugcontentBox)) {
+            tile._debugcontentBox = tile._debugcontentBox.destroy();
         }
 
         if (owner.debugShowBoundingVolume) {
             if (!defined(tile._debugSphere)) {
-                tile._debugSphere = createDebugSphere(tile._boundingSphere, hasContentsBox ? Color.WHITE : Color.RED);
+                tile._debugSphere = createDebugSphere(tile._boundingSphere, hascontentBox ? Color.WHITE : Color.RED);
             }
             tile._debugSphere.update(context, frameState, commandList);
         } else if (!owner.debugShowBoundingVolume && defined(tile._debugSphere)) {
             tile._debugSphere = tile._debugSphere.destroy();
         }
 
-        if (owner.debugShowContentsBoundingVolume && hasContentsBox) {
+        if (owner.debugShowContentsBoundingVolume && hascontentBox) {
             if (!defined(tile._debugContentsSphere)) {
                 tile._debugContentsSphere = createDebugSphere(tile._contentsBoundingSphere, Color.BLUE);
             }
@@ -264,7 +264,7 @@ define([
     Cesium3DTile.prototype.destroy = function() {
         this._content = this._content && this._content.destroy();
         this._debugBox = this._debugBox && this._debugBox.destroy();
-        this._debugContentsBox = this._debugContentsBox && this._debugContentsBox.destroy();
+        this._debugcontentBox = this._debugcontentBox && this._debugcontentBox.destroy();
         this._debugSphere = this._debugSphere && this._debugSphere.destroy();
         this._debugContentsSphere = this._debugContentsSphere && this._debugContentsSphere.destroy();
         return destroyObject(this);

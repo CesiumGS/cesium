@@ -37,7 +37,7 @@ var city = viewer.scene.primitives.add(new Cesium.Cesium3DTiles({
     debugShowStatistics : false,
     debugFreezeFrame : false,
     debugShowBox : false,
-    debugShowContentsBox : false,
+    debugShowcontentBox : false,
     debugShowBoundingVolume : false,
     debugShowContentsBoundingVolume : false
 }));
@@ -59,7 +59,7 @@ Sandcastle.addToolbarButton('Box on/off', function() {
 });
 
 Sandcastle.addToolbarButton('Contents box on/off', function() {
-    city.debugShowContentsBox = !city.debugShowContentsBox;
+    city.debugShowcontentBox = !city.debugShowcontentBox;
 });
 
 Sandcastle.addToolbarButton('BV on/off', function() {

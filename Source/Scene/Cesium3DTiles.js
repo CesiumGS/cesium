@@ -38,7 +38,7 @@ define([
      * @param {Boolean} [options.debugFreezeFrame=false] TODO
      * @param {Boolean} [options.debugColorizeTiles=false] TODO
      * @param {Boolean} [options.debugShowBox=false] TODO
-     * @param {Boolean} [options.debugShowContentsBox=false] TODO
+     * @param {Boolean} [options.debugShowcontentBox=false] TODO
      * @param {Boolean} [options.debugShowBoundingVolume=false] TODO
      * @param {Boolean} [options.debugShowContentsBoundingVolume=false] TODO
      *
@@ -107,7 +107,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.debugShowContentsBox = defaultValue(options.debugShowContentsBox, false);
+        this.debugShowcontentBox = defaultValue(options.debugShowcontentBox, false);
 
         /**
          * DOC_TBA
