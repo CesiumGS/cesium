@@ -300,11 +300,12 @@ define([
 
         var callbacksAdded = primitive._callbacksAdded;
         var callbacksRemoved = primitive._callbacksRemoved;
+        var frameNumber = frameState.frameNumber;
 
         if (callbacksAdded.length > 0 || callbacksRemoved.length > 0) {
             for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
                 tile = levelZeroTiles[i];
-                tile._updateCallbacks(callbacksAdded, callbacksRemoved);
+                tile._updateCallbacks(frameNumber, callbacksAdded, callbacksRemoved);
             }
 
             callbacksAdded.length = 0;
@@ -336,7 +337,7 @@ define([
             ++debug.tilesVisited;
 
             primitive._tileReplacementQueue.markTileRendered(tile);
-            tile._updateCallbacks();
+            tile._updateCallbacks(frameNumber);
 
             if (tile.level > debug.maxDepth) {
                 debug.maxDepth = tile.level;

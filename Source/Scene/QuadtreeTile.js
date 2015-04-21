@@ -65,7 +65,8 @@ define([
         this._distance = 0.0;
 
         this._callbacks = [];
-        this._dirtyValue = 0;
+        this._frameUpdated = undefined;
+        this._frameRendered = undefined;
 
         /**
          * Gets or sets the current state of the tile in the tile load pipeline.
@@ -134,7 +135,7 @@ define([
         return result;
     };
 
-    QuadtreeTile.prototype._updateCallbacks = function(added, removed) {
+    QuadtreeTile.prototype._updateCallbacks = function(frameNumber, added, removed) {
         var callbacks = this.callbacks;
 
         var i;
@@ -161,11 +162,11 @@ define([
                 }
             }
 
-            this._dirtyValue = Math.random();
+            this._frameUpdated = frameNumber;
         } else {
             // interior or leaf tile, update from parent
             var parent = this._parent;
-            if (defined(parent) && this._dirtyValue !== parent._dirtyValue) {
+            if (defined(parent) && this._frameUpdated !== parent._frameUpdated) {
                 callbacks.length = 0;
 
                 rectangle = this._rectangle;
@@ -177,7 +178,7 @@ define([
                     }
                 }
 
-                this._dirtyValue = parent._dirtyValue;
+                this._frameUpdated = parent._frameUpdated;
             }
         }
     };
