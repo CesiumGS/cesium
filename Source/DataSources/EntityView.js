@@ -220,8 +220,9 @@ define([
         this._lastEntity = undefined;
         this._mode = undefined;
 
-        //Re-usable objects to be used for retrieving position.
         this._lastCartesian = new Cartesian3();
+        this._defaultOffset3D = undefined;
+        this._defaultOffset2D = undefined;
 
         this._offset3D = new Cartesian3();
         this._offset2D = new HeadingPitchRange();
@@ -294,15 +295,17 @@ define([
         var updateLookAt = objectChanged || sceneModeChanged;
         if (objectChanged) {
             var viewFromProperty = entity.viewFrom;
+            var hasViewFrom = defined(viewFromProperty);
             var sphere = this.boundingSphere;
             this._boundingSphereOffset = undefined;
-            if (defined(sphere)) {
+
+            if (!hasViewFrom && defined(sphere)) {
                 var controller = scene.screenSpaceCameraController;
                 controller.minimumZoomDistance = Math.min(controller.minimumZoomDistance, sphere.radius * 0.5);
                 camera.viewBoundingSphere(sphere);
                 this._boundingSphereOffset = Cartesian3.subtract(sphere.center, entity.position.getValue(time), new Cartesian3());
                 updateLookAt = false;
-            } else if (!defined(viewFromProperty) || !defined(viewFromProperty.getValue(time, offset3D))) {
+            } else if (!hasViewFrom || !defined(viewFromProperty.getValue(time, offset3D))) {
                 HeadingPitchRange.clone(EntityView._defaultOffset2D, offset2D);
                 Cartesian3.clone(EntityView._defaultOffset3D, offset3D);
             } else {
