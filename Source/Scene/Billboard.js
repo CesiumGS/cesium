@@ -148,7 +148,7 @@ define([
 
         this._callback = undefined;
         this._currentTile = undefined;
-        this._clampedPosition = undefined;
+        this._actualClampedPosition = undefined;
         this._positionChanged = false;
         this._mode = undefined;
 
@@ -781,6 +781,16 @@ define([
             get : function() {
                 return this._imageIndex !== -1;
             }
+        },
+
+        _clampedPosition : {
+            get : function() {
+                return this._actualClampedPosition;
+            },
+            set : function(value) {
+                this._actualClampedPosition = Cartesian3.clone(value, this._actualClampedPosition);
+                makeDirty(this, POSITION_INDEX);
+            }
         }
     });
 
@@ -800,17 +810,15 @@ define([
     var scratchPosition = new Cartesian3();
     var scratchCartographic = new Cartographic();
 
-    Billboard._clampPosition = function(billboard, mode, projection) {
-        var billboardMode = billboard._mode;
-        var modeChanged = mode !== SceneMode.MORPHING && mode !== billboardMode;
-
-        if (billboard._newTile !== billboard._currentTile || billboard._positionChanged || modeChanged) {
+    Billboard._clampPosition = function(object, mode, projection, markObjectDirty) {
+        var modeChanged = mode !== SceneMode.MORPHING && mode !== object._mode;
+        if (object._newTile !== object._currentTile || object._positionChanged || modeChanged) {
             if (mode === SceneMode.SCENE3D) {
                 Cartesian3.clone(Cartesian3.ZERO, scratchRay.origin);
-                Cartesian3.normalize(billboard.position, scratchRay.direction);
+                Cartesian3.normalize(object.position, scratchRay.direction);
             } else {
                 var ellipsoid = projection.ellipsoid;
-                ellipsoid.cartesianToCartographic(billboard.position, scratchCartographic);
+                ellipsoid.cartesianToCartographic(object.position, scratchCartographic);
                 scratchCartographic.height = -1000.0; // TODO: get minimum height of entire terrain set
                 projection.project(scratchCartographic, scratchPosition);
                 Cartesian3.fromElements(scratchPosition.z, scratchPosition.x, scratchPosition.y, scratchPosition);
@@ -818,32 +826,35 @@ define([
                 Cartesian3.clone(Cartesian3.UNIT_X, scratchRay.direction);
             }
 
-            var position = billboard._newTile.data.pick(scratchRay, mode, projection, false, scratchPosition);
+            var position = object._newTile.data.pick(scratchRay, mode, projection, false, scratchPosition);
             if (defined(position)) {
-                billboard._clampedPosition = Cartesian3.clone(position, billboard._clampedPosition);
+                object._clampedPosition = Cartesian3.clone(position, object._clampedPosition);
             }
 
-            billboard._positionChanged = false;
-            billboard._mode = mode;
-            billboard._currentTile = billboard._newTile;
-            makeDirty(billboard, POSITION_INDEX);
+            object._positionChanged = false;
+            object._mode = mode;
+            object._currentTile = object._newTile;
         }
     };
 
-    function createCallback(billboard) {
+    function createCallback(collection, object) {
         return function (tile) {
-            billboard._newTile = tile;
-            var clampList = billboard._billboardCollection._clampBillboardsToTerrain;
-            if (clampList.indexOf(billboard) === -1) {
-                clampList.push(billboard);
+            object._newTile = tile;
+            var clampList = collection._clampToTerrainList;
+            if (clampList.indexOf(object) === -1) {
+                clampList.push(object);
             }
         };
     }
 
     Billboard.prototype._updateClamping = function() {
-        var globe = this._billboardCollection._globe;
+        Billboard._updateClamping(this._billboardCollection, this);
+    };
+
+    Billboard._updateClamping = function(collection, object) {
+        var globe = collection._globe;
         if (!defined(globe)) {
-            if (defined(this._clampToGround)) {
+            if (defined(object._clampToGround)) {
                 throw new DeveloperError('Clamping a billboard to the ground is not supported.');
             }
             return;
@@ -851,18 +862,18 @@ define([
 
         var ellipsoid = globe.ellipsoid;
         var surface = globe._surface;
-        var callback = this._callback;
+        var callback = object._callback;
 
-        if (defined(callback) && !this._clampToGround) {
+        if (defined(callback) && !object._clampToGround) {
             surface.removeTileLoadedCallback(callback);
-            this._callback = undefined;
+            object._callback = undefined;
         }
 
-        if (!this._clampToGround || !defined(this._position)) {
+        if (!object._clampToGround || !defined(object._position)) {
             return;
         }
 
-        var position = ellipsoid.cartesianToCartographic(this._position);
+        var position = ellipsoid.cartesianToCartographic(object._position);
         if (!defined(position)) {
             return;
         }
@@ -874,12 +885,12 @@ define([
             surface.removeTileLoadedCallback(callback);
         }
 
-        this._callback = {
+        object._callback = {
             position : position,
-            func : createCallback(this)
+            func : createCallback(collection, object)
         };
-        surface.addTileLoadedCallback(this._callback);
-        this._positionChanged = true;
+        surface.addTileLoadedCallback(object._callback);
+        object._positionChanged = true;
     };
 
     Billboard.prototype._loadImage = function() {

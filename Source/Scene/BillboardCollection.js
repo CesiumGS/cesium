@@ -184,7 +184,7 @@ define([
         this._boundingVolume = new BoundingSphere();
         this._boundingVolumeDirty = false;
 
-        this._clampBillboardsToTerrain = [];
+        this._clampToTerrainList = [];
         this._clampTimeSlice = 5.0;
 
         this._colorCommands = [];
@@ -1026,7 +1026,7 @@ define([
         var timeSlice = this._clampTimeSlice;
         var endTime = startTime + timeSlice;
 
-        var clampList = this._clampBillboardsToTerrain;
+        var clampList = this._clampToTerrainList;
         while (clampList.length > 0) {
             Billboard._clampPosition(clampList.shift(), frameState.mode, frameState.mapProjection);
             if (getTimestamp() >= endTime) {

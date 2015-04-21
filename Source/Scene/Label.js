@@ -93,6 +93,14 @@ define([
 
         this._rebindAllGlyphs = true;
         this._repositionAllGlyphs = true;
+
+        this._callback = undefined;
+        this._currentTile = undefined;
+        this._actualClampedPosition = undefined;
+        this._positionChanged = false;
+        this._mode = undefined;
+
+        this._updateClamping();
     };
 
     defineProperties(Label.prototype, {
@@ -147,13 +155,35 @@ define([
                 if (!Cartesian3.equals(position, value)) {
                     Cartesian3.clone(value, position);
 
-                    var glyphs = this._glyphs;
-                    for (var i = 0, len = glyphs.length; i < len; i++) {
-                        var glyph = glyphs[i];
-                        if (defined(glyph.billboard)) {
-                            glyph.billboard.position = value;
+                    if (!this._clampToGround) {
+                        var glyphs = this._glyphs;
+                        for (var i = 0, len = glyphs.length; i < len; i++) {
+                            var glyph = glyphs[i];
+                            if (defined(glyph.billboard)) {
+                                glyph.billboard.position = value;
+                            }
                         }
+                    } else {
+                        this._updateClamping();
                     }
+                }
+            }
+        },
+
+        clampToGround : {
+            get : function() {
+                return this._clampToGround;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value)) {
+                    throw new DeveloperError('value is required.');
+                }
+                //>>includeEnd('debug');
+
+                if (value !== this._clampToGround) {
+                    this._clamptoGround = value;
+                    this._updateClamping();
                 }
             }
         },
@@ -628,8 +658,29 @@ define([
                     }
                 }
             }
+        },
+
+        _clampedPosition : {
+            get : function() {
+                return this._actualClampedPosition;
+            },
+            set : function(value) {
+                this._actualClampedPosition = Cartesian3.clone(value, this._actualClampedPosition);
+
+                var glyphs = this._glyphs;
+                for (var i = 0, len = glyphs.length; i < len; i++) {
+                    var glyph = glyphs[i];
+                    if (defined(glyph.billboard)) {
+                        glyph.billboard.position = value;
+                    }
+                }
+            }
         }
     });
+
+    Label.prototype._updateClamping = function() {
+        Billboard._updateClamping(this._labelCollection, this);
+    };
 
     /**
      * Computes the screen-space position of the label's origin, taking into account eye and pixel offsets.

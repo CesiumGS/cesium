@@ -6,8 +6,10 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/getTimestamp',
         '../Core/Matrix4',
         '../Core/writeTextToCanvas',
+        './Billboard',
         './BillboardCollection',
         './HorizontalOrigin',
         './Label',
@@ -21,8 +23,10 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        getTimestamp,
         Matrix4,
         writeTextToCanvas,
+        Billboard,
         BillboardCollection,
         HorizontalOrigin,
         Label,
@@ -200,7 +204,6 @@ define([
                 billboard.image = id;
                 billboard.translucencyByDistance = label._translucencyByDistance;
                 billboard.pixelOffsetScaleByDistance = label._pixelOffsetScaleByDistance;
-                billboard.clampToGround = label._clampToGround;
             }
         }
 
@@ -333,6 +336,9 @@ define([
         this._labelsToUpdate = [];
         this._totalGlyphCount = 0;
         this._resolutionScale = undefined;
+
+        this._clampToTerrainList = [];
+        this._clampTimeSlice = 5.0;
 
         /**
          * The 4x4 transformation matrix that transforms each label in this collection from model to world coordinates.
@@ -558,6 +564,18 @@ define([
      * @private
      */
     LabelCollection.prototype.update = function(context, frameState, commandList) {
+        var startTime = getTimestamp();
+        var timeSlice = this._clampTimeSlice;
+        var endTime = startTime + timeSlice;
+
+        var clampList = this._clampToTerrainList;
+        while (clampList.length > 0) {
+            Billboard._clampPosition(clampList.shift(), frameState.mode, frameState.mapProjection);
+            if (getTimestamp() >= endTime) {
+                break;
+            }
+        }
+
         var billboardCollection = this._billboardCollection;
 
         billboardCollection.modelMatrix = this.modelMatrix;
