@@ -446,6 +446,10 @@ define([
 
         this._nodeCommands = [];
         this._pickIds = [];
+
+        // CESIUM_RTC extension
+        this._rtcCenter = undefined;    // in world coordinates
+        this._rtcCenterEye = undefined; // in eye coordinates
     };
 
     defineProperties(Model.prototype, {
@@ -1796,67 +1800,74 @@ define([
 
     // This doesn't support LOCAL, which we could add if it is ever used.
     var gltfSemanticUniforms = {
-        MODEL : function(uniformState) {
+        MODEL : function(uniformState, model) {
             return function() {
                 return uniformState.model;
             };
         },
-        VIEW : function(uniformState) {
+        VIEW : function(uniformState, model) {
             return function() {
                 return uniformState.view;
             };
         },
-        PROJECTION : function(uniformState) {
+        PROJECTION : function(uniformState, model) {
             return function() {
                 return uniformState.projection;
             };
         },
-        MODELVIEW : function(uniformState) {
+        MODELVIEW : function(uniformState, model) {
             return function() {
                 return uniformState.modelView;
             };
         },
-        MODELVIEWPROJECTION : function(uniformState) {
+        MODELVIEW_RTC : function(uniformState, model) {
+            // CESIUM_RTC extension
+            var mvRtc = new Matrix4();
+            return function() {
+                return Matrix4.setTranslation(uniformState.modelView, model._rtcCenterEye, mvRtc);
+            };
+        },
+        MODELVIEWPROJECTION : function(uniformState, model) {
             return function() {
                 return uniformState.modelViewProjection;
             };
         },
-        MODELINVERSE : function(uniformState) {
+        MODELINVERSE : function(uniformState, model) {
             return function() {
                 return uniformState.inverseModel;
             };
         },
-        VIEWINVERSE : function(uniformState) {
+        VIEWINVERSE : function(uniformState, model) {
             return function() {
                 return uniformState.inverseView;
             };
         },
-        PROJECTIONINVERSE : function(uniformState) {
+        PROJECTIONINVERSE : function(uniformState, model) {
             return function() {
                 return uniformState.inverseProjection;
             };
         },
-        MODELVIEWINVERSE : function(uniformState) {
+        MODELVIEWINVERSE : function(uniformState, model) {
             return function() {
                 return uniformState.inverseModelView;
             };
         },
-        MODELVIEWPROJECTIONINVERSE : function(uniformState) {
+        MODELVIEWPROJECTIONINVERSE : function(uniformState, model) {
             return function() {
                 return uniformState.inverseModelViewProjection;
             };
         },
-        MODELINVERSETRANSPOSE : function(uniformState) {
+        MODELINVERSETRANSPOSE : function(uniformState, model) {
             return function() {
                 return uniformState.inverseTranposeModel;
             };
         },
-        MODELVIEWINVERSETRANSPOSE : function(uniformState) {
+        MODELVIEWINVERSETRANSPOSE : function(uniformState, model) {
             return function() {
                 return uniformState.normal;
             };
         },
-        VIEWPORT : function(uniformState) {
+        VIEWPORT : function(uniformState, model) {
             return function() {
                 return uniformState.viewportCartesian4;
             };
@@ -2046,7 +2057,7 @@ define([
                         } else if (defined(parameter.semantic)) {
                             if (parameter.semantic !== 'JOINTMATRIX') {
                                 // Map glTF semantic to Cesium automatic uniform
-                                uniformMap[name] = gltfSemanticUniforms[parameter.semantic](context.uniformState);
+                                uniformMap[name] = gltfSemanticUniforms[parameter.semantic](context.uniformState, model);
                             } else {
                                 jointMatrixUniformName = name;
                             }
@@ -2374,6 +2385,10 @@ define([
                             // PERFORMANCE_IDEA: Can use transformWithoutScale if no node up to the root has scale (inclug animation)
                             BoundingSphere.transform(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
 
+                            if (defined(model._rtcCenter)) {
+                                Cartesian3.add(model._rtcCenter, command.boundingVolume.center, command.boundingVolume.center);
+                            }
+
                             if (allowPicking) {
                                 var pickCommand = primitiveCommand.pickCommand;
                                 Matrix4.clone(command.modelMatrix, pickCommand.modelMatrix);
@@ -2682,6 +2697,17 @@ define([
             this._boundingSphere = computeBoundingSphere(this.gltf);
             this._initialRadius = this._boundingSphere.radius;
 
+            var extensions = this.gltf.extensions;
+            if (defined(extensions) && defined(extensions.CESIUM_RTC)) {
+                var center = extensions.CESIUM_RTC.center;
+                this._rtcCenter = Cartesian3.fromDegrees(center.longitude, center.latitude, center.height);
+                this._rtcCenterEye = new Cartesian3();
+
+// TODO_TRC: Correct sphere with scale
+// TODO_TRC: Correct sphere with min pixel size
+                Cartesian3.add(this._rtcCenter, this._boundingSphere.center, this._boundingSphere.center);
+            }
+
             this._loadResources = new LoadResources();
             parse(this);
         }
@@ -2760,6 +2786,12 @@ define([
             updatePickIds(this, context);
             updateWireframe(this);
             updateShowBoundingVolume(this);
+
+            if (defined(this._rtcCenter)) {
+                // The CESIUM_RTC extension is use.  Compute the center in eye coordinates so it
+                // can be used to compute the model-view RTC matrix uniforms.
+                Matrix4.multiplyByPoint(frameState.camera.viewMatrix, this._rtcCenter, this._rtcCenterEye);
+            }
         }
 
         if (justLoaded) {
