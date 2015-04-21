@@ -86,6 +86,7 @@ define([
         this._id = options.id;
         this._translucencyByDistance = options.translucencyByDistance;
         this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
+        this._clampToGround = defaultValue(options.clampToGround, false);
 
         this._labelCollection = labelCollection;
         this._glyphs = [];

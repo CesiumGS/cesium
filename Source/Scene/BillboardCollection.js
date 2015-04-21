@@ -183,7 +183,7 @@ define([
         this._boundingVolumeDirty = false;
 
         this._clampBillboardsToTerrain = [];
-        this._clampTimeSlice = 5.0;
+        this._clampTimeSlice = 10.0;
 
         this._colorCommands = [];
         this._pickCommands = [];
