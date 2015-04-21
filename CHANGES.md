@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+TODO
+
+* Added `Matrix4.setTranslation`.
+
 ### 1.9 - 2015-05-01
 * Breaking changes
   * Removed `ColorMaterialProperty.fromColor`, previously deprecated in 1.6. Pass a `Color` directly to the `ColorMaterialProperty` constructor instead.
