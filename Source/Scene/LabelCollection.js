@@ -338,7 +338,7 @@ define([
         this._resolutionScale = undefined;
 
         this._clampToTerrainList = [];
-        this._clampTimeSlice = 5.0;
+        this._clampTimeSlice = 1.0;
 
         /**
          * The 4x4 transformation matrix that transforms each label in this collection from model to world coordinates.
