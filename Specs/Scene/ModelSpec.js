@@ -11,6 +11,7 @@ defineSuite([
         'Core/Matrix4',
         'Core/PrimitiveType',
         'Core/Transforms',
+        'Scene/HeadingPitchRange',
         'Scene/ModelAnimationLoop',
         'Specs/createScene',
         'Specs/pollToPromise',
@@ -27,6 +28,7 @@ defineSuite([
         Matrix4,
         PrimitiveType,
         Transforms,
+        HeadingPitchRange,
         ModelAnimationLoop,
         createScene,
         pollToPromise,
@@ -84,8 +86,9 @@ defineSuite([
     function addZoomTo(model) {
         model.zoomTo = function() {
             var camera = scene.camera;
-            var r = Math.max(model.boundingSphere.radius, camera.frustum.near);
-            camera.lookAt( Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cartesian3()), new Cartesian3(r, -r, -r));
+            var center = Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cartesian3());
+            var r = 4.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
+            camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, r));
         };
     }
 
@@ -94,7 +97,7 @@ defineSuite([
 
         var model = primitives.add(Model.fromGltf({
             url : url,
-            modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
+            modelMatrix : defaultValue(options.modelMatrix, Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0))),
             show : false,
             scale : options.scale,
             minimumPixelSize : options.minimumPixelSize,
@@ -449,7 +452,9 @@ defineSuite([
     });
 
     it('renders a model with the CESIUM_RTC extension', function() {
-        return loadModel(boxRtcUrl).then(function(m) {
+        return loadModel(boxRtcUrl, {
+                modelMatrix : Matrix4.IDENTITY
+            }).then(function(m) {
             verifyRender(m);
             primitives.remove(m);
         });
