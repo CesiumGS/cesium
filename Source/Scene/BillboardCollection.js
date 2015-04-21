@@ -134,6 +134,8 @@ define([
     var BillboardCollection = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        this._globe = options.globe;
+
         this._textureAtlas = undefined;
         this._textureAtlasGUID = undefined;
         this._destroyTextureAtlas = true;
@@ -183,7 +185,7 @@ define([
         this._boundingVolumeDirty = false;
 
         this._clampBillboardsToTerrain = [];
-        this._clampTimeSlice = 10.0;
+        this._clampTimeSlice = 5.0;
 
         this._colorCommands = [];
         this._pickCommands = [];
@@ -1026,7 +1028,7 @@ define([
 
         var clampList = this._clampBillboardsToTerrain;
         while (clampList.length > 0) {
-            Billboard._clampPosition(clampList.shift());
+            Billboard._clampPosition(clampList.shift(), frameState.mode, frameState.mapProjection);
             if (getTimestamp() >= endTime) {
                 break;
             }

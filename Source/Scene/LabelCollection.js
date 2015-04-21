@@ -318,9 +318,13 @@ define([
     var LabelCollection = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        this._globe = options.globe;
+
         this._textureAtlas = undefined;
 
-        this._billboardCollection = new BillboardCollection();
+        this._billboardCollection = new BillboardCollection({
+            globe : this._globe
+        });
         this._billboardCollection.destroyTextureAtlas = false;
 
         this._spareBillboards = [];

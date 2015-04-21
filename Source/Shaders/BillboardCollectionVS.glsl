@@ -229,7 +229,8 @@ void main()
     vec4 offsetPosition = positionEC + vec4(0.0, 0.0, -positionEC.z * 0.05, 0.0);
     vec4 wc = computePositionWindowCoordinates(offsetPosition, vec2(0.0, 0.0), scale, direction, origin, vec2(0.0), pixelOffset, alignedAxis, rotation);
     float d = texture2D(czm_globeDepthTexture, wc.xy / czm_viewport.zw).r;
-    if (wc.z > d) {
+    if (wc.z > d)
+    {
         gl_Position = czm_projection * vec4(vec3(0.0), 1.0);
         return;
     }

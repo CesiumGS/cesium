@@ -800,9 +800,7 @@ define([
     var scratchPosition = new Cartesian3();
     var scratchCartographic = new Cartographic();
 
-    Billboard._clampPosition = function(billboard) {
-        var scene = billboard._billboardCollection._scene;
-        var mode = scene.mode;
+    Billboard._clampPosition = function(billboard, mode, projection) {
         var billboardMode = billboard._mode;
         var modeChanged = mode !== SceneMode.MORPHING && mode !== billboardMode;
 
@@ -811,9 +809,7 @@ define([
                 Cartesian3.clone(Cartesian3.ZERO, scratchRay.origin);
                 Cartesian3.normalize(billboard.position, scratchRay.direction);
             } else {
-                var projection = scene.mapProjection;
                 var ellipsoid = projection.ellipsoid;
-
                 ellipsoid.cartesianToCartographic(billboard.position, scratchCartographic);
                 scratchCartographic.height = -1000.0; // TODO: get minimum height of entire terrain set
                 projection.project(scratchCartographic, scratchPosition);
@@ -822,7 +818,7 @@ define([
                 Cartesian3.clone(Cartesian3.UNIT_X, scratchRay.direction);
             }
 
-            var position = billboard._newTile.data.pick(scratchRay, scene, false, scratchPosition);
+            var position = billboard._newTile.data.pick(scratchRay, mode, projection, false, scratchPosition);
             if (defined(position)) {
                 billboard._clampedPosition = Cartesian3.clone(position, billboard._clampedPosition);
             }
@@ -862,11 +858,15 @@ define([
             this._callback = undefined;
         }
 
-        if (!this._clampToGround) {
+        if (!this._clampToGround || !defined(this._position)) {
             return;
         }
 
         var position = ellipsoid.cartesianToCartographic(this._position);
+        if (!defined(position)) {
+            return;
+        }
+
         if (defined(callback)) {
             if (Cartographic.equals(position, callback.position)) {
                 return;
