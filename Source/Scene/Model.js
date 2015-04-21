@@ -567,6 +567,11 @@ define([
                 var scaledBoundingSphere = this._scaledBoundingSphere;
                 scaledBoundingSphere.center = Cartesian3.multiplyComponents(this._boundingSphere.center, nonUniformScale, scaledBoundingSphere.center);
                 scaledBoundingSphere.radius = Cartesian3.maximumComponent(nonUniformScale) * this._initialRadius;
+
+                if (defined(this._rtcCenter)) {
+                    Cartesian3.add(this._rtcCenter, scaledBoundingSphere.center, scaledBoundingSphere.center);
+                }
+
                 return scaledBoundingSphere;
             }
         },
@@ -2576,6 +2581,11 @@ define([
             scratchPosition.x = m[12];
             scratchPosition.y = m[13];
             scratchPosition.z = m[14];
+
+            if (defined(model._rtcCenter)) {
+                Cartesian3.add(model._rtcCenter, scratchPosition, scratchPosition);
+            }
+
             var radius = model.boundingSphere.radius;
             var metersPerPixel = scaleInPixels(scratchPosition, radius, context, frameState);
 
@@ -2702,10 +2712,6 @@ define([
                 var center = extensions.CESIUM_RTC.center;
                 this._rtcCenter = Cartesian3.fromDegrees(center.longitude, center.latitude, center.height);
                 this._rtcCenterEye = new Cartesian3();
-
-// TODO_TRC: Correct sphere with scale
-// TODO_TRC: Correct sphere with min pixel size
-                Cartesian3.add(this._rtcCenter, this._boundingSphere.center, this._boundingSphere.center);
             }
 
             this._loadResources = new LoadResources();
