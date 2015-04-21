@@ -38,6 +38,7 @@ defineSuite([
     var texturedBoxUrl = './Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf';
     var texturedBoxSeparateUrl = './Data/Models/Box-Textured-Separate/CesiumTexturedBoxTest.gltf';
     var texturedBoxCustomUrl = './Data/Models/Box-Textured-Custom/CesiumTexturedBoxTest.gltf';
+    var boxRtcUrl = './Data/Models/Box-RTC/Box.gltf';
     var cesiumAirUrl = './Data/Models/CesiumAir/Cesium_Air.gltf';
     var animBoxesUrl = './Data/Models/anim-test-1-boxes/anim-test-1-boxes.gltf';
     var riggedFigureUrl = './Data/Models/rigged-figure-test/rigged-figure-test.gltf';
@@ -442,25 +443,21 @@ defineSuite([
 
     it('renders texturedBoxCustom (all uniform semantics)', function() {
         return loadModel(texturedBoxCustomUrl).then(function(m) {
-            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-
-            m.show = true;
-            m.zoomTo();
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            verifyRender(m);
             primitives.remove(m);
         });
     });
 
-    ///////////////////////////////////////////////////////////////////////////
+    it('renders a model with the CESIUM_RTC extension', function() {
+        return loadModel(boxRtcUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
 
     it('renders textured box with external resources: .glsl, .bin, and .png files', function() {
         return loadModel(texturedBoxSeparateUrl).then(function(m) {
-            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-
-            m.show = true;
-            m.zoomTo();
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
-
+            verifyRender(m);
             primitives.remove(m);
         });
     });
@@ -473,12 +470,7 @@ defineSuite([
     });
 
     it('renders cesiumAir (has translucency)', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-
-        cesiumAirModel.show = true;
-        cesiumAirModel.zoomTo();
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
-        cesiumAirModel.show = false;
+        verifyRender(cesiumAirModel);
     });
 
     it('renders cesiumAir with per-node show (root)', function() {
