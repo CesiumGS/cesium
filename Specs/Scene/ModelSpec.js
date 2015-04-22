@@ -453,8 +453,13 @@ defineSuite([
 
     it('renders a model with the CESIUM_RTC extension', function() {
         return loadModel(boxRtcUrl, {
-                modelMatrix : Matrix4.IDENTITY
-            }).then(function(m) {
+            modelMatrix : Matrix4.IDENTITY,
+            minimumPixelSize : 1
+        }).then(function(m) {
+            var bs = m.boundingSphere;
+            expect(bs.center.equalsEpsilon(new Cartesian3(6378137.0, -0.25, 0.0), CesiumMath.EPSILON14));
+            expect(bs.radius).toEqualEpsilon(0.75, CesiumMath.EPSILON14);
+
             verifyRender(m);
             primitives.remove(m);
         });
