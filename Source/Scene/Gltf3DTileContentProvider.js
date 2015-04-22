@@ -1,21 +1,17 @@
 /*global define*/
 define([
-        '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Color',
         '../Core/defined',
         '../Core/destroyObject',
-        '../Core/Transforms',
         './Cesium3DTileContentState',
         './Model',
         '../ThirdParty/when'
     ], function(
-        Cartesian3,
         Cartesian4,
         Color,
         defined,
         destroyObject,
-        Transforms,
         Cesium3DTileContentState,
         Model,
         when) {
@@ -48,13 +44,8 @@ define([
     };
 
     Gltf3DTileContentProvider.prototype.request = function() {
-// TODO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-// TODO: position
-        var origin = Cartesian3.fromRadians(0, 0, 0);
-        var modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
         var model = Model.fromGltf({
             url : this._url,
-            modelMatrix : modelMatrix,
             cull : false
 //TODO: disable glTF caching
         });

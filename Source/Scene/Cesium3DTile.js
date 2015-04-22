@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
+        '../Core/DeveloperError',
         '../Core/GeometryInstance',
         '../Core/BoundingSphere',
         '../Core/defined',
@@ -13,18 +14,19 @@ define([
         '../Core/Matrix4',
         '../Core/SphereOutlineGeometry',
         '../Core/Rectangle',
-        './Cesium3DTileContentProvider',
+        './Cesium3DTileContentProviderFactory',
         './Cesium3DTileContentState',
-        './Gltf3DTileContentProvider',
         './PerInstanceColorAppearance',
         './Primitive',
         './TileBoundingBox',
+        '../ThirdParty/Uri',
         '../ThirdParty/when'
     ], function(
         RectangleOutlineGeometry,
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
+        DeveloperError,
         GeometryInstance,
         BoundingSphere,
         defined,
@@ -34,12 +36,12 @@ define([
         Matrix4,
         SphereOutlineGeometry,
         Rectangle,
-        Cesium3DTileContentProvider,
+        Cesium3DTileContentProviderFactory,
         Cesium3DTileContentState,
-        Gltf3DTileContentProvider,
         PerInstanceColorAppearance,
         Primitive,
         TileBoundingBox,
+        Uri,
         when) {
     "use strict";
 
@@ -98,10 +100,17 @@ define([
          */
         this.readyPromise = when.defer();
 
-// TODO: how to know which content provider to use, e.g., a property in tree.json
 // TODO: contents may come from a different server than tree.json
-        var content = new Cesium3DTileContentProvider(baseUrl + header.content.url);
-//      var content = new Gltf3DTileContentProvider(baseUrl + header.content.url);
+        var contentUrl = header.content.url;
+        var url = (new Uri(contentUrl).isAbsolute()) ? contentUrl : baseUrl + contentUrl;
+        var contentFactory = Cesium3DTileContentProviderFactory[header.content.type];
+        var content;
+
+        if (defined(contentFactory)) {
+            content = contentFactory(url);
+        } else {
+            throw new DeveloperError('Unknown tile content type, ' + header.content.type + ', for ' + url);
+        }
         this._content = content;
 
         var that = this;
@@ -205,11 +214,16 @@ define([
         return createDebugPrimitive(geometry, color, Matrix4.fromTranslation(sphere.center));
     }
 
+// TODO: remove workaround for https://github.com/AnalyticalGraphicsInc/cesium/issues/2657
+    function workaround2657(rectangle) {
+        return (rectangle.south !== rectangle.north) || (rectangle.west !== rectangle.east);
+    }
+
     function applyDebugSettings(tile, owner, context, frameState, commandList) {
         // Tiles do not have a content.box if it is the same as the tile's box.
         var hascontentBox = defined(tile._header.content.box);
 
-        if (owner.debugShowBox) {
+        if (owner.debugShowBox && workaround2657(tile._header.box)) {
             if (!defined(tile._debugBox)) {
                 tile._debugBox = createDebugBox(tile._header.box, hascontentBox ? Color.WHITE : Color.RED);
             }
@@ -218,7 +232,7 @@ define([
             tile._debugBox = tile._debugBox.destroy();
         }
 
-        if (owner.debugShowcontentBox && hascontentBox) {
+        if (owner.debugShowcontentBox && hascontentBox && workaround2657(tile._header.content.box)) {
             if (!defined(tile._debugcontentBox)) {
                 tile._debugcontentBox = createDebugBox(tile._header.content.box, Color.BLUE);
             }
