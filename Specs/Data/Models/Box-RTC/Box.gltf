@@ -91,11 +91,7 @@
     },
     "extensions": {
         "CESIUM_RTC": {
-            "center": {
-                "height": 0,
-                "latitude": 0,
-                "longitude": 0
-            }
+            "center": [6378137.0, 0.0, 0.0]
         }
     },
     "materials": {
@@ -249,7 +245,7 @@
                     "type": 35666
                 },
                 "modelViewMatrix": {
-                    "semantic": "MODELVIEW_RTC",
+                    "semantic": "CESIUM_RTC_MODELVIEW",
                     "type": 35676
                 },
                 "normal": {

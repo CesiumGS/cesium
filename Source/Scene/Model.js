@@ -1825,7 +1825,7 @@ define([
                 return uniformState.modelView;
             };
         },
-        MODELVIEW_RTC : function(uniformState, model) {
+        CESIUM_RTC_MODELVIEW : function(uniformState, model) {
             // CESIUM_RTC extension
             var mvRtc = new Matrix4();
             return function() {
@@ -2709,8 +2709,7 @@ define([
 
             var extensions = this.gltf.extensions;
             if (defined(extensions) && defined(extensions.CESIUM_RTC)) {
-                var center = extensions.CESIUM_RTC.center;
-                this._rtcCenter = Cartesian3.fromDegrees(center.longitude, center.latitude, center.height);
+                this._rtcCenter = Cartesian3.fromArray(extensions.CESIUM_RTC.center);
                 this._rtcCenterEye = new Cartesian3();
             }
 
