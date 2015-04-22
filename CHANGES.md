@@ -3,7 +3,7 @@ Change Log
 
 TODO
 
-* Added support for the CESIUM_RTC glTF extension for high-precision rendering to `Model`.
+* Added support for the [CESIUM_RTC](https://github.com/KhronosGroup/glTF/blob/new-extensions/extensions/CESIUM_RTC/README.md) glTF extension for high-precision rendering to `Model`.
 * Added `Matrix4.setTranslation`.
 
 ### 1.9 - 2015-05-01
