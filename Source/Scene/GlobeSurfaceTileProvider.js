@@ -464,15 +464,6 @@ define([
 
         tileSet.push(tile);
 
-        if (tile._frameRendered !== frameState.frameNumber - 1) {
-            var callbacks = tile.callbacks;
-            var length = callbacks.length;
-            for (var j = 0; j < length; ++j) {
-                callbacks[j].func(tile);
-            }
-        }
-        tile._frameRendered = frameState.frameNumber;
-
         var debug = this._debug;
         ++debug.tilesRendered;
         debug.texturesRendered += readyTextureCount;

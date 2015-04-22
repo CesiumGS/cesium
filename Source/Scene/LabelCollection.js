@@ -337,8 +337,9 @@ define([
         this._totalGlyphCount = 0;
         this._resolutionScale = undefined;
 
-        this._clampToTerrainList = [];
+        this._renderedTileList = [];
         this._clampTimeSlice = 1.0;
+        this._lastTileIndex = 0;
 
         /**
          * The 4x4 transformation matrix that transforms each label in this collection from model to world coordinates.
@@ -382,6 +383,16 @@ define([
          * @default false
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
+
+        if (defined(this._globe)) {
+            var that = this;
+            this._globe._surface.tileRenderedEvent.addEventListener(function(tile) {
+                var tileList = that._renderedTileList;
+                if (tileList.indexOf(tile) === -1) {
+                    tileList.push(tile);
+                }
+            });
+        }
     };
 
     defineProperties(LabelCollection.prototype, {
@@ -564,15 +575,38 @@ define([
      * @private
      */
     LabelCollection.prototype.update = function(context, frameState, commandList) {
+        var i;
+
         var startTime = getTimestamp();
         var timeSlice = this._clampTimeSlice;
         var endTime = startTime + timeSlice;
 
-        var clampList = this._clampToTerrainList;
-        while (clampList.length > 0) {
-            Billboard._clampPosition(clampList.shift(), frameState.mode, frameState.mapProjection);
-            if (getTimestamp() >= endTime) {
+        var tileList = this._renderedTileList;
+        while (tileList.length > 0) {
+            var tile = tileList[0];
+            var customData = tile.customData;
+            var customDataLength = customData.length;
+
+            var timeSliceMax = false;
+            for (i = this._lastTileIndex; i < customDataLength; ++i) {
+                var data = customData[i];
+                var object = data.object;
+                if (defined(object) && object instanceof Label) {
+                    object._newTile = tile;
+                    Billboard._clampPosition(object, frameState.mode, frameState.mapProjection);
+                    if (getTimestamp() >= endTime) {
+                        timeSliceMax = true;
+                        break;
+                    }
+                }
+            }
+
+            if (timeSliceMax) {
+                this._lastTileIndex = i;
                 break;
+            } else {
+                this._lastTileIndex = 0;
+                tileList.shift();
             }
         }
 
@@ -600,7 +634,8 @@ define([
             labelsToUpdate = this._labelsToUpdate;
         }
 
-        for (var i = 0, len = labelsToUpdate.length; i < len; ++i) {
+        var len = labelsToUpdate.length;
+        for (i = 0; i < len; ++i) {
             var label = labelsToUpdate[i];
             if (label.isDestroyed()) {
                 continue;

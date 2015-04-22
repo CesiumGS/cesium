@@ -64,7 +64,7 @@ define([
         // QuadtreePrimitive gets/sets this private property.
         this._distance = 0.0;
 
-        this._callbacks = [];
+        this._customData = [];
         this._frameUpdated = undefined;
         this._frameRendered = undefined;
 
@@ -135,20 +135,20 @@ define([
         return result;
     };
 
-    QuadtreeTile.prototype._updateCallbacks = function(frameNumber, added, removed) {
-        var callbacks = this.callbacks;
+    QuadtreeTile.prototype._updateCustomData = function(frameNumber, added, removed) {
+        var customData = this.customData;
 
         var i;
-        var callback;
+        var data;
         var rectangle;
 
         if (defined(added) && defined(removed)) {
             // level zero tile
             for (i = 0; i < removed.length; ++i) {
-                callback = removed[i];
-                for (var j = 0; j < callbacks.length; ++j) {
-                    if (callbacks[j] === callback) {
-                        callbacks.splice(j, 1);
+                data = removed[i];
+                for (var j = 0; j < customData.length; ++j) {
+                    if (customData[j] === data) {
+                        customData.splice(j, 1);
                         break;
                     }
                 }
@@ -156,9 +156,9 @@ define([
 
             rectangle = this._rectangle;
             for (i = 0; i < added.length; ++i) {
-                callback = added[i];
-                if (Rectangle.contains(rectangle, callback.position)) {
-                    callbacks.push(callback);
+                data = added[i];
+                if (Rectangle.contains(rectangle, data.position)) {
+                    customData.push(data);
                 }
             }
 
@@ -167,14 +167,14 @@ define([
             // interior or leaf tile, update from parent
             var parent = this._parent;
             if (defined(parent) && this._frameUpdated !== parent._frameUpdated) {
-                callbacks.length = 0;
+                customData.length = 0;
 
                 rectangle = this._rectangle;
-                var parentCallbacks = parent.callbacks;
-                for (i = 0; i < parentCallbacks.length; ++i) {
-                    callback = parentCallbacks[i];
-                    if (Rectangle.contains(rectangle, callback.position)) {
-                        callbacks.push(callback);
+                var parentCustomData = parent.customData;
+                for (i = 0; i < parentCustomData.length; ++i) {
+                    data = parentCustomData[i];
+                    if (Rectangle.contains(rectangle, data.position)) {
+                        customData.push(data);
                     }
                 }
 
@@ -294,9 +294,9 @@ define([
             }
         },
 
-        callbacks : {
+        customData : {
             get : function() {
-                return this._callbacks;
+                return this._customData;
             }
         },
 

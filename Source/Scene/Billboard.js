@@ -146,7 +146,7 @@ define([
             this._loadImage();
         }
 
-        this._callback = undefined;
+        this._customData = undefined;
         this._currentTile = undefined;
         this._actualClampedPosition = undefined;
         this._positionChanged = false;
@@ -837,16 +837,6 @@ define([
         }
     };
 
-    function createCallback(collection, object) {
-        return function (tile) {
-            object._newTile = tile;
-            var clampList = collection._clampToTerrainList;
-            if (clampList.indexOf(object) === -1) {
-                clampList.push(object);
-            }
-        };
-    }
-
     Billboard.prototype._updateClamping = function() {
         Billboard._updateClamping(this._billboardCollection, this);
     };
@@ -862,11 +852,11 @@ define([
 
         var ellipsoid = globe.ellipsoid;
         var surface = globe._surface;
-        var callback = object._callback;
+        var customData = object._customData;
 
-        if (defined(callback) && !object._clampToGround) {
-            surface.removeTileLoadedCallback(callback);
-            object._callback = undefined;
+        if (defined(customData) && !object._clampToGround) {
+            surface.removeTileCustomData(customData);
+            object._customData = undefined;
         }
 
         if (!object._clampToGround || !defined(object._position)) {
@@ -878,18 +868,18 @@ define([
             return;
         }
 
-        if (defined(callback)) {
-            if (Cartographic.equals(position, callback.position)) {
+        if (defined(customData)) {
+            if (Cartographic.equals(position, customData.position)) {
                 return;
             }
-            surface.removeTileLoadedCallback(callback);
+            surface.removeTileCustomData(customData);
         }
 
-        object._callback = {
+        object._customData = {
             position : position,
-            func : createCallback(collection, object)
+            object : object
         };
-        surface.addTileLoadedCallback(object._callback);
+        surface.addTileCustomData(object._customData);
         object._positionChanged = true;
     };
 
@@ -1042,7 +1032,7 @@ define([
     };
 
     Billboard.prototype._getActualPosition = function() {
-        return defined(this._callback) && defined(this._clampedPosition) && this._mode !== SceneMode.MORPHING ? this._clampedPosition : this._actualPosition;
+        return defined(this._customData) && defined(this._clampedPosition) && this._mode !== SceneMode.MORPHING ? this._clampedPosition : this._actualPosition;
     };
 
     Billboard.prototype._setActualPosition = function(value) {
@@ -1052,7 +1042,7 @@ define([
 
     var tempCartesian3 = new Cartesian4();
     Billboard._computeActualPosition = function(billboard, position, frameState, modelMatrix) {
-        if (defined(billboard._callback) && defined(billboard._clampedPosition) && this._mode !== SceneMode.MORPHING) {
+        if (defined(billboard._customData) && defined(billboard._clampedPosition) && this._mode !== SceneMode.MORPHING) {
             return billboard._clampedPosition;
         } else if (frameState.mode === SceneMode.SCENE3D) {
             return position;

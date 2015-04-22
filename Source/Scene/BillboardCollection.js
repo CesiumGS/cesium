@@ -184,8 +184,9 @@ define([
         this._boundingVolume = new BoundingSphere();
         this._boundingVolumeDirty = false;
 
-        this._clampToTerrainList = [];
+        this._renderedTileList = [];
         this._clampTimeSlice = 1.0;
+        this._lastTileIndex = 0;
 
         this._colorCommands = [];
         this._pickCommands = [];
@@ -262,6 +263,15 @@ define([
                 return that._textureAtlas.texture;
             }
         };
+
+        if (defined(this._globe)) {
+            this._globe._surface.tileRenderedEvent.addEventListener(function(tile) {
+                var tileList = that._renderedTileList;
+                if (tileList.indexOf(tile) === -1) {
+                    tileList.push(tile);
+                }
+            });
+        }
     };
 
     defineProperties(BillboardCollection.prototype, {
@@ -1022,15 +1032,39 @@ define([
      * @exception {RuntimeError} image with id must be in the atlas.
      */
     BillboardCollection.prototype.update = function(context, frameState, commandList) {
+        var i;
+        var j;
+
         var startTime = getTimestamp();
         var timeSlice = this._clampTimeSlice;
         var endTime = startTime + timeSlice;
 
-        var clampList = this._clampToTerrainList;
-        while (clampList.length > 0) {
-            Billboard._clampPosition(clampList.shift(), frameState.mode, frameState.mapProjection);
-            if (getTimestamp() >= endTime) {
+        var tileList = this._renderedTileList;
+        while (tileList.length > 0) {
+            var tile = tileList[0];
+            var customData = tile.customData;
+            var customDataLength = customData.length;
+
+            var timeSliceMax = false;
+            for (i = this._lastTileIndex; i < customDataLength; ++i) {
+                var data = customData[i];
+                var object = data.object;
+                if (defined(object) && object instanceof Billboard) {
+                    object._newTile = tile;
+                    Billboard._clampPosition(object, frameState.mode, frameState.mapProjection);
+                    if (getTimestamp() >= endTime) {
+                        timeSliceMax = true;
+                        break;
+                    }
+                }
+            }
+
+            if (timeSliceMax) {
+                this._lastTileIndex = i;
                 break;
+            } else {
+                this._lastTileIndex = 0;
+                tileList.shift();
             }
         }
 
@@ -1090,7 +1124,7 @@ define([
                 vafWriters = this._vaf.writers;
 
                 // Rewrite entire buffer if billboards were added or removed.
-                for (var i = 0; i < billboardsLength; ++i) {
+                for (i = 0; i < billboardsLength; ++i) {
                     var billboard = this._billboards[i];
                     billboard._dirty = false; // In case it needed an update.
                     writeBillboard(this, context, textureAtlasCoordinates, vafWriters, billboard);
@@ -1196,7 +1230,6 @@ define([
         var va;
         var vaLength;
         var command;
-        var j;
         var vs;
         var fs;
 

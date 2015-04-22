@@ -4,6 +4,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/Event',
         '../Core/getTimestamp',
         '../Core/Queue',
         '../Core/Rectangle',
@@ -18,6 +19,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        Event,
         getTimestamp,
         Queue,
         Rectangle,
@@ -92,8 +94,8 @@ define([
         this._levelZeroTilesReady = false;
         this._loadQueueTimeSlice = 5.0;
 
-        this._callbacksAdded = [];
-        this._callbacksRemoved = [];
+        this._customDataAdded = [];
+        this._customDataRemoved = [];
 
         /**
          * Gets or sets the maximum screen-space error, in pixels, that is allowed.
@@ -113,6 +115,8 @@ define([
          * @default 100
          */
         this.tileCacheSize = defaultValue(options.tileCacheSize, 100);
+
+        this.tileRenderedEvent = new Event();
 
         this._occluders = new QuadtreeOccluders({
             ellipsoid : ellipsoid
@@ -187,12 +191,12 @@ define([
         }
     };
 
-    QuadtreePrimitive.prototype.addTileLoadedCallback = function(callback) {
-        this._callbacksAdded.push(callback);
+    QuadtreePrimitive.prototype.addTileCustomData = function(customData) {
+        this._customDataAdded.push(customData);
     };
 
-    QuadtreePrimitive.prototype.removeTileLoadedCallback = function(callback) {
-        this._callbacksRemoved.push(callback);
+    QuadtreePrimitive.prototype.removeTileCustomData = function(customData) {
+        this._customDataRemoved.push(customData);
     };
 
     /**
@@ -298,18 +302,18 @@ define([
         var tile;
         var levelZeroTiles = primitive._levelZeroTiles;
 
-        var callbacksAdded = primitive._callbacksAdded;
-        var callbacksRemoved = primitive._callbacksRemoved;
+        var customDataAdded = primitive._customDataAdded;
+        var customDataRemoved = primitive._customDataRemoved;
         var frameNumber = frameState.frameNumber;
 
-        if (callbacksAdded.length > 0 || callbacksRemoved.length > 0) {
+        if (customDataAdded.length > 0 || customDataRemoved.length > 0) {
             for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
                 tile = levelZeroTiles[i];
-                tile._updateCallbacks(frameNumber, callbacksAdded, callbacksRemoved);
+                tile._updateCustomData(frameNumber, customDataAdded, customDataRemoved);
             }
 
-            callbacksAdded.length = 0;
-            callbacksRemoved.length = 0;
+            customDataAdded.length = 0;
+            customDataRemoved.length = 0;
         }
 
         // Enqueue the root tiles that are renderable and visible.
@@ -337,7 +341,7 @@ define([
             ++debug.tilesVisited;
 
             primitive._tileReplacementQueue.markTileRendered(tile);
-            tile._updateCallbacks(frameNumber);
+            tile._updateCustomData(frameNumber);
 
             if (tile.level > debug.maxDepth) {
                 debug.maxDepth = tile.level;
@@ -490,7 +494,13 @@ define([
         tilesToRender.sort(tileDistanceSortFunction);
 
         for (var i = 0, len = tilesToRender.length; i < len; ++i) {
-            tileProvider.showTileThisFrame(tilesToRender[i], context, frameState, commandList);
+            var tile = tilesToRender[i];
+            tileProvider.showTileThisFrame(tile, context, frameState, commandList);
+
+            if (tile._frameRendered !== frameState.frameNumber - 1) {
+                primitive.tileRenderedEvent.raiseEvent(tile);
+            }
+            tile._frameRendered = frameState.frameNumber;
         }
     }
 

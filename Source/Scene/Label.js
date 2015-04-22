@@ -94,7 +94,7 @@ define([
         this._rebindAllGlyphs = true;
         this._repositionAllGlyphs = true;
 
-        this._callback = undefined;
+        this._customData = undefined;
         this._currentTile = undefined;
         this._actualClampedPosition = undefined;
         this._positionChanged = false;
