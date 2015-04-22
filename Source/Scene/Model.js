@@ -752,15 +752,19 @@ define([
                 loadArrayBuffer(url, options.headers).then(function(arrayBuffer) {
                     var magic = getStringFromTypedArray(arrayBuffer, 0, 4);
                     if (magic !== 'glTF') {
-                        throw new RuntimeError('bgltf is not a valid binary glTF file.');
+                        throw new RuntimeError('bgltf is not a valid Binary glTF file.');
                     }
 
                     var view = new DataView(arrayBuffer);
                     var byteOffset = 0;
 
-// TODO: no need for version since it is in JSON.
                     byteOffset += sizeOfUnit32;  // Skip magic number
-                    byteOffset += sizeOfUnit32;  // Skip version
+
+                    var version = view.getUint32(byteOffset, true);
+                    byteOffset += sizeOfUnit32;
+                    if (version !== 1) {
+                        throw new RuntimeError('Only glTF Binary version 1 is supported.  Version ' + version + ' is not.');
+                    }
 
                     var jsonOffset = view.getUint32(byteOffset, true);
                     byteOffset += sizeOfUnit32;
