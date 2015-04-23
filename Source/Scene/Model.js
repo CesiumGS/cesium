@@ -482,7 +482,6 @@ define([
             }
         },
 
-// TODO: update doc and maybe rename this since it is more than JSON
         /**
          * When <code>true</code>, the glTF JSON is not stored with the model once the model is
          * loaded (when {@link Model#ready} is <code>true</code>).  This saves memory when
@@ -530,9 +529,9 @@ define([
 
         /**
          * The base path that paths in the glTF JSON are relative to.  The base
-         * path is the same path as the path containing the .json file
-         * minus the .json file, when binary, image, and shader files are
-         * in the same directory as the .json.  When this is <code>''</code>,
+         * path is the same path as the path containing the .gltf file
+         * minus the .gltf file, when binary, image, and shader files are
+         * in the same directory as the .gltf.  When this is <code>''</code>,
          * the app's base path is used.
          *
          * @memberof Model.prototype
@@ -687,10 +686,12 @@ define([
 
     var sizeOfUnit32 = Uint32Array.BYTES_PER_ELEMENT;
 
-// TODO: update doc to include .bgltf
     /**
      * Creates a model from a glTF asset.  When the model is ready to render, i.e., when the external binary, image,
      * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyPromise} is resolved.
+     *
+     * The model can be a traditional glTF asset with a .gltf extension or a Binary glTF using the
+     * CESIUM_binary_glTF extension with a .bgltf extension.
      *
      * @param {Object} options Object with the following properties:
      * @param {String} options.url The url to the .gltf file.
@@ -710,7 +711,7 @@ define([
      * @example
      * // Example 1. Create a model from a glTF asset
      * var model = scene.primitives.add(Cesium.Model.fromGltf({
-     *   url : './duck/duck.json'
+     *   url : './duck/duck.gltf'
      * }));
      *
      * @example
@@ -719,7 +720,7 @@ define([
      * var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
      *
      * var model = scene.primitives.add(Model.fromGltf({
-     *   url : './duck/duck.json',
+     *   url : './duck/duck.gltf',
      *   show : true,                     // default
      *   modelMatrix : modelMatrix,
      *   scale : 2.0,                     // double size
@@ -766,15 +767,19 @@ define([
                 loadArrayBuffer(url, options.headers).then(function(arrayBuffer) {
                     var magic = getStringFromTypedArray(arrayBuffer, 0, 4);
                     if (magic !== 'glTF') {
-                        throw new RuntimeError('bgltf is not a valid binary glTF file.');
+                        throw new RuntimeError('bgltf is not a valid Binary glTF file.');
                     }
 
                     var view = new DataView(arrayBuffer);
                     var byteOffset = 0;
 
-// TODO: no need for version since it is in JSON.
                     byteOffset += sizeOfUnit32;  // Skip magic number
-                    byteOffset += sizeOfUnit32;  // Skip version
+
+                    var version = view.getUint32(byteOffset, true);
+                    byteOffset += sizeOfUnit32;
+                    if (version !== 1) {
+                        throw new RuntimeError('Only glTF Binary version 1 is supported.  Version ' + version + ' is not.');
+                    }
 
                     var jsonOffset = view.getUint32(byteOffset, true);
                     byteOffset += sizeOfUnit32;

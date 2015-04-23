@@ -40,6 +40,7 @@ defineSuite([
     var texturedBoxUrl = './Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf';
     var texturedBoxSeparateUrl = './Data/Models/Box-Textured-Separate/CesiumTexturedBoxTest.gltf';
     var texturedBoxCustomUrl = './Data/Models/Box-Textured-Custom/CesiumTexturedBoxTest.gltf';
+    var texturedBoxBinaryUrl = './Data/Models/Box-Textured-Binary/CesiumTexturedBoxTest.bgltf';
     var boxRtcUrl = './Data/Models/Box-RTC/Box.gltf';
     var cesiumAirUrl = './Data/Models/CesiumAir/Cesium_Air.gltf';
     var animBoxesUrl = './Data/Models/anim-test-1-boxes/anim-test-1-boxes.gltf';
@@ -446,6 +447,13 @@ defineSuite([
 
     it('renders texturedBoxCustom (all uniform semantics)', function() {
         return loadModel(texturedBoxCustomUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('renders a model with the CESIUM_binary_glTF extension', function() {
+        return loadModel(texturedBoxBinaryUrl).then(function(m) {
             verifyRender(m);
             primitives.remove(m);
         });
