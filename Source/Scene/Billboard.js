@@ -14,6 +14,7 @@ define([
         '../Core/Matrix4',
         '../Core/NearFarScalar',
         '../Core/Ray',
+        './HeightReference',
         './HorizontalOrigin',
         './SceneMode',
         './SceneTransforms',
@@ -33,6 +34,7 @@ define([
         Matrix4,
         NearFarScalar,
         Ray,
+        HeightReference,
         HorizontalOrigin,
         SceneMode,
         SceneTransforms,
@@ -102,7 +104,7 @@ define([
         this._scaleByDistance = options.scaleByDistance;
         this._translucencyByDistance = options.translucencyByDistance;
         this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
-        this._clampToGround = defaultValue(options.clampToGround, false);
+        this._heightReference = defaultValue(options.heightReference, HeightReference.NONE);
         this._id = options.id;
         this._collection = defaultValue(options.collection, billboardCollection);
 
@@ -148,6 +150,7 @@ define([
 
         this._customData = undefined;
         this._currentTile = undefined;
+        this._newTile = undefined;
         this._actualClampedPosition = undefined;
         this._positionChanged = false;
         this._mode = undefined;
@@ -231,9 +234,9 @@ define([
             }
         },
 
-        clampToGround : {
+        heightReference : {
             get : function() {
-                return this._clampToGround;
+                return this._heightReference;
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug)
@@ -242,9 +245,9 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                var clampToGround = this._clampToGround;
-                if (value !== clampToGround) {
-                    this._clampToGround = value;
+                var heightReference = this._heightReference;
+                if (value !== heightReference) {
+                    this._heightReference = value;
                     this._updateClamping();
                     makeDirty(this, POSITION_INDEX);
                 }
@@ -812,12 +815,13 @@ define([
 
     Billboard._clampPosition = function(object, mode, projection, markObjectDirty) {
         var modeChanged = mode !== SceneMode.MORPHING && mode !== object._mode;
+        var ellipsoid = projection.ellipsoid;
+
         if (object._newTile !== object._currentTile || object._positionChanged || modeChanged) {
             if (mode === SceneMode.SCENE3D) {
                 Cartesian3.clone(Cartesian3.ZERO, scratchRay.origin);
                 Cartesian3.normalize(object.position, scratchRay.direction);
             } else {
-                var ellipsoid = projection.ellipsoid;
                 ellipsoid.cartesianToCartographic(object.position, scratchCartographic);
                 scratchCartographic.height = -1000.0; // TODO: get minimum height of entire terrain set
                 projection.project(scratchCartographic, scratchPosition);
@@ -828,6 +832,11 @@ define([
 
             var position = object._newTile.data.pick(scratchRay, mode, projection, false, scratchPosition);
             if (defined(position)) {
+                if (object._heightReference === HeightReference.RELATIVE_TO_GROUND) {
+                    var clampedCart = ellipsoid.cartesianToCartographic(position, scratchCartographic);
+                    clampedCart.height += object._customData.position.height;
+                    ellipsoid.cartographicToCartesian(clampedCart, position);
+                }
                 object._clampedPosition = Cartesian3.clone(position, object._clampedPosition);
             }
 
@@ -844,8 +853,8 @@ define([
     Billboard._updateClamping = function(collection, object) {
         var globe = collection._globe;
         if (!defined(globe)) {
-            if (defined(object._clampToGround)) {
-                throw new DeveloperError('Clamping a billboard to the ground is not supported.');
+            if (object._heightReference !== HeightReference.NONE) {
+                throw new DeveloperError('Height reference is not supported.');
             }
             return;
         }
@@ -854,12 +863,12 @@ define([
         var surface = globe._surface;
         var customData = object._customData;
 
-        if (defined(customData) && !object._clampToGround) {
+        if (defined(customData) && object._heightReference === HeightReference.NONE) {
             surface.removeTileCustomData(customData);
             object._customData = undefined;
         }
 
-        if (!object._clampToGround || !defined(object._position)) {
+        if (object._heightReference === HeightReference.NONE || !defined(object._position)) {
             return;
         }
 
@@ -1155,6 +1164,14 @@ define([
     };
 
     Billboard.prototype._destroy = function() {
+        if (defined(this._customData)) {
+            this._billboardCollection._globe._surface.removeTileCustomData(this._customData);
+            this._customData = undefined;
+        }
+
+        this._currentTile = undefined;
+        this._newTile = undefined;
+
         this.image = undefined;
         this._pickId = this._pickId && this._pickId.destroy();
         this._billboardCollection = undefined;

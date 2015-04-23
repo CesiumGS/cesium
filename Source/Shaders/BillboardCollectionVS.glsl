@@ -226,7 +226,10 @@ void main()
 #endif
     
 #ifdef TEST_GLOBE_DEPTH
-    vec4 offsetPosition = positionEC + vec4(0.0, 0.0, -positionEC.z * 0.05, 0.0);
+    //float piece = step(3000.0, -positionEC.z);
+    //float offsetZ = (1.0 - piece) * -positionEC.z * 0.005;
+    float offsetZ = -positionEC.z * 0.005;
+    vec4 offsetPosition = positionEC + vec4(0.0, 0.0, offsetZ, 0.0);
     vec4 wc = computePositionWindowCoordinates(offsetPosition, vec2(0.0, 0.0), scale, direction, origin, vec2(0.0), pixelOffset, alignedAxis, rotation);
     float d = texture2D(czm_globeDepthTexture, wc.xy / czm_viewport.zw).r;
     if (wc.z > d)

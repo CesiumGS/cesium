@@ -272,6 +272,15 @@ define([
             unbindGlyph(labelCollection, glyphs[i]);
         }
         label._labelCollection = undefined;
+
+        if (defined(label._customData)) {
+            labelCollection._globe._surface.removeTileCustomData(label._customData);
+            label._customData = undefined;
+        }
+
+        label._currentTile = undefined;
+        label._newTile = undefined;
+
         destroyObject(label);
     }
 
@@ -384,9 +393,10 @@ define([
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
 
+        this._removeEventFunc = undefined;
         if (defined(this._globe)) {
             var that = this;
-            this._globe._surface.tileRenderedEvent.addEventListener(function(tile) {
+            this._removeEventFunc = this._globe._surface.tileRenderedEvent.addEventListener(function(tile) {
                 var tileList = that._renderedTileList;
                 if (tileList.indexOf(tile) === -1) {
                     tileList.push(tile);
@@ -696,6 +706,11 @@ define([
         this.removeAll();
         this._billboardCollection = this._billboardCollection.destroy();
         this._textureAtlas = this._textureAtlas && this._textureAtlas.destroy();
+
+        if (defined(this._removeEventFunc)) {
+            this._removeEventFunc();
+        }
+
         return destroyObject(this);
     };
 

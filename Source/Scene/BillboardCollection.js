@@ -264,8 +264,9 @@ define([
             }
         };
 
+        this._removeEventFunc = undefined;
         if (defined(this._globe)) {
-            this._globe._surface.tileRenderedEvent.addEventListener(function(tile) {
+            this._removeEventFunc = this._globe._surface.tileRenderedEvent.addEventListener(function(tile) {
                 var tileList = that._renderedTileList;
                 if (tileList.indexOf(tile) === -1) {
                     tileList.push(tile);
@@ -1418,6 +1419,10 @@ define([
         this._spPick = this._spPick && this._spPick.destroy();
         this._vaf = this._vaf && this._vaf.destroy();
         this._destroyBillboards();
+
+        if (defined(this._removeEventFunc)) {
+            this._removeEventFunc();
+        }
 
         return destroyObject(this);
     };

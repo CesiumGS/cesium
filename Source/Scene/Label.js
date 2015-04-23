@@ -9,6 +9,7 @@ define([
         '../Core/DeveloperError',
         '../Core/NearFarScalar',
         './Billboard',
+        './HeightReference',
         './HorizontalOrigin',
         './LabelStyle',
         './VerticalOrigin'
@@ -22,6 +23,7 @@ define([
         DeveloperError,
         NearFarScalar,
         Billboard,
+        HeightReference,
         HorizontalOrigin,
         LabelStyle,
         VerticalOrigin) {
@@ -86,7 +88,7 @@ define([
         this._id = options.id;
         this._translucencyByDistance = options.translucencyByDistance;
         this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
-        this._clampToGround = defaultValue(options.clampToGround, false);
+        this._heightReference = defaultValue(options.heightReference, HeightReference.NONE);
 
         this._labelCollection = labelCollection;
         this._glyphs = [];
@@ -96,6 +98,7 @@ define([
 
         this._customData = undefined;
         this._currentTile = undefined;
+        this._newTile = undefined;
         this._actualClampedPosition = undefined;
         this._positionChanged = false;
         this._mode = undefined;
@@ -155,7 +158,7 @@ define([
                 if (!Cartesian3.equals(position, value)) {
                     Cartesian3.clone(value, position);
 
-                    if (!this._clampToGround) {
+                    if (this._heightReference === HeightReference.NONE) {
                         var glyphs = this._glyphs;
                         for (var i = 0, len = glyphs.length; i < len; i++) {
                             var glyph = glyphs[i];
@@ -170,9 +173,9 @@ define([
             }
         },
 
-        clampToGround : {
+        heightReference : {
             get : function() {
-                return this._clampToGround;
+                return this._heightReference;
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
@@ -181,8 +184,8 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                if (value !== this._clampToGround) {
-                    this._clamptoGround = value;
+                if (value !== this._heightReference) {
+                    this._heightReference = value;
                     this._updateClamping();
                 }
             }
