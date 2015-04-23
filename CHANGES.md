@@ -1,8 +1,11 @@
 Change Log
 ==========
 
-TODO
-
+### 1.10 - 2015-06-01
+* Breaking changes
+  *
+* Deprecated
+  *
 * Added support for the [CESIUM_binary_glTF](https://github.com/KhronosGroup/glTF/blob/new-extensions/extensions/CESIUM_binary_glTF/README.md) extension for loading binary blobs of glTF to `Model`.
 * Added support for the [CESIUM_RTC](https://github.com/KhronosGroup/glTF/blob/new-extensions/extensions/CESIUM_RTC/README.md) glTF extension for high-precision rendering to `Model`.
 * Added `Matrix4.setTranslation`.
