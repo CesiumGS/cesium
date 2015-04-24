@@ -1,6 +1,6 @@
 {
   "name": "terriajs-cesium",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Cesium for TerriaJS.",
   "homepage": "http://cesiumjs.org",
   "license": "Apache-2.0",
@@ -28,7 +28,8 @@
     "deamdify": "^0.1.1"
   },
   "scripts": {
-    "prepublish": "gulp prepare-cesium"
+    "prepublish": "gulp prepare-cesium",
+    "postpublish": "git tag -a ${npm_package_version} -m \"${npm_package_version}\" && git push origin ${npm_package_version}"
   },
   "browserify": {
     "transform": [
