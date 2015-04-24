@@ -1,6 +1,11 @@
 /.metadata
+/Apps
 /Build
+/Documentation
 /Instrumented
+/Specs
+/Tools
+/launches
 /Cesium-*.zip
 .DS_Store
 Thumbs.db

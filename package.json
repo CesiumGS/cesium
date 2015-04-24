@@ -1,18 +1,38 @@
 {
-    "name": "cesium",
-    "version": "1.8.0",
-    "description": "Cesium is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
-    "homepage": "http://cesiumjs.org",
-    "license": "Apache-2.0",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/AnalyticalGraphicsInc/cesium.git"
-    },
-    "devDependencies": {
-        "jsdoc": "3.3.0-alpha9",
-        "express": "4.4.4",
-        "compression": "1.0.8",
-        "request": "2.36.0",
-        "yargs": "1.2.6"
-    }
+  "name": "terriajs-cesium",
+  "version": "0.0.2",
+  "description": "Cesium for TerriaJS.",
+  "homepage": "http://cesiumjs.org",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TerriaJS/cesium.git"
+  },
+  "devDependencies": {
+    "browserify": "^9.0.8",
+    "compression": "1.0.8",
+    "exorcist": "^0.3.0",
+    "express": "4.4.4",
+    "glob-all": "^3.0.1",
+    "gulp": "^3.8.11",
+    "gulp-sourcemaps": "^1.5.2",
+    "gulp-uglify": "^1.2.0",
+    "jsdoc": "3.3.0-alpha9",
+    "request": "2.36.0",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0",
+    "vinyl-transform": "^1.0.0",
+    "yargs": "1.2.6"
+  },
+  "dependencies": {
+    "deamdify": "^0.1.1"
+  },
+  "scripts": {
+    "prepublish": "gulp prepare-cesium"
+  },
+  "browserify": {
+    "transform": [
+      "deamdify"
+    ]
+  }
 }
