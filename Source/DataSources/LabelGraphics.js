@@ -64,6 +64,8 @@ define([
         this._verticalOriginSubscription = undefined;
         this._eyeOffset = undefined;
         this._eyeOffsetSubscription = undefined;
+        this._heightReference = undefined;
+        this._heightReferenceSubscription = undefined;
         this._pixelOffset = undefined;
         this._pixelOffsetSubscription = undefined;
         this._scale = undefined;
@@ -176,6 +178,14 @@ define([
         eyeOffset : createPropertyDescriptor('eyeOffset'),
 
         /**
+         * Gets or sets the Property specifying the {@link HeightReference}.
+         * @memberof BillboardGraphics.prototype
+         * @type {Property}
+         * @default HeightReference.NONE
+         */
+        heightReference : createPropertyDescriptor('heightReference'),
+
+        /**
          * Gets or sets the {@link Cartesian2} Property specifying the label's pixel offset in screen space
          * from the origin of this label.  This is commonly used to align multiple labels and labels at
          * the same position, e.g., an image and text.  The screen space origin is the top, left corner of the
@@ -263,6 +273,7 @@ define([
         result.horizontalOrigin = this.horizontalOrigin;
         result.verticalOrigin = this.verticalOrigin;
         result.eyeOffset = this.eyeOffset;
+        result.heightReference = this.heightReference;
         result.pixelOffset = this.pixelOffset;
         result.translucencyByDistance = this.translucencyByDistance;
         result.pixelOffsetScaleByDistance = this.pixelOffsetScaleByDistance;
@@ -293,6 +304,7 @@ define([
         this.horizontalOrigin = defaultValue(this.horizontalOrigin, source.horizontalOrigin);
         this.verticalOrigin = defaultValue(this.verticalOrigin, source.verticalOrigin);
         this.eyeOffset = defaultValue(this.eyeOffset, source.eyeOffset);
+        this.heightReference = defaultValue(this.heightReference, source.heightReference);
         this.pixelOffset = defaultValue(this.pixelOffset, source.pixelOffset);
         this.translucencyByDistance = defaultValue(this._translucencyByDistance, source.translucencyByDistance);
         this.pixelOffsetScaleByDistance = defaultValue(this._pixelOffsetScaleByDistance, source.pixelOffsetScaleByDistance);
