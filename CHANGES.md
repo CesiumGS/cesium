@@ -16,6 +16,7 @@ Change Log
 * Fixed a bug that caused `Corridor` and `PolylineVolume` geometry to be incorrect for sharp corners [#2626](https://github.com/AnalyticalGraphicsInc/cesium/pull/2626)
 * Fixed crash when modifying a translucent entity geometry outline. [#2630](https://github.com/AnalyticalGraphicsInc/cesium/pull/2630)
 * Fixed crash when loading KML GroundOverlays that spanned 360 degrees. [#2639](https://github.com/AnalyticalGraphicsInc/cesium/pull/2639)
+* Fixed `Geocoder` styling issue in Safari. [#2658](https://github.com/AnalyticalGraphicsInc/cesium/pull/2658).
 * Added number of cached shaders to the `CesiumInspector` debugging widget.
 
 ### 1.8 - 2015-04-01
