@@ -28,8 +28,8 @@ define([
     "use strict";
 
     /**
-     * A glPoint positioned in the 3D scene, that is created
-     * and rendered using a {@link PointPrimitiveCollection}.  A pointPrimitive is created and its initial
+     * A graphical point positioned in the 3D scene, that is created
+     * and rendered using a {@link PointPrimitiveCollection}.  A point is created and its initial
      * properties are set by calling {@link PointPrimitiveCollection#add}.
      *
      * @alias PointPrimitive
@@ -46,11 +46,10 @@ define([
      *
      * @see PointPrimitiveCollection
      * @see PointPrimitiveCollection#add
-     * @see Label
      *
      * @internalConstructor
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=PointPrimitives.html|Cesium Sandcastle PointPrimitive Demo}
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Points.html|Cesium Sandcastle Points Demo}
      */
     var PointPrimitive = function(options, pointPrimitiveCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -77,7 +76,6 @@ define([
         this._collection = defaultValue(options.collection, pointPrimitiveCollection);
 
         this._pickId = undefined;
-        this._pickPrimitive = defaultValue(options._pickPrimitive, this);
         this._pointPrimitiveCollection = pointPrimitiveCollection;
         this._dirty = false;
         this._index = -1; //Used only by PointPrimitiveCollection
@@ -103,7 +101,7 @@ define([
 
     defineProperties(PointPrimitive.prototype, {
         /**
-         * Determines if this pointPrimitive will be shown.  Use this to hide or show a pointPrimitive, instead
+         * Determines if this point will be shown.  Use this to hide or show a point, instead
          * of removing it and re-adding it to the collection.
          * @memberof PointPrimitive.prototype
          * @type {Boolean}
@@ -127,7 +125,7 @@ define([
         },
 
         /**
-        * Gets or sets the Cartesian position of this pointPrimitive.
+        * Gets or sets the Cartesian position of this point.
         * @memberof PointPrimitive.prototype
         * @type {Cartesian3}
         */
@@ -153,11 +151,12 @@ define([
         },
 
         /**
-         * Gets or sets near and far scaling properties of a PointPrimitive based on the pointPrimitive's distance from the camera.
-         * A pointPrimitive's scale will interpolate between the {@link NearFarScalar#nearValue} and
+         * Gets or sets near and far scaling properties of a point based on the point's distance from the camera.
+         * A point's scale will interpolate between the {@link NearFarScalar#nearValue} and
          * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
          * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
-         * Outside of these ranges the pointPrimitive's scale remains clamped to the nearest bound.  If undefined,
+         * Outside of these ranges the point's scale remains clamped to the nearest bound.  This scale
+         * multiplies the pixelSize and outlineWidth to affect the total size of the point.  If undefined,
          * scaleByDistance will be disabled.
          * @memberof PointPrimitive.prototype
          * @type {NearFarScalar}
@@ -194,19 +193,19 @@ define([
         },
 
         /**
-         * Gets or sets near and far translucency properties of a PointPrimitive based on the pointPrimitive's distance from the camera.
-         * A pointPrimitive's translucency will interpolate between the {@link NearFarScalar#nearValue} and
+         * Gets or sets near and far translucency properties of a point based on the point's distance from the camera.
+         * A point's translucency will interpolate between the {@link NearFarScalar#nearValue} and
          * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
          * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
-         * Outside of these ranges the pointPrimitive's translucency remains clamped to the nearest bound.  If undefined,
+         * Outside of these ranges the point's translucency remains clamped to the nearest bound.  If undefined,
          * translucencyByDistance will be disabled.
          * @memberof PointPrimitive.prototype
          * @type {NearFarScalar}
          *
          * @example
          * // Example 1.
-         * // Set a pointPrimitive's translucency to 1.0 when the
-         * // camera is 1500 meters from the pointPrimitive and disappear as
+         * // Set a point's translucency to 1.0 when the
+         * // camera is 1500 meters from the point and disappear as
          * // the camera distance approaches 8.0e6 meters.
          * b.translucencyByDistance = new Cesium.NearFarScalar(1.5e2, 1.0, 8.0e6, 0.0);
          *
@@ -235,7 +234,7 @@ define([
         },
 
         /**
-         * Gets or sets the inner size of the pointPrimitive in pixels.
+         * Gets or sets the inner size of the point in pixels.
          * @memberof PointPrimitive.prototype
          * @type {Number}
          */
@@ -258,7 +257,7 @@ define([
         },
 
         /**
-         * Gets or sets the color attribute for the pointPrimitive.
+         * Gets or sets the inner color of the point.
          * The red, green, blue, and alpha values are indicated by <code>value</code>'s <code>red</code>, <code>green</code>,
          * <code>blue</code>, and <code>alpha</code> properties as shown in Example 1.  These components range from <code>0.0</code>
          * (no intensity) to <code>1.0</code> (full intensity).
@@ -293,7 +292,7 @@ define([
         },
 
         /**
-         * Gets or sets the outline color attribute for the pointPrimitive.
+         * Gets or sets the outline color of the point.
          * @memberof PointPrimitive.prototype
          * @param {Color}
          */
@@ -317,7 +316,7 @@ define([
         },
 
         /**
-         * Gets or sets the outline width in pixels.  This width adds with pixelSize,
+         * Gets or sets the outline width in pixels.  This width adds to pixelSize,
          * increasing the total size of the point.
          * @memberof PointPrimitive.prototype
          * @type {Number}
@@ -341,7 +340,7 @@ define([
         },
 
         /**
-         * Gets or sets the user-defined object returned when the pointPrimitive is picked.
+         * Gets or sets the user-defined object returned when the point is picked.
          * @memberof PointPrimitive.prototype
          * @type {Object}
          */
@@ -355,30 +354,13 @@ define([
                     this._pickId.object.id = value;
                 }
             }
-        },
-
-        /**
-         * The primitive to return when picking this pointPrimitive.
-         * @memberof PointPrimitive.prototype
-         * @private
-         */
-        pickPrimitive : {
-            get : function() {
-                return this._pickPrimitive;
-            },
-            set : function(value) {
-                this._pickPrimitive = value;
-                if (defined(this._pickId)) {
-                    this._pickId.object.primitive = value;
-                }
-            }
         }
     });
 
     PointPrimitive.prototype.getPickId = function(context) {
         if (!defined(this._pickId)) {
             this._pickId = context.createPickId({
-                primitive : this._pickPrimitive,
+                primitive : this,
                 collection : this._collection,
                 id : this._id
             });
@@ -425,12 +407,12 @@ define([
     };
 
     /**
-     * Computes the screen-space position of the pointPrimitive's origin.
+     * Computes the screen-space position of the point's origin.
      * The screen space origin is the top, left corner of the canvas; <code>x</code> increases from
      * left to right, and <code>y</code> increases from top to bottom.
      *
      * @param {Scene} scene The scene.
-     * @returns {Cartesian2} The screen-space position of the pointPrimitive.
+     * @returns {Cartesian2} The screen-space position of the point.
      *
      * @exception {DeveloperError} PointPrimitive must be in a collection.
      *
@@ -456,22 +438,21 @@ define([
     };
 
     /**
-     * Determines if this pointPrimitive equals another pointPrimitive.  PointPrimitives are equal if all their properties
-     * are equal.  PointPrimitives in different collections can be equal.
+     * Determines if this point equals another point.  Points are equal if all their properties
+     * are equal.  Points in different collections can be equal.
      *
-     * @param {PointPrimitive} other The pointPrimitive to compare for equality.
-     * @returns {Boolean} <code>true</code> if the pointPrimitives are equal; otherwise, <code>false</code>.
+     * @param {PointPrimitive} other The point to compare for equality.
+     * @returns {Boolean} <code>true</code> if the points are equal; otherwise, <code>false</code>.
      */
     PointPrimitive.prototype.equals = function(other) {
         return this === other ||
                defined(other) &&
-               this._show === other._show &&
-               this._pixelSize === other._pixelSize &&
-               this._outlineWidth === other._outlineWidth &&
                this._id === other._id &&
-               this._imageId === other._imageId &&
                Cartesian3.equals(this._position, other._position) &&
                Color.equals(this._color, other._color) &&
+               this._pixelSize === other._pixelSize &&
+               this._outlineWidth === other._outlineWidth &&
+               this._show === other._show &&
                Color.equals(this._outlineColor, other._outlineColor) &&
                NearFarScalar.equals(this._scaleByDistance, other._scaleByDistance) &&
                NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance);

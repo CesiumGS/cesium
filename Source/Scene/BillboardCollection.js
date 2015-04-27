@@ -1004,6 +1004,8 @@ define([
         boundingVolume.radius += size + offset;
     }
 
+    var writers = [];
+
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -1085,7 +1087,7 @@ define([
         } else {
             // Billboards were modified, but none were added or removed.
             if (billboardsToUpdateLength > 0) {
-                var writers = [];
+                writers.length = 0;
 
                 if (properties[POSITION_INDEX] || properties[ROTATION_INDEX] || properties[SCALE_INDEX]) {
                     writers.push(writePositionScaleAndRotation);
@@ -1115,6 +1117,8 @@ define([
                     writers.push(writePixelOffsetScaleByDistance);
                 }
 
+                var numWriters = writers.length;
+
                 vafWriters = this._vaf.writers;
 
                 if ((billboardsToUpdateLength / billboardsLength) > 0.1) {
@@ -1126,7 +1130,7 @@ define([
                         var b = billboardsToUpdate[m];
                         b._dirty = false;
 
-                        for ( var n = 0; n < writers.length; ++n) {
+                        for ( var n = 0; n < numWriters; ++n) {
                             writers[n](this, context, textureAtlasCoordinates, vafWriters, b);
                         }
                     }
@@ -1136,7 +1140,7 @@ define([
                         var bb = billboardsToUpdate[h];
                         bb._dirty = false;
 
-                        for ( var o = 0; o < writers.length; ++o) {
+                        for ( var o = 0; o < numWriters; ++o) {
                             writers[o](this, context, textureAtlasCoordinates, vafWriters, bb);
                         }
                         this._vaf.subCommit(bb._index * 4, 4);

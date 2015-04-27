@@ -9,13 +9,15 @@ varying vec4 v_pickColor;
 
 void main()
 {
-    float distance = length(gl_PointCoord - vec2(0.5));
-    float innerDistance = max(0.0, 0.5 - v_pixelDistance);
-    float whole = 1.0 - smoothstep(innerDistance, 0.5, distance);
-    float inner = 1.0 - smoothstep(innerDistance * v_innerPercent, 0.5 * v_innerPercent, distance);
+    // The distance in UV space from this fragment to the center of the point, at most 0.5.
+    float distanceToCenter = length(gl_PointCoord - vec2(0.5));
+    // The max distance stops one pixel shy of the edge to leave space for anti-aliasing.
+    float maxDistance = max(0.0, 0.5 - v_pixelDistance);
+    float wholeAlpha = 1.0 - smoothstep(maxDistance, 0.5, distanceToCenter);
+    float innerAlpha = 1.0 - smoothstep(maxDistance * v_innerPercent, 0.5 * v_innerPercent, distanceToCenter);
 
-    vec4 color = mix(v_outlineColor, v_color, inner);
-    color.a *= whole;
+    vec4 color = mix(v_outlineColor, v_color, innerAlpha);
+    color.a *= wholeAlpha;
     if (color.a < 0.005)
     {
         discard;

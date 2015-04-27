@@ -70,32 +70,30 @@ define([
     };
 
     /**
-     * A renderable collection of glPoints.
+     * A renderable collection of points.
      * <br /><br />
-     * PointPrimitives are added and removed from the collection using {@link PointPrimitiveCollection#add}
-     * and {@link PointPrimitiveCollection#remove}.  PointPrimitives in a collection automatically share textures
-     * for images with the same identifier.
+     * Points are added and removed from the collection using {@link PointPrimitiveCollection#add}
+     * and {@link PointPrimitiveCollection#remove}.
      *
      * @alias PointPrimitiveCollection
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each pointPrimitive from model to world coordinates.
+     * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each point from model to world coordinates.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      *
-     * @performance For best performance, prefer a few collections, each with many pointPrimitives, to
-     * many collections with only a few pointPrimitives each.  Organize collections so that pointPrimitives
-     * with the same update frequency are in the same collection, i.e., pointPrimitives that do not
-     * change should be in one collection; pointPrimitives that change every frame should be in another
+     * @performance For best performance, prefer a few collections, each with many points, to
+     * many collections with only a few points each.  Organize collections so that points
+     * with the same update frequency are in the same collection, i.e., points that do not
+     * change should be in one collection; points that change every frame should be in another
      * collection; and so on.
      *
      * @see PointPrimitiveCollection#add
      * @see PointPrimitiveCollection#remove
      * @see PointPrimitive
-     * @see LabelCollection
      *
      * @example
-     * // Create a pointPrimitive collection with two pointPrimitives
+     * // Create a pointPrimitive collection with two points
      * var pointPrimitives = new Cesium.PointPrimitiveCollection();
      * pointPrimitives.add({
      *   position : { x : 1.0, y : 2.0, z : 3.0 },
@@ -142,7 +140,7 @@ define([
         this._pickCommands = [];
 
         /**
-         * The 4x4 transformation matrix that transforms each pointPrimitive in this collection from model to world coordinates.
+         * The 4x4 transformation matrix that transforms each point in this collection from model to world coordinates.
          * When this is the identity matrix, the pointPrimitives are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
          * Local reference frames can be used by providing a different transformation matrix, like that returned
          * by {@link Transforms.eastNorthUpToFixedFrame}.
@@ -212,8 +210,8 @@ define([
 
     defineProperties(PointPrimitiveCollection.prototype, {
         /**
-         * Returns the number of pointPrimitives in this collection.  This is commonly used with
-         * {@link PointPrimitiveCollection#get} to iterate over all the pointPrimitives
+         * Returns the number of points in this collection.  This is commonly used with
+         * {@link PointPrimitiveCollection#get} to iterate over all the points
          * in the collection.
          * @memberof PointPrimitiveCollection.prototype
          * @type {Number}
@@ -227,11 +225,11 @@ define([
     });
 
     /**
-     * Creates and adds a pointPrimitive with the specified initial properties to the collection.
-     * The added pointPrimitive is returned so it can be modified or removed from the collection later.
+     * Creates and adds a point with the specified initial properties to the collection.
+     * The added point is returned so it can be modified or removed from the collection later.
      *
-     * @param {Object}[pointPrimitive] A template describing the pointPrimitive's properties as shown in Example 1.
-     * @returns {PointPrimitive} The pointPrimitive that was added to the collection.
+     * @param {Object}[pointPrimitive] A template describing the point's properties as shown in Example 1.
+     * @returns {PointPrimitive} The point that was added to the collection.
      *
      * @performance Calling <code>add</code> is expected constant time.  However, the collection's vertex buffer
      * is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.  For
@@ -243,7 +241,7 @@ define([
      * @see PointPrimitiveCollection#removeAll
      *
      * @example
-     * // Example 1:  Add a pointPrimitive, specifying all the default values.
+     * // Example 1:  Add a point, specifying all the default values.
      * var p = pointPrimitives.add({
      *   show : true,
      *   position : Cesium.Cartesian3.ZERO,
@@ -255,7 +253,7 @@ define([
      * });
      *
      * @example
-     * // Example 2:  Specify only the pointPrimitive's cartographic position.
+     * // Example 2:  Specify only the point's cartographic position.
      * var p = pointPrimitives.add({
      *   position : Cesium.Cartesian3.fromDegrees(longitude, latitude, height)
      * });
@@ -271,16 +269,16 @@ define([
     };
 
     /**
-     * Removes a pointPrimitive from the collection.
+     * Removes a point from the collection.
      *
-     * @param {PointPrimitive} pointPrimitive The pointPrimitive to remove.
-     * @returns {Boolean} <code>true</code> if the pointPrimitive was removed; <code>false</code> if the pointPrimitive was not found in the collection.
+     * @param {PointPrimitive} pointPrimitive The point to remove.
+     * @returns {Boolean} <code>true</code> if the point was removed; <code>false</code> if the point was not found in the collection.
      *
      * @performance Calling <code>remove</code> is expected constant time.  However, the collection's vertex buffer
      * is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.  For
-     * best performance, remove as many pointPrimitives as possible before calling <code>update</code>.
-     * If you intend to temporarily hide a pointPrimitive, it is usually more efficient to call
-     * {@link PointPrimitive#show} instead of removing and re-adding the pointPrimitive.
+     * best performance, remove as many points as possible before calling <code>update</code>.
+     * If you intend to temporarily hide a point, it is usually more efficient to call
+     * {@link PointPrimitive#show} instead of removing and re-adding the point.
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
@@ -289,8 +287,8 @@ define([
      * @see PointPrimitive#show
      *
      * @example
-     * var b = pointPrimitives.add(...);
-     * pointPrimitives.remove(b);  // Returns true
+     * var p = pointPrimitives.add(...);
+     * pointPrimitives.remove(p);  // Returns true
      */
     PointPrimitiveCollection.prototype.remove = function(pointPrimitive) {
         if (this.contains(pointPrimitive)) {
@@ -305,9 +303,9 @@ define([
     };
 
     /**
-     * Removes all pointPrimitives from the collection.
+     * Removes all points from the collection.
      *
-     * @performance <code>O(n)</code>.  It is more efficient to remove all the pointPrimitives
+     * @performance <code>O(n)</code>.  It is more efficient to remove all the points
      * from a collection and then add new ones than to create a new collection entirely.
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
@@ -358,10 +356,10 @@ define([
     };
 
     /**
-     * Check whether this collection contains a given pointPrimitive.
+     * Check whether this collection contains a given point.
      *
-     * @param {PointPrimitive} [pointPrimitive] The pointPrimitive to check for.
-     * @returns {Boolean} true if this collection contains the pointPrimitive, false otherwise.
+     * @param {PointPrimitive} [pointPrimitive] The point to check for.
+     * @returns {Boolean} true if this collection contains the point, false otherwise.
      *
      * @see PointPrimitiveCollection#get
      */
@@ -370,16 +368,16 @@ define([
     };
 
     /**
-     * Returns the pointPrimitive in the collection at the specified index.  Indices are zero-based
-     * and increase as pointPrimitives are added.  Removing a pointPrimitive shifts all pointPrimitives after
+     * Returns the point in the collection at the specified index.  Indices are zero-based
+     * and increase as points are added.  Removing a point shifts all points after
      * it to the left, changing their indices.  This function is commonly used with
-     * {@link PointPrimitiveCollection#length} to iterate over all the pointPrimitives
+     * {@link PointPrimitiveCollection#length} to iterate over all the points
      * in the collection.
      *
-     * @param {Number} index The zero-based index of the pointPrimitive.
-     * @returns {PointPrimitive} The pointPrimitive at the specified index.
+     * @param {Number} index The zero-based index of the point.
+     * @returns {PointPrimitive} The point at the specified index.
      *
-     * @performance Expected constant time.  If pointPrimitives were removed from the collection and
+     * @performance Expected constant time.  If points were removed from the collection and
      * {@link PointPrimitiveCollection#update} was not called, an implicit <code>O(n)</code>
      * operation is performed.
      *
@@ -388,7 +386,7 @@ define([
      * @see PointPrimitiveCollection#length
      *
      * @example
-     * // Toggle the show property of every pointPrimitive in the collection
+     * // Toggle the show property of every point in the collection
      * var len = pointPrimitives.length;
      * for (var i = 0; i < len; ++i) {
      *   var p = pointPrimitives.get(i);
@@ -664,6 +662,8 @@ define([
         boundingVolume.radius += size;
     }
 
+    var writers = [];
+
     /**
      * @private
      */
@@ -712,7 +712,6 @@ define([
                     writePointPrimitive(this, context, vafWriters, pointPrimitive);
                 }
 
-                // Different pointPrimitive collections share the same index buffer.
                 this._vaf.commit();
             }
 
@@ -720,7 +719,7 @@ define([
         } else {
             // PointPrimitives were modified, but none were added or removed.
             if (pointPrimitivesToUpdateLength > 0) {
-                var writers = [];
+                writers.length = 0;
 
                 if (properties[POSITION_INDEX] || properties[OUTLINE_WIDTH_INDEX] || properties[PIXEL_SIZE_INDEX]) {
                     writers.push(writePositionSizeAndOutline);
@@ -738,6 +737,8 @@ define([
                     writers.push(writeScaleByDistance);
                 }
 
+                var numWriters = writers.length;
+
                 vafWriters = this._vaf.writers;
 
                 if ((pointPrimitivesToUpdateLength / pointPrimitivesLength) > 0.1) {
@@ -749,7 +750,7 @@ define([
                         var b = pointPrimitivesToUpdate[m];
                         b._dirty = false;
 
-                        for ( var n = 0; n < writers.length; ++n) {
+                        for ( var n = 0; n < numWriters; ++n) {
                             writers[n](this, context, vafWriters, b);
                         }
                     }
@@ -759,7 +760,7 @@ define([
                         var bb = pointPrimitivesToUpdate[h];
                         bb._dirty = false;
 
-                        for ( var o = 0; o < writers.length; ++o) {
+                        for ( var o = 0; o < numWriters; ++o) {
                             writers[o](this, context, vafWriters, bb);
                         }
                         this._vaf.subCommit(bb._index, 1);
