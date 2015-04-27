@@ -985,7 +985,10 @@ defineSuite([
 
     it('should load a model where WebGL shader optimizer removes an attribute (linux)', function() {
         var url = './Data/Models/test-shader-optimize/test-shader-optimize.gltf';
-        var m = loadModel(url);
+        return loadModel(url).then(function(m) {
+            expect(m).toBeDefined();
+            primitives.remove(m);
+        });
     });
 
     it('releaseGltfJson releases glTFJSON when constructed with fromGltf', function() {

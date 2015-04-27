@@ -55,5 +55,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Gilles Cébélieu (IGN France)](https://github.com/gcebelieu)
 * [Guillaume Beraudo](https://github.com/gberaudo)
 * [Thomas Hirsch](https://github.com/relet)
+* [Ayush Khandelwal](https://github.com/ayk115)
+* [Aditya Raisinghani](https://github.com/adi2412)
 
 Also see [our contributors page](http://cesiumjs.org/contributors.html) for more information.
