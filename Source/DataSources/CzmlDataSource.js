@@ -375,9 +375,9 @@ define([
         case VerticalOrigin:
             return VerticalOrigin[defaultValue(czmlInterval.verticalOrigin, czmlInterval)];
         default:
-        	if (type && type.defaultValue) {
-        		return type.defaultValue(czmlInterval);
-        		}
+            if (type && type.defaultValue)  {
+                return type.defaultValue(czmlInterval);
+            }
             throw new RuntimeError(type);
         }
     }
