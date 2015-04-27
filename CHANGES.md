@@ -18,6 +18,7 @@ Change Log
 * Fixed crash when loading KML GroundOverlays that spanned 360 degrees. [#2639](https://github.com/AnalyticalGraphicsInc/cesium/pull/2639)
 * Fixed `Geocoder` styling issue in Safari. [#2658](https://github.com/AnalyticalGraphicsInc/cesium/pull/2658).
 * Added number of cached shaders to the `CesiumInspector` debugging widget.
+* Entity `material` properties and `Material` uniform values can now take a `canvas` element in addition to an image or url.
 
 ### 1.8 - 2015-04-01
 
