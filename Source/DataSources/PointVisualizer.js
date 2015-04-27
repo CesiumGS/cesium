@@ -32,6 +32,7 @@ define([
     var position = new Cartesian3();
     var outlineColor = new Color();
     var scaleByDistance = new NearFarScalar();
+    var translucencyByDistance = new NearFarScalar();
 
     var EntityData = function(entity) {
         this.entity = entity;
@@ -123,6 +124,7 @@ define([
             pointPrimitive.show = true;
             pointPrimitive.position = position;
             pointPrimitive.scaleByDistance = Property.getValueOrUndefined(pointGraphics._scaleByDistance, time, scaleByDistance);
+            pointPrimitive.translucencyByDistance = Property.getValueOrUndefined(pointGraphics._translucencyByDistance, time, translucencyByDistance);
             pointPrimitive.color = Property.getValueOrDefault(pointGraphics._color, time, defaultColor, color);
             pointPrimitive.outlineColor = Property.getValueOrDefault(pointGraphics._outlineColor, time, defaultOutlineColor, outlineColor);
             pointPrimitive.outlineWidth = Property.getValueOrDefault(pointGraphics._outlineWidth, time, defaultOutlineWidth);
