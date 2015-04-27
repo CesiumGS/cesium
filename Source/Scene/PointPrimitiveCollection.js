@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../Core/AttributeCompression',
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -12,7 +11,6 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EncodedCartesian3',
-        '../Core/IndexDatatype',
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
@@ -27,7 +25,6 @@ define([
         './Pass',
         './SceneMode'
     ], function(
-        AttributeCompression,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -39,7 +36,6 @@ define([
         destroyObject,
         DeveloperError,
         EncodedCartesian3,
-        IndexDatatype,
         CesiumMath,
         Matrix4,
         PrimitiveType,
@@ -486,8 +482,6 @@ define([
 
     var LEFT_SHIFT16 = 65536.0; // 2^16
     var LEFT_SHIFT8 = 256.0;    // 2^8
-
-    var RIGHT_SHIFT8 = 1.0 / 256.0;
 
     function writeCompressedAttrib0(pointPrimitiveCollection, context, vafWriters, pointPrimitive) {
         var i = pointPrimitive._index;
