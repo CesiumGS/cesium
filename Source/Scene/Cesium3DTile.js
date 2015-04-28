@@ -54,14 +54,14 @@ define([
         this._header = header;
 
         var b = header.box;
-        var rectangle = new Rectangle(b.west, b.south, b.east, b.north);
+        var rectangle = new Rectangle(b[0], b[1], b[2], b[3]);
 
         this._tileBoundingBox = new TileBoundingBox({
             rectangle : rectangle,
-            minimumHeight : b.minimumHeight,
-            maximumHeight : b.maximumHeight
+            minimumHeight : b[4],
+            maximumHeight : b[5]
         });
-        this._boundingSphere = BoundingSphere.fromRectangleWithHeights3D(rectangle, undefined, b.minimumHeight, b.maximumHeight);
+        this._boundingSphere = BoundingSphere.fromRectangleWithHeights3D(rectangle, undefined, b[4], b[5]);
 
         var rs;
         if (defined(header.content.box)) {
@@ -71,7 +71,7 @@ define([
             // since it only bounds models in the tile, not the entire tile, children may be
             // outside of this box.
             var cb = header.content.box;
-            rs = BoundingSphere.fromRectangleWithHeights3D(new Rectangle(cb.west, cb.south, cb.east, cb.north), undefined, cb.minimumHeight, cb.maximumHeight);
+            rs = BoundingSphere.fromRectangleWithHeights3D(new Rectangle(cb[0], cb[1], cb[2], cb[3]), undefined, cb[4], cb[5]);
         }
 
         this._contentsBoundingSphere = rs;
@@ -81,11 +81,11 @@ define([
          */
         this.geometricError = header.geometricError;
 
+// TODO: use default for a smaller tree.json?  Or inherit from parent.  Same for "type" and others.
         /**
          * @readonly
          */
-//        this.refine = Cesium3DTileRefine.ADD;
-        this.refine = Cesium3DTileRefine.REPLACE;
+        this.refine = (header.refine === 'replace') ? Cesium3DTileRefine.REPLACE : Cesium3DTileRefine.ADD;
 
         /**
          * @type {Array}
@@ -208,9 +208,9 @@ define([
 
     function createDebugBox(box, color) {
         var geometry = new RectangleOutlineGeometry({
-            rectangle : new Rectangle(box.west, box.south, box.east, box.north),
-            height : box.minimumHeight,
-            extrudedHeight: box.maximumHeight
+            rectangle : new Rectangle(box[0], box[1], box[2], box[3]),
+            height : box[4],
+            extrudedHeight: box[5]
          });
         return createDebugPrimitive(geometry, color);
     }
@@ -224,7 +224,7 @@ define([
 
 // TODO: remove workaround for https://github.com/AnalyticalGraphicsInc/cesium/issues/2657
     function workaround2657(rectangle) {
-        return (rectangle.south !== rectangle.north) || (rectangle.west !== rectangle.east);
+        return (rectangle[1] !== rectangle[3]) || (rectangle[0] !== rectangle[2]);
     }
 
     function applyDebugSettings(tile, owner, context, frameState, commandList) {
