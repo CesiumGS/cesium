@@ -150,8 +150,7 @@ define([
         }
 
         this._customData = undefined;
-        this._currentTile = undefined;
-        this._newTile = undefined;
+        this._level = 0;
         this._actualClampedPosition = undefined;
         this._positionChanged = false;
         this._mode = undefined;
@@ -815,11 +814,12 @@ define([
     var scratchPosition = new Cartesian3();
     var scratchCartographic = new Cartographic();
 
-    Billboard._clampPosition = function(object, mode, projection, markObjectDirty) {
+    Billboard._clampPosition = function(object, tile, mode, projection) {
         var modeChanged = mode !== SceneMode.MORPHING && mode !== object._mode;
         var ellipsoid = projection.ellipsoid;
+        var level = tile.level;
 
-        if (object._newTile !== object._currentTile || object._positionChanged || modeChanged) {
+        if (level > object._level || object._positionChanged || modeChanged) {
             if (mode === SceneMode.SCENE3D) {
                 Cartesian3.clone(Cartesian3.ZERO, scratchRay.origin);
                 Cartesian3.normalize(object.position, scratchRay.direction);
@@ -832,7 +832,7 @@ define([
                 Cartesian3.clone(Cartesian3.UNIT_X, scratchRay.direction);
             }
 
-            var position = object._newTile.data.pick(scratchRay, mode, projection, false, scratchPosition);
+            var position = tile.data.pick(scratchRay, mode, projection, false, scratchPosition);
             if (defined(position)) {
                 if (object._heightReference === HeightReference.RELATIVE_TO_GROUND) {
                     var clampedCart = ellipsoid.cartesianToCartographic(position, scratchCartographic);
@@ -844,7 +844,7 @@ define([
 
             object._positionChanged = false;
             object._mode = mode;
-            object._currentTile = object._newTile;
+            object._level = level;
         }
     };
 
@@ -1184,9 +1184,6 @@ define([
             this._billboardCollection._globe._surface.removeTileCustomData(this._customData);
             this._customData = undefined;
         }
-
-        this._currentTile = undefined;
-        this._newTile = undefined;
 
         this.image = undefined;
         this._pickId = this._pickId && this._pickId.destroy();

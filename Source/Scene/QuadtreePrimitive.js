@@ -117,6 +117,7 @@ define([
         this.tileCacheSize = defaultValue(options.tileCacheSize, 100);
 
         this.tileRenderedEvent = new Event();
+        this.tileLoadedEvent = new Event();
 
         this._occluders = new QuadtreeOccluders({
             ellipsoid : ellipsoid
@@ -477,6 +478,11 @@ define([
             var tile = tileLoadQueue[i];
             primitive._tileReplacementQueue.markTileRendered(tile);
             tileProvider.loadTile(context, frameState, tile);
+
+            if (tile.state === QuadtreeTileLoadState.DONE) {
+                primitive.tileLoadedEvent.raiseEvent(tile);
+            }
+
             if (getTimestamp() >= endTime) {
                 break;
             }

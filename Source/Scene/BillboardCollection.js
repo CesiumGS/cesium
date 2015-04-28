@@ -269,7 +269,7 @@ define([
 
         this._removeEventFunc = undefined;
         if (defined(this._globe)) {
-            this._removeEventFunc = this._globe._surface.tileRenderedEvent.addEventListener(function(tile) {
+            this._removeEventFunc = this._globe._surface.tileLoadedEvent.addEventListener(function(tile) {
                 var tileList = that._renderedTileList;
                 if (tileList.indexOf(tile) === -1) {
                     tileList.push(tile);
@@ -1071,8 +1071,7 @@ define([
                 var data = customData[i];
                 var object = data.object;
                 if (defined(object) && object instanceof Billboard) {
-                    object._newTile = tile;
-                    Billboard._clampPosition(object, frameState.mode, frameState.mapProjection);
+                    Billboard._clampPosition(object, tile, frameState.mode, frameState.mapProjection);
                     if (getTimestamp() >= endTime) {
                         timeSliceMax = true;
                         break;

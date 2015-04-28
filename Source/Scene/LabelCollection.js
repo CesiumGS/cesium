@@ -403,7 +403,7 @@ define([
         this._removeEventFunc = undefined;
         if (defined(this._globe)) {
             var that = this;
-            this._removeEventFunc = this._globe._surface.tileRenderedEvent.addEventListener(function(tile) {
+            this._removeEventFunc = this._globe._surface.tileLoadedEvent.addEventListener(function(tile) {
                 var tileList = that._renderedTileList;
                 if (tileList.indexOf(tile) === -1) {
                     tileList.push(tile);
