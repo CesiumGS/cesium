@@ -18,6 +18,7 @@ Change Log
 * Fixed crash when loading KML GroundOverlays that spanned 360 degrees. [#2639](https://github.com/AnalyticalGraphicsInc/cesium/pull/2639)
 * Fixed `Geocoder` styling issue in Safari. [#2658](https://github.com/AnalyticalGraphicsInc/cesium/pull/2658).
 * Fixed a crash that would occur when the `Viewer` or `CesiumWidget` was resized to 0 while the camera was in motion.
+* Added an optional `result` parameter to `computeScreenSpacePosition` on both `Billboard` and `Label`.
 * Added number of cached shaders to the `CesiumInspector` debugging widget.
 
 ### 1.8 - 2015-04-01
