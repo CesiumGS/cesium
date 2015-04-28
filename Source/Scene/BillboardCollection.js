@@ -325,6 +325,15 @@ define([
         }
     });
 
+    function destroyBillboards(billboards) {
+        var length = billboards.length;
+        for (var i = 0; i < length; ++i) {
+            if (billboards[i]) {
+                billboards[i]._destroy();
+            }
+        }
+    }
+
     /**
      * Creates and adds a billboard with the specified initial properties to the collection.
      * The added billboard is returned so it can be modified or removed from the collection later.
@@ -423,7 +432,7 @@ define([
      * billboards.removeAll();
      */
     BillboardCollection.prototype.removeAll = function() {
-        this._destroyBillboards();
+        destroyBillboards(this._billboards);
         this._billboards = [];
         this._billboardsToUpdate = [];
         this._billboardsToUpdateIndex = 0;
@@ -1363,19 +1372,9 @@ define([
         this._sp = this._sp && this._sp.destroy();
         this._spPick = this._spPick && this._spPick.destroy();
         this._vaf = this._vaf && this._vaf.destroy();
-        this._destroyBillboards();
+        destroyBillboards(this._billboards);
 
         return destroyObject(this);
-    };
-
-    BillboardCollection.prototype._destroyBillboards = function() {
-        var billboards = this._billboards;
-        var length = billboards.length;
-        for (var i = 0; i < length; ++i) {
-            if (billboards[i]) {
-                billboards[i]._destroy();
-            }
-        }
     };
 
     return BillboardCollection;

@@ -224,6 +224,15 @@ define([
         }
     });
 
+    function destroyPointPrimitives(pointPrimitives) {
+        var length = pointPrimitives.length;
+        for (var i = 0; i < length; ++i) {
+            if (pointPrimitives[i]) {
+                pointPrimitives[i]._destroy();
+            }
+        }
+    }
+
     /**
      * Creates and adds a point with the specified initial properties to the collection.
      * The added point is returned so it can be modified or removed from the collection later.
@@ -319,7 +328,7 @@ define([
      * pointPrimitives.removeAll();
      */
     PointPrimitiveCollection.prototype.removeAll = function() {
-        this._destroyPointPrimitives();
+        destroyPointPrimitives(this._pointPrimitives);
         this._pointPrimitives = [];
         this._pointPrimitivesToUpdate = [];
         this._pointPrimitivesToUpdateIndex = 0;
@@ -672,13 +681,10 @@ define([
 
         this._maxTotalPointSize = context.maximumAliasedPointSize;
 
-        var pointPrimitives = this._pointPrimitives;
-        var pointPrimitivesLength = pointPrimitives.length;
-
         updateMode(this, frameState);
 
-        pointPrimitives = this._pointPrimitives;
-        pointPrimitivesLength = pointPrimitives.length;
+        var pointPrimitives = this._pointPrimitives;
+        var pointPrimitivesLength = pointPrimitives.length;
         var pointPrimitivesToUpdate = this._pointPrimitivesToUpdate;
         var pointPrimitivesToUpdateLength = this._pointPrimitivesToUpdateIndex;
 
@@ -952,19 +958,9 @@ define([
         this._sp = this._sp && this._sp.destroy();
         this._spPick = this._spPick && this._spPick.destroy();
         this._vaf = this._vaf && this._vaf.destroy();
-        this._destroyPointPrimitives();
+        destroyPointPrimitives(this._pointPrimitives);
 
         return destroyObject(this);
-    };
-
-    PointPrimitiveCollection.prototype._destroyPointPrimitives = function() {
-        var pointPrimitives = this._pointPrimitives;
-        var length = pointPrimitives.length;
-        for (var i = 0; i < length; ++i) {
-            if (pointPrimitives[i]) {
-                pointPrimitives[i]._destroy();
-            }
-        }
     };
 
     return PointPrimitiveCollection;
