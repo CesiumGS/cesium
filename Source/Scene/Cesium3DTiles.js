@@ -294,7 +294,7 @@ define([
                 selectTile(selectedTiles, t, fullyVisible, frameState);
 
 // TODO: experiment with prefetching children
-                if (sse < maximumScreenSpaceError) {
+                if (sse > maximumScreenSpaceError) {
                     // Tile does not meet SSE. Refine to them in front-to-back order.
 
                     // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
@@ -311,7 +311,7 @@ define([
                         child = children[k];
                         child.parentFullyVisible = fullyVisible;
 
-                        if (child.isContentUnloaded() && (visible(child, frameState.cullingVolume) !== Intersect.OUTSIDE)) {
+                        if (child.isContentUnloaded() && (visible(child, cullingVolume, stats) !== Intersect.OUTSIDE)) {
                             requestChild(tiles3D, child);
                         } else {
                             stack.push(child);
