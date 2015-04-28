@@ -29,8 +29,10 @@ function createExorcistTransform(name) {
 
 // Create the build directory, because browserify flips out if the directory that might
 // contain an existing source map doesn't exist.
-if (!fs.existsSync('wwwroot/build')) {
+if (!fs.existsSync('wwwroot')) {
     fs.mkdirSync('wwwroot');
+}
+if (!fs.existsSync('wwwroot/build')) {
     fs.mkdirSync('wwwroot/build');
 }
 

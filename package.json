@@ -8,6 +8,9 @@
     "type": "git",
     "url": "https://github.com/TerriaJS/cesium.git"
   },
+  "directories": {
+    "lib": "Source"
+  },
   "devDependencies": {
     "browserify": "^9.0.8",
     "compression": "1.0.8",
@@ -28,8 +31,9 @@
     "deamdify": "^0.1.1"
   },
   "scripts": {
-    "prepublish": "gulp prepare-cesium",
-    "postpublish": "git tag -a ${npm_package_version} -m \"${npm_package_version}\" && git push origin ${npm_package_version}"
+    "prepublish": "if [ ! -d \"./wwwroot/build\" ]; then gulp prepare-cesium; fi",
+    "postpublish": "git tag -a ${npm_package_version} -m \"${npm_package_version}\" && git push origin ${npm_package_version}",
+    "postinstall": "if [ ! -d \"./wwwroot/build\" ]; then gulp prepare-cesium; fi"
   },
   "browserify": {
     "transform": [
