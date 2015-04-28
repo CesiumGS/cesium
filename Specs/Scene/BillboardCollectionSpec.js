@@ -887,6 +887,17 @@ defineSuite([
         expect(b.computeScreenSpacePosition(scene)).toEqualEpsilon(new Cartesian2(0.5, 0.5), CesiumMath.EPSILON1);
     });
 
+    it('stores screen space position in a result', function() {
+        var b = billboards.add({
+            position : Cartesian3.ZERO
+        });
+        var result = new Cartesian2();
+        scene.renderForSpecs();
+        var actual = b.computeScreenSpacePosition(scene, result);
+        expect(actual).toEqual(result);
+        expect(result).toEqualEpsilon(new Cartesian2(0.5, 0.5), CesiumMath.EPSILON1);
+    });
+
     it('computes screen space position with pixelOffset', function() {
         var b = billboards.add({
             position : Cartesian3.ZERO,

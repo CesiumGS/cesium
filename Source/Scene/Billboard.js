@@ -935,7 +935,7 @@ define([
     var scratchCartesian2 = new Cartesian2();
     var scratchComputePixelOffset = new Cartesian2();
 
-    Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, scene) {
+    Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, scene, result) {
         // This function is basically a stripped-down JavaScript version of BillboardCollectionVS.glsl
         var camera = scene.camera;
         var view = camera.viewMatrix;
@@ -952,7 +952,7 @@ define([
         positionEC.z += zEyeOffset.z;
 
         var positionCC = Matrix4.multiplyByVector(projection, positionEC, scratchCartesian4); // clip coordinates
-        var positionWC = SceneTransforms.clipToGLWindowCoordinates(scene, positionCC, new Cartesian2());
+        var positionWC = SceneTransforms.clipToGLWindowCoordinates(scene, positionCC, result);
 
         // Apply pixel offset
         pixelOffset = Cartesian2.clone(pixelOffset, scratchComputePixelOffset);
@@ -972,6 +972,7 @@ define([
      * left to right, and <code>y</code> increases from top to bottom.
      *
      * @param {Scene} scene The scene.
+     * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The screen-space position of the billboard.
      *
      * @exception {DeveloperError} Billboard must be in a collection.
@@ -982,8 +983,11 @@ define([
      * @example
      * console.log(b.computeScreenSpacePosition(scene).toString());
      */
-    Billboard.prototype.computeScreenSpacePosition = function(scene) {
+    Billboard.prototype.computeScreenSpacePosition = function(scene, result) {
         var billboardCollection = this._billboardCollection;
+        if (!defined(result)) {
+            result = new Cartesian2();
+        }
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(billboardCollection)) {
@@ -999,7 +1003,8 @@ define([
         Cartesian2.add(scratchPixelOffset, this._translate, scratchPixelOffset);
 
         var modelMatrix = billboardCollection.modelMatrix;
-        var windowCoordinates = Billboard._computeScreenSpacePosition(modelMatrix, this._actualPosition, this._eyeOffset, scratchPixelOffset, scene);
+        var windowCoordinates = Billboard._computeScreenSpacePosition(modelMatrix, this._actualPosition,
+                this._eyeOffset, scratchPixelOffset, scene, result);
         windowCoordinates.y = scene.canvas.clientHeight - windowCoordinates.y;
         return windowCoordinates;
     };
