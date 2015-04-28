@@ -36,7 +36,7 @@ define([
         '../Scene/VerticalOrigin',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
-        './Angle',
+        './Rotation',
         './BillboardGraphics',
         './ColorMaterialProperty',
         './CompositeMaterialProperty',
@@ -106,7 +106,7 @@ define([
         VerticalOrigin,
         Uri,
         when,
-        Angle,
+        Rotation,
         BillboardGraphics,
         ColorMaterialProperty,
         CompositeMaterialProperty,
@@ -362,6 +362,8 @@ define([
             return JulianDate.fromIso8601(defaultValue(czmlInterval.date, czmlInterval));
         case LabelStyle:
             return LabelStyle[defaultValue(czmlInterval.labelStyle, czmlInterval)];
+        case Rotation:
+            return defaultValue(czmlInterval.number, czmlInterval);
         case Number:
             return defaultValue(czmlInterval.number, czmlInterval);
         case String:
@@ -377,9 +379,6 @@ define([
         case VerticalOrigin:
             return VerticalOrigin[defaultValue(czmlInterval.verticalOrigin, czmlInterval)];
         default:
-            if (type && type.defaultValue)  {
-                return type.defaultValue(czmlInterval);
-            }
             throw new RuntimeError(type);
         }
     }

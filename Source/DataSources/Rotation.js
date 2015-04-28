@@ -1,41 +1,28 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event'
+        '../Core/defaultValue'
     ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event) {
+        defaultValue) {
     "use strict";
 
     /**
-     * A property type whose value is always interpolated by taking the the shortest distances between 2 angles.
-
+     * Static interface for {@link Packable} properties which require interpolation between two shortest values (eg: angles)
      *
-     * @alias ConstantProperty
-     * @constructor
+     * @namespace
+     * @alias Rotation
      *
-     * @param {Object} [value] The property value.
-     *
-     * @see ConstantPositionProperty
-     *
-     * @exception {DeveloperError} value.clone is a required function.
-     * @exception {DeveloperError} value.equals is a required function.
+     * @see PackableForInterpolation
      */
 
-    //A value that always interpolates the shortest distances between 2 angles.
-    var Angle = {
+    var Rotation = {
         packedLength : 1,
         packedInterpolationLength : 1,
+
         pack : function(value, array, startingIndex) {
             startingIndex = defaultValue(startingIndex, 0);
             array[startingIndex] = value;
         },
+
         unpack : function(array, startingIndex, result) {
             startingIndex = defaultValue(startingIndex, 0);
 
@@ -47,6 +34,7 @@ define([
 
             return result;
         },
+        
         convertPackedArrayForInterpolation : function(packedArray, startingIndex, lastIndex, result) {
             for (var i = 0, len = lastIndex - startingIndex + 1; i < len; i++) {
                 result[i] = packedArray[startingIndex + i];
@@ -54,10 +42,6 @@ define([
         },
 
         unpackInterpolationResult : function(value, sourceArray, firstIndex, lastIndex, result) {
-
-        //shortest_angle=((((end - start) % 360) + 540) % 360) - 180;
-        //return shortest_angle * amount;
-
             var start = sourceArray[firstIndex];
             var end = sourceArray[lastIndex];
             var difference = Math.abs(end - start);
@@ -86,12 +70,8 @@ define([
             }
             
             return result;
-        },
-
-        defaultValue: function(czmlInterval){
-            return defaultValue(czmlInterval.number, czmlInterval);
         }
     };
 
-    return Angle;
+    return Rotation;
 });
