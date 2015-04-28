@@ -214,6 +214,7 @@ define([
 
     // reusable Cartesian2 instance
     var glyphPixelOffset = new Cartesian2();
+    var maxSize = new Cartesian2();
 
     function repositionAllGlyphs(label, resolutionScale) {
         var glyphs = label._glyphs;
@@ -221,6 +222,7 @@ define([
         var dimensions;
         var totalWidth = 0;
         var maxHeight = 0;
+        var maxWidth = 0;
 
         var glyphIndex = 0;
         var glyphLength = glyphs.length;
@@ -229,6 +231,7 @@ define([
             dimensions = glyph.dimensions;
             totalWidth += dimensions.computedWidth;
             maxHeight = Math.max(maxHeight, dimensions.height);
+            maxWidth = Math.max(maxWidth, dimensions.computedWidth);
         }
 
         var scale = label._scale;
@@ -242,6 +245,9 @@ define([
 
         glyphPixelOffset.x = widthOffset * resolutionScale;
         glyphPixelOffset.y = 0;
+
+        maxSize.x = maxWidth;
+        maxSize.y = maxHeight;
 
         var verticalOrigin = label._verticalOrigin;
         for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
@@ -260,6 +266,7 @@ define([
 
             if (defined(glyph.billboard)) {
                 glyph.billboard._setTranslate(glyphPixelOffset);
+                glyph.billboard._setMaxImageSize(maxSize);
             }
 
             glyphPixelOffset.x += dimensions.computedWidth * scale * resolutionScale;

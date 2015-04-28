@@ -73,6 +73,7 @@ define([
     var SCALE_BY_DISTANCE_INDEX = Billboard.SCALE_BY_DISTANCE_INDEX;
     var TRANSLUCENCY_BY_DISTANCE_INDEX = Billboard.TRANSLUCENCY_BY_DISTANCE_INDEX;
     var PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = Billboard.PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX;
+    var MAX_SIZE_INDEX = Billboard.MAX_SIZE_INDEX;
     var NUMBER_OF_PROPERTIES = Billboard.NUMBER_OF_PROPERTIES;
 
     var attributeLocations = {
@@ -83,7 +84,8 @@ define([
         compressedAttribute2 : 4,        // image height, color, pick color, 2 bytes free
         eyeOffset : 5,
         scaleByDistance : 6,
-        pixelOffsetScaleByDistance : 7
+        pixelOffsetScaleByDistance : 7,
+        maxSize : 8
     };
 
     /**
@@ -254,7 +256,8 @@ define([
                               BufferUsage.STATIC_DRAW, // ALIGNED_AXIS_INDEX
                               BufferUsage.STATIC_DRAW, // SCALE_BY_DISTANCE_INDEX
                               BufferUsage.STATIC_DRAW, // TRANSLUCENCY_BY_DISTANCE_INDEX
-                              BufferUsage.STATIC_DRAW  // PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX
+                              BufferUsage.STATIC_DRAW, // PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX
+                              BufferUsage.STATIC_DRAW  // PIXEL_MAX_SIZE_INDEX
                           ];
 
         var that = this;
@@ -609,6 +612,11 @@ define([
             componentsPerAttribute : 4,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX]
+        }, {
+            index : attributeLocations.maxSize,
+            componentsPerAttribute : 2,
+            componentDatatype : ComponentDatatype.FLOAT,
+            usage : buffersUsage[MAX_SIZE_INDEX]
         }], 4 * numberOfBillboards); // 4 vertices per billboard
     }
 
@@ -931,6 +939,17 @@ define([
         writer(i + 3, near, nearValue, far, farValue);
     }
 
+    function writeMaxSize(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
+        var i = billboard._index * 4;
+        var maxSize = billboard._maxImageSize;
+
+        var writer = vafWriters[attributeLocations.maxSize];
+        writer(i + 0, maxSize.x, maxSize.y);
+        writer(i + 1, maxSize.x, maxSize.y);
+        writer(i + 2, maxSize.x, maxSize.y);
+        writer(i + 3, maxSize.x, maxSize.y);
+    }
+
     function writeBillboard(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         writePositionScaleAndRotation(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeCompressedAttrib0(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
@@ -939,6 +958,7 @@ define([
         writeEyeOffset(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writePixelOffsetScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
+        writeMaxSize(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
     }
 
     function recomputeActualPositions(billboardCollection, billboards, length, frameState, modelMatrix, recomputeBoundingVolume) {
@@ -1167,6 +1187,10 @@ define([
 
                 if (properties[PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX]) {
                     writers.push(writePixelOffsetScaleByDistance);
+                }
+
+                if (properties[MAX_SIZE_INDEX]) {
+                    writers.push(writeMaxSize);
                 }
 
                 vafWriters = this._vaf.writers;
