@@ -101,6 +101,11 @@ define([
         performanceContainer.className = 'cesium-cesiumInspector-performanceDisplay';
         generalSection.appendChild(performanceContainer);
 
+        var shaderCacheDisplay = document.createElement('div');
+        shaderCacheDisplay.className = 'cesium-cesiumInspector-shaderCache';
+        shaderCacheDisplay.setAttribute('data-bind', 'html: shaderCacheText');
+        generalSection.appendChild(shaderCacheDisplay);
+
         // Primitives
         var prim = document.createElement('div');
         prim.className = 'cesium-cesiumInspector-sectionHeader';
