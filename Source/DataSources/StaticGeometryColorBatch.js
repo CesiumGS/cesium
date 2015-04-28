@@ -124,12 +124,10 @@ define([
                     }
                 }
 
-                if (!updater.hasConstantFill) {
-                    var show = updater.entity.isShowing && updater.isFilled(time);
-                    var currentShow = attributes.show[0] === 1;
-                    if (show !== currentShow) {
-                        attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
-                    }
+                var show = updater.entity.isShowing && (updater.hasConstantFill || updater.isFilled(time));
+                var currentShow = attributes.show[0] === 1;
+                if (show !== currentShow) {
+                    attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
                 }
             }
 

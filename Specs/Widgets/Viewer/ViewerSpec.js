@@ -772,6 +772,39 @@ defineSuite([
         viewer.destroy();
     });
 
+    it('selectedEntity sets InfoBox properties', function() {
+        var viewer = new Viewer(container);
+
+        var entity = new Entity();
+
+        var viewModel = viewer.infoBox.viewModel;
+        expect(viewModel.showInfo).toBe(false);
+
+        viewer.selectedEntity = entity;
+
+        viewer.clock.tick();
+        expect(viewModel.showInfo).toBe(true);
+        expect(viewModel.titleText).toEqual(entity.id);
+        expect(viewModel.description).toEqual('');
+
+        entity.name = 'Yes, this is name.';
+        entity.description = 'tubelcane';
+
+        viewer.clock.tick();
+        expect(viewModel.showInfo).toBe(true);
+        expect(viewModel.titleText).toEqual(entity.name);
+        expect(viewModel.description).toEqual(entity.description.getValue());
+
+        viewer.selectedEntity = undefined;
+
+        viewer.clock.tick();
+        expect(viewModel.showInfo).toBe(false);
+        expect(viewModel.titleText).toEqual('');
+        expect(viewModel.description).toEqual('');
+
+        viewer.destroy();
+    });
+
     it('home button resets tracked object', function() {
         viewer = new Viewer(container);
 

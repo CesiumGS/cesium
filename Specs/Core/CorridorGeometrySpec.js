@@ -180,6 +180,24 @@ defineSuite([
         expect(m.indices.length).toEqual(3 * 8);
     });
 
+    it('computes sharp turns', function() {
+        var m = CorridorGeometry.createGeometry(new CorridorGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            positions : Cartesian3.fromDegreesArray([
+                 2.00571672577652,52.7781459942399,
+                 1.99188457974115,52.7764958852886,
+                 2.01325961458495,52.7674170680511,
+                 1.98708058340534,52.7733979856253,
+                 2.00634853946644,52.7650460748473
+            ]),
+            cornerType: CornerType.BEVELED,
+            width : 100
+        }));
+
+        expect(m.attributes.position.values.length).toEqual(3 * 13);
+        expect(m.indices.length).toEqual(3 * 11);
+    });
+
     it('computes straight corridors', function() {
         var m = CorridorGeometry.createGeometry(new CorridorGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
