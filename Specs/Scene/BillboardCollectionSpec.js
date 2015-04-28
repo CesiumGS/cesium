@@ -502,6 +502,10 @@ defineSuite([
         expect(atlas.isDestroyed()).toEqual(false);
     });
 
+    it('does not render when constructed', function() {
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+    });
+
     it('modifies and removes a billboard, then renders', function() {
         var b1 = billboards.add({
             position : Cartesian3.ZERO,
@@ -954,6 +958,7 @@ defineSuite([
             }
         });
 
+        // This tests the `BillboardCollection.equals` function itself, not simple equality.
         expect(b.equals(b2)).toEqual(true);
     });
 
@@ -965,10 +970,12 @@ defineSuite([
             position : new Cartesian3(4.0, 5.0, 6.0)
         });
 
+        // This tests the `BillboardCollection.equals` function itself, not simple equality.
         expect(b.equals(b2)).toEqual(false);
     });
 
     it('does not equal undefined', function() {
+        // This tests the `BillboardCollection.equals` function itself, not simple equality.
         var billboard = billboards.add();
         expect(billboard.equals(undefined)).toEqual(false);
     });
@@ -1080,7 +1087,6 @@ defineSuite([
         scene.morphTo2D(0);
         scene.renderForSpecs();
 
-        var camera = scene.camera;
         camera.frustum = orthoFrustum;
 
         scene.renderForSpecs();
@@ -1097,8 +1103,6 @@ defineSuite([
     });
 
     it('computes bounding sphere with pixel offset', function() {
-        var camera = scene.camera;
-
         var one = billboards.add({
             image : greenImage,
             position : Cartesian3.fromDegrees(-50.0, -50.0),
