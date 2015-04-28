@@ -152,7 +152,6 @@ define([
         this._customData = undefined;
         this._level = 0;
         this._actualClampedPosition = undefined;
-        this._positionChanged = false;
         this._mode = undefined;
 
         this._updateClamping();
@@ -815,11 +814,11 @@ define([
     var scratchCartographic = new Cartographic();
 
     Billboard._clampPosition = function(object, tile, mode, projection) {
-        var modeChanged = mode !== SceneMode.MORPHING && mode !== object._mode;
+        var modeChanged = object._mode !== mode;
         var ellipsoid = projection.ellipsoid;
         var level = tile.level;
 
-        if (level > object._level || object._positionChanged || modeChanged) {
+        if (level > object._level || modeChanged) {
             if (mode === SceneMode.SCENE3D) {
                 Cartesian3.clone(Cartesian3.ZERO, scratchRay.origin);
                 Cartesian3.normalize(object.position, scratchRay.direction);
@@ -842,8 +841,8 @@ define([
                 object._clampedPosition = Cartesian3.clone(position, object._clampedPosition);
             }
 
-            object._positionChanged = false;
             object._mode = mode;
+            object._projection = projection;
             object._level = level;
         }
     };
@@ -865,9 +864,12 @@ define([
         var surface = globe._surface;
         var customData = object._customData;
 
+        var mode = object._mode = defaultValue(object._mode, SceneMode.SCENE3D);
+
         if (defined(customData) && object._heightReference === HeightReference.NONE) {
             surface.removeTileCustomData(customData);
             object._customData = undefined;
+            object._clampedPosition = undefined;
         }
 
         if (object._heightReference === HeightReference.NONE || !defined(object._position)) {
@@ -880,9 +882,6 @@ define([
         }
 
         if (defined(customData)) {
-            if (Cartographic.equals(position, customData.position)) {
-                return;
-            }
             surface.removeTileCustomData(customData);
         }
 
@@ -891,7 +890,20 @@ define([
             object : object
         };
         surface.addTileCustomData(object._customData);
-        object._positionChanged = true;
+
+        var height = globe.getHeight(position);
+        if (defined(height)) {
+            var clampedCart = Cartographic.clone(position, scratchCartographic);
+            clampedCart.height = object._heightReference === HeightReference.RELATIVE_TO_GROUND ? height + position.height : height;
+
+            if (mode === SceneMode.SCENE3D) {
+                object._clampedPosition = ellipsoid.cartographicToCartesian(clampedCart, object._clampedPosition);
+            } else if (defined(object._projection)) {
+                object._projection.project(clampedCart, scratchPosition);
+                object._clampedPosition = Cartesian3.fromElements(scratchPosition.z, scratchPosition.x, scratchPosition.y, object._clampedPosition);
+            }
+
+        }
     };
 
     Billboard.prototype._loadImage = function() {
@@ -1061,13 +1073,20 @@ define([
     };
 
     Billboard.prototype._setActualPosition = function(value) {
-        Cartesian3.clone(value, this._actualPosition);
+        if (!(defined(this._customData) && defined(this._clampedPosition) && this._mode !== SceneMode.MORPHING)) {
+            Cartesian3.clone(value, this._actualPosition);
+        }
         makeDirty(this, POSITION_INDEX);
     };
 
     var tempCartesian3 = new Cartesian4();
     Billboard._computeActualPosition = function(billboard, position, frameState, modelMatrix) {
         if (defined(billboard._customData) && defined(billboard._clampedPosition) && this._mode !== SceneMode.MORPHING) {
+            if (frameState.mode !== this._mode) {
+                billboard._mode = frameState.mode;
+                billboard._projection = frameState.mapProjection;
+                billboard._updateClamping();
+            }
             return billboard._clampedPosition;
         } else if (frameState.mode === SceneMode.SCENE3D) {
             return position;
