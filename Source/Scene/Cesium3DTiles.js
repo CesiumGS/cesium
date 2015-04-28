@@ -10,6 +10,7 @@ define([
         '../Core/loadJson',
         '../Core/Math',
         './Cesium3DTile',
+        './Cesium3DTileRefine',
         './SceneMode',
         '../ThirdParty/when'
     ], function(
@@ -23,6 +24,7 @@ define([
         loadJson,
         CesiumMath,
         Cesium3DTile,
+        Cesium3DTileRefine,
         SceneMode,
         when) {
     "use strict";
@@ -226,24 +228,6 @@ define([
         when(tile.readyPromise).then(removeFunction).otherwise(removeFunction);
     }
 
-    function requestChildren(tiles3D, parent, frameState) {
-        var children = parent.children;
-        var length = children.length;
-
-        // Sort to request tiles closest to the viewer first
-        computeDistanceToCamera(children, frameState);
-        children.sort(sortChildrenByDistanceToCamera);
-
-        for (var i = 0; i < length; ++i) {
-            var child = children[i];
-            if (child.isContentUnloaded()) {
-                requestChild(tiles3D, child);
-            }
- // TODO: when we don't require all four children for refinement and we don't require top-down rendering, we can only request visible children, e.g.,
- //   (parentFullyVisible || (contentsVisible(child, frameState.cullingVolume) !== Intersect.OUTSIDE))
-        }
-    }
-
     function selectTile(selectedTiles, tile, fullyVisible, frameState) {
         // There may also be a tight box around just the tile's contents, e.g., for a city, we may be
         // zoomed into a neighborhood and can cull the skyscrapers in the root node.
@@ -282,7 +266,6 @@ define([
 
         var stack = scratchStack;
         stack.push(root);
-//console.log('---');
         while (stack.length > 0) {
             // Depth first.  We want the high detail tiles first.
             var t = stack.pop();
@@ -302,35 +285,82 @@ define([
 
             var children = t.children;
             var childrenLength = children.length;
-            var allChildrenLoaded = t.numberOfChildrenWithoutContent === 0;
+            var child;
+            var k;
 
-            if ((sse <= maximumScreenSpaceError) || (childrenLength === 0.0)) {
-                // This tile meets the SSE so add its commands.
-                //
-                // We also checked if the tile is a leaf (childrenLength === 0.0) for the potential case when the leaf
-                // node has a non-zero geometric error, e.g., because its contents is another 3D Tiles tree.
+            if (t.refine === Cesium3DTileRefine.ADD) {
+                // With additive refinement, the tile is rendered
+                // regardless of if its SSE is sufficient.
                 selectTile(selectedTiles, t, fullyVisible, frameState);
-//console.log(t._content._url);
-            } else if (!allChildrenLoaded) {
-                // Tile does not meet SSE.  Add its commands since it is the best we have and request its children.
-                selectTile(selectedTiles, t, fullyVisible, frameState);
-//console.log(t._content._url);
-                requestChildren(tiles3D, t, frameState);
+
+// TODO: experiment with prefetching children
+                if (sse < maximumScreenSpaceError) {
+                    // Tile does not meet SSE. Refine to them in front-to-back order.
+
+                    // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
+                    computeDistanceToCamera(children, frameState);
+
+                    // Sort children by distance for (1) request ordering, and (2) early-z
+                    children.sort(sortChildrenByDistanceToCamera);
+// TODO: is pixel size better?
+// TODO: consider priority queue instead of explicit sort, which would no longer be DFS.
+
+                    // With additive refinement, we only request children that are visible, compared
+                    // to replacement refinement where we need all children.
+                    for (k = 0; k < childrenLength; ++k) {
+                        child = children[k];
+                        child.parentFullyVisible = fullyVisible;
+
+                        if (child.isContentUnloaded() && (visible(child, frameState.cullingVolume) !== Intersect.OUTSIDE)) {
+                            requestChild(tiles3D, child);
+                        } else {
+                            stack.push(child);
+                        }
+                    }
+                }
             } else {
-                // Tile does not meet SEE and its children are loaded.  Refine to them in front-to-back order.
+                // t.refine === Cesium3DTileRefine.REPLACE
+                //
+                // With replacement refinement, the if the tile's SSE
+                // is not sufficient, its children (or ancestors) are
+                // rendered instead
+                var allChildrenLoaded = t.numberOfChildrenWithoutContent === 0;
 
-                // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
-                computeDistanceToCamera(children, frameState);
+                if ((sse <= maximumScreenSpaceError) || (childrenLength === 0.0)) {
+                    // This tile meets the SSE so add its commands.
+                    //
+                    // We also checked if the tile is a leaf (childrenLength === 0.0) for the potential case when the leaf
+                    // node has a non-zero geometric error, e.g., because its contents is another 3D Tiles tree.
+                    selectTile(selectedTiles, t, fullyVisible, frameState);
+                } else {
+                    // Tile does not meet SSE.
 
-                // Sort children by distance for (1) request ordering, and (2) early-z
-                children.sort(sortChildrenByDistanceToCamera);
-// TODO: is pixel size better?  Same question for requestChildren().
-// TODO: consider priority queue instead of explicit sort, which would no longer be BFS, and would not average detail throughout the tree
+                    // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
+                    computeDistanceToCamera(children, frameState);
 
-                for (var k = 0; k < childrenLength; ++k) {
-                    var child = children[k];
-                    child.parentFullyVisible = fullyVisible;
-                    stack.push(child);
+                    // Sort children by distance for (1) request ordering, and (2) early-z
+                    children.sort(sortChildrenByDistanceToCamera);
+// TODO: same TODO as above.
+
+                    if (!allChildrenLoaded) {
+                        // Tile does not meet SSE.  Add its commands since it is the best we have and request its children.
+                        selectTile(selectedTiles, t, fullyVisible, frameState);
+
+                        for (k = 0; k < childrenLength; ++k) {
+                            child = children[k];
+// TODO: we could spin a bit less CPU here and probably above by keeping separate lists for unloaded/ready children.
+                            if (child.isContentUnloaded()) {
+                                requestChild(tiles3D, child);
+                            }
+                        }
+                    } else {
+                        // Tile does not meet SEE and its children are loaded.  Refine to them in front-to-back order.
+                        for (k = 0; k < childrenLength; ++k) {
+                            child = children[k];
+                            child.parentFullyVisible = fullyVisible;
+                            stack.push(child);
+                        }
+                    }
                 }
             }
         }

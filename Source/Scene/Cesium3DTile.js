@@ -16,6 +16,7 @@ define([
         '../Core/Rectangle',
         './Cesium3DTileContentProviderFactory',
         './Cesium3DTileContentState',
+        './Cesium3DTileRefine',
         './PerInstanceColorAppearance',
         './Primitive',
         './TileBoundingBox',
@@ -38,6 +39,7 @@ define([
         Rectangle,
         Cesium3DTileContentProviderFactory,
         Cesium3DTileContentState,
+        Cesium3DTileRefine,
         PerInstanceColorAppearance,
         Primitive,
         TileBoundingBox,
@@ -78,6 +80,12 @@ define([
          * @readonly
          */
         this.geometricError = header.geometricError;
+
+        /**
+         * @readonly
+         */
+//        this.refine = Cesium3DTileRefine.ADD;
+        this.refine = Cesium3DTileRefine.REPLACE;
 
         /**
          * @type {Array}
