@@ -1014,14 +1014,14 @@ define([
     Billboard.prototype.equals = function(other) {
         return this === other ||
                defined(other) &&
+               this._id === other._id &&
+               Cartesian3.equals(this._position, other._position) &&
+               this._imageId === other._imageId &&
                this._show === other._show &&
                this._scale === other._scale &&
                this._verticalOrigin === other._verticalOrigin &&
                this._horizontalOrigin === other._horizontalOrigin &&
-               this._id === other._id &&
-               this._imageId === other._imageId &&
                BoundingRectangle.equals(this._imageSubRegion, other._imageSubRegion) &&
-               Cartesian3.equals(this._position, other._position) &&
                Color.equals(this._color, other._color) &&
                Cartesian2.equals(this._pixelOffset, other._pixelOffset) &&
                Cartesian2.equals(this._translate, other._translate) &&
