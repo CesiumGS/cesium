@@ -97,10 +97,8 @@ define([
         this._repositionAllGlyphs = true;
 
         this._customData = undefined;
-        this._currentTile = undefined;
-        this._newTile = undefined;
+        this._level = 0;
         this._actualClampedPosition = undefined;
-        this._positionChanged = false;
         this._mode = undefined;
 
         this._updateClamping();

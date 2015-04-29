@@ -6,7 +6,7 @@ attribute vec4 compressedAttribute2;        // image height, color, pick color, 
 attribute vec3 eyeOffset;                   // eye offset in meters
 attribute vec4 scaleByDistance;             // near, nearScale, far, farScale
 attribute vec4 pixelOffsetScaleByDistance;  // near, nearScale, far, farScale
-attribute vec2 maxSize;
+attribute vec2 ownerSize;
 
 varying vec2 v_textureCoordinates;
 
@@ -236,7 +236,7 @@ void main()
 	    directions[3] = vec2(1.0, 1.0);
 	    
 	    vec2 invSize = 1.0 / czm_viewport.zw;
-	    vec2 size = all(equal(vec2(0.0), maxSize)) ? imageSize : maxSize;
+	    vec2 size = all(equal(vec2(0.0), ownerSize)) ? imageSize : ownerSize;
 	    
 	    bool visible = false;
 	    for (int i = 0; i < 4; ++i)

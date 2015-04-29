@@ -73,7 +73,7 @@ define([
     var SCALE_BY_DISTANCE_INDEX = Billboard.SCALE_BY_DISTANCE_INDEX;
     var TRANSLUCENCY_BY_DISTANCE_INDEX = Billboard.TRANSLUCENCY_BY_DISTANCE_INDEX;
     var PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = Billboard.PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX;
-    var MAX_SIZE_INDEX = Billboard.MAX_SIZE_INDEX;
+    var OWNER_SIZE_INDEX = Billboard.OWNER_SIZE_INDEX;
     var NUMBER_OF_PROPERTIES = Billboard.NUMBER_OF_PROPERTIES;
 
     var attributeLocations = {
@@ -85,7 +85,7 @@ define([
         eyeOffset : 5,
         scaleByDistance : 6,
         pixelOffsetScaleByDistance : 7,
-        maxSize : 8
+        ownerSize : 8
     };
 
     /**
@@ -136,7 +136,7 @@ define([
     var BillboardCollection = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        this._globe = options.globe;
+        this._scene = options.scene;
 
         this._textureAtlas = undefined;
         this._textureAtlasGUID = undefined;
@@ -257,7 +257,7 @@ define([
                               BufferUsage.STATIC_DRAW, // SCALE_BY_DISTANCE_INDEX
                               BufferUsage.STATIC_DRAW, // TRANSLUCENCY_BY_DISTANCE_INDEX
                               BufferUsage.STATIC_DRAW, // PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX
-                              BufferUsage.STATIC_DRAW  // PIXEL_MAX_SIZE_INDEX
+                              BufferUsage.STATIC_DRAW  // OWNER_SIZE_INDEX
                           ];
 
         var that = this;
@@ -268,8 +268,8 @@ define([
         };
 
         this._removeEventFunc = undefined;
-        if (defined(this._globe)) {
-            this._removeEventFunc = this._globe._surface.tileRenderedEvent.addEventListener(function(tile) {
+        if (defined(this._scene)) {
+            this._removeEventFunc = this._scene.globe._surface.tileRenderedEvent.addEventListener(function(tile) {
                 var tileList = that._renderedTileList;
                 if (tileList.indexOf(tile) === -1) {
                     tileList.push(tile);
@@ -622,10 +622,10 @@ define([
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX]
         }, {
-            index : attributeLocations.maxSize,
+            index : attributeLocations.ownerSize,
             componentsPerAttribute : 2,
             componentDatatype : ComponentDatatype.FLOAT,
-            usage : buffersUsage[MAX_SIZE_INDEX]
+            usage : buffersUsage[OWNER_SIZE_INDEX]
         }], 4 * numberOfBillboards); // 4 vertices per billboard
     }
 
@@ -948,15 +948,15 @@ define([
         writer(i + 3, near, nearValue, far, farValue);
     }
 
-    function writeMaxSize(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
+    function writeOwnerSize(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = billboard._index * 4;
-        var maxSize = billboard._maxImageSize;
+        var size = billboard._ownerSize;
 
-        var writer = vafWriters[attributeLocations.maxSize];
-        writer(i + 0, maxSize.x, maxSize.y);
-        writer(i + 1, maxSize.x, maxSize.y);
-        writer(i + 2, maxSize.x, maxSize.y);
-        writer(i + 3, maxSize.x, maxSize.y);
+        var writer = vafWriters[attributeLocations.ownerSize];
+        writer(i + 0, size.x, size.y);
+        writer(i + 1, size.x, size.y);
+        writer(i + 2, size.x, size.y);
+        writer(i + 3, size.x, size.y);
     }
 
     function writeBillboard(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
@@ -967,7 +967,7 @@ define([
         writeEyeOffset(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writePixelOffsetScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
-        writeMaxSize(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
+        writeOwnerSize(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
     }
 
     function recomputeActualPositions(billboardCollection, billboards, length, frameState, modelMatrix, recomputeBoundingVolume) {
@@ -1099,6 +1099,11 @@ define([
      * @exception {RuntimeError} image with id must be in the atlas.
      */
     BillboardCollection.prototype.update = function(context, frameState, commandList) {
+        var scene = this._scene;
+        if (defined(scene) && (!scene._globeDepth.supported || context.maximumVertexTextureImageUnits === 0)) {
+            throw new DeveloperError('Bilboards with a height reference are not supported.');
+        }
+
         updateClampedBillboards(this, frameState);
         removeBillboards(this);
 
@@ -1201,8 +1206,8 @@ define([
                     writers.push(writePixelOffsetScaleByDistance);
                 }
 
-                if (properties[MAX_SIZE_INDEX]) {
-                    writers.push(writeMaxSize);
+                if (properties[OWNER_SIZE_INDEX]) {
+                    writers.push(writeOwnerSize);
                 }
 
                 var numWriters = writers.length;
@@ -1309,7 +1314,7 @@ define([
                 if (this._shaderPixelOffsetScaleByDistance) {
                     vs.defines.push('EYE_DISTANCE_PIXEL_OFFSET');
                 }
-                if (defined(this._globe)) {
+                if (defined(this._scene)) {
                     vs.defines.push('TEST_GLOBE_DEPTH');
                 }
 
@@ -1377,7 +1382,7 @@ define([
                 if (this._shaderPixelOffsetScaleByDistance) {
                     vs.defines.push('EYE_DISTANCE_PIXEL_OFFSET');
                 }
-                if (defined(this._globe)) {
+                if (defined(this._scene)) {
                     vs.defines.push('TEST_GLOBE_DEPTH');
                 }
 

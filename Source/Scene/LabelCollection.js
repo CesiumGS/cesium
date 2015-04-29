@@ -214,7 +214,7 @@ define([
 
     // reusable Cartesian2 instance
     var glyphPixelOffset = new Cartesian2();
-    var maxSize = new Cartesian2();
+    var ownerSize = new Cartesian2();
 
     function repositionAllGlyphs(label, resolutionScale) {
         var glyphs = label._glyphs;
@@ -246,8 +246,8 @@ define([
         glyphPixelOffset.x = widthOffset * resolutionScale;
         glyphPixelOffset.y = 0;
 
-        maxSize.x = maxWidth;
-        maxSize.y = maxHeight;
+        ownerSize.x = maxWidth;
+        ownerSize.y = maxHeight;
 
         var verticalOrigin = label._verticalOrigin;
         for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
@@ -266,7 +266,7 @@ define([
 
             if (defined(glyph.billboard)) {
                 glyph.billboard._setTranslate(glyphPixelOffset);
-                glyph.billboard._setMaxImageSize(maxSize);
+                glyph.billboard._setOwnerSize(ownerSize);
             }
 
             glyphPixelOffset.x += dimensions.computedWidth * scale * resolutionScale;
@@ -281,7 +281,7 @@ define([
         label._labelCollection = undefined;
 
         if (defined(label._customData)) {
-            labelCollection._globe._surface.removeTileCustomData(label._customData);
+            labelCollection._scene.globe._surface.removeTileCustomData(label._customData);
             label._customData = undefined;
         }
 
@@ -337,12 +337,12 @@ define([
     var LabelCollection = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        this._globe = options.globe;
+        this._scene = options.scene;
 
         this._textureAtlas = undefined;
 
         this._billboardCollection = new BillboardCollection({
-            globe : this._globe
+            scene : this._scene
         });
         this._billboardCollection.destroyTextureAtlas = false;
 
@@ -401,9 +401,9 @@ define([
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
 
         this._removeEventFunc = undefined;
-        if (defined(this._globe)) {
+        if (defined(this._scene)) {
             var that = this;
-            this._removeEventFunc = this._globe._surface.tileRenderedEvent.addEventListener(function(tile) {
+            this._removeEventFunc = this._scene.globe._surface.tileRenderedEvent.addEventListener(function(tile) {
                 var tileList = that._renderedTileList;
                 if (tileList.indexOf(tile) === -1) {
                     tileList.push(tile);
@@ -605,8 +605,7 @@ define([
                 var data = customData[i];
                 var object = data.object;
                 if (defined(object) && object instanceof Label) {
-                    object._newTile = tile;
-                    Billboard._clampPosition(object, frameState.mode, frameState.mapProjection);
+                    Billboard._clampPosition(object, tile, frameState.mode, frameState.mapProjection);
                     if (getTimestamp() >= endTime) {
                         timeSliceMax = true;
                         break;

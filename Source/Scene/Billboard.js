@@ -105,7 +105,7 @@ define([
         this._translucencyByDistance = options.translucencyByDistance;
         this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
         this._heightReference = defaultValue(options.heightReference, HeightReference.NONE);
-        this._maxImageSize = new Cartesian2(); // used by labels
+        this._ownerSize = new Cartesian2(); // used by labels
         this._id = options.id;
         this._collection = defaultValue(options.collection, billboardCollection);
 
@@ -171,7 +171,7 @@ define([
     var SCALE_BY_DISTANCE_INDEX = Billboard.SCALE_BY_DISTANCE_INDEX = 11;
     var TRANSLUCENCY_BY_DISTANCE_INDEX = Billboard.TRANSLUCENCY_BY_DISTANCE_INDEX = 12;
     var PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = Billboard.PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = 13;
-    var MAX_SIZE_INDEX = Billboard.MAX_SIZE_INDEX = 14;
+    var OWNER_SIZE_INDEX = Billboard.OWNER_SIZE_INDEX = 14;
     Billboard.NUMBER_OF_PROPERTIES = 15;
 
     function makeDirty(billboard, propertyChanged) {
@@ -824,7 +824,9 @@ define([
                 Cartesian3.normalize(object.position, scratchRay.direction);
             } else {
                 ellipsoid.cartesianToCartographic(object.position, scratchCartographic);
-                scratchCartographic.height = -1000.0; // TODO: get minimum height of entire terrain set
+
+                // minimum height for the terrain set, need to get this information from the terrain provider
+                scratchCartographic.height = -11500.0;
                 projection.project(scratchCartographic, scratchPosition);
                 Cartesian3.fromElements(scratchPosition.z, scratchPosition.x, scratchPosition.y, scratchPosition);
                 Cartesian3.clone(scratchPosition, scratchRay.origin);
@@ -852,14 +854,15 @@ define([
     };
 
     Billboard._updateClamping = function(collection, object) {
-        var globe = collection._globe;
-        if (!defined(globe)) {
+        var scene = collection._scene;
+        if (!defined(scene)) {
             if (object._heightReference !== HeightReference.NONE) {
                 throw new DeveloperError('Height reference is not supported.');
             }
             return;
         }
 
+        var globe = scene.globe;
         var ellipsoid = globe.ellipsoid;
         var surface = globe._surface;
         var customData = object._customData;
@@ -1053,17 +1056,17 @@ define([
         }
     };
 
-    Billboard.prototype._setMaxImageSize = function(value) {
+    Billboard.prototype._setOwnerSize = function(value) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
         //>>includeEnd('debug');
 
-        var maxSize = this._maxImageSize;
-        if (!Cartesian2.equals(maxSize, value)) {
-            Cartesian2.clone(value, maxSize);
-            makeDirty(this, MAX_SIZE_INDEX);
+        var size = this._ownerSize;
+        if (!Cartesian2.equals(size, value)) {
+            Cartesian2.clone(value, size);
+            makeDirty(this, OWNER_SIZE_INDEX);
         }
     };
 
@@ -1204,7 +1207,7 @@ define([
 
     Billboard.prototype._destroy = function() {
         if (defined(this._customData)) {
-            this._billboardCollection._globe._surface.removeTileCustomData(this._customData);
+            this._billboardCollection._scene.globe._surface.removeTileCustomData(this._customData);
             this._customData = undefined;
         }
 
