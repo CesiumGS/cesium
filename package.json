@@ -32,7 +32,7 @@
   },
   "scripts": {
     "prepublish": "if [ ! -d \"./wwwroot/build\" ]; then gulp prepare-cesium; fi",
-    "postpublish": "git tag -a ${npm_package_version} -m \"${npm_package_version}\" && git push origin ${npm_package_version}",
+    "postpublish": "git tag -a terriajs-${npm_package_version} -m \"terriajs-${npm_package_version}\" && git push origin terriajs-${npm_package_version}",
     "postinstall": "if [ ! -d \"./wwwroot/build\" ]; then gulp prepare-cesium; fi"
   },
   "browserify": {
