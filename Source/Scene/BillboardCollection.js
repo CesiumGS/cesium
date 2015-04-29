@@ -1013,7 +1013,7 @@ define([
         boundingVolume.radius += size + offset;
     }
 
-    var writers = [];
+    var scratchWriterArray = [];
 
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
@@ -1096,6 +1096,7 @@ define([
         } else {
             // Billboards were modified, but none were added or removed.
             if (billboardsToUpdateLength > 0) {
+                var writers = scratchWriterArray;
                 writers.length = 0;
 
                 if (properties[POSITION_INDEX] || properties[ROTATION_INDEX] || properties[SCALE_INDEX]) {
