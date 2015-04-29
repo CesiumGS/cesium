@@ -31,9 +31,9 @@
     "deamdify": "^0.1.1"
   },
   "scripts": {
-    "prepublish": "if [ ! -d \"./wwwroot/build\" ]; then gulp prepare-cesium; fi",
-    "postpublish": "git tag -a terriajs-${npm_package_version} -m \"terriajs-${npm_package_version}\" && git push origin terriajs-${npm_package_version}",
-    "postinstall": "if [ ! -d \"./wwwroot/build\" ]; then gulp prepare-cesium; fi"
+    "prepublish": "bash -c \"if [ ! -d \"./wwwroot/build\" ]; then gulp prepare-cesium; fi\"",
+    "postpublish": "bash -c \"git tag -a terriajs-${npm_package_version} -m \"terriajs-${npm_package_version}\" && git push origin terriajs-${npm_package_version}\"",
+    "postinstall": "bash -c \"if [ ! -d \"./wwwroot/build\" ]; then gulp prepare-cesium; fi\""
   },
   "browserify": {
     "transform": [
