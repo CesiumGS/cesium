@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -20,6 +21,7 @@ define([
         Cartesian2,
         Cartesian3,
         Color,
+        defaultValue,
         defined,
         destroyObject,
         DeveloperError,
@@ -129,7 +131,7 @@ define([
                 var labelCollection = this._labelCollection;
                 if (!defined(labelCollection)) {
                     labelCollection = new LabelCollection({
-                        globe : this._scene.globe
+                        scene : this._scene
                     });
                     this._labelCollection = labelCollection;
                     this._scene.primitives.add(labelCollection);
@@ -194,7 +196,8 @@ define([
             return BoundingSphereState.FAILED;
         }
 
-        result.center = Cartesian3.clone(item.label.position, result.center);
+        var label = item.label;
+        result.center = Cartesian3.clone(defaultValue(label._clampedPosition, label.position), result.center);
         result.radius = 0;
         return BoundingSphereState.DONE;
     };

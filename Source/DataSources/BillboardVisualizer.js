@@ -5,6 +5,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -21,6 +22,7 @@ define([
         Cartesian2,
         Cartesian3,
         Color,
+        defaultValue,
         defined,
         destroyObject,
         DeveloperError,
@@ -126,7 +128,7 @@ define([
                 var billboardCollection = this._billboardCollection;
                 if (!defined(billboardCollection)) {
                     billboardCollection = new BillboardCollection({
-                        globe : this._scene.globe
+                        scene : this._scene
                     });
                     this._billboardCollection = billboardCollection;
                     this._scene.primitives.add(billboardCollection);
@@ -199,7 +201,8 @@ define([
             return BoundingSphereState.FAILED;
         }
 
-        result.center = Cartesian3.clone(item.billboard.position, result.center);
+        var billboard = item.billboard;
+        result.center = Cartesian3.clone(defaultValue(billboard._clampedPosition, billboard.position), result.center);
         result.radius = 0;
         return BoundingSphereState.DONE;
     };
