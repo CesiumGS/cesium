@@ -186,7 +186,7 @@ define([
         this._boundingVolume = new BoundingSphere();
         this._boundingVolumeDirty = false;
 
-        this._renderedTileList = [];
+        this._newlyVisibleTileList = [];
         this._clampTimeSlice = 1.0;
         this._lastTileIndex = 0;
 
@@ -269,11 +269,8 @@ define([
 
         this._removeEventFunc = undefined;
         if (defined(this._scene)) {
-            this._removeEventFunc = this._scene.globe._surface.tileRenderedEvent.addEventListener(function(tile) {
-                var tileList = that._renderedTileList;
-                if (tileList.indexOf(tile) === -1) {
-                    tileList.push(tile);
-                }
+            this._removeEventFunc = this._scene.globe._surface.tileVisibleEvent.addEventListener(function(tile) {
+                that._newlyVisibleTileList.push(tile);
             });
         }
     };
@@ -1057,7 +1054,7 @@ define([
         var timeSlice = collection._clampTimeSlice;
         var endTime = startTime + timeSlice;
 
-        var tileList = collection._renderedTileList;
+        var tileList = collection._newlyVisibleTileList;
         while (tileList.length > 0) {
             var tile = tileList[0];
             var customData = tile.customData;

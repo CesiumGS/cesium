@@ -116,7 +116,7 @@ define([
          */
         this.tileCacheSize = defaultValue(options.tileCacheSize, 100);
 
-        this.tileRenderedEvent = new Event();
+        this.tileVisibleEvent = new Event();
 
         this._occluders = new QuadtreeOccluders({
             ellipsoid : ellipsoid
@@ -498,7 +498,7 @@ define([
             tileProvider.showTileThisFrame(tile, context, frameState, commandList);
 
             if (tile._frameRendered !== frameState.frameNumber - 1) {
-                primitive.tileRenderedEvent.raiseEvent(tile);
+                primitive.tileVisibleEvent.raiseEvent(tile);
             }
             tile._frameRendered = frameState.frameNumber;
         }
