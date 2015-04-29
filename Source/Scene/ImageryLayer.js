@@ -132,6 +132,8 @@ define([
      * @param {Number} [options.maximumTerrainLevel] The maximum terrain level-of-detail at which to show this imagery layer,
      *                 or undefined to show it at all levels.  Level zero is the least-detailed level.
      */
+
+
     var ImageryLayer = function ImageryLayer(imageryProvider, options) {
         this._imageryProvider = imageryProvider;
 
@@ -199,6 +201,7 @@ define([
 
         this._minimumTerrainLevel = options.minimumTerrainLevel;
         this._maximumTerrainLevel = options.maximumTerrainLevel;
+
 
         this._rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
         this._maximumAnisotropy = options.maximumAnisotropy;
@@ -358,6 +361,13 @@ define([
         }
 
         var imageryProvider = this._imageryProvider;
+
+        if (defined(imageryProvider.minimumLevelToShow) && tile.level < imageryProvider.minimumLevelToShow) {
+            return false;
+        }
+        if (defined(imageryProvider.maximumLevelToShow) && tile.level > imageryProvider.maximumLevelToShow) {
+            return false;
+        }
 
         if (!defined(insertionPoint)) {
             insertionPoint = surfaceTile.imagery.length;
