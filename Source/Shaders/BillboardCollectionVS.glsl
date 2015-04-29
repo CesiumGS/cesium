@@ -6,6 +6,7 @@ attribute vec4 compressedAttribute2;        // image height, color, pick color, 
 attribute vec3 eyeOffset;                   // eye offset in meters
 attribute vec4 scaleByDistance;             // near, nearScale, far, farScale
 attribute vec4 pixelOffsetScaleByDistance;  // near, nearScale, far, farScale
+attribute vec2 ownerSize;
 
 varying vec2 v_textureCoordinates;
 
@@ -226,16 +227,34 @@ void main()
 #endif
     
 #ifdef TEST_GLOBE_DEPTH
-    //float piece = step(3000.0, -positionEC.z);
-    //float offsetZ = (1.0 - piece) * -positionEC.z * 0.005;
-    float offsetZ = -positionEC.z * 0.005;
-    vec4 offsetPosition = positionEC + vec4(0.0, 0.0, offsetZ, 0.0);
-    vec4 wc = computePositionWindowCoordinates(offsetPosition, vec2(0.0, 0.0), scale, direction, origin, vec2(0.0), pixelOffset, alignedAxis, rotation);
-    float d = texture2D(czm_globeDepthTexture, wc.xy / czm_viewport.zw).r;
-    if (wc.z > d)
+    if (-positionEC.z < 70000.0)
     {
-        gl_Position = czm_projection * vec4(vec3(0.0), 1.0);
-        return;
+	    vec2 directions[4];
+	    directions[0] = vec2(0.0, 0.0);
+	    directions[1] = vec2(0.0, 1.0);
+	    directions[2] = vec2(1.0, 0.0);
+	    directions[3] = vec2(1.0, 1.0);
+	    
+	    vec2 invSize = 1.0 / czm_viewport.zw;
+	    vec2 size = all(equal(vec2(0.0), ownerSize)) ? imageSize : ownerSize;
+	    
+	    bool visible = false;
+	    for (int i = 0; i < 4; ++i)
+	    {
+	        vec4 wc = computePositionWindowCoordinates(positionEC, size, scale, directions[i], vec2(0.0, 0.0), vec2(0.0), pixelOffset, alignedAxis, rotation);
+	        float d = texture2D(czm_globeDepthTexture, wc.xy * invSize).r;
+	        if (wc.z < d)
+	        {
+	            visible = true;
+	            break;
+	        }
+	    }
+	    
+	    if (!visible)
+	    {
+	        gl_Position = czm_projection[3];
+	        return;
+	    }
     }
 #endif
     

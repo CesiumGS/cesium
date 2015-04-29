@@ -214,6 +214,7 @@ define([
 
     // reusable Cartesian2 instance
     var glyphPixelOffset = new Cartesian2();
+    var ownerSize = new Cartesian2();
 
     function repositionAllGlyphs(label, resolutionScale) {
         var glyphs = label._glyphs;
@@ -221,6 +222,7 @@ define([
         var dimensions;
         var totalWidth = 0;
         var maxHeight = 0;
+        var maxWidth = 0;
 
         var glyphIndex = 0;
         var glyphLength = glyphs.length;
@@ -229,6 +231,7 @@ define([
             dimensions = glyph.dimensions;
             totalWidth += dimensions.computedWidth;
             maxHeight = Math.max(maxHeight, dimensions.height);
+            maxWidth = Math.max(maxWidth, dimensions.computedWidth);
         }
 
         var scale = label._scale;
@@ -242,6 +245,9 @@ define([
 
         glyphPixelOffset.x = widthOffset * resolutionScale;
         glyphPixelOffset.y = 0;
+
+        ownerSize.x = maxWidth;
+        ownerSize.y = maxHeight;
 
         var verticalOrigin = label._verticalOrigin;
         for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
@@ -260,6 +266,7 @@ define([
 
             if (defined(glyph.billboard)) {
                 glyph.billboard._setTranslate(glyphPixelOffset);
+                glyph.billboard._setOwnerSize(ownerSize);
             }
 
             glyphPixelOffset.x += dimensions.computedWidth * scale * resolutionScale;
@@ -274,7 +281,7 @@ define([
         label._labelCollection = undefined;
 
         if (defined(label._customData)) {
-            labelCollection._globe._surface.removeTileCustomData(label._customData);
+            labelCollection._scene.globe._surface.removeTileCustomData(label._customData);
             label._customData = undefined;
         }
 
@@ -302,6 +309,7 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each label from model to world coordinates.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+     * @param {Scene} [options.scene] Must be passed in for labels that use the height reference property or will be depth tested against the globe.
      *
      * @performance For best performance, prefer a few collections, each with many labels, to
      * many collections with only a few labels each.  Avoid having collections where some
@@ -330,12 +338,12 @@ define([
     var LabelCollection = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        this._globe = options.globe;
+        this._scene = options.scene;
 
         this._textureAtlas = undefined;
 
         this._billboardCollection = new BillboardCollection({
-            globe : this._globe
+            scene : this._scene
         });
         this._billboardCollection.destroyTextureAtlas = false;
 
@@ -346,7 +354,7 @@ define([
         this._totalGlyphCount = 0;
         this._resolutionScale = undefined;
 
-        this._renderedTileList = [];
+        this._newlyVisibleTileList = [];
         this._clampTimeSlice = 1.0;
         this._lastTileIndex = 0;
 
@@ -394,13 +402,10 @@ define([
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
 
         this._removeEventFunc = undefined;
-        if (defined(this._globe)) {
+        if (defined(this._scene)) {
             var that = this;
-            this._removeEventFunc = this._globe._surface.tileRenderedEvent.addEventListener(function(tile) {
-                var tileList = that._renderedTileList;
-                if (tileList.indexOf(tile) === -1) {
-                    tileList.push(tile);
-                }
+            this._removeEventFunc = this._scene.globe._surface.tileVisibleEvent.addEventListener(function(tile) {
+                that._newlyVisibleTileList.push(tile);
             });
         }
     };
@@ -581,29 +586,24 @@ define([
         return this._labels[index];
     };
 
-    /**
-     * @private
-     */
-    LabelCollection.prototype.update = function(context, frameState, commandList) {
-        var i;
-
+    function updateClampedLabels(collection, frameState) {
+        // Unified time slicing tasks: https://github.com/AnalyticalGraphicsInc/cesium/issues/2655
         var startTime = getTimestamp();
-        var timeSlice = this._clampTimeSlice;
+        var timeSlice = collection._clampTimeSlice;
         var endTime = startTime + timeSlice;
 
-        var tileList = this._renderedTileList;
+        var tileList = collection._newlyVisibleTileList;
         while (tileList.length > 0) {
             var tile = tileList[0];
             var customData = tile.customData;
             var customDataLength = customData.length;
 
             var timeSliceMax = false;
-            for (i = this._lastTileIndex; i < customDataLength; ++i) {
+            for (var i = collection._lastTileIndex; i < customDataLength; ++i) {
                 var data = customData[i];
                 var object = data.object;
                 if (defined(object) && object instanceof Label) {
-                    object._newTile = tile;
-                    Billboard._clampPosition(object, frameState.mode, frameState.mapProjection);
+                    Billboard._clampPosition(object, tile, frameState.mode, frameState.mapProjection);
                     if (getTimestamp() >= endTime) {
                         timeSliceMax = true;
                         break;
@@ -612,13 +612,20 @@ define([
             }
 
             if (timeSliceMax) {
-                this._lastTileIndex = i;
+                collection._lastTileIndex = i;
                 break;
             } else {
-                this._lastTileIndex = 0;
+                collection._lastTileIndex = 0;
                 tileList.shift();
             }
         }
+    }
+
+    /**
+     * @private
+     */
+    LabelCollection.prototype.update = function(context, frameState, commandList) {
+        updateClampedLabels(this, frameState);
 
         var billboardCollection = this._billboardCollection;
 
@@ -645,7 +652,7 @@ define([
         }
 
         var len = labelsToUpdate.length;
-        for (i = 0; i < len; ++i) {
+        for (var i = 0; i < len; ++i) {
             var label = labelsToUpdate[i];
             if (label.isDestroyed()) {
                 continue;

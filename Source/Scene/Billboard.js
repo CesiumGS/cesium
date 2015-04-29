@@ -105,6 +105,7 @@ define([
         this._translucencyByDistance = options.translucencyByDistance;
         this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
         this._heightReference = defaultValue(options.heightReference, HeightReference.NONE);
+        this._ownerSize = new Cartesian2(); // used by labels
         this._id = options.id;
         this._collection = defaultValue(options.collection, billboardCollection);
 
@@ -149,10 +150,8 @@ define([
         }
 
         this._customData = undefined;
-        this._currentTile = undefined;
-        this._newTile = undefined;
+        this._level = 0;
         this._actualClampedPosition = undefined;
-        this._positionChanged = false;
         this._mode = undefined;
 
         this._updateClamping();
@@ -172,7 +171,8 @@ define([
     var SCALE_BY_DISTANCE_INDEX = Billboard.SCALE_BY_DISTANCE_INDEX = 11;
     var TRANSLUCENCY_BY_DISTANCE_INDEX = Billboard.TRANSLUCENCY_BY_DISTANCE_INDEX = 12;
     var PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = Billboard.PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = 13;
-    Billboard.NUMBER_OF_PROPERTIES = 14;
+    var OWNER_SIZE_INDEX = Billboard.OWNER_SIZE_INDEX = 14;
+    Billboard.NUMBER_OF_PROPERTIES = 15;
 
     function makeDirty(billboard, propertyChanged) {
         var billboardCollection = billboard._billboardCollection;
@@ -234,6 +234,12 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the height reference of this billboard.
+         * @memberof Billboard.prototype
+         * @type {HeightReference}
+         * @default HeightReference.NONE
+         */
         heightReference : {
             get : function() {
                 return this._heightReference;
@@ -786,6 +792,12 @@ define([
             }
         },
 
+        /**
+         * Keeps track of the position of the billboard based on the height reference.
+         * @memberof Billboard.prototype
+         * @type {Cartesian3}
+         * @private
+         */
         _clampedPosition : {
             get : function() {
                 return this._actualClampedPosition;
@@ -813,24 +825,27 @@ define([
     var scratchPosition = new Cartesian3();
     var scratchCartographic = new Cartographic();
 
-    Billboard._clampPosition = function(object, mode, projection, markObjectDirty) {
-        var modeChanged = mode !== SceneMode.MORPHING && mode !== object._mode;
+    Billboard._clampPosition = function(object, tile, mode, projection) {
+        var modeChanged = object._mode !== mode;
         var ellipsoid = projection.ellipsoid;
+        var level = tile.level;
 
-        if (object._newTile !== object._currentTile || object._positionChanged || modeChanged) {
+        if (level > object._level || modeChanged) {
             if (mode === SceneMode.SCENE3D) {
                 Cartesian3.clone(Cartesian3.ZERO, scratchRay.origin);
                 Cartesian3.normalize(object.position, scratchRay.direction);
             } else {
                 ellipsoid.cartesianToCartographic(object.position, scratchCartographic);
-                scratchCartographic.height = -1000.0; // TODO: get minimum height of entire terrain set
+
+                // minimum height for the terrain set, need to get this information from the terrain provider
+                scratchCartographic.height = -11500.0;
                 projection.project(scratchCartographic, scratchPosition);
                 Cartesian3.fromElements(scratchPosition.z, scratchPosition.x, scratchPosition.y, scratchPosition);
                 Cartesian3.clone(scratchPosition, scratchRay.origin);
                 Cartesian3.clone(Cartesian3.UNIT_X, scratchRay.direction);
             }
 
-            var position = object._newTile.data.pick(scratchRay, mode, projection, false, scratchPosition);
+            var position = tile.data.pick(scratchRay, mode, projection, false, scratchPosition);
             if (defined(position)) {
                 if (object._heightReference === HeightReference.RELATIVE_TO_GROUND) {
                     var clampedCart = ellipsoid.cartesianToCartographic(position, scratchCartographic);
@@ -840,9 +855,9 @@ define([
                 object._clampedPosition = Cartesian3.clone(position, object._clampedPosition);
             }
 
-            object._positionChanged = false;
             object._mode = mode;
-            object._currentTile = object._newTile;
+            object._projection = projection;
+            object._level = level;
         }
     };
 
@@ -851,21 +866,25 @@ define([
     };
 
     Billboard._updateClamping = function(collection, object) {
-        var globe = collection._globe;
-        if (!defined(globe)) {
+        var scene = collection._scene;
+        if (!defined(scene)) {
             if (object._heightReference !== HeightReference.NONE) {
                 throw new DeveloperError('Height reference is not supported.');
             }
             return;
         }
 
+        var globe = scene.globe;
         var ellipsoid = globe.ellipsoid;
         var surface = globe._surface;
         var customData = object._customData;
 
+        var mode = object._mode = defaultValue(object._mode, SceneMode.SCENE3D);
+
         if (defined(customData) && object._heightReference === HeightReference.NONE) {
             surface.removeTileCustomData(customData);
             object._customData = undefined;
+            object._clampedPosition = undefined;
         }
 
         if (object._heightReference === HeightReference.NONE || !defined(object._position)) {
@@ -878,9 +897,6 @@ define([
         }
 
         if (defined(customData)) {
-            if (Cartographic.equals(position, customData.position)) {
-                return;
-            }
             surface.removeTileCustomData(customData);
         }
 
@@ -889,7 +905,19 @@ define([
             object : object
         };
         surface.addTileCustomData(object._customData);
-        object._positionChanged = true;
+
+        var height = globe.getHeight(position);
+        if (defined(height)) {
+            var clampedCart = Cartographic.clone(position, scratchCartographic);
+            clampedCart.height = object._heightReference === HeightReference.RELATIVE_TO_GROUND ? height + position.height : height;
+
+            if (mode === SceneMode.SCENE3D) {
+                object._clampedPosition = ellipsoid.cartographicToCartesian(clampedCart, object._clampedPosition);
+            } else if (defined(object._projection)) {
+                object._projection.project(clampedCart, scratchPosition);
+                object._clampedPosition = Cartesian3.fromElements(scratchPosition.z, scratchPosition.x, scratchPosition.y, object._clampedPosition);
+            }
+        }
     };
 
     Billboard.prototype._loadImage = function() {
@@ -1040,18 +1068,39 @@ define([
         }
     };
 
+    Billboard.prototype._setOwnerSize = function(value) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required.');
+        }
+        //>>includeEnd('debug');
+
+        var size = this._ownerSize;
+        if (!Cartesian2.equals(size, value)) {
+            Cartesian2.clone(value, size);
+            makeDirty(this, OWNER_SIZE_INDEX);
+        }
+    };
+
     Billboard.prototype._getActualPosition = function() {
         return defined(this._customData) && defined(this._clampedPosition) && this._mode !== SceneMode.MORPHING ? this._clampedPosition : this._actualPosition;
     };
 
     Billboard.prototype._setActualPosition = function(value) {
-        Cartesian3.clone(value, this._actualPosition);
+        if (!(defined(this._customData) && defined(this._clampedPosition) && this._mode !== SceneMode.MORPHING)) {
+            Cartesian3.clone(value, this._actualPosition);
+        }
         makeDirty(this, POSITION_INDEX);
     };
 
     var tempCartesian3 = new Cartesian4();
     Billboard._computeActualPosition = function(billboard, position, frameState, modelMatrix) {
         if (defined(billboard._customData) && defined(billboard._clampedPosition) && this._mode !== SceneMode.MORPHING) {
+            if (frameState.mode !== this._mode) {
+                billboard._mode = frameState.mode;
+                billboard._projection = frameState.mapProjection;
+                billboard._updateClamping();
+            }
             return billboard._clampedPosition;
         } else if (frameState.mode === SceneMode.SCENE3D) {
             return position;
@@ -1067,7 +1116,7 @@ define([
     var scratchCartesian2 = new Cartesian2();
     var scratchComputePixelOffset = new Cartesian2();
 
-    Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, scene) {
+    Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, scene, result) {
         // This function is basically a stripped-down JavaScript version of BillboardCollectionVS.glsl
         var camera = scene.camera;
         var view = camera.viewMatrix;
@@ -1084,7 +1133,7 @@ define([
         positionEC.z += zEyeOffset.z;
 
         var positionCC = Matrix4.multiplyByVector(projection, positionEC, scratchCartesian4); // clip coordinates
-        var positionWC = SceneTransforms.clipToGLWindowCoordinates(scene, positionCC, new Cartesian2());
+        var positionWC = SceneTransforms.clipToGLWindowCoordinates(scene, positionCC, result);
 
         // Apply pixel offset
         pixelOffset = Cartesian2.clone(pixelOffset, scratchComputePixelOffset);
@@ -1104,6 +1153,7 @@ define([
      * left to right, and <code>y</code> increases from top to bottom.
      *
      * @param {Scene} scene The scene.
+     * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The screen-space position of the billboard.
      *
      * @exception {DeveloperError} Billboard must be in a collection.
@@ -1114,8 +1164,11 @@ define([
      * @example
      * console.log(b.computeScreenSpacePosition(scene).toString());
      */
-    Billboard.prototype.computeScreenSpacePosition = function(scene) {
+    Billboard.prototype.computeScreenSpacePosition = function(scene, result) {
         var billboardCollection = this._billboardCollection;
+        if (!defined(result)) {
+            result = new Cartesian2();
+        }
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(billboardCollection)) {
@@ -1131,7 +1184,8 @@ define([
         Cartesian2.add(scratchPixelOffset, this._translate, scratchPixelOffset);
 
         var modelMatrix = billboardCollection.modelMatrix;
-        var windowCoordinates = Billboard._computeScreenSpacePosition(modelMatrix, this._actualPosition, this._eyeOffset, scratchPixelOffset, scene);
+        var windowCoordinates = Billboard._computeScreenSpacePosition(modelMatrix, this._actualPosition,
+                this._eyeOffset, scratchPixelOffset, scene, result);
         windowCoordinates.y = scene.canvas.clientHeight - windowCoordinates.y;
         return windowCoordinates;
     };
@@ -1146,14 +1200,14 @@ define([
     Billboard.prototype.equals = function(other) {
         return this === other ||
                defined(other) &&
+               this._id === other._id &&
+               Cartesian3.equals(this._position, other._position) &&
+               this._imageId === other._imageId &&
                this._show === other._show &&
                this._scale === other._scale &&
                this._verticalOrigin === other._verticalOrigin &&
                this._horizontalOrigin === other._horizontalOrigin &&
-               this._id === other._id &&
-               this._imageId === other._imageId &&
                BoundingRectangle.equals(this._imageSubRegion, other._imageSubRegion) &&
-               Cartesian3.equals(this._position, other._position) &&
                Color.equals(this._color, other._color) &&
                Cartesian2.equals(this._pixelOffset, other._pixelOffset) &&
                Cartesian2.equals(this._translate, other._translate) &&
@@ -1165,12 +1219,9 @@ define([
 
     Billboard.prototype._destroy = function() {
         if (defined(this._customData)) {
-            this._billboardCollection._globe._surface.removeTileCustomData(this._customData);
+            this._billboardCollection._scene.globe._surface.removeTileCustomData(this._customData);
             this._customData = undefined;
         }
-
-        this._currentTile = undefined;
-        this._newTile = undefined;
 
         this.image = undefined;
         this._pickId = this._pickId && this._pickId.destroy();
