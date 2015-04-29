@@ -346,6 +346,15 @@ define([
         }
     });
 
+    function destroyBillboards(billboards) {
+        var length = billboards.length;
+        for (var i = 0; i < length; ++i) {
+            if (billboards[i]) {
+                billboards[i]._destroy();
+            }
+        }
+    }
+
     /**
      * Creates and adds a billboard with the specified initial properties to the collection.
      * The added billboard is returned so it can be modified or removed from the collection later.
@@ -444,7 +453,7 @@ define([
      * billboards.removeAll();
      */
     BillboardCollection.prototype.removeAll = function() {
-        this._destroyBillboards();
+        destroyBillboards(this._billboards);
         this._billboards = [];
         this._billboardsToUpdate = [];
         this._billboardsToUpdateIndex = 0;
@@ -1077,6 +1086,8 @@ define([
         }
     }
 
+    var scratchWriterArray = [];
+
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -1159,7 +1170,8 @@ define([
         } else {
             // Billboards were modified, but none were added or removed.
             if (billboardsToUpdateLength > 0) {
-                var writers = [];
+                var writers = scratchWriterArray;
+                writers.length = 0;
 
                 if (properties[POSITION_INDEX] || properties[ROTATION_INDEX] || properties[SCALE_INDEX]) {
                     writers.push(writePositionScaleAndRotation);
@@ -1193,6 +1205,7 @@ define([
                     writers.push(writeMaxSize);
                 }
 
+                var numWriters = writers.length;
                 vafWriters = this._vaf.writers;
 
                 if ((billboardsToUpdateLength / billboardsLength) > 0.1) {
@@ -1204,7 +1217,7 @@ define([
                         var b = billboardsToUpdate[m];
                         b._dirty = false;
 
-                        for ( var n = 0; n < writers.length; ++n) {
+                        for ( var n = 0; n < numWriters; ++n) {
                             writers[n](this, context, textureAtlasCoordinates, vafWriters, b);
                         }
                     }
@@ -1214,7 +1227,7 @@ define([
                         var bb = billboardsToUpdate[h];
                         bb._dirty = false;
 
-                        for ( var o = 0; o < writers.length; ++o) {
+                        for ( var o = 0; o < numWriters; ++o) {
                             writers[o](this, context, textureAtlasCoordinates, vafWriters, bb);
                         }
                         this._vaf.subCommit(bb._index * 4, 4);
@@ -1443,23 +1456,13 @@ define([
         this._sp = this._sp && this._sp.destroy();
         this._spPick = this._spPick && this._spPick.destroy();
         this._vaf = this._vaf && this._vaf.destroy();
-        this._destroyBillboards();
+        destroyBillboards(this._billboards);
 
         if (defined(this._removeEventFunc)) {
             this._removeEventFunc();
         }
 
         return destroyObject(this);
-    };
-
-    BillboardCollection.prototype._destroyBillboards = function() {
-        var billboards = this._billboards;
-        var length = billboards.length;
-        for (var i = 0; i < length; ++i) {
-            if (billboards[i]) {
-                billboards[i]._destroy();
-            }
-        }
     };
 
     return BillboardCollection;
