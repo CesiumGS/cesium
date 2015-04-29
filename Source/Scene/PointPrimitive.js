@@ -391,7 +391,7 @@ define([
     var scratchMatrix4 = new Matrix4();
     var scratchCartesian4 = new Cartesian4();
 
-    PointPrimitive._computeScreenSpacePosition = function(modelMatrix, position, scene) {
+    PointPrimitive._computeScreenSpacePosition = function(modelMatrix, position, scene, result) {
         // This function is basically a stripped-down JavaScript version of PointPrimitiveCollectionVS.glsl
         var camera = scene.camera;
         var view = camera.viewMatrix;
@@ -401,7 +401,7 @@ define([
         var mv = Matrix4.multiplyTransformation(view, modelMatrix, scratchMatrix4);
         var positionEC = Matrix4.multiplyByVector(mv, Cartesian4.fromElements(position.x, position.y, position.z, 1, scratchCartesian4), scratchCartesian4);
         var positionCC = Matrix4.multiplyByVector(projection, positionEC, scratchCartesian4); // clip coordinates
-        var positionWC = SceneTransforms.clipToGLWindowCoordinates(scene, positionCC, new Cartesian2());
+        var positionWC = SceneTransforms.clipToGLWindowCoordinates(scene, positionCC, result);
 
         return positionWC;
     };
@@ -412,6 +412,7 @@ define([
      * left to right, and <code>y</code> increases from top to bottom.
      *
      * @param {Scene} scene The scene.
+     * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The screen-space position of the point.
      *
      * @exception {DeveloperError} PointPrimitive must be in a collection.
@@ -419,8 +420,11 @@ define([
      * @example
      * console.log(p.computeScreenSpacePosition(scene).toString());
      */
-    PointPrimitive.prototype.computeScreenSpacePosition = function(scene) {
+    PointPrimitive.prototype.computeScreenSpacePosition = function(scene, result) {
         var pointPrimitiveCollection = this._pointPrimitiveCollection;
+        if (!defined(result)) {
+            result = new Cartesian2();
+        }
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(pointPrimitiveCollection)) {
@@ -432,7 +436,7 @@ define([
         //>>includeEnd('debug');
 
         var modelMatrix = pointPrimitiveCollection.modelMatrix;
-        var windowCoordinates = PointPrimitive._computeScreenSpacePosition(modelMatrix, this._actualPosition, scene);
+        var windowCoordinates = PointPrimitive._computeScreenSpacePosition(modelMatrix, this._actualPosition, scene, result);
         windowCoordinates.y = scene.canvas.clientHeight - windowCoordinates.y;
         return windowCoordinates;
     };

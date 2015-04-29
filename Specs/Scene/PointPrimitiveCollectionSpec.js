@@ -365,6 +365,10 @@ defineSuite([
         expect(pointPrimitives.contains(new Cartesian2())).toEqual(false);
     });
 
+    it('does not render when constructed', function() {
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+    });
+
     it('modifies and removes a pointPrimitive, then renders', function() {
         var p1 = pointPrimitives.add({
             position : Cartesian3.ZERO,
@@ -659,6 +663,7 @@ defineSuite([
             }
         });
 
+        // This tests the `PointPrimitiveCollection.equals` function itself, not simple equality.
         expect(p.equals(p2)).toEqual(true);
     });
 
@@ -670,10 +675,12 @@ defineSuite([
             position : new Cartesian3(4.0, 5.0, 6.0)
         });
 
+        // This tests the `PointPrimitiveCollection.equals` function itself, not simple equality.
         expect(p.equals(p2)).toEqual(false);
     });
 
     it('does not equal undefined', function() {
+        // This tests the `PointPrimitiveCollection.equals` function itself, not simple equality.
         var pointPrimitive = pointPrimitives.add();
         expect(pointPrimitive.equals(undefined)).toEqual(false);
     });

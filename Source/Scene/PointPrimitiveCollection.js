@@ -671,7 +671,7 @@ define([
         boundingVolume.radius += size;
     }
 
-    var writers = [];
+    var scratchWriterArray = [];
 
     /**
      * @private
@@ -725,6 +725,7 @@ define([
         } else {
             // PointPrimitives were modified, but none were added or removed.
             if (pointPrimitivesToUpdateLength > 0) {
+                var writers = scratchWriterArray;
                 writers.length = 0;
 
                 if (properties[POSITION_INDEX] || properties[OUTLINE_WIDTH_INDEX] || properties[PIXEL_SIZE_INDEX]) {
