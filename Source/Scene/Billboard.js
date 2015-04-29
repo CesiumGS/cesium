@@ -1184,7 +1184,9 @@ define([
         Cartesian2.add(scratchPixelOffset, this._translate, scratchPixelOffset);
 
         var modelMatrix = billboardCollection.modelMatrix;
-        var windowCoordinates = Billboard._computeScreenSpacePosition(modelMatrix, this._actualPosition,
+        var actualPosition = this._getActualPosition();
+
+        var windowCoordinates = Billboard._computeScreenSpacePosition(modelMatrix, actualPosition,
                 this._eyeOffset, scratchPixelOffset, scene, result);
         windowCoordinates.y = scene.canvas.clientHeight - windowCoordinates.y;
         return windowCoordinates;
