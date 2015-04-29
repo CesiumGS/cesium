@@ -1687,13 +1687,7 @@ define([
      */
     ScreenSpaceCameraController.prototype.destroy = function() {
         this._tweens.removeAll();
-        this._spinHandler = this._spinHandler && this._spinHandler.destroy();
-        this._translateHandler = this._translateHandler && this._translateHandler.destroy();
-        this._lookHandler = this._lookHandler && this._lookHandler.destroy();
-        this._rotateHandler = this._rotateHandler && this._rotateHandler.destroy();
-        this._zoomHandler = this._zoomHandler && this._zoomHandler.destroy();
-        this._zoomWheelHandler = this._zoomWheelHandler && this._zoomWheelHandler.destroy();
-        this._pinchHandler = this._pinchHandler && this._pinchHandler.destroy();
+        this._aggregator = this._aggregator && this._aggregator.destroy();
         return destroyObject(this);
     };
 

@@ -18,7 +18,7 @@ define([
             return new ColorMaterialProperty(value);
         }
 
-        if (typeof value === 'string') {
+        if (typeof value === 'string' || value instanceof HTMLCanvasElement) {
             var result = new ImageMaterialProperty();
             result.image = value;
             return result;

@@ -16,8 +16,14 @@ Change Log
 * Fixed a bug that caused `Corridor` and `PolylineVolume` geometry to be incorrect for sharp corners [#2626](https://github.com/AnalyticalGraphicsInc/cesium/pull/2626)
 * Fixed crash when modifying a translucent entity geometry outline. [#2630](https://github.com/AnalyticalGraphicsInc/cesium/pull/2630)
 * Fixed crash when loading KML GroundOverlays that spanned 360 degrees. [#2639](https://github.com/AnalyticalGraphicsInc/cesium/pull/2639)
+* Fixed `Geocoder` styling issue in Safari. [#2658](https://github.com/AnalyticalGraphicsInc/cesium/pull/2658).
+* Fixed a crash that would occur when the `Viewer` or `CesiumWidget` was resized to 0 while the camera was in motion.
+* Added an optional `result` parameter to `computeScreenSpacePosition` on both `Billboard` and `Label`.
+* Added number of cached shaders to the `CesiumInspector` debugging widget.
+* Entity `material` properties and `Material` uniform values can now take a `canvas` element in addition to an image or url.
 * Fixed documentation for 'Context.drawingBufferHeight' and 'Context.drawingBufferWidth'.
 * Added debug option to 'Scene' to show the depth buffer information for a specified view frustum slice and exposed capability in 'CesiumInspector' widget.
+* Removed `Scene.fxaaOrderIndependentTranslucency`. Use `Scene.fxaa` which is now `true` by default.
 
 ### 1.8 - 2015-04-01
 
@@ -46,7 +52,6 @@ Change Log
 * Added new construction options to `CesiumWidget` and `Viewer`, for `skyBox`, `skyAtmosphere`, and `globe`.
 * Fixed a bug that prevented Cesium from working in browser configurations that explicitly disabled localStorage, such as Safari's private browsing mode.
 * Cesium is now tested using Jasmine 2.2.0.
-* Removed `Scene.fxaaOrderIndependentTranslucency`. Use `Scene.fxaa` which is now `true` by default.
 
 ### 1.7.1 - 2015-03-06
 

@@ -322,6 +322,28 @@ defineSuite([
         expect(pixel).not.toEqual([0, 0, 0, 0]);
     });
 
+    it('creates a material with an image canvas uniform', function() {
+        var canvas = document.createElement('canvas');
+        var context2D = canvas.getContext('2d');
+        context2D.width = 1;
+        context2D.height = 1;
+        context2D.fillStyle = 'rgb(0,0,255)';
+        context2D.fillRect(0, 0, 1, 1);
+
+        var material = new Material({
+            strict : true,
+            fabric : {
+                type : 'DiffuseMap',
+                uniforms : {
+                    image : canvas
+                }
+            }
+        });
+
+        var pixel = renderMaterial(material);
+        expect(pixel).not.toEqual([0, 0, 0, 0]);
+    });
+
     it('creates a material with a cube map uniform', function() {
         var material = new Material({
             strict : true,
