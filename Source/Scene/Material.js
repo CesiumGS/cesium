@@ -702,12 +702,17 @@ define([
                 if (defined(newTexture)) {
                     Material._textureCache.releaseTexture(material._texturePaths[uniformId]);
                     material._textures[uniformId] = newTexture;
-                } else {
+                } else if (typeof uniformValue === 'string') {
                     when(loadImage(uniformValue), function(image) {
                         material._loadedImages.push({
                             id : uniformId,
                             image : image
                         });
+                    });
+                } else if (uniformValue instanceof HTMLCanvasElement) {
+                    material._loadedImages.push({
+                        id : uniformId,
+                        image : uniformValue
                     });
                 }
 
@@ -853,7 +858,7 @@ define([
                 uniformType = 'float';
             } else if (type === 'boolean') {
                 uniformType = 'bool';
-            } else if (type === 'string') {
+            } else if (type === 'string' || uniformValue instanceof HTMLCanvasElement) {
                 if (/^([rgba]){1,4}$/i.test(uniformValue)) {
                     uniformType = 'channels';
                 } else if (uniformValue === Material.DefaultCubeMapId) {
