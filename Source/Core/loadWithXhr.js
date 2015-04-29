@@ -163,10 +163,12 @@ define([
 
         xhr.onload = function(e) {
             if (xhr.status === 200) {
+                var parser;
+
                 if (defined(xhr.response)) {
                     if (weWantXml) {
                         try {
-                            var parser = new DOMParser();
+                            parser = new DOMParser();
                             deferred.resolve(parser.parseFromString(xhr.response, 'text/xml'));
                         } catch (ex) {
                             deferred.reject(ex);
@@ -176,12 +178,21 @@ define([
                     }
                 } else {
                     // busted old browsers.
-                    if (!defaultValue(preferText, false) && defined(xhr.responseXML) && xhr.responseXML.hasChildNodes()) {
-                        deferred.resolve(xhr.responseXML);
-                    } else if (defined(xhr.responseText)) {
-                        deferred.resolve(xhr.responseText);
+                    if (weWantXml) {
+                        try {
+                            parser = new DOMParser();
+                            deferred.resolve(parser.parseFromString(xhr.responseText, 'text/xml'));
+                        } catch (ex) {
+                            deferred.reject(ex);
+                        }
                     } else {
-                        deferred.reject(new RuntimeError('unknown XMLHttpRequest response type.'));
+                        if (!defaultValue(preferText, false) && defined(xhr.responseXML) && xhr.responseXML.hasChildNodes()) {
+                            deferred.resolve(xhr.responseXML);
+                        } else if (defined(xhr.responseText)) {
+                            deferred.resolve(xhr.responseText);
+                        } else {
+                            deferred.reject(new RuntimeError('unknown XMLHttpRequest response type.'));
+                        }
                     }
                 }
             } else {
