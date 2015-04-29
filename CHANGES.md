@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+### 1.10 - 2015-06-01
+* Breaking changes
+  *
+* Added new `PointPrimitive` and `PointPrimitiveCollection` as alternatives to billboards with circles.
+* Changed `Entity.point` back-end graphics to use the new `PointPrimitive` instead of billboards.  No change to the `Entity.point` API.
+
 ### 1.9 - 2015-05-01
 * Breaking changes
   * Removed `ColorMaterialProperty.fromColor`, previously deprecated in 1.6. Pass a `Color` directly to the `ColorMaterialProperty` constructor instead.
@@ -11,8 +17,6 @@ Change Log
 * Deprecated
   *
 * An exception is now thrown if `Primitive.modelMatrix` is not the identity matrix when in in 2D or Columbus View.
-* Added new `PointPrimitive` and `PointPrimitiveCollection` as alternatives to billboards with circles.
-* Changed `Entity.point` back-end graphics to use the new `PointPrimitive` instead of billboards.  No change to the `Entity.point` API.
 * Fix a bug which caused `Entity.viewFrom` to be ignored when flying to, zooming to, or tracking an Entity.
 * The `InfoBox` title is now correctly updated if the name of `viewer.selectedEntity` changes on the fly. [#2644](https://github.com/AnalyticalGraphicsInc/cesium/pull/2644)
 * Fixed a bug that caused `Corridor` and `PolylineVolume` geometry to be incorrect for sharp corners [#2626](https://github.com/AnalyticalGraphicsInc/cesium/pull/2626)
