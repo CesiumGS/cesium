@@ -294,6 +294,11 @@ define([
             }
         },
 
+        /**
+         * An array of objects associated with this tile. See QuadtreePrimitive.addTileCustomData.
+         * @memberof QuadtreeTile.prototype
+         * @type {Array}
+         */
         customData : {
             get : function() {
                 return this._customData;

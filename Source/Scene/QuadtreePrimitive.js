@@ -116,6 +116,11 @@ define([
          */
         this.tileCacheSize = defaultValue(options.tileCacheSize, 100);
 
+        /**
+         * An event that is raised when a tile becomes visible. The argument to the event listener
+         * is the visible tile.
+         * @type {Event}
+         */
         this.tileVisibleEvent = new Event();
 
         this._occluders = new QuadtreeOccluders({
@@ -191,10 +196,24 @@ define([
         }
     };
 
+    /**
+     * Associate data with the tiles of the quadtree. The custom data must have a Cartographic position property.
+     * The position will be used to associate the data with the individual tiles of the quadtree. If the position
+     * is in the tile's rectangle, the custom data will be added to the tile.
+     *
+     * @param {Object} customData The object literal with a Cartographic position property and any other custom properties.
+     */
     QuadtreePrimitive.prototype.addTileCustomData = function(customData) {
         this._customDataAdded.push(customData);
     };
 
+    /**
+     * Removes custom data from the tiles quadtree.
+     *
+     * @param {Object} customData The data to be removed.
+     *
+     * @see QuadtreePrimitive.addTileCustomData
+     */
     QuadtreePrimitive.prototype.removeTileCustomData = function(customData) {
         this._customDataRemoved.push(customData);
     };

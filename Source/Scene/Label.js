@@ -171,6 +171,11 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the height reference of this billboard.
+         * @memberof Label.prototype
+         * @type {HeightReference}
+         */
         heightReference : {
             get : function() {
                 return this._heightReference;
@@ -661,6 +666,12 @@ define([
             }
         },
 
+        /**
+         * Keeps track of the position of the label based on the height reference.
+         * @memberof Label.prototype
+         * @type {Cartesian3}
+         * @private
+         */
         _clampedPosition : {
             get : function() {
                 return this._actualClampedPosition;
