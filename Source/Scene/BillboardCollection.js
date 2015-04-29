@@ -1042,32 +1042,20 @@ define([
         boundingVolume.radius += size + offset;
     }
 
-    /**
-     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
-     * get the draw commands needed to render this primitive.
-     * <p>
-     * Do not call this function directly.  This is documented just to
-     * list the exceptions that may be propagated when the scene is rendered:
-     * </p>
-     *
-     * @exception {RuntimeError} image with id must be in the atlas.
-     */
-    BillboardCollection.prototype.update = function(context, frameState, commandList) {
-        var i;
-        var j;
-
+    function updateClampedBillboards(collection, frameState) {
+        // Unified time slicing tasks: https://github.com/AnalyticalGraphicsInc/cesium/issues/2655
         var startTime = getTimestamp();
-        var timeSlice = this._clampTimeSlice;
+        var timeSlice = collection._clampTimeSlice;
         var endTime = startTime + timeSlice;
 
-        var tileList = this._renderedTileList;
+        var tileList = collection._renderedTileList;
         while (tileList.length > 0) {
             var tile = tileList[0];
             var customData = tile.customData;
             var customDataLength = customData.length;
 
             var timeSliceMax = false;
-            for (i = this._lastTileIndex; i < customDataLength; ++i) {
+            for (var i = collection._lastTileIndex; i < customDataLength; ++i) {
                 var data = customData[i];
                 var object = data.object;
                 if (defined(object) && object instanceof Billboard) {
@@ -1080,14 +1068,27 @@ define([
             }
 
             if (timeSliceMax) {
-                this._lastTileIndex = i;
+                collection._lastTileIndex = i;
                 break;
             } else {
-                this._lastTileIndex = 0;
+                collection._lastTileIndex = 0;
                 tileList.shift();
             }
         }
+    }
 
+    /**
+     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
+     * get the draw commands needed to render this primitive.
+     * <p>
+     * Do not call this function directly.  This is documented just to
+     * list the exceptions that may be propagated when the scene is rendered:
+     * </p>
+     *
+     * @exception {RuntimeError} image with id must be in the atlas.
+     */
+    BillboardCollection.prototype.update = function(context, frameState, commandList) {
+        updateClampedBillboards(this, frameState);
         removeBillboards(this);
 
         var billboards = this._billboards;
@@ -1144,7 +1145,7 @@ define([
                 vafWriters = this._vaf.writers;
 
                 // Rewrite entire buffer if billboards were added or removed.
-                for (i = 0; i < billboardsLength; ++i) {
+                for (var i = 0; i < billboardsLength; ++i) {
                     var billboard = this._billboards[i];
                     billboard._dirty = false; // In case it needed an update.
                     writeBillboard(this, context, textureAtlasCoordinates, vafWriters, billboard);
@@ -1256,6 +1257,7 @@ define([
         var command;
         var vs;
         var fs;
+        var j;
 
         if (pass.render) {
             var colorList = this._colorCommands;

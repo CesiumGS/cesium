@@ -252,7 +252,7 @@ void main()
 	    
 	    if (!visible)
 	    {
-	        gl_Position = czm_projection * vec4(vec3(0.0), 1.0);
+	        gl_Position = czm_projection[3];
 	        return;
 	    }
     }

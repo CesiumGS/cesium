@@ -902,7 +902,6 @@ define([
                 object._projection.project(clampedCart, scratchPosition);
                 object._clampedPosition = Cartesian3.fromElements(scratchPosition.z, scratchPosition.x, scratchPosition.y, object._clampedPosition);
             }
-
         }
     };
 
