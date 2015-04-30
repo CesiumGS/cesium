@@ -135,18 +135,18 @@ define([
 
 // TODO: allow tree itself to be out-of-core?  Or have content-type that can be a tree?
             while (stack.length > 0) {
-                var n = stack.pop();
-                var skeletonChildren = n.header.children;
-                if (defined(skeletonChildren)) {
-                    var length = skeletonChildren.length;
+                var t = stack.pop();
+                var children = t.header.children;
+                if (defined(children)) {
+                    var length = children.length;
                     for (var k = 0; k < length; ++k) {
-                        var skeletonChild = skeletonChildren[k];
-                        var cesium3DTileChild = new Cesium3DTile(baseUrl, skeletonChild, n.cesium3DTile);
-                        n.cesium3DTile.children.push(cesium3DTileChild);
+                        var childHeader = children[k];
+                        var childTile = new Cesium3DTile(baseUrl, childHeader, t.cesium3DTile);
+                        t.cesium3DTile.children.push(childTile);
 
                         stack.push({
-                            header : skeletonChild,
-                            cesium3DTile : cesium3DTileChild
+                            header : childHeader,
+                            cesium3DTile : childTile
                         });
                     }
                 }
