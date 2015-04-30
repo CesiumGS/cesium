@@ -35,7 +35,7 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {String} options.url TODO
      * @param {Boolean} [options.show=true] TODO
-     * @param {Boolean} [options.maximumScreenSpaceError=32] TODO
+     * @param {Boolean} [options.maximumScreenSpaceError=16] TODO
      * @param {Boolean} [options.debugShowStatistics=false] TODO
      * @param {Boolean} [options.debugFreezeFrame=false] TODO
      * @param {Boolean} [options.debugColorizeTiles=false] TODO
@@ -76,7 +76,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 32);
+        this.maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
 
         /**
          * DOC_TBA
