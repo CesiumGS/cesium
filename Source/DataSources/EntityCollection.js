@@ -4,7 +4,6 @@ define([
         '../Core/createGuid',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/Iso8601',
@@ -17,7 +16,6 @@ define([
         createGuid,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         Event,
         Iso8601,
@@ -125,20 +123,6 @@ define([
         id : {
             get : function() {
                 return this._id;
-            }
-        },
-        /**
-         * Gets the array of Entity instances in the collection.
-         * This array should not be modified directly.
-         * @memberof EntityCollection.prototype
-         * @readonly
-         * @type {Entity[]}
-         * @deprecated
-         */
-        entities : {
-            get : function() {
-                deprecationWarning('EntityCollection.entities', 'EntityCollection.entities has been deprecated and will be removed in Cesium 1.9, use EntityCollection.values instead');
-                return this._entities.values;
             }
         },
         /**
