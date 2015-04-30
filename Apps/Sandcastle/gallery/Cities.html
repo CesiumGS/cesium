@@ -42,6 +42,9 @@ var city = viewer.scene.primitives.add(new Cesium.Cesium3DTiles({
     debugShowContentsBoundingVolume : false
 }));
 
+viewer.scene.debugShowFramesPerSecond = true;
+//viewer.extend(Cesium.viewerCesiumInspectorMixin);
+
 Sandcastle.addToolbarButton('Stats on/off', function() {
     city.debugShowStatistics = !city.debugShowStatistics;
 });
