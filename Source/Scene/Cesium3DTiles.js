@@ -137,16 +137,18 @@ define([
             while (stack.length > 0) {
                 var n = stack.pop();
                 var skeletonChildren = n.header.children;
-                var length = skeletonChildren.length;
-                for (var k = 0; k < length; ++k) {
-                    var skeletonChild = skeletonChildren[k];
-                    var cesium3DTileChild = new Cesium3DTile(baseUrl, skeletonChild, n.cesium3DTile);
-                    n.cesium3DTile.children.push(cesium3DTileChild);
+                if (defined(skeletonChildren)) {
+                    var length = skeletonChildren.length;
+                    for (var k = 0; k < length; ++k) {
+                        var skeletonChild = skeletonChildren[k];
+                        var cesium3DTileChild = new Cesium3DTile(baseUrl, skeletonChild, n.cesium3DTile);
+                        n.cesium3DTile.children.push(cesium3DTileChild);
 
-                    stack.push({
-                        header : skeletonChild,
-                        cesium3DTile : cesium3DTileChild
-                    });
+                        stack.push({
+                            header : skeletonChild,
+                            cesium3DTile : cesium3DTileChild
+                        });
+                    }
                 }
             }
         });

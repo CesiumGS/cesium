@@ -100,7 +100,7 @@ define([
         /**
          * @readonly
          */
-        this.numberOfChildrenWithoutContent = header.children.length;
+        this.numberOfChildrenWithoutContent = defined(header.children) ? header.children.length : 0;
 
         /**
          * @type {Promise}
