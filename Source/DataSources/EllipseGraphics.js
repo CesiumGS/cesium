@@ -38,7 +38,7 @@ define([
      * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
      * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
      * @param {Property} [options.numberOfVerticalLines=16] A numeric Property specifying the number of vertical lines to draw along the perimeter for the outline.
-     * @param {Property} [options.rotation=0.0] A numeric property specifying the rotation of the ellipse clockwise from north.
+     * @param {Property} [options.rotation=0.0] A numeric property specifying the rotation of the ellipse counter-clockwise from north.
      * @param {Property} [options.stRotation=0.0] A numeric property specifying the rotation of the ellipse texture counter-clockwise from north.
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between points on the ellipse.
      *

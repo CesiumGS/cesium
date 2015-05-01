@@ -112,11 +112,11 @@ define([
          */
         positions : {
             get : function() {
-                deprecationWarning('PolygonGraphics.positions', 'PolygonGraphics.positions was deprecated in Cesium 1.6, use PolygonGraphics.hierarchy instead. This property will be removed in Cesium 1.9.');
+                deprecationWarning('PolygonGraphics.positions', 'PolygonGraphics.positions was deprecated in Cesium 1.6, use PolygonGraphics.hierarchy instead.');
                 return this.hierarchy;
             },
             set : function(value) {
-                deprecationWarning('PolygonGraphics.positions', 'PolygonGraphics.positions was deprecated in Cesium 1.6, use PolygonGraphics.hierarchy instead. This property will be removed in Cesium 1.9.');
+                deprecationWarning('PolygonGraphics.positions', 'PolygonGraphics.positions was deprecated in Cesium 1.6, use PolygonGraphics.hierarchy instead.');
                 this.hierarchy = value;
             }
         },
