@@ -859,20 +859,22 @@ define([
             object._removeCallbackFunc();
         }
 
-        var updateFunction = function(position) {
+        var updateFunction = function(clampedPosition) {
             if (object._heightReference === HeightReference.RELATIVE_TO_GROUND) {
-                var clampedCart = ellipsoid.cartesianToCartographic(position, scratchCartographic);
-                clampedCart.height += object._customData.position.height;
-                ellipsoid.cartographicToCartesian(clampedCart, position);
+                var clampedCart = ellipsoid.cartesianToCartographic(clampedPosition, scratchCartographic);
+                clampedCart.height += position.height;
+                ellipsoid.cartographicToCartesian(clampedCart, clampedPosition);
             }
-            object._clampedPosition = Cartesian3.clone(position, object._clampedPosition);
+            object._clampedPosition = Cartesian3.clone(clampedPosition, object._clampedPosition);
         };
 
         object._removeCallbackFunc = surface.updateHeight(position, updateFunction);
 
         var height = globe.getHeight(position);
         if (defined(height)) {
-            updateFunction(height);
+            Cartographic.clone(position, scratchCartographic);
+            scratchCartographic.height = height;
+            updateFunction(ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition));
         }
     };
 

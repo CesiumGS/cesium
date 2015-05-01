@@ -505,6 +505,7 @@ define([
 
     function updateHeights(primitive, frameState) {
         var tilesToUpdateHeights = primitive._tileToUpdateHeights;
+        var terrainProvider = primitive._tileProvider.terrainProvider;
 
         var startTime = getTimestamp();
         var timeSlice = primitive._updateHeightsTimeSlice;
@@ -548,19 +549,25 @@ define([
                     }
 
                     data.level = tile.level;
-                } /*else if (tile.level === data.level) {
+                } else if (tile.level === data.level) {
                     var children = tile.children;
                     var childrenLength = children.length;
 
-                    var upsampledOnly = true;
+                    var child;
                     for (var j = 0; j < childrenLength; ++j) {
-                        upsampledOnly = upsampledOnly && children[j].upsampledFromParent;
+                        child = children[j];
+                        if (Rectangle.contains(child.rectangle, data.positionCartographic)) {
+                            break;
+                        }
                     }
 
-                    if (upsampledOnly) {
-                        data.removeFunc();
+                    var tileDataAvailable = terrainProvider.getTileDataAvailable(child.x, child.y, child.level);
+                    if ((defined(tileDataAvailable) && !tileDataAvailable) ||
+                           (defined(parent) && defined(parent.data) && defined(parent.data.terrainData) &&
+                                   !parent.data.terrainData.isChildAvailable(parent.x, parent.y, child.x, child.y))) {
+                            data.removeFunc();
                     }
-                }*/
+                }
 
                 if (getTimestamp() >= endTime) {
                     timeSliceMax = true;
