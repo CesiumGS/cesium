@@ -7,6 +7,7 @@ defineSuite([
         'Core/defaultValue',
         'Core/FeatureDetection',
         'Core/JulianDate',
+        'Core/loadArrayBuffer',
         'Core/Math',
         'Core/Matrix4',
         'Core/PrimitiveType',
@@ -24,6 +25,7 @@ defineSuite([
         defaultValue,
         FeatureDetection,
         JulianDate,
+        loadArrayBuffer,
         CesiumMath,
         Matrix4,
         PrimitiveType,
@@ -457,6 +459,51 @@ defineSuite([
             verifyRender(m);
             primitives.remove(m);
         });
+    });
+
+    it('loads a model with the CESIUM_binary_glTF using new Model', function() {
+        return loadArrayBuffer(texturedBoxBinaryUrl). then(function(arrayBuffer) {
+            var model = primitives.add(new Model({
+                gltf : arrayBuffer,
+                modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
+                show : false
+            }));
+            addZoomTo(model);
+
+            return pollToPromise(function() {
+                // Render scene to progressively load the model
+                scene.renderForSpecs();
+                return model.ready;
+            }, { timeout: 10000 }).then(function() {
+                verifyRender(model);
+                primitives.remove(model);
+            });
+
+        });
+    });
+
+    it('Throws because of an invalid Binary glTF header - magic', function() {
+        expect(function() {
+            var arrayBuffer = new ArrayBuffer(16);
+            var model = new Model({
+                gltf : arrayBuffer
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('Throws because of an invalid Binary glTF header - version', function() {
+        expect(function() {
+            var arrayBuffer = new ArrayBuffer(16);
+            var bytes = new Uint8Array(arrayBuffer);
+            bytes[0] = 'g'.charCodeAt(0);
+            bytes[1] = 'l'.charCodeAt(0);
+            bytes[2] = 'T'.charCodeAt(0);
+            bytes[3] = 'F'.charCodeAt(0);
+
+            var model = new Model({
+                gltf : arrayBuffer
+            });
+        }).toThrowDeveloperError();
     });
 
     it('renders a model with the CESIUM_RTC extension', function() {
