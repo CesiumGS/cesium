@@ -104,6 +104,13 @@ define([
         this.performance = false;
 
         /**
+         * Gets or sets the shader cache text.  This property is observable.
+         * @type {String}
+         * @default ''
+         */
+        this.shaderCacheText = '';
+
+        /**
          * Gets or sets the show primitive bounding sphere state.  This property is observable.
          * @type {Boolean}
          * @default false
@@ -250,7 +257,7 @@ define([
          */
         this.terrainSwitchText = '+';
 
-        knockout.track(this, ['filterTile', 'suspendUpdates', 'dropDownVisible', 'frustums',
+        knockout.track(this, ['filterTile', 'suspendUpdates', 'dropDownVisible', 'shaderCacheText', 'frustums',
                               'frustumStatisticText', 'pickTileActive', 'pickPrimitiveActive', 'hasPickedPrimitive',
                               'hasPickedTile', 'tileText', 'generalVisible', 'generalSwitchText',
                               'primitivesVisible', 'primitivesSwitchText', 'terrainVisible', 'terrainSwitchText']);
@@ -818,6 +825,8 @@ define([
                     if (that.primitiveReferenceFrame) {
                         that._modelMatrixPrimitive.modelMatrix = that._primitive.modelMatrix;
                     }
+
+                    that.shaderCacheText = 'Cached shaders: ' + that._scene.context.shaderCache.numberOfShaders;
                 };
             }
         }
