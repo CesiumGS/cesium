@@ -227,7 +227,7 @@ void main()
 #endif
     
 #ifdef TEST_GLOBE_DEPTH
-    if (-positionEC.z < 70000.0)
+    if (-positionEC.z < 50000.0)
     {
 	    vec2 directions[4];
 	    directions[0] = vec2(0.0, 0.0);

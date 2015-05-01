@@ -187,10 +187,6 @@ define([
         this._boundingVolume = new BoundingSphere();
         this._boundingVolumeDirty = false;
 
-        this._newlyVisibleTileList = [];
-        this._clampTimeSlice = 1.0;
-        this._lastTileIndex = 0;
-
         this._colorCommands = [];
         this._pickCommands = [];
 
@@ -267,13 +263,6 @@ define([
                 return that._textureAtlas.texture;
             }
         };
-
-        this._removeEventFunc = undefined;
-        if (defined(this._scene)) {
-            this._removeEventFunc = this._scene.globe._surface.tileVisibleEvent.addEventListener(function(tile) {
-                that._newlyVisibleTileList.push(tile);
-            });
-        }
     };
 
     defineProperties(BillboardCollection.prototype, {
@@ -1049,41 +1038,6 @@ define([
         boundingVolume.radius += size + offset;
     }
 
-    function updateClampedBillboards(collection, frameState) {
-        // Unified time slicing tasks: https://github.com/AnalyticalGraphicsInc/cesium/issues/2655
-        var startTime = getTimestamp();
-        var timeSlice = collection._clampTimeSlice;
-        var endTime = startTime + timeSlice;
-
-        var tileList = collection._newlyVisibleTileList;
-        while (tileList.length > 0) {
-            var tile = tileList[0];
-            var customData = tile.customData;
-            var customDataLength = customData.length;
-
-            var timeSliceMax = false;
-            for (var i = collection._lastTileIndex; i < customDataLength; ++i) {
-                var data = customData[i];
-                var object = data.object;
-                if (defined(object) && object instanceof Billboard) {
-                    Billboard._clampPosition(object, tile, frameState.mode, frameState.mapProjection);
-                    if (getTimestamp() >= endTime) {
-                        timeSliceMax = true;
-                        break;
-                    }
-                }
-            }
-
-            if (timeSliceMax) {
-                collection._lastTileIndex = i;
-                break;
-            } else {
-                collection._lastTileIndex = 0;
-                tileList.shift();
-            }
-        }
-    }
-
     var scratchWriterArray = [];
 
     /**
@@ -1102,7 +1056,6 @@ define([
             throw new DeveloperError('Bilboards with a height reference are not supported.');
         }
 
-        updateClampedBillboards(this, frameState);
         removeBillboards(this);
 
         var billboards = this._billboards;
@@ -1460,10 +1413,6 @@ define([
         this._spPick = this._spPick && this._spPick.destroy();
         this._vaf = this._vaf && this._vaf.destroy();
         destroyBillboards(this._billboards);
-
-        if (defined(this._removeEventFunc)) {
-            this._removeEventFunc();
-        }
 
         return destroyObject(this);
     };

@@ -1,5 +1,7 @@
 /*global define*/
 define([
+        '../Core/Cartesian3',
+        '../Core/Cartographic',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -7,6 +9,7 @@ define([
         '../Core/Event',
         '../Core/getTimestamp',
         '../Core/Queue',
+        '../Core/Ray',
         '../Core/Rectangle',
         '../Core/Visibility',
         './QuadtreeOccluders',
@@ -15,6 +18,8 @@ define([
         './SceneMode',
         './TileReplacementQueue'
     ], function(
+        Cartesian3,
+        Cartographic,
         defaultValue,
         defined,
         defineProperties,
@@ -22,6 +27,7 @@ define([
         Event,
         getTimestamp,
         Queue,
+        Ray,
         Rectangle,
         Visibility,
         QuadtreeOccluders,
@@ -94,8 +100,12 @@ define([
         this._levelZeroTilesReady = false;
         this._loadQueueTimeSlice = 5.0;
 
-        this._customDataAdded = [];
-        this._customDataRemoved = [];
+        this._addHeightCallbacks = [];
+        this._removeHeightCallbacks = [];
+
+        this._tileToUpdateHeights = [];
+        this._lastTileIndex = 0;
+        this._updateHeightsTimeSlice = 2.0;
 
         /**
          * Gets or sets the maximum screen-space error, in pixels, that is allowed.
@@ -115,13 +125,6 @@ define([
          * @default 100
          */
         this.tileCacheSize = defaultValue(options.tileCacheSize, 100);
-
-        /**
-         * An event that is raised when a tile becomes visible. The argument to the event listener
-         * is the visible tile.
-         * @type {Event}
-         */
-        this.tileVisibleEvent = new Event();
 
         this._occluders = new QuadtreeOccluders({
             ellipsoid : ellipsoid
@@ -196,26 +199,20 @@ define([
         }
     };
 
-    /**
-     * Associate data with the tiles of the quadtree. The custom data must have a Cartographic position property.
-     * The position will be used to associate the data with the individual tiles of the quadtree. If the position
-     * is in the tile's rectangle, the custom data will be added to the tile.
-     *
-     * @param {Object} customData The object literal with a Cartographic position property and any other custom properties.
-     */
-    QuadtreePrimitive.prototype.addTileCustomData = function(customData) {
-        this._customDataAdded.push(customData);
-    };
+    QuadtreePrimitive.prototype.updateHeight = function(cartographic, callback) {
+        var primitive = this;
+        var object = {
+            position : undefined,
+            positionCartographic : cartographic,
+            level : 0,
+            callback : callback,
+            removeFunc : function() {
+                primitive._removeHeightCallbacks.push(this);
+            }
+        };
 
-    /**
-     * Removes custom data from the tiles quadtree.
-     *
-     * @param {Object} customData The data to be removed.
-     *
-     * @see QuadtreePrimitive.addTileCustomData
-     */
-    QuadtreePrimitive.prototype.removeTileCustomData = function(customData) {
-        this._customDataRemoved.push(customData);
+        primitive._addHeightCallbacks.push(object);
+        return object.removeFunc;
     };
 
     /**
@@ -321,8 +318,8 @@ define([
         var tile;
         var levelZeroTiles = primitive._levelZeroTiles;
 
-        var customDataAdded = primitive._customDataAdded;
-        var customDataRemoved = primitive._customDataRemoved;
+        var customDataAdded = primitive._addHeightCallbacks;
+        var customDataRemoved = primitive._removeHeightCallbacks;
         var frameNumber = frameState.frameNumber;
 
         if (customDataAdded.length > 0 || customDataRemoved.length > 0) {
@@ -502,6 +499,85 @@ define([
         }
     }
 
+    var scratchRay = new Ray();
+    var scratchCartographic = new Cartographic();
+    var scratchPosition = new Cartesian3();
+
+    function updateHeights(primitive, frameState) {
+        var tilesToUpdateHeights = primitive._tileToUpdateHeights;
+
+        var startTime = getTimestamp();
+        var timeSlice = primitive._updateHeightsTimeSlice;
+        var endTime = startTime + timeSlice;
+
+        var mode = frameState.mode;
+        var projection = frameState.mapProjection;
+        var ellipsoid = projection.ellipsoid;
+
+        while (tilesToUpdateHeights.length > 0) {
+            var tile = tilesToUpdateHeights[0];
+            var customData = tile.customData;
+            var customDataLength = customData.length;
+
+            var timeSliceMax = false;
+            for (var i = primitive._lastTileIndex; i < customDataLength; ++i) {
+                var data = customData[i];
+
+                if (tile.level > data.level) {
+                    if (!defined(data.position)) {
+                        data.position = ellipsoid.cartographicToCartesian(data.positionCartographic);
+                    }
+
+                    if (mode === SceneMode.SCENE3D) {
+                        Cartesian3.clone(Cartesian3.ZERO, scratchRay.origin);
+                        Cartesian3.normalize(data.position, scratchRay.direction);
+                    } else {
+                        Cartographic.clone(data.positionCartographic, scratchCartographic);
+
+                        // minimum height for the terrain set, need to get this information from the terrain provider
+                        scratchCartographic.height = -11500.0;
+                        projection.project(scratchCartographic, scratchPosition);
+                        Cartesian3.fromElements(scratchPosition.z, scratchPosition.x, scratchPosition.y, scratchPosition);
+                        Cartesian3.clone(scratchPosition, scratchRay.origin);
+                        Cartesian3.clone(Cartesian3.UNIT_X, scratchRay.direction);
+                    }
+
+                    var position = tile.data.pick(scratchRay, mode, projection, false, scratchPosition);
+                    if (defined(position)) {
+                        data.callback(position);
+                    }
+
+                    data.level = tile.level;
+                } /*else if (tile.level === data.level) {
+                    var children = tile.children;
+                    var childrenLength = children.length;
+
+                    var upsampledOnly = true;
+                    for (var j = 0; j < childrenLength; ++j) {
+                        upsampledOnly = upsampledOnly && children[j].upsampledFromParent;
+                    }
+
+                    if (upsampledOnly) {
+                        data.removeFunc();
+                    }
+                }*/
+
+                if (getTimestamp() >= endTime) {
+                    timeSliceMax = true;
+                    break;
+                }
+            }
+
+            if (timeSliceMax) {
+                primitive._lastTileIndex = i;
+                break;
+            } else {
+                primitive._lastTileIndex = 0;
+                tilesToUpdateHeights.shift();
+            }
+        }
+    }
+
     function tileDistanceSortFunction(a, b) {
         return a._distance - b._distance;
     }
@@ -509,6 +585,7 @@ define([
     function createRenderCommandsForSelectedTiles(primitive, context, frameState, commandList) {
         var tileProvider = primitive._tileProvider;
         var tilesToRender = primitive._tilesToRender;
+        var tilesToUpdateHeights = primitive._tileToUpdateHeights;
 
         tilesToRender.sort(tileDistanceSortFunction);
 
@@ -517,10 +594,12 @@ define([
             tileProvider.showTileThisFrame(tile, context, frameState, commandList);
 
             if (tile._frameRendered !== frameState.frameNumber - 1) {
-                primitive.tileVisibleEvent.raiseEvent(tile);
+                tilesToUpdateHeights.push(tile);
             }
             tile._frameRendered = frameState.frameNumber;
         }
+
+        updateHeights(primitive, frameState);
     }
 
     return QuadtreePrimitive;

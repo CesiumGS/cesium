@@ -354,10 +354,6 @@ define([
         this._totalGlyphCount = 0;
         this._resolutionScale = undefined;
 
-        this._newlyVisibleTileList = [];
-        this._clampTimeSlice = 1.0;
-        this._lastTileIndex = 0;
-
         /**
          * The 4x4 transformation matrix that transforms each label in this collection from model to world coordinates.
          * When this is the identity matrix, the labels are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
@@ -400,14 +396,6 @@ define([
          * @default false
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
-
-        this._removeEventFunc = undefined;
-        if (defined(this._scene)) {
-            var that = this;
-            this._removeEventFunc = this._scene.globe._surface.tileVisibleEvent.addEventListener(function(tile) {
-                that._newlyVisibleTileList.push(tile);
-            });
-        }
     };
 
     defineProperties(LabelCollection.prototype, {
@@ -586,47 +574,10 @@ define([
         return this._labels[index];
     };
 
-    function updateClampedLabels(collection, frameState) {
-        // Unified time slicing tasks: https://github.com/AnalyticalGraphicsInc/cesium/issues/2655
-        var startTime = getTimestamp();
-        var timeSlice = collection._clampTimeSlice;
-        var endTime = startTime + timeSlice;
-
-        var tileList = collection._newlyVisibleTileList;
-        while (tileList.length > 0) {
-            var tile = tileList[0];
-            var customData = tile.customData;
-            var customDataLength = customData.length;
-
-            var timeSliceMax = false;
-            for (var i = collection._lastTileIndex; i < customDataLength; ++i) {
-                var data = customData[i];
-                var object = data.object;
-                if (defined(object) && object instanceof Label) {
-                    Billboard._clampPosition(object, tile, frameState.mode, frameState.mapProjection);
-                    if (getTimestamp() >= endTime) {
-                        timeSliceMax = true;
-                        break;
-                    }
-                }
-            }
-
-            if (timeSliceMax) {
-                collection._lastTileIndex = i;
-                break;
-            } else {
-                collection._lastTileIndex = 0;
-                tileList.shift();
-            }
-        }
-    }
-
     /**
      * @private
      */
     LabelCollection.prototype.update = function(context, frameState, commandList) {
-        updateClampedLabels(this, frameState);
-
         var billboardCollection = this._billboardCollection;
 
         billboardCollection.modelMatrix = this.modelMatrix;
@@ -713,10 +664,6 @@ define([
         this.removeAll();
         this._billboardCollection = this._billboardCollection.destroy();
         this._textureAtlas = this._textureAtlas && this._textureAtlas.destroy();
-
-        if (defined(this._removeEventFunc)) {
-            this._removeEventFunc();
-        }
 
         return destroyObject(this);
     };

@@ -149,10 +149,9 @@ define([
             this._loadImage();
         }
 
-        this._customData = undefined;
-        this._level = 0;
         this._actualClampedPosition = undefined;
-        this._mode = undefined;
+        this._removeCallbackFunc = undefined;
+        this._mode = SceneMode.SCENE3D;
 
         this._updateClamping();
     };
@@ -821,49 +820,12 @@ define([
         return this._pickId;
     };
 
-    var scratchRay = new Ray();
-    var scratchPosition = new Cartesian3();
-    var scratchCartographic = new Cartographic();
-
-    Billboard._clampPosition = function(object, tile, mode, projection) {
-        var modeChanged = object._mode !== mode;
-        var ellipsoid = projection.ellipsoid;
-        var level = tile.level;
-
-        if (level > object._level || modeChanged) {
-            if (mode === SceneMode.SCENE3D) {
-                Cartesian3.clone(Cartesian3.ZERO, scratchRay.origin);
-                Cartesian3.normalize(object.position, scratchRay.direction);
-            } else {
-                ellipsoid.cartesianToCartographic(object.position, scratchCartographic);
-
-                // minimum height for the terrain set, need to get this information from the terrain provider
-                scratchCartographic.height = -11500.0;
-                projection.project(scratchCartographic, scratchPosition);
-                Cartesian3.fromElements(scratchPosition.z, scratchPosition.x, scratchPosition.y, scratchPosition);
-                Cartesian3.clone(scratchPosition, scratchRay.origin);
-                Cartesian3.clone(Cartesian3.UNIT_X, scratchRay.direction);
-            }
-
-            var position = tile.data.pick(scratchRay, mode, projection, false, scratchPosition);
-            if (defined(position)) {
-                if (object._heightReference === HeightReference.RELATIVE_TO_GROUND) {
-                    var clampedCart = ellipsoid.cartesianToCartographic(position, scratchCartographic);
-                    clampedCart.height += object._customData.position.height;
-                    ellipsoid.cartographicToCartesian(clampedCart, position);
-                }
-                object._clampedPosition = Cartesian3.clone(position, object._clampedPosition);
-            }
-
-            object._mode = mode;
-            object._projection = projection;
-            object._level = level;
-        }
-    };
-
     Billboard.prototype._updateClamping = function() {
         Billboard._updateClamping(this._billboardCollection, this);
     };
+
+    var scratchCartographic = new Cartographic();
+    var scratchPosition = new Cartesian3();
 
     Billboard._updateClamping = function(collection, object) {
         var scene = collection._scene;
@@ -877,13 +839,10 @@ define([
         var globe = scene.globe;
         var ellipsoid = globe.ellipsoid;
         var surface = globe._surface;
-        var customData = object._customData;
 
-        var mode = object._mode = defaultValue(object._mode, SceneMode.SCENE3D);
-
-        if (defined(customData) && object._heightReference === HeightReference.NONE) {
-            surface.removeTileCustomData(customData);
-            object._customData = undefined;
+        if (object._heightReference === HeightReference.NONE && defined(object._removeCallbackFunc)) {
+            object._removeCallbackFunc();
+            object._removeCallbackFunc = undefined;
             object._clampedPosition = undefined;
         }
 
@@ -896,27 +855,24 @@ define([
             return;
         }
 
-        if (defined(customData)) {
-            surface.removeTileCustomData(customData);
+        if (defined(object._removeCallbackFunc)) {
+            object._removeCallbackFunc();
         }
 
-        object._customData = {
-            position : position,
-            object : object
+        var updateFunction = function(position) {
+            if (object._heightReference === HeightReference.RELATIVE_TO_GROUND) {
+                var clampedCart = ellipsoid.cartesianToCartographic(position, scratchCartographic);
+                clampedCart.height += object._customData.position.height;
+                ellipsoid.cartographicToCartesian(clampedCart, position);
+            }
+            object._clampedPosition = Cartesian3.clone(position, object._clampedPosition);
         };
-        surface.addTileCustomData(object._customData);
+
+        object._removeCallbackFunc = surface.updateHeight(position, updateFunction);
 
         var height = globe.getHeight(position);
         if (defined(height)) {
-            var clampedCart = Cartographic.clone(position, scratchCartographic);
-            clampedCart.height = object._heightReference === HeightReference.RELATIVE_TO_GROUND ? height + position.height : height;
-
-            if (mode === SceneMode.SCENE3D) {
-                object._clampedPosition = ellipsoid.cartographicToCartesian(clampedCart, object._clampedPosition);
-            } else if (defined(object._projection)) {
-                object._projection.project(clampedCart, scratchPosition);
-                object._clampedPosition = Cartesian3.fromElements(scratchPosition.z, scratchPosition.x, scratchPosition.y, object._clampedPosition);
-            }
+            updateFunction(height);
         }
     };
 
@@ -1083,11 +1039,11 @@ define([
     };
 
     Billboard.prototype._getActualPosition = function() {
-        return defined(this._customData) && defined(this._clampedPosition) && this._mode !== SceneMode.MORPHING ? this._clampedPosition : this._actualPosition;
+        return defined(this._clampedPosition) && this._mode !== SceneMode.MORPHING ? this._clampedPosition : this._actualPosition;
     };
 
     Billboard.prototype._setActualPosition = function(value) {
-        if (!(defined(this._customData) && defined(this._clampedPosition) && this._mode !== SceneMode.MORPHING)) {
+        if (!(defined(this._clampedPosition) && this._mode !== SceneMode.MORPHING)) {
             Cartesian3.clone(value, this._actualPosition);
         }
         makeDirty(this, POSITION_INDEX);
@@ -1095,7 +1051,7 @@ define([
 
     var tempCartesian3 = new Cartesian4();
     Billboard._computeActualPosition = function(billboard, position, frameState, modelMatrix) {
-        if (defined(billboard._customData) && defined(billboard._clampedPosition) && this._mode !== SceneMode.MORPHING) {
+        if (defined(billboard._clampedPosition) && this._mode !== SceneMode.MORPHING) {
             if (frameState.mode !== this._mode) {
                 billboard._mode = frameState.mode;
                 billboard._projection = frameState.mapProjection;
