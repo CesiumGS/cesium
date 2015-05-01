@@ -644,10 +644,12 @@ define([
      * unless <code>useDefaultRenderLoop</code> is set to false;
      */
     CesiumWidget.prototype.render = function() {
-        this._scene.initializeFrame();
-        var currentTime = this._clock.tick();
         if (this._canRender) {
+            this._scene.initializeFrame();
+            var currentTime = this._clock.tick();
             this._scene.render(currentTime);
+        } else {
+            this._clock.tick();
         }
     };
 
