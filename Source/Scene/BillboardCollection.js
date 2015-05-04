@@ -119,13 +119,13 @@ define([
      *
      * @example
      * // Create a billboard collection with two billboards
-     * var billboards = new Cesium.BillboardCollection();
+     * var billboards = scene.primitives.add(new Cesium.BillboardCollection());
      * billboards.add({
-     *   position : { x : 1.0, y : 2.0, z : 3.0 },
+     *   position : new Cesium.Cartesian3(1.0, 2.0, 3.0),
      *   image : 'url/to/image'
      * });
      * billboards.add({
-     *   position : { x : 4.0, y : 5.0, z : 6.0 },
+     *   position : new Cesium.Cartesian3(4.0, 5.0, 6.0),
      *   image : 'url/to/another/image'
      * });
      */

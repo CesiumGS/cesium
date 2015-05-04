@@ -94,13 +94,13 @@ define([
      *
      * @example
      * // Create a pointPrimitive collection with two points
-     * var pointPrimitives = new Cesium.PointPrimitiveCollection();
-     * pointPrimitives.add({
-     *   position : { x : 1.0, y : 2.0, z : 3.0 },
+     * var points = scene.primitives.add(new Cesium.PointPrimitiveCollection());
+     * points.add({
+     *   position : new Cesium.Cartesian3(1.0, 2.0, 3.0),
      *   color : Cesium.Color.YELLOW
      * });
-     * pointPrimitives.add({
-     *   position : { x : 4.0, y : 5.0, z : 6.0 },
+     * points.add({
+     *   position : new Cesium.Cartesian3(4.0, 5.0, 6.0),
      *   color : Cesium.Color.CYAN
      * });
      */
