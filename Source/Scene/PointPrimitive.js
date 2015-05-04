@@ -166,12 +166,12 @@ define([
          * // Set a pointPrimitive's scaleByDistance to scale to 15 when the
          * // camera is 1500 meters from the pointPrimitive and disappear as
          * // the camera distance approaches 8.0e6 meters.
-         * b.scaleByDistance = new Cesium.NearFarScalar(1.5e2, 15, 8.0e6, 0.0);
+         * p.scaleByDistance = new Cesium.NearFarScalar(1.5e2, 15, 8.0e6, 0.0);
          *
          * @example
          * // Example 2.
          * // disable scaling by distance
-         * b.scaleByDistance = undefined;
+         * p.scaleByDistance = undefined;
          */
         scaleByDistance : {
             get : function() {
@@ -207,12 +207,12 @@ define([
          * // Set a point's translucency to 1.0 when the
          * // camera is 1500 meters from the point and disappear as
          * // the camera distance approaches 8.0e6 meters.
-         * b.translucencyByDistance = new Cesium.NearFarScalar(1.5e2, 1.0, 8.0e6, 0.0);
+         * p.translucencyByDistance = new Cesium.NearFarScalar(1.5e2, 1.0, 8.0e6, 0.0);
          *
          * @example
          * // Example 2.
          * // disable translucency by distance
-         * b.translucencyByDistance = undefined;
+         * p.translucencyByDistance = undefined;
          */
         translucencyByDistance : {
             get : function() {
