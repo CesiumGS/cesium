@@ -199,6 +199,14 @@ define([
         }
     };
 
+    /**
+     * Calls the callback when a new tile is rendered that contains the given cartographic. The only parameter
+     * is the cartesian position on the tile.
+     *
+     * @param {Cartographic} cartographic The cartographic position.
+     * @param {Function} callback The function to be called when a new tile is loaded containing cartographic.
+     * @returns {Function} The function to remove this callback from the quadtree.
+     */
     QuadtreePrimitive.prototype.updateHeight = function(cartographic, callback) {
         var primitive = this;
         var object = {

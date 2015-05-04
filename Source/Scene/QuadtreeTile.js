@@ -295,7 +295,7 @@ define([
         },
 
         /**
-         * An array of objects associated with this tile. See QuadtreePrimitive.addTileCustomData.
+         * An array of objects associated with this tile.
          * @memberof QuadtreeTile.prototype
          * @type {Array}
          */
