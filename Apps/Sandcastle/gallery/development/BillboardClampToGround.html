@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Visualize worldwide, high-resolution terrain.">
-    <meta name="cesium-sandcastle-labels" content="Tutorials, Showcases">
+    <meta name="cesium-sandcastle-labels" content="Development">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
@@ -42,8 +42,14 @@ viewer.scene.globe.depthTestAgainstTerrain = false;
 
 var ellipsoid = viewer.scene.globe.ellipsoid;
 var billboardCollection = viewer.scene.primitives.add(new Cesium.BillboardCollection({
-    globe : viewer.scene.globe
+    scene : viewer.scene
 }));
+
+/*
+var labelCollection = viewer.scene.primitives.add(new Cesium.LabelCollection({
+    scene : viewer.scene
+}));
+*/
 
 // everest
 //var centerLatitude = Cesium.Math.toRadians(27.988257);
@@ -68,9 +74,13 @@ for (var y = 0; y < gridHeight; ++y) {
         billboardCollection.add({
             position : ellipsoid.cartographicToCartesian(position),
             image : '../images/facility.gif',
-            scale : 0.7,
             heightReference : Cesium.HeightReference.CLAMP_TO_GROUND
         });
+        //labelCollection.add({
+        //    text : 'Label',
+        //    position : ellipsoid.cartographicToCartesian(position),
+        //    heightReference : Cesium.HeightReference.CLAMP_TO_GROUND
+        //});
     }
 }
 
