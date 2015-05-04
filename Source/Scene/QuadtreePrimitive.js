@@ -205,10 +205,11 @@ define([
             position : undefined,
             positionCartographic : cartographic,
             level : 0,
-            callback : callback,
-            removeFunc : function() {
-                primitive._removeHeightCallbacks.push(this);
-            }
+            callback : callback
+        };
+
+        object.removeFunc = function() {
+            primitive._removeHeightCallbacks.push(object);
         };
 
         primitive._addHeightCallbacks.push(object);
