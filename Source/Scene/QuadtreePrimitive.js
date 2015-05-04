@@ -161,6 +161,16 @@ define([
         var levelZeroTiles = this._levelZeroTiles;
         if (defined(levelZeroTiles)) {
             for (var i = 0; i < levelZeroTiles.length; ++i) {
+                var tile = levelZeroTiles[i];
+                var customData = tile.customData;
+                var customDataLength = customData.length;
+
+                for (var j = 0; j < customDataLength; ++j) {
+                    var data = customData[j];
+                    data.level = 0;
+                    this._addHeightCallbacks.push(data);
+                }
+
                 levelZeroTiles[i].freeResources();
             }
         }
