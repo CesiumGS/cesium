@@ -827,10 +827,10 @@ define([
     var scratchCartographic = new Cartographic();
     var scratchPosition = new Cartesian3();
 
-    Billboard._updateClamping = function(collection, object) {
+    Billboard._updateClamping = function(collection, owner) {
         var scene = collection._scene;
         if (!defined(scene)) {
-            if (object._heightReference !== HeightReference.NONE) {
+            if (owner._heightReference !== HeightReference.NONE) {
                 throw new DeveloperError('Height reference is not supported.');
             }
             return;
@@ -840,35 +840,35 @@ define([
         var ellipsoid = globe.ellipsoid;
         var surface = globe._surface;
 
-        if (object._heightReference === HeightReference.NONE && defined(object._removeCallbackFunc)) {
-            object._removeCallbackFunc();
-            object._removeCallbackFunc = undefined;
-            object._clampedPosition = undefined;
+        if (owner._heightReference === HeightReference.NONE && defined(owner._removeCallbackFunc)) {
+            owner._removeCallbackFunc();
+            owner._removeCallbackFunc = undefined;
+            owner._clampedPosition = undefined;
         }
 
-        if (object._heightReference === HeightReference.NONE || !defined(object._position)) {
+        if (owner._heightReference === HeightReference.NONE || !defined(owner._position)) {
             return;
         }
 
-        var position = ellipsoid.cartesianToCartographic(object._position);
+        var position = ellipsoid.cartesianToCartographic(owner._position);
         if (!defined(position)) {
             return;
         }
 
-        if (defined(object._removeCallbackFunc)) {
-            object._removeCallbackFunc();
+        if (defined(owner._removeCallbackFunc)) {
+            owner._removeCallbackFunc();
         }
 
         var updateFunction = function(clampedPosition) {
-            if (object._heightReference === HeightReference.RELATIVE_TO_GROUND) {
+            if (owner._heightReference === HeightReference.RELATIVE_TO_GROUND) {
                 var clampedCart = ellipsoid.cartesianToCartographic(clampedPosition, scratchCartographic);
                 clampedCart.height += position.height;
                 ellipsoid.cartographicToCartesian(clampedCart, clampedPosition);
             }
-            object._clampedPosition = Cartesian3.clone(clampedPosition, object._clampedPosition);
+            owner._clampedPosition = Cartesian3.clone(clampedPosition, owner._clampedPosition);
         };
 
-        object._removeCallbackFunc = surface.updateHeight(position, updateFunction);
+        owner._removeCallbackFunc = surface.updateHeight(position, updateFunction);
 
         var height = globe.getHeight(position);
         if (defined(height)) {
