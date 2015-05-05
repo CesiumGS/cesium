@@ -601,6 +601,26 @@ defineSuite([
         expect(pick).not.toBeDefined();
     });
 
+    it('pick a pointPrimitive using scaleByDistance', function() {
+        var p = pointPrimitives.add({
+            position : Cartesian3.ZERO,
+            color : Color.WHITE
+        });
+
+        var scaleByDistance = new NearFarScalar(1.0, 4.0, 3.0e9, 2.0);
+        p.scaleByDistance = scaleByDistance;
+
+        var pick = scene.pick(new Cartesian2(0, 0));
+        expect(pick.primitive).toEqual(p);
+
+        scaleByDistance.nearValue = 0.0;
+        scaleByDistance.farValue = 0.0;
+        p.scaleByDistance = scaleByDistance;
+
+        pick = scene.pick(new Cartesian2(0, 0));
+        expect(pick).not.toBeDefined();
+    });
+
     it('pick a pointPrimitive using translucencyByDistance', function() {
         var p = pointPrimitives.add({
             position : Cartesian3.ZERO,

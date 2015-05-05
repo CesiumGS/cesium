@@ -846,6 +846,26 @@ defineSuite([
         expect(pick).not.toBeDefined();
     });
 
+    it('pick a billboard using scaleByDistance', function() {
+        var b = billboards.add({
+            position : Cartesian3.ZERO,
+            image : whiteImage
+        });
+
+        var scaleByDistance = new NearFarScalar(1.0, 4.0, 3.0e9, 2.0);
+        b.scaleByDistance = scaleByDistance;
+
+        var pick = scene.pick(new Cartesian2(0, 0));
+        expect(pick.primitive).toEqual(b);
+
+        scaleByDistance.nearValue = 0.0;
+        scaleByDistance.farValue = 0.0;
+        b.scaleByDistance = scaleByDistance;
+
+        pick = scene.pick(new Cartesian2(0, 0));
+        expect(pick).not.toBeDefined();
+    });
+
     it('pick a billboard using translucencyByDistance', function() {
         var b = billboards.add({
             position : Cartesian3.ZERO,
@@ -885,6 +905,28 @@ defineSuite([
 
         pick = scene.pick(new Cartesian2(0, 0));
         expect(pick).not.toBeDefined();
+    });
+
+    it('can pick a billboard using the rotation property', function() {
+        var b = billboards.add({
+            position : Cartesian3.ZERO,
+            image : greenImage
+        });
+
+        b.rotation = CesiumMath.PI_OVER_TWO;
+        var pick = scene.pick(new Cartesian2(0, 0));
+        expect(pick.primitive).toEqual(b);
+    });
+
+    it('can pick a billboard using the aligned axis property', function() {
+        var b = billboards.add({
+            position : Cartesian3.ZERO,
+            image : greenImage
+        });
+
+        b.alignedAxis = Cartesian3.UNIT_X;
+        var pick = scene.pick(new Cartesian2(0, 0));
+        expect(pick.primitive).toEqual(b);
     });
 
     it('computes screen space position', function() {
