@@ -13,7 +13,6 @@ define([
         '../Core/DeveloperError',
         '../Core/Matrix4',
         '../Core/NearFarScalar',
-        '../Core/Ray',
         './HeightReference',
         './HorizontalOrigin',
         './SceneMode',
@@ -33,7 +32,6 @@ define([
         DeveloperError,
         Matrix4,
         NearFarScalar,
-        Ray,
         HeightReference,
         HorizontalOrigin,
         SceneMode,
@@ -840,7 +838,13 @@ define([
         var ellipsoid = globe.ellipsoid;
         var surface = globe._surface;
 
-        if (owner._heightReference === HeightReference.NONE && defined(owner._removeCallbackFunc)) {
+        var mode = scene.frameState.mode;
+        var projection = scene.frameState.mapProjection;
+
+        var modeChanged = mode !== owner._mode;
+        owner._mode = mode;
+
+        if ((owner._heightReference === HeightReference.NONE || modeChanged) && defined(owner._removeCallbackFunc)) {
             owner._removeCallbackFunc();
             owner._removeCallbackFunc = undefined;
             owner._clampedPosition = undefined;
@@ -861,9 +865,13 @@ define([
 
         var updateFunction = function(clampedPosition) {
             if (owner._heightReference === HeightReference.RELATIVE_TO_GROUND) {
-                var clampedCart = ellipsoid.cartesianToCartographic(clampedPosition, scratchCartographic);
-                clampedCart.height += position.height;
-                ellipsoid.cartographicToCartesian(clampedCart, clampedPosition);
+                if (owner._mode === SceneMode.SCENE3D) {
+                    var clampedCart = ellipsoid.cartesianToCartographic(clampedPosition, scratchCartographic);
+                    clampedCart.height += position.height;
+                    ellipsoid.cartographicToCartesian(clampedCart, clampedPosition);
+                } else {
+                    clampedPosition.x += position.height;
+                }
             }
             owner._clampedPosition = Cartesian3.clone(clampedPosition, owner._clampedPosition);
         };
@@ -874,7 +882,14 @@ define([
         if (defined(height)) {
             Cartographic.clone(position, scratchCartographic);
             scratchCartographic.height = height;
-            updateFunction(ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition));
+            if (owner._mode === SceneMode.SCENE3D) {
+                ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition);
+            } else {
+                projection.project(scratchCartographic, scratchPosition);
+                Cartesian3.fromElements(scratchPosition.z, scratchPosition.x, scratchPosition.y, scratchPosition);
+            }
+
+            updateFunction(scratchPosition);
         }
     };
 
@@ -1041,11 +1056,11 @@ define([
     };
 
     Billboard.prototype._getActualPosition = function() {
-        return defined(this._clampedPosition) && this._mode !== SceneMode.MORPHING ? this._clampedPosition : this._actualPosition;
+        return defined(this._clampedPosition) ? this._clampedPosition : this._actualPosition;
     };
 
     Billboard.prototype._setActualPosition = function(value) {
-        if (!(defined(this._clampedPosition) && this._mode !== SceneMode.MORPHING)) {
+        if (!(defined(this._clampedPosition))) {
             Cartesian3.clone(value, this._actualPosition);
         }
         makeDirty(this, POSITION_INDEX);
@@ -1053,10 +1068,8 @@ define([
 
     var tempCartesian3 = new Cartesian4();
     Billboard._computeActualPosition = function(billboard, position, frameState, modelMatrix) {
-        if (defined(billboard._clampedPosition) && this._mode !== SceneMode.MORPHING) {
-            if (frameState.mode !== this._mode) {
-                billboard._mode = frameState.mode;
-                billboard._projection = frameState.mapProjection;
+        if (defined(billboard._clampedPosition)) {
+            if (frameState.mode !== billboard._mode) {
                 billboard._updateClamping();
             }
             return billboard._clampedPosition;

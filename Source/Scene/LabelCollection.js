@@ -6,10 +6,8 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/getTimestamp',
         '../Core/Matrix4',
         '../Core/writeTextToCanvas',
-        './Billboard',
         './BillboardCollection',
         './HorizontalOrigin',
         './Label',
@@ -23,10 +21,8 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
-        getTimestamp,
         Matrix4,
         writeTextToCanvas,
-        Billboard,
         BillboardCollection,
         HorizontalOrigin,
         Label,
@@ -280,13 +276,9 @@ define([
         }
         label._labelCollection = undefined;
 
-        if (defined(label._customData)) {
-            labelCollection._scene.globe._surface.removeTileCustomData(label._customData);
-            label._customData = undefined;
+        if (defined(label._removeCallbackFunc)) {
+            label._removeCallbackFunc();
         }
-
-        label._currentTile = undefined;
-        label._newTile = undefined;
 
         destroyObject(label);
     }

@@ -96,9 +96,8 @@ define([
         this._rebindAllGlyphs = true;
         this._repositionAllGlyphs = true;
 
-        this._customData = undefined;
-        this._level = 0;
         this._actualClampedPosition = undefined;
+        this._removeCallbackFunc = undefined;
         this._mode = undefined;
 
         this._updateClamping();
