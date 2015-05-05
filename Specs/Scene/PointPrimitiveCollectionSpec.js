@@ -49,7 +49,7 @@ defineSuite([
         scene.primitives.removeAll();
     });
 
-    it('default constructs a pointPrimitive', function() {
+    it('constructs a default pointPrimitive', function() {
         var p = pointPrimitives.add();
         expect(p.show).toEqual(true);
         expect(p.position).toEqual(Cartesian3.ZERO);
@@ -114,7 +114,7 @@ defineSuite([
         expect(p.id).toEqual('id');
     });
 
-    it('set pointPrimitive properties', function() {
+    it('sets pointPrimitive properties', function() {
         var p = pointPrimitives.add();
         p.show = false;
         p.position = new Cartesian3(1.0, 2.0, 3.0);
@@ -141,11 +141,11 @@ defineSuite([
         expect(p.translucencyByDistance).toEqual(new NearFarScalar(1.0e6, 1.0, 1.0e8, 0.0));
     });
 
-    it('isDestroyed returns false', function() {
+    it('is not destroyed', function() {
         expect(pointPrimitives.isDestroyed()).toEqual(false);
     });
 
-    it('disable pointPrimitive scaleByDistance', function() {
+    it('disables pointPrimitive scaleByDistance', function() {
         var p = pointPrimitives.add({
             scaleByDistance : new NearFarScalar(1.0, 3.0, 1.0e6, 0.0)
         });
@@ -153,7 +153,7 @@ defineSuite([
         expect(p.scaleByDistance).not.toBeDefined();
     });
 
-    it('disable pointPrimitive translucencyByDistance', function() {
+    it('disables pointPrimitive translucencyByDistance', function() {
         var p = pointPrimitives.add({
             translucencyByDistance : new NearFarScalar(1.0, 1.0, 1.0e6, 0.0)
         });
@@ -161,7 +161,7 @@ defineSuite([
         expect(p.translucencyByDistance).not.toBeDefined();
     });
 
-    it('render pointPrimitive with scaleByDistance', function() {
+    it('renders pointPrimitive with scaleByDistance', function() {
         pointPrimitives.add({
             position : Cartesian3.ZERO,
             scaleByDistance: new NearFarScalar(2.0, 1.0, 4.0, 0.0),
@@ -175,7 +175,7 @@ defineSuite([
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
     });
 
-    it('render pointPrimitive with translucencyByDistance', function() {
+    it('renders pointPrimitive with translucencyByDistance', function() {
         pointPrimitives.add({
             position : Cartesian3.ZERO,
             translucencyByDistance: new NearFarScalar(2.0, 1.0, 4.0, 0.0),
@@ -601,7 +601,7 @@ defineSuite([
         expect(pick).not.toBeDefined();
     });
 
-    it('pick a pointPrimitive using scaleByDistance', function() {
+    it('picks a pointPrimitive using scaleByDistance', function() {
         var p = pointPrimitives.add({
             position : Cartesian3.ZERO,
             color : Color.WHITE
@@ -621,7 +621,7 @@ defineSuite([
         expect(pick).not.toBeDefined();
     });
 
-    it('pick a pointPrimitive using translucencyByDistance', function() {
+    it('picks a pointPrimitive using translucencyByDistance', function() {
         var p = pointPrimitives.add({
             position : Cartesian3.ZERO,
             color : Color.WHITE

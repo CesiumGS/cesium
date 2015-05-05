@@ -82,7 +82,7 @@ defineSuite([
         scene.primitives.removeAll();
     });
 
-    it('default constructs a billboard', function() {
+    it('constructs a default billboard', function() {
         var b = billboards.add();
         expect(b.show).toEqual(true);
         expect(b.position).toEqual(Cartesian3.ZERO);
@@ -160,7 +160,7 @@ defineSuite([
         expect(b.id).toEqual('id');
     });
 
-    it('set billboard properties', function() {
+    it('sets billboard properties', function() {
         var b = billboards.add();
         b.show = false;
         b.position = new Cartesian3(1.0, 2.0, 3.0);
@@ -200,11 +200,11 @@ defineSuite([
         expect(b.height).toEqual(200.0);
     });
 
-    it('isDestroyed returns false', function() {
+    it('is not destroyed', function() {
         expect(billboards.isDestroyed()).toEqual(false);
     });
 
-    it('disable billboard scaleByDistance', function() {
+    it('disables billboard scaleByDistance', function() {
         var b = billboards.add({
             scaleByDistance : new NearFarScalar(1.0, 3.0, 1.0e6, 0.0)
         });
@@ -212,7 +212,7 @@ defineSuite([
         expect(b.scaleByDistance).not.toBeDefined();
     });
 
-    it('disable billboard translucencyByDistance', function() {
+    it('disables billboard translucencyByDistance', function() {
         var b = billboards.add({
             translucencyByDistance : new NearFarScalar(1.0, 1.0, 1.0e6, 0.0)
         });
@@ -220,7 +220,7 @@ defineSuite([
         expect(b.translucencyByDistance).not.toBeDefined();
     });
 
-    it('disable billboard pixelOffsetScaleByDistance', function() {
+    it('disables billboard pixelOffsetScaleByDistance', function() {
         var b = billboards.add({
             pixelOffsetScaleByDistance : new NearFarScalar(1.0, 1.0, 1.0e6, 0.0)
         });
@@ -228,7 +228,7 @@ defineSuite([
         expect(b.pixelOffsetScaleByDistance).not.toBeDefined();
     });
 
-    it('render billboard with scaleByDistance', function() {
+    it('renders billboard with scaleByDistance', function() {
         billboards.add({
             position : Cartesian3.ZERO,
             scaleByDistance: new NearFarScalar(2.0, 1.0, 4.0, 0.0),
@@ -242,7 +242,7 @@ defineSuite([
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
     });
 
-    it('render billboard with translucencyByDistance', function() {
+    it('renders billboard with translucencyByDistance', function() {
         billboards.add({
             position : Cartesian3.ZERO,
             translucencyByDistance: new NearFarScalar(2.0, 1.0, 4.0, 0.0),
@@ -256,7 +256,7 @@ defineSuite([
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
     });
 
-    it('render billboard with pixelOffsetScaleByDistance', function() {
+    it('renders billboard with pixelOffsetScaleByDistance', function() {
         billboards.add({
             position : Cartesian3.ZERO,
             pixelOffset : new Cartesian2(1.0, 0.0),
@@ -346,7 +346,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('set a removed billboard property', function() {
+    it('sets a removed billboard property', function() {
         var b = billboards.add();
         billboards.remove(b);
         b.show = false;
@@ -846,7 +846,7 @@ defineSuite([
         expect(pick).not.toBeDefined();
     });
 
-    it('pick a billboard using scaleByDistance', function() {
+    it('picks a billboard using scaleByDistance', function() {
         var b = billboards.add({
             position : Cartesian3.ZERO,
             image : whiteImage
@@ -866,7 +866,7 @@ defineSuite([
         expect(pick).not.toBeDefined();
     });
 
-    it('pick a billboard using translucencyByDistance', function() {
+    it('picks a billboard using translucencyByDistance', function() {
         var b = billboards.add({
             position : Cartesian3.ZERO,
             image : whiteImage
@@ -886,7 +886,7 @@ defineSuite([
         expect(pick).not.toBeDefined();
     });
 
-    it('pick a billboard using pixelOffsetScaleByDistance', function() {
+    it('picks a billboard using pixelOffsetScaleByDistance', function() {
         var b = billboards.add({
             position : Cartesian3.ZERO,
             pixelOffset : new Cartesian2(0.0, 100.0),
