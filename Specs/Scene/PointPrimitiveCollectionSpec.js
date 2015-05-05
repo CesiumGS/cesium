@@ -50,22 +50,22 @@ defineSuite([
     });
 
     it('default constructs a pointPrimitive', function() {
-        var b = pointPrimitives.add();
-        expect(b.show).toEqual(true);
-        expect(b.position).toEqual(Cartesian3.ZERO);
-        expect(b.pixelSize).toEqual(10.0);
-        expect(b.color.red).toEqual(1.0);
-        expect(b.color.green).toEqual(1.0);
-        expect(b.color.blue).toEqual(1.0);
-        expect(b.color.alpha).toEqual(1.0);
-        expect(b.outlineColor.red).toEqual(0.0);
-        expect(b.outlineColor.green).toEqual(0.0);
-        expect(b.outlineColor.blue).toEqual(0.0);
-        expect(b.outlineColor.alpha).toEqual(0.0);
-        expect(b.outlineWidth).toEqual(0.0);
-        expect(b.scaleByDistance).not.toBeDefined();
-        expect(b.translucencyByDistance).not.toBeDefined();
-        expect(b.id).not.toBeDefined();
+        var p = pointPrimitives.add();
+        expect(p.show).toEqual(true);
+        expect(p.position).toEqual(Cartesian3.ZERO);
+        expect(p.pixelSize).toEqual(10.0);
+        expect(p.color.red).toEqual(1.0);
+        expect(p.color.green).toEqual(1.0);
+        expect(p.color.blue).toEqual(1.0);
+        expect(p.color.alpha).toEqual(1.0);
+        expect(p.outlineColor.red).toEqual(0.0);
+        expect(p.outlineColor.green).toEqual(0.0);
+        expect(p.outlineColor.blue).toEqual(0.0);
+        expect(p.outlineColor.alpha).toEqual(0.0);
+        expect(p.outlineWidth).toEqual(0.0);
+        expect(p.scaleByDistance).not.toBeDefined();
+        expect(p.translucencyByDistance).not.toBeDefined();
+        expect(p.id).not.toBeDefined();
     });
 
     it('can add and remove before first render.', function() {
@@ -75,7 +75,7 @@ defineSuite([
     });
 
     it('explicitly constructs a pointPrimitive', function() {
-        var b = pointPrimitives.add({
+        var p = pointPrimitives.add({
             show : false,
             position : new Cartesian3(1.0, 2.0, 3.0),
             pixelSize : 2.0,
@@ -97,64 +97,68 @@ defineSuite([
             id : 'id'
         });
 
-        expect(b.show).toEqual(false);
-        expect(b.position).toEqual(new Cartesian3(1.0, 2.0, 3.0));
-        expect(b.pixelSize).toEqual(2.0);
-        expect(b.color.red).toEqual(0.1);
-        expect(b.color.green).toEqual(0.2);
-        expect(b.color.blue).toEqual(0.3);
-        expect(b.color.alpha).toEqual(0.4);
-        expect(b.outlineColor.red).toEqual(0.5);
-        expect(b.outlineColor.green).toEqual(0.6);
-        expect(b.outlineColor.blue).toEqual(0.7);
-        expect(b.outlineColor.alpha).toEqual(0.8);
-        expect(b.outlineWidth).toEqual(4.0);
-        expect(b.scaleByDistance).toEqual(new NearFarScalar(1.0, 3.0, 1.0e6, 0.0));
-        expect(b.translucencyByDistance).toEqual(new NearFarScalar(1.0, 1.0, 1.0e6, 0.0));
-        expect(b.id).toEqual('id');
+        expect(p.show).toEqual(false);
+        expect(p.position).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+        expect(p.pixelSize).toEqual(2.0);
+        expect(p.color.red).toEqual(0.1);
+        expect(p.color.green).toEqual(0.2);
+        expect(p.color.blue).toEqual(0.3);
+        expect(p.color.alpha).toEqual(0.4);
+        expect(p.outlineColor.red).toEqual(0.5);
+        expect(p.outlineColor.green).toEqual(0.6);
+        expect(p.outlineColor.blue).toEqual(0.7);
+        expect(p.outlineColor.alpha).toEqual(0.8);
+        expect(p.outlineWidth).toEqual(4.0);
+        expect(p.scaleByDistance).toEqual(new NearFarScalar(1.0, 3.0, 1.0e6, 0.0));
+        expect(p.translucencyByDistance).toEqual(new NearFarScalar(1.0, 1.0, 1.0e6, 0.0));
+        expect(p.id).toEqual('id');
     });
 
     it('set pointPrimitive properties', function() {
-        var b = pointPrimitives.add();
-        b.show = false;
-        b.position = new Cartesian3(1.0, 2.0, 3.0);
-        b.pixelSize = 2.0;
-        b.color = new Color(0.1, 0.2, 0.3, 0.4);
-        b.outlineColor = new Color(0.5, 0.6, 0.7, 0.8);
-        b.outlineWidth = 4.0;
-        b.scaleByDistance = new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0);
-        b.translucencyByDistance = new NearFarScalar(1.0e6, 1.0, 1.0e8, 0.0);
+        var p = pointPrimitives.add();
+        p.show = false;
+        p.position = new Cartesian3(1.0, 2.0, 3.0);
+        p.pixelSize = 2.0;
+        p.color = new Color(0.1, 0.2, 0.3, 0.4);
+        p.outlineColor = new Color(0.5, 0.6, 0.7, 0.8);
+        p.outlineWidth = 4.0;
+        p.scaleByDistance = new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0);
+        p.translucencyByDistance = new NearFarScalar(1.0e6, 1.0, 1.0e8, 0.0);
 
-        expect(b.show).toEqual(false);
-        expect(b.position).toEqual(new Cartesian3(1.0, 2.0, 3.0));
-        expect(b.pixelSize).toEqual(2.0);
-        expect(b.color.red).toEqual(0.1);
-        expect(b.color.green).toEqual(0.2);
-        expect(b.color.blue).toEqual(0.3);
-        expect(b.color.alpha).toEqual(0.4);
-        expect(b.outlineColor.red).toEqual(0.5);
-        expect(b.outlineColor.green).toEqual(0.6);
-        expect(b.outlineColor.blue).toEqual(0.7);
-        expect(b.outlineColor.alpha).toEqual(0.8);
-        expect(b.outlineWidth).toEqual(4.0);
-        expect(b.scaleByDistance).toEqual(new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0));
-        expect(b.translucencyByDistance).toEqual(new NearFarScalar(1.0e6, 1.0, 1.0e8, 0.0));
+        expect(p.show).toEqual(false);
+        expect(p.position).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+        expect(p.pixelSize).toEqual(2.0);
+        expect(p.color.red).toEqual(0.1);
+        expect(p.color.green).toEqual(0.2);
+        expect(p.color.blue).toEqual(0.3);
+        expect(p.color.alpha).toEqual(0.4);
+        expect(p.outlineColor.red).toEqual(0.5);
+        expect(p.outlineColor.green).toEqual(0.6);
+        expect(p.outlineColor.blue).toEqual(0.7);
+        expect(p.outlineColor.alpha).toEqual(0.8);
+        expect(p.outlineWidth).toEqual(4.0);
+        expect(p.scaleByDistance).toEqual(new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0));
+        expect(p.translucencyByDistance).toEqual(new NearFarScalar(1.0e6, 1.0, 1.0e8, 0.0));
+    });
+
+    it('isDestroyed returns false', function() {
+        expect(pointPrimitives.isDestroyed()).toEqual(false);
     });
 
     it('disable pointPrimitive scaleByDistance', function() {
-        var b = pointPrimitives.add({
+        var p = pointPrimitives.add({
             scaleByDistance : new NearFarScalar(1.0, 3.0, 1.0e6, 0.0)
         });
-        b.scaleByDistance = undefined;
-        expect(b.scaleByDistance).not.toBeDefined();
+        p.scaleByDistance = undefined;
+        expect(p.scaleByDistance).not.toBeDefined();
     });
 
     it('disable pointPrimitive translucencyByDistance', function() {
-        var b = pointPrimitives.add({
+        var p = pointPrimitives.add({
             translucencyByDistance : new NearFarScalar(1.0, 1.0, 1.0e6, 0.0)
         });
-        b.translucencyByDistance = undefined;
-        expect(b.translucencyByDistance).not.toBeDefined();
+        p.translucencyByDistance = undefined;
+        expect(p.translucencyByDistance).not.toBeDefined();
     });
 
     it('render pointPrimitive with scaleByDistance', function() {
@@ -186,10 +190,10 @@ defineSuite([
     });
 
     it('throws scaleByDistance with nearDistance === farDistance', function() {
-        var b = pointPrimitives.add();
+        var p = pointPrimitives.add();
         var scale = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
         expect(function() {
-            b.scaleByDistance = scale;
+            p.scaleByDistance = scale;
         }).toThrowDeveloperError();
     });
 
@@ -203,18 +207,18 @@ defineSuite([
     });
 
     it('throws scaleByDistance with nearDistance > farDistance', function() {
-        var b = pointPrimitives.add();
+        var p = pointPrimitives.add();
         var scale = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
         expect(function() {
-            b.scaleByDistance = scale;
+            p.scaleByDistance = scale;
         }).toThrowDeveloperError();
     });
 
     it('throws translucencyByDistance with nearDistance === farDistance', function() {
-        var b = pointPrimitives.add();
+        var p = pointPrimitives.add();
         var translucency = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
         expect(function() {
-            b.translucencyByDistance = translucency;
+            p.translucencyByDistance = translucency;
         }).toThrowDeveloperError();
     });
 
@@ -228,18 +232,18 @@ defineSuite([
     });
 
     it('throws translucencyByDistance with nearDistance > farDistance', function() {
-        var b = pointPrimitives.add();
+        var p = pointPrimitives.add();
         var translucency = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
         expect(function() {
-            b.translucencyByDistance = translucency;
+            p.translucencyByDistance = translucency;
         }).toThrowDeveloperError();
     });
 
     it('set a removed pointPrimitive property', function() {
-        var b = pointPrimitives.add();
-        pointPrimitives.remove(b);
-        b.show = false;
-        expect(b.show).toEqual(false);
+        var p = pointPrimitives.add();
+        pointPrimitives.remove(p);
+        p.show = false;
+        expect(p.show).toEqual(false);
     });
 
     it('has zero pointPrimitives when constructed', function() {
@@ -247,12 +251,12 @@ defineSuite([
     });
 
     it('adds a pointPrimitive', function() {
-        var b = pointPrimitives.add({
+        var p = pointPrimitives.add({
             position : new Cartesian3(1.0, 2.0, 3.0)
         });
 
         expect(pointPrimitives.length).toEqual(1);
-        expect(pointPrimitives.get(0)).toEqual(b);
+        expect(pointPrimitives.get(0)).toEqual(p);
     });
 
     it('removes the first pointPrimitive', function() {
@@ -288,15 +292,15 @@ defineSuite([
     });
 
     it('removes the same pointPrimitive twice', function() {
-        var b = pointPrimitives.add({
+        var p = pointPrimitives.add({
             position : new Cartesian3(1.0, 2.0, 3.0)
         });
         expect(pointPrimitives.length).toEqual(1);
 
-        expect(pointPrimitives.remove(b)).toEqual(true);
+        expect(pointPrimitives.remove(p)).toEqual(true);
         expect(pointPrimitives.length).toEqual(0);
 
-        expect(pointPrimitives.remove(b)).toEqual(false);
+        expect(pointPrimitives.remove(p)).toEqual(false);
         expect(pointPrimitives.length).toEqual(0);
     });
 
@@ -625,6 +629,17 @@ defineSuite([
         expect(p.computeScreenSpacePosition(scene)).toEqualEpsilon(new Cartesian2(0.5, 0.5), CesiumMath.EPSILON1);
     });
 
+    it('stores screen space position in a result', function() {
+        var p = pointPrimitives.add({
+            position : Cartesian3.ZERO
+        });
+        var result = new Cartesian2();
+        scene.renderForSpecs();
+        var actual = p.computeScreenSpacePosition(scene, result);
+        expect(actual).toEqual(result);
+        expect(result).toEqualEpsilon(new Cartesian2(0.5, 0.5), CesiumMath.EPSILON1);
+    });
+
     it('throws when computing screen space position when not in a collection', function() {
         var p = pointPrimitives.add({
             position : Cartesian3.ZERO
@@ -760,7 +775,6 @@ defineSuite([
         scene.morphTo2D(0);
         scene.renderForSpecs();
 
-        var camera = scene.camera;
         camera.frustum = orthoFrustum;
 
         scene.renderForSpecs();

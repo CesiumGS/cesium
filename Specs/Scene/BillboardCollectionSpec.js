@@ -200,6 +200,10 @@ defineSuite([
         expect(b.height).toEqual(200.0);
     });
 
+    it('isDestroyed returns false', function() {
+        expect(billboards.isDestroyed()).toEqual(false);
+    });
+
     it('disable billboard scaleByDistance', function() {
         var b = billboards.add({
             scaleByDistance : new NearFarScalar(1.0, 3.0, 1.0e6, 0.0)
