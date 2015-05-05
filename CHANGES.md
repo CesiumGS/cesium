@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+### 1.10 - 2015-06-01
+* Breaking changes
+  *
+* Added new `PointPrimitive` and `PointPrimitiveCollection`, which are faster and use less memory than billboards with circles.
+* Changed `Entity.point` back-end graphics to use the new `PointPrimitive` instead of billboards.  No change to the `Entity.point` API.
+
 ### 1.9 - 2015-05-01
 
 * Breaking changes
