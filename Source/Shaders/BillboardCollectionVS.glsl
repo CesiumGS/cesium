@@ -229,6 +229,9 @@ void main()
 #ifdef TEST_GLOBE_DEPTH
     if (-positionEC.z < 50000.0)
     {
+        vec4 offsetPosition = positionEC;
+        offsetPosition.z *= 0.99;
+        
 	    vec2 directions[4];
 	    directions[0] = vec2(0.0, 0.0);
 	    directions[1] = vec2(0.0, 1.0);
@@ -241,7 +244,7 @@ void main()
 	    bool visible = false;
 	    for (int i = 0; i < 4; ++i)
 	    {
-	        vec4 wc = computePositionWindowCoordinates(positionEC, size, scale, directions[i], vec2(0.0, 0.0), vec2(0.0), pixelOffset, alignedAxis, rotation);
+	        vec4 wc = computePositionWindowCoordinates(offsetPosition, size, scale, directions[i], vec2(0.0, 0.0), vec2(0.0), pixelOffset, alignedAxis, rotation);
 	        float d = texture2D(czm_globeDepthTexture, wc.xy * invSize).r;
 	        if (wc.z < d)
 	        {
