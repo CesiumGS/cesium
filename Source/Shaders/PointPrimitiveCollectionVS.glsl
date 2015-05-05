@@ -15,20 +15,6 @@ varying float v_pixelDistance;
 varying vec4 v_pickColor;
 #endif
 
-float getNearFarScalar(vec4 nearFarScalar, float cameraDistSq)
-{
-    float valueAtMin = nearFarScalar.y;
-    float valueAtMax = nearFarScalar.w;
-    float nearDistanceSq = nearFarScalar.x * nearFarScalar.x;
-    float farDistanceSq = nearFarScalar.z * nearFarScalar.z;
-
-    float t = (cameraDistSq - nearDistanceSq) / (farDistanceSq - nearDistanceSq);
-
-    t = pow(clamp(t, 0.0, 1.0), 0.2);
-
-    return mix(valueAtMin, valueAtMax, t);
-}
-
 const float SHIFT_LEFT8 = 256.0;
 const float SHIFT_RIGHT8 = 1.0 / 256.0;
 
@@ -130,7 +116,7 @@ void main()
 #endif
 
 #ifdef EYE_DISTANCE_SCALING
-    totalSize *= getNearFarScalar(scaleByDistance, lengthSq);
+    totalSize *= czm_nearFarScalar(scaleByDistance, lengthSq);
 #endif
     // Clamp to max point size.
     totalSize = min(totalSize, u_maxTotalPointSize);
@@ -144,7 +130,7 @@ void main()
 
     float translucency = 1.0;
 #ifdef EYE_DISTANCE_TRANSLUCENCY
-    translucency = getNearFarScalar(translucencyByDistance, lengthSq);
+    translucency = czm_nearFarScalar(translucencyByDistance, lengthSq);
     // push vertex behind near plane for clipping
     if (translucency < 0.004)
     {
