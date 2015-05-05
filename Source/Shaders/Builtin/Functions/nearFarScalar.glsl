@@ -6,7 +6,7 @@
  * @name czm_nearFarScalar
  * @glslFunction
  *
- * @param {vec4} nearFarScalar A vector with 4 components: Near distance, Near value, Far distance, Far value.
+ * @param {vec4} nearFarScalar A vector with 4 components: Near distance (x), Near value (y), Far distance (z), Far value (w).
  * @param {float} cameraDistSq The square of the current distance from the camera.
  *
  * @returns {float} The value at this distance.
