@@ -60,6 +60,7 @@ define([
         './PolylineOutlineMaterialProperty',
         './PositionPropertyArray',
         './RectangleGraphics',
+        './ReferenceEntity',
         './ReferenceProperty',
         './SampledPositionProperty',
         './SampledProperty',
@@ -129,6 +130,7 @@ define([
         PolylineOutlineMaterialProperty,
         PositionPropertyArray,
         RectangleGraphics,
+        ReferenceEntity,
         ReferenceProperty,
         SampledPositionProperty,
         SampledProperty,
@@ -146,6 +148,21 @@ define([
             referenceString = currentId + referenceString;
         }
         return ReferenceProperty.fromString(collection, referenceString);
+    }
+
+    function makeReferenceEntity(collection, referenceFrameString, currentReferenceFrame) {
+        if (referenceFrameString === null) {
+          return null;
+        }
+
+        if (referenceFrameString[0] === '#') {
+            referenceFrameString = referenceFrameString.slice(1);
+        }
+
+        if (currentReferenceFrame instanceof ReferenceEntity && currentReferenceFrame.targetCollection === collection && currentReferenceFrame.targetId === referenceFrameString) {
+            return currentReferenceFrame;
+        }
+        return new ReferenceEntity(collection, referenceFrameString);
     }
 
     var scratchCartesian = new Cartesian3();
@@ -605,8 +622,17 @@ define([
         var isReference = defined(packetData.reference);
         var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
 
+        var property = object[propertyName];
+
         if (!isReference) {
-            referenceFrame = defaultValue(ReferenceFrame[packetData.referenceFrame], undefined);
+            var packetReferenceFrame = packetData.referenceFrame;
+            if (defined(packetReferenceFrame)) {
+                referenceFrame = ReferenceFrame[packetReferenceFrame];
+                if (!defined(referenceFrame)) {
+                    var currentReferenceFrame = defined(property) && property.referenceFrame;
+                    referenceFrame = makeReferenceEntity(entityCollection, packetReferenceFrame, currentReferenceFrame);
+                }
+            }
             unwrappedInterval = unwrapCartesianInterval(packetData);
             unwrappedIntervalLength = defaultValue(unwrappedInterval.length, 1);
             isSampled = unwrappedIntervalLength > packedLength;
@@ -621,8 +647,6 @@ define([
             }
             return;
         }
-
-        var property = object[propertyName];
 
         var epoch;
         var packetEpoch = packetData.epoch;
