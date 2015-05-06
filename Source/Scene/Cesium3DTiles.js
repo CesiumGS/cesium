@@ -199,6 +199,7 @@ define([
         return getExplicitScreenSpaceError(tile.geometricError, tile, context, frameState);
     }
 
+ // TODO: use distance to contentsBox, not box?  Check out Seattle with one building per tile
     function getExplicitScreenSpaceError(geometricError, tile, context, frameState) {
         // Avoid divide by zero when viewer is inside the tile
         var distance = Math.max(tile.distanceToCamera, CesiumMath.EPSILON7);

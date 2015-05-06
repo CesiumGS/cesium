@@ -231,12 +231,13 @@ define([
         // Tiles do not have a content.box if it is the same as the tile's box.
         var hascontentBox = defined(tile._header.content.box);
 
-        if (owner.debugShowBox && workaround2657(tile._header.box)) {
+        var showBox = owner.debugShowBox || (owner.debugShowcontentBox && !hascontentBox);
+        if (showBox && workaround2657(tile._header.box)) {
             if (!defined(tile._debugBox)) {
                 tile._debugBox = createDebugBox(tile._header.box, hascontentBox ? Color.WHITE : Color.RED);
             }
             tile._debugBox.update(context, frameState, commandList);
-        } else if (!owner.debugShowBox && defined(tile._debugBox)) {
+        } else if (!showBox && defined(tile._debugBox)) {
             tile._debugBox = tile._debugBox.destroy();
         }
 
