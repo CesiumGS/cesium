@@ -944,6 +944,7 @@
 			}
 
 			// Process any remaining text after the last HTML element. Will process all of the text if there were no HTML elements.
+			if( !html ) return;
 			if( lastIndex < html.length ) {
 				var text = html.substring( lastIndex );
 
