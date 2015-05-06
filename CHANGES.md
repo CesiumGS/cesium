@@ -6,6 +6,7 @@ Change Log
   *
 * Added new `PointPrimitive` and `PointPrimitiveCollection`, which are faster and use less memory than billboards with circles.
 * Changed `Entity.point` back-end graphics to use the new `PointPrimitive` instead of billboards.  No change to the `Entity.point` API.
+* Upgraded Autolinker from version 0.15.2 to 0.17.1.
 
 ### 1.9 - 2015-05-01
 
