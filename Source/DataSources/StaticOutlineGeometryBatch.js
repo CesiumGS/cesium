@@ -129,12 +129,10 @@ define([
                     }
                 }
 
-                if (!updater.hasConstantOutline) {
-                    var show = updater.entity.isShowing && updater.isOutlineVisible(time);
-                    var currentShow = attributes.show[0] === 1;
-                    if (show !== currentShow) {
-                        attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
-                    }
+                var show = updater.entity.isShowing && (updater.hasConstantOutline || updater.isOutlineVisible(time));
+                var currentShow = attributes.show[0] === 1;
+                if (show !== currentShow) {
+                    attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
                 }
             }
 
@@ -253,7 +251,7 @@ define([
         var translucentBatches = this._translucentBatches.values;
         var translucentBatchesLength = translucentBatches.length;
         for (i = 0; i < translucentBatchesLength; i++) {
-            if (translucentBatches.remove(updater)) {
+            if (translucentBatches[i].remove(updater)) {
                 return;
             }
         }

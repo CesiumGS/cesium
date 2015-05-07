@@ -1,11 +1,13 @@
 /*global define*/
 define([
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         './ShaderProgram',
         './ShaderSource'
     ], function(
         defined,
+        defineProperties,
         destroyObject,
         ShaderProgram,
         ShaderSource) {
@@ -17,8 +19,17 @@ define([
     var ShaderCache = function(context) {
         this._context = context;
         this._shaders = {};
+        this._numberOfShaders = 0;
         this._shadersToRelease = {};
     };
+
+    defineProperties(ShaderCache.prototype, {
+        numberOfShaders : {
+            get : function() {
+                return this._numberOfShaders;
+            }
+        }
+    });
 
     /**
      * Returns a shader program from the cache, or creates and caches a new shader program,
@@ -107,6 +118,7 @@ define([
             // A shader can't be in more than one cache.
             shaderProgram._cachedShader = cachedShader;
             this._shaders[keyword] = cachedShader;
+            ++this._numberOfShaders;
         }
 
         ++cachedShader.count;
@@ -121,6 +133,7 @@ define([
                 var cachedShader = shadersToRelease[keyword];
                 delete this._shaders[cachedShader.keyword];
                 cachedShader.shaderProgram.finalDestroy();
+                --this._numberOfShaders;
             }
         }
 
