@@ -159,7 +159,7 @@ click: function () { closeClicked.raiseEvent(this); }');
          * Gets the view model.
          * @memberof InfoBox.prototype
          *
-         * @type {SelectionIndicatorViewModel}
+         * @type {InfoBoxViewModel}
          */
         viewModel : {
             get : function() {
