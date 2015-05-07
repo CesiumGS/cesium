@@ -6,6 +6,7 @@ attribute vec4 compressedAttribute2;        // image height, color, pick color, 
 attribute vec3 eyeOffset;                   // eye offset in meters
 attribute vec4 scaleByDistance;             // near, nearScale, far, farScale
 attribute vec4 pixelOffsetScaleByDistance;  // near, nearScale, far, farScale
+attribute vec2 ownerSize;
 
 varying vec2 v_textureCoordinates;
 
@@ -32,6 +33,42 @@ const float SHIFT_RIGHT3 = 1.0 / 8.0;
 const float SHIFT_RIGHT2 = 1.0 / 4.0;
 const float SHIFT_RIGHT1 = 1.0 / 2.0;
 
+vec4 computePositionWindowCoordinates(vec4 positionEC, vec2 imageSize, float scale, vec2 direction, vec2 origin, vec2 translate, vec2 pixelOffset, vec3 alignedAxis, float rotation)
+{
+    vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
+    
+    vec2 halfSize = imageSize * scale * czm_resolutionScale;
+    halfSize *= ((direction * 2.0) - 1.0);
+    
+    positionWC.xy += (origin * abs(halfSize));
+    
+#if defined(ROTATION) || defined(ALIGNED_AXIS)
+    if (!all(equal(alignedAxis, vec3(0.0))) || rotation != 0.0)
+    {
+        float angle = rotation;
+        if (!all(equal(alignedAxis, vec3(0.0))))
+        {
+            vec3 pos = positionEC.xyz + czm_encodedCameraPositionMCHigh + czm_encodedCameraPositionMCLow;
+            vec3 normal = normalize(cross(alignedAxis, pos));
+            vec4 tangent = vec4(normalize(cross(pos, normal)), 0.0);
+            tangent = czm_modelViewProjection * tangent;
+            angle += sign(-tangent.x) * acos(tangent.y / length(tangent.xy));
+        }
+        
+        float cosTheta = cos(angle);
+        float sinTheta = sin(angle);
+        mat2 rotationMatrix = mat2(cosTheta, sinTheta, -sinTheta, cosTheta);
+        halfSize = rotationMatrix * halfSize;
+    }
+#endif
+    
+    positionWC.xy += halfSize;
+    positionWC.xy += translate;
+    positionWC.xy += (pixelOffset * czm_resolutionScale);
+    
+    return positionWC;
+}
+
 void main() 
 {
     // Modifying this shader may also require modifications to Billboard._computeScreenSpacePosition
@@ -43,6 +80,8 @@ void main()
     
 #if defined(ROTATION) || defined(ALIGNED_AXIS)
     float rotation = positionLowAndRotation.w;
+#else
+    float rotation = 0.0;
 #endif
 
     float compressed = compressedAttribute0.x;
@@ -172,38 +211,43 @@ void main()
     float pixelOffsetScale = czm_nearFarScalar(pixelOffsetScaleByDistance, lengthSq);
     pixelOffset *= pixelOffsetScale;
 #endif
-
-    vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
     
-    vec2 halfSize = imageSize * scale * czm_resolutionScale;
-    halfSize *= ((direction * 2.0) - 1.0);
-    
-    positionWC.xy += (origin * abs(halfSize));
-    
-#if defined(ROTATION) || defined(ALIGNED_AXIS)
-    if (!all(equal(alignedAxis, vec3(0.0))) || rotation != 0.0)
+#ifdef TEST_GLOBE_DEPTH
+    if (-positionEC.z < 50000.0)
     {
-        float angle = rotation;
-        if (!all(equal(alignedAxis, vec3(0.0))))
-        {
-            vec3 pos = positionEC.xyz + czm_encodedCameraPositionMCHigh + czm_encodedCameraPositionMCLow;
-            vec3 normal = normalize(cross(alignedAxis, pos));
-            vec4 tangent = vec4(normalize(cross(pos, normal)), 0.0);
-            tangent = czm_modelViewProjection * tangent;
-            angle += sign(-tangent.x) * acos(tangent.y / length(tangent.xy));
-        }
+        vec4 offsetPosition = positionEC;
+        offsetPosition.z *= 0.99;
         
-        float cosTheta = cos(angle);
-        float sinTheta = sin(angle);
-        mat2 rotationMatrix = mat2(cosTheta, sinTheta, -sinTheta, cosTheta);
-        halfSize = rotationMatrix * halfSize;
+	    vec2 directions[4];
+	    directions[0] = vec2(0.0, 0.0);
+	    directions[1] = vec2(0.0, 1.0);
+	    directions[2] = vec2(1.0, 0.0);
+	    directions[3] = vec2(1.0, 1.0);
+	    
+	    vec2 invSize = 1.0 / czm_viewport.zw;
+	    vec2 size = all(equal(vec2(0.0), ownerSize)) ? imageSize : ownerSize;
+	    
+	    bool visible = false;
+	    for (int i = 0; i < 4; ++i)
+	    {
+	        vec4 wc = computePositionWindowCoordinates(offsetPosition, size, scale, directions[i], vec2(0.0, 0.0), vec2(0.0), pixelOffset, alignedAxis, rotation);
+	        float d = texture2D(czm_globeDepthTexture, wc.xy * invSize).r;
+	        if (wc.z < d)
+	        {
+	            visible = true;
+	            break;
+	        }
+	    }
+	    
+	    if (!visible)
+	    {
+	        gl_Position = czm_projection[3];
+	        return;
+	    }
     }
 #endif
     
-    positionWC.xy += halfSize;
-    positionWC.xy += translate;
-    positionWC.xy += (pixelOffset * czm_resolutionScale);
-
+    vec4 positionWC = computePositionWindowCoordinates(positionEC, imageSize, scale, direction, origin, translate, pixelOffset, alignedAxis, rotation);
     gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
     v_textureCoordinates = textureCoordinates;
 

@@ -71,6 +71,7 @@ define([
     var SCALE_BY_DISTANCE_INDEX = Billboard.SCALE_BY_DISTANCE_INDEX;
     var TRANSLUCENCY_BY_DISTANCE_INDEX = Billboard.TRANSLUCENCY_BY_DISTANCE_INDEX;
     var PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = Billboard.PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX;
+    var OWNER_SIZE_INDEX = Billboard.OWNER_SIZE_INDEX;
     var NUMBER_OF_PROPERTIES = Billboard.NUMBER_OF_PROPERTIES;
 
     var attributeLocations = {
@@ -81,7 +82,8 @@ define([
         compressedAttribute2 : 4,        // image height, color, pick color, 2 bytes free
         eyeOffset : 5,
         scaleByDistance : 6,
-        pixelOffsetScaleByDistance : 7
+        pixelOffsetScaleByDistance : 7,
+        ownerSize : 8
     };
 
     /**
@@ -103,6 +105,7 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each billboard from model to world coordinates.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+     * @param {Scene} [options.scene] Must be passed in for billboards that use the height reference property or will be depth tested against the globe.
      *
      * @performance For best performance, prefer a few collections, each with many billboards, to
      * many collections with only a few billboards each.  Organize collections so that billboards
@@ -131,6 +134,8 @@ define([
      */
     var BillboardCollection = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        this._scene = options.scene;
 
         this._textureAtlas = undefined;
         this._textureAtlasGUID = undefined;
@@ -246,7 +251,8 @@ define([
                               BufferUsage.STATIC_DRAW, // ALIGNED_AXIS_INDEX
                               BufferUsage.STATIC_DRAW, // SCALE_BY_DISTANCE_INDEX
                               BufferUsage.STATIC_DRAW, // TRANSLUCENCY_BY_DISTANCE_INDEX
-                              BufferUsage.STATIC_DRAW  // PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX
+                              BufferUsage.STATIC_DRAW, // PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX
+                              BufferUsage.STATIC_DRAW  // OWNER_SIZE_INDEX
                           ];
 
         var that = this;
@@ -600,6 +606,11 @@ define([
             componentsPerAttribute : 4,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX]
+        }, {
+            index : attributeLocations.ownerSize,
+            componentsPerAttribute : 2,
+            componentDatatype : ComponentDatatype.FLOAT,
+            usage : buffersUsage[OWNER_SIZE_INDEX]
         }], 4 * numberOfBillboards); // 4 vertices per billboard
     }
 
@@ -922,6 +933,17 @@ define([
         writer(i + 3, near, nearValue, far, farValue);
     }
 
+    function writeOwnerSize(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
+        var i = billboard._index * 4;
+        var size = billboard._ownerSize;
+
+        var writer = vafWriters[attributeLocations.ownerSize];
+        writer(i + 0, size.x, size.y);
+        writer(i + 1, size.x, size.y);
+        writer(i + 2, size.x, size.y);
+        writer(i + 3, size.x, size.y);
+    }
+
     function writeBillboard(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         writePositionScaleAndRotation(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeCompressedAttrib0(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
@@ -930,6 +952,7 @@ define([
         writeEyeOffset(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writePixelOffsetScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
+        writeOwnerSize(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
     }
 
     function recomputeActualPositions(billboardCollection, billboards, length, frameState, modelMatrix, recomputeBoundingVolume) {
@@ -945,7 +968,7 @@ define([
         for ( var i = 0; i < length; ++i) {
             var billboard = billboards[i];
             var position = billboard.position;
-            var actualPosition = Billboard._computeActualPosition(position, frameState, modelMatrix);
+            var actualPosition = Billboard._computeActualPosition(billboard, position, frameState, modelMatrix);
             if (defined(actualPosition)) {
                 billboard._setActualPosition(actualPosition);
 
@@ -1026,6 +1049,11 @@ define([
      * @exception {RuntimeError} image with id must be in the atlas.
      */
     BillboardCollection.prototype.update = function(context, frameState, commandList) {
+        var scene = this._scene;
+        if (defined(scene) && (!scene._globeDepth.supported || context.maximumVertexTextureImageUnits === 0)) {
+            throw new DeveloperError('Bilboards with a height reference are not supported.');
+        }
+
         removeBillboards(this);
 
         var billboards = this._billboards;
@@ -1127,8 +1155,11 @@ define([
                     writers.push(writePixelOffsetScaleByDistance);
                 }
 
-                var numWriters = writers.length;
+                if (properties[OWNER_SIZE_INDEX]) {
+                    writers.push(writeOwnerSize);
+                }
 
+                var numWriters = writers.length;
                 vafWriters = this._vaf.writers;
 
                 if ((billboardsToUpdateLength / billboardsLength) > 0.1) {
@@ -1191,9 +1222,9 @@ define([
         var va;
         var vaLength;
         var command;
-        var j;
         var vs;
         var fs;
+        var j;
 
         if (pass.render) {
             var colorList = this._colorCommands;
@@ -1231,6 +1262,9 @@ define([
                 }
                 if (this._shaderPixelOffsetScaleByDistance) {
                     vs.defines.push('EYE_DISTANCE_PIXEL_OFFSET');
+                }
+                if (defined(this._scene)) {
+                    vs.defines.push('TEST_GLOBE_DEPTH');
                 }
 
                 this._sp = context.replaceShaderProgram(this._sp, vs, BillboardCollectionFS, attributeLocations);
@@ -1296,6 +1330,9 @@ define([
                 }
                 if (this._shaderPixelOffsetScaleByDistance) {
                     vs.defines.push('EYE_DISTANCE_PIXEL_OFFSET');
+                }
+                if (defined(this._scene)) {
+                    vs.defines.push('TEST_GLOBE_DEPTH');
                 }
 
                 fs = new ShaderSource({

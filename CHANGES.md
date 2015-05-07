@@ -4,6 +4,7 @@ Change Log
 ### 1.10 - 2015-06-01
 * Breaking changes
   *
+* Added `Billboard.heightReference` and `Label.heightReference` to clamp billboards and labels to terrain.
 * Added new `PointPrimitive` and `PointPrimitiveCollection`, which are faster and use less memory than billboards with circles.
 * Changed `Entity.point` back-end graphics to use the new `PointPrimitive` instead of billboards.  No change to the `Entity.point` API.
 * Upgraded Autolinker from version 0.15.2 to 0.17.1.
