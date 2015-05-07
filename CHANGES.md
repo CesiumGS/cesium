@@ -1,29 +1,35 @@
 Change Log
 ==========
 
+### 1.10 - 2015-06-01
+* Breaking changes
+  *
+* Added new `PointPrimitive` and `PointPrimitiveCollection`, which are faster and use less memory than billboards with circles.
+* Changed `Entity.point` back-end graphics to use the new `PointPrimitive` instead of billboards.  No change to the `Entity.point` API.
+* Upgraded Autolinker from version 0.15.2 to 0.17.1.
+* Fixed documentation for 'Context.drawingBufferHeight' and 'Context.drawingBufferWidth'.
+* Added debug option to 'Scene' to show the depth buffer information for a specified view frustum slice and exposed capability in 'CesiumInspector' widget.
+* Removed `Scene.fxaaOrderIndependentTranslucency`. Use `Scene.fxaa` which is now `true` by default.
+
 ### 1.9 - 2015-05-01
+
 * Breaking changes
   * Removed `ColorMaterialProperty.fromColor`, previously deprecated in 1.6. Pass a `Color` directly to the `ColorMaterialProperty` constructor instead.
   * Removed `CompositeEntityCollection.entities` and `EntityCollection.entities`, both previously deprecated in 1.6. Use `CompositeEntityCollection.values` and `EntityCollection.values` instead.
   * Removed `DataSourceDisplay.getScene` and `DataSourceDisplay.getDataSources`, both previously deprecated in 1.6. Use `DataSourceDisplay.scene` and `DataSourceDisplay.dataSources` instead.
-  * `Entity` no longer takes a string id as it's constructor argument. Pass an options object with `id` property instead. This was previously deprecated in 1.6.
+  * `Entity` no longer takes a string id as its constructor argument. Pass an options object with `id` property instead. This was previously deprecated in 1.6.
   * Removed `Model.readyToRender`, previously deprecated in 1.6.  Use `Model.readyPromise` instead.
-* Deprecated
-  *
-* An exception is now thrown if `Primitive.modelMatrix` is not the identity matrix when in in 2D or Columbus View.
-* Fix a bug which caused `Entity.viewFrom` to be ignored when flying to, zooming to, or tracking an Entity.
-* The `InfoBox` title is now correctly updated if the name of `viewer.selectedEntity` changes on the fly. [#2644](https://github.com/AnalyticalGraphicsInc/cesium/pull/2644)
+* Entity `material` properties and `Material` uniform values can now take a `canvas` element in addition to an image or url. [#2667](https://github.com/AnalyticalGraphicsInc/cesium/pull/2667)
+* Fixed a bug which caused `Entity.viewFrom` to be ignored when flying to, zooming to, or tracking an Entity. [#2628](https://github.com/AnalyticalGraphicsInc/cesium/issues/2628)
 * Fixed a bug that caused `Corridor` and `PolylineVolume` geometry to be incorrect for sharp corners [#2626](https://github.com/AnalyticalGraphicsInc/cesium/pull/2626)
 * Fixed crash when modifying a translucent entity geometry outline. [#2630](https://github.com/AnalyticalGraphicsInc/cesium/pull/2630)
 * Fixed crash when loading KML GroundOverlays that spanned 360 degrees. [#2639](https://github.com/AnalyticalGraphicsInc/cesium/pull/2639)
 * Fixed `Geocoder` styling issue in Safari. [#2658](https://github.com/AnalyticalGraphicsInc/cesium/pull/2658).
-* Fixed a crash that would occur when the `Viewer` or `CesiumWidget` was resized to 0 while the camera was in motion.
+* Fixed a crash that would occur when the `Viewer` or `CesiumWidget` was resized to 0 while the camera was in motion. [#2662](https://github.com/AnalyticalGraphicsInc/cesium/issues/2662)
+* Fixed a bug that prevented the `InfoBox` title from updating if the name of `viewer.selectedEntity` changed. [#2644](https://github.com/AnalyticalGraphicsInc/cesium/pull/2644)
 * Added an optional `result` parameter to `computeScreenSpacePosition` on both `Billboard` and `Label`.
 * Added number of cached shaders to the `CesiumInspector` debugging widget.
-* Entity `material` properties and `Material` uniform values can now take a `canvas` element in addition to an image or url.
-* Fixed documentation for 'Context.drawingBufferHeight' and 'Context.drawingBufferWidth'.
-* Added debug option to 'Scene' to show the depth buffer information for a specified view frustum slice and exposed capability in 'CesiumInspector' widget.
-* Removed `Scene.fxaaOrderIndependentTranslucency`. Use `Scene.fxaa` which is now `true` by default.
+* An exception is now thrown if `Primitive.modelMatrix` is not the identity matrix when in in 2D or Columbus View.
 
 ### 1.8 - 2015-04-01
 
