@@ -62,7 +62,7 @@ define([
         this._model = model;
 // TODO: allow this to not change the state depending on if the request is actually made, e.g., with RequestsByServer.
         this.state = Cesium3DTileContentState.PROCESSING;
-        this.processingPromise.resolve(that);
+        this.processingPromise.resolve(this);
     };
 
     function setMaterialDiffuse(content, color) {

@@ -224,7 +224,7 @@ define([
         return b.distanceToCamera - a.distanceToCamera;
     }
 
-    function requestChild(tiles3D, tile) {
+    function requestContent(tiles3D, tile) {
         tile.requestContent();
         var removeFunction = removeFromProcessingQueue(tiles3D, tile);
         when(tile.processingPromise).then(addToProcessingQueue(tiles3D, tile));
@@ -261,7 +261,7 @@ define([
         }
 
         if (root.isContentUnloaded()) {
-            requestChild(tiles3D, root);
+            requestContent(tiles3D, root);
             return;
         }
 
@@ -315,7 +315,7 @@ define([
                         child.parentFullyVisible = fullyVisible;
 
                         if (child.isContentUnloaded() && (visible(child, cullingVolume, stats) !== Intersect.OUTSIDE)) {
-                            requestChild(tiles3D, child);
+                            requestContent(tiles3D, child);
                         } else {
                             stack.push(child);
                         }
@@ -353,7 +353,7 @@ define([
                             child = children[k];
 // TODO: we could spin a bit less CPU here and probably above by keeping separate lists for unloaded/ready children.
                             if (child.isContentUnloaded()) {
-                                requestChild(tiles3D, child);
+                                requestContent(tiles3D, child);
                             }
                         }
                     } else {
@@ -380,7 +380,12 @@ define([
     function removeFromProcessingQueue(tiles3D, tile) {
         return function() {
             var index = tiles3D._processingQueue.indexOf(tile);
-            tiles3D._processingQueue.splice(index, 1);
+
+            // The tile may not be in the processing queue if, for example, it
+            // doesn't have any content and went immediately to the ready state.
+            if (index !== -1) {
+                tiles3D._processingQueue.splice(index, 1);
+            }
         };
     }
 

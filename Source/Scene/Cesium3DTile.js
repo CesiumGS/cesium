@@ -17,6 +17,7 @@ define([
         './Cesium3DTileContentProviderFactory',
         './Cesium3DTileContentState',
         './Cesium3DTileRefine',
+        './Empty3DTileContentProvider',
         './PerInstanceColorAppearance',
         './Primitive',
         './TileBoundingBox',
@@ -40,6 +41,7 @@ define([
         Cesium3DTileContentProviderFactory,
         Cesium3DTileContentState,
         Cesium3DTileRefine,
+        Empty3DTileContentProvider,
         PerInstanceColorAppearance,
         Primitive,
         TileBoundingBox,
@@ -52,6 +54,7 @@ define([
      */
     var Cesium3DTile = function(baseUrl, header, parent) {
         this._header = header;
+        var contentHeader = header.content;
 
         var b = header.box;
         var rectangle = new Rectangle(b[0], b[1], b[2], b[3]);
@@ -64,13 +67,13 @@ define([
         this._boundingSphere = BoundingSphere.fromRectangleWithHeights3D(rectangle, undefined, b[4], b[5]);
 
         var rs;
-        if (defined(header.content.box)) {
-            // Non-leaf tiles may have a render-box bounding-volume, which is a tight-fit box
+        if (defined(contentHeader) && defined(contentHeader.box)) {
+            // Non-leaf tiles may have a content-box bounding-volume, which is a tight-fit box
             // around only the models in the tile.  This box is useful for culling for rendering,
             // but not for culling for traversing the tree since it is not spatial coherence, i.e.,
             // since it only bounds models in the tile, not the entire tile, children may be
             // outside of this box.
-            var cb = header.content.box;
+            var cb = contentHeader.box;
             rs = BoundingSphere.fromRectangleWithHeights3D(new Rectangle(cb[0], cb[1], cb[2], cb[3]), undefined, cb[4], cb[5]);
         }
 
@@ -108,16 +111,19 @@ define([
          */
         this.readyPromise = when.defer();
 
-// TODO: contents may come from a different server than tree.json
-        var contentUrl = header.content.url;
-        var url = (new Uri(contentUrl).isAbsolute()) ? contentUrl : baseUrl + contentUrl;
-        var contentFactory = Cesium3DTileContentProviderFactory[header.content.type];
         var content;
+        if (defined(contentHeader)) {
+            var contentUrl = contentHeader.url;
+            var url = (new Uri(contentUrl).isAbsolute()) ? contentUrl : baseUrl + contentUrl;
+            var contentFactory = Cesium3DTileContentProviderFactory[contentHeader.type];
 
-        if (defined(contentFactory)) {
-            content = contentFactory(url);
+            if (defined(contentFactory)) {
+                content = contentFactory(url);
+            } else {
+                throw new DeveloperError('Unknown tile content type, ' + contentHeader.type + ', for ' + url);
+            }
         } else {
-            throw new DeveloperError('Unknown tile content type, ' + header.content.type + ', for ' + url);
+            content = new Empty3DTileContentProvider();
         }
         this._content = content;
 
@@ -132,7 +138,7 @@ define([
             that.readyPromise.resolve(that);
         }).otherwise(function(error) {
             that.readyPromise.reject(error);
-// TODO: that.parent.numberOfChildrenWithoutContent will never reach zero and therefore that.parent will never refine
+//TODO: that.parent.numberOfChildrenWithoutContent will never reach zero and therefore that.parent will never refine
         });
 
         // Members that are updated every frame for rendering optimizations
@@ -229,7 +235,7 @@ define([
 
     function applyDebugSettings(tile, owner, context, frameState, commandList) {
         // Tiles do not have a content.box if it is the same as the tile's box.
-        var hascontentBox = defined(tile._header.content.box);
+        var hascontentBox = defined(tile._header.content) && defined(tile._header.content.box);
 
         var showBox = owner.debugShowBox || (owner.debugShowcontentBox && !hascontentBox);
         if (showBox && workaround2657(tile._header.box)) {
