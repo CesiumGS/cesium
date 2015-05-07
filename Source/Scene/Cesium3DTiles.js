@@ -123,7 +123,7 @@ define([
 
         var that = this;
 
-        loadJson(baseUrl + 'tree.json').then(function(tree) {
+        loadJson(baseUrl + 'tiles.json').then(function(tree) {
             that._geometricError = tree.geometricError;
             that._root = new Cesium3DTile(baseUrl, tree.root, undefined);
 
