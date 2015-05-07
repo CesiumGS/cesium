@@ -222,7 +222,7 @@ define([
         var object = {
             position : undefined,
             positionCartographic : cartographic,
-            level : 0,
+            level : -1,
             callback : callback
         };
 
