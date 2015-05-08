@@ -892,6 +892,13 @@ require({
 
     registry.byId('buttonNewWindow').on('click', function() {
         var baseHref = window.location.href;
+        
+        //Handle case where demo is in a sub-directory.
+        var searchLen = window.location.search.length;
+        if (searchLen > 0) {
+            baseHref = baseHref.substring(0, baseHref.length - searchLen);
+        }
+        
         var pos = baseHref.lastIndexOf('/');
         baseHref = baseHref.substring(0, pos) + '/gallery/';
 

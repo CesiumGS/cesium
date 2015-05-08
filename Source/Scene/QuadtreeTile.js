@@ -281,7 +281,7 @@ define([
     });
 
     /**
-     * Frees the resources assocated with this tile and returns it to the <code>START</code>
+     * Frees the resources associated with this tile and returns it to the <code>START</code>
      * {@link QuadtreeTileLoadState}.  If the {@link QuadtreeTile#data} property is defined and it
      * has a <code>freeResources</code> method, the method will be invoked.
      *
