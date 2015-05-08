@@ -204,11 +204,11 @@ defineSuite([
         expect(labels.length).toEqual(0);
     });
 
-    it('isDestroyed returns false', function() {
+    it('is not destroyed', function() {
         expect(labels.isDestroyed()).toEqual(false);
     });
 
-    it('adding and removing multiple labels works', function() {
+    it('can add and remove multiple labels', function() {
         var one = labels.add();
         var two = labels.add();
         var three = labels.add();
@@ -455,7 +455,7 @@ defineSuite([
         expect(scene.renderForSpecs()[0]).toBeGreaterThan(10);
     });
 
-    it('render label with translucencyByDistance', function() {
+    it('renders label with translucencyByDistance', function() {
         labels.add({
             position : Cartesian3.ZERO,
             text : 'x',
@@ -471,7 +471,7 @@ defineSuite([
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
     });
 
-    it('render label with pixelOffsetScaleByDistance', function() {
+    it('renders label with pixelOffsetScaleByDistance', function() {
         labels.add({
             position : Cartesian3.ZERO,
             pixelOffset : new Cartesian2(1.0, 0.0),
@@ -535,7 +535,7 @@ defineSuite([
         expect(pick).not.toBeDefined();
     });
 
-    it('pick a label using translucencyByDistance', function() {
+    it('picks a label using translucencyByDistance', function() {
         var label = labels.add({
             position : Cartesian3.ZERO,
             text : 'x',
@@ -557,7 +557,7 @@ defineSuite([
         expect(pick).not.toBeDefined();
     });
 
-    it('pick a label using pixelOffsetScaleByDistance', function() {
+    it('picks a label using pixelOffsetScaleByDistance', function() {
         var label = labels.add({
             position : Cartesian3.ZERO,
             pixelOffset : new Cartesian2(0.0, 100.0),

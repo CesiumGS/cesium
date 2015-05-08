@@ -94,7 +94,7 @@
         }
 
         if (!remoteUrl) {
-            return res.send(400, 'No url specified.');
+            return res.status(400).send('No url specified.');
         }
 
         if (!remoteUrl.protocol) {
@@ -121,7 +121,7 @@
                 res.header(filterHeaders(req, response.headers));
             }
 
-            res.send(code, body);
+            res.status(code).send(body);
         });
     });
 
