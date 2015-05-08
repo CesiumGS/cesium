@@ -189,18 +189,13 @@ define([
         return tile.contentsVisibility(cullingVolume) !== Intersect.OUTSIDE;
     }
 
-    function getScreenSpaceError(tile, context, frameState) {
-// TODO: screenSpaceError2D like QuadtreePrimitive.js
-        if (tile.geometricError === 0.0) {
+    function getScreenSpaceError(geometricError, tile, context, frameState) {
+        // TODO: screenSpaceError2D like QuadtreePrimitive.js
+        if (geometricError === 0.0) {
             // Leaf nodes do not have any error so save the computation
-            return tile.geometricError;
+            return 0.0;
         }
 
-        return getExplicitScreenSpaceError(tile.geometricError, tile, context, frameState);
-    }
-
- // TODO: use distance to contentsBox, not box?  Check out Seattle with one building per tile
-    function getExplicitScreenSpaceError(geometricError, tile, context, frameState) {
         // Avoid divide by zero when viewer is inside the tile
         var distance = Math.max(tile.distanceToCamera, CesiumMath.EPSILON7);
         var height = context.drawingBufferHeight;
@@ -255,7 +250,7 @@ define([
         var root = tiles3D._root;
         root.distanceToCamera = root.distanceToTile(frameState);
 
-        if (getExplicitScreenSpaceError(tiles3D._geometricError, root, context, frameState) <= maximumScreenSpaceError) {
+        if (getScreenSpaceError(tiles3D._geometricError, root, context, frameState) <= maximumScreenSpaceError) {
             // The SSE of not rendering the tree is small enough that the tree does not need to be rendered
             return;
         }
@@ -283,7 +278,7 @@ define([
             }
 
             // Tile is inside/intersects the view frustum.  How many pixels is its geometric error?
-            var sse = getScreenSpaceError(t, context, frameState);
+            var sse = getScreenSpaceError(t.geometricError, t, context, frameState);
 // TODO: refine also based on (1) occlusion/VMSSE and/or (2) center of viewport
 
             var children = t.children;
@@ -314,10 +309,13 @@ define([
                         child = children[k];
                         child.parentFullyVisible = fullyVisible;
 
-                        if (child.isContentUnloaded() && (visible(child, cullingVolume, stats) !== Intersect.OUTSIDE)) {
-                            requestContent(tiles3D, child);
-                        } else {
-                            stack.push(child);
+                        // Use parent's geometric error with child's box to see if we already meet the SSE
+                        if (getScreenSpaceError(t.geometricError, child, context, frameState) > maximumScreenSpaceError) {
+                            if (child.isContentUnloaded() && (visible(child, cullingVolume, stats) !== Intersect.OUTSIDE)) {
+                                requestContent(tiles3D, child);
+                            } else {
+                                stack.push(child);
+                            }
                         }
                     }
                 }
