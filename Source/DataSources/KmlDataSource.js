@@ -1322,6 +1322,14 @@ define([
         kmlData.phoneNumber = queryStringValue(featureNode, 'phoneNumber', namespaces.kml);
         kmlData.snippet = queryStringValue(featureNode, 'Snippet', namespaces.kml);
 
+        var lookAtNode = queryFirstNode(featureNode, 'LookAt', namespaces.kml);
+        var lookAt = kmlData.lookAt;
+        lookAt.longitude = Number(queryStringValue(lookAtNode, 'longitude', namespaces.kml));
+        lookAt.latitude = Number(queryStringValue(lookAtNode, 'latitude', namespaces.kml));
+        lookAt.heading = Number(queryStringValue(lookAtNode, 'heading', namespaces.kml));
+        lookAt.tilt = Number(queryStringValue(lookAtNode, 'tilt', namespaces.kml));
+        lookAt.range = Number(queryStringValue(lookAtNode, 'range', namespaces.kml));
+
         processExtendedData(featureNode, entity);
         processDescription(featureNode, entity, styleEntity, uriResolver);
 
@@ -1929,6 +1937,53 @@ define([
              * @property link.length
              */
             length : undefined
+        };
+
+        /**
+         * Gets the lookAt.
+         * @type Object
+         */
+        this.lookAt = {
+            /**
+             * Gets the longitude.
+             * @type Number
+             * @alias lookAt.longitude
+             * @memberof! KmlFeatureData#
+             * @property lookAt.longitude
+             */
+            longitude : undefined,
+            /**
+             * Gets the latitude.
+             * @type Number
+             * @alias lookAt.latitude
+             * @memberof! KmlFeatureData#
+             * @property lookAt.latitude
+             */
+            latitude : undefined,
+            /**
+             * Gets the heading.
+             * @type Number
+             * @alias lookAt.heading
+             * @memberof! KmlFeatureData#
+             * @property lookAt.heading
+             */
+            heading : undefined,
+            /**
+             * Gets the tilt.
+             * @type Number
+             * @alias lookAt.tilt
+             * @memberof! KmlFeatureData#
+             * @property lookAt.tilt
+             */
+            tilt : undefined,
+            /**
+             * Gets the range.
+             * @type Number
+             * @alias lookAt.range
+             * @memberof! KmlFeatureData#
+             * @property lookAt.range
+             */
+            range : undefined
         };
 
         /**
