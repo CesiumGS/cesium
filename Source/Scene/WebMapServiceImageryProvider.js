@@ -134,7 +134,7 @@ define([
         this._proxy = options.proxy;
         this._layers = options.layers;
         this._enablePickFeatures = defaultValue(options.enablePickFeatures, true);
-        this._getFeatureInfoFormats = WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats;
+        this._getFeatureInfoFormats = defaultValue(options.getFeatureInfoFormats, WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats);
 
         if (defined(options.getFeatureInfoAsGeoJson) || defined(options.getFeatureInfoAsXml) || defined(options.getFeatureInfoXmlContentType)) {
             deprecationWarning('WebMapServiceImageryProvider.getFeatureInfo', 'The options.getFeatureInfoAsGeoJson, getFeatureInfoAsXml, and getFeatureInfoXmlContentType parameters to WebMapServiceImageryProvider were deprecated in Cesium 1.10 and will be removed in 1.13.  Use options.getFeatureInfoType and options.getFeatureInfoFormats instead.');
