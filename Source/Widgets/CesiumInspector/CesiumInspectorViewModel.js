@@ -4,6 +4,7 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
+        '../../Core/FeatureDetection',
         '../../Core/Rectangle',
         '../../Scene/DebugModelMatrixPrimitive',
         '../../Scene/PerformanceDisplay',
@@ -15,6 +16,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        FeatureDetection,
         Rectangle,
         DebugModelMatrixPrimitive,
         PerformanceDisplay,
@@ -405,9 +407,19 @@ define([
         this._pickPrimitive = createCommand(function() {
             that.pickPrimitiveActive = !that.pickPrimitiveActive;
             if (that.pickPrimitiveActive) {
-                that._canvas.addEventListener('mousedown', pickPrimitive, false);
+                if (FeatureDetection.supportsPointerEvents()) {
+                    that._canvas.addEventListener('pointerdown', pickPrimitive, true);
+                } else {
+                    that._canvas.addEventListener('mousedown', pickPrimitive, true);
+                    that._canvas.addEventListener('touchstart', pickPrimitive, true);
+                }
             } else {
-                that._canvas.removeEventListener('mousedown', pickPrimitive, false);
+                if (FeatureDetection.supportsPointerEvents()) {
+                    that._canvas.removeEventListener('pointerdown', pickPrimitive, true);
+                } else {
+                    that._canvas.removeEventListener('mousedown', pickPrimitive, true);
+                    that._canvas.removeEventListener('touchstart', pickPrimitive, true);
+                }
             }
         });
 
@@ -447,9 +459,19 @@ define([
             that.pickTileActive = !that.pickTileActive;
 
             if (that.pickTileActive) {
-                that._canvas.addEventListener('mousedown', selectTile, false);
+                if (FeatureDetection.supportsPointerEvents()) {
+                    that._canvas.addEventListener('pointerdown', selectTile, true);
+                } else {
+                    that._canvas.addEventListener('mousedown', selectTile, true);
+                    that._canvas.addEventListener('touchstart', selectTile, true);
+                }
             } else {
-                that._canvas.removeEventListener('mousedown', selectTile, false);
+                if (FeatureDetection.supportsPointerEvents()) {
+                    that._canvas.removeEventListener('pointerdown', selectTile, true);
+                } else {
+                    that._canvas.removeEventListener('mousedown', selectTile, true);
+                    that._canvas.removeEventListener('touchstart', selectTile, true);
+                }
             }
         });
     };
