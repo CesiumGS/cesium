@@ -247,7 +247,7 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Object} [options.gltf] The object for the glTF JSON.
+     * @param {Object|ArrayBuffer} [options.gltf] The object for the glTF JSON or an arraybuffer of Binary glTF defined by the CESIUM_binary_glTF extension.
      * @param {String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {DisplayCondition} [options.displayCondition] DOC_TBA
@@ -260,6 +260,9 @@ define([
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
+     *
+     * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
+     * @exception {DeveloperError} Only glTF Binary version 1 is supported.
      *
      * @see Model.fromGltf
      *
@@ -281,11 +284,24 @@ define([
             ++cachedGltf.count;
         } else {
             // glTF was explicitly provided, e.g., when a user uses the Model constructor directly
-            if (defined(options.gltf)) {
-                cachedGltf = new CachedGltf({
-                    gltf : options.gltf,
-                    ready : true
-                });
+            var gltf = options.gltf;
+
+            if (defined(gltf)) {
+                if (gltf instanceof ArrayBuffer) {
+                    // Binary glTF
+                    cachedGltf = new CachedGltf({
+                        gltf : parseBinaryGltfHeader(gltf),
+                        bgltf : gltf,
+                        ready : true
+                    });
+                } else {
+                    // Normal glTF (JSON)
+                    cachedGltf = new CachedGltf({
+                        gltf : options.gltf,
+                        ready : true
+                    });
+                }
+
                 cachedGltf.count = 1;
 
                 if (defined(cacheKey)) {
@@ -490,7 +506,6 @@ define([
             }
         },
 
-// TODO: update doc and maybe rename this since it is more than JSON
         /**
          * When <code>true</code>, the glTF JSON is not stored with the model once the model is
          * loaded (when {@link Model#ready} is <code>true</code>).  This saves memory when
@@ -538,9 +553,9 @@ define([
 
         /**
          * The base path that paths in the glTF JSON are relative to.  The base
-         * path is the same path as the path containing the .json file
-         * minus the .json file, when binary, image, and shader files are
-         * in the same directory as the .json.  When this is <code>''</code>,
+         * path is the same path as the path containing the .gltf file
+         * minus the .gltf file, when binary, image, and shader files are
+         * in the same directory as the .gltf.  When this is <code>''</code>,
          * the app's base path is used.
          *
          * @memberof Model.prototype
@@ -685,10 +700,38 @@ define([
 
     var sizeOfUnit32 = Uint32Array.BYTES_PER_ELEMENT;
 
-// TODO: update doc to include .bgltf
+    function parseBinaryGltfHeader(arrayBuffer) {
+        var magic = getStringFromTypedArray(arrayBuffer, 0, 4);
+        if (magic !== 'glTF') {
+            throw new DeveloperError('bgltf is not a valid Binary glTF file.');
+        }
+
+        var view = new DataView(arrayBuffer);
+        var byteOffset = 0;
+
+        byteOffset += sizeOfUnit32;  // Skip magic number
+
+        var version = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUnit32;
+        if (version !== 1) {
+            throw new DeveloperError('Only glTF Binary version 1 is supported.  Version ' + version + ' is not.');
+        }
+
+        var jsonOffset = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUnit32;
+
+        var jsonLength = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUnit32;
+
+        return JSON.parse(getStringFromTypedArray(arrayBuffer, jsonOffset, jsonLength));
+    }
+
     /**
      * Creates a model from a glTF asset.  When the model is ready to render, i.e., when the external binary, image,
      * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyPromise} is resolved.
+     *
+     * The model can be a traditional glTF asset with a .gltf extension or a Binary glTF using the
+     * CESIUM_binary_glTF extension with a .bgltf extension.
      *
      * @param {Object} options Object with the following properties:
      * @param {String} options.url The url to the .gltf file.
@@ -705,10 +748,13 @@ define([
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @returns {Model} The newly created model.
      *
+     * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
+     * @exception {DeveloperError} Only glTF Binary version 1 is supported.
+     *
      * @example
      * // Example 1. Create a model from a glTF asset
      * var model = scene.primitives.add(Cesium.Model.fromGltf({
-     *   url : './duck/duck.json'
+     *   url : './duck/duck.gltf'
      * }));
      *
      * @example
@@ -717,7 +763,7 @@ define([
      * var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
      *
      * var model = scene.primitives.add(Model.fromGltf({
-     *   url : './duck/duck.json',
+     *   url : './duck/duck.gltf',
      *   show : true,                     // default
      *   modelMatrix : modelMatrix,
      *   scale : 2.0,                     // double size
@@ -762,26 +808,7 @@ define([
             if (url.toLowerCase().indexOf('.bgltf', url.length - 6) !== -1) {
                 // Load binary glTF
                 loadArrayBuffer(url, options.headers).then(function(arrayBuffer) {
-                    var magic = getStringFromTypedArray(arrayBuffer, 0, 4);
-                    if (magic !== 'glTF') {
-                        throw new RuntimeError('bgltf is not a valid binary glTF file.');
-                    }
-
-                    var view = new DataView(arrayBuffer);
-                    var byteOffset = 0;
-
-// TODO: no need for version since it is in JSON.
-                    byteOffset += sizeOfUnit32;  // Skip magic number
-                    byteOffset += sizeOfUnit32;  // Skip version
-
-                    var jsonOffset = view.getUint32(byteOffset, true);
-                    byteOffset += sizeOfUnit32;
-
-                    var jsonLength = view.getUint32(byteOffset, true);
-                    byteOffset += sizeOfUnit32;
-
-                    var jsonString = getStringFromTypedArray(arrayBuffer, jsonOffset, jsonLength);
-                    cachedGltf.makeReady(JSON.parse(jsonString), arrayBuffer);
+                    cachedGltf.makeReady(parseBinaryGltfHeader(arrayBuffer), arrayBuffer);
                 }).otherwise(getFailedLoadFunction(model, 'bgltf', url));
             } else {
                 // Load text (JSON) glTF

@@ -28,6 +28,7 @@ define([
      * @param {Property} [options.outlineWidth=0] A numeric Property specifying the the outline width in pixels.
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the point.
      * @param {Property} [options.scaleByDistance] A {@link NearFarScalar} Property used to scale the point based on distance.
+     * @param {Property} [options.translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
      */
     var PointGraphics = function(options) {
         this._color = undefined;
@@ -42,6 +43,8 @@ define([
         this._showSubscription = undefined;
         this._scaleByDistance = undefined;
         this._scaleByDistanceSubscription = undefined;
+        this._translucencyByDistance = undefined;
+        this._translucencyByDistanceSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -107,7 +110,18 @@ define([
          * @memberof PointGraphics.prototype
          * @type {Property}
          */
-        scaleByDistance : createPropertyDescriptor('scaleByDistance')
+        scaleByDistance : createPropertyDescriptor('scaleByDistance'),
+
+        /**
+         * Gets or sets {@link NearFarScalar} Property specifying the translucency of the point based on the distance from the camera.
+         * A point's translucency will interpolate between the {@link NearFarScalar#nearValue} and
+         * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+         * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
+         * Outside of these ranges the points's translucency remains clamped to the nearest bound.
+         * @memberof PointGraphics.prototype
+         * @type {Property}
+         */
+        translucencyByDistance : createPropertyDescriptor('translucencyByDistance')
     });
 
     /**
@@ -126,6 +140,7 @@ define([
         result.outlineWidth = this.outlineWidth;
         result.show = this.show;
         result.scaleByDistance = this.scaleByDistance;
+        result.translucencyByDistance = this._translucencyByDistance;
         return result;
     };
 
@@ -148,6 +163,7 @@ define([
         this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
         this.show = defaultValue(this.show, source.show);
         this.scaleByDistance = defaultValue(this.scaleByDistance, source.scaleByDistance);
+        this.translucencyByDistance = defaultValue(this._translucencyByDistance, source.translucencyByDistance);
     };
 
     return PointGraphics;

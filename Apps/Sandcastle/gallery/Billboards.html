@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Add billboard images, points, and markers to the scene.">
+    <meta name="description" content="Add billboard images and markers to the scene.">
     <meta name="cesium-sandcastle-labels" content="Beginner, Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -161,32 +161,6 @@ function offsetByDistance() {
     });
 }
 
-function addPointBillboards() {
-    Sandcastle.declare(addPointBillboards);
-
-    viewer.entities.add({
-        position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-        point : {
-            color : Cesium.Color.RED,
-            pixelSize : 8
-        }
-    });
-    viewer.entities.add({
-        position : Cesium.Cartesian3.fromDegrees(-80.50, 35.14),
-        point : {
-            color : Cesium.Color.BLUE,
-            pixelSize : 16
-        }
-    });
-    viewer.entities.add({
-        position : Cesium.Cartesian3.fromDegrees(-80.12, 25.46),
-        point : {
-            color : Cesium.Color.LIME,
-            pixelSize : 32
-        }
-    });
-}
-
 function addMarkerBillboards() {
     Sandcastle.declare(addMarkerBillboards);
 
@@ -276,12 +250,6 @@ Sandcastle.addToolbarMenu([{
         Sandcastle.highlight(offsetByDistance);
     }
 }, {
-    text : 'Add point billboards',
-    onselect : function() {
-        addPointBillboards();
-        Sandcastle.highlight(addPointBillboards);
-    }
-}, {
     text : 'Add marker billboards',
     onselect : function() {
         addMarkerBillboards();
@@ -293,7 +261,7 @@ Sandcastle.reset = function () {
     viewer.entities.removeAll();
 };
 //Sandcastle_End
-Sandcastle.finishedLoading();
+    Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {
     startup(Cesium);
