@@ -42,6 +42,7 @@ define([
         './PerInstanceColorAppearance',
         './PerspectiveFrustum',
         './PerspectiveOffCenterFrustum',
+        './PickDepth',
         './Primitive',
         './PrimitiveCollection',
         './SceneMode',
@@ -93,6 +94,7 @@ define([
         PerInstanceColorAppearance,
         PerspectiveFrustum,
         PerspectiveOffCenterFrustum,
+        PickDepth,
         Primitive,
         PrimitiveCollection,
         SceneMode,
@@ -238,6 +240,9 @@ define([
             depth : 1.0,
             owner : this
         });
+
+        this._pickDepths = [];
+        this._debugGlobeDepths = [];
 
         this._transitioner = new SceneTransitioner(this);
 
@@ -437,8 +442,6 @@ define([
          * @default false
          */
         this.debugShowGlobeDepth = false;
-
-        this._debugGlobeDepths = [];
 
         /**
          * This property is for debugging only; it is not for production use.
@@ -1210,6 +1213,15 @@ define([
         return globeDepth;
     }
 
+    function getPickDepth(scene, context, index) {
+        var pickDepth = scene._pickDepths[index];
+        if (!defined(pickDepth)) {
+            pickDepth = new PickDepth(context);
+            scene._pickDepths[index] = pickDepth;
+        }
+        return pickDepth;
+    }
+
     var scratchPerspectiveFrustum = new PerspectiveFrustum();
     var scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
     var scratchOrthographicFrustum = new OrthographicFrustum();
@@ -1397,6 +1409,10 @@ define([
             commands = frustumCommands.commands[Pass.TRANSLUCENT];
             commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
             executeTranslucentCommands(scene, executeCommand, passState, commands);
+
+            var pickDepth = getPickDepth(scene, context, index);
+            pickDepth.update(context, globeDepth.framebuffer.depthStencilTexture);
+            pickDepth.executeCopyDepth(context, passState);
         }
 
         if (scene.debugShowGlobeDepth) {
@@ -1696,6 +1712,22 @@ define([
         context.endFrame();
         callAfterRenderFunctions(frameState);
         return object;
+    };
+
+    Scene.prototype.pickDepth = function(windowPosition) {
+        var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(this, windowPosition, scratchPosition);
+        //drawingBufferPosition.y = this.drawingBufferHeight - drawingBufferPosition.y;
+
+        var context = this._context;
+        var pickDepth = getPickDepth(this, context, 0);
+
+        return context.readPixels({
+            x : drawingBufferPosition.x,
+            y : drawingBufferPosition.y,
+            width : 1,
+            height : 1,
+            framebuffer : pickDepth.framebuffer
+        });
     };
 
     /**
