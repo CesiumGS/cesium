@@ -4,8 +4,9 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
-        '../../Core/FeatureDetection',
         '../../Core/Rectangle',
+        '../../Core/ScreenSpaceEventHandler',
+        '../../Core/ScreenSpaceEventType',
         '../../Scene/DebugModelMatrixPrimitive',
         '../../Scene/PerformanceDisplay',
         '../../Scene/TileCoordinatesImageryProvider',
@@ -16,8 +17,9 @@ define([
         defined,
         defineProperties,
         DeveloperError,
-        FeatureDetection,
         Rectangle,
+        ScreenSpaceEventHandler,
+        ScreenSpaceEventType,
         DebugModelMatrixPrimitive,
         PerformanceDisplay,
         TileCoordinatesImageryProvider,
@@ -80,6 +82,7 @@ define([
 
         var that = this;
         var canvas = scene.canvas;
+        var eventHandler = new ScreenSpaceEventHandler(canvas);
         this._scene = scene;
         this._canvas = canvas;
         this._primitive = undefined;
@@ -393,11 +396,11 @@ define([
         });
 
         var pickPrimitive = function(e) {
-            that._canvas.removeEventListener('mousedown', pickPrimitive, false);
+            eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
             that.pickPrimitiveActive = false;
             var newPick = that._scene.pick({
-                x : e.clientX,
-                y : e.clientY
+                x : e.position.x,
+                y : e.position.y
             });
             if (defined(newPick)) {
                 that.primitive = defined(newPick.collection) ? newPick.collection : newPick.primitive;
@@ -407,19 +410,9 @@ define([
         this._pickPrimitive = createCommand(function() {
             that.pickPrimitiveActive = !that.pickPrimitiveActive;
             if (that.pickPrimitiveActive) {
-                if (FeatureDetection.supportsPointerEvents()) {
-                    that._canvas.addEventListener('pointerdown', pickPrimitive, true);
-                } else {
-                    that._canvas.addEventListener('mousedown', pickPrimitive, true);
-                    that._canvas.addEventListener('touchstart', pickPrimitive, true);
-                }
+                eventHandler.setInputAction(pickPrimitive, ScreenSpaceEventType.LEFT_CLICK);
             } else {
-                if (FeatureDetection.supportsPointerEvents()) {
-                    that._canvas.removeEventListener('pointerdown', pickPrimitive, true);
-                } else {
-                    that._canvas.removeEventListener('mousedown', pickPrimitive, true);
-                    that._canvas.removeEventListener('touchstart', pickPrimitive, true);
-                }
+                eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
             }
         });
 
@@ -427,8 +420,8 @@ define([
             var selectedTile;
             var ellipsoid = globe.ellipsoid;
             var cartesian = that._scene.camera.pickEllipsoid({
-                x : e.clientX,
-                y : e.clientY
+                x : e.position.x,
+                y : e.position.y
             }, ellipsoid);
 
             if (defined(cartesian)) {
@@ -451,7 +444,7 @@ define([
 
             that.tile = selectedTile;
 
-            that._canvas.removeEventListener('mousedown', selectTile, false);
+            eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
             that.pickTileActive = false;
         };
 
@@ -459,19 +452,9 @@ define([
             that.pickTileActive = !that.pickTileActive;
 
             if (that.pickTileActive) {
-                if (FeatureDetection.supportsPointerEvents()) {
-                    that._canvas.addEventListener('pointerdown', selectTile, true);
-                } else {
-                    that._canvas.addEventListener('mousedown', selectTile, true);
-                    that._canvas.addEventListener('touchstart', selectTile, true);
-                }
+                eventHandler.setInputAction(selectTile, ScreenSpaceEventType.LEFT_CLICK);
             } else {
-                if (FeatureDetection.supportsPointerEvents()) {
-                    that._canvas.removeEventListener('pointerdown', selectTile, true);
-                } else {
-                    that._canvas.removeEventListener('mousedown', selectTile, true);
-                    that._canvas.removeEventListener('touchstart', selectTile, true);
-                }
+                eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
             }
         });
     };
