@@ -249,8 +249,24 @@ define([
         return [featureInfo];
     }
 
+    var emptyBodyRegex= /<body>\s*<\/body>/im;
+    var titleRegex = /<title>([^]*)<\/title>/im;
+
     function textToFeatureInfo(text) {
+        // If the text is HTML and it has an empty body tag, assume it means no features were found.
+        if (emptyBodyRegex.test(text)) {
+            return undefined;
+        }
+
+        // If the text has a <title> element, use it as the name.
+        var name;
+        var title = titleRegex.exec(text);
+        if (title && title.length > 1) {
+            name = title[1];
+        }
+
         var featureInfo = new ImageryLayerFeatureInfo();
+        featureInfo.name = name;
         featureInfo.description = text;
         featureInfo.data = text;
         return [featureInfo];
