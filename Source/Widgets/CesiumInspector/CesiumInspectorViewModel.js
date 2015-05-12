@@ -3,6 +3,7 @@ define([
         '../../Core/Color',
         '../../Core/defined',
         '../../Core/defineProperties',
+        '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Rectangle',
         '../../Core/ScreenSpaceEventHandler',
@@ -16,6 +17,7 @@ define([
         Color,
         defined,
         defineProperties,
+        destroyObject,
         DeveloperError,
         Rectangle,
         ScreenSpaceEventHandler,
@@ -83,6 +85,7 @@ define([
         var that = this;
         var canvas = scene.canvas;
         var eventHandler = new ScreenSpaceEventHandler(canvas);
+        this._eventHandler = eventHandler;
         this._scene = scene;
         this._canvas = canvas;
         this._primitive = undefined;
@@ -836,6 +839,22 @@ define([
             }
         }
     });
+
+    /**
+     * @returns {Boolean} true if the object has been destroyed, false otherwise.
+     */
+    CesiumInspectorViewModel.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys the widget.  Should be called if permanently
+     * removing the widget from layout.
+     */
+    CesiumInspectorViewModel.prototype.destroy = function() {
+        this._eventHandler.destroy();
+        return destroyObject(this);
+    };
 
     return CesiumInspectorViewModel;
 });
