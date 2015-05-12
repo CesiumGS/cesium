@@ -1727,11 +1727,15 @@ define([
      * @returns {Cartesian3} The cartesian position.
      *
      * @exception {DeveloperError} windowPosition is undefined.
+     * @exception {DeveloperError} Picking from the depth buffer is not supported.
      */
     Scene.prototype.pickDepth = function(windowPosition, result) {
         //>>includeStart('debug', pragmas.debug);
         if(!defined(windowPosition)) {
             throw new DeveloperError('windowPosition is undefined.');
+        }
+        if (!this._globeDepth.supported) {
+            throw new DeveloperError('Picking from the depth buffer is not supported.');
         }
         //>>includeEnd('debug');
 
