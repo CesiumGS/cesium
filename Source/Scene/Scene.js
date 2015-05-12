@@ -4,6 +4,7 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/createGuid',
@@ -56,6 +57,7 @@ define([
         BoundingSphere,
         Cartesian2,
         Cartesian3,
+        Cartesian4,
         Color,
         ColorGeometryInstanceAttribute,
         createGuid,
@@ -1715,19 +1717,70 @@ define([
     };
 
     Scene.prototype.pickDepth = function(windowPosition) {
-        var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(this, windowPosition, scratchPosition);
-        //drawingBufferPosition.y = this.drawingBufferHeight - drawingBufferPosition.y;
-
         var context = this._context;
-        var pickDepth = getPickDepth(this, context, 0);
+        var uniformState = context.uniformState;
 
-        return context.readPixels({
-            x : drawingBufferPosition.x,
-            y : drawingBufferPosition.y,
-            width : 1,
-            height : 1,
-            framebuffer : pickDepth.framebuffer
-        });
+        var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(this, windowPosition, scratchPosition);
+        drawingBufferPosition.y = this.drawingBufferHeight - drawingBufferPosition.y;
+
+        var depth;
+        var index;
+        var numFrustums = this.numberOfFrustums;
+
+        for (var i = 0; i < numFrustums; ++i) {
+            var pickDepth = getPickDepth(this, context, i);
+            var pixels = context.readPixels({
+                x : drawingBufferPosition.x,
+                y : drawingBufferPosition.y,
+                width : 1,
+                height : 1,
+                framebuffer : pickDepth.framebuffer
+            });
+
+            depth = pixels[0] / 255.0 + pixels[1] / 65535.0 + pixels[2] / 16777215.0;
+            if (depth > 0.0 && depth < 1.0) {
+                index = i;
+                break;
+            }
+        }
+
+        if (!defined(index)) {
+            return undefined;
+        }
+
+        var camera = this._camera;
+
+        // Create a working frustum from the original camera frustum.
+        var frustum;
+        if (defined(camera.frustum.fov)) {
+            frustum = camera.frustum.clone(scratchPerspectiveFrustum);
+        } else if (defined(camera.frustum.infiniteProjectionMatrix)){
+            frustum = camera.frustum.clone(scratchPerspectiveOffCenterFrustum);
+        } else {
+            throw new DeveloperError('An orthographic projection matrix is not invertible.');
+        }
+
+        var renderedFrustum = this._frustumCommandsList[index];
+        frustum.near = renderedFrustum.near * 0.99;
+        frustum.far = renderedFrustum.far;
+        uniformState.updateFrustum(frustum);
+
+        var viewport = uniformState.viewport;
+        var viewportTransformation = uniformState.viewportTransformation;
+
+        var ndc = Cartesian4.clone(Cartesian4.UNIT_W);
+        ndc.x = (drawingBufferPosition.x - viewport.x) / viewport.width * 2.0 - 1.0;
+        ndc.y = (drawingBufferPosition.y - viewport.y) / viewport.height * 2.0 - 1.0;
+        ndc.z = (depth * 2.0) - 1.0;
+        ndc.w = 1.0;
+
+        var worldCoords = Matrix4.multiplyByVector(uniformState.inverseViewProjection, ndc, new Cartesian4());
+
+        // Reverse perspective divide
+        var w = 1.0 / worldCoords.w;
+        Cartesian3.multiplyByScalar(worldCoords, w, worldCoords);
+
+        return Cartesian3.fromCartesian4(worldCoords);
     };
 
     /**

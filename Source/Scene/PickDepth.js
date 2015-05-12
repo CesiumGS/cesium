@@ -23,7 +23,7 @@ define([
         this.framebuffer = undefined;
 
         this._depthTexture = undefined;
-        this._texturetoCopy = undefined;
+        this._textureToCopy = undefined;
         this._copyDepthCommand = undefined;
 
         var supported = updateFramebuffers(this, context);
@@ -55,7 +55,7 @@ define([
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.FLOAT
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE
         });
     }
 
@@ -109,6 +109,19 @@ define([
 
     function updateCopyCommands(pickDepth, context, depthTexture) {
         if (!defined(pickDepth._copyDepthCommand)) {
+            var fs = 'uniform sampler2D u_texture;\n' +
+                     'varying vec2 v_textureCoordinates;\n' +
+                     'void main()\n' +
+                     '{\n' +
+                     '    float depth = texture2D(u_texture, v_textureCoordinates).r;\n' +
+                     '    float temp = depth * 255.0;\n' +
+                     '    float r = floor(temp) / 255.0;\n' +
+                     '    temp = (temp - 255.0) * 255.0;\n' +
+                     '    float g = floor(temp) / 255.0;\n' +
+                     '    temp = (temp - 255.0) * 255.0;\n' +
+                     '    float b = floor(temp) / 255.0;\n' +
+                     '    gl_FragColor = vec4(r, g, b, 1.0);\n' +
+                     '}\n';
             pickDepth._copyDepthCommand = context.createViewportQuadCommand(PassThrough, {
                 renderState : context.createRenderState(),
                 uniformMap : {

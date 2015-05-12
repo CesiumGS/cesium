@@ -1913,12 +1913,11 @@ define([
         }
         //>>includeEnd('debug');
 
+        var pixels = new Uint8Array(4 * width * height);
+
         bindFramebuffer(this, framebuffer);
 
-        var type = gl.getParameter(gl.IMPLEMENTATION_COLOR_READ_TYPE);
-        var pixels = PixelDatatype.createTypedArray(type, 4 * width * height);
-
-        gl.readPixels(x, y, width, height, gl.RGBA, type, pixels);
+        gl.readPixels(x, y, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
 
         return pixels;
     };
