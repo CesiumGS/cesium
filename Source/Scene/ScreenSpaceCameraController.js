@@ -595,8 +595,18 @@ define([
         var origin = Cartesian3.clone(Cartesian3.ZERO, translateCVOrigin);
         var normal = Cartesian3.UNIT_X;
 
-        if (defined(controller._globe) && camera.position.z < controller.minimumPickingTerrainHeight) {
-            var intersection = controller._globe.pick(startRay, scene, translateCVStartPos);
+        var globe = controller._globe;
+        if (defined(globe) && camera.position.z < controller.minimumPickingTerrainHeight) {
+            var intersection;
+            var pickDepth = globe.depthTestAgainstTerrain && scene._globeDepth.supported;
+            if (pickDepth) {
+                intersection = scene.pickDepth(startMouse);
+            }
+
+            if (!pickDepth || !defined(intersection)) {
+                intersection = globe.pick(startRay, scene, translateCVStartPos);
+            }
+
             if (defined(intersection)) {
                 origin.x = intersection.x;
             }
@@ -749,8 +759,16 @@ define([
             center = Cartesian3.clone(controller._tiltCenter, rotateCVCenter);
         } else {
             ray = camera.getPickRay(startPosition, rotateCVWindowRay);
-            if (defined(controller._globe) && camera.position.z < controller.minimumPickingTerrainHeight) {
-                center = controller._globe.pick(ray, scene, rotateCVCenter);
+            var globe = controller._globe;
+            if (defined(globe) && camera.position.z < controller.minimumPickingTerrainHeight) {
+                var pickDepth = globe.depthTestAgainstTerrain && scene._globeDepth.supported;
+                if (pickDepth) {
+                    center = scene.pickDepth(startPosition);
+                }
+
+                if (!pickDepth || !defined(center)) {
+                    center = globe.pick(ray, scene, rotateCVCenter);
+                }
             }
 
             if (!defined(center)) {
@@ -914,8 +932,16 @@ define([
         var ray = camera.getPickRay(windowPosition, zoomCVWindowRay);
 
         var intersection;
-        if (defined(controller._globe) && camera.position.z < controller.minimumPickingTerrainHeight) {
-            intersection = controller._globe.pick(ray, scene, zoomCVIntersection);
+        var globe = controller._globe;
+        if (defined(globe) && camera.position.z < controller.minimumPickingTerrainHeight) {
+            var pickDepth = globe.depthTestAgainstTerrain && scene._globeDepth.supported;
+            if (pickDepth) {
+                intersection = scene.pickDepth(windowPosition);
+            }
+
+            if (!pickDepth || !defined(intersection)) {
+                intersection = globe.pick(ray, scene, zoomCVIntersection);
+            }
         }
 
         var distance;
@@ -1006,9 +1032,19 @@ define([
         }
 
         var height = controller._ellipsoid.cartesianToCartographic(camera.positionWC, scratchCartographic).height;
-        if (defined(controller._globe) && height < controller.minimumPickingTerrainHeight) {
-            var startRay = camera.getPickRay(movement.startPosition, scratchStartRay);
-            var mousePos = controller._globe.pick(startRay, scene, scratchMousePos);
+        var globe = controller._globe;
+        if (defined(globe) && height < controller.minimumPickingTerrainHeight) {
+            var mousePos;
+            var pickDepth = globe.depthTestAgainstTerrain && scene._globeDepth.supported;
+            if (pickDepth) {
+                mousePos = scene.pickDepth(movement.startPosition);
+            }
+
+            if (!pickDepth || !defined(mousePos)) {
+                var startRay = camera.getPickRay(movement.startPosition, scratchStartRay);
+                mousePos = globe.pick(startRay, scene, scratchMousePos);
+            }
+
             if (defined(mousePos)) {
                 magnitude = Cartesian3.magnitude(mousePos);
                 radii = scratchRadii;
@@ -1208,8 +1244,16 @@ define([
 
         var intersection;
         var height = ellipsoid.cartesianToCartographic(camera.position, zoom3DCartographic).height;
-        if (defined(controller._globe) && height < controller.minimumPickingTerrainHeight) {
-            intersection = controller._globe.pick(ray, scene, zoomCVIntersection);
+        var globe = controller._globe;
+        if (defined(globe) && height < controller.minimumPickingTerrainHeight) {
+            var pickDepth = globe.depthTestAgainstTerrain && scene._globeDepth.supported;
+            if (pickDepth) {
+                intersection = scene.pickDepth(windowPosition);
+            }
+
+            if (!pickDepth || !defined(intersection)) {
+                intersection = globe.pick(ray, scene, zoomCVIntersection);
+            }
         }
 
         var distance;
@@ -1346,8 +1390,17 @@ define([
             center = Cartesian3.clone(controller._tiltCenter, tilt3DCenter);
         } else {
             ray = camera.getPickRay(startPosition, tilt3DRay);
+
+            var globe = controller._globe;
             if (defined(controller._globe)) {
-                center = controller._globe.pick(ray, scene, tilt3DCenter);
+                var pickDepth = globe.depthTestAgainstTerrain && scene._globeDepth.supported;
+                if (pickDepth) {
+                    center = scene.pickDepth(startPosition);
+                }
+
+                if (!pickDepth || !defined(center)) {
+                    center = globe.pick(ray, scene, tilt3DCenter);
+                }
             }
 
             if (!defined(center)) {
