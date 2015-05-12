@@ -600,7 +600,7 @@ define([
             var intersection;
             var pickDepth = globe.depthTestAgainstTerrain && scene._globeDepth.supported;
             if (pickDepth) {
-                intersection = scene.pickDepth(startMouse);
+                intersection = scene.pickDepth(startMouse, translateCVStartPos);
             }
 
             if (!pickDepth || !defined(intersection)) {
@@ -763,7 +763,7 @@ define([
             if (defined(globe) && camera.position.z < controller.minimumPickingTerrainHeight) {
                 var pickDepth = globe.depthTestAgainstTerrain && scene._globeDepth.supported;
                 if (pickDepth) {
-                    center = scene.pickDepth(startPosition);
+                    center = scene.pickDepth(startPosition, rotateCVCenter);
                 }
 
                 if (!pickDepth || !defined(center)) {
@@ -936,7 +936,7 @@ define([
         if (defined(globe) && camera.position.z < controller.minimumPickingTerrainHeight) {
             var pickDepth = globe.depthTestAgainstTerrain && scene._globeDepth.supported;
             if (pickDepth) {
-                intersection = scene.pickDepth(windowPosition);
+                intersection = scene.pickDepth(windowPosition, zoomCVIntersection);
             }
 
             if (!pickDepth || !defined(intersection)) {
@@ -1037,7 +1037,7 @@ define([
             var mousePos;
             var pickDepth = globe.depthTestAgainstTerrain && scene._globeDepth.supported;
             if (pickDepth) {
-                mousePos = scene.pickDepth(movement.startPosition);
+                mousePos = scene.pickDepth(movement.startPosition, scratchMousePos);
             }
 
             if (!pickDepth || !defined(mousePos)) {
@@ -1248,7 +1248,7 @@ define([
         if (defined(globe) && height < controller.minimumPickingTerrainHeight) {
             var pickDepth = globe.depthTestAgainstTerrain && scene._globeDepth.supported;
             if (pickDepth) {
-                intersection = scene.pickDepth(windowPosition);
+                intersection = scene.pickDepth(windowPosition, zoomCVIntersection);
             }
 
             if (!pickDepth || !defined(intersection)) {
@@ -1395,7 +1395,7 @@ define([
             if (defined(controller._globe)) {
                 var pickDepth = globe.depthTestAgainstTerrain && scene._globeDepth.supported;
                 if (pickDepth) {
-                    center = scene.pickDepth(startPosition);
+                    center = scene.pickDepth(startPosition, tilt3DCenter);
                 }
 
                 if (!pickDepth || !defined(center)) {

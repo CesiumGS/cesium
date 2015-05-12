@@ -1716,7 +1716,25 @@ define([
         return object;
     };
 
-    Scene.prototype.pickDepth = function(windowPosition) {
+    var scratchNDC = new Cartesian4();
+    var scratchWorldCoords = new Cartesian4();
+
+    /**
+     * Returns the cartesian position reconstructed from the depth buffer and window position.
+     *
+     * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+     * @param {Cartesian3} [result] The object on which to restore the result.
+     * @returns {Cartesian3} The cartesian position.
+     *
+     * @exception {DeveloperError} windowPosition is undefined.
+     */
+    Scene.prototype.pickDepth = function(windowPosition, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if(!defined(windowPosition)) {
+            throw new DeveloperError('windowPosition is undefined.');
+        }
+        //>>includeEnd('debug');
+
         var context = this._context;
         var uniformState = context.uniformState;
 
@@ -1768,19 +1786,19 @@ define([
         var viewport = uniformState.viewport;
         var viewportTransformation = uniformState.viewportTransformation;
 
-        var ndc = Cartesian4.clone(Cartesian4.UNIT_W);
+        var ndc = Cartesian4.clone(Cartesian4.UNIT_W, scratchNDC);
         ndc.x = (drawingBufferPosition.x - viewport.x) / viewport.width * 2.0 - 1.0;
         ndc.y = (drawingBufferPosition.y - viewport.y) / viewport.height * 2.0 - 1.0;
         ndc.z = (depth * 2.0) - 1.0;
         ndc.w = 1.0;
 
-        var worldCoords = Matrix4.multiplyByVector(uniformState.inverseViewProjection, ndc, new Cartesian4());
+        var worldCoords = Matrix4.multiplyByVector(uniformState.inverseViewProjection, ndc, scratchWorldCoords);
 
         // Reverse perspective divide
         var w = 1.0 / worldCoords.w;
         Cartesian3.multiplyByScalar(worldCoords, w, worldCoords);
 
-        return Cartesian3.fromCartesian4(worldCoords);
+        return Cartesian3.fromCartesian4(worldCoords, result);
     };
 
     /**
