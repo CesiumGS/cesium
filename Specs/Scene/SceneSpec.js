@@ -579,7 +579,7 @@ defineSuite([
         s.render();
 
         var spyListener = jasmine.createSpy('listener');
-        s.cameraMoveStart.addEventListener(spyListener);
+        s.camera.moveStart.addEventListener(spyListener);
 
         s.camera.moveLeft();
         s.render();
@@ -594,7 +594,7 @@ defineSuite([
         s.render();
 
         var spyListener = jasmine.createSpy('listener');
-        s.cameraMoveEnd.addEventListener(spyListener);
+        s.camera.moveEnd.addEventListener(spyListener);
 
         s.cameraEventWaitTime = 0.0;
         s.camera.moveLeft();

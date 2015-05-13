@@ -10,6 +10,7 @@ define([
         '../Core/DeveloperError',
         '../Core/EasingFunction',
         '../Core/Ellipsoid',
+        '../Core/Event',
         '../Core/IntersectionTests',
         '../Core/Math',
         '../Core/Matrix3',
@@ -33,6 +34,7 @@ define([
         DeveloperError,
         EasingFunction,
         Ellipsoid,
+        Event,
         IntersectionTests,
         CesiumMath,
         Matrix3,
@@ -188,6 +190,9 @@ define([
          * @default 2.5
          */
         this.maximumZoomFactor = 2.5;
+
+        this._moveStart = new Event();
+        this._moveEnd = new Event();
 
         this._viewMatrix = new Matrix4();
         this._invViewMatrix = new Matrix4();
@@ -734,6 +739,30 @@ define([
                 }
 
                 return undefined;
+            }
+        },
+
+        /**
+         * Gets the event that will be raised at when the camera starts to move.
+         * @memberof Camera.prototype
+         * @type {Event}
+         * @readonly
+         */
+        moveStart : {
+            get : function() {
+                return this._moveStart;
+            }
+        },
+
+        /**
+         * Gets the event that will be raised at when the camera has stopped moving.
+         * @memberof Camera.prototype
+         * @type {Event}
+         * @readonly
+         */
+        moveEnd : {
+            get : function() {
+                return this._moveEnd;
             }
         }
     });

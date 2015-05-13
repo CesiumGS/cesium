@@ -235,9 +235,6 @@ define([
         this._preRender = new Event();
         this._postRender = new Event();
 
-        this._cameraMoveStart = new Event();
-        this._cameraMoveEnd = new Event();
-
         this._cameraStartFired = false;
         this._cameraMovedTime = undefined;
 
@@ -446,6 +443,7 @@ define([
          * The time in milliseconds to wait before checking if the camera has not moved and fire the cameraMoveEnd event.
          * @type {Number}
          * @default 500.0
+         * @private
          */
         this.cameraEventWaitTime = 500.0;
 
@@ -714,30 +712,6 @@ define([
         postRender : {
             get : function() {
                 return this._postRender;
-            }
-        },
-
-        /**
-         * Gets the event that will be raised at when the camera starts to move.
-         * @memberof Scene.prototype
-         * @type {Event}
-         * @readonly
-         */
-        cameraMoveStart : {
-            get : function() {
-                return this._cameraMoveStart;
-            }
-        },
-
-        /**
-         * Gets the event that will be raised at when the camera has stopped moving.
-         * @memberof Scene.prototype
-         * @type {Event}
-         * @readonly
-         */
-        cameraMoveEnd : {
-            get : function() {
-                return this._cameraMoveEnd;
             }
         },
 
@@ -1420,17 +1394,18 @@ define([
             time = JulianDate.now();
         }
 
-        var cameraChanged = !Camera.equalsEpsilon(scene._camera, scene._cameraClone, CesiumMath.EPSILON4);
+        var camera = scene._camera;
+        var cameraChanged = !Camera.equalsEpsilon(camera, scene._cameraClone, CesiumMath.EPSILON4);
         if (cameraChanged && !scene._cameraStartFired) {
-            scene._cameraMoveStart.raiseEvent();
+            camera.moveStart.raiseEvent();
             scene._cameraStartFired = true;
             scene._cameraMovedTime = getTimestamp();
         } else if (!cameraChanged && scene._cameraStartFired && getTimestamp() - scene._cameraMovedTime > scene.cameraEventWaitTime) {
-            scene._cameraMoveEnd.raiseEvent();
+            camera.moveEnd.raiseEvent();
             scene._cameraStartFired = false;
         }
 
-        Camera.clone(scene._camera, scene._cameraClone);
+        Camera.clone(camera, scene._cameraClone);
 
         scene._preRender.raiseEvent(scene, time);
 
