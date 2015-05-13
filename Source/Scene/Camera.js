@@ -2453,8 +2453,8 @@ define([
 
     /**
      * Returns a duplicate of a Camera instance.
-     *
-     * @returns {Camera} A new copy of the Camera instance.
+     * @deprecated
+     * @returns {Camera} The provided result parameter or a new copy of the Camera instance.
      */
     Camera.prototype.clone = function() {
         var camera = new Camera(this._scene);
@@ -2466,6 +2466,34 @@ define([
         camera._transformChanged = true;
         camera.frustum = this.frustum.clone();
         return camera;
+    };
+
+    /**
+     * @private
+     */
+    Camera.clone = function(camera, result) {
+        if (!defined(result)) {
+            result = new Camera(camera._scene);
+        }
+
+        Cartesian3.clone(camera.position, result.position);
+        Cartesian3.clone(camera.direction, result.direction);
+        Cartesian3.clone(camera.up, result.up);
+        Cartesian3.clone(camera.right, result.right);
+        Matrix4.clone(camera._transform, result.transform);
+
+        return result;
+    };
+
+    /**
+     * @private
+     */
+    Camera.equalsEpsilon = function(camera0, camera1, epsilon) {
+        return Cartesian3.equalsEpsilon(camera0.position, camera1.position, epsilon) &&
+            Cartesian3.equalsEpsilon(camera0.direction, camera1.direction, epsilon) &&
+            Cartesian3.equalsEpsilon(camera0.up, camera1.up, epsilon) &&
+            Cartesian3.equalsEpsilon(camera0.right, camera1.right, epsilon) &&
+            Matrix4.equalsEpsilon(camera0.transform, camera1.transform, epsilon);
     };
 
     /**

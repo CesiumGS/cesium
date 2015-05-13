@@ -17,6 +17,7 @@ define([
         '../Core/GeographicProjection',
         '../Core/GeometryInstance',
         '../Core/GeometryPipeline',
+        '../Core/getTimestamp',
         '../Core/Intersect',
         '../Core/Interval',
         '../Core/JulianDate',
@@ -67,6 +68,7 @@ define([
         GeographicProjection,
         GeometryInstance,
         GeometryPipeline,
+        getTimestamp,
         Intersect,
         Interval,
         JulianDate,
@@ -232,6 +234,12 @@ define([
         this._renderError = new Event();
         this._preRender = new Event();
         this._postRender = new Event();
+
+        this._cameraMoveStart = new Event();
+        this._cameraMoveEnd = new Event();
+
+        this._cameraStartFired = false;
+        this._cameraMovedTime = undefined;
 
         /**
          * Exceptions occurring in <code>render</code> are always caught in order to raise the
@@ -439,6 +447,7 @@ define([
 
         var camera = new Camera(this);
         this._camera = camera;
+        this._cameraClone = Camera.clone(camera);
         this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
 
         // initial guess at frustums.
@@ -698,6 +707,30 @@ define([
         postRender : {
             get : function() {
                 return this._postRender;
+            }
+        },
+
+        /**
+         * Gets the event that will be raised at when the camera starts to move.
+         * @memberof Scene.prototype
+         * @type {Event}
+         * @readonly
+         */
+        cameraMoveStart : {
+            get : function() {
+                return this._cameraMoveStart;
+            }
+        },
+
+        /**
+         * Gets the event that will be raised at when the camera has stopped moving.
+         * @memberof Scene.prototype
+         * @type {Event}
+         * @readonly
+         */
+        cameraMoveEnd : {
+            get : function() {
+                return this._cameraMoveEnd;
             }
         },
 
@@ -1379,6 +1412,18 @@ define([
         if (!defined(time)) {
             time = JulianDate.now();
         }
+
+        var cameraChanged = !Camera.equalsEpsilon(scene._camera, scene._cameraClone, CesiumMath.EPSILON4);
+        if (cameraChanged && !scene._cameraStartFired) {
+            scene._cameraMoveStart.raiseEvent();
+            scene._cameraStartFired = true;
+            scene._cameraMovedTime = getTimestamp();
+        } else if (!cameraChanged && scene._cameraStartFired && getTimestamp() - scene._cameraMovedTime > 500) {
+            scene._cameraMoveEnd.raiseEvent();
+            scene._cameraStartFired = false;
+        }
+
+        Camera.clone(scene._camera, scene._cameraClone);
 
         scene._preRender.raiseEvent(scene, time);
 
