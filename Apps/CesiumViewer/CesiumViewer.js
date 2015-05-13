@@ -35,7 +35,9 @@ define([
      * 'source' : 'file.czml',  // The relative URL of the CZML file to load at startup.
      * 'stats'  : true,         // Enable the FPS performance display.
      * 'theme'  : 'lighter',    // Use the dark-text-on-light-background theme.
-     * 'scene3DOnly' : false    // Enable 3D only mode
+     * 'scene3DOnly' : false,    // Enable 3D only mode
+     * 'location' : string/lon,lat/lon,lat,height // Fly to this location on load.
+     * 'orientation' : heading,pitch,roll // Uses this orientation for the camera if 'location' was specified.
      */
     var endUserOptions = queryToObject(window.location.search.substring(1));
 
