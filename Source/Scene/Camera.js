@@ -201,7 +201,7 @@ define([
         this._max2Dfrustum = undefined;
 
         // set default view
-        this.viewRectangle(Camera.DEFAULT_VIEW_RECTANGLE);
+        this.viewRectangle(Camera.DEFAULT_VIEW_RECTANGLE, scene.mapProjection.ellipsoid);
 
         var mag = Cartesian3.magnitude(this.position);
         mag += mag * Camera.DEFAULT_VIEW_FACTOR;
