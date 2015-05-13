@@ -1285,7 +1285,7 @@ define([
             frustum.far = frustumCommands.far;
 
             if (index !== 0) {
-                // Avoid tearing artifacts between adjacent frustums
+                // Avoid tearing artifacts between adjacent frustums in the opaque passes
                 frustum.near *= 0.99;
             }
 
@@ -1306,8 +1306,11 @@ define([
                 }
             }
 
-            frustum.near = frustumCommands.near;
-            us.updateFrustum(frustum);
+            if (index !== 0) {
+                // Do not overlap frustums in the translucent pass to avoid blending artifacts
+                frustum.near = frustumCommands.near;
+                us.updateFrustum(frustum);
+            }
 
             commands = frustumCommands.commands[Pass.TRANSLUCENT];
             commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
