@@ -1412,9 +1412,11 @@ define([
             commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
             executeTranslucentCommands(scene, executeCommand, passState, commands);
 
-            var pickDepth = getPickDepth(scene, context, index);
-            pickDepth.update(context, globeDepth.framebuffer.depthStencilTexture);
-            pickDepth.executeCopyDepth(context, passState);
+            if (globeDepth.supported) {
+                var pickDepth = getPickDepth(scene, context, index);
+                pickDepth.update(context, globeDepth.framebuffer.depthStencilTexture);
+                pickDepth.executeCopyDepth(context, passState);
+            }
         }
 
         if (scene.debugShowGlobeDepth) {
