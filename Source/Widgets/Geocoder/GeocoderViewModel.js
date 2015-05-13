@@ -6,6 +6,7 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
+        '../../Core/Event',
         '../../Core/jsonp',
         '../../Core/Matrix4',
         '../../Core/objectToQuery',
@@ -21,6 +22,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        Event,
         jsonp,
         Matrix4,
         objectToQuery,
@@ -55,8 +57,6 @@ define([
         }
         //>>includeEnd('debug');
 
-        var queryOptions = queryToObject(window.location.search.substring(1));
-
         this._url = defaultValue(options.url, '//dev.virtualearth.net/');
         if (this._url.length > 0 && this._url[this._url.length - 1] !== '/') {
             this._url += '/';
@@ -68,22 +68,18 @@ define([
         this._searchText = '';
         this._isSearchInProgress = false;
         this._geocodeInProgress = undefined;
+        this._onSuccess = new Event();
 
         var that = this;
-        this._searchCommand = createCommand(function() {
+        this._searchCommand = createCommand(function(orientation) {
             if (that.isSearchInProgress) {
                 cancelGeocode(that);
             } else {
-                geocode(that);
+                geocode(that, orientation);
             }
         });
 
         knockout.track(this, ['_searchText', '_isSearchInProgress']);
-
-        if (defined(queryOptions.location)) {
-            this.searchText = queryOptions.location;
-            this.search();
-        }
 
         /**
          * Gets a value indicating whether a search is currently in progress.  This property is observable.
@@ -172,6 +168,18 @@ define([
         },
 
         /**
+         * Gets the event triggered on flight completion.
+         * @memberof GeocoderViewModel.prototype
+         *
+         * @type {Event}
+         */
+        onSuccess : {
+            get : function() {
+                return this._onSuccess;
+            }
+        },
+
+        /**
          * Gets the scene to control.
          * @memberof GeocoderViewModel.prototype
          *
@@ -196,27 +204,18 @@ define([
         }
     });
 
-    function setQueryString(query) {
-        var queryOptions = queryToObject(window.location.search.substring(1));
-        queryOptions.location = query;
-        window.history.replaceState({}, document.title, '?' + objectToQuery(queryOptions));
+    function onComplete(viewModel) {
+        return function() {
+            viewModel._onSuccess.raiseEvent();
+        };
     }
 
-    function geocode(viewModel) {
+    function geocode(viewModel, orientation) {
         var query = viewModel.searchText;
 
         if (/^\s*$/.test(query)) {
             //whitespace string
             return;
-        }
-
-        var queryOptions = queryToObject(window.location.search.substring(1));
-        var orientation = {};
-        if (defined(queryOptions.orientation)) {
-            var oQuery = orientation.match(/[^\s,\n]+/g);
-            orientation.heading = (oQuery.length > 0) ? oQuery[0] : undefined;
-            orientation.pitch = (oQuery.length > 1) ? oQuery[1] : undefined;
-            orientation.roll = (oQuery.length > 2) ? oQuery[2] : undefined;
         }
 
         // If the user entered (longitude, latitude, [height]) in degrees/meters,
@@ -231,11 +230,11 @@ define([
                 viewModel._scene.camera.flyTo({
                     destination : Cartesian3.fromDegrees(longitude, latitude, height),
                     orientation: orientation,
+                    complete: onComplete(viewModel),
                     duration : viewModel._flightDuration,
                     endTransform : Matrix4.IDENTITY,
                     convert : false
                 });
-                setQueryString(query);
                 return;
             }
         }
@@ -287,11 +286,11 @@ define([
             viewModel._scene.camera.flyTo({
                 destination : position,
                 orientation: orientation,
+                complete: onComplete(viewModel),
                 duration : viewModel._flightDuration,
                 endTransform : Matrix4.IDENTITY,
                 convert : false
             });
-            setQueryString(query);
         }, function() {
             if (geocodeInProgress.cancel) {
                 return;
