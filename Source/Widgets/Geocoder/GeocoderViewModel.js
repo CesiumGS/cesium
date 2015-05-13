@@ -80,8 +80,8 @@ define([
 
         knockout.track(this, ['_searchText', '_isSearchInProgress']);
 
-        if (defined(queryOptions.geocoder)) {
-            this.searchText = queryOptions.geocoder;
+        if (defined(queryOptions.location)) {
+            this.searchText = queryOptions.location;
             this.search();
         }
 
@@ -198,7 +198,7 @@ define([
 
     function setQueryString(query) {
         var queryOptions = queryToObject(window.location.search.substring(1));
-        queryOptions.geocoder = query;
+        queryOptions.location = query;
         window.history.replaceState({}, document.title, '?' + objectToQuery(queryOptions));
     }
 
@@ -208,6 +208,15 @@ define([
         if (/^\s*$/.test(query)) {
             //whitespace string
             return;
+        }
+
+        var queryOptions = queryToObject(window.location.search.substring(1));
+        var orientation = {};
+        if (defined(queryOptions.orientation)) {
+            var oQuery = orientation.match(/[^\s,\n]+/g);
+            orientation.heading = (oQuery.length > 0) ? oQuery[0] : undefined;
+            orientation.pitch = (oQuery.length > 1) ? oQuery[1] : undefined;
+            orientation.roll = (oQuery.length > 2) ? oQuery[2] : undefined;
         }
 
         // If the user entered (longitude, latitude, [height]) in degrees/meters,
@@ -221,6 +230,7 @@ define([
             if (!isNaN(longitude) && !isNaN(latitude) && !isNaN(height)) {
                 viewModel._scene.camera.flyTo({
                     destination : Cartesian3.fromDegrees(longitude, latitude, height),
+                    orientation: orientation,
                     duration : viewModel._flightDuration,
                     endTransform : Matrix4.IDENTITY,
                     convert : false
@@ -276,6 +286,7 @@ define([
 
             viewModel._scene.camera.flyTo({
                 destination : position,
+                orientation: orientation,
                 duration : viewModel._flightDuration,
                 endTransform : Matrix4.IDENTITY,
                 convert : false
