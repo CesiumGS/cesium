@@ -229,8 +229,6 @@ define([
             owner : this
         });
 
-        this._transitioner = new SceneTransitioner(this);
-
         this._renderError = new Event();
         this._preRender = new Event();
         this._postRender = new Event();
@@ -325,6 +323,8 @@ define([
         this._mode = SceneMode.SCENE3D;
 
         this._mapProjection = defined(options.mapProjection) ? options.mapProjection : new GeographicProjection();
+
+        this._transitioner = new SceneTransitioner(this, this._mapProjection.ellipsoid);
 
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
@@ -1610,6 +1610,7 @@ define([
      * scene (front to back).
      *
      * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+     * @param {Number} [limit] If supplied, stop drilling after collecting this many picks.
      * @returns {Object[]} Array of objects, each containing 1 picked primitives.
      *
      * @exception {DeveloperError} windowPosition is undefined.
@@ -1617,7 +1618,7 @@ define([
      * @example
      * var pickedObjects = Cesium.Scene.drillPick(new Cesium.Cartesian2(100.0, 200.0));
      */
-    Scene.prototype.drillPick = function(windowPosition) {
+    Scene.prototype.drillPick = function(windowPosition, limit) {
         // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead
         // we could update the primitive once, and then just execute their commands for each pass,
         // and cull commands for picked primitives.  e.g., base on the command's owner.
@@ -1633,10 +1634,16 @@ define([
         var result = [];
         var pickedPrimitives = [];
         var pickedAttributes = [];
+        if (!defined(limit)) {
+            limit = Number.MAX_VALUE;
+        }
 
         var pickedResult = this.pick(windowPosition);
         while (defined(pickedResult) && defined(pickedResult.primitive)) {
             result.push(pickedResult);
+            if (0 >= --limit) {
+                break;
+            }
 
             var primitive = pickedResult.primitive;
             var hasShowAttribute = false;
