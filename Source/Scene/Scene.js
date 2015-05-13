@@ -222,8 +222,9 @@ define([
 
         this._fxaa = new FXAA();
 
-        this._clearColorCommand = new ClearCommand({
+        this._clearColorDepthCommand = new ClearCommand({
             color : new Color(),
+            depth : 1.0,
             owner : this
         });
         this._depthClearCommand = new ClearCommand({
@@ -1239,7 +1240,7 @@ define([
         var moonVisible = isVisible(moonCommand, frameState);
 
         // Clear default framebuffer
-        var clear = scene._clearColorCommand;
+        var clear = scene._clearColorDepthCommand;
         Color.clone(clearColor, clear.color);
         clear.execute(context, passState);
 
@@ -1337,7 +1338,11 @@ define([
             }
 
             us.updateFrustum(frustum);
-            clearDepth.execute(context, passState);
+            if (i !== 0) {
+                // Depth for the first frustum was cleared when color was cleared - and
+                // no primitives rendered in the entire frustum write depth.
+                clearDepth.execute(context, passState);
+            }
 
             var commands;
             var length;
