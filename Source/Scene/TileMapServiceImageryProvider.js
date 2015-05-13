@@ -54,6 +54,9 @@ define([
      * @param {TilingScheme} [options.tilingScheme] The tiling scheme specifying how the ellipsoidal
      * surface is broken into tiles.  If this parameter is not provided, a {@link WebMercatorTilingScheme}
      * is used.
+     * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
+     *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
+     *                    parameter is specified, the WGS84 ellipsoid is used.
      * @param {Number} [options.tileWidth=256] Pixel width of image tiles.
      * @param {Number} [options.tileHeight=256] Pixel height of image tiles.
      *
@@ -167,9 +170,9 @@ define([
 
             if (!defined(that._tilingScheme)) {
                 if (tilingSchemeName === 'geodetic' || tilingSchemeName === 'global-geodetic') {
-                    that._tilingScheme = new GeographicTilingScheme();
+                    that._tilingScheme = new GeographicTilingScheme({ ellipsoid : options.ellipsoid });
                 } else if (tilingSchemeName === 'mercator' || tilingSchemeName === 'global-mercator') {
-                    that._tilingScheme = new WebMercatorTilingScheme();
+                    that._tilingScheme = new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid });
                 } else {
                     var message = url + 'tilemapresource.xml specifies an unsupported profile attribute, ' + tilingSchemeName + '.';
                     metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
@@ -246,7 +249,7 @@ define([
             that._tileHeight = defaultValue(options.tileHeight, 256);
             that._minimumLevel = defaultValue(options.minimumLevel, 0);
             that._maximumLevel = defaultValue(options.maximumLevel, 18);
-            that._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new WebMercatorTilingScheme();
+            that._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid });
             that._rectangle = defaultValue(options.rectangle, that._tilingScheme.rectangle);
             that._ready = true;
         }

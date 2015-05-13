@@ -28,6 +28,9 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {TilingScheme} [options.tilingScheme=new GeographicTilingScheme()] The tiling scheme for which to draw tiles.
+     * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
+     *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
+     *                    parameter is specified, the WGS84 ellipsoid is used.
      * @param {Number} [options.cells=8] The number of grids cells.
      * @param {Color} [options.color=Color(1.0, 1.0, 1.0, 0.4)] The color to draw grid lines.
      * @param {Color} [options.glowColor=Color(0.0, 1.0, 0.0, 0.05)] The color to draw glow for grid lines.
@@ -40,7 +43,7 @@ define([
     var GridImageryProvider = function GridImageryProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new GeographicTilingScheme();
+        this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new GeographicTilingScheme({ ellipsoid : options.ellipsoid });
         this._cells = defaultValue(options.cells, 8);
         this._color = defaultValue(options.color, defaultColor);
         this._glowColor = defaultValue(options.glowColor, defaultGlowColor);

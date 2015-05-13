@@ -229,8 +229,6 @@ define([
             owner : this
         });
 
-        this._transitioner = new SceneTransitioner(this);
-
         this._renderError = new Event();
         this._preRender = new Event();
         this._postRender = new Event();
@@ -325,6 +323,8 @@ define([
         this._mode = SceneMode.SCENE3D;
 
         this._mapProjection = defined(options.mapProjection) ? options.mapProjection : new GeographicProjection();
+
+        this._transitioner = new SceneTransitioner(this, this._mapProjection.ellipsoid);
 
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
