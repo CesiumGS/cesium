@@ -57,5 +57,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Thomas Hirsch](https://github.com/relet)
 * [Ayush Khandelwal](https://github.com/ayk115)
 * [Aditya Raisinghani](https://github.com/adi2412)
+* [Ilia Choly](https://github.com/icholy)
 
 Also see [our contributors page](http://cesiumjs.org/contributors.html) for more information.
