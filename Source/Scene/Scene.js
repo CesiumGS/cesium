@@ -442,6 +442,13 @@ define([
          */
         this.fxaa = false;
 
+        /**
+         * The time in milliseconds to wait before checking if the camera has not moved and fire the cameraMoveEnd event.
+         * @type {Number}
+         * @default 500.0
+         */
+        this.cameraEventWaitTime = 500.0;
+
         this._performanceDisplay = undefined;
         this._debugSphere = undefined;
 
@@ -1418,7 +1425,7 @@ define([
             scene._cameraMoveStart.raiseEvent();
             scene._cameraStartFired = true;
             scene._cameraMovedTime = getTimestamp();
-        } else if (!cameraChanged && scene._cameraStartFired && getTimestamp() - scene._cameraMovedTime > 500) {
+        } else if (!cameraChanged && scene._cameraStartFired && getTimestamp() - scene._cameraMovedTime > scene.cameraEventWaitTime) {
             scene._cameraMoveEnd.raiseEvent();
             scene._cameraStartFired = false;
         }
