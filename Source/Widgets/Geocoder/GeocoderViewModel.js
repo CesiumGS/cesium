@@ -8,6 +8,8 @@ define([
         '../../Core/DeveloperError',
         '../../Core/jsonp',
         '../../Core/Matrix4',
+        '../../Core/objectToQuery',
+        '../../Core/queryToObject',
         '../../Core/Rectangle',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when',
@@ -21,6 +23,8 @@ define([
         DeveloperError,
         jsonp,
         Matrix4,
+        objectToQuery,
+        queryToObject,
         Rectangle,
         knockout,
         when,
@@ -51,6 +55,8 @@ define([
         }
         //>>includeEnd('debug');
 
+        var queryOptions = queryToObject(window.location.search.substring(1));
+
         this._url = defaultValue(options.url, '//dev.virtualearth.net/');
         if (this._url.length > 0 && this._url[this._url.length - 1] !== '/') {
             this._url += '/';
@@ -73,6 +79,11 @@ define([
         });
 
         knockout.track(this, ['_searchText', '_isSearchInProgress']);
+
+        if (defined(queryOptions.geocoder)) {
+            this.searchText = queryOptions.geocoder;
+            this.search();
+        }
 
         /**
          * Gets a value indicating whether a search is currently in progress.  This property is observable.
@@ -185,6 +196,12 @@ define([
         }
     });
 
+    function setQueryString(query) {
+        var queryOptions = queryToObject(window.location.search.substring(1));
+        queryOptions.geocoder = query;
+        window.history.replaceState({}, document.title, '?' + objectToQuery(queryOptions));
+    }
+
     function geocode(viewModel) {
         var query = viewModel.searchText;
 
@@ -208,6 +225,7 @@ define([
                     endTransform : Matrix4.IDENTITY,
                     convert : false
                 });
+                setQueryString(query);
                 return;
             }
         }
@@ -262,6 +280,7 @@ define([
                 endTransform : Matrix4.IDENTITY,
                 convert : false
             });
+            setQueryString(query);
         }, function() {
             if (geocodeInProgress.cancel) {
                 return;
