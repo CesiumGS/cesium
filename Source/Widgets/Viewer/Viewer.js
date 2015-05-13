@@ -10,10 +10,7 @@ define([
         '../../Core/DeveloperError',
         '../../Core/EventHelper',
         '../../Core/isArray',
-        '../../Core/Math',
         '../../Core/Matrix4',
-        '../../Core/objectToQuery',
-        '../../Core/queryToObject',
         '../../Core/ScreenSpaceEventType',
         '../../DataSources/BoundingSphereState',
         '../../DataSources/ConstantPositionProperty',
@@ -53,10 +50,7 @@ define([
         DeveloperError,
         EventHelper,
         isArray,
-        CesiumMath,
         Matrix4,
-        objectToQuery,
-        queryToObject,
         ScreenSpaceEventType,
         BoundingSphereState,
         ConstantPositionProperty,
@@ -614,20 +608,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         cesiumWidget.screenSpaceEventHandler.setInputAction(pickAndSelectObject, ScreenSpaceEventType.LEFT_CLICK);
         cesiumWidget.screenSpaceEventHandler.setInputAction(pickAndTrackObject, ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
-
-        var queryOptions = queryToObject(window.location.search.substring(1));
-        if (defined(queryOptions.location) && defined(geocoder)) {
-            geocoder.viewModel.searchText = queryOptions.location;
-            var orientation = {};
-            if (defined(queryOptions.orientation)) {
-                var query = queryOptions.orientation.match(/[^\s,\n]+/g);
-
-                orientation.heading = ((query.length > 0) && (!isNaN(+query[0]))) ? CesiumMath.toRadians(+query[0]) : undefined;
-                orientation.pitch = ((query.length > 1) && (!isNaN(+query[1]))) ? CesiumMath.toRadians(+query[1]) : undefined;
-                orientation.roll = ((query.length > 2) && (!isNaN(+query[2]))) ? CesiumMath.toRadians(+query[2]) : undefined;
-            }
-            geocoder.viewModel.search(orientation);
-        }
     };
 
     defineProperties(Viewer.prototype, {

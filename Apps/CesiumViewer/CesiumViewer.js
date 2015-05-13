@@ -3,6 +3,7 @@ define([
         'Cesium/Core/defined',
         'Cesium/Core/formatError',
         'Cesium/Core/getFilenameFromUri',
+        'Cesium/Core/Math',
         'Cesium/Core/queryToObject',
         'Cesium/DataSources/CzmlDataSource',
         'Cesium/DataSources/GeoJsonDataSource',
@@ -16,6 +17,7 @@ define([
         defined,
         formatError,
         getFilenameFromUri,
+        CesiumMath,
         queryToObject,
         CzmlDataSource,
         GeoJsonDataSource,
@@ -52,6 +54,20 @@ define([
             baseLayerPicker : !defined(imageryProvider),
             scene3DOnly : endUserOptions.scene3DOnly
         });
+
+
+        if (defined(endUserOptions.location)) {
+            viewer.geocoder.viewModel.searchText = endUserOptions.location;
+            var orientation = {};
+            if (defined(endUserOptions.orientation)) {
+                var query = endUserOptions.orientation.match(/[^\s,\n]+/g);
+
+                orientation.heading = ((query.length > 0) && (!isNaN(+query[0]))) ? CesiumMath.toRadians(+query[0]) : undefined;
+                orientation.pitch = ((query.length > 1) && (!isNaN(+query[1]))) ? CesiumMath.toRadians(+query[1]) : undefined;
+                orientation.roll = ((query.length > 2) && (!isNaN(+query[2]))) ? CesiumMath.toRadians(+query[2]) : undefined;
+            }
+            viewer.geocoder.viewModel.search(orientation);
+        }
     } catch (exception) {
         loadingIndicator.style.display = 'none';
         var message = formatError(exception);
