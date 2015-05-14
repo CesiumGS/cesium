@@ -12,6 +12,7 @@ Change Log
 * Added optional `ellipsoid` parameter to construction options of imagery and terrain providers that were lacking it.  Note that terrain bounding spheres are precomputed on the server, so any supplied terrain ellipsoid must match the one used by the server.
 * Upgraded Autolinker from version 0.15.2 to 0.17.1.
 * Added `Camera.moveStart` and `Camera.moveEnd` events.
+* Added `GeocoderViewModel.onSuccess` event.  Triggered after the camera flight is completed.
 
 ### 1.9 - 2015-05-01
 

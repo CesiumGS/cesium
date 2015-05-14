@@ -6,6 +6,7 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
+        '../../Core/Event',
         '../../Core/jsonp',
         '../../Core/Matrix4',
         '../../Core/Rectangle',
@@ -19,6 +20,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        Event,
         jsonp,
         Matrix4,
         Rectangle,
@@ -280,7 +282,7 @@ define([
                 return;
             }
 
-            updateCamera(viewModel, Cartesian3.fromDegrees(longitude, latitude, height));
+            updateCamera(viewModel, position);
         }, function() {
             if (geocodeInProgress.cancel) {
                 return;
