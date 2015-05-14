@@ -3,7 +3,9 @@ define([
         'Cesium/Core/defined',
         'Cesium/Core/formatError',
         'Cesium/Core/getFilenameFromUri',
+        'Cesium/Core/Math',
         'Cesium/Core/queryToObject',
+        'Cesium/Core/objectToQuery',
         'Cesium/DataSources/CzmlDataSource',
         'Cesium/DataSources/GeoJsonDataSource',
         'Cesium/DataSources/KmlDataSource',
@@ -16,7 +18,9 @@ define([
         defined,
         formatError,
         getFilenameFromUri,
+        CesiumMath,
         queryToObject,
+        objectToQuery,
         CzmlDataSource,
         GeoJsonDataSource,
         KmlDataSource,
@@ -33,7 +37,10 @@ define([
      * 'source' : 'file.czml',  // The relative URL of the CZML file to load at startup.
      * 'stats'  : true,         // Enable the FPS performance display.
      * 'theme'  : 'lighter',    // Use the dark-text-on-light-background theme.
-     * 'scene3DOnly' : false    // Enable 3D only mode
+     * 'scene3DOnly' : false,    // Enable 3D only mode
+     * 'saveCamera' : true,    // Saves the location and orientation of the camera in the query string for reload
+     * 'location' : string/lon,lat/lon,lat,height // Fly to this location on load.
+     * 'orientation' : heading,pitch,roll // Uses this orientation for the camera if 'location' was specified.
      */
     var endUserOptions = queryToObject(window.location.search.substring(1));
 
@@ -52,6 +59,25 @@ define([
             baseLayerPicker : !defined(imageryProvider),
             scene3DOnly : endUserOptions.scene3DOnly
         });
+
+
+        if (defined(endUserOptions.location)) {
+            var geocoderVM = viewer.geocoder.viewModel;
+            var duration = geocoderVM.flightDuration;
+            geocoderVM.flightDuration = 0;
+            geocoderVM.searchText = endUserOptions.location;
+            var orientation = {};
+            if (defined(endUserOptions.orientation)) {
+                var query = endUserOptions.orientation.match(/[^\s,\n]+/g);
+
+                orientation.heading = ((query.length > 0) && (!isNaN(+query[0]))) ? CesiumMath.toRadians(+query[0]) : undefined;
+                orientation.pitch = ((query.length > 1) && (!isNaN(+query[1]))) ? CesiumMath.toRadians(+query[1]) : undefined;
+                orientation.roll = ((query.length > 2) && (!isNaN(+query[2]))) ? CesiumMath.toRadians(+query[2]) : undefined;
+            }
+            geocoderVM.search(orientation);
+            geocoderVM.searchText = '';
+            geocoderVM.flightDuration = duration;
+        }
     } catch (exception) {
         loadingIndicator.style.display = 'none';
         var message = formatError(exception);
@@ -76,6 +102,16 @@ define([
     viewer.dropError.addEventListener(function(viewerArg, name, error) {
         showLoadError(name, error);
     });
+
+    if (endUserOptions.saveCamera !== 'false') {
+        var camera = viewer.camera;
+        camera.moveEnd.addEventListener(function() {
+            var position = camera.positionCartographic;
+            endUserOptions.location = CesiumMath.toDegrees(position.longitude) + ',' + CesiumMath.toDegrees(position.latitude) + ',' + position.height;
+            endUserOptions.orientation = CesiumMath.toDegrees(camera.heading) + ',' + CesiumMath.toDegrees(camera.pitch) + ',' + CesiumMath.toDegrees(camera.roll);
+            history.replaceState(undefined, '', '?' + objectToQuery(endUserOptions));
+        });
+    }
 
     var scene = viewer.scene;
     var context = scene.context;
