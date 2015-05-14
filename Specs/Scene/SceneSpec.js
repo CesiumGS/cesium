@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
         'Core/BoundingSphere',
+        'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
         'Core/Ellipsoid',
@@ -26,6 +27,7 @@ defineSuite([
         'Specs/render'
     ], 'Scene/Scene', function(
         BoundingSphere,
+        Cartesian2,
         Cartesian3,
         Color,
         Ellipsoid,
@@ -231,7 +233,18 @@ defineSuite([
     });
 
     it('debugShowGlobeDepth', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        scene.camera.viewRectangle(rectangle);
+
+        var rectanglePrimitive = new RectanglePrimitive({
+            rectangle : rectangle,
+            asynchronous : false
+        });
+        rectanglePrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+        scene.primitives.add(rectanglePrimitive);
+
+        expect(scene.renderForSpecs()).toEqual([255, 0, 0, 255]);
         scene.debugShowGlobeDepth = true;
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
         scene.debugShowGlobeDepth = false;
@@ -505,6 +518,33 @@ defineSuite([
 
             s.destroyForSpecs();
         }
+    });
+
+    it('pickDepth', function() {
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        scene.camera.viewRectangle(rectangle);
+
+        scene.renderForSpecs();
+
+        var canvas = scene.canvas;
+        var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        var position = scene.pickDepth(windowPosition);
+        expect(position).not.toBeDefined();
+
+        var rectanglePrimitive = new RectanglePrimitive({
+            rectangle : rectangle,
+            asynchronous : false
+        });
+        rectanglePrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+        var primitives = scene.primitives;
+        primitives.add(rectanglePrimitive);
+
+        scene.renderForSpecs();
+
+        position = scene.pickDepth(windowPosition);
+        expect(position).toBeDefined();
     });
 
     it('isDestroyed', function() {
