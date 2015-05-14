@@ -206,6 +206,23 @@ define([
         };
     }
 
+    function updateCamera(viewModel, position, orientation) {
+        if (viewModel._flightDuration === 0) {
+            var view = defaultValue(orientation, {});
+            view.position = position;
+            viewModel._scene.camera.setView(view);
+            viewModel._onSuccess.raiseEvent();
+        }
+        viewModel._scene.camera.flyTo({
+            destination : position,
+            orientation: orientation,
+            complete: onComplete(viewModel),
+            duration : viewModel._flightDuration,
+            endTransform : Matrix4.IDENTITY,
+            convert : false
+        });
+    }
+
     function geocode(viewModel, orientation) {
         var query = viewModel.searchText;
 
@@ -223,14 +240,7 @@ define([
             var height = (splitQuery.length === 3) ? +splitQuery[2] : 300.0;
 
             if (!isNaN(longitude) && !isNaN(latitude) && !isNaN(height)) {
-                viewModel._scene.camera.flyTo({
-                    destination : Cartesian3.fromDegrees(longitude, latitude, height),
-                    orientation: orientation,
-                    complete: onComplete(viewModel),
-                    duration : viewModel._flightDuration,
-                    endTransform : Matrix4.IDENTITY,
-                    convert : false
-                });
+                updateCamera(viewModel, Cartesian3.fromDegrees(longitude, latitude, height), orientation);
                 return;
             }
         }
@@ -279,14 +289,7 @@ define([
                 return;
             }
 
-            viewModel._scene.camera.flyTo({
-                destination : position,
-                orientation: orientation,
-                complete: onComplete(viewModel),
-                duration : viewModel._flightDuration,
-                endTransform : Matrix4.IDENTITY,
-                convert : false
-            });
+            updateCamera(viewModel, position, orientation);
         }, function() {
             if (geocodeInProgress.cancel) {
                 return;

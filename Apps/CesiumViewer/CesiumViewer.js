@@ -62,7 +62,10 @@ define([
 
 
         if (defined(endUserOptions.location)) {
-            viewer.geocoder.viewModel.searchText = endUserOptions.location;
+            var geocoderVM = viewer.geocoder.viewModel;
+            var duration = geocoderVM.flightDuration;
+            geocoderVM.flightDuration = 0;
+            geocoderVM.searchText = endUserOptions.location;
             var orientation = {};
             if (defined(endUserOptions.orientation)) {
                 var query = endUserOptions.orientation.match(/[^\s,\n]+/g);
@@ -71,8 +74,9 @@ define([
                 orientation.pitch = ((query.length > 1) && (!isNaN(+query[1]))) ? CesiumMath.toRadians(+query[1]) : undefined;
                 orientation.roll = ((query.length > 2) && (!isNaN(+query[2]))) ? CesiumMath.toRadians(+query[2]) : undefined;
             }
-            viewer.geocoder.viewModel.search(orientation);
-            viewer.geocoder.viewModel.searchText = '';
+            geocoderVM.search(orientation);
+            geocoderVM.searchText = '';
+            geocoderVM.flightDuration = duration;
         }
     } catch (exception) {
         loadingIndicator.style.display = 'none';
