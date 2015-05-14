@@ -38,7 +38,7 @@ define([
      * 'stats'  : true,         // Enable the FPS performance display.
      * 'theme'  : 'lighter',    // Use the dark-text-on-light-background theme.
      * 'scene3DOnly' : false,    // Enable 3D only mode
-     * 'saveCamera' : false,    // Saves the location and orientation of the camera in the query string for reload
+     * 'saveCamera' : true,    // Saves the location and orientation of the camera in the query string for reload
      * 'location' : string/lon,lat/lon,lat,height // Fly to this location on load.
      * 'orientation' : heading,pitch,roll // Uses this orientation for the camera if 'location' was specified.
      */
@@ -103,7 +103,7 @@ define([
         showLoadError(name, error);
     });
 
-    if (endUserOptions.saveCamera) {
+    if (endUserOptions.saveCamera !== 'false') {
         var camera = viewer.camera;
         camera.moveEnd.addEventListener(function() {
             var position = camera.positionCartographic;
