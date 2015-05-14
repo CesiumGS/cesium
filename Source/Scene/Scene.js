@@ -232,13 +232,13 @@ define([
             globeDepth = new GlobeDepth();
         }
 
-        this._globeDepth = globeDepth;
-
-        this._oit =  undefined;
+        var oit;
         if (this._useOIT && defined(globeDepth)) {
-            this._oit = new OIT(context, globeDepth.framebuffer);
+            var oit = new OIT(context);
         }
 
+        this._globeDepth = globeDepth;
+        this._oit = oit;
         this._fxaa = new FXAA();
 
         this._clearColorCommand = new ClearCommand({
