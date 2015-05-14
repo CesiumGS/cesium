@@ -59,6 +59,13 @@ define([
      *                    parameter is specified, the WGS84 ellipsoid is used.
      * @param {Number} [options.tileWidth=256] Pixel width of image tiles.
      * @param {Number} [options.tileHeight=256] Pixel height of image tiles.
+     * @param {String} [options.schema='{Z}/{X}/{revY}']  The schema to forge the URL to request a tile where the key word: <ul>
+     *  <li> {Z}:  corresponding to the level of a tile</li>
+     *  <li> {X}:  corresponding to the abscissa of a tile</li>
+     *  <li> {revX}:  corresponding to the reverse abscissa of a tile</li>
+     *  <li> {Y}:  corresponding to the ordinate of a tile</li>
+     *  <li> {revY}:  corresponding to the reverse ordinate of a tile</li>
+     * </ul>
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
@@ -73,16 +80,17 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
      * @example
-     * // TileMapService tile provider
+     * // TileMapService tile provider for a TMS with Z/Y/X and .PNG tile files
      * var tms = new Cesium.TileMapServiceImageryProvider({
      *    url : '../images/cesium_maptiler/Cesium_Logo_Color',
-     *    fileExtension: 'png',
+     *    fileExtension: 'PNG',
      *    maximumLevel: 4,
      *    rectangle: new Cesium.Rectangle(
      *        Cesium.Math.toRadians(-120.0),
      *        Cesium.Math.toRadians(20.0),
      *        Cesium.Math.toRadians(-60.0),
-     *        Cesium.Math.toRadians(40.0))
+     *        Cesium.Math.toRadians(40.0)),
+     *    schema: '{Z}/{revY}/{X}'
      * });
      */
     var TileMapServiceImageryProvider = function TileMapServiceImageryProvider(options) {
@@ -109,6 +117,7 @@ define([
         this._maximumLevel = options.maximumLevel;
         this._rectangle = Rectangle.clone(options.rectangle);
         this._tilingScheme = options.tilingScheme;
+        this._schema=defaultValue(options.schema,'{Z}/{X}/{revY}');
 
         var credit = options.credit;
         if (typeof credit === 'string') {
@@ -268,8 +277,10 @@ define([
     };
 
     function buildImageUrl(imageryProvider, x, y, level) {
-        var yTiles = imageryProvider._tilingScheme.getNumberOfYTilesAtLevel(level);
-        var url = imageryProvider._url + level + '/' + x + '/' + (yTiles - y - 1) + '.' + imageryProvider._fileExtension;
+        var revY= imageryProvider._tilingScheme.getNumberOfYTilesAtLevel(level) - y - 1;
+        var revX=imageryProvider._tilingScheme.getNumberOfXTilesAtLevel(level) - x - 1;
+        var url=imageryProvider._url + imageryProvider.schema + '.' + imageryProvider._fileExtension;
+        url = url.replace('{Z}',level).replace('{X}',x).replace('{revX}',revX).replace('{Y}',y).replace('{revY}',revY);
 
         var proxy = imageryProvider._proxy;
         if (defined(proxy)) {
@@ -492,6 +503,23 @@ define([
         hasAlphaChannel : {
             get : function() {
                 return true;
+            }
+        },
+
+        /** The schema to forge the URL to request a tile where the key word: <ul>
+         *  <li> {Z}:  corresponding to the level of a tile</li>
+         *  <li> {X}:  corresponding to the abscissa of a tile</li>
+         *  <li> {revX}:  corresponding to the reverse abscissa of a tile</li>
+         *  <li> {Y}:  corresponding to the ordinate of a tile</li>
+         *  <li> {revY}:  corresponding to the reverse ordinate of a tile</li>
+         * </ul>
+         * @memberof TileMapServiceImageryProvider.prototype
+         * @type {String}
+         * @readonly
+         */
+        schema : {
+            get : function() {
+                return this._schema;
             }
         }
     });
