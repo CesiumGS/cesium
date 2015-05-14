@@ -64,7 +64,7 @@ define([
         this._searchText = '';
         this._isSearchInProgress = false;
         this._geocodeInProgress = undefined;
-        this._onSuccess = new Event();
+        this._complete = new Event();
 
         var that = this;
         this._searchCommand = createCommand(function() {
@@ -169,9 +169,9 @@ define([
          *
          * @type {Event}
          */
-        onSuccess : {
+        complete : {
             get : function() {
-                return this._onSuccess;
+                return this._complete;
             }
         },
 
@@ -203,12 +203,12 @@ define([
     function updateCamera(viewModel, position) {
         if (viewModel._flightDuration === 0) {
             viewModel._scene.camera.setView({position: position});
-            viewModel._onSuccess.raiseEvent();
+            viewModel._complete.raiseEvent();
         } else {
             viewModel._scene.camera.flyTo({
                 destination : position,
                 complete: function() {
-                    viewModel._onSuccess.raiseEvent();
+                    viewModel._complete.raiseEvent();
                 },
                 duration : viewModel._flightDuration,
                 endTransform : Matrix4.IDENTITY,
