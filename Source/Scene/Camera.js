@@ -1510,12 +1510,6 @@ define([
      * @param {Cartesian3} target The target position in world coordinates.
      * @param {Cartesian3|HeadingPitchRange} offset The offset from the target in the local east-north-up reference frame centered at the target.
      *
-     * The deprecated parameters sets the camera position and orientation with an eye position, target, and up vector.
-     *
-     * @param {Cartesian3} eye The position of the camera. This parameter is deprecated.
-     * @param {Cartesian3} target The position to look at. This parameter is deprecated.
-     * @param {Cartesian3} up The up vector. This parameter is deprecated.
-     *
      * @exception {DeveloperError} lookAt is not supported while morphing.
      *
      * @example
