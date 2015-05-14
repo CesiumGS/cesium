@@ -211,12 +211,17 @@ define([
         destroyTextures(this);
         destroyFramebuffers(this);
 
-        this._copyColorCommand.shaderProgram = defined(this._copyColorCommand.shaderProgram) && this._copyColorCommand.shaderProgram.destroy();
-        this._copyDepthCommand.shaderProgram = defined(this._copyDepthCommand.shaderProgram) && this._copyDepthCommand.shaderProgram.destroy();
+        if (defined(this._copyColorCommand)) {
+            this._copyColorCommand.shaderProgram = this._copyColorCommand.shaderProgram.destroy();
+        }
+
+        if (defined(this._copyDepthCommand)) {
+            this._copyDepthCommand.shaderProgram = this._copyDepthCommand.shaderProgram.destroy();
+        }
 
         var command = this._debugGlobeDepthViewportCommand;
         if (defined(command)) {
-            command.shaderProgram = defined(command.shaderProgram) && command.shaderProgram.destroy();
+            command.shaderProgram = command.shaderProgram.destroy();
         }
 
         return destroyObject(this);
