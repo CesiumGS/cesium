@@ -566,6 +566,31 @@ define([
         tweens.update();
     }
 
+    var pickGlobeScratchRay = new Ray();
+
+    function pickGlobe(controller, mousePosition, result) {
+        var scene = controller._scene;
+        var globe = controller._globe;
+        var camera = scene.camera;
+
+        if (!defined(globe)) {
+            return;
+        }
+
+        var intersection;
+        var pickDepth = globe.depthTestAgainstTerrain && defined(scene._globeDepth);
+        if (pickDepth) {
+            intersection = scene.pickDepth(mousePosition, result);
+        }
+
+        if (!pickDepth || !defined(intersection)) {
+            var ray = camera.getPickRay(mousePosition, pickGlobeScratchRay);
+            intersection = globe.pick(ray, scene, result);
+        }
+
+        return intersection;
+    }
+
     var translateCVStartRay = new Ray();
     var translateCVEndRay = new Ray();
     var translateCVStartPos = new Cartesian3();
@@ -595,20 +620,10 @@ define([
         var origin = Cartesian3.clone(Cartesian3.ZERO, translateCVOrigin);
         var normal = Cartesian3.UNIT_X;
 
-        var globe = controller._globe;
-        if (defined(globe) && camera.position.z < controller.minimumPickingTerrainHeight) {
-            var intersection;
-            var pickDepth = globe.depthTestAgainstTerrain && defined(scene._globeDepth);
-            if (pickDepth) {
-                intersection = scene.pickDepth(startMouse, translateCVStartPos);
-            }
-
-            if (!pickDepth || !defined(intersection)) {
-                intersection = globe.pick(startRay, scene, translateCVStartPos);
-            }
-
-            if (defined(intersection)) {
-                origin.x = intersection.x;
+        if (camera.position.z < controller.minimumPickingTerrainHeight) {
+            var globePos = pickGlobe(controller, startMouse, translateCVStartPos);
+            if (defined(globePos)) {
+                origin.x = globePos.x;
             }
         }
 
@@ -758,20 +773,12 @@ define([
         if (Cartesian2.equals(startPosition, controller._tiltCenterMousePosition)) {
             center = Cartesian3.clone(controller._tiltCenter, rotateCVCenter);
         } else {
-            ray = camera.getPickRay(startPosition, rotateCVWindowRay);
-            var globe = controller._globe;
-            if (defined(globe) && camera.position.z < controller.minimumPickingTerrainHeight) {
-                var pickDepth = globe.depthTestAgainstTerrain && defined(scene._globeDepth);
-                if (pickDepth) {
-                    center = scene.pickDepth(startPosition, rotateCVCenter);
-                }
-
-                if (!pickDepth || !defined(center)) {
-                    center = globe.pick(ray, scene, rotateCVCenter);
-                }
+            if (camera.position.z < controller.minimumPickingTerrainHeight) {
+                center = pickGlobe(controller, startPosition, rotateCVCenter);
             }
 
             if (!defined(center)) {
+                ray = camera.getPickRay(startPosition, rotateCVWindowRay);
                 var position = ray.origin;
                 var direction = ray.direction;
 
@@ -932,16 +939,8 @@ define([
         var ray = camera.getPickRay(windowPosition, zoomCVWindowRay);
 
         var intersection;
-        var globe = controller._globe;
-        if (defined(globe) && camera.position.z < controller.minimumPickingTerrainHeight) {
-            var pickDepth = globe.depthTestAgainstTerrain && defined(scene._globeDepth);
-            if (pickDepth) {
-                intersection = scene.pickDepth(windowPosition, zoomCVIntersection);
-            }
-
-            if (!pickDepth || !defined(intersection)) {
-                intersection = globe.pick(ray, scene, zoomCVIntersection);
-            }
+        if (camera.position.z < controller.minimumPickingTerrainHeight) {
+            intersection = pickGlobe(controller, windowPosition, zoomCVIntersection);
         }
 
         var distance;
@@ -1034,17 +1033,7 @@ define([
         var height = controller._ellipsoid.cartesianToCartographic(camera.positionWC, scratchCartographic).height;
         var globe = controller._globe;
         if (defined(globe) && height < controller.minimumPickingTerrainHeight) {
-            var mousePos;
-            var pickDepth = globe.depthTestAgainstTerrain && defined(scene._globeDepth);
-            if (pickDepth) {
-                mousePos = scene.pickDepth(movement.startPosition, scratchMousePos);
-            }
-
-            if (!pickDepth || !defined(mousePos)) {
-                var startRay = camera.getPickRay(movement.startPosition, scratchStartRay);
-                mousePos = globe.pick(startRay, scene, scratchMousePos);
-            }
-
+            var mousePos = pickGlobe(controller, movement.startPosition, scratchMousePos);
             if (defined(mousePos)) {
                 magnitude = Cartesian3.magnitude(mousePos);
                 radii = scratchRadii;
@@ -1244,16 +1233,8 @@ define([
 
         var intersection;
         var height = ellipsoid.cartesianToCartographic(camera.position, zoom3DCartographic).height;
-        var globe = controller._globe;
-        if (defined(globe) && height < controller.minimumPickingTerrainHeight) {
-            var pickDepth = globe.depthTestAgainstTerrain && defined(scene._globeDepth);
-            if (pickDepth) {
-                intersection = scene.pickDepth(windowPosition, zoomCVIntersection);
-            }
-
-            if (!pickDepth || !defined(intersection)) {
-                intersection = globe.pick(ray, scene, zoomCVIntersection);
-            }
+        if (height < controller.minimumPickingTerrainHeight) {
+            intersection = pickGlobe(controller, windowPosition, zoomCVIntersection);
         }
 
         var distance;
@@ -1389,21 +1370,10 @@ define([
         if (Cartesian2.equals(startPosition, controller._tiltCenterMousePosition)) {
             center = Cartesian3.clone(controller._tiltCenter, tilt3DCenter);
         } else {
-            ray = camera.getPickRay(startPosition, tilt3DRay);
-
-            var globe = controller._globe;
-            if (defined(controller._globe)) {
-                var pickDepth = globe.depthTestAgainstTerrain && defined(scene._globeDepth);
-                if (pickDepth) {
-                    center = scene.pickDepth(startPosition, tilt3DCenter);
-                }
-
-                if (!pickDepth || !defined(center)) {
-                    center = globe.pick(ray, scene, tilt3DCenter);
-                }
-            }
+            center = pickGlobe(controller, startPosition, tilt3DCenter);
 
             if (!defined(center)) {
+                ray = camera.getPickRay(startPosition, tilt3DRay);
                 intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
                 if (!defined(intersection)) {
                     var cartographic = ellipsoid.cartesianToCartographic(camera.position, tilt3DCart);
