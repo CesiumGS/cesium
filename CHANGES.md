@@ -16,6 +16,7 @@ Change Log
 * Added debug option to 'Scene' to show the depth buffer information for a specified view frustum slice and exposed capability in 'CesiumInspector' widget.
 * Removed `Scene.fxaaOrderIndependentTranslucency`. Use `Scene.fxaa` which is now `true` by default.
 * Added `Scene.pickDepth` to reconstruct the cartesian world position from window coordinates.
+* The default mouse controls now support panning and zooming on 3D models and other opaque geometry.
 * Added `Camera.moveStart` and `Camera.moveEnd` events.
 
 ### 1.9 - 2015-05-01

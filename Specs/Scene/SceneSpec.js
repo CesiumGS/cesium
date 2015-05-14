@@ -547,6 +547,12 @@ defineSuite([
         expect(position).toBeDefined();
     });
 
+    it('pickDepth throws without windowPosition', function() {
+        expect(function() {
+            scene.pickDepth();
+        }).toThrowDeveloperError();
+    });
+
     it('isDestroyed', function() {
         var s = createScene();
         expect(s.isDestroyed()).toEqual(false);
