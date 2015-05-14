@@ -4,6 +4,7 @@ defineSuite([
         'Core/Cartographic',
         'Core/DefaultProxy',
         'Core/defined',
+        'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
         'Core/loadImage',
         'Core/loadWithXhr',
@@ -24,6 +25,7 @@ defineSuite([
         Cartographic,
         DefaultProxy,
         defined,
+        Ellipsoid,
         GeographicTilingScheme,
         loadImage,
         loadWithXhr,
@@ -79,6 +81,21 @@ defineSuite([
             return provider.ready;
         }).then(function() {
             expect(typeof provider.hasAlphaChannel).toBe('boolean');
+        });
+    });
+
+    it('can use a custom ellipsoid', function() {
+        var ellipsoid = new Ellipsoid(1, 2, 3);
+        var provider = new WebMapServiceImageryProvider({
+            url : 'made/up/wms/server',
+            layers : 'someLayer',
+            ellipsoid : ellipsoid
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            expect(provider.tilingScheme.ellipsoid).toEqual(ellipsoid);
         });
     });
 

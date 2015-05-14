@@ -40,6 +40,7 @@ define([
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
      * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
      * @param {Number} [options.maximumLevel=18] The maximum level-of-detail supported by the imagery provider.
+     * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {Credit|String} [options.credit='MapQuest, Open Street Map and contributors, CC-BY-SA'] A credit for the data source, which is displayed on the canvas.
      *
      * @see ArcGisMapServerImageryProvider
@@ -71,7 +72,7 @@ define([
         this._proxy = options.proxy;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
 
-        this._tilingScheme = new WebMercatorTilingScheme();
+        this._tilingScheme = new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid });
 
         this._tileWidth = 256;
         this._tileHeight = 256;
