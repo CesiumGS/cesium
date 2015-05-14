@@ -252,12 +252,6 @@ define([
     };
 
     /**
-     * The number of elements used to pack the object into an array.
-     * @type {Number}
-     */
-    Rectangle.packedLength = 4;
-
-    /**
      * Stores the provided instance into the provided array.
      *
      * @param {Rectangle} value The value to pack.
