@@ -567,6 +567,8 @@ define([
     }
 
     var pickGlobeScratchRay = new Ray();
+    var scratchDepthIntersection = new Cartesian3();
+    var scratchRayIntersection = new Cartesian3();
 
     function pickGlobe(controller, mousePosition, result) {
         var scene = controller._scene;
@@ -574,21 +576,25 @@ define([
         var camera = scene.camera;
 
         if (!defined(globe)) {
-            return;
+            return undefined;
         }
 
-        var intersection;
-        var pickDepth = globe.depthTestAgainstTerrain && defined(scene._globeDepth);
-        if (pickDepth) {
-            intersection = scene.pickDepth(mousePosition, result);
+        var depthIntersection;
+        if (defined(scene._globeDepth)) {
+            depthIntersection = scene.pickDepth(mousePosition, scratchDepthIntersection);
         }
 
-        if (!pickDepth || !defined(intersection)) {
-            var ray = camera.getPickRay(mousePosition, pickGlobeScratchRay);
-            intersection = globe.pick(ray, scene, result);
+        var ray = camera.getPickRay(mousePosition, pickGlobeScratchRay);
+        var rayIntersection = globe.pick(ray, scene, scratchRayIntersection);
+
+        var pickDistance = defined(depthIntersection) ? Cartesian3.distance(depthIntersection, camera.positionWC) : Number.POSITIVE_INFINITY;
+        var rayDistance = defined(rayIntersection) ? Cartesian3.distance(rayIntersection, camera.positionWC) : Number.POSITIVE_INFINITY;
+
+        if (pickDistance < rayDistance) {
+            return Cartesian3.clone(depthIntersection, result);
         }
 
-        return intersection;
+        return Cartesian3.clone(rayIntersection, result);
     }
 
     var translateCVStartRay = new Ray();
