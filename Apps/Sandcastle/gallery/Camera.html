@@ -258,6 +258,9 @@ Sandcastle.reset = function() {
         removeEnd();
 
         viewChanged.style.display = 'none';
+        
+        removeStart = undefined;
+        removeEnd = undefined;
     }
     
     viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
