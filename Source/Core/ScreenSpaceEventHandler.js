@@ -243,6 +243,10 @@ define([
         }
 
         Cartesian2.clone(position, previousPosition);
+
+        if (defined(screenSpaceEventHandler._buttonDown)) {
+            event.preventDefault();
+        }
     }
 
     var mouseDblClickEvent = {

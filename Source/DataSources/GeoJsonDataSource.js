@@ -735,45 +735,6 @@ define([
         }
     });
 
-    GeoJsonDataSource.prototype.refreshDescription = function(dynamicObject) {
-        var geoJson = dynamicObject.geoJson;
-        var properties = geoJson.properties;
-        if (defined(properties)) {
-            //Try and find a good name for the object from its meta-data
-            //TODO: Make both name and description creation user-configurable.
-            var key;
-            var nameProperty;
-            for (key in properties) {
-                if (properties.hasOwnProperty(key) && properties[key]) {
-                    var upperKey = key.toUpperCase();
-                    if (upperKey === 'NAME' || upperKey === 'TITLE') {
-                        nameProperty = key;
-                        dynamicObject.name = properties[key];
-                        break;
-                    }
-                }
-            }
-            if (!defined(nameProperty)) {
-                for (key in properties) {
-                    if (properties.hasOwnProperty(key) && properties[key]) {
-                        if (/name/i.test(key) || /title/i.test(key)) {
-                            nameProperty = key;
-                            dynamicObject.name = properties[key];
-                            break;
-                        }
-                    }
-                }
-            }
-
-            var description = describe(properties, nameProperty);
-            dynamicObject.description = {
-                getValue : function() {
-                    return description;
-                }
-            };
-        }
-    };
-
     GeoJsonDataSource.prototype.loadUrl = function(url, options) {
         deprecationWarning('GeoJsonDataSource.prototype.loadUrl', 'GeoJsonDataSource.loadUrl has been deprecated.  You can now pass a url to GeoJsonDataSource.load.');
         return this.load(url, options);
