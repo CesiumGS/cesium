@@ -621,6 +621,38 @@ defineSuite([
         s.destroyForSpecs();
     });
 
+    it('raises the cameraMoveStart event after moving the camera', function() {
+        var s = createScene();
+        s.render();
+
+        var spyListener = jasmine.createSpy('listener');
+        s.camera.moveStart.addEventListener(spyListener);
+
+        s.camera.moveLeft();
+        s.render();
+
+        expect(spyListener.calls.count()).toBe(1);
+
+        s.destroyForSpecs();
+    });
+
+    it('raises the cameraMoveEvent event when the camera stops moving', function() {
+        var s = createScene();
+        s.render();
+
+        var spyListener = jasmine.createSpy('listener');
+        s.camera.moveEnd.addEventListener(spyListener);
+
+        s.cameraEventWaitTime = 0.0;
+        s.camera.moveLeft();
+        s.render();
+        s.render();
+
+        expect(spyListener.calls.count()).toBe(1);
+
+        s.destroyForSpecs();
+    });
+
     it('get maximumAliasedLineWidth', function() {
         var s = createScene();
         expect(s.maximumAliasedLineWidth).toBeGreaterThanOrEqualTo(1);

@@ -85,6 +85,9 @@ define([
      *        will not support feature picking at all.
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
      * @param {TilingScheme} [options.tilingScheme=new GeographicTilingScheme()] The tiling scheme to use to divide the world into tiles.
+     * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
+     *        this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
+     *        parameter is specified, the WGS84 ellipsoid is used.
      * @param {Number} [options.tileWidth=256] The width of each tile in pixels.
      * @param {Number} [options.tileHeight=256] The height of each tile in pixels.
      * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when
@@ -145,7 +148,7 @@ define([
         this._maximumLevel = options.maximumLevel; // undefined means no limit
 
         this._rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
-        this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new GeographicTilingScheme();
+        this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new GeographicTilingScheme({ ellipsoid : options.ellipsoid });
 
         this._rectangle = Rectangle.intersection(this._rectangle, this._tilingScheme.rectangle);
 

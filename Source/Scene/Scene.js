@@ -18,6 +18,7 @@ define([
         '../Core/GeographicProjection',
         '../Core/GeometryInstance',
         '../Core/GeometryPipeline',
+        '../Core/getTimestamp',
         '../Core/Intersect',
         '../Core/Interval',
         '../Core/JulianDate',
@@ -71,6 +72,7 @@ define([
         GeographicProjection,
         GeometryInstance,
         GeometryPipeline,
+        getTimestamp,
         Intersect,
         Interval,
         JulianDate,
@@ -257,6 +259,9 @@ define([
         this._preRender = new Event();
         this._postRender = new Event();
 
+        this._cameraStartFired = false;
+        this._cameraMovedTime = undefined;
+
         /**
          * Exceptions occurring in <code>render</code> are always caught in order to raise the
          * <code>renderError</code> event.  If this property is true, the error is rethrown
@@ -347,6 +352,8 @@ define([
         this._mode = SceneMode.SCENE3D;
 
         this._mapProjection = defined(options.mapProjection) ? options.mapProjection : new GeographicProjection();
+
+        this._transitioner = new SceneTransitioner(this, this._mapProjection.ellipsoid);
 
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
@@ -471,11 +478,20 @@ define([
          */
         this.fxaa = true;
 
+        /**
+         * The time in milliseconds to wait before checking if the camera has not moved and fire the cameraMoveEnd event.
+         * @type {Number}
+         * @default 500.0
+         * @private
+         */
+        this.cameraEventWaitTime = 500.0;
+
         this._performanceDisplay = undefined;
         this._debugSphere = undefined;
 
         var camera = new Camera(this);
         this._camera = camera;
+        this._cameraClone = Camera.clone(camera);
         this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
 
         // initial guess at frustums.
@@ -1374,7 +1390,7 @@ define([
             frustum.far = frustumCommands.far;
 
             if (index !== 0) {
-                // Avoid tearing artifacts between adjacent frustums
+                // Avoid tearing artifacts between adjacent frustums in the opaque passes
                 frustum.near *= OPAQUE_FRUSTUM_NEAR_OFFSET;
             }
 
@@ -1416,8 +1432,11 @@ define([
                 }
             }
 
-            frustum.near = frustumCommands.near;
-            us.updateFrustum(frustum);
+            if (index !== 0) {
+                // Do not overlap frustums in the translucent pass to avoid blending artifacts
+                frustum.near = frustumCommands.near;
+                us.updateFrustum(frustum);
+            }
 
             commands = frustumCommands.commands[Pass.TRANSLUCENT];
             commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
@@ -1506,6 +1525,19 @@ define([
         if (!defined(time)) {
             time = JulianDate.now();
         }
+
+        var camera = scene._camera;
+        var cameraChanged = !Camera.equalsEpsilon(camera, scene._cameraClone, CesiumMath.EPSILON4);
+        if (cameraChanged && !scene._cameraStartFired) {
+            camera.moveStart.raiseEvent();
+            scene._cameraStartFired = true;
+            scene._cameraMovedTime = getTimestamp();
+        } else if (!cameraChanged && scene._cameraStartFired && getTimestamp() - scene._cameraMovedTime > scene.cameraEventWaitTime) {
+            camera.moveEnd.raiseEvent();
+            scene._cameraStartFired = false;
+        }
+
+        Camera.clone(camera, scene._cameraClone);
 
         scene._preRender.raiseEvent(scene, time);
 

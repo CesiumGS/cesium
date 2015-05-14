@@ -4,15 +4,19 @@ Change Log
 ### 1.10 - 2015-06-01
 * Breaking changes
   *
+* Deprecated
+  * Deprecated `Camera.clone`. It will be removed in 1.11.
 * Added `Billboard.heightReference` and `Label.heightReference` to clamp billboards and labels to terrain.
 * Added new `PointPrimitive` and `PointPrimitiveCollection`, which are faster and use less memory than billboards with circles.
 * Changed `Entity.point` back-end graphics to use the new `PointPrimitive` instead of billboards.  No change to the `Entity.point` API.
 * Added optional drilling limit to `Scene.drillPick`.
+* Added optional `ellipsoid` parameter to construction options of imagery and terrain providers that were lacking it.  Note that terrain bounding spheres are precomputed on the server, so any supplied terrain ellipsoid must match the one used by the server.
 * Upgraded Autolinker from version 0.15.2 to 0.17.1.
 * Fixed documentation for 'Context.drawingBufferHeight' and 'Context.drawingBufferWidth'.
 * Added debug option to 'Scene' to show the depth buffer information for a specified view frustum slice and exposed capability in 'CesiumInspector' widget.
 * Removed `Scene.fxaaOrderIndependentTranslucency`. Use `Scene.fxaa` which is now `true` by default.
 * Added `Scene.pickDepth` to reconstruct the cartesian world position from window coordinates.
+* Added `Camera.moveStart` and `Camera.moveEnd` events.
 
 ### 1.9 - 2015-05-01
 
