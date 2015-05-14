@@ -225,11 +225,16 @@ define([
         this._useOIT = defaultValue(options.orderIndependentTranslucency, true);
         this._executeOITFunction = undefined;
 
-        this._globeDepth = new GlobeDepth(context);
+        var globeDepth;
+        if (context.depthTexture) {
+            globeDepth = new GlobeDepth();
+        }
+
+        this._globeDepth = globeDepth;
 
         this._oit =  undefined;
-        if (this._useOIT && this._globeDepth.supported) {
-            this._oit = new OIT(context, this._globeDepth.framebuffer);
+        if (this._useOIT && defined(globeDepth)) {
+            this._oit = new OIT(context, globeDepth.framebuffer);
         }
 
         this._fxaa = new FXAA();
@@ -483,6 +488,8 @@ define([
         updateFrameState(this, 0.0, JulianDate.now());
         this.initializeFrame();
     };
+
+    var OPAQUE_FRUSTUM_NEAR_OFFSET = 0.99;
 
     defineProperties(Scene.prototype, {
         /**
@@ -1206,19 +1213,19 @@ define([
         }
     }
 
-    function getDebugGlobeDepth(scene, context, index) {
+    function getDebugGlobeDepth(scene, index) {
         var globeDepth = scene._debugGlobeDepths[index];
-        if (!defined(globeDepth)) {
-            globeDepth = new GlobeDepth(context);
+        if (!defined(globeDepth) && scene.context.depthTexture) {
+            globeDepth = new GlobeDepth();
             scene._debugGlobeDepths[index] = globeDepth;
         }
         return globeDepth;
     }
 
-    function getPickDepth(scene, context, index) {
+    function getPickDepth(scene, index) {
         var pickDepth = scene._pickDepths[index];
         if (!defined(pickDepth)) {
-            pickDepth = new PickDepth(context);
+            pickDepth = new PickDepth();
             scene._pickDepths[index] = pickDepth;
         }
         return pickDepth;
@@ -1275,8 +1282,10 @@ define([
         clearColorCommand.execute(context, passState);
 
         // Update globe depth rendering based on the current context and clear the globe depth framebuffer.
-        scene._globeDepth.update(context);
-        scene._globeDepth.clear(context, passState, clearColor);
+        if (defined(scene._globeDepth)) {
+            scene._globeDepth.update(context);
+            scene._globeDepth.clear(context, passState, clearColor);
+        }
 
         // Determine if there are any translucent surfaces in any of the frustums.
         var renderTranslucentCommands = false;
@@ -1300,7 +1309,7 @@ define([
         // If supported, configure FXAA to use the globe depth color texture and clear the FXAA framebuffer.
         var useFXAA = !picking && scene.fxaa;
         if (useFXAA) {
-            var fxaaTexture = !useOIT ? scene._globeDepth._colorTexture : undefined;
+            var fxaaTexture = !useOIT && defined(scene._globeDepth) ? scene._globeDepth._colorTexture : undefined;
             scene._fxaa.update(context, fxaaTexture);
             scene._fxaa.clear(context, passState, clearColor);
         }
@@ -1308,7 +1317,7 @@ define([
         var sunVisible = isVisible(sunCommand, frameState);
         if (sunVisible && scene.sunBloom) {
             passState.framebuffer = scene._sunPostProcess.update(context);
-        } else if (scene._globeDepth.supported) {
+        } else if (defined(scene._globeDepth)) {
             passState.framebuffer = scene._globeDepth.framebuffer;
         } else if (useFXAA) {
             passState.framebuffer = scene._fxaa.getColorFramebuffer();
@@ -1331,7 +1340,7 @@ define([
             sunCommand.execute(context, passState);
             if (scene.sunBloom) {
                 var framebuffer;
-                if (scene._globeDepth.supported) {
+                if (defined(scene._globeDepth)) {
                     framebuffer = scene._globeDepth.framebuffer;
                 } else if (scene.fxaa) {
                     framebuffer = scene._fxaa.getColorFramebuffer();
@@ -1366,13 +1375,13 @@ define([
 
             if (index !== 0) {
                 // Avoid tearing artifacts between adjacent frustums
-                frustum.near *= 0.99;
+                frustum.near *= OPAQUE_FRUSTUM_NEAR_OFFSET;
             }
 
-            var globeDepth = scene.debugShowGlobeDepth ? getDebugGlobeDepth(scene, context, index) : scene._globeDepth;
+            var globeDepth = scene.debugShowGlobeDepth ? getDebugGlobeDepth(scene, index) : scene._globeDepth;
 
             var fb;
-            if (scene.debugShowGlobeDepth) {
+            if (scene.debugShowGlobeDepth && defined(globeDepth)) {
                 fb = passState.framebuffer;
                 passState.framebuffer = globeDepth.framebuffer;
             }
@@ -1386,11 +1395,13 @@ define([
                 executeCommand(commands[j], scene, context, passState);
             }
 
-            globeDepth.update(context);
-            globeDepth.executeCopyDepth(context, passState);
+            if (defined(globeDepth)) {
+                globeDepth.update(context);
+                globeDepth.executeCopyDepth(context, passState);
 
-            if (scene.debugShowGlobeDepth) {
-                passState.framebuffer = fb;
+                if (scene.debugShowGlobeDepth) {
+                    passState.framebuffer = fb;
+                }
             }
 
             // Execute commands in order by pass up to the translucent pass.
@@ -1412,15 +1423,16 @@ define([
             commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
             executeTranslucentCommands(scene, executeCommand, passState, commands);
 
-            if (globeDepth.supported) {
-                var pickDepth = getPickDepth(scene, context, index);
+            if (defined(globeDepth)) {
+                // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
+                var pickDepth = getPickDepth(scene, index);
                 pickDepth.update(context, globeDepth.framebuffer.depthStencilTexture);
                 pickDepth.executeCopyDepth(context, passState);
             }
         }
 
-        if (scene.debugShowGlobeDepth) {
-            var gd = getDebugGlobeDepth(scene, context, scene.debugShowGlobeDepthFrustum - 1);
+        if (scene.debugShowGlobeDepth && defined(scene._globeDepth)) {
+            var gd = getDebugGlobeDepth(scene, scene.debugShowGlobeDepthFrustum - 1);
             gd.executeDebugGlobeDepth(context, passState);
         }
 
@@ -1434,7 +1446,7 @@ define([
             scene._fxaa.execute(context, passState);
         }
 
-        if (!useOIT && !useFXAA) {
+        if (!useOIT && !useFXAA && defined(scene._globeDepth)) {
             passState.framebuffer = originalFramebuffer;
             scene._globeDepth.executeCopyColor(context, passState);
         }
@@ -1718,9 +1730,6 @@ define([
         return object;
     };
 
-    var scratchNDC = new Cartesian4();
-    var scratchWorldCoords = new Cartesian4();
-
     /**
      * Returns the cartesian position reconstructed from the depth buffer and window position.
      *
@@ -1728,16 +1737,16 @@ define([
      * @param {Cartesian3} [result] The object on which to restore the result.
      * @returns {Cartesian3} The cartesian position.
      *
-     * @exception {DeveloperError} windowPosition is undefined.
-     * @exception {DeveloperError} Picking from the depth buffer is not supported.
+     * @exception {DeveloperError} Picking from the depth buffer is not supported. Check Context.depthTexture for support.
+     * @exception {DeveloperError} 2D is not supported. An orthographic projection matrix is not invertible.
      */
     Scene.prototype.pickDepth = function(windowPosition, result) {
         //>>includeStart('debug', pragmas.debug);
         if(!defined(windowPosition)) {
             throw new DeveloperError('windowPosition is undefined.');
         }
-        if (!this._globeDepth.supported) {
-            throw new DeveloperError('Picking from the depth buffer is not supported.');
+        if (!defined(this._globeDepth)) {
+            throw new DeveloperError('Picking from the depth buffer is not supported. Check Context.depthTexture for support.');
         }
         //>>includeEnd('debug');
 
@@ -1752,7 +1761,7 @@ define([
         var numFrustums = this.numberOfFrustums;
 
         for (var i = 0; i < numFrustums; ++i) {
-            var pickDepth = getPickDepth(this, context, i);
+            var pickDepth = getPickDepth(this, i);
             var pixels = context.readPixels({
                 x : drawingBufferPosition.x,
                 y : drawingBufferPosition.y,
@@ -1781,30 +1790,17 @@ define([
         } else if (defined(camera.frustum.infiniteProjectionMatrix)){
             frustum = camera.frustum.clone(scratchPerspectiveOffCenterFrustum);
         } else {
-            throw new DeveloperError('An orthographic projection matrix is not invertible.');
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('2D is not supported. An orthographic projection matrix is not invertible.');
+            //>>includeEnd('debug');
         }
 
         var renderedFrustum = this._frustumCommandsList[index];
-        frustum.near = renderedFrustum.near * 0.99;
+        frustum.near = renderedFrustum.near * OPAQUE_FRUSTUM_NEAR_OFFSET;
         frustum.far = renderedFrustum.far;
         uniformState.updateFrustum(frustum);
 
-        var viewport = uniformState.viewport;
-        var viewportTransformation = uniformState.viewportTransformation;
-
-        var ndc = Cartesian4.clone(Cartesian4.UNIT_W, scratchNDC);
-        ndc.x = (drawingBufferPosition.x - viewport.x) / viewport.width * 2.0 - 1.0;
-        ndc.y = (drawingBufferPosition.y - viewport.y) / viewport.height * 2.0 - 1.0;
-        ndc.z = (depth * 2.0) - 1.0;
-        ndc.w = 1.0;
-
-        var worldCoords = Matrix4.multiplyByVector(uniformState.inverseViewProjection, ndc, scratchWorldCoords);
-
-        // Reverse perspective divide
-        var w = 1.0 / worldCoords.w;
-        Cartesian3.multiplyByScalar(worldCoords, w, worldCoords);
-
-        return Cartesian3.fromCartesian4(worldCoords, result);
+        return SceneTransforms.drawingBufferToWgs84Coordinates(this, drawingBufferPosition, depth, result);
     };
 
     /**

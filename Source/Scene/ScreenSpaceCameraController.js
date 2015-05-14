@@ -598,7 +598,7 @@ define([
         var globe = controller._globe;
         if (defined(globe) && camera.position.z < controller.minimumPickingTerrainHeight) {
             var intersection;
-            var pickDepth = globe.depthTestAgainstTerrain && scene._globeDepth.supported;
+            var pickDepth = globe.depthTestAgainstTerrain && defined(scene._globeDepth);
             if (pickDepth) {
                 intersection = scene.pickDepth(startMouse, translateCVStartPos);
             }
@@ -761,7 +761,7 @@ define([
             ray = camera.getPickRay(startPosition, rotateCVWindowRay);
             var globe = controller._globe;
             if (defined(globe) && camera.position.z < controller.minimumPickingTerrainHeight) {
-                var pickDepth = globe.depthTestAgainstTerrain && scene._globeDepth.supported;
+                var pickDepth = globe.depthTestAgainstTerrain && defined(scene._globeDepth);
                 if (pickDepth) {
                     center = scene.pickDepth(startPosition, rotateCVCenter);
                 }
@@ -934,7 +934,7 @@ define([
         var intersection;
         var globe = controller._globe;
         if (defined(globe) && camera.position.z < controller.minimumPickingTerrainHeight) {
-            var pickDepth = globe.depthTestAgainstTerrain && scene._globeDepth.supported;
+            var pickDepth = globe.depthTestAgainstTerrain && defined(scene._globeDepth);
             if (pickDepth) {
                 intersection = scene.pickDepth(windowPosition, zoomCVIntersection);
             }
@@ -1035,7 +1035,7 @@ define([
         var globe = controller._globe;
         if (defined(globe) && height < controller.minimumPickingTerrainHeight) {
             var mousePos;
-            var pickDepth = globe.depthTestAgainstTerrain && scene._globeDepth.supported;
+            var pickDepth = globe.depthTestAgainstTerrain && defined(scene._globeDepth);
             if (pickDepth) {
                 mousePos = scene.pickDepth(movement.startPosition, scratchMousePos);
             }
@@ -1246,7 +1246,7 @@ define([
         var height = ellipsoid.cartesianToCartographic(camera.position, zoom3DCartographic).height;
         var globe = controller._globe;
         if (defined(globe) && height < controller.minimumPickingTerrainHeight) {
-            var pickDepth = globe.depthTestAgainstTerrain && scene._globeDepth.supported;
+            var pickDepth = globe.depthTestAgainstTerrain && defined(scene._globeDepth);
             if (pickDepth) {
                 intersection = scene.pickDepth(windowPosition, zoomCVIntersection);
             }
@@ -1393,7 +1393,7 @@ define([
 
             var globe = controller._globe;
             if (defined(controller._globe)) {
-                var pickDepth = globe.depthTestAgainstTerrain && scene._globeDepth.supported;
+                var pickDepth = globe.depthTestAgainstTerrain && defined(scene._globeDepth);
                 if (pickDepth) {
                     center = scene.pickDepth(startPosition, tilt3DCenter);
                 }

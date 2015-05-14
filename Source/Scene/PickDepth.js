@@ -19,7 +19,7 @@ define([
     /**
      * @private
      */
-    var PickDepth = function(context) {
+    var PickDepth = function() {
         this.framebuffer = undefined;
 
         this._depthTexture = undefined;
