@@ -6,6 +6,7 @@ define([
         'Cesium/Core/getFilenameFromUri',
         'Cesium/Core/Math',
         'Cesium/Core/queryToObject',
+        'Cesium/Core/objectToQuery',
         'Cesium/DataSources/CzmlDataSource',
         'Cesium/DataSources/GeoJsonDataSource',
         'Cesium/DataSources/KmlDataSource',
@@ -21,6 +22,7 @@ define([
         getFilenameFromUri,
         CesiumMath,
         queryToObject,
+        objectToQuery,
         CzmlDataSource,
         GeoJsonDataSource,
         KmlDataSource,
@@ -38,7 +40,7 @@ define([
      * 'stats'  : true,         // Enable the FPS performance display.
      * 'theme'  : 'lighter',    // Use the dark-text-on-light-background theme.
      * 'scene3DOnly' : false    // Enable 3D only mode
-     * 'flyTo' : longitude,latitude,[height,heading,pitch,roll]
+     * 'view' : longitude,latitude,[height,heading,pitch,roll]
      *    // Using degrees and meters
      *    // [height,heading,pitch,roll] default is looking straight down, [300,0,-90,0]
      */
@@ -140,9 +142,9 @@ define([
         }
     }
 
-    var flyTo = endUserOptions.flyTo;
-    if (defined(flyTo)) {
-        var splitQuery = flyTo.split(/[ ,]+/);
+    var view = endUserOptions.view;
+    if (defined(view)) {
+        var splitQuery = view.split(/[ ,]+/);
         if (splitQuery.length > 1) {
             var longitude = !isNaN(+splitQuery[0]) ? +splitQuery[0] : 0.0;
             var latitude = !isNaN(+splitQuery[1]) ? +splitQuery[1] : 0.0;
@@ -151,15 +153,21 @@ define([
             var pitch = ((splitQuery.length > 4) && (!isNaN(+splitQuery[4]))) ? CesiumMath.toRadians(+splitQuery[4]) : undefined;
             var roll = ((splitQuery.length > 5) && (!isNaN(+splitQuery[5]))) ? CesiumMath.toRadians(+splitQuery[5]) : undefined;
 
-            viewer.camera.flyTo({
-                destination : Cartesian3.fromDegrees(longitude, latitude, height),
-                orientation : {
-                    heading : heading,
-                    pitch : pitch,
-                    roll : roll
-                }
+            viewer.camera.setView({
+                position: Cartesian3.fromDegrees(longitude, latitude, height),
+                heading: heading,
+                pitch: pitch,
+                roll: roll
             });
         }
+    }
+    if (endUserOptions.saveCamera !== 'false') {
+        var camera = viewer.camera;
+        camera.moveEnd.addEventListener(function() {
+            var position = camera.positionCartographic;
+            endUserOptions.view = CesiumMath.toDegrees(position.longitude) + ',' + CesiumMath.toDegrees(position.latitude) + ',' + position.height + ',' + CesiumMath.toDegrees(camera.heading) + ',' + CesiumMath.toDegrees(camera.pitch) + ',' + CesiumMath.toDegrees(camera.roll);
+            history.replaceState(undefined, '', '?' + objectToQuery(endUserOptions));
+        });
     }
 
     loadingIndicator.style.display = 'none';
