@@ -104,4 +104,19 @@ defineSuite([
             return new GeocoderViewModel();
         }).toThrowDeveloperError();
     });
+
+    it('raises the onSuccess event camera finished', function() {
+        var viewModel = new GeocoderViewModel({
+            scene : scene,
+            flightDuration : 0
+        });
+
+        var spyListener = jasmine.createSpy('listener');
+        viewModel.onSuccess.addEventListener(spyListener);
+
+        viewModel.searchText = '-1.0, -2.0';
+        viewModel.search();
+
+        expect(spyListener.calls.count()).toBe(1);
+    });
 }, 'WebGL');

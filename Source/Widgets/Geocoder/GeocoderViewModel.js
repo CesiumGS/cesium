@@ -204,16 +204,17 @@ define([
         if (viewModel._flightDuration === 0) {
             viewModel._scene.camera.setView({position: position});
             viewModel._onSuccess.raiseEvent();
+        } else {
+            viewModel._scene.camera.flyTo({
+                destination : position,
+                complete: function() {
+                    viewModel._onSuccess.raiseEvent();
+                },
+                duration : viewModel._flightDuration,
+                endTransform : Matrix4.IDENTITY,
+                convert : false
+            });
         }
-        viewModel._scene.camera.flyTo({
-            destination : position,
-            complete: function() {
-                viewModel._onSuccess.raiseEvent();
-            },
-            duration : viewModel._flightDuration,
-            endTransform : Matrix4.IDENTITY,
-            convert : false
-        });
     }
 
     function geocode(viewModel) {
