@@ -5,6 +5,7 @@ define([
         'Cesium/Core/getFilenameFromUri',
         'Cesium/Core/Math',
         'Cesium/Core/queryToObject',
+        'Cesium/Core/objectToQuery',
         'Cesium/DataSources/CzmlDataSource',
         'Cesium/DataSources/GeoJsonDataSource',
         'Cesium/DataSources/KmlDataSource',
@@ -19,6 +20,7 @@ define([
         getFilenameFromUri,
         CesiumMath,
         queryToObject,
+        objectToQuery,
         CzmlDataSource,
         GeoJsonDataSource,
         KmlDataSource,
@@ -36,6 +38,7 @@ define([
      * 'stats'  : true,         // Enable the FPS performance display.
      * 'theme'  : 'lighter',    // Use the dark-text-on-light-background theme.
      * 'scene3DOnly' : false,    // Enable 3D only mode
+     * 'saveCamera' : false,    // Saves the location and orientation of the camera in the query string for reload
      * 'location' : string/lon,lat/lon,lat,height // Fly to this location on load.
      * 'orientation' : heading,pitch,roll // Uses this orientation for the camera if 'location' was specified.
      */
@@ -69,6 +72,7 @@ define([
                 orientation.roll = ((query.length > 2) && (!isNaN(+query[2]))) ? CesiumMath.toRadians(+query[2]) : undefined;
             }
             viewer.geocoder.viewModel.search(orientation);
+            viewer.geocoder.viewModel.searchText = '';
         }
     } catch (exception) {
         loadingIndicator.style.display = 'none';
@@ -94,6 +98,16 @@ define([
     viewer.dropError.addEventListener(function(viewerArg, name, error) {
         showLoadError(name, error);
     });
+
+    if (endUserOptions.saveCamera) {
+        var camera = viewer.camera;
+        camera.moveEnd.addEventListener(function() {
+            var position = camera.positionCartographic;
+            endUserOptions.location = CesiumMath.toDegrees(position.longitude) + ',' + CesiumMath.toDegrees(position.latitude) + ',' + position.height;
+            endUserOptions.orientation = CesiumMath.toDegrees(camera.heading) + ',' + CesiumMath.toDegrees(camera.pitch) + ',' + CesiumMath.toDegrees(camera.roll);
+            history.replaceState(undefined, '', '?' + objectToQuery(endUserOptions));
+        });
+    }
 
     var scene = viewer.scene;
     var context = scene.context;
