@@ -234,7 +234,7 @@ define([
 
         var oit;
         if (this._useOIT && defined(globeDepth)) {
-            var oit = new OIT(context);
+            oit = new OIT(context);
         }
 
         this._globeDepth = globeDepth;
