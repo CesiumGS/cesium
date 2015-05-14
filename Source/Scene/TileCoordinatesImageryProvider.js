@@ -25,6 +25,9 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {TilingScheme} [options.tilingScheme=new GeographicTilingScheme()] The tiling scheme for which to draw tiles.
+     * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
+     *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
+     *                    parameter is specified, the WGS84 ellipsoid is used.
      * @param {Color} [options.color=Color.YELLOW] The color to draw the tile box and label.
      * @param {Number} [options.tileWidth=256] The width of the tile for level-of-detail selection purposes.
      * @param {Number} [options.tileHeight=256] The height of the tile for level-of-detail selection purposes.
@@ -32,7 +35,7 @@ define([
     var TileCoordinatesImageryProvider = function TileCoordinatesImageryProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new GeographicTilingScheme();
+        this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new GeographicTilingScheme({ ellipsoid : options.ellipsoid });
         this._color = defaultValue(options.color, Color.YELLOW);
         this._errorEvent = new Event();
         this._tileWidth = defaultValue(options.tileWidth, 256);

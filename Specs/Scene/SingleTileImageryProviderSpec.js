@@ -2,6 +2,7 @@
 defineSuite([
         'Scene/SingleTileImageryProvider',
         'Core/DefaultProxy',
+        'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
         'Core/loadImage',
         'Core/Rectangle',
@@ -14,6 +15,7 @@ defineSuite([
     ], function(
         SingleTileImageryProvider,
         DefaultProxy,
+        Ellipsoid,
         GeographicTilingScheme,
         loadImage,
         Rectangle,
@@ -77,6 +79,20 @@ defineSuite([
             return new SingleTileImageryProvider({});
         }
         expect(constructWithoutUrl).toThrowDeveloperError();
+    });
+
+    it('can use a custom ellipsoid', function() {
+        var ellipsoid = new Ellipsoid(1, 2, 3);
+        var provider = new SingleTileImageryProvider({
+            url : 'Data/Images/Red16x16.png',
+            ellipsoid : ellipsoid
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            expect(provider.tilingScheme.ellipsoid).toEqual(ellipsoid);
+        });
     });
 
     it('requests the single image immediately upon construction', function() {

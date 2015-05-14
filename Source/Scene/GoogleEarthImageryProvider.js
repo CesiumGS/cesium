@@ -72,6 +72,7 @@ define([
      * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
      *        is invalid and should be discarded. To ensure that no tiles are discarded, construct and pass
      *        a {@link NeverTileDiscardPolicy} for this parameter.
+     * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {Proxy} [options.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
      *
@@ -181,13 +182,15 @@ define([
               that._tilingScheme = new GeographicTilingScheme({
                   numberOfLevelZeroTilesX : 2,
                   numberOfLevelZeroTilesY : 2,
-                  rectangle: new Rectangle(-Math.PI, -Math.PI, Math.PI, Math.PI)
+                  rectangle: new Rectangle(-Math.PI, -Math.PI, Math.PI, Math.PI),
+                  ellipsoid : options.ellipsoid
               });
             // Default to mercator projection when projection is undefined
             } else if(!defined(data.projection) || data.projection === 'mercator') {
               that._tilingScheme = new WebMercatorTilingScheme({
                   numberOfLevelZeroTilesX : 2,
-                  numberOfLevelZeroTilesY : 2
+                  numberOfLevelZeroTilesY : 2,
+                  ellipsoid : options.ellipsoid
               });
             } else {
               message = 'Unsupported projection ' + data.projection + '.';
