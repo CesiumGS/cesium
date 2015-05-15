@@ -161,12 +161,27 @@ define([
             });
         }
     }
+
+    function saveCamera() {
+        var position = camera.positionCartographic;
+        endUserOptions.view = CesiumMath.toDegrees(position.longitude) + ',' + CesiumMath.toDegrees(position.latitude) + ',' + position.height + ',' + CesiumMath.toDegrees(camera.heading) + ',' + CesiumMath.toDegrees(camera.pitch) + ',' + CesiumMath.toDegrees(camera.roll);
+        history.replaceState(undefined, '', '?' + objectToQuery(endUserOptions));
+    }
+
+    var updateTimer;
     if (endUserOptions.saveCamera !== 'false') {
         var camera = viewer.camera;
+        camera.moveStart.addEventListener(function() {
+            if (!defined(updateTimer)) {
+                updateTimer = window.setInterval(saveCamera, 1000);
+            }
+        });
         camera.moveEnd.addEventListener(function() {
-            var position = camera.positionCartographic;
-            endUserOptions.view = CesiumMath.toDegrees(position.longitude) + ',' + CesiumMath.toDegrees(position.latitude) + ',' + position.height + ',' + CesiumMath.toDegrees(camera.heading) + ',' + CesiumMath.toDegrees(camera.pitch) + ',' + CesiumMath.toDegrees(camera.roll);
-            history.replaceState(undefined, '', '?' + objectToQuery(endUserOptions));
+            if (defined(updateTimer)) {
+                window.clearInterval(updateTimer);
+                updateTimer = undefined;
+            }
+            saveCamera();
         });
     }
 

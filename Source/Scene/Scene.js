@@ -1398,17 +1398,17 @@ define([
         }
 
         var camera = scene._camera;
-        var cameraChanged = !Camera.equalsEpsilon(camera, scene._cameraClone, CesiumMath.EPSILON8);
-        if (cameraChanged && !scene._cameraStartFired) {
-            camera.moveStart.raiseEvent();
-            scene._cameraStartFired = true;
+        if (!Camera.equalsEpsilon(camera, scene._cameraClone, CesiumMath.EPSILON6)) {
+            if (!scene._cameraStartFired) {
+                camera.moveStart.raiseEvent();
+                scene._cameraStartFired = true;
+            }
             scene._cameraMovedTime = getTimestamp();
-        } else if (!cameraChanged && scene._cameraStartFired && getTimestamp() - scene._cameraMovedTime > scene.cameraEventWaitTime) {
+            Camera.clone(camera, scene._cameraClone);
+        } else if (scene._cameraStartFired && getTimestamp() - scene._cameraMovedTime > scene.cameraEventWaitTime) {
             camera.moveEnd.raiseEvent();
             scene._cameraStartFired = false;
         }
-
-        Camera.clone(camera, scene._cameraClone);
 
         scene._preRender.raiseEvent(scene, time);
 

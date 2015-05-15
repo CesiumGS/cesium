@@ -2508,11 +2508,23 @@ define([
         return result;
     };
 
+    var scratchPosition0 = new Cartesian3();
+    var scratchPosition1 = new Cartesian3();
+    function maxComponent(a, b) {
+        var x = Math.max(Math.abs(a.x), Math.abs(b.x));
+        var y = Math.max(Math.abs(a.y), Math.abs(b.y));
+        var z = Math.max(Math.abs(a.z), Math.abs(b.z));
+        return Math.max(Math.max(x, y), z);
+    }
+
     /**
      * @private
      */
     Camera.equalsEpsilon = function(camera0, camera1, epsilon) {
-        return Cartesian3.equalsEpsilon(camera0.position, camera1.position, epsilon) &&
+        var scalar = 1 / Math.max(1, maxComponent(camera0.position, camera1.position));
+        Cartesian3.multiplyByScalar(camera0.position, scalar, scratchPosition0);
+        Cartesian3.multiplyByScalar(camera1.position, scalar, scratchPosition1);
+        return Cartesian3.equalsEpsilon(scratchPosition0, scratchPosition1, epsilon) &&
             Cartesian3.equalsEpsilon(camera0.direction, camera1.direction, epsilon) &&
             Cartesian3.equalsEpsilon(camera0.up, camera1.up, epsilon) &&
             Cartesian3.equalsEpsilon(camera0.right, camera1.right, epsilon) &&
