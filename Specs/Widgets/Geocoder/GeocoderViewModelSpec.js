@@ -118,5 +118,14 @@ defineSuite([
         viewModel.search();
 
         expect(spyListener.calls.count()).toBe(1);
+
+        viewModel.duration = 1.5;
+        viewModel.serachText = '2.0, 2.0';
+        viewModel.search();
+
+        return pollToPromise(function() {
+            scene.tweens.update();
+            return spyListener.calls.count() === 2;
+        });
     });
 }, 'WebGL');
