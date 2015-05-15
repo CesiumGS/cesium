@@ -396,7 +396,7 @@ define([
 
         /**
          * Gets the collection of image layers that will be rendered on the globe.
-         * @memberof Viewer.prototype
+         * @memberof CesiumWidget.prototype
          *
          * @type {ImageryLayerCollection}
          * @readonly
