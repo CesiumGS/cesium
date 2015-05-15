@@ -1398,7 +1398,7 @@ define([
         }
 
         var camera = scene._camera;
-        var cameraChanged = !Camera.equalsEpsilon(camera, scene._cameraClone, CesiumMath.EPSILON4);
+        var cameraChanged = !Camera.equalsEpsilon(camera, scene._cameraClone, CesiumMath.EPSILON8);
         if (cameraChanged && !scene._cameraStartFired) {
             camera.moveStart.raiseEvent();
             scene._cameraStartFired = true;
