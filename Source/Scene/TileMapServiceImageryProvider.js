@@ -59,7 +59,7 @@ define([
      *                    parameter is specified, the WGS84 ellipsoid is used.
      * @param {Number} [options.tileWidth=256] Pixel width of image tiles.
      * @param {Number} [options.tileHeight=256] Pixel height of image tiles.
-     * @param {String} [options.schema='{Z}/{X}/{revY}']  The schema to forge the URL to request a tile where the key word: <ul>
+     * @param {String} [options.pattern='{Z}/{X}/{revY}']  The pattern to forge the URL to request a tile where the key word: <ul>
      *  <li> {Z}:  corresponding to the level of a tile</li>
      *  <li> {X}:  corresponding to the abscissa of a tile</li>
      *  <li> {revX}:  corresponding to the reverse abscissa of a tile</li>
@@ -90,7 +90,7 @@ define([
      *        Cesium.Math.toRadians(20.0),
      *        Cesium.Math.toRadians(-60.0),
      *        Cesium.Math.toRadians(40.0)),
-     *    schema: '{Z}/{revY}/{X}'
+     *    pattern: '{Z}/{revY}/{X}'
      * });
      */
     var TileMapServiceImageryProvider = function TileMapServiceImageryProvider(options) {
@@ -117,7 +117,7 @@ define([
         this._maximumLevel = options.maximumLevel;
         this._rectangle = Rectangle.clone(options.rectangle);
         this._tilingScheme = options.tilingScheme;
-        this._schema=defaultValue(options.schema,'{Z}/{X}/{revY}');
+        this._pattern=defaultValue(options.pattern,'{Z}/{X}/{revY}');
 
         var credit = options.credit;
         if (typeof credit === 'string') {
@@ -279,7 +279,7 @@ define([
     function buildImageUrl(imageryProvider, x, y, level) {
         var revY= imageryProvider._tilingScheme.getNumberOfYTilesAtLevel(level) - y - 1;
         var revX=imageryProvider._tilingScheme.getNumberOfXTilesAtLevel(level) - x - 1;
-        var url=imageryProvider._url + imageryProvider.schema + '.' + imageryProvider._fileExtension;
+        var url=imageryProvider._url + imageryProvider.pattern + '.' + imageryProvider._fileExtension;
         url = url.replace('{Z}',level).replace('{X}',x).replace('{revX}',revX).replace('{Y}',y).replace('{revY}',revY);
 
         var proxy = imageryProvider._proxy;
@@ -506,7 +506,7 @@ define([
             }
         },
 
-        /** The schema to forge the URL to request a tile where the key word: <ul>
+        /** The pattern to forge the URL to request a tile where the key word: <ul>
          *  <li> {Z}:  corresponding to the level of a tile</li>
          *  <li> {X}:  corresponding to the abscissa of a tile</li>
          *  <li> {revX}:  corresponding to the reverse abscissa of a tile</li>
@@ -517,9 +517,9 @@ define([
          * @type {String}
          * @readonly
          */
-        schema : {
+        pattern : {
             get : function() {
-                return this._schema;
+                return this._pattern;
             }
         }
     });
