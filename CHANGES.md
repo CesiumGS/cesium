@@ -6,6 +6,7 @@ Change Log
   *
 * Deprecated
   * Deprecated `Camera.clone`. It will be removed in 1.11.
+  * `WebMapServiceImageryProvider` constructor parameters `options.getFeatureInfoAsGeoJson` and `options.getFeatureInfoAsXml` have been deprecated and will be removed in Cesium 1.13.  Use `options.getFeatureInfoFormats` instead.
 * Added new `PointPrimitive` and `PointPrimitiveCollection`, which are faster and use less memory than billboards with circles.
 * Changed `Entity.point` back-end graphics to use the new `PointPrimitive` instead of billboards.  No change to the `Entity.point` API.
 * Added optional drilling limit to `Scene.drillPick`.
@@ -18,6 +19,8 @@ Change Log
 * Fixed a crash caused by `ImageryLayer` attempting to generate mipmaps for textures that are not a power-of-two size.
 * Fixed a bug where `ImageryLayerCollection.pickImageryLayerFeatures` would return incorrect results when picking from a terrain tile that was partially covered by correct-level imagery and partially covered by imagery from an ancestor level.
 * Fixed incorrect counting of `debug.tilesWaitingForChildren` in `QuadtreePrimitive`.
+* `WebMapServiceImageryProvider.pickFeatures` now works with WMS servers, such as Google Maps Engine, that can only return feature information in HTML format.
+* `WebMapServiceImageryProvider` now accepts an array of `GetFeatureInfoFormat` instances that it will use to obtain information about the features at a given position on the globe.  This enables an arbitrary `info_format` to be passed to the WMS server, and an arbitrary JavaScript function to be used to interpret the response.
 
 ### 1.9 - 2015-05-01
 
