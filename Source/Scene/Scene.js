@@ -1789,6 +1789,7 @@ define([
         drawingBufferPosition.y = this.drawingBufferHeight - drawingBufferPosition.y;
 
         var depth;
+        var firstDepth;
         var index;
         var numFrustums = this.numberOfFrustums;
 
@@ -1803,6 +1804,12 @@ define([
             });
 
             depth = pixels[0] / 255.0 + pixels[1] / 65535.0 + pixels[2] / 16777215.0;
+            depth = CesiumMath.clamp(depth, 0.0, 1.0);
+
+            if (i === 0) {
+                firstDepth = depth;
+            }
+
             if (depth > 0.0 && depth < 1.0) {
                 index = i;
                 break;
@@ -1810,7 +1817,8 @@ define([
         }
 
         if (!defined(index)) {
-            return undefined;
+            depth = firstDepth;
+            index = 0;
         }
 
         var camera = this._camera;
@@ -1828,7 +1836,7 @@ define([
         }
 
         var renderedFrustum = this._frustumCommandsList[index];
-        frustum.near = renderedFrustum.near * OPAQUE_FRUSTUM_NEAR_OFFSET;
+        frustum.near = renderedFrustum.near;
         frustum.far = renderedFrustum.far;
         uniformState.updateFrustum(frustum);
 

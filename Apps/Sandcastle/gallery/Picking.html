@@ -19,10 +19,16 @@
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
+    
+    #pickDepth {
+        display: none;
+        background-color: red;
+        color: white;
+    }
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
+<div id="toolbar"><div id="pickDepth"></div></div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     "use strict";
@@ -144,6 +150,8 @@ Sandcastle.addToolbarButton('Drill-Down Picking', function() {
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 });
 
+var pickDepthElement = document.getElementById('pickDepth');
+
 Sandcastle.addToolbarButton('Pick depth buffer', function() {
     var ellipsoid = scene.globe.ellipsoid;
     
@@ -175,16 +183,16 @@ Sandcastle.addToolbarButton('Pick depth buffer', function() {
             var latitudeString = Cesium.Math.toDegrees(cartographic.latitude).toFixed(2);
             var heightString = cartographic.height.toFixed(2);
 
-            labelEntity.position = cartesian;
-            labelEntity.label.show = true;
-            labelEntity.label.text = '(' + longitudeString + ', ' + latitudeString + ', ' + heightString + ')';
+            pickDepthElement.style.display = 'block';
+            pickDepthElement.innerText = '(' + longitudeString + ', ' + latitudeString + ', ' + heightString + ')';
         } else {
-            labelEntity.label.show = false;
+            pickDepthElement.style.display = 'none';
         }
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 });
 
 Sandcastle.reset = function() {
+    pickDepthElement.style.display = 'none';
     viewer.entities.removeAll();
     handler = handler && handler.destroy();
 };
