@@ -12,6 +12,7 @@ Change Log
 * Added optional `ellipsoid` parameter to construction options of imagery and terrain providers that were lacking it.  Note that terrain bounding spheres are precomputed on the server, so any supplied terrain ellipsoid must match the one used by the server.
 * Upgraded Autolinker from version 0.15.2 to 0.17.1.
 * Added `Camera.moveStart` and `Camera.moveEnd` events.
+* Added `throttleRequestsByServer.maximumRequestsPerServer` property.
 
 ### 1.9 - 2015-05-01
 
@@ -88,14 +89,14 @@ Change Log
   * Deprecated the `sourceUri` parameter to all `CzmlDataSource` load and process functions. Support will be removed in 1.10.  Instead pass an `options` object with `sourceUri` property.
 * Added initial support for [KML 2.2](https://developers.google.com/kml/) via `KmlDataSource`. Check out the new [Sandcastle Demo](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=KML.html) and the [reference documentation](http://cesiumjs.org/Cesium/Build/Documentation/KmlDataSource.html) for more details.
 * `InfoBox` sanitization now relies on [iframe sandboxing](http://www.html5rocks.com/en/tutorials/security/sandboxed-iframes/). This allows for much more content to be displayed in the InfoBox (and still be secure).
-* Added `InfoBox.frame` which is the instance of the iframe that is used to host description content. Sanitization can be controlled via the frame's `sandbox` attribute.  See the above link for additional information. 
+* Added `InfoBox.frame` which is the instance of the iframe that is used to host description content. Sanitization can be controlled via the frame's `sandbox` attribute.  See the above link for additional information.
 * Worked around a bug in Safari that caused most of Cesium to be broken. Cesium should now work much better on Safari for both desktop and mobile.
 * Fixed incorrect ellipse texture coordinates. [#2363](https://github.com/AnalyticalGraphicsInc/cesium/issues/2363) and [#2465](https://github.com/AnalyticalGraphicsInc/cesium/issues/2465)
 * Fixed a bug that would cause incorrect geometry for long Corridors and Polyline Volumes. [#2513](https://github.com/AnalyticalGraphicsInc/cesium/issues/2513)
 * Fixed a bug in imagery loading that could cause some or all of the globe to be missing when using an imagery layer that does not cover the entire globe.
 * Fixed a bug that caused `ElipseOutlineGeometry` and `CircleOutlineGeometry` to be extruded to the ground when they should have instead been drawn at height. [#2499](https://github.com/AnalyticalGraphicsInc/cesium/issues/2499).
 * Fixed a bug that prevented per-vertex colors from working with `PolylineGeometry` and `SimplePolylineGeometry` when used asynchronously. [#2516](https://github.com/AnalyticalGraphicsInc/cesium/issues/2516)
-* Fixed a bug that would caused duplicate graphics if non-time-dynamic `Entity` objects were modified in quick succession. [#2514](https://github.com/AnalyticalGraphicsInc/cesium/issues/2514).  
+* Fixed a bug that would caused duplicate graphics if non-time-dynamic `Entity` objects were modified in quick succession. [#2514](https://github.com/AnalyticalGraphicsInc/cesium/issues/2514).
 * Fixed a bug where `camera.flyToBoundingSphere` would ignore range if the bounding sphere radius was 0. [#2519](https://github.com/AnalyticalGraphicsInc/cesium/issues/2519)
 * Fixed some styling issues with `InfoBox` and `BaseLayerPicker` caused by using Bootstrap with Cesium. [#2487](https://github.com/AnalyticalGraphicsInc/cesium/issues/2479)
 * Added support for rendering a water effect on Quantized-Mesh terrain tiles.
@@ -131,7 +132,7 @@ Change Log
   * `DataSourceDisplay` methods `getScene` and `getDataSources` have been deprecated and replaced with `scene` and `dataSources` properties. They will be removed in Cesium 1.9.
   * The `Entity` constructor taking a single string value for the id has been deprecated. The constructor now takes an options object which allows you to provide any and all `Entity` related properties at construction time. Support for the deprecated behavior will be removed in Cesium 1.9.
   * The `EntityCollection.entities` and `CompositeEntityCollect.entities` properties have both been renamed to `values`.  Support for the deprecated behavior will be removed in Cesium 1.9.
-* Fixed an issue which caused order independent translucency to be broken on many video cards. Disabling order independent translucency should no longer be necessary. 
+* Fixed an issue which caused order independent translucency to be broken on many video cards. Disabling order independent translucency should no longer be necessary.
 * `GeoJsonDataSource` now supports polygons with holes.
 * Many Sandcastle examples have been rewritten to make use of the newly improved Entity API.
 * Instead of throwing an exception when there are not enough unique positions to define a geometry, creating a `Primitive` will succeed, but not render. [#2375](https://github.com/AnalyticalGraphicsInc/cesium/issues/2375)
