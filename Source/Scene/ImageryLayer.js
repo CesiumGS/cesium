@@ -592,7 +592,8 @@ define([
                     imageryProvider.errorEvent,
                     message,
                     imagery.x, imagery.y, imagery.level,
-                    doRequest);
+                    doRequest,
+                    e);
         }
 
         function doRequest() {
@@ -879,7 +880,9 @@ define([
         // to the texture via the FBO, and calling generateMipmap later,
         // will result in the texture appearing blank.  I can't pretend to
         // understand exactly why this is.
-        outputTexture.generateMipmap(MipmapHint.NICEST);
+        if (CesiumMath.isPowerOfTwo(width) && CesiumMath.isPowerOfTwo(height)) {
+            outputTexture.generateMipmap(MipmapHint.NICEST);
+        }
 
         if (defined(reproject.framebuffer)) {
             reproject.framebuffer.destroy();

@@ -6,6 +6,7 @@ defineSuite([
         'Core/loadImage',
         'Core/loadWithXhr',
         'Core/Rectangle',
+        'Scene/ArcGisMapServerImageryProvider',
         'Scene/BingMapsImageryProvider',
         'Scene/GlobeSurfaceTile',
         'Scene/Imagery',
@@ -25,6 +26,7 @@ defineSuite([
         loadImage,
         loadWithXhr,
         Rectangle,
+        ArcGisMapServerImageryProvider,
         BingMapsImageryProvider,
         GlobeSurfaceTile,
         Imagery,
@@ -189,6 +191,39 @@ defineSuite([
         expect(layer.isDestroyed()).toEqual(false);
         layer.destroy();
         expect(layer.isDestroyed()).toEqual(true);
+    });
+
+    it('returns HTTP status code information in TileProviderError', function() {
+        // Web browsers unfortunately provide very little information about what went wrong when an Image fails
+        // to load.  But when an imagery provider is configured to use a TileDiscardPolicy, Cesium downloads the image
+        // using XHR and then creates a blob URL to pass to an actual Image.  This allows access to much more detailed
+        // information, including the status code.
+
+        var provider = new ArcGisMapServerImageryProvider({
+            url : 'File/That/Does/Not/Exist',
+            usePreCachedTilesIfAvailable : false,
+            tileDiscardPolicy : new NeverTileDiscardPolicy()
+        });
+
+        var errorRaised = false;
+        provider.errorEvent.addEventListener(function(tileProviderError) {
+            expect(tileProviderError).toBeDefined();
+            expect(tileProviderError.error).toBeDefined();
+            expect(tileProviderError.error.statusCode).toBe(404);
+            errorRaised = true;
+        });
+
+        var imageryLayer = new ImageryLayer(provider);
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            imageryLayer._requestImagery(new Imagery(imageryLayer, 0, 0, 0));
+
+            return pollToPromise(function() {
+                return errorRaised;
+            });
+        });
     });
 
     describe('createTileImagerySkeletons', function() {
