@@ -22,6 +22,7 @@ Change Log
 * `WebMapServiceImageryProvider.pickFeatures` now works with WMS servers, such as Google Maps Engine, that can only return feature information in HTML format.
 * `WebMapServiceImageryProvider` now accepts an array of `GetFeatureInfoFormat` instances that it will use to obtain information about the features at a given position on the globe.  This enables an arbitrary `info_format` to be passed to the WMS server, and an arbitrary JavaScript function to be used to interpret the response.
 * Added `throttleRequestsByServer.maximumRequestsPerServer` property.
+* Added `GeocoderViewModel.complete` event.  Triggered after the camera flight is completed.
 
 ### 1.9 - 2015-05-01
 
