@@ -9,7 +9,6 @@ define([
         defaultValue) {
     "use strict";
 
-    var maximumRequestsPerServer = 6;
     var activeRequests = {};
 
     var pageUri = new Uri(document.location.href);
@@ -59,7 +58,7 @@ define([
         var server = getServer(url);
 
         var activeRequestsForServer = defaultValue(activeRequests[server], 0);
-        if (activeRequestsForServer >= maximumRequestsPerServer) {
+        if (activeRequestsForServer >= throttleRequestByServer.maximumRequestsPerServer) {
             return undefined;
         }
 
@@ -73,6 +72,8 @@ define([
             return when.reject(error);
         });
     };
+
+    throttleRequestByServer.maximumRequestsPerServer = 6;
 
     /**
      * A function that will make a request if there are available slots to the server.
