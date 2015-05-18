@@ -167,6 +167,29 @@ function viewInICRF() {
     scene.globe.enableLighting = true;
 }
 
+var viewChanged = document.createElement('div');
+viewChanged.style.display = 'none';
+viewChanged.style.backgroundColor = 'red';
+viewChanged.style.color = 'white';
+viewChanged.innerText = 'View Changed';
+
+document.getElementById('toolbar').appendChild(viewChanged);
+
+var removeStart;
+var removeEnd;
+
+function cameraEvents() {
+    Sandcastle.declare(cameraEvents);
+    
+    var camera = viewer.camera;
+    removeStart = camera.moveStart.addEventListener(function() {
+        viewChanged.style.display = 'block';
+    });
+    removeEnd = camera.moveEnd.addEventListener(function() {
+        viewChanged.style.display = 'none';
+    });
+}
+
 Sandcastle.addToolbarMenu([{
     text : 'Camera Options'
 }, {
@@ -217,6 +240,12 @@ Sandcastle.addToolbarMenu([{
         viewInICRF();
         Sandcastle.highlight(viewInICRF);
     }
+}, {
+    text : 'Move events',
+    onselect : function() {
+        cameraEvents();
+        Sandcastle.highlight(cameraEvents);
+    }
 }]);
 
 Sandcastle.reset = function() {
@@ -224,6 +253,16 @@ Sandcastle.reset = function() {
     scene.primitives.removeAll();
     scene.tweens.removeAll();
 
+    if (Cesium.defined(removeStart)) {
+        removeStart();
+        removeEnd();
+
+        viewChanged.style.display = 'none';
+        
+        removeStart = undefined;
+        removeEnd = undefined;
+    }
+    
     viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
     clock.multiplier = 1.0;
