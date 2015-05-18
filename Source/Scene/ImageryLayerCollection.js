@@ -413,7 +413,7 @@ define([
             // Check the textureCoordinateRectangle.
             var applicableRectangle = applicableRectangleScratch;
 
-            var epsilon = 1 / 1024; // 1/4 of a pixel.
+            var epsilon = 1 / 1024; // 1/4 of a pixel in a typical 256x256 tile.
             applicableRectangle.west = CesiumMath.lerp(pickedTile.rectangle.west, pickedTile.rectangle.east, terrainImagery.textureCoordinateRectangle.x - epsilon);
             applicableRectangle.east = CesiumMath.lerp(pickedTile.rectangle.west, pickedTile.rectangle.east, terrainImagery.textureCoordinateRectangle.z + epsilon);
             applicableRectangle.south = CesiumMath.lerp(pickedTile.rectangle.south, pickedTile.rectangle.north, terrainImagery.textureCoordinateRectangle.y - epsilon);
