@@ -23,6 +23,8 @@ Change Log
 * `WebMapServiceImageryProvider` now accepts an array of `GetFeatureInfoFormat` instances that it will use to obtain information about the features at a given position on the globe.  This enables an arbitrary `info_format` to be passed to the WMS server, and an arbitrary JavaScript function to be used to interpret the response.
 * Added `throttleRequestsByServer.maximumRequestsPerServer` property.
 * Added `GeocoderViewModel.complete` event.  Triggered after the camera flight is completed.
+* Added `view` option to the `CesiumViewer` app.  Sets the initial camera position using longitude, latitude, height, heading, pitch and roll.
+  * Example: path/to/CesiumViewer/index.html?view=-75.0,40.0,300.0,9.0,-13.0,3.0
 
 ### 1.9 - 2015-05-01
 
