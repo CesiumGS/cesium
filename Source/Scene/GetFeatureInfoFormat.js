@@ -250,11 +250,18 @@ define([
     }
 
     var emptyBodyRegex= /<body>\s*<\/body>/im;
+    var wmsServiceExceptionREportRegex = /<ServiceExceptionReport([^]*)<\/ServiceExceptionReport>/im;
     var titleRegex = /<title>([^]*)<\/title>/im;
 
     function textToFeatureInfo(text) {
         // If the text is HTML and it has an empty body tag, assume it means no features were found.
         if (emptyBodyRegex.test(text)) {
+            return undefined;
+        }
+
+        // If this is a WMS exception report, treat it as "no features found" rather than showing
+        // bogus feature info.
+        if (wmsServiceExceptionREportRegex.test(text)) {
             return undefined;
         }
 

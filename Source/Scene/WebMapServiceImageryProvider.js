@@ -149,10 +149,10 @@ define([
             //>>includeEnd('debug');
 
             this._getFeatureInfoFormats = [];
-            if (options.getFeatureInfoAsGeoJson) {
+            if (defaultValue(options.getFeatureInfoAsGeoJson, true)) {
                 this._getFeatureInfoFormats.push(new GetFeatureInfoFormat('json', 'application/json'));
             }
-            if (options.getFeatureInfoAsXml) {
+            if (defaultValue(options.getFeatureInfoAsXml, true)) {
                 this._getFeatureInfoFormats.push(new GetFeatureInfoFormat('xml', 'text/xml'));
             }
         }
@@ -474,7 +474,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (!this._enablePickFeatures) {
+        if (!this._enablePickFeatures || this._getFeatureInfoFormats.length === 0) {
             return undefined;
         }
 
