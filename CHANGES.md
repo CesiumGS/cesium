@@ -13,6 +13,12 @@ Change Log
 * Added optional `ellipsoid` parameter to construction options of imagery and terrain providers that were lacking it.  Note that terrain bounding spheres are precomputed on the server, so any supplied terrain ellipsoid must match the one used by the server.
 * Upgraded Autolinker from version 0.15.2 to 0.17.1.
 * Added `Camera.moveStart` and `Camera.moveEnd` events.
+* `TileProviderError` now optionally takes an `error` parameter with more details of the error or exception that occurred.  `ImageryLayer` passes that information through when tiles fail to load.  This allows tile provider error handling to take a different action when a tile returns a 404 versus a 500, for example.
+* `ArcGisMapServerImageryProvider` now has a `maximumLevel` constructor parameter.
+* `ArcGisMapServerImageryProvider` picking now works correctly when the `layers` parameter is specified.  Previously, it would pick from all layers even if only displaying a subset.
+* Fixed a crash caused by `ImageryLayer` attempting to generate mipmaps for textures that are not a power-of-two size.
+* Fixed a bug where `ImageryLayerCollection.pickImageryLayerFeatures` would return incorrect results when picking from a terrain tile that was partially covered by correct-level imagery and partially covered by imagery from an ancestor level.
+* Fixed incorrect counting of `debug.tilesWaitingForChildren` in `QuadtreePrimitive`.
 * `WebMapServiceImageryProvider.pickFeatures` now works with WMS servers, such as Google Maps Engine, that can only return feature information in HTML format.
 * `WebMapServiceImageryProvider` now accepts an array of `GetFeatureInfoFormat` instances that it will use to obtain information about the features at a given position on the globe.  This enables an arbitrary `info_format` to be passed to the WMS server, and an arbitrary JavaScript function to be used to interpret the response.
 

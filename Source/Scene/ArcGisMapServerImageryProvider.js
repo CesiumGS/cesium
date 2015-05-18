@@ -87,6 +87,8 @@ define([
      *                    parameter is specified, the WGS84 ellipsoid is used.
      * @param {Number} [options.tileWidth=256] The width of each tile in pixels.  This parameter is ignored when accessing a tiled server.
      * @param {Number} [options.tileHeight=256] The height of each tile in pixels.  This parameter is ignored when accessing a tiled server.
+     * @param {Number} [options.maximumLevel] The maximum tile level to request, or undefined if there is no maximum.  This parameter is ignored when accessing
+     *                                        a tiled server.
      *
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
@@ -118,7 +120,7 @@ define([
 
         this._tileWidth = defaultValue(options.tileWidth, 256);
         this._tileHeight = defaultValue(options.tileHeight, 256);
-        this._maximumLevel = undefined;
+        this._maximumLevel = options.maximumLevel;
         this._tilingScheme = defaultValue(options.tilingScheme, new GeographicTilingScheme({ ellipsoid : options.ellipsoid }));
         this._credit = undefined;
         this._useTiles = defaultValue(options.usePreCachedTilesIfAvailable, true);
@@ -591,11 +593,16 @@ define([
             sr = '3857';
         }
 
-        var url = this._url + '/identify?f=json&tolerance=2&layers=visible&geometryType=esriGeometryPoint';
+        var url = this._url + '/identify?f=json&tolerance=2&geometryType=esriGeometryPoint';
         url += '&geometry=' + horizontal + ',' + vertical;
         url += '&mapExtent=' + rectangle.west + ',' + rectangle.south + ',' + rectangle.east + ',' + rectangle.north;
         url += '&imageDisplay=' + this._tileWidth + ',' + this._tileHeight + ',96';
         url += '&sr=' + sr;
+
+        url += '&layers=visible';
+        if (defined(this._layers)) {
+            url += ':' + this._layers;
+        }
 
         return loadJson(url).then(function(json) {
             var result = [];
