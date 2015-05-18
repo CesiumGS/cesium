@@ -13,7 +13,7 @@ Change Log
 * Upgraded Autolinker from version 0.15.2 to 0.17.1.
 * Added `Camera.moveStart` and `Camera.moveEnd` events.
 * Added `buildModuleUrl.setBaseUrl` function to allow the Cesium base URL to be set without the use of the global CESIUM_BASE_URL variable.
-* Changed `ThirdParty/zip` to defer its called to `buildModuleUrl` until it is needed, rather than executing during module loading.
+* Changed `ThirdParty/zip` to defer its call to `buildModuleUrl` until it is needed, rather than executing during module loading.
 * Changed `createGeometry` to load individual-geometry workers using a CommonJS-style `require` when run in a CommonJS-like environment.
 
 ### 1.9 - 2015-05-01
