@@ -8,6 +8,8 @@ defineSuite([
         'Core/Matrix4',
         'Core/Ray',
         'Core/Rectangle',
+        'Core/WebMercatorProjection',
+        'Core/WebMercatorTilingScheme',
         'Scene/Globe',
         'Scene/ImageryLayer',
         'Scene/ImageryLayerFeatureInfo',
@@ -24,6 +26,8 @@ defineSuite([
         Matrix4,
         Ray,
         Rectangle,
+        WebMercatorProjection,
+        WebMercatorTilingScheme,
         Globe,
         ImageryLayer,
         ImageryLayerFeatureInfo,
@@ -509,6 +513,58 @@ defineSuite([
                     expect(features[0].description).toContain('Bar!');
                     expect(features[1].name).toEqual('Foo');
                     expect(features[1].description).toContain('Foo!');
+                });
+            });
+        });
+
+        it('correctly picks from a terrain tile that is partially covered by correct-level imagery and partially covered by imagery from an ancestor level', function() {
+            var provider = {
+                ready : true,
+                rectangle : new Rectangle(-Math.PI, -WebMercatorProjection.MaximumLatitude, Math.PI, WebMercatorProjection.MaximumLatitude),
+                tileWidth : 256,
+                tileHeight : 256,
+                maximumLevel : 1,
+                minimumLevel : 1,
+                tilingScheme : new WebMercatorTilingScheme(),
+                errorEvent : new Event(),
+                hasAlphaChannel : true,
+
+                pickFeatures : function(x, y, level, longitude, latitude) {
+                    var deferred = when.defer();
+                    setTimeout(function() {
+                        var featureInfo = new ImageryLayerFeatureInfo();
+                        featureInfo.name = 'L' + level + 'X' + x + 'Y' + y;
+                        deferred.resolve([featureInfo]);
+                    }, 1);
+                    return deferred.promise;
+                },
+
+                requestImage : function(x, y, level) {
+                    // At level 1, only the northwest quadrant has a valid tile.
+                    if (level !== 1 || (x === 0 && y === 0)) {
+                        return ImageryProvider.loadImage(this, 'Data/Images/Blue.png');
+                    } else {
+                        return when.reject();
+                    }
+                }
+            };
+
+            globe.imageryLayers.addImageryProvider(provider);
+
+            camera.viewRectangle(Rectangle.fromDegrees(-180.0, 0, 0, 90));
+
+            return updateUntilDone(globe).then(function() {
+                var ellipsoid = Ellipsoid.WGS84;
+
+                var ray = new Ray(camera.position, camera.direction);
+                var featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(ray, scene);
+
+                expect(featuresPromise).toBeDefined();
+
+                return featuresPromise.then(function(features) {
+                    // Verify that we don't end up picking from imagery level 0.
+                    expect(features.length).toBe(1);
+                    expect(features[0].name).toEqual('L1X0Y0');
                 });
             });
         });

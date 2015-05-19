@@ -2797,4 +2797,10 @@ defineSuite([
             expect(entities[1].parent).toBe(entities[0]);
         });
     });
+
+    it('can load a KML file with explicit namespaces', function() {
+        return KmlDataSource.load('Data/KML/namespaced.kml').then(function(dataSource) {
+            expect(dataSource.entities.values.length).toBe(2);
+        });
+    });
 });
