@@ -91,7 +91,7 @@ define([
         /**
          * Gets the map projection used by this tiling scheme.
          * @memberof WebMercatorTilingScheme.prototype
-         * @type {Projection}
+         * @type {MapProjection}
          */
         projection : {
             get : function() {

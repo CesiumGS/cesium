@@ -75,7 +75,7 @@ define([
         /**
          * Gets the map projection used by this tiling scheme.
          * @memberof GeographicTilingScheme.prototype
-         * @type {Projection}
+         * @type {MapProjection}
          */
         projection : {
             get : function() {
