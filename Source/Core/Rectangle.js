@@ -99,7 +99,7 @@ define([
     /**
      * Stores the provided instance into the provided array.
      *
-     * @param {BoundingSphere} value The value to pack.
+     * @param {Rectangle} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */

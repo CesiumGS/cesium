@@ -17,6 +17,7 @@ define([
         '../Core/GeographicProjection',
         '../Core/GeometryInstance',
         '../Core/GeometryPipeline',
+        '../Core/getTimestamp',
         '../Core/Intersect',
         '../Core/Interval',
         '../Core/JulianDate',
@@ -67,6 +68,7 @@ define([
         GeographicProjection,
         GeometryInstance,
         GeometryPipeline,
+        getTimestamp,
         Intersect,
         Interval,
         JulianDate,
@@ -229,11 +231,12 @@ define([
             owner : this
         });
 
-        this._transitioner = new SceneTransitioner(this);
-
         this._renderError = new Event();
         this._preRender = new Event();
         this._postRender = new Event();
+
+        this._cameraStartFired = false;
+        this._cameraMovedTime = undefined;
 
         /**
          * Exceptions occurring in <code>render</code> are always caught in order to raise the
@@ -325,6 +328,8 @@ define([
         this._mode = SceneMode.SCENE3D;
 
         this._mapProjection = defined(options.mapProjection) ? options.mapProjection : new GeographicProjection();
+
+        this._transitioner = new SceneTransitioner(this, this._mapProjection.ellipsoid);
 
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
@@ -434,11 +439,20 @@ define([
          */
         this.fxaa = false;
 
+        /**
+         * The time in milliseconds to wait before checking if the camera has not moved and fire the cameraMoveEnd event.
+         * @type {Number}
+         * @default 500.0
+         * @private
+         */
+        this.cameraEventWaitTime = 500.0;
+
         this._performanceDisplay = undefined;
         this._debugSphere = undefined;
 
         var camera = new Camera(this);
         this._camera = camera;
+        this._cameraClone = Camera.clone(camera);
         this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
 
         // initial guess at frustums.
@@ -792,6 +806,26 @@ define([
             }
         }
     });
+
+    var scratchPosition0 = new Cartesian3();
+    var scratchPosition1 = new Cartesian3();
+    function maxComponent(a, b) {
+        var x = Math.max(Math.abs(a.x), Math.abs(b.x));
+        var y = Math.max(Math.abs(a.y), Math.abs(b.y));
+        var z = Math.max(Math.abs(a.z), Math.abs(b.z));
+        return Math.max(Math.max(x, y), z);
+    }
+
+    function cameraEqual(camera0, camera1, epsilon) {
+        var scalar = 1 / Math.max(1, maxComponent(camera0.position, camera1.position));
+        Cartesian3.multiplyByScalar(camera0.position, scalar, scratchPosition0);
+        Cartesian3.multiplyByScalar(camera1.position, scalar, scratchPosition1);
+        return Cartesian3.equalsEpsilon(scratchPosition0, scratchPosition1, epsilon) &&
+            Cartesian3.equalsEpsilon(camera0.direction, camera1.direction, epsilon) &&
+            Cartesian3.equalsEpsilon(camera0.up, camera1.up, epsilon) &&
+            Cartesian3.equalsEpsilon(camera0.right, camera1.right, epsilon) &&
+            Matrix4.equalsEpsilon(camera0.transform, camera1.transform, epsilon);
+    }
 
     var scratchOccluderBoundingSphere = new BoundingSphere();
     var scratchOccluder;
@@ -1285,7 +1319,7 @@ define([
             frustum.far = frustumCommands.far;
 
             if (index !== 0) {
-                // Avoid tearing artifacts between adjacent frustums
+                // Avoid tearing artifacts between adjacent frustums in the opaque passes
                 frustum.near *= 0.99;
             }
 
@@ -1306,8 +1340,11 @@ define([
                 }
             }
 
-            frustum.near = frustumCommands.near;
-            us.updateFrustum(frustum);
+            if (index !== 0) {
+                // Do not overlap frustums in the translucent pass to avoid blending artifacts
+                frustum.near = frustumCommands.near;
+                us.updateFrustum(frustum);
+            }
 
             commands = frustumCommands.commands[Pass.TRANSLUCENT];
             commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
@@ -1378,6 +1415,19 @@ define([
     function render(scene, time) {
         if (!defined(time)) {
             time = JulianDate.now();
+        }
+
+        var camera = scene._camera;
+        if (!cameraEqual(camera, scene._cameraClone, CesiumMath.EPSILON6)) {
+            if (!scene._cameraStartFired) {
+                camera.moveStart.raiseEvent();
+                scene._cameraStartFired = true;
+            }
+            scene._cameraMovedTime = getTimestamp();
+            Camera.clone(camera, scene._cameraClone);
+        } else if (scene._cameraStartFired && getTimestamp() - scene._cameraMovedTime > scene.cameraEventWaitTime) {
+            camera.moveEnd.raiseEvent();
+            scene._cameraStartFired = false;
         }
 
         scene._preRender.raiseEvent(scene, time);

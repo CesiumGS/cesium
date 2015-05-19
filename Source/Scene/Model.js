@@ -717,6 +717,8 @@ define([
             throw new DeveloperError('Only glTF Binary version 1 is supported.  Version ' + version + ' is not.');
         }
 
+        byteOffset += sizeOfUnit32;  // Skip length
+
         var jsonOffset = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUnit32;
 
@@ -978,8 +980,7 @@ define([
             if (buffers.hasOwnProperty(name)) {
                 var buffer = buffers[name];
 
-// TODO: Best semantic for this?
-                if (name === 'self') {
+                if (name === 'CESIUM_binary_glTF') {
                     // Buffer is the binary glTF file itself that is already loaded
                     var loadResources = model._loadResources;
                     loadResources.buffers[name] = model._cachedGltf.bgltf;
@@ -1025,10 +1026,10 @@ define([
                 var shader = shaders[name];
 
                 // Shader references either uri (external or base64-encoded) or bufferView
-                if (defined(shader.extensions) && defined(shader.extensions.binaryGltf)) {
+                if (defined(shader.extensions) && defined(shader.extensions.CESIUM_binary_glTF)) {
                     model._loadResources.shaders[name] = {
                         source : undefined,
-                        bufferView : shader.extensions.binaryGltf.bufferView
+                        bufferView : shader.extensions.CESIUM_binary_glTF.bufferView
                     };
                 } else {
                     ++model._loadResources.pendingShaderLoads;
@@ -1069,8 +1070,8 @@ define([
                 var gltfImage = images[textures[name].source];
 
                 // Image references either uri (external or base64-encoded) or bufferView
-                if (defined(gltfImage.extensions) && defined(gltfImage.extensions.binaryGltf)) {
-                    var binary = gltfImage.extensions.binaryGltf;
+                if (defined(gltfImage.extensions) && defined(gltfImage.extensions.CESIUM_binary_glTF)) {
+                    var binary = gltfImage.extensions.CESIUM_binary_glTF;
                     model._loadResources.texturesToCreateFromBufferView.enqueue({
                         name : name,
                         image : undefined,
