@@ -707,9 +707,7 @@ define([
             throw new DeveloperError('Only glTF Binary version 1 is supported.  Version ' + version + ' is not.');
         }
 
-        // Length of entire bgltf file
-        var totalLength = view.getUint32(byteOffset, true);
-        byteOffset += sizeOfUnit32;
+        byteOffset += sizeOfUnit32;  // Skip length
 
         var jsonOffset = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUnit32;
@@ -970,7 +968,6 @@ define([
             if (buffers.hasOwnProperty(name)) {
                 var buffer = buffers[name];
 
-// TODO: Best semantic for this?
                 if (name === 'CESIUM_binary_glTF') {
                     // Buffer is the binary glTF file itself that is already loaded
                     var loadResources = model._loadResources;
