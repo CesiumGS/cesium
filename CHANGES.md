@@ -26,6 +26,8 @@ Change Log
 * Added `GeocoderViewModel.complete` event.  Triggered after the camera flight is completed.
 * Added `view` option to the `CesiumViewer` app.  Sets the initial camera position using longitude, latitude, height, heading, pitch and roll.
   * Example: path/to/CesiumViewer/index.html?view=-75.0,40.0,300.0,9.0,-13.0,3.0
+* Added support for the [CESIUM_binary_glTF](https://github.com/KhronosGroup/glTF/blob/new-extensions/extensions/CESIUM_binary_glTF/README.md) extension for loading binary blobs of glTF to `Model`.
+* Added support for the [CESIUM_RTC](https://github.com/KhronosGroup/glTF/blob/new-extensions/extensions/CESIUM_RTC/README.md) glTF extension for high-precision rendering to `Model`.
 
 ### 1.9 - 2015-05-01
 

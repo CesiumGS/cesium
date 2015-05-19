@@ -432,7 +432,7 @@ define([
     var modifiedModelViewScratch = new Matrix4();
     var tileRectangleScratch = new Cartesian4();
     var rtcScratch = new Cartesian3();
-    var centerEyeScratch = new Cartesian4();
+    var centerEyeScratch = new Cartesian3();
     var southwestScratch = new Cartesian3();
     var northeastScratch = new Cartesian3();
 
@@ -869,14 +869,8 @@ define([
             }
         }
 
-        var centerEye = centerEyeScratch;
-        centerEye.x = rtc.x;
-        centerEye.y = rtc.y;
-        centerEye.z = rtc.z;
-        centerEye.w = 1.0;
-
-        Matrix4.multiplyByVector(viewMatrix, centerEye, centerEye);
-        Matrix4.setColumn(viewMatrix, 3, centerEye, modifiedModelViewScratch);
+        var centerEye = Matrix4.multiplyByPoint(viewMatrix, rtc, centerEyeScratch);
+        Matrix4.setTranslation(viewMatrix, centerEye, modifiedModelViewScratch);
 
         var tileImageryCollection = surfaceTile.imagery;
         var imageryIndex = 0;
