@@ -1,9 +1,26 @@
 /*global define*/
 define([
-        './RequestsByServer'
+        '../ThirdParty/Uri',
+        '../ThirdParty/when',
+        './defaultValue'
     ], function(
-        RequestsByServer) {
+        Uri,
+        when,
+        defaultValue) {
     "use strict";
+
+    var activeRequests = {};
+
+    var pageUri = new Uri(document.location.href);
+    function getServer(url) {
+        var uri = new Uri(url).resolve(pageUri);
+        uri.normalize();
+        var server = uri.authority;
+        if (!/:/.test(server)) {
+            server = server + ':' + (uri.scheme === 'https' ? '443' : '80');
+        }
+        return server;
+    }
 
     /**
      * Because browsers throttle the number of parallel requests allowed to each server,
@@ -38,8 +55,37 @@ define([
      * }
      */
     var throttleRequestByServer = function(url, requestFunction) {
-        return RequestsByServer.throttleRequest(url, requestFunction);
+
+// TODO: use below and account for maximumRequestsPerServer
+//
+//   return RequestsByServer.throttleRequest(url, requestFunction);
+
+        var server = getServer(url);
+
+        var activeRequestsForServer = defaultValue(activeRequests[server], 0);
+        if (activeRequestsForServer >= throttleRequestByServer.maximumRequestsPerServer) {
+            return undefined;
+        }
+
+        activeRequests[server] = activeRequestsForServer + 1;
+
+        return when(requestFunction(url), function(result) {
+            activeRequests[server]--;
+            return result;
+        }).otherwise(function(error) {
+            activeRequests[server]--;
+            return when.reject(error);
+        });
     };
+
+    /**
+     * Specifies the maximum number of requests that can be simultaneously open to a single server.  If this value is higher than
+     * the number of requests per server actually allowed by the web browser, Cesium's ability to prioritize requests will be adversely
+     * affected.
+     * @type {Number}
+     * @default 6
+     */
+    throttleRequestByServer.maximumRequestsPerServer = 6;
 
     /**
      * A function that will make a request if there are available slots to the server.
