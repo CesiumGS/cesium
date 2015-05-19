@@ -6,6 +6,7 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
+        '../../Core/Event',
         '../../Core/jsonp',
         '../../Core/Matrix4',
         '../../Core/Rectangle',
@@ -19,6 +20,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        Event,
         jsonp,
         Matrix4,
         Rectangle,
@@ -62,6 +64,7 @@ define([
         this._searchText = '';
         this._isSearchInProgress = false;
         this._geocodeInProgress = undefined;
+        this._complete = new Event();
 
         var that = this;
         this._searchCommand = createCommand(function() {
@@ -161,6 +164,18 @@ define([
         },
 
         /**
+         * Gets the event triggered on flight completion.
+         * @memberof GeocoderViewModel.prototype
+         *
+         * @type {Event}
+         */
+        complete : {
+            get : function() {
+                return this._complete;
+            }
+        },
+
+        /**
          * Gets the scene to control.
          * @memberof GeocoderViewModel.prototype
          *
@@ -185,6 +200,23 @@ define([
         }
     });
 
+    function updateCamera(viewModel, position) {
+        if (viewModel._flightDuration === 0) {
+            viewModel._scene.camera.setView({position: position});
+            viewModel._complete.raiseEvent();
+        } else {
+            viewModel._scene.camera.flyTo({
+                destination : position,
+                complete: function() {
+                    viewModel._complete.raiseEvent();
+                },
+                duration : viewModel._flightDuration,
+                endTransform : Matrix4.IDENTITY,
+                convert : false
+            });
+        }
+    }
+
     function geocode(viewModel) {
         var query = viewModel.searchText;
 
@@ -202,12 +234,7 @@ define([
             var height = (splitQuery.length === 3) ? +splitQuery[2] : 300.0;
 
             if (!isNaN(longitude) && !isNaN(latitude) && !isNaN(height)) {
-                viewModel._scene.camera.flyTo({
-                    destination : Cartesian3.fromDegrees(longitude, latitude, height),
-                    duration : viewModel._flightDuration,
-                    endTransform : Matrix4.IDENTITY,
-                    convert : false
-                });
+                updateCamera(viewModel, Cartesian3.fromDegrees(longitude, latitude, height));
                 return;
             }
         }
@@ -256,12 +283,7 @@ define([
                 return;
             }
 
-            viewModel._scene.camera.flyTo({
-                destination : position,
-                duration : viewModel._flightDuration,
-                endTransform : Matrix4.IDENTITY,
-                convert : false
-            });
+            updateCamera(viewModel, position);
         }, function() {
             if (geocodeInProgress.cancel) {
                 return;

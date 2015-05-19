@@ -2509,17 +2509,6 @@ define([
     };
 
     /**
-     * @private
-     */
-    Camera.equalsEpsilon = function(camera0, camera1, epsilon) {
-        return Cartesian3.equalsEpsilon(camera0.position, camera1.position, epsilon) &&
-            Cartesian3.equalsEpsilon(camera0.direction, camera1.direction, epsilon) &&
-            Cartesian3.equalsEpsilon(camera0.up, camera1.up, epsilon) &&
-            Cartesian3.equalsEpsilon(camera0.right, camera1.right, epsilon) &&
-            Matrix4.equalsEpsilon(camera0.transform, camera1.transform, epsilon);
-    };
-
-    /**
      * A function that will execute when a flight completes.
      * @callback Camera~FlightCompleteCallback
      */
