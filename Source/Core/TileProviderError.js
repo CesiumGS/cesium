@@ -29,7 +29,7 @@ define([
     var TileProviderError = function TileProviderError(provider, message, x, y, level, timesRetried, error) {
         /**
          * The {@link ImageryProvider} or {@link TerrainProvider} that experienced the error.
-         * @type {ImageryProvider|TerainProvider}
+         * @type {ImageryProvider|TerrainProvider}
          */
         this.provider = provider;
 
