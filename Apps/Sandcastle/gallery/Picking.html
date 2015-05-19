@@ -38,6 +38,9 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     infoBox : false
 });
 
+viewer.extend(Cesium.viewerCesiumInspectorMixin);
+viewer.scene.globe.depthTestAgainstTerrain = false;
+
 var scene = viewer.scene;
 var handler;
 

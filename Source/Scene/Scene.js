@@ -1451,8 +1451,13 @@ define([
         }
 
         if (scene.debugShowGlobeDepth && defined(scene._globeDepth)) {
-            var gd = getDebugGlobeDepth(scene, scene.debugShowGlobeDepthFrustum - 1);
+            var gd = getDebugGlobeDepth(scene, scene.debugShowDepthFrustum - 1);
             gd.executeDebugGlobeDepth(context, passState);
+        }
+
+        if (scene.debugShowPickDepth && defined(scene._globeDepth)) {
+            var pd = getPickDepth(scene, scene.debugShowDepthFrustum - 1);
+            pd.executeDebugPickDepth(context, passState);
         }
 
         if (useOIT) {
@@ -1762,6 +1767,9 @@ define([
         return object;
     };
 
+    var scratckPickDepthPosition = new Cartesian3();
+    var scratchMinDistPos = new Cartesian3();
+
     /**
      * Returns the cartesian position reconstructed from the depth buffer and window position.
      *
@@ -1788,39 +1796,6 @@ define([
         var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(this, windowPosition, scratchPosition);
         drawingBufferPosition.y = this.drawingBufferHeight - drawingBufferPosition.y;
 
-        var depth;
-        var firstDepth;
-        var index;
-        var numFrustums = this.numberOfFrustums;
-
-        for (var i = 0; i < numFrustums; ++i) {
-            var pickDepth = getPickDepth(this, i);
-            var pixels = context.readPixels({
-                x : drawingBufferPosition.x,
-                y : drawingBufferPosition.y,
-                width : 1,
-                height : 1,
-                framebuffer : pickDepth.framebuffer
-            });
-
-            depth = pixels[0] / 255.0 + pixels[1] / 65535.0 + pixels[2] / 16777215.0;
-            depth = CesiumMath.clamp(depth, 0.0, 1.0);
-
-            if (i === 0) {
-                firstDepth = depth;
-            }
-
-            if (depth > 0.0 && depth < 1.0) {
-                index = i;
-                break;
-            }
-        }
-
-        if (!defined(index)) {
-            depth = firstDepth;
-            index = 0;
-        }
-
         var camera = this._camera;
 
         // Create a working frustum from the original camera frustum.
@@ -1835,12 +1810,40 @@ define([
             //>>includeEnd('debug');
         }
 
-        var renderedFrustum = this._frustumCommandsList[index];
-        frustum.near = renderedFrustum.near;
-        frustum.far = renderedFrustum.far;
-        uniformState.updateFrustum(frustum);
+        var minimumPosition;
+        var minDistance;
+        var numFrustums = this.numberOfFrustums;
 
-        return SceneTransforms.drawingBufferToWgs84Coordinates(this, drawingBufferPosition, depth, result);
+        for (var i = 0; i < numFrustums; ++i) {
+            var pickDepth = getPickDepth(this, i);
+            var pixels = context.readPixels({
+                x : drawingBufferPosition.x,
+                y : drawingBufferPosition.y,
+                width : 1,
+                height : 1,
+                framebuffer : pickDepth.framebuffer
+            });
+
+            var depth = pixels[0] / 255.0 + pixels[1] / 65535.0 + pixels[2] / 16777215.0;
+            depth = CesiumMath.clamp(depth, 0.0, 1.0);
+
+            if (depth > 0.0 && depth < 1.0) {
+                var renderedFrustum = this._frustumCommandsList[i];
+                frustum.near = renderedFrustum.near;
+                frustum.far = renderedFrustum.far;
+                uniformState.updateFrustum(frustum);
+
+                var position = SceneTransforms.drawingBufferToWgs84Coordinates(this, drawingBufferPosition, depth, scratckPickDepthPosition);
+                var distance = Cartesian3.distance(position, camera.position);
+
+                if (!defined(minimumPosition) || distance < minDistance) {
+                    minimumPosition = Cartesian3.clone(position, result);
+                    minDistance = distance;
+                }
+            }
+        }
+
+        return minimumPosition;
     };
 
     /**
