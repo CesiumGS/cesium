@@ -397,7 +397,7 @@ define(['../Core/buildModuleUrl'], function(buildModuleUrl) {
 		}
 
 		if (obj.zip.useWebWorkers) {
-			worker = new Worker(getWorkerScriptsPath(obj.zip) + INFLATE_JS);
+			worker = new Worker(obj.zip.workerScriptsPath + INFLATE_JS);
 			launchWorkerProcess(worker, reader, writer, offset, size, oninflateappend, onprogress, oninflateend, onreaderror, onwriteerror);
 		} else
 			launchProcess(new obj.zip.Inflater(), reader, writer, offset, size, oninflateappend, onprogress, oninflateend, onreaderror, onwriteerror);
@@ -422,7 +422,7 @@ define(['../Core/buildModuleUrl'], function(buildModuleUrl) {
 		}
 
 		if (obj.zip.useWebWorkers) {
-			worker = new Worker(getWorkerScriptsPath(obj.zip) + DEFLATE_JS);
+			worker = new Worker(obj.zip.workerScriptsPath + DEFLATE_JS);
 			worker.addEventListener(MESSAGE_EVENT, onmessage, false);
 			worker.postMessage({
 				init : true,
@@ -779,13 +779,6 @@ define(['../Core/buildModuleUrl'], function(buildModuleUrl) {
 		};
 	}
 
-	function getWorkerScriptsPath(zip) {
-		if (typeof zip.workerScriptsPath === 'undefined') {
-			zip.workerScriptsPath = buildModuleUrl('ThirdParty/Workers/');
-		}
-		return zip.workerScriptsPath;
-	}
-
 	obj.zip = {
 		Reader : Reader,
 		Writer : Writer,
@@ -805,9 +798,19 @@ define(['../Core/buildModuleUrl'], function(buildModuleUrl) {
 				callback(createZipWriter(writer, onerror, dontDeflate));
 			}, onerror);
 		},
-		workerScriptsPath : undefined,
 		useWebWorkers : true
 	};
+
+	var workerScriptsPath;
+
+	Object.defineProperty(obj.zip, 'workerScriptsPath', {
+		get : function() {
+			if (typeof workerScriptsPath === 'undefined') {
+				workerScriptsPath = buildModuleUrl('ThirdParty/Workers/');
+			}
+			return workerScriptsPath;
+		}
+	});
 
 })(tmp);
 
