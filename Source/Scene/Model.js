@@ -2490,6 +2490,26 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     /**
+     * If the minimum pixel size of the model is not set, this will return the radius of the bounding sphere.
+     * If the minimum pixel size is set, this will return the true size of the bounding sphere used when drawing the model.
+     *
+     * @param {Scene} scene The scene.
+     *
+     * @returns {Number} The radius of the bounding sphere scaled to maintain a minimum pixel size.
+     */
+    Model.prototype.getScaledBoundingSphereRadius = function(scene) {
+        //>>includeStart('debug', pragmas.debug);
+        if (this._state !== ModelState.LOADED) {
+            throw new DeveloperError('The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.');
+        }
+        //>>includeEnd('debug');
+
+        var context = scene.context;
+        var frameState = scene.frameState;
+        return getScale(this, context, frameState) * this.boundingSphere.radius;
+    };
+
+    /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
      * <p>
