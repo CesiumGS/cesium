@@ -44,7 +44,7 @@ define([
                 'varying vec2 v_textureCoordinates;\n' +
                 'void main()\n' +
                 '{\n' +
-                '    float z_window = czm_unpackDepth(texture2D(u_texture, v_textureCoordinates).rgb);\n' +
+                '    float z_window = czm_unpackDepth(texture2D(u_texture, v_textureCoordinates));\n' +
                 '    float n_range = czm_depthRange.near;\n' +
                 '    float f_range = czm_depthRange.far;\n' +
                 '    float z_ndc = (2.0 * z_window - n_range - f_range) / (f_range - n_range);\n' +
@@ -137,7 +137,7 @@ define([
                 'varying vec2 v_textureCoordinates;\n' +
                 'void main()\n' +
                 '{\n' +
-                '    gl_FragColor = vec4(czm_packDepth(texture2D(u_texture, v_textureCoordinates).r), 1.0);\n' +
+                '    gl_FragColor = czm_packDepth(texture2D(u_texture, v_textureCoordinates).r);\n' +
                 '}\n';
             globeDepth._copyDepthCommand = context.createViewportQuadCommand(fs, {
                 renderState : context.createRenderState(),

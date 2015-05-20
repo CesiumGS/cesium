@@ -1767,8 +1767,10 @@ define([
         return object;
     };
 
-    var scratckPickDepthPosition = new Cartesian3();
+    var scratchPickDepthPosition = new Cartesian3();
     var scratchMinDistPos = new Cartesian3();
+    var scratchPackedDepth = new Cartesian4();
+    var packedDepthScale = new Cartesian4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 160581375.0);
 
     /**
      * Returns the cartesian position reconstructed from the depth buffer and window position.
@@ -1824,8 +1826,9 @@ define([
                 framebuffer : pickDepth.framebuffer
             });
 
-            var depth = pixels[0] / 255.0 + pixels[1] / 65535.0 + pixels[2] / 16777215.0;
-            depth = CesiumMath.clamp(depth, 0.0, 1.0);
+            var packedDepth = Cartesian4.unpack(pixels, 0, scratchPackedDepth);
+            Cartesian4.divideByScalar(packedDepth, 255.0, packedDepth);
+            var depth = Cartesian4.dot(packedDepth, packedDepthScale);
 
             if (depth > 0.0 && depth < 1.0) {
                 var renderedFrustum = this._frustumCommandsList[i];
@@ -1833,8 +1836,8 @@ define([
                 frustum.far = renderedFrustum.far;
                 uniformState.updateFrustum(frustum);
 
-                var position = SceneTransforms.drawingBufferToWgs84Coordinates(this, drawingBufferPosition, depth, scratckPickDepthPosition);
-                var distance = Cartesian3.distance(position, camera.position);
+                var position = SceneTransforms.drawingBufferToWgs84Coordinates(this, drawingBufferPosition, depth, scratchPickDepthPosition);
+                var distance = Cartesian3.distance(position, camera.positionWC);
 
                 if (!defined(minimumPosition) || distance < minDistance) {
                     minimumPosition = Cartesian3.clone(position, result);
