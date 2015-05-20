@@ -121,8 +121,8 @@ define([
      *
      * @param {Number} numberOfVertices Number of vertices that the indices will reference.
      * @param {ArrayBuffer} sourceArray Passed through to the typed array constructor.
-     * @param {byteOffset} byteOffset Passed through to the typed array constructor.
-     * @param {length} length Passed through to the typed array constructor.
+     * @param {Number} byteOffset Passed through to the typed array constructor.
+     * @param {Number} length Passed through to the typed array constructor.
      * @returns {Uint16Array|Uint32Array} A <code>Uint16Array</code> or <code>Uint32Array</code> constructed with <code>sourceArray</code>, <code>byteOffset</code>, and <code>length</code>.
      *
      */

@@ -807,6 +807,26 @@ define([
         }
     });
 
+    var scratchPosition0 = new Cartesian3();
+    var scratchPosition1 = new Cartesian3();
+    function maxComponent(a, b) {
+        var x = Math.max(Math.abs(a.x), Math.abs(b.x));
+        var y = Math.max(Math.abs(a.y), Math.abs(b.y));
+        var z = Math.max(Math.abs(a.z), Math.abs(b.z));
+        return Math.max(Math.max(x, y), z);
+    }
+
+    function cameraEqual(camera0, camera1, epsilon) {
+        var scalar = 1 / Math.max(1, maxComponent(camera0.position, camera1.position));
+        Cartesian3.multiplyByScalar(camera0.position, scalar, scratchPosition0);
+        Cartesian3.multiplyByScalar(camera1.position, scalar, scratchPosition1);
+        return Cartesian3.equalsEpsilon(scratchPosition0, scratchPosition1, epsilon) &&
+            Cartesian3.equalsEpsilon(camera0.direction, camera1.direction, epsilon) &&
+            Cartesian3.equalsEpsilon(camera0.up, camera1.up, epsilon) &&
+            Cartesian3.equalsEpsilon(camera0.right, camera1.right, epsilon) &&
+            Matrix4.equalsEpsilon(camera0.transform, camera1.transform, epsilon);
+    }
+
     var scratchOccluderBoundingSphere = new BoundingSphere();
     var scratchOccluder;
 
@@ -1398,17 +1418,17 @@ define([
         }
 
         var camera = scene._camera;
-        var cameraChanged = !Camera.equalsEpsilon(camera, scene._cameraClone, CesiumMath.EPSILON4);
-        if (cameraChanged && !scene._cameraStartFired) {
-            camera.moveStart.raiseEvent();
-            scene._cameraStartFired = true;
+        if (!cameraEqual(camera, scene._cameraClone, CesiumMath.EPSILON6)) {
+            if (!scene._cameraStartFired) {
+                camera.moveStart.raiseEvent();
+                scene._cameraStartFired = true;
+            }
             scene._cameraMovedTime = getTimestamp();
-        } else if (!cameraChanged && scene._cameraStartFired && getTimestamp() - scene._cameraMovedTime > scene.cameraEventWaitTime) {
+            Camera.clone(camera, scene._cameraClone);
+        } else if (scene._cameraStartFired && getTimestamp() - scene._cameraMovedTime > scene.cameraEventWaitTime) {
             camera.moveEnd.raiseEvent();
             scene._cameraStartFired = false;
         }
-
-        Camera.clone(camera, scene._cameraClone);
 
         scene._preRender.raiseEvent(scene, time);
 
