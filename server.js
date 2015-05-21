@@ -94,7 +94,7 @@
         }
 
         if (!remoteUrl) {
-            return res.send(400, 'No url specified.');
+            return res.status(400).send('No url specified.');
         }
 
         if (!remoteUrl.protocol) {
@@ -121,7 +121,7 @@
                 res.header(filterHeaders(req, response.headers));
             }
 
-            res.send(code, body);
+            res.status(code).send(body);
         });
     });
 
@@ -151,10 +151,18 @@
         console.log('Cesium development server stopped.');
     });
 
+    var isFirstSig = true;
     process.on('SIGINT', function() {
-        server.close(function() {
-            process.exit(0);
-        });
+        if (isFirstSig) {
+            console.log('Cesium development server shutting down.');
+            server.close(function() {
+              process.exit(0);
+            });
+            isFirstSig = false;
+        } else {
+            console.log('Cesium development server force kill.');
+            process.exit(1);
+        }
     });
 
 })();

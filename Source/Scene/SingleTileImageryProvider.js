@@ -36,6 +36,7 @@ define([
      * @param {String} options.url The url for the tile.
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+     * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
      *
      * @see ArcGisMapServerImageryProvider
@@ -64,7 +65,8 @@ define([
         var tilingScheme = new GeographicTilingScheme({
             rectangle : rectangle,
             numberOfLevelZeroTilesX : 1,
-            numberOfLevelZeroTilesY : 1
+            numberOfLevelZeroTilesY : 1,
+            ellipsoid : options.ellipsoid
         });
         this._tilingScheme = tilingScheme;
 
@@ -107,7 +109,8 @@ define([
                     that._errorEvent,
                     message,
                     0, 0, 0,
-                    doRequest);
+                    doRequest,
+                    e);
         }
 
         function doRequest() {

@@ -1,0 +1,31 @@
+<kml:kml xmlns:kml="http://www.opengis.net/kml/2.2">
+    <kml:Document id="docid">
+        <kml:name>Namespaced</kml:name>
+        <kml:description>Test that Cesium is able to load a KML document with explicit namespaces.</kml:description>
+        <kml:visibility>1</kml:visibility>
+        <kml:Placemark>
+            <kml:name>Foo</kml:name>
+            <kml:description>Bar</kml:description>
+            <kml:visibility>1</kml:visibility>
+            <kml:Polygon>
+                <kml:outerBoundaryIs>
+                    <kml:LinearRing>
+                        <kml:coordinates>129.129819,-25.311793 129.130142,-25.311992 129.129671,-25.312533 129.129341,-25.312338 129.129633,-25.312009 129.129555,-25.311964 129.129717,-25.311790 129.129789,-25.311830 129.129819,-25.311793</kml:coordinates>
+                    </kml:LinearRing>
+                </kml:outerBoundaryIs>
+            </kml:Polygon>
+        </kml:Placemark>
+        <kml:Placemark>
+            <kml:name>Another</kml:name>
+            <kml:description>Test</kml:description>
+            <kml:visibility>1</kml:visibility>
+            <kml:Polygon>
+                <kml:outerBoundaryIs>
+                    <kml:LinearRing>
+                        <kml:coordinates>129.129580,-25.311670 129.129205,-25.312091 129.128890,-25.311903 129.129043,-25.311721 129.128839,-25.311598 129.129053,-25.311358 129.129580,-25.311670</kml:coordinates>
+                    </kml:LinearRing>
+                </kml:outerBoundaryIs>
+            </kml:Polygon>
+        </kml:Placemark>
+    </kml:Document>
+</kml:kml>
