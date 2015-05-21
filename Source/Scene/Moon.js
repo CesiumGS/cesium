@@ -110,18 +110,14 @@ define([
     var icrfToFixed = new Matrix3();
     var rotationScratch = new Matrix3();
     var translationScratch = new Cartesian3();
+    var scratchCommandList = [];
 
     /**
      * @private
      */
-    Moon.prototype.update = function(context, frameState, commandList) {
+    Moon.prototype.update = function(context, frameState) {
         if (!this.show) {
             return;
-        }
-
-        // XXX temporary hack
-        if (!defined(commandList)) {
-            commandList = [];
         }
 
         var ellipsoidPrimitive = this._ellipsoidPrimitive;
@@ -141,10 +137,10 @@ define([
         Matrix3.multiplyByVector(icrfToFixed, translation, translation);
 
         Matrix4.fromRotationTranslation(rotation, translation, ellipsoidPrimitive.modelMatrix);
-        ellipsoidPrimitive.update(context, frameState, commandList);
-
-        // XXX temporary hack
-        return commandList.length === 1 ? commandList[0] : undefined;
+        
+        scratchCommandList.length = 0;
+        ellipsoidPrimitive.update(context, frameState, scratchCommandList);
+        return (scratchCommandList.length === 1) ? scratchCommandList[0] : undefined;
     };
 
     /**
