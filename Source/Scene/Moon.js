@@ -82,7 +82,7 @@ define([
         this._ellipsoidPrimitive = new EllipsoidPrimitive({
             radii : this.ellipsoid.radii,
             material : Material.fromType(Material.ImageType),
-            depthTestEnabled : true,
+            depthTestEnabled : false,
             _owner : this
         });
         this._ellipsoidPrimitive.material.translucent = false;

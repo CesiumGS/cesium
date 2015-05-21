@@ -300,7 +300,7 @@ define([
                     face : CullFace.FRONT
                 },
                 depthTest : {
-                    enabled : this.depthTestEnabled
+                    enabled : this._depthTestEnabled
                 },
                 // Only write depth when EXT_frag_depth is supported since the depth for
                 // the bounding box is wrong; it is not the true depth of the ray casted ellipsoid.
