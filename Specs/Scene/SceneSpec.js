@@ -520,7 +520,7 @@ defineSuite([
         }
     });
 
-    it('pickDepth', function() {
+    it('pickPosition', function() {
         var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
         scene.camera.viewRectangle(rectangle);
 
@@ -529,7 +529,7 @@ defineSuite([
         var canvas = scene.canvas;
         var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
 
-        var position = scene.pickDepth(windowPosition);
+        var position = scene.pickPosition(windowPosition);
         expect(position).not.toBeDefined();
 
         var rectanglePrimitive = new RectanglePrimitive({
@@ -543,13 +543,13 @@ defineSuite([
 
         scene.renderForSpecs();
 
-        position = scene.pickDepth(windowPosition);
+        position = scene.pickPosition(windowPosition);
         expect(position).toBeDefined();
     });
 
-    it('pickDepth throws without windowPosition', function() {
+    it('pickPosition throws without windowPosition', function() {
         expect(function() {
-            scene.pickDepth();
+            scene.pickPosition();
         }).toThrowDeveloperError();
     });
 

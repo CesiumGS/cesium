@@ -467,7 +467,7 @@ define([
          *
          * @default 1
          */
-        this.debugShowGlobeDepthFrustum = 1;
+        this.debugShowDepthFrustum = 1;
 
         /**
          * When <code>true</code>, enables Fast Approximate Anti-aliasing even when order independent translucency
@@ -1802,7 +1802,7 @@ define([
      * @exception {DeveloperError} Picking from the depth buffer is not supported. Check Context.depthTexture for support.
      * @exception {DeveloperError} 2D is not supported. An orthographic projection matrix is not invertible.
      */
-    Scene.prototype.pickDepth = function(windowPosition, result) {
+    Scene.prototype.pickPosition = function(windowPosition, result) {
         //>>includeStart('debug', pragmas.debug);
         if(!defined(windowPosition)) {
             throw new DeveloperError('windowPosition is undefined.');
