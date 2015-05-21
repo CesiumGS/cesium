@@ -1233,7 +1233,9 @@ define([
         var skyBoxCommand = (frameState.passes.render && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
         var skyAtmosphereCommand = (frameState.passes.render && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
         var sunCommand = (frameState.passes.render && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
+        var moonCommand = (frameState.passes.render && defined(scene.moon)) ? scene.moon.update(context, frameState) : undefined;
         var sunVisible = isVisible(sunCommand, frameState);
+        var moonVisible = isVisible(moonCommand, frameState);
 
         var clear = scene._clearColorCommand;
         Color.clone(clearColor, clear.color);
@@ -1296,6 +1298,12 @@ define([
                 scene._sunPostProcess.execute(context, opaqueFramebuffer);
                 passState.framebuffer = opaqueFramebuffer;
             }
+        }
+
+        // Render the moon here to make sure it's behind geometry and in front of the sun.
+        // Side effect: moon can be seen through the atmosphere, since the sun is rendered after the atmosphere.
+        if (defined(moonCommand) && moonVisible) {
+            moonCommand.execute(context, passState);
         }
 
         var clearDepth = scene._depthClearCommand;
@@ -1381,10 +1389,6 @@ define([
         }
 
         scene._primitives.update(context, frameState, commandList);
-
-        if (defined(scene.moon)) {
-            scene.moon.update(context, frameState, commandList);
-        }
     }
 
     function callAfterRenderFunctions(frameState) {

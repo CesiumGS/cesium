@@ -119,6 +119,11 @@ define([
             return;
         }
 
+        // XXX temporary hack
+        if (!defined(commandList)) {
+            commandList = [];
+        }
+
         var ellipsoidPrimitive = this._ellipsoidPrimitive;
         ellipsoidPrimitive.material.uniforms.image = this.textureUrl;
         ellipsoidPrimitive.onlySunLighting = this.onlySunLighting;
@@ -137,6 +142,9 @@ define([
 
         Matrix4.fromRotationTranslation(rotation, translation, ellipsoidPrimitive.modelMatrix);
         ellipsoidPrimitive.update(context, frameState, commandList);
+
+        // XXX temporary hack
+        return commandList.length === 1 ? commandList[0] : undefined;
     };
 
     /**
