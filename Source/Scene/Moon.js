@@ -82,6 +82,7 @@ define([
         this._ellipsoidPrimitive = new EllipsoidPrimitive({
             radii : this.ellipsoid.radii,
             material : Material.fromType(Material.ImageType),
+            depthTestEnabled : true,
             _owner : this
         });
         this._ellipsoidPrimitive.material.translucent = false;
@@ -137,7 +138,7 @@ define([
         Matrix3.multiplyByVector(icrfToFixed, translation, translation);
 
         Matrix4.fromRotationTranslation(rotation, translation, ellipsoidPrimitive.modelMatrix);
-        
+
         scratchCommandList.length = 0;
         ellipsoidPrimitive.update(context, frameState, scratchCommandList);
         return (scratchCommandList.length === 1) ? scratchCommandList[0] : undefined;
