@@ -1230,11 +1230,12 @@ define([
             scene._sunBloom = false;
         }
 
-        var skyBoxCommand = (frameState.passes.render && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
-        var skyAtmosphereCommand = (frameState.passes.render && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
-        var sunCommand = (frameState.passes.render && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
-        var moonCommand = (frameState.passes.render && defined(scene.moon)) ? scene.moon.update(context, frameState) : undefined;
+        var renderPass = frameState.passes.render;
+        var skyBoxCommand = (renderPass && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
+        var skyAtmosphereCommand = (renderPass && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
+        var sunCommand = (renderPass && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
         var sunVisible = isVisible(sunCommand, frameState);
+        var moonCommand = (renderPass && defined(scene.moon)) ? scene.moon.update(context, frameState) : undefined;
         var moonVisible = isVisible(moonCommand, frameState);
 
         var clear = scene._clearColorCommand;
@@ -1291,7 +1292,7 @@ define([
             executeCommand(skyAtmosphereCommand, scene, context, passState);
         }
 
-        if (defined(sunCommand) && sunVisible) {
+        if (sunVisible) {
             sunCommand.execute(context, passState);
 
             if (scene.sunBloom) {
@@ -1300,9 +1301,8 @@ define([
             }
         }
 
-        // Render the moon here to make sure it's behind geometry and in front of the sun.
-        // Side effect: moon can be seen through the atmosphere, since the sun is rendered after the atmosphere.
-        if (defined(moonCommand) && moonVisible) {
+        // Moon can be seen through the atmosphere, since the sun is rendered after the atmosphere.
+        if (moonVisible) {
             moonCommand.execute(context, passState);
         }
 
