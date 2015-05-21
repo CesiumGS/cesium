@@ -401,7 +401,6 @@ define([
                     }
                 }
             } else {
-                ++debug.tilesWaitingForChildren;
                 // SSE is not good enough but not all children are loaded, so render this tile anyway.
                 addTileToRenderList(primitive, tile);
             }
