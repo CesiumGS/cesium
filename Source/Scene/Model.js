@@ -240,6 +240,11 @@ define([
      * when the external binary, image, and shader files are downloaded and the WebGL
      * resources are created.
      * </p>
+     * <p>
+     * For high-precision rendering, Cesium supports the CESIUM_RTC extension, which introduces the
+     * CESIUM_RTC_MODELVIEW parameter semantic that says the node is in WGS84 coordinates translated
+     * relative to a local origin.
+     * </p>
      *
      * @alias Model
      * @constructor
@@ -701,11 +706,13 @@ define([
 
         byteOffset += sizeOfUnit32;  // Skip magic number
 
+        //>>includeStart('debug', pragmas.debug);
         var version = view.getUint32(byteOffset, true);
-        byteOffset += sizeOfUnit32;
         if (version !== 1) {
             throw new DeveloperError('Only glTF Binary version 1 is supported.  Version ' + version + ' is not.');
         }
+        //>>includeEnd('debug');
+        byteOffset += sizeOfUnit32;
 
         byteOffset += sizeOfUnit32;  // Skip length
 
@@ -719,11 +726,19 @@ define([
     }
 
     /**
+     * <p>
      * Creates a model from a glTF asset.  When the model is ready to render, i.e., when the external binary, image,
      * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyPromise} is resolved.
-     *
+     * </p>
+     * <p>
      * The model can be a traditional glTF asset with a .gltf extension or a Binary glTF using the
      * CESIUM_binary_glTF extension with a .bgltf extension.
+     * </p>
+     * <p>
+     * For high-precision rendering, Cesium supports the CESIUM_RTC extension, which introduces the
+     * CESIUM_RTC_MODELVIEW parameter semantic that says the node is in WGS84 coordinates translated
+     * relative to a local origin.
+     * </p>
      *
      * @param {Object} options Object with the following properties:
      * @param {String} options.url The url to the .gltf file.
@@ -795,7 +810,7 @@ define([
             setCachedGltf(model, cachedGltf);
             gltfCache[cacheKey] = cachedGltf;
 
-            if (url.toLowerCase().indexOf('.bgltf', url.length - 6) !== -1) {
+            if (/\.bgltf$/i.test(url)) {
                 // Load binary glTF
                 loadArrayBuffer(url, options.headers).then(function(arrayBuffer) {
                     cachedGltf.makeReady(parseBinaryGltfHeader(arrayBuffer), arrayBuffer);
