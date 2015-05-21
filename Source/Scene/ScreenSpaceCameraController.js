@@ -580,7 +580,7 @@ define([
         }
 
         var depthIntersection;
-        if (defined(scene._globeDepth)) {
+        if (scene.pickPositionSupported) {
             depthIntersection = scene.pickPosition(mousePosition, scratchDepthIntersection);
         }
 

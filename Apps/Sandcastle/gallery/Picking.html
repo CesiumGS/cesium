@@ -169,7 +169,7 @@ Sandcastle.addToolbarButton('Pick depth buffer', function() {
     handler.setInputAction(function(movement) {
         var scene = viewer.scene;
         var pickedObject = scene.pick(movement.endPosition);
-        if (Cesium.defined(pickedObject) && pickedObject.id === modelEntity) {
+        if (scene.pickPositionSupported && Cesium.defined(pickedObject) && pickedObject.id === modelEntity) {
             var cartesian = viewer.scene.pickPosition(movement.endPosition);
             
             var cartographic = ellipsoid.cartesianToCartographic(cartesian);

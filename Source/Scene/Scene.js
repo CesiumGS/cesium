@@ -582,6 +582,18 @@ define([
         },
 
         /**
+         * Returns true if the pickPosition function is supported.
+         *
+         * @type {Boolean}
+         * @readonly
+         */
+        pickPositionSupported : {
+            get : function() {
+                return this._context.depthTexture;
+            }
+        },
+
+        /**
          * Gets or sets the depth-test ellipsoid.
          * @memberof Scene.prototype
          *
@@ -1799,7 +1811,7 @@ define([
      * @param {Cartesian3} [result] The object on which to restore the result.
      * @returns {Cartesian3} The cartesian position.
      *
-     * @exception {DeveloperError} Picking from the depth buffer is not supported. Check Context.depthTexture for support.
+     * @exception {DeveloperError} Picking from the depth buffer is not supported. Check pickPositionSupported.
      * @exception {DeveloperError} 2D is not supported. An orthographic projection matrix is not invertible.
      */
     Scene.prototype.pickPosition = function(windowPosition, result) {
@@ -1808,7 +1820,7 @@ define([
             throw new DeveloperError('windowPosition is undefined.');
         }
         if (!defined(this._globeDepth)) {
-            throw new DeveloperError('Picking from the depth buffer is not supported. Check Context.depthTexture for support.');
+            throw new DeveloperError('Picking from the depth buffer is not supported. Check pickPositionSupported.');
         }
         //>>includeEnd('debug');
 
