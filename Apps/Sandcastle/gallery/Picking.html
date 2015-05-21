@@ -19,16 +19,10 @@
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
-    
-    #pickDepth {
-        display: none;
-        background-color: red;
-        color: white;
-    }
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"><div id="pickDepth"></div></div>
+<div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     "use strict";
@@ -37,9 +31,6 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     selectionIndicator : false,
     infoBox : false
 });
-
-viewer.extend(Cesium.viewerCesiumInspectorMixin);
-viewer.scene.globe.depthTestAgainstTerrain = false;
 
 var scene = viewer.scene;
 var handler;
@@ -153,8 +144,6 @@ Sandcastle.addToolbarButton('Drill-Down Picking', function() {
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 });
 
-var pickDepthElement = document.getElementById('pickDepth');
-
 Sandcastle.addToolbarButton('Pick depth buffer', function() {
     var ellipsoid = scene.globe.ellipsoid;
     
@@ -198,7 +187,6 @@ Sandcastle.addToolbarButton('Pick depth buffer', function() {
 });
 
 Sandcastle.reset = function() {
-    pickDepthElement.style.display = 'none';
     viewer.entities.removeAll();
     handler = handler && handler.destroy();
 };
