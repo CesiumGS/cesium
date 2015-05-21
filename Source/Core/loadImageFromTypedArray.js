@@ -39,7 +39,10 @@ define([
         });
 
         var blobUrl = window.URL.createObjectURL(blob);
-        return loadImageViaBlob(blobUrl);
+        return loadImageViaBlob(blobUrl).then(function(image){
+            window.URL.revokeObjectURL(blobUrl);
+            return image;
+        });
     };
 
     return loadImageFromTypedArray;
