@@ -2496,11 +2496,16 @@ define([
      * @param {Scene} scene The scene.
      *
      * @returns {Number} The radius of the bounding sphere scaled to maintain a minimum pixel size.
+     *
+     * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
      */
     Model.prototype.getScaledBoundingSphereRadius = function(scene) {
         //>>includeStart('debug', pragmas.debug);
         if (this._state !== ModelState.LOADED) {
             throw new DeveloperError('The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.');
+        }
+        if (!defined(scene)) {
+            throw new DeveloperError('scene is required.');
         }
         //>>includeEnd('debug');
 

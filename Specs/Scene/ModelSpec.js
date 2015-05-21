@@ -430,6 +430,29 @@ defineSuite([
         texturedBoxModel.modelMatrix = originalMatrix;
     });
 
+    it('getScaledBoundingSphereRadius gets scaled radius', function() {
+        texturedBoxModel.zoomTo();
+        expect(texturedBoxModel.getScaledBoundingSphereRadius(scene)).toEqual(texturedBoxModel.boundingSphere.radius);
+
+        texturedBoxModel.minimumPixelSize = 128.0;
+        expect(texturedBoxModel.getScaledBoundingSphereRadius(scene)).toBeGreaterThan(texturedBoxModel.boundingSphere.radius);
+
+        texturedBoxModel.minimumPixelSize = 0.0;
+    });
+
+    it('getScaledBoundingSphereRadius throws without scene', function() {
+        expect(function() {
+            return texturedBoxModel.getScaledBoundingSphereRadius();
+        }).toThrowDeveloperError();
+    });
+
+    it('getScaledBoundingSphereRadius throws when model is not loaded', function() {
+        var m = new Model();
+        expect(function() {
+            return m.getScaledBoundingSphereRadius(scene);
+        }).toThrowDeveloperError();
+    });
+
     it('destroys', function() {
         return loadModel(boxUrl).then(function(m) {
             expect(m.isDestroyed()).toEqual(false);
