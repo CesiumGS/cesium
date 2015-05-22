@@ -1238,6 +1238,7 @@ define([
         var moonCommand = (renderPass && defined(scene.moon)) ? scene.moon.update(context, frameState) : undefined;
         var moonVisible = isVisible(moonCommand, frameState);
 
+        // Clear default framebuffer
         var clear = scene._clearColorCommand;
         Color.clone(clearColor, clear.color);
         clear.execute(context, passState);
@@ -1278,6 +1279,10 @@ define([
             passState.framebuffer = opaqueFramebuffer;
         }
 
+        if (defined(passState.framebuffer)) {
+            clear.execute(context, passState);
+        }
+
         // Ideally, we would render the sky box and atmosphere last for
         // early-z, but we would have to draw it in each frustum
         frustum.near = camera.frustum.near;
@@ -1286,8 +1291,6 @@ define([
 
         if (defined(skyBoxCommand)) {
             executeCommand(skyBoxCommand, scene, context, passState);
-        } else {
-            executeCommand(clear, scene, context, passState);
         }
 
         if (defined(skyAtmosphereCommand)) {
@@ -1456,6 +1459,9 @@ define([
         createPotentiallyVisibleSet(scene);
 
         var passState = scene._passState;
+        passState.framebuffer = undefined;
+        passState.blendingEnabled = undefined;
+        passState.scissorTest = undefined;
 
         executeCommands(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
         executeOverlayCommands(scene, passState);
