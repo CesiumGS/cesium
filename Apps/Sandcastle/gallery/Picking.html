@@ -171,19 +171,17 @@ Sandcastle.addToolbarButton('Pick position', function() {
         if (scene.pickPositionSupported && Cesium.defined(pickedObject) && pickedObject.id === modelEntity) {
             var cartesian = viewer.scene.pickPosition(movement.endPosition);
             
-            if (Cesium.defined(cartesian)) {
-                var cartographic = ellipsoid.cartesianToCartographic(cartesian);
-                var longitudeString = Cesium.Math.toDegrees(cartographic.longitude).toFixed(2);
-                var latitudeString = Cesium.Math.toDegrees(cartographic.latitude).toFixed(2);
-                var heightString = cartographic.height.toFixed(2);
-    
-                labelEntity.position = cartesian;
-                labelEntity.label.show = true;
-                labelEntity.label.text = '(' + longitudeString + ', ' + latitudeString + ', ' + heightString + ')';
-                
-                var camera = scene.camera;
-                labelEntity.label.eyeOffset = new Cesium.Cartesian3(0.0, 0.0, camera.frustum.near * 1.5 - Cesium.Cartesian3.distance(cartesian, camera.position));
-            }
+            var cartographic = ellipsoid.cartesianToCartographic(cartesian);
+            var longitudeString = Cesium.Math.toDegrees(cartographic.longitude).toFixed(2);
+            var latitudeString = Cesium.Math.toDegrees(cartographic.latitude).toFixed(2);
+            var heightString = cartographic.height.toFixed(2);
+
+            labelEntity.position = cartesian;
+            labelEntity.label.show = true;
+            labelEntity.label.text = '(' + longitudeString + ', ' + latitudeString + ', ' + heightString + ')';
+            
+            var camera = scene.camera;
+            labelEntity.label.eyeOffset = new Cesium.Cartesian3(0.0, 0.0, camera.frustum.near * 1.5 - Cesium.Cartesian3.distance(cartesian, camera.position));
         } else {
             labelEntity.label.show = false;
         }
