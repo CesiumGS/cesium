@@ -291,7 +291,7 @@ defineSuite([
         expect(actualTranslation).toEqual(origin);
     });
 	
-    it('headingPitchRollToFixedFrameAircraft works without a result parameter', function() {
+    it('aircraftHeadingPitchRollToFixedFrame works without a result parameter', function() {
         var origin = new Cartesian3(1.0, 0.0, 0.0);
         var heading = CesiumMath.toRadians(20.0);
         var pitch = CesiumMath.toRadians(30.0);
@@ -306,7 +306,7 @@ defineSuite([
         Cartesian3.fromElements(expectedY.z, -expectedY.y, expectedY.x, expectedY);
         Cartesian3.fromElements(expectedZ.z, -expectedZ.y, expectedZ.x, expectedZ);
 
-        var returnedResult = Transforms.headingPitchRollToFixedFrameAircraft(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE);
+        var returnedResult = Transforms.aircraftHeadingPitchRollToFixedFrame(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE);
         var actualX = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 0, new Cartesian4()));
         var actualY = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 1, new Cartesian4()));
         var actualZ = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 2, new Cartesian4()));
@@ -318,7 +318,7 @@ defineSuite([
         expect(actualTranslation).toEqual(origin);
     });
 
-    it('headingPitchRollToFixedFrameAircraft works with a result parameter', function() {
+    it('aircraftHeadingPitchRollToFixedFrame works with a result parameter', function() {
         var origin = new Cartesian3(1.0, 0.0, 0.0);
         var heading = CesiumMath.toRadians(20.0);
         var pitch = CesiumMath.toRadians(30.0);
@@ -334,7 +334,7 @@ defineSuite([
         Cartesian3.fromElements(expectedZ.z, -expectedZ.y, expectedZ.x, expectedZ);
 
         var result = new Matrix4();
-        var returnedResult = Transforms.headingPitchRollToFixedFrameAircraft(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE, result);
+        var returnedResult = Transforms.aircraftHeadingPitchRollToFixedFrame(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE, result);
         var actualX = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 0, new Cartesian4()));
         var actualY = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 1, new Cartesian4()));
         var actualZ = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 2, new Cartesian4()));
@@ -383,7 +383,7 @@ defineSuite([
         var pitch = CesiumMath.toRadians(30.0);
         var roll = CesiumMath.toRadians(40.0);
 
-        var transform = Transforms.headingPitchRollToFixedFrameAircraft(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE);
+        var transform = Transforms.aircraftHeadingPitchRollToFixedFrame(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE);
         var expected = Matrix4.getRotation(transform, new Matrix3());
 
         var quaternion = Transforms.headingPitchRollQuaternionAircraft(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE);
@@ -397,7 +397,7 @@ defineSuite([
         var pitch = CesiumMath.toRadians(30.0);
         var roll = CesiumMath.toRadians(40.0);
 
-        var transform = Transforms.headingPitchRollToFixedFrameAircraft(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE);
+        var transform = Transforms.aircraftHeadingPitchRollToFixedFrame(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE);
         var expected = Matrix4.getRotation(transform, new Matrix3());
 
         var result = new Quaternion();
