@@ -496,9 +496,9 @@ define([
      * var heading = -Cesium.Math.PI_OVER_TWO;
      * var pitch = Cesium.Math.PI_OVER_FOUR;
      * var roll = 0.0;
-     * var transform = Cesium.Transforms.headingPitchRollToFixedFrameAircraft(center, heading, pitch, roll);
+     * var transform = Cesium.Transforms.aircraftHeadingPitchRollToFixedFrame(center, heading, pitch, roll);
      */
-    Transforms.headingPitchRollToFixedFrameAircraft = function(origin, heading, pitch, roll, ellipsoid, result) {
+    Transforms.aircraftHeadingPitchRollToFixedFrame = function(origin, heading, pitch, roll, ellipsoid, result) {
         // checks for required parameters happen in the called functions
         var hprQuaternion = Quaternion.fromHeadingPitchRoll(heading, pitch, roll, scratchHPRQuaternion);
         var hprMatrix = Matrix4.fromTranslationQuaternionRotationScale(Cartesian3.ZERO, hprQuaternion, scratchScale, scratchHPRMatrix4);
@@ -562,7 +562,7 @@ define([
      */
     Transforms.headingPitchRollQuaternionAircraft = function(origin, heading, pitch, roll, ellipsoid, result) {
         // checks for required parameters happen in the called functions
-        var transform = Transforms.headingPitchRollToFixedFrameAircraft(origin, heading, pitch, roll, ellipsoid, scratchENUMatrix4);
+        var transform = Transforms.aircraftHeadingPitchRollToFixedFrame(origin, heading, pitch, roll, ellipsoid, scratchENUMatrix4);
         var rotation = Matrix4.getRotation(transform, scratchHPRMatrix3);
         return Quaternion.fromRotationMatrix(rotation, result);
     };

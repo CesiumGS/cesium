@@ -1024,6 +1024,6 @@ defineSuite([
             Quaternion.fastSquad(new Quaternion(), new Quaternion(), new Quaternion(), new Quaternion(), 3);
         }).toThrowDeveloperError();
     });
- 
+
     createPackableSpecs(Quaternion, new Quaternion(1, 2, 3, 4), [1, 2, 3, 4]);
 });

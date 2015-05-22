@@ -1081,7 +1081,7 @@ define([
                 (Math.abs(left.z - right.z) <= epsilon) &&
                 (Math.abs(left.w - right.w) <= epsilon));
     };
- 
+
     /**
      * An immutable Quaternion instance initialized to (0.0, 0.0, 0.0, 0.0).
      *

@@ -11,8 +11,8 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
+    var deg2rad = CesiumMath.RADIANS_PER_DEGREE;
     it('conversion from quaternion', function () {
-        var deg2rad = Math.PI / 180;
         var testingTab = [[0, 0, 0],
             [90 * deg2rad, 0, 0],
             [-90 * deg2rad, 0, 0],
@@ -32,7 +32,6 @@ defineSuite([
     });
 
     it('conversion from degrees', function () {
-        var deg2rad = Math.PI / 180;
         var testingTab = [[0, 0, 0],
             [90, 0, 0],
             [-90, 0, 0],
