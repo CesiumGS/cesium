@@ -1286,6 +1286,8 @@ define([
 
         if (defined(skyBoxCommand)) {
             executeCommand(skyBoxCommand, scene, context, passState);
+        } else {
+            executeCommand(clear, scene, context, passState);
         }
 
         if (defined(skyAtmosphereCommand)) {

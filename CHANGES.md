@@ -33,6 +33,7 @@ Change Log
 * Fixed a bug where moon rendered in front of foreground geometry. [#1964](https://github.com/AnalyticalGraphicsInc/cesium/issue/1964)
 * Added support for the [CESIUM_binary_glTF](https://github.com/KhronosGroup/glTF/blob/new-extensions/extensions/CESIUM_binary_glTF/README.md) extension for loading binary blobs of glTF to `Model`.
 * Added support for the [CESIUM_RTC](https://github.com/KhronosGroup/glTF/blob/new-extensions/extensions/CESIUM_RTC/README.md) glTF extension for high-precision rendering to `Model`.
+* Fixed a bug where the framebuffer was not cleared when there was no skybox. [#1829](https://github.com/AnalyticalGraphicsInc/cesium/issue/1829)
 
 ### 1.9 - 2015-05-01
 
