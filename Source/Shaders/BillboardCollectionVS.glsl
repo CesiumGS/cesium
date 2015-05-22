@@ -231,7 +231,7 @@ void main()
 	    for (int i = 0; i < 4; ++i)
 	    {
 	        vec4 wc = computePositionWindowCoordinates(offsetPosition, size, scale, directions[i], vec2(0.0, 0.0), vec2(0.0), pixelOffset, alignedAxis, rotation);
-	        float d = texture2D(czm_globeDepthTexture, wc.xy * invSize).r;
+	        float d = czm_unpackDepth(texture2D(czm_globeDepthTexture, wc.xy * invSize));
 	        if (wc.z < d)
 	        {
 	            visible = true;

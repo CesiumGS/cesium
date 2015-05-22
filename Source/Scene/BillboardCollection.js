@@ -1050,7 +1050,7 @@ define([
      */
     BillboardCollection.prototype.update = function(context, frameState, commandList) {
         var scene = this._scene;
-        if (defined(scene) && (!scene._globeDepth.supported || context.maximumVertexTextureImageUnits === 0)) {
+        if (defined(scene) && (!defined(scene._globeDepth) || context.maximumVertexTextureImageUnits === 0)) {
             throw new DeveloperError('Bilboards with a height reference are not supported.');
         }
 

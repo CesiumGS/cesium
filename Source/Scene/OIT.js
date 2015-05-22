@@ -31,22 +31,18 @@ define([
     /**
      * @private
      */
-    var OIT = function(context, framebuffer) {
+    var OIT = function(context) {
         // We support multipass for the Chrome D3D9 backend and ES 2.0 on mobile.
         this._translucentMultipassSupport = false;
         this._translucentMRTSupport = false;
-
-        if (!defined(framebuffer)) {
-            return;
-        }
 
         var extensionsSupported = context.floatingPointTexture && context.depthTexture;
         this._translucentMRTSupport = context.drawBuffers && extensionsSupported;
         this._translucentMultipassSupport = !this._translucentMRTSupport && extensionsSupported;
 
-        this._opaqueFBO = framebuffer;
-        this._opaqueTexture = framebuffer.getColorTexture(0);
-        this._depthStencilTexture = framebuffer.depthStencilTexture;
+        this._opaqueFBO = undefined;
+        this._opaqueTexture = undefined;
+        this._depthStencilTexture = undefined;
 
         this._accumulationTexture = undefined;
 
