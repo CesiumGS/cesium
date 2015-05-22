@@ -79,7 +79,6 @@ define([
 
         this._entity = entity;
         this._scene = scene;
-        this._entitySubscription = entity.definitionChanged.addEventListener(BoxGeometryUpdater.prototype._onEntityPropertyChanged, this);
         this._fillEnabled = false;
         this._dynamic = false;
         this._outlineEnabled = false;
@@ -361,25 +360,6 @@ define([
                 color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
             }
         });
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     *
-     * @returns {Boolean} True if this object was destroyed; otherwise, false.
-     */
-    BoxGeometryUpdater.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Destroys and resources used by the object.  Once an object is destroyed, it should not be used.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     */
-    BoxGeometryUpdater.prototype.destroy = function() {
-        this._entitySubscription();
-        destroyObject(this);
     };
 
     BoxGeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {

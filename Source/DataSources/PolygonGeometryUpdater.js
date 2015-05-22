@@ -88,7 +88,6 @@ define([
 
         this._entity = entity;
         this._scene = scene;
-        this._entitySubscription = entity.definitionChanged.addEventListener(PolygonGeometryUpdater.prototype._onEntityPropertyChanged, this);
         this._fillEnabled = false;
         this._isClosed = false;
         this._dynamic = false;
@@ -371,25 +370,6 @@ define([
                 color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
             }
         });
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     *
-     * @returns {Boolean} True if this object was destroyed; otherwise, false.
-     */
-    PolygonGeometryUpdater.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Destroys and resources used by the object.  Once an object is destroyed, it should not be used.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     */
-    PolygonGeometryUpdater.prototype.destroy = function() {
-        this._entitySubscription();
-        destroyObject(this);
     };
 
     PolygonGeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {

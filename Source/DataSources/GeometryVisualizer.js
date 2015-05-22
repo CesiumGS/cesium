@@ -143,6 +143,7 @@ define([
         this._dynamicBatch = new DynamicGeometryBatch(primitives);
         this._batches = [this._closedColorBatch, this._closedMaterialBatch, this._openColorBatch, this._openMaterialBatch, this._dynamicBatch, this._outlineBatch];
 
+        this._entityPropertChangedSubscriptions = new AssociativeArray();
         this._subscriptions = new AssociativeArray();
         this._updaters = new AssociativeArray();
 
@@ -202,10 +203,16 @@ define([
             id = entity.id;
             updater = this._updaters.get(id);
             removeUpdater(this, updater);
-            updater.destroy();
+            if (typeof updater.destroy === 'function') {
+                updater.destroy();
+            }
             this._updaters.remove(id);
+
             this._subscriptions.get(id)();
             this._subscriptions.remove(id);
+
+            this._entityPropertChangedSubscriptions.get(id)();
+            this._entityPropertChangedSubscriptions.remove(id);
         }
 
         for (i = added.length - 1; i > -1; i--) {
@@ -214,7 +221,9 @@ define([
             updater = new this._type(entity, this._scene);
             this._updaters.set(id, updater);
             insertUpdaterIntoBatch(this, time, updater);
-            this._subscriptions.set(id, updater.geometryChanged.addEventListener(GeometryVisualizer._onGeometryChanged, this));
+
+            this._subscriptions.set(id, updater.geometryChanged.addEventListener(GeometryVisualizer.prototype._onGeometryChanged, this));
+            this._entityPropertChangedSubscriptions.set(id, entity.definitionChanged.addEventListener(GeometryVisualizer.prototype._onEntityPropertyChanged, this));
         }
 
         addedObjects.removeAll();
@@ -319,7 +328,7 @@ define([
     /**
      * @private
      */
-    GeometryVisualizer._onGeometryChanged = function(updater) {
+    GeometryVisualizer.prototype._onGeometryChanged = function(updater) {
         var removedObjects = this._removedObjects;
         var changedObjects = this._changedObjects;
 
@@ -328,6 +337,18 @@ define([
 
         if (!defined(removedObjects.get(id)) && !defined(changedObjects.get(id))) {
             changedObjects.set(id, entity);
+        }
+    };
+
+    /**
+     * @private
+     */
+    GeometryVisualizer.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
+        var updaters = this._updaters;
+        var length = updaters.length;
+        for (var i = 0; i < length; i++) {
+            var updater = updaters[i];
+            updater._onEntityPropertyChanged(entity, propertyName, newValue, oldValue);
         }
     };
 
