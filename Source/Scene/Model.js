@@ -98,6 +98,8 @@ define([
         FAILED : 3
     };
 
+    var defaultModelAccept = 'model/vnd.gltf.binary,model/vnd.gltf+json;q=0.8,application/json;q=0.2,*/*;q=0.01';
+
     function LoadResources() {
         this.buffersToCreate = new Queue();
         this.buffers = {};
@@ -800,6 +802,13 @@ define([
         options.cacheKey = cacheKey;
         var model = new Model(options);
 
+        if (!defined(options.headers)) {
+            options.headers = {};
+        }
+        if (!defined(options.headers.Accept)) {
+            options.headers.Accept = defaultModelAccept;
+        }
+
         var cachedGltf = gltfCache[cacheKey];
         if (!defined(cachedGltf)) {
             cachedGltf = new CachedGltf({
@@ -810,17 +819,17 @@ define([
             setCachedGltf(model, cachedGltf);
             gltfCache[cacheKey] = cachedGltf;
 
-            if (/\.bgltf$/i.test(url)) {
-                // Load binary glTF
-                loadArrayBuffer(url, options.headers).then(function(arrayBuffer) {
+            loadArrayBuffer(url, options.headers).then(function(arrayBuffer) {
+                var magic = getStringFromTypedArray(arrayBuffer, 0, 4);
+                if (magic === 'glTF') {
+                    // Load binary glTF
                     cachedGltf.makeReady(parseBinaryGltfHeader(arrayBuffer), arrayBuffer);
-                }).otherwise(getFailedLoadFunction(model, 'bgltf', url));
-            } else {
-                // Load text (JSON) glTF
-                loadText(url, options.headers).then(function(data) {
+                } else {
+                    // Load text (JSON) glTF
+                    var data = getStringFromTypedArray(arrayBuffer, 0, arrayBuffer.byteLength);
                     cachedGltf.makeReady(JSON.parse(data));
-                }).otherwise(getFailedLoadFunction(model, 'gltf', url));
-            }
+                }
+            }).otherwise(getFailedLoadFunction(model, 'model', url));
         } else if (!cachedGltf.ready) {
             // Cache hit but the loadArrayBuffer() or loadText() request is still pending
             ++cachedGltf.count;
