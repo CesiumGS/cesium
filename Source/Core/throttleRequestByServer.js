@@ -9,7 +9,6 @@ define([
         defaultValue) {
     "use strict";
 
-    var maximumRequestsPerServer = 6;
     var activeRequests = {};
 
     var pageUri = new Uri(document.location.href);
@@ -59,7 +58,7 @@ define([
         var server = getServer(url);
 
         var activeRequestsForServer = defaultValue(activeRequests[server], 0);
-        if (activeRequestsForServer >= maximumRequestsPerServer) {
+        if (activeRequestsForServer >= throttleRequestByServer.maximumRequestsPerServer) {
             return undefined;
         }
 
@@ -73,6 +72,15 @@ define([
             return when.reject(error);
         });
     };
+
+    /**
+     * Specifies the maximum number of requests that can be simultaneously open to a single server.  If this value is higher than
+     * the number of requests per server actually allowed by the web browser, Cesium's ability to prioritize requests will be adversely
+     * affected.
+     * @type {Number}
+     * @default 6
+     */
+    throttleRequestByServer.maximumRequestsPerServer = 6;
 
     /**
      * A function that will make a request if there are available slots to the server.

@@ -91,7 +91,7 @@ define([
         /**
          * Gets the map projection used by this tiling scheme.
          * @memberof WebMercatorTilingScheme.prototype
-         * @type {Projection}
+         * @type {MapProjection}
          */
         projection : {
             get : function() {
@@ -212,7 +212,7 @@ define([
      *
      * @param {Cartographic} position The position.
      * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
-     * @param {Cartesian} [result] The instance to which to copy the result, or undefined if a new instance
+     * @param {Cartesian2} [result] The instance to which to copy the result, or undefined if a new instance
      *        should be created.
      * @returns {Cartesian2} The specified 'result', or a new object containing the tile x, y coordinates
      *          if 'result' is undefined.

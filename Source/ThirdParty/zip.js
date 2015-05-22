@@ -798,9 +798,19 @@ define(['../Core/buildModuleUrl'], function(buildModuleUrl) {
 				callback(createZipWriter(writer, onerror, dontDeflate));
 			}, onerror);
 		},
-		workerScriptsPath : buildModuleUrl('ThirdParty/Workers/'),
 		useWebWorkers : true
 	};
+
+	var workerScriptsPath;
+
+	Object.defineProperty(obj.zip, 'workerScriptsPath', {
+		get : function() {
+			if (typeof workerScriptsPath === 'undefined') {
+				workerScriptsPath = buildModuleUrl('ThirdParty/Workers/');
+			}
+			return workerScriptsPath;
+		}
+	});
 
 })(tmp);
 

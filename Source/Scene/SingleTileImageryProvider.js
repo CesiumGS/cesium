@@ -109,7 +109,8 @@ define([
                     that._errorEvent,
                     message,
                     0, 0, 0,
-                    doRequest);
+                    doRequest,
+                    e);
         }
 
         function doRequest() {
