@@ -40,6 +40,7 @@
     var mime = express.static.mime;
     mime.define({
         'application/json' : ['czml', 'json', 'geojson', 'topojson', 'gltf'],
+        'application/vnd.gltf+binary' : ['bgltf'],
         'text/plain' : ['glsl']
     });
 

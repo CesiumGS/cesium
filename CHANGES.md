@@ -7,6 +7,7 @@ Change Log
 * Deprecated
   * Deprecated `Camera.clone`. It will be removed in 1.11.
   * `WebMapServiceImageryProvider` constructor parameters `options.getFeatureInfoAsGeoJson` and `options.getFeatureInfoAsXml` have been deprecated and will be removed in Cesium 1.13.  Use `options.getFeatureInfoFormats` instead.
+  * The Cesium sample models are now in the Binary glTF format (`.bgltf`).  Cesium will also include the models as plain glTF (`.gltf`) until Cesium 1.13.  Cesium support for `.gltf` will not be removed.
 * Added new `PointPrimitive` and `PointPrimitiveCollection`, which are faster and use less memory than billboards with circles.
 * Changed `Entity.point` back-end graphics to use the new `PointPrimitive` instead of billboards.  No change to the `Entity.point` API.
 * Added optional drilling limit to `Scene.drillPick`.
@@ -30,6 +31,8 @@ Change Log
 * Changed `ThirdParty/zip` to defer its call to `buildModuleUrl` until it is needed, rather than executing during module loading.
 * Changed `createGeometry` to load individual-geometry workers using a CommonJS-style `require` when run in a CommonJS-like environment.
 * Fixed a bug where moon rendered in front of foreground geometry. [#1964](https://github.com/AnalyticalGraphicsInc/cesium/issue/1964)
+* Added support for the [CESIUM_binary_glTF](https://github.com/KhronosGroup/glTF/blob/new-extensions/extensions/CESIUM_binary_glTF/README.md) extension for loading binary blobs of glTF to `Model`.
+* Added support for the [CESIUM_RTC](https://github.com/KhronosGroup/glTF/blob/new-extensions/extensions/CESIUM_RTC/README.md) glTF extension for high-precision rendering to `Model`.
 
 ### 1.9 - 2015-05-01
 

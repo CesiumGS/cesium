@@ -87,22 +87,22 @@ onselect : function() {
         var heading = 0.0;
         var pitch = Cesium.Math.toRadians(10.0);
         var roll = Cesium.Math.toRadians(-20.0);
-        createModel('../../SampleData/models/CesiumAir/Cesium_Air.gltf', height, heading, pitch, roll);
+        createModel('../../SampleData/models/CesiumAir/Cesium_Air.bgltf', height, heading, pitch, roll);
     }
 }, {
 text : 'Ground vehicle',
     onselect : function() {
-        createModel('../../SampleData/models/CesiumGround/Cesium_Ground.gltf');
+        createModel('../../SampleData/models/CesiumGround/Cesium_Ground.bgltf');
     }
 }, {
 text : 'Milk truck',
 onselect : function() {
-    createModel('../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.gltf');
+    createModel('../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.bgltf');
 }
 }, {
     text : 'Skinned character',
     onselect : function() {
-        createModel('../../SampleData/models/CesiumMan/Cesium_Man.gltf');
+        createModel('../../SampleData/models/CesiumMan/Cesium_Man.bgltf');
     }
 }];
 
