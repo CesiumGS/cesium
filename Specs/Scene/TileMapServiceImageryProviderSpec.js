@@ -627,28 +627,4 @@ defineSuite([
             expect(errorRaised).toBe(true);
         });
     });
-
-    it('supports schema usage', function() {
-        var provider = new TileMapServiceImageryProvider({
-            url : 'made/up/tms/server/',
-            schema : '{Z}/{revY}/{X}',
-            fileExtension: 'PNG'
-        });
-
-        return pollToPromise(function() {
-            return provider.ready;
-        }).then(function() {
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url).toEqual('made/up/tms/server/2/2/3.PNG');
-
-                // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
-            });
-
-            return provider.requestImage(3, 1, 2).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
-            });
-        });
-    });
 });
