@@ -17,6 +17,7 @@ define([
         '../Core/GeographicProjection',
         '../Core/GeometryInstance',
         '../Core/GeometryPipeline',
+        '../Core/getTimestamp',
         '../Core/Intersect',
         '../Core/Interval',
         '../Core/JulianDate',
@@ -67,6 +68,7 @@ define([
         GeographicProjection,
         GeometryInstance,
         GeometryPipeline,
+        getTimestamp,
         Intersect,
         Interval,
         JulianDate,
@@ -232,6 +234,9 @@ define([
         this._renderError = new Event();
         this._preRender = new Event();
         this._postRender = new Event();
+
+        this._cameraStartFired = false;
+        this._cameraMovedTime = undefined;
 
         /**
          * Exceptions occurring in <code>render</code> are always caught in order to raise the
@@ -434,11 +439,20 @@ define([
          */
         this.fxaa = false;
 
+        /**
+         * The time in milliseconds to wait before checking if the camera has not moved and fire the cameraMoveEnd event.
+         * @type {Number}
+         * @default 500.0
+         * @private
+         */
+        this.cameraEventWaitTime = 500.0;
+
         this._performanceDisplay = undefined;
         this._debugSphere = undefined;
 
         var camera = new Camera(this);
         this._camera = camera;
+        this._cameraClone = Camera.clone(camera);
         this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
 
         // initial guess at frustums.
@@ -792,6 +806,26 @@ define([
             }
         }
     });
+
+    var scratchPosition0 = new Cartesian3();
+    var scratchPosition1 = new Cartesian3();
+    function maxComponent(a, b) {
+        var x = Math.max(Math.abs(a.x), Math.abs(b.x));
+        var y = Math.max(Math.abs(a.y), Math.abs(b.y));
+        var z = Math.max(Math.abs(a.z), Math.abs(b.z));
+        return Math.max(Math.max(x, y), z);
+    }
+
+    function cameraEqual(camera0, camera1, epsilon) {
+        var scalar = 1 / Math.max(1, maxComponent(camera0.position, camera1.position));
+        Cartesian3.multiplyByScalar(camera0.position, scalar, scratchPosition0);
+        Cartesian3.multiplyByScalar(camera1.position, scalar, scratchPosition1);
+        return Cartesian3.equalsEpsilon(scratchPosition0, scratchPosition1, epsilon) &&
+            Cartesian3.equalsEpsilon(camera0.direction, camera1.direction, epsilon) &&
+            Cartesian3.equalsEpsilon(camera0.up, camera1.up, epsilon) &&
+            Cartesian3.equalsEpsilon(camera0.right, camera1.right, epsilon) &&
+            Matrix4.equalsEpsilon(camera0.transform, camera1.transform, epsilon);
+    }
 
     var scratchOccluderBoundingSphere = new BoundingSphere();
     var scratchOccluder;
@@ -1196,10 +1230,13 @@ define([
             scene._sunBloom = false;
         }
 
-        var skyBoxCommand = (frameState.passes.render && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
-        var skyAtmosphereCommand = (frameState.passes.render && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
-        var sunCommand = (frameState.passes.render && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
+        var renderPass = frameState.passes.render;
+        var skyBoxCommand = (renderPass && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
+        var skyAtmosphereCommand = (renderPass && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
+        var sunCommand = (renderPass && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
         var sunVisible = isVisible(sunCommand, frameState);
+        var moonCommand = (renderPass && defined(scene.moon)) ? scene.moon.update(context, frameState) : undefined;
+        var moonVisible = isVisible(moonCommand, frameState);
 
         var clear = scene._clearColorCommand;
         Color.clone(clearColor, clear.color);
@@ -1255,13 +1292,18 @@ define([
             executeCommand(skyAtmosphereCommand, scene, context, passState);
         }
 
-        if (defined(sunCommand) && sunVisible) {
+        if (sunVisible) {
             sunCommand.execute(context, passState);
 
             if (scene.sunBloom) {
                 scene._sunPostProcess.execute(context, opaqueFramebuffer);
                 passState.framebuffer = opaqueFramebuffer;
             }
+        }
+
+        // Moon can be seen through the atmosphere, since the sun is rendered after the atmosphere.
+        if (moonVisible) {
+            moonCommand.execute(context, passState);
         }
 
         var clearDepth = scene._depthClearCommand;
@@ -1347,10 +1389,6 @@ define([
         }
 
         scene._primitives.update(context, frameState, commandList);
-
-        if (defined(scene.moon)) {
-            scene.moon.update(context, frameState, commandList);
-        }
     }
 
     function callAfterRenderFunctions(frameState) {
@@ -1381,6 +1419,19 @@ define([
     function render(scene, time) {
         if (!defined(time)) {
             time = JulianDate.now();
+        }
+
+        var camera = scene._camera;
+        if (!cameraEqual(camera, scene._cameraClone, CesiumMath.EPSILON6)) {
+            if (!scene._cameraStartFired) {
+                camera.moveStart.raiseEvent();
+                scene._cameraStartFired = true;
+            }
+            scene._cameraMovedTime = getTimestamp();
+            Camera.clone(camera, scene._cameraClone);
+        } else if (scene._cameraStartFired && getTimestamp() - scene._cameraMovedTime > scene.cameraEventWaitTime) {
+            camera.moveEnd.raiseEvent();
+            scene._cameraStartFired = false;
         }
 
         scene._preRender.raiseEvent(scene, time);
