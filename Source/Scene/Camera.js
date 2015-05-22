@@ -10,6 +10,7 @@ define([
         '../Core/DeveloperError',
         '../Core/EasingFunction',
         '../Core/Ellipsoid',
+        '../Core/Event',
         '../Core/IntersectionTests',
         '../Core/Math',
         '../Core/Matrix3',
@@ -33,6 +34,7 @@ define([
         DeveloperError,
         EasingFunction,
         Ellipsoid,
+        Event,
         IntersectionTests,
         CesiumMath,
         Matrix3,
@@ -189,6 +191,9 @@ define([
          */
         this.maximumZoomFactor = 2.5;
 
+        this._moveStart = new Event();
+        this._moveEnd = new Event();
+
         this._viewMatrix = new Matrix4();
         this._invViewMatrix = new Matrix4();
         updateViewMatrix(this);
@@ -201,7 +206,7 @@ define([
         this._max2Dfrustum = undefined;
 
         // set default view
-        this.viewRectangle(Camera.DEFAULT_VIEW_RECTANGLE);
+        this.viewRectangle(Camera.DEFAULT_VIEW_RECTANGLE, scene.mapProjection.ellipsoid);
 
         var mag = Cartesian3.magnitude(this.position);
         mag += mag * Camera.DEFAULT_VIEW_FACTOR;
@@ -734,6 +739,30 @@ define([
                 }
 
                 return undefined;
+            }
+        },
+
+        /**
+         * Gets the event that will be raised at when the camera starts to move.
+         * @memberof Camera.prototype
+         * @type {Event}
+         * @readonly
+         */
+        moveStart : {
+            get : function() {
+                return this._moveStart;
+            }
+        },
+
+        /**
+         * Gets the event that will be raised at when the camera has stopped moving.
+         * @memberof Camera.prototype
+         * @type {Event}
+         * @readonly
+         */
+        moveEnd : {
+            get : function() {
+                return this._moveEnd;
             }
         }
     });
@@ -1480,12 +1509,6 @@ define([
      *
      * @param {Cartesian3} target The target position in world coordinates.
      * @param {Cartesian3|HeadingPitchRange} offset The offset from the target in the local east-north-up reference frame centered at the target.
-     *
-     * The deprecated parameters sets the camera position and orientation with an eye position, target, and up vector.
-     *
-     * @param {Cartesian3} eye The position of the camera. This parameter is deprecated.
-     * @param {Cartesian3} target The position to look at. This parameter is deprecated.
-     * @param {Cartesian3} up The up vector. This parameter is deprecated.
      *
      * @exception {DeveloperError} lookAt is not supported while morphing.
      *
@@ -2453,8 +2476,8 @@ define([
 
     /**
      * Returns a duplicate of a Camera instance.
-     *
-     * @returns {Camera} A new copy of the Camera instance.
+     * @deprecated
+     * @returns {Camera} The provided result parameter or a new copy of the Camera instance.
      */
     Camera.prototype.clone = function() {
         var camera = new Camera(this._scene);
@@ -2466,6 +2489,23 @@ define([
         camera._transformChanged = true;
         camera.frustum = this.frustum.clone();
         return camera;
+    };
+
+    /**
+     * @private
+     */
+    Camera.clone = function(camera, result) {
+        if (!defined(result)) {
+            result = new Camera(camera._scene);
+        }
+
+        Cartesian3.clone(camera.position, result.position);
+        Cartesian3.clone(camera.direction, result.direction);
+        Cartesian3.clone(camera.up, result.up);
+        Cartesian3.clone(camera.right, result.right);
+        Matrix4.clone(camera._transform, result.transform);
+
+        return result;
     };
 
     /**

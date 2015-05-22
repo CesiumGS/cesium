@@ -91,5 +91,13 @@ define([
     // exposed for testing
     buildModuleUrl._cesiumScriptRegex = cesiumScriptRegex;
 
+    /**
+     * Sets the base URL for resolving modules.
+     * @param {String} value The new base URL.
+     */
+    buildModuleUrl.setBaseUrl = function(value) {
+        baseUrl = new Uri(value).resolve(new Uri(document.location.href));
+    };
+
     return buildModuleUrl;
 });
