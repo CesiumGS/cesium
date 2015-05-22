@@ -7,6 +7,7 @@ Change Log
 * Deprecated
   * Deprecated `Camera.clone`. It will be removed in 1.11.
   * `WebMapServiceImageryProvider` constructor parameters `options.getFeatureInfoAsGeoJson` and `options.getFeatureInfoAsXml` have been deprecated and will be removed in Cesium 1.13.  Use `options.getFeatureInfoFormats` instead.
+  * The Cesium sample models are now in the Binary glTF format (`.bgltf`).  Cesium will also include the models as plain glTF (`.gltf`) until Cesium 1.13.  Cesium support for `.gltf` will not be removed.
 * Added new `PointPrimitive` and `PointPrimitiveCollection`, which are faster and use less memory than billboards with circles.
 * Changed `Entity.point` back-end graphics to use the new `PointPrimitive` instead of billboards.  No change to the `Entity.point` API.
 * Added optional drilling limit to `Scene.drillPick`.
