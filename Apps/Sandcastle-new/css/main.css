@@ -1,0 +1,70 @@
+
+
+/* ==========================================================================
+   Author's custom styles
+   ========================================================================== */
+html,body{
+  height: 100%;
+}
+
+.navbar{
+  position: absolute;
+  margin-bottom: 0;
+  height: 60px;
+  width: 100%;
+  background: #f8f8f8;
+  box-shadow: none;
+}
+
+#bodyContainer{
+  padding-top: 60px;
+  overflow-y: hidden;
+}
+
+#cesiumColumn, #codeColumn{
+  padding: 0;
+}
+
+ul.nav.nav-tabs{
+  position: absolute;
+  width: 100%;
+  height: 42px;
+}
+
+ul+div.tab-content{
+  padding-top: 42px;
+}
+
+#appLayout,#bodyContainer,#bodyRow,#codeColumn,#codeColumn div[role="tabpanel"], #codeColumn .tab-content, #cesiumColumn, #cesiumColumn>div, #cesiumContainer, #cesiumContainer>div, #cesiumContainer iframe {
+  height: 100%;
+}
+
+#cesiumContainer iframe{
+  width: 100%;
+}
+
+.codeContainer{
+  height: 100%;
+}
+
+.CodeMirror{
+  height: 100%;
+}
+
+#bucketFrame{
+  border: none;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
