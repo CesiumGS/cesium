@@ -12,9 +12,49 @@ define(['react', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/show-hint','
 
   var SandcastleJSCode = React.createClass({
     getInitialState: function () {
-      return {
-        src: 'var i = 10;\n'
+      return{
+        src: '// Select a demo from the gallery to load.\n'
       };
+    },
+
+    loadDemoCode: function(){
+      // fetch the data for the demo
+      var scriptCodeRegex = /\/\/Sandcastle_Begin\s*([\s\S]*)\/\/Sandcastle_End/;
+      var code;
+      var that = this;
+      this.requestDemo().then(function(value){
+        code = value;
+        var parser = new DOMParser();
+        var doc = parser.parseFromString(code, 'text/html');
+
+        var script = doc.querySelector('script[id="cesium_sandcastle_script"]');
+        if (!script) {
+          console.log('Error reading source file: ' + this.props.demo);
+          return;
+        }
+        var scriptMatch = scriptCodeRegex.exec(script.textContent);
+        if (!scriptMatch) {
+          console.log('Error reading source file: ' + this.props.demo);
+          return;
+        }
+        code = scriptMatch[1];
+        that.setState({src: code});
+      });
+    },
+
+    componentDidMount: function(){
+      this.loadDemoCode();
+    },
+
+    requestDemo: function(){
+      return $.ajax({
+        url: 'gallery/' + this.props.demo + '.html',
+        handleAs: 'text',
+        sync: true,
+        error: function(error) {
+          console.log(error);
+        }
+      });
     },
 
     render: function(){
@@ -62,6 +102,11 @@ define(['react', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/show-hint','
       }
     },
 
+    componentWillUpdate: function(nextProps, nextState){
+      // Update with new value from demo
+      this.editor.setValue(nextProps.defaultValue);
+    },
+
     render: function(){
       var editor = React.createElement('textarea', {
         ref: 'editor',
@@ -80,10 +125,46 @@ define(['react', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/show-hint','
   var SandcastleHTMLCode = React.createClass({
     getInitialState: function () {
       return {
-        src: '<p>Hello World</p>\n'
+        src: '&lt;!-- Select a demo from the gallery to load. --&gt;\n'
       };
     },
 
+    loadDemoCode: function(){
+      // fetch the data for the demo
+      var scriptCodeRegex = /\/\/Sandcastle_Begin\s*([\s\S]*)\/\/Sandcastle_End/;
+      var that = this;
+      this.requestDemo().then(function(value){
+        code = value;
+        var parser = new DOMParser();
+        var doc = parser.parseFromString(code, 'text/html');
+        var script = doc.querySelector('script[id="cesium_sandcastle_script"]');
+        var htmlText = '';
+        var childIndex = 0;
+        var childNode = doc.body.childNodes[childIndex];
+        while (childIndex < doc.body.childNodes.length && childNode !== script) {
+          htmlText += childNode.nodeType === 1 ? childNode.outerHTML : childNode.nodeValue;
+          childNode = doc.body.childNodes[++childIndex];
+        }
+        htmlText = htmlText.replace(/^\s+/, '');
+        that.setState({src: htmlText});
+      });
+    },
+
+    componentDidMount: function(){
+      this.loadDemoCode();
+    },
+
+    requestDemo: function(){
+      return $.ajax({
+        url: 'gallery/' + this.props.demo + '.html',
+        handleAs: 'text',
+        sync: true,
+        error: function(error) {
+          console.log(error);
+        }
+      });
+    },
+    
     render: function(){
       return (
         <div role="tabpanel" className="tab-pane codeContainer" id="htmlContainer">
@@ -100,8 +181,8 @@ define(['react', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/show-hint','
           <div role="tabpanel">
             <SandcastleCodeTabs />
             <div className="tab-content">
-              <SandcastleJSCode />
-              <SandcastleHTMLCode />
+              <SandcastleJSCode demo={this.props.demo}/>
+              <SandcastleHTMLCode demo={this.props.demo}/>
             </div>
           </div>
         </div>
@@ -120,6 +201,71 @@ define(['react', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/show-hint','
   });
 
   var SandcastleCesiumContainer = React.createClass({
+    getInitialState: function(){
+      this.emptyDoc = $('#bucketFrame').contentDocument;
+      this.defaultHeaders = '<html><head></head><body data-sandcastle-bucket-loaded="no">';
+      return null;
+    },
+
+    componentDidMount: function(){
+      // Load the bucket with demo code
+      this.loadBucket();
+    },
+
+    loadBucket: function(){
+      // Save a reference to the current object.
+      var that = this;
+      this.requestDemo().then(function(value){
+        var parser = new DOMParser();
+        var doc = parser.parseFromString(value, 'text/html');
+
+        var bucket = doc.body.getAttribute('data-sandcastle-bucket');
+        bucket = bucket ? bucket : 'bucket-requirejs.html';
+        $.ajax({
+          url: 'templates/' + bucket,
+          dataType: 'text'
+        }).done(function(value) {
+          var pos = value.indexOf('<body');
+          pos = value.indexOf('>', pos);
+          bucketTypes = value.substring(0, pos + 1);
+          that.defaultHeaders = bucketTypes;
+          that.applyBucket();
+        });
+      });
+    },
+
+    applyBucket: function(){
+      // TODO: come up with better way to do this
+      var bucketDoc = document.getElementById("bucketFrame").contentDocument;
+      var bodyAttributes = this.defaultHeaders.match(/<body([^>]*?)>/)[1];
+      var attributeRegex = /([-a-z_]+)\s*="([^"]*?)"/ig;
+      var attributeMatch;
+      while ((attributeMatch = attributeRegex.exec(bodyAttributes)) !== null) {
+        var attributeName = attributeMatch[1];
+        var attributeValue = attributeMatch[2];
+        if (attributeName === 'class') {
+          bucketDoc.body.className = attributeValue;
+        } else {
+          bucketDoc.body.setAttribute(attributeName, attributeValue);
+        }
+      }
+
+      var pos = this.defaultHeaders.indexOf('</head>');
+      var extraHeaders = this.defaultHeaders.substring(this.emptyDoc.length, pos);
+      bucketDoc.head.innerHTML += extraHeaders;
+    },
+
+    requestDemo: function(){
+      return $.ajax({
+        url: 'gallery/' + this.props.demo + '.html',
+        handleAs: 'text',
+        sync: true,
+        error: function(error) {
+          console.log(error);
+        }
+      });
+    },
+
     render: function(){
       return (
         <div id="cesiumContainer" className="tab-content">
@@ -137,7 +283,7 @@ define(['react', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/show-hint','
         <div id="cesiumColumn" className="col-md-7">
           <div role="tabpanel">
             <SandcastleCesiumTabs />
-            <SandcastleCesiumContainer />
+            <SandcastleCesiumContainer demo={this.props.demo}/>
           </div>
         </div>
       );
@@ -149,8 +295,8 @@ define(['react', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/show-hint','
       return (
         <div id="bodyContainer" className="container-fluid">
           <div id="bodyRow" className="row">
-            <SandcastleCode />
-            <SandcastleCesium />
+            <SandcastleCode demo={this.props.demo}/>
+            <SandcastleCesium demo={this.props.demo}/>
           </div>
         </div>
       );
@@ -158,11 +304,37 @@ define(['react', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/show-hint','
   });
 
   var SandcastleApp = React.createClass({
+    componentWillMount: function(){
+      if(window.location.search)
+      {
+        var query = window.location.search.substring(1).split('&');
+        for (var i = 0; i < query.length; ++i) {
+          var tags = query[i].split('=');
+          queryParams[tags[0]] = tags[1];
+          if(tags[0] == "src")
+          {
+            // Set the current demo
+            this.demoName = tags[1];
+          }
+        }
+        if(!this.demoName)
+        {
+          // Set the demo name to hello world
+          this.demoName = "Hello World";
+        }
+      }
+      else
+      {
+        //No query parameters. set demo name
+        this.demoName = "Hello World";
+      }
+    },
+
     render: function(){
       return (
         <div style={{height: 100 + '%'}}>
           <SandcastleHeader />
-          <SandcastleBody />
+          <SandcastleBody demo={this.demoName}/>
         </div>
       );
     }
