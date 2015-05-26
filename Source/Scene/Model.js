@@ -797,7 +797,7 @@ define([
         // different relative paths could point to the same model.
         var cacheKey = defaultValue(options.cacheKey, getAbsoluteURL(url));
 
-        options = clone(options);
+        options = clone(options, true);
         options.basePath = getBasePath(url);
         options.cacheKey = cacheKey;
         var model = new Model(options);
