@@ -14,6 +14,7 @@ Change Log
 * Added optional `ellipsoid` parameter to construction options of imagery and terrain providers that were lacking it.  Note that terrain bounding spheres are precomputed on the server, so any supplied terrain ellipsoid must match the one used by the server.
 * Upgraded Autolinker from version 0.15.2 to 0.17.1.
 * Added `Camera.moveStart` and `Camera.moveEnd` events.
+* Added new leap second for 30 June 2015 at UTC 23:59:60.
 * `KmlDataSource` can now load a KML file that uses explicit XML namespacing, e.g. `kml:Document`.
 * `TileProviderError` now optionally takes an `error` parameter with more details of the error or exception that occurred.  `ImageryLayer` passes that information through when tiles fail to load.  This allows tile provider error handling to take a different action when a tile returns a 404 versus a 500, for example.
 * `ArcGisMapServerImageryProvider` now has a `maximumLevel` constructor parameter.
