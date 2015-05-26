@@ -820,7 +820,7 @@ define([
             gltfCache[cacheKey] = cachedGltf;
 
             loadArrayBuffer(url, options.headers).then(function(arrayBuffer) {
-                var magic = getStringFromTypedArray(arrayBuffer, 0, 4);
+                var magic = getStringFromTypedArray(arrayBuffer, 0, Math.min(4, arrayBuffer.byteLength));
                 if (magic === 'glTF') {
                     // Load binary glTF
                     cachedGltf.makeReady(parseBinaryGltfHeader(arrayBuffer), arrayBuffer);
