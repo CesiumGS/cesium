@@ -797,14 +797,12 @@ define([
         // different relative paths could point to the same model.
         var cacheKey = defaultValue(options.cacheKey, getAbsoluteURL(url));
 
-        options = clone(options, true);
+        options = clone(options);
         options.basePath = getBasePath(url);
         options.cacheKey = cacheKey;
         var model = new Model(options);
 
-        if (!defined(options.headers)) {
-            options.headers = {};
-        }
+        options.headers = defined(options.headers) ? clone(options.headers) : {};
         if (!defined(options.headers.Accept)) {
             options.headers.Accept = defaultModelAccept;
         }
