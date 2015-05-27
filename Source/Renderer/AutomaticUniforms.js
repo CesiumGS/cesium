@@ -164,6 +164,8 @@ define([
          * An automatic GLSL uniform representing the depth after
          * only the globe has been rendered and packed into an RGBA texture.
          *
+         * @private
+         *
          * @alias czm_globeDepthTexture
          * @glslUniform
          *
