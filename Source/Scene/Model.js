@@ -98,6 +98,8 @@ define([
         FAILED : 3
     };
 
+    var defaultModelAccept = 'model/vnd.gltf.binary,model/vnd.gltf+json;q=0.8,application/json;q=0.2,*/*;q=0.01';
+
     function LoadResources() {
         this.buffersToCreate = new Queue();
         this.buffers = {};
@@ -239,6 +241,11 @@ define([
      * {@link Model#readyPromise} is resolved when the model is ready to render, i.e.,
      * when the external binary, image, and shader files are downloaded and the WebGL
      * resources are created.
+     * </p>
+     * <p>
+     * For high-precision rendering, Cesium supports the CESIUM_RTC extension, which introduces the
+     * CESIUM_RTC_MODELVIEW parameter semantic that says the node is in WGS84 coordinates translated
+     * relative to a local origin.
      * </p>
      *
      * @alias Model
@@ -713,11 +720,13 @@ define([
 
         byteOffset += sizeOfUnit32;  // Skip magic number
 
+        //>>includeStart('debug', pragmas.debug);
         var version = view.getUint32(byteOffset, true);
-        byteOffset += sizeOfUnit32;
         if (version !== 1) {
             throw new DeveloperError('Only glTF Binary version 1 is supported.  Version ' + version + ' is not.');
         }
+        //>>includeEnd('debug');
+        byteOffset += sizeOfUnit32;
 
         byteOffset += sizeOfUnit32;  // Skip length
 
@@ -731,11 +740,19 @@ define([
     }
 
     /**
+     * <p>
      * Creates a model from a glTF asset.  When the model is ready to render, i.e., when the external binary, image,
      * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyPromise} is resolved.
-     *
+     * </p>
+     * <p>
      * The model can be a traditional glTF asset with a .gltf extension or a Binary glTF using the
      * CESIUM_binary_glTF extension with a .bgltf extension.
+     * </p>
+     * <p>
+     * For high-precision rendering, Cesium supports the CESIUM_RTC extension, which introduces the
+     * CESIUM_RTC_MODELVIEW parameter semantic that says the node is in WGS84 coordinates translated
+     * relative to a local origin.
+     * </p>
      *
      * @param {Object} options Object with the following properties:
      * @param {String} options.url The url to the .gltf file.
@@ -799,6 +816,11 @@ define([
         options.cacheKey = cacheKey;
         var model = new Model(options);
 
+        options.headers = defined(options.headers) ? clone(options.headers) : {};
+        if (!defined(options.headers.Accept)) {
+            options.headers.Accept = defaultModelAccept;
+        }
+
         var cachedGltf = gltfCache[cacheKey];
         if (!defined(cachedGltf)) {
             cachedGltf = new CachedGltf({
@@ -809,17 +831,17 @@ define([
             setCachedGltf(model, cachedGltf);
             gltfCache[cacheKey] = cachedGltf;
 
-            if (url.toLowerCase().indexOf('.bgltf', url.length - 6) !== -1) {
-                // Load binary glTF
-                loadArrayBuffer(url, options.headers).then(function(arrayBuffer) {
+            loadArrayBuffer(url, options.headers).then(function(arrayBuffer) {
+                var magic = getStringFromTypedArray(arrayBuffer, 0, Math.min(4, arrayBuffer.byteLength));
+                if (magic === 'glTF') {
+                    // Load binary glTF
                     cachedGltf.makeReady(parseBinaryGltfHeader(arrayBuffer), arrayBuffer);
-                }).otherwise(getFailedLoadFunction(model, 'bgltf', url));
-            } else {
-                // Load text (JSON) glTF
-                loadText(url, options.headers).then(function(data) {
+                } else {
+                    // Load text (JSON) glTF
+                    var data = getStringFromTypedArray(arrayBuffer, 0, arrayBuffer.byteLength);
                     cachedGltf.makeReady(JSON.parse(data));
-                }).otherwise(getFailedLoadFunction(model, 'gltf', url));
-            }
+                }
+            }).otherwise(getFailedLoadFunction(model, 'model', url));
         } else if (!cachedGltf.ready) {
             // Cache hit but the loadArrayBuffer() or loadText() request is still pending
             ++cachedGltf.count;
