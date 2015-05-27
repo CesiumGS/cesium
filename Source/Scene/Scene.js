@@ -487,6 +487,14 @@ define([
          */
         this.cameraEventWaitTime = 500.0;
 
+        /**
+         * Set to true to copy the depth texture after rendering the globe. Makes czm_globeDepthTexture valid.
+         * @type {Boolean}
+         * @default false
+         * @private
+         */
+        this.copyGlobeDepth = false;
+
         this._performanceDisplay = undefined;
         this._debugSphere = undefined;
 
@@ -1462,13 +1470,13 @@ define([
                 executeCommand(commands[j], scene, context, passState);
             }
 
-            if (defined(globeDepth)) {
+            if (defined(globeDepth) && (scene.copyGlobeDepth || scene.debugShowGlobeDepth)) {
                 globeDepth.update(context);
                 globeDepth.executeCopyDepth(context, passState);
+            }
 
-                if (scene.debugShowGlobeDepth) {
-                    passState.framebuffer = fb;
-                }
+            if (scene.debugShowGlobeDepth && defined(globeDepth)) {
+                passState.framebuffer = fb;
             }
 
             // Execute commands in order by pass up to the translucent pass.

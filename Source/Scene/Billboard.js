@@ -103,7 +103,6 @@ define([
         this._translucencyByDistance = options.translucencyByDistance;
         this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
         this._heightReference = defaultValue(options.heightReference, HeightReference.NONE);
-        this._ownerSize = new Cartesian2(); // used by labels
         this._id = options.id;
         this._collection = defaultValue(options.collection, billboardCollection);
 
@@ -168,8 +167,7 @@ define([
     var SCALE_BY_DISTANCE_INDEX = Billboard.SCALE_BY_DISTANCE_INDEX = 11;
     var TRANSLUCENCY_BY_DISTANCE_INDEX = Billboard.TRANSLUCENCY_BY_DISTANCE_INDEX = 12;
     var PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = Billboard.PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = 13;
-    var OWNER_SIZE_INDEX = Billboard.OWNER_SIZE_INDEX = 14;
-    Billboard.NUMBER_OF_PROPERTIES = 15;
+    Billboard.NUMBER_OF_PROPERTIES = 14;
 
     function makeDirty(billboard, propertyChanged) {
         var billboardCollection = billboard._billboardCollection;
@@ -1038,20 +1036,6 @@ define([
         if (!Cartesian2.equals(translate, value)) {
             Cartesian2.clone(value, translate);
             makeDirty(this, PIXEL_OFFSET_INDEX);
-        }
-    };
-
-    Billboard.prototype._setOwnerSize = function(value) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required.');
-        }
-        //>>includeEnd('debug');
-
-        var size = this._ownerSize;
-        if (!Cartesian2.equals(size, value)) {
-            Cartesian2.clone(value, size);
-            makeDirty(this, OWNER_SIZE_INDEX);
         }
     };
 

@@ -71,7 +71,6 @@ define([
     var SCALE_BY_DISTANCE_INDEX = Billboard.SCALE_BY_DISTANCE_INDEX;
     var TRANSLUCENCY_BY_DISTANCE_INDEX = Billboard.TRANSLUCENCY_BY_DISTANCE_INDEX;
     var PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = Billboard.PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX;
-    var OWNER_SIZE_INDEX = Billboard.OWNER_SIZE_INDEX;
     var NUMBER_OF_PROPERTIES = Billboard.NUMBER_OF_PROPERTIES;
 
     var attributeLocations = {
@@ -82,8 +81,7 @@ define([
         compressedAttribute2 : 4,        // image height, color, pick color, 2 bytes free
         eyeOffset : 5,
         scaleByDistance : 6,
-        pixelOffsetScaleByDistance : 7,
-        ownerSize : 8
+        pixelOffsetScaleByDistance : 7
     };
 
     /**
@@ -251,8 +249,7 @@ define([
                               BufferUsage.STATIC_DRAW, // ALIGNED_AXIS_INDEX
                               BufferUsage.STATIC_DRAW, // SCALE_BY_DISTANCE_INDEX
                               BufferUsage.STATIC_DRAW, // TRANSLUCENCY_BY_DISTANCE_INDEX
-                              BufferUsage.STATIC_DRAW, // PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX
-                              BufferUsage.STATIC_DRAW  // OWNER_SIZE_INDEX
+                              BufferUsage.STATIC_DRAW  // PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX
                           ];
 
         var that = this;
@@ -606,11 +603,6 @@ define([
             componentsPerAttribute : 4,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX]
-        }, {
-            index : attributeLocations.ownerSize,
-            componentsPerAttribute : 2,
-            componentDatatype : ComponentDatatype.FLOAT,
-            usage : buffersUsage[OWNER_SIZE_INDEX]
         }], 4 * numberOfBillboards); // 4 vertices per billboard
     }
 
@@ -933,17 +925,6 @@ define([
         writer(i + 3, near, nearValue, far, farValue);
     }
 
-    function writeOwnerSize(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
-        var i = billboard._index * 4;
-        var size = billboard._ownerSize;
-
-        var writer = vafWriters[attributeLocations.ownerSize];
-        writer(i + 0, size.x, size.y);
-        writer(i + 1, size.x, size.y);
-        writer(i + 2, size.x, size.y);
-        writer(i + 3, size.x, size.y);
-    }
-
     function writeBillboard(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         writePositionScaleAndRotation(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeCompressedAttrib0(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
@@ -952,7 +933,6 @@ define([
         writeEyeOffset(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writePixelOffsetScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
-        writeOwnerSize(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
     }
 
     function recomputeActualPositions(billboardCollection, billboards, length, frameState, modelMatrix, recomputeBoundingVolume) {
@@ -1049,11 +1029,6 @@ define([
      * @exception {RuntimeError} image with id must be in the atlas.
      */
     BillboardCollection.prototype.update = function(context, frameState, commandList) {
-        var scene = this._scene;
-        if (defined(scene) && (!defined(scene._globeDepth) || context.maximumVertexTextureImageUnits === 0)) {
-            throw new DeveloperError('Bilboards with a height reference are not supported.');
-        }
-
         removeBillboards(this);
 
         var billboards = this._billboards;
@@ -1153,10 +1128,6 @@ define([
 
                 if (properties[PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX]) {
                     writers.push(writePixelOffsetScaleByDistance);
-                }
-
-                if (properties[OWNER_SIZE_INDEX]) {
-                    writers.push(writeOwnerSize);
                 }
 
                 var numWriters = writers.length;
@@ -1264,7 +1235,7 @@ define([
                     vs.defines.push('EYE_DISTANCE_PIXEL_OFFSET');
                 }
                 if (defined(this._scene)) {
-                    vs.defines.push('TEST_GLOBE_DEPTH');
+                    vs.defines.push('CLAMPED_TO_GROUND');
                 }
 
                 this._sp = context.replaceShaderProgram(this._sp, vs, BillboardCollectionFS, attributeLocations);
@@ -1332,7 +1303,7 @@ define([
                     vs.defines.push('EYE_DISTANCE_PIXEL_OFFSET');
                 }
                 if (defined(this._scene)) {
-                    vs.defines.push('TEST_GLOBE_DEPTH');
+                    vs.defines.push('CLAMPED_TO_GROUND');
                 }
 
                 fs = new ShaderSource({

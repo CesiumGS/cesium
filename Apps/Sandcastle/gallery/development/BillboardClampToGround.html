@@ -38,7 +38,7 @@ var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
     url : '//assets.agi.com/stk-terrain/world'
 });
 viewer.terrainProvider = cesiumTerrainProviderMeshes;
-viewer.scene.globe.depthTestAgainstTerrain = false;
+viewer.scene.globe.depthTestAgainstTerrain = true;
 
 var ellipsoid = viewer.scene.globe.ellipsoid;
 var billboardCollection = viewer.scene.primitives.add(new Cesium.BillboardCollection({

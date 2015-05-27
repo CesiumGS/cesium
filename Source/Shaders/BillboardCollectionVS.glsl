@@ -6,7 +6,6 @@ attribute vec4 compressedAttribute2;        // image height, color, pick color, 
 attribute vec3 eyeOffset;                   // eye offset in meters
 attribute vec4 scaleByDistance;             // near, nearScale, far, farScale
 attribute vec4 pixelOffsetScaleByDistance;  // near, nearScale, far, farScale
-attribute vec2 ownerSize;
 
 varying vec2 v_textureCoordinates;
 
@@ -212,41 +211,14 @@ void main()
     pixelOffset *= pixelOffsetScale;
 #endif
     
-#ifdef TEST_GLOBE_DEPTH
-    if (-positionEC.z < 50000.0)
-    {
-        vec4 offsetPosition = positionEC;
-        offsetPosition.z *= 0.99;
-        
-	    vec2 directions[4];
-	    directions[0] = vec2(0.0, 0.0);
-	    directions[1] = vec2(0.0, 1.0);
-	    directions[2] = vec2(1.0, 0.0);
-	    directions[3] = vec2(1.0, 1.0);
-	    
-	    vec2 invSize = 1.0 / czm_viewport.zw;
-	    vec2 size = all(equal(vec2(0.0), ownerSize)) ? imageSize : ownerSize;
-	    
-	    bool visible = false;
-	    for (int i = 0; i < 4; ++i)
-	    {
-	        vec4 wc = computePositionWindowCoordinates(offsetPosition, size, scale, directions[i], vec2(0.0, 0.0), vec2(0.0), pixelOffset, alignedAxis, rotation);
-	        float d = czm_unpackDepth(texture2D(czm_globeDepthTexture, wc.xy * invSize));
-	        if (wc.z < d)
-	        {
-	            visible = true;
-	            break;
-	        }
-	    }
-	    
-	    if (!visible)
-	    {
-	        gl_Position = czm_projection[3];
-	        return;
-	    }
-    }
-#endif
+#ifdef CLAMPED_TO_GROUND
+    // move slightly closer to camera to avoid depth issues.
+    positionEC.z *= 0.995;
     
+    // Force bottom vertical origin
+    origin.y = 1.0;
+#endif
+
     vec4 positionWC = computePositionWindowCoordinates(positionEC, imageSize, scale, direction, origin, translate, pixelOffset, alignedAxis, rotation);
     gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
     v_textureCoordinates = textureCoordinates;
