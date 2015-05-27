@@ -1264,7 +1264,7 @@ define([
                     vs.defines.push('EYE_DISTANCE_PIXEL_OFFSET');
                 }
                 if (defined(this._scene)) {
-                    vs.defines.push('TEST_GLOBE_DEPTH');
+                    vs.defines.push('CLAMPED_TO_GROUND');
                 }
 
                 this._sp = context.replaceShaderProgram(this._sp, vs, BillboardCollectionFS, attributeLocations);
@@ -1332,7 +1332,7 @@ define([
                     vs.defines.push('EYE_DISTANCE_PIXEL_OFFSET');
                 }
                 if (defined(this._scene)) {
-                    vs.defines.push('TEST_GLOBE_DEPTH');
+                    vs.defines.push('CLAMPED_TO_GROUND');
                 }
 
                 fs = new ShaderSource({
