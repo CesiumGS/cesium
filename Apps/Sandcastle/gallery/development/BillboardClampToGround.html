@@ -45,16 +45,6 @@ var billboardCollection = viewer.scene.primitives.add(new Cesium.BillboardCollec
     scene : viewer.scene
 }));
 
-/*
-var labelCollection = viewer.scene.primitives.add(new Cesium.LabelCollection({
-    scene : viewer.scene
-}));
-*/
-
-// everest
-//var centerLatitude = Cesium.Math.toRadians(27.988257);
-//var centerLongitude = Cesium.Math.toRadians(86.925145);
-
 // seneca
 var centerLongitude = -1.385205433269729;
 var centerLatitude = 0.6777926580888163;
@@ -76,11 +66,6 @@ for (var y = 0; y < gridHeight; ++y) {
             image : '../images/facility.gif',
             heightReference : Cesium.HeightReference.CLAMP_TO_GROUND
         });
-        //labelCollection.add({
-        //    text : 'Label',
-        //    position : ellipsoid.cartographicToCartesian(position),
-        //    heightReference : Cesium.HeightReference.CLAMP_TO_GROUND
-        //});
     }
 }
 
