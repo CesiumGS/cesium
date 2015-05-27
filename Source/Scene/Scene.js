@@ -1330,9 +1330,9 @@ define([
         }
 
         // Clear the pass state framebuffer.
-        var clearColorCommand = scene._clearColorCommand;
-        Color.clone(clearColor, clearColorCommand.color);
-        clearColorCommand.execute(context, passState);
+        var clear = scene._clearColorDepthCommand;
+        Color.clone(clearColor, clear.color);
+        clear.execute(context, passState);
 
         // Update globe depth rendering based on the current context and clear the globe depth framebuffer.
         if (defined(scene._globeDepth)) {
@@ -1367,7 +1367,6 @@ define([
             scene._fxaa.clear(context, passState, clearColor);
         }
 
-        var sunVisible = isVisible(sunCommand, frameState);
         if (sunVisible && scene.sunBloom) {
             passState.framebuffer = scene._sunPostProcess.update(context);
         } else if (defined(scene._globeDepth)) {
@@ -1415,8 +1414,6 @@ define([
             moonCommand.execute(context, passState);
         }
 
-        var clearDepth = scene._depthClearCommand;
-
         // Determine how translucent surfaces will be handled.
         var executeTranslucentCommands;
         if (useOIT) {
@@ -1431,7 +1428,7 @@ define([
         }
 
         // Execute commands in each frustum in back to front order
-        var depthClearCommand = scene._depthClearCommand;
+        var clearDepth = scene._depthClearCommand;
         for (i = 0; i < numFrustums; ++i) {
             var index = numFrustums - i - 1;
             var frustumCommands = frustumCommandsList[index];
