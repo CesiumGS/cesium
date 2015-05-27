@@ -6,7 +6,6 @@ attribute vec4 compressedAttribute2;        // image height, color, pick color, 
 attribute vec3 eyeOffset;                   // eye offset in meters
 attribute vec4 scaleByDistance;             // near, nearScale, far, farScale
 attribute vec4 pixelOffsetScaleByDistance;  // near, nearScale, far, farScale
-attribute vec2 ownerSize;
 
 varying vec2 v_textureCoordinates;
 
