@@ -14,8 +14,8 @@ Change Log
 * Added optional drilling limit to `Scene.drillPick`.
 * Added optional `ellipsoid` parameter to construction options of imagery and terrain providers that were lacking it.  Note that terrain bounding spheres are precomputed on the server, so any supplied terrain ellipsoid must match the one used by the server.
 * Upgraded Autolinker from version 0.15.2 to 0.17.1.
-* Fixed documentation for 'Context.drawingBufferHeight' and 'Context.drawingBufferWidth'.
-* Added debug option to 'Scene' to show the depth buffer information for a specified view frustum slice and exposed capability in 'CesiumInspector' widget.
+* Fixed documentation for `Context.drawingBufferHeight` and `Context.drawingBufferWidth`.
+* Added debug option to `Scene` to show the depth buffer information for a specified view frustum slice and exposed capability in `CesiumInspector` widget.
 * Removed `Scene.fxaaOrderIndependentTranslucency`. Use `Scene.fxaa` which is now `true` by default.
 * Added `Scene.pickPosition` to reconstruct the cartesian world position from window coordinates.
 * The default mouse controls now support panning and zooming on 3D models and other opaque geometry.
