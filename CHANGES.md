@@ -19,6 +19,7 @@ Change Log
 * `TileProviderError` now optionally takes an `error` parameter with more details of the error or exception that occurred.  `ImageryLayer` passes that information through when tiles fail to load.  This allows tile provider error handling to take a different action when a tile returns a 404 versus a 500, for example.
 * `ArcGisMapServerImageryProvider` now has a `maximumLevel` constructor parameter.
 * `ArcGisMapServerImageryProvider` picking now works correctly when the `layers` parameter is specified.  Previously, it would pick from all layers even if only displaying a subset.
+* Setting `Entity.show` now properly toggles the display of all descendant entities, previously it was only affecting its direct children.
 * Fixed a crash caused by `ImageryLayer` attempting to generate mipmaps for textures that are not a power-of-two size.
 * Fixed a bug where `ImageryLayerCollection.pickImageryLayerFeatures` would return incorrect results when picking from a terrain tile that was partially covered by correct-level imagery and partially covered by imagery from an ancestor level.
 * Fixed incorrect counting of `debug.tilesWaitingForChildren` in `QuadtreePrimitive`.
