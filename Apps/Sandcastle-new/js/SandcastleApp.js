@@ -200,77 +200,74 @@ define(['react', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/show-hint','
     }
   });
 
-  var SandcastleCesiumContainer = React.createClass({
-    getInitialState: function(){
-      this.emptyDoc = $('#bucketFrame').contentDocument;
-      this.defaultHeaders = '<html><head></head><body data-sandcastle-bucket-loaded="no">';
-      return null;
-    },
-
+  var SandcastleCesiumFrame = React.createClass({
     componentDidMount: function(){
-      // Load the bucket with demo code
-      this.loadBucket();
+      // Create an empty iframe with cesium build
+      var doc = '<html><head><script src="../../Build/Cesium/Cesium.js"></script><style>@import url(../../Build/Cesium/Widgets/widgets.css);\nhtml, body, #cesiumContainer {width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;}\n</style></head><body></body></html>';
+      this.getDOMNode().contentWindow.document.open();
+      this.getDOMNode().contentWindow.document.write(doc);
+      this.getDOMNode().contentWindow.document.close();
+
+      // Get demo code to load
+      this.loadDemoCode();
     },
 
-    loadBucket: function(){
-      // Save a reference to the current object.
-      var that = this;
-      this.requestDemo().then(function(value){
-        var parser = new DOMParser();
-        var doc = parser.parseFromString(value, 'text/html');
-
-        var bucket = doc.body.getAttribute('data-sandcastle-bucket');
-        bucket = bucket ? bucket : 'bucket-requirejs.html';
-        $.ajax({
-          url: 'templates/' + bucket,
-          dataType: 'text'
-        }).done(function(value) {
-          var pos = value.indexOf('<body');
-          pos = value.indexOf('>', pos);
-          bucketTypes = value.substring(0, pos + 1);
-          that.defaultHeaders = bucketTypes;
-          that.applyBucket();
-        });
-      });
+    getScriptFromEditor: function(addExtra, jsCode){
+      return 'function startup(Cesium) {\n' +
+       '    "use strict";\n' +
+       '//Sandcastle_Begin\n' +
+       (addExtra ? '\n' : '') +
+       jsCode +
+       '//Sandcastle_End\n' +
+       '    Sandcastle.finishedLoading();\n' +
+       '}\n' +
+       'if (typeof Cesium !== "undefined") {\n' +
+       '    startup(Cesium);\n' +
+       '} else if (typeof require === "function") {\n' +
+       '    require(["Cesium"], startup);\n' +
+       '}\n';
     },
 
-    applyBucket: function(){
-      // TODO: come up with better way to do this
-      var bucketDoc = document.getElementById("bucketFrame").contentDocument;
-      var bodyAttributes = this.defaultHeaders.match(/<body([^>]*?)>/)[1];
-      var attributeRegex = /([-a-z_]+)\s*="([^"]*?)"/ig;
-      var attributeMatch;
-      while ((attributeMatch = attributeRegex.exec(bodyAttributes)) !== null) {
-        var attributeName = attributeMatch[1];
-        var attributeValue = attributeMatch[2];
-        if (attributeName === 'class') {
-          bucketDoc.body.className = attributeValue;
-        } else {
-          bucketDoc.body.setAttribute(attributeName, attributeValue);
-        }
+    loadDemoCode: function(){
+      // TODO: Use message passing to get code from react component
+      // Check if document has loaded else set a timeout for nexttick
+      var frameDoc = this.getDOMNode().contentWindow.document;
+      if(frameDoc.readyState === 'complete'){
+        var htmlEditor = $('#htmlContainer .CodeMirror')[0].CodeMirror;
+        var htmlCode = htmlEditor.getValue();
+        var htmlElement = frameDoc.createElement('div');
+        htmlElement.innerHTML = htmlCode;
+        frameDoc.body.appendChild(htmlElement);
+        var jsEditor = $('#jsContainer .CodeMirror')[0].CodeMirror;
+        var jsCode = jsEditor.getValue();
+        var scriptElement = frameDoc.createElement('script');
+        var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
+        scriptElement.textContent = this.getScriptFromEditor(isFirefox, jsCode);
+        frameDoc.body.appendChild(scriptElement);
       }
-
-      var pos = this.defaultHeaders.indexOf('</head>');
-      var extraHeaders = this.defaultHeaders.substring(this.emptyDoc.length, pos);
-      bucketDoc.head.innerHTML += extraHeaders;
+      else{
+        setTimeout(this.loadDemoCode, 0);
+      }
     },
 
-    requestDemo: function(){
-      return $.ajax({
-        url: 'gallery/' + this.props.demo + '.html',
-        handleAs: 'text',
-        sync: true,
-        error: function(error) {
-          console.log(error);
-        }
+    render: function(){
+      this.cesiumFrame = React.createElement('iframe', {
+        frameBorder:'0',
+        className:'fullFrame',
+        id:'bucketFrame',
+        sandbox:'allow-scripts allow-same-origin'
       });
-    },
+      return this.cesiumFrame;
+    }
+  });
+
+  var SandcastleCesiumContainer = React.createClass({
 
     render: function(){
       return (
         <div id="cesiumContainer" className="tab-content">
           <div role="tabpanel" className="tab-pane active" id="bucketPane">
-              <iframe id="bucketFrame" src="templates/bucket.html" className="fullFrame" allowFullScreen mozallowfullscreen webkitallowfullscreen></iframe>
+            <SandcastleCesiumFrame />
           </div>
         </div>
       );
@@ -283,7 +280,7 @@ define(['react', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/show-hint','
         <div id="cesiumColumn" className="col-md-7">
           <div role="tabpanel">
             <SandcastleCesiumTabs />
-            <SandcastleCesiumContainer demo={this.props.demo}/>
+            <SandcastleCesiumContainer />
           </div>
         </div>
       );
@@ -296,7 +293,7 @@ define(['react', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/show-hint','
         <div id="bodyContainer" className="container-fluid">
           <div id="bodyRow" className="row">
             <SandcastleCode demo={this.props.demo}/>
-            <SandcastleCesium demo={this.props.demo}/>
+            <SandcastleCesium />
           </div>
         </div>
       );
