@@ -74,7 +74,7 @@ define([
     loadImage.createImage = function(url, crossOrigin, deferred) {
         var image = new Image();
 
-        image.onload = function(e) {
+        image.onload = function() {
             deferred.resolve(image);
         };
 

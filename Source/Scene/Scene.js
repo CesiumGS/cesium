@@ -241,8 +241,9 @@ define([
         this._oit = oit;
         this._fxaa = new FXAA();
 
-        this._clearColorCommand = new ClearCommand({
+        this._clearColorDepthCommand = new ClearCommand({
             color : new Color(),
+            depth : 1.0,
             owner : this
         });
         this._depthClearCommand = new ClearCommand({
@@ -1307,9 +1308,13 @@ define([
         }
 
         // Manage celestial and terrestrial environment effects.
-        var skyBoxCommand = (frameState.passes.render && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
-        var skyAtmosphereCommand = (frameState.passes.render && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
-        var sunCommand = (frameState.passes.render && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
+        var renderPass = frameState.passes.render;
+        var skyBoxCommand = (renderPass && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
+        var skyAtmosphereCommand = (renderPass && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
+        var sunCommand = (renderPass && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
+        var sunVisible = isVisible(sunCommand, frameState);
+        var moonCommand = (renderPass && defined(scene.moon)) ? scene.moon.update(context, frameState) : undefined;
+        var moonVisible = isVisible(moonCommand, frameState);
 
         // Preserve the reference to the original framebuffer.
         var originalFramebuffer = passState.framebuffer;
@@ -1371,11 +1376,16 @@ define([
             passState.framebuffer = scene._fxaa.getColorFramebuffer();
         }
 
-        // Update the uniforms based on the original frustum.
+        if (defined(passState.framebuffer)) {
+            clear.execute(context, passState);
+        }
+
+        // Ideally, we would render the sky box and atmosphere last for
+        // early-z, but we would have to draw it in each frustum
+        frustum.near = camera.frustum.near;
+        frustum.far = camera.frustum.far;
         us.updateFrustum(frustum);
 
-        // Ideally, we would render the sky box and atmosphere last for early-z,
-        // but we would have to draw it in each frustum
         if (defined(skyBoxCommand)) {
             executeCommand(skyBoxCommand, scene, context, passState);
         }
@@ -1384,7 +1394,7 @@ define([
             executeCommand(skyAtmosphereCommand, scene, context, passState);
         }
 
-        if (defined(sunCommand) && sunVisible) {
+        if (sunVisible) {
             sunCommand.execute(context, passState);
             if (scene.sunBloom) {
                 var framebuffer;
@@ -1399,6 +1409,13 @@ define([
                 passState.framebuffer = framebuffer;
             }
         }
+
+        // Moon can be seen through the atmosphere, since the sun is rendered after the atmosphere.
+        if (moonVisible) {
+            moonCommand.execute(context, passState);
+        }
+
+        var clearDepth = scene._depthClearCommand;
 
         // Determine how translucent surfaces will be handled.
         var executeTranslucentCommands;
@@ -1435,7 +1452,12 @@ define([
             }
 
             us.updateFrustum(frustum);
-            depthClearCommand.execute(context, passState);
+
+            if (i !== 0) {
+                // Depth for the first frustum was cleared when color was cleared - and
+                // no primitives rendered in the entire frustum write depth.
+                clearDepth.execute(context, passState);
+            }
 
             var commands = frustumCommands.commands[Pass.GLOBE];
             var length = frustumCommands.indices[Pass.GLOBE];
@@ -1527,10 +1549,6 @@ define([
         }
 
         scene._primitives.update(context, frameState, commandList);
-
-        if (defined(scene.moon)) {
-            scene.moon.update(context, frameState, commandList);
-        }
     }
 
     function callAfterRenderFunctions(frameState) {
@@ -1596,6 +1614,9 @@ define([
         createPotentiallyVisibleSet(scene);
 
         var passState = scene._passState;
+        passState.framebuffer = undefined;
+        passState.blendingEnabled = undefined;
+        passState.scissorTest = undefined;
 
         executeCommands(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
         executeOverlayCommands(scene, passState);
