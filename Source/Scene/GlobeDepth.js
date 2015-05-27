@@ -126,8 +126,6 @@ define([
         if (!defined(globeDepth.framebuffer) || textureChanged) {
             createFramebuffers(globeDepth, context, width, height);
         }
-
-        context.uniformState.globeDepthTexture = globeDepth._globeDepthTexture;
     }
 
     function updateCopyCommands(globeDepth, context) {
@@ -181,11 +179,13 @@ define([
     GlobeDepth.prototype.update = function(context) {
         updateFramebuffers(this, context);
         updateCopyCommands(this, context);
+        context.uniformState.globeDepthTexture = undefined;
     };
 
     GlobeDepth.prototype.executeCopyDepth = function(context, passState) {
         if (defined(this._copyDepthCommand)) {
             this._copyDepthCommand.execute(context, passState);
+            context.uniformState.globeDepthTexture = this._globeDepthTexture;
         }
     };
 

@@ -520,6 +520,33 @@ defineSuite([
         }
     });
 
+    it('copies the globe depth', function() {
+        var scene = createScene();
+
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+
+        var rectanglePrimitive = new RectanglePrimitive({
+            rectangle : rectangle,
+            height : 1000.0,
+            asynchronous : false
+        });
+        rectanglePrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
+
+        var primitives = scene.primitives;
+        primitives.add(rectanglePrimitive);
+
+        scene.camera.viewRectangle(rectangle);
+
+        var uniformState = scene.context.uniformState;
+
+        scene.renderForSpecs();
+        expect(uniformState.globeDepthTexture).not.toBeDefined();
+
+        scene.copyGlobeDepth = true;
+        scene.renderForSpecs();
+        expect(uniformState.globeDepthTexture).toBeDefined();
+    });
+
     it('pickPosition', function() {
         var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
         scene.camera.viewRectangle(rectangle);
