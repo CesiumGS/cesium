@@ -333,6 +333,8 @@ define([
         this.layerMoved.raiseEvent(layer, 0, index);
     };
 
+    var applicableRectangleScratch = new Rectangle();
+
     /**
      * Asynchronously determines the imagery layer features that are intersected by a pick ray.  The intersected imagery
      * layer features are found by invoking {@link ImageryProvider#pickFeatures} for each imagery layer tile intersected
@@ -400,6 +402,23 @@ define([
             }
             var provider = imagery.imageryLayer.imageryProvider;
             if (!defined(provider.pickFeatures)) {
+                continue;
+            }
+
+            if (!Rectangle.contains(imagery.rectangle, pickedLocation)) {
+                continue;
+            }
+
+            // If this imagery came from a parent, it may not be applicable to its entire rectangle.
+            // Check the textureCoordinateRectangle.
+            var applicableRectangle = applicableRectangleScratch;
+
+            var epsilon = 1 / 1024; // 1/4 of a pixel in a typical 256x256 tile.
+            applicableRectangle.west = CesiumMath.lerp(pickedTile.rectangle.west, pickedTile.rectangle.east, terrainImagery.textureCoordinateRectangle.x - epsilon);
+            applicableRectangle.east = CesiumMath.lerp(pickedTile.rectangle.west, pickedTile.rectangle.east, terrainImagery.textureCoordinateRectangle.z + epsilon);
+            applicableRectangle.south = CesiumMath.lerp(pickedTile.rectangle.south, pickedTile.rectangle.north, terrainImagery.textureCoordinateRectangle.y - epsilon);
+            applicableRectangle.north = CesiumMath.lerp(pickedTile.rectangle.south, pickedTile.rectangle.north, terrainImagery.textureCoordinateRectangle.w + epsilon);
+            if (!Rectangle.contains(applicableRectangle, pickedLocation)) {
                 continue;
             }
 

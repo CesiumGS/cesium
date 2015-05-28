@@ -4,6 +4,7 @@ defineSuite([
         'Core/Cartographic',
         'Core/DefaultProxy',
         'Core/defined',
+        'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
         'Core/loadImage',
         'Core/loadWithXhr',
@@ -11,6 +12,7 @@ defineSuite([
         'Core/queryToObject',
         'Core/Rectangle',
         'Core/WebMercatorTilingScheme',
+        'Scene/GetFeatureInfoFormat',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryLayerFeatureInfo',
@@ -24,6 +26,7 @@ defineSuite([
         Cartographic,
         DefaultProxy,
         defined,
+        Ellipsoid,
         GeographicTilingScheme,
         loadImage,
         loadWithXhr,
@@ -31,6 +34,7 @@ defineSuite([
         queryToObject,
         Rectangle,
         WebMercatorTilingScheme,
+        GetFeatureInfoFormat,
         Imagery,
         ImageryLayer,
         ImageryLayerFeatureInfo,
@@ -79,6 +83,21 @@ defineSuite([
             return provider.ready;
         }).then(function() {
             expect(typeof provider.hasAlphaChannel).toBe('boolean');
+        });
+    });
+
+    it('can use a custom ellipsoid', function() {
+        var ellipsoid = new Ellipsoid(1, 2, 3);
+        var provider = new WebMapServiceImageryProvider({
+            url : 'made/up/wms/server',
+            layers : 'someLayer',
+            ellipsoid : ellipsoid
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            expect(provider.tilingScheme.ellipsoid).toEqual(ellipsoid);
         });
     });
 
@@ -547,12 +566,26 @@ defineSuite([
             });
         });
 
-        it('returns undefined if getFeatureInfoAsGeoJson and getFeatureInfoAsXml are false', function() {
+        it('Backward compatibility: returns undefined if getFeatureInfoAsGeoJson and getFeatureInfoAsXml are false', function() {
             var provider = new WebMapServiceImageryProvider({
                 url : 'made/up/wms/server',
                 layers : 'someLayer',
                 getFeatureInfoAsGeoJson : false,
                 getFeatureInfoAsXml : false
+            });
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).toBeUndefined();
+            });
+        });
+
+        it('returns undefined if list of feature info formats is empty', function() {
+            var provider = new WebMapServiceImageryProvider({
+                url : 'made/up/wms/server',
+                layers : 'someLayer',
+                getFeatureInfoFormats : []
             });
 
             return pollToPromise(function() {
@@ -576,7 +609,7 @@ defineSuite([
             });
         });
 
-        it('requests XML exclusively if getFeatureInfoAsGeoJson is false', function() {
+        it('Backward compatibility: requests XML exclusively if getFeatureInfoAsGeoJson is false', function() {
             var provider = new WebMapServiceImageryProvider({
                 url : 'made/up/wms/server',
                 layers : 'someLayer',
@@ -603,7 +636,36 @@ defineSuite([
             });
         });
 
-        it('requests GeoJSON exclusively if getFeatureInfoAsXml is false', function() {
+        it('requests XML exclusively if specified in getFeatureInfoFormats', function() {
+            var provider = new WebMapServiceImageryProvider({
+                url : 'made/up/wms/server',
+                layers : 'someLayer',
+                getFeatureInfoFormats : [
+                    new GetFeatureInfoFormat('xml')
+                ]
+            });
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                expect(url).toContain('GetFeatureInfo');
+                expect(url).not.toContain('json');
+                loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-MapInfoMXP.xml', responseType, method, data, headers, deferred, overrideMimeType);
+            };
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(pickResult) {
+                    expect(pickResult.length).toBe(1);
+
+                    var firstResult = pickResult[0];
+                    expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
+                    expect(firstResult.name).toBe('SPRINGWOOD');
+                    expect(firstResult.description).toContain('NSW');
+                });
+            });
+        });
+
+        it('Backward compatibility: requests GeoJSON exclusively if getFeatureInfoAsXml is false', function() {
             var provider = new WebMapServiceImageryProvider({
                 url : 'made/up/wms/server',
                 layers : 'someLayer',
@@ -624,9 +686,104 @@ defineSuite([
                     }
                 };
 
-                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function() {
-                    fail('should not be called');
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(features) {
+                    expect(features.length).toBe(0);
                 }).otherwise(function() {
+                });
+            });
+        });
+
+        it('requests GeoJSON exclusively if specified in getFeatureInfoFormats', function() {
+            var provider = new WebMapServiceImageryProvider({
+                url : 'made/up/wms/server',
+                layers : 'someLayer',
+                getFeatureInfoFormats : [
+                    new GetFeatureInfoFormat('json')
+                ]
+            });
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                    expect(url).toContain('GetFeatureInfo');
+
+                    if (url.indexOf('json') >= 0) {
+                        deferred.reject();
+                    } else {
+                        // this should not happen
+                        loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-MapInfoMXP.xml', responseType, method, data, headers, deferred, overrideMimeType);
+                    }
+                };
+
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(features) {
+                    expect(features.length).toBe(0);
+                }).otherwise(function() {
+                });
+            });
+        });
+
+        it('uses custom GetFeatureInfo handling function if specified', function() {
+            function fooProcessor(response) {
+                var json = JSON.parse(response);
+                expect(json.custom).toBe(true);
+                var feature = new ImageryLayerFeatureInfo();
+                feature.name = 'Foo processed!';
+                return [feature];
+            }
+
+            var provider = new WebMapServiceImageryProvider({
+                url : 'made/up/wms/server',
+                layers : 'someLayer',
+                getFeatureInfoFormats : [
+                    new GetFeatureInfoFormat('foo', 'application/foo', fooProcessor)
+                ]
+            });
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                    expect(url).toContain('GetFeatureInfo');
+
+                    if (url.indexOf(encodeURIComponent('application/foo')) < 0) {
+                        deferred.reject();
+                    }
+
+                    return loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-Custom.json', responseType, method, data, headers, deferred, overrideMimeType);
+                };
+
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(features) {
+                    expect(features.length).toBe(1);
+                    expect(features[0].name).toEqual('Foo processed!');
+                });
+            });
+        });
+
+        it('works with HTML response', function() {
+            var provider = new WebMapServiceImageryProvider({
+                url : 'made/up/wms/server',
+                layers : 'someLayer'
+            });
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                expect(url).toContain('GetFeatureInfo');
+                if (url.indexOf(encodeURIComponent('text/html')) < 0) {
+                    deferred.reject();
+                }
+                loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo.html', responseType, method, data, headers, deferred, overrideMimeType);
+            };
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(pickResult) {
+                    expect(pickResult.length).toBe(1);
+
+                    var firstResult = pickResult[0];
+                    expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
+                    expect(firstResult.name).toBe('HTML yeah!');
+                    expect(firstResult.description).toContain('great information');
                 });
             });
         });

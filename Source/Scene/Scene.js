@@ -17,6 +17,7 @@ define([
         '../Core/GeographicProjection',
         '../Core/GeometryInstance',
         '../Core/GeometryPipeline',
+        '../Core/getTimestamp',
         '../Core/Intersect',
         '../Core/Interval',
         '../Core/JulianDate',
@@ -67,6 +68,7 @@ define([
         GeographicProjection,
         GeometryInstance,
         GeometryPipeline,
+        getTimestamp,
         Intersect,
         Interval,
         JulianDate,
@@ -220,8 +222,9 @@ define([
 
         this._fxaa = new FXAA();
 
-        this._clearColorCommand = new ClearCommand({
+        this._clearColorDepthCommand = new ClearCommand({
             color : new Color(),
+            depth : 1.0,
             owner : this
         });
         this._depthClearCommand = new ClearCommand({
@@ -229,11 +232,12 @@ define([
             owner : this
         });
 
-        this._transitioner = new SceneTransitioner(this);
-
         this._renderError = new Event();
         this._preRender = new Event();
         this._postRender = new Event();
+
+        this._cameraStartFired = false;
+        this._cameraMovedTime = undefined;
 
         /**
          * Exceptions occurring in <code>render</code> are always caught in order to raise the
@@ -325,6 +329,8 @@ define([
         this._mode = SceneMode.SCENE3D;
 
         this._mapProjection = defined(options.mapProjection) ? options.mapProjection : new GeographicProjection();
+
+        this._transitioner = new SceneTransitioner(this, this._mapProjection.ellipsoid);
 
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
@@ -434,11 +440,20 @@ define([
          */
         this.fxaa = false;
 
+        /**
+         * The time in milliseconds to wait before checking if the camera has not moved and fire the cameraMoveEnd event.
+         * @type {Number}
+         * @default 500.0
+         * @private
+         */
+        this.cameraEventWaitTime = 500.0;
+
         this._performanceDisplay = undefined;
         this._debugSphere = undefined;
 
         var camera = new Camera(this);
         this._camera = camera;
+        this._cameraClone = Camera.clone(camera);
         this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
 
         // initial guess at frustums.
@@ -793,6 +808,26 @@ define([
         }
     });
 
+    var scratchPosition0 = new Cartesian3();
+    var scratchPosition1 = new Cartesian3();
+    function maxComponent(a, b) {
+        var x = Math.max(Math.abs(a.x), Math.abs(b.x));
+        var y = Math.max(Math.abs(a.y), Math.abs(b.y));
+        var z = Math.max(Math.abs(a.z), Math.abs(b.z));
+        return Math.max(Math.max(x, y), z);
+    }
+
+    function cameraEqual(camera0, camera1, epsilon) {
+        var scalar = 1 / Math.max(1, maxComponent(camera0.position, camera1.position));
+        Cartesian3.multiplyByScalar(camera0.position, scalar, scratchPosition0);
+        Cartesian3.multiplyByScalar(camera1.position, scalar, scratchPosition1);
+        return Cartesian3.equalsEpsilon(scratchPosition0, scratchPosition1, epsilon) &&
+            Cartesian3.equalsEpsilon(camera0.direction, camera1.direction, epsilon) &&
+            Cartesian3.equalsEpsilon(camera0.up, camera1.up, epsilon) &&
+            Cartesian3.equalsEpsilon(camera0.right, camera1.right, epsilon) &&
+            Matrix4.equalsEpsilon(camera0.transform, camera1.transform, epsilon);
+    }
+
     var scratchOccluderBoundingSphere = new BoundingSphere();
     var scratchOccluder;
 
@@ -916,6 +951,7 @@ define([
                 frustumCommandsList[n].indices[p] = 0;
             }
         }
+        overlayList.length = 0;
 
         var near = Number.MAX_VALUE;
         var far = Number.MIN_VALUE;
@@ -1195,12 +1231,16 @@ define([
             scene._sunBloom = false;
         }
 
-        var skyBoxCommand = (frameState.passes.render && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
-        var skyAtmosphereCommand = (frameState.passes.render && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
-        var sunCommand = (frameState.passes.render && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
+        var renderPass = frameState.passes.render;
+        var skyBoxCommand = (renderPass && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
+        var skyAtmosphereCommand = (renderPass && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
+        var sunCommand = (renderPass && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
         var sunVisible = isVisible(sunCommand, frameState);
+        var moonCommand = (renderPass && defined(scene.moon)) ? scene.moon.update(context, frameState) : undefined;
+        var moonVisible = isVisible(moonCommand, frameState);
 
-        var clear = scene._clearColorCommand;
+        // Clear default framebuffer
+        var clear = scene._clearColorDepthCommand;
         Color.clone(clearColor, clear.color);
         clear.execute(context, passState);
 
@@ -1240,6 +1280,10 @@ define([
             passState.framebuffer = opaqueFramebuffer;
         }
 
+        if (defined(passState.framebuffer)) {
+            clear.execute(context, passState);
+        }
+
         // Ideally, we would render the sky box and atmosphere last for
         // early-z, but we would have to draw it in each frustum
         frustum.near = camera.frustum.near;
@@ -1254,13 +1298,18 @@ define([
             executeCommand(skyAtmosphereCommand, scene, context, passState);
         }
 
-        if (defined(sunCommand) && sunVisible) {
+        if (sunVisible) {
             sunCommand.execute(context, passState);
 
             if (scene.sunBloom) {
                 scene._sunPostProcess.execute(context, opaqueFramebuffer);
                 passState.framebuffer = opaqueFramebuffer;
             }
+        }
+
+        // Moon can be seen through the atmosphere, since the sun is rendered after the atmosphere.
+        if (moonVisible) {
+            moonCommand.execute(context, passState);
         }
 
         var clearDepth = scene._depthClearCommand;
@@ -1284,12 +1333,16 @@ define([
             frustum.far = frustumCommands.far;
 
             if (index !== 0) {
-                // Avoid tearing artifacts between adjacent frustums
+                // Avoid tearing artifacts between adjacent frustums in the opaque passes
                 frustum.near *= 0.99;
             }
 
             us.updateFrustum(frustum);
-            clearDepth.execute(context, passState);
+            if (i !== 0) {
+                // Depth for the first frustum was cleared when color was cleared - and
+                // no primitives rendered in the entire frustum write depth.
+                clearDepth.execute(context, passState);
+            }
 
             var commands;
             var length;
@@ -1305,8 +1358,11 @@ define([
                 }
             }
 
-            frustum.near = frustumCommands.near;
-            us.updateFrustum(frustum);
+            if (index !== 0) {
+                // Do not overlap frustums in the translucent pass to avoid blending artifacts
+                frustum.near = frustumCommands.near;
+                us.updateFrustum(frustum);
+            }
 
             commands = frustumCommands.commands[Pass.TRANSLUCENT];
             commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
@@ -1343,10 +1399,6 @@ define([
         }
 
         scene._primitives.update(context, frameState, commandList);
-
-        if (defined(scene.moon)) {
-            scene.moon.update(context, frameState, commandList);
-        }
     }
 
     function callAfterRenderFunctions(frameState) {
@@ -1379,6 +1431,19 @@ define([
             time = JulianDate.now();
         }
 
+        var camera = scene._camera;
+        if (!cameraEqual(camera, scene._cameraClone, CesiumMath.EPSILON6)) {
+            if (!scene._cameraStartFired) {
+                camera.moveStart.raiseEvent();
+                scene._cameraStartFired = true;
+            }
+            scene._cameraMovedTime = getTimestamp();
+            Camera.clone(camera, scene._cameraClone);
+        } else if (scene._cameraStartFired && getTimestamp() - scene._cameraMovedTime > scene.cameraEventWaitTime) {
+            camera.moveEnd.raiseEvent();
+            scene._cameraStartFired = false;
+        }
+
         scene._preRender.raiseEvent(scene, time);
 
         var us = scene.context.uniformState;
@@ -1399,6 +1464,9 @@ define([
         createPotentiallyVisibleSet(scene);
 
         var passState = scene._passState;
+        passState.framebuffer = undefined;
+        passState.blendingEnabled = undefined;
+        passState.scissorTest = undefined;
 
         executeCommands(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
         executeOverlayCommands(scene, passState);
@@ -1609,6 +1677,7 @@ define([
      * scene (front to back).
      *
      * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+     * @param {Number} [limit] If supplied, stop drilling after collecting this many picks.
      * @returns {Object[]} Array of objects, each containing 1 picked primitives.
      *
      * @exception {DeveloperError} windowPosition is undefined.
@@ -1616,7 +1685,7 @@ define([
      * @example
      * var pickedObjects = Cesium.Scene.drillPick(new Cesium.Cartesian2(100.0, 200.0));
      */
-    Scene.prototype.drillPick = function(windowPosition) {
+    Scene.prototype.drillPick = function(windowPosition, limit) {
         // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead
         // we could update the primitive once, and then just execute their commands for each pass,
         // and cull commands for picked primitives.  e.g., base on the command's owner.
@@ -1632,10 +1701,16 @@ define([
         var result = [];
         var pickedPrimitives = [];
         var pickedAttributes = [];
+        if (!defined(limit)) {
+            limit = Number.MAX_VALUE;
+        }
 
         var pickedResult = this.pick(windowPosition);
         while (defined(pickedResult) && defined(pickedResult.primitive)) {
             result.push(pickedResult);
+            if (0 >= --limit) {
+                break;
+            }
 
             var primitive = pickedResult.primitive;
             var hasShowAttribute = false;

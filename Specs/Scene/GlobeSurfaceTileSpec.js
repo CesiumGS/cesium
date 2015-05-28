@@ -497,7 +497,7 @@ defineSuite([
 
         it('gets correct results even when the mesh includes normals', function() {
             var terrainProvider = new CesiumTerrainProvider({
-                url : '//cesiumjs.org/stk-terrain/tilesets/world/tiles',
+                url : '//assets.agi.com/stk-terrain/world',
                 requestVertexNormals : true
             });
 

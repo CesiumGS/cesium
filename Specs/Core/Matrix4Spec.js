@@ -429,7 +429,18 @@ defineSuite([
         returnedResult = Matrix4.setColumn(matrix, 3, new Cartesian4(17.0, 18.0, 19.0, 20.0), result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
-});
+    });
+
+    it('setTranslation works', function() {
+        var matrix = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
+        var translation = new Cartesian3(-1.0, -2.0, -3.0);
+        var result = new Matrix4();
+
+        var expected = new Matrix4(1.0, 2.0, 3.0, -1.0, 5.0, 6.0, 7.0, -2.0, 9.0, 10.0, 11.0, -3.0, 13.0, 14.0, 15.0, 16.0);
+        var returnedResult = Matrix4.setTranslation(matrix, translation, result);
+        expect(result).toBe(returnedResult);
+        expect(result).toEqual(expected);
+    });
 
     it('getRow works for each row', function() {
         var matrix = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
@@ -1273,9 +1284,28 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('getRow throws without matrix parameter', function() {
+    it('setColumn throws without matrix parameter', function() {
+        var cartesian = new Cartesian4();
         expect(function() {
-            Matrix4.getRow(undefined, 1);
+            Matrix4.setColumn(undefined, 2, cartesian);
+        }).toThrowDeveloperError();
+    });
+
+    it('setTranslation throws without matrix parameter', function() {
+        expect(function() {
+            Matrix4.setTranslation(undefined, new Cartesian3(), new Matrix4());
+        }).toThrowDeveloperError();
+    });
+
+    it('setTranslation throws without translation parameter', function() {
+        expect(function() {
+            Matrix4.setTranslation(new Matrix4(), undefined, new Matrix4());
+        }).toThrowDeveloperError();
+    });
+
+    it('setTranslation throws without result parameter', function() {
+        expect(function() {
+            Matrix4.setTranslation(new Matrix4(), new Cartesian3(), undefined);
         }).toThrowDeveloperError();
     });
 

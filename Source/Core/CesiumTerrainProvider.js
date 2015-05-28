@@ -58,6 +58,7 @@ define([
      * @param {Proxy} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
      * @param {Boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server, in the form of per vertex normals if available.
      * @param {Boolean} [options.requestWaterMask=false] Flag that indicates if the client should request per tile water masks from the server,  if available.
+     * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
      * @see TerrainProvider
@@ -66,7 +67,7 @@ define([
      * // Construct a terrain provider that uses per vertex normals for lighting
      * // to add shading detail to an imagery provider.
      * var terrainProvider = new Cesium.CesiumTerrainProvider({
-     *     url : '//cesiumjs.org/stk-terrain/tilesets/world/tiles',
+     *     url : '//assets.agi.com/stk-terrain/world',
      *     requestVertexNormals : true
      * });
      *
@@ -98,7 +99,8 @@ define([
 
         this._tilingScheme = new GeographicTilingScheme({
             numberOfLevelZeroTilesX : 2,
-            numberOfLevelZeroTilesY : 1
+            numberOfLevelZeroTilesY : 1,
+            ellipsoid : options.ellipsoid
         });
 
         this._heightmapWidth = 65;
