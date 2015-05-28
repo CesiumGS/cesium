@@ -3,6 +3,7 @@ Change Log
 
 ### 1.10 - 2015-06-01
 * Breaking changes
+  * Existing bookmarks to documentation of static members have changed [#2757](https://github.com/AnalyticalGraphicsInc/cesium/issues/2757).
   * Removed `InfoBoxViewModel.defaultSanitizer`, `InfoBoxViewModel.sanitizer`, and `Cesium.sanitize`, which was deprecated in 1.7.
   * Removed `InfoBoxViewModel.descriptionRawHtml`, which was deprecated in 1.7.  Use `InfoBoxViewModel.description` instead.
   * Removed `GeoJsonDataSource.fromUrl`, which was deprecated in 1.7. Use `GeoJsonDataSource.load` instead. Unlike fromUrl, load can take either a url or parsed JSON object and returns a promise to a new instance, rather than a new instance.
@@ -43,6 +44,7 @@ Change Log
 * Added support for the [CESIUM_binary_glTF](https://github.com/KhronosGroup/glTF/blob/new-extensions/extensions/CESIUM_binary_glTF/README.md) extension for loading binary blobs of glTF to `Model`.
 * Added support for the [CESIUM_RTC](https://github.com/KhronosGroup/glTF/blob/new-extensions/extensions/CESIUM_RTC/README.md) glTF extension for high-precision rendering to `Model`.
 * Fixed a bug where the sun was smeared when the skybox/stars was disabled. [#1829](https://github.com/AnalyticalGraphicsInc/cesium/issue/1829)
+* Fixed a bug that sometimes caused `Entity` instances with `show` set to false to reappear when new `Entity` geometry is added. [#2686](https://github.com/AnalyticalGraphicsInc/cesium/issues/2686) 
 
 ### 1.9 - 2015-05-01
 
