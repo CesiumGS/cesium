@@ -1080,13 +1080,13 @@ define([
         }
 
         processPacketData(Boolean, ellipse, 'show', ellipseData.show, interval, sourceUri, entityCollection);
-        processPacketData(Number, ellipse, 'rotation', ellipseData.rotation, interval, sourceUri, entityCollection);
+        processPacketData(Rotation, ellipse, 'rotation', ellipseData.rotation, interval, sourceUri, entityCollection);
         processPacketData(Number, ellipse, 'semiMajorAxis', ellipseData.semiMajorAxis, interval, sourceUri, entityCollection);
         processPacketData(Number, ellipse, 'semiMinorAxis', ellipseData.semiMinorAxis, interval, sourceUri, entityCollection);
         processPacketData(Number, ellipse, 'height', ellipseData.height, interval, sourceUri, entityCollection);
         processPacketData(Number, ellipse, 'extrudedHeight', ellipseData.extrudedHeight, interval, sourceUri, entityCollection);
         processPacketData(Number, ellipse, 'granularity', ellipseData.granularity, interval, sourceUri, entityCollection);
-        processPacketData(Number, ellipse, 'stRotation', ellipseData.stRotation, interval, sourceUri, entityCollection);
+        processPacketData(Rotation, ellipse, 'stRotation', ellipseData.stRotation, interval, sourceUri, entityCollection);
         processMaterialPacketData(ellipse, 'material', ellipseData.material, interval, sourceUri, entityCollection);
         processPacketData(Boolean, ellipse, 'fill', ellipseData.fill, interval, sourceUri, entityCollection);
         processPacketData(Boolean, ellipse, 'outline', ellipseData.outline, interval, sourceUri, entityCollection);
@@ -1252,7 +1252,7 @@ define([
         processPacketData(Number, polygon, 'height', polygonData.height, interval, sourceUri, entityCollection);
         processPacketData(Number, polygon, 'extrudedHeight', polygonData.extrudedHeight, interval, sourceUri, entityCollection);
         processPacketData(Number, polygon, 'granularity', polygonData.granularity, interval, sourceUri, entityCollection);
-        processPacketData(Number, polygon, 'stRotation', polygonData.stRotation, interval, sourceUri, entityCollection);
+        processPacketData(Rotation, polygon, 'stRotation', polygonData.stRotation, interval, sourceUri, entityCollection);
         processPacketData(Boolean, polygon, 'fill', polygonData.fill, interval, sourceUri, entityCollection);
         processPacketData(Boolean, polygon, 'outline', polygonData.outline, interval, sourceUri, entityCollection);
         processPacketData(Color, polygon, 'outlineColor', polygonData.outlineColor, interval, sourceUri, entityCollection);
@@ -1285,8 +1285,8 @@ define([
         processPacketData(Number, rectangle, 'height', rectangleData.height, interval, sourceUri, entityCollection);
         processPacketData(Number, rectangle, 'extrudedHeight', rectangleData.extrudedHeight, interval, sourceUri, entityCollection);
         processPacketData(Number, rectangle, 'granularity', rectangleData.granularity, interval, sourceUri, entityCollection);
-        processPacketData(Number, rectangle, 'rotation', rectangleData.rotation, interval, sourceUri, entityCollection);
-        processPacketData(Number, rectangle, 'stRotation', rectangleData.stRotation, interval, sourceUri, entityCollection);
+        processPacketData(Rotation, rectangle, 'rotation', rectangleData.rotation, interval, sourceUri, entityCollection);
+        processPacketData(Rotation, rectangle, 'stRotation', rectangleData.stRotation, interval, sourceUri, entityCollection);
         processPacketData(Boolean, rectangle, 'fill', rectangleData.fill, interval, sourceUri, entityCollection);
         processPacketData(Boolean, rectangle, 'outline', rectangleData.outline, interval, sourceUri, entityCollection);
         processPacketData(Color, rectangle, 'outlineColor', rectangleData.outlineColor, interval, sourceUri, entityCollection);

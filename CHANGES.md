@@ -36,6 +36,7 @@ Change Log
 * Added support for the [CESIUM_binary_glTF](https://github.com/KhronosGroup/glTF/blob/new-extensions/extensions/CESIUM_binary_glTF/README.md) extension for loading binary blobs of glTF to `Model`.
 * Added support for the [CESIUM_RTC](https://github.com/KhronosGroup/glTF/blob/new-extensions/extensions/CESIUM_RTC/README.md) glTF extension for high-precision rendering to `Model`.
 * Fixed a bug where the sun was smeared when the skybox/stars was disabled. [#1829](https://github.com/AnalyticalGraphicsInc/cesium/issue/1829)
+* Added a `Rotation` object which, when passed to `SampledProperty`, always interpolates values towards the shortest angle. Also hooked up CZML to use `Rotation` for all time-dynamic rotations.
 
 ### 1.9 - 2015-05-01
 
