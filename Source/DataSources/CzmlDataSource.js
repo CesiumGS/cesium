@@ -36,6 +36,7 @@ define([
         '../Scene/VerticalOrigin',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
+        './Rotation',
         './BillboardGraphics',
         './ColorMaterialProperty',
         './CompositeMaterialProperty',
@@ -105,6 +106,7 @@ define([
         VerticalOrigin,
         Uri,
         when,
+        Rotation,
         BillboardGraphics,
         ColorMaterialProperty,
         CompositeMaterialProperty,
@@ -360,6 +362,8 @@ define([
             return JulianDate.fromIso8601(defaultValue(czmlInterval.date, czmlInterval));
         case LabelStyle:
             return LabelStyle[defaultValue(czmlInterval.labelStyle, czmlInterval)];
+        case Rotation:
+            return defaultValue(czmlInterval.number, czmlInterval);
         case Number:
             return defaultValue(czmlInterval.number, czmlInterval);
         case String:
@@ -1006,7 +1010,7 @@ define([
         processPacketData(Image, billboard, 'image', billboardData.image, interval, sourceUri, entityCollection);
         processPacketData(Cartesian2, billboard, 'pixelOffset', billboardData.pixelOffset, interval, sourceUri, entityCollection);
         processPacketData(Number, billboard, 'scale', billboardData.scale, interval, sourceUri, entityCollection);
-        processPacketData(Number, billboard, 'rotation', billboardData.rotation, interval, sourceUri, entityCollection);
+        processPacketData(Rotation, billboard, 'rotation', billboardData.rotation, interval, sourceUri, entityCollection);
         processPacketData(Cartesian3, billboard, 'alignedAxis', billboardData.alignedAxis, interval, sourceUri, entityCollection);
         processPacketData(Boolean, billboard, 'show', billboardData.show, interval, sourceUri, entityCollection);
         processPacketData(VerticalOrigin, billboard, 'verticalOrigin', billboardData.verticalOrigin, interval, sourceUri, entityCollection);
