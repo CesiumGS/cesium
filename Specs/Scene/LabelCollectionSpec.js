@@ -5,8 +5,10 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/Ellipsoid',
         'Core/Math',
         'Core/NearFarScalar',
+        'Scene/HeightReference',
         'Scene/HorizontalOrigin',
         'Scene/LabelStyle',
         'Scene/OrthographicFrustum',
@@ -18,8 +20,10 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Color,
+        Ellipsoid,
         CesiumMath,
         NearFarScalar,
+        HeightReference,
         HorizontalOrigin,
         LabelStyle,
         OrthographicFrustum,
@@ -33,10 +37,14 @@ defineSuite([
     var scene;
     var camera;
     var labels;
+    var heightReferenceSupported;
+    var labelsWithHeight;
 
     beforeAll(function() {
         scene = createScene();
         camera = scene.camera;
+
+        heightReferenceSupported = scene._globeDepth.supported && scene.context.maximumVertexTextureImageUnits > 0;
     });
 
     afterAll(function() {
@@ -45,11 +53,20 @@ defineSuite([
 
     beforeEach(function() {
         scene.morphTo3D(0);
+
         camera.position = new Cartesian3(10.0, 0.0, 0.0);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+
         labels = new LabelCollection();
         scene.primitives.add(labels);
+
+        if (heightReferenceSupported) {
+            labelsWithHeight = new LabelCollection({
+                scene : scene
+            });
+            scene.primitives.add(labelsWithHeight);
+        }
     });
 
     afterEach(function() {
@@ -1615,6 +1632,142 @@ defineSuite([
         scene.primitives.removeAll();
 
         expect(textureAtlas.isDestroyed()).toBe(true);
+    });
+
+    describe('height referenced labels', function() {
+        function createMockGlobe() {
+            var globe = {
+                callback : undefined,
+                removedCallback : false,
+                ellipsoid : Ellipsoid.WGS84,
+                update : function() {},
+                getHeight : function() {
+                    return 0.0;
+                },
+                _surface : {},
+                destroy : function() {}
+            };
+
+            globe._surface.updateHeight = function(position, callback) {
+                globe.callback = callback;
+                return function() {
+                    globe.removedCallback = true;
+                    globe.callback = undefined;
+                };
+            };
+
+            return globe;
+        }
+
+        it('explicitly constructs a label with height reference', function() {
+            if (!heightReferenceSupported) {
+                return;
+            }
+
+            scene.globe = createMockGlobe();
+            var l = labelsWithHeight.add({
+                heightReference : HeightReference.CLAMP_TO_GROUND
+            });
+
+            expect(l.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
+        });
+
+        it('set label height reference property', function() {
+            if (!heightReferenceSupported) {
+                return;
+            }
+
+            scene.globe = createMockGlobe();
+            var l = labelsWithHeight.add();
+            l.heightReference = HeightReference.CLAMP_TO_GROUND;
+
+            expect(l.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
+        });
+
+        it('creating with a height reference creates a height update callback', function() {
+            if (!heightReferenceSupported) {
+                return;
+            }
+
+            scene.globe = createMockGlobe();
+            var l = labelsWithHeight.add({
+                heightReference : HeightReference.CLAMP_TO_GROUND,
+                position : Cartesian3.fromDegrees(-72.0, 40.0)
+            });
+            expect(scene.globe.callback).toBeDefined();
+        });
+
+        it('set height reference property creates a height update callback', function() {
+            if (!heightReferenceSupported) {
+                return;
+            }
+
+            scene.globe = createMockGlobe();
+            var l = labelsWithHeight.add({
+                position : Cartesian3.fromDegrees(-72.0, 40.0)
+            });
+            l.heightReference = HeightReference.CLAMP_TO_GROUND;
+            expect(scene.globe.callback).toBeDefined();
+        });
+
+        it('updates the callback when the height reference changes', function() {
+            if (!heightReferenceSupported) {
+                return;
+            }
+
+            scene.globe = createMockGlobe();
+            var l = labelsWithHeight.add({
+                heightReference : HeightReference.CLAMP_TO_GROUND,
+                position : Cartesian3.fromDegrees(-72.0, 40.0)
+            });
+            expect(scene.globe.callback).toBeDefined();
+
+            l.heightReference = HeightReference.RELATIVE_TO_GROUND;
+            expect(scene.globe.removedCallback).toEqual(true);
+            expect(scene.globe.callback).toBeDefined();
+
+            scene.globe.removedCallback = false;
+            l.heightReference = HeightReference.NONE;
+            expect(scene.globe.removedCallback).toEqual(true);
+            expect(scene.globe.callback).not.toBeDefined();
+        });
+
+        it('changing the position updates the callback', function() {
+            if (!heightReferenceSupported) {
+                return;
+            }
+
+            scene.globe = createMockGlobe();
+            var l = labelsWithHeight.add({
+                heightReference : HeightReference.CLAMP_TO_GROUND,
+                position : Cartesian3.fromDegrees(-72.0, 40.0)
+            });
+            expect(scene.globe.callback).toBeDefined();
+
+            l.position = Cartesian3.fromDegrees(-73.0, 40.0);
+            expect(scene.globe.removedCallback).toEqual(true);
+            expect(scene.globe.callback).toBeDefined();
+        });
+
+        it('callback updates the position', function() {
+            if (!heightReferenceSupported) {
+                return;
+            }
+
+            scene.globe = createMockGlobe();
+            var l = labelsWithHeight.add({
+                heightReference : HeightReference.CLAMP_TO_GROUND,
+                position : Cartesian3.fromDegrees(-72.0, 40.0)
+            });
+            expect(scene.globe.callback).toBeDefined();
+
+            var cartographic = scene.globe.ellipsoid.cartesianToCartographic(l._clampedPosition);
+            expect(cartographic.height).toEqual(0.0);
+
+            scene.globe.callback(Cartesian3.fromDegrees(-72.0, 40.0, 100.0));
+            cartographic = scene.globe.ellipsoid.cartesianToCartographic(l._clampedPosition);
+            expect(cartographic.height).toEqualEpsilon(100.0, CesiumMath.EPSILON9);
+        });
     });
 
 }, 'WebGL');
