@@ -10,7 +10,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Event',
@@ -79,7 +78,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         Ellipsoid,
         Event,
@@ -1642,47 +1640,25 @@ define([
     /**
      * Processes the provided url or CZML object without clearing any existing data.
      *
-     * @param {String|Object} data A url or CZML object to be processed.
+     * @param {String|Object} czml A url or CZML object to be processed.
      * @param {Object} [options] An object with the following properties:
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
      * @returns {Promise} A promise that resolves to this instances once the data is processed.
      */
     CzmlDataSource.prototype.process = function(czml, options) {
-        if (typeof options === 'string') {
-            options = {
-                sourceUri : options
-            };
-            deprecationWarning('CzmlDataSource.process.options', 'Passing a sourceUri string as the second paraameter to CzmlDataSource.process has been deprecated. Pass an options object instead.');
-        }
         return load(this, czml, options, false);
     };
 
     /**
      * Loads the provided url or CZML object, replacing any existing data.
      *
-     * @param {String|Object} data A url or CZML object to be processed.
+     * @param {String|Object} czml A url or CZML object to be processed.
      * @param {Object} [options] An object with the following properties:
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
      * @returns {Promise} A promise that resolves to this instances once the data is processed.
      */
     CzmlDataSource.prototype.load = function(czml, options) {
-        if (typeof options === 'string') {
-            options = {
-                sourceUri : options
-            };
-            deprecationWarning('CzmlDataSource.process.load', 'Passing a sourceUri string as the second paraameter to CzmlDataSource.load has been deprecated. Pass an options object instead.');
-        }
         return load(this, czml, options, true);
-    };
-
-    CzmlDataSource.prototype.processUrl = function(url) {
-        deprecationWarning('CzmlDataSource.prototype.processUrl', 'CzmlDataSource.processUrl has been deprecated.  Use CzmlDataSource.process instead.');
-        return this.process(url);
-    };
-
-    CzmlDataSource.prototype.loadUrl = function(url) {
-        deprecationWarning('CzmlDataSource.prototype.loadUrl', 'CzmlDataSource.loadUrl has been deprecated.  Use CzmlDataSource.load instead.');
-        return this.load(url);
     };
 
     /**

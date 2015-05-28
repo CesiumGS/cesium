@@ -3,7 +3,13 @@ Change Log
 
 ### 1.10 - 2015-06-01
 * Breaking changes
-  *
+  * Removed `InfoBoxViewModel.defaultSanitizer`, `InfoBoxViewModel.sanitizer`, and `Cesium.sanitize`, which was deprecated in 1.7.
+  * Removed `InfoBoxViewModel.descriptionRawHtml`, which was deprecated in 1.7.  Use `InfoBoxViewModel.description` instead.
+  * Removed `GeoJsonDataSource.fromUrl`, which was deprecated in 1.7. Use `GeoJsonDataSource.load` instead. Unlike fromUrl, load can take either a url or parsed JSON object and returns a promise to a new instance, rather than a new instance.
+  * Removed `GeoJsonDataSource.prototype.loadUrl`, which was deprecated in 1.7.  Instead, pass a url as the first parameter to `GeoJsonDataSource.prototype.load`.
+  * Removed `CzmlDataSource.prototype.loadUrl`, which was deprecated in 1.7.  Instead, pass a url as the first parameter to `CzmlDataSource.prototype.load`.
+  * Removed `CzmlDataSource.prototype.processUrl`, which was deprecated in 1.7.  Instead, pass a url as the first parameter to `CzmlDataSource.prototype.process`.
+  * Removed the `sourceUri` parameter to all `CzmlDataSource` load and process functions, which was deprecated in 1.7.  Instead pass an `options` object with `sourceUri` property.
 * Deprecated
   * Deprecated `Camera.clone`. It will be removed in 1.11.
   * `WebMapServiceImageryProvider` constructor parameters `options.getFeatureInfoAsGeoJson` and `options.getFeatureInfoAsXml` have been deprecated and will be removed in Cesium 1.13.  Use `options.getFeatureInfoFormats` instead.
