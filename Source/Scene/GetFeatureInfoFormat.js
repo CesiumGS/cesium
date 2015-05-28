@@ -250,7 +250,7 @@ define([
     }
 
     var emptyBodyRegex= /<body>\s*<\/body>/im;
-    var titleRegex = /<title>([^]*)<\/title>/im;
+    var titleRegex = /<title>(.*)<\/title>/im;
 
     function textToFeatureInfo(text) {
         // If the text is HTML and it has an empty body tag, assume it means no features were found.
