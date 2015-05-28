@@ -1799,11 +1799,11 @@ define([
 
         bindFramebuffer(context, framebuffer);
 
+        applyRenderState(context, rs, passState);
+
         var sp = defaultValue(shaderProgram, drawCommand.shaderProgram);
         sp._bind();
         context._maxFrameTextureUnitIndex = Math.max(context._maxFrameTextureUnitIndex, sp.maximumTextureUnitIndex);
-
-        applyRenderState(context, rs, passState);
     }
 
     function continueDraw(context, drawCommand, shaderProgram) {
@@ -1834,22 +1834,19 @@ define([
         var sp = defaultValue(shaderProgram, drawCommand.shaderProgram);
         sp._setUniforms(drawCommand.uniformMap, context._us, context.validateShaderProgram);
 
+        va._bind();
         var indexBuffer = va.indexBuffer;
 
         if (defined(indexBuffer)) {
             offset = offset * indexBuffer.bytesPerIndex; // offset in vertices to offset in bytes
             count = defaultValue(count, indexBuffer.numberOfIndices);
-
-            va._bind();
             context._gl.drawElements(primitiveType, count, indexBuffer.indexDatatype, offset);
-            va._unBind();
         } else {
             count = defaultValue(count, va.numberOfVertices);
-
-            va._bind();
             context._gl.drawArrays(primitiveType, offset, count);
-            va._unBind();
         }
+
+        va._unBind();
     }
 
     Context.prototype.draw = function(drawCommand, passState, renderState, shaderProgram) {

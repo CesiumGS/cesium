@@ -199,6 +199,11 @@ define([
         this.onlySunLighting = defaultValue(options.onlySunLighting, false);
         this._onlySunLighting = false;
 
+        /**
+         * @private
+         */
+        this._depthTestEnabled = defaultValue(options.depthTestEnabled, true);
+
         this._sp = undefined;
         this._rs = undefined;
         this._va = undefined;
@@ -295,11 +300,10 @@ define([
                     face : CullFace.FRONT
                 },
                 depthTest : {
-                    enabled : true
+                    enabled : this._depthTestEnabled
                 },
-                // Do not write depth since the depth for the bounding box is
-                // wrong; it is not the true depth of the ray casted ellipsoid.
-                // Only write depth when EXT_frag_depth is supported.
+                // Only write depth when EXT_frag_depth is supported since the depth for
+                // the bounding box is wrong; it is not the true depth of the ray casted ellipsoid.
                 depthMask : !translucent && context.fragmentDepth,
                 blending : translucent ? BlendingState.ALPHA_BLEND : undefined
             });
