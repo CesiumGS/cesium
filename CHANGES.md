@@ -8,11 +8,17 @@ Change Log
   * Deprecated `Camera.clone`. It will be removed in 1.11.
   * `WebMapServiceImageryProvider` constructor parameters `options.getFeatureInfoAsGeoJson` and `options.getFeatureInfoAsXml` have been deprecated and will be removed in Cesium 1.13.  Use `options.getFeatureInfoFormats` instead.
   * The Cesium sample models are now in the Binary glTF format (`.bgltf`).  Cesium will also include the models as plain glTF (`.gltf`) until Cesium 1.13.  Cesium support for `.gltf` will not be removed.
+  * Deprecated `Scene.fxaaOrderIndependentTranslucency`. Use `Scene.fxaa` which is now `true` by default.
+* Added `Billboard.heightReference` and `Label.heightReference` to clamp billboards and labels to terrain.
 * Added new `PointPrimitive` and `PointPrimitiveCollection`, which are faster and use less memory than billboards with circles.
 * Changed `Entity.point` back-end graphics to use the new `PointPrimitive` instead of billboards.  No change to the `Entity.point` API.
 * Added optional drilling limit to `Scene.drillPick`.
 * Added optional `ellipsoid` parameter to construction options of imagery and terrain providers that were lacking it.  Note that terrain bounding spheres are precomputed on the server, so any supplied terrain ellipsoid must match the one used by the server.
 * Upgraded Autolinker from version 0.15.2 to 0.17.1.
+* Fixed documentation for `Context.drawingBufferHeight` and `Context.drawingBufferWidth`.
+* Added debug option to `Scene` to show the depth buffer information for a specified view frustum slice and exposed capability in `CesiumInspector` widget.
+* Added `Scene.pickPosition` to reconstruct the cartesian world position from window coordinates.
+* The default mouse controls now support panning and zooming on 3D models and other opaque geometry.
 * Added `Camera.moveStart` and `Camera.moveEnd` events.
 * Added new leap second for 30 June 2015 at UTC 23:59:60.
 * `KmlDataSource` can now load a KML file that uses explicit XML namespacing, e.g. `kml:Document`.
