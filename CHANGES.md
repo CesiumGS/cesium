@@ -10,6 +10,7 @@ Change Log
   * Removed `CzmlDataSource.prototype.loadUrl`, which was deprecated in 1.7.  Instead, pass a url as the first parameter to `CzmlDataSource.prototype.load`.
   * Removed `CzmlDataSource.prototype.processUrl`, which was deprecated in 1.7.  Instead, pass a url as the first parameter to `CzmlDataSource.prototype.process`.
   * Removed the `sourceUri` parameter to all `CzmlDataSource` load and process functions, which was deprecated in 1.7.  Instead pass an `options` object with `sourceUri` property.
+  * Removed `PolygonGraphics.positions` which was deprecated in 1.6. Instead, use `PolygonGraphics.hierarchy`.
 * Deprecated
   * Deprecated `Camera.clone`. It will be removed in 1.11.
   * `WebMapServiceImageryProvider` constructor parameters `options.getFeatureInfoAsGeoJson` and `options.getFeatureInfoAsXml` have been deprecated and will be removed in Cesium 1.13.  Use `options.getFeatureInfoFormats` instead.
