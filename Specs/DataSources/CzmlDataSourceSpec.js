@@ -427,6 +427,7 @@ defineSuite([
             billboard : {
                 image : 'image.png',
                 scale : 1.0,
+                rotation : 1.3,
                 horizontalOrigin : 'CENTER',
                 verticalOrigin : 'CENTER',
                 color : {
@@ -450,6 +451,7 @@ defineSuite([
 
         expect(entity.billboard).toBeDefined();
         expect(entity.billboard.image.getValue(Iso8601.MINIMUM_VALUE)).toEqual(sourceUri + 'image.png');
+        expect(entity.billboard.rotation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(billboardPacket.billboard.rotation);
         expect(entity.billboard.scale.getValue(Iso8601.MINIMUM_VALUE)).toEqual(billboardPacket.billboard.scale);
         expect(entity.billboard.horizontalOrigin.getValue(Iso8601.MINIMUM_VALUE)).toEqual(HorizontalOrigin.CENTER);
         expect(entity.billboard.verticalOrigin.getValue(Iso8601.MINIMUM_VALUE)).toEqual(VerticalOrigin.CENTER);
