@@ -41,6 +41,7 @@ var city = viewer.scene.primitives.add(new Cesium.Cesium3DTiles({
     debugShowBoundingVolume : false,
     debugShowContentsBoundingVolume : false
 }));
+viewer.scene.screenSpaceCameraController.minimumZoomDistance = 1;
 
 viewer.scene.debugShowFramesPerSecond = true;
 //viewer.extend(Cesium.viewerCesiumInspectorMixin);
