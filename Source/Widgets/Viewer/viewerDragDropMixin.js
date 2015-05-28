@@ -33,7 +33,7 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Element|String} [options.dropTarget=viewer.container] The DOM element which will serve as the drop target.
      * @param {Boolean} [options.clearOnDrop=true] When true, dropping files will clear all existing data sources first, when false, new data sources will be loaded after the existing ones.
-     * @param {DefaultProxy} [options.proxy] The proxy to be used for KML network links.
+     * @param {Proxy} [options.proxy] The proxy to be used for KML network links.
      *
      * @exception {DeveloperError} Element with id <options.dropTarget> does not exist in the document.
      * @exception {DeveloperError} dropTarget is already defined by another mixin.
@@ -152,7 +152,7 @@ define([
             /**
              * Gets or sets the proxy to be used for KML.
              * @memberof viewerDragDropMixin.prototype
-             * @type {DefaultProxy}
+             * @type {Proxy}
              */
             proxy : {
                 get : function() {

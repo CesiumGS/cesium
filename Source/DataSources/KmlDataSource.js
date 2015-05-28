@@ -1650,7 +1650,7 @@ define([
      * @alias KmlDataSource
      * @constructor
      *
-     * @param {DefaultProxy} [proxy] A proxy to be used for loading external data.
+     * @param {Proxy} [proxy] A proxy to be used for loading external data.
      *
      * @see {@link http://www.opengeospatial.org/standards/kml/|Open Geospatial Consortium KML Standard}
      * @see {@link https://developers.google.com/kml/|Google KML Documentation}
@@ -1679,7 +1679,7 @@ define([
      *
      * @param {String|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
      * @param {Object} [options] An object with the following properties:
-     * @param {DefaultProxy} [options.proxy] A proxy to be used for loading external data.
+     * @param {Proxy} [options.proxy] A proxy to be used for loading external data.
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
      * @returns {Promise} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
      */
