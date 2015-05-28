@@ -256,6 +256,9 @@ define([
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
      * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
      * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
+     * @param {DOC_TBA} [options.vertexShaderLoaded] DOC_TBA.
+     * @param {DOC_TBA} [options.fragmentShaderLoaded] DOC_TBA.
+     * @param {DOC_TBA} [options.uniformMapLoaded] DOC_TBA.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
@@ -388,6 +391,22 @@ define([
          */
         this.id = options.id;
         this._id = options.id;
+
+        /**
+         * DOC_TBA
+         */
+        this.vertexShaderLoaded = options.vertexShaderLoaded;
+
+        /**
+         * DOC_TBA
+         */
+        this.fragmentShaderLoaded = options.fragmentShaderLoaded;
+
+        /**
+         * DOC_TBA
+         */
+// TODO: what all do we pass to this?
+        this.uniformMapLoaded = options.uniformMapLoaded;
 
         /**
          * Used for picking primitives that wrap a model.
@@ -1008,11 +1027,12 @@ define([
         }
     }
 
-    function shaderLoad(model, name) {
+    function shaderLoad(model, type, name) {
         return function(source) {
             var loadResources = model._loadResources;
             loadResources.shaders[name] = {
                 source : source,
+                type : type,
                 bufferView : undefined
             };
             --loadResources.pendingShaderLoads;
@@ -1029,13 +1049,14 @@ define([
                 if (defined(shader.extensions) && defined(shader.extensions.CESIUM_binary_glTF)) {
                     model._loadResources.shaders[name] = {
                         source : undefined,
+                        type : shader.type,
                         bufferView : shader.extensions.CESIUM_binary_glTF.bufferView
                     };
                 } else {
                     ++model._loadResources.pendingShaderLoads;
                     var uri = new Uri(shader.uri);
                     var shaderPath = uri.resolve(model._baseUri).toString();
-                    loadText(shaderPath).then(shaderLoad(model, name)).otherwise(getFailedLoadFunction(model, 'shader', shaderPath));
+                    loadText(shaderPath).then(shaderLoad(model, shader.type, name)).otherwise(getFailedLoadFunction(model, 'shader', shaderPath));
                 }
             }
         }
@@ -1284,15 +1305,25 @@ define([
     }
 
     function getShaderSource(model, shader) {
+        var source;
+
         if (defined(shader.source)) {
-            return shader.source;
+            source = shader.source;
+        } else {
+            var buffers = model._loadResources.buffers;
+            var gltf = model.gltf;
+            var bufferView = gltf.bufferViews[shader.bufferView];
+            source = getStringFromTypedArray(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
         }
 
-        var buffers = model._loadResources.buffers;
-        var gltf = model.gltf;
-        var bufferView = gltf.bufferViews[shader.bufferView];
+        // Allow callbacks to modify the shader source
+        if (defined(model.vertexShaderLoaded) && (shader.type === WebGLRenderingContext.VERTEX_SHADER)) {
+            source = model.vertexShaderLoaded(source);
+        } else if (defined(model.fragmentShaderLoaded) && (shader.type === WebGLRenderingContext.FRAGMENT_SHADER)) {
+            source = model.fragmentShaderLoaded(source);
+        }
 
-        return getStringFromTypedArray(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
+        return source;
     }
 
     function createProgram(name, model, context) {
@@ -1441,6 +1472,7 @@ define([
                 source : source,
                 pixelFormat : texture.internalFormat,
                 pixelDatatype : texture.type,
+                sampler : sampler,
                 flipY : false
             });
         }
@@ -1449,7 +1481,6 @@ define([
         if (mipmap) {
             tx.generateMipmap();
         }
-        tx.sampler = sampler;
 
         model._rendererResources.textures[gltfTexture.name] = tx;
     }
@@ -2117,6 +2148,11 @@ define([
                             uniformValues[parameterName] = uv2;
                         }
                     }
+                }
+
+                // Allow callback to add new uniforms
+                if (defined(model.uniformMapLoaded)) {
+                    uniformMap = model.uniformMapLoaded(uniformMap);
                 }
 
                 var u = uniformMaps[materialName];

@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+TODO
+* Breaking changes
+  *
+* Deprecated
+  *
+* Added `vertexShaderLoaded`, `fragmentShaderLoaded`, and `uniformMapLoaded` callbacks to `Model`.
+
 ### 1.10 - 2015-06-01
 * Breaking changes
   *
