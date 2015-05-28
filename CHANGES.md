@@ -3,7 +3,7 @@ Change Log
 
 ### 1.10 - 2015-06-01
 * Breaking changes
-  *
+  * Existing bookmarks to documentation of static members have changed [#2757](https://github.com/AnalyticalGraphicsInc/cesium/issues/2757).
 * Deprecated
   * Deprecated `Camera.clone`. It will be removed in 1.11.
   * `WebMapServiceImageryProvider` constructor parameters `options.getFeatureInfoAsGeoJson` and `options.getFeatureInfoAsXml` have been deprecated and will be removed in Cesium 1.13.  Use `options.getFeatureInfoFormats` instead.
