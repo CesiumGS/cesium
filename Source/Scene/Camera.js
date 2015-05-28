@@ -1639,6 +1639,7 @@ define([
     var viewRectangle3DNorthWest = new Cartesian3();
     var viewRectangle3DSouthEast = new Cartesian3();
     var viewRectangle3DCenter = new Cartesian3();
+    var viewRectangle3DCenter2 = new Cartesian3();
     var defaultRF = {direction: new Cartesian3(), right: new Cartesian3(), up: new Cartesian3()};
     function rectangleCameraPosition3D (camera, rectangle, ellipsoid, result, positionOnly) {
         if (!defined(result)) {
@@ -1670,9 +1671,14 @@ define([
         cart.latitude = north;
         var northWest = ellipsoid.cartographicToCartesian(cart, viewRectangle3DNorthWest);
 
-        var center = Cartesian3.subtract(northEast, southWest, viewRectangle3DCenter);
+        var center1 = Cartesian3.add(northEast, southWest, viewRectangle3DCenter);
+        Cartesian3.multiplyByScalar(center1, 0.5, center1);
+
+        var center2 = Cartesian3.add(northWest, southEast, viewRectangle3DCenter2);
+        Cartesian3.multiplyByScalar(center2, 0.5, center2);
+
+        var center = Cartesian3.add(center1, center2, viewRectangle3DCenter);
         Cartesian3.multiplyByScalar(center, 0.5, center);
-        Cartesian3.add(southWest, center, center);
 
         var mag = Cartesian3.magnitude(center);
         if (mag < CesiumMath.EPSILON6) {
