@@ -118,7 +118,7 @@ define([
             var contentFactory = Cesium3DTileContentProviderFactory[contentHeader.type];
 
             if (defined(contentFactory)) {
-                content = contentFactory(url);
+                content = contentFactory(url, contentHeader);
             } else {
                 throw new DeveloperError('Unknown tile content type, ' + contentHeader.type + ', for ' + url);
             }

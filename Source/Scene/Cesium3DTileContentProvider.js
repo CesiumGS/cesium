@@ -38,7 +38,7 @@ define([
     /**
      * @private
      */
-    var Cesium3DTileContentProvider = function(url) {
+    var Cesium3DTileContentProvider = function(url, contentHeader) {
         this._primitives = undefined;
         this._url = url;
 

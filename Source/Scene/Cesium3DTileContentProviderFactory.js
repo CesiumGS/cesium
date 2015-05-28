@@ -11,11 +11,11 @@ define([
      * @private
      */
     var Cesium3DTileContentProviderFactory = {
-        gltf : function(url) {
-            return new Gltf3DTileContentProvider(url);
+        gltf : function(url, contentHeader) {
+            return new Gltf3DTileContentProvider(url, contentHeader);
         },
-        czml : function(url) {
-            return new Cesium3DTileContentProvider(url);
+        czml : function(url, contentHeader) {
+            return new Cesium3DTileContentProvider(url, contentHeader);
         }
     };
 
