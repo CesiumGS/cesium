@@ -182,12 +182,12 @@ define([
         // Replace main() for picked if desired.
         var pickColorQualifier = shaderSource.pickColorQualifier;
         if (defined(pickColorQualifier)) {
-            combinedSources = combinedSources.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_old_main()');
+            combinedSources = ShaderSource.replaceMain(combinedSources, 'czm_pick_main');
             combinedSources += '\
 \n' + pickColorQualifier + ' vec4 czm_pickColor;\n\
 void main()\n\
 {\n\
-    czm_old_main();\n\
+    czm_pick_main();\n\
     if (gl_FragColor.a == 0.0) {\n\
         discard;\n\
     }\n\
@@ -287,6 +287,11 @@ void main()\n\
             pickColorQuantifier : this.pickColorQualifier,
             includeBuiltIns : this.includeBuiltIns
         });
+    };
+
+    ShaderSource.replaceMain = function(source, renamedMain) {
+        renamedMain = 'void ' + renamedMain + '()';
+        return source.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, renamedMain);
     };
 
     /**

@@ -149,7 +149,7 @@ define([
         this._flipY = flipY;
         this._sampler = undefined;
 
-        this.sampler = undefined;
+        this.sampler = options.sampler;
     };
 
     defineProperties(Texture.prototype, {

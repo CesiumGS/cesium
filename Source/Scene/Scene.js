@@ -29,6 +29,7 @@ define([
         '../Renderer/ClearCommand',
         '../Renderer/Context',
         '../Renderer/PassState',
+        '../Renderer/ShaderSource',
         './Camera',
         './CreditDisplay',
         './CullingVolume',
@@ -80,6 +81,7 @@ define([
         ClearCommand,
         Context,
         PassState,
+        ShaderSource,
         Camera,
         CreditDisplay,
         CullingVolume,
@@ -1040,8 +1042,7 @@ define([
         var fs = sp.fragmentShaderSource.clone();
 
         fs.sources = fs.sources.map(function(source) {
-            source = source.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_Debug_main()');
-            return source;
+            return ShaderSource.replaceMain(source, 'czm_Debug_main');
         });
 
         var newMain =

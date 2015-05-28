@@ -541,13 +541,13 @@ define([
     }
 
     function createPickVertexShaderSource(vertexShaderSource) {
-        var renamedVS = vertexShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_old_main()');
+        var renamedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_pick_main');
         var pickMain =
             'attribute vec4 pickColor; \n' +
             'varying vec4 czm_pickColor; \n' +
             'void main() \n' +
             '{ \n' +
-            '    czm_old_main(); \n' +
+            '    czm_pick_main(); \n' +
             '    czm_pickColor = pickColor; \n' +
             '}';
 
@@ -559,7 +559,7 @@ define([
             return vertexShaderSource;
         }
 
-        var renamedVS = vertexShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_non_show_main()');
+        var renamedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_non_show_main');
         var showMain =
             'attribute float show;\n' +
             'void main() \n' +
@@ -630,7 +630,7 @@ define([
         modifiedVS = modifiedVS.replace(/attribute\s+vec2\s+st;/g, '');
         modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+tangent;/g, '');
         modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+binormal;/g, '');
-        modifiedVS = modifiedVS.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_non_compressed_main()');
+        modifiedVS = ShaderSource.replaceMain(modifiedVS, 'czm_non_compressed_main');
         var compressedMain =
             'void main() \n' +
             '{ \n' +

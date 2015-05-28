@@ -330,13 +330,12 @@ defineSuite([
     it('can generate mipmaps', function() {
         texture = context.createTexture2D({
             source : blueImage,
-            pixelFormat : PixelFormat.RGBA
+            pixelFormat : PixelFormat.RGBA,
+            sampler : context.createSampler({
+                minificationFilter : TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
+            })
         });
-
         texture.generateMipmap();
-        texture.sampler = context.createSampler({
-            minificationFilter : TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
-        });
 
         expect(renderFragment(context)).toEqual(Color.BLUE.toBytes());
     });
@@ -364,7 +363,7 @@ defineSuite([
         }
     });
 
-    it('can set a sampler', function() {
+    it('can set sampler property', function() {
         texture = context.createTexture2D({
             source : blueImage,
             pixelFormat : PixelFormat.RGBA
@@ -384,6 +383,27 @@ defineSuite([
         expect(s.wrapT).toEqual(sampler.wrapT);
         expect(s.minificationFilter).toEqual(sampler.minificationFilter);
         expect(s.magnificationFilter).toEqual(sampler.magnificationFilter);
+        expect(s.maximumAnisotropy).toEqual(2.0);
+    });
+
+    it('can set sampler at construction', function() {
+        texture = context.createTexture2D({
+            source : blueImage,
+            pixelFormat : PixelFormat.RGBA,
+            sampler : context.createSampler({
+                wrapS : TextureWrap.REPEAT,
+                wrapT : TextureWrap.MIRRORED_REPEAT,
+                minificationFilter : TextureMinificationFilter.NEAREST,
+                magnificationFilter : TextureMagnificationFilter.NEAREST,
+                maximumAnisotropy : 2.0
+            })
+        });
+
+        var s = texture.sampler;
+        expect(s.wrapS).toEqual(TextureWrap.REPEAT);
+        expect(s.wrapT).toEqual(TextureWrap.MIRRORED_REPEAT);
+        expect(s.minificationFilter).toEqual(TextureMinificationFilter.NEAREST);
+        expect(s.magnificationFilter).toEqual(TextureMagnificationFilter.NEAREST);
         expect(s.maximumAnisotropy).toEqual(2.0);
     });
 

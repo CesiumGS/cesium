@@ -387,7 +387,7 @@ define([
             var fs = shaderProgram.fragmentShaderSource.clone();
 
             fs.sources = fs.sources.map(function(source) {
-                source = source.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_translucent_main()');
+                source = ShaderSource.replaceMain(source, 'czm_translucent_main');
                 source = source.replace(/gl_FragColor/g, 'czm_gl_FragColor');
                 source = source.replace(/\bdiscard\b/g, 'czm_discard = true');
                 source = source.replace(/czm_phong/g, 'czm_translucentPhong');
