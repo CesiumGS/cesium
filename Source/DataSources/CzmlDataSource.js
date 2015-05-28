@@ -446,12 +446,15 @@ define([
             isSampled = !defined(packetData.array) && (typeof unwrappedInterval !== 'string') && unwrappedIntervalLength > packedLength;
         }
 
+        //Rotation is a special case because it represents a native type (Number)
+        //and therefore does not need to be unpacked when loaded as a constant value.
+        var needsUnpacking = typeof type.unpack === 'function' && type !== Rotation;
 
         //Any time a constant value is assigned, it completely blows away anything else.
         if (!isSampled && !hasInterval) {
             if (isReference) {
                 object[propertyName] = makeReference(entityCollection, packetData.reference);
-            } else if (defined(type.unpack)) {
+            } else if (needsUnpacking) {
                 object[propertyName] = new ConstantProperty(type.unpack(unwrappedInterval, 0));
             } else {
                 object[propertyName] = new ConstantProperty(unwrappedInterval);
@@ -489,7 +492,7 @@ define([
             combinedInterval = combinedInterval.clone();
             if (isReference) {
                 combinedInterval.data = makeReference(entityCollection, packetData.reference);
-            } else if (defined(type.unpack)) {
+            } else if (needsUnpacking) {
                 combinedInterval.data = type.unpack(unwrappedInterval, 0);
             } else {
                 combinedInterval.data = unwrappedInterval;
