@@ -7,21 +7,20 @@ Change Log
 * Deprecated
   * `WebMapServiceImageryProvider` constructor parameters `options.getFeatureInfoAsGeoJson` and `options.getFeatureInfoAsXml` were deprecated and will be removed in Cesium 1.13.  Use `options.getFeatureInfoFormats` instead.
   * Deprecated `Camera.clone`. It will be removed in 1.11.
-  * Deprecated `Scene.fxaaOrderIndependentTranslucency`. Use `Scene.fxaa` which is now `true` by default.  It will be removed in 1.11.
-  * The Cesium sample models are now in the Binary glTF format (`.bgltf`).  Cesium will also include the models as plain glTF (`.gltf`) until Cesium 1.13.  Cesium support for `.gltf` will not be removed.
-* Added `view` option to the CesiumViewer app.  Sets the initial camera position using longitude, latitude, height, heading, pitch and roll.
-  * Example: path/to/CesiumViewer/index.html?view=-75.0,40.0,300.0,9.0,-13.0,3.0
+  * Deprecated `Scene.fxaaOrderIndependentTranslucency`. It will be removed in 1.11. Use `Scene.fxaa` which is now `true` by default.
+  * The Cesium sample models are now in the Binary glTF format (`.bgltf`).  Cesium will also include the models as plain glTF (`.gltf`) until 1.13.  Cesium support for `.gltf` will not be removed.
+* Added `view` query parameter to the CesiumViewer app, which sets the initial camera position using longitude, latitude, height, heading, pitch and roll.  For example: `http://cesiumjs.org/Cesium/Build/Apps/CesiumViewer/index.html/index.html?view=-75.0,40.0,300.0,9.0,-13.0,3.0`
 * Added `Billboard.heightReference` and `Label.heightReference` to clamp billboards and labels to terrain.
 * Added support for the [CESIUM_binary_glTF](https://github.com/KhronosGroup/glTF/blob/new-extensions/extensions/CESIUM_binary_glTF/README.md) extension for loading binary blobs of glTF to `Model`.  See [Faster 3D Models with Binary glTF](http://cesiumjs.org/2015/06/01/Binary-glTF/).
 * Added support for the [CESIUM_RTC](https://github.com/KhronosGroup/glTF/blob/new-extensions/extensions/CESIUM_RTC/README.md) glTF extension for high-precision rendering to `Model`.
-* Added new `PointPrimitive` and `PointPrimitiveCollection`, which are faster and use less memory than billboards with circles.
-* Changed `Entity.point` back-end graphics to use the new `PointPrimitive` instead of billboards.  No change to the `Entity.point` API.
-* Added `Scene.pickPosition` to reconstruct the cartesian world position from window coordinates.
+* Added `PointPrimitive` and `PointPrimitiveCollection`, which are faster and use less memory than billboards with circles.
+* Changed `Entity.point` to use the new `PointPrimitive` instead of billboards.  This does not change the `Entity.point` API.
+* Added `Scene.pickPosition` to reconstruct the WGS84 position from window coordinates.
 * The default mouse controls now support panning and zooming on 3D models and other opaque geometry.
 * Added `Camera.moveStart` and `Camera.moveEnd` events.
 * Added `GeocoderViewModel.complete` event.  Triggered after the camera flight is completed.
 * `KmlDataSource` can now load a KML file that uses explicit XML namespacing, e.g. `kml:Document`.
-* Setting `Entity.show` now properly toggles the display of all descendant entities, previously it was only affecting its direct children.
+* Setting `Entity.show` now properly toggles the display of all descendant entities, previously it only affected its direct children.
 * Fixed a bug that sometimes caused `Entity` instances with `show` set to false to reappear when new `Entity` geometry is added. [#2686](https://github.com/AnalyticalGraphicsInc/cesium/issues/2686)
 * Added a `Rotation` object which, when passed to `SampledProperty`, always interpolates values towards the shortest angle. Also hooked up CZML to use `Rotation` for all time-dynamic rotations.
 * Fixed a bug where moon rendered in front of foreground geometry. [#1964](https://github.com/AnalyticalGraphicsInc/cesium/issue/1964)
