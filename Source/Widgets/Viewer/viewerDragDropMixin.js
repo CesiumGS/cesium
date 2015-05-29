@@ -67,6 +67,9 @@ define([
         if (viewer.hasOwnProperty('clearOnDrop')) {
             throw new DeveloperError('clearOnDrop is already defined by another mixin.');
         }
+        if (viewer.hasOwnProperty('flyToOnDrop')) {
+            throw new DeveloperError('flyToOnDrop is already defined by another mixin.');
+        }
         //>>includeEnd('debug');
 
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
