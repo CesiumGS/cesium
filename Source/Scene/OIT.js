@@ -32,17 +32,20 @@ define([
      * @private
      */
     var OIT = function(context) {
+        // We support multipass for the Chrome D3D9 backend and ES 2.0 on mobile.
+        this._translucentMultipassSupport = false;
+        this._translucentMRTSupport = false;
+
         var extensionsSupported = context.floatingPointTexture && context.depthTexture;
         this._translucentMRTSupport = context.drawBuffers && extensionsSupported;
-
-        // We support multipass for the Chrome D3D9 backend and ES 2.0 on mobile.
         this._translucentMultipassSupport = !this._translucentMRTSupport && extensionsSupported;
 
-        this._opaqueTexture = undefined;
-        this._accumulationTexture = undefined;
-        this._depthTexture = undefined;
-
         this._opaqueFBO = undefined;
+        this._opaqueTexture = undefined;
+        this._depthStencilTexture = undefined;
+
+        this._accumulationTexture = undefined;
+
         this._translucentFBO = undefined;
         this._alphaFBO = undefined;
 
@@ -77,14 +80,11 @@ define([
     };
 
     function destroyTextures(oit) {
-        oit._opaqueTexture = oit._opaqueTexture && !oit._opaqueTexture.isDestroyed() && oit._opaqueTexture.destroy();
         oit._accumulationTexture = oit._accumulationTexture && !oit._accumulationTexture.isDestroyed() && oit._accumulationTexture.destroy();
         oit._revealageTexture = oit._revealageTexture && !oit._revealageTexture.isDestroyed() && oit._revealageTexture.destroy();
-        oit._depthTexture = oit._depthTexture && !oit._depthTexture.isDestroyed() && oit._depthTexture.destroy();
     }
 
     function destroyFramebuffers(oit) {
-        oit._opaqueFBO = oit._opaqueFBO && !oit._opaqueFBO.isDestroyed() && oit._opaqueFBO.destroy();
         oit._translucentFBO = oit._translucentFBO && !oit._translucentFBO.isDestroyed() && oit._translucentFBO.destroy();
         oit._alphaFBO = oit._alphaFBO && !oit._alphaFBO.isDestroyed() && oit._alphaFBO.destroy();
         oit._adjustTranslucentFBO = oit._adjustTranslucentFBO && !oit._adjustTranslucentFBO.isDestroyed() && oit._adjustTranslucentFBO.destroy();
@@ -99,12 +99,6 @@ define([
     function updateTextures(oit, context, width, height) {
         destroyTextures(oit);
 
-        oit._opaqueTexture = context.createTexture2D({
-            width : width,
-            height : height,
-            pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.UNSIGNED_BYTE
-        });
         oit._accumulationTexture = context.createTexture2D({
             width : width,
             height : height,
@@ -116,12 +110,6 @@ define([
             height : height,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.FLOAT
-        });
-        oit._depthTexture = context.createTexture2D({
-            width : width,
-            height : height,
-            pixelFormat : PixelFormat.DEPTH_COMPONENT,
-            pixelDatatype : PixelDatatype.UNSIGNED_SHORT
         });
     }
 
@@ -135,7 +123,7 @@ define([
         if (oit._translucentMRTSupport) {
             oit._translucentFBO = context.createFramebuffer({
                 colorTextures : [oit._accumulationTexture, oit._revealageTexture],
-                depthTexture : oit._depthTexture,
+                depthStencilTexture : oit._depthStencilTexture,
                 destroyAttachments : false
             });
             oit._adjustTranslucentFBO = context.createFramebuffer({
@@ -153,12 +141,12 @@ define([
         if (!oit._translucentMRTSupport) {
             oit._translucentFBO = context.createFramebuffer({
                 colorTextures : [oit._accumulationTexture],
-                depthTexture : oit._depthTexture,
+                depthStencilTexture : oit._depthStencilTexture,
                 destroyAttachments : false
             });
             oit._alphaFBO = context.createFramebuffer({
                 colorTextures : [oit._revealageTexture],
-                depthTexture : oit._depthTexture,
+                depthStencilTexture : oit._depthStencilTexture,
                 destroyAttachments : false
             });
             oit._adjustTranslucentFBO = context.createFramebuffer({
@@ -181,32 +169,28 @@ define([
             }
         }
 
-        if (supported) {
-            oit._opaqueFBO = context.createFramebuffer({
-                colorTextures : [oit._opaqueTexture],
-                depthTexture : oit._depthTexture,
-                destroyAttachments : false
-            });
-        }
-
         return supported;
     }
 
-    OIT.prototype.update = function(context) {
+    OIT.prototype.update = function(context, framebuffer) {
         if (!this.isSupported()) {
             return;
         }
 
-        var width = context.drawingBufferWidth;
-        var height = context.drawingBufferHeight;
+        this._opaqueFBO = framebuffer;
+        this._opaqueTexture = framebuffer.getColorTexture(0);
+        this._depthStencilTexture = framebuffer.depthStencilTexture;
 
-        var opaqueTexture = this._opaqueTexture;
-        var textureChanged = !defined(opaqueTexture) || opaqueTexture.width !== width || opaqueTexture.height !== height;
+        var width = this._opaqueTexture.width;
+        var height = this._opaqueTexture.height;
+
+        var accumulationTexture = this._accumulationTexture;
+        var textureChanged = !defined(accumulationTexture) || accumulationTexture.width !== width || accumulationTexture.height !== height;
         if (textureChanged) {
             updateTextures(this, context, width, height);
         }
 
-        if (!defined(this._opaqueFBO) || textureChanged) {
+        if (!defined(this._translucentFBO) || textureChanged) {
             if (!updateFramebuffers(this, context)) {
                 // framebuffer creation failed
                 return;
@@ -255,7 +239,7 @@ define([
                         return that._translucentMRTClearCommand.color;
                     },
                     u_depthTexture : function() {
-                        return that._depthTexture;
+                        return that._depthStencilTexture;
                     }
                 };
 
@@ -274,7 +258,7 @@ define([
                         return that._translucentMultipassClearCommand.color;
                     },
                     u_depthTexture : function() {
-                        return that._depthTexture;
+                        return that._depthStencilTexture;
                     }
                 };
 
@@ -289,7 +273,7 @@ define([
                         return that._alphaClearCommand.color;
                     },
                     u_depthTexture : function() {
-                        return that._depthTexture;
+                        return that._depthStencilTexture;
                     }
                 };
 
@@ -540,10 +524,6 @@ define([
         }
 
         passState.framebuffer = framebuffer;
-    };
-
-    OIT.prototype.getColorFramebuffer = function() {
-        return this._opaqueFBO;
     };
 
     OIT.prototype.isSupported = function() {

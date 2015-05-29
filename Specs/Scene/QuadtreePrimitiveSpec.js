@@ -1,6 +1,8 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/QuadtreePrimitive',
+        'Core/Cartesian3',
+        'Core/Cartographic',
         'Core/defineProperties',
         'Core/GeographicTilingScheme',
         'Core/Visibility',
@@ -9,6 +11,8 @@ defineSuite([
         'Specs/createFrameState'
     ], function(
         QuadtreePrimitive,
+        Cartesian3,
+        Cartographic,
         defineProperties,
         GeographicTilingScheme,
         Visibility,
@@ -157,5 +161,88 @@ defineSuite([
         quadtree.forEachLoadedTile(function(tile) {
             expect(tile.state).not.toBe(QuadtreeTileLoadState.START);
         });
+    });
+
+    it('add and remove callbacks to tiles', function() {
+        var tileProvider = createSpyTileProvider();
+        tileProvider.getReady.and.returnValue(true);
+        tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
+        tileProvider.computeDistanceToTile.and.returnValue(1e-15);
+
+        // Load the root tiles.
+        tileProvider.loadTile.and.callFake(function(context, frameState, tile) {
+            tile.state = QuadtreeTileLoadState.DONE;
+            tile.renderable = true;
+        });
+
+        var quadtree = new QuadtreePrimitive({
+            tileProvider : tileProvider
+        });
+
+        var removeFunc = quadtree.updateHeight(Cartographic.fromDegrees(-72.0, 40.0), function(position) {});
+
+        quadtree.update(context, frameState, []);
+
+        var addedCallback = false;
+        quadtree.forEachLoadedTile(function (tile) {
+            addedCallback = addedCallback || tile.customData.length > 0;
+        });
+
+        expect(addedCallback).toEqual(true);
+
+        removeFunc();
+        quadtree.update(context, frameState, []);
+
+        var removedCallback = true;
+        quadtree.forEachLoadedTile(function (tile) {
+            removedCallback = removedCallback && tile.customData.length === 0;
+        });
+
+        expect(removedCallback).toEqual(true);
+    });
+
+    it('updates heights', function() {
+        var tileProvider = createSpyTileProvider();
+        tileProvider.getReady.and.returnValue(true);
+        tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
+        tileProvider.computeDistanceToTile.and.returnValue(1e-15);
+
+        tileProvider.terrainProvider = {
+            getTileDataAvailable : function() {
+                return true;
+            }
+        };
+
+        // Load the root tiles.
+        tileProvider.loadTile.and.callFake(function(context, frameState, tile) {
+            tile.state = QuadtreeTileLoadState.DONE;
+            tile.renderable = true;
+        });
+
+        var quadtree = new QuadtreePrimitive({
+            tileProvider : tileProvider
+        });
+
+        var position = Cartesian3.clone(Cartesian3.ZERO);
+        var updatedPosition = Cartesian3.clone(Cartesian3.UNIT_X);
+
+        quadtree.updateHeight(Cartographic.fromDegrees(-72.0, 40.0), function(p) {
+            Cartesian3.clone(p, position);
+        });
+
+        quadtree.update(context, frameState, []);
+        expect(position).toEqual(Cartesian3.ZERO);
+
+        quadtree.forEachLoadedTile(function (tile) {
+            tile.data = {
+                pick : function() {
+                    return updatedPosition;
+                }
+            };
+        });
+
+        quadtree.update(context, frameState, []);
+
+        expect(position).toEqual(updatedPosition);
     });
 });
