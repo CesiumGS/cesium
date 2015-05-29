@@ -47,6 +47,14 @@ viewer.camera.flyTo({
     duration : 0.0
 });
 
+var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+handler.setInputAction(function(movement) {
+    var pick = viewer.scene.pick(movement.endPosition);
+    if (Cesium.defined(pick)) {
+        console.log(pick.contentProvider.batchSize);
+    }
+}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
 viewer.scene.debugShowFramesPerSecond = true;
 //viewer.extend(Cesium.viewerCesiumInspectorMixin);
 
