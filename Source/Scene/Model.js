@@ -259,6 +259,9 @@ define([
      * @param {DOC_TBA} [options.vertexShaderLoaded] DOC_TBA.
      * @param {DOC_TBA} [options.fragmentShaderLoaded] DOC_TBA.
      * @param {DOC_TBA} [options.uniformMapLoaded] DOC_TBA.
+     * @param {DOC_TBA} [options.pickVertexShaderLoaded] DOC_TBA.
+     * @param {DOC_TBA} [options.pickFragmentShaderLoaded] DOC_TBA.
+     * @param {DOC_TBA} [options.pickUniformMapLoaded] DOC_TBA.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
@@ -407,6 +410,22 @@ define([
          */
 // TODO: what all do we pass to this?
         this.uniformMapLoaded = options.uniformMapLoaded;
+
+        /**
+         * DOC_TBA
+         */
+        this.pickVertexShaderLoaded = options.pickVertexShaderLoaded;
+
+        /**
+         * DOC_TBA
+         */
+        this.pickFragmentShaderLoaded = options.pickFragmentShaderLoaded;
+
+        /**
+         * DOC_TBA
+         */
+// TODO: what all do we pass to this?
+        this.pickUniformMapLoaded = options.pickUniformMapLoaded;
 
         /**
          * Used for picking primitives that wrap a model.
@@ -1304,7 +1323,7 @@ define([
         return attributeLocations;
     }
 
-    function getShaderSource(model, shader) {
+    function getShaderSource(model, shader, callback) {
         var source;
 
         if (defined(shader.source)) {
@@ -1316,11 +1335,9 @@ define([
             source = getStringFromTypedArray(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
         }
 
-        // Allow callbacks to modify the shader source
-        if (defined(model.vertexShaderLoaded) && (shader.type === WebGLRenderingContext.VERTEX_SHADER)) {
-            source = model.vertexShaderLoaded(source);
-        } else if (defined(model.fragmentShaderLoaded) && (shader.type === WebGLRenderingContext.FRAGMENT_SHADER)) {
-            source = model.fragmentShaderLoaded(source);
+        // Allow callback to modify the shader source
+        if (defined(callback)) {
+            source = callback(source);
         }
 
         return source;
@@ -1332,18 +1349,29 @@ define([
         var program = programs[name];
 
         var attributeLocations = createAttributeLocations(program.attributes);
-        var vs = getShaderSource(model, shaders[program.vertexShader]);
-        var fs = getShaderSource(model, shaders[program.fragmentShader]);
+        var vs = getShaderSource(model, shaders[program.vertexShader], model.vertexShaderLoaded);
+        var fs = getShaderSource(model, shaders[program.fragmentShader], model.fragmentShaderLoaded);
 
         model._rendererResources.programs[name] = context.createShaderProgram(vs, fs, attributeLocations);
 
         if (model.allowPicking) {
-            // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
-            var pickFS = new ShaderSource({
-                sources : [fs],
-                pickColorQualifier : 'uniform'
-            });
-            model._rendererResources.pickPrograms[name] = context.createShaderProgram(vs, pickFS, attributeLocations);
+            // PERFORMANCE_IDEA: Can optimize the fragment shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
+            var pickVS;
+            var pickFS;
+
+            if (defined(model.pickFragmentShaderLoaded)) {
+                // If a pick fragment shader callback is defined, it overrides model picking
+                pickVS = getShaderSource(model, shaders[program.vertexShader], model.pickVertexShaderLoaded);
+                pickFS = getShaderSource(model, shaders[program.fragmentShader], model.pickFragmentShaderLoaded);
+            } else {
+                pickVS = vs;
+                pickFS = new ShaderSource({
+                    sources : [fs],
+                    pickColorQualifier : 'uniform'
+                });
+            }
+
+            model._rendererResources.pickPrograms[name] = context.createShaderProgram(pickVS, pickFS, attributeLocations);
         }
     }
 
@@ -2265,13 +2293,26 @@ define([
                 var pickCommand;
 
                 if (allowPicking) {
-                    var pickId = context.createPickId(owner);
-                    pickIds.push(pickId);
+                    var pickUniformMap;
 
-                    var pickUniformMap = combine(
-                        uniformMap, {
+                    // Callback to override default model picking
+                    if (defined(model.pickFragmentShaderLoaded)) {
+                        if (defined(model.pickUniformMapLoaded)) {
+                            pickUniformMap = model.pickUniformMapLoaded(uniformMap);
+                        } else {
+                            // This is unlikely, but could happen if the override shader does not
+                            // need new uniforms since, for example, its pick ids are coming from
+                            // a vertex attribute or are baked into the shader source.
+                            pickUniformMap = combine(uniformMap);
+                        }
+                    } else {
+                        var pickId = context.createPickId(owner);
+                        pickIds.push(pickId);
+                        var pickUniforms = {
                             czm_pickColor : createPickColorFunction(pickId.color)
-                        });
+                        };
+                        pickUniformMap = combine(uniformMap, pickUniforms);
+                    }
 
                     pickCommand = new DrawCommand({
                         boundingVolume : new BoundingSphere(), // updated in update()
