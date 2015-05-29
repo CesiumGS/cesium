@@ -66,7 +66,7 @@ define([
         this._batchTextureDimensions = undefined;
         this._useVTF = false;
 
-        this._debugColor = Cartesian4.fromColor(Color.fromRandom({ alpha : 1.0 }));
+        this._debugColor = Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;
     };
 
@@ -172,6 +172,23 @@ define([
             batchValues[offset + 1] = newValue[1];
             batchValues[offset + 2] = newValue[2];
             this._batchValuesDirty = true;
+        }
+    };
+
+    /**
+     * DOC_TBA
+     */
+    Gltf3DTileContentProvider.prototype.setAllColor = function(value) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required.');
+        }
+        //>>includeEnd('debug');
+
+        var batchSize = this._batchSize;
+        for (var i = 0; i < batchSize; ++i) {
+            // PERFORMANCE_IDEA: duplicate part of setColor here to factor things out of the loop
+            this.setColor(i, value);
         }
     };
 
@@ -340,25 +357,14 @@ define([
         this.processingPromise.resolve(this);
     };
 
-    function setMaterialDiffuse(content, color) {
-        var material = content._model.getMaterial('material_RoofColor');
-        if (!defined(material)) {
-//TODO: consistent material name
-/*jshint debug: true*/
-            debugger;
-/*jshint debug: false*/
-        }
-        material.setValue('diffuse', color);
-    }
-
-    function applyDebugSettings(owner, content) {
+     function applyDebugSettings(owner, content) {
         if (content.state === Cesium3DTileContentState.READY) {
             if (owner.debugColorizeTiles && !content._debugColorizeTiles) {
                 content._debugColorizeTiles = true;
-                setMaterialDiffuse(content, content._debugColor);
+                content.setAllColor(content._debugColor);
             } else if (!owner.debugColorizeTiles && content._debugColorizeTiles) {
                 content._debugColorizeTiles = false;
-                setMaterialDiffuse(content, Cartesian4.fromColor(Color.WHITE));
+                content.setAllColor(Color.WHITE);
             }
         }
     }
@@ -409,10 +415,11 @@ define([
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
 
+        applyDebugSettings(owner, this);
+
         createBatchTexture(this, context);
         updateBatchTexture(this, context);  // Apply per-model show/color updates
 
-        applyDebugSettings(owner, this);
         this._model.update(context, frameState, commandList);
    };
 
