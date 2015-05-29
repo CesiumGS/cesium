@@ -95,6 +95,7 @@ define([
         context.throwOnWebGLError = true;
     }
 
+    var view = endUserOptions.view;
     var source = endUserOptions.source;
     if (defined(source)) {
         var loadPromise;
@@ -120,7 +121,7 @@ define([
                         var error = 'No entity with id "' + lookAt + '" exists in the provided data source.';
                         showLoadError(source, error);
                     }
-                } else {
+                } else if (!defined(view)) {
                     viewer.flyTo(dataSource);
                 }
             }).otherwise(function(error) {
@@ -144,7 +145,6 @@ define([
         }
     }
 
-    var view = endUserOptions.view;
     if (defined(view)) {
         var splitQuery = view.split(/[ ,]+/);
         if (splitQuery.length > 1) {
