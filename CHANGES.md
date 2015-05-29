@@ -3,33 +3,54 @@ Change Log
 
 ### 1.10 - 2015-06-01
 * Breaking changes
-  *
+  * Existing bookmarks to documentation of static members have changed [#2757](https://github.com/AnalyticalGraphicsInc/cesium/issues/2757).
+  * Removed `InfoBoxViewModel.defaultSanitizer`, `InfoBoxViewModel.sanitizer`, and `Cesium.sanitize`, which was deprecated in 1.7.
+  * Removed `InfoBoxViewModel.descriptionRawHtml`, which was deprecated in 1.7.  Use `InfoBoxViewModel.description` instead.
+  * Removed `GeoJsonDataSource.fromUrl`, which was deprecated in 1.7. Use `GeoJsonDataSource.load` instead. Unlike fromUrl, load can take either a url or parsed JSON object and returns a promise to a new instance, rather than a new instance.
+  * Removed `GeoJsonDataSource.prototype.loadUrl`, which was deprecated in 1.7.  Instead, pass a url as the first parameter to `GeoJsonDataSource.prototype.load`.
+  * Removed `CzmlDataSource.prototype.loadUrl`, which was deprecated in 1.7.  Instead, pass a url as the first parameter to `CzmlDataSource.prototype.load`.
+  * Removed `CzmlDataSource.prototype.processUrl`, which was deprecated in 1.7.  Instead, pass a url as the first parameter to `CzmlDataSource.prototype.process`.
+  * Removed the `sourceUri` parameter to all `CzmlDataSource` load and process functions, which was deprecated in 1.7.  Instead pass an `options` object with `sourceUri` property.
+  * Removed `PolygonGraphics.positions` which was deprecated in 1.6. Instead, use `PolygonGraphics.hierarchy`.
+  * Existing bookmarks to documentation of static members changed. [#2757](https://github.com/AnalyticalGraphicsInc/cesium/issues/2757)
 * Deprecated
+  * `WebMapServiceImageryProvider` constructor parameters `options.getFeatureInfoAsGeoJson` and `options.getFeatureInfoAsXml` were deprecated and will be removed in Cesium 1.13.  Use `options.getFeatureInfoFormats` instead.
   * Deprecated `Camera.clone`. It will be removed in 1.11.
-  * `WebMapServiceImageryProvider` constructor parameters `options.getFeatureInfoAsGeoJson` and `options.getFeatureInfoAsXml` have been deprecated and will be removed in Cesium 1.13.  Use `options.getFeatureInfoFormats` instead.
-* Added new `PointPrimitive` and `PointPrimitiveCollection`, which are faster and use less memory than billboards with circles.
-* Changed `Entity.point` back-end graphics to use the new `PointPrimitive` instead of billboards.  No change to the `Entity.point` API.
-* Added optional drilling limit to `Scene.drillPick`.
-* Added optional `ellipsoid` parameter to construction options of imagery and terrain providers that were lacking it.  Note that terrain bounding spheres are precomputed on the server, so any supplied terrain ellipsoid must match the one used by the server.
-* Upgraded Autolinker from version 0.15.2 to 0.17.1.
+  * Deprecated `Scene.fxaaOrderIndependentTranslucency`. It will be removed in 1.11. Use `Scene.fxaa` which is now `true` by default.
+  * The Cesium sample models are now in the Binary glTF format (`.bgltf`).  Cesium will also include the models as plain glTF (`.gltf`) until 1.13.  Cesium support for `.gltf` will not be removed.
+* Added `view` query parameter to the CesiumViewer app, which sets the initial camera position using longitude, latitude, height, heading, pitch and roll.  For example: `http://cesiumjs.org/Cesium/Build/Apps/CesiumViewer/index.html/index.html?view=-75.0,40.0,300.0,9.0,-13.0,3.0`
+* Added `Billboard.heightReference` and `Label.heightReference` to clamp billboards and labels to terrain.
+* Added support for the [CESIUM_binary_glTF](https://github.com/KhronosGroup/glTF/blob/new-extensions/extensions/CESIUM_binary_glTF/README.md) extension for loading binary blobs of glTF to `Model`.  See [Faster 3D Models with Binary glTF](http://cesiumjs.org/2015/06/01/Binary-glTF/).
+* Added support for the [CESIUM_RTC](https://github.com/KhronosGroup/glTF/blob/new-extensions/extensions/CESIUM_RTC/README.md) glTF extension for high-precision rendering to `Model`.
+* Added `PointPrimitive` and `PointPrimitiveCollection`, which are faster and use less memory than billboards with circles.
+* Changed `Entity.point` to use the new `PointPrimitive` instead of billboards.  This does not change the `Entity.point` API.
+* Added `Scene.pickPosition` to reconstruct the WGS84 position from window coordinates.
+* The default mouse controls now support panning and zooming on 3D models and other opaque geometry.
 * Added `Camera.moveStart` and `Camera.moveEnd` events.
+* Added `GeocoderViewModel.complete` event.  Triggered after the camera flight is completed.
 * `KmlDataSource` can now load a KML file that uses explicit XML namespacing, e.g. `kml:Document`.
+* Setting `Entity.show` now properly toggles the display of all descendant entities, previously it only affected its direct children.
+* Fixed a bug that sometimes caused `Entity` instances with `show` set to false to reappear when new `Entity` geometry is added. [#2686](https://github.com/AnalyticalGraphicsInc/cesium/issues/2686)
+* Added a `Rotation` object which, when passed to `SampledProperty`, always interpolates values towards the shortest angle. Also hooked up CZML to use `Rotation` for all time-dynamic rotations.
+* Fixed a bug where moon rendered in front of foreground geometry. [#1964](https://github.com/AnalyticalGraphicsInc/cesium/issue/1964)
+* Fixed a bug where the sun was smeared when the skybox/stars was disabled. [#1829](https://github.com/AnalyticalGraphicsInc/cesium/issue/1829)
 * `TileProviderError` now optionally takes an `error` parameter with more details of the error or exception that occurred.  `ImageryLayer` passes that information through when tiles fail to load.  This allows tile provider error handling to take a different action when a tile returns a 404 versus a 500, for example.
 * `ArcGisMapServerImageryProvider` now has a `maximumLevel` constructor parameter.
 * `ArcGisMapServerImageryProvider` picking now works correctly when the `layers` parameter is specified.  Previously, it would pick from all layers even if only displaying a subset.
+* `WebMapServiceImageryProvider.pickFeatures` now works with WMS servers, such as Google Maps Engine, that can only return feature information in HTML format.
+* `WebMapServiceImageryProvider` now accepts an array of `GetFeatureInfoFormat` instances that it will use to obtain information about the features at a given position on the globe.  This enables an arbitrary `info_format` to be passed to the WMS server, and an arbitrary JavaScript function to be used to interpret the response.
 * Fixed a crash caused by `ImageryLayer` attempting to generate mipmaps for textures that are not a power-of-two size.
 * Fixed a bug where `ImageryLayerCollection.pickImageryLayerFeatures` would return incorrect results when picking from a terrain tile that was partially covered by correct-level imagery and partially covered by imagery from an ancestor level.
 * Fixed incorrect counting of `debug.tilesWaitingForChildren` in `QuadtreePrimitive`.
-* `WebMapServiceImageryProvider.pickFeatures` now works with WMS servers, such as Google Maps Engine, that can only return feature information in HTML format.
-* `WebMapServiceImageryProvider` now accepts an array of `GetFeatureInfoFormat` instances that it will use to obtain information about the features at a given position on the globe.  This enables an arbitrary `info_format` to be passed to the WMS server, and an arbitrary JavaScript function to be used to interpret the response.
 * Added `throttleRequestsByServer.maximumRequestsPerServer` property.
-* Added `GeocoderViewModel.complete` event.  Triggered after the camera flight is completed.
-* Added `view` option to the `CesiumViewer` app.  Sets the initial camera position using longitude, latitude, height, heading, pitch and roll.
-  * Example: path/to/CesiumViewer/index.html?view=-75.0,40.0,300.0,9.0,-13.0,3.0
+* Changed `createGeometry` to load individual-geometry workers using a CommonJS-style `require` when run in a CommonJS-like environment.
 * Added `buildModuleUrl.setBaseUrl` function to allow the Cesium base URL to be set without the use of the global CESIUM_BASE_URL variable.
 * Changed `ThirdParty/zip` to defer its call to `buildModuleUrl` until it is needed, rather than executing during module loading.
-* Changed `createGeometry` to load individual-geometry workers using a CommonJS-style `require` when run in a CommonJS-like environment.
-* Fixed a bug where moon rendered in front of foreground geometry. [#1964](https://github.com/AnalyticalGraphicsInc/cesium/issue/1964)
+* Added optional drilling limit to `Scene.drillPick`.
+* Added optional `ellipsoid` parameter to construction options of imagery and terrain providers that were lacking it.  Note that terrain bounding spheres are precomputed on the server, so any supplied terrain ellipsoid must match the one used by the server.
+* Added debug option to `Scene` to show the depth buffer information for a specified view frustum slice and exposed capability in `CesiumInspector` widget.
+* Added new leap second for 30 June 2015 at UTC 23:59:60.
+* Upgraded Autolinker from version 0.15.2 to 0.17.1.
 
 ### 1.9 - 2015-05-01
 
