@@ -62,6 +62,34 @@ define([
                 packable.unpack(undefined);
             }).toThrowDeveloperError();
         });
+
+        if (typeof packable.convertPackedArrayForInterpolation === 'function') {
+            it(namePrefix + ' packs and unpacks for interpolation.', function() {
+                var packedForInterpolation = [];
+                packable.convertPackedArrayForInterpolation(packedInstance, 0, 0, packedForInterpolation);
+                var value = packable.unpackInterpolationResult(packedForInterpolation, packedInstance, 0, 0);
+                var result = packable.unpack(packedInstance);
+                expect(value).toEqual(result);
+            });
+
+            it(namePrefix + ' convertPackedArrayForInterpolation throws without array.', function(){
+                expect(function() {
+                    packable.convertPackedArrayForInterpolation(undefined);
+                }).toThrowDeveloperError();
+            });
+
+            it(namePrefix + ' unpackInterpolationResult throws without packed array.', function(){
+                expect(function() {
+                    packable.unpackInterpolationResult(undefined, []);
+                }).toThrowDeveloperError();
+            });
+
+            it(namePrefix + ' unpackInterpolationResult throws without source array.', function(){
+                expect(function() {
+                    packable.unpackInterpolationResult([], undefined);
+                }).toThrowDeveloperError();
+            });
+        }
     }
 
     return createPackableSpecs;
