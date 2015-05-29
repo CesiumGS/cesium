@@ -6,7 +6,9 @@ define([
         '../Core/combine',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/PixelFormat',
         '../Renderer/PixelDatatype',
         '../Renderer/ShaderSource',
@@ -22,7 +24,9 @@ define([
         combine,
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
+        DeveloperError,
         PixelFormat,
         PixelDatatype,
         ShaderSource,
@@ -56,12 +60,144 @@ define([
         this.readyPromise = when.defer();
 
         this._batchSize = defaultValue(contentHeader.batchSize, 0);  // Number of models, e.g., buildings, batched into the glTF model.
+        this._batchValues = undefined;                               // Per-model show/color
+        this._batchValuesDirty = false;
         this._batchTexture = undefined;
         this._batchTextureDimensions = undefined;
         this._useVTF = false;
 
         this._debugColor = Cartesian4.fromColor(Color.fromRandom({ alpha : 1.0 }));
         this._debugColorizeTiles = false;
+    };
+
+    defineProperties(Gltf3DTileContentProvider.prototype, {
+        /**
+         * DOC_TBA
+         */
+        batchSize : {
+            get : function() {
+                return this._batchSize;
+            }
+        }
+    });
+
+    function createBatchValues(batchSize) {
+        // Default batch texture to RGBA = 255: white highlight and show = true.
+        var byteLength = batchSize * 4;
+        var bytes = new Uint8Array(byteLength);
+        for (var i = 0; i < byteLength; ++i) {
+            bytes[i] = 255;
+        }
+        return bytes;
+    }
+
+    function getBatchValues(content) {
+        if (!defined(content._batchValues)) {
+            content._batchValues = createBatchValues(content._batchSize);
+        }
+
+        return content._batchValues;
+    }
+
+    /**
+     * DOC_TBA
+     */
+    Gltf3DTileContentProvider.prototype.setShow = function(batchId, value) {
+        var batchSize = this._batchSize;
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(batchId) || (batchId < 0) || (batchId > batchSize)) {
+            throw new DeveloperError('batchId is required and between zero and batchSize - 1 (' + batchSize - + ').');
+        }
+
+        if (!defined(value)) {
+            throw new DeveloperError('value is required.');
+        }
+        //>>includeEnd('debug');
+
+        var batchValues = getBatchValues(this);
+        var offset = (batchId * 4) + 3; // Store show/hide in alpha
+        var newValue = value ? 255 : 0;
+
+        if (batchValues[offset] !== newValue) {
+            batchValues[offset] = newValue;
+            this._batchValuesDirty = true;
+        }
+    };
+
+    /**
+     * DOC_TBA
+     */
+    Gltf3DTileContentProvider.prototype.getShow = function(batchId) {
+        var batchSize = this._batchSize;
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(batchId) || (batchId < 0) || (batchId > batchSize)) {
+            throw new DeveloperError('batchId is required and between zero and batchSize - 1 (' + batchSize - + ').');
+        }
+        //>>includeEnd('debug');
+
+        if (!defined(this._batchValues)) {
+            // Batched models default to true
+            return true;
+        }
+
+        var offset = (batchId * 4) + 3; // Store show/hide in alpha
+        return this._batchValues[offset] === 255;
+    };
+
+    var scratchColor = new Array(4);
+
+    /**
+     * DOC_TBA
+     */
+    Gltf3DTileContentProvider.prototype.setColor = function(batchId, value) {
+        var batchSize = this._batchSize;
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(batchId) || (batchId < 0) || (batchId > batchSize)) {
+            throw new DeveloperError('batchId is required and between zero and batchSize - 1 (' + batchSize - + ').');
+        }
+
+        if (!defined(value)) {
+            throw new DeveloperError('value is required.');
+        }
+        //>>includeEnd('debug');
+
+        var batchValues = getBatchValues(this);
+        var offset = batchId * 4;
+        var newValue = value.toBytes(scratchColor);
+
+        if ((batchValues[offset] !== newValue[0]) ||
+                (batchValues[offset + 1] !== newValue[1]) ||
+                (batchValues[offset + 2] !== newValue[2])) {
+            batchValues[offset] = newValue[0];
+            batchValues[offset + 1] = newValue[1];
+            batchValues[offset + 2] = newValue[2];
+            this._batchValuesDirty = true;
+        }
+    };
+
+    /**
+     * DOC_TBA
+     */
+    Gltf3DTileContentProvider.prototype.getColor = function(batchId, color) {
+        var batchSize = this._batchSize;
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(batchId) || (batchId < 0) || (batchId > batchSize)) {
+            throw new DeveloperError('batchId is required and between zero and batchSize - 1 (' + batchSize - + ').');
+        }
+
+        if (!defined(color)) {
+            throw new DeveloperError('color is required.');
+        }
+        //>>includeEnd('debug');
+
+        if (!defined(this._batchValues)) {
+            // Batched models default to WHITE
+            return Color.clone(Color.WHITE, color);
+        }
+
+        var batchValues = this._batchValues;
+        var offset = batchId * 4;
+        return Color.fromBytes(batchValues[offset], batchValues[offset + 1], batchValues[offset + 2], 255, color);
     };
 
     function getVertexShaderCallback(content) {
@@ -71,7 +207,7 @@ define([
                 return source;
             }
 
-            var renamedSource = ShaderSource.replaceMain(source, 'czm_gltf_main');
+            var renamedSource = ShaderSource.replaceMain(source, 'gltf_main');
             var newMain;
 
             // Assuming the batch texture is has dimensions batch-size by 1.
@@ -87,30 +223,30 @@ define([
             if (content._useVTF) {
                 // When VTF is supported, perform per patched model (e.g., building) show/hide in the vertex shader
                 newMain =
-                    'uniform sampler2D czm_batchTexture; \n' +
-                    'uniform vec2 czm_batchTextureDimensions; \n' +
-                    'varying vec3 czm_modelColor; \n' +
+                    'uniform sampler2D tile3d_batchTexture; \n' +
+                    'uniform vec2 tile3d_batchTextureDimensions; \n' +
+                    'varying vec3 tile3d_modelColor; \n' +
 // TODO: get batch id from vertex attribute
                     'int batchId = 0; \n' +
                     'void main() \n' +
                     '{ \n' +
-                    '    czm_gltf_main(); \n' +
-                    '    vec2 st = computeSt(batchId, czm_batchTextureDimensions); \n' +
-                    '    vec4 modelProperties = texture2D(czm_batchTexture, st); \n' +
+                    '    gltf_main(); \n' +
+                    '    vec2 st = computeSt(batchId, tile3d_batchTextureDimensions); \n' +
+                    '    vec4 modelProperties = texture2D(tile3d_batchTexture, st); \n' +
                     '    float show = modelProperties.a; \n' +
-                    '    gl_Position *= show; \n' +                    // Per batched model show/hide
-                    '    czm_modelColor = modelProperties.rgb; \n' +   // Pass batched model color to fragment shader
+                    '    gl_Position *= show; \n' +                       // Per batched model show/hide
+                    '    tile3d_modelColor = modelProperties.rgb; \n' +   // Pass batched model color to fragment shader
                     '}';
             } else {
                 newMain =
-                    'varying vec2 czm_modelSt; \n' +
-                    'uniform vec2 czm_batchTextureDimensions; \n' +
+                    'varying vec2 tile3d_modelSt; \n' +
+                    'uniform vec2 tile3d_batchTextureDimensions; \n' +
 // TODO: get batch id from vertex attribute
                     'int batchId = 0; \n' +
                     'void main() \n' +
                     '{ \n' +
-                    '    czm_gltf_main(); \n' +
-                    '    czm_modelSt = computeSt(batchId, czm_batchTextureDimensions); \n' +
+                    '    gltf_main(); \n' +
+                    '    tile3d_modelSt = computeSt(batchId, tile3d_batchTextureDimensions); \n' +
                     '}';
             }
 
@@ -125,30 +261,30 @@ define([
                 return source;
             }
 
-            var renamedSource = ShaderSource.replaceMain(source, 'czm_gltf_main');
+            var renamedSource = ShaderSource.replaceMain(source, 'gltf_main');
             var newMain;
 
             if (content._useVTF) {
                 // When VTF is supported, per patched model (e.g., building) show/hide already
                 // happened in the fragment shader
                 newMain =
-                    'varying vec3 czm_modelColor; \n' +
+                    'varying vec3 tile3d_modelColor; \n' +
                     'void main() \n' +
                     '{ \n' +
-                    '    czm_gltf_main(); \n' +
-                    '    gl_FragColor.rgb *= czm_modelColor; \n' +
+                    '    gltf_main(); \n' +
+                    '    gl_FragColor.rgb *= tile3d_modelColor; \n' +
                     '}';
             } else {
                 newMain =
-                    'uniform sampler2D czm_batchTexture; \n' +
-                    'varying vec2 czm_modelSt; \n' +
+                    'uniform sampler2D tile3d_batchTexture; \n' +
+                    'varying vec2 tile3d_modelSt; \n' +
                     'void main() \n' +
                     '{ \n' +
-                    '    vec4 modelProperties = texture2D(czm_batchTexture, czm_modelSt); \n' +
+                    '    vec4 modelProperties = texture2D(tile3d_batchTexture, tile3d_modelSt); \n' +
                     '    if (modelProperties.a == 0.0) { \n' +
                     '        discard; \n' +
                     '    } \n' +
-                    '    czm_gltf_main(); \n' +
+                    '    gltf_main(); \n' +
                     '    gl_FragColor.rgb *= modelProperties.rgb; \n' +
                     '}';
             }
@@ -165,10 +301,10 @@ define([
             }
 
             var batchUniformMap = {
-                czm_batchTexture : function() {
+                tile3d_batchTexture : function() {
                     return content._batchTexture;
                 },
-                czm_batchTextureDimensions : function() {
+                tile3d_batchTextureDimensions : function() {
                     return content._batchTextureDimensions;
                 }
             };
@@ -178,6 +314,8 @@ define([
     }
 
     Gltf3DTileContentProvider.prototype.request = function() {
+        // PERFORMANCE_IDEA: patch the shader on demand, e.g., the first time show/color changes.
+        // The pitch shader still needs to be patched.
         var model = Model.fromGltf({
             url : this._url,
             cull : false,           // The model is already culled by the 3D tiles
@@ -225,23 +363,13 @@ define([
         }
     }
 
-    Gltf3DTileContentProvider.prototype.update = function(owner, context, frameState, commandList) {
-        // In the LOADED state we may be calling update() to move forward
-        // the content's resource loading.  In the READY state, it will
-        // actually generate commands.
-
-        var batchSize = this._batchSize;
-        if (!defined(this._batchTexture) && (batchSize > 0)) {
-            // Default batch texture to RGBA = 255: white highlight and show = true.
-            var byteLength = batchSize * 4;
-            var bytes = new Uint8Array(byteLength);
-            for (var i = 0; i < byteLength; ++i) {
-                bytes[i] = 255;
-            }
-
+    function createBatchTexture(content, context) {
+        var batchSize = content._batchSize;
+        if (!defined(content._batchTexture) && (batchSize > 0)) {
 // TODO: handle case when the batch size is > context.maximumTextureSize
             var dimensions = new Cartesian2(batchSize, 1);
-            this._batchTexture = context.createTexture2D({
+            var bytes = defined(content._batchValues) ? content._batchValues : createBatchValues(batchSize);
+            content._batchTexture = context.createTexture2D({
                 pixelFormat : PixelFormat.RGBA,
                 pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
                 source : {
@@ -254,22 +382,39 @@ define([
                     magnificationFilter : TextureMagnificationFilter.NEAREST
                 })
             });
-            this._batchTextureDimensions = dimensions;
-            this._useVTF = (context.maximumVertexTextureImageUnits > 0);
+            content._batchTextureDimensions = dimensions;
+            content._useVTF = (context.maximumVertexTextureImageUnits > 0);
+            content._batchValuesDirty = false;
         }
+    }
 
-// TODO: how to update one building:
-/*
-        this._batchTexture.copyFrom({
-            width : 1,
-            height : 1,
-            arrayBufferView : new Uint8Array([255, 255, 0, 255])
-        }, 0, 0);
-*/
+    function updateBatchTexture(content, context) {
+        if (content._batchValuesDirty) {
+            content._batchValuesDirty = false;
+
+            var dimensions = content._batchTextureDimensions;
+            // PERFORMANCE_IDEA: Instead of rewriting the entire texture, use fine-grained
+            // texture updates when less than, for example, 10%, of the values changed.  Or
+            // even just optimize the common case when one model show/color changed.
+            content._batchTexture.copyFrom({
+                width : dimensions.x,
+                height : dimensions.y,
+                arrayBufferView : content._batchValues
+            });
+        }
+    }
+
+    Gltf3DTileContentProvider.prototype.update = function(owner, context, frameState, commandList) {
+        // In the LOADED state we may be calling update() to move forward
+        // the content's resource loading.  In the READY state, it will
+        // actually generate commands.
+
+        createBatchTexture(this, context);
+        updateBatchTexture(this, context);  // Apply per-model show/color updates
 
         applyDebugSettings(owner, this);
         this._model.update(context, frameState, commandList);
-    };
+   };
 
     Gltf3DTileContentProvider.prototype.isDestroyed = function() {
         return false;
