@@ -236,7 +236,7 @@ define([
 
     var scratchStack = [];
 
-    function selectTiles(tiles3D, context, frameState, commandList) {
+    function selectTiles(tiles3D, context, frameState, commandList, allowRequests) {
         if (tiles3D.debugFreezeFrame) {
             return;
         }
@@ -256,7 +256,9 @@ define([
         }
 
         if (root.isContentUnloaded()) {
-            requestContent(tiles3D, root);
+            if (allowRequests) {
+                requestContent(tiles3D, root);
+            }
             return;
         }
 
@@ -311,7 +313,7 @@ define([
 
                         // Use parent's geometric error with child's box to see if we already meet the SSE
                         if (getScreenSpaceError(t.geometricError, child, context, frameState) > maximumScreenSpaceError) {
-                            if (child.isContentUnloaded() && (visible(child, cullingVolume, stats) !== Intersect.OUTSIDE)) {
+                            if (child.isContentUnloaded() && (visible(child, cullingVolume, stats) !== Intersect.OUTSIDE) && allowRequests) {
                                 requestContent(tiles3D, child);
                             } else {
                                 stack.push(child);
@@ -347,11 +349,13 @@ define([
                         // Tile does not meet SSE.  Add its commands since it is the best we have and request its children.
                         selectTile(selectedTiles, t, fullyVisible, frameState);
 
-                        for (k = 0; k < childrenLength; ++k) {
-                            child = children[k];
+                        if (allowRequests) {
+                            for (k = 0; k < childrenLength; ++k) {
+                                child = children[k];
 // TODO: we could spin a bit less CPU here and probably above by keeping separate lists for unloaded/ready children.
-                            if (child.isContentUnloaded()) {
-                                requestContent(tiles3D, child);
+                                if (child.isContentUnloaded()) {
+                                    requestContent(tiles3D, child);
+                                }
                             }
                         }
                     } else {
@@ -434,6 +438,14 @@ define([
         }
     }
 
+    function updateTiles(tiles3D, context, frameState, commandList) {
+        var selectedTiles = tiles3D._selectedTiles;
+        var length = selectedTiles.length;
+        for (var i = 0; i < length; ++i) {
+            selectedTiles[i].update(tiles3D, context, frameState, commandList);
+        }
+    }
+
     /**
      * DOC_TBA
      */
@@ -443,16 +455,17 @@ define([
             return;
         }
 
+        var passes = frameState.passes;
+        var isPick = (passes.pick && !passes.render);
+
         clearStats(this);
 
-        processTiles(this, context, frameState);
-        selectTiles(this, context, frameState, commandList);
-
-        var selectedTiles = this._selectedTiles;
-        var length = selectedTiles.length;
-        for (var i = 0; i < length; ++i) {
-            selectedTiles[i].update(this, context, frameState, commandList);
+        if (!isPick) {
+            // Do not process new tiles while picking
+            processTiles(this, context, frameState);
         }
+        selectTiles(this, context, frameState, commandList, !isPick);
+        updateTiles(this, context, frameState, commandList);
 
         showStats(this);
     };
