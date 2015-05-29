@@ -1053,7 +1053,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('fails to copy from the frame buffer (invalid data type)', function() {
+    it('fails to copy from the framebuffer (invalid data type)', function() {
         if (context.floatingPointTexture) {
             cubeMap = context.createCubeMap({
                 width : 1,
@@ -1067,7 +1067,7 @@ defineSuite([
         }
     });
 
-    it('fails to copy from the frame buffer (xOffset)', function() {
+    it('fails to copy from the framebuffer (xOffset)', function() {
         cubeMap = context.createCubeMap({
             width : 1,
             height : 1
@@ -1078,7 +1078,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('fails to copy from the frame buffer (yOffset)', function() {
+    it('fails to copy from the framebuffer (yOffset)', function() {
         cubeMap = context.createCubeMap({
             width : 1,
             height : 1
@@ -1089,7 +1089,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('fails to copy from the frame buffer (framebufferXOffset)', function() {
+    it('fails to copy from the framebuffer (framebufferXOffset)', function() {
         cubeMap = context.createCubeMap({
             width : 1,
             height : 1
@@ -1100,7 +1100,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('fails to copy from the frame buffer (framebufferYOffset)', function() {
+    it('fails to copy from the framebuffer (framebufferYOffset)', function() {
         cubeMap = context.createCubeMap({
             width : 1,
             height : 1
@@ -1111,7 +1111,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('fails to copy from the frame buffer (width)', function() {
+    it('fails to copy from the framebuffer (width)', function() {
         cubeMap = context.createCubeMap({
             width : 1,
             height : 1
@@ -1122,7 +1122,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('fails to copy from the frame buffer (height)', function() {
+    it('fails to copy from the framebuffer (height)', function() {
         cubeMap = context.createCubeMap({
             width : 1,
             height : 1
