@@ -59,6 +59,9 @@ define([
          */
         this.readyPromise = when.defer();
 
+//!!!!!!!!
+//contentHeader.batchSize = 0;
+
         this._batchSize = defaultValue(contentHeader.batchSize, 0);  // Number of models, e.g., buildings, batched into the glTF model.
         this._batchValues = undefined;                               // Per-model show/color
         this._batchValuesDirty = false;
@@ -217,67 +220,70 @@ define([
         return Color.fromBytes(batchValues[offset], batchValues[offset + 1], batchValues[offset + 2], 255, color);
     };
 
-    function getVertexShaderCallback(content) {
-        return function(source) {
-            if (content._batchSize === 0) {
-                // Do not change vertex shader source; the model was not batched
-                return source;
-            }
+    ///////////////////////////////////////////////////////////////////////////
 
+    function getGlslComputeSt() {
+        // Assuming the batch texture is has dimensions batch-size by 1.
+        return 'vec2 computeSt(int batchId, vec2 dimensions) \n' +
+            '{ \n' +
+            '    float width = dimensions.x; \n ' +
+            '    float step = (1.0 / width); \n ' +   // PERFORMANCE_IDEA: could precompute step and center
+            '    float center = step * 0.5; \n ' +
+            '    return vec2(center + (float(batchId) * step), 0.5); \n' +  // batchId is zero-based: [0, width - 1]
+            '} \n';
+    }
+
+    function getVertexShaderCallback(content) {
+        if (content._batchSize === 0) {
+            // Do not change vertex shader source; the model was not batched
+            return undefined;
+        }
+
+        return function(source) {
             var renamedSource = ShaderSource.replaceMain(source, 'gltf_main');
             var newMain;
-
-            // Assuming the batch texture is has dimensions batch-size by 1.
-            var computeSt =
-                'vec2 computeSt(int batchId, vec2 dimensions) \n' +
-                '{ \n' +
-                '    float width = dimensions.x; \n ' +
-                '    float step = (1.0 / width); \n ' +   // PERFORMANCE_IDEA: could precompute step and center
-                '    float center = step * 0.5; \n ' +
-                '    return vec2(center + (float(batchId) * step), 0.5); \n' +  // batchId is zero-based: [0, width - 1]
-                '} \n';
 
             if (content._useVTF) {
                 // When VTF is supported, perform per patched model (e.g., building) show/hide in the vertex shader
                 newMain =
-                    'uniform sampler2D tile3d_batchTexture; \n' +
-                    'uniform vec2 tile3d_batchTextureDimensions; \n' +
-                    'varying vec3 tile3d_modelColor; \n' +
+                    'uniform sampler2D tiles3d_batchTexture; \n' +
+                    'uniform vec2 tiles3d_batchTextureDimensions; \n' +
+                    'varying vec3 tiles3d_modelColor; \n' +
 // TODO: get batch id from vertex attribute
                     'int batchId = 0; \n' +
                     'void main() \n' +
                     '{ \n' +
                     '    gltf_main(); \n' +
-                    '    vec2 st = computeSt(batchId, tile3d_batchTextureDimensions); \n' +
-                    '    vec4 modelProperties = texture2D(tile3d_batchTexture, st); \n' +
+                    '    vec2 st = computeSt(batchId, tiles3d_batchTextureDimensions); \n' +
+                    '    vec4 modelProperties = texture2D(tiles3d_batchTexture, st); \n' +
                     '    float show = modelProperties.a; \n' +
                     '    gl_Position *= show; \n' +                       // Per batched model show/hide
-                    '    tile3d_modelColor = modelProperties.rgb; \n' +   // Pass batched model color to fragment shader
+                    '    tiles3d_modelColor = modelProperties.rgb; \n' +   // Pass batched model color to fragment shader
                     '}';
             } else {
                 newMain =
-                    'varying vec2 tile3d_modelSt; \n' +
-                    'uniform vec2 tile3d_batchTextureDimensions; \n' +
+                    'varying vec2 tiles3d_modelSt; \n' +
+                    'uniform vec2 tiles3d_batchTextureDimensions; \n' +
 // TODO: get batch id from vertex attribute
                     'int batchId = 0; \n' +
                     'void main() \n' +
                     '{ \n' +
                     '    gltf_main(); \n' +
-                    '    tile3d_modelSt = computeSt(batchId, tile3d_batchTextureDimensions); \n' +
+                    '    tiles3d_modelSt = computeSt(batchId, tiles3d_batchTextureDimensions); \n' +
                     '}';
             }
 
-            return renamedSource + '\n' + computeSt + newMain;
+            return renamedSource + '\n' + getGlslComputeSt() + newMain;
         };
     }
 
     function getFragmentShaderCallback(content) {
-        return function(source) {
-            if (content._batchSize === 0) {
-                // Do not change fragment shader source; the model was not batched
-                return source;
-            }
+        if (content._batchSize === 0) {
+            // Do not change fragment shader source; the model was not batched
+            return undefined;
+        }
 
+        return function(source) {
             var renamedSource = ShaderSource.replaceMain(source, 'gltf_main');
             var newMain;
 
@@ -285,19 +291,19 @@ define([
                 // When VTF is supported, per patched model (e.g., building) show/hide already
                 // happened in the fragment shader
                 newMain =
-                    'varying vec3 tile3d_modelColor; \n' +
+                    'varying vec3 tiles3d_modelColor; \n' +
                     'void main() \n' +
                     '{ \n' +
                     '    gltf_main(); \n' +
-                    '    gl_FragColor.rgb *= tile3d_modelColor; \n' +
+                    '    gl_FragColor.rgb *= tiles3d_modelColor; \n' +
                     '}';
             } else {
                 newMain =
-                    'uniform sampler2D tile3d_batchTexture; \n' +
-                    'varying vec2 tile3d_modelSt; \n' +
+                    'uniform sampler2D tiles3d_batchTexture; \n' +
+                    'varying vec2 tiles3d_modelSt; \n' +
                     'void main() \n' +
                     '{ \n' +
-                    '    vec4 modelProperties = texture2D(tile3d_batchTexture, tile3d_modelSt); \n' +
+                    '    vec4 modelProperties = texture2D(tiles3d_batchTexture, tiles3d_modelSt); \n' +
                     '    if (modelProperties.a == 0.0) { \n' +
                     '        discard; \n' +
                     '    } \n' +
@@ -311,17 +317,17 @@ define([
     }
 
     function getUniformMapCallback(content) {
-        return function(uniformMap) {
-            if (content._batchSize === 0) {
-                // Do not change the uniform map; the model was not batched
-                return uniformMap;
-            }
+        if (content._batchSize === 0) {
+            // Do not change the uniform map; the model was not batched
+            return undefined;
+        }
 
+        return function(uniformMap) {
             var batchUniformMap = {
-                tile3d_batchTexture : function() {
+                tiles3d_batchTexture : function() {
                     return content._batchTexture;
                 },
-                tile3d_batchTextureDimensions : function() {
+                tiles3d_batchTextureDimensions : function() {
                     return content._batchTextureDimensions;
                 }
             };
@@ -329,6 +335,121 @@ define([
             return combine(uniformMap, batchUniformMap);
         };
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    function getPickVertexShaderCallback(content) {
+        if (content._batchSize === 0) {
+            // Do not change vertex shader source; the model was not batched
+            return undefined;
+        }
+
+        return function(source) {
+            var renamedSource = ShaderSource.replaceMain(source, 'gltf_main');
+            var newMain;
+
+            if (content._useVTF) {
+                // When VTF is supported, perform per patched model (e.g., building) show/hide in the vertex shader
+                newMain =
+                    'uniform sampler2D tiles3d_batchTexture; \n' +
+                    'uniform vec2 tiles3d_batchTextureDimensions; \n' +
+// TODO: get batch id from vertex attribute
+                    'int batchId = 0; \n' +
+                    'void main() \n' +
+                    '{ \n' +
+                    '    gltf_main(); \n' +
+                    '    vec2 st = computeSt(batchId, tiles3d_batchTextureDimensions); \n' +
+                    '    vec4 modelProperties = texture2D(tiles3d_batchTexture, st); \n' +
+                    '    float show = modelProperties.a; \n' +
+                    '    gl_Position *= show; \n' +                       // Per batched model show/hide
+                    '}';
+            } else {
+                newMain =
+                    'varying vec2 tiles3d_modelSt; \n' +
+                    'uniform vec2 tiles3d_batchTextureDimensions; \n' +
+// TODO: get batch id from vertex attribute
+                    'int batchId = 0; \n' +
+                    'void main() \n' +
+                    '{ \n' +
+                    '    gltf_main(); \n' +
+                    '    tiles3d_modelSt = computeSt(batchId, tiles3d_batchTextureDimensions); \n' +
+                    '}';
+            }
+
+            return renamedSource + '\n' + getGlslComputeSt() + newMain;
+        };
+    }
+
+    function getPickFragmentShaderCallback(content) {
+        if (content._batchSize === 0) {
+            // Do not change fragment shader source; the model was not batched
+            return undefined;
+        }
+
+        return function(source) {
+            var renamedSource = ShaderSource.replaceMain(source, 'gltf_main');
+            var newMain;
+
+            if (content._useVTF) {
+                // When VTF is supported, per patched model (e.g., building) show/hide already
+                // happened in the fragment shader
+                newMain =
+                    'uniform vec4 tiles3d_pickColor; \n' +
+                    'void main() \n' +
+                    '{ \n' +
+                    '    gltf_main(); \n' +
+                    '    if (gl_FragColor.a == 0.0) { \n' +
+                    '        discard; \n' +
+                    '    } \n' +
+                    '    gl_FragColor = tiles3d_pickColor; \n' +
+                    '}';
+            } else {
+                newMain =
+                    'uniform vec4 tiles3d_pickColor; \n' +
+                    'uniform sampler2D tiles3d_batchTexture; \n' +
+                    'varying vec2 tiles3d_modelSt; \n' +
+                    'void main() \n' +
+                    '{ \n' +
+                    '    vec4 modelProperties = texture2D(tiles3d_batchTexture, tiles3d_modelSt); \n' +
+                    '    if (modelProperties.a == 0.0) { \n' +
+                    '        discard; \n' +                       // Per batched model show/hide
+                    '    } \n' +
+                    '    gltf_main(); \n' +
+                    '    if (gl_FragColor.a == 0.0) { \n' +
+                    '        discard; \n' +
+                    '    } \n' +
+                    '    gl_FragColor = tiles3d_pickColor; \n' +
+                    '}';
+            }
+
+            return renamedSource + '\n' + newMain;
+        };
+    }
+
+    function getPickUniformMapCallback(content) {
+        if (content._batchSize === 0) {
+            // Do not change the uniform map; the model was not batched
+            return undefined;
+        }
+
+        return function(uniformMap) {
+            var batchUniformMap = {
+                tiles3d_batchTexture : function() {
+                    return content._batchTexture;
+                },
+                tiles3d_batchTextureDimensions : function() {
+                    return content._batchTextureDimensions;
+                },
+                tiles3d_pickColor : function() {
+                    return content._pickId.color;
+                }
+            };
+
+            return combine(uniformMap, batchUniformMap);
+        };
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
 
     Gltf3DTileContentProvider.prototype.request = function() {
         // PERFORMANCE_IDEA: patch the shader on demand, e.g., the first time show/color changes.
@@ -339,7 +460,10 @@ define([
             releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
             vertexShaderLoaded : getVertexShaderCallback(this),
             fragmentShaderLoaded : getFragmentShaderCallback(this),
-            uniformMapLoaded : getUniformMapCallback(this)
+            uniformMapLoaded : getUniformMapCallback(this),
+            pickVertexShaderLoaded : getPickVertexShaderCallback(this),
+            pickFragmentShaderLoaded : getPickFragmentShaderCallback(this),
+            pickUniformMapLoaded : getPickUniformMapCallback(this)
         });
 
         var that = this;
@@ -417,6 +541,14 @@ define([
 
         applyDebugSettings(owner, this);
 
+        if (!defined(this._pickId) && (this._batchSize > 0)) {
+            this._pickId = context.createPickId({
+//                primitive : undefined,
+//                id : undefined,
+                contentProvider : this
+            });
+        }
+
         createBatchTexture(this, context);
         updateBatchTexture(this, context);  // Apply per-model show/color updates
 
@@ -430,6 +562,7 @@ define([
     Gltf3DTileContentProvider.prototype.destroy = function() {
         this._model = this._model && this._model.destroy();
         this._batchTexture = this._batchTexture && this._batchTexture.destroy();
+        this._pickId = this._pickId && this._pickId.destroy();
         return destroyObject(this);
     };
 
