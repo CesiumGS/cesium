@@ -20,7 +20,6 @@ define([
      * @constructor
      */
     var InfoBoxViewModel = function() {
-        this._description = '';
         this._cameraClicked = new Event();
         this._closeClicked = new Event();
 
@@ -54,25 +53,15 @@ define([
          */
         this.titleText = '';
 
-        this._loadingIndicatorHtml = '<div class="cesium-infoBox-loadingContainer"><span class="cesium-infoBox-loading"></span></div>';
-
-        knockout.track(this, ['showInfo', 'titleText', '_description', 'maxHeight', 'enableCamera', 'isCameraTracking']);
-
         /**
-         * Gets or sets the unprocessed description HTML for the info box.
+         * Gets or sets the description HTML for the info box.
          * @type {String}
          */
-        this.description = undefined;
-        knockout.defineProperty(this, 'description', {
-            get : function() {
-                return this._description;
-            },
-            set : function(value) {
-                if (this._description !== value) {
-                    this._description = value;
-                }
-            }
-        });
+        this.description = '';
+
+        knockout.track(this, ['showInfo', 'titleText', 'description', 'maxHeight', 'enableCamera', 'isCameraTracking']);
+
+        this._loadingIndicatorHtml = '<div class="cesium-infoBox-loadingContainer"><span class="cesium-infoBox-loading"></span></div>';
 
         /**
          * Gets the SVG path of the camera icon, which can change to be "crossed out" or not.
@@ -87,7 +76,7 @@ define([
 
         knockout.defineProperty(this, '_bodyless', {
             get : function() {
-                return !defined(this._description) || this._description.length === 0;
+                return !defined(this.description) || this.description.length === 0;
             }
         });
     };
