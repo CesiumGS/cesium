@@ -1,4 +1,4 @@
-define(['react', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/show-hint','CodeMirror/addon/hint/javascript-hint','CodeMirror/mode/javascript/javascript','CodeMirror/mode/css/css','CodeMirror/mode/xml/xml','CodeMirror/mode/htmlmixed/htmlmixed'], function(React, CodeMirror){
+define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/show-hint','CodeMirror/addon/hint/javascript-hint','CodeMirror/mode/javascript/javascript','CodeMirror/mode/css/css','CodeMirror/mode/xml/xml','CodeMirror/mode/htmlmixed/htmlmixed'], function(React, PubSub, CodeMirror){
   var SandcastleCodeTabs = React.createClass({
     render: function(){
       return (
@@ -17,50 +17,18 @@ define(['react', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/show-hint','
       };
     },
 
-    loadDemoCode: function(){
-      // fetch the data for the demo
-      var scriptCodeRegex = /\/\/Sandcastle_Begin\s*([\s\S]*)\/\/Sandcastle_End/;
-      var code;
-      var that = this;
-      this.requestDemo().then(function(value){
-        code = value;
-        var parser = new DOMParser();
-        var doc = parser.parseFromString(code, 'text/html');
-
-        var script = doc.querySelector('script[id="cesium_sandcastle_script"]');
-        if (!script) {
-          console.log('Error reading source file: ' + this.props.demo);
-          return;
-        }
-        var scriptMatch = scriptCodeRegex.exec(script.textContent);
-        if (!scriptMatch) {
-          console.log('Error reading source file: ' + this.props.demo);
-          return;
-        }
-        code = scriptMatch[1];
-        that.setState({src: code});
-      });
+    handleJSCode: function(msg, data){
+      this.setState({src: data});
     },
 
     componentDidMount: function(){
-      this.loadDemoCode();
-    },
-
-    requestDemo: function(){
-      return $.ajax({
-        url: 'gallery/' + this.props.demo + '.html',
-        handleAs: 'text',
-        sync: true,
-        error: function(error) {
-          console.log(error);
-        }
-      });
+      PubSub.subscribe('JS CODE', this.handleJSCode);
     },
 
     render: function(){
       return (
         <div role="tabpanel" className="tab-pane active codeContainer" id="jsContainer">
-          <SandcastleCodeMirrorEditor style={{height: 95 + '%'}} textAreaClassName='form-control' defaultValue={this.state.src} mode="javascript" lineNumbers={true} gutters ={['hintGutter', 'errorGutter', 'searchGutter', 'highlightGutter']} matchBrackets={true} indentUnit={4} />
+          <SandcastleCodeMirrorEditor style={{height: 95 + '%'}} textAreaClassName='form-control' defaultValue={this.state.src} mode="javascript" lineNumbers={true} gutters ={['hintGutter', 'errorGutter', 'searchGutter', 'highlightGutter']} matchBrackets={true} indentUnit={4} extraKeys={{'Ctrl-Space': 'autocomplete', 'F8': 'runCesium', 'Tab': 'indentMore', 'Shift-Tab': 'indentLess'}}/>
         </div>
       );
     }
@@ -89,6 +57,13 @@ define(['react', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/show-hint','
               editor.focus();
           }
       });
+
+      // Subscribe to events
+      PubSub.subscribe('SUGGEST', this.autocomplete);
+    },
+
+    autocomplete: function(){
+      CodeMirror.commands.autocomplete(this.editor);
     },
 
     handleChange: function() {
@@ -125,41 +100,23 @@ define(['react', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/show-hint','
   var SandcastleHTMLCode = React.createClass({
     getInitialState: function () {
       return {
-        src: '&lt;!-- Select a demo from the gallery to load. --&gt;\n'
+        src: '<!-- Select a demo from the gallery to load. -->\n'
       };
     },
 
-    loadDemoCode: function(){
-      // fetch the data for the demo
-      var scriptCodeRegex = /\/\/Sandcastle_Begin\s*([\s\S]*)\/\/Sandcastle_End/;
-      var that = this;
-      this.requestDemo().then(function(value){
-        code = value;
-        var parser = new DOMParser();
-        var doc = parser.parseFromString(code, 'text/html');
-        var script = doc.querySelector('script[id="cesium_sandcastle_script"]');
-        var htmlText = '';
-        var childIndex = 0;
-        var childNode = doc.body.childNodes[childIndex];
-        while (childIndex < doc.body.childNodes.length && childNode !== script) {
-          htmlText += childNode.nodeType === 1 ? childNode.outerHTML : childNode.nodeValue;
-          childNode = doc.body.childNodes[++childIndex];
-        }
-        htmlText = htmlText.replace(/^\s+/, '');
-        that.setState({src: htmlText});
-      });
+    handleHTMLCode: function(msg, data){
+     this.setState({src: data});
     },
 
     componentDidMount: function(){
-      this.loadDemoCode();
+      PubSub.subscribe('HTML CODE', this.handleHTMLCode);
     },
 
-    requestDemo: function(){
+    requestDemo: function(file){
       return $.ajax({
-        url: 'gallery/' + this.props.demo + '.html',
+        url: 'gallery/' + file,
         handleAs: 'text',
-        sync: true,
-        error: function(error) {
+        fail: function(error) {
           console.log(error);
         }
       });
@@ -181,8 +138,8 @@ define(['react', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/show-hint','
           <div role="tabpanel">
             <SandcastleCodeTabs />
             <div className="tab-content">
-              <SandcastleJSCode demo={this.props.demo}/>
-              <SandcastleHTMLCode demo={this.props.demo}/>
+              <SandcastleJSCode jsCode={this.props.jsCode} demo={this.props.demo}/>
+              <SandcastleHTMLCode htmlCode={this.props.htmlCode} demo={this.props.demo}/>
             </div>
           </div>
         </div>
@@ -203,13 +160,11 @@ define(['react', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/show-hint','
   var SandcastleCesiumFrame = React.createClass({
     componentDidMount: function(){
       // Create an empty iframe with cesium build
-      var doc = '<html><head><script src="../../Build/Cesium/Cesium.js"></script><style>@import url(../../Build/Cesium/Widgets/widgets.css);\nhtml, body, #cesiumContainer {width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;}\n</style></head><body></body></html>';
+      var doc = '<html><head><script src="../../Build/Cesium/Cesium.js"></script><script type="text/javascript" src="./Sandcastle-header.js"></script><style>@import url(../../Build/Cesium/Widgets/widgets.css);\nhtml, body, #cesiumContainer {width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;}\n</style></head><body></body></html>';
       this.getDOMNode().contentWindow.document.open();
       this.getDOMNode().contentWindow.document.write(doc);
       this.getDOMNode().contentWindow.document.close();
 
-      // Get demo code to load
-      this.loadDemoCode();
     },
 
     getScriptFromEditor: function(addExtra, jsCode){
@@ -228,34 +183,55 @@ define(['react', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/show-hint','
        '}\n';
     },
 
-    loadDemoCode: function(){
-      // TODO: Use message passing to get code from react component
-      // Check if document has loaded else set a timeout for nexttick
+    componentWillMount: function(){
+      // Subscribe to events
+      PubSub.subscribe('RELOAD FRAME', this.reloadFrame);
+      PubSub.subscribe('LOAD FRAME', this.loadFrame);
+    },
+
+    loadFrame: function(msg, data){
       var frameDoc = this.getDOMNode().contentWindow.document;
+      frameDoc.body.innerHTML = "";
       if(frameDoc.readyState === 'complete'){
-        var htmlEditor = $('#htmlContainer .CodeMirror')[0].CodeMirror;
-        var htmlCode = htmlEditor.getValue();
+        var htmlCode = data.html;
         var htmlElement = frameDoc.createElement('div');
         htmlElement.innerHTML = htmlCode;
         frameDoc.body.appendChild(htmlElement);
-        var jsEditor = $('#jsContainer .CodeMirror')[0].CodeMirror;
-        var jsCode = jsEditor.getValue();
         var scriptElement = frameDoc.createElement('script');
-        var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
-        scriptElement.textContent = this.getScriptFromEditor(isFirefox, jsCode);
+        scriptElement.textContent = data.js;
         frameDoc.body.appendChild(scriptElement);
       }
       else{
-        setTimeout(this.loadDemoCode, 0);
+        var that = this;
+        setTimeout(function(){
+          that.loadFrame(msg, data)
+        }, 0);
       }
+    },
+
+    reloadFrame: function(){
+      // Reload the frame with the new code
+      var frameDoc = this.getDOMNode().contentWindow.document;
+      frameDoc.body.innerHTML = "";
+      // Fetch the code from the code editor
+      var htmlEditor = $('#htmlContainer .CodeMirror')[0].CodeMirror;
+      var htmlCode = htmlEditor.getValue();
+      var htmlElement = frameDoc.createElement('div');
+      htmlElement.innerHTML = htmlCode;
+      frameDoc.body.appendChild(htmlElement);
+      var jsEditor = $('#jsContainer .CodeMirror')[0].CodeMirror;
+      var jsCode = jsEditor.getValue();
+      var scriptElement = frameDoc.createElement('script');
+      var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
+      scriptElement.textContent = this.getScriptFromEditor(isFirefox, jsCode);
+      frameDoc.body.appendChild(scriptElement);
     },
 
     render: function(){
       this.cesiumFrame = React.createElement('iframe', {
         frameBorder:'0',
         className:'fullFrame',
-        id:'bucketFrame',
-        sandbox:'allow-scripts allow-same-origin'
+        id:'bucketFrame'
       });
       return this.cesiumFrame;
     }
@@ -265,7 +241,7 @@ define(['react', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/show-hint','
 
     render: function(){
       return (
-        <div id="cesiumContainer" className="tab-content">
+        <div id="cesiumFrame" className="tab-content">
           <div role="tabpanel" className="tab-pane active" id="bucketPane">
             <SandcastleCesiumFrame />
           </div>
@@ -288,12 +264,107 @@ define(['react', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/show-hint','
   });
 
   var SandcastleBody = React.createClass({
+    loadDemoCode: function(){
+      // fetch the html and css files
+      var demo = gallery[this.props.demo];
+      var id = demo.id;
+      var htmlText = '';
+      var that = this;
+      var data = {};
+      this.requestDemo(id + '/' + id + '.html').done(function(value){
+        htmlText += value;
+        that.requestDemo(id + '/' + id + '.css').done(function(value){
+          // Surround the css with style tags
+          var code = '<style>' + value + '</style>\n';
+          // Append the html
+          code += htmlText;
+          data.html = code;
+          PubSub.publish('HTML CODE', code);
+          //fetch the js
+          var jsText = '';
+          that.requestDemo(id + '/' + id + '.json').done(function(value){
+            jsText += value.js;
+            var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
+            data.js = that.getScriptFromEditor(isFirefox, jsText);
+            PubSub.publish('JS CODE', jsText);
+            // Combine and send to iframe
+            PubSub.publish('LOAD FRAME', data);
+          });
+        });
+      });
+    },
+
+    getScriptFromEditor: function(addExtra, jsCode){
+      return 'function startup(Cesium) {\n' +
+       '    "use strict";\n' +
+       '//Sandcastle_Begin\n' +
+       (addExtra ? '\n' : '') +
+       jsCode +
+       '//Sandcastle_End\n' +
+       '    Sandcastle.finishedLoading();\n' +
+       '}\n' +
+       'if (typeof Cesium !== "undefined") {\n' +
+       '    startup(Cesium);\n' +
+       '} else if (typeof require === "function") {\n' +
+       '    require(["Cesium"], startup);\n' +
+       '}\n';
+    },
+
+    handleNewDemo: function(){
+      // Fetch the hello world demo
+      var demoName = "Hello World";
+      var demo = gallery[this.props.demo];
+      var id = demo.id;
+      var htmlText = '';
+      var that = this;
+      var data = {};
+      this.requestDemo(id + '/' + id + '.html').done(function(value){
+        htmlText += value;
+        that.requestDemo(id + '/' + id + '.css').done(function(value){
+          // Surround the css with style tags
+          var code = '<style>' + value + '</style>\n';
+          // Append the html
+          code += htmlText;
+          data.html = code;
+          PubSub.publish('HTML CODE', code);
+          //fetch the js
+          var jsText = '';
+          that.requestDemo(id + '/' + id + '.json').done(function(value){
+            jsText += value.js;
+            var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
+            data.js = that.getScriptFromEditor(isFirefox, jsText);
+            PubSub.publish('JS CODE', jsText);
+            PubSub.publish('LOAD FRAME', data);
+          });
+        });
+      });
+    },
+
+    componentWillMount: function(){
+      
+    },
+
+    componentDidMount: function(){
+      this.loadDemoCode();
+      PubSub.subscribe('NEW DEMO', this.handleNewDemo);
+    },
+
+    requestDemo: function(file){
+      return $.ajax({
+        url: 'gallery/' + file,
+        handleAs: 'text',
+        fail: function(error) {
+          console.log(error);
+        }
+      });
+    },
+
     render: function(){
       return (
         <div id="bodyContainer" className="container-fluid">
           <div id="bodyRow" className="row">
             <SandcastleCode demo={this.props.demo}/>
-            <SandcastleCesium />
+            <SandcastleCesium/>
           </div>
         </div>
       );
@@ -338,6 +409,18 @@ define(['react', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/show-hint','
   });
 
   var SandcastleHeader = React.createClass({
+    newDemo: function(){
+      PubSub.publish('NEW DEMO', 'new');
+    },
+
+    runDemo: function(){
+      PubSub.publish('RELOAD FRAME', 'reload');
+    },
+
+    runSuggest: function(){
+      PubSub.publish('SUGGEST', 'suggest');
+    },
+
     render: function(){
       return (
         <nav className="navbar navbar-default" id="toolbar">
@@ -355,9 +438,9 @@ define(['react', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/show-hint','
 
             <div className="collapse navbar-collapse" id="toolbar-extend">
               <ul className="nav navbar-nav">
-                  <li id="buttonNew"><a href="#">New</a></li>
-                  <li id="buttonRun"><a href="#">Run (F8)</a></li>
-                  <li id="buttonSuggest"><a href="#">Suggest (Ctrl-Space)</a></li>
+                  <li id="buttonNew"><a href="#" onClick={this.newDemo}>New</a></li>
+                  <li id="buttonRun"><a href="#" onClick={this.runDemo}>Run (F8)</a></li>
+                  <li id="buttonSuggest" onClick={this.runSuggest}><a href="#">Suggest (Ctrl-Space)</a></li>
                   <li id="buttonNewWindow"><a href="#">Open in New Window</a></li>
                   <li id="buttonShare"><a href="#">Share</a></li>
                   <li id="buttonGallery"><a href="#">Gallery</a></li>
