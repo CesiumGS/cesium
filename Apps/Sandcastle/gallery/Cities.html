@@ -51,7 +51,7 @@ var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 handler.setInputAction(function(movement) {
     var pick = viewer.scene.pick(movement.endPosition);
     if (Cesium.defined(pick)) {
-        console.log(pick.contentProvider.batchSize);
+        console.log(pick.batchId);
     }
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
