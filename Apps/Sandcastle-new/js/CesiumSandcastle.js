@@ -11,6 +11,7 @@ require({
   paths: {
     jquery: '//code.jquery.com/jquery-1.11.2.min',
     bootstrap: '../../ThirdParty/bootstrap-3.3.2/js/bootstrap.min',
+    pubsub: 'js/vendor/pubsub',
     react: '//fb.me/react-with-addons-0.13.3',
     JSXTransformer: '//fb.me/JSXTransformer-0.13.3',
     text: 'js/text',
@@ -36,6 +37,7 @@ require({
   'jsx!js/SandcastleApp',
   'jquery',
   'Source/Cesium',
+  'pubsub',
   'CodeMirror/lib/codemirror',
   'CodeMirror/addon/hint/show-hint',
   'CodeMirror/addon/hint/javascript-hint',
@@ -49,6 +51,7 @@ require({
   SandcastleApp,
   $,
   Cesium,
+  PubSub,
   CodeMirror) {
   "use strict";
 

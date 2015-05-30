@@ -41,7 +41,6 @@ html {
 .navbar {
   position: absolute;
   margin-bottom: 0;
-  height: 60px;
   width: 100%;
   background: #f8f8f8;
   box-shadow: none; }
@@ -61,10 +60,10 @@ ul.nav.nav-tabs {
 ul + div.tab-content {
   padding-top: 42px; }
 
-#appLayout, #bodyContainer, #bodyRow, #codeColumn, #codeColumn div[role="tabpanel"], #codeColumn .tab-content, #cesiumColumn, #cesiumColumn > div, #cesiumContainer, #cesiumContainer > div, #cesiumContainer iframe {
+#appLayout, #bodyContainer, #bodyRow, #codeColumn, #codeColumn div[role="tabpanel"], #codeColumn .tab-content, #cesiumColumn, #cesiumColumn > div, #cesiumFrame, #cesiumFrame > div, #cesiumFrame iframe {
   height: 100%; }
 
-#cesiumContainer iframe {
+#cesiumFrame iframe {
   width: 100%; }
 
 .codeContainer {
