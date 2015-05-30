@@ -8,6 +8,7 @@ define([
         '../../Core/wrapFunction',
         '../../DataSources/CzmlDataSource',
         '../../DataSources/GeoJsonDataSource',
+        '../../DataSources/GmlDataSource',
         '../../DataSources/KmlDataSource',
         '../getElement'
     ], function(
@@ -19,6 +20,7 @@ define([
         wrapFunction,
         CzmlDataSource,
         GeoJsonDataSource,
+        GmlDataSource,
         KmlDataSource,
         getElement) {
     "use strict";
@@ -236,7 +238,12 @@ define([
                         sourceUri : fileName,
                         proxy : proxy
                     });
-                } else {
+                } else if (/\.gml$/i.test(fileName)) {
+                	loadPromise = GmlDataSource.load(file, {
+                		sourceUri : fileName,
+                		proxy : proxy
+                	});
+                }else {
                     viewer.dropError.raiseEvent(viewer, fileName, 'Unrecognized file: ' + fileName);
                     return;
                 }
