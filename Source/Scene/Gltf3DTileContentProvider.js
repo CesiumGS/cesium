@@ -59,15 +59,15 @@ define([
          */
         this.readyPromise = when.defer();
 
-//!!!!!!!!
-//contentHeader.batchSize = 0;
-
         this._batchSize = defaultValue(contentHeader.batchSize, 0);  // Number of models, e.g., buildings, batched into the glTF model.
         this._batchValues = undefined;                               // Per-model show/color
         this._batchValuesDirty = false;
         this._batchTexture = undefined;
         this._batchTextureDimensions = undefined;
         this._useVTF = false;
+
+        this._pickTexture = undefined;
+        this._pickIds = [];
 
         this._debugColor = Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;
@@ -248,9 +248,9 @@ define([
                 newMain =
                     'uniform sampler2D tiles3d_batchTexture; \n' +
                     'uniform vec2 tiles3d_batchTextureDimensions; \n' +
-                    'varying vec3 tiles3d_modelColor; \n' +
 // TODO: get batch id from vertex attribute
                     'int batchId = 0; \n' +
+                    'varying vec3 tiles3d_modelColor; \n' +
                     'void main() \n' +
                     '{ \n' +
                     '    gltf_main(); \n' +
@@ -262,10 +262,10 @@ define([
                     '}';
             } else {
                 newMain =
-                    'varying vec2 tiles3d_modelSt; \n' +
                     'uniform vec2 tiles3d_batchTextureDimensions; \n' +
 // TODO: get batch id from vertex attribute
                     'int batchId = 0; \n' +
+                    'varying vec2 tiles3d_modelSt; \n' +
                     'void main() \n' +
                     '{ \n' +
                     '    gltf_main(); \n' +
@@ -355,6 +355,7 @@ define([
                     'uniform vec2 tiles3d_batchTextureDimensions; \n' +
 // TODO: get batch id from vertex attribute
                     'int batchId = 0; \n' +
+                    'varying vec2 tiles3d_modelSt; \n' +
                     'void main() \n' +
                     '{ \n' +
                     '    gltf_main(); \n' +
@@ -362,13 +363,14 @@ define([
                     '    vec4 modelProperties = texture2D(tiles3d_batchTexture, st); \n' +
                     '    float show = modelProperties.a; \n' +
                     '    gl_Position *= show; \n' +                       // Per batched model show/hide
+                    '    tiles3d_modelSt = computeSt(batchId, tiles3d_batchTextureDimensions); \n' +
                     '}';
             } else {
                 newMain =
-                    'varying vec2 tiles3d_modelSt; \n' +
                     'uniform vec2 tiles3d_batchTextureDimensions; \n' +
 // TODO: get batch id from vertex attribute
                     'int batchId = 0; \n' +
+                    'varying vec2 tiles3d_modelSt; \n' +
                     'void main() \n' +
                     '{ \n' +
                     '    gltf_main(); \n' +
@@ -394,18 +396,19 @@ define([
                 // When VTF is supported, per patched model (e.g., building) show/hide already
                 // happened in the fragment shader
                 newMain =
-                    'uniform vec4 tiles3d_pickColor; \n' +
+                    'uniform sampler2D tiles3d_pickTexture; \n' +
+                    'varying vec2 tiles3d_modelSt; \n' +
                     'void main() \n' +
                     '{ \n' +
                     '    gltf_main(); \n' +
                     '    if (gl_FragColor.a == 0.0) { \n' +
                     '        discard; \n' +
                     '    } \n' +
-                    '    gl_FragColor = tiles3d_pickColor; \n' +
+                    '    gl_FragColor = texture2D(tiles3d_pickTexture, tiles3d_modelSt); \n' +
                     '}';
             } else {
                 newMain =
-                    'uniform vec4 tiles3d_pickColor; \n' +
+                    'uniform sampler2D tiles3d_pickTexture; \n' +
                     'uniform sampler2D tiles3d_batchTexture; \n' +
                     'varying vec2 tiles3d_modelSt; \n' +
                     'void main() \n' +
@@ -418,7 +421,7 @@ define([
                     '    if (gl_FragColor.a == 0.0) { \n' +
                     '        discard; \n' +
                     '    } \n' +
-                    '    gl_FragColor = tiles3d_pickColor; \n' +
+                    '    gl_FragColor = texture2D(tiles3d_pickTexture, tiles3d_modelSt); \n' +
                     '}';
             }
 
@@ -440,8 +443,8 @@ define([
                 tiles3d_batchTextureDimensions : function() {
                     return content._batchTextureDimensions;
                 },
-                tiles3d_pickColor : function() {
-                    return content._pickId.color;
+                tiles3d_pickTexture : function() {
+                    return content._pickTexture;
                 }
             };
 
@@ -493,26 +496,61 @@ define([
         }
     }
 
+    function createTexture(context, batchSize, bytes) {
+        return context.createTexture2D({
+            pixelFormat : PixelFormat.RGBA,
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+// TODO: handle case when the batch size is > context.maximumTextureSize
+            source : {
+                width : batchSize,
+                height : 1,
+                arrayBufferView : bytes
+            },
+            sampler : context.createSampler({
+                minificationFilter : TextureMinificationFilter.NEAREST,
+                magnificationFilter : TextureMagnificationFilter.NEAREST
+            })
+        });
+    }
+
+    function createPickTexture(content, context) {
+        var batchSize = content._batchSize;
+        if (!defined(content._pickTexture) && (batchSize > 0)) {
+            var pickIds = content._pickIds;
+            var byteLength = batchSize * 4;
+            var bytes = new Uint8Array(byteLength);
+
+            // PERFORMANCE_IDEA: we could skip the pick texture completely by allocating
+            // a continuous range of pickIds and then converting the base pickId + batchId
+            // to RGBA in the shader.  The only consider is precision issues, which might
+            // not be an issue in WebGL 2.
+            for (var i = 0; i < batchSize; ++i) {
+// TODO: return object with show/color get/set
+                var pickId = context.createPickId({
+                    contentProvider : content,
+                    batchId : i
+                 });
+                pickIds.push(pickId);
+
+                var pickColor = pickId.color;
+                var offset = i * 4;
+                bytes[offset] = Color.floatToByte(pickColor.red);
+                bytes[offset + 1] = Color.floatToByte(pickColor.green);
+                bytes[offset + 2] = Color.floatToByte(pickColor.blue);
+                bytes[offset + 3] = Color.floatToByte(pickColor.alpha);
+            }
+
+            content._pickTexture = createTexture(context, batchSize, bytes, PixelDatatype.FLOAT);
+        }
+    }
+
     function createBatchTexture(content, context) {
         var batchSize = content._batchSize;
         if (!defined(content._batchTexture) && (batchSize > 0)) {
-// TODO: handle case when the batch size is > context.maximumTextureSize
-            var dimensions = new Cartesian2(batchSize, 1);
             var bytes = defined(content._batchValues) ? content._batchValues : createBatchValues(batchSize);
-            content._batchTexture = context.createTexture2D({
-                pixelFormat : PixelFormat.RGBA,
-                pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-                source : {
-                    width : dimensions.x,
-                    height : dimensions.y,
-                    arrayBufferView : bytes
-                },
-                sampler : context.createSampler({
-                    minificationFilter : TextureMinificationFilter.NEAREST,
-                    magnificationFilter : TextureMagnificationFilter.NEAREST
-                })
-            });
-            content._batchTextureDimensions = dimensions;
+            var texture = createTexture(context, batchSize, bytes);
+            content._batchTexture = texture;
+            content._batchTextureDimensions = new Cartesian2(texture.width, texture.height);
             content._useVTF = (context.maximumVertexTextureImageUnits > 0);
             content._batchValuesDirty = false;
         }
@@ -541,14 +579,7 @@ define([
 
         applyDebugSettings(owner, this);
 
-        if (!defined(this._pickId) && (this._batchSize > 0)) {
-            this._pickId = context.createPickId({
-//                primitive : undefined,
-//                id : undefined,
-                contentProvider : this
-            });
-        }
-
+        createPickTexture(this, context);
         createBatchTexture(this, context);
         updateBatchTexture(this, context);  // Apply per-model show/color updates
 
@@ -562,7 +593,14 @@ define([
     Gltf3DTileContentProvider.prototype.destroy = function() {
         this._model = this._model && this._model.destroy();
         this._batchTexture = this._batchTexture && this._batchTexture.destroy();
-        this._pickId = this._pickId && this._pickId.destroy();
+        this._pickTexture = this._pickTexture && this._pickTexture.destroy();
+
+        var pickIds = this._pickIds;
+        var length = pickIds.length;
+        for (var i = 0; i < length; ++i) {
+            pickIds[i].destroy();
+        }
+
         return destroyObject(this);
     };
 
