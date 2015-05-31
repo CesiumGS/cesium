@@ -16,6 +16,7 @@ define([
         '../Renderer/TextureMagnificationFilter',
         './Cesium3DTileContentState',
         './Model',
+        './BatchedModel',
         '../ThirdParty/when'
     ], function(
         Cartesian2,
@@ -34,6 +35,7 @@ define([
         TextureMagnificationFilter,
         Cesium3DTileContentState,
         Model,
+        BatchedModel,
         when) {
     "use strict";
 
@@ -103,7 +105,7 @@ define([
     }
 
     /**
-     * DOC_TBA
+     * @private
      */
     Gltf3DTileContentProvider.prototype.setShow = function(batchId, value) {
         var batchSize = this._batchSize;
@@ -128,7 +130,7 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * @private
      */
     Gltf3DTileContentProvider.prototype.getShow = function(batchId) {
         var batchSize = this._batchSize;
@@ -150,7 +152,7 @@ define([
     var scratchColor = new Array(4);
 
     /**
-     * DOC_TBA
+     * @private
      */
     Gltf3DTileContentProvider.prototype.setColor = function(batchId, value) {
         var batchSize = this._batchSize;
@@ -196,7 +198,7 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * @private
      */
     Gltf3DTileContentProvider.prototype.getColor = function(batchId, color) {
         var batchSize = this._batchSize;
@@ -525,11 +527,8 @@ define([
             // to RGBA in the shader.  The only consider is precision issues, which might
             // not be an issue in WebGL 2.
             for (var i = 0; i < batchSize; ++i) {
-// TODO: return object with show/color get/set
-                var pickId = context.createPickId({
-                    contentProvider : content,
-                    batchId : i
-                 });
+// TODO: What else should go into the owner passed to createPickId?
+                var pickId = context.createPickId(new BatchedModel(content, i));
                 pickIds.push(pickId);
 
                 var pickColor = pickId.color;
