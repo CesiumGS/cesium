@@ -47,9 +47,10 @@ viewer.camera.flyTo({
     duration : 0.0
 });
 
-// High building on mouse over
 var currentBuilding;
 var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+
+//High building on mouse over
 handler.setInputAction(function(movement) {
     var pickedBuilding = viewer.scene.pick(movement.endPosition);
     if (Cesium.defined(pickedBuilding)) {
@@ -61,14 +62,32 @@ handler.setInputAction(function(movement) {
     }
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-handler.setInputAction(function(movement) {
+// When a building is clicked, add an annotation showing the height at the click location
+var annotations = viewer.scene.primitives.add(new Cesium.LabelCollection());
 
-/*     var pickedBuilding = viewer.scene.pick(movement.position);
+handler.setInputAction(function(movement) {
+    if (Cesium.defined(currentBuilding) && viewer.scene.pickPositionSupported) {
+        var cartesian = viewer.scene.pickPosition(movement.position);
+
+// TODO: add Cartographic.fromCartesian to Cesium
+        var cartographic = viewer.scene.globe.ellipsoid.cartesianToCartographic(cartesian);
+        var height = cartographic.height.toFixed(2) + ' m';
+
+        annotations.add({
+            position : cartesian,
+            text : height,
+            horizontalOrigin : Cesium.HorizontalOrigin.LEFT,
+            verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
+            eyeOffset : new Cesium.Cartesian3(0.0, 0.0, -1.0)
+        });
+    }
+/*
+    var pickedBuilding = viewer.scene.pick(movement.position);
     if (Cesium.defined(pickedBuilding)) {
         pickedBuilding.show = false;
     }
- */
-}, Cesium.ScreenSpaceEventType.LEFT_DOWN);
+*/
+}, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 
 viewer.scene.debugShowFramesPerSecond = true;
 //viewer.extend(Cesium.viewerCesiumInspectorMixin);
