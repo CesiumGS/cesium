@@ -715,13 +715,13 @@ define([
 
         // There are two tangent points, one on far side of each sphere.
         var halfDistanceBetweenTangentPoints = (leftRadius + centerSeparation + rightRadius) * 0.5;
-        result.radius = halfDistanceBetweenTangentPoints;
 
         // Compute the center point halfway between the two tangent points.
         var center = Cartesian3.multiplyByScalar(toRightCenter,
                 (-leftRadius + halfDistanceBetweenTangentPoints) / centerSeparation, unionScratchCenter);
         Cartesian3.add(center, leftCenter, center);
         Cartesian3.clone(center, result.center);
+        result.radius = halfDistanceBetweenTangentPoints;
 
         return result;
     };

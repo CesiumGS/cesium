@@ -415,10 +415,24 @@ defineSuite([
         expect(BoundingSphere.union(bs1, bs2)).toEqual(expected);
     });
 
-    it('union result parameter is caller', function() {
+    it('union left sphere encloses right', function() {
+        var bs1 = new BoundingSphere(Cartesian3.ZERO, 3.0);
+        var bs2 = new BoundingSphere(Cartesian3.UNIT_X, 1.0);
+        var union = BoundingSphere.union(bs1, bs2);
+        expect(union).toEqual(bs1);
+    });
+
+    it('union of co-located spheres, right sphere encloses left', function() {
+        var bs1 = new BoundingSphere(Cartesian3.UNIT_X, 1.0);
+        var bs2 = new BoundingSphere(Cartesian3.UNIT_X, 2.0);
+        var union = BoundingSphere.union(bs1, bs2);
+        expect(union).toEqual(bs2);
+    });
+
+    it('union result parameter is a tight fit', function() {
         var bs1 = new BoundingSphere(Cartesian3.multiplyByScalar(Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()), 3.0, new Cartesian3()), 3.0);
         var bs2 = new BoundingSphere(Cartesian3.UNIT_X, 1.0);
-        var expected = new BoundingSphere(Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()), 5.0);
+        var expected = new BoundingSphere(Cartesian3.multiplyByScalar(Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()), 2.0, new Cartesian3()), 4.0);
         BoundingSphere.union(bs1, bs2, bs1);
         expect(bs1).toEqual(expected);
     });
