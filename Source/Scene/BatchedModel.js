@@ -11,6 +11,9 @@ define([
     var BatchedModel = function(content, batchId) {
         this._content = content;
         this._batchId = batchId;
+
+// TODO: this should not be here.  It is so pickEntity doesn't crash when pickPosition is called.
+        this.primitive = {};
     };
 
     defineProperties(BatchedModel.prototype, {
