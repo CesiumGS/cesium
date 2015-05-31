@@ -43,11 +43,13 @@ html {
   margin-bottom: 0;
   width: 100%;
   background: #f8f8f8;
-  box-shadow: none; }
+  box-shadow: none; 
+  z-index: 10;
+}
 
 #bodyContainer {
   padding-top: 60px;
-  overflow-y: hidden; }
+  overflow-y: scroll; }
 
 #cesiumColumn, #codeColumn {
   padding: 0; }

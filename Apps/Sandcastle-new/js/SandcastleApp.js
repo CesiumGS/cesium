@@ -28,7 +28,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
     render: function(){
       return (
         <div role="tabpanel" className="tab-pane active codeContainer" id="jsContainer">
-          <SandcastleCodeMirrorEditor style={{height: 95 + '%'}} textAreaClassName='form-control' defaultValue={this.state.src} mode="javascript" lineNumbers={true} gutters ={['hintGutter', 'errorGutter', 'searchGutter', 'highlightGutter']} matchBrackets={true} indentUnit={4} extraKeys={{'Ctrl-Space': 'autocomplete', 'F8': 'runCesium', 'Tab': 'indentMore', 'Shift-Tab': 'indentLess'}}/>
+          <SandcastleCodeMirrorEditor style={{height: 95 + '%'}} textAreaClassName='form-control' defaultValue={this.state.src} mode="javascript" lineWrapping={true} lineNumbers={true} gutters ={['hintGutter', 'errorGutter', 'searchGutter', 'highlightGutter']} matchBrackets={true} indentUnit={4} extraKeys={{'Ctrl-Space': 'autocomplete', 'F8': 'runCesium', 'Tab': 'indentMore', 'Shift-Tab': 'indentLess'}}/>
         </div>
       );
     }
@@ -134,7 +134,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
   var SandcastleCode = React.createClass({
     render: function(){
       return (
-        <div id="codeColumn" className="col-md-5">
+        <div id="codeColumn" className=" col-sm-5">
           <div role="tabpanel">
             <SandcastleCodeTabs />
             <div className="tab-content">
@@ -187,6 +187,23 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       // Subscribe to events
       PubSub.subscribe('RELOAD FRAME', this.reloadFrame);
       PubSub.subscribe('LOAD FRAME', this.loadFrame);
+      PubSub.subscribe('NEW WINDOW', this.openNewWindow);
+    },
+
+    openNewWindow: function(msg, data){
+      var baseHref = window.location.href;
+      var frameDoc = this.getDOMNode().contentWindow.document;
+      var baseElement = frameDoc.createElement('base');
+      baseElement.setAttribute("href", baseHref);
+      frameDoc.head.appendChild(baseElement);
+      console.log(frameDoc.children[0].outerHTML);
+      var htmlBlob = new Blob([frameDoc.children[0].outerHTML], {
+            'type' : 'text/html;charset=utf-8',
+            'endings' : 'native'
+      });
+      var htmlBlobURL = URL.createObjectURL(htmlBlob);
+      window.open(htmlBlobURL, '_blank');
+      window.focus();
     },
 
     loadFrame: function(msg, data){
@@ -253,7 +270,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
   var SandcastleCesium = React.createClass({
     render: function(){
       return (
-        <div id="cesiumColumn" className="col-md-7">
+        <div id="cesiumColumn" className=" hidden-xs col-sm-7">
           <div role="tabpanel">
             <SandcastleCesiumTabs />
             <SandcastleCesiumContainer />
@@ -264,6 +281,13 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
   });
 
   var SandcastleBody = React.createClass({
+    getInitialState: function(){
+      return {
+        jsCode: '',
+        htmlCode: ''
+      }
+    },
+
     loadDemoCode: function(){
       // fetch the html and css files
       var demo = gallery[this.props.demo];
@@ -279,6 +303,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
           // Append the html
           code += htmlText;
           data.html = code;
+          that.setState({htmlCode: code});
           PubSub.publish('HTML CODE', code);
           //fetch the js
           var jsText = '';
@@ -286,6 +311,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
             jsText += value.js;
             var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
             data.js = that.getScriptFromEditor(isFirefox, jsText);
+            that.setState({jsCode: jsText});
             PubSub.publish('JS CODE', jsText);
             // Combine and send to iframe
             PubSub.publish('LOAD FRAME', data);
@@ -410,15 +436,19 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
 
   var SandcastleHeader = React.createClass({
     newDemo: function(){
-      PubSub.publish('NEW DEMO', 'new');
+      PubSub.publish('NEW DEMO', '');
     },
 
     runDemo: function(){
-      PubSub.publish('RELOAD FRAME', 'reload');
+      PubSub.publish('RELOAD FRAME', '');
     },
 
     runSuggest: function(){
-      PubSub.publish('SUGGEST', 'suggest');
+      PubSub.publish('SUGGEST', '');
+    },
+
+    newWindow: function(){
+      PubSub.publish('NEW WINDOW', '');
     },
 
     render: function(){
@@ -439,9 +469,13 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
             <div className="collapse navbar-collapse" id="toolbar-extend">
               <ul className="nav navbar-nav">
                   <li id="buttonNew"><a href="#" onClick={this.newDemo}>New</a></li>
-                  <li id="buttonRun"><a href="#" onClick={this.runDemo}>Run (F8)</a></li>
-                  <li id="buttonSuggest" onClick={this.runSuggest}><a href="#">Suggest (Ctrl-Space)</a></li>
-                  <li id="buttonNewWindow"><a href="#">Open in New Window</a></li>
+                  <li className="hidden-xs" id="buttonRun"><a href="#" onClick={this.runDemo}>Run (F8)</a></li>
+                  <li className="hidden-xs" id="buttonSuggest" onClick={this.runSuggest}><a href="#">Suggest (Ctrl-Space)</a></li>
+                  <li className="hidden-xs" id="buttonNewWindow" onClick={this.newWindow}><a href="#">Open in New Window</a></li>
+                  <li id="buttonCesium" className="visible-xs-block"><a href="#">Preview</a></li>
+                  <li id="buttonJSCode" className="visible-xs-block"><a href="#">View JS Code</a></li>
+                  <li id="buttonHTMLCode" className="visible-xs-block"><a href="#">View HTML Code</a></li>
+                  <li id="buttonConsole" className="visible-xs-block"><a href="#">Console</a></li>
                   <li id="buttonShare"><a href="#">Share</a></li>
                   <li id="buttonGallery"><a href="#">Gallery</a></li>
               </ul>
