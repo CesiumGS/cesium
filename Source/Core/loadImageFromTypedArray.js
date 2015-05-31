@@ -2,11 +2,13 @@
 define([
         '../ThirdParty/when',
         './defined',
-        './DeveloperError'
+        './DeveloperError',
+        './loadImageViaBlob'
     ], function(
         when,
         defined,
-        DeveloperError) {
+        DeveloperError,
+        loadImageViaBlob) {
     "use strict";
 
     /**
@@ -36,24 +38,10 @@ define([
             type : format
         });
 
-        return when(blob, function(blob) {
-            var deferred = when.defer();
-            var blobUrl = window.URL.createObjectURL(blob);
-            var image = new Image();
-
-            image.onload = function() {
-                window.URL.revokeObjectURL(blobUrl);
-                deferred.resolve(image);
-            };
-
-            image.onerror = function(e) {
-                window.URL.revokeObjectURL(blobUrl);
-                deferred.reject(e);
-            };
-
-            image.src = blobUrl;
-
-            return deferred.promise;
+        var blobUrl = window.URL.createObjectURL(blob);
+        return loadImageViaBlob(blobUrl).then(function(image){
+            window.URL.revokeObjectURL(blobUrl);
+            return image;
         });
     };
 

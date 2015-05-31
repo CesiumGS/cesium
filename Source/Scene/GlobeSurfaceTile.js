@@ -170,12 +170,11 @@ define([
         }
     });
 
-    function getPosition(tile, scene, vertices, stride, index, result) {
+    function getPosition(tile, mode, projection, vertices, stride, index, result) {
         Cartesian3.unpack(vertices, index * stride, result);
         Cartesian3.add(tile.center, result, result);
 
-        if (defined(scene) && scene.mode !== SceneMode.SCENE3D) {
-            var projection = scene.mapProjection;
+        if (defined(mode) && mode !== SceneMode.SCENE3D) {
             var ellipsoid = projection.ellipsoid;
             var positionCart = ellipsoid.cartesianToCartographic(result);
             projection.project(positionCart, result);
@@ -190,7 +189,7 @@ define([
     var scratchV2 = new Cartesian3();
     var scratchResult = new Cartesian3();
 
-    GlobeSurfaceTile.prototype.pick = function(ray, scene, cullBackFaces, result) {
+    GlobeSurfaceTile.prototype.pick = function(ray, mode, projection, cullBackFaces, result) {
         var terrain = this.pickTerrain;
         if (!defined(terrain)) {
             return undefined;
@@ -211,9 +210,9 @@ define([
             var i1 = indices[i + 1];
             var i2 = indices[i + 2];
 
-            var v0 = getPosition(this, scene, vertices, stride, i0, scratchV0);
-            var v1 = getPosition(this, scene, vertices, stride, i1, scratchV1);
-            var v2 = getPosition(this, scene, vertices, stride, i2, scratchV2);
+            var v0 = getPosition(this, mode, projection, vertices, stride, i0, scratchV0);
+            var v1 = getPosition(this, mode, projection, vertices, stride, i1, scratchV1);
+            var v2 = getPosition(this, mode, projection, vertices, stride, i2, scratchV2);
 
             var intersection = IntersectionTests.rayTriangle(ray, v0, v1, v2, cullBackFaces, scratchResult);
             if (defined(intersection)) {

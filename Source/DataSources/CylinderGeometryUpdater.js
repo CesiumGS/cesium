@@ -311,7 +311,7 @@ define([
         var attributes;
 
         var color;
-        var show = new ShowGeometryInstanceAttribute(isAvailable && this._showProperty.getValue(time) && this._fillProperty.getValue(time));
+        var show = new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._fillProperty.getValue(time));
         if (this._materialProperty instanceof ColorMaterialProperty) {
             var currentColor = Color.WHITE;
             if (defined(this._materialProperty.color) && (this._materialProperty.color.isConstant || isAvailable)) {
@@ -364,7 +364,7 @@ define([
             geometry : new CylinderOutlineGeometry(this._options),
             modelMatrix : entity._getModelMatrix(Iso8601.MINIMUM_VALUE),
             attributes : {
-                show : new ShowGeometryInstanceAttribute(isAvailable && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
+                show : new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
                 color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
             }
         });
