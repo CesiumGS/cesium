@@ -47,13 +47,28 @@ viewer.camera.flyTo({
     duration : 0.0
 });
 
+// High building on mouse over
+var currentBuilding;
 var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 handler.setInputAction(function(movement) {
-    var pick = viewer.scene.pick(movement.endPosition);
-    if (Cesium.defined(pick)) {
-        console.log(pick.batchId);
+    var pickedBuilding = viewer.scene.pick(movement.endPosition);
+    if (Cesium.defined(pickedBuilding)) {
+        pickedBuilding.color = Cesium.Color.YELLOW;
+        currentBuilding = pickedBuilding;
+    } else if (Cesium.defined(currentBuilding)) {
+        currentBuilding.color = Cesium.Color.WHITE;
+        currentBuilding = undefined;
     }
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+handler.setInputAction(function(movement) {
+
+/*     var pickedBuilding = viewer.scene.pick(movement.position);
+    if (Cesium.defined(pickedBuilding)) {
+        pickedBuilding.show = false;
+    }
+ */
+}, Cesium.ScreenSpaceEventType.LEFT_DOWN);
 
 viewer.scene.debugShowFramesPerSecond = true;
 //viewer.extend(Cesium.viewerCesiumInspectorMixin);
