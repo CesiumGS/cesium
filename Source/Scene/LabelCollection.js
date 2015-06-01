@@ -268,6 +268,11 @@ define([
             unbindGlyph(labelCollection, glyphs[i]);
         }
         label._labelCollection = undefined;
+
+        if (defined(label._removeCallbackFunc)) {
+            label._removeCallbackFunc();
+        }
+
         destroyObject(label);
     }
 
@@ -289,6 +294,7 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each label from model to world coordinates.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+     * @param {Scene} [options.scene] Must be passed in for labels that use the height reference property or will be depth tested against the globe.
      *
      * @performance For best performance, prefer a few collections, each with many labels, to
      * many collections with only a few labels each.  Avoid having collections where some
@@ -317,9 +323,13 @@ define([
     var LabelCollection = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        this._scene = options.scene;
+
         this._textureAtlas = undefined;
 
-        this._billboardCollection = new BillboardCollection();
+        this._billboardCollection = new BillboardCollection({
+            scene : this._scene
+        });
         this._billboardCollection.destroyTextureAtlas = false;
 
         this._spareBillboards = [];
@@ -577,7 +587,8 @@ define([
             labelsToUpdate = this._labelsToUpdate;
         }
 
-        for (var i = 0, len = labelsToUpdate.length; i < len; ++i) {
+        var len = labelsToUpdate.length;
+        for (var i = 0; i < len; ++i) {
             var label = labelsToUpdate[i];
             if (label.isDestroyed()) {
                 continue;
@@ -638,6 +649,7 @@ define([
         this.removeAll();
         this._billboardCollection = this._billboardCollection.destroy();
         this._textureAtlas = this._textureAtlas && this._textureAtlas.destroy();
+
         return destroyObject(this);
     };
 

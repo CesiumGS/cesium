@@ -39,7 +39,9 @@
     // https://github.com/visionmedia/send/commit/d2cb54658ce65948b0ed6e5fb5de69d022bef941
     var mime = express.static.mime;
     mime.define({
-        'application/json' : ['czml', 'json', 'geojson', 'topojson', 'gltf'],
+        'application/json' : ['czml', 'json', 'geojson', 'topojson'],
+        'model/vnd.gltf+json' : ['gltf'],
+        'model/vnd.gltf.binary' : ['bgltf'],
         'text/plain' : ['glsl']
     });
 

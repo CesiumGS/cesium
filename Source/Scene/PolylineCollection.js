@@ -312,7 +312,7 @@ define([
      * Determines if this collection contains the specified polyline.
      *
      * @param {Polyline} polyline The polyline to check for.
-     * @returns {Boolean} true if this collection contains the billboard, false otherwise.
+     * @returns {Boolean} true if this collection contains the polyline, false otherwise.
      *
      * @see PolylineCollection#get
      */
