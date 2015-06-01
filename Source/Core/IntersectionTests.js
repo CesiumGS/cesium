@@ -579,7 +579,7 @@ define([
      *
      * @param {Ray} ray The ray.
      * @param {Ellipsoid} ellipsoid The ellipsoid.
-     * @returns {Cartesian} The nearest planetodetic point on the ray.
+     * @returns {Cartesian3} The nearest planetodetic point on the ray.
      */
     IntersectionTests.grazingAltitudeLocation = function(ray, ellipsoid) {
         //>>includeStart('debug', pragmas.debug);

@@ -376,7 +376,7 @@ define([
             throw new DeveloperError('index must be 0 or 1.');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -412,7 +412,7 @@ define([
             throw new DeveloperError('index must be 0 or 1.');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -442,7 +442,7 @@ define([
             throw new DeveloperError('index must be 0 or 1.');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -477,7 +477,7 @@ define([
             throw new DeveloperError('index must be 0 or 1.');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -502,7 +502,7 @@ define([
             throw new DeveloperError('matrix is required.');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -542,7 +542,7 @@ define([
             throw new DeveloperError('right is required');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -575,7 +575,7 @@ define([
             throw new DeveloperError('right is required');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -603,7 +603,7 @@ define([
             throw new DeveloperError('right is required');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -631,7 +631,7 @@ define([
             throw new DeveloperError('cartesian is required');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -660,7 +660,7 @@ define([
             throw new DeveloperError('scalar is required and must be a number');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -684,7 +684,7 @@ define([
             throw new DeveloperError('matrix is required');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -708,7 +708,7 @@ define([
             throw new DeveloperError('matrix is required');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -737,7 +737,7 @@ define([
             throw new DeveloperError('matrix is required');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 

@@ -6,9 +6,11 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/Ellipsoid',
         'Core/loadImage',
         'Core/Math',
         'Core/NearFarScalar',
+        'Scene/HeightReference',
         'Scene/HorizontalOrigin',
         'Scene/OrthographicFrustum',
         'Scene/TextureAtlas',
@@ -23,9 +25,11 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Color,
+        Ellipsoid,
         loadImage,
         CesiumMath,
         NearFarScalar,
+        HeightReference,
         HorizontalOrigin,
         OrthographicFrustum,
         TextureAtlas,
@@ -39,6 +43,8 @@ defineSuite([
     var scene;
     var camera;
     var billboards;
+    var heightReferenceSupported;
+    var billboardsWithHeight;
 
     var greenImage;
     var blueImage;
@@ -48,6 +54,8 @@ defineSuite([
     beforeAll(function() {
         scene = createScene();
         camera = scene.camera;
+
+        heightReferenceSupported = scene._globeDepth.supported && scene.context.maximumVertexTextureImageUnits > 0;
 
         return when.join(
             loadImage('./Data/Images/Green.png').then(function(result) {
@@ -70,11 +78,20 @@ defineSuite([
 
     beforeEach(function() {
         scene.morphTo3D(0);
+
         camera.position = new Cartesian3(10.0, 0.0, 0.0);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+
         billboards = new BillboardCollection();
         scene.primitives.add(billboards);
+
+        if (heightReferenceSupported) {
+            billboardsWithHeight = new BillboardCollection({
+                scene : scene
+            });
+            scene.primitives.add(billboardsWithHeight);
+        }
     });
 
     afterEach(function() {
@@ -82,7 +99,7 @@ defineSuite([
         scene.primitives.removeAll();
     });
 
-    it('default constructs a billboard', function() {
+    it('constructs a default billboard', function() {
         var b = billboards.add();
         expect(b.show).toEqual(true);
         expect(b.position).toEqual(Cartesian3.ZERO);
@@ -104,6 +121,7 @@ defineSuite([
         expect(b.width).not.toBeDefined();
         expect(b.height).not.toBeDefined();
         expect(b.id).not.toBeDefined();
+        expect(b.heightReference).toEqual(HeightReference.NONE);
     });
 
     it('can add and remove before first update.', function() {
@@ -160,7 +178,7 @@ defineSuite([
         expect(b.id).toEqual('id');
     });
 
-    it('set billboard properties', function() {
+    it('sets billboard properties', function() {
         var b = billboards.add();
         b.show = false;
         b.position = new Cartesian3(1.0, 2.0, 3.0);
@@ -200,7 +218,11 @@ defineSuite([
         expect(b.height).toEqual(200.0);
     });
 
-    it('disable billboard scaleByDistance', function() {
+    it('is not destroyed', function() {
+        expect(billboards.isDestroyed()).toEqual(false);
+    });
+
+    it('disables billboard scaleByDistance', function() {
         var b = billboards.add({
             scaleByDistance : new NearFarScalar(1.0, 3.0, 1.0e6, 0.0)
         });
@@ -208,7 +230,7 @@ defineSuite([
         expect(b.scaleByDistance).not.toBeDefined();
     });
 
-    it('disable billboard translucencyByDistance', function() {
+    it('disables billboard translucencyByDistance', function() {
         var b = billboards.add({
             translucencyByDistance : new NearFarScalar(1.0, 1.0, 1.0e6, 0.0)
         });
@@ -216,7 +238,7 @@ defineSuite([
         expect(b.translucencyByDistance).not.toBeDefined();
     });
 
-    it('disable billboard pixelOffsetScaleByDistance', function() {
+    it('disables billboard pixelOffsetScaleByDistance', function() {
         var b = billboards.add({
             pixelOffsetScaleByDistance : new NearFarScalar(1.0, 1.0, 1.0e6, 0.0)
         });
@@ -224,7 +246,7 @@ defineSuite([
         expect(b.pixelOffsetScaleByDistance).not.toBeDefined();
     });
 
-    it('render billboard with scaleByDistance', function() {
+    it('renders billboard with scaleByDistance', function() {
         billboards.add({
             position : Cartesian3.ZERO,
             scaleByDistance: new NearFarScalar(2.0, 1.0, 4.0, 0.0),
@@ -238,7 +260,7 @@ defineSuite([
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
     });
 
-    it('render billboard with translucencyByDistance', function() {
+    it('renders billboard with translucencyByDistance', function() {
         billboards.add({
             position : Cartesian3.ZERO,
             translucencyByDistance: new NearFarScalar(2.0, 1.0, 4.0, 0.0),
@@ -252,7 +274,7 @@ defineSuite([
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
     });
 
-    it('render billboard with pixelOffsetScaleByDistance', function() {
+    it('renders billboard with pixelOffsetScaleByDistance', function() {
         billboards.add({
             position : Cartesian3.ZERO,
             pixelOffset : new Cartesian2(1.0, 0.0),
@@ -342,7 +364,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('set a removed billboard property', function() {
+    it('sets a removed billboard property', function() {
         var b = billboards.add();
         billboards.remove(b);
         b.show = false;
@@ -842,7 +864,27 @@ defineSuite([
         expect(pick).not.toBeDefined();
     });
 
-    it('pick a billboard using translucencyByDistance', function() {
+    it('picks a billboard using scaleByDistance', function() {
+        var b = billboards.add({
+            position : Cartesian3.ZERO,
+            image : whiteImage
+        });
+
+        var scaleByDistance = new NearFarScalar(1.0, 4.0, 3.0e9, 2.0);
+        b.scaleByDistance = scaleByDistance;
+
+        var pick = scene.pick(new Cartesian2(0, 0));
+        expect(pick.primitive).toEqual(b);
+
+        scaleByDistance.nearValue = 0.0;
+        scaleByDistance.farValue = 0.0;
+        b.scaleByDistance = scaleByDistance;
+
+        pick = scene.pick(new Cartesian2(0, 0));
+        expect(pick).not.toBeDefined();
+    });
+
+    it('picks a billboard using translucencyByDistance', function() {
         var b = billboards.add({
             position : Cartesian3.ZERO,
             image : whiteImage
@@ -862,7 +904,7 @@ defineSuite([
         expect(pick).not.toBeDefined();
     });
 
-    it('pick a billboard using pixelOffsetScaleByDistance', function() {
+    it('picks a billboard using pixelOffsetScaleByDistance', function() {
         var b = billboards.add({
             position : Cartesian3.ZERO,
             pixelOffset : new Cartesian2(0.0, 100.0),
@@ -881,6 +923,28 @@ defineSuite([
 
         pick = scene.pick(new Cartesian2(0, 0));
         expect(pick).not.toBeDefined();
+    });
+
+    it('can pick a billboard using the rotation property', function() {
+        var b = billboards.add({
+            position : Cartesian3.ZERO,
+            image : greenImage
+        });
+
+        b.rotation = CesiumMath.PI_OVER_TWO;
+        var pick = scene.pick(new Cartesian2(0, 0));
+        expect(pick.primitive).toEqual(b);
+    });
+
+    it('can pick a billboard using the aligned axis property', function() {
+        var b = billboards.add({
+            position : Cartesian3.ZERO,
+            image : greenImage
+        });
+
+        b.alignedAxis = Cartesian3.UNIT_X;
+        var pick = scene.pick(new Cartesian2(0, 0));
+        expect(pick.primitive).toEqual(b);
     });
 
     it('computes screen space position', function() {
@@ -1411,5 +1475,141 @@ defineSuite([
         renderAndCheck();
 
         return deferred.promise;
+    });
+
+    describe('height referenced billboards', function() {
+        function createMockGlobe() {
+            var globe = {
+                callback : undefined,
+                removedCallback : false,
+                ellipsoid : Ellipsoid.WGS84,
+                update : function() {},
+                getHeight : function() {
+                    return 0.0;
+                },
+                _surface : {},
+                destroy : function() {}
+            };
+
+            globe._surface.updateHeight = function(position, callback) {
+                globe.callback = callback;
+                return function() {
+                    globe.removedCallback = true;
+                    globe.callback = undefined;
+                };
+            };
+
+            return globe;
+        }
+
+        it('explicitly constructs a billboard with height reference', function() {
+            if (!heightReferenceSupported) {
+                return;
+            }
+
+            scene.globe = createMockGlobe();
+            var b = billboardsWithHeight.add({
+                heightReference : HeightReference.CLAMP_TO_GROUND
+            });
+
+            expect(b.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
+        });
+
+        it('set billboard height reference property', function() {
+            if (!heightReferenceSupported) {
+                return;
+            }
+
+            scene.globe = createMockGlobe();
+            var b = billboardsWithHeight.add();
+            b.heightReference = HeightReference.CLAMP_TO_GROUND;
+
+            expect(b.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
+        });
+
+        it('creating with a height reference creates a height update callback', function() {
+            if (!heightReferenceSupported) {
+                return;
+            }
+
+            scene.globe = createMockGlobe();
+            var b = billboardsWithHeight.add({
+                heightReference : HeightReference.CLAMP_TO_GROUND,
+                position : Cartesian3.fromDegrees(-72.0, 40.0)
+            });
+            expect(scene.globe.callback).toBeDefined();
+        });
+
+        it('set height reference property creates a height update callback', function() {
+            if (!heightReferenceSupported) {
+                return;
+            }
+
+            scene.globe = createMockGlobe();
+            var b = billboardsWithHeight.add({
+                position : Cartesian3.fromDegrees(-72.0, 40.0)
+            });
+            b.heightReference = HeightReference.CLAMP_TO_GROUND;
+            expect(scene.globe.callback).toBeDefined();
+        });
+
+        it('updates the callback when the height reference changes', function() {
+            if (!heightReferenceSupported) {
+                return;
+            }
+
+            scene.globe = createMockGlobe();
+            var b = billboardsWithHeight.add({
+                heightReference : HeightReference.CLAMP_TO_GROUND,
+                position : Cartesian3.fromDegrees(-72.0, 40.0)
+            });
+            expect(scene.globe.callback).toBeDefined();
+
+            b.heightReference = HeightReference.RELATIVE_TO_GROUND;
+            expect(scene.globe.removedCallback).toEqual(true);
+            expect(scene.globe.callback).toBeDefined();
+
+            scene.globe.removedCallback = false;
+            b.heightReference = HeightReference.NONE;
+            expect(scene.globe.removedCallback).toEqual(true);
+            expect(scene.globe.callback).not.toBeDefined();
+        });
+
+        it('changing the position updates the callback', function() {
+            if (!heightReferenceSupported) {
+                return;
+            }
+
+            scene.globe = createMockGlobe();
+            var b = billboardsWithHeight.add({
+                heightReference : HeightReference.CLAMP_TO_GROUND,
+                position : Cartesian3.fromDegrees(-72.0, 40.0)
+            });
+            expect(scene.globe.callback).toBeDefined();
+
+            b.position = Cartesian3.fromDegrees(-73.0, 40.0);
+            expect(scene.globe.removedCallback).toEqual(true);
+            expect(scene.globe.callback).toBeDefined();
+        });
+
+        it('callback updates the position', function() {
+            if (!heightReferenceSupported) {
+                return;
+            }
+
+            scene.globe = createMockGlobe();
+            var b = billboardsWithHeight.add({
+                heightReference : HeightReference.CLAMP_TO_GROUND,
+                position : Cartesian3.fromDegrees(-72.0, 40.0)
+            });
+            expect(scene.globe.callback).toBeDefined();
+
+            var cartographic = scene.globe.ellipsoid.cartesianToCartographic(b._clampedPosition);
+            expect(cartographic.height).toEqual(0.0);
+
+            scene.globe.callback(Cartesian3.fromDegrees(-72.0, 40.0, 100.0));
+            cartographic = scene.globe.ellipsoid.cartesianToCartographic(b._clampedPosition);
+            expect(cartographic.height).toEqualEpsilon(100.0, CesiumMath.EPSILON9);
+        });
     });
 }, 'WebGL');

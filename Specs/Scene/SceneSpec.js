@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
         'Core/BoundingSphere',
+        'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
         'Core/Ellipsoid',
@@ -26,6 +27,7 @@ defineSuite([
         'Specs/render'
     ], 'Scene/Scene', function(
         BoundingSphere,
+        Cartesian2,
         Cartesian3,
         Color,
         Ellipsoid,
@@ -127,7 +129,7 @@ defineSuite([
       expect(function() {
           return new Scene({});
       }).toThrowDeveloperError();
-  });
+    });
 
     it('draws background color', function() {
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
@@ -228,6 +230,24 @@ defineSuite([
         scene.renderForSpecs();
         expect(scene._performanceDisplay).toBeDefined();
         scene.debugShowFramesPerSecond = false;
+    });
+
+    it('debugShowGlobeDepth', function() {
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        scene.camera.viewRectangle(rectangle);
+
+        var rectanglePrimitive = new RectanglePrimitive({
+            rectangle : rectangle,
+            asynchronous : false
+        });
+        rectanglePrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+        scene.primitives.add(rectanglePrimitive);
+
+        expect(scene.renderForSpecs()).toEqual([255, 0, 0, 255]);
+        scene.debugShowGlobeDepth = true;
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        scene.debugShowGlobeDepth = false;
     });
 
     it('opaque/translucent render order (1)', function() {
@@ -500,6 +520,66 @@ defineSuite([
         }
     });
 
+    it('copies the globe depth', function() {
+        var scene = createScene();
+
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+
+        var rectanglePrimitive = new RectanglePrimitive({
+            rectangle : rectangle,
+            height : 1000.0,
+            asynchronous : false
+        });
+        rectanglePrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
+
+        var primitives = scene.primitives;
+        primitives.add(rectanglePrimitive);
+
+        scene.camera.viewRectangle(rectangle);
+
+        var uniformState = scene.context.uniformState;
+
+        scene.renderForSpecs();
+        expect(uniformState.globeDepthTexture).not.toBeDefined();
+
+        scene.copyGlobeDepth = true;
+        scene.renderForSpecs();
+        expect(uniformState.globeDepthTexture).toBeDefined();
+    });
+
+    it('pickPosition', function() {
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        scene.camera.viewRectangle(rectangle);
+
+        scene.renderForSpecs();
+
+        var canvas = scene.canvas;
+        var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        var position = scene.pickPosition(windowPosition);
+        expect(position).not.toBeDefined();
+
+        var rectanglePrimitive = new RectanglePrimitive({
+            rectangle : rectangle,
+            asynchronous : false
+        });
+        rectanglePrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+        var primitives = scene.primitives;
+        primitives.add(rectanglePrimitive);
+
+        scene.renderForSpecs();
+
+        position = scene.pickPosition(windowPosition);
+        expect(position).toBeDefined();
+    });
+
+    it('pickPosition throws without windowPosition', function() {
+        expect(function() {
+            scene.pickPosition();
+        }).toThrowDeveloperError();
+    });
+
     it('isDestroyed', function() {
         var s = createScene();
         expect(s.isDestroyed()).toEqual(false);
@@ -567,6 +647,38 @@ defineSuite([
         var spyListener = jasmine.createSpy('listener');
         s.postRender.addEventListener(spyListener);
 
+        s.render();
+
+        expect(spyListener.calls.count()).toBe(1);
+
+        s.destroyForSpecs();
+    });
+
+    it('raises the cameraMoveStart event after moving the camera', function() {
+        var s = createScene();
+        s.render();
+
+        var spyListener = jasmine.createSpy('listener');
+        s.camera.moveStart.addEventListener(spyListener);
+
+        s.camera.moveLeft();
+        s.render();
+
+        expect(spyListener.calls.count()).toBe(1);
+
+        s.destroyForSpecs();
+    });
+
+    it('raises the cameraMoveEvent event when the camera stops moving', function() {
+        var s = createScene();
+        s.render();
+
+        var spyListener = jasmine.createSpy('listener');
+        s.camera.moveEnd.addEventListener(spyListener);
+
+        s.cameraEventWaitTime = 0.0;
+        s.camera.moveLeft();
+        s.render();
         s.render();
 
         expect(spyListener.calls.count()).toBe(1);
