@@ -305,6 +305,10 @@ define([
             if (!hasViewFrom && defined(sphere)) {
                 var controller = scene.screenSpaceCameraController;
                 controller.minimumZoomDistance = Math.min(controller.minimumZoomDistance, sphere.radius * 0.5);
+
+                //The default HPR is not ideal for high altitude objects so
+                //we scale the pitch as we get further from the earth for a more
+                //downward view.
                 scratchHeadingPitchRange.pitch = -CesiumMath.PI_OVER_FOUR;
                 scratchHeadingPitchRange.range = 0;
                 var position = positionProperty.getValue(time, scratchCartesian);
@@ -312,6 +316,7 @@ define([
                     var factor = 2 - 1 / Math.max(1, Cartesian3.magnitude(position) / ellipsoid.maximumRadius);
                     scratchHeadingPitchRange.pitch *= factor;
                 }
+
                 camera.viewBoundingSphere(sphere, scratchHeadingPitchRange);
                 this._boundingSphereOffset = Cartesian3.subtract(sphere.center, entity.position.getValue(time), new Cartesian3());
                 updateLookAt = false;
