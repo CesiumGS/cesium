@@ -10,6 +10,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/PixelFormat',
+        '../Renderer/Context',
         '../Renderer/PixelDatatype',
         '../Renderer/ShaderSource',
         '../Renderer/TextureMinificationFilter',
@@ -29,6 +30,7 @@ define([
         destroyObject,
         DeveloperError,
         PixelFormat,
+        Context,
         PixelDatatype,
         ShaderSource,
         TextureMinificationFilter,
@@ -87,9 +89,15 @@ define([
         }
     });
 
+    function getByteLength(batchSize) {
+        var width = Math.min(batchSize, Context.maximumTextureSize);
+        var height = Math.ceil(batchSize / Context.maximumTextureSize);
+        return (width * height) * 4;
+    }
+
     function createBatchValues(batchSize) {
         // Default batch texture to RGBA = 255: white highlight (RGB) and show = true (A).
-        var byteLength = batchSize * 4;
+        var byteLength = getByteLength(batchSize);
         var bytes = new Uint8Array(byteLength);
         for (var i = 0; i < byteLength; ++i) {
             bytes[i] = 255;
@@ -263,7 +271,7 @@ bytes[11] = 255;
             '    float centerY = tiles3d_batchTextureStep.w; \n ' +
             '    float xId = mod(float(batchId), tiles3d_batchTextureDimensions.x); \n ' +
             '    float yId = float(batchId / int(tiles3d_batchTextureDimensions.x)); \n ' +
-            '    return vec2(centerX + (xId * stepX), centerY + (yId * stepY)); \n' +
+            '    return vec2(centerX + (xId * stepX), 1.0 - (centerY + (yId * stepY))); \n' +
             '} \n';
     }
 
@@ -533,20 +541,17 @@ bytes[11] = 255;
     }
 
     function createTexture(context, batchSize, bytes) {
-        var maxTextureSize = context.maximumTextureSize;
-        maxTextureSize = 2;
-
-        // PERFORMANCE_IDEA: this can waste memory in the bottom row in the uncommon case
+        // PERFORMANCE_IDEA: this can waste memory in the top row in the uncommon case
         // when more than one row is needed (e.g., > 16K models in one tile)
-        var width = Math.min(batchSize, maxTextureSize);
-        var height = Math.ceil(batchSize / maxTextureSize);
+        var width = Math.min(batchSize, Context.maximumTextureSize);
+        var height = Math.ceil(batchSize / Context.maximumTextureSize);
 
         return context.createTexture2D({
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
             source : {
-                width : batchSize,
-                height : 1,
+                width : width,
+                height : height,
                 arrayBufferView : bytes
             },
             sampler : context.createSampler({
@@ -560,7 +565,7 @@ bytes[11] = 255;
         var batchSize = content._batchSize;
         if (!defined(content._pickTexture) && (batchSize > 0)) {
             var pickIds = content._pickIds;
-            var byteLength = batchSize * 4;
+            var byteLength = getByteLength(batchSize);
             var bytes = new Uint8Array(byteLength);
 
             // PERFORMANCE_IDEA: we could skip the pick texture completely by allocating

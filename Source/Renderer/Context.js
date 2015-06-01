@@ -265,6 +265,9 @@ define([
         this._aliasedPointSizeRange = gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE); // must include 1
         this._maximumViewportDimensions = gl.getParameter(gl.MAX_VIEWPORT_DIMS);
 
+        // Will be the same across all contexts.
+        Context.maximumTextureSize = this._maximumTextureSize;
+
         this._antialias = gl.getContextAttributes().antialias;
 
         // Query and initialize extensions
@@ -339,6 +342,8 @@ define([
 
         RenderState.apply(gl, rs, ps);
     };
+
+    Context.maximumTextureSize = undefined;
 
     var defaultFramebufferMarker = {};
 
