@@ -66,6 +66,7 @@ define([
         this._batchValuesDirty = false;
         this._batchTexture = undefined;
         this._batchTextureDimensions = undefined;
+        this._batchTextureStep = undefined;
         this._useVTF = false;
 
         this._pickTexture = undefined;
@@ -87,12 +88,28 @@ define([
     });
 
     function createBatchValues(batchSize) {
-        // Default batch texture to RGBA = 255: white highlight and show = true.
+        // Default batch texture to RGBA = 255: white highlight (RGB) and show = true (A).
         var byteLength = batchSize * 4;
         var bytes = new Uint8Array(byteLength);
         for (var i = 0; i < byteLength; ++i) {
             bytes[i] = 255;
         }
+
+bytes[0] = 255;
+bytes[1] = 0;
+bytes[2] = 0;
+bytes[3] = 255;
+
+bytes[4] = 0;
+bytes[5] = 255;
+bytes[6] = 0;
+bytes[7] = 255;
+
+bytes[8] = 0;
+bytes[9] = 0;
+bytes[10] = 255;
+bytes[11] = 255;
+
         return bytes;
     }
 
@@ -224,14 +241,29 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function getGlslComputeSt() {
-        // Assuming the batch texture is has dimensions batch-size by 1.
-        return 'vec2 computeSt(int batchId, vec2 dimensions) \n' +
+    function getGlslComputeSt(content) {
+        // GLSL batchId is zero-based: [0, batchSize - 1]
+        if (content._batchTextureDimensions.y === 1) {
+            return 'uniform vec4 tiles3d_batchTextureStep; \n' +
+                'vec2 computeSt(int batchId) \n' +
+                '{ \n' +
+                '    float stepX = tiles3d_batchTextureStep.x; \n ' +
+                '    float centerX = tiles3d_batchTextureStep.y; \n ' +
+                '    return vec2(centerX + (float(batchId) * stepX), 0.5); \n' +
+                '} \n';
+        }
+
+        return 'uniform vec4 tiles3d_batchTextureStep; \n' +
+            'uniform vec2 tiles3d_batchTextureDimensions; \n' +
+            'vec2 computeSt(int batchId) \n' +
             '{ \n' +
-            '    float width = dimensions.x; \n ' +
-            '    float step = (1.0 / width); \n ' +   // PERFORMANCE_IDEA: could precompute step and center
-            '    float center = step * 0.5; \n ' +
-            '    return vec2(center + (float(batchId) * step), 0.5); \n' +  // batchId is zero-based: [0, width - 1]
+            '    float stepX = tiles3d_batchTextureStep.x; \n ' +
+            '    float centerX = tiles3d_batchTextureStep.y; \n ' +
+            '    float stepY = tiles3d_batchTextureStep.z; \n ' +
+            '    float centerY = tiles3d_batchTextureStep.w; \n ' +
+            '    float xId = mod(float(batchId), tiles3d_batchTextureDimensions.x); \n ' +
+            '    float yId = float(batchId / int(tiles3d_batchTextureDimensions.x)); \n ' +
+            '    return vec2(centerX + (xId * stepX), centerY + (yId * stepY)); \n' +
             '} \n';
     }
 
@@ -249,14 +281,13 @@ define([
                 // When VTF is supported, perform per patched model (e.g., building) show/hide in the vertex shader
                 newMain =
                     'uniform sampler2D tiles3d_batchTexture; \n' +
-                    'uniform vec2 tiles3d_batchTextureDimensions; \n' +
 // TODO: get batch id from vertex attribute
                     'int batchId = 0; \n' +
                     'varying vec3 tiles3d_modelColor; \n' +
                     'void main() \n' +
                     '{ \n' +
                     '    gltf_main(); \n' +
-                    '    vec2 st = computeSt(batchId, tiles3d_batchTextureDimensions); \n' +
+                    '    vec2 st = computeSt(batchId); \n' +
                     '    vec4 modelProperties = texture2D(tiles3d_batchTexture, st); \n' +
                     '    float show = modelProperties.a; \n' +
                     '    gl_Position *= show; \n' +                       // Per batched model show/hide
@@ -264,18 +295,17 @@ define([
                     '}';
             } else {
                 newMain =
-                    'uniform vec2 tiles3d_batchTextureDimensions; \n' +
 // TODO: get batch id from vertex attribute
                     'int batchId = 0; \n' +
                     'varying vec2 tiles3d_modelSt; \n' +
                     'void main() \n' +
                     '{ \n' +
                     '    gltf_main(); \n' +
-                    '    tiles3d_modelSt = computeSt(batchId, tiles3d_batchTextureDimensions); \n' +
+                    '    tiles3d_modelSt = computeSt(batchId); \n' +
                     '}';
             }
 
-            return renamedSource + '\n' + getGlslComputeSt() + newMain;
+            return renamedSource + '\n' + getGlslComputeSt(content) + newMain;
         };
     }
 
@@ -331,6 +361,9 @@ define([
                 },
                 tiles3d_batchTextureDimensions : function() {
                     return content._batchTextureDimensions;
+                },
+                tiles3d_batchTextureStep : function() {
+                    return content._batchTextureStep;
                 }
             };
 
@@ -354,33 +387,31 @@ define([
                 // When VTF is supported, perform per patched model (e.g., building) show/hide in the vertex shader
                 newMain =
                     'uniform sampler2D tiles3d_batchTexture; \n' +
-                    'uniform vec2 tiles3d_batchTextureDimensions; \n' +
 // TODO: get batch id from vertex attribute
                     'int batchId = 0; \n' +
                     'varying vec2 tiles3d_modelSt; \n' +
                     'void main() \n' +
                     '{ \n' +
                     '    gltf_main(); \n' +
-                    '    vec2 st = computeSt(batchId, tiles3d_batchTextureDimensions); \n' +
+                    '    vec2 st = computeSt(batchId); \n' +
                     '    vec4 modelProperties = texture2D(tiles3d_batchTexture, st); \n' +
                     '    float show = modelProperties.a; \n' +
                     '    gl_Position *= show; \n' +                       // Per batched model show/hide
-                    '    tiles3d_modelSt = computeSt(batchId, tiles3d_batchTextureDimensions); \n' +
+                    '    tiles3d_modelSt = st; \n' +
                     '}';
             } else {
                 newMain =
-                    'uniform vec2 tiles3d_batchTextureDimensions; \n' +
 // TODO: get batch id from vertex attribute
                     'int batchId = 0; \n' +
                     'varying vec2 tiles3d_modelSt; \n' +
                     'void main() \n' +
                     '{ \n' +
                     '    gltf_main(); \n' +
-                    '    tiles3d_modelSt = computeSt(batchId, tiles3d_batchTextureDimensions); \n' +
+                    '    tiles3d_modelSt = computeSt(batchId); \n' +
                     '}';
             }
 
-            return renamedSource + '\n' + getGlslComputeSt() + newMain;
+            return renamedSource + '\n' + getGlslComputeSt(content) + newMain;
         };
     }
 
@@ -445,6 +476,9 @@ define([
                 tiles3d_batchTextureDimensions : function() {
                     return content._batchTextureDimensions;
                 },
+                tiles3d_batchTextureStep : function() {
+                    return content._batchTextureStep;
+                },
                 tiles3d_pickTexture : function() {
                     return content._pickTexture;
                 }
@@ -499,10 +533,17 @@ define([
     }
 
     function createTexture(context, batchSize, bytes) {
+        var maxTextureSize = context.maximumTextureSize;
+        maxTextureSize = 2;
+
+        // PERFORMANCE_IDEA: this can waste memory in the bottom row in the uncommon case
+        // when more than one row is needed (e.g., > 16K models in one tile)
+        var width = Math.min(batchSize, maxTextureSize);
+        var height = Math.ceil(batchSize / maxTextureSize);
+
         return context.createTexture2D({
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-// TODO: handle case when the batch size is > context.maximumTextureSize
             source : {
                 width : batchSize,
                 height : 1,
@@ -548,8 +589,14 @@ define([
         if (!defined(content._batchTexture) && (batchSize > 0)) {
             var bytes = defined(content._batchValues) ? content._batchValues : createBatchValues(batchSize);
             var texture = createTexture(context, batchSize, bytes);
+            var stepX = 1.0 / texture.width;
+            var centerX = stepX * 0.5;
+            var stepY = 1.0 / texture.height;
+            var centerY = stepY * 0.5;
+
             content._batchTexture = texture;
             content._batchTextureDimensions = new Cartesian2(texture.width, texture.height);
+            content._batchTextureStep = new Cartesian4(stepX, centerX, stepY, centerY);
             content._useVTF = (context.maximumVertexTextureImageUnits > 0);
             content._batchValuesDirty = false;
         }
