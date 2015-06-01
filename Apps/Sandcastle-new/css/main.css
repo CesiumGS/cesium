@@ -93,4 +93,8 @@ ul + div.tab-content {
   ul + div.tab-content {
     padding-top: 0px;
   }
+
+  #consoleRow{
+    position: static;
+  }
 }

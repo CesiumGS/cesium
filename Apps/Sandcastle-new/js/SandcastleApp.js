@@ -137,7 +137,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
   var SandcastleCode = React.createClass({
     render: function(){
       return (
-        <div id="codeColumn" className=" col-sm-5">
+        <div id="codeColumn" className="hidden-xs col-sm-5">
           <div role="tabpanel">
             <SandcastleCodeTabs />
             <div className="tab-content">
@@ -278,7 +278,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
   var SandcastleCesium = React.createClass({
     render: function(){
       return (
-        <div id="cesiumColumn" className=" hidden-xs col-sm-7">
+        <div id="cesiumColumn" className=" col-xs-12 col-sm-7">
           <div role="tabpanel">
             <SandcastleCesiumTabs />
             <SandcastleCesiumContainer />
@@ -544,6 +544,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       $(".navbar-collapse").collapse('hide');
       $('#bodyRow').addClass('hidden-xs');
       $('#consoleRow').removeClass('hidden-xs');
+      $('#consoleLog').addClass('in');
     },
 
     render: function(){
