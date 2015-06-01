@@ -267,6 +267,7 @@ define([
 
         // Will be the same across all contexts.
         Context.maximumTextureSize = this._maximumTextureSize;
+        Context.maximumVertexTextureImageUnits = this._maximumVertexTextureImageUnits;
 
         this._antialias = gl.getContextAttributes().antialias;
 
@@ -344,6 +345,7 @@ define([
     };
 
     Context.maximumTextureSize = undefined;
+    Context.maximumVertexTextureImageUnits = undefined;
 
     var defaultFramebufferMarker = {};
 

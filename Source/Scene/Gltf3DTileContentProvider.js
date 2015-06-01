@@ -69,7 +69,6 @@ define([
         this._batchTexture = undefined;
         this._batchTextureDimensions = undefined;
         this._batchTextureStep = undefined;
-        this._useVTF = false;
 
         this._pickTexture = undefined;
         this._pickIds = [];
@@ -270,7 +269,7 @@ define([
             var renamedSource = ShaderSource.replaceMain(source, 'gltf_main');
             var newMain;
 
-            if (content._useVTF) {
+            if (Context.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, perform per patched model (e.g., building) show/hide in the vertex shader
                 newMain =
                     'uniform sampler2D tiles3d_batchTexture; \n' +
@@ -312,7 +311,7 @@ define([
             var renamedSource = ShaderSource.replaceMain(source, 'gltf_main');
             var newMain;
 
-            if (content._useVTF) {
+            if (Context.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, per patched model (e.g., building) show/hide already
                 // happened in the fragment shader
                 newMain =
@@ -376,7 +375,7 @@ define([
             var renamedSource = ShaderSource.replaceMain(source, 'gltf_main');
             var newMain;
 
-            if (content._useVTF) {
+            if (Context.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, perform per patched model (e.g., building) show/hide in the vertex shader
                 newMain =
                     'uniform sampler2D tiles3d_batchTexture; \n' +
@@ -418,7 +417,7 @@ define([
             var renamedSource = ShaderSource.replaceMain(source, 'gltf_main');
             var newMain;
 
-            if (content._useVTF) {
+            if (Context.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, per patched model (e.g., building) show/hide already
                 // happened in the fragment shader
                 newMain =
@@ -587,7 +586,6 @@ define([
             content._batchTexture = texture;
             content._batchTextureDimensions = new Cartesian2(texture.width, texture.height);
             content._batchTextureStep = new Cartesian4(stepX, centerX, stepY, centerY);
-            content._useVTF = (context.maximumVertexTextureImageUnits > 0);
             content._batchValuesDirty = false;
         }
     }
