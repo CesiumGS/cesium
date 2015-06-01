@@ -2,7 +2,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
   var SandcastleCodeTabs = React.createClass({
     render: function(){
       return (
-        <ul className="nav nav-tabs" id="codeContainerTabs" role="tablist">
+        <ul className="nav nav-tabs hidden-xs" id="codeContainerTabs" role="tablist">
           <li role="presentation" className="active"><a href="#jsContainer" aria-controls="jsContainer" role="tab" data-toggle="tab">Javascript code</a></li>
           <li role="presentation"><a href="#htmlContainer" aria-controls="htmlContainer" role="tab" data-toggle="tab">HTML body &amp; CSS</a></li>
         </ul>
@@ -150,7 +150,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
   var SandcastleCesiumTabs = React.createClass({
     render: function(){
       return (
-        <ul className="nav nav-tabs" id="cesiumTabs" role="tablist">
+        <ul className="nav nav-tabs hidden-xs" id="cesiumTabs" role="tablist">
             <li role="presentation" className="active"><a href="#bucketPane" aria-controls="bucketPane" role="tab" data-toggle="tab">Cesium</a></li>
         </ul>
       );
@@ -436,6 +436,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
 
   var SandcastleHeader = React.createClass({
     newDemo: function(){
+      $(".navbar-collapse").collapse('hide');
       PubSub.publish('NEW DEMO', '');
     },
 
@@ -449,6 +450,26 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
 
     newWindow: function(){
       PubSub.publish('NEW WINDOW', '');
+    },
+
+    showPreview: function(){
+      $(".navbar-collapse").collapse('hide');
+      $('#codeColumn').addClass('hidden-xs');
+      $('#cesiumColumn').removeClass('hidden-xs');
+    },
+
+    showJSCode: function(){
+      $(".navbar-collapse").collapse('hide');
+      $('#codeColumn').removeClass('hidden-xs');
+      $('#cesiumColumn').addClass('hidden-xs');
+      $('#codeContainerTabs a[href="#jsContainer"').tab('show');
+    },
+
+    showHTMLCode: function(){
+      $(".navbar-collapse").collapse('hide');
+      $('#codeColumn').removeClass('hidden-xs');
+      $('#cesiumColumn').addClass('hidden-xs');
+      $('#codeContainerTabs a[href="#htmlContainer"').tab('show');
     },
 
     render: function(){
@@ -472,9 +493,9 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
                   <li className="hidden-xs" id="buttonRun"><a href="#" onClick={this.runDemo}>Run (F8)</a></li>
                   <li className="hidden-xs" id="buttonSuggest" onClick={this.runSuggest}><a href="#">Suggest (Ctrl-Space)</a></li>
                   <li className="hidden-xs" id="buttonNewWindow" onClick={this.newWindow}><a href="#">Open in New Window</a></li>
-                  <li id="buttonCesium" className="visible-xs-block"><a href="#">Preview</a></li>
-                  <li id="buttonJSCode" className="visible-xs-block"><a href="#">View JS Code</a></li>
-                  <li id="buttonHTMLCode" className="visible-xs-block"><a href="#">View HTML Code</a></li>
+                  <li id="buttonCesium" className="visible-xs-block"><a href="#" onClick={this.showPreview}>Preview</a></li>
+                  <li id="buttonJSCode" className="visible-xs-block"><a href="#" onClick={this.showJSCode}>View JS Code</a></li>
+                  <li id="buttonHTMLCode" className="visible-xs-block"><a href="#" onClick={this.showHTMLCode}>View HTML Code</a></li>
                   <li id="buttonConsole" className="visible-xs-block"><a href="#">Console</a></li>
                   <li id="buttonShare"><a href="#">Share</a></li>
                   <li id="buttonGallery"><a href="#">Gallery</a></li>
