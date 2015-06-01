@@ -243,9 +243,8 @@ define([
         this._oit = oit;
         this._fxaa = new FXAA();
 
-        this._clearColorDepthCommand = new ClearCommand({
+        this._clearColorCommand = new ClearCommand({
             color : new Color(),
-            depth : 1.0,
             owner : this
         });
         this._depthClearCommand = new ClearCommand({
@@ -1360,7 +1359,7 @@ define([
         }
 
         // Clear the pass state framebuffer.
-        var clear = scene._clearColorDepthCommand;
+        var clear = scene._clearColorCommand;
         Color.clone(clearColor, clear.color);
         clear.execute(context, passState);
 
