@@ -63,15 +63,36 @@ define([
          */
         this.readyPromise = when.defer();
 
-        this._batchSize = defaultValue(contentHeader.batchSize, 0);  // Number of models, e.g., buildings, batched into the glTF model.
-        this._batchValues = undefined;                               // Per-model show/color
+        var batchSize = defaultValue(contentHeader.batchSize, 0);
+        this._batchSize = batchSize;    // Number of models, e.g., buildings, batched into the glTF model.
+        this._batchValues = undefined;  // Per-model show/color
         this._batchValuesDirty = false;
         this._batchTexture = undefined;
-        this._batchTextureDimensions = undefined;
-        this._batchTextureStep = undefined;
+        this._defaultTexture = undefined;
 
         this._pickTexture = undefined;
         this._pickIds = [];
+
+        // Dimensions for batch and pick textures
+        var textureDimensions;
+        var textureStep;
+
+        if (batchSize > 0) {
+            // PERFORMANCE_IDEA: this can waste memory in the last row in the uncommon case
+            // when more than one row is needed (e.g., > 16K models in one tile)
+            var width = Math.min(batchSize, Context.maximumTextureSize);
+            var height = Math.ceil(batchSize / Context.maximumTextureSize);
+            var stepX = 1.0 / width;
+            var centerX = stepX * 0.5;
+            var stepY = 1.0 / height;
+            var centerY = stepY * 0.5;
+
+            textureDimensions = new Cartesian2(width, height);
+            textureStep = new Cartesian4(stepX, centerX, stepY, centerY);
+        }
+
+        this._textureDimensions = textureDimensions;
+        this._textureStep = textureStep;
 
         this._debugColor = Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;
@@ -88,26 +109,21 @@ define([
         }
     });
 
-    function getByteLength(batchSize) {
-        var width = Math.min(batchSize, Context.maximumTextureSize);
-        var height = Math.ceil(batchSize / Context.maximumTextureSize);
-        return (width * height) * 4;
-    }
-
-    function createBatchValues(batchSize) {
-        // Default batch texture to RGBA = 255: white highlight (RGB) and show = true (A).
-        var byteLength = getByteLength(batchSize);
-        var bytes = new Uint8Array(byteLength);
-        for (var i = 0; i < byteLength; ++i) {
-            bytes[i] = 255;
-        }
-
-        return bytes;
+    function getByteLength(content) {
+        var dimensions = content._textureDimensions;
+        return (dimensions.x * dimensions.y) * 4;
     }
 
     function getBatchValues(content) {
         if (!defined(content._batchValues)) {
-            content._batchValues = createBatchValues(content._batchSize);
+            // Default batch texture to RGBA = 255: white highlight (RGB) and show = true (A).
+            var byteLength = getByteLength(content);
+            var bytes = new Uint8Array(byteLength);
+            for (var i = 0; i < byteLength; ++i) {
+                bytes[i] = 255;
+            }
+
+            content._batchValues = bytes;
         }
 
         return content._batchValues;
@@ -127,6 +143,11 @@ define([
             throw new DeveloperError('value is required.');
         }
         //>>includeEnd('debug');
+
+        if (value && !defined(this._batchValues)) {
+            // Avoid allocating since the default is show = true
+            return;
+        }
 
         var batchValues = getBatchValues(this);
         var offset = (batchId * 4) + 3; // Store show/hide in alpha
@@ -174,6 +195,11 @@ define([
             throw new DeveloperError('value is required.');
         }
         //>>includeEnd('debug');
+
+        if (Color.equals(value, Color.WHITE) && !defined(this._batchValues)) {
+            // Avoid allocating since the default is white
+            return;
+        }
 
         var batchValues = getBatchValues(this);
         var offset = batchId * 4;
@@ -235,26 +261,26 @@ define([
 
     function getGlslComputeSt(content) {
         // GLSL batchId is zero-based: [0, batchSize - 1]
-        if (content._batchTextureDimensions.y === 1) {
-            return 'uniform vec4 tiles3d_batchTextureStep; \n' +
+        if (content._textureDimensions.y === 1) {
+            return 'uniform vec4 tiles3d_textureStep; \n' +
                 'vec2 computeSt(int batchId) \n' +
                 '{ \n' +
-                '    float stepX = tiles3d_batchTextureStep.x; \n ' +
-                '    float centerX = tiles3d_batchTextureStep.y; \n ' +
+                '    float stepX = tiles3d_textureStep.x; \n ' +
+                '    float centerX = tiles3d_textureStep.y; \n ' +
                 '    return vec2(centerX + (float(batchId) * stepX), 0.5); \n' +
                 '} \n';
         }
 
-        return 'uniform vec4 tiles3d_batchTextureStep; \n' +
-            'uniform vec2 tiles3d_batchTextureDimensions; \n' +
+        return 'uniform vec4 tiles3d_textureStep; \n' +
+            'uniform vec2 tiles3d_textureDimensions; \n' +
             'vec2 computeSt(int batchId) \n' +
             '{ \n' +
-            '    float stepX = tiles3d_batchTextureStep.x; \n ' +
-            '    float centerX = tiles3d_batchTextureStep.y; \n ' +
-            '    float stepY = tiles3d_batchTextureStep.z; \n ' +
-            '    float centerY = tiles3d_batchTextureStep.w; \n ' +
-            '    float xId = mod(float(batchId), tiles3d_batchTextureDimensions.x); \n ' +
-            '    float yId = float(batchId / int(tiles3d_batchTextureDimensions.x)); \n ' +
+            '    float stepX = tiles3d_textureStep.x; \n ' +
+            '    float centerX = tiles3d_textureStep.y; \n ' +
+            '    float stepY = tiles3d_textureStep.z; \n ' +
+            '    float centerY = tiles3d_textureStep.w; \n ' +
+            '    float xId = mod(float(batchId), tiles3d_textureDimensions.x); \n ' +
+            '    float yId = float(batchId / int(tiles3d_textureDimensions.x)); \n ' +
             '    return vec2(centerX + (xId * stepX), 1.0 - (centerY + (yId * stepY))); \n' +
             '} \n';
     }
@@ -349,13 +375,14 @@ define([
         return function(uniformMap) {
             var batchUniformMap = {
                 tiles3d_batchTexture : function() {
-                    return content._batchTexture;
+                    // PERFORMANCE_IDEA: we could also use a custom shader that avoids the texture read.
+                    return defaultValue(content._batchTexture, content._defaultTexture);
                 },
-                tiles3d_batchTextureDimensions : function() {
-                    return content._batchTextureDimensions;
+                tiles3d_textureDimensions : function() {
+                    return content._textureDimensions;
                 },
-                tiles3d_batchTextureStep : function() {
-                    return content._batchTextureStep;
+                tiles3d_textureStep : function() {
+                    return content._textureStep;
                 }
             };
 
@@ -463,13 +490,13 @@ define([
         return function(uniformMap) {
             var batchUniformMap = {
                 tiles3d_batchTexture : function() {
-                    return content._batchTexture;
+                    return defaultValue(content._batchTexture, content._defaultTexture);
                 },
-                tiles3d_batchTextureDimensions : function() {
-                    return content._batchTextureDimensions;
+                tiles3d_textureDimensions : function() {
+                    return content._textureDimensions;
                 },
-                tiles3d_batchTextureStep : function() {
-                    return content._batchTextureStep;
+                tiles3d_textureStep : function() {
+                    return content._textureStep;
                 },
                 tiles3d_pickTexture : function() {
                     return content._pickTexture;
@@ -524,18 +551,14 @@ define([
         }
     }
 
-    function createTexture(context, batchSize, bytes) {
-        // PERFORMANCE_IDEA: this can waste memory in the top row in the uncommon case
-        // when more than one row is needed (e.g., > 16K models in one tile)
-        var width = Math.min(batchSize, Context.maximumTextureSize);
-        var height = Math.ceil(batchSize / Context.maximumTextureSize);
-
+    function createTexture(content, context, bytes) {
+        var dimensions = content._textureDimensions;
         return context.createTexture2D({
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
             source : {
-                width : width,
-                height : height,
+                width : dimensions.x,
+                height : dimensions.y,
                 arrayBufferView : bytes
             },
             sampler : context.createSampler({
@@ -549,7 +572,7 @@ define([
         var batchSize = content._batchSize;
         if (!defined(content._pickTexture) && (batchSize > 0)) {
             var pickIds = content._pickIds;
-            var byteLength = getByteLength(batchSize);
+            var byteLength = getByteLength(content);
             var bytes = new Uint8Array(byteLength);
 
             // PERFORMANCE_IDEA: we could skip the pick texture completely by allocating
@@ -569,32 +592,20 @@ define([
                 bytes[offset + 3] = Color.floatToByte(pickColor.alpha);
             }
 
-            content._pickTexture = createTexture(context, batchSize, bytes, PixelDatatype.FLOAT);
+            content._pickTexture = createTexture(content, context, bytes);
         }
     }
 
     function createBatchTexture(content, context) {
-        var batchSize = content._batchSize;
-        if (!defined(content._batchTexture) && (batchSize > 0)) {
-            var bytes = defined(content._batchValues) ? content._batchValues : createBatchValues(batchSize);
-            var texture = createTexture(context, batchSize, bytes);
-            var stepX = 1.0 / texture.width;
-            var centerX = stepX * 0.5;
-            var stepY = 1.0 / texture.height;
-            var centerY = stepY * 0.5;
-
-            content._batchTexture = texture;
-            content._batchTextureDimensions = new Cartesian2(texture.width, texture.height);
-            content._batchTextureStep = new Cartesian4(stepX, centerX, stepY, centerY);
+        if (!defined(content._batchTexture)) {
+            content._batchTexture = createTexture(content, context, content._batchValues);
             content._batchValuesDirty = false;
         }
     }
 
     function updateBatchTexture(content, context) {
         if (content._batchValuesDirty) {
-            content._batchValuesDirty = false;
-
-            var dimensions = content._batchTextureDimensions;
+            var dimensions = content._textureDimensions;
             // PERFORMANCE_IDEA: Instead of rewriting the entire texture, use fine-grained
             // texture updates when less than, for example, 10%, of the values changed.  Or
             // even just optimize the common case when one model show/color changed.
@@ -613,9 +624,20 @@ define([
 
         applyDebugSettings(owner, this);
 
-        createPickTexture(this, context);
-        createBatchTexture(this, context);
-        updateBatchTexture(this, context);  // Apply per-model show/color updates
+        this._defaultTexture = context.defaultTexture;
+
+        if (frameState.passes.pick) {
+            // Create pick texture on-demand
+            createPickTexture(this, context);
+        }
+
+        if (this._batchValuesDirty) {
+            // Create batch texture on-demand
+            createBatchTexture(this, context);
+            updateBatchTexture(this, context);  // Apply per-model show/color updates
+
+            this._batchValuesDirty = false;
+        }
 
         this._model.update(context, frameState, commandList);
    };
