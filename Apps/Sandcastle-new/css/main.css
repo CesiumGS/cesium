@@ -74,6 +74,20 @@ ul + div.tab-content {
 .CodeMirror {
   height: 100%; }
 
+#consoleRow {
+  position: fixed;
+  bottom: 39px;
+  width: 100%;
+}
+
+#consoleRow .col-md-4{
+  padding-left: 25px;
+}
+
+#consoleRow p{
+  font-size: 13px;
+}
+
 /*# sourceMappingURL=main.css.map */
 @media screen and (max-width: 768px) {
   ul + div.tab-content {

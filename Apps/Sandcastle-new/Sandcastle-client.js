@@ -1,9 +1,7 @@
-(function() {
+(function (){
     "use strict";
     /*global console,Sandcastle,window*/
-
-    window.parent.postMessage('reload', '*');
-
+    var PubSub = window.parent.PubSub;
     function defined(value) {
         return value !== undefined;
     }
@@ -11,27 +9,22 @@
     console.originalLog = console.log;
     console.log = function(d1) {
         console.originalLog.apply(console, arguments);
-        window.parent.postMessage({
-            'log' : defined(d1) ? d1.toString() : 'undefined'
-        }, '*');
+        PubSub.publish('CONSOLE LOG', defined(d1)?d1.toString():'undefined');
     };
 
     console.originalWarn = console.warn;
     console.warn = function(d1) {
         console.originalWarn.apply(console, arguments);
-        window.parent.postMessage({
-            'warn' : defined(d1) ? d1.toString() : 'undefined'
-        }, '*');
+        PubSub.publish('CONSOLE WARN', defined(d1)?d1.toString():'undefined');
     };
 
     console.originalError = console.error;
     console.error = function(d1) {
         console.originalError.apply(console, arguments);
+        var msg = {};
         if (!defined(d1)) {
-            window.parent.postMessage({
-                'error' : 'undefined'
-            }, '*');
-            return;
+            msg.data = 'undefined';
+            PubSub.publish('CONSOLE ERROR', msg);
         }
 
         // Look for d1.stack, "bucket.html:line:char"
@@ -62,96 +55,47 @@
         }
 
         if (lineNumber >= 0) {
-            window.parent.postMessage({
-                'error' : errorMsg,
-                'lineNumber' : lineNumber
-            }, '*');
+            msg.data = errorMsg;
+            msg.lineNum = lineNumber;
+           PubSub.publish('CONSOLE ERROR', msg);
         } else {
-            window.parent.postMessage({
-                'error' : errorMsg
-            }, '*');
+            msg.data = errorMsg;
+            PubSub.publish('CONSOLE ERROR', msg);
         }
     };
 
-    window.onerror = function(errorMsg, url, lineNumber) {
-        if (defined(lineNumber)) {
-            if (defined(url) && url.indexOf(Sandcastle.bucket) > -1) {
-                // if the URL is the bucket itself, ignore it
-                url = '';
-            }
-            if (lineNumber < 1) {
-                // Change lineNumber to the local one for highlighting.
-                try {
-                    var pos = errorMsg.indexOf(Sandcastle.bucket + ':');
-                    if (pos < 0) {
-                        pos = errorMsg.indexOf('<anonymous>');
-                    }
-                    if (pos >= 0) {
-                        pos += 12;
-                        lineNumber = parseInt(errorMsg.substring(pos), 10);
-                    }
-                } catch (ex) {
-                }
-            }
-            window.parent.postMessage({
-                'error' : errorMsg,
-                'url' : url,
-                'lineNumber' : lineNumber
-            }, '*');
-        } else {
-            window.parent.postMessage({
-                'error' : errorMsg,
-                'url' : url
-            }, '*');
-        }
-        console.originalError.apply(console, [errorMsg]);
-        return false;
-    };
-
-    Sandcastle.declare = function(obj) {
-        try {
-            //Browsers such as IE don't have a stack property until you actually throw the error.
-            var stack = '';
-            try {
-                throw new Error();
-            } catch (ex) {
-                stack = ex.stack.toString();
-            }
-            var needle = Sandcastle.bucket + ':';   // Firefox
-            var pos = stack.indexOf(needle);
-            if (pos < 0) {
-                needle = ' (<anonymous>:';          // Chrome
-                pos = stack.indexOf(needle);
-            }
-            if (pos < 0) {
-                needle = ' (Unknown script code:';  // IE 11
-                pos = stack.indexOf(needle);
-            }
-            if (pos >= 0) {
-                pos += needle.length;
-                var lineNumber = parseInt(stack.substring(pos), 10);
-                Sandcastle.registered.push({
-                    'obj' : obj,
-                    'lineNumber' : lineNumber
-                });
-            }
-        } catch (ex) {
-        }
-    };
-
-    Sandcastle.highlight = function(obj) {
-        if (typeof obj !== 'undefined') {
-            for (var i = 0, len = Sandcastle.registered.length; i < len; ++i) {
-                if (obj === Sandcastle.registered[i].obj || obj.primitive === Sandcastle.registered[i].obj) {
-                    window.parent.postMessage({
-                        'highlight' : Sandcastle.registered[i].lineNumber
-                    }, '*');
-                    return;
-                }
-            }
-        }
-        window.parent.postMessage({
-            'highlight' : 0
-        }, '*');
-    };
+    // window.onerror = function(errorMsg, url, lineNumber) {
+    //     if (defined(lineNumber)) {
+    //         if (defined(url) && url.indexOf(Sandcastle.bucket) > -1) {
+    //             // if the URL is the bucket itself, ignore it
+    //             url = '';
+    //         }
+    //         if (lineNumber < 1) {
+    //             // Change lineNumber to the local one for highlighting.
+    //             try {
+    //                 var pos = errorMsg.indexOf(Sandcastle.bucket + ':');
+    //                 if (pos < 0) {
+    //                     pos = errorMsg.indexOf('<anonymous>');
+    //                 }
+    //                 if (pos >= 0) {
+    //                     pos += 12;
+    //                     lineNumber = parseInt(errorMsg.substring(pos), 10);
+    //                 }
+    //             } catch (ex) {
+    //             }
+    //         }
+    //         window.parent.postMessage({
+    //             'error' : errorMsg,
+    //             'url' : url,
+    //             'lineNumber' : lineNumber
+    //         }, '*');
+    //     } else {
+    //         window.parent.postMessage({
+    //             'error' : errorMsg,
+    //             'url' : url
+    //         }, '*');
+    //     }
+    //     console.originalError.apply(console, [errorMsg]);
+    //     return false;
+    // };
 }());
