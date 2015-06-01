@@ -1479,12 +1479,7 @@ define([
             }
 
             us.updateFrustum(frustum);
-
-            if (i !== 0) {
-                // Depth for the first frustum was cleared when color was cleared - and
-                // no primitives rendered in the entire frustum write depth.
-                clearDepth.execute(context, passState);
-            }
+            clearDepth.execute(context, passState);
 
             var commands = frustumCommands.commands[Pass.GLOBE];
             var length = frustumCommands.indices[Pass.GLOBE];
