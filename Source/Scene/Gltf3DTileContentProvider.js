@@ -103,21 +103,6 @@ define([
             bytes[i] = 255;
         }
 
-bytes[0] = 255;
-bytes[1] = 0;
-bytes[2] = 0;
-bytes[3] = 255;
-
-bytes[4] = 0;
-bytes[5] = 255;
-bytes[6] = 0;
-bytes[7] = 255;
-
-bytes[8] = 0;
-bytes[9] = 0;
-bytes[10] = 255;
-bytes[11] = 255;
-
         return bytes;
     }
 
