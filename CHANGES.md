@@ -2,6 +2,7 @@ Change Log
 ==========
 
 ### 1.10 - 2015-06-01
+
 * Breaking changes
   * Existing bookmarks to documentation of static members have changed [#2757](https://github.com/AnalyticalGraphicsInc/cesium/issues/2757).
   * Removed `InfoBoxViewModel.defaultSanitizer`, `InfoBoxViewModel.sanitizer`, and `Cesium.sanitize`, which was deprecated in 1.7.
