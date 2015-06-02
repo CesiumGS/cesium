@@ -1549,7 +1549,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
     function updateZoomTarget(viewer) {
         var entities = viewer._zoomTarget;
-        if (!defined(entities)) {
+        if (!defined(entities) || viewer.scene.mode === SceneMode.MORPHING) {
             return;
         }
 
