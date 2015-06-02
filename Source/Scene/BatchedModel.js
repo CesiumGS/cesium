@@ -1,7 +1,9 @@
 /*global define*/
 define([
+        '../Core/Color',
         '../Core/defineProperties'
     ], function(
+        Color,
         defineProperties) {
     "use strict";
 
@@ -11,6 +13,7 @@ define([
     var BatchedModel = function(content, batchId) {
         this._content = content;
         this._batchId = batchId;
+        this._color = undefined;  // for calling getColor
 
 // TODO: this should not be here.  It is so pickEntity doesn't crash when pickPosition is called.
         this.primitive = {};
@@ -34,7 +37,10 @@ define([
          */
         color : {
             get : function() {
-                return this._content.getColor(this._batchId);
+                if (!this._color) {
+                    this._color = new Color();
+                }
+                return this._content.getColor(this._batchId, this._color);
             },
             set : function(value) {
                 this._content.setColor(this._batchId, value);
