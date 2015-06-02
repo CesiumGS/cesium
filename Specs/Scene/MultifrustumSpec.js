@@ -185,9 +185,20 @@ defineSuite([
         scene.renderForSpecs();
 
         expect(DrawCommand.prototype.execute).toHaveBeenCalled();
-        expect(DrawCommand.prototype.execute.calls.mostRecent().args.length).toEqual(4);
-        expect(DrawCommand.prototype.execute.calls.mostRecent().args[3]).toBeDefined();
-        expect(DrawCommand.prototype.execute.calls.mostRecent().args[3].fragmentShaderSource.sources[1]).toContain('czm_Debug_main');
+
+        var calls = DrawCommand.prototype.execute.calls.all();
+        var billboardCall;
+        for (var i = 0; i < calls.length; ++i) {
+            if (calls[i].object.owner instanceof BillboardCollection) {
+                billboardCall = calls[i];
+                break;
+            }
+        }
+
+        expect(billboardCall).toBeDefined();
+        expect(billboardCall.args.length).toEqual(4);
+        expect(billboardCall.args[3]).toBeDefined();
+        expect(billboardCall.args[3].fragmentShaderSource.sources[1]).toContain('czm_Debug_main');
     });
 
     function createPrimitive(bounded, closestFrustum) {

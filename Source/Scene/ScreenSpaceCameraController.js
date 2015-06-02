@@ -566,6 +566,37 @@ define([
         tweens.update();
     }
 
+    var pickGlobeScratchRay = new Ray();
+    var scratchDepthIntersection = new Cartesian3();
+    var scratchRayIntersection = new Cartesian3();
+
+    function pickGlobe(controller, mousePosition, result) {
+        var scene = controller._scene;
+        var globe = controller._globe;
+        var camera = scene.camera;
+
+        if (!defined(globe)) {
+            return undefined;
+        }
+
+        var depthIntersection;
+        if (scene.pickPositionSupported) {
+            depthIntersection = scene.pickPosition(mousePosition, scratchDepthIntersection);
+        }
+
+        var ray = camera.getPickRay(mousePosition, pickGlobeScratchRay);
+        var rayIntersection = globe.pick(ray, scene, scratchRayIntersection);
+
+        var pickDistance = defined(depthIntersection) ? Cartesian3.distance(depthIntersection, camera.positionWC) : Number.POSITIVE_INFINITY;
+        var rayDistance = defined(rayIntersection) ? Cartesian3.distance(rayIntersection, camera.positionWC) : Number.POSITIVE_INFINITY;
+
+        if (pickDistance < rayDistance) {
+            return Cartesian3.clone(depthIntersection, result);
+        }
+
+        return Cartesian3.clone(rayIntersection, result);
+    }
+
     var translateCVStartRay = new Ray();
     var translateCVEndRay = new Ray();
     var translateCVStartPos = new Cartesian3();
@@ -595,10 +626,10 @@ define([
         var origin = Cartesian3.clone(Cartesian3.ZERO, translateCVOrigin);
         var normal = Cartesian3.UNIT_X;
 
-        if (defined(controller._globe) && camera.position.z < controller.minimumPickingTerrainHeight) {
-            var intersection = controller._globe.pick(startRay, scene, translateCVStartPos);
-            if (defined(intersection)) {
-                origin.x = intersection.x;
+        if (camera.position.z < controller.minimumPickingTerrainHeight) {
+            var globePos = pickGlobe(controller, startMouse, translateCVStartPos);
+            if (defined(globePos)) {
+                origin.x = globePos.x;
             }
         }
 
@@ -748,12 +779,12 @@ define([
         if (Cartesian2.equals(startPosition, controller._tiltCenterMousePosition)) {
             center = Cartesian3.clone(controller._tiltCenter, rotateCVCenter);
         } else {
-            ray = camera.getPickRay(startPosition, rotateCVWindowRay);
-            if (defined(controller._globe) && camera.position.z < controller.minimumPickingTerrainHeight) {
-                center = controller._globe.pick(ray, scene, rotateCVCenter);
+            if (camera.position.z < controller.minimumPickingTerrainHeight) {
+                center = pickGlobe(controller, startPosition, rotateCVCenter);
             }
 
             if (!defined(center)) {
+                ray = camera.getPickRay(startPosition, rotateCVWindowRay);
                 var position = ray.origin;
                 var direction = ray.direction;
 
@@ -914,8 +945,8 @@ define([
         var ray = camera.getPickRay(windowPosition, zoomCVWindowRay);
 
         var intersection;
-        if (defined(controller._globe) && camera.position.z < controller.minimumPickingTerrainHeight) {
-            intersection = controller._globe.pick(ray, scene, zoomCVIntersection);
+        if (camera.position.z < controller.minimumPickingTerrainHeight) {
+            intersection = pickGlobe(controller, windowPosition, zoomCVIntersection);
         }
 
         var distance;
@@ -1006,9 +1037,9 @@ define([
         }
 
         var height = controller._ellipsoid.cartesianToCartographic(camera.positionWC, scratchCartographic).height;
-        if (defined(controller._globe) && height < controller.minimumPickingTerrainHeight) {
-            var startRay = camera.getPickRay(movement.startPosition, scratchStartRay);
-            var mousePos = controller._globe.pick(startRay, scene, scratchMousePos);
+        var globe = controller._globe;
+        if (defined(globe) && height < controller.minimumPickingTerrainHeight) {
+            var mousePos = pickGlobe(controller, movement.startPosition, scratchMousePos);
             if (defined(mousePos)) {
                 magnitude = Cartesian3.magnitude(mousePos);
                 radii = scratchRadii;
@@ -1208,8 +1239,8 @@ define([
 
         var intersection;
         var height = ellipsoid.cartesianToCartographic(camera.position, zoom3DCartographic).height;
-        if (defined(controller._globe) && height < controller.minimumPickingTerrainHeight) {
-            intersection = controller._globe.pick(ray, scene, zoomCVIntersection);
+        if (height < controller.minimumPickingTerrainHeight) {
+            intersection = pickGlobe(controller, windowPosition, zoomCVIntersection);
         }
 
         var distance;
@@ -1345,12 +1376,10 @@ define([
         if (Cartesian2.equals(startPosition, controller._tiltCenterMousePosition)) {
             center = Cartesian3.clone(controller._tiltCenter, tilt3DCenter);
         } else {
-            ray = camera.getPickRay(startPosition, tilt3DRay);
-            if (defined(controller._globe)) {
-                center = controller._globe.pick(ray, scene, tilt3DCenter);
-            }
+            center = pickGlobe(controller, startPosition, tilt3DCenter);
 
             if (!defined(center)) {
+                ray = camera.getPickRay(startPosition, tilt3DRay);
                 intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
                 if (!defined(intersection)) {
                     var cartographic = ellipsoid.cartesianToCartographic(camera.position, tilt3DCart);
@@ -1687,13 +1716,7 @@ define([
      */
     ScreenSpaceCameraController.prototype.destroy = function() {
         this._tweens.removeAll();
-        this._spinHandler = this._spinHandler && this._spinHandler.destroy();
-        this._translateHandler = this._translateHandler && this._translateHandler.destroy();
-        this._lookHandler = this._lookHandler && this._lookHandler.destroy();
-        this._rotateHandler = this._rotateHandler && this._rotateHandler.destroy();
-        this._zoomHandler = this._zoomHandler && this._zoomHandler.destroy();
-        this._zoomWheelHandler = this._zoomWheelHandler && this._zoomWheelHandler.destroy();
-        this._pinchHandler = this._pinchHandler && this._pinchHandler.destroy();
+        this._aggregator = this._aggregator && this._aggregator.destroy();
         return destroyObject(this);
     };
 

@@ -3,6 +3,7 @@ define([
         '../Core/Cartographic',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/definedNotNull',
         '../Core/DeveloperError',
         '../Core/RuntimeError',
         './ImageryLayerFeatureInfo'
@@ -10,6 +11,7 @@ define([
         Cartographic,
         defaultValue,
         defined,
+        definedNotNull,
         DeveloperError,
         RuntimeError,
         ImageryLayerFeatureInfo) {
@@ -92,7 +94,7 @@ define([
             featureInfo.configureDescriptionFromProperties(feature.properties);
 
             // If this is a point feature, use the coordinates of the point.
-            if (feature.geometry && feature.geometry.type === 'Point') {
+            if (definedNotNull(feature.geometry) && feature.geometry.type === 'Point') {
                 var longitude = feature.geometry.coordinates[0];
                 var latitude = feature.geometry.coordinates[1];
                 featureInfo.position = Cartographic.fromDegrees(longitude, latitude);
@@ -250,11 +252,18 @@ define([
     }
 
     var emptyBodyRegex= /<body>\s*<\/body>/im;
+    var wmsServiceExceptionReportRegex = /<ServiceExceptionReport([^]*)<\/ServiceExceptionReport>/im;
     var titleRegex = /<title>(.*)<\/title>/im;
 
     function textToFeatureInfo(text) {
         // If the text is HTML and it has an empty body tag, assume it means no features were found.
         if (emptyBodyRegex.test(text)) {
+            return undefined;
+        }
+
+        // If this is a WMS exception report, treat it as "no features found" rather than showing
+        // bogus feature info.
+        if (wmsServiceExceptionReportRegex.test(text)) {
             return undefined;
         }
 

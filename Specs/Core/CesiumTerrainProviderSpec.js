@@ -3,6 +3,7 @@ defineSuite([
         'Core/CesiumTerrainProvider',
         'Core/DefaultProxy',
         'Core/defined',
+        'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
         'Core/HeightmapTerrainData',
         'Core/loadWithXhr',
@@ -15,6 +16,7 @@ defineSuite([
         CesiumTerrainProvider,
         DefaultProxy,
         defined,
+        Ellipsoid,
         GeographicTilingScheme,
         HeightmapTerrainData,
         loadWithXhr,
@@ -118,6 +120,22 @@ defineSuite([
         }).then(function() {
             var tilingScheme = provider.tilingScheme;
             expect(tilingScheme instanceof GeographicTilingScheme).toBe(true);
+        });
+    });
+
+    it('can use a custom ellipsoid', function() {
+        returnHeightmapTileJson();
+
+        var ellipsoid = new Ellipsoid(1, 2, 3);
+        var provider = new CesiumTerrainProvider({
+            url : 'made/up/url',
+            ellipsoid : ellipsoid
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            expect(provider.tilingScheme.ellipsoid).toEqual(ellipsoid);
         });
     });
 

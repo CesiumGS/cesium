@@ -243,7 +243,7 @@ require({
                 var member = local.docTypes[lowerText][i];
                 var ele = document.createElement('a');
                 ele.target = '_blank';
-                ele.textContent = member.replace('.html', '').replace('module-', '').replace('#', '.');
+                ele.textContent = member.replace('.html', '').replace('module-', '').replace('#.', '.').replace('#', '.');
                 ele.href = '../../Build/Documentation/' + member;
                 ele.onclick = onDocClick;
                 docMessage.appendChild(ele);
@@ -892,6 +892,13 @@ require({
 
     registry.byId('buttonNewWindow').on('click', function() {
         var baseHref = window.location.href;
+
+        //Handle case where demo is in a sub-directory.
+        var searchLen = window.location.search.length;
+        if (searchLen > 0) {
+            baseHref = baseHref.substring(0, baseHref.length - searchLen);
+        }
+
         var pos = baseHref.lastIndexOf('/');
         baseHref = baseHref.substring(0, pos) + '/gallery/';
 

@@ -9,6 +9,7 @@ define([
         '../Core/DeveloperError',
         '../Core/NearFarScalar',
         './Billboard',
+        './HeightReference',
         './HorizontalOrigin',
         './LabelStyle',
         './VerticalOrigin'
@@ -22,6 +23,7 @@ define([
         DeveloperError,
         NearFarScalar,
         Billboard,
+        HeightReference,
         HorizontalOrigin,
         LabelStyle,
         VerticalOrigin) {
@@ -86,12 +88,19 @@ define([
         this._id = options.id;
         this._translucencyByDistance = options.translucencyByDistance;
         this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
+        this._heightReference = defaultValue(options.heightReference, HeightReference.NONE);
 
         this._labelCollection = labelCollection;
         this._glyphs = [];
 
         this._rebindAllGlyphs = true;
         this._repositionAllGlyphs = true;
+
+        this._actualClampedPosition = undefined;
+        this._removeCallbackFunc = undefined;
+        this._mode = undefined;
+
+        this._updateClamping();
     };
 
     defineProperties(Label.prototype, {
@@ -146,13 +155,40 @@ define([
                 if (!Cartesian3.equals(position, value)) {
                     Cartesian3.clone(value, position);
 
-                    var glyphs = this._glyphs;
-                    for (var i = 0, len = glyphs.length; i < len; i++) {
-                        var glyph = glyphs[i];
-                        if (defined(glyph.billboard)) {
-                            glyph.billboard.position = value;
+                    if (this._heightReference === HeightReference.NONE) {
+                        var glyphs = this._glyphs;
+                        for (var i = 0, len = glyphs.length; i < len; i++) {
+                            var glyph = glyphs[i];
+                            if (defined(glyph.billboard)) {
+                                glyph.billboard.position = value;
+                            }
                         }
+                    } else {
+                        this._updateClamping();
                     }
+                }
+            }
+        },
+
+        /**
+         * Gets or sets the height reference of this billboard.
+         * @memberof Label.prototype
+         * @type {HeightReference}
+         */
+        heightReference : {
+            get : function() {
+                return this._heightReference;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value)) {
+                    throw new DeveloperError('value is required.');
+                }
+                //>>includeEnd('debug');
+
+                if (value !== this._heightReference) {
+                    this._heightReference = value;
+                    this._updateClamping();
                 }
             }
         },
@@ -627,8 +663,35 @@ define([
                     }
                 }
             }
+        },
+
+        /**
+         * Keeps track of the position of the label based on the height reference.
+         * @memberof Label.prototype
+         * @type {Cartesian3}
+         * @private
+         */
+        _clampedPosition : {
+            get : function() {
+                return this._actualClampedPosition;
+            },
+            set : function(value) {
+                this._actualClampedPosition = Cartesian3.clone(value, this._actualClampedPosition);
+
+                var glyphs = this._glyphs;
+                for (var i = 0, len = glyphs.length; i < len; i++) {
+                    var glyph = glyphs[i];
+                    if (defined(glyph.billboard)) {
+                        glyph.billboard.position = value;
+                    }
+                }
+            }
         }
     });
+
+    Label.prototype._updateClamping = function() {
+        Billboard._updateClamping(this._labelCollection, this);
+    };
 
     /**
      * Computes the screen-space position of the label's origin, taking into account eye and pixel offsets.
@@ -636,6 +699,7 @@ define([
      * left to right, and <code>y</code> increases from top to bottom.
      *
      * @param {Scene} scene The scene the label is in.
+     * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The screen-space position of the label.
      *
      * @see Label#eyeOffset
@@ -644,18 +708,23 @@ define([
      * @example
      * console.log(l.computeScreenSpacePosition(scene).toString());
      */
-    Label.prototype.computeScreenSpacePosition = function(scene) {
+    Label.prototype.computeScreenSpacePosition = function(scene, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
-            throw new DeveloperError('context is required.');
+            throw new DeveloperError('scene is required.');
         }
         //>>includeEnd('debug');
 
+        if (!defined(result)) {
+            result = new Cartesian2();
+        }
+
         var labelCollection = this._labelCollection;
         var modelMatrix = labelCollection.modelMatrix;
-        var actualPosition = Billboard._computeActualPosition(this._position, scene.frameState, modelMatrix);
+        var actualPosition = Billboard._computeActualPosition(this, this._position, scene.frameState, modelMatrix);
 
-        var windowCoordinates = Billboard._computeScreenSpacePosition(modelMatrix, actualPosition, this._eyeOffset, this._pixelOffset, scene);
+        var windowCoordinates = Billboard._computeScreenSpacePosition(modelMatrix, actualPosition,
+                this._eyeOffset, this._pixelOffset, scene, result);
         windowCoordinates.y = scene.canvas.clientHeight - windowCoordinates.y;
         return windowCoordinates;
     };

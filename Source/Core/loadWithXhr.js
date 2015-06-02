@@ -161,7 +161,7 @@ define([
             xhr.responseType = responseType;
         }
 
-        xhr.onload = function(e) {
+        xhr.onload = function() {
             if (xhr.status === 200) {
                 var parser;
 

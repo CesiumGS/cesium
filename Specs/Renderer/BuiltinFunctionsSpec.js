@@ -281,4 +281,16 @@ defineSuite([
             '}';
         context.verifyDrawForSpecs(fs);
     });
+
+    it('can calculate nearFarScalar', function() {
+        var fs =
+            'vec4 testNearFarScalar = vec4(10.0, 1.0, 20.0, 0.0);' +
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_nearFarScalar(testNearFarScalar, 5.0 * 5.0) == 1.0, ' +
+            '                      czm_nearFarScalar(testNearFarScalar, 10.0 * 10.0) == 1.0, ' +
+            '                      czm_nearFarScalar(testNearFarScalar, 20.0 * 20.0) == 0.0, ' +
+            '                      czm_nearFarScalar(testNearFarScalar, 50.0 * 50.0) == 0.0); ' +
+            '}';
+        context.verifyDrawForSpecs(fs);
+    });
 }, 'WebGL');

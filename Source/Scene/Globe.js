@@ -409,7 +409,7 @@ define([
         var intersection;
         length = sphereIntersections.length;
         for (i = 0; i < length; ++i) {
-            intersection = sphereIntersections[i].data.pick(ray, scene, true, result);
+            intersection = sphereIntersections[i].data.pick(ray, scene.mode, scene.mapProjection, true, result);
             if (defined(intersection)) {
                 break;
             }
@@ -480,7 +480,7 @@ define([
         var intersection;
         length = sphereIntersections.length;
         for (i = 0; i < length; ++i) {
-            intersection = sphereIntersections[i].data.pickTriangle(ray, scene, true, result);
+            intersection = sphereIntersections[i].data.pickTriangle(ray, scene.mode, scene.mapProjection, true, result);
             if (defined(intersection)) {
                 intersection.tile = sphereIntersections[i];
                 break;
@@ -554,7 +554,7 @@ define([
         var ray = scratchGetHeightRay;
         Cartesian3.normalize(cartesian, ray.direction);
 
-        var intersection = tile.data.pick(ray, undefined, false, scratchGetHeightIntersection);
+        var intersection = tile.data.pick(ray, undefined, undefined, false, scratchGetHeightIntersection);
         if (!defined(intersection)) {
             return undefined;
         }

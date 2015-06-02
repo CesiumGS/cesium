@@ -19,6 +19,7 @@ define(function() {
      * Get the final URL to use to request a given resource.
      *
      * @param {String} resource The resource to request.
+     * @returns {String} proxied resource
      */
     DefaultProxy.prototype.getURL = function(resource) {
         return this.proxy + '?' + encodeURIComponent(resource);

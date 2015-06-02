@@ -277,7 +277,7 @@ define([
         var attributes;
         var entity = this._entity;
         var isAvailable = entity.isAvailable(time);
-        var show = new ShowGeometryInstanceAttribute(isAvailable && this._showProperty.getValue(time));
+        var show = new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time));
 
         if (this._materialProperty instanceof ColorMaterialProperty) {
             var currentColor = Color.WHITE;

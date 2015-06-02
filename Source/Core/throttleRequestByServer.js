@@ -76,6 +76,15 @@ define([
     throttleRequestByServer.maximumRequestsPerServer = 6;
 
     /**
+     * Specifies the maximum number of requests that can be simultaneously open to a single server.  If this value is higher than
+     * the number of requests per server actually allowed by the web browser, Cesium's ability to prioritize requests will be adversely
+     * affected.
+     * @type {Number}
+     * @default 6
+     */
+    throttleRequestByServer.maximumRequestsPerServer = 6;
+
+    /**
      * A function that will make a request if there are available slots to the server.
      * @callback throttleRequestByServer~RequestFunction
      *

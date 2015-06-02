@@ -19,11 +19,16 @@
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
+    
+    #viewChanged {
+        display: none;
+        background-color: red;
+        color: white;
+    }
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
-<script id="cesium_sandcastle_script">
+<div id="toolbar"><div id="viewChanged">View Changed</div></div><script id="cesium_sandcastle_script">
 function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
@@ -167,6 +172,23 @@ function viewInICRF() {
     scene.globe.enableLighting = true;
 }
 
+var viewChanged = document.getElementById('viewChanged');
+
+var removeStart;
+var removeEnd;
+
+function cameraEvents() {
+    Sandcastle.declare(cameraEvents);
+    
+    var camera = viewer.camera;
+    removeStart = camera.moveStart.addEventListener(function() {
+        viewChanged.style.display = 'block';
+    });
+    removeEnd = camera.moveEnd.addEventListener(function() {
+        viewChanged.style.display = 'none';
+    });
+}
+
 Sandcastle.addToolbarMenu([{
     text : 'Camera Options'
 }, {
@@ -217,6 +239,12 @@ Sandcastle.addToolbarMenu([{
         viewInICRF();
         Sandcastle.highlight(viewInICRF);
     }
+}, {
+    text : 'Move events',
+    onselect : function() {
+        cameraEvents();
+        Sandcastle.highlight(cameraEvents);
+    }
 }]);
 
 Sandcastle.reset = function() {
@@ -224,6 +252,16 @@ Sandcastle.reset = function() {
     scene.primitives.removeAll();
     scene.tweens.removeAll();
 
+    if (Cesium.defined(removeStart)) {
+        removeStart();
+        removeEnd();
+
+        viewChanged.style.display = 'none';
+        
+        removeStart = undefined;
+        removeEnd = undefined;
+    }
+    
     viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
     clock.multiplier = 1.0;

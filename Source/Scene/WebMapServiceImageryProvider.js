@@ -87,6 +87,9 @@ define([
      *        in which to try WMS GetFeatureInfo requests.
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
      * @param {TilingScheme} [options.tilingScheme=new GeographicTilingScheme()] The tiling scheme to use to divide the world into tiles.
+     * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
+     *        this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
+     *        parameter is specified, the WGS84 ellipsoid is used.
      * @param {Number} [options.tileWidth=256] The width of each tile in pixels.
      * @param {Number} [options.tileHeight=256] The height of each tile in pixels.
      * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when
@@ -136,21 +139,21 @@ define([
         this._enablePickFeatures = defaultValue(options.enablePickFeatures, true);
         this._getFeatureInfoFormats = defaultValue(options.getFeatureInfoFormats, WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats);
 
-        if (defined(options.getFeatureInfoAsGeoJson) || defined(options.getFeatureInfoAsXml) || defined(options.getFeatureInfoXmlContentType)) {
-            deprecationWarning('WebMapServiceImageryProvider.getFeatureInfo', 'The options.getFeatureInfoAsGeoJson, getFeatureInfoAsXml, and getFeatureInfoXmlContentType parameters to WebMapServiceImageryProvider were deprecated in Cesium 1.10 and will be removed in 1.13.  Use options.getFeatureInfoFormats instead.');
+        if (defined(options.getFeatureInfoAsGeoJson) || defined(options.getFeatureInfoAsXml)) {
+            deprecationWarning('WebMapServiceImageryProvider.getFeatureInfo', 'The options.getFeatureInfoAsGeoJson and getFeatureInfoAsXml parameters to WebMapServiceImageryProvider were deprecated in Cesium 1.10 and will be removed in 1.13.  Use options.getFeatureInfoFormats instead.');
 
             //>>includeStart('debug', pragmas.debug);
             if (defined(options.getFeatureInfoFormats)) {
-                throw new DeveloperError('options.getFeatureInfoFormats must not be specified if options.getFeatureInfoAsGeoJson, options.getFeatureInfoAsXml, or options.getFeatureInfoXmlContentType is specified.');
+                throw new DeveloperError('options.getFeatureInfoFormats must not be specified if options.getFeatureInfoAsGeoJson or options.getFeatureInfoAsXml are specified.');
             }
             //>>includeEnd('debug');
 
             this._getFeatureInfoFormats = [];
-            if (options.getFeatureInfoAsGeoJson) {
+            if (defaultValue(options.getFeatureInfoAsGeoJson, true)) {
                 this._getFeatureInfoFormats.push(new GetFeatureInfoFormat('json', 'application/json'));
             }
-            if (options.getFeatureInfoAsXml) {
-                this._getFeatureInfoFormats.push(new GetFeatureInfoFormat('xml', defaultValue(options.getFeatureInfoXmlContentType, 'text/xml')));
+            if (defaultValue(options.getFeatureInfoAsXml, true)) {
+                this._getFeatureInfoFormats.push(new GetFeatureInfoFormat('xml', 'text/xml'));
             }
         }
 
@@ -164,7 +167,7 @@ define([
         this._maximumLevel = options.maximumLevel; // undefined means no limit
 
         this._rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
-        this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new GeographicTilingScheme();
+        this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new GeographicTilingScheme({ ellipsoid : options.ellipsoid });
 
         this._rectangle = Rectangle.intersection(this._rectangle, this._tilingScheme.rectangle);
 
@@ -471,7 +474,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (!this._enablePickFeatures) {
+        if (!this._enablePickFeatures || this._getFeatureInfoFormats.length === 0) {
             return undefined;
         }
 

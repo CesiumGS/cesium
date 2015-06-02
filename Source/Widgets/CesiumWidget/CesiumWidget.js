@@ -218,6 +218,8 @@ define([
         var creditContainerContainer = defined(options.creditContainer) ? getElement(options.creditContainer) : element;
         creditContainerContainer.appendChild(creditContainer);
 
+        var showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
+
         this._element = element;
         this._container = container;
         this._canvas = canvas;
@@ -226,7 +228,7 @@ define([
         this._creditContainer = creditContainer;
         this._canRender = false;
         this._renderLoopRunning = false;
-        this._showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
+        this._showRenderLoopErrors = showRenderLoopErrors;
         this._resolutionScale = 1.0;
         this._forceResize = false;
         this._clock = defined(options.clock) ? options.clock : new Clock();
@@ -334,9 +336,11 @@ define([
                 }
             });
         } catch (error) {
-            var title = 'Error constructing CesiumWidget.';
-            var message = 'Visit <a href="http://get.webgl.org">http://get.webgl.org</a> to verify that your web browser and hardware support WebGL.  Consider trying a different web browser or updating your video drivers.  Detailed error information is below:';
-            this.showErrorPanel(title, message, error);
+            if (showRenderLoopErrors) {
+                var title = 'Error constructing CesiumWidget.';
+                var message = 'Visit <a href="http://get.webgl.org">http://get.webgl.org</a> to verify that your web browser and hardware support WebGL.  Consider trying a different web browser or updating your video drivers.  Detailed error information is below:';
+                this.showErrorPanel(title, message, error);
+            }
             throw error;
         }
     };
@@ -392,7 +396,7 @@ define([
 
         /**
          * Gets the collection of image layers that will be rendered on the globe.
-         * @memberof Viewer.prototype
+         * @memberof CesiumWidget.prototype
          *
          * @type {ImageryLayerCollection}
          * @readonly
@@ -653,10 +657,12 @@ define([
      * unless <code>useDefaultRenderLoop</code> is set to false;
      */
     CesiumWidget.prototype.render = function() {
-        this._scene.initializeFrame();
-        var currentTime = this._clock.tick();
         if (this._canRender) {
+            this._scene.initializeFrame();
+            var currentTime = this._clock.tick();
             this._scene.render(currentTime);
+        } else {
+            this._clock.tick();
         }
     };
 
