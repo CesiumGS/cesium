@@ -866,6 +866,27 @@ defineSuite([
         });
     });
 
+    it('does not crash when tracking an object with a position property whose value is undefined.', function() {
+        viewer = new Viewer(container);
+
+        var entity = new Entity();
+        entity.position = new ConstantProperty(undefined);
+        entity.polyline = {
+            positions : [Cartesian3.fromDegrees(0, 0, 0), Cartesian3.fromDegrees(0, 0, 1)]
+        };
+
+        viewer.entities.add(entity);
+        viewer.trackedEntity = entity;
+
+        spyOn(viewer.scene.renderError, 'raiseEvent');
+        return pollToPromise(function() {
+            viewer.render();
+            return viewer.dataSourceDisplay.update(viewer.clock.currentTime);
+        }).then(function() {
+            expect(viewer.scene.renderError.raiseEvent).not.toHaveBeenCalled();
+        });
+    });
+
     it('removes data source listeners when destroyed', function() {
         viewer = new Viewer(container);
 
