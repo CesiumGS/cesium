@@ -263,24 +263,24 @@ define([
         // GLSL batchId is zero-based: [0, batchSize - 1]
         if (content._textureDimensions.y === 1) {
             return 'uniform vec4 tiles3d_textureStep; \n' +
-                'vec2 computeSt(int batchId) \n' +
+                'vec2 computeSt(float batchId) \n' +
                 '{ \n' +
-                '    float stepX = tiles3d_textureStep.x; \n ' +
-                '    float centerX = tiles3d_textureStep.y; \n ' +
-                '    return vec2(centerX + (float(batchId) * stepX), 0.5); \n' +
+                '    float stepX = tiles3d_textureStep.x; \n' +
+                '    float centerX = tiles3d_textureStep.y; \n' +
+                '    return vec2(centerX + (batchId * stepX), 0.5); \n' +
                 '} \n';
         }
 
         return 'uniform vec4 tiles3d_textureStep; \n' +
             'uniform vec2 tiles3d_textureDimensions; \n' +
-            'vec2 computeSt(int batchId) \n' +
+            'vec2 computeSt(float batchId) \n' +
             '{ \n' +
-            '    float stepX = tiles3d_textureStep.x; \n ' +
-            '    float centerX = tiles3d_textureStep.y; \n ' +
-            '    float stepY = tiles3d_textureStep.z; \n ' +
-            '    float centerY = tiles3d_textureStep.w; \n ' +
-            '    float xId = mod(float(batchId), tiles3d_textureDimensions.x); \n ' +
-            '    float yId = float(batchId / int(tiles3d_textureDimensions.x)); \n ' +
+            '    float stepX = tiles3d_textureStep.x; \n' +
+            '    float centerX = tiles3d_textureStep.y; \n' +
+            '    float stepY = tiles3d_textureStep.z; \n' +
+            '    float centerY = tiles3d_textureStep.w; \n' +
+            '    float xId = mod(batchId, tiles3d_textureDimensions.x); \n' +
+            '    float yId = floor(batchId / tiles3d_textureDimensions.x); \n' +
             '    return vec2(centerX + (xId * stepX), 1.0 - (centerY + (yId * stepY))); \n' +
             '} \n';
     }
@@ -299,27 +299,23 @@ define([
                 // When VTF is supported, perform per patched model (e.g., building) show/hide in the vertex shader
                 newMain =
                     'uniform sampler2D tiles3d_batchTexture; \n' +
-// TODO: get batch id from vertex attribute
-                    'int batchId = 0; \n' +
                     'varying vec3 tiles3d_modelColor; \n' +
                     'void main() \n' +
                     '{ \n' +
                     '    gltf_main(); \n' +
-                    '    vec2 st = computeSt(batchId); \n' +
+                    '    vec2 st = computeSt(a_batchId); \n' +
                     '    vec4 modelProperties = texture2D(tiles3d_batchTexture, st); \n' +
                     '    float show = modelProperties.a; \n' +
-                    '    gl_Position *= show; \n' +                       // Per batched model show/hide
+                    '    gl_Position *= show; \n' +                        // Per batched model show/hide
                     '    tiles3d_modelColor = modelProperties.rgb; \n' +   // Pass batched model color to fragment shader
                     '}';
             } else {
                 newMain =
-// TODO: get batch id from vertex attribute
-                    'int batchId = 0; \n' +
                     'varying vec2 tiles3d_modelSt; \n' +
                     'void main() \n' +
                     '{ \n' +
                     '    gltf_main(); \n' +
-                    '    tiles3d_modelSt = computeSt(batchId); \n' +
+                    '    tiles3d_modelSt = computeSt(a_batchId); \n' +
                     '}';
             }
 
@@ -406,13 +402,11 @@ define([
                 // When VTF is supported, perform per patched model (e.g., building) show/hide in the vertex shader
                 newMain =
                     'uniform sampler2D tiles3d_batchTexture; \n' +
-// TODO: get batch id from vertex attribute
-                    'int batchId = 0; \n' +
                     'varying vec2 tiles3d_modelSt; \n' +
                     'void main() \n' +
                     '{ \n' +
                     '    gltf_main(); \n' +
-                    '    vec2 st = computeSt(batchId); \n' +
+                    '    vec2 st = computeSt(a_batchId); \n' +
                     '    vec4 modelProperties = texture2D(tiles3d_batchTexture, st); \n' +
                     '    float show = modelProperties.a; \n' +
                     '    gl_Position *= show; \n' +                       // Per batched model show/hide
@@ -420,13 +414,11 @@ define([
                     '}';
             } else {
                 newMain =
-// TODO: get batch id from vertex attribute
-                    'int batchId = 0; \n' +
                     'varying vec2 tiles3d_modelSt; \n' +
                     'void main() \n' +
                     '{ \n' +
                     '    gltf_main(); \n' +
-                    '    tiles3d_modelSt = computeSt(batchId); \n' +
+                    '    tiles3d_modelSt = computeSt(a_batchId); \n' +
                     '}';
             }
 
