@@ -47,18 +47,65 @@ viewer.camera.flyTo({
     duration : 0.0
 });
 
-var currentBuilding;
 var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+var flags = {
+	leftDown : false,
+	middleDown : false,
+	rightDown : false
+};
 
-//High building on mouse over
 handler.setInputAction(function(movement) {
+    flags.leftDown = true;
+}, Cesium.ScreenSpaceEventType.LEFT_DOWN);
+
+handler.setInputAction(function(movement) {
+    flags.middleDown = true;
+}, Cesium.ScreenSpaceEventType.MIDDLE_DOWN);
+
+handler.setInputAction(function(movement) {
+    flags.rightDown = true;
+}, Cesium.ScreenSpaceEventType.RIGHT_DOWN);
+
+handler.setInputAction(function(movement) {
+    flags.leftDown = false;
+}, Cesium.ScreenSpaceEventType.LEFT_UP);
+
+handler.setInputAction(function(movement) {
+    flags.middleDown = false;
+}, Cesium.ScreenSpaceEventType.MIDDLE_UP);
+
+handler.setInputAction(function(movement) {
+    flags.rightDown = false;
+}, Cesium.ScreenSpaceEventType.RIGHT_UP);
+
+var current = {
+    model : undefined,
+    originalColor : new Cesium.Color()
+};
+
+// Highlight building on mouse over
+handler.setInputAction(function(movement) {
+    if (flags.leftDown || flags.middleDown || flags.rightDown) {
+        // Don't highlight when panning and zooming
+        return;
+    }
+
     var pickedBuilding = viewer.scene.pick(movement.endPosition);
-    if (Cesium.defined(pickedBuilding)) {
-        pickedBuilding.color = Cesium.Color.YELLOW;
-        currentBuilding = pickedBuilding;
-    } else if (Cesium.defined(currentBuilding)) {
-        currentBuilding.color = Cesium.Color.WHITE;
-        currentBuilding = undefined;
+
+    if (Cesium.defined(current.building) && (current.building !== pickedBuilding)) {
+        // Restore original color to building that is no longer selected
+
+        // This assignment is nessearcy to work with the set property
+        current.building.color = Cesium.Color.clone(current.originalColor, current.building.color);
+        current.building = undefined;
+    }
+
+    if (Cesium.defined(pickedBuilding) && (pickedBuilding !== current.building)) {
+        current.building = pickedBuilding;
+        Cesium.Color.clone(pickedBuilding.color, current.originalColor);
+
+        // Highlight newly selected building
+        pickedBuilding.color = Cesium.Color.clone(Cesium.Color.YELLOW, pickedBuilding.color);
     }
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
@@ -66,7 +113,7 @@ handler.setInputAction(function(movement) {
 var annotations = viewer.scene.primitives.add(new Cesium.LabelCollection());
 
 handler.setInputAction(function(movement) {
-    if (Cesium.defined(currentBuilding) && viewer.scene.pickPositionSupported) {
+    if (Cesium.defined(current.building) && viewer.scene.pickPositionSupported) {
         var cartesian = viewer.scene.pickPosition(movement.position);
 
 // TODO: add Cartographic.fromCartesian to Cesium
