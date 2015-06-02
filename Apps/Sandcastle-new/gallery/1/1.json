@@ -1,6 +1,6 @@
 {
   "name": "Hello World",
   "html": "1.html",
-  "js": "var viewer = new Cesium.Viewer('cesiumContainer');",
+  "js": "var viewer = new Cesium.Viewer('cesiumContainer');\n",
   "css": "1.css"
 }

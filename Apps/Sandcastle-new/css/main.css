@@ -49,7 +49,7 @@ html {
 
 #bodyContainer {
   padding-top: 60px;
-  overflow-y: scroll; }
+}
 
 #cesiumColumn, #codeColumn {
   padding: 0; }
@@ -78,6 +78,7 @@ ul + div.tab-content {
   position: fixed;
   bottom: 39px;
   width: 100%;
+  z-index: 10;
 }
 
 #consoleRow .col-md-4{
@@ -88,8 +89,13 @@ ul + div.tab-content {
   font-size: 13px;
 }
 
+#consoleLog .panel-body{
+  max-height: 200px;
+  overflow-y: scroll;
+}
+
 /*# sourceMappingURL=main.css.map */
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 767px) {
   ul + div.tab-content {
     padding-top: 0px;
   }

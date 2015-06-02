@@ -8,23 +8,25 @@
 
     console.originalLog = console.log;
     console.log = function(d1) {
-        console.originalLog.apply(console, arguments);
+        // console.originalLog.apply(console, arguments);
         PubSub.publish('CONSOLE LOG', defined(d1)?d1.toString():'undefined');
     };
 
     console.originalWarn = console.warn;
     console.warn = function(d1) {
-        console.originalWarn.apply(console, arguments);
+        // console.originalWarn.apply(console, arguments);
         PubSub.publish('CONSOLE WARN', defined(d1)?d1.toString():'undefined');
     };
 
     console.originalError = console.error;
     console.error = function(d1) {
-        console.originalError.apply(console, arguments);
+        console.log("send an error msg frm here");
+        // console.originalError.apply(console, arguments);
         var msg = {};
         if (!defined(d1)) {
             msg.data = 'undefined';
             PubSub.publish('CONSOLE ERROR', msg);
+            return;
         }
 
         // Look for d1.stack, "bucket.html:line:char"
@@ -64,38 +66,38 @@
         }
     };
 
-    // window.onerror = function(errorMsg, url, lineNumber) {
-    //     if (defined(lineNumber)) {
-    //         if (defined(url) && url.indexOf(Sandcastle.bucket) > -1) {
-    //             // if the URL is the bucket itself, ignore it
-    //             url = '';
-    //         }
-    //         if (lineNumber < 1) {
-    //             // Change lineNumber to the local one for highlighting.
-    //             try {
-    //                 var pos = errorMsg.indexOf(Sandcastle.bucket + ':');
-    //                 if (pos < 0) {
-    //                     pos = errorMsg.indexOf('<anonymous>');
-    //                 }
-    //                 if (pos >= 0) {
-    //                     pos += 12;
-    //                     lineNumber = parseInt(errorMsg.substring(pos), 10);
-    //                 }
-    //             } catch (ex) {
-    //             }
-    //         }
-    //         window.parent.postMessage({
-    //             'error' : errorMsg,
-    //             'url' : url,
-    //             'lineNumber' : lineNumber
-    //         }, '*');
-    //     } else {
-    //         window.parent.postMessage({
-    //             'error' : errorMsg,
-    //             'url' : url
-    //         }, '*');
-    //     }
-    //     console.originalError.apply(console, [errorMsg]);
-    //     return false;
-    // };
+    window.onerror = function(errorMsg, url, lineNumber) {
+        if (defined(lineNumber)) {
+            if (defined(url) && url.indexOf(Sandcastle.bucket) > -1) {
+                // if the URL is the bucket itself, ignore it
+                url = '';
+            }
+            if (lineNumber < 1) {
+                // Change lineNumber to the local one for highlighting.
+                try {
+                    var pos = errorMsg.indexOf(Sandcastle.bucket + ':');
+                    if (pos < 0) {
+                        pos = errorMsg.indexOf('<anonymous>');
+                    }
+                    if (pos >= 0) {
+                        pos += 12;
+                        lineNumber = parseInt(errorMsg.substring(pos), 10);
+                    }
+                } catch (ex) {
+                }
+            }
+            var msg = {};
+            msg.data = errorMsg;
+            msg.url = url;
+            msg.lineNum = lineNumber;
+            PubSub.publish('CONSOLE ERROR', msg);
+        } else {
+            var msg = {};
+            msg.data = errorMsg;
+            msg.url = url;
+            PubSub.publish('CONSOLE ERROR', msg);
+        }
+        // console.originalError.apply(console, [errorMsg]);
+        return false;
+    };
 }());

@@ -46,27 +46,38 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
         this.editor.on('change', this.handleChange);
       }
 
-      // Add listener for tab active
       var editor = this.editor;
       $('#codeContainerTabs a[data-toggle="tab"]').on('shown.bs.tab', function(e){
-          if($(e.target).attr("href") === "#htmlContainer")
-          {
-              editor.refresh();
-              editor.focus();
-          }
-          else
-          {
-              editor.refresh();
-              editor.focus();
-          }
+          editor.refresh();
+          editor.focus();
       });
 
       // Subscribe to events
       PubSub.subscribe('SUGGEST', this.autocomplete);
+      PubSub.subscribe('CODE TAB', this.refreshEditor);
+      PubSub.subscribe('MARK LINE', this.markLine);
+    },
+
+    refreshEditor: function(){
+      this.editor.refresh();
+      this.editor.focus();
     },
 
     autocomplete: function(){
       CodeMirror.commands.autocomplete(this.editor);
+    },
+
+    makeLabel: function(msg){
+      var element = document.createElement('abbr');
+      element.style.color = "#822";
+      element.innerHTML = '&times;';
+      element.title = msg;
+      return element;
+    },
+
+    markLine: function(msg, data){
+      // var line = this.editor.setGutterMarker(data.line, 'errorGutter', this.makeLabel(data.data));
+      // this.editor.addLineClass(line, 'text', 'errorLine');
     },
 
     handleChange: function() {
@@ -162,11 +173,6 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
 
   var SandcastleCesiumFrame = React.createClass({
     componentDidMount: function(){
-      // Create an empty iframe with cesium build
-      var doc = '<html><head><script src="../../Build/Cesium/Cesium.js"></script><script type="text/javascript" src="./Sandcastle-header.js"></script><style>@import url(../../Build/Cesium/Widgets/widgets.css);\nhtml, body, #cesiumContainer {width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;}\n</style></head><body><script type="text/javascript" src="./Sandcastle-client.js"></script></body></html>';
-      this.getDOMNode().contentWindow.document.open();
-      this.getDOMNode().contentWindow.document.write(doc);
-      this.getDOMNode().contentWindow.document.close();
     },
 
     getScriptFromEditor: function(addExtra, jsCode){
@@ -194,11 +200,12 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
 
     openNewWindow: function(msg, data){
       var baseHref = window.location.href;
+      var pos = baseHref.lastIndexOf('/');
+      baseHref = baseHref.substring(0, pos) + '/';
       var frameDoc = this.getDOMNode().contentWindow.document;
       var baseElement = frameDoc.createElement('base');
       baseElement.setAttribute("href", baseHref);
       frameDoc.head.appendChild(baseElement);
-      console.log(frameDoc.children[0].outerHTML);
       var htmlBlob = new Blob([frameDoc.children[0].outerHTML], {
             'type' : 'text/html;charset=utf-8',
             'endings' : 'native'
@@ -208,11 +215,16 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       window.focus();
     },
 
-    loadFrame: function(msg, data){
+    refreshFrame: function(){
+      this.getDOMNode().contentWindow.location.reload();
+      var doc = '<html><head><script src="../../Build/Cesium/Cesium.js"></script><script type="text/javascript" src="./Sandcastle-header.js"></script><style>@import url(../../Build/Cesium/Widgets/widgets.css);\nhtml, body, #cesiumContainer {width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;}\n</style></head><body class="sandcastle-loading"><script type="text/javascript" src="./Sandcastle-client.js"></script></body></html>';
+      this.getDOMNode().contentWindow.document.open();
+      this.getDOMNode().contentWindow.document.write(doc);
+      this.getDOMNode().contentWindow.document.close();
+    },
+
+    loadDocument: function(data){
       var frameDoc = this.getDOMNode().contentWindow.document;
-      // frameDoc.body.innerHTML = "";
-      $(this.getDOMNode()).contents().find('div').remove();
-      $(this.getDOMNode()).contents().find('#sandcastleCode').remove();
       if(frameDoc.readyState === 'complete'){
         var htmlCode = data.html;
         var htmlElement = frameDoc.createElement('div');
@@ -226,30 +238,29 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       else{
         var that = this;
         setTimeout(function(){
-          that.loadFrame(msg, data)
+          that.loadDocument(data)
         }, 0);
       }
     },
 
+    loadFrame: function(msg, data){
+      this.refreshFrame();
+      this.loadDocument(data);
+    },
+
     reloadFrame: function(){
       // Reload the frame with the new code
-      var frameDoc = this.getDOMNode().contentWindow.document;
-      // frameDoc.body.innerHTML = "";
-      $(this.getDOMNode()).contents().find('div').remove();
-      $(this.getDOMNode()).contents().find('#sandcastleCode').remove();
+      this.refreshFrame();
       // Fetch the code from the code editor
       var htmlEditor = $('#htmlContainer .CodeMirror')[0].CodeMirror;
       var htmlCode = htmlEditor.getValue();
-      var htmlElement = frameDoc.createElement('div');
-      htmlElement.innerHTML = htmlCode;
-      frameDoc.body.appendChild(htmlElement);
+      var data = {};
+      data.html = htmlCode;
       var jsEditor = $('#jsContainer .CodeMirror')[0].CodeMirror;
       var jsCode = jsEditor.getValue();
-      var scriptElement = frameDoc.createElement('script');
-      scriptElement.setAttribute('id', 'sandcastleCode');
       var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
-      scriptElement.textContent = this.getScriptFromEditor(isFirefox, jsCode);
-      frameDoc.body.appendChild(scriptElement);
+      data.js = this.getScriptFromEditor(isFirefox, jsCode);
+      this.loadDocument(data);
     },
 
     render: function(){
@@ -310,7 +321,6 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
 
     printLog: function(msg,data){
       this.setState({msgNum: this.state.msgNum+1});
-      console.log(this.state.msgNum);
       $('.panel-body').append('<p>' + data + '</p>');
     },
 
@@ -319,9 +329,32 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       $('.panel-body').append('<p class="text-warning">' + data + '</p>');
     },
 
+    scriptLineToEditorLine: function(line){
+      var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
+      return isFirefox? line - 4 : line-3;
+    },
+
     printError: function(msg,data){
       this.setState({msgNum: this.state.msgNum+1});
-      $('.panel-body').append('<p class="text-danger">' + data + '</p>');
+      var message = '<p class="text-danger">' + data.data;
+      if(data.lineNum !== undefined)
+      {
+        message += ' (on line ';
+        if(data.url)
+        {
+          message += this.scriptLineToEditorLine(data.lineNum) + ' of ' + data.url + ')';
+        }
+        else
+        {
+          message += this.scriptLineToEditorLine(data.lineNum) + ')';
+        }
+        var data = {};
+        data.line = this.scriptLineToEditorLine(data.lineNum);
+        data.error = data.data;
+        PubSub.publish('MARK LINE', data);
+      }
+      message += '</p>';
+      $('.panel-body').append(message);
     },
 
     render: function(){
@@ -499,6 +532,8 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
   var SandcastleHeader = React.createClass({
     newDemo: function(){
       $(".navbar-collapse").collapse('hide');
+      // Open the preview screen else Cesium returns an error
+      this.showPreview();
       PubSub.publish('NEW DEMO', '');
     },
 
@@ -528,7 +563,8 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       $('#codeColumn').removeClass('hidden-xs');
       $('#cesiumColumn').addClass('hidden-xs');
       $('#consoleRow').addClass('hidden-xs');
-      $('#codeContainerTabs a[href="#jsContainer"').tab('show');
+      $('#codeContainerTabs a[href="#jsContainer"]').tab('show');
+      PubSub.publish('CODE TAB', '');
     },
 
     showHTMLCode: function(){
@@ -537,7 +573,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       $('#codeColumn').removeClass('hidden-xs');
       $('#cesiumColumn').addClass('hidden-xs');
       $('#consoleRow').addClass('hidden-xs');
-      $('#codeContainerTabs a[href="#htmlContainer"').tab('show');
+      $('#codeContainerTabs a[href="#htmlContainer"]').tab('show');
     },
 
     showConsole: function(){
