@@ -1294,7 +1294,7 @@ defineSuite([
             CesiumMath.toRadians(21.51),
             CesiumMath.toRadians(41.38));
         camera.viewRectangle(rectangle, Ellipsoid.WGS84);
-        expect(camera.position).toEqualEpsilon(new Cartesian3(4481594.74880154, 1754513.392213863, 4200579.395187099), CesiumMath.EPSILON6);
+        expect(camera.position).toEqualEpsilon(new Cartesian3(4481555.454147325, 1754498.0086281248, 4200627.581953675), CesiumMath.EPSILON6);
         expect(camera.direction).toEqualEpsilon(new Cartesian3(-0.6995108433013301, -0.27385366401082994, -0.6600672320390594), CesiumMath.EPSILON10);
         expect(camera.up).toEqualEpsilon(new Cartesian3(-0.6146434679470263, -0.24062867269250837, 0.75120652898407), CesiumMath.EPSILON10);
         expect(camera.right).toEqualEpsilon(new Cartesian3(-0.36455176232452213, 0.9311831251617939, 0), CesiumMath.EPSILON10);
@@ -1307,7 +1307,7 @@ defineSuite([
             CesiumMath.toRadians(157.0),
             CesiumMath.toRadians(0.0));
         camera.viewRectangle(rectangle);
-        expect(camera.position).toEqualEpsilon(new Cartesian3(-6020987.145335815, 9096719.279476268, -5061902.525777783), CesiumMath.EPSILON6);
+        expect(camera.position).toEqualEpsilon(new Cartesian3(-6017603.25625715, 9091606.78076493, -5075070.862292178), CesiumMath.EPSILON6);
         expect(camera.direction).toEqualEpsilon(new Cartesian3(0.5000640869795608, -0.7555144216716235, 0.4232420909591703), CesiumMath.EPSILON10);
         expect(camera.up).toEqualEpsilon(new Cartesian3(-0.23360296374117637, 0.35293557895291494, 0.9060166292295686), CesiumMath.EPSILON10);
         expect(camera.right).toEqualEpsilon(new Cartesian3(-0.8338858220671682, -0.5519369853120581, 0), CesiumMath.EPSILON10);
@@ -1320,7 +1320,7 @@ defineSuite([
             CesiumMath.toRadians(174.0),
             CesiumMath.toRadians(-4.0));
         camera.viewRectangle(rectangle);
-        expect(camera.position).toEqualEpsilon(new Cartesian3(-7315343.706901635, 8124512.271161941, -7068894.119227167), CesiumMath.EPSILON6);
+        expect(camera.position).toEqualEpsilon(new Cartesian3(-7307919.685704952, 8116267.060310548, -7085995.891547672), CesiumMath.EPSILON6);
         expect(camera.direction).toEqualEpsilon(new Cartesian3(0.5607858365117034, -0.622815768168856, 0.5455453826109309), CesiumMath.EPSILON10);
         expect(camera.up).toEqualEpsilon(new Cartesian3(-0.3650411126627274, 0.4054192281503986, 0.8380812821629494), CesiumMath.EPSILON10);
         expect(camera.right).toEqualEpsilon(new Cartesian3(-0.7431448254773944, -0.6691306063588581, 0), CesiumMath.EPSILON10);

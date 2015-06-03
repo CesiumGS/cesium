@@ -1799,9 +1799,7 @@ define([
             d = Math.max(d, computeD(direction, up, equatorPosition, tanPhi), computeD(direction, right, equatorPosition, tanTheta));
         }
 
-        var scalar = Cartesian3.magnitude(center) + d;
-        Cartesian3.normalize(center, center);
-        return Cartesian3.multiplyByScalar(center, scalar, result);
+        return Cartesian3.add(center, Cartesian3.multiplyByScalar(direction, -d, viewRectangle3DEquator), result);
     }
 
     var viewRectangleCVCartographic = new Cartographic();
