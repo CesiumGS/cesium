@@ -40,8 +40,8 @@ define([
         msElement.className = 'cesium-performanceDisplay-ms';
         this._msText = document.createTextNode("");
         msElement.appendChild(this._msText);
-        display.appendChild(fpsElement);
         display.appendChild(msElement);
+        display.appendChild(fpsElement);
         this._container.appendChild(display);
 
         this._lastFpsSampleTime = undefined;

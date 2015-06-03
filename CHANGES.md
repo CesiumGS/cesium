@@ -3,8 +3,7 @@ Change Log
 
 ### 1.11 - 2015-07-01
 
-* Breaking changes
-  * PerformanceDisplay (private API) no longer takes style options.  It is now styled with app-overridable CSS.  Use `scene.debugShowFramesPerSecond` to enable it as before.
+* The performance statistics displayed by setting `scene.debugShowFramesPerSecond` to `true` can now be styled using the `cesium-performanceDisplay` CSS classes in `shared.css`.
 
 ### 1.10 - 2015-06-01
 

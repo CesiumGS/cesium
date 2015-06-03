@@ -86,6 +86,7 @@
     position: absolute;
     top: 50px;
     right: 10px;
+    text-align: right;
 }
 
 .cesium-performanceDisplay {
@@ -93,7 +94,7 @@
     padding: 7px;
     border-radius: 5px;
     border: 1px solid #444;
-    font: 12px sans-serif;
+    font: bold 12px sans-serif;
 }
 
 .cesium-performanceDisplay-fps {
