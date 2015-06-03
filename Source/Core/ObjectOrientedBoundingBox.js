@@ -362,9 +362,9 @@ define([
         return (left === right) ||
                 ((defined(left)) &&
                  (defined(right)) &&
-                 Cartesian3.equals(left.transformedPosition, right.transformedPosition) &&
-                 Matrix3.equals(left.transformMatrix, right.transformMatrix) &&
-                 Cartesian3.equals(left.rectangle, right.rectangle));
+                 Cartesian3.equals(left.translation, right.translation) &&
+                 Matrix3.equals(left.rotation, right.rotation) &&
+                 Cartesian3.equals(left.scale, right.scale));
     };
 
     /**
