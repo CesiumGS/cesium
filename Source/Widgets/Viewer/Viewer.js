@@ -1605,6 +1605,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     }
 
     function updateTrackedEntity(viewer) {
+        if (!viewer._needTrackedEntityUpdate) {
+            return;
+        }
+
         var trackedEntity = viewer._trackedEntity;
         var currentTime = viewer.clock.currentTime;
 
@@ -1613,7 +1617,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         //computed. In this case, we will track the entity once it comes back into existence.
         var currentPosition = Property.getValueOrUndefined(trackedEntity.position, currentTime);
 
-        if (!viewer._needTrackedEntityUpdate || !defined(currentPosition)) {
+        if (!defined(currentPosition)) {
             return;
         }
 

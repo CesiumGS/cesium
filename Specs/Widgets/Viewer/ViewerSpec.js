@@ -126,6 +126,13 @@ defineSuite([
         expect(viewer.isDestroyed()).toEqual(true);
     });
 
+    it('renders without errors', function() {
+        viewer = new Viewer(container);
+        spyOn(viewer.scene.renderError, 'raiseEvent');
+        viewer.render();
+        expect(viewer.scene.renderError.raiseEvent).not.toHaveBeenCalled();
+    });
+
     it('constructor works with container id string', function() {
         viewer = new Viewer('container');
         expect(viewer.container).toBe(container);
