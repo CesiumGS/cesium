@@ -1647,10 +1647,7 @@ define([
         if (scene.debugShowFramesPerSecond) {
             if (!defined(scene._performanceDisplay)) {
                 var performanceContainer = document.createElement('div');
-                performanceContainer.className = 'cesium-performanceDisplay';
-                performanceContainer.style.position = 'absolute';
-                performanceContainer.style.top = '50px';
-                performanceContainer.style.right = '10px';
+                performanceContainer.className = 'cesium-performanceDisplay-defaultContainer';
                 var container = scene._canvas.parentNode;
                 container.appendChild(performanceContainer);
                 var performanceDisplay = new PerformanceDisplay({container: performanceContainer});

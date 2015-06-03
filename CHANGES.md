@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.11 - 2015-07-01
+
+* The performance statistics displayed by setting `scene.debugShowFramesPerSecond` to `true` can now be styled using the `cesium-performanceDisplay` CSS classes in `shared.css`.
+
 ### 1.10 - 2015-06-01
 
 * Breaking changes
