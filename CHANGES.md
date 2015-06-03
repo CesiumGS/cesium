@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.11 - 2015-07-01
+
+* Breaking changes
+  * PerformanceDisplay (private API) no longer takes style options.  It is now styled with app-overridable CSS.  Use `scene.debugShowFramesPerSecond` to enable it as before.
+
 ### 1.10 - 2015-06-01
 
 * Breaking changes
