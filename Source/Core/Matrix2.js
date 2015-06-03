@@ -813,6 +813,15 @@ define([
                                                 0.0, 1.0));
 
     /**
+     * An immutable Matrix2 instance initialized to the zero matrix.
+     *
+     * @type {Matrix2}
+     * @constant
+     */
+    Matrix2.ZERO = freezeObject(new Matrix2(0.0, 0.0,
+                                            0.0, 0.0));
+
+    /**
      * The index into Matrix2 for column 0, row 0.
      *
      * @type {Number}

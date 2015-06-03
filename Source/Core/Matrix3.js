@@ -1355,6 +1355,16 @@ define([
                                                 0.0, 0.0, 1.0));
 
     /**
+     * An immutable Matrix3 instance initialized to the zero matrix.
+     *
+     * @type {Matrix3}
+     * @constant
+     */
+    Matrix3.ZERO = freezeObject(new Matrix3(0.0, 0.0, 0.0,
+                                            0.0, 0.0, 0.0,
+                                            0.0, 0.0, 0.0));
+
+    /**
      * The index into Matrix3 for column 0, row 0.
      *
      * @type {Number}

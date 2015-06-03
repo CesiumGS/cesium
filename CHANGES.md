@@ -11,6 +11,7 @@ Change Log
 * Fixed an issue where `Camera` functions would throw an exception if used from within a `Scene.morphComplete` callback [#2776](https://github.com/AnalyticalGraphicsInc/cesium/issues/2776).
 * `Model` can now load Binary glTF from a Uint8Array.
 * Added a new camera mode for horizon views. When the camera is looking at the horizon and a point on terrain above the camera is picked, the camera moves in the plane containing the camera position, up and right vectors.
+* Added `Matrix2`/`Matrix3`/`Matrix4.ZERO` constants for zero matrices.
 
 ### 1.10 - 2015-06-01
 
