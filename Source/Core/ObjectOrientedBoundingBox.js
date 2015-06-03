@@ -4,12 +4,14 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
+        './deprecationWarning',
         './Matrix3'
     ], function(
         Cartesian3,
         defaultValue,
         defined,
         DeveloperError,
+        deprecationWarning,
         Matrix3) {
     "use strict";
 
@@ -19,6 +21,7 @@ define([
      * It is oriented, so it can provide an optimum fit, it can bound more tightly.
      * @alias ObjectOrientedBoundingBox
      * @constructor
+     * @deprecated
      *
      * @param {Matrix3} [rotation=Matrix3.IDENTITY] The transformation matrix, to rotate the box to the right position.
      * @param {Cartesian3} [translation=Cartesian3.ZERO] The position of the box.
@@ -38,6 +41,8 @@ define([
      * var oobb = new Cesium.ObjectOrientedBoundingBox(rotation, translation, scale);
      */
     var ObjectOrientedBoundingBox = function(rotation, translation, scale) {
+        deprecationWarning('ObjectOrientedBoundingBox', 'ObjectOrientedBoundingBox was deprecated in Cesium 1.11.  It will be removed in 1.12.  Use OrientedBoundingBox instead.');
+
         /**
          * The transformation matrix, to rotate the box to the right position.
          * @type {Matrix3}
