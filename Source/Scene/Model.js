@@ -695,7 +695,7 @@ define([
         return modelUri.resolve(docUri).toString();
     }
 
-    var sizeOfUnit32 = Uint32Array.BYTES_PER_ELEMENT;
+    var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
     function parseBinaryGltfHeader(arrayBuffer) {
         var magic = getStringFromTypedArray(arrayBuffer, 0, 4);
@@ -706,7 +706,7 @@ define([
         var view = new DataView(arrayBuffer);
         var byteOffset = 0;
 
-        byteOffset += sizeOfUnit32;  // Skip magic number
+        byteOffset += sizeOfUint32;  // Skip magic number
 
         //>>includeStart('debug', pragmas.debug);
         var version = view.getUint32(byteOffset, true);
@@ -714,15 +714,15 @@ define([
             throw new DeveloperError('Only glTF Binary version 1 is supported.  Version ' + version + ' is not.');
         }
         //>>includeEnd('debug');
-        byteOffset += sizeOfUnit32;
+        byteOffset += sizeOfUint32;
 
-        byteOffset += sizeOfUnit32;  // Skip length
+        byteOffset += sizeOfUint32;  // Skip length
 
         var jsonOffset = view.getUint32(byteOffset, true);
-        byteOffset += sizeOfUnit32;
+        byteOffset += sizeOfUint32;
 
         var jsonLength = view.getUint32(byteOffset, true);
-        byteOffset += sizeOfUnit32;
+        byteOffset += sizeOfUint32;
 
         return JSON.parse(getStringFromTypedArray(arrayBuffer, jsonOffset, jsonLength));
     }
