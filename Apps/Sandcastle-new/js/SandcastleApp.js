@@ -54,7 +54,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
 
       // Subscribe to events
       PubSub.subscribe('SUGGEST', this.autocomplete);
-      PubSub.subscribe('CODE TAB', this.refreshEditor);
+      PubSub.subscribe('SHOW JS CODE', this.refreshEditor);
       PubSub.subscribe('MARK LINE', this.markLine);
     },
 
@@ -146,9 +146,48 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
   });
 
   var SandcastleCode = React.createClass({
+    getInitialState: function(){
+      var classes = {"hidden-xs": true, "col-sm-5": true};
+      return {
+        classes: classes
+      };
+    },
+
+    componentWillMount: function(){
+      PubSub.subscribe('SHOW PREVIEW', this.handleNavigation);
+      PubSub.subscribe('SHOW JS CODE', this.handleNavigation);
+      PubSub.subscribe('SHOW HTML CODE', this.handleNavigation);
+    },
+
+    handleNavigation: function(msg, data){
+      var classes = this.state.classes;
+      switch(msg){
+        case 'SHOW PREVIEW':
+          classes['hidden-xs'] = true;
+          break;
+        case 'SHOW JS CODE':
+          classes['hidden-xs'] = false;
+          break;
+        case 'SHOW HTML CODE':
+          classes['hidden-xs'] = false;
+          break;
+      }
+      this.setState({classes: classes});
+    },
+
     render: function(){
+      var printClasses = function(obj){
+        var classes = '';
+        for(type in obj){
+          if(obj[type])
+            classes += type;
+            classes += ' ';
+        }
+        return classes;
+      };
+
       return (
-        <div id="codeColumn" className="hidden-xs col-sm-5">
+        <div id="codeColumn" className={printClasses(this.state.classes)}>
           <div role="tabpanel">
             <SandcastleCodeTabs />
             <div className="tab-content">
@@ -287,9 +326,48 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
   });
 
   var SandcastleCesium = React.createClass({
+    getInitialState: function(){
+      var classes = {'col-xs-12': true, 'col-sm-7': true};
+      return{
+        classes: classes
+      };
+    },
+
+    componentWillMount: function(){
+      PubSub.subscribe('SHOW PREVIEW', this.handleNavigation);
+      PubSub.subscribe('SHOW JS CODE', this.handleNavigation);
+      PubSub.subscribe('SHOW HTML CODE', this.handleNavigation);
+    },
+
+    handleNavigation: function(msg, data){
+      var classes = this.state.classes;
+      switch(msg){
+        case 'SHOW PREVIEW':
+          classes['hidden-xs'] = false;
+          break;
+        case 'SHOW JS CODE':
+          classes['hidden-xs'] = true;
+          break;
+        case 'SHOW HTML CODE':
+          classes['hidden-xs'] = true;
+          break;
+      }
+      this.setState({classes: classes});
+    },
+
     render: function(){
+      var printClasses = function(obj){
+        var classes = '';
+        for(type in obj){
+          if(obj[type])
+            classes += type;
+            classes += ' ';
+        }
+        return classes;
+      };
+
       return (
-        <div id="cesiumColumn" className=" col-xs-12 col-sm-7">
+        <div id="cesiumColumn" className={printClasses(this.state.classes)}>
           <div role="tabpanel">
             <SandcastleCesiumTabs />
             <SandcastleCesiumContainer />
@@ -302,6 +380,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
   var SandcastleConsole = React.createClass({
     getInitialState: function(){
       return {
+        messages: [],
         msgNum: 0
       };
     },
@@ -315,18 +394,26 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
     },
 
     newDemo: function(){
-      this.setState({msgNum: 0});
-      $('.panel-body').empty();
+      this.setState({messages: [], msgNum: 0});
     },
 
     printLog: function(msg,data){
       this.setState({msgNum: this.state.msgNum+1});
-      $('.panel-body').append('<p>' + data + '</p>');
+      var newMsg = {};
+      newMsg.type = '';
+      newMsg.text = data;
+      var newMessages = this.state.messages.concat([newMsg]);
+      this.setState({messages: newMessages});
+      // $('.panel-body').append('<p>' + data + '</p>');
     },
 
     printWarning: function(msg,data){
       this.setState({msgNum: this.state.msgNum+1});
-      $('.panel-body').append('<p class="text-warning">' + data + '</p>');
+      var newMsg = {};
+      newMsg.type = 'text-warning';
+      newMsg.text = data;
+      var newMessages = this.state.messages.concat([newMsg]);
+      this.setState({messages: newMessages});
     },
 
     scriptLineToEditorLine: function(line){
@@ -336,7 +423,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
 
     printError: function(msg,data){
       this.setState({msgNum: this.state.msgNum+1});
-      var message = '<p class="text-danger">' + data.data;
+      var message = data.data;
       if(data.lineNum !== undefined)
       {
         message += ' (on line ';
@@ -353,17 +440,25 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
         data.error = data.data;
         PubSub.publish('MARK LINE', data);
       }
-      message += '</p>';
-      $('.panel-body').append(message);
+      var newMsg = {};
+      newMsg.type = 'text-danger';
+      newMsg.text = message;
+      var newMessages = this.state.messages.concat([newMsg]);
+      this.setState({messages: newMessages});
     },
 
     render: function(){
+      var createMsg = function(item, index){
+        return <p key={index} className={item.type}>{item.text}</p>;
+      };
+
       return (
         <div className="col-md-4 col-xs-12">
           <div className="panel panel-default">
             <div className="panel-heading hidden-xs"><a data-toggle="collapse" href="#consoleLog" aria-expanded="false" aria-controls="consoleLog">Console ({this.state.msgNum})</a></div>
             <div id="consoleLog" className="panel-collapse collapse" aria-labelledby="consoleLog">
               <div className="panel-body">
+              {this.state.messages.map(createMsg)}
               </div>
             </div>
           </div>
@@ -374,9 +469,13 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
 
   var SandcastleBody = React.createClass({
     getInitialState: function(){
+      var consoleClasses = {'hidden-xs': true, 'row': true};
+      var bodyClasses = {'row': true};
       return {
         jsCode: '',
-        htmlCode: ''
+        htmlCode: '',
+        consoleClasses: consoleClasses,
+        bodyClasses: bodyClasses
       }
     },
 
@@ -458,8 +557,35 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       });
     },
 
+    handleNavigation: function(msg, data){
+      var consoleClasses = this.state.consoleClasses;
+      var bodyClasses = this.state.bodyClasses;
+      switch(msg){
+        case 'SHOW PREVIEW':
+          consoleClasses['hidden-xs'] = true;
+          bodyClasses['hidden-xs'] = false;
+          break;
+        case 'SHOW JS CODE':
+          consoleClasses['hidden-xs'] = true;
+          bodyClasses['hidden-xs'] = false;
+          break;
+        case 'SHOW HTML CODE':
+          consoleClasses['hidden-xs'] = true;
+          bodyClasses['hidden-xs'] = false;
+          break;
+        case 'SHOW CONSOLE':
+          consoleClasses['hidden-xs'] = false;
+          bodyClasses['hidden-xs'] = true;
+          break;
+      }
+      this.setState({bodyClasses: bodyClasses, consoleClasses: consoleClasses});
+    },
+
     componentWillMount: function(){
-      
+      PubSub.subscribe('SHOW PREVIEW', this.handleNavigation);
+      PubSub.subscribe('SHOW JS CODE', this.handleNavigation);
+      PubSub.subscribe('SHOW HTML CODE', this.handleNavigation);
+      PubSub.subscribe('SHOW CONSOLE', this.handleNavigation);
     },
 
     componentDidMount: function(){
@@ -478,13 +604,23 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
     },
 
     render: function(){
+      var printClasses = function(obj){
+        var classes = '';
+        for(type in obj){
+          if(obj[type])
+            classes += type;
+            classes += ' ';
+        }
+        return classes;
+      };
+
       return (
         <div id="bodyContainer" className="container-fluid">
-          <div id="bodyRow" className="row">
+          <div id="bodyRow" className={printClasses(this.state.bodyClasses)}>
             <SandcastleCode demo={this.props.demo}/>
             <SandcastleCesium/>
           </div>
-          <div id="consoleRow" className="hidden-xs row">
+          <div id="consoleRow" className={printClasses(this.state.consoleClasses)}>
             <SandcastleConsole />
           </div>
         </div>
@@ -551,35 +687,24 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
 
     showPreview: function(){
       $(".navbar-collapse").collapse('hide');
-      $('#codeColumn').addClass('hidden-xs');
-      $('#consoleRow').addClass('hidden-xs');
-      $('#bodyRow').removeClass('hidden-xs');
-      $('#cesiumColumn').removeClass('hidden-xs');
+      PubSub.publish('SHOW PREVIEW', '');
     },
 
     showJSCode: function(){
       $(".navbar-collapse").collapse('hide');
-      $('#bodyRow').removeClass('hidden-xs');
-      $('#codeColumn').removeClass('hidden-xs');
-      $('#cesiumColumn').addClass('hidden-xs');
-      $('#consoleRow').addClass('hidden-xs');
+      PubSub.publish('SHOW JS CODE', '');
       $('#codeContainerTabs a[href="#jsContainer"]').tab('show');
-      PubSub.publish('CODE TAB', '');
     },
 
     showHTMLCode: function(){
       $(".navbar-collapse").collapse('hide');
-      $('#bodyRow').removeClass('hidden-xs');
-      $('#codeColumn').removeClass('hidden-xs');
-      $('#cesiumColumn').addClass('hidden-xs');
-      $('#consoleRow').addClass('hidden-xs');
+      PubSub.publish('SHOW HTML CODE', '');
       $('#codeContainerTabs a[href="#htmlContainer"]').tab('show');
     },
 
     showConsole: function(){
       $(".navbar-collapse").collapse('hide');
-      $('#bodyRow').addClass('hidden-xs');
-      $('#consoleRow').removeClass('hidden-xs');
+      PubSub.publish('SHOW CONSOLE', '');
       $('#consoleLog').addClass('in');
     },
 
