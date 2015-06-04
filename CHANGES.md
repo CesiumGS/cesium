@@ -3,6 +3,7 @@ Change Log
 
 ### 1.11 - 2015-07-01
 
+* Improved the algorithm that `Camera.viewRectangle` uses to select the position of the camera, so that the specified rectangle is now better centered on the screen.
 * The performance statistics displayed by setting `scene.debugShowFramesPerSecond` to `true` can now be styled using the `cesium-performanceDisplay` CSS classes in `shared.css`.
 
 ### 1.10 - 2015-06-01
