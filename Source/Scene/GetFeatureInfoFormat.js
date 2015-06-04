@@ -168,7 +168,7 @@ define([
 
         var featureInfoResponse = xml.documentElement;
 
-        var features = featureInfoResponse.getElementsByTagNameNS(esriWmsNamespace, 'FIELDS');
+        var features = featureInfoResponse.getElementsByTagNameNS('*', 'FIELDS');
         for (var featureIndex = 0; featureIndex < features.length; ++featureIndex) {
             var feature = features[featureIndex];
 
