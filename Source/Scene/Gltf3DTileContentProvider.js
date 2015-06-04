@@ -2,6 +2,7 @@
 define([
         '../Core/Cartesian2',
         '../Core/Cartesian4',
+        '../Core/clone',
         '../Core/Color',
         '../Core/combine',
         '../Core/defaultValue',
@@ -9,6 +10,8 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/getStringFromTypedArray',
+        '../Core/loadArrayBuffer',
         '../Core/PixelFormat',
         '../Renderer/Context',
         '../Renderer/PixelDatatype',
@@ -22,6 +25,7 @@ define([
     ], function(
         Cartesian2,
         Cartesian4,
+        clone,
         Color,
         combine,
         defaultValue,
@@ -29,6 +33,8 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        getStringFromTypedArray,
+        loadArrayBuffer,
         PixelFormat,
         Context,
         PixelDatatype,
@@ -72,6 +78,8 @@ define([
 
         this._pickTexture = undefined;
         this._pickIds = [];
+
+        this._batchTable = undefined;
 
         // Dimensions for batch and pick textures
         var textureDimensions;
@@ -255,6 +263,72 @@ define([
         var batchValues = this._batchValues;
         var offset = batchId * 4;
         return Color.fromBytes(batchValues[offset], batchValues[offset + 1], batchValues[offset + 2], 255, color);
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+// TODO: functions for?
+//   * number of properties
+//   * get property name
+//   * has property
+
+    /**
+     * @private
+     */
+    Gltf3DTileContentProvider.prototype.getProperty = function(batchId, name) {
+        var batchSize = this._batchSize;
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(batchId) || (batchId < 0) || (batchId > batchSize)) {
+            throw new DeveloperError('batchId is required and between zero and batchSize - 1 (' + batchSize - + ').');
+        }
+
+        if (!defined(name)) {
+            throw new DeveloperError('color is required.');
+        }
+        //>>includeEnd('debug');
+
+        if (!defined(this._batchTable)) {
+            return undefined;
+        }
+
+        var propertyValues = this._batchTable[name];
+
+        if (!defined(propertyValues)) {
+            return undefined;
+        }
+
+        return clone(propertyValues[batchId], true);
+    };
+
+    /**
+     * @private
+     */
+    Gltf3DTileContentProvider.prototype.setProperty = function(batchId, name, value) {
+        var batchSize = this._batchSize;
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(batchId) || (batchId < 0) || (batchId > batchSize)) {
+            throw new DeveloperError('batchId is required and between zero and batchSize - 1 (' + batchSize - + ').');
+        }
+
+        if (!defined(name)) {
+            throw new DeveloperError('color is required.');
+        }
+        //>>includeEnd('debug');
+
+        if (!defined(this._batchTable)) {
+            // Tile payload did not have a batch table.  Create one for new user-defined properties.
+            this._batchTable = {};
+        }
+
+        var propertyValues = this._batchTable[name];
+
+        if (!defined(propertyValues)) {
+            // Property does not exist.  Create it.
+            this._batchTable[name] = new Array(batchSize);
+            propertyValues = this._batchTable[name];
+        }
+
+        propertyValues[batchId] = clone(value, true);
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -501,34 +575,79 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    Gltf3DTileContentProvider.prototype.request = function() {
-        // PERFORMANCE_IDEA: patch the shader on demand, e.g., the first time show/color changes.
-        // The pitch shader still needs to be patched.
-        var model = Model.fromGltf({
-            url : this._url,
-            cull : false,           // The model is already culled by the 3D tiles
-            releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
-            vertexShaderLoaded : getVertexShaderCallback(this),
-            fragmentShaderLoaded : getFragmentShaderCallback(this),
-            uniformMapLoaded : getUniformMapCallback(this),
-            pickVertexShaderLoaded : getPickVertexShaderCallback(this),
-            pickFragmentShaderLoaded : getPickFragmentShaderCallback(this),
-            pickUniformMapLoaded : getPickUniformMapCallback(this)
-        });
+    var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
+    Gltf3DTileContentProvider.prototype.request = function() {
         var that = this;
-        when(model.readyPromise).then(function(model) {
-            that.state = Cesium3DTileContentState.READY;
-            that.readyPromise.resolve(that);
-        }).otherwise(function(error) {
+
+        function failRequest(error) {
             that.state = Cesium3DTileContentState.FAILED;
             that.readyPromise.reject(error);
-        });
+        }
 
-        this._model = model;
+        loadArrayBuffer(this._url). then(function(arrayBuffer) {
+            var magic = getStringFromTypedArray(arrayBuffer, 0, Math.min(4, arrayBuffer.byteLength));
+            if (magic !== 'glTF') {
+// TODO: throw
+            }
+
+            var view = new DataView(arrayBuffer);
+            var byteOffset = 0;
+
+            byteOffset += sizeOfUint32;  // Skip magic number
+
+            //>>includeStart('debug', pragmas.debug);
+            var version = view.getUint32(byteOffset, true);
+            if (version !== 1) {
+                throw new DeveloperError('Only Batched Binary glTF version 1 is supported.  Version ' + version + ' is not.');
+            }
+            //>>includeEnd('debug');
+            byteOffset += sizeOfUint32;
+
+            var batchTable;
+// !!! TODO: read batch table
+            var batchSize = that._batchSize;
+            if (batchSize > 0) {
+                batchTable = {
+                    cc3did : []
+                };
+
+                for (var i = 0; i < batchSize; ++i) {
+                    batchTable.cc3did.push('id ' + i);
+                }
+            }
+// !!! END_TODO
+
+            // PERFORMANCE_IDEA: is it possible to allocate this on-demand?  Perhaps keep the
+            // arraybuffer/string compressed in memory and then decompress it when it is first accessed.
+            that._batchTable = batchTable;
+
+            // PERFORMANCE_IDEA: patch the shader on demand, e.g., the first time show/color changes.
+            // The pitch shader still needs to be patched.
+            var model = new Model({
+                gltf : arrayBuffer,
+                cull : false,           // The model is already culled by the 3D tiles
+                releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
+                vertexShaderLoaded : getVertexShaderCallback(that),
+                fragmentShaderLoaded : getFragmentShaderCallback(that),
+                uniformMapLoaded : getUniformMapCallback(that),
+                pickVertexShaderLoaded : getPickVertexShaderCallback(that),
+                pickFragmentShaderLoaded : getPickFragmentShaderCallback(that),
+                pickUniformMapLoaded : getPickUniformMapCallback(that)
+            });
+
+            that._model = model;
+            that.state = Cesium3DTileContentState.PROCESSING;
+            that.processingPromise.resolve(that);
+
+            when(model.readyPromise).then(function(model) {
+                that.state = Cesium3DTileContentState.READY;
+                that.readyPromise.resolve(that);
+            }).otherwise(failRequest);
+        }).otherwise(failRequest);
+
 // TODO: allow this to not change the state depending on if the request is actually made, e.g., with RequestsByServer.
-        this.state = Cesium3DTileContentState.PROCESSING;
-        this.processingPromise.resolve(this);
+        this.state = Cesium3DTileContentState.LOADING;
     };
 
      function applyDebugSettings(owner, content) {
@@ -610,7 +729,7 @@ define([
     }
 
     Gltf3DTileContentProvider.prototype.update = function(owner, context, frameState, commandList) {
-        // In the LOADED state we may be calling update() to move forward
+        // In the PROCESSING state we may be calling update() to move forward
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
 

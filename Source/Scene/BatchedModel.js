@@ -48,5 +48,13 @@ define([
         }
     });
 
+    BatchedModel.prototype.getProperty = function(name) {
+        return this._content.getProperty(this._batchId, name);
+    };
+
+    BatchedModel.prototype.setProperty = function(name, value) {
+        this._content.setProperty(this._batchId, name, value);
+    };
+
     return BatchedModel;
 });
