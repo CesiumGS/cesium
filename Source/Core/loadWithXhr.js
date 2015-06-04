@@ -30,6 +30,10 @@ define([
      * @param {String} [options.data] The data to send with the request, if any.
      * @param {Object} [options.headers] HTTP headers to send with the request, if any.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
+     *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
+     *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
+     *
      * @returns {Promise} a promise that will resolve to the requested data when loaded.
      *
      * @see loadArrayBuffer
@@ -65,11 +69,12 @@ define([
         var headers = options.headers;
         var overrideMimeType = options.overrideMimeType;
         var preferText = options.preferText;
+        var timeout = options.timeout;
 
         return when(options.url, function(url) {
             var deferred = when.defer();
 
-            loadWithXhr.load(url, responseType, method, data, headers, deferred, overrideMimeType, preferText);
+            loadWithXhr.load(url, responseType, method, data, headers, deferred, overrideMimeType, preferText, timeout);
 
             return deferred.promise;
         });
@@ -123,7 +128,7 @@ define([
     }
 
     // This is broken out into a separate function so that it can be mocked for testing purposes.
-    loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType, preferText) {
+    loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType, preferText, timeout) {
         var dataUriRegexResult = dataUriRegex.exec(url);
         if (dataUriRegexResult !== null) {
             deferred.resolve(decodeDataUri(dataUriRegexResult, responseType));
@@ -159,6 +164,10 @@ define([
 
         if (defined(responseType)) {
             xhr.responseType = responseType;
+        }
+
+        if (defined(timeout)) {
+            xhr.timeout = timeout;
         }
 
         xhr.onload = function() {
@@ -202,6 +211,12 @@ define([
 
         xhr.onerror = function(e) {
             deferred.reject(new RequestErrorEvent());
+        };
+
+        xhr.ontimeout = function(e) {
+            var timeout = new RequestErrorEvent();
+            timeout.isTimeout = true;
+            deferred.reject(timeout);
         };
 
         xhr.send(data);
