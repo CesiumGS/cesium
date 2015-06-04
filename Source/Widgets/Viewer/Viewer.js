@@ -594,7 +594,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         function pickAndTrackObject(e) {
             var entity = pickEntity(that, e);
             if (defined(entity)) {
-                if (defined(entity.position)) {
+                //Only track the entity if it has a valid position at the current time.
+                if (Property.getValueOrUndefined(entity.position, that.clock.currentTime)) {
                     that.trackedEntity = entity;
                 } else {
                     that.zoomTo(entity);
@@ -1549,7 +1550,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
     function updateZoomTarget(viewer) {
         var entities = viewer._zoomTarget;
-        if (!defined(entities)) {
+        if (!defined(entities) || viewer.scene.mode === SceneMode.MORPHING) {
             return;
         }
 
@@ -1608,8 +1609,19 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             return;
         }
 
-        var scene = viewer.scene;
         var trackedEntity = viewer._trackedEntity;
+        var currentTime = viewer.clock.currentTime;
+
+        //Verify we have a current position at this time. This is only triggered if a position
+        //has become undefined after trackedEntity is set but before the boundingSphere has been
+        //computed. In this case, we will track the entity once it comes back into existence.
+        var currentPosition = Property.getValueOrUndefined(trackedEntity.position, currentTime);
+
+        if (!defined(currentPosition)) {
+            return;
+        }
+
+        var scene = viewer.scene;
 
         var state = viewer._dataSourceDisplay.getBoundingSphere(trackedEntity, false, boundingSphereScratch);
         if (state === BoundingSphereState.PENDING) {
@@ -1627,7 +1639,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         var bs = state !== BoundingSphereState.FAILED ? boundingSphereScratch : undefined;
         viewer._entityView = new EntityView(trackedEntity, scene, scene.mapProjection.ellipsoid, bs);
-        viewer._entityView.update(viewer.clock.currentTime);
+        viewer._entityView.update(currentTime);
         viewer._needTrackedEntityUpdate = false;
     }
 

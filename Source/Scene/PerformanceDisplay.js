@@ -17,10 +17,6 @@ define([
         getElement) {
     "use strict";
 
-    var defaultFpsColor = Color.fromCssColorString('#e52');
-    var defaultFrameTimeColor = Color.fromCssColorString('#de3');
-    var defaultBackgroundColor = Color.fromCssColorString('rgba(40, 40, 40, 0.7)');
-
     /**
      * @private
      */
@@ -33,28 +29,19 @@ define([
         }
 
         this._container = container;
-        this._fpsColor = defaultValue(options.fpsColor, defaultFpsColor).toCssColorString();
-        this._frameTimeColor = defaultValue(options.frameTimeColor, defaultFrameTimeColor).toCssColorString();
-        this._backgroundColor = defaultValue(options.backgroundColor, defaultBackgroundColor).toCssColorString();
-        this._font = defaultValue(options.font, 'bold 12px Helvetica,Arial,sans-serif');
 
         var display = document.createElement('div');
+        display.className = 'cesium-performanceDisplay';
         var fpsElement = document.createElement('div');
+        fpsElement.className = 'cesium-performanceDisplay-fps';
         this._fpsText = document.createTextNode("");
         fpsElement.appendChild(this._fpsText);
-        fpsElement.style.color = this._fpsColor;
         var msElement = document.createElement('div');
+        msElement.className = 'cesium-performanceDisplay-ms';
         this._msText = document.createTextNode("");
-        msElement.style.color = this._frameTimeColor;
         msElement.appendChild(this._msText);
-        display.appendChild(fpsElement);
         display.appendChild(msElement);
-        display.style['z-index'] = 1;
-        display.style['background-color'] = this._backgroundColor;
-        display.style.font = this._font;
-        display.style.padding = '7px';
-        display.style['border-radius'] = '5px';
-        display.style.border = '1px solid #444';
+        display.appendChild(fpsElement);
         this._container.appendChild(display);
 
         this._lastFpsSampleTime = undefined;
