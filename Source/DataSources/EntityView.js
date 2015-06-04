@@ -46,9 +46,7 @@ define([
     var deltaTime = new JulianDate();
     var northUpAxisFactor = 1.25;  // times ellipsoid's maximum radius
 
-    function updateTransform(that, camera, updateLookAt, positionProperty, time, ellipsoid) {
-        var updatedCameraTransform = false;
-
+    function updateTransform(that, camera, updateLookAt, saveCamera, positionProperty, time, ellipsoid) {
         var cartesian = positionProperty.getValue(time, that._lastCartesian);
         if (defined(cartesian)) {
             var hasBasis = false;
@@ -142,9 +140,15 @@ define([
                 Cartesian3.add(that._boundingSphereOffset, cartesian, cartesian);
             }
 
-            var position = Cartesian3.clone(camera.position, updateTransformCartesian3Scratch4);
-            var direction = Cartesian3.clone(camera.direction, updateTransformCartesian3Scratch5);
-            var up = Cartesian3.clone(camera.up, updateTransformCartesian3Scratch6);
+            var position;
+            var direction;
+            var up;
+
+            if (saveCamera) {
+                position = Cartesian3.clone(camera.position, updateTransformCartesian3Scratch4);
+                direction = Cartesian3.clone(camera.direction, updateTransformCartesian3Scratch5);
+                up = Cartesian3.clone(camera.up, updateTransformCartesian3Scratch6);
+            }
 
             var transform = updateTransformMatrix4Scratch;
             if (hasBasis) {
@@ -171,10 +175,12 @@ define([
 
             camera._setTransform(transform);
 
-            Cartesian3.clone(position, camera.position);
-            Cartesian3.clone(direction, camera.direction);
-            Cartesian3.clone(up, camera.up);
-            Cartesian3.cross(direction, up, camera.right);
+            if (saveCamera) {
+                Cartesian3.clone(position, camera.position);
+                Cartesian3.clone(direction, camera.direction);
+                Cartesian3.clone(up, camera.up);
+                Cartesian3.cross(direction, up, camera.right);
+            }
         }
 
         if (updateLookAt) {
@@ -300,6 +306,8 @@ define([
         var camera = scene.camera;
 
         var updateLookAt = objectChanged || sceneModeChanged;
+        var saveCamera = true;
+
         if (objectChanged) {
             var viewFromProperty = entity.viewFrom;
             var hasViewFrom = defined(viewFromProperty);
@@ -324,6 +332,7 @@ define([
                 camera.viewBoundingSphere(sphere, scratchHeadingPitchRange);
                 this._boundingSphereOffset = Cartesian3.subtract(sphere.center, entity.position.getValue(time), new Cartesian3());
                 updateLookAt = false;
+                saveCamera = false;
             } else if (!hasViewFrom || !defined(viewFromProperty.getValue(time, offset3D))) {
                 HeadingPitchRange.clone(EntityView._defaultOffset2D, offset2D);
                 Cartesian3.clone(EntityView._defaultOffset3D, offset3D);
@@ -344,7 +353,7 @@ define([
         this._mode = scene.mode !== SceneMode.MORPHING ? scene.mode : this._mode;
 
         if (scene.mode !== SceneMode.MORPHING) {
-            updateTransform(this, camera, updateLookAt, positionProperty, time, ellipsoid);
+            updateTransform(this, camera, updateLookAt, saveCamera, positionProperty, time, ellipsoid);
         }
     };
 
