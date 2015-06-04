@@ -759,7 +759,7 @@ define([
         //>>includeStart('debug', pragmas.debug);
         var version = view.getUint32(byteOffset, true);
         if (version !== 1) {
-            throw new DeveloperError('Only glTF Binary version 1 is supported.  Version ' + version + ' is not.');
+            throw new DeveloperError('Only Binary glTF version 1 is supported.  Version ' + version + ' is not.');
         }
         //>>includeEnd('debug');
         byteOffset += sizeOfUnit32;
