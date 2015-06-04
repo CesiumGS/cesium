@@ -2,6 +2,7 @@
 define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -17,6 +18,7 @@ define([
     ], function(
         BoundingSphere,
         Cartesian3,
+        Cartesian4,
         defaultValue,
         defined,
         defineProperties,
@@ -139,6 +141,11 @@ define([
             if (defined(that._boundingSphereOffset)) {
                 Cartesian3.add(that._boundingSphereOffset, cartesian, cartesian);
             }
+
+            var position = Cartesian3.clone(camera.position, updateTransformCartesian3Scratch4);
+            var direction = Cartesian3.clone(camera.direction, updateTransformCartesian3Scratch5);
+            var up = Cartesian3.clone(camera.up, updateTransformCartesian3Scratch6);
+
             var transform = updateTransformMatrix4Scratch;
             if (hasBasis) {
                 transform[0]  = xBasis.x;
@@ -162,18 +169,15 @@ define([
                 Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, transform);
             }
 
-            var offset;
-            if ((mode === SceneMode.SCENE2D && that._offset2D.range === 0.0) || (mode !== SceneMode.SCENE2D  && Cartesian3.equals(that._offset3D, Cartesian3.ZERO))) {
-                offset = undefined;
-            } else {
-                offset = mode === SceneMode.SCENE2D ? that._offset2D : that._offset3D;
-            }
+            camera._setTransform(transform);
 
-            camera.lookAtTransform(transform, offset);
-            updatedCameraTransform = true;
+            Cartesian3.clone(position, camera.position);
+            Cartesian3.clone(direction, camera.direction);
+            Cartesian3.clone(up, camera.up);
+            Cartesian3.cross(direction, up, camera.right);
         }
 
-        if (updateLookAt && !updatedCameraTransform) {
+        if (updateLookAt) {
             camera.lookAtTransform(camera.transform, that.scene.mode === SceneMode.SCENE2D ? that._offset2D : that._offset3D);
         }
     }
