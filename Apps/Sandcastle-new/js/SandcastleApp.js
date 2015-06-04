@@ -56,6 +56,18 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       PubSub.subscribe('SUGGEST', this.autocomplete);
       PubSub.subscribe('SHOW JS CODE', this.refreshEditor);
       PubSub.subscribe('MARK LINE', this.markLine);
+      PubSub.subscribe('RELOAD FRAME', this.getData);
+    },
+
+    getData: function(){
+      if(this.props.mode === 'javascript')
+      {
+        PubSub.publish('UPDATE JS', this.editor.getValue());
+      }
+      else
+      {
+        PubSub.publish('UPDATE HTML', this.editor.getValue());
+      }
     },
 
     refreshEditor: function(){
@@ -232,7 +244,6 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
 
     componentWillMount: function(){
       // Subscribe to events
-      PubSub.subscribe('RELOAD FRAME', this.reloadFrame);
       PubSub.subscribe('LOAD FRAME', this.loadFrame);
       PubSub.subscribe('NEW WINDOW', this.openNewWindow);
     },
@@ -284,21 +295,6 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
 
     loadFrame: function(msg, data){
       this.refreshFrame();
-      this.loadDocument(data);
-    },
-
-    reloadFrame: function(){
-      // Reload the frame with the new code
-      this.refreshFrame();
-      // Fetch the code from the code editor
-      var htmlEditor = $('#htmlContainer .CodeMirror')[0].CodeMirror;
-      var htmlCode = htmlEditor.getValue();
-      var data = {};
-      data.html = htmlCode;
-      var jsEditor = $('#jsContainer .CodeMirror')[0].CodeMirror;
-      var jsCode = jsEditor.getValue();
-      var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
-      data.js = this.getScriptFromEditor(isFirefox, jsCode);
       this.loadDocument(data);
     },
 
@@ -472,8 +468,6 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       var consoleClasses = {'hidden-xs': true, 'row': true};
       var bodyClasses = {'row': true};
       return {
-        jsCode: '',
-        htmlCode: '',
         consoleClasses: consoleClasses,
         bodyClasses: bodyClasses
       }
@@ -494,7 +488,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
           // Append the html
           code += htmlText;
           data.html = code;
-          that.setState({htmlCode: code});
+          that.htmlCode = code;
           PubSub.publish('HTML CODE', code);
           //fetch the js
           var jsText = '';
@@ -502,7 +496,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
             jsText += value.js;
             var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
             data.js = that.getScriptFromEditor(isFirefox, jsText);
-            that.setState({jsCode: jsText});
+            that.jsCode = jsText;
             PubSub.publish('JS CODE', jsText);
             // Combine and send to iframe
             PubSub.publish('LOAD FRAME', data);
@@ -516,7 +510,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
        '    "use strict";\n' +
        '//Sandcastle_Begin\n' +
        (addExtra ? '\n' : '') +
-       jsCode +
+       jsCode + '\n' + 
        '//Sandcastle_End\n' +
        '    Sandcastle.finishedLoading();\n' +
        '}\n' +
@@ -581,11 +575,39 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       this.setState({bodyClasses: bodyClasses, consoleClasses: consoleClasses});
     },
 
+    loadUserCode: function(msg, data){
+      if(msg === 'UPDATE JS')
+      {
+        this.jsCode = data;
+      }
+      else if(msg === 'UPDATE HTML')
+      {
+        this.htmlCode = data;
+      }
+
+      if(this.jsCode !== '' && this.htmlCode !== '')
+      {
+        var sendData = {};
+        sendData.html = this.htmlCode;
+        var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
+        sendData.js = this.getScriptFromEditor(isFirefox, this.jsCode);
+        PubSub.publish('LOAD FRAME', sendData);
+      }
+    },
+
+    refreshData: function(){
+      this.htmlCode = '';
+      this.jsCode = '';
+    },
+
     componentWillMount: function(){
+      PubSub.subscribe('RELOAD FRAME', this.refreshData);
       PubSub.subscribe('SHOW PREVIEW', this.handleNavigation);
       PubSub.subscribe('SHOW JS CODE', this.handleNavigation);
       PubSub.subscribe('SHOW HTML CODE', this.handleNavigation);
       PubSub.subscribe('SHOW CONSOLE', this.handleNavigation);
+      PubSub.subscribe('UPDATE JS', this.loadUserCode);
+      PubSub.subscribe('UPDATE HTML', this.loadUserCode);
     },
 
     componentDidMount: function(){
