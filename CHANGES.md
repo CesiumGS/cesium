@@ -1,7 +1,16 @@
 Change Log
 ==========
 
+### 1.11 - 2015-07-01
+
+* Breaking changes
+  * 
+* Deprecated
+  *
+* Improved the algorithm that `Camera.viewRectangle` uses to select the position of the camera, so that the specified rectangle is now better centered on the screen.
+
 ### 1.10 - 2015-06-01
+
 * Breaking changes
   * Existing bookmarks to documentation of static members have changed [#2757](https://github.com/AnalyticalGraphicsInc/cesium/issues/2757).
   * Removed `InfoBoxViewModel.defaultSanitizer`, `InfoBoxViewModel.sanitizer`, and `Cesium.sanitize`, which was deprecated in 1.7.
@@ -51,7 +60,6 @@ Change Log
 * Added debug option to `Scene` to show the depth buffer information for a specified view frustum slice and exposed capability in `CesiumInspector` widget.
 * Added new leap second for 30 June 2015 at UTC 23:59:60.
 * Upgraded Autolinker from version 0.15.2 to 0.17.1.
-* Improved the algorithm that `Camera.viewRectangle` uses to select the position of the camera, so that the specified rectangle is now better centered on the screen.
 
 ### 1.9 - 2015-05-01
 
