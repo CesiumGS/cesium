@@ -575,6 +575,11 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+// TODO: move this and the copy in Model.js to an overload for getStringFromTypedArray
+    function getSubarray(array, offset, length) {
+        return array.subarray(offset, offset + length);
+    }
+
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
     Gltf3DTileContentProvider.prototype.request = function() {
@@ -586,9 +591,10 @@ define([
         }
 
         loadArrayBuffer(this._url). then(function(arrayBuffer) {
-            var magic = getStringFromTypedArray(arrayBuffer, 0, Math.min(4, arrayBuffer.byteLength));
-            if (magic !== 'glTF') {
-// TODO: throw
+            var uint8Array = new Uint8Array(arrayBuffer);
+            var magic = getStringFromTypedArray(getSubarray(uint8Array, 0, Math.min(4, uint8Array.length)));
+            if (magic !== 'bbgl') {
+                throw new DeveloperError('Invalid Batched Binary glTF.  Expected magic=bbgl.  Read magic=' + magic);
             }
 
             var view = new DataView(arrayBuffer);
@@ -604,28 +610,26 @@ define([
             //>>includeEnd('debug');
             byteOffset += sizeOfUint32;
 
-            var batchTable;
-// !!! TODO: read batch table
-            var batchSize = that._batchSize;
-            if (batchSize > 0) {
-                batchTable = {
-                    cc3did : []
-                };
+            var batchTableLength = view.getUint32(byteOffset, true);
+            byteOffset += sizeOfUint32;
+            if (batchTableLength > 0) {
+                var batchTableString = getStringFromTypedArray(getSubarray(uint8Array, byteOffset, batchTableLength));
+                byteOffset += batchTableLength;
 
-                for (var i = 0; i < batchSize; ++i) {
-                    batchTable.cc3did.push('id ' + i);
-                }
+                // PERFORMANCE_IDEA: is it possible to allocate this on-demand?  Perhaps keep the
+                // arraybuffer/string compressed in memory and then decompress it when it is first accessed.
+                //
+                // We could also make another request for it, but that would make the property set/get
+                // API async, and would double the number of numbers in some cases.
+                that._batchTable = JSON.parse(batchTableString);
             }
-// !!! END_TODO
 
-            // PERFORMANCE_IDEA: is it possible to allocate this on-demand?  Perhaps keep the
-            // arraybuffer/string compressed in memory and then decompress it when it is first accessed.
-            that._batchTable = batchTable;
+            var gltfView = new Uint8Array(arrayBuffer, byteOffset, arrayBuffer.byteLength - byteOffset);
 
             // PERFORMANCE_IDEA: patch the shader on demand, e.g., the first time show/color changes.
             // The pitch shader still needs to be patched.
             var model = new Model({
-                gltf : arrayBuffer,
+                gltf : gltfView,
                 cull : false,           // The model is already culled by the 3D tiles
                 releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
                 vertexShaderLoaded : getVertexShaderCallback(that),
