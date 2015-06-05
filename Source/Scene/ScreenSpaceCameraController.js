@@ -995,6 +995,30 @@ define([
         }
     }
 
+    var scratchStrafeRay = new Ray();
+    var scratchStrafePlane = new Plane(Cartesian3.ZERO, 0.0);
+    var scratchStrafeIntersection = new Cartesian3();
+    var scratchStrafeDirection = new Cartesian3();
+
+    function strafeQuestionMark(controller, startPosition, movement) {
+        var scene = controller._scene;
+        var camera = scene.camera;
+
+        var mouseStartPosition = controller._rotateStartPosition;
+
+        var mousePosition = movement.endPosition;
+        var ray = camera.getPickRay(mousePosition, scratchStrafeRay);
+        var plane = Plane.fromPointNormal(mouseStartPosition, camera.direction, scratchStrafePlane);
+
+        var intersection = IntersectionTests.rayPlane(ray, plane, scratchStrafeIntersection);
+        if (!defined(intersection)) {
+            return;
+        }
+
+        var direction = Cartesian3.subtract(mouseStartPosition, intersection, scratchStrafeDirection);
+        Cartesian3.add(camera.position, direction, camera.position);
+    }
+
     var spin3DPick = new Cartesian3();
     var scratchStartRay = new Ray();
     var scratchCartographic = new Cartographic();
@@ -1023,6 +1047,8 @@ define([
                 look3D(controller, startPosition, movement, up);
             } else if (controller._rotating) {
                 rotate3D(controller, startPosition, movement);
+            } else if (controller._strafing) {
+                strafeQuestionMark(controller, startPosition, movement);
             } else {
                 magnitude = Cartesian3.magnitude(controller._rotateStartPosition);
                 radii = scratchRadii;
@@ -1034,6 +1060,7 @@ define([
         } else {
             controller._looking = false;
             controller._rotating = false;
+            controller._strafing = false;
         }
 
         var height = controller._ellipsoid.cartesianToCartographic(camera.positionWC, scratchCartographic).height;
@@ -1041,13 +1068,20 @@ define([
         if (defined(globe) && height < controller.minimumPickingTerrainHeight) {
             var mousePos = pickGlobe(controller, movement.startPosition, scratchMousePos);
             if (defined(mousePos)) {
-                magnitude = Cartesian3.magnitude(mousePos);
-                radii = scratchRadii;
-                radii.x = radii.y = radii.z = magnitude;
-                ellipsoid = Ellipsoid.fromCartesian3(radii, scratchEllipsoid);
-                pan3D(controller, startPosition, movement, ellipsoid);
+                if (Cartesian3.magnitude(camera.position) < Cartesian3.magnitude(mousePos)) {
+                    Cartesian3.clone(mousePos, controller._rotateStartPosition);
 
-                Cartesian3.clone(mousePos, controller._rotateStartPosition);
+                    controller._strafing = true;
+                    strafeQuestionMark(controller, startPosition, movement);
+                } else {
+                    magnitude = Cartesian3.magnitude(mousePos);
+                    radii = scratchRadii;
+                    radii.x = radii.y = radii.z = magnitude;
+                    ellipsoid = Ellipsoid.fromCartesian3(radii, scratchEllipsoid);
+                    pan3D(controller, startPosition, movement, ellipsoid);
+
+                    Cartesian3.clone(mousePos, controller._rotateStartPosition);
+                }
             } else {
                 controller._looking = true;
                 look3D(controller, startPosition, movement, up);
@@ -1121,19 +1155,9 @@ define([
     function pan3D(controller, startPosition, movement, ellipsoid) {
         var scene = controller._scene;
         var camera = scene.camera;
-        var cameraPosMag = Cartesian3.magnitude(camera.position);
 
         var startMousePosition = Cartesian2.clone(movement.startPosition, pan3DStartMousePosition);
         var endMousePosition = Cartesian2.clone(movement.endPosition, pan3DEndMousePosition);
-        if (cameraPosMag < ellipsoid.maximumRadius) {
-            startMousePosition.y = endMousePosition.y;
-            endMousePosition.y = movement.startPosition.y;
-
-            var magnitude = cameraPosMag + (ellipsoid.maximumRadius - cameraPosMag) * 2.0;
-            var radii = scratchRadii;
-            radii.x = radii.y = radii.z = magnitude;
-            ellipsoid = Ellipsoid.fromCartesian3(radii, ellipsoid);
-        }
 
         var p0 = camera.pickEllipsoid(startMousePosition, ellipsoid, pan3DP0);
         var p1 = camera.pickEllipsoid(endMousePosition, ellipsoid, pan3DP1);
