@@ -2,6 +2,7 @@
 define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -17,6 +18,7 @@ define([
     ], function(
         BoundingSphere,
         Cartesian3,
+        Cartesian4,
         defaultValue,
         defined,
         defineProperties,
@@ -44,9 +46,7 @@ define([
     var deltaTime = new JulianDate();
     var northUpAxisFactor = 1.25;  // times ellipsoid's maximum radius
 
-    function updateTransform(that, camera, updateLookAt, positionProperty, time, ellipsoid) {
-        var updatedCameraTransform = false;
-
+    function updateTransform(that, camera, updateLookAt, saveCamera, positionProperty, time, ellipsoid) {
         var cartesian = positionProperty.getValue(time, that._lastCartesian);
         if (defined(cartesian)) {
             var hasBasis = false;
@@ -139,6 +139,17 @@ define([
             if (defined(that._boundingSphereOffset)) {
                 Cartesian3.add(that._boundingSphereOffset, cartesian, cartesian);
             }
+
+            var position;
+            var direction;
+            var up;
+
+            if (saveCamera) {
+                position = Cartesian3.clone(camera.position, updateTransformCartesian3Scratch4);
+                direction = Cartesian3.clone(camera.direction, updateTransformCartesian3Scratch5);
+                up = Cartesian3.clone(camera.up, updateTransformCartesian3Scratch6);
+            }
+
             var transform = updateTransformMatrix4Scratch;
             if (hasBasis) {
                 transform[0]  = xBasis.x;
@@ -162,18 +173,17 @@ define([
                 Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, transform);
             }
 
-            var offset;
-            if ((mode === SceneMode.SCENE2D && that._offset2D.range === 0.0) || (mode !== SceneMode.SCENE2D  && Cartesian3.equals(that._offset3D, Cartesian3.ZERO))) {
-                offset = undefined;
-            } else {
-                offset = mode === SceneMode.SCENE2D ? that._offset2D : that._offset3D;
-            }
+            camera._setTransform(transform);
 
-            camera.lookAtTransform(transform, offset);
-            updatedCameraTransform = true;
+            if (saveCamera) {
+                Cartesian3.clone(position, camera.position);
+                Cartesian3.clone(direction, camera.direction);
+                Cartesian3.clone(up, camera.up);
+                Cartesian3.cross(direction, up, camera.right);
+            }
         }
 
-        if (updateLookAt && !updatedCameraTransform) {
+        if (updateLookAt) {
             camera.lookAtTransform(camera.transform, that.scene.mode === SceneMode.SCENE2D ? that._offset2D : that._offset3D);
         }
     }
@@ -250,6 +260,9 @@ define([
     // Initialize the static property.
     EntityView.defaultOffset3D = new Cartesian3(-14000, 3500, 3500);
 
+    var scratchHeadingPitchRange = new HeadingPitchRange();
+    var scratchCartesian = new Cartesian3();
+
     /**
     * Should be called each animation frame to update the camera
     * to the latest settings.
@@ -293,6 +306,8 @@ define([
         var camera = scene.camera;
 
         var updateLookAt = objectChanged || sceneModeChanged;
+        var saveCamera = true;
+
         if (objectChanged) {
             var viewFromProperty = entity.viewFrom;
             var hasViewFrom = defined(viewFromProperty);
@@ -302,9 +317,22 @@ define([
             if (!hasViewFrom && defined(sphere)) {
                 var controller = scene.screenSpaceCameraController;
                 controller.minimumZoomDistance = Math.min(controller.minimumZoomDistance, sphere.radius * 0.5);
-                camera.viewBoundingSphere(sphere);
+
+                //The default HPR is not ideal for high altitude objects so
+                //we scale the pitch as we get further from the earth for a more
+                //downward view.
+                scratchHeadingPitchRange.pitch = -CesiumMath.PI_OVER_FOUR;
+                scratchHeadingPitchRange.range = 0;
+                var position = positionProperty.getValue(time, scratchCartesian);
+                if (defined(position)) {
+                    var factor = 2 - 1 / Math.max(1, Cartesian3.magnitude(position) / ellipsoid.maximumRadius);
+                    scratchHeadingPitchRange.pitch *= factor;
+                }
+
+                camera.viewBoundingSphere(sphere, scratchHeadingPitchRange);
                 this._boundingSphereOffset = Cartesian3.subtract(sphere.center, entity.position.getValue(time), new Cartesian3());
                 updateLookAt = false;
+                saveCamera = false;
             } else if (!hasViewFrom || !defined(viewFromProperty.getValue(time, offset3D))) {
                 HeadingPitchRange.clone(EntityView._defaultOffset2D, offset2D);
                 Cartesian3.clone(EntityView._defaultOffset3D, offset3D);
@@ -325,7 +353,7 @@ define([
         this._mode = scene.mode !== SceneMode.MORPHING ? scene.mode : this._mode;
 
         if (scene.mode !== SceneMode.MORPHING) {
-            updateTransform(this, camera, updateLookAt, positionProperty, time, ellipsoid);
+            updateTransform(this, camera, updateLookAt, saveCamera, positionProperty, time, ellipsoid);
         }
     };
 
