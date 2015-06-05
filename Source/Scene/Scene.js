@@ -1884,10 +1884,7 @@ define([
             //>>includeEnd('debug');
         }
 
-        var minimumPosition;
-        var minDistance;
         var numFrustums = this.numberOfFrustums;
-
         for (var i = 0; i < numFrustums; ++i) {
             var pickDepth = getPickDepth(this, i);
             var pixels = context.readPixels({
@@ -1904,21 +1901,15 @@ define([
 
             if (depth > 0.0 && depth < 1.0) {
                 var renderedFrustum = this._frustumCommandsList[i];
-                frustum.near = renderedFrustum.near;
+                frustum.near = renderedFrustum.near * (i !== 0 ? OPAQUE_FRUSTUM_NEAR_OFFSET : 1.0);
                 frustum.far = renderedFrustum.far;
                 uniformState.updateFrustum(frustum);
 
-                var position = SceneTransforms.drawingBufferToWgs84Coordinates(this, drawingBufferPosition, depth, scratchPickDepthPosition);
-                var distance = Cartesian3.distance(position, camera.positionWC);
-
-                if (!defined(minimumPosition) || distance < minDistance) {
-                    minimumPosition = Cartesian3.clone(position, result);
-                    minDistance = distance;
-                }
+                return SceneTransforms.drawingBufferToWgs84Coordinates(this, drawingBufferPosition, depth, result);
             }
         }
 
-        return minimumPosition;
+        return undefined;
     };
 
     /**
