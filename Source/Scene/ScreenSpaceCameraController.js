@@ -1054,8 +1054,7 @@ define([
                 var normal = controller._ellipsoid.geodeticSurfaceNormal(mousePos);
                 tangentPick = Math.abs(Cartesian3.dot(ray.direction, normal)) < 0.05;
 
-                if (tangentPick) {
-                    controller._looking = false;
+                if (tangentPick && !controller._looking) {
                     controller._rotating = false;
                     controller._strafing = true;
                 }
