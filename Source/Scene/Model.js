@@ -695,7 +695,7 @@ define([
         return modelUri.resolve(docUri).toString();
     }
 
-    var sizeOfUnit32 = Uint32Array.BYTES_PER_ELEMENT;
+    var sizeOfUnit32 = typeof Uint32Array !== 'undefined' ? Uint32Array.BYTES_PER_ELEMENT : 4;
 
     function parseBinaryGltfHeader(arrayBuffer) {
         var magic = getStringFromTypedArray(arrayBuffer, 0, 4);
