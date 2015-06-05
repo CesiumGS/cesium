@@ -1042,6 +1042,26 @@ define([
 
         var up = controller._ellipsoid.geodeticSurfaceNormal(camera.position, scratchLookUp);
 
+        var height = controller._ellipsoid.cartesianToCartographic(camera.positionWC, scratchCartographic).height;
+        var globe = controller._globe;
+
+        var mousePos;
+        var tangentPick = false;
+        if (defined(globe) && height < controller.minimumPickingTerrainHeight) {
+            mousePos = pickGlobe(controller, movement.startPosition, scratchMousePos);
+            if (defined(mousePos)) {
+                var ray = camera.getPickRay(movement.startPosition, pickGlobeScratchRay);
+                var normal = controller._ellipsoid.geodeticSurfaceNormal(mousePos);
+                tangentPick = Math.abs(Cartesian3.dot(ray.direction, normal)) < 0.05;
+
+                if (tangentPick) {
+                    controller._looking = false;
+                    controller._rotating = false;
+                    controller._strafing = true;
+                }
+            }
+        }
+
         if (Cartesian2.equals(startPosition, controller._rotateMousePosition)) {
             if (controller._looking) {
                 look3D(controller, startPosition, movement, up);
@@ -1063,10 +1083,8 @@ define([
             controller._strafing = false;
         }
 
-        var height = controller._ellipsoid.cartesianToCartographic(camera.positionWC, scratchCartographic).height;
-        var globe = controller._globe;
         if (defined(globe) && height < controller.minimumPickingTerrainHeight) {
-            var mousePos = pickGlobe(controller, movement.startPosition, scratchMousePos);
+            //var mousePos = pickGlobe(controller, movement.startPosition, scratchMousePos);
             if (defined(mousePos)) {
                 if (Cartesian3.magnitude(camera.position) < Cartesian3.magnitude(mousePos)) {
                     Cartesian3.clone(mousePos, controller._rotateStartPosition);
