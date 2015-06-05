@@ -440,6 +440,14 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('throws if flyToOnDrop property already added by another mixin.', function() {
+        viewer = new Viewer(container);
+        viewer.flyToOnDrop = true;
+        expect(function() {
+            viewer.extend(viewerDragDropMixin);
+        }).toThrowDeveloperError();
+    });
+
     it('setting dropTarget to undefined throws exception', function() {
         viewer = new Viewer(container);
         viewer.extend(viewerDragDropMixin);

@@ -60,8 +60,6 @@ define([
         return str;
     }
 
-    var bc = new Color(0.15, 0.15, 0.15, 0.75);
-
     function boundDepthFrustum(lower, upper, proposed) {
         var bounded = Math.min(proposed, upper);
         bounded = Math.max(bounded, lower);
@@ -336,9 +334,7 @@ define([
         this._showPerformance = createCommand(function() {
             if (that.performance) {
                 that._performanceDisplay = new PerformanceDisplay({
-                    container : that._performanceContainer,
-                    backgroundColor : bc,
-                    font : '12px arial,sans-serif'
+                    container : that._performanceContainer
                 });
             } else {
                 that._performanceContainer.innerHTML = '';
