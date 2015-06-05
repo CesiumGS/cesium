@@ -395,7 +395,7 @@ define([
             if (controller.enableInputs && enabled) {
                 if (movement) {
                     action(controller, startPosition, movement);
-                } else if (inertiaConstant < 1.0) {
+                } else if (inertiaConstant < 1.0 &&  !controller._strafing) {
                     maintainInertia(aggregator, type, modifier, inertiaConstant, action, controller, inertiaStateName);
                 }
             }
