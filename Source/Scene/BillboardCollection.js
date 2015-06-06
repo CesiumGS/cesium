@@ -12,7 +12,6 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EncodedCartesian3',
-        '../Core/getTimestamp',
         '../Core/IndexDatatype',
         '../Core/Math',
         '../Core/Matrix4',
@@ -41,7 +40,6 @@ define([
         destroyObject,
         DeveloperError,
         EncodedCartesian3,
-        getTimestamp,
         IndexDatatype,
         CesiumMath,
         Matrix4,
@@ -73,7 +71,6 @@ define([
     var SCALE_BY_DISTANCE_INDEX = Billboard.SCALE_BY_DISTANCE_INDEX;
     var TRANSLUCENCY_BY_DISTANCE_INDEX = Billboard.TRANSLUCENCY_BY_DISTANCE_INDEX;
     var PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = Billboard.PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX;
-    var OWNER_SIZE_INDEX = Billboard.OWNER_SIZE_INDEX;
     var NUMBER_OF_PROPERTIES = Billboard.NUMBER_OF_PROPERTIES;
 
     var attributeLocations = {
@@ -84,8 +81,7 @@ define([
         compressedAttribute2 : 4,        // image height, color, pick color, 2 bytes free
         eyeOffset : 5,
         scaleByDistance : 6,
-        pixelOffsetScaleByDistance : 7,
-        ownerSize : 8
+        pixelOffsetScaleByDistance : 7
     };
 
     /**
@@ -124,13 +120,13 @@ define([
      *
      * @example
      * // Create a billboard collection with two billboards
-     * var billboards = new Cesium.BillboardCollection();
+     * var billboards = scene.primitives.add(new Cesium.BillboardCollection());
      * billboards.add({
-     *   position : { x : 1.0, y : 2.0, z : 3.0 },
+     *   position : new Cesium.Cartesian3(1.0, 2.0, 3.0),
      *   image : 'url/to/image'
      * });
      * billboards.add({
-     *   position : { x : 4.0, y : 5.0, z : 6.0 },
+     *   position : new Cesium.Cartesian3(4.0, 5.0, 6.0),
      *   image : 'url/to/another/image'
      * });
      */
@@ -186,10 +182,6 @@ define([
         this._baseVolume2D = new BoundingSphere();
         this._boundingVolume = new BoundingSphere();
         this._boundingVolumeDirty = false;
-
-        this._newlyVisibleTileList = [];
-        this._clampTimeSlice = 1.0;
-        this._lastTileIndex = 0;
 
         this._colorCommands = [];
         this._pickCommands = [];
@@ -257,8 +249,7 @@ define([
                               BufferUsage.STATIC_DRAW, // ALIGNED_AXIS_INDEX
                               BufferUsage.STATIC_DRAW, // SCALE_BY_DISTANCE_INDEX
                               BufferUsage.STATIC_DRAW, // TRANSLUCENCY_BY_DISTANCE_INDEX
-                              BufferUsage.STATIC_DRAW, // PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX
-                              BufferUsage.STATIC_DRAW  // OWNER_SIZE_INDEX
+                              BufferUsage.STATIC_DRAW  // PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX
                           ];
 
         var that = this;
@@ -267,13 +258,6 @@ define([
                 return that._textureAtlas.texture;
             }
         };
-
-        this._removeEventFunc = undefined;
-        if (defined(this._scene)) {
-            this._removeEventFunc = this._scene.globe._surface.tileVisibleEvent.addEventListener(function(tile) {
-                that._newlyVisibleTileList.push(tile);
-            });
-        }
     };
 
     defineProperties(BillboardCollection.prototype, {
@@ -619,11 +603,6 @@ define([
             componentsPerAttribute : 4,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX]
-        }, {
-            index : attributeLocations.ownerSize,
-            componentsPerAttribute : 2,
-            componentDatatype : ComponentDatatype.FLOAT,
-            usage : buffersUsage[OWNER_SIZE_INDEX]
         }], 4 * numberOfBillboards); // 4 vertices per billboard
     }
 
@@ -946,17 +925,6 @@ define([
         writer(i + 3, near, nearValue, far, farValue);
     }
 
-    function writeOwnerSize(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
-        var i = billboard._index * 4;
-        var size = billboard._ownerSize;
-
-        var writer = vafWriters[attributeLocations.ownerSize];
-        writer(i + 0, size.x, size.y);
-        writer(i + 1, size.x, size.y);
-        writer(i + 2, size.x, size.y);
-        writer(i + 3, size.x, size.y);
-    }
-
     function writeBillboard(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         writePositionScaleAndRotation(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeCompressedAttrib0(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
@@ -965,7 +933,6 @@ define([
         writeEyeOffset(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writePixelOffsetScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
-        writeOwnerSize(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
     }
 
     function recomputeActualPositions(billboardCollection, billboards, length, frameState, modelMatrix, recomputeBoundingVolume) {
@@ -1049,41 +1016,6 @@ define([
         boundingVolume.radius += size + offset;
     }
 
-    function updateClampedBillboards(collection, frameState) {
-        // Unified time slicing tasks: https://github.com/AnalyticalGraphicsInc/cesium/issues/2655
-        var startTime = getTimestamp();
-        var timeSlice = collection._clampTimeSlice;
-        var endTime = startTime + timeSlice;
-
-        var tileList = collection._newlyVisibleTileList;
-        while (tileList.length > 0) {
-            var tile = tileList[0];
-            var customData = tile.customData;
-            var customDataLength = customData.length;
-
-            var timeSliceMax = false;
-            for (var i = collection._lastTileIndex; i < customDataLength; ++i) {
-                var data = customData[i];
-                var object = data.object;
-                if (defined(object) && object instanceof Billboard) {
-                    Billboard._clampPosition(object, tile, frameState.mode, frameState.mapProjection);
-                    if (getTimestamp() >= endTime) {
-                        timeSliceMax = true;
-                        break;
-                    }
-                }
-            }
-
-            if (timeSliceMax) {
-                collection._lastTileIndex = i;
-                break;
-            } else {
-                collection._lastTileIndex = 0;
-                tileList.shift();
-            }
-        }
-    }
-
     var scratchWriterArray = [];
 
     /**
@@ -1097,12 +1029,6 @@ define([
      * @exception {RuntimeError} image with id must be in the atlas.
      */
     BillboardCollection.prototype.update = function(context, frameState, commandList) {
-        var scene = this._scene;
-        if (defined(scene) && (!scene._globeDepth.supported || context.maximumVertexTextureImageUnits === 0)) {
-            throw new DeveloperError('Bilboards with a height reference are not supported.');
-        }
-
-        updateClampedBillboards(this, frameState);
         removeBillboards(this);
 
         var billboards = this._billboards;
@@ -1202,10 +1128,6 @@ define([
 
                 if (properties[PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX]) {
                     writers.push(writePixelOffsetScaleByDistance);
-                }
-
-                if (properties[OWNER_SIZE_INDEX]) {
-                    writers.push(writeOwnerSize);
                 }
 
                 var numWriters = writers.length;
@@ -1313,7 +1235,7 @@ define([
                     vs.defines.push('EYE_DISTANCE_PIXEL_OFFSET');
                 }
                 if (defined(this._scene)) {
-                    vs.defines.push('TEST_GLOBE_DEPTH');
+                    vs.defines.push('CLAMPED_TO_GROUND');
                 }
 
                 this._sp = context.replaceShaderProgram(this._sp, vs, BillboardCollectionFS, attributeLocations);
@@ -1381,7 +1303,7 @@ define([
                     vs.defines.push('EYE_DISTANCE_PIXEL_OFFSET');
                 }
                 if (defined(this._scene)) {
-                    vs.defines.push('TEST_GLOBE_DEPTH');
+                    vs.defines.push('CLAMPED_TO_GROUND');
                 }
 
                 fs = new ShaderSource({
@@ -1460,10 +1382,6 @@ define([
         this._spPick = this._spPick && this._spPick.destroy();
         this._vaf = this._vaf && this._vaf.destroy();
         destroyBillboards(this._billboards);
-
-        if (defined(this._removeEventFunc)) {
-            this._removeEventFunc();
-        }
 
         return destroyObject(this);
     };

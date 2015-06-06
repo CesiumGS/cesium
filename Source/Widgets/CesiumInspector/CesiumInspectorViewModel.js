@@ -3,8 +3,11 @@ define([
         '../../Core/Color',
         '../../Core/defined',
         '../../Core/defineProperties',
+        '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Rectangle',
+        '../../Core/ScreenSpaceEventHandler',
+        '../../Core/ScreenSpaceEventType',
         '../../Scene/DebugModelMatrixPrimitive',
         '../../Scene/PerformanceDisplay',
         '../../Scene/TileCoordinatesImageryProvider',
@@ -14,8 +17,11 @@ define([
         Color,
         defined,
         defineProperties,
+        destroyObject,
         DeveloperError,
         Rectangle,
+        ScreenSpaceEventHandler,
+        ScreenSpaceEventType,
         DebugModelMatrixPrimitive,
         PerformanceDisplay,
         TileCoordinatesImageryProvider,
@@ -54,9 +60,7 @@ define([
         return str;
     }
 
-    var bc = new Color(0.15, 0.15, 0.15, 0.75);
-
-    function boundGlobeDepthFrustum(lower, upper, proposed) {
+    function boundDepthFrustum(lower, upper, proposed) {
         var bounded = Math.min(proposed, upper);
         bounded = Math.max(bounded, lower);
         return bounded;
@@ -84,6 +88,8 @@ define([
 
         var that = this;
         var canvas = scene.canvas;
+        var eventHandler = new ScreenSpaceEventHandler(canvas);
+        this._eventHandler = eventHandler;
         this._scene = scene;
         this._canvas = canvas;
         this._primitive = undefined;
@@ -166,19 +172,26 @@ define([
         this.globeDepth = false;
 
         /**
-         * Gets or sets the index of the globe depth frustum to display.  This property is observable.
+         * Gets or sets the show pick depth state.  This property is observable.
+         * @type {Boolean}
+         * @default false
+         */
+        this.pickDepth = false;
+
+        /**
+         * Gets or sets the index of the depth frustum to display.  This property is observable.
          * @type {Number}
          * @default 1
          */
-        this.globeDepthFrustum = 1;
+        this.depthFrustum = 1;
         this._numberOfFrustums = 1;
 
         /**
-         * Gets or sets the index of the globe depth frustum text.  This property is observable.
+         * Gets or sets the index of the depth frustum text.  This property is observable.
          * @type {String}
          * @default '1 of 1'
          */
-        this.globeDepthFrustumText = '1 of 1';
+        this.depthFrustumText = '1 of 1';
 
         /**
          * Gets or sets the suspend updates state.  This property is observable.
@@ -288,7 +301,7 @@ define([
         knockout.track(this, ['filterTile', 'suspendUpdates', 'dropDownVisible', 'shaderCacheText', 'frustums',
                               'frustumStatisticText', 'pickTileActive', 'pickPrimitiveActive', 'hasPickedPrimitive',
                               'hasPickedTile', 'tileText', 'generalVisible', 'generalSwitchText',
-                              'primitivesVisible', 'primitivesSwitchText', 'terrainVisible', 'terrainSwitchText', 'globeDepthFrustumText']);
+                              'primitivesVisible', 'primitivesSwitchText', 'terrainVisible', 'terrainSwitchText', 'depthFrustumText']);
 
         this._toggleDropDown = createCommand(function() {
             that.dropDownVisible = !that.dropDownVisible;
@@ -321,9 +334,7 @@ define([
         this._showPerformance = createCommand(function() {
             if (that.performance) {
                 that._performanceDisplay = new PerformanceDisplay({
-                    container : that._performanceContainer,
-                    backgroundColor : bc,
-                    font : '12px arial,sans-serif'
+                    container : that._performanceContainer
                 });
             } else {
                 that._performanceContainer.innerHTML = '';
@@ -376,17 +387,22 @@ define([
             return true;
         });
 
-        this._incrementGlobeDepthFrustum = createCommand(function() {
-            var next = that.globeDepthFrustum + 1;
-            that.globeDepthFrustum = boundGlobeDepthFrustum(1, that._numberOfFrustums, next);
-            that.scene.debugShowGlobeDepthFrustum = that.globeDepthFrustum;
+        this._showPickDepth = createCommand(function() {
+            that._scene.debugShowPickDepth = that.pickDepth;
             return true;
         });
 
-        this._decrementGlobeDepthFrustum = createCommand(function() {
-            var next = that.globeDepthFrustum - 1;
-            that.globeDepthFrustum = boundGlobeDepthFrustum(1, that._numberOfFrustums, next);
-            that.scene.debugShowGlobeDepthFrustum = that.globeDepthFrustum;
+        this._incrementDepthFrustum = createCommand(function() {
+            var next = that.depthFrustum + 1;
+            that.depthFrustum = boundDepthFrustum(1, that._numberOfFrustums, next);
+            that.scene.debugShowDepthFrustum = that.depthFrustum;
+            return true;
+        });
+
+        this._decrementDepthFrustum = createCommand(function() {
+            var next = that.depthFrustum - 1;
+            that.depthFrustum = boundDepthFrustum(1, that._numberOfFrustums, next);
+            that.scene.debugShowDepthFrustum = that.depthFrustum;
             return true;
         });
 
@@ -438,11 +454,11 @@ define([
         });
 
         var pickPrimitive = function(e) {
-            that._canvas.removeEventListener('mousedown', pickPrimitive, false);
+            eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
             that.pickPrimitiveActive = false;
             var newPick = that._scene.pick({
-                x : e.clientX,
-                y : e.clientY
+                x : e.position.x,
+                y : e.position.y
             });
             if (defined(newPick)) {
                 that.primitive = defined(newPick.collection) ? newPick.collection : newPick.primitive;
@@ -452,9 +468,9 @@ define([
         this._pickPrimitive = createCommand(function() {
             that.pickPrimitiveActive = !that.pickPrimitiveActive;
             if (that.pickPrimitiveActive) {
-                that._canvas.addEventListener('mousedown', pickPrimitive, false);
+                eventHandler.setInputAction(pickPrimitive, ScreenSpaceEventType.LEFT_CLICK);
             } else {
-                that._canvas.removeEventListener('mousedown', pickPrimitive, false);
+                eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
             }
         });
 
@@ -462,8 +478,8 @@ define([
             var selectedTile;
             var ellipsoid = globe.ellipsoid;
             var cartesian = that._scene.camera.pickEllipsoid({
-                x : e.clientX,
-                y : e.clientY
+                x : e.position.x,
+                y : e.position.y
             }, ellipsoid);
 
             if (defined(cartesian)) {
@@ -486,7 +502,7 @@ define([
 
             that.tile = selectedTile;
 
-            that._canvas.removeEventListener('mousedown', selectTile, false);
+            eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
             that.pickTileActive = false;
         };
 
@@ -494,9 +510,9 @@ define([
             that.pickTileActive = !that.pickTileActive;
 
             if (that.pickTileActive) {
-                that._canvas.addEventListener('mousedown', selectTile, false);
+                eventHandler.setInputAction(selectTile, ScreenSpaceEventType.LEFT_CLICK);
             } else {
-                that._canvas.removeEventListener('mousedown', selectTile, false);
+                eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
             }
         });
     };
@@ -623,26 +639,38 @@ define([
         },
 
         /**
-         * Gets the command to increment the globe depth frustum index to be shown
+         * Gets the command to toggle the view of the pick depth buffer
          * @memberof CesiumInspectorViewModel.prototype
          *
          * @type {Command}
          */
-        incrementGlobeDepthFrustum : {
+        showPickDepth : {
             get : function() {
-                return this._incrementGlobeDepthFrustum;
+                return this._showPickDepth;
             }
         },
 
         /**
-         * Gets the command to decrement the globe depth frustum index to be shown
+         * Gets the command to increment the depth frustum index to be shown
          * @memberof CesiumInspectorViewModel.prototype
          *
          * @type {Command}
          */
-        decrementGlobeDepthFrustum : {
+        incrementDepthFrustum : {
             get : function() {
-                return this._decrementGlobeDepthFrustum;
+                return this._incrementDepthFrustum;
+            }
+        },
+
+        /**
+         * Gets the command to decrement the depth frustum index to be shown
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
+        decrementDepthFrustum : {
+            get : function() {
+                return this._decrementDepthFrustum;
             }
         },
 
@@ -907,11 +935,11 @@ define([
                     var numberOfFrustums = that._scene.numberOfFrustums;
                     that._numberOfFrustums = numberOfFrustums;
                     // Bound the frustum to be displayed.
-                    var globeDepthFrustum = boundGlobeDepthFrustum(1, numberOfFrustums, that.globeDepthFrustum);
-                    that.globeDepthFrustum = globeDepthFrustum;
-                    that.scene.debugShowGlobeDepthFrustum = globeDepthFrustum;
+                    var depthFrustum = boundDepthFrustum(1, numberOfFrustums, that.depthFrustum);
+                    that.depthFrustum = depthFrustum;
+                    that.scene.debugShowDepthFrustum = depthFrustum;
                     // Update the displayed text.
-                    that.globeDepthFrustumText = globeDepthFrustum + ' of ' + numberOfFrustums;
+                    that.depthFrustumText = depthFrustum + ' of ' + numberOfFrustums;
 
                     if (that.performance) {
                         that._performanceDisplay.update();
@@ -925,6 +953,22 @@ define([
             }
         }
     });
+
+    /**
+     * @returns {Boolean} true if the object has been destroyed, false otherwise.
+     */
+    CesiumInspectorViewModel.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys the widget.  Should be called if permanently
+     * removing the widget from layout.
+     */
+    CesiumInspectorViewModel.prototype.destroy = function() {
+        this._eventHandler.destroy();
+        return destroyObject(this);
+    };
 
     return CesiumInspectorViewModel;
 });

@@ -6,10 +6,8 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/getTimestamp',
         '../Core/Matrix4',
         '../Core/writeTextToCanvas',
-        './Billboard',
         './BillboardCollection',
         './HorizontalOrigin',
         './Label',
@@ -23,10 +21,8 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
-        getTimestamp,
         Matrix4,
         writeTextToCanvas,
-        Billboard,
         BillboardCollection,
         HorizontalOrigin,
         Label,
@@ -214,7 +210,6 @@ define([
 
     // reusable Cartesian2 instance
     var glyphPixelOffset = new Cartesian2();
-    var ownerSize = new Cartesian2();
 
     function repositionAllGlyphs(label, resolutionScale) {
         var glyphs = label._glyphs;
@@ -222,7 +217,6 @@ define([
         var dimensions;
         var totalWidth = 0;
         var maxHeight = 0;
-        var maxWidth = 0;
 
         var glyphIndex = 0;
         var glyphLength = glyphs.length;
@@ -231,7 +225,6 @@ define([
             dimensions = glyph.dimensions;
             totalWidth += dimensions.computedWidth;
             maxHeight = Math.max(maxHeight, dimensions.height);
-            maxWidth = Math.max(maxWidth, dimensions.computedWidth);
         }
 
         var scale = label._scale;
@@ -245,9 +238,6 @@ define([
 
         glyphPixelOffset.x = widthOffset * resolutionScale;
         glyphPixelOffset.y = 0;
-
-        ownerSize.x = maxWidth;
-        ownerSize.y = maxHeight;
 
         var verticalOrigin = label._verticalOrigin;
         for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
@@ -266,7 +256,6 @@ define([
 
             if (defined(glyph.billboard)) {
                 glyph.billboard._setTranslate(glyphPixelOffset);
-                glyph.billboard._setOwnerSize(ownerSize);
             }
 
             glyphPixelOffset.x += dimensions.computedWidth * scale * resolutionScale;
@@ -280,13 +269,9 @@ define([
         }
         label._labelCollection = undefined;
 
-        if (defined(label._customData)) {
-            labelCollection._scene.globe._surface.removeTileCustomData(label._customData);
-            label._customData = undefined;
+        if (defined(label._removeCallbackFunc)) {
+            label._removeCallbackFunc();
         }
-
-        label._currentTile = undefined;
-        label._newTile = undefined;
 
         destroyObject(label);
     }
@@ -325,13 +310,13 @@ define([
      *
      * @example
      * // Create a label collection with two labels
-     * var labels = new Cesium.LabelCollection();
+     * var labels = scene.primitives.add(new Cesium.LabelCollection());
      * labels.add({
-     *   position : { x : 1.0, y : 2.0, z : 3.0 },
+     *   position : new Cesium.Cartesian3(1.0, 2.0, 3.0),
      *   text : 'A label'
      * });
      * labels.add({
-     *   position : { x : 4.0, y : 5.0, z : 6.0 },
+     *   position : new Cesium.Cartesian3(4.0, 5.0, 6.0),
      *   text : 'Another label'
      * });
      */
@@ -353,10 +338,6 @@ define([
         this._labelsToUpdate = [];
         this._totalGlyphCount = 0;
         this._resolutionScale = undefined;
-
-        this._newlyVisibleTileList = [];
-        this._clampTimeSlice = 1.0;
-        this._lastTileIndex = 0;
 
         /**
          * The 4x4 transformation matrix that transforms each label in this collection from model to world coordinates.
@@ -400,14 +381,6 @@ define([
          * @default false
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
-
-        this._removeEventFunc = undefined;
-        if (defined(this._scene)) {
-            var that = this;
-            this._removeEventFunc = this._scene.globe._surface.tileVisibleEvent.addEventListener(function(tile) {
-                that._newlyVisibleTileList.push(tile);
-            });
-        }
     };
 
     defineProperties(LabelCollection.prototype, {
@@ -586,47 +559,10 @@ define([
         return this._labels[index];
     };
 
-    function updateClampedLabels(collection, frameState) {
-        // Unified time slicing tasks: https://github.com/AnalyticalGraphicsInc/cesium/issues/2655
-        var startTime = getTimestamp();
-        var timeSlice = collection._clampTimeSlice;
-        var endTime = startTime + timeSlice;
-
-        var tileList = collection._newlyVisibleTileList;
-        while (tileList.length > 0) {
-            var tile = tileList[0];
-            var customData = tile.customData;
-            var customDataLength = customData.length;
-
-            var timeSliceMax = false;
-            for (var i = collection._lastTileIndex; i < customDataLength; ++i) {
-                var data = customData[i];
-                var object = data.object;
-                if (defined(object) && object instanceof Label) {
-                    Billboard._clampPosition(object, tile, frameState.mode, frameState.mapProjection);
-                    if (getTimestamp() >= endTime) {
-                        timeSliceMax = true;
-                        break;
-                    }
-                }
-            }
-
-            if (timeSliceMax) {
-                collection._lastTileIndex = i;
-                break;
-            } else {
-                collection._lastTileIndex = 0;
-                tileList.shift();
-            }
-        }
-    }
-
     /**
      * @private
      */
     LabelCollection.prototype.update = function(context, frameState, commandList) {
-        updateClampedLabels(this, frameState);
-
         var billboardCollection = this._billboardCollection;
 
         billboardCollection.modelMatrix = this.modelMatrix;
@@ -713,10 +649,6 @@ define([
         this.removeAll();
         this._billboardCollection = this._billboardCollection.destroy();
         this._textureAtlas = this._textureAtlas && this._textureAtlas.destroy();
-
-        if (defined(this._removeEventFunc)) {
-            this._removeEventFunc();
-        }
 
         return destroyObject(this);
     };

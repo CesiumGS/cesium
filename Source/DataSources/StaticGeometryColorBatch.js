@@ -71,6 +71,9 @@ define([
         var removedCount = 0;
         var primitive = this.primitive;
         var primitives = this.primitives;
+        var attributes;
+        var i;
+
         if (this.createPrimitive) {
             if (defined(primitive)) {
                 if (!defined(this.oldPrimitive)) {
@@ -79,12 +82,28 @@ define([
                     primitives.remove(primitive);
                 }
             }
-            this.attributes.removeAll();
-            var geometry = this.geometry.values;
-            if (geometry.length > 0) {
+
+            var geometries = this.geometry.values;
+            var geometriesLength = geometries.length;
+            if (geometriesLength > 0) {
+                for (i = 0; i < geometriesLength; i++) {
+                    var geometryItem = geometries[i];
+                    var originalAttributes = geometryItem.attributes;
+                    attributes = this.attributes.get(geometryItem.id.id);
+
+                    if (defined(attributes)) {
+                        if (defined(originalAttributes.show)) {
+                            originalAttributes.show.value = attributes.show;
+                        }
+                        if (defined(originalAttributes.color)) {
+                            originalAttributes.color.value = attributes.color;
+                        }
+                    }
+                }
+
                 primitive = new Primitive({
                     asynchronous : true,
-                    geometryInstances : geometry,
+                    geometryInstances : geometries,
                     appearance : new this.appearanceType({
                         translucent : this.translucent,
                         closed : this.closed
@@ -93,6 +112,8 @@ define([
                 primitives.add(primitive);
                 isUpdated = false;
             }
+
+            this.attributes.removeAll();
             this.primitive = primitive;
             this.createPrimitive = false;
         } else if (defined(primitive) && primitive.ready) {
@@ -102,11 +123,11 @@ define([
             }
             var updatersWithAttributes = this.updatersWithAttributes.values;
             var length = updatersWithAttributes.length;
-            for (var i = 0; i < length; i++) {
+            for (i = 0; i < length; i++) {
                 var updater = updatersWithAttributes[i];
                 var instance = this.geometry.get(updater.entity.id);
 
-                var attributes = this.attributes.get(instance.id.id);
+                attributes = this.attributes.get(instance.id.id);
                 if (!defined(attributes)) {
                     attributes = primitive.getGeometryInstanceAttributes(instance.id);
                     this.attributes.set(instance.id.id, attributes);

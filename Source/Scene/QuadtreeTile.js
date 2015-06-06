@@ -157,7 +157,7 @@ define([
             rectangle = this._rectangle;
             for (i = 0; i < added.length; ++i) {
                 data = added[i];
-                if (Rectangle.contains(rectangle, data.position)) {
+                if (Rectangle.contains(rectangle, data.positionCartographic)) {
                     customData.push(data);
                 }
             }
@@ -173,7 +173,7 @@ define([
                 var parentCustomData = parent.customData;
                 for (i = 0; i < parentCustomData.length; ++i) {
                     data = parentCustomData[i];
-                    if (Rectangle.contains(rectangle, data.position)) {
+                    if (Rectangle.contains(rectangle, data.positionCartographic)) {
                         customData.push(data);
                     }
                 }
@@ -295,7 +295,7 @@ define([
         },
 
         /**
-         * An array of objects associated with this tile. See QuadtreePrimitive.addTileCustomData.
+         * An array of objects associated with this tile.
          * @memberof QuadtreeTile.prototype
          * @type {Array}
          */

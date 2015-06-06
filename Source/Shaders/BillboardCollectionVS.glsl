@@ -6,7 +6,6 @@ attribute vec4 compressedAttribute2;        // image height, color, pick color, 
 attribute vec3 eyeOffset;                   // eye offset in meters
 attribute vec4 scaleByDistance;             // near, nearScale, far, farScale
 attribute vec4 pixelOffsetScaleByDistance;  // near, nearScale, far, farScale
-attribute vec2 ownerSize;
 
 varying vec2 v_textureCoordinates;
 
@@ -15,20 +14,6 @@ varying vec4 v_pickColor;
 #else
 varying vec4 v_color;
 #endif
-
-float getNearFarScalar(vec4 nearFarScalar, float cameraDistSq)
-{
-    float valueAtMin = nearFarScalar.y;
-    float valueAtMax = nearFarScalar.w;
-    float nearDistanceSq = nearFarScalar.x * nearFarScalar.x;
-    float farDistanceSq = nearFarScalar.z * nearFarScalar.z;
-
-    float t = (cameraDistSq - nearDistanceSq) / (farDistanceSq - nearDistanceSq);
-
-    t = pow(clamp(t, 0.0, 1.0), 0.2);
-
-    return mix(valueAtMin, valueAtMax, t);
-}
 
 const float UPPER_BOUND = 32768.0;
 
@@ -203,7 +188,7 @@ void main()
 #endif
 
 #ifdef EYE_DISTANCE_SCALING
-    scale *= getNearFarScalar(scaleByDistance, lengthSq);
+    scale *= czm_nearFarScalar(scaleByDistance, lengthSq);
     // push vertex behind near plane for clipping
     if (scale == 0.0)
     {
@@ -213,7 +198,7 @@ void main()
 
     float translucency = 1.0;
 #ifdef EYE_DISTANCE_TRANSLUCENCY
-    translucency = getNearFarScalar(translucencyByDistance, lengthSq);
+    translucency = czm_nearFarScalar(translucencyByDistance, lengthSq);
     // push vertex behind near plane for clipping
     if (translucency == 0.0)
     {
@@ -222,42 +207,18 @@ void main()
 #endif
 
 #ifdef EYE_DISTANCE_PIXEL_OFFSET
-    float pixelOffsetScale = getNearFarScalar(pixelOffsetScaleByDistance, lengthSq);
+    float pixelOffsetScale = czm_nearFarScalar(pixelOffsetScaleByDistance, lengthSq);
     pixelOffset *= pixelOffsetScale;
 #endif
     
-#ifdef TEST_GLOBE_DEPTH
-    if (-positionEC.z < 70000.0)
-    {
-	    vec2 directions[4];
-	    directions[0] = vec2(0.0, 0.0);
-	    directions[1] = vec2(0.0, 1.0);
-	    directions[2] = vec2(1.0, 0.0);
-	    directions[3] = vec2(1.0, 1.0);
-	    
-	    vec2 invSize = 1.0 / czm_viewport.zw;
-	    vec2 size = all(equal(vec2(0.0), ownerSize)) ? imageSize : ownerSize;
-	    
-	    bool visible = false;
-	    for (int i = 0; i < 4; ++i)
-	    {
-	        vec4 wc = computePositionWindowCoordinates(positionEC, size, scale, directions[i], vec2(0.0, 0.0), vec2(0.0), pixelOffset, alignedAxis, rotation);
-	        float d = texture2D(czm_globeDepthTexture, wc.xy * invSize).r;
-	        if (wc.z < d)
-	        {
-	            visible = true;
-	            break;
-	        }
-	    }
-	    
-	    if (!visible)
-	    {
-	        gl_Position = czm_projection[3];
-	        return;
-	    }
-    }
-#endif
+#ifdef CLAMPED_TO_GROUND
+    // move slightly closer to camera to avoid depth issues.
+    positionEC.z *= 0.995;
     
+    // Force bottom vertical origin
+    origin.y = 1.0;
+#endif
+
     vec4 positionWC = computePositionWindowCoordinates(positionEC, imageSize, scale, direction, origin, translate, pixelOffset, alignedAxis, rotation);
     gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
     v_textureCoordinates = textureCoordinates;
