@@ -1689,6 +1689,7 @@ define([
             projection.unproject(camera.position, cartographic);
         }
 
+        var heightUpdated = false;
         if (cartographic.height < controller.minimumCollisionTerrainHeight) {
             var height = globe.getHeight(cartographic);
             if (defined(height)) {
@@ -1700,18 +1701,21 @@ define([
                     } else {
                         projection.project(cartographic, camera.position);
                     }
+                    heightUpdated = true;
                 }
             }
         }
 
         if (defined(transform)) {
             camera._setTransform(transform);
-            Cartesian3.normalize(camera.position, camera.position);
-            Cartesian3.negate(camera.position, camera.direction);
-            Cartesian3.multiplyByScalar(camera.position, Math.max(mag, controller.minimumZoomDistance), camera.position);
-            Cartesian3.normalize(camera.direction, camera.direction);
-            Cartesian3.cross(camera.direction, camera.up, camera.right);
-            Cartesian3.cross(camera.right, camera.direction, camera.up);
+            if (heightUpdated) {
+                Cartesian3.normalize(camera.position, camera.position);
+                Cartesian3.negate(camera.position, camera.direction);
+                Cartesian3.multiplyByScalar(camera.position, Math.max(mag, controller.minimumZoomDistance), camera.position);
+                Cartesian3.normalize(camera.direction, camera.direction);
+                Cartesian3.cross(camera.direction, camera.up, camera.right);
+                Cartesian3.cross(camera.right, camera.direction, camera.up);
+            }
         }
     }
 
