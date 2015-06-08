@@ -41,10 +41,14 @@ var city = viewer.scene.primitives.add(new Cesium.Cesium3DTiles({
     debugShowBoundingVolume : false,
     debugShowContentsBoundingVolume : false
 }));
+
 viewer.scene.screenSpaceCameraController.minimumZoomDistance = 1;
 viewer.camera.setView({
     position : Cesium.Cartesian3.fromDegrees(-71.1106, 42.3736, 5000.0)
 });
+
+viewer.scene.debugShowFramesPerSecond = true;
+//viewer.extend(Cesium.viewerCesiumInspectorMixin);
 
 var canvas = viewer.canvas;
 canvas.setAttribute('tabindex', '0'); // needed to put focus on the canvas
@@ -57,11 +61,11 @@ var handler = new Cesium.ScreenSpaceEventHandler(canvas);
 
 var flags = {
     // Mouse
-	leftDown : false,
-	middleDown : false,
-	rightDown : false,
+    leftDown : false,
+    middleDown : false,
+    rightDown : false,
 
-	annotate : false
+    annotate : false
 };
 
 handler.setInputAction(function(movement) {
@@ -178,7 +182,6 @@ function zoom(movement) {
         newPosition = Cesium.Cartesian3.add(cartesian, toOldPosition, newPosition);
 
 // TODO: need better flights
-// TODO: is the position destination only right in the first frustum?
         viewer.camera.flyTo({
             destination : newPosition,
             orientation : {
@@ -197,8 +200,7 @@ handler.setInputAction(function(movement) {
     }
 }, Cesium.ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK);
 
-viewer.scene.debugShowFramesPerSecond = true;
-//viewer.extend(Cesium.viewerCesiumInspectorMixin);
+///////////////////////////////////////////////////////////////////////////////
 
 Sandcastle.addToolbarButton('Stats on/off', function() {
     city.debugShowStatistics = !city.debugShowStatistics;
