@@ -235,7 +235,7 @@ define([
          * @type {Number}
          * @default 10000.0
          */
-        this.minimumCollisionTerrainHeight = 10000.0;
+        this.minimumCollisionTerrainHeight = 15000.0;
         /**
          * The minimum height the camera must be before switching from rotating a track ball to
          * free look when clicks originate on the sky on in space.
@@ -438,7 +438,20 @@ define([
             distance = distanceMeasure - maxHeight;
         }
 
-        object._scene.camera.zoomIn(distance);
+        var scene = object._scene;
+        var camera = scene.camera;
+
+        if (distance > 0.0 && scene.mode !== SceneMode.SCENE2D) {
+            var ray = camera.getPickRay(startPosition);
+            var direction = ray.direction;
+            if (scene.mode === SceneMode.COLUMBUS_VIEW) {
+                Cartesian3.fromElements(direction.y, direction.z, direction.x, direction);
+            }
+
+            camera.move(ray.direction, distance);
+        } else {
+            camera.zoomIn(distance);
+        }
     }
 
     var translate2DStart = new Ray();
