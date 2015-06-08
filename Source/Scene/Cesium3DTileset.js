@@ -44,10 +44,10 @@ define([
      * @param {Boolean} [options.debugShowBoundingVolume=false] TODO
      * @param {Boolean} [options.debugShowContentsBoundingVolume=false] TODO
      *
-     * @alias Cesium3DTiles
+     * @alias Cesium3DTileset
      * @constructor
      */
-    var Cesium3DTiles = function(options) {
+    var Cesium3DTileset = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var url = options.url;
@@ -153,11 +153,11 @@ define([
         });
     };
 
-    defineProperties(Cesium3DTiles.prototype, {
+    defineProperties(Cesium3DTileset.prototype, {
         /**
          * DOC_TBA
          *
-         * @memberof Cesium3DTiles.prototype
+         * @memberof Cesium3DTileset.prototype
          *
          * @type {String}
          * @readonly
@@ -448,7 +448,7 @@ define([
     /**
      * DOC_TBA
      */
-    Cesium3DTiles.prototype.update = function(context, frameState, commandList) {
+    Cesium3DTileset.prototype.update = function(context, frameState, commandList) {
         // TODO: Support 2D and CV
         if (!this.show || !defined(this._root) || (frameState.mode !== SceneMode.SCENE3D)) {
             return;
@@ -474,17 +474,17 @@ define([
     /**
      * DOC_TBA
      */
-    Cesium3DTiles.prototype.isDestroyed = function() {
+    Cesium3DTileset.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
      * DOC_TBA
      */
-    Cesium3DTiles.prototype.destroy = function() {
+    Cesium3DTileset.prototype.destroy = function() {
 // TODO: traverse and destroy...careful of pending loads/processing
         return destroyObject(this);
     };
 
-    return Cesium3DTiles;
+    return Cesium3DTileset;
 });

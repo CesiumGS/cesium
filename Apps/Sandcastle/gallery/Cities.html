@@ -29,7 +29,7 @@ function startup(Cesium) {
 //Sandcastle_Begin
 
 var viewer = new Cesium.Viewer('cesiumContainer');
-var city = viewer.scene.primitives.add(new Cesium.Cesium3DTiles({
+var city = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
     url : 'http://localhost:8002/tilesets/Cambridge',
 
     // Defaults:
