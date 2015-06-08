@@ -1090,6 +1090,7 @@ define([
             } else if (controller._rotating) {
                 rotate3D(controller, startPosition, movement);
             } else if (controller._strafing) {
+                Cartesian3.clone(mousePos, controller._strafeStartPosition);
                 strafe(controller, startPosition, movement);
             } else {
                 magnitude = Cartesian3.magnitude(controller._rotateStartPosition);
