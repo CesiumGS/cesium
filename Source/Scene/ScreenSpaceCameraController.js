@@ -271,9 +271,11 @@ define([
         this._tiltCenter = new Cartesian3();
         this._rotateMousePosition = new Cartesian2(-1.0, -1.0);
         this._rotateStartPosition = new Cartesian3();
+        this._strafeStartPosition = new Cartesian3();
         this._tiltCVOffMap = false;
         this._looking = false;
         this._rotating = false;
+        this._strafing = false;
 
         var projection = scene.mapProjection;
         this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
@@ -395,7 +397,7 @@ define([
             if (controller.enableInputs && enabled) {
                 if (movement) {
                     action(controller, startPosition, movement);
-                } else if (inertiaConstant < 1.0 &&  !controller._strafing) {
+                } else if (inertiaConstant < 1.0 && !controller._strafing) {
                     maintainInertia(aggregator, type, modifier, inertiaConstant, action, controller, inertiaStateName);
                 }
             }
@@ -612,8 +614,17 @@ define([
             controller._looking = false;
         }
 
+        if (!Cartesian3.equals(startPosition, controller._strafeMousePosition)) {
+            controller._strafing = false;
+        }
+
         if (controller._looking) {
             look3D(controller, startPosition, movement);
+            return;
+        }
+
+        if (controller._strafing) {
+            strafe(controller, startPosition, movement);
             return;
         }
 
@@ -626,17 +637,20 @@ define([
         var origin = Cartesian3.clone(Cartesian3.ZERO, translateCVOrigin);
         var normal = Cartesian3.UNIT_X;
 
+        var globePos;
         if (camera.position.z < controller.minimumPickingTerrainHeight) {
-            var globePos = pickGlobe(controller, startMouse, translateCVStartPos);
+            globePos = pickGlobe(controller, startMouse, translateCVStartPos);
             if (defined(globePos)) {
                 origin.x = globePos.x;
             }
         }
 
-        if (origin.x > camera.position.z) {
-            var tempY = startMouse.y;
-            startMouse.y = endMouse.y;
-            endMouse.y = tempY;
+        if (origin.x > camera.position.z && defined(globePos)) {
+            Cartesian3.clone(globePos, controller._strafeStartPosition);
+            controller._strafing = true;
+            strafe(controller, startPosition, movement);
+            controller._strafeMousePosition = Cartesian2.clone(startPosition, controller._strafeMousePosition);
+            return;
         }
 
         var plane = Plane.fromPointNormal(origin, normal, translateCVPlane);
@@ -1000,22 +1014,31 @@ define([
     var scratchStrafeIntersection = new Cartesian3();
     var scratchStrafeDirection = new Cartesian3();
 
-    function strafeQuestionMark(controller, startPosition, movement) {
+    function strafe(controller, startPosition, movement) {
         var scene = controller._scene;
         var camera = scene.camera;
 
-        var mouseStartPosition = controller._rotateStartPosition;
+        var mouseStartPosition = controller._strafeStartPosition;
 
         var mousePosition = movement.endPosition;
         var ray = camera.getPickRay(mousePosition, scratchStrafeRay);
-        var plane = Plane.fromPointNormal(mouseStartPosition, camera.direction, scratchStrafePlane);
 
+        var direction = Cartesian3.clone(camera.direction, scratchStrafeDirection);
+        if (scene.mode === SceneMode.COLUMBUS_VIEW) {
+            Cartesian3.fromElements(direction.z, direction.x, direction.y, direction);
+        }
+
+        var plane = Plane.fromPointNormal(mouseStartPosition, direction, scratchStrafePlane);
         var intersection = IntersectionTests.rayPlane(ray, plane, scratchStrafeIntersection);
         if (!defined(intersection)) {
             return;
         }
 
-        var direction = Cartesian3.subtract(mouseStartPosition, intersection, scratchStrafeDirection);
+        direction = Cartesian3.subtract(mouseStartPosition, intersection, direction);
+        if (scene.mode === SceneMode.COLUMBUS_VIEW) {
+            Cartesian3.fromElements(direction.y, direction.z, direction.x, direction);
+        }
+
         Cartesian3.add(camera.position, direction, camera.position);
     }
 
@@ -1067,7 +1090,7 @@ define([
             } else if (controller._rotating) {
                 rotate3D(controller, startPosition, movement);
             } else if (controller._strafing) {
-                strafeQuestionMark(controller, startPosition, movement);
+                strafe(controller, startPosition, movement);
             } else {
                 magnitude = Cartesian3.magnitude(controller._rotateStartPosition);
                 radii = scratchRadii;
@@ -1083,13 +1106,12 @@ define([
         }
 
         if (defined(globe) && height < controller.minimumPickingTerrainHeight) {
-            //var mousePos = pickGlobe(controller, movement.startPosition, scratchMousePos);
             if (defined(mousePos)) {
                 if (Cartesian3.magnitude(camera.position) < Cartesian3.magnitude(mousePos)) {
-                    Cartesian3.clone(mousePos, controller._rotateStartPosition);
+                    Cartesian3.clone(mousePos, controller._strafeStartPosition);
 
                     controller._strafing = true;
-                    strafeQuestionMark(controller, startPosition, movement);
+                    strafe(controller, startPosition, movement);
                 } else {
                     magnitude = Cartesian3.magnitude(mousePos);
                     radii = scratchRadii;
