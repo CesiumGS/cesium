@@ -8,7 +8,7 @@ define([
     /**
      * This type describes an interface and is not intended to be instantiated directly.
      *
-     * @private
+     * DOC_TBA
      */
     var Cesium3DTileContentProvider = function(url, contentHeader) {
         /**

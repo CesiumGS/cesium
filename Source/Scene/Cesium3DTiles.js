@@ -46,7 +46,6 @@ define([
      *
      * @alias Cesium3DTiles
      * @constructor
-     * @private
      */
     var Cesium3DTiles = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -236,7 +235,7 @@ define([
 
     var scratchStack = [];
 
-    function selectTiles(tiles3D, context, frameState, commandList, allowRequests) {
+    function selectTiles(tiles3D, context, frameState, commandList, outOfCore) {
         if (tiles3D.debugFreezeFrame) {
             return;
         }
@@ -256,7 +255,7 @@ define([
         }
 
         if (root.isContentUnloaded()) {
-            if (allowRequests) {
+            if (outOfCore) {
                 requestContent(tiles3D, root);
             }
             return;
@@ -313,7 +312,7 @@ define([
 
                         // Use parent's geometric error with child's box to see if we already meet the SSE
                         if (getScreenSpaceError(t.geometricError, child, context, frameState) > maximumScreenSpaceError) {
-                            if (child.isContentUnloaded() && (visible(child, cullingVolume, stats) !== Intersect.OUTSIDE) && allowRequests) {
+                            if (child.isContentUnloaded() && (visible(child, cullingVolume, stats) !== Intersect.OUTSIDE) && outOfCore) {
                                 requestContent(tiles3D, child);
                             } else {
                                 stack.push(child);
@@ -349,7 +348,7 @@ define([
                         // Tile does not meet SSE.  Add its commands since it is the best we have and request its children.
                         selectTile(selectedTiles, t, fullyVisible, frameState);
 
-                        if (allowRequests) {
+                        if (outOfCore) {
                             for (k = 0; k < childrenLength; ++k) {
                                 child = children[k];
 // TODO: we could spin a bit less CPU here and probably above by keeping separate lists for unloaded/ready children.
@@ -455,16 +454,18 @@ define([
             return;
         }
 
+        // Do not do out-of-core operations (new content requests, cache removal,
+        // process new tiles) during the pick pass.
         var passes = frameState.passes;
         var isPick = (passes.pick && !passes.render);
+        var outOfCore = !isPick;
 
         clearStats(this);
 
-        if (!isPick) {
-            // Do not process new tiles while picking
+        if (outOfCore) {
             processTiles(this, context, frameState);
         }
-        selectTiles(this, context, frameState, commandList, !isPick);
+        selectTiles(this, context, frameState, commandList, outOfCore);
         updateTiles(this, context, frameState, commandList);
 
         showStats(this);

@@ -8,7 +8,7 @@ define([
     "use strict";
 
     /**
-     * @private
+     * DOC_TBA
      */
     var BatchedModel = function(content, batchId) {
         this._content = content;

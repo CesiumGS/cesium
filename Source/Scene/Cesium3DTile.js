@@ -176,8 +176,6 @@ define([
     };
 
     Cesium3DTile.prototype.visibility = function(cullingVolume) {
-       // TODO: some 3D tiles would benefit from horizon culling (like global vector data), but
-       // more local 3D tiles, like cities and point clouds, will not.
         return cullingVolume.computeVisibility(this._boundingSphere);
     };
 

@@ -107,9 +107,6 @@ define([
     };
 
     defineProperties(Gltf3DTileContentProvider.prototype, {
-        /**
-         * DOC_TBA
-         */
         batchSize : {
             get : function() {
                 return this._batchSize;
@@ -137,9 +134,6 @@ define([
         return content._batchValues;
     }
 
-    /**
-     * @private
-     */
     Gltf3DTileContentProvider.prototype.setShow = function(batchId, value) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
@@ -167,9 +161,6 @@ define([
         }
     };
 
-    /**
-     * @private
-     */
     Gltf3DTileContentProvider.prototype.getShow = function(batchId) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
@@ -189,9 +180,6 @@ define([
 
     var scratchColor = new Array(4);
 
-    /**
-     * @private
-     */
     Gltf3DTileContentProvider.prototype.setColor = function(batchId, value) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
@@ -223,9 +211,6 @@ define([
         }
     };
 
-    /**
-     * DOC_TBA
-     */
     Gltf3DTileContentProvider.prototype.setAllColor = function(value) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
@@ -240,9 +225,6 @@ define([
         }
     };
 
-    /**
-     * @private
-     */
     Gltf3DTileContentProvider.prototype.getColor = function(batchId, color) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
@@ -272,9 +254,6 @@ define([
 //   * get property name
 //   * has property
 
-    /**
-     * @private
-     */
     Gltf3DTileContentProvider.prototype.getProperty = function(batchId, name) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
@@ -300,9 +279,6 @@ define([
         return clone(propertyValues[batchId], true);
     };
 
-    /**
-     * @private
-     */
     Gltf3DTileContentProvider.prototype.setProperty = function(batchId, name, value) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
