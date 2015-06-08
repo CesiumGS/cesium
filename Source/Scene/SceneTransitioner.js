@@ -656,6 +656,7 @@ define([
 
         var wasMorphing = defined(transitioner._completeMorph);
         transitioner._completeMorph = undefined;
+        scene.camera.update(scene.mode);
         transitioner._scene.morphComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.SCENE3D, wasMorphing);
     }
 
@@ -678,6 +679,7 @@ define([
 
         var wasMorphing = defined(transitioner._completeMorph);
         transitioner._completeMorph = undefined;
+        scene.camera.update(scene.mode);
         transitioner._scene.morphComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.SCENE2D, wasMorphing);
     }
 
@@ -703,6 +705,7 @@ define([
 
         var wasMorphing = defined(transitioner._completeMorph);
         transitioner._completeMorph = undefined;
+        scene.camera.update(scene.mode);
         transitioner._scene.morphComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.COLUMBUS_VIEW, wasMorphing);
     }
 

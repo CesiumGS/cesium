@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+### 1.11 - 2015-07-01
+
+* Improved the algorithm that `Camera.viewRectangle` uses to select the position of the camera, so that the specified rectangle is now better centered on the screen [#2764](https://github.com/AnalyticalGraphicsInc/cesium/issues/2764).
+* The performance statistics displayed by setting `scene.debugShowFramesPerSecond` to `true` can now be styled using the `cesium-performanceDisplay` CSS classes in `shared.css` [#2779](https://github.com/AnalyticalGraphicsInc/cesium/issues/2779).
+* Fixed a crash when `viewer.zoomTo` or `viewer.flyTo` were called immediately before or during a scene morph [#2775](https://github.com/AnalyticalGraphicsInc/cesium/issues/2775).
+* Fixed an issue where `Camera` functions would throw an exception if used from within a `Scene.morphComplete` callback [#2776](https://github.com/AnalyticalGraphicsInc/cesium/issues/2776).
+* `Model` can now load Binary glTF from a Uint8Array.
+
 ### 1.10 - 2015-06-01
 
 * Breaking changes
