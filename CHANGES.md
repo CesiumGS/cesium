@@ -12,7 +12,8 @@ Change Log
 * Fixed a crash when `viewer.zoomTo` or `viewer.flyTo` were called immediately before or during a scene morph [#2775](https://github.com/AnalyticalGraphicsInc/cesium/issues/2775).
 * Fixed an issue where `Camera` functions would throw an exception if used from within a `Scene.morphComplete` callback [#2776](https://github.com/AnalyticalGraphicsInc/cesium/issues/2776).
 * `Model` can now load Binary glTF from a Uint8Array.
-* Added `vertexShaderLoaded`, `fragmentShaderLoaded`, and `uniformMapLoaded` callbacks to `Model`.
+* Added `vertexShaderLoaded`, `fragmentShaderLoaded`, `uniformMapLoaded`, `pickVertexShaderLoaded`, `pickFragmentShaderLoaded`, and `pickUniformMapLoaded` callbacks to `Model`.
+* Added `BoundingSphere.fromRectangleWithHeights3D`.
 
 ### 1.10 - 2015-06-01
 
