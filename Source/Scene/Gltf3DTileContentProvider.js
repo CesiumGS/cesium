@@ -569,8 +569,8 @@ define([
         loadArrayBuffer(this._url). then(function(arrayBuffer) {
             var uint8Array = new Uint8Array(arrayBuffer);
             var magic = getStringFromTypedArray(getSubarray(uint8Array, 0, Math.min(4, uint8Array.length)));
-            if (magic !== 'bbgl') {
-                throw new DeveloperError('Invalid Batched Binary glTF.  Expected magic=bbgl.  Read magic=' + magic);
+            if (magic !== 'b3dm') {
+                throw new DeveloperError('Invalid Batched 3D Model.  Expected magic=b3dm.  Read magic=' + magic);
             }
 
             var view = new DataView(arrayBuffer);
