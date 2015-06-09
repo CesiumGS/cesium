@@ -50,7 +50,7 @@ define([
     /**
      * @private
      */
-    var Gltf3DTileContentProvider = function(url, contentHeader) {
+    var B3dm3DTileContentProvider = function(url, contentHeader) {
         this._model = undefined;
         this._url = url;
 
@@ -106,7 +106,7 @@ define([
         this._debugColorizeTiles = false;
     };
 
-    defineProperties(Gltf3DTileContentProvider.prototype, {
+    defineProperties(B3dm3DTileContentProvider.prototype, {
         batchSize : {
             get : function() {
                 return this._batchSize;
@@ -134,7 +134,7 @@ define([
         return content._batchValues;
     }
 
-    Gltf3DTileContentProvider.prototype.setShow = function(batchId, value) {
+    B3dm3DTileContentProvider.prototype.setShow = function(batchId, value) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(batchId) || (batchId < 0) || (batchId > batchSize)) {
@@ -161,7 +161,7 @@ define([
         }
     };
 
-    Gltf3DTileContentProvider.prototype.getShow = function(batchId) {
+    B3dm3DTileContentProvider.prototype.getShow = function(batchId) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(batchId) || (batchId < 0) || (batchId > batchSize)) {
@@ -180,7 +180,7 @@ define([
 
     var scratchColor = new Array(4);
 
-    Gltf3DTileContentProvider.prototype.setColor = function(batchId, value) {
+    B3dm3DTileContentProvider.prototype.setColor = function(batchId, value) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(batchId) || (batchId < 0) || (batchId > batchSize)) {
@@ -211,7 +211,7 @@ define([
         }
     };
 
-    Gltf3DTileContentProvider.prototype.setAllColor = function(value) {
+    B3dm3DTileContentProvider.prototype.setAllColor = function(value) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
@@ -225,7 +225,7 @@ define([
         }
     };
 
-    Gltf3DTileContentProvider.prototype.getColor = function(batchId, color) {
+    B3dm3DTileContentProvider.prototype.getColor = function(batchId, color) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(batchId) || (batchId < 0) || (batchId > batchSize)) {
@@ -254,7 +254,7 @@ define([
 //   * get property name
 //   * has property
 
-    Gltf3DTileContentProvider.prototype.getProperty = function(batchId, name) {
+    B3dm3DTileContentProvider.prototype.getProperty = function(batchId, name) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(batchId) || (batchId < 0) || (batchId > batchSize)) {
@@ -279,7 +279,7 @@ define([
         return clone(propertyValues[batchId], true);
     };
 
-    Gltf3DTileContentProvider.prototype.setProperty = function(batchId, name, value) {
+    B3dm3DTileContentProvider.prototype.setProperty = function(batchId, name, value) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(batchId) || (batchId < 0) || (batchId > batchSize)) {
@@ -558,7 +558,7 @@ define([
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
-    Gltf3DTileContentProvider.prototype.request = function() {
+    B3dm3DTileContentProvider.prototype.request = function() {
         var that = this;
 
         function failRequest(error) {
@@ -708,7 +708,7 @@ define([
         }
     }
 
-    Gltf3DTileContentProvider.prototype.update = function(owner, context, frameState, commandList) {
+    B3dm3DTileContentProvider.prototype.update = function(owner, context, frameState, commandList) {
         // In the PROCESSING state we may be calling update() to move forward
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
@@ -733,11 +733,11 @@ define([
         this._model.update(context, frameState, commandList);
    };
 
-    Gltf3DTileContentProvider.prototype.isDestroyed = function() {
+    B3dm3DTileContentProvider.prototype.isDestroyed = function() {
         return false;
     };
 
-    Gltf3DTileContentProvider.prototype.destroy = function() {
+    B3dm3DTileContentProvider.prototype.destroy = function() {
         this._model = this._model && this._model.destroy();
         this._batchTexture = this._batchTexture && this._batchTexture.destroy();
         this._pickTexture = this._pickTexture && this._pickTexture.destroy();
@@ -751,5 +751,5 @@ define([
         return destroyObject(this);
     };
 
-    return Gltf3DTileContentProvider;
+    return B3dm3DTileContentProvider;
 });

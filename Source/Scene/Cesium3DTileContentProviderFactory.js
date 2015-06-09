@@ -1,16 +1,16 @@
 /*global define*/
 define([
-        './Gltf3DTileContentProvider'
+        './B3dm3DTileContentProvider'
     ], function(
-        Gltf3DTileContentProvider) {
+        B3dm3DTileContentProvider) {
     "use strict";
 
     /**
      * @private
      */
     var Cesium3DTileContentProviderFactory = {
-        gltf : function(url, contentHeader) {
-            return new Gltf3DTileContentProvider(url, contentHeader);
+        b3dm : function(url, contentHeader) {
+            return new B3dm3DTileContentProvider(url, contentHeader);
         }
     };
 
