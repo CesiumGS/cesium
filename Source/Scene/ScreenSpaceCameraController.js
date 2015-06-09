@@ -442,13 +442,60 @@ define([
         var camera = scene.camera;
 
         if (distance > 0.0 && scene.mode !== SceneMode.SCENE2D) {
-            var ray = camera.getPickRay(startPosition);
-            var direction = ray.direction;
-            if (scene.mode === SceneMode.COLUMBUS_VIEW) {
-                Cartesian3.fromElements(direction.y, direction.z, direction.x, direction);
-            }
+            var pickedPosition = pickGlobe(object, startPosition);
+            if (defined(pickedPosition)) {
+                var ray = camera.getPickRay(startPosition);
+                var direction = ray.direction;
+                if (scene.mode === SceneMode.COLUMBUS_VIEW) {
+                    Cartesian3.fromElements(direction.y, direction.z, direction.x, direction);
+                }
 
-            camera.move(ray.direction, distance);
+                if (camera.positionCartographic.height > 1000000.0) {
+                    if (scene.mode === SceneMode.SCENE3D) {
+                        var canvas = scene.canvas;
+                        var controller = object;
+
+                        var rho = Cartesian3.magnitude(camera.position);
+                        var rotateRate = controller._rotateFactor * (rho - controller._rotateRateRangeAdjustment);
+
+                        if (rotateRate > controller._maximumRotateRate) {
+                            rotateRate = controller._maximumRotateRate;
+                        }
+
+                        if (rotateRate < controller._minimumRotateRate) {
+                            rotateRate = controller._minimumRotateRate;
+                        }
+
+                        var start = movement.startPosition;
+                        var magnitude = Cartesian2.distance(start, movement.endPosition);
+                        var offset = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+                        Cartesian2.subtract(offset, start, offset);
+                        Cartesian2.normalize(offset, offset);
+                        Cartesian2.multiplyByScalar(offset, magnitude, offset);
+
+                        var endX = start.x + offset.x;
+                        var endY = start.y + offset.y;
+
+                        var phiWindowRatio = (start.x - endX) / canvas.clientWidth;
+                        var thetaWindowRatio = (start.y - endY) / canvas.clientHeight;
+
+                        phiWindowRatio = Math.min(phiWindowRatio, controller.maximumMovementRatio);
+                        thetaWindowRatio = Math.min(thetaWindowRatio, controller.maximumMovementRatio);
+
+                        var deltaPhi = rotateRate * phiWindowRatio * Math.PI * 2.0;
+                        var deltaTheta = rotateRate * thetaWindowRatio * Math.PI;
+
+                        camera.rotateRight(deltaPhi);
+                        camera.rotateUp(deltaTheta);
+
+                        camera.zoomIn(distance);
+                    }
+                } else {
+                    camera.move(ray.direction, distance);
+                }
+            } else {
+                camera.zoomIn(distance);
+            }
         } else {
             camera.zoomIn(distance);
         }
