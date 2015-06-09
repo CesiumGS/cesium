@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+### TODO
+
+* Added `incrementallyLoadTextures` to `Model`.  This is `true` by default so a model's textures incrementally appear as they are loaded.
+* Added `vertexShaderLoaded`, `fragmentShaderLoaded`, `uniformMapLoaded`, `pickVertexShaderLoaded`, `pickFragmentShaderLoaded`, and `pickUniformMapLoaded` callbacks to the `Model` constructor and 
+`Model.fromGltf`.
+* Added `BoundingSphere.fromRectangleWithHeights3D`.
+
 ### 1.11 - 2015-07-01
 
 * Breaking changes
@@ -12,8 +19,6 @@ Change Log
 * Fixed a crash when `viewer.zoomTo` or `viewer.flyTo` were called immediately before or during a scene morph [#2775](https://github.com/AnalyticalGraphicsInc/cesium/issues/2775).
 * Fixed an issue where `Camera` functions would throw an exception if used from within a `Scene.morphComplete` callback [#2776](https://github.com/AnalyticalGraphicsInc/cesium/issues/2776).
 * `Model` can now load Binary glTF from a Uint8Array.
-* Added `vertexShaderLoaded`, `fragmentShaderLoaded`, `uniformMapLoaded`, `pickVertexShaderLoaded`, `pickFragmentShaderLoaded`, and `pickUniformMapLoaded` callbacks to `Model`.
-* Added `BoundingSphere.fromRectangleWithHeights3D`.
 
 ### 1.10 - 2015-06-01
 
