@@ -86,7 +86,6 @@ define([
      * @see SingleTileImageryProvider
      * @see WebMapServiceImageryProvider
      *
-     *
      * @example
      * // A tile provider with z/x/y, .png tile files, and tile Y coordinates numbered from the South (TMS style).
      * var utip = new Cesium.UrlTemplateImageryProvider({
