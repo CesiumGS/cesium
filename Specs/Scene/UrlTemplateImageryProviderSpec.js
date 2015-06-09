@@ -2,6 +2,7 @@
 defineSuite([
     'Scene/UrlTemplateImageryProvider',
     'Core/DefaultProxy',
+    'Core/Ellipsoid',
     'Core/GeographicTilingScheme',
     'Core/loadImage',
     'Core/Math',
@@ -16,6 +17,7 @@ defineSuite([
 ], function(
     UrlTemplateImageryProvider,
     DefaultProxy,
+    Ellipsoid,
     GeographicTilingScheme,
     loadImage,
     CesiumMath,
@@ -129,7 +131,7 @@ defineSuite([
     it('rectangle passed to constructor does not affect tile numbering', function() {
         var rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
         var provider = new UrlTemplateImageryProvider({
-            url: 'made/up/tms/server/{Z}/{X}/{reverseY}',
+            url: 'made/up/tms/server/{z}/{x}/{reverseY}',
             rectangle: rectangle
         });
 
@@ -217,7 +219,7 @@ defineSuite([
 
     it('evaluation of pattern X Y reverseX reverseY Z', function() {
         var provider = new UrlTemplateImageryProvider({
-            url: 'made/up/tms/server/{Z}/{reverseY}/{Y}/{reverseX}/{X}.PNG',
+            url: 'made/up/tms/server/{z}/{reverseY}/{y}/{reverseX}/{x}.PNG',
             tilingScheme: new GeographicTilingScheme()
         });
 
@@ -238,17 +240,17 @@ defineSuite([
         });
     });
 
-    it('evaluation of pattern north', function() {
+    it('evaluates pattern northDegrees', function() {
         var provider = new UrlTemplateImageryProvider({
-            url: '{north}',
+            url: '{northDegrees}',
             tilingScheme: new GeographicTilingScheme()
         });
 
-        pollToPromise(function() {
+        return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
             spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url).toEqualEpsilon(45.088235294117645, CesiumMath.EPSILON11);
+                expect(url).toEqualEpsilon(45.0, CesiumMath.EPSILON11);
 
                 // Just return any old image.
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
@@ -261,17 +263,17 @@ defineSuite([
         });
     });
 
-    it('evaluation of pattern south', function() {
+    it('evaluates pattern southDegrees', function() {
         var provider = new UrlTemplateImageryProvider({
-            url: '{south}',
+            url: '{southDegrees}',
             tilingScheme: new GeographicTilingScheme()
         });
 
-        pollToPromise(function() {
+        return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
             spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url).toEqualEpsilon(-0.08823529411764706, CesiumMath.EPSILON11);
+                expect(url).toEqualEpsilon(0.0, CesiumMath.EPSILON11);
 
                 // Just return any old image.
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
@@ -284,17 +286,17 @@ defineSuite([
         });
     });
 
-    it('evaluation of pattern east', function() {
+    it('evaluates pattern eastDegrees', function() {
         var provider = new UrlTemplateImageryProvider({
-            url: '{east}',
+            url: '{eastDegrees}',
             tilingScheme: new GeographicTilingScheme()
         });
 
-        pollToPromise(function() {
+        return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
             spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url).toEqualEpsilon(0.08823529411764706, CesiumMath.EPSILON11);
+                expect(url).toEqualEpsilon(0.0, CesiumMath.EPSILON11);
 
                 // Just return any old image.
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
@@ -307,17 +309,174 @@ defineSuite([
         });
     });
 
-    it('evaluation of pattern west', function() {
+    it('evaluates pattern westDegrees', function() {
         var provider = new UrlTemplateImageryProvider({
-            url: '{west}',
+            url: '{westDegrees}',
             tilingScheme: new GeographicTilingScheme()
         });
 
-        pollToPromise(function() {
+        return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
             spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url).toEqualEpsilon(-45.088235294117645, CesiumMath.EPSILON11);
+                expect(url).toEqualEpsilon(-45.0, CesiumMath.EPSILON11);
+
+                // Just return any old image.
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            });
+
+            return provider.requestImage(3, 1, 2).then(function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(image).toBeInstanceOf(Image);
+            });
+        });
+    });
+
+    it('evaluates pattern northProjected', function() {
+        var provider = new UrlTemplateImageryProvider({
+            url: '{northProjected}',
+            tilingScheme: new WebMercatorTilingScheme()
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+                expect(url).toEqualEpsilon(Math.PI * Ellipsoid.WGS84.maximumRadius / 2.0, CesiumMath.EPSILON11);
+
+                // Just return any old image.
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            });
+
+            return provider.requestImage(3, 1, 2).then(function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(image).toBeInstanceOf(Image);
+            });
+        });
+    });
+
+    it('evaluates pattern southProjected', function() {
+        var provider = new UrlTemplateImageryProvider({
+            url: '{southProjected}'
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+                expect(url).toEqualEpsilon(Math.PI * Ellipsoid.WGS84.maximumRadius / 2.0, CesiumMath.EPSILON11);
+
+                // Just return any old image.
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            });
+
+            return provider.requestImage(3, 0, 2).then(function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(image).toBeInstanceOf(Image);
+            });
+        });
+    });
+
+    it('evaluates pattern eastProjected', function() {
+        var provider = new UrlTemplateImageryProvider({
+            url: '{eastProjected}'
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+                expect(url).toEqualEpsilon(-Math.PI * Ellipsoid.WGS84.maximumRadius / 2.0, CesiumMath.EPSILON11);
+
+                // Just return any old image.
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            });
+
+            return provider.requestImage(0, 1, 2).then(function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(image).toBeInstanceOf(Image);
+            });
+        });
+    });
+
+    it('evaluates pattern westProjected', function() {
+        var provider = new UrlTemplateImageryProvider({
+            url: '{westProjected}'
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+                expect(url).toEqualEpsilon(-Math.PI * Ellipsoid.WGS84.maximumRadius / 2.0, CesiumMath.EPSILON11);
+
+                // Just return any old image.
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            });
+
+            return provider.requestImage(1, 1, 2).then(function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(image).toBeInstanceOf(Image);
+            });
+        });
+    });
+
+    it('evaluates pattern s', function() {
+        var provider = new UrlTemplateImageryProvider({
+            url: '{s}'
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+                expect(['a', 'b', 'c'].indexOf(url)).toBeGreaterThanOrEqualTo(0);
+
+                // Just return any old image.
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            });
+
+            return provider.requestImage(3, 1, 2).then(function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(image).toBeInstanceOf(Image);
+            });
+        });
+    });
+
+    it('uses custom subdomain string', function() {
+        var provider = new UrlTemplateImageryProvider({
+            url: '{s}',
+            subdomains: '123'
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+                expect(['1', '2', '3'].indexOf(url)).toBeGreaterThanOrEqualTo(0);
+
+                // Just return any old image.
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            });
+
+            return provider.requestImage(3, 1, 2).then(function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(image).toBeInstanceOf(Image);
+            });
+        });
+    });
+
+    it('uses custom subdomain array', function() {
+        var provider = new UrlTemplateImageryProvider({
+            url: '{s}',
+            subdomains: ['foo', 'bar']
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+                expect(['foo', 'bar'].indexOf(url)).toBeGreaterThanOrEqualTo(0);
 
                 // Just return any old image.
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);

@@ -2,6 +2,7 @@
 define([
         '../Core/Cartesian2',
         '../Core/Cartographic',
+        '../Core/Math',
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
@@ -18,6 +19,7 @@ define([
     ], function(
         Cartesian2,
         Cartographic,
+        CesiumMath,
         Credit,
         defaultValue,
         defined,
@@ -34,23 +36,32 @@ define([
     "use strict";
 
     /**
-     * Provides tiled imagery following a specific URL template
+     * Provides imagery by requesting tiles using a specified URL template.
      *
      * @alias UrlTemplateImageryProvider
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {String} [options.url='']  The pattern to request a tile which has the following keywords: <ul>
-     *  <li> {Z}:  corresponding to the level of a tile</li>
-     *  <li> {X}:  corresponding to the abscissa of a tile</li>
-     *  <li> {reverseX}:  corresponding to the reverse abscissa of a tile</li>
-     *  <li> {Y}:  corresponding to the ordinate of a tile</li>
-     *  <li> {reverseY}:  corresponding to the reverse ordinate of a tile</li>
-     *  <li> {north}:  the north bounding of a tile</li>
-     *  <li> {south}:  the south bounding of a tile</li>
-     *  <li> {east}:  the east bounding of a tile</li>
-     *  <li> {west}:  the west bounding of a tile</li>
+     * @param {String} [options.url='']  The pattern to request a tile which has the following keywords:
+     * <ul>
+     *  <li> <code>{z}</code>: The level of the tile in the tiling scheme.  Level zero is the root of the quadtree pyramid.</li>
+     *  <li> <code>{x}</code>: The tile X coordinate in the tiling scheme, where 0 is the Westernmost tile.</li>
+     *  <li> <code>{y}</code>: The tile Y coordinate in the tiling scheme, where 0 is the Northernmost tile.</li>
+     *  <li> <code>{s}</code>: One of the available subdomains, used to overcome browser limits on the number of simultaneous requests per host.</li>
+     *  <li> <code>{reverseX}</code>: The tile X coordinate in the tiling scheme, where 0 is the Easternmost tile.</li>
+     *  <li> <code>{reverseY}</code>: The tile Y coordinate in the tiling scheme, where 0 is the Southernmost tile.</li>
+     *  <li> <code>{westDegrees}</code>: The Western edge of the tile in geodetic degrees.</li>
+     *  <li> <code>{southDegrees}</code>: The Southern edge of the tile in geodetic degrees.</li>
+     *  <li> <code>{eastDegrees}</code>: The Eastern edge of the tile in geodetic degrees.</li>
+     *  <li> <code>{northDegrees}</code>: The Northern edge of the tile in geodetic degrees.</li>
+     *  <li> <code>{westProjected}</code>: The Western edge of the tile in projected coordinates of the tiling scheme.</li>
+     *  <li> <code>{southProjected}</code>: The Southern edge of the tile in projected coordinates of the tiling scheme.</li>
+     *  <li> <code>{eastProjected}</code>: The Eastern edge of the tile in projected coordinates of the tiling scheme.</li>
+     *  <li> <code>{northProjected}</code>: The Northern edge of the tile in projected coordinates of the tiling scheme.</li>
      * </ul>
+     * @param {String|String[]} [subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
+     *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
+     *                          an array, each element in the array is a subdomain.
      * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
      * @param {Credit|String} [options.credit=''] A credit for the data source, which is displayed on the canvas.
      * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
@@ -77,42 +88,44 @@ define([
      *
      *
      * @example
-     * // A tile provider with Z/Y/X and .PNG tile files template
+     * // A tile provider with z/x/y, .png tile files, and tile Y coordinates numbered from the South (TMS style).
      * var utip = new Cesium.UrlTemplateImageryProvider({
-     *    url : '../images/cesium_maptiler/Cesium_Logo_Color/{Z}/{reverseY}/{X}.PNG',
-     *    maximumLevel: 4,
-     *    rectangle: new Cesium.Rectangle(
-     *        Cesium.Math.toRadians(-120.0),
-     *        Cesium.Math.toRadians(20.0),
-     *        Cesium.Math.toRadians(-60.0),
-     *        Cesium.Math.toRadians(40.0))
+     *     url : '../images/cesium_maptiler/Cesium_Logo_Color/{z}/{x}/{reverseY}.png',
+     *     maximumLevel: 4,
+     *     rectangle: new Cesium.Rectangle.fromDegrees(-120, 20, -60, 40)
      * });
-     * // An emulation of WMS server with a time dimension
+     * // An emulation of a WMS server with a time dimension
      * utip = new Cesium.UrlTemplateImageryProvider({
      *    url : 'URL/to/WMS?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=980_13'+
      *    '&FORMAT=image/png&STYLES=default&TRANSPARENT=true&SRS=EPSG:4326&'+
-     *    'BBOX={west},{south},{east},{north}&WIDTH=256&HEIGHT=256&TIME=2009-11-30T12:00',
+     *    'BBOX={westDegrees},{southDegrees},{eastDegrees},{northDegrees}&WIDTH=256&HEIGHT=256&TIME=2009-11-30T12:00',
      * });
-     * // An emulation of WMTS server 
+     * // An emulation of a WMTS server 
      * utip = new Cesium.UrlTemplateImageryProvider({
      *    url : 'URL/to/WMTS?REQUEST=gettile&LAYER=980_13&FORMAT=image/png&TILEMATRIXSET=EPSG:4258'+
      *    '&TILEMATRIX=EPSG:4258:{Z}&TILEROW={Y}&TILECOL={X}&DIM_TIME=2013-11-20T11:15:00Z&STYLE=default
      * });
      */
     var UrlTemplateImageryProvider = function UrlTemplateImageryProvider(options) {
-        options = defaultValue(options, {});
-
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.url)) {
+        if (!defined(options) || !defined(options.url)) {
             throw new DeveloperError('options.url is required.');
         }
         //>>includeEnd('debug');
 
         this._url = options.url;
-        this._ready = false;
         this._proxy = options.proxy;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._errorEvent = new Event();
+        
+        this._subdomains = options.subdomains;
+        if (Array.isArray(this._subdomains)) {
+            this._subdomains = this._subdomains.slice();
+        } else if (defined(this._subdomains) && this._subdomains.length > 0) {
+            this._subdomains = this._subdomains.split('');
+        } else {
+            this._subdomains = ['a', 'b', 'c'];
+        }
 
         this._tileWidth = defaultValue(options.tileWidth, 256);
         this._tileHeight = defaultValue(options.tileHeight, 256);
@@ -128,23 +141,54 @@ define([
         }
         this._credit = credit;
 
+        var url = this._url;
+        var parts = [];
+        var nextIndex = 0;
+        var minIndex;
+        var minTag;
+        var tagList = Object.keys(tags);
+
+        while (nextIndex < url.length) {
+            minIndex = Number.MAX_VALUE;
+            minTag = undefined;
+
+            for (var i = 0; i < tagList.length; ++i) {
+                var thisIndex = url.indexOf(tagList[i], nextIndex);
+                if (thisIndex >= 0 && thisIndex < minIndex) {
+                    minIndex = thisIndex;
+                    minTag = tagList[i];
+                }
+            }
+
+            if (!defined(minTag)) {
+                parts.push(url.substring(nextIndex));
+                nextIndex = url.length;
+            } else {
+                if (nextIndex < minIndex) {
+                    parts.push(url.substring(nextIndex, minIndex));
+                }
+                parts.push(tags[minTag]);
+                nextIndex = minIndex + minTag.length;
+            }
+        }
+
+        this._urlParts = parts;
     };
 
     function buildImageUrl(imageryProvider, x, y, level) {
-        var reverseY= imageryProvider.tilingScheme.getNumberOfYTilesAtLevel(level) - y - 1;
-        var reverseX=imageryProvider.tilingScheme.getNumberOfXTilesAtLevel(level) - x - 1;
+        degreesScratchComputed = false;
+        projectedScratchComputed = false;
 
-        var rect= imageryProvider.tilingScheme.tileXYToNativeRectangle(x, y,level);
-        var xSpacing = (rect.east - rect.west)/ (imageryProvider.tileWidth - 1);
-        var ySpacing = (rect.north - rect.south)/ (imageryProvider.tileHeight - 1);
-        rect.west -= xSpacing * 0.5;
-        rect.east += xSpacing * 0.5;
-        rect.south -= ySpacing * 0.5;
-        rect.north += ySpacing * 0.5;
-
-        var url = imageryProvider.url;
-        url = url.replace('{Z}',level).replace('{X}',x).replace('{reverseX}',reverseX).replace('{Y}',y).replace('{reverseY}',reverseY);
-        url = url.replace('{north}',rect.north).replace('{south}',rect.south).replace('{west}',rect.west).replace('{east}',rect.east);
+        var url = '';
+        var parts = imageryProvider._urlParts;
+        for (var i = 0; i < parts.length; ++i) {
+            var part = parts[i];
+            if (typeof part === 'string') {
+                url += part;
+            } else {
+                url += part(imageryProvider, x, y, level);
+            }
+        }
 
         var proxy = imageryProvider._proxy;
         if (defined(proxy)) {
@@ -157,26 +201,30 @@ define([
 
     defineProperties(UrlTemplateImageryProvider.prototype, {
         /**
-         * The pattern to request a tile which has the following keywords: <ul>
-         *  <li> {Z}:  corresponding to the level of a tile</li>
-         *  <li> {X}:  corresponding to the abscissa of a tile</li>
-         *  <li> {reverseX}:  corresponding to the reverse abscissa of a tile</li>
-         *  <li> {Y}:  corresponding to the ordinate of a tile</li>
-         *  <li> {reverseY}:  corresponding to the reverse ordinate of a tile</li>
-         *  <li> {north}:  the north bounding of a tile</li>
-         *  <li> {south}:  the south bounding of a tile</li>
-         *  <li> {east}:  the east bounding of a tile</li>
-         *  <li> {west}:  the west bounding of a tile</li>
+         * The pattern to request a tile which has the following keywords:
+         * <ul>
+         *  <li> <code>{z}</code>: The level of the tile in the tiling scheme.  Level zero is the root of the quadtree pyramid.</li>
+         *  <li> <code>{x}</code>: The tile X coordinate in the tiling scheme, where 0 is the Westernmost tile.</li>
+         *  <li> <code>{y}</code>: The tile Y coordinate in the tiling scheme, where 0 is the Northernmost tile.</li>
+         *  <li> <code>{s}</code>: One of the available subdomains, used to overcome browser limits on the number of simultaneous requests per host.</li>
+         *  <li> <code>{reverseX}</code>: The tile X coordinate in the tiling scheme, where 0 is the Easternmost tile.</li>
+         *  <li> <code>{reverseY}</code>: The tile Y coordinate in the tiling scheme, where 0 is the Southernmost tile.</li>
+         *  <li> <code>{westDegrees}</code>: The Western edge of the tile in geodetic degrees.</li>
+         *  <li> <code>{southDegrees}</code>: The Southern edge of the tile in geodetic degrees.</li>
+         *  <li> <code>{eastDegrees}</code>: The Eastern edge of the tile in geodetic degrees.</li>
+         *  <li> <code>{northDegrees}</code>: The Northern edge of the tile in geodetic degrees.</li>
+         *  <li> <code>{westProjected}</code>: The Western edge of the tile in projected coordinates of the tiling scheme.</li>
+         *  <li> <code>{southProjected}</code>: The Southern edge of the tile in projected coordinates of the tiling scheme.</li>
+         *  <li> <code>{eastProjected}</code>: The Eastern edge of the tile in projected coordinates of the tiling scheme.</li>
+         *  <li> <code>{northProjected}</code>: The Northern edge of the tile in projected coordinates of the tiling scheme.</li>
          * </ul>
          * @memberof UrlTemplateImageryProvider.prototype
          * @type {String}
+         * @readonly
          */
         url : {
             get : function() {
                 return this._url;
-            },
-            set : function(value) {
-                this._url=value;
             }
         },
 
@@ -197,6 +245,7 @@ define([
          * not be called before {@link UrlTemplateImageryProvider#ready} returns true.
          * @memberof UrlTemplateImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         tileWidth : {
             get : function() {
@@ -207,9 +256,6 @@ define([
                 //>>includeEnd('debug');
 
                 return this._tileWidth;
-            },
-            set : function(value) {
-                this._tileWidth=value;
             }
         },
 
@@ -218,6 +264,7 @@ define([
          * not be called before {@link UrlTemplateImageryProvider#ready} returns true.
          * @memberof UrlTemplateImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         tileHeight: {
             get : function() {
@@ -228,9 +275,6 @@ define([
                 //>>includeEnd('debug');
 
                 return this._tileHeight;
-            },
-            set : function(value) {
-                this._tileHeight=value;
             }
         },
 
@@ -239,6 +283,7 @@ define([
          * not be called before {@link UrlTemplateImageryProvider#ready} returns true.
          * @memberof UrlTemplateImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         maximumLevel : {
             get : function() {
@@ -249,9 +294,6 @@ define([
                 //>>includeEnd('debug');
 
                 return this._maximumLevel;
-            },
-            set : function(value) {
-                this._maximumLevel=value;
             }
         },
 
@@ -260,6 +302,7 @@ define([
          * not be called before {@link UrlTemplateImageryProvider#ready} returns true.
          * @memberof UrlTemplateImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         minimumLevel : {
             get : function() {
@@ -270,9 +313,6 @@ define([
                 //>>includeEnd('debug');
 
                 return this._minimumLevel;
-            },
-            set : function(value) {
-                this._minimumLevel=value;
             }
         },
 
@@ -444,6 +484,118 @@ define([
      */
     UrlTemplateImageryProvider.prototype.pickFeatures = function() {
         return undefined;
+    };
+
+    function xTag(imageryProvider, x, y, level) {
+        return x;
+    }
+
+    function reverseXTag(imageryProvider, x, y, level) {
+        return imageryProvider.tilingScheme.getNumberOfXTilesAtLevel(level) - x - 1;
+    }
+
+    function yTag(imageryProvider, x, y, level) {
+        return y;
+    }
+
+    function reverseYTag(imageryProvider, x, y, level) {
+        return imageryProvider.tilingScheme.getNumberOfYTilesAtLevel(level) - y - 1;
+    }
+
+    function zTag(imageryProvider, x, y, level) {
+        return level;
+    }
+
+    function sTag(imageryProvider, x, y, level) {
+        var index = (x + y + level) % imageryProvider._subdomains.length;
+        return imageryProvider._subdomains[index];
+    }
+
+    var degreesScratchComputed = false;
+    var degreesScratch = new Rectangle();
+
+    function computeDegrees(imageryProvider, x, y, level) {
+        if (degreesScratchComputed) {
+            return;
+        }
+
+        imageryProvider.tilingScheme.tileXYToRectangle(x, y, level, degreesScratch);
+        degreesScratch.west *= CesiumMath.DEGREES_PER_RADIAN;
+        degreesScratch.south *= CesiumMath.DEGREES_PER_RADIAN;
+        degreesScratch.east *= CesiumMath.DEGREES_PER_RADIAN;
+        degreesScratch.north *= CesiumMath.DEGREES_PER_RADIAN;
+
+        degreesScratchComputed = true;
+    }
+
+    function westDegreesTag(imageryProvider, x, y, level) {
+        computeDegrees(imageryProvider, x, y, level);
+        return degreesScratch.west;
+    }
+
+    function southDegreesTag(imageryProvider, x, y, level) {
+        computeDegrees(imageryProvider, x, y, level);
+        return degreesScratch.south;
+    }
+
+    function eastDegreesTag(imageryProvider, x, y, level) {
+        computeDegrees(imageryProvider, x, y, level);
+        return degreesScratch.east;
+    }
+
+    function northDegreesTag(imageryProvider, x, y, level) {
+        computeDegrees(imageryProvider, x, y, level);
+        return degreesScratch.north;
+    }
+
+    var projectedScratchComputed = false;
+    var projectedScratch = new Rectangle();
+
+    function computeProjected(imageryProvider, x, y, level) {
+        if (projectedScratchComputed) {
+            return;
+        }
+
+        imageryProvider.tilingScheme.tileXYToNativeRectangle(x, y, level, projectedScratch);
+
+        projectedScratchComputed = true;
+    }
+
+    function westProjectedTag(imageryProvider, x, y, level) {
+        computeProjected(imageryProvider, x, y, level);
+        return projectedScratch.west;
+    }
+
+    function southProjectedTag(imageryProvider, x, y, level) {
+        computeProjected(imageryProvider, x, y, level);
+        return projectedScratch.south;
+    }
+
+    function eastProjectedTag(imageryProvider, x, y, level) {
+        computeProjected(imageryProvider, x, y, level);
+        return projectedScratch.east;
+    }
+
+    function northProjectedTag(imageryProvider, x, y, level) {
+        computeProjected(imageryProvider, x, y, level);
+        return projectedScratch.north;
+    }
+
+    var tags = {
+        '{x}': xTag,
+        '{y}': yTag,
+        '{z}': zTag,
+        '{s}': sTag,
+        '{reverseX}': reverseXTag,
+        '{reverseY}': reverseYTag,
+        '{westDegrees}': westDegreesTag,
+        '{southDegrees}': southDegreesTag,
+        '{eastDegrees}': eastDegreesTag,
+        '{northDegrees}': northDegreesTag,
+        '{westProjected}': westProjectedTag,
+        '{southProjected}': southProjectedTag,
+        '{eastProjected}': eastProjectedTag,
+        '{northProjected}': northProjectedTag
     };
 
     return UrlTemplateImageryProvider;
