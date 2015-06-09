@@ -201,7 +201,7 @@ define([
      *
      * @param {Number[]} values The column-major order array.
      * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix3 instance if one was not provided.
+     * @returns {Matrix3} The modified result parameter, or a new Matrix3 instance if one was not provided.
      */
     Matrix3.fromColumnMajorArray = function(values, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -219,7 +219,7 @@ define([
      *
      * @param {Number[]} values The row-major order array.
      * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix3 instance if one was not provided.
+     * @returns {Matrix3} The modified result parameter, or a new Matrix3 instance if one was not provided.
      */
     Matrix3.fromRowMajorArray = function(values, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -303,7 +303,7 @@ define([
      *
      * @param {Cartesian3} scale The x, y, and z scale factors.
      * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix3 instance if one was not provided.
+     * @returns {Matrix3} The modified result parameter, or a new Matrix3 instance if one was not provided.
      *
      * @example
      * // Creates
@@ -343,7 +343,7 @@ define([
      *
      * @param {Number} scale The uniform scale factor.
      * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix3 instance if one was not provided.
+     * @returns {Matrix3} The modified result parameter, or a new Matrix3 instance if one was not provided.
      *
      * @example
      * // Creates
@@ -383,7 +383,7 @@ define([
      *
      * @param {Cartesian3} the vector on the left hand side of the cross product operation.
      * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix3 instance if one was not provided.
+     * @returns {Matrix3} The modified result parameter, or a new Matrix3 instance if one was not provided.
      *
      * @example
      * // Creates
@@ -423,7 +423,7 @@ define([
      *
      * @param {Number} angle The angle, in radians, of the rotation.  Positive angles are counterclockwise.
      * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix3 instance if one was not provided.
+     * @returns {Matrix3} The modified result parameter, or a new Matrix3 instance if one was not provided.
      *
      * @example
      * // Rotate a point 45 degrees counterclockwise around the x-axis.
@@ -466,7 +466,7 @@ define([
      *
      * @param {Number} angle The angle, in radians, of the rotation.  Positive angles are counterclockwise.
      * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix3 instance if one was not provided.
+     * @returns {Matrix3} The modified result parameter, or a new Matrix3 instance if one was not provided.
      *
      * @example
      * // Rotate a point 45 degrees counterclockwise around the y-axis.
@@ -509,7 +509,7 @@ define([
      *
      * @param {Number} angle The angle, in radians, of the rotation.  Positive angles are counterclockwise.
      * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix3 instance if one was not provided.
+     * @returns {Matrix3} The modified result parameter, or a new Matrix3 instance if one was not provided.
      *
      * @example
      * // Rotate a point 45 degrees counterclockwise around the z-axis.
@@ -647,7 +647,7 @@ define([
      * @param {Matrix3} matrix The matrix to use.
      * @param {Number} index The zero-based index of the column to set.
      * @param {Cartesian3} cartesian The Cartesian whose values will be assigned to the specified column.
-     * @param {Cartesian3} result The object onto which to store the result.
+     * @param {Matrix3} result The object onto which to store the result.
      * @returns {Matrix3} The modified result parameter.
      *
      * @exception {DeveloperError} index must be 0, 1, or 2.
@@ -715,7 +715,7 @@ define([
      * @param {Matrix3} matrix The matrix to use.
      * @param {Number} index The zero-based index of the row to set.
      * @param {Cartesian3} cartesian The Cartesian whose values will be assigned to the specified row.
-     * @param {Cartesian3} result The object onto which to store the result.
+     * @param {Matrix3} result The object onto which to store the result.
      * @returns {Matrix3} The modified result parameter.
      *
      * @exception {DeveloperError} index must be 0, 1, or 2.

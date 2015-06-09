@@ -11,22 +11,14 @@ define([
     /**
      * @private
      */
-    var getStringFromTypedArray = function(buffer, byteOffset, length) {
+    var getStringFromTypedArray = function(uint8Array) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(buffer)) {
-            throw new DeveloperError('buffer is required.');
-        }
-
-        if (!defined(byteOffset)) {
-            throw new DeveloperError('byteOffset is required.');
-        }
-
-        if (!defined(length)) {
-            throw new DeveloperError('length is required.');
+        if (!defined(uint8Array)) {
+            throw new DeveloperError('uint8Array is required.');
         }
         //>>includeEnd('debug');
 
-        return getStringFromTypedArray.decode(new Uint8Array(buffer, byteOffset, length));
+        return getStringFromTypedArray.decode(uint8Array);
     };
 
     // Exposed functions for testing
@@ -44,7 +36,7 @@ define([
         // fromCharCode will not handle all legal Unicode values (up to 21 bits).  See
         // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/fromCharCode
         for (var i = 0; i < length; ++i) {
-          result += String.fromCharCode(view[i]);
+            result += String.fromCharCode(view[i]);
         }
         return result;
     };

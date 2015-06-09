@@ -243,9 +243,8 @@ define([
         this._oit = oit;
         this._fxaa = new FXAA();
 
-        this._clearColorDepthCommand = new ClearCommand({
+        this._clearColorCommand = new ClearCommand({
             color : new Color(),
-            depth : 1.0,
             owner : this
         });
         this._depthClearCommand = new ClearCommand({
@@ -1360,7 +1359,7 @@ define([
         }
 
         // Clear the pass state framebuffer.
-        var clear = scene._clearColorDepthCommand;
+        var clear = scene._clearColorCommand;
         Color.clone(clearColor, clear.color);
         clear.execute(context, passState);
 
@@ -1479,12 +1478,7 @@ define([
             }
 
             us.updateFrustum(frustum);
-
-            if (i !== 0) {
-                // Depth for the first frustum was cleared when color was cleared - and
-                // no primitives rendered in the entire frustum write depth.
-                clearDepth.execute(context, passState);
-            }
+            clearDepth.execute(context, passState);
 
             var commands = frustumCommands.commands[Pass.GLOBE];
             var length = frustumCommands.indices[Pass.GLOBE];
@@ -1653,10 +1647,7 @@ define([
         if (scene.debugShowFramesPerSecond) {
             if (!defined(scene._performanceDisplay)) {
                 var performanceContainer = document.createElement('div');
-                performanceContainer.className = 'cesium-performanceDisplay';
-                performanceContainer.style.position = 'absolute';
-                performanceContainer.style.top = '50px';
-                performanceContainer.style.right = '10px';
+                performanceContainer.className = 'cesium-performanceDisplay-defaultContainer';
                 var container = scene._canvas.parentNode;
                 container.appendChild(performanceContainer);
                 var performanceDisplay = new PerformanceDisplay({container: performanceContainer});
@@ -1892,10 +1883,7 @@ define([
             //>>includeEnd('debug');
         }
 
-        var minimumPosition;
-        var minDistance;
         var numFrustums = this.numberOfFrustums;
-
         for (var i = 0; i < numFrustums; ++i) {
             var pickDepth = getPickDepth(this, i);
             var pixels = context.readPixels({
@@ -1912,21 +1900,15 @@ define([
 
             if (depth > 0.0 && depth < 1.0) {
                 var renderedFrustum = this._frustumCommandsList[i];
-                frustum.near = renderedFrustum.near;
+                frustum.near = renderedFrustum.near * (i !== 0 ? OPAQUE_FRUSTUM_NEAR_OFFSET : 1.0);
                 frustum.far = renderedFrustum.far;
                 uniformState.updateFrustum(frustum);
 
-                var position = SceneTransforms.drawingBufferToWgs84Coordinates(this, drawingBufferPosition, depth, scratchPickDepthPosition);
-                var distance = Cartesian3.distance(position, camera.positionWC);
-
-                if (!defined(minimumPosition) || distance < minDistance) {
-                    minimumPosition = Cartesian3.clone(position, result);
-                    minDistance = distance;
-                }
+                return SceneTransforms.drawingBufferToWgs84Coordinates(this, drawingBufferPosition, depth, result);
             }
         }
 
-        return minimumPosition;
+        return undefined;
     };
 
     /**

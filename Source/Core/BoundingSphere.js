@@ -742,8 +742,9 @@ define([
      * Determines which side of a plane a sphere is located.
      *
      * @param {BoundingSphere} sphere The bounding sphere to test.
-     * @param {Cartesian4} plane The coefficients of the plane in the for ax + by + cz + d = 0
-     *                           where the coefficients a, b, c, and d are the components x, y, z,
+     * @param {Cartesian4} plane The coefficients of the plane in Hessian Normal Form, as `ax + by + cz + d = 0`,
+     *                           where (a, b, c) must be a unit normal vector.
+     *                           The coefficients a, b, c, and d are the components x, y, z,
      *                           and w of the {@link Cartesian4}, respectively.
      * @returns {Intersect} {@link Intersect.INSIDE} if the entire sphere is on the side of the plane
      *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire sphere is
