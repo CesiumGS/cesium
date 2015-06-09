@@ -197,7 +197,6 @@ define([
         return url;
     }
 
-
     defineProperties(UrlTemplateImageryProvider.prototype, {
         /**
          * The pattern to request a tile which has the following keywords:
