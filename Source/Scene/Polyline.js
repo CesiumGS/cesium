@@ -62,9 +62,6 @@ define([
 
         this._positions = positions;
         this._actualPositions = PolylinePipeline.removeDuplicates(positions);
-        if (!defined(this._actualPositions)) {
-            this._actualPositions = positions;
-        }
 
         if (this._loop && this._actualPositions.length > 2) {
             if (this._actualPositions === this._positions) {
@@ -160,9 +157,6 @@ define([
                 //>>includeEnd('debug');
 
                 var positions = PolylinePipeline.removeDuplicates(value);
-                if (!defined(positions)) {
-                    positions = value;
-                }
 
                 if (this._loop && positions.length > 2) {
                     if (positions === value) {

@@ -24,6 +24,11 @@ defineSuite([
         expect(segments.lengths[0]).toEqual(2);
     });
 
+    it('wrapLongitude works with empty array', function() {
+        var segments = PolylinePipeline.wrapLongitude([]);
+        expect(segments.lengths.length).toEqual(0);
+    });
+
     it('wrapLongitude breaks polyline into segments', function() {
         var positions = Cartesian3.fromDegreesArray([
             -179.0, 39.0,
@@ -47,10 +52,16 @@ defineSuite([
         expect(segments.lengths[1]).toEqual(2);
     });
 
-    it('removeDuplicates returns false', function() {
+    it('removeDuplicates returns positions if none removed', function() {
         var positions = [Cartesian3.ZERO];
         var noDuplicates = PolylinePipeline.removeDuplicates(positions);
-        expect(noDuplicates).not.toBeDefined();
+        expect(noDuplicates).toBe(positions);
+    });
+
+    it('removeDuplicates returns positions if none removed', function() {
+        var positions = [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y, Cartesian3.UNIT_Z];
+        var noDuplicates = PolylinePipeline.removeDuplicates(positions);
+        expect(noDuplicates).toBe(positions);
     });
 
     it('removeDuplicates to remove duplicates', function() {
@@ -68,6 +79,12 @@ defineSuite([
             new Cartesian3(3.0, 3.0, 3.0)];
         var noDuplicates = PolylinePipeline.removeDuplicates(positions);
         expect(noDuplicates).toEqual(expectedPositions);
+    });
+
+    it('removeDuplicates works with empty array', function() {
+        var positions = [];
+        var noDuplicates = PolylinePipeline.removeDuplicates(positions);
+        expect(noDuplicates).toEqual(positions);
     });
 
     it('removeDuplicates to remove positions within absolute epsilon 7', function() {
@@ -140,4 +157,23 @@ defineSuite([
         expect(Cartesian3.equalsEpsilon(p2, p2n, CesiumMath.EPSILON4)).toEqual(true);
         expect(Cartesian3.equalsEpsilon(p3, p3n, CesiumMath.EPSILON4)).toEqual(true);
     });
+
+    it('generateArc works with empty array', function() {
+        var newPositions = PolylinePipeline.generateArc({
+            positions: []
+        });
+
+        expect(newPositions.length).toEqual(0);
+    });
+
+    it('generateArc works one position', function() {
+        var newPositions = PolylinePipeline.generateArc({
+            positions: [Cartesian3.UNIT_Z],
+            ellipsoid: Ellipsoid.UNIT_SPHERE
+        });
+
+        expect(newPositions.length).toEqual(3);
+        expect(newPositions).toEqual([0,0,1]);
+    });
+
 });
