@@ -10,7 +10,9 @@ define([
         './DeveloperError',
         './Ellipsoid',
         './IntersectionTests',
+        './Matrix3',
         './Matrix4',
+        './OrientedBoundingBox',
         './Plane',
         './Ray',
         './Transforms'
@@ -25,7 +27,9 @@ define([
         DeveloperError,
         Ellipsoid,
         IntersectionTests,
+        Matrix3,
         Matrix4,
+        OrientedBoundingBox,
         Plane,
         Ray,
         Transforms) {
@@ -90,6 +94,17 @@ define([
         origin : {
             get : function() {
                 return this._origin;
+            }
+        },
+
+        /**
+         * Gets the plane which is tangent to the ellipsoid.
+         * @memberof EllipsoidTangentPlane.prototype
+         * @type {Plane}
+         */
+        plane : {
+            get : function() {
+                return this._plane;
             }
         }
     });
@@ -295,6 +310,57 @@ define([
             Cartesian3.add(point, tmp, point);
             ellipsoid.scaleToGeocentricSurface(point, point);
         }
+
+        return result;
+    };
+
+    var scratchOffset = new Cartesian3();
+    var scratchScale = new Cartesian3();
+    /**
+     * Computes an OrientedBoundingBox given extents in the east-north-up space of the tangent plane.
+     *
+     * @param {Number} minX Minimum x extent in tangent plane space.
+     * @param {Number} maxX Maximum x extent in tangent plane space.
+     * @param {Number} minY Minimum y extent in tangent plane space.
+     * @param {Number} maxY Maximum y extent in tangent plane space.
+     * @param {Number} minZ Minimum z extent in tangent plane space.
+     * @param {Number} maxZ Maximum z extent in tangent plane space.
+     * @param {OrientedBoundingBox} [result] The object onto which to store the result.
+     * @returns {OrientedBoundingBox} The modified result parameter or a new OrientedBoundingBox instance if one was not provided.
+     */
+    EllipsoidTangentPlane.prototype.extentsToOrientedBoundingBox = function(minX, maxX, minY, maxY, minZ, maxZ, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(minX)) { throw new DeveloperError('minX is required.'); }
+        if (!defined(maxX)) { throw new DeveloperError('maxX is required.'); }
+        if (!defined(minY)) { throw new DeveloperError('minY is required.'); }
+        if (!defined(maxY)) { throw new DeveloperError('maxY is required.'); }
+        if (!defined(minZ)) { throw new DeveloperError('minZ is required.'); }
+        if (!defined(maxZ)) { throw new DeveloperError('maxZ is required.'); }
+        //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            result = new OrientedBoundingBox();
+        }
+
+        var halfAxes = result.halfAxes;
+        Matrix3.setColumn(halfAxes, 0, this._xAxis, halfAxes);
+        Matrix3.setColumn(halfAxes, 1, this._yAxis, halfAxes);
+        Matrix3.setColumn(halfAxes, 2, this._plane.normal, halfAxes);
+
+        var centerOffset = scratchOffset;
+        centerOffset.x = (minX + maxX) / 2.0;
+        centerOffset.y = (minY + maxY) / 2.0;
+        centerOffset.z = (minZ + maxZ) / 2.0;
+
+        var scale = scratchScale;
+        scale.x = (maxX - minX) / 2.0;
+        scale.y = (maxY - minY) / 2.0;
+        scale.z = (maxZ - minZ) / 2.0;
+
+        var center = result.center;
+        centerOffset = Matrix3.multiplyByVector(halfAxes, centerOffset, centerOffset);
+        Cartesian3.add(this._origin, centerOffset, center);
+        Matrix3.multiplyByScale(halfAxes, scale, halfAxes);
 
         return result;
     };
