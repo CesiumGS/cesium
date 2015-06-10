@@ -8,6 +8,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/IntersectionTests',
+        '../Core/OrientedBoundingBox',
         '../Core/PixelFormat',
         '../Core/Rectangle',
         '../Renderer/PixelDatatype',
@@ -28,6 +29,7 @@ define([
         defined,
         defineProperties,
         IntersectionTests,
+        OrientedBoundingBox,
         PixelFormat,
         Rectangle,
         PixelDatatype,
@@ -124,6 +126,7 @@ define([
         this.maximumHeight = 0.0;
         this.boundingSphere3D = new BoundingSphere();
         this.boundingSphere2D = new BoundingSphere();
+        this.boundingOBB = undefined;
         this.occludeePointInScaledSpace = new Cartesian3();
 
         this.loadedTerrain = undefined;

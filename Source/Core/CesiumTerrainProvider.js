@@ -10,12 +10,16 @@ define([
         './defined',
         './defineProperties',
         './DeveloperError',
+        './EllipsoidTangentPlane',
         './Event',
         './GeographicTilingScheme',
         './HeightmapTerrainData',
         './IndexDatatype',
         './loadArrayBuffer',
         './loadJson',
+        './Math',
+        './Matrix3',
+        './OrientedBoundingBox',
         './QuantizedMeshTerrainData',
         './RuntimeError',
         './TerrainProvider',
@@ -32,12 +36,16 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        EllipsoidTangentPlane,
         Event,
         GeographicTilingScheme,
         HeightmapTerrainData,
         IndexDatatype,
         loadArrayBuffer,
         loadJson,
+        CesiumMath,
+        Matrix3,
+        OrientedBoundingBox,
         QuantizedMeshTerrainData,
         RuntimeError,
         TerrainProvider,
@@ -417,11 +425,19 @@ define([
 
         var skirtHeight = provider.getLevelMaximumGeometricError(level) * 5.0;
 
+        var rectangle = provider._tilingScheme.tileXYToRectangle(x, y, level);
+        var boundingOBB;
+        if (rectangle.width < CesiumMath.PI_OVER_TWO + 0.001) {
+            var tangentPlane = new EllipsoidTangentPlane(center, provider._tilingScheme.ellipsoid);
+            boundingOBB = OrientedBoundingBox.fromRectangleTangentPlane(rectangle, tangentPlane, minimumHeight, maximumHeight);
+        }
+
         return new QuantizedMeshTerrainData({
             center : center,
             minimumHeight : minimumHeight,
             maximumHeight : maximumHeight,
             boundingSphere : boundingSphere,
+            boundingOBB : boundingOBB,
             horizonOcclusionPoint : horizonOcclusionPoint,
             quantizedVertices : encodedVertexBuffer,
             encodedNormals : encodedNormalBuffer,
