@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Use Viewer to start building new applications or easily embed Cesium into existing applications.">
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases">
+    <title>Cesium Demo - Picking Sublayer Regions</title>
+    <script type="text/javascript" src="../../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../../ThirdParty/requirejs-2.1.9/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+    <style type="text/css">
+        @import url(../../templates/bucket.css);
+    </style>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+"use strict";
+//Sandcastle_Begin
+
+var viewer = new Cesium.Viewer('cesiumContainer', { infoBox : false });
+var entities = viewer.entities;
+var scene = viewer.scene;
+var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+
+var pickedObject;
+var stack = {
+    boxes: 10,
+    location: {lon: -70.625353, lat: 41.938152, alt: 0},
+    exterior: {height: 129, length: 15, width: 15},
+    interior: {height: 11.99, length: 14.9, width: 14.9, spacing: 1},
+    entity: entities.add({})
+};
+
+//offset heights to work with bottom height instead of center height of Geometry
+var offsetExteriorHeight = stack.exterior.height / 2;
+var offsetInteriorHeight = stack.interior.height / 2;
+
+//Visible Building Model
+var exterior = entities.add({
+    parent : stack.entity,
+    id: 'stack-exterior',
+    position: Cesium.Cartesian3.fromDegrees(
+            stack.location.lon,
+            stack.location.lat,
+            stack.location.alt + offsetExteriorHeight),
+    box: {
+        dimensions : new Cesium.Cartesian3(
+                stack.exterior.length,
+                stack.exterior.width,
+                stack.exterior.height),
+        material : Cesium.Color.DARKGREEN,
+        fill: true,
+        outline : false,
+        outlineColor : Cesium.Color.BLACK
+    },
+    label: {
+        text: 'Cesium Tower',
+        show: false
+    }
+});
+
+//collection for hittable entity testing
+var hittable = new Cesium.EntityCollection();
+
+//Non-visible "pick-able" Objects
+var interior = new Cesium.Entity({
+    parent: stack.entity,
+    id: 'stack-blocks',
+    show: true
+});
+
+for (var box = 0; box < stack.boxes; box++) {
+    var heightInStack = (box * stack.interior.height) + (box * stack.interior.spacing);
+    entities.add(
+            hittable.add({
+                parent : interior,
+                id: 'stack-blocks-' + box,
+                name: 'Contained Box ' + (box+1),
+                label: {
+                    text: 'Contained Box: ' + (box+1),
+                    show: false,
+                    eyeOffset: new Cesium.Cartesian3(25.0, 0.0, -25.0)
+                },
+                position : Cesium.Cartesian3.fromDegrees(
+                        stack.location.lon,
+                        stack.location.lat,
+                        heightInStack + offsetInteriorHeight),
+                box : {
+                    dimensions : new Cesium.Cartesian3(
+                            stack.interior.length,
+                            stack.interior.width,
+                            stack.interior.height),
+                    material : Cesium.Color.WHITE.withAlpha(0.004),
+                    outline : false,
+                    outlineColor : Cesium.Color.BLUE
+                }
+            })
+    );
+}
+
+entities.add(interior);
+
+viewer.trackedEntity = stack.entity;
+viewer.zoomTo(viewer.entities);
+
+//UI Interactions
+Sandcastle.addToolbarButton('Toggle Stack Exterior Fill', function (){
+    exterior.box.fill = !exterior.box.fill.getValue();
+    exterior.box.outline = !exterior.box.outline.getValue();
+});
+
+Sandcastle.addToolbarButton('Toggle Stack Interior Outlines', function (){
+    var boxes = hittable.values;
+    for (var i = 0; i < boxes.length; i++) {
+        boxes[i].box.outline = !boxes[i].box.outline.getValue();
+    }
+});
+
+handler.setInputAction( function searchHittable(movement) {
+    //flip the shown flags
+    interior.show = true;
+    var currentObjects = scene.drillPick(movement.position);
+    console.log(currentObjects.length + ' entites found');
+
+    //set them back to original state
+    for (var i = 0; i < currentObjects.length; i++) {
+        var current = currentObjects[i].id;
+        if (pickedObject === current) {
+            return; //picked object hasn't changed so do nothing
+        }
+
+        if (hittable.contains(current)) {
+            console.log('picked: ' + current.name);
+
+            //clear the prior selected object
+            ((pickedObject || {}).label || {}).show = false;
+
+            pickedObject = current;
+            pickedObject.label.show = true;
+
+            //stop checking
+            return;
+        }
+    }
+
+    //If a hittable entity was found you would not get here
+    ((pickedObject || {}).label || {}).show = false;
+    pickedObject = undefined;
+
+}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>
