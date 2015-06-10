@@ -2100,16 +2100,14 @@ define([
         this.sun = this.sun && this.sun.destroy();
         this._sunPostProcess = this._sunPostProcess && this._sunPostProcess.destroy();
 
-        this._transitioner.destroy();
+        this._transitioner = this._transitioner && this._transitioner.destroy();
 
-        this._globeDepth.destroy();
-        if (defined(this._oit)) {
-            this._oit.destroy();
-        }
-        this._fxaa.destroy();
+        this._globeDepth = this._globeDepth && this._globeDepth.destroy();
+        this._oit = this._oit && this._oit.destroy();
+        this._fxaa = this._fxaa && this._fxaa.destroy();
 
         this._context = this._context && this._context.destroy();
-        this._frameState.creditDisplay.destroy();
+        this._frameState.creditDisplay = this._frameState.creditDisplay && this._frameState.creditDisplay.destroy();
         if (defined(this._performanceDisplay)){
             this._performanceDisplay = this._performanceDisplay && this._performanceDisplay.destroy();
             this._performanceContainer.parentNode.removeChild(this._performanceContainer);
