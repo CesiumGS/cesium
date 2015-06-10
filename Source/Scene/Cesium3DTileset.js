@@ -84,10 +84,12 @@ define([
         this._statistics = {
             visited : 0,
             frustumTests : 0,
+            numberOfCommands : 0,
 
             lastSelected : -1,
             lastVisited : -1,
-            lastFrustumTests : -1
+            lastFrustumTests : -1,
+            lastNumberOfCommands : -1
         };
 
         /**
@@ -408,6 +410,7 @@ define([
         var stats = tiles3D._statistics;
         stats.visited = 0;
         stats.frustumTests = 0;
+        stats.numberOfCommands = 0;
     }
 
     function showStats(tiles3D, isPick) {
@@ -416,10 +419,12 @@ define([
         if (tiles3D.debugShowStatistics && (
             stats.lastVisited !== stats.visited ||
             stats.lastFrustumTests !== stats.frustumTests ||
+            stats.lastNumberOfCommands !== stats.numberOfCommands ||
             stats.lastSelected !== tiles3D._selectedTiles.length)) {
 
             stats.lastVisited = stats.visited;
             stats.lastFrustumTests = stats.frustumTests;
+            stats.lastNumberOfCommands = stats.numberOfCommands;
             stats.lastSelected = tiles3D._selectedTiles.length;
 
             // Since the pick pass uses a smaller frustum around the pixel of interest,
@@ -431,9 +436,12 @@ define([
                 // This number can be less than the number of tiles visited since spatial coherence is
                 // exploited to avoid unnecessary checks.
                 ', Frustum Tests: ' + stats.frustumTests +
-                // Number of commands executed is likely to be higher than the number of tiles selected
-                // because of tiles that create multiple commands and/or overlap multiple frustums.
-                ', Selected: ' + tiles3D._selectedTiles.length;
+                // Number of commands returned is likely to be higher than the number of tiles selected
+                // because of tiles that create multiple commands.
+                ', Selected: ' + tiles3D._selectedTiles.length +
+                // Number of commands executed is likely to be higher because of commands overlapping
+                // multiple frustums.
+                ', Commands: ' + stats.numberOfCommands;
 
             /*global console*/
             console.log(s);
@@ -441,11 +449,14 @@ define([
     }
 
     function updateTiles(tiles3D, context, frameState, commandList) {
+        var numberOfCommands = commandList.length;
         var selectedTiles = tiles3D._selectedTiles;
         var length = selectedTiles.length;
         for (var i = 0; i < length; ++i) {
             selectedTiles[i].update(tiles3D, context, frameState, commandList);
         }
+
+        tiles3D._statistics.numberOfCommands = (commandList.length - numberOfCommands);
     }
 
     /**
