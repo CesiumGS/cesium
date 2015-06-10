@@ -9,6 +9,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/Ellipsoid',
         '../Core/Event',
         '../Core/GeographicProjection',
         '../Core/GeographicTilingScheme',
@@ -32,6 +33,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        Ellipsoid,
         Event,
         GeographicProjection,
         GeographicTilingScheme,
@@ -89,6 +91,8 @@ define([
      * @param {Number} [options.tileHeight=256] The height of each tile in pixels.  This parameter is ignored when accessing a tiled server.
      * @param {Number} [options.maximumLevel] The maximum tile level to request, or undefined if there is no maximum.  This parameter is ignored when accessing
      *                                        a tiled server.
+     * @param {Object} [options.mapServerData] This MapServer's metadata.  This can be supplied to prevent the imagery provider from making an extraneous
+     *                                         request when the application already has the metadata.
      *
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
@@ -162,8 +166,9 @@ define([
                             data.fullExtent.spatialReference.wkid === 102113) {
 
                             var projection = new WebMercatorProjection();
-                            var sw = projection.unproject(new Cartesian2(data.fullExtent.xmin, data.fullExtent.ymin));
-                            var ne = projection.unproject(new Cartesian2(data.fullExtent.xmax, data.fullExtent.ymax));
+                            var extent = data.fullExtent;
+                            var sw = projection.unproject(new Cartesian3(Math.max(extent.xmin, -Ellipsoid.WGS84.maximumRadius * Math.PI), Math.max(extent.ymin, -Ellipsoid.WGS84.maximumRadius * Math.PI), 0.0));
+                            var ne = projection.unproject(new Cartesian3(Math.min(extent.xmax, Ellipsoid.WGS84.maximumRadius * Math.PI), Math.min(extent.ymax, Ellipsoid.WGS84.maximumRadius * Math.PI), 0.0));
                             that._rectangle = new Rectangle(sw.longitude, sw.latitude, ne.longitude, ne.latitude);
                         } else if (data.fullExtent.spatialReference.wkid === 4326) {
                             that._rectangle = Rectangle.fromDegrees(data.fullExtent.xmin, data.fullExtent.ymin, data.fullExtent.xmax, data.fullExtent.ymax);
@@ -212,7 +217,9 @@ define([
             when(metadata, metadataSuccess, metadataFailure);
         }
 
-        if (this._useTiles) {
+        if (defined(options.mapServerData)) {
+            metadataSuccess(options.mapServerData);
+        } else if (this._useTiles) {
             requestMetadata();
         } else {
             this._ready = true;
