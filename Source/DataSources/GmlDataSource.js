@@ -115,6 +115,13 @@ define([
     function processFeatureCollection(that, gml) {
         var documentNode = gml.documentElement;
         var featureCollection = documentNode.getElementsByTagNameNS(gmlns, "featureMember") || documentNode.getElementsByTagNameNS(gmlns, "featureMembers");
+        
+/*        var crsFunction = defaultCrsFunction;
+        var boundByNode = documentNode.getElementsByTagNameNS(gmlns, "BoundBy");
+        if(boundByNode) {
+        	//crsFunction = getCrsFromBoundBy()
+        }
+*/        
         for(var i=0; i<featureCollection.length; i++) {
             var features = featureCollection[i].children;
             for(var j=0; j<features.length; j++) {
@@ -124,31 +131,38 @@ define([
     }
 
     function processFeature(that, feature, options) {
-        var i, geometryHandler, geometryElement;
-        var properties = feature.children;
-        for(i=0; i<properties.length; i++) {
-            var childCount = properties[i].childElementCount;
-            //elementCount > 0 implies that the property is geometry property.
-            //elementCount = 0 implies that the property is simple type(non-spatial).
-            if(childCount > 0) {
-                //elementCount = 2 when BoundBy is also present.
-                if(childCount == 1) {
-                    geometryElement = properties[i].firstElementChild;
-                    geometryHandler = geometryTypes[geometryElement.localName];
-                } else if(childCount == 2) {
-                    //Get srs from BoundBy element.
-                    geomtryElement = properties[i].firstElementChild;
-                    geometryHandler = geometryTypes[geometryElement.localName];
-                }
-                geometryHandler(that, geometryElement, options);
-            } else if(childCount == 0) {
-                //Non-spatial property. Will deal with this later.
-                ;
+        var i, j, geometryHandler, geometryElements = [];
+        var properties = {};
+        var elements = feature.children;
+        for(i=0; i<elements.length; i++) {
+            var childCount = elements[i].childElementCount;
+            if(childCount == 0) {
+                //Non-nested non-spatial properties.
+                properties[elements[i].localName] = elements[i].textContent;
+            } else if(childCount > 0) {
+            	//Nested and geometry properties.
+            	var subElements = elements[i].children;
+            	var prop = {};
+            	for(j=0; j<childCount; j++) {
+            		if(subElements[j].namespaceURI === gmlns) {
+            			geometryElements.push(subElements[j]);
+            		} else {
+            			prop[subElements[j].localName] = subElements[j].textContent;
+            		}
+            	}
+            	if(Object.keys(prop).length) {
+            		properties[elements[i].localName] = prop;
+            	}
             }
+        }
+
+        for(i=0; i<geometryElements.length; i++) {
+        	geometryHandler = geometryTypes[geometryElements[i].localName];
+        	geometryHandler(that, geometryElements[i], properties);
         }
     }
 
-    function processPoint(that, point, options) {
+    function processPoint(that, point, properties) {
         var coordinates = point.firstElementChild.textContent;
         coordinates = coordinates.split(" ");
         for(var i=0; i<coordinates.length; i++) {
@@ -157,10 +171,20 @@ define([
         if(coordinates.length == 2) {
             coordinates.push(0.0);
         }
-        createPoint(that, coordinates, options);
+        createPoint(that, coordinates, properties);
     }
 
-    function createPoint(that, coordinates) {
+/*    function processMultiPoint(that, multiPoint, properties) {
+        var pointMembers = multiPoint.getElementsByTagNameNS(gmlns, "pointMember") || multiPoint.getElementsByTagNameNS(gmlns, "pointMembers");
+        for(i=0; i<pointMembers.length; i++) {
+            var points = pointMembers[i].children;
+            for(j=0; j<points.length; i++) {
+            	processPoint(that, point, options);
+            }
+        }    	
+    }
+*/
+    function createPoint(that, coordinates, properties) {
         var canvasOrPromise = that._pinBuilder.fromColor(defaultMarkerColor, defaultMarkerSize);
 
         that._promises.push(when(canvasOrPromise, function(dataUrl) {
@@ -169,6 +193,8 @@ define([
             billboard.image = new ConstantProperty(dataUrl);
 
             var entity = createObject(that._entityCollection);
+            entity.addProperty('properties');
+            entity.properties = properties;
             entity.billboard = billboard;
             entity.position = new ConstantPositionProperty(defaultCrsFunction(coordinates));
         }));
