@@ -1,6 +1,6 @@
 {
   "name": "Cesium",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "homepage": "https://github.com/AnalyticalGraphicsInc/cesium",
   "authors": [
     "Mike LP <mikelp@agi.com>"
@@ -44,5 +44,10 @@
   ],
   "devDependencies": {
     "bootstrap": "~3.3.4"
+  },
+  "dependencies": {
+    "react": "~0.13.3",
+    "pubsubjs": "~0.3.9",
+    "jquery": "~2.1.4"
   }
 }
