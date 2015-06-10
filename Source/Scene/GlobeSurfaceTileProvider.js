@@ -399,7 +399,7 @@ define([
 
         var cullingVolume = frameState.cullingVolume;
 
-        var boundingVolume = defaultValue(surfaceTile.boundingOBB, surfaceTile.boundingSphere3D);
+        var boundingVolume = defaultValue(surfaceTile.orientedBoundingBox, surfaceTile.boundingSphere3D);
 
         if (frameState.mode !== SceneMode.SCENE3D) {
             boundingVolume = boundingSphereScratch;
@@ -897,7 +897,7 @@ define([
                 command.owner = tile;
                 command.cull = false;
                 command.boundingVolume = new BoundingSphere();
-                command.boundingOBB = undefined;
+                command.orientedBoundingBox = undefined;
 
                 uniformMap = createTileUniformMap();
 
@@ -1007,7 +1007,7 @@ define([
             }
 
             var boundingVolume = command.boundingVolume;
-            var boundingOBB = command.boundingOBB;
+            var orientedBoundingBox = command.orientedBoundingBox;
 
             if (frameState.mode !== SceneMode.SCENE3D) {
                 BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.mapProjection, surfaceTile.minimumHeight, surfaceTile.maximumHeight, boundingVolume);
@@ -1018,7 +1018,7 @@ define([
                 }
             } else {
                 command.boundingVolume = BoundingSphere.clone(surfaceTile.boundingSphere3D, boundingVolume);
-                command.boundingOBB = OrientedBoundingBox.clone(surfaceTile.boundingOBB, boundingOBB);
+                command.orientedBoundingBox = OrientedBoundingBox.clone(surfaceTile.orientedBoundingBox, orientedBoundingBox);
             }
 
             commandList.push(command);

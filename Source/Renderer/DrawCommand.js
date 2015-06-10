@@ -40,7 +40,7 @@ define([
          *
          * @see DrawCommand#debugShowBoundingVolume
          */
-        this.boundingOBB = options.boundingOBB;
+        this.orientedBoundingBox = options.orientedBoundingBox;
 
         /**
          * When <code>true</code>, the renderer frustum and horizon culls the command based on its {@link DrawCommand#boundingVolume}.

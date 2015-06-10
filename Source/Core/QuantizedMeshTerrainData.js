@@ -46,7 +46,7 @@ define([
      * @param {Number} options.minimumHeight The minimum terrain height within the tile, in meters above the ellipsoid.
      * @param {Number} options.maximumHeight The maximum terrain height within the tile, in meters above the ellipsoid.
      * @param {BoundingSphere} options.boundingSphere A sphere bounding all of the vertices in the mesh.
-     * @param {OrientedBoundingBox} [options.boundingOBB] An OrientedBoundingBox bounding all of the vertices in the mesh.
+     * @param {OrientedBoundingBox} [options.orientedBoundingBox] An OrientedBoundingBox bounding all of the vertices in the mesh.
      * @param {Cartesian3} options.horizonOcclusionPoint The horizon occlusion point of the mesh.  If this point
      *                      is below the horizon, the entire tile is assumed to be below the horizon as well.
      *                      The point is expressed in ellipsoid-scaled coordinates.
@@ -91,7 +91,7 @@ define([
      *     indices : new Uint16Array([0, 3, 1,
      *                                0, 2, 3]),
      *     boundingSphere : new Cesium.BoundingSphere(new Cesium.Cartesian3(1.0, 2.0, 3.0), 10000),
-     *     boundingOBB : new Cesium.OrientedBoundingBox(new Cesium.Cartesian3(1.0, 2.0, 3.0), Matrix3.fromRotationX(Cesium.Math.PI, new Matrix3())),
+     *     orientedBoundingBox : new Cesium.OrientedBoundingBox(new Cesium.Cartesian3(1.0, 2.0, 3.0), Matrix3.fromRotationX(Cesium.Math.PI, new Matrix3())),
      *     horizonOcclusionPoint : new Cesium.Cartesian3(3.0, 2.0, 1.0),
      *     westIndices : [0, 1],
      *     southIndices : [0, 1],
@@ -158,7 +158,7 @@ define([
         this._minimumHeight = options.minimumHeight;
         this._maximumHeight = options.maximumHeight;
         this._boundingSphere = options.boundingSphere;
-        this._boundingOBB = options.boundingOBB;
+        this._orientedBoundingBox = options.orientedBoundingBox;
         this._horizonOcclusionPoint = options.horizonOcclusionPoint;
 
         var vertexCount = this._quantizedVertices.length / 3;
@@ -297,7 +297,7 @@ define([
                     that._boundingSphere,
                     that._horizonOcclusionPoint,
                     defined(that._encodedNormals) ? 7 : 6,
-                    that._boundingOBB);
+                    that._orientedBoundingBox);
         });
     };
 
@@ -394,7 +394,7 @@ define([
                 minimumHeight : result.minimumHeight,
                 maximumHeight : result.maximumHeight,
                 boundingSphere : BoundingSphere.clone(result.boundingSphere),
-                boundingOBB : OrientedBoundingBox.clone(result.boundingOBB),
+                orientedBoundingBox : OrientedBoundingBox.clone(result.orientedBoundingBox),
                 horizonOcclusionPoint : Cartesian3.clone(result.horizonOcclusionPoint),
                 westIndices : result.westIndices,
                 southIndices : result.southIndices,

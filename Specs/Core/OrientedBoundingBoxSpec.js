@@ -77,63 +77,32 @@ defineSuite([
         expect(box.halfAxes).toEqual(Matrix3.ZERO);
     });
 
-    it('fromBoundingRectangle throws without rectangle', function() {
+    it('fromEllipsoidRectangle throws without ellipsoid', function() {
+        var rectangle = new Rectangle(0.0, 0.0, 0.0, 0.0);
         expect(function() {
-            OrientedBoundingBox.fromBoundingRectangle();
+            OrientedBoundingBox.fromEllipsoidRectangle(undefined, rectangle, 0.0, 0.0);
         }).toThrowDeveloperError();
     });
 
-    it('fromBoundingRectangle returns zero-size OrientedBoundingBox given a zero-size BoundingRectangle', function() {
-        var box = OrientedBoundingBox.fromBoundingRectangle(new BoundingRectangle());
-        expect(box.center).toEqual(Cartesian3.ZERO);
-        expect(box.halfAxes).toEqual(Matrix3.ZERO);
-    });
-
-    it('fromBoundingRectangle creates an OrientedBoundingBox without a result parameter', function() {
-        var rect = new BoundingRectangle(1.0, 2.0, 3.0, 4.0);
-        var angle = CesiumMath.PI_OVER_TWO;
-        var box = OrientedBoundingBox.fromBoundingRectangle(rect, angle);
-        var rotation = Matrix3.fromRotationZ(angle);
-        expect(box.center).toEqual(new Cartesian3(-1.0, 3.5, 0.0));
-
-        var rotScale = new Matrix3();
-        Matrix3.multiply(rotation, Matrix3.fromScale(new Cartesian3(1.5, 2.0, 0.0)), rotScale);
-        expect(box.halfAxes).toEqualEpsilon(rotScale, CesiumMath.EPSILON15);
-    });
-
-    it('fromBoundingRectangle creates an OrientedBoundingBox with a result parameter', function() {
-        var rect = new BoundingRectangle(1.0, 2.0, 3.0, 4.0);
-        var angle = CesiumMath.PI_OVER_TWO;
-        var result = new OrientedBoundingBox();
-        var box = OrientedBoundingBox.fromBoundingRectangle(rect, angle, result);
-        expect(box).toBe(result);
-        var rotation = Matrix3.fromRotationZ(angle);
-
-        expect(box.center).toEqual(new Cartesian3(-1.0, 3.5, 0.0));
-
-        var rotScale = new Matrix3();
-        Matrix3.multiply(rotation, Matrix3.fromScale(new Cartesian3(1.5, 2.0, 0.0)), rotScale);
-        expect(box.halfAxes).toEqualEpsilon(rotScale, CesiumMath.EPSILON15);
-    });
-
-    it('fromRectangleTangentPlane throws without rectangle', function() {
-        var pl = new EllipsoidTangentPlane(Cartesian3.UNIT_X, Ellipsoid.UNIT_SPHERE);
+    it('fromEllipsoidRectangle throws without rectangle', function() {
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
         expect(function() {
-            return OrientedBoundingBox.fromRectangleTangentPlane(undefined, pl, 0.0, 0.0);
+            OrientedBoundingBox.fromEllipsoidRectangle(ellipsoid, undefined, 0.0, 0.0);
         }).toThrowDeveloperError();
     });
 
-    it('fromRectangleTangentPlane throws without tangentPlane', function() {
-        var rect = new BoundingRectangle(1.0, 2.0, 3.0, 4.0);
-        expect(function() {
-            return OrientedBoundingBox.fromRectangleTangentPlane(rect, undefined, 0.0, 0.0);
-        }).toThrowDeveloperError();
+    it('fromEllipsoidRectangle throws with invalid rectangles', function() {
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        expect(function() { return OrientedBoundingBox.fromEllipsoidRectangle(ellipsoid, new Rectangle(1.0, -1.0, -1.0, 1.0), 0.0, 0.0); }).toThrowDeveloperError();
+        expect(function() { return OrientedBoundingBox.fromEllipsoidRectangle(ellipsoid, new Rectangle(-1.0, 1.0, 1.0, -1.0), 0.0, 0.0); }).toThrowDeveloperError();
+        expect(function() { return OrientedBoundingBox.fromEllipsoidRectangle(ellipsoid, new Rectangle(-1.0, 1.0, -2.0, 2.0), 0.0, 0.0); }).toThrowDeveloperError();
+        expect(function() { return OrientedBoundingBox.fromEllipsoidRectangle(ellipsoid, new Rectangle(-2.0, 2.0, -1.0, 1.0), 0.0, 0.0); }).toThrowDeveloperError();
     });
 
-    it('fromRectangleTangentPlane creates an OrientedBoundingBox without a result parameter', function() {
-        var rect = new Rectangle(0.0, 0.0, 0.0, 0.0);
-        var pl = new EllipsoidTangentPlane(Cartesian3.UNIT_X, Ellipsoid.UNIT_SPHERE);
-        var box = OrientedBoundingBox.fromRectangleTangentPlane(rect, pl, 0.0, 0.0);
+    it('fromEllipsoidRectangle creates an OrientedBoundingBox without a result parameter', function() {
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var rectangle = new Rectangle(0.0, 0.0, 0.0, 0.0);
+        var box = OrientedBoundingBox.fromEllipsoidRectangle(ellipsoid, rectangle, 0.0, 0.0);
 
         expect(box.center).toEqualEpsilon(new Cartesian3(1.0, 0.0, 0.0), CesiumMath.EPSILON15);
 
@@ -141,11 +110,11 @@ defineSuite([
         expect(box.halfAxes).toEqualEpsilon(rotScale, CesiumMath.EPSILON15);
     });
 
-    it('fromRectangleTangentPlane creates an OrientedBoundingBox with a result parameter', function() {
-        var rect = new Rectangle(0.0, 0.0, 0.0, 0.0);
-        var pl = new EllipsoidTangentPlane(Cartesian3.UNIT_X, Ellipsoid.UNIT_SPHERE);
+    it('fromEllipsoidRectangle creates an OrientedBoundingBox with a result parameter', function() {
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var rectangle = new Rectangle(0.0, 0.0, 0.0, 0.0);
         var result = new OrientedBoundingBox();
-        var box = OrientedBoundingBox.fromRectangleTangentPlane(rect, pl, 0.0, 0.0, result);
+        var box = OrientedBoundingBox.fromEllipsoidRectangle(ellipsoid, rectangle, 0.0, 0.0, result);
         expect(box).toBe(result);
 
         expect(box.center).toEqualEpsilon(new Cartesian3(1.0, 0.0, 0.0), CesiumMath.EPSILON15);
@@ -154,66 +123,130 @@ defineSuite([
         expect(box.halfAxes).toEqualEpsilon(rotScale, CesiumMath.EPSILON15);
     });
 
-    it('fromRectangleTangentPlane from a degenerate rectangle from (-45, 0) to (45, 0)', function() {
+    it('fromEllipsoidRectangle for interesting, degenerate, and edge-case rectangles', function() {
         var d45 = CesiumMath.PI_OVER_FOUR;
-        var rect = new Rectangle(-d45, 0.0, d45, 0.0);
-        var pl = new EllipsoidTangentPlane(Cartesian3.UNIT_X, Ellipsoid.UNIT_SPHERE);
-        var result = new OrientedBoundingBox();
-        var box = OrientedBoundingBox.fromRectangleTangentPlane(rect, pl, 0.0, 0.0, result);
-        expect(box).toBe(result);
-
-        expect(box.center).toEqualEpsilon(new Cartesian3((1.0 + Math.SQRT1_2) / 2.0, 0.0, 0.0), CesiumMath.EPSILON15);
-
-        var rotScale = new Matrix3(0.0, 0.0, 0.5 * (1.0 - Math.SQRT1_2), Math.SQRT1_2, 0.0, 0.0, 0.0, 0.0, 0.0);
-        expect(box.halfAxes).toEqualEpsilon(rotScale, CesiumMath.EPSILON15);
-    });
-
-    it('fromRectangleTangentPlane from a degenerate rectangle from (135, 0) to (-135, 0)', function() {
+        var d90 = CesiumMath.PI_OVER_TWO;
         var d135 = 3 * CesiumMath.PI_OVER_FOUR;
-        var rect = new Rectangle(d135, 0.0, -d135, 0.0);
-        var pl = new EllipsoidTangentPlane(new Cartesian3(-1.0, 0.0, 0.0), Ellipsoid.UNIT_SPHERE);
-        var result = new OrientedBoundingBox();
-        var box = OrientedBoundingBox.fromRectangleTangentPlane(rect, pl, 0.0, 0.0, result);
-        expect(box).toBe(result);
+        var d180 = CesiumMath.PI;
 
-        expect(box.center).toEqualEpsilon(new Cartesian3(-(1.0 + Math.SQRT1_2) / 2.0, 0.0, 0.0), CesiumMath.EPSILON15);
+        var box;
 
-        var rotScale = new Matrix3(0.0, 0.0, -0.5 * (1.0 - Math.SQRT1_2), -Math.SQRT1_2, 0.0, 0.0, 0.0, 0.0, 0.0);
-        expect(box.halfAxes).toEqualEpsilon(rotScale, CesiumMath.EPSILON15);
-    });
+        box = OrientedBoundingBox.fromEllipsoidRectangle(Ellipsoid.UNIT_SPHERE,new Rectangle(0.0, 0.0, 0.0, 0.0), 0.0, 0.0);
+        expect(box.center).toEqualEpsilon(new Cartesian3(1.0, 0.0, 0.0), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(Matrix3.ZERO, CesiumMath.EPSILON15);
 
-    it('fromRectangleTangentPlane from a degenerate rectangle from (0, -45) to (0, 45)', function() {
-        var d45 = CesiumMath.PI_OVER_FOUR;
-        var rect = new Rectangle(0.0, -d45, 0.0, d45);
-        var pl = new EllipsoidTangentPlane(Cartesian3.UNIT_X, Ellipsoid.UNIT_SPHERE);
-        var result = new OrientedBoundingBox();
-        var box = OrientedBoundingBox.fromRectangleTangentPlane(rect, pl, 0.0, 0.0, result);
-        expect(box).toBe(result);
+        box = OrientedBoundingBox.fromEllipsoidRectangle(Ellipsoid.UNIT_SPHERE, new Rectangle(d180, 0.0, -d180, 0.0), 0.0, 0.0);
+        expect(box.center).toEqualEpsilon(new Cartesian3(-1.0, 0.0, 0.0), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(Matrix3.ZERO, CesiumMath.EPSILON15);
 
+        box = OrientedBoundingBox.fromEllipsoidRectangle(Ellipsoid.UNIT_SPHERE, new Rectangle(d180, 0.0, d180, 0.0), 0.0, 0.0);
+        expect(box.center).toEqualEpsilon(new Cartesian3(-1.0, 0.0, 0.0), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(Matrix3.ZERO, CesiumMath.EPSILON15);
+
+        box = OrientedBoundingBox.fromEllipsoidRectangle(Ellipsoid.UNIT_SPHERE, new Rectangle(0.0, d90, 0.0, d90), 0.0, 0.0);
+        expect(box.center).toEqualEpsilon(new Cartesian3(0.0, 0.0, 1.0), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(Matrix3.ZERO, CesiumMath.EPSILON15);
+
+        box = OrientedBoundingBox.fromEllipsoidRectangle(Ellipsoid.UNIT_SPHERE, new Rectangle(0.0, 0.0, d180, 0.0), 0.0, 0.0);
+        expect(box.center).toEqualEpsilon(new Cartesian3(0.0, 0.5, 0.0), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(new Matrix3(-1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0), CesiumMath.EPSILON15);
+
+        box = OrientedBoundingBox.fromEllipsoidRectangle(Ellipsoid.UNIT_SPHERE, new Rectangle(-d90, -d90, d90, d90), 0.0, 0.0);
+        expect(box.center).toEqualEpsilon(new Cartesian3(0.5, 0.0, 0.0), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(new Matrix3(0.0, 0.0, 0.5, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0), CesiumMath.EPSILON15);
+
+        box = OrientedBoundingBox.fromEllipsoidRectangle(Ellipsoid.UNIT_SPHERE, new Rectangle(-d90, -d45, d90, d90), 0.0, 0.0);
+        expect(box.center).toEqualEpsilon(new Cartesian3(0.5, 0.0, 0.5 * (1.0 - Math.SQRT1_2)), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(new Matrix3(0.0, 0.0, 0.5, 1.0, 0.0, 0.0, 0.0, 0.5 * (1.0 + Math.SQRT1_2), 0.0), CesiumMath.EPSILON15);
+
+        box = OrientedBoundingBox.fromEllipsoidRectangle(Ellipsoid.UNIT_SPHERE, new Rectangle(-d45, 0.0, d45, 0.0), 0.0, 0.0);
         expect(box.center).toEqualEpsilon(new Cartesian3((1.0 + Math.SQRT1_2) / 2.0, 0.0, 0.0), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(new Matrix3(0.0, 0.0, 0.5 * (1.0 - Math.SQRT1_2), Math.SQRT1_2, 0.0, 0.0, 0.0, 0.0, 0.0), CesiumMath.EPSILON15);
 
-        var rotScale = new Matrix3(0.0, 0.0, 0.5 * (1.0 - Math.SQRT1_2), 0.0, 0.0, 0.0, 0.0, Math.SQRT1_2, 0.0);
-        expect(box.halfAxes).toEqualEpsilon(rotScale, CesiumMath.EPSILON15);
-    });
-
-    it('fromRectangleTangentPlane from a degenerate rectangle from (0, 135) to (0, -135)', function() {
-        var d135 = 3 * CesiumMath.PI_OVER_FOUR;
-        var rect = new Rectangle(0.0, d135, 0.0, -d135);
-        var pl = new EllipsoidTangentPlane(new Cartesian3(-1.0, 0.0, 0.0), Ellipsoid.UNIT_SPHERE);
-        var result = new OrientedBoundingBox();
-        var box = OrientedBoundingBox.fromRectangleTangentPlane(rect, pl, 0.0, 0.0, result);
-        expect(box).toBe(result);
-
+        box = OrientedBoundingBox.fromEllipsoidRectangle(Ellipsoid.UNIT_SPHERE, new Rectangle(d135, 0.0, -d135, 0.0), 0.0, 0.0);
         expect(box.center).toEqualEpsilon(new Cartesian3(-(1.0 + Math.SQRT1_2) / 2.0, 0.0, 0.0), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(new Matrix3(0.0, 0.0, -0.5 * (1.0 - Math.SQRT1_2), -Math.SQRT1_2, 0.0, 0.0, 0.0, 0.0, 0.0), CesiumMath.EPSILON15);
 
-        var rotScale = new Matrix3(0.0, 0.0, -0.5 * (1.0 - Math.SQRT1_2), 0.0, 0.0, 0.0, 0.0, -Math.SQRT1_2, 0.0);
-        expect(box.halfAxes).toEqualEpsilon(rotScale, CesiumMath.EPSILON15);
+        box = OrientedBoundingBox.fromEllipsoidRectangle(Ellipsoid.UNIT_SPHERE, new Rectangle(0.0, -d45, 0.0, d45), 0.0, 0.0);
+        expect(box.center).toEqualEpsilon(new Cartesian3((1.0 + Math.SQRT1_2) / 2.0, 0.0, 0.0), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(new Matrix3(0.0, 0.0, 0.5 * (1.0 - Math.SQRT1_2), 0.0, 0.0, 0.0, 0.0, Math.SQRT1_2, 0.0), CesiumMath.EPSILON15);
+
+        box = OrientedBoundingBox.fromEllipsoidRectangle(Ellipsoid.UNIT_SPHERE, new Rectangle(-d90, 0.0, d90, 0.0), 0.0, 0.0);
+        expect(box.center).toEqualEpsilon(new Cartesian3(0.5, 0.0, 0.0), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(new Matrix3(0.0, 0.0, 0.5, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0), CesiumMath.EPSILON15);
+
+        box = OrientedBoundingBox.fromEllipsoidRectangle(Ellipsoid.UNIT_SPHERE, new Rectangle(0.0, -d90, 0.0, d90), 0.0, 0.0);
+        expect(box.center).toEqualEpsilon(new Cartesian3(0.5, 0.0, 0.0), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(new Matrix3(0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0), CesiumMath.EPSILON15);
     });
 
-    /**
-     * @param {Cartesian3} center
-     * @param {Matrix3} axes
-     */
+    /*
+    it('extentsToOrientedBoundingBox works with a result parameter', function() {
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var origin = Cartesian3.UNIT_X;
+        var pl = new EllipsoidTangentPlane(origin, ellipsoid);
+        var result = new OrientedBoundingBox();
+        result = pl.extentsToOrientedBoundingBox(-0.5, 0.5, -0.5, 0.5, -0.5, 0.5, result);
+        var expected = new OrientedBoundingBox(origin,
+            new Matrix3(0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.0, 0.5, 0.0));
+        expect(result).toEqual(expected);
+    });
+
+    it('extentsToOrientedBoundingBox works without a result parameter', function() {
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var origin = Cartesian3.UNIT_X;
+        var pl = new EllipsoidTangentPlane(origin, ellipsoid);
+        var result = pl.extentsToOrientedBoundingBox(-0.5, 0.5, -0.5, 0.5, -0.5, 0.5);
+        var expected = new OrientedBoundingBox(origin,
+            new Matrix3(0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.0, 0.5, 0.0));
+        expect(result).toEqual(expected);
+    });
+
+    it('extentsToOrientedBoundingBox throws missing any of the dimensional parameters', function() {
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var origin = new Cartesian3(1.0, 0.0, 0.0);
+        var pl = new EllipsoidTangentPlane(origin, ellipsoid);
+        var result = new OrientedBoundingBox();
+        expect(function() { pl.extentsToOrientedBoundingBox(undefined, 0.5, -0.5, 0.5, -0.5, 0.5, result);  }).toThrowDeveloperError();
+        expect(function() { pl.extentsToOrientedBoundingBox(-0.5, undefined, -0.5, 0.5, -0.5, 0.5, result); }).toThrowDeveloperError();
+        expect(function() { pl.extentsToOrientedBoundingBox(-0.5, 0.5, undefined, 0.5, -0.5, 0.5, result);  }).toThrowDeveloperError();
+        expect(function() { pl.extentsToOrientedBoundingBox(-0.5, 0.5, -0.5, undefined, -0.5, 0.5, result); }).toThrowDeveloperError();
+        expect(function() { pl.extentsToOrientedBoundingBox(-0.5, 0.5, -0.5, 0.5, undefined, 0.5, result);  }).toThrowDeveloperError();
+        expect(function() { pl.extentsToOrientedBoundingBox(-0.5, 0.5, -0.5, 0.5, -0.5, undefined, result); }).toThrowDeveloperError();
+    });
+
+    it('extentsToOrientedBoundingBox works with some edge-ish cases', function() {
+        var res, exp;
+        var result = new OrientedBoundingBox();
+        var ellipsoid;
+
+        ellipsoid = Ellipsoid.UNIT_SPHERE;
+        res = new EllipsoidTangentPlane(Cartesian3.UNIT_X, ellipsoid).extentsToOrientedBoundingBox(-0.3, 0.3, -0.3, 0.3, -0.3, 0.3, res);
+        exp = new OrientedBoundingBox(Cartesian3.UNIT_X,
+            new Matrix3(0.0, 0.0, 0.3, 0.3, 0.0, 0.0, 0.0, 0.3, 0.0));
+        expect(res.center).toEqualEpsilon(exp.center, CesiumMath.EPSILON15);
+        expect(res.halfAxes).toEqualEpsilon(exp.halfAxes, CesiumMath.EPSILON15);
+
+        ellipsoid = Ellipsoid.UNIT_SPHERE;
+        res = new EllipsoidTangentPlane(Cartesian3.UNIT_Z, ellipsoid).extentsToOrientedBoundingBox(-0.3, 0.3, -0.3, 0.3, -0.3, 0.3, res);
+        expect(res.center).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON15);
+
+        ellipsoid = Ellipsoid.UNIT_SPHERE;
+        res = new EllipsoidTangentPlane(Cartesian3.UNIT_Y, ellipsoid).extentsToOrientedBoundingBox(-0.3, 0.3, -0.3, 0.3, -0.3, 0.3, res);
+        exp = new OrientedBoundingBox(Cartesian3.UNIT_Y,
+            new Matrix3(-0.3, 0.0, 0.0, 0.0, 0.0, 0.3, 0.0, 0.3, 0.0));
+        expect(res.center).toEqualEpsilon(exp.center, CesiumMath.EPSILON15);
+        expect(res.halfAxes).toEqualEpsilon(exp.halfAxes, CesiumMath.EPSILON15);
+
+        ellipsoid = Ellipsoid.UNIT_SPHERE;
+        res = new EllipsoidTangentPlane(Cartesian3.UNIT_X, ellipsoid).extentsToOrientedBoundingBox(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, res);
+        exp = new OrientedBoundingBox(Cartesian3.UNIT_X,
+            new Matrix3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+        expect(res.center).toEqualEpsilon(exp.center, CesiumMath.EPSILON15);
+        expect(res.halfAxes).toEqualEpsilon(exp.halfAxes, CesiumMath.EPSILON15);
+    });
+    */
+
     var intersectPlaneTestCornersEdgesFaces = function(center, axes) {
         var SQRT1_2 = Math.pow(1.0 / 2.0, 1 / 2.0);
         var SQRT1_3 = Math.pow(1.0 / 3.0, 1 / 2.0);
@@ -248,7 +281,6 @@ defineSuite([
 
         var pl;
 
-
         // Tests against faces
 
         pl = planeNormXform(+1.0, +0.0, +0.0,  0.50001); if (pl) { expect(box.intersectPlane(pl)).toEqual(Intersect.INSIDE); }
@@ -278,7 +310,6 @@ defineSuite([
         pl = planeNormXform(+0.0, -1.0, +0.0, -0.50001); if (pl) { expect(box.intersectPlane(pl)).toEqual(Intersect.OUTSIDE); }
         pl = planeNormXform(+0.0, +0.0, +1.0, -0.50001); if (pl) { expect(box.intersectPlane(pl)).toEqual(Intersect.OUTSIDE); }
         pl = planeNormXform(+0.0, +0.0, -1.0, -0.50001); if (pl) { expect(box.intersectPlane(pl)).toEqual(Intersect.OUTSIDE); }
-
 
         // Tests against edges
 
@@ -333,7 +364,6 @@ defineSuite([
         pl = planeNormXform(+0.0, +1.0, -1.0, -SQRT1_2 - 0.00001); if (pl) { expect(box.intersectPlane(pl)).toEqual(Intersect.OUTSIDE); }
         pl = planeNormXform(+0.0, -1.0, +1.0, -SQRT1_2 - 0.00001); if (pl) { expect(box.intersectPlane(pl)).toEqual(Intersect.OUTSIDE); }
         pl = planeNormXform(+0.0, -1.0, -1.0, -SQRT1_2 - 0.00001); if (pl) { expect(box.intersectPlane(pl)).toEqual(Intersect.OUTSIDE); }
-
 
         // Tests against corners
 

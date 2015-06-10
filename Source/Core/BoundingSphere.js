@@ -4,6 +4,7 @@ define([
         './Cartographic',
         './defaultValue',
         './defined',
+        './deprecationWarning',
         './DeveloperError',
         './Ellipsoid',
         './GeographicProjection',
@@ -17,6 +18,7 @@ define([
         Cartographic,
         defaultValue,
         defined,
+        deprecationWarning,
         DeveloperError,
         Ellipsoid,
         GeographicProjection,
@@ -792,6 +794,7 @@ define([
      *                      intersects the plane.
      */
     BoundingSphere.intersect = function(sphere, plane) {
+        deprecationWarning('BoundingSphere.intersect', 'BoundingSphere.intersect() was deprecated in Cesium 1.11.  It will be removed in 1.12.  Use BoundingSphere.intersectPlane() instead.');
         var p = Plane.fromCartesian4(plane, scratchPlane);
         return BoundingSphere.intersectPlane(sphere, p);
     };

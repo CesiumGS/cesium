@@ -7,6 +7,7 @@ define([
         './defined',
         './DeveloperError',
         './Ellipsoid',
+        './EllipsoidTangentPlane',
         './Intersect',
         './Plane',
         './Rectangle',
@@ -20,6 +21,7 @@ define([
         defined,
         DeveloperError,
         Ellipsoid,
+        EllipsoidTangentPlane,
         Intersect,
         Plane,
         Rectangle,
@@ -29,8 +31,7 @@ define([
 
     /**
      * Creates an instance of an OrientedBoundingBox.
-     * An OrientedBoundingBox model of an object or set of objects, is a closed volume (a cuboid), which completely contains the object or the set of objects.
-     * It is oriented, so it can provide an optimum fit, it can bound more tightly.
+     * An OrientedBoundingBox of some object is a closed and convex cuboid. It can provide a tighter bounding volume than {@link BoundingSphere} or {@link AxisAlignedBoundingBox} in many cases.
      * @alias OrientedBoundingBox
      * @constructor
      *
@@ -39,15 +40,13 @@ define([
      *                                          Equivalently, the transformation matrix, to rotate and scale a 2x2x2
      *                                          cube centered at the origin.
      *
-     * @see OrientedBoundingBox.fromBoundingRectangle
      * @see BoundingSphere
      * @see BoundingRectangle
-     * @see ObjectOrientedBoundingBox
      *
      * @example
      * // Create an OrientedBoundingBox using a transformation matrix, a position where the box will be translated, and a scale.
-     * var center = new Cesium.Cartesian3(1,0,0);
-     * var halfAxes = Cesium.Matrix3.clone(Cesium.Matrix3.fromScale(new Cartesian3(1.0, 3.0, 2.0)));
+     * var center = new Cesium.Cartesian3(1.0, 0.0, 0.0);
+     * var halfAxes = Cesium.Matrix3.fromScale(new Cartesian3(1.0, 3.0, 2.0), new Matrix3());
      *
      * var obb = new Cesium.OrientedBoundingBox(center, halfAxes);
      */
@@ -66,28 +65,29 @@ define([
         this.halfAxes = Matrix3.clone(defaultValue(halfAxes, Matrix3.ZERO));
     };
 
-    var scratchCartesian1 = new Cartesian3();
-    var scratchCartesian2 = new Cartesian3();
-    var scratchCartesian3 = new Cartesian3();
-
-    var scratchRotation = new Matrix3();
+    var scratchOffset = new Cartesian3();
+    var scratchScale = new Cartesian3();
     /**
-     * Computes an OrientedBoundingBox from a BoundingRectangle.
-     * The BoundingRectangle is placed on the XY plane.
+     * Computes an OrientedBoundingBox given extents in the east-north-up space of the tangent plane.
      *
-     * @param {BoundingRectangle} boundingRectangle A bounding rectangle.
-     * @param {Number} [rotation=0.0] The rotation of the bounding box in radians.
+     * @param {Number} minimumX Minimum X extent in tangent plane space.
+     * @param {Number} maximumX Maximum X extent in tangent plane space.
+     * @param {Number} minimumY Minimum Y extent in tangent plane space.
+     * @param {Number} maximumY Maximum Y extent in tangent plane space.
+     * @param {Number} minimumZ Minimum Z extent in tangent plane space.
+     * @param {Number} maximumZ Maximum Z extent in tangent plane space.
      * @param {OrientedBoundingBox} [result] The object onto which to store the result.
      * @returns {OrientedBoundingBox} The modified result parameter or a new OrientedBoundingBox instance if one was not provided.
-     *
-     * @example
-     * // Compute an object oriented bounding box enclosing two points.
-     * var box = Cesium.OrientedBoundingBox.fromBoundingRectangle(boundingRectangle, 0.0);
      */
-    OrientedBoundingBox.fromBoundingRectangle = function(boundingRectangle, rotation, result) {
+    var fromTangentPlaneExtents = function(tangentPlane, minimumX, maximumX, minimumY, maximumY, minimumZ, maximumZ, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(boundingRectangle)) {
-            throw new DeveloperError('boundingRectangle is required');
+        if (!defined(minimumX) ||
+            !defined(maximumX) ||
+            !defined(minimumY) ||
+            !defined(maximumY) ||
+            !defined(minimumZ) ||
+            !defined(maximumZ)) {
+            throw new DeveloperError('all extents (minimum/maximum X/Y/Z) are required.');
         }
         //>>includeEnd('debug');
 
@@ -95,99 +95,123 @@ define([
             result = new OrientedBoundingBox();
         }
 
-        var rotMat;
-        if (defined(rotation)) {
-            rotMat = Matrix3.fromRotationZ(rotation, scratchRotation);
-        } else {
-            rotMat = Matrix3.clone(Matrix3.IDENTITY, scratchRotation);
-        }
+        var halfAxes = result.halfAxes;
+        Matrix3.setColumn(halfAxes, 0, tangentPlane.xAxis, halfAxes);
+        Matrix3.setColumn(halfAxes, 1, tangentPlane.yAxis, halfAxes);
+        Matrix3.setColumn(halfAxes, 2, tangentPlane.zAxis, halfAxes);
 
-        var scale = scratchCartesian1;
-        scale.x = boundingRectangle.width * 0.5;
-        scale.y = boundingRectangle.height * 0.5;
-        scale.z = 0.0;
-        Matrix3.multiplyByScale(rotMat, scale, result.halfAxes);
+        var centerOffset = scratchOffset;
+        centerOffset.x = (minimumX + maximumX) / 2.0;
+        centerOffset.y = (minimumY + maximumY) / 2.0;
+        centerOffset.z = (minimumZ + maximumZ) / 2.0;
 
-        var translation = Matrix3.multiplyByVector(rotMat, scale, result.center);
-        translation.x += boundingRectangle.x;
-        translation.y += boundingRectangle.y;
+        var scale = scratchScale;
+        scale.x = (maximumX - minimumX) / 2.0;
+        scale.y = (maximumY - minimumY) / 2.0;
+        scale.z = (maximumZ - minimumZ) / 2.0;
+
+        var center = result.center;
+        centerOffset = Matrix3.multiplyByVector(halfAxes, centerOffset, centerOffset);
+        Cartesian3.add(tangentPlane.origin, centerOffset, center);
+        Matrix3.multiplyByScale(halfAxes, scale, halfAxes);
 
         return result;
     };
 
-    var cornersCartographicScratch = [new Cartographic(), new Cartographic(), new Cartographic(), new Cartographic(), new Cartographic(), new Cartographic()];
-    var cornersCartesianScratch = [new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3()];
-    var cornersProjectedScratch = [new Cartesian2(), new Cartesian2(), new Cartesian2(), new Cartesian2(), new Cartesian2(), new Cartesian2()];
+    var scratchRectangleCenterCartographic = new Cartographic();
+    var scratchRectangleCenter = new Cartesian3();
+    var perimeterCartographicScratch = [new Cartographic(), new Cartographic(), new Cartographic(), new Cartographic(), new Cartographic(), new Cartographic(), new Cartographic(), new Cartographic()];
+    var perimeterCartesianScratch = [new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3()];
+    var perimeterProjectedScratch = [new Cartesian2(), new Cartesian2(), new Cartesian2(), new Cartesian2(), new Cartesian2(), new Cartesian2(), new Cartesian2(), new Cartesian2()];
     /**
-     * Computes an OrientedBoundingBox from a surface {@link Rectangle} aligned with a specified {@link EllipsoidTangentPlane}.
+     * Computes an OrientedBoundingBox that bounds a {@link Rectangle} on the surface of an {@link Ellipsoid}.
+     * There are no guarantees about the orientation of the bounding box.
      *
-     * @param {Rectangle} rectangle The valid rectangle used to create a bounding box.
-     * @param {EllipsoidTangentPlane} tangentPlane A tangent plane with which the bounding box will be aligned.
-     * @param {Number} [minHeight=0.0] The minimum height (elevation) within the tile.
-     * @param {Number} [maxHeight=0.0] The maximum height (elevation) within the tile.
+     * @param {Ellipsoid} ellipsoid The ellipsoid on which the rectangle is defined.
+     * @param {Rectangle} rectangle The cartographic rectangle on the surface of the ellipsoid.
+     * @param {Number} [minimumHeight=0.0] The minimum height (elevation) within the tile.
+     * @param {Number} [maximumHeight=0.0] The maximum height (elevation) within the tile.
      * @param {OrientedBoundingBox} [result] The object onto which to store the result.
      * @returns {OrientedBoundingBox} The modified result parameter or a new OrientedBoundingBox instance if none was provided.
+     *
+     * @exception {DeveloperError} rectangle.width must be between 0 and pi.
+     * @exception {DeveloperError} rectangle.height must be between 0 and pi.
      */
-    OrientedBoundingBox.fromRectangleTangentPlane = function(rectangle, tangentPlane, minHeight, maxHeight, result) {
+    OrientedBoundingBox.fromEllipsoidRectangle = function(ellipsoid, rectangle, minimumHeight, maximumHeight, result) {
         //>>includeStart('debug', pragmas.debug);
+        if (!defined(ellipsoid)) {
+            throw new DeveloperError('ellipsoid is required');
+        }
         if (!defined(rectangle)) {
             throw new DeveloperError('rectangle is required');
         }
-        if (!defined(tangentPlane)) {
-            throw new DeveloperError('tangentPlane is required');
+        if (rectangle.width < 0.0 || rectangle.width > CesiumMath.PI) {
+            throw new DeveloperError('Rectangle width must be between 0 and pi');
         }
-        (function() {
-            var rw = rectangle.width;
-            var rh = rectangle.height;
-            if (rw < 0.0 || rw > CesiumMath.PI) {
-                throw new DeveloperError('Rectangle width must be between 0 and pi')
-            }
-            if (rh < 0.0 || rh > CesiumMath.PI) {
-                throw new DeveloperError('Rectangle height must be between 0 and pi')
-            }
-        })();
+        if (rectangle.height < 0.0 || rectangle.height > CesiumMath.PI) {
+            throw new DeveloperError('Rectangle height must be between 0 and pi');
+        }
         //>>includeEnd('debug');
 
-        minHeight = defaultValue(minHeight, 0.0);
-        maxHeight = defaultValue(maxHeight, 0.0);
+        minimumHeight = defaultValue(minimumHeight, 0.0);
+        maximumHeight = defaultValue(maximumHeight, 0.0);
 
+        // If the rectangle does not span the equator, then the bounding box will be aligned with the tangent plane at the center of the rectangle.
+        // If the rectangle does span the equator, then the bounding box will be aligned with the tangent plane to the equator at the longitudinal center of the rectangle.
+        var tangentPointCartographic = Rectangle.center(rectangle, scratchRectangleCenterCartographic);
+        if (rectangle.south < 0.0 && rectangle.north > 0.0) {
+            // The rectangle spans the equator
+            tangentPointCartographic.latitude = 0.0;
+        }
+        var tangentPoint = ellipsoid.cartographicToCartesian(tangentPointCartographic, scratchRectangleCenter);
+        var tangentPlane = new EllipsoidTangentPlane(tangentPoint, ellipsoid);
         var plane = tangentPlane.plane;
 
-        // Rectangle at maximum height
-        var cornerNE = cornersCartographicScratch[0];
-        var cornerNW = cornersCartographicScratch[1];
-        var cornerSE = cornersCartographicScratch[2];
-        var cornerSW = cornersCartographicScratch[3];
-        var cornerNC = cornersCartographicScratch[4];
-        var cornerSC = cornersCartographicScratch[5];
+        // Corner arrangement:
+        //          N/+y
+        //      [0] [1] [2]
+        // W/-x [7]     [3] E/+x
+        //      [6] [5] [4]
+        //          S/-y
+        var perimeterNW = perimeterCartographicScratch[0];
+        var perimeterNC = perimeterCartographicScratch[1];
+        var perimeterNE = perimeterCartographicScratch[2];
+        var perimeterCE = perimeterCartographicScratch[3];
+        var perimeterSE = perimeterCartographicScratch[4];
+        var perimeterSC = perimeterCartographicScratch[5];
+        var perimeterSW = perimeterCartographicScratch[6];
+        var perimeterCW = perimeterCartographicScratch[7];
 
-        var lonWest = rectangle.west;
-        var lonEast = rectangle.east;
-        var lonCenter = lonWest + 0.5 * rectangle.width;
-        cornerSW.latitude = cornerSC.latitude = cornerSE.latitude = rectangle.south;
-        cornerNW.latitude = cornerNC.latitude = cornerNE.latitude = rectangle.north;
-        cornerSW.longitude = cornerNW.longitude = lonWest;
-        cornerSC.longitude = cornerNC.longitude = lonCenter;
-        cornerSE.longitude = cornerNE.longitude = lonEast;
+        var lonCenter = tangentPointCartographic.longitude;
+        var latCenter = tangentPointCartographic.latitude;
+        perimeterSW.latitude = perimeterSC.latitude = perimeterSE.latitude = rectangle.south;
+        perimeterCW.latitude = perimeterCE.latitude = latCenter;
+        perimeterNW.latitude = perimeterNC.latitude = perimeterNE.latitude = rectangle.north;
+        perimeterSW.longitude = perimeterCW.longitude = perimeterNW.longitude = rectangle.west;
+        perimeterSC.longitude = perimeterNC.longitude = lonCenter;
+        perimeterSE.longitude = perimeterCE.longitude = perimeterNE.longitude = rectangle.east;
 
-        cornerNE.height = cornerNW.height = cornerSE.height = cornerSW.height = cornerNC.height = cornerSC.height = maxHeight;
+        // Compute XY extents using the rectangle at maximum height
+        perimeterNE.height = perimeterNW.height = perimeterSE.height = perimeterSW.height = perimeterNC.height = perimeterSC.height = maximumHeight;
 
-        tangentPlane.ellipsoid.cartographicArrayToCartesianArray(cornersCartographicScratch, cornersCartesianScratch);
-        tangentPlane.projectPointsToNearestOnPlane(cornersCartesianScratch, cornersProjectedScratch);
-        var minX = Math.min(cornersProjectedScratch[1].x, cornersProjectedScratch[3].x);
-        var maxX = Math.max(cornersProjectedScratch[0].x, cornersProjectedScratch[2].x);
-        var minY = Math.min(cornersProjectedScratch[2].y, cornersProjectedScratch[3].y, cornersProjectedScratch[5].y);
-        var maxY = Math.max(cornersProjectedScratch[0].y, cornersProjectedScratch[1].y, cornersProjectedScratch[4].y);
+        ellipsoid.cartographicArrayToCartesianArray(perimeterCartographicScratch, perimeterCartesianScratch);
+        tangentPlane.projectPointsToNearestOnPlane(perimeterCartesianScratch, perimeterProjectedScratch);
+        // See the `perimeterXX` definitions above for what these are
+        var minX = Math.min(perimeterProjectedScratch[6].x, perimeterProjectedScratch[7].x, perimeterProjectedScratch[0].x);
+        var maxX = Math.max(perimeterProjectedScratch[2].x, perimeterProjectedScratch[3].x, perimeterProjectedScratch[4].x);
+        var minY = Math.min(perimeterProjectedScratch[4].y, perimeterProjectedScratch[6].y, perimeterProjectedScratch[6].y);
+        var maxY = Math.max(perimeterProjectedScratch[0].y, perimeterProjectedScratch[1].y, perimeterProjectedScratch[2].y);
 
-        cornerNE.height = cornerNW.height = cornerSE.height = cornerSW.height = minHeight;
-        tangentPlane.ellipsoid.cartographicArrayToCartesianArray(cornersCartographicScratch, cornersCartesianScratch);
-        var minZ = Math.min(Plane.getPointDistance(plane, cornersCartesianScratch[0]),
-                            Plane.getPointDistance(plane, cornersCartesianScratch[1]),
-                            Plane.getPointDistance(plane, cornersCartesianScratch[2]),
-                            Plane.getPointDistance(plane, cornersCartesianScratch[3]));
-        var maxZ = maxHeight;  // Since the tangent plane touches the surface at height = 0, this is okay
+        // Compute minimum Z using the rectangle at minimum height
+        perimeterNE.height = perimeterNW.height = perimeterSE.height = perimeterSW.height = minimumHeight;
+        ellipsoid.cartographicArrayToCartesianArray(perimeterCartographicScratch, perimeterCartesianScratch);
+        var minZ = Math.min(Plane.getPointDistance(plane, perimeterCartesianScratch[0]),
+                            Plane.getPointDistance(plane, perimeterCartesianScratch[1]),
+                            Plane.getPointDistance(plane, perimeterCartesianScratch[2]),
+                            Plane.getPointDistance(plane, perimeterCartesianScratch[3]));
+        var maxZ = maximumHeight;  // Since the tangent plane touches the surface at height = 0, this is okay
 
-        return tangentPlane.extentsToOrientedBoundingBox(minX, maxX, minY, maxY, minZ, maxZ, result);
+        return fromTangentPlaneExtents(tangentPlane, minX, maxX, minY, maxY, minZ, maxZ, result);
     };
 
     /**
@@ -212,6 +236,9 @@ define([
         return result;
     };
 
+    var scratchCartesian1 = new Cartesian3();
+    var scratchCartesian2 = new Cartesian3();
+    var scratchCartesian3 = new Cartesian3();
     /**
      * Determines which side of a plane the oriented bounding box is located.
      *

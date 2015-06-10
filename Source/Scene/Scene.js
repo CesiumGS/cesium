@@ -1210,16 +1210,16 @@ define([
             var modelMatrix = new Matrix4();
 
             var geometry;
-            if (defined(command.boundingOBB)) {
+            if (defined(command.orientedBoundingBox)) {
                 // Assumes bounding volume is an OrientedBoundingBox.
-                var boundingOBB = command.boundingOBB;
+                var orientedBoundingBox = command.orientedBoundingBox;
 
                 geometry = BoxOutlineGeometry.createGeometry(BoxOutlineGeometry.fromDimensions({
                     dimensions: new Cartesian3(2.0, 2.0, 2.0),
                     vertexFormat: PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
                 }));
 
-                Matrix4.fromRotationTranslation(boundingOBB.halfAxes, boundingOBB.center, modelMatrix);
+                Matrix4.fromRotationTranslation(orientedBoundingBox.halfAxes, orientedBoundingBox.center, modelMatrix);
             } else if (defined(command.boundingVolume)) {
                 // Assumes bounding volume is a bounding sphere.
 

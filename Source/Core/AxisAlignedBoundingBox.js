@@ -3,6 +3,7 @@ define([
         './Cartesian3',
         './defaultValue',
         './defined',
+        './deprecationWarning',
         './DeveloperError',
         './Intersect',
         './Plane'
@@ -10,6 +11,7 @@ define([
         Cartesian3,
         defaultValue,
         defined,
+        deprecationWarning,
         DeveloperError,
         Intersect,
         Plane) {
@@ -213,6 +215,7 @@ define([
      *                      intersects the plane.
      */
     AxisAlignedBoundingBox.intersect = function(box, plane) {
+        deprecationWarning('AxisAlignedBoundingBox.intersect', 'AxisAlignedBoundingBox.intersect() was deprecated in Cesium 1.11.  It will be removed in 1.12.  Use AxisAlignedBoundingBox.intersectPlane() instead.');
         var p = Plane.fromCartesian4(plane, scratchPlane);
         return AxisAlignedBoundingBox.intersectPlane(box, p);
     };

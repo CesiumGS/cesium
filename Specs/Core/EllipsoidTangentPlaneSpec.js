@@ -38,7 +38,7 @@ defineSuite([
         expect(tangentPlane.origin).toEqual(Cartesian3.UNIT_X);
     });
 
-    it('projectPointOntoPlane returns undefined for points not on the plane', function () {
+    it('projectPointOntoPlane returns undefined for unsolvable projections', function () {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var origin = new Cartesian3(1, 0, 0);
         var tangentPlane = new EllipsoidTangentPlane(origin, ellipsoid);
@@ -98,7 +98,7 @@ defineSuite([
         expect(returnedResults).toEqual(expectedResults);
     });
 
-    it('projectPointsOntoPlane works when some points not on plane', function () {
+    it('projectPointsOntoPlane works when some points cannot be projected', function () {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var origin = new Cartesian3(1, 0, 0);
         var tangentPlane = new EllipsoidTangentPlane(origin, ellipsoid);
@@ -135,25 +135,66 @@ defineSuite([
         expect(returnedResults).toEqual(expectedResults);
     });
 
-    it('extentsToOrientedBoundingBox works with a result parameter', function() {
+    it('projectPointToNearestOnPlane works without a result parameter', function () {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        var origin = Cartesian3.UNIT_X;
-        var pl = new EllipsoidTangentPlane(origin, ellipsoid);
-        var result = new OrientedBoundingBox();
-        result = pl.extentsToOrientedBoundingBox(-0.5, 0.5, -0.5, 0.5, -0.5, 0.5, result);
-        var expected = new OrientedBoundingBox(origin,
-            new Matrix3(0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.0, 0.5, 0.0));
-        expect(result).toEqual(expected);
+        var origin = new Cartesian3(1, 0, 0);
+        var tangentPlane = new EllipsoidTangentPlane(origin, ellipsoid);
+
+        var positions = new Cartesian3(1, 0, 1);
+        var expectedResult = new Cartesian2(0, 1);
+        var returnedResult = tangentPlane.projectPointToNearestOnPlane(positions);
+        expect(returnedResult).toEqual(expectedResult);
     });
 
-    it('extentsToOrientedBoundingBox works without a result parameter', function() {
+    it('projectPointToNearestOnPlane works projecting from various distances', function () {
+        var ellipsoid = Ellipsoid.ZERO;
+        var origin = new Cartesian3(1, 0, 0);
+        var tangentPlane = new EllipsoidTangentPlane(origin, ellipsoid);
+
+        expect(tangentPlane.projectPointToNearestOnPlane(new Cartesian3(2, 0, 0))).toEqual(new Cartesian2(0, 0));
+        expect(tangentPlane.projectPointToNearestOnPlane(new Cartesian3(1, 0, 0))).toEqual(new Cartesian2(0, 0));
+        expect(tangentPlane.projectPointToNearestOnPlane(new Cartesian3(0, 0, 0))).toEqual(new Cartesian2(0, 0));
+        expect(tangentPlane.projectPointToNearestOnPlane(new Cartesian3(-1, 0, 0))).toEqual(new Cartesian2(0, 0));
+    });
+
+    it('projectPointToNearestOnPlane works with a result parameter', function () {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        var origin = Cartesian3.UNIT_X;
-        var pl = new EllipsoidTangentPlane(origin, ellipsoid);
-        var result = pl.extentsToOrientedBoundingBox(-0.5, 0.5, -0.5, 0.5, -0.5, 0.5);
-        var expected = new OrientedBoundingBox(origin,
-            new Matrix3(0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.0, 0.5, 0.0));
-        expect(result).toEqual(expected);
+        var origin = new Cartesian3(1, 0, 0);
+        var tangentPlane = new EllipsoidTangentPlane(origin, ellipsoid);
+
+        var positions = new Cartesian3(1, 0, 1);
+        var expectedResult = new Cartesian2(0, 1);
+        var result = new Cartesian2();
+        var returnedResult = tangentPlane.projectPointToNearestOnPlane(positions, result);
+        expect(result).toBe(returnedResult);
+        expect(returnedResult).toEqual(expectedResult);
+    });
+
+    it('projectPointsToNearestOnPlane works without a result parameter', function () {
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var origin = new Cartesian3(1, 0, 0);
+        var tangentPlane = new EllipsoidTangentPlane(origin, ellipsoid);
+
+        var positions = [new Cartesian3(1, 0, 1), new Cartesian3(1, 0, 0), new Cartesian3(1, 1, 0)];
+        var expectedResults = [new Cartesian2(0, 1), new Cartesian2(0, 0), new Cartesian2(1, 0)];
+        var returnedResults = tangentPlane.projectPointsToNearestOnPlane(positions);
+        expect(returnedResults).toEqual(expectedResults);
+    });
+
+    it('projectPointsToNearestOnPlane works with a result parameter', function () {
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var origin = new Cartesian3(1, 0, 0);
+        var tangentPlane = new EllipsoidTangentPlane(origin, ellipsoid);
+
+        var positions = [new Cartesian3(1, 0, 1), new Cartesian3(1, 0, 0), new Cartesian3(1, 1, 0)];
+        var expectedResults = [new Cartesian2(0, 1), new Cartesian2(0, 0), new Cartesian2(1, 0)];
+
+        var index0 = new Cartesian2();
+        var result = [index0];
+        var returnedResults = tangentPlane.projectPointsToNearestOnPlane(positions, result);
+        expect(result).toBe(returnedResults);
+        expect(result[0]).toBe(index0);
+        expect(returnedResults).toEqual(expectedResults);
     });
 
     it('constructor throws without origin', function() {
@@ -209,19 +250,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('extentsToOrientedBoundingBox throws missing any of the dimensional parameters', function() {
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        var origin = new Cartesian3(1.0, 0.0, 0.0);
-        var pl = new EllipsoidTangentPlane(origin, ellipsoid);
-        var result = new OrientedBoundingBox();
-        expect(function() { pl.extentsToOrientedBoundingBox(undefined, 0.5, -0.5, 0.5, -0.5, 0.5, result);  }).toThrowDeveloperError();
-        expect(function() { pl.extentsToOrientedBoundingBox(-0.5, undefined, -0.5, 0.5, -0.5, 0.5, result); }).toThrowDeveloperError();
-        expect(function() { pl.extentsToOrientedBoundingBox(-0.5, 0.5, undefined, 0.5, -0.5, 0.5, result);  }).toThrowDeveloperError();
-        expect(function() { pl.extentsToOrientedBoundingBox(-0.5, 0.5, -0.5, undefined, -0.5, 0.5, result); }).toThrowDeveloperError();
-        expect(function() { pl.extentsToOrientedBoundingBox(-0.5, 0.5, -0.5, 0.5, undefined, 0.5, result);  }).toThrowDeveloperError();
-        expect(function() { pl.extentsToOrientedBoundingBox(-0.5, 0.5, -0.5, 0.5, -0.5, undefined, result); }).toThrowDeveloperError();
-    });
-
     it('projectPointsOntoEllipsoid works with an arbitrary ellipsoid using fromPoints', function () {
         var points = Cartesian3.fromDegreesArray([
             -72.0, 40.0,
@@ -238,36 +266,5 @@ defineSuite([
         expect(positionsBack[0].x).toBeCloseTo(points[0].x);
         expect(positionsBack[0].y).toBeCloseTo(points[0].y);
         expect(positionsBack[0].z).toBeCloseTo(points[0].z);
-    });
-
-    it('extentsToOrientedBoundingBox works with some edge-ish cases', function() {
-        var res, exp;
-        var result = new OrientedBoundingBox();
-        var ellipsoid;
-
-        ellipsoid = Ellipsoid.UNIT_SPHERE;
-        res = new EllipsoidTangentPlane(Cartesian3.UNIT_X, ellipsoid).extentsToOrientedBoundingBox(-0.3, 0.3, -0.3, 0.3, -0.3, 0.3, res);
-        exp = new OrientedBoundingBox(Cartesian3.UNIT_X,
-            new Matrix3(0.0, 0.0, 0.3, 0.3, 0.0, 0.0, 0.0, 0.3, 0.0));
-        expect(res.center).toEqualEpsilon(exp.center, CesiumMath.EPSILON15);
-        expect(res.halfAxes).toEqualEpsilon(exp.halfAxes, CesiumMath.EPSILON15);
-
-        ellipsoid = Ellipsoid.UNIT_SPHERE;
-        res = new EllipsoidTangentPlane(Cartesian3.UNIT_Z, ellipsoid).extentsToOrientedBoundingBox(-0.3, 0.3, -0.3, 0.3, -0.3, 0.3, res);
-        expect(res.center).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON15);
-
-        ellipsoid = Ellipsoid.UNIT_SPHERE;
-        res = new EllipsoidTangentPlane(Cartesian3.UNIT_Y, ellipsoid).extentsToOrientedBoundingBox(-0.3, 0.3, -0.3, 0.3, -0.3, 0.3, res);
-        exp = new OrientedBoundingBox(Cartesian3.UNIT_Y,
-            new Matrix3(-0.3, 0.0, 0.0, 0.0, 0.0, 0.3, 0.0, 0.3, 0.0));
-        expect(res.center).toEqualEpsilon(exp.center, CesiumMath.EPSILON15);
-        expect(res.halfAxes).toEqualEpsilon(exp.halfAxes, CesiumMath.EPSILON15);
-
-        ellipsoid = Ellipsoid.UNIT_SPHERE;
-        res = new EllipsoidTangentPlane(Cartesian3.UNIT_X, ellipsoid).extentsToOrientedBoundingBox(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, res);
-        exp = new OrientedBoundingBox(Cartesian3.UNIT_X,
-                new Matrix3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
-        expect(res.center).toEqualEpsilon(exp.center, CesiumMath.EPSILON15);
-        expect(res.halfAxes).toEqualEpsilon(exp.halfAxes, CesiumMath.EPSILON15);
     });
 });
