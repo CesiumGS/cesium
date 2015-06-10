@@ -492,8 +492,13 @@ define([
                         var deltaPhi = rotateRate * phiWindowRatio * Math.PI * 2.0;
                         var deltaTheta = rotateRate * thetaWindowRatio * Math.PI;
 
+                        var constrainedAxis = camera.constrainedAxis;
+                        camera.constrainedAxis = undefined;
+
                         camera.rotateRight(deltaPhi);
                         camera.rotateUp(deltaTheta);
+
+                        camera.constrainedAxis = constrainedAxis;
                     }
 
                     camera.zoomIn(distance);
