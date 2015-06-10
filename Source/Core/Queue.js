@@ -79,6 +79,17 @@ define([
     };
 
     /**
+     * DOC_TBA
+     */
+    Queue.prototype.peek = function() {
+        if (this._length === 0) {
+            return undefined;
+        }
+
+        return this._array[this._offset];
+    };
+
+    /**
      * Check whether this queue contains the specified item.
      *
      * @param {Object} item the item to search for.
