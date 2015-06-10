@@ -410,7 +410,7 @@ define([
         stats.frustumTests = 0;
     }
 
-    function showStats(tiles3D) {
+    function showStats(tiles3D, isPick) {
         var stats = tiles3D._statistics;
 
         if (tiles3D.debugShowStatistics && (
@@ -422,7 +422,10 @@ define([
             stats.lastFrustumTests = stats.frustumTests;
             stats.lastSelected = tiles3D._selectedTiles.length;
 
-            var s =
+            // Since the pick pass uses a smaller frustum around the pixel of interest,
+            // the stats will be different than the normal render pass.
+            var s = isPick ? '[Pick]: ' : '';
+            s +=
                 'Visited: ' + stats.visited +
                 // Frustum tests do not include tests for child tile requests or culling the contents.
                 // This number can be less than the number of tiles visited since spatial coherence is
@@ -468,7 +471,7 @@ define([
         selectTiles(this, context, frameState, commandList, outOfCore);
         updateTiles(this, context, frameState, commandList);
 
-        showStats(this);
+        showStats(this, isPick);
     };
 
     /**
