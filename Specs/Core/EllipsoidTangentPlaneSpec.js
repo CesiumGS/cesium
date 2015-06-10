@@ -161,6 +161,20 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('projectPointToNearestOnPlane throws without cartesian', function() {
+        var tangentPlane = new EllipsoidTangentPlane(Cartesian3.UNIT_X, Ellipsoid.UNIT_SPHERE);
+        expect(function() {
+            return tangentPlane.projectPointToNearestOnPlane(undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('projectPointsToNearestOnPlane throws without cartesians', function() {
+        var tangentPlane = new EllipsoidTangentPlane(Cartesian3.UNIT_X, Ellipsoid.UNIT_SPHERE);
+        expect(function() {
+            return tangentPlane.projectPointsToNearestOnPlane(undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('projectPointsOntoEllipsoid throws without cartesians', function() {
         var tangentPlane = new EllipsoidTangentPlane(Cartesian3.UNIT_X, Ellipsoid.UNIT_SPHERE);
         expect(function() {
