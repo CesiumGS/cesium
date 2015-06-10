@@ -7,6 +7,7 @@ defineSuite([
     'Core/loadImage',
     'Core/Math',
     'Core/Rectangle',
+    'Core/WebMercatorProjection',
     'Core/WebMercatorTilingScheme',
     'Scene/Imagery',
     'Scene/ImageryLayer',
@@ -22,6 +23,7 @@ defineSuite([
     loadImage,
     CesiumMath,
     Rectangle,
+    WebMercatorProjection,
     WebMercatorTilingScheme,
     Imagery,
     ImageryLayer,
@@ -72,6 +74,7 @@ defineSuite([
             expect(provider.tileWidth).toEqual(256);
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toBeUndefined();
+            expect(provider.minimumLevel).toBe(0);
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
 
@@ -141,6 +144,7 @@ defineSuite([
             expect(provider.tileWidth).toEqual(256);
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toBeUndefined();
+            expect(provider.minimumLevel).toBe(0);
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.rectangle).toEqual(rectangle);
             expect(provider.tileDiscardPolicy).toBeUndefined();
@@ -159,15 +163,17 @@ defineSuite([
         });
     });
 
-    it('uses maximumLevel passed to constructor', function() {
+    it('uses minimumLevel and maximumLevel passed to constructor', function() {
         var provider = new UrlTemplateImageryProvider({
             url: 'made/up/tms/server',
+            minimumLevel: 1,
             maximumLevel: 5
         });
 
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
+            expect(provider.minimumLevel).toEqual(1);
             expect(provider.maximumLevel).toEqual(5);
         });
     });
@@ -421,6 +427,36 @@ defineSuite([
         });
     });
 
+    it('evalutes multiple coordinate patterns', function() {
+        var provider = new UrlTemplateImageryProvider({
+            url: '{westDegrees} {westProjected} {southProjected} {southDegrees} {eastProjected} {eastDegrees} {northDegrees} {northProjected}'
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+                expect(url).toEqual(
+                    '-90 ' +
+                    (-Math.PI * Ellipsoid.WGS84.maximumRadius / 2.0) + ' ' +
+                    '0 ' +
+                    '0 ' +
+                    '0 ' +
+                    '0 ' +
+                    CesiumMath.toDegrees(WebMercatorProjection.mercatorAngleToGeodeticLatitude(Math.PI / 2)) + ' ' +
+                    (Math.PI * Ellipsoid.WGS84.maximumRadius / 2.0));
+
+                // Just return any old image.
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            });
+
+            return provider.requestImage(1, 1, 2).then(function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(image).toBeInstanceOf(Image);
+            });
+        });
+    });
+
     it('evaluates pattern s', function() {
         var provider = new UrlTemplateImageryProvider({
             url: '{s}'
@@ -486,6 +522,18 @@ defineSuite([
                 expect(loadImage.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
+        });
+    });
+
+    it('pickFeatures returns undefined', function() {
+        var provider = new UrlTemplateImageryProvider({
+            url: 'foo/bar'
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            expect(provider.pickFeatures(0, 0, 0, 0.0, 0.0)).toBeUndefined();
         });
     });
 });
