@@ -42,7 +42,7 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {String} [options.url='']  The pattern to request a tile which has the following keywords:
+     * @param {String} [options.url='']  The URL template to use to request tiles.  It has the following keywords:
      * <ul>
      *  <li> <code>{z}</code>: The level of the tile in the tiling scheme.  Level zero is the root of the quadtree pyramid.</li>
      *  <li> <code>{x}</code>: The tile X coordinate in the tiling scheme, where 0 is the Westernmost tile.</li>
@@ -59,7 +59,7 @@ define([
      *  <li> <code>{eastProjected}</code>: The Eastern edge of the tile in projected coordinates of the tiling scheme.</li>
      *  <li> <code>{northProjected}</code>: The Northern edge of the tile in projected coordinates of the tiling scheme.</li>
      * </ul>
-     * @param {String|String[]} [subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
+     * @param {String|String[]} [options.subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
      *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
      *                          an array, each element in the array is a subdomain.
      * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
@@ -67,7 +67,7 @@ define([
      * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
      *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
      *                 to result in rendering problems.
-     * @param {Number} [options.maximumLevel=18] The maximum level-of-detail supported by the imagery provider.
+     * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
      * @param {TilingScheme} [options.tilingScheme=WebMercatorTilingScheme] The tiling scheme specifying how the ellipsoidal
      * surface is broken into tiles.  If this parameter is not provided, a {@link WebMercatorTilingScheme}
@@ -77,32 +77,43 @@ define([
      *                    parameter is specified, the WGS84 ellipsoid is used.
      * @param {Number} [options.tileWidth=256] Pixel width of image tiles.
      * @param {Number} [options.tileHeight=256] Pixel height of image tiles.
+     * @param {Boolean} [options.hasAlphaChannel=true] true if the images provided by this imagery provider
+     *                  include an alpha channel; otherwise, false.  If this property is false, an alpha channel, if
+     *                  present, will be ignored.  If this property is true, any images without an alpha channel will
+     *                  be treated as if their alpha is 1.0 everywhere.  When this property is false, memory usage
+     *                  and texture upload time are potentially reduced.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
      * @see OpenStreetMapImageryProvider
-     * @see WebMapTileServiceImageryProvider
      * @see SingleTileImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
+     * @see WebMapTileServiceImageryProvider
      *
      * @example
-     * // A tile provider with z/x/y, .png tile files, and tile Y coordinates numbered from the South (TMS style).
-     * var utip = new Cesium.UrlTemplateImageryProvider({
-     *     url : '../images/cesium_maptiler/Cesium_Logo_Color/{z}/{x}/{reverseY}.png',
-     *     maximumLevel: 4,
-     *     rectangle: new Cesium.Rectangle.fromDegrees(-120, 20, -60, 40)
+     * // Access Natural Earth II imagery, which uses a TMS tiling scheme and Geographic (EPSG:4326) project
+     * var tms = new Cesium.UrlTemplateImageryProvider({
+     *     url : '//cesiumjs.org/tilesets/imagery/naturalearthii/{z}/{x}/{reverseY}.jpg',
+     *     credit : '© Analytical Graphics, Inc.',
+     *     tilingScheme : new Cesium.GeographicTilingScheme(),
+     *     maximumLevel : 5
      * });
-     * // An emulation of a WMS server with a time dimension
-     * utip = new Cesium.UrlTemplateImageryProvider({
-     *    url : 'URL/to/WMS?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=980_13'+
-     *    '&FORMAT=image/png&STYLES=default&TRANSPARENT=true&SRS=EPSG:4326&'+
-     *    'BBOX={westDegrees},{southDegrees},{eastDegrees},{northDegrees}&WIDTH=256&HEIGHT=256&TIME=2009-11-30T12:00',
+     * // Access the CartoDB Positron basemap, which uses an OpenStreetMap-like tiling scheme.
+     * var positron = new Cesium.UrlTemplateImageryProvider({
+     *     url : 'http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+     *     credit : 'Map tiles by CartoDB, under CC BY 3.0. Data by OpenStreetMap, under ODbL.'
      * });
-     * // An emulation of a WMTS server 
-     * utip = new Cesium.UrlTemplateImageryProvider({
-     *    url : 'URL/to/WMTS?REQUEST=gettile&LAYER=980_13&FORMAT=image/png&TILEMATRIXSET=EPSG:4258'+
-     *    '&TILEMATRIX=EPSG:4258:{Z}&TILEROW={Y}&TILECOL={X}&DIM_TIME=2013-11-20T11:15:00Z&STYLE=default
+     * // Access a Web Map Service (WMS) server.
+     * var wms = new Cesium.UrlTemplateImageryProvider({
+     *    url : 'https://programs.communications.gov.au/geoserver/ows?tiled=true&' +
+     *          'transparent=true&format=image%2Fpng&exceptions=application%2Fvnd.ogc.se_xml&' +
+     *          'styles=&service=WMS&version=1.1.1&request=GetMap&' +
+     *          'layers=public%3AMyBroadband_Availability&srs=EPSG%3A3857&' +
+     *          'bbox={westProjected}%2C{southProjected}%2C{eastProjected}%2C{northProjected}&' +
+     *          'width=256&height=256',
+     *    rectangle : Cesium.Rectangle.fromDegrees(96.799393, -43.598214999057824, 153.63925700000001, -9.2159219997013)
      * });
      */
     var UrlTemplateImageryProvider = function UrlTemplateImageryProvider(options) {
@@ -129,10 +140,10 @@ define([
         this._tileWidth = defaultValue(options.tileWidth, 256);
         this._tileHeight = defaultValue(options.tileHeight, 256);
         this._minimumLevel = defaultValue(options.minimumLevel, 0);
-        this._maximumLevel = defaultValue(options.maximumLevel, 18);
+        this._maximumLevel = options.maximumLevel;
         this._tilingScheme = defaultValue(options.tilingScheme, new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid }));
         this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
-        this._ready = true;
+        this._hasAlphaChannel = defaultValue(options.hasAlphaChannel, true);
 
         var credit = options.credit;
         if (typeof credit === 'string') {
@@ -199,7 +210,7 @@ define([
 
     defineProperties(UrlTemplateImageryProvider.prototype, {
         /**
-         * The pattern to request a tile which has the following keywords:
+         * Gets the URL template to use to request tiles.  It has the following keywords:
          * <ul>
          *  <li> <code>{z}</code>: The level of the tile in the tiling scheme.  Level zero is the root of the quadtree pyramid.</li>
          *  <li> <code>{x}</code>: The tile X coordinate in the tiling scheme, where 0 is the Westernmost tile.</li>
@@ -231,6 +242,7 @@ define([
          * @memberof UrlTemplateImageryProvider.prototype
          * @type {Proxy}
          * @readonly
+         * @default undefined
          */
         proxy : {
             get : function() {
@@ -244,15 +256,10 @@ define([
          * @memberof UrlTemplateImageryProvider.prototype
          * @type {Number}
          * @readonly
+         * @default 256
          */
         tileWidth : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('tileWidth must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
                 return this._tileWidth;
             }
         },
@@ -263,34 +270,24 @@ define([
          * @memberof UrlTemplateImageryProvider.prototype
          * @type {Number}
          * @readonly
+         * @default 256
          */
         tileHeight: {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('tileHeight must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
                 return this._tileHeight;
             }
         },
 
         /**
-         * Gets the maximum level-of-detail that can be requested.  This function should
-         * not be called before {@link UrlTemplateImageryProvider#ready} returns true.
+         * Gets the maximum level-of-detail that can be requested, or undefined if there is no limit.
+         * This function should not be called before {@link UrlTemplateImageryProvider#ready} returns true.
          * @memberof UrlTemplateImageryProvider.prototype
          * @type {Number}
          * @readonly
+         * @default undefined
          */
         maximumLevel : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('maximumLevel must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
                 return this._maximumLevel;
             }
         },
@@ -301,15 +298,10 @@ define([
          * @memberof UrlTemplateImageryProvider.prototype
          * @type {Number}
          * @readonly
+         * @default 0
          */
         minimumLevel : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('minimumLevel must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
                 return this._minimumLevel;
             }
         },
@@ -320,15 +312,10 @@ define([
          * @memberof UrlTemplateImageryProvider.prototype
          * @type {TilingScheme}
          * @readonly
+         * @default new WebMercatorTilingScheme()
          */
         tilingScheme : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('tilingScheme must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
                 return this._tilingScheme;
             }
         },
@@ -339,15 +326,10 @@ define([
          * @memberof UrlTemplateImageryProvider.prototype
          * @type {Rectangle}
          * @readonly
+         * @default tilingScheme.rectangle
          */
         rectangle : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('rectangle must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
                 return this._rectangle;
             }
         },
@@ -360,15 +342,10 @@ define([
          * @memberof UrlTemplateImageryProvider.prototype
          * @type {TileDiscardPolicy}
          * @readonly
+         * @default undefined
          */
         tileDiscardPolicy : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('tileDiscardPolicy must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
                 return this._tileDiscardPolicy;
             }
         },
@@ -395,7 +372,7 @@ define([
          */
         ready : {
             get : function() {
-                return this._ready;
+                return true;
             }
         },
 
@@ -405,6 +382,7 @@ define([
          * @memberof UrlTemplateImageryProvider.prototype
          * @type {Credit}
          * @readonly
+         * @default undefined
          */
         credit : {
             get : function() {
@@ -421,10 +399,11 @@ define([
          * @memberof UrlTemplateImageryProvider.prototype
          * @type {Boolean}
          * @readonly
+         * @default true
          */
         hasAlphaChannel : {
             get : function() {
-                return true;
+                return this._hasAlphaChannel;
             }
         }
     });
@@ -456,12 +435,6 @@ define([
      *          Image or a Canvas DOM object.
      */
     UrlTemplateImageryProvider.prototype.requestImage = function(x, y, level) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-
         var url = buildImageUrl(this, x, y, level);
         return ImageryProvider.loadImage(this, url);
     };
@@ -518,10 +491,10 @@ define([
         }
 
         imageryProvider.tilingScheme.tileXYToRectangle(x, y, level, degreesScratch);
-        degreesScratch.west *= CesiumMath.DEGREES_PER_RADIAN;
-        degreesScratch.south *= CesiumMath.DEGREES_PER_RADIAN;
-        degreesScratch.east *= CesiumMath.DEGREES_PER_RADIAN;
-        degreesScratch.north *= CesiumMath.DEGREES_PER_RADIAN;
+        degreesScratch.west = CesiumMath.toDegrees(degreesScratch.west);
+        degreesScratch.south = CesiumMath.toDegrees(degreesScratch.south);
+        degreesScratch.east = CesiumMath.toDegrees(degreesScratch.east);
+        degreesScratch.north = CesiumMath.toDegrees(degreesScratch.north);
 
         degreesScratchComputed = true;
     }
