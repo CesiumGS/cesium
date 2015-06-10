@@ -22,6 +22,7 @@ define([
         './CameraEventAggregator',
         './CameraEventType',
         './SceneMode',
+        './SceneTransforms',
         './TweenCollection'
     ], function(
         Cartesian2,
@@ -46,6 +47,7 @@ define([
         CameraEventAggregator,
         CameraEventType,
         SceneMode,
+        SceneTransforms,
         TweenCollection) {
     "use strict";
 
@@ -444,53 +446,72 @@ define([
         if (distance > 0.0 && scene.mode !== SceneMode.SCENE2D) {
             var pickedPosition = pickGlobe(object, startPosition);
             if (defined(pickedPosition)) {
-                var ray = camera.getPickRay(startPosition);
-                var direction = ray.direction;
-                if (scene.mode === SceneMode.COLUMBUS_VIEW) {
-                    Cartesian3.fromElements(direction.y, direction.z, direction.x, direction);
-                }
-
                 if (camera.positionCartographic.height > 1000000.0) {
+                    if (!Cartesian2.equals(startPosition, object._zoomMouseStart)) {
+                        object._zoomMouseStart = Cartesian2.clone(startPosition, object._zoomMouseStart);
+                        object._zoomWorldPosition = Cartesian3.clone(pickedPosition, object._zoomWorldPosition);
+                    }
+
                     if (scene.mode === SceneMode.SCENE3D) {
                         var canvas = scene.canvas;
+
+                        var offset = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+                        var start = SceneTransforms.wgs84ToWindowCoordinates(scene, object._zoomWorldPosition);
+
                         var controller = object;
 
-                        var rho = Cartesian3.magnitude(camera.position);
-                        var rotateRate = controller._rotateFactor * (rho - controller._rotateRateRangeAdjustment);
+                        var end = Cartesian2.clone(movement.endPosition);
+                        end.x = movement.startPosition.x;
 
-                        if (rotateRate > controller._maximumRotateRate) {
-                            rotateRate = controller._maximumRotateRate;
-                        }
-
-                        if (rotateRate < controller._minimumRotateRate) {
-                            rotateRate = controller._minimumRotateRate;
-                        }
-
-                        var start = movement.startPosition;
-                        var magnitude = Cartesian2.distance(start, movement.endPosition);
-                        var offset = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
                         Cartesian2.subtract(offset, start, offset);
-                        Cartesian2.normalize(offset, offset);
-                        Cartesian2.multiplyByScalar(offset, magnitude, offset);
 
-                        var endX = start.x + offset.x;
-                        var endY = start.y + offset.y;
+                        if (Cartesian2.magnitude(offset) > 20.0) {
+                            var magnitude = Cartesian2.distance(movement.startPosition, end);
+                            Cartesian2.normalize(offset, offset);
+                            Cartesian2.multiplyByScalar(offset, magnitude, offset);
 
-                        var phiWindowRatio = (start.x - endX) / canvas.clientWidth;
-                        var thetaWindowRatio = (start.y - endY) / canvas.clientHeight;
+                            var endX = start.x + offset.x;
+                            var endY = start.y + offset.y;
 
-                        phiWindowRatio = Math.min(phiWindowRatio, controller.maximumMovementRatio);
-                        thetaWindowRatio = Math.min(thetaWindowRatio, controller.maximumMovementRatio);
+                            var rho = Cartesian3.magnitude(camera.position);
+                            var rotateRate = controller._rotateFactor * (rho - controller._rotateRateRangeAdjustment);
 
-                        var deltaPhi = rotateRate * phiWindowRatio * Math.PI * 2.0;
-                        var deltaTheta = rotateRate * thetaWindowRatio * Math.PI;
+                            if (rotateRate > controller._maximumRotateRate) {
+                                rotateRate = controller._maximumRotateRate;
+                            }
 
-                        camera.rotateRight(deltaPhi);
-                        camera.rotateUp(deltaTheta);
+                            if (rotateRate < controller._minimumRotateRate) {
+                                rotateRate = controller._minimumRotateRate;
+                            }
+
+                            var phiWindowRatio = (start.x - endX) / canvas.clientWidth;
+                            var thetaWindowRatio = (start.y - endY) / canvas.clientHeight;
+
+                            phiWindowRatio = Math.min(phiWindowRatio, controller.maximumMovementRatio);
+                            thetaWindowRatio = Math.min(thetaWindowRatio, controller.maximumMovementRatio);
+
+                            var deltaPhi = rotateRate * phiWindowRatio * Math.PI * 2.0;
+                            var deltaTheta = rotateRate * thetaWindowRatio * Math.PI;
+
+                            camera.rotateRight(deltaPhi);
+                            camera.rotateUp(deltaTheta);
+                        }
 
                         camera.zoomIn(distance);
                     }
                 } else {
+                    var ray;
+                    if (Cartesian2.equals(startPosition, object._zoomMouseStart)) {
+                        ray = camera.getPickRay(SceneTransforms.wgs84ToWindowCoordinates(scene, object._zoomWorldPosition));
+                    } else {
+                        ray = camera.getPickRay(startPosition);
+                    }
+
+                    var direction = ray.direction;
+                    if (scene.mode === SceneMode.COLUMBUS_VIEW) {
+                        Cartesian3.fromElements(direction.y, direction.z, direction.x, direction);
+                    }
+
                     camera.move(ray.direction, distance);
                 }
             } else {
