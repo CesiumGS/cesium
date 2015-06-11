@@ -108,7 +108,6 @@ define([
         }*/
         var id = createGuid();
         var entity = entityCollection.getOrCreateEntity(id);
-        //entity.name = "new entity";
         return entity;
     }
 
@@ -164,6 +163,21 @@ define([
 
     function processPoint(that, point, properties) {
         var coordinates = point.firstElementChild.textContent;
+        createPoint(that, coordinates, properties);
+    }
+
+    function processMultiPoint(that, multiPoint, properties) {
+        var pointMembers = multiPoint.getElementsByTagNameNS(gmlns, "pointMember") || multiPoint.getElementsByTagNameNS(gmlns, "pointMembers");
+        for(var i=0; i<pointMembers.length; i++) {
+            var points = pointMembers[i].children;
+            for(var j=0; j<points.length; j++) {
+            	var coordinates = points[j].firstElementChild.textContent;
+                createPoint(that, coordinates, properties);
+            }
+        }
+    }
+
+    function createPoint(that, coordinates, properties) {
         coordinates = coordinates.split(" ");
         for(var i=0; i<coordinates.length; i++) {
             coordinates[i] = parseFloat(coordinates[i]);
@@ -171,20 +185,6 @@ define([
         if(coordinates.length == 2) {
             coordinates.push(0.0);
         }
-        createPoint(that, coordinates, properties);
-    }
-
-/*    function processMultiPoint(that, multiPoint, properties) {
-        var pointMembers = multiPoint.getElementsByTagNameNS(gmlns, "pointMember") || multiPoint.getElementsByTagNameNS(gmlns, "pointMembers");
-        for(i=0; i<pointMembers.length; i++) {
-            var points = pointMembers[i].children;
-            for(j=0; j<points.length; i++) {
-            	processPoint(that, point, options);
-            }
-        }    	
-    }
-*/
-    function createPoint(that, coordinates, properties) {
         var canvasOrPromise = that._pinBuilder.fromColor(defaultMarkerColor, defaultMarkerSize);
 
         that._promises.push(when(canvasOrPromise, function(dataUrl) {
@@ -204,7 +204,7 @@ define([
         //GeometryCollection : processGeometryCollection,
         //LineString : processLineString,
         //MultiLineString : processMultiLineString,
-        //MultiPoint : processMultiPoint,
+        MultiPoint : processMultiPoint,
         //MultiPolygon : processMultiPolygon,
         Point : processPoint
         //Polygon : processPolygon
