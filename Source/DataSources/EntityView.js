@@ -47,6 +47,7 @@ define([
     var northUpAxisFactor = 1.25;  // times ellipsoid's maximum radius
 
     function updateTransform(that, camera, updateLookAt, saveCamera, positionProperty, time, ellipsoid) {
+        var mode = that.scene.mode;
         var cartesian = positionProperty.getValue(time, that._lastCartesian);
         if (defined(cartesian)) {
             var hasBasis = false;
@@ -54,7 +55,6 @@ define([
             var yBasis;
             var zBasis;
 
-            var mode = that.scene.mode;
             if (mode === SceneMode.SCENE3D) {
                 // The time delta was determined based on how fast satellites move compared to vehicles near the surface.
                 // Slower moving vehicles will most likely default to east-north-up, while faster ones will be VVLH.
@@ -184,7 +184,14 @@ define([
         }
 
         if (updateLookAt) {
-            camera.lookAtTransform(camera.transform, that.scene.mode === SceneMode.SCENE2D ? that._offset2D : that._offset3D);
+            var offset;
+            if ((mode === SceneMode.SCENE2D && that._offset2D.range === 0.0) ||
+                (mode !== SceneMode.SCENE2D && Cartesian3.equals(that._offset3D, Cartesian3.ZERO))) {
+                offset = undefined;
+            } else {
+                offset = mode === SceneMode.SCENE2D ? that._offset2D : that._offset3D;
+            }
+            camera.lookAtTransform(camera.transform, offset);
         }
     }
 
