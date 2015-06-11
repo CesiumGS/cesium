@@ -93,8 +93,9 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
     },
 
     markLine: function(msg, data){
-      // var line = this.editor.setGutterMarker(data.line, 'errorGutter', this.makeLabel(data.data));
-      // this.editor.addLineClass(line, 'text', 'errorLine');
+      console.log(data);
+      var line = this.editor.setGutterMarker(data.line-1, 'errorGutter', this.makeLabel(data.data));
+      this.editor.addLineClass(line, 'text', 'errorLine');
     },
 
     openDocTab: function(title, link){
@@ -295,8 +296,11 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
 
     openDocTab: function(msg, data){
       var tabs = this.state.tabs;
-      tabs.push(data.title);
-      this.setState({tabs: tabs});
+      if(tabs.indexOf(data.title) == -1)
+      {
+        tabs.push(data.title);
+        this.setState({tabs: tabs});
+      }
     },
 
     handleClose: function(e){
@@ -428,11 +432,23 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
 
     openDocTab: function(msg, data){
       var tabs = this.state.tabs;
-      var tab = {};
-      tab.title = data.title;
-      tab.link = data.link;
-      tabs.push(tab);
-      this.setState({tabs: tabs});
+      var exists = false;
+      for(var i = tabs.length-1; i >= 0; i--)
+      {
+        if(tabs[i].title === data.title)
+        {
+          exists = true;
+          break;
+        }
+      }
+      if(!exists)
+      {
+        var tab = {};
+        tab.title = data.title;
+        tab.link = data.link;
+        tabs.push(tab);
+        this.setState({tabs: tabs});
+      }
       $('#cesiumTabs a[href="#'+data.title+'Pane"]').tab('show');
     },
 
@@ -458,7 +474,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
         }
         else
         {
-          return <div key={index.title+item} role="tabpanel" className="tab-pane" id={item.title+ "Pane"}><iframe frameBorder="0" className="fullFrame" src={item.link}></iframe></div>
+          return <div key={index+item.title} role="tabpanel" className="tab-pane" id={item.title+ "Pane"}><iframe frameBorder="0" className="fullFrame" src={item.link}></iframe></div>
         }
       };
 
@@ -580,10 +596,10 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
         {
           message += this.scriptLineToEditorLine(data.lineNum) + ')';
         }
-        var data = {};
-        data.line = this.scriptLineToEditorLine(data.lineNum);
-        data.error = data.data;
-        PubSub.publish('MARK LINE', data);
+        var sendMsg = {};
+        sendMsg.line = this.scriptLineToEditorLine(data.lineNum);
+        sendMsg.error = data.data;
+        PubSub.publish('MARK LINE', sendMsg);
       }
       var newMsg = {};
       newMsg.type = 'text-danger';
