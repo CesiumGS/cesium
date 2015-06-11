@@ -487,7 +487,9 @@ define([
 
                             var direction = Cartesian3.subtract(worldPosition, end, scratchTranslateP0);
                             Cartesian3.normalize(direction, direction);
-                            camera.move(direction, distance);
+
+                            var distanceScale = Math.min(1.0, Math.max(0.25, (1.0 - camera.getMagnitude() / camera.position.z)));
+                            camera.move(direction, distance * distanceScale);
                         } else {
                             var rho = Cartesian3.magnitude(camera.position);
                             var rotateRate = controller._rotateFactor * (rho - controller._rotateRateRangeAdjustment);
