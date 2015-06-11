@@ -488,7 +488,9 @@ define([
                             var direction = Cartesian3.subtract(worldPosition, end, scratchTranslateP0);
                             Cartesian3.normalize(direction, direction);
 
-                            var distanceScale = Math.min(1.0, Math.max(0.25, (1.0 - camera.getMagnitude() / camera.position.z)));
+                            var zScale = Math.min(1.0, Math.max(0.25, (1.0 - camera.getMagnitude() / camera.position.z)));
+                            var widthScale = Math.abs(start.x - (canvas.clientWidth * 0.5)) / canvas.clientWidth * 0.5;
+                            var distanceScale = zScale + widthScale;
                             camera.move(direction, distance * distanceScale);
                         } else {
                             var rho = Cartesian3.magnitude(camera.position);
