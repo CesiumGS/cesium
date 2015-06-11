@@ -461,7 +461,7 @@ define([
                         var projection = scene.mapProjection;
                         var ellipsoid = projection.ellipsoid;
 
-                        var cartographic = projection.unproject(pickedPosition);
+                        var cartographic = projection.unproject(startWorldPosition);
                         startWorldPosition = ellipsoid.cartographicToCartesian(cartographic);
                     }
                     var start = SceneTransforms.wgs84ToWindowCoordinates(scene, startWorldPosition);
@@ -482,19 +482,12 @@ define([
                         var endY = start.y + offset.y;
 
                         if (scene.mode === SceneMode.SCENE2D) {
-                            var worldPosition = object._zoomWorldPosition;
+                            var worldPosition = camera.getPickRay(start).origin;
                             end = camera.getPickRay(new Cartesian2(endX, endY)).origin;
 
-                            var position = camera.position;
-                            var p0 = Cartesian3.subtract(worldPosition, position, scratchTranslateP0);
-                            var p1 = Cartesian3.subtract(end, position, scratchTranslateP1);
-                            var direction = Cartesian3.subtract(p0, p1, scratchTranslateP0);
-                            var mag = Cartesian3.magnitude(direction);
-
-                            if (mag > 0.0) {
-                                Cartesian3.normalize(direction, direction);
-                                camera.move(direction, mag);
-                            }
+                            var direction = Cartesian3.subtract(worldPosition, end, scratchTranslateP0);
+                            Cartesian3.normalize(direction, direction);
+                            camera.move(direction, distance);
                         } else {
                             var rho = Cartesian3.magnitude(camera.position);
                             var rotateRate = controller._rotateFactor * (rho - controller._rotateRateRangeAdjustment);
