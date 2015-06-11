@@ -274,6 +274,8 @@ define([
         this._rotateMousePosition = new Cartesian2(-1.0, -1.0);
         this._rotateStartPosition = new Cartesian3();
         this._strafeStartPosition = new Cartesian3();
+        this._zoomMouseStart = new Cartesian2();
+        this._zoomWorldPosition = new Cartesian3();
         this._tiltCVOffMap = false;
         this._looking = false;
         this._rotating = false;
@@ -406,6 +408,16 @@ define([
         }
     }
 
+    var scratchZoomPickRay = new Ray();
+    var scratchZoomEndRay = new Ray();
+    var scratchPickCartesian = new Cartesian3();
+    var scratchZoomOffset = new Cartesian2();
+    var scratchZoomCartographic = new Cartographic();
+    var scratch2DCartesian = new Cartesian3();
+    var scratchStartWC = new Cartesian2();
+    var scratchEndClone = new Cartesian2();
+    var scratchZoomDirection = new Cartesian3();
+
     function handleZoom(object, startPosition, movement, zoomFactor, distanceMeasure, unitPositionDotDirection) {
         var percentage = 1.0;
         if (defined(unitPositionDotDirection)) {
@@ -444,7 +456,7 @@ define([
         var camera = scene.camera;
         var mode = scene.mode;
 
-        var pickedPosition = mode !== SceneMode.SCENE2D ? pickGlobe(object, startPosition) : camera.getPickRay(startPosition).origin;
+        var pickedPosition = mode !== SceneMode.SCENE2D ? pickGlobe(object, startPosition, scratchPickCartesian) : camera.getPickRay(startPosition, scratchZoomPickRay).origin;
 
         if (distance <= 0.0 || !defined(pickedPosition)) {
             camera.zoomIn(distance);
@@ -460,19 +472,21 @@ define([
             }
 
             var canvas = scene.canvas;
-            var offset = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+            var offset = scratchZoomOffset;
+            offset.x = canvas.clientWidth / 2;
+            offset.y = canvas.clientHeight / 2;
 
             var startWorldPosition = object._zoomWorldPosition;
             if (mode === SceneMode.SCENE2D) {
                 var projection = scene.mapProjection;
                 var ellipsoid = projection.ellipsoid;
 
-                var cartographic = projection.unproject(startWorldPosition);
-                startWorldPosition = ellipsoid.cartographicToCartesian(cartographic);
+                var cartographic = projection.unproject(startWorldPosition, scratchZoomCartographic);
+                startWorldPosition = ellipsoid.cartographicToCartesian(cartographic, scratch2DCartesian);
             }
-            var start = SceneTransforms.wgs84ToWindowCoordinates(scene, startWorldPosition);
+            var start = SceneTransforms.wgs84ToWindowCoordinates(scene, startWorldPosition, scratchStartWC);
 
-            var end = Cartesian2.clone(movement.endPosition);
+            var end = Cartesian2.clone(movement.endPosition, scratchEndClone);
             end.x = movement.startPosition.x;
 
             Cartesian2.subtract(offset, start, offset);
@@ -482,14 +496,14 @@ define([
                 Cartesian2.normalize(offset, offset);
                 Cartesian2.multiplyByScalar(offset, magnitude, offset);
 
-                var endX = start.x + offset.x;
-                var endY = start.y + offset.y;
+                end.x = start.x + offset.x;
+                end.y = start.y + offset.y;
 
                 if (mode === SceneMode.SCENE2D) {
-                    var worldPosition = camera.getPickRay(start).origin;
-                    end = camera.getPickRay(new Cartesian2(endX, endY)).origin;
+                    var worldPosition = camera.getPickRay(start, scratchZoomPickRay).origin;
+                    var endPosition = camera.getPickRay(end, scratchZoomEndRay).origin;
 
-                    var direction = Cartesian3.subtract(worldPosition, end, scratchTranslateP0);
+                    var direction = Cartesian3.subtract(worldPosition, endPosition, scratchZoomDirection);
                     Cartesian3.normalize(direction, direction);
 
                     var zScale = Math.min(1.0, Math.max(0.25, (1.0 - camera.getMagnitude() / camera.position.z)));
@@ -508,8 +522,8 @@ define([
                         rotateRate = object._minimumRotateRate;
                     }
 
-                    var phiWindowRatio = (start.x - endX) / canvas.clientWidth;
-                    var thetaWindowRatio = (start.y - endY) / canvas.clientHeight;
+                    var phiWindowRatio = (start.x - end.x) / canvas.clientWidth;
+                    var thetaWindowRatio = (start.y - end.y) / canvas.clientHeight;
 
                     phiWindowRatio = Math.min(phiWindowRatio, object.maximumMovementRatio);
                     thetaWindowRatio = Math.min(thetaWindowRatio, object.maximumMovementRatio);
@@ -534,9 +548,9 @@ define([
         if (zoomAlongVector) {
             var ray;
             if (Cartesian2.equals(startPosition, object._zoomMouseStart)) {
-                ray = camera.getPickRay(SceneTransforms.wgs84ToWindowCoordinates(scene, object._zoomWorldPosition));
+                ray = camera.getPickRay(SceneTransforms.wgs84ToWindowCoordinates(scene, object._zoomWorldPosition, scratchZoomOffset), scratchZoomPickRay);
             } else {
-                ray = camera.getPickRay(startPosition);
+                ray = camera.getPickRay(startPosition, scratchZoomPickRay);
             }
 
             var rayDirection = ray.direction;
@@ -553,7 +567,6 @@ define([
     var translate2DStart = new Ray();
     var translate2DEnd = new Ray();
     var scratchTranslateP0 = new Cartesian3();
-    var scratchTranslateP1 = new Cartesian3();
 
     function translate2D(controller, startPosition, movement) {
         var scene = controller._scene;
@@ -561,10 +574,7 @@ define([
         var start = camera.getPickRay(movement.startPosition, translate2DStart).origin;
         var end = camera.getPickRay(movement.endPosition, translate2DEnd).origin;
 
-        var position = camera.position;
-        var p0 = Cartesian3.subtract(start, position, scratchTranslateP0);
-        var p1 = Cartesian3.subtract(end, position, scratchTranslateP1);
-        var direction = Cartesian3.subtract(p0, p1, scratchTranslateP0);
+        var direction = Cartesian3.subtract(start, end, scratchTranslateP0);
         var distance = Cartesian3.magnitude(direction);
 
         if (distance > 0.0) {
