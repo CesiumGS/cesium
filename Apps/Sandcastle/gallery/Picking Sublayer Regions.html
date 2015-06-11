@@ -4,30 +4,29 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Use Viewer to start building new applications or easily embed Cesium into existing applications.">
-    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases">
-    <title>Cesium Demo - Picking Sublayer Regions</title>
-    <script type="text/javascript" src="../../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../../ThirdParty/requirejs-2.1.9/require.js"></script>
+    <meta name="description" content="Demonstration of how to have pickable sub regions within your geometries">
+    <meta name="cesium-sandcastle-labels" content="Geometries">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
     <script type="text/javascript">
     require.config({
-        baseUrl : '../../../../Source',
+        baseUrl : '../../../Source',
         waitSeconds : 60
     });
     </script>
-    <style type="text/css">
-        @import url(../../templates/bucket.css);
-    </style>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
-"use strict";
+    "use strict";
 //Sandcastle_Begin
-
 var viewer = new Cesium.Viewer('cesiumContainer', { infoBox : false });
 var entities = viewer.entities;
 var scene = viewer.scene;
@@ -38,7 +37,7 @@ var stack = {
     boxes: 10,
     location: {lon: -70.625353, lat: 41.938152, alt: 0},
     exterior: {height: 129, length: 15, width: 15},
-    interior: {height: 11.99, length: 14.9, width: 14.9, spacing: 1},
+    interior: {height: 12, length: 15, width: 15, spacing: 1},
     entity: entities.add({})
 };
 
@@ -59,9 +58,9 @@ var exterior = entities.add({
                 stack.exterior.length,
                 stack.exterior.width,
                 stack.exterior.height),
-        material : Cesium.Color.DARKGREEN,
+        material : Cesium.Color.DARKGREEN.withAlpha(0.6),
         fill: true,
-        outline : false,
+        outline : true,
         outlineColor : Cesium.Color.BLACK
     },
     label: {
@@ -90,7 +89,9 @@ for (var box = 0; box < stack.boxes; box++) {
                 label: {
                     text: 'Contained Box: ' + (box+1),
                     show: false,
-                    eyeOffset: new Cesium.Cartesian3(25.0, 0.0, -25.0)
+                    eyeOffset: new Cesium.Cartesian3(0, 0, -25.0),
+                    pixelOffset: new Cesium.Cartesian2(35, 0),
+                    horizontalOrigin : Cesium.HorizontalOrigin.LEFT
                 },
                 position : Cesium.Cartesian3.fromDegrees(
                         stack.location.lon,
@@ -127,9 +128,9 @@ Sandcastle.addToolbarButton('Toggle Stack Interior Outlines', function (){
     }
 });
 
-handler.setInputAction( function searchHittable(movement) {
-    //flip the shown flags
-    interior.show = true;
+//Search Hittable Entitis on mouse left click
+handler.setInputAction( function(movement) {
+
     var currentObjects = scene.drillPick(movement.position);
     console.log(currentObjects.length + ' entites found');
 
@@ -144,8 +145,9 @@ handler.setInputAction( function searchHittable(movement) {
             console.log('picked: ' + current.name);
 
             //clear the prior selected object
-            ((pickedObject || {}).label || {}).show = false;
-
+            if (Cesium.defined(pickedObject) && Cesium.defined(pickedObject.label)) {
+                pickedObject.label.show = false;
+            }
             pickedObject = current;
             pickedObject.label.show = true;
 
@@ -155,15 +157,14 @@ handler.setInputAction( function searchHittable(movement) {
     }
 
     //If a hittable entity was found you would not get here
-    ((pickedObject || {}).label || {}).show = false;
+    if (Cesium.defined(pickedObject) && Cesium.defined(pickedObject.label)) {
+        pickedObject.label.show = false;
+    }
     pickedObject = undefined;
 
-}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-
-//Sandcastle_End
+}, Cesium.ScreenSpaceEventType.LEFT_CLICK);//Sandcastle_End
     Sandcastle.finishedLoading();
 }
-
 if (typeof Cesium !== "undefined") {
     startup(Cesium);
 } else if (typeof require === "function") {
