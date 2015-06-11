@@ -9,55 +9,58 @@ define([
         JobType) {
     "use strict";
 
+    var Budget = function(total) {
+        // Total budget, in ms, allowed for one frame
+        this.total = total;
+
+        // Remaining budget, in ms, for this frame
+        this.remainingThisFrame = total;
+    };
+
     /**
      * @private
      */
-    var JobScheduler = function(budgets) {
-        var budgetPerType = new Array(JobType.NUMBER_OF_JOB_TYPES);
+    var JobScheduler = function() {
+        var budgets = new Array(JobType.NUMBER_OF_JOB_TYPES);
 
 // TODO: allow "stealing" time slices, e.g., override argument or temporal coherence so
 //       for example, buffers can use the textures time slice, if no textures were
 //       created last frame.
-        budgetPerType[JobType.TEXTURE] = 8.0;
-        budgetPerType[JobType.PROGRAM] = 2.0;
-        budgetPerType[JobType.BUFFER] = 6.0;
+        budgets[JobType.TEXTURE] = new Budget(8.0);
+        budgets[JobType.PROGRAM] = new Budget(2.0);
+        budgets[JobType.BUFFER] = new Budget(6.0);
 
-        // Time budget, in ms, each frame for each job type.  Changes to this take
-        // effect next time resetBudgets() is called.
-        this.budgetPerType = budgetPerType;
-
-        // Remaining budget, in ms, this frame for each job type
-        this._remainingBudgetPerType = new Array(length);
-
-        this.resetBudgets();
+        this._budgets = budgets;
     };
 
     JobScheduler.prototype.clearBudgets = function() {
-        var remainingBudgetPerType = this._remainingBudgetPerType;
-        var length = JobType.NUMBER_OF_JOB_TYPES;
+        var budgets = this._budgets;
+        var length = budgets.length;
         for (var i = 0; i < length; ++i) {
-            remainingBudgetPerType[i] = 0.0;
+            budgets[i].remainingThisFrame = 0.0;
         }
     };
 
     JobScheduler.prototype.resetBudgets = function() {
-        var budgetPerType = this.budgetPerType;
-        var remainingBudgetPerType = this._remainingBudgetPerType;
-        var length = JobType.NUMBER_OF_JOB_TYPES;
+        var budgets = this._budgets;
+        var length = budgets.length;
         for (var i = 0; i < length; ++i) {
-            remainingBudgetPerType[i] = budgetPerType[i];
+            var budget = budgets[i];
+            budget.remainingThisFrame = budget.total;
         }
     };
 
     JobScheduler.prototype.execute = function(job, jobType) {
-        if (this._remainingBudgetPerType[jobType] <= 0.0) {
+        var budget = this._budgets[jobType];
+
+        if (budget.remainingThisFrame <= 0.0) {
             return false;
         }
 
         var startTime = getTimestamp();
         job.executeJob();
         var duration = getTimestamp() - startTime;
-        this._remainingBudgetPerType[jobType] -= duration;
+        budget.remainingThisFrame -= duration;
 
         return true;
     };
