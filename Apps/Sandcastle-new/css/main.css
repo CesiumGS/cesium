@@ -29,7 +29,6 @@ html {
 }
 
 #appLayout{
-  padding-top: 80px;
   padding-bottom: 60px;
   position: absolute;
   width: 100%;
@@ -65,6 +64,15 @@ ul + div.tab-content {
 #appLayout, #bodyContainer, #bodyRow, #codeColumn, #codeColumn div[role="tabpanel"], #codeColumn .tab-content, #cesiumColumn, #cesiumColumn > div, #cesiumFrame, #cesiumFrame > div, #cesiumFrame iframe {
   height: 100%; }
 
+#cesiumTabs .docTab{
+  padding-right: 5px;
+}
+
+#cesiumTabs .close{
+  font-size: 14px;
+  margin-left: 10px;
+}
+
 #cesiumFrame iframe {
   width: 100%; }
 
@@ -76,7 +84,7 @@ ul + div.tab-content {
 
 #consoleRow {
   position: fixed;
-  bottom: 39px;
+  bottom: 60px; /* Remove this when footer is removed */
   width: 100%;
   z-index: 10;
 }
@@ -89,9 +97,26 @@ ul + div.tab-content {
   font-size: 13px;
 }
 
+#consoleRow .panel{
+  margin-bottom: 0;
+}
+
 #consoleLog .panel-body{
   max-height: 200px;
   overflow-y: scroll;
+}
+
+#docPopup{
+  opacity: 0.9;
+}
+
+#docPopupMessage{
+  max-width: 100%;
+  text-align: left;
+}
+
+#docPopupMessage a{
+  display: block;
 }
 
 /*# sourceMappingURL=main.css.map */

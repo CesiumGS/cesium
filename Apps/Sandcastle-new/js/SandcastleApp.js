@@ -44,6 +44,10 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       if (!isTextArea) {
         this.editor = CodeMirror.fromTextArea(this.refs.editor.getDOMNode(), this.props);
         this.editor.on('change', this.handleChange);
+        if(this.props.mode === 'javascript')
+        {
+          this.editor.on('cursorActivity', this.onCursorActivity);
+        }
       }
 
       var editor = this.editor;
@@ -57,6 +61,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       PubSub.subscribe('SHOW JS CODE', this.refreshEditor);
       PubSub.subscribe('MARK LINE', this.markLine);
       PubSub.subscribe('RELOAD FRAME', this.getData);
+
     },
 
     getData: function(){
@@ -92,6 +97,59 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       // this.editor.addLineClass(line, 'text', 'errorLine');
     },
 
+    openDocTab: function(title, link){
+      // Bootstrap doesn't play nice with periods in tab IDs.
+      var escapeTitle = title.replace('.','_');
+      var data = {};
+      data.title = escapeTitle;
+      data.link = link;
+      PubSub.publish('OPEN DOC',data);
+    },
+
+    showDocPopup: function(){
+      var selectedText = this.editor.getSelection();
+      var lowerText = selectedText.toLowerCase();
+      var docNode = $('#docPopup');
+      var docMessage = $('#docPopupMessage');
+      var that = this;
+
+      var onDocClick = function() {
+          that.openDocTab(this.textContent, this.href);
+          return false;
+      };
+
+      this.docTimer = undefined;
+      if (lowerText && lowerText in this.docTypes && typeof this.docTypes[lowerText].push === 'function') {
+        docMessage.text('');
+        for (var i = 0, len = this.docTypes[lowerText].length; i < len; ++i) {
+          var member = this.docTypes[lowerText][i];
+          var ele = document.createElement('a');
+          ele.target = '_blank';
+          ele.textContent = member.replace('.html', '').replace('module-', '').replace('#', '.');
+          ele.href = '../../Build/Documentation/' + member;
+          ele.onclick = onDocClick;
+          // ele.setAttribute('data-toggle', 'modal');
+          // ele.setAttribute('data-target', '#docModal');
+          docMessage.append(ele);
+        }
+        this.editor.addWidget(this.editor.getCursor(true), docNode.get(0));
+        docNode.css('top', (parseInt(docNode.css('top'), 10) - 5) + 'px');
+        $('#docPopup').tooltip('show');
+      }
+    },
+
+    onCursorActivity: function(){
+      var pos = {};
+      pos.left = -999;
+      $('#docPopup').css('left', '-999px');
+      PubSub.publish('DOC POSITION', pos);
+      if(this.docTimer !== undefined){
+        window.clearTimeout(docTimer);
+      }
+
+      doctimer = window.setTimeout(this.showDocPopup, 500);
+    },
+
     handleChange: function() {
       if (this.editor) {
         var value = this.editor.getValue();
@@ -106,6 +164,20 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
     componentWillUpdate: function(nextProps, nextState){
       // Update with new value from demo
       this.editor.setValue(nextProps.defaultValue);
+    },
+
+    componentWillMount: function(){
+      var that = this;
+      $.ajax({
+        url : '../../Build/Documentation/types.txt',
+        dataType : 'json',
+        error : function(error) {
+          console.log("no docs found");
+            docError = true;
+        }
+      }).done(function(value) {
+        that.docTypes = value;
+      });
     },
 
     render: function(){
@@ -213,10 +285,46 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
   });
 
   var SandcastleCesiumTabs = React.createClass({
+    getInitialState: function(){
+      return {tabs: ["Cesium Sandcastle"]};
+    },
+
+    componentWillMount: function(){
+      PubSub.subscribe('OPEN DOC', this.openDocTab);
+    },
+
+    openDocTab: function(msg, data){
+      var tabs = this.state.tabs;
+      tabs.push(data.title);
+      this.setState({tabs: tabs});
+    },
+
+    handleClose: function(e){
+      $('#cesiumTabs a[href="#bucketPane"]').tab('show');
+      var title = e.target.parentNode.getAttribute('data-doc-name');
+      PubSub.publish('CLOSE TAB', title);
+      var tabs = this.state.tabs;
+      var index = tabs.indexOf(title);
+      tabs.splice(index, 1);
+      this.setState({tabs: tabs});
+    },
+
     render: function(){
+      var that = this;
+      var createItem = function(itemText, index){
+        if(itemText === "Cesium Sandcastle")
+        {
+          return <li key="cesiumTab" role="presentation" className="active"><a href="#bucketPane" aria-controls="bucketPane" role="tab" data-toggle="tab">Cesium</a></li>
+        }
+        else
+        {
+          return <li key={index+itemText} role="presentation"><a href={"#"+ itemText+"Pane"} data-doc-name={itemText} className="docTab" aria-controls={itemText + "Pane"} role="tab" data-toggle="tab">{itemText}<span className="close" onClick={that.handleClose}>x</span></a></li>
+        }
+      };
+
       return (
         <ul className="nav nav-tabs hidden-xs" id="cesiumTabs" role="tablist">
-            <li role="presentation" className="active"><a href="#bucketPane" aria-controls="bucketPane" role="tab" data-toggle="tab">Cesium</a></li>
+            {this.state.tabs.map(createItem)}
         </ul>
       );
     }
@@ -245,7 +353,6 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
     componentWillMount: function(){
       // Subscribe to events
       PubSub.subscribe('LOAD FRAME', this.loadFrame);
-      PubSub.subscribe('NEW WINDOW', this.openNewWindow);
     },
 
     openNewWindow: function(msg, data){
@@ -256,12 +363,13 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       var baseElement = frameDoc.createElement('base');
       baseElement.setAttribute("href", baseHref);
       frameDoc.head.appendChild(baseElement);
+
       var htmlBlob = new Blob([frameDoc.children[0].outerHTML], {
             'type' : 'text/html;charset=utf-8',
             'endings' : 'native'
       });
       var htmlBlobURL = URL.createObjectURL(htmlBlob);
-      window.open(htmlBlobURL, '_blank');
+      window.open(htmlBlobURL);
       window.focus();
     },
 
@@ -302,20 +410,61 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       this.cesiumFrame = React.createElement('iframe', {
         frameBorder:'0',
         className:'fullFrame',
-        id:'bucketFrame'
+        id:'bucketFrame',
       });
       return this.cesiumFrame;
     }
   });
 
   var SandcastleCesiumContainer = React.createClass({
+    getInitialState: function(){
+      return {tabs: [{title: 'Cesium', link: undefined}]};
+    },
+
+    componentWillMount: function(){
+      PubSub.subscribe('OPEN DOC', this.openDocTab);
+      PubSub.subscribe('CLOSE TAB', this.closeDocTab);
+    },
+
+    openDocTab: function(msg, data){
+      var tabs = this.state.tabs;
+      var tab = {};
+      tab.title = data.title;
+      tab.link = data.link;
+      tabs.push(tab);
+      this.setState({tabs: tabs});
+      $('#cesiumTabs a[href="#'+data.title+'Pane"]').tab('show');
+    },
+
+    closeDocTab: function(msg, data){
+      console.log("closing doc tab");
+      var tabs = this.state.tabs;
+      for(var i = tabs.length-1; i>=0; i--)
+      {
+        if(tabs[i].title === data)
+        {
+          tabs.splice(i, 1);
+          break;
+        }
+      }
+      this.setState({tabs: tabs});
+    },
 
     render: function(){
+      var createItem = function(item, index){
+        if(item.title === 'Cesium' && item.link === undefined)
+        {
+          return <div key="sandcastlecesium" role="tabpanel" className="tab-pane active" id="bucketPane"><SandcastleCesiumFrame /></div>
+        }
+        else
+        {
+          return <div key={index.title+item} role="tabpanel" className="tab-pane" id={item.title+ "Pane"}><iframe frameBorder="0" className="fullFrame" src={item.link}></iframe></div>
+        }
+      };
+
       return (
         <div id="cesiumFrame" className="tab-content">
-          <div role="tabpanel" className="tab-pane active" id="bucketPane">
-            <SandcastleCesiumFrame />
-          </div>
+          {this.state.tabs.map(createItem)}
         </div>
       );
     }
@@ -600,6 +749,58 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       this.jsCode = '';
     },
 
+    getDemoHTML: function(){
+      var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
+      var baseHref = window.location.href;
+      var pos = baseHref.lastIndexOf('/');
+      baseHref = baseHref.substring(0, pos) + '/';
+      return '<html>' + '\n'
+            + '<head>' + '\n'
+            + '<base href="' + baseHref + '"></base>' + '\n'
+            + '<script src="../../Build/Cesium/Cesium.js"></script>' + '\n'
+            + '<script type="text/javascript" src="./Sandcastle-header.js"></script>' + '\n'
+            + '<style>@import url(../../Build/Cesium/Widgets/widgets.css);\nhtml, body, #cesiumContainer {width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;}\n</style>' + '\n'
+            + '</head><body class="sandcastle-loading">' + '\n'
+            + this.htmlCode + '\n'
+            + '<script type="text/javascript">' + '\n'
+            + this.getScriptFromEditor(isFirefox, this.jsCode) + '\n'
+            + '</script></body></html';
+    },
+
+    exportStandalone: function(){
+      var data;
+      var link = document.createElement('a');
+      data = this.getDemoHTML();
+      link.setAttribute('href', 'data:text/html;charset=utf-8', encodeURIComponent(data));
+      link.setAttribute('download', 'export.html');
+      if (document.createEvent) {
+        var event = document.createEvent('MouseEvents');
+        event.initEvent('click', true, true);
+        link.dispatchEvent(event);
+      }
+      else {
+        link.click();
+      }
+      var octetBlob = new Blob([data], {
+        'type': 'application/octet-stream',
+        'endings': 'native'
+      });
+      var octetBlobURL = URL.createObjectURL(octetBlob);
+      // window.open(octetBlobURL);
+    },
+
+    openNewWindow: function(){
+      var data;
+      data = this.getDemoHTML();
+      var htmlBlob = new Blob([data], {
+        'type': 'text/html;charset=utf-8',
+        'endings': 'native'
+      });
+      var htmlBlobURL = URL.createObjectURL(htmlBlob);
+      window.open(htmlBlobURL, '_blank');
+      window.focus();
+    },
+
     componentWillMount: function(){
       PubSub.subscribe('RELOAD FRAME', this.refreshData);
       PubSub.subscribe('SHOW PREVIEW', this.handleNavigation);
@@ -608,6 +809,8 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       PubSub.subscribe('SHOW CONSOLE', this.handleNavigation);
       PubSub.subscribe('UPDATE JS', this.loadUserCode);
       PubSub.subscribe('UPDATE HTML', this.loadUserCode);
+      PubSub.subscribe('EXPORT STANDALONE', this.exportStandalone);
+      PubSub.subscribe('NEW WINDOW', this.openNewWindow);
     },
 
     componentDidMount: function(){
@@ -650,6 +853,40 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
     }
   });
 
+  var SandcastleDocs = React.createClass({
+    getInitialState: function(){
+      return {
+        top: 0,
+        left: -999
+      };
+    },
+
+    updatePosition: function(msg, data){
+      if(data.top !== undefined)
+      {
+        this.setState({top: data.top});
+      }
+      if(data.left !== undefined)
+      {
+        this.setState({left: data.left});
+      }
+    },
+
+    componentWillMount: function(){
+      PubSub.subscribe('DOC POSITION', this.updatePosition);
+    },
+
+    render: function(){
+      return (
+        <div style={{top:this.state.top + 'px', left:this.state.left + 'px'}} className="tooltip bottom" id="docPopup" role="tooltip">
+          <div className="tooltip-arrow"></div>
+          <div className="tooltip-inner" id="docPopupMessage">
+          </div>
+        </div>
+      )
+    }
+  });
+
   var SandcastleApp = React.createClass({
     componentWillMount: function(){
       if(window.location.search)
@@ -682,6 +919,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
         <div style={{height: 100 + '%'}}>
           <SandcastleHeader />
           <SandcastleBody demo={this.demoName}/>
+          <SandcastleDocs />
         </div>
       );
     }
@@ -730,6 +968,10 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       $('#consoleLog').addClass('in');
     },
 
+    exportStandalone: function(){
+      PubSub.publish('EXPORT STANDALONE', '');
+    },
+
     render: function(){
       return (
         <nav className="navbar navbar-default" id="toolbar">
@@ -755,7 +997,12 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
                   <li id="buttonJSCode" className="visible-xs-block"><a href="#" onClick={this.showJSCode}>View JS Code</a></li>
                   <li id="buttonHTMLCode" className="visible-xs-block"><a href="#" onClick={this.showHTMLCode}>View HTML Code</a></li>
                   <li id="buttonConsole" className="visible-xs-block"><a href="#" onClick={this.showConsole}>Console</a></li>
-                  <li id="buttonShare"><a href="#">Share</a></li>
+                  <li className="dropdown" id="buttonShare">
+                    <a href="#" className="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Share <span className="caret"></span></a>
+                    <ul className="dropdown-menu" role="menu">
+                      <li><a href="#" onClick={this.exportStandalone}>Export as standalone</a></li>
+                    </ul>
+                  </li>
                   <li id="buttonGallery"><a href="#">Gallery</a></li>
               </ul>
             </div>
