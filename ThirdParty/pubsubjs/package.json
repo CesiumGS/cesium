@@ -1,0 +1,51 @@
+{
+  "name": "pubsubjs",
+  "version": "0.3.9",
+  "description": "micro pubsub library",
+  "tags": [
+    "node",
+    "pubsub",
+    "browser",
+    "observer",
+    "event",
+    "server",
+    "client",
+    "publish",
+    "subscribe"
+  ],
+  "keywords": [
+    "node",
+    "pubsub",
+    "browser",
+    "observer",
+    "event",
+    "server",
+    "client",
+    "publish",
+    "subscribe"
+  ],
+  "author": "nazomikan <nazomikan@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nazomikan/PubsubJS.git"
+  },
+  "homepage": "https://github.com/nazomikan/PubsubJS",
+  "bugs": {
+    "url": "https://github.com/nazomikan/PubsubJS/issues"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/nazomikan/PubsubJS/blob/master/MIT-LICENSE.txt"
+    }
+  ],
+  "devDependencies": {
+    "mocha": "1.7.4",
+    "jquery": "~2.1.3",
+    "mock-browser": "~0.90.32"
+  },
+  "scripts": {
+    "test": "mocha test/pubsub-test.js"
+  },
+  "main": "pubsub.js"
+}

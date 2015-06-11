@@ -1,0 +1,11 @@
+{
+    "name": "pubsubjs",
+    "version": "0.3.9",
+    "main": "./pubsub.js",
+    "dependencies": {},
+    "ignore": [
+        "test/",
+        "sample/",
+        "node_modules/"
+    ]
+}
