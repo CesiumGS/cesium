@@ -39,6 +39,7 @@ define([
         './FrustumCommands',
         './FXAA',
         './GlobeDepth',
+        './JobScheduler',
         './OIT',
         './OrthographicFrustum',
         './Pass',
@@ -95,6 +96,7 @@ define([
         FrustumCommands,
         FXAA,
         GlobeDepth,
+        JobScheduler,
         OIT,
         OrthographicFrustum,
         Pass,
@@ -207,7 +209,8 @@ define([
         }
 
         this._id = createGuid();
-        this._frameState = new FrameState(new CreditDisplay(creditContainer));
+        this._jobScheduler = new JobScheduler();
+        this._frameState = new FrameState(new CreditDisplay(creditContainer), this._jobScheduler);
         this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
 
         this._passState = new PassState(context);
@@ -1617,6 +1620,7 @@ define([
         }
 
         scene._preRender.raiseEvent(scene, time);
+        scene._jobScheduler.resetBudgets();
 
         var us = scene.context.uniformState;
         var frameState = scene._frameState;
@@ -1817,6 +1821,8 @@ define([
         if (!defined(this._pickFramebuffer)) {
             this._pickFramebuffer = context.createPickFramebuffer();
         }
+
+        this._jobScheduler.clearBudgets();
 
         // Update with previous frame's number and time, assuming that render is called before picking.
         updateFrameState(this, frameState.frameNumber, frameState.time);
