@@ -184,13 +184,7 @@ define([
         }
 
         if (updateLookAt) {
-            var offset;
-            if ((mode === SceneMode.SCENE2D && that._offset2D.range === 0.0) ||
-                (mode !== SceneMode.SCENE2D && Cartesian3.equals(that._offset3D, Cartesian3.ZERO))) {
-                offset = undefined;
-            } else {
-                offset = mode === SceneMode.SCENE2D ? that._offset2D : that._offset3D;
-            }
+            var offset = (mode === SceneMode.SCENE2D || Cartesian3.equals(that._offset3D, Cartesian3.ZERO)) ? undefined : that._offset3D;
             camera.lookAtTransform(camera.transform, offset);
         }
     }
@@ -239,10 +233,8 @@ define([
 
         this._lastCartesian = new Cartesian3();
         this._defaultOffset3D = undefined;
-        this._defaultOffset2D = undefined;
 
         this._offset3D = new Cartesian3();
-        this._offset2D = new HeadingPitchRange();
     };
 
     // STATIC properties defined here, not per-instance.
@@ -259,7 +251,6 @@ define([
             },
             set : function(vector) {
                 this._defaultOffset3D = Cartesian3.clone(vector, new Cartesian3());
-                this._defaultOffset2D = new HeadingPitchRange(0.0, 0.0, Cartesian3.magnitude(this._defaultOffset3D));
             }
         }
     });
@@ -309,7 +300,6 @@ define([
         var sceneModeChanged = sceneMode !== this._mode;
 
         var offset3D = this._offset3D;
-        var offset2D = this._offset2D;
         var camera = scene.camera;
 
         var updateLookAt = objectChanged || sceneModeChanged;
@@ -341,19 +331,10 @@ define([
                 updateLookAt = false;
                 saveCamera = false;
             } else if (!hasViewFrom || !defined(viewFromProperty.getValue(time, offset3D))) {
-                HeadingPitchRange.clone(EntityView._defaultOffset2D, offset2D);
                 Cartesian3.clone(EntityView._defaultOffset3D, offset3D);
-            } else {
-                offset2D.heading = 0.0;
-                offset2D.range = Cartesian3.magnitude(offset3D);
             }
-        } else if (!sceneModeChanged && scene.mode !== SceneMode.MORPHING) {
-            if (this._mode === SceneMode.SCENE2D) {
-                offset2D.heading = camera.heading;
-                offset2D.range = camera.frustum.right - camera.frustum.left;
-            } else if (this._mode === SceneMode.SCENE3D || this._mode === SceneMode.COLUMBUS_VIEW) {
-                Cartesian3.clone(camera.position, offset3D);
-            }
+        } else if (!sceneModeChanged && scene.mode !== SceneMode.MORPHING && this._mode !== SceneMode.SCENE2D) {
+            Cartesian3.clone(camera.position, offset3D);
         }
 
         this._lastEntity = entity;
