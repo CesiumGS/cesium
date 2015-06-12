@@ -1,59 +1,33 @@
 /*global define*/
 define([
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
         '../Core/combine',
-        '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/deprecationWarning',
         '../Core/DeveloperError',
-        '../Core/Event',
         '../Core/freezeObject',
         '../Core/GeographicTilingScheme',
-        '../Core/loadJson',
-        '../Core/loadText',
-        '../Core/loadWithXhr',
-        '../Core/loadXML',
-        '../Core/Math',
         '../Core/objectToQuery',
         '../Core/queryToObject',
-        '../Core/Rectangle',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/Uri',
-        '../ThirdParty/when',
         './GetFeatureInfoFormat',
-        './ImageryLayerFeatureInfo',
-        './ImageryProvider',
         './UrlTemplateImageryProvider'
     ], function(
-        Cartesian3,
-        Cartographic,
         combine,
-        Credit,
         defaultValue,
         defined,
         defineProperties,
         deprecationWarning,
         DeveloperError,
-        Event,
         freezeObject,
         GeographicTilingScheme,
-        loadJson,
-        loadText,
-        loadWithXhr,
-        loadXML,
-        CesiumMath,
         objectToQuery,
         queryToObject,
-        Rectangle,
         WebMercatorTilingScheme,
         Uri,
-        when,
         GetFeatureInfoFormat,
-        ImageryLayerFeatureInfo,
-        ImageryProvider,
         UrlTemplateImageryProvider) {
     "use strict";
 
@@ -159,45 +133,62 @@ define([
             }
         }
 
-        // Merge the parameters with the defaults, and make all parameter names lowercase
-        this._getFeatureInfoParameters = combine(objectToLowercase(defaultValue(options.getFeatureInfoParameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters);
-
-        // Build a template URL.
+        // Build the template URLs for tiles and pickFeatures.
         var uri = new Uri(options.url);
         var queryOptions = queryToObject(defaultValue(uri.query, ''));
-
         var parameters = combine(objectToLowercase(defaultValue(options.parameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.DefaultParameters);
         queryOptions = combine(parameters, queryOptions);
 
-        if (!defined(queryOptions.layers)) {
-            queryOptions.layers = options.layers;
+        var pickFeaturesUri = new Uri(options.url);
+        var pickFeaturesQueryOptions = queryToObject(defaultValue(pickFeaturesUri.query, ''));
+        var pickFeaturesParameters = combine(objectToLowercase(defaultValue(options.getFeatureInfoParameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters);
+        pickFeaturesQueryOptions = combine(pickFeaturesParameters, pickFeaturesQueryOptions);
+
+        function setParameter(name, value) {
+            if (!defined(queryOptions[name])) {
+                queryOptions[name] = value;
+            }
+
+            if (!defined(pickFeaturesQueryOptions[name])) {
+                pickFeaturesQueryOptions[name] = value;
+            }
         }
 
-        if (!defined(queryOptions.srs)) {
-            queryOptions.srs = options.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'EPSG:4326';
+        setParameter('layers', options.layers);
+        setParameter('srs', options.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'EPSG:4326');
+        setParameter('bbox', '{westProjected},{southProjected},{eastProjected},{northProjected}');
+        setParameter('width', '{width}');
+        setParameter('height', '{height}');
+
+        if (!defined(pickFeaturesQueryOptions.query_layers)) {
+            pickFeaturesQueryOptions.query_layers = options.layers;
         }
 
-        if (!defined(queryOptions.bbox)) {
-            queryOptions.bbox = '{westProjected},{southProjected},{eastProjected},{northProjected}';
+        if (!defined(pickFeaturesQueryOptions.x)) {
+            pickFeaturesQueryOptions.x = '{i}';
         }
 
-        if (!defined(queryOptions.width)) {
-            queryOptions.width = '{width}';
+        if (!defined(pickFeaturesQueryOptions.y)) {
+            pickFeaturesQueryOptions.y = '{j}';
         }
 
-        if (!defined(queryOptions.height)) {
-            queryOptions.height = '{height}';
+        if (!defined(pickFeaturesQueryOptions.info_format)) {
+            pickFeaturesQueryOptions.info_format = '{format}';
         }
 
         uri.query = objectToQuery(queryOptions);
-        var templateUrl = uri.toString();
+        var templateUrl = uri.toString().replace(/%7B/g, '{').replace(/%7D/g, '}');
 
-        // Remove URL encoding of URL template placeholders.
-        templateUrl = templateUrl.replace(/%7B/g, '{').replace(/%7D/g, '}');
+        var pickFeaturesTemplateUrl;
+        if (this._enablePickFeatures) {
+            pickFeaturesUri.query = objectToQuery(pickFeaturesQueryOptions);
+            pickFeaturesTemplateUrl = pickFeaturesUri.toString().replace(/%7B/g, '{').replace(/%7D/g, '}');
+        }
 
         // Let UrlTemplateImageryProvider do the actual URL building.
         this._tileProvider = new UrlTemplateImageryProvider({
             url : templateUrl,
+            pickFeaturesUrl : pickFeaturesTemplateUrl,
             tilingScheme : defaultValue(options.tilingScheme, new GeographicTilingScheme({ ellipsoid : options.ellipsoid})),
             rectangle : options.rectangle,
             tileWidth : options.tileWidth,
@@ -206,7 +197,8 @@ define([
             maximumLevel : options.maximumLevel,
             proxy : options.proxy,
             tileDiscardPolicy : options.tileDiscardPolicy,
-            credit : options.credit
+            credit : options.credit,
+            getFeatureInfoFormats : this._getFeatureInfoFormats
         });
     };
 
@@ -428,9 +420,6 @@ define([
         return this._tileProvider.requestImage(x, y, level);
     };
 
-    var cartographicScratch = new Cartographic();
-    var cartesian3Scratch = new Cartesian3();
-
     /**
      * Asynchronously determines what features, if any, are located at a given longitude and latitude within
      * a tile.  This function should not be called before {@link ImageryProvider#ready} returns true.
@@ -447,70 +436,7 @@ define([
      * @exception {DeveloperError} <code>pickFeatures</code> must not be called before the imagery provider is ready.
      */
     WebMapServiceImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this.ready) {
-            throw new DeveloperError('pickFeatures must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        if (!this._enablePickFeatures || this._getFeatureInfoFormats.length === 0) {
-            return undefined;
-        }
-
-        var rectangle = this.tilingScheme.tileXYToNativeRectangle(x, y, level);
-
-        var projected;
-        if (this.tilingScheme instanceof GeographicTilingScheme) {
-            projected = cartesian3Scratch;
-            projected.x = CesiumMath.toDegrees(longitude);
-            projected.y = CesiumMath.toDegrees(latitude);
-        } else {
-            var cartographic = cartographicScratch;
-            cartographic.longitude = longitude;
-            cartographic.latitude = latitude;
-
-            projected = this.tilingScheme.projection.project(cartographic, cartesian3Scratch);
-        }
-
-        var i = (this.tileWidth * (projected.x - rectangle.west) / rectangle.width) | 0;
-        var j = (this.tileHeight * (rectangle.north - projected.y) / rectangle.height) | 0;
-
-        var url;
-
-        var formatIndex = 0;
-
-        var that = this;
-
-        function handleResponse(format, data) {
-            return format.callback(data);
-        }
-
-        function doRequest() {
-            if (formatIndex >= that._getFeatureInfoFormats.length) {
-                // No valid formats, so no features picked.
-                return when([]);
-            }
-
-            var format = that._getFeatureInfoFormats[formatIndex];
-            var url = buildGetFeatureInfoUrl(that, format.format, x, y, level, i, j);
-
-            ++formatIndex;
-
-            if (format.type === 'json') {
-                return loadJson(url).then(format.callback).otherwise(doRequest);
-            } else if (format.type === 'xml') {
-                return loadXML(url).then(format.callback).otherwise(doRequest);
-            } else if (format.type === 'text' || format.type === 'html') {
-                return loadText(url).then(format.callback).otherwise(doRequest);
-            } else {
-                return loadWithXhr({
-                    url: url,
-                    responseType: format.format
-                }).then(handleResponse.bind(undefined, format)).otherwise(doRequest);
-            }
-        }
-
-        return doRequest();
+        return this._tileProvider.pickFeatures(x, y, level, longitude, latitude);
     };
 
     /**
@@ -550,61 +476,6 @@ define([
         freezeObject(new GetFeatureInfoFormat('xml', 'text/xml')),
         freezeObject(new GetFeatureInfoFormat('text', 'text/html'))
     ]);
-
-    function buildGetFeatureInfoUrl(imageryProvider, infoFormat, x, y, level, i, j) {
-        var uri = new Uri(imageryProvider._url);
-        var queryOptions = queryToObject(defaultValue(uri.query, ''));
-
-        queryOptions = combine(imageryProvider._getFeatureInfoParameters, queryOptions);
-
-        if (!defined(queryOptions.layers)) {
-            queryOptions.layers = imageryProvider._layers;
-        }
-
-        if (!defined(queryOptions.query_layers)) {
-            queryOptions.query_layers = imageryProvider._layers;
-        }
-
-        if (!defined(queryOptions.srs)) {
-            queryOptions.srs = imageryProvider.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'EPSG:4326';
-        }
-
-        if (!defined(queryOptions.bbox)) {
-            var nativeRectangle = imageryProvider.tilingScheme.tileXYToNativeRectangle(x, y, level);
-            queryOptions.bbox = nativeRectangle.west + ',' + nativeRectangle.south + ',' + nativeRectangle.east + ',' + nativeRectangle.north;
-        }
-
-        if (!defined(queryOptions.x)) {
-            queryOptions.x = i;
-        }
-
-        if (!defined(queryOptions.y)) {
-            queryOptions.y = j;
-        }
-
-        if (!defined(queryOptions.width)) {
-            queryOptions.width = imageryProvider.tileWidth;
-        }
-
-        if (!defined(queryOptions.height)) {
-            queryOptions.height = imageryProvider.tileHeight;
-        }
-
-        if (!defined(queryOptions.info_format)) {
-            queryOptions.info_format = infoFormat;
-        }
-
-        uri.query = objectToQuery(queryOptions);
-
-        var url = uri.toString();
-
-        var proxy = imageryProvider.proxy;
-        if (defined(proxy)) {
-            url = proxy.getURL(url);
-        }
-
-        return url;
-    }
 
     return WebMapServiceImageryProvider;
 });
