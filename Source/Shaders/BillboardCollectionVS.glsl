@@ -200,14 +200,14 @@ void main()
 // HACK to pass billboard position and cut distance
 #ifdef EYE_DISTANCE_PIXEL_OFFSET
     float position = pixelOffsetScaleByDistance.x;
-//    float cutDistSq = pixelOffsetScaleByDistance.z * pixelOffsetScaleByDistance.z;
+    float cutDistSq = pixelOffsetScaleByDistance.z * pixelOffsetScaleByDistance.z;
     float cameraDistSq = lengthSq;
-//    if (cameraDistSq > cutDistSq)
-//    {
-//        positionEC.xyz = vec3(0.0);
-//    }
-//    else
-//    {
+    if (cutDistSq > 0.0 && cameraDistSq > cutDistSq)
+    {
+        positionEC.xyz = vec3(0.0);
+    }
+    else if (position > 0.0)
+    {
         // Empirical formula to create levels according to the distance x
         // set xrange [0:40000]; plot floor(x / 1000), floor(sqrt(x/1000))
         float level = floor(pow(cameraDistSq / 1000000.0, 0.20));
@@ -215,7 +215,7 @@ void main()
         {
             positionEC.xyz = vec3(0.0);
         }
-//    }
+    }
 #endif
 
     float translucency = 1.0;
