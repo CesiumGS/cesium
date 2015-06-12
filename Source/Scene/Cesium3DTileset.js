@@ -6,6 +6,7 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/Event',
         '../Core/Intersect',
         '../Core/loadJson',
         '../Core/Math',
@@ -20,6 +21,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        Event,
         Intersect,
         loadJson,
         CesiumMath,
@@ -82,14 +84,20 @@ define([
          */
         this.debugShowStatistics = defaultValue(options.debugShowStatistics, false);
         this._statistics = {
+            // Rendering stats
             visited : 0,
             frustumTests : 0,
             numberOfCommands : 0,
+            // Loading stats
+            numberOfPendingRequests : 0,
+            numberProcessing : 0,
 
             lastSelected : -1,
             lastVisited : -1,
             lastFrustumTests : -1,
-            lastNumberOfCommands : -1
+            lastNumberOfCommands : -1,
+            lastNumberOfPendingRequests : -1,
+            lastNumberProcessing : -1
         };
 
         /**
@@ -121,6 +129,12 @@ define([
          * DOC_TBA
          */
         this.debugShowContentsBoundingVolume = defaultValue(options.debugShowContentsBoundingVolume, false);
+
+        /**
+         * DOC_TBA
+         */
+        this.tileLoad = new Event();
+        this._tileLoadEventsToRaise = [];
 
         var that = this;
 
@@ -221,6 +235,10 @@ define([
     }
 
     function requestContent(tiles3D, tile) {
+        var stats = tiles3D._statistics;
+        ++stats.numberOfPendingRequests;
+        addTileLoadEvent(tiles3D);
+
         tile.requestContent();
         var removeFunction = removeFromProcessingQueue(tiles3D, tile);
         when(tile.processingPromise).then(addToProcessingQueue(tiles3D, tile));
@@ -377,18 +395,21 @@ define([
     function addToProcessingQueue(tiles3D, tile) {
         return function() {
             tiles3D._processingQueue.push(tile);
+
+            var stats = tiles3D._statistics;
+            --stats.numberOfPendingRequests;
+            ++stats.numberProcessing;
+            addTileLoadEvent(tiles3D);
         };
     }
 
     function removeFromProcessingQueue(tiles3D, tile) {
         return function() {
             var index = tiles3D._processingQueue.indexOf(tile);
+            tiles3D._processingQueue.splice(index, 1);
 
-            // The tile may not be in the processing queue if, for example, it
-            // doesn't have any content and went immediately to the ready state.
-            if (index !== -1) {
-                tiles3D._processingQueue.splice(index, 1);
-            }
+            --tiles3D._statistics.numberProcessing;
+            addTileLoadEvent(tiles3D);
         };
     }
 
@@ -401,7 +422,6 @@ define([
         for (var i = length - 1; i >= 0; --i) {
             tiles[i].process(tiles3D, context, frameState);
         }
-// TODO: timeslice like QuadtreePrimitive.js (but with round robin?) Or should that happen at a lower-level, e.g., models/renderer?
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -420,12 +440,16 @@ define([
             stats.lastVisited !== stats.visited ||
             stats.lastFrustumTests !== stats.frustumTests ||
             stats.lastNumberOfCommands !== stats.numberOfCommands ||
-            stats.lastSelected !== tiles3D._selectedTiles.length)) {
+            stats.lastSelected !== tiles3D._selectedTiles.length ||
+            stats.lastNumberOfPendingRequests !== stats.numberOfPendingRequests ||
+            stats.lastNumberProcessing !== stats.numberProcessing)) {
 
             stats.lastVisited = stats.visited;
             stats.lastFrustumTests = stats.frustumTests;
             stats.lastNumberOfCommands = stats.numberOfCommands;
             stats.lastSelected = tiles3D._selectedTiles.length;
+            stats.lastNumberOfPendingRequests = stats.numberOfPendingRequests;
+            stats.lastNumberProcessing = stats.numberProcessing;
 
             // Since the pick pass uses a smaller frustum around the pixel of interest,
             // the stats will be different than the normal render pass.
@@ -441,7 +465,10 @@ define([
                 ', Selected: ' + tiles3D._selectedTiles.length +
                 // Number of commands executed is likely to be higher because of commands overlapping
                 // multiple frustums.
-                ', Commands: ' + stats.numberOfCommands;
+                ', Commands: ' + stats.numberOfCommands +
+                '\n  ' +
+                'Requests: ' + stats.numberOfPendingRequests +
+                ', Processing: ' + stats.numberProcessing;
 
             /*global console*/
             console.log(s);
@@ -458,6 +485,39 @@ define([
 
         tiles3D._statistics.numberOfCommands = (commandList.length - numberOfCommands);
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    function addTileLoadEvent(tiles3D) {
+        if (tiles3D.tileLoad.numberOfListeners > 0) {
+            var stats = tiles3D._statistics;
+            tiles3D._tileLoadEventsToRaise.push({
+                numberOfPendingRequests : stats.numberOfPendingRequests,
+                numberProcessing : stats.numberProcessing
+            });
+        }
+    }
+
+    function evenMoreComplicated(tiles3D, numberOfPendingRequests, numberProcessing) {
+        return function() {
+// TODO: also pass the tile and state?
+            tiles3D.tileLoad.raiseEvent(numberOfPendingRequests, numberProcessing);
+        };
+    }
+
+    function raiseEvents(tiles3D, frameState) {
+        var eventsToRaise = tiles3D._tileLoadEventsToRaise;
+        var length = eventsToRaise.length;
+        for (var i = 0; i < length; ++i) {
+            var numberOfPendingRequests = eventsToRaise[i].numberOfPendingRequests;
+            var numberProcessing = eventsToRaise[i].numberProcessing;
+
+            frameState.afterRender.push(evenMoreComplicated(tiles3D, numberOfPendingRequests, numberProcessing));
+        }
+        eventsToRaise.length = 0;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
 
     /**
      * DOC_TBA
@@ -481,6 +541,11 @@ define([
         }
         selectTiles(this, context, frameState, commandList, outOfCore);
         updateTiles(this, context, frameState, commandList);
+
+        // Events are raised (added to the afterRender queue) here since promises
+        // may resolve outside of the update loop that then raise events, e.g.,
+        // model's readyPromise.
+        raiseEvents(this, frameState);
 
         showStats(this, isPick);
     };

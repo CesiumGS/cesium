@@ -16,17 +16,20 @@ define([
         /**
          * @readonly
          */
-        this.state = Cesium3DTileContentState.READY;
+        this.state = undefined;
 
         /**
          * @type {Promise}
          */
         this.processingPromise = when.defer();
+        this.state = Cesium3DTileContentState.PROCESSING;
+        this.processingPromise.resolve(this);
 
         /**
          * @type {Promise}
          */
         this.readyPromise = when.defer();
+        this.state = Cesium3DTileContentState.READY;
         this.readyPromise.resolve(this);
     };
 
