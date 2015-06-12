@@ -304,9 +304,6 @@ define([
         var k;
 
         var positions = PolylinePipeline.removeDuplicates(polylineGeometry._positions);
-        if (!defined(positions)) {
-            positions = polylineGeometry._positions;
-        }
 
         var positionsLength = positions.length;
         if (positionsLength < 2) {
