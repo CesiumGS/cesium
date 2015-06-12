@@ -1395,7 +1395,7 @@ define([
         this.context = context;
     };
 
-    CreateVertexBufferJob.prototype.executeJob = function() {
+    CreateVertexBufferJob.prototype.execute = function() {
         createVertexBuffer(this.id, this.model, this.context);
     };
 
@@ -1427,7 +1427,7 @@ define([
         this.context = context;
     };
 
-    CreateIndexBufferJob.prototype.executeJob = function() {
+    CreateIndexBufferJob.prototype.execute = function() {
         createIndexBuffer(this.id, this.componentType, this.model, this.context);
     };
 
@@ -1531,7 +1531,7 @@ define([
         this.context = context;
     };
 
-    CreateProgramJob.prototype.executeJob = function() {
+    CreateProgramJob.prototype.execute = function() {
         createProgram(this.id, this.model, this.context);
     };
 
@@ -1673,7 +1673,7 @@ define([
         this.context = context;
     };
 
-    CreateTextureJob.prototype.executeJob = function() {
+    CreateTextureJob.prototype.execute = function() {
         createTexture(this.gltfTexture, this.model, this.context);
     };
 

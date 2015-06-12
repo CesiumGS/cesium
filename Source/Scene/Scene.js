@@ -1822,7 +1822,7 @@ define([
             this._pickFramebuffer = context.createPickFramebuffer();
         }
 
-        this._jobScheduler.clearBudgets();
+        this._jobScheduler.disableThisFrame();
 
         // Update with previous frame's number and time, assuming that render is called before picking.
         updateFrameState(this, frameState.frameNumber, frameState.time);
