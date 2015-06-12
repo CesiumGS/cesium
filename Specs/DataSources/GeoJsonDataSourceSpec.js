@@ -956,7 +956,7 @@ defineSuite([
         dataSource.errorEvent.addEventListener(spy);
 
         // Blue.png is not JSON
-        return dataSource.loadUrl('Data/Images/Blue.png').then(function() {
+        return dataSource.load('Data/Images/Blue.png').then(function() {
             fail('should not be called');
         }).otherwise(function() {
             expect(spy).toHaveBeenCalledWith(dataSource, jasmine.any(Error));

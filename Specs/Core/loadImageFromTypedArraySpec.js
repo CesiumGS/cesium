@@ -13,8 +13,9 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor,fail*/
 
     it('can load an image', function() {
-        return loadArrayBuffer('./Data/Images/Blue10x10.png'). then(function(arrayBuffer) {
-            return loadImageFromTypedArray(arrayBuffer, 0, arrayBuffer.byteLength, 'image/png').then(function(image) {
+        return loadArrayBuffer('./Data/Images/Blue10x10.png').then(function(arrayBuffer) {
+            var arr = new Uint8Array(arrayBuffer);
+            return loadImageFromTypedArray(arr, 'image/png').then(function(image) {
                 expect(image.width).toEqual(10);
                 expect(image.height).toEqual(10);
             });
@@ -23,36 +24,21 @@ defineSuite([
 
     it('can not load an invalid image', function() {
         var notApng = new Uint8Array([67, 101, 115, 105, 117, 109]);
-        return loadImageFromTypedArray(notApng, 0, notApng.byteLength, 'image/png').then(function(image) {
+        return loadImageFromTypedArray(notApng, 'image/png').then(function(image) {
             fail('should not be called');
         }).otherwise(function() {
         });
     });
 
-    it('Throws without buffer', function() {
+    it('Throws without array', function() {
         expect(function() {
             loadImageFromTypedArray();
         }).toThrowDeveloperError();
     });
 
-    it('Throws without byteOffset', function() {
-        var buffer = new Uint8Array();
-        expect(function() {
-            loadImageFromTypedArray(buffer);
-        }).toThrowDeveloperError();
-    });
-
-    it('Throws without length', function() {
-        var buffer = new Uint8Array();
-        expect(function() {
-            loadImageFromTypedArray(buffer, 0);
-        }).toThrowDeveloperError();
-    });
-
     it('Throws without format', function() {
-        var buffer = new Uint8Array();
         expect(function() {
-            loadImageFromTypedArray(buffer, 0, buffer.byteLength);
+            loadImageFromTypedArray(new Uint8Array());
         }).toThrowDeveloperError();
     });
 });

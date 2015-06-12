@@ -126,6 +126,10 @@ define([
         this.skinnedNodesNames = [];
     }
 
+    LoadResources.prototype.getBuffer = function(bufferView) {
+        return getSubarray(this.buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
+    };
+
     LoadResources.prototype.finishedPendingLoads = function() {
         return ((this.pendingBufferLoads === 0) &&
                 (this.pendingShaderLoads === 0) &&
@@ -252,7 +256,7 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Object|ArrayBuffer} [options.gltf] The object for the glTF JSON or an arraybuffer of Binary glTF defined by the CESIUM_binary_glTF extension.
+     * @param {Object|ArrayBuffer|Uint8Array} [options.gltf] The object for the glTF JSON or an arraybuffer of Binary glTF defined by the CESIUM_binary_glTF extension.
      * @param {String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
@@ -291,6 +295,10 @@ define([
 
             if (defined(gltf)) {
                 if (gltf instanceof ArrayBuffer) {
+                    gltf = new Uint8Array(gltf);
+                }
+
+                if (gltf instanceof Uint8Array) {
                     // Binary glTF
                     cachedGltf = new CachedGltf({
                         gltf : parseBinaryGltfHeader(gltf),
@@ -695,18 +703,32 @@ define([
         return modelUri.resolve(docUri).toString();
     }
 
-    var sizeOfUnit32 = Uint32Array.BYTES_PER_ELEMENT;
+    var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
-    function parseBinaryGltfHeader(arrayBuffer) {
-        var magic = getStringFromTypedArray(arrayBuffer, 0, 4);
-        if (magic !== 'glTF') {
+    /**
+     * This function differs from the normal subarray function
+     * because it takes offset and length, rather than begin and end.
+     */
+    function getSubarray(array, offset, length) {
+        return array.subarray(offset, offset + length);
+    }
+
+    function containsGltfMagic(uint8Array) {
+        if (uint8Array.byteLength < 4) {
+            return false;
+        }
+        return getStringFromTypedArray(uint8Array.subarray(0, 4)) === 'glTF';
+    }
+
+    function parseBinaryGltfHeader(uint8Array) {
+        if (!containsGltfMagic(uint8Array)) {
             throw new DeveloperError('bgltf is not a valid Binary glTF file.');
         }
 
-        var view = new DataView(arrayBuffer);
+        var view = new DataView(uint8Array.buffer, uint8Array.byteOffset, uint8Array.byteLength);
         var byteOffset = 0;
 
-        byteOffset += sizeOfUnit32;  // Skip magic number
+        byteOffset += sizeOfUint32; // Skip magic number
 
         //>>includeStart('debug', pragmas.debug);
         var version = view.getUint32(byteOffset, true);
@@ -714,17 +736,18 @@ define([
             throw new DeveloperError('Only glTF Binary version 1 is supported.  Version ' + version + ' is not.');
         }
         //>>includeEnd('debug');
-        byteOffset += sizeOfUnit32;
+        byteOffset += sizeOfUint32;
 
-        byteOffset += sizeOfUnit32;  // Skip length
+        byteOffset += sizeOfUint32; // Skip length
 
         var jsonOffset = view.getUint32(byteOffset, true);
-        byteOffset += sizeOfUnit32;
+        byteOffset += sizeOfUint32;
 
         var jsonLength = view.getUint32(byteOffset, true);
-        byteOffset += sizeOfUnit32;
+        byteOffset += sizeOfUint32;
 
-        return JSON.parse(getStringFromTypedArray(arrayBuffer, jsonOffset, jsonLength));
+        var json = getStringFromTypedArray(getSubarray(uint8Array, jsonOffset, jsonLength));
+        return JSON.parse(json);
     }
 
     /**
@@ -818,14 +841,14 @@ define([
             gltfCache[cacheKey] = cachedGltf;
 
             loadArrayBuffer(url, options.headers).then(function(arrayBuffer) {
-                var magic = getStringFromTypedArray(arrayBuffer, 0, Math.min(4, arrayBuffer.byteLength));
-                if (magic === 'glTF') {
+                var array = new Uint8Array(arrayBuffer);
+                if (containsGltfMagic(array)) {
                     // Load binary glTF
-                    cachedGltf.makeReady(parseBinaryGltfHeader(arrayBuffer), arrayBuffer);
+                    cachedGltf.makeReady(parseBinaryGltfHeader(array), array);
                 } else {
                     // Load text (JSON) glTF
-                    var data = getStringFromTypedArray(arrayBuffer, 0, arrayBuffer.byteLength);
-                    cachedGltf.makeReady(JSON.parse(data));
+                    var json = getStringFromTypedArray(array);
+                    cachedGltf.makeReady(JSON.parse(json));
                 }
             }).otherwise(getFailedLoadFunction(model, 'model', url));
         } else if (!cachedGltf.ready) {
@@ -979,7 +1002,7 @@ define([
     function bufferLoad(model, name) {
         return function(arrayBuffer) {
             var loadResources = model._loadResources;
-            loadResources.buffers[name] = arrayBuffer;
+            loadResources.buffers[name] = new Uint8Array(arrayBuffer);
             --loadResources.pendingBufferLoads;
          };
     }
@@ -1243,10 +1266,8 @@ define([
             return;
         }
 
-        var raw;
         var bufferView;
         var bufferViews = model.gltf.bufferViews;
-        var buffers = loadResources.buffers;
         var rendererBuffers = model._rendererResources.buffers;
 
         while (loadResources.buffersToCreate.length > 0) {
@@ -1254,8 +1275,7 @@ define([
             bufferView = bufferViews[bufferViewName];
 
             // Only ARRAY_BUFFER here.  ELEMENT_ARRAY_BUFFER created below.
-            raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
-            var vertexBuffer = context.createVertexBuffer(raw, BufferUsage.STATIC_DRAW);
+            var vertexBuffer = context.createVertexBuffer(loadResources.getBuffer(bufferView), BufferUsage.STATIC_DRAW);
             vertexBuffer.vertexArrayDestroyable = false;
             rendererBuffers[bufferViewName] = vertexBuffer;
         }
@@ -1270,8 +1290,7 @@ define([
                 bufferView = bufferViews[accessor.bufferView];
 
                 if ((bufferView.target === WebGLRenderingContext.ELEMENT_ARRAY_BUFFER) && !defined(rendererBuffers[accessor.bufferView])) {
-                    raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
-                    var indexBuffer = context.createIndexBuffer(raw, BufferUsage.STATIC_DRAW, accessor.componentType);
+                    var indexBuffer = context.createIndexBuffer(loadResources.getBuffer(bufferView), BufferUsage.STATIC_DRAW, accessor.componentType);
                     indexBuffer.vertexArrayDestroyable = false;
                     rendererBuffers[accessor.bufferView] = indexBuffer;
                     // In theory, several glTF accessors with different componentTypes could
@@ -1298,11 +1317,11 @@ define([
             return shader.source;
         }
 
-        var buffers = model._loadResources.buffers;
+        var loadResources = model._loadResources;
         var gltf = model.gltf;
         var bufferView = gltf.bufferViews[shader.bufferView];
 
-        return getStringFromTypedArray(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
+        return getStringFromTypedArray(loadResources.getBuffer(bufferView));
     }
 
     function createProgram(name, model, context) {
@@ -1377,13 +1396,12 @@ define([
         while (loadResources.texturesToCreateFromBufferView.length > 0) {
             var gltfTexture = loadResources.texturesToCreateFromBufferView.dequeue();
 
-            var buffers = loadResources.buffers;
             var gltf = model.gltf;
             var bufferView = gltf.bufferViews[gltfTexture.bufferView];
 
             var onload = getOnImageCreatedFromTypedArray(loadResources, gltfTexture);
             var onerror = getFailedLoadFunction(model, 'image', 'name: ' + gltfTexture.name + ', bufferView: ' + gltfTexture.bufferView);
-            loadImageFromTypedArray(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength, gltfTexture.mimeType).
+            loadImageFromTypedArray(loadResources.getBuffer(bufferView), gltfTexture.mimeType).
                 then(onload).otherwise(onerror);
 
             ++loadResources.pendingBufferViewToImage;

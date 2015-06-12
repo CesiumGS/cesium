@@ -461,8 +461,8 @@ defineSuite([
         });
     });
 
-    it('loads a model with the CESIUM_binary_glTF using new Model', function() {
-        return loadArrayBuffer(texturedBoxBinaryUrl). then(function(arrayBuffer) {
+    it('loads a model with the CESIUM_binary_glTF extension as an ArrayBuffer using new Model', function() {
+        return loadArrayBuffer(texturedBoxBinaryUrl).then(function(arrayBuffer) {
             var model = primitives.add(new Model({
                 gltf : arrayBuffer,
                 modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
@@ -474,11 +474,34 @@ defineSuite([
                 // Render scene to progressively load the model
                 scene.renderForSpecs();
                 return model.ready;
-            }, { timeout: 10000 }).then(function() {
+            }, {
+                timeout : 10000
+            }).then(function() {
                 verifyRender(model);
                 primitives.remove(model);
             });
+        });
+    });
 
+    it('loads a model with the CESIUM_binary_glTF extension as an Uint8Array using new Model', function() {
+        return loadArrayBuffer(texturedBoxBinaryUrl).then(function(arrayBuffer) {
+            var model = primitives.add(new Model({
+                gltf : new Uint8Array(arrayBuffer),
+                modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
+                show : false
+            }));
+            addZoomTo(model);
+
+            return pollToPromise(function() {
+                // Render scene to progressively load the model
+                scene.renderForSpecs();
+                return model.ready;
+            }, {
+                timeout : 10000
+            }).then(function() {
+                verifyRender(model);
+                primitives.remove(model);
+            });
         });
     });
 
