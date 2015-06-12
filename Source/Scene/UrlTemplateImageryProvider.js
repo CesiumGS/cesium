@@ -58,6 +58,8 @@ define([
      *  <li> <code>{southProjected}</code>: The Southern edge of the tile in projected coordinates of the tiling scheme.</li>
      *  <li> <code>{eastProjected}</code>: The Eastern edge of the tile in projected coordinates of the tiling scheme.</li>
      *  <li> <code>{northProjected}</code>: The Northern edge of the tile in projected coordinates of the tiling scheme.</li>
+     *  <li> <code>{width}</code>: The width of a tile in pixels.</li>
+     *  <li> <code>{height}</code>: The height of a tile in pixels.</li>
      * </ul>
      * @param {String|String[]} [options.subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
      *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
@@ -143,6 +145,7 @@ define([
         this._maximumLevel = options.maximumLevel;
         this._tilingScheme = defaultValue(options.tilingScheme, new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid }));
         this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
+        this._rectangle = Rectangle.intersection(this._rectangle, this._tilingScheme.rectangle);
         this._hasAlphaChannel = defaultValue(options.hasAlphaChannel, true);
 
         var credit = options.credit;
@@ -226,6 +229,8 @@ define([
          *  <li> <code>{southProjected}</code>: The Southern edge of the tile in projected coordinates of the tiling scheme.</li>
          *  <li> <code>{eastProjected}</code>: The Eastern edge of the tile in projected coordinates of the tiling scheme.</li>
          *  <li> <code>{northProjected}</code>: The Northern edge of the tile in projected coordinates of the tiling scheme.</li>
+         *  <li> <code>{width}</code>: The width of a tile in pixels.</li>
+         *  <li> <code>{height}</code>: The height of a tile in pixels.</li>
          * </ul>
          * @memberof UrlTemplateImageryProvider.prototype
          * @type {String}
@@ -552,6 +557,14 @@ define([
         return projectedScratch.north;
     }
 
+    function widthTag(imageryProvider, x, y, level) {
+        return imageryProvider.tileWidth;
+    }
+
+    function heightTag(imageryProvider, x, y, level) {
+        return imageryProvider.tileHeight;
+    }
+
     var tags = {
         '{x}': xTag,
         '{y}': yTag,
@@ -566,7 +579,9 @@ define([
         '{westProjected}': westProjectedTag,
         '{southProjected}': southProjectedTag,
         '{eastProjected}': eastProjectedTag,
-        '{northProjected}': northProjectedTag
+        '{northProjected}': northProjectedTag,
+        '{width}': widthTag,
+        '{height}': heightTag
     };
 
     return UrlTemplateImageryProvider;

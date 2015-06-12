@@ -25,7 +25,8 @@ define([
         '../ThirdParty/when',
         './GetFeatureInfoFormat',
         './ImageryLayerFeatureInfo',
-        './ImageryProvider'
+        './ImageryProvider',
+        './UrlTemplateImageryProvider'
     ], function(
         Cartesian3,
         Cartographic,
@@ -52,7 +53,8 @@ define([
         when,
         GetFeatureInfoFormat,
         ImageryLayerFeatureInfo,
-        ImageryProvider) {
+        ImageryProvider,
+        UrlTemplateImageryProvider) {
     "use strict";
 
     function objectToLowercase(obj) {
@@ -135,8 +137,6 @@ define([
         //>>includeEnd('debug');
 
         this._url = options.url;
-        this._tileDiscardPolicy = options.tileDiscardPolicy;
-        this._proxy = options.proxy;
         this._layers = options.layers;
         this._enablePickFeatures = defaultValue(options.enablePickFeatures, true);
         this._getFeatureInfoFormats = defaultValue(options.getFeatureInfoFormats, WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats);
@@ -160,28 +160,54 @@ define([
         }
 
         // Merge the parameters with the defaults, and make all parameter names lowercase
-        this._parameters = combine(objectToLowercase(defaultValue(options.parameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.DefaultParameters);
         this._getFeatureInfoParameters = combine(objectToLowercase(defaultValue(options.getFeatureInfoParameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters);
 
-        this._tileWidth = defaultValue(options.tileWidth, 256);
-        this._tileHeight = defaultValue(options.tileHeight, 256);
-        this._minimumLevel = defaultValue(options.minimumLevel, 0);
-        this._maximumLevel = options.maximumLevel; // undefined means no limit
+        // Build a template URL.
+        var uri = new Uri(options.url);
+        var queryOptions = queryToObject(defaultValue(uri.query, ''));
 
-        this._rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
-        this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new GeographicTilingScheme({ ellipsoid : options.ellipsoid });
+        var parameters = combine(objectToLowercase(defaultValue(options.parameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.DefaultParameters);
+        queryOptions = combine(parameters, queryOptions);
 
-        this._rectangle = Rectangle.intersection(this._rectangle, this._tilingScheme.rectangle);
-
-        var credit = options.credit;
-        if (typeof credit === 'string') {
-            credit = new Credit(credit);
+        if (!defined(queryOptions.layers)) {
+            queryOptions.layers = options.layers;
         }
-        this._credit = credit;
 
-        this._errorEvent = new Event();
+        if (!defined(queryOptions.srs)) {
+            queryOptions.srs = options.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'EPSG:4326';
+        }
 
-        this._ready = true;
+        if (!defined(queryOptions.bbox)) {
+            queryOptions.bbox = '{westProjected},{southProjected},{eastProjected},{northProjected}';
+        }
+
+        if (!defined(queryOptions.width)) {
+            queryOptions.width = '{width}';
+        }
+
+        if (!defined(queryOptions.height)) {
+            queryOptions.height = '{height}';
+        }
+
+        uri.query = objectToQuery(queryOptions);
+        var templateUrl = uri.toString();
+
+        // Remove URL encoding of URL template placeholders.
+        templateUrl = templateUrl.replace(/%7B/g, '{').replace(/%7D/g, '}');
+
+        // Let UrlTemplateImageryProvider do the actual URL building.
+        this._tileProvider = new UrlTemplateImageryProvider({
+            url : templateUrl,
+            tilingScheme : defaultValue(options.tilingScheme, new GeographicTilingScheme({ ellipsoid : options.ellipsoid})),
+            rectangle : options.rectangle,
+            tileWidth : options.tileWidth,
+            tileHeight : options.tileHeight,
+            minimumLevel : options.minimumLevel,
+            maximumLevel : options.maximumLevel,
+            proxy : options.proxy,
+            tileDiscardPolicy : options.tileDiscardPolicy,
+            credit : options.credit
+        });
     };
 
     defineProperties(WebMapServiceImageryProvider.prototype, {
@@ -205,7 +231,7 @@ define([
          */
         proxy : {
             get : function() {
-                return this._proxy;
+                return this._tileProvider.proxy;
             }
         },
 
@@ -230,13 +256,7 @@ define([
          */
         tileWidth : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('tileWidth must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
-                return this._tileWidth;
+                return this._tileProvider.tileWidth;
             }
         },
 
@@ -249,13 +269,7 @@ define([
          */
         tileHeight : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('tileHeight must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
-                return this._tileHeight;
+                return this._tileProvider.tileHeight;
             }
         },
 
@@ -268,13 +282,7 @@ define([
          */
         maximumLevel : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('maximumLevel must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
-                return this._maximumLevel;
+                return this._tileProvider.maximumLevel;
             }
         },
 
@@ -287,13 +295,7 @@ define([
          */
         minimumLevel : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('minimumLevel must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
-                return this._minimumLevel;
+                return this._tileProvider.minimumLevel;
             }
         },
 
@@ -306,13 +308,7 @@ define([
          */
         tilingScheme : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('tilingScheme must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
-                return this._tilingScheme;
+                return this._tileProvider.tilingScheme;
             }
         },
 
@@ -325,13 +321,7 @@ define([
          */
         rectangle : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('rectangle must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
-                return this._rectangle;
+                return this._tileProvider.rectangle;
             }
         },
 
@@ -346,13 +336,7 @@ define([
          */
         tileDiscardPolicy : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('tileDiscardPolicy must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
-                return this._tileDiscardPolicy;
+                return this._tileProvider.tileDiscardPolicy;
             }
         },
 
@@ -366,7 +350,7 @@ define([
          */
         errorEvent : {
             get : function() {
-                return this._errorEvent;
+                return this._tileProvider.errorEvent;
             }
         },
 
@@ -378,7 +362,7 @@ define([
          */
         ready : {
             get : function() {
-                return this._ready;
+                return this._tileProvider.ready;
             }
         },
 
@@ -391,7 +375,7 @@ define([
          */
         credit : {
             get : function() {
-                return this._credit;
+                return this._tileProvider.credit;
             }
         },
 
@@ -407,7 +391,7 @@ define([
          */
         hasAlphaChannel : {
             get : function() {
-                return true;
+                return this._tileProvider.hasAlphaChannel;
             }
         }
     });
@@ -423,7 +407,7 @@ define([
      * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
      */
     WebMapServiceImageryProvider.prototype.getTileCredits = function(x, y, level) {
-        return undefined;
+        return this._tileProvider.getTileCredits(x, y, level);
     };
 
     /**
@@ -441,14 +425,7 @@ define([
      * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
      */
     WebMapServiceImageryProvider.prototype.requestImage = function(x, y, level) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        var url = buildImageUrl(this, x, y, level);
-        return ImageryProvider.loadImage(this, url);
+        return this._tileProvider.requestImage(x, y, level);
     };
 
     var cartographicScratch = new Cartographic();
@@ -471,7 +448,7 @@ define([
      */
     WebMapServiceImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
         //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
+        if (!this.ready) {
             throw new DeveloperError('pickFeatures must not be called before the imagery provider is ready.');
         }
         //>>includeEnd('debug');
@@ -480,10 +457,10 @@ define([
             return undefined;
         }
 
-        var rectangle = this._tilingScheme.tileXYToNativeRectangle(x, y, level);
+        var rectangle = this.tilingScheme.tileXYToNativeRectangle(x, y, level);
 
         var projected;
-        if (this._tilingScheme instanceof GeographicTilingScheme) {
+        if (this.tilingScheme instanceof GeographicTilingScheme) {
             projected = cartesian3Scratch;
             projected.x = CesiumMath.toDegrees(longitude);
             projected.y = CesiumMath.toDegrees(latitude);
@@ -492,11 +469,11 @@ define([
             cartographic.longitude = longitude;
             cartographic.latitude = latitude;
 
-            projected = this._tilingScheme.projection.project(cartographic, cartesian3Scratch);
+            projected = this.tilingScheme.projection.project(cartographic, cartesian3Scratch);
         }
 
-        var i = (this._tileWidth * (projected.x - rectangle.west) / rectangle.width) | 0;
-        var j = (this._tileHeight * (rectangle.north - projected.y) / rectangle.height) | 0;
+        var i = (this.tileWidth * (projected.x - rectangle.west) / rectangle.width) | 0;
+        var j = (this.tileHeight * (rectangle.north - projected.y) / rectangle.height) | 0;
 
         var url;
 
@@ -574,45 +551,6 @@ define([
         freezeObject(new GetFeatureInfoFormat('text', 'text/html'))
     ]);
 
-    function buildImageUrl(imageryProvider, x, y, level) {
-        var uri = new Uri(imageryProvider._url);
-        var queryOptions = queryToObject(defaultValue(uri.query, ''));
-
-        queryOptions = combine(imageryProvider._parameters, queryOptions);
-
-        if (!defined(queryOptions.layers)) {
-            queryOptions.layers = imageryProvider._layers;
-        }
-
-        if (!defined(queryOptions.srs)) {
-            queryOptions.srs = imageryProvider._tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'EPSG:4326';
-        }
-
-        if (!defined(queryOptions.bbox)) {
-            var nativeRectangle = imageryProvider._tilingScheme.tileXYToNativeRectangle(x, y, level);
-            queryOptions.bbox = nativeRectangle.west + ',' + nativeRectangle.south + ',' + nativeRectangle.east + ',' + nativeRectangle.north;
-        }
-
-        if (!defined(queryOptions.width)) {
-            queryOptions.width = imageryProvider._tileWidth;
-        }
-
-        if (!defined(queryOptions.height)) {
-            queryOptions.height = imageryProvider._tileHeight;
-        }
-
-        uri.query = objectToQuery(queryOptions);
-
-        var url = uri.toString();
-
-        var proxy = imageryProvider._proxy;
-        if (defined(proxy)) {
-            url = proxy.getURL(url);
-        }
-
-        return url;
-    }
-
     function buildGetFeatureInfoUrl(imageryProvider, infoFormat, x, y, level, i, j) {
         var uri = new Uri(imageryProvider._url);
         var queryOptions = queryToObject(defaultValue(uri.query, ''));
@@ -628,11 +566,11 @@ define([
         }
 
         if (!defined(queryOptions.srs)) {
-            queryOptions.srs = imageryProvider._tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'EPSG:4326';
+            queryOptions.srs = imageryProvider.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'EPSG:4326';
         }
 
         if (!defined(queryOptions.bbox)) {
-            var nativeRectangle = imageryProvider._tilingScheme.tileXYToNativeRectangle(x, y, level);
+            var nativeRectangle = imageryProvider.tilingScheme.tileXYToNativeRectangle(x, y, level);
             queryOptions.bbox = nativeRectangle.west + ',' + nativeRectangle.south + ',' + nativeRectangle.east + ',' + nativeRectangle.north;
         }
 
@@ -645,11 +583,11 @@ define([
         }
 
         if (!defined(queryOptions.width)) {
-            queryOptions.width = imageryProvider._tileWidth;
+            queryOptions.width = imageryProvider.tileWidth;
         }
 
         if (!defined(queryOptions.height)) {
-            queryOptions.height = imageryProvider._tileHeight;
+            queryOptions.height = imageryProvider.tileHeight;
         }
 
         if (!defined(queryOptions.info_format)) {
@@ -660,7 +598,7 @@ define([
 
         var url = uri.toString();
 
-        var proxy = imageryProvider._proxy;
+        var proxy = imageryProvider.proxy;
         if (defined(proxy)) {
             url = proxy.getURL(url);
         }
