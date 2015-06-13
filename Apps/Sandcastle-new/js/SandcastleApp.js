@@ -7,7 +7,8 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       return (
         <ul className="nav nav-tabs hidden-xs" id="codeContainerTabs" role="tablist">
           <li role="presentation" className="active"><a href="#jsContainer" aria-controls="jsContainer" role="tab" data-toggle="tab">Javascript code</a></li>
-          <li role="presentation"><a href="#htmlContainer" aria-controls="htmlContainer" role="tab" data-toggle="tab">HTML body &amp; CSS</a></li>
+          <li role="presentation"><a href="#htmlContainer" aria-controls="htmlContainer" role="tab" data-toggle="tab">HTML</a></li>
+          <li role="presentation"><a href="#cssContainer" aria-controls="cssContainer" role="tab" data-toggle="tab">CSS</a></li>
         </ul>
       );
     }
@@ -83,7 +84,6 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
         this.editor.removeLineClass(line, 'text');
       }
       var options = JSON.parse(JSON.stringify(sandcastleJsHintOptions));
-      console.log(JSHINT);
       if (!JSHINT(this.editor.getValue(), options)) {
         var hints = JSHINT.errors;
         for (i = 0, len = hints.length; i < len; ++i) {
@@ -103,9 +103,13 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
         this.clearErrorsAddHints();
         PubSub.publish('UPDATE JS', this.editor.getValue());
       }
-      else
+      else if(this.props.mode === 'text/html')
       {
         PubSub.publish('UPDATE HTML', this.editor.getValue());
+      }
+      else
+      {
+        PubSub.publish('UPDATE CSS', this.editor.getValue());
       }
     },
 
@@ -257,21 +261,35 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
     componentDidMount: function(){
       PubSub.subscribe('HTML CODE', this.handleHTMLCode);
     },
-
-    requestDemo: function(file){
-      return $.ajax({
-        url: 'gallery/' + file,
-        handleAs: 'text',
-        fail: function(error) {
-          console.log(error);
-        }
-      });
-    },
     
     render: function(){
       return (
         <div role="tabpanel" className="tab-pane codeContainer" id="htmlContainer">
             <SandcastleCodeMirrorEditor style={{height: 100 + '%'}} textAreaClassName='form-control' defaultValue={this.state.src} mode="text/html" lineNumbers={true} matchBrackets={true} indentUnit={4}/>
+        </div>
+      );
+    }
+  });
+
+  var SandcastleCSSCode = React.createClass({
+    getInitialState: function () {
+      return {
+        src: '/* Select a demo from the gallery to load */\n'
+      };
+    },
+
+    handleCSSCode: function(msg, data){
+     this.setState({src: data});
+    },
+
+    componentDidMount: function(){
+      PubSub.subscribe('CSS CODE', this.handleCSSCode);
+    },
+
+    render: function(){
+      return (
+        <div role="tabpanel" className="tab-pane codeContainer" id="cssContainer">
+            <SandcastleCodeMirrorEditor style={{height: 100 + '%'}} textAreaClassName='form-control' defaultValue={this.state.src} mode="text/css" lineNumbers={true} matchBrackets={true} indentUnit={4}/>
         </div>
       );
     }
@@ -323,8 +341,9 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
           <div role="tabpanel">
             <SandcastleCodeTabs />
             <div className="tab-content">
-              <SandcastleJSCode jsCode={this.props.jsCode} demo={this.props.demo}/>
-              <SandcastleHTMLCode htmlCode={this.props.htmlCode} demo={this.props.demo}/>
+              <SandcastleJSCode />
+              <SandcastleHTMLCode />
+              <SandcastleCSSCode />
             </div>
           </div>
         </div>
@@ -601,6 +620,13 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       PubSub.subscribe('RELOAD FRAME', this.newDemo);
     },
 
+    componentDidMount: function(){
+      var that = this;
+      $('#consoleLog').on('shown.bs.collapse', function(){
+        that.setState({msgNum: 0});
+      });
+    },
+
     newDemo: function(){
       this.setState({messages: [], msgNum: 0});
     },
@@ -690,6 +716,8 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       var demo = gallery[this.props.demo];
       var id = demo.id;
       var htmlText = '';
+      var cssText = '';
+      var jsText = '';
       var that = this;
       var data = {};
       this.requestDemo(id + '/' + id + '.html').done(function(value){
@@ -699,9 +727,13 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
           var code = '<style>' + value + '</style>\n';
           // Append the html
           code += htmlText;
-          data.html = code;
-          that.htmlCode = code;
-          PubSub.publish('HTML CODE', code);
+          cssText += value;
+          data.html = htmlText;
+          that.htmlCode = htmlText;
+          data.css = cssText;
+          that.cssCode = cssText;
+          PubSub.publish('HTML CODE', htmlText);
+          PubSub.publish('CSS CODE', data.css);
           //fetch the js
           var jsText = '';
           that.requestDemo(id + '/' + id + '.json').done(function(value){
@@ -736,9 +768,11 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
     handleNewDemo: function(){
       // Fetch the hello world demo
       var demoName = "Hello World";
-      var demo = gallery[this.props.demo];
+      var demo = gallery[demoName];
       var id = demo.id;
       var htmlText = '';
+      var cssText = '';
+      var jsText = '';
       var that = this;
       var data = {};
       this.requestDemo(id + '/' + id + '.html').done(function(value){
@@ -748,8 +782,13 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
           var code = '<style>' + value + '</style>\n';
           // Append the html
           code += htmlText;
-          data.html = code;
-          PubSub.publish('HTML CODE', code);
+          cssText += value;
+          data.html = htmlText;
+          that.htmlCode = htmlText;
+          data.css = cssText;
+          that.cssCode = cssText;
+          PubSub.publish('HTML CODE', htmlText);
+          PubSub.publish('CSS CODE', data.css);
           //fetch the js
           var jsText = '';
           that.requestDemo(id + '/' + id + '.json').done(function(value){
@@ -796,11 +835,16 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       {
         this.htmlCode = data;
       }
+      else
+      {
+        this.cssCode = data;
+      }
 
-      if(this.jsCode !== '' && this.htmlCode !== '')
+      if(this.jsCode !== '' && this.htmlCode !== '' && this.cssCode !== '')
       {
         var sendData = {};
-        sendData.html = this.htmlCode;
+        sendData.html = '<style>' + this.cssCode + '</style>';
+        sendData.html += this.htmlCode;
         var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
         sendData.js = this.getScriptFromEditor(isFirefox, this.jsCode);
         PubSub.publish('LOAD FRAME', sendData);
@@ -810,6 +854,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
     refreshData: function(){
       this.htmlCode = '';
       this.jsCode = '';
+      this.cssCode = '';
     },
 
     getDemoHTML: function(){
@@ -824,6 +869,9 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
             + '<script type="text/javascript" src="./Sandcastle-header.js"></script>' + '\n'
             + '<style>@import url(../../Build/Cesium/Widgets/widgets.css);\nhtml, body, #cesiumContainer {width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;}\n</style>' + '\n'
             + '</head><body class="sandcastle-loading">' + '\n'
+            + '<style>' + '\n'
+            + this.cssCode + '\n'
+            + '</style>' + '\n'
             + this.htmlCode + '\n'
             + '<script type="text/javascript">' + '\n'
             + this.getScriptFromEditor(isFirefox, this.jsCode) + '\n'
@@ -872,6 +920,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       PubSub.subscribe('SHOW CONSOLE', this.handleNavigation);
       PubSub.subscribe('UPDATE JS', this.loadUserCode);
       PubSub.subscribe('UPDATE HTML', this.loadUserCode);
+      PubSub.subscribe('UPDATE CSS', this.loadUserCode);
       PubSub.subscribe('EXPORT STANDALONE', this.exportStandalone);
       PubSub.subscribe('NEW WINDOW', this.openNewWindow);
     },
@@ -905,7 +954,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       return (
         <div id="bodyContainer" className="container-fluid">
           <div id="bodyRow" className={printClasses(this.state.bodyClasses)}>
-            <SandcastleCode demo={this.props.demo}/>
+            <SandcastleCode />
             <SandcastleCesium/>
           </div>
           <div id="consoleRow" className={printClasses(this.state.consoleClasses)}>
