@@ -307,6 +307,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       PubSub.subscribe('SHOW PREVIEW', this.handleNavigation);
       PubSub.subscribe('SHOW JS CODE', this.handleNavigation);
       PubSub.subscribe('SHOW HTML CODE', this.handleNavigation);
+      PubSub.subscribe('SHOW CSS CODE', this.handleNavigation);
     },
 
     handleNavigation: function(msg, data){
@@ -319,6 +320,9 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
           classes['hidden-xs'] = false;
           break;
         case 'SHOW HTML CODE':
+          classes['hidden-xs'] = false;
+          break;
+        case 'SHOW CSS CODE':
           classes['hidden-xs'] = false;
           break;
       }
@@ -564,6 +568,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       PubSub.subscribe('SHOW PREVIEW', this.handleNavigation);
       PubSub.subscribe('SHOW JS CODE', this.handleNavigation);
       PubSub.subscribe('SHOW HTML CODE', this.handleNavigation);
+      PubSub.subscribe('SHOW CSS CODE', this.handleNavigation);
     },
 
     handleNavigation: function(msg, data){
@@ -576,6 +581,9 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
           classes['hidden-xs'] = true;
           break;
         case 'SHOW HTML CODE':
+          classes['hidden-xs'] = true;
+          break;
+        case 'SHOW CSS CODE':
           classes['hidden-xs'] = true;
           break;
       }
@@ -818,6 +826,10 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
           consoleClasses['hidden-xs'] = true;
           bodyClasses['hidden-xs'] = false;
           break;
+        case 'SHOW CSS CODE':
+          consoleClasses['hidden-xs'] = true;
+          bodyClasses['hidden-xs'] = false;
+          break;
         case 'SHOW CONSOLE':
           consoleClasses['hidden-xs'] = false;
           bodyClasses['hidden-xs'] = true;
@@ -917,6 +929,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       PubSub.subscribe('SHOW PREVIEW', this.handleNavigation);
       PubSub.subscribe('SHOW JS CODE', this.handleNavigation);
       PubSub.subscribe('SHOW HTML CODE', this.handleNavigation);
+      PubSub.subscribe('SHOW CSS CODE', this.handleNavigation);
       PubSub.subscribe('SHOW CONSOLE', this.handleNavigation);
       PubSub.subscribe('UPDATE JS', this.loadUserCode);
       PubSub.subscribe('UPDATE HTML', this.loadUserCode);
@@ -1074,6 +1087,12 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       $('#codeContainerTabs a[href="#htmlContainer"]').tab('show');
     },
 
+    showCSSCode: function(){
+      $(".navbar-collapse").collapse('hide');
+      PubSub.publish('SHOW CSS CODE', '');
+      $('#codeContainerTabs a[href="#cssContainer"]').tab('show');
+    },
+
     showConsole: function(){
       $(".navbar-collapse").collapse('hide');
       PubSub.publish('SHOW CONSOLE', '');
@@ -1108,6 +1127,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
                   <li id="buttonCesium" className="visible-xs-block"><a href="#" onClick={this.showPreview}>Preview</a></li>
                   <li id="buttonJSCode" className="visible-xs-block"><a href="#" onClick={this.showJSCode}>View JS Code</a></li>
                   <li id="buttonHTMLCode" className="visible-xs-block"><a href="#" onClick={this.showHTMLCode}>View HTML Code</a></li>
+                  <li id="buttonCSSCode" className="visible-xs-block"><a href="#" onClick={this.showCSSCode}>View CSS Code</a></li>
                   <li id="buttonConsole" className="visible-xs-block"><a href="#" onClick={this.showConsole}>Console</a></li>
                   <li className="dropdown" id="buttonShare">
                     <a href="#" className="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Share <span className="caret"></span></a>
