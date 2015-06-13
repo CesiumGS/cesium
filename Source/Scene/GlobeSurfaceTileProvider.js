@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../Core/BoundingSphere',
+        '../Core/BoxOutlineGeometry',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Color',
+        '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -12,6 +14,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/FeatureDetection',
+        '../Core/GeometryInstance',
         '../Core/GeometryPipeline',
         '../Core/IndexDatatype',
         '../Core/Intersect',
@@ -19,6 +22,7 @@ define([
         '../Core/OrientedBoundingBox',
         '../Core/PrimitiveType',
         '../Core/Rectangle',
+        '../Core/SphereOutlineGeometry',
         '../Core/Visibility',
         '../Core/WebMercatorProjection',
         '../Renderer/BufferUsage',
@@ -26,6 +30,8 @@ define([
         '../Scene/BlendingState',
         '../Scene/DepthFunction',
         '../Scene/Pass',
+        '../Scene/PerInstanceColorAppearance',
+        '../Scene/Primitive',
         '../ThirdParty/when',
         './GlobeSurfaceTile',
         './ImageryLayer',
@@ -34,10 +40,12 @@ define([
         './SceneMode'
     ], function(
         BoundingSphere,
+        BoxOutlineGeometry,
         Cartesian2,
         Cartesian3,
         Cartesian4,
         Color,
+        ColorGeometryInstanceAttribute,
         defaultValue,
         defined,
         defineProperties,
@@ -45,6 +53,7 @@ define([
         DeveloperError,
         Event,
         FeatureDetection,
+        GeometryInstance,
         GeometryPipeline,
         IndexDatatype,
         Intersect,
@@ -52,6 +61,7 @@ define([
         OrientedBoundingBox,
         PrimitiveType,
         Rectangle,
+        SphereOutlineGeometry,
         Visibility,
         WebMercatorProjection,
         BufferUsage,
@@ -59,6 +69,8 @@ define([
         BlendingState,
         DepthFunction,
         Pass,
+        PerInstanceColorAppearance,
+        Primitive,
         when,
         GlobeSurfaceTile,
         ImageryLayer,
@@ -798,6 +810,44 @@ define([
         return context.createVertexArray(vertexArray._attributes, wireframeIndexBuffer);
     }
 
+    function createDebugPrimitive(geometry, color, modelMatrix) {
+        var instance = new GeometryInstance({
+            geometry : geometry,
+            modelMatrix : modelMatrix,
+            attributes : {
+                color : ColorGeometryInstanceAttribute.fromColor(color)
+            }
+        });
+
+        return new Primitive({
+            geometryInstances : instance,
+            appearance : new PerInstanceColorAppearance({
+                translucent : false,
+                flat : true
+            }),
+            asynchronous : false
+        });
+    }
+
+    var scratchBVMatrix = new Matrix4();
+    var debugOrientedBoundingBox = BoxOutlineGeometry.fromDimensions({
+        dimensions: new Cartesian3(2.0, 2.0, 2.0),
+        vertexFormat: PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
+    });
+    var createDebugOrientedBoundingBox = function(obb, color) {
+        var modelMatrix = Matrix4.fromRotationTranslation(obb.halfAxes, obb.center, scratchBVMatrix);
+        return createDebugPrimitive(debugOrientedBoundingBox, color, modelMatrix);
+    };
+
+    var debugBoundingSphere = new SphereOutlineGeometry({
+        radius: 1.0
+    });
+    var createDebugSphere = function(sphere, color) {
+        var modelMatrix = Matrix4.fromTranslation(sphere.center);
+        Matrix4.multiplyByUniformScale(modelMatrix, sphere.radius, modelMatrix);
+        return createDebugPrimitive(debugBoundingSphere, color, modelMatrix);
+    };
+
     var otherPassesInitialColor = new Cartesian4(0.0, 0.0, 0.0, 0.0);
 
     function addDrawCommandsForTile(tileProvider, tile, context, frameState, commandList) {
@@ -912,7 +962,13 @@ define([
 
             ++tileProvider._usedDrawCommands;
 
-            command.debugShowBoundingVolume = (tile === tileProvider._debug.boundingSphereTile);
+            if (tile === tileProvider._debug.boundingSphereTile) {
+                if (defined(surfaceTile.orientedBoundingBox)) {
+                    createDebugOrientedBoundingBox(surfaceTile.orientedBoundingBox, Color.RED).update(context, frameState, commandList);
+                } else if (defined(surfaceTile.boundingSphere3D)) {
+                    createDebugSphere(surfaceTile.boundingSphere3D, Color.RED).update(context, frameState, commandList);
+                }
+            }
 
             Cartesian4.clone(initialColor, uniformMap.initialColor);
             uniformMap.oceanNormalMap = oceanNormalMap;
