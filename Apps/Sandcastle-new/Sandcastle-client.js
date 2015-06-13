@@ -20,7 +20,6 @@
 
     console.originalError = console.error;
     console.error = function(d1) {
-        console.log("send an error msg frm here");
         // console.originalError.apply(console, arguments);
         var msg = {};
         if (!defined(d1)) {

@@ -47,6 +47,11 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
         if(this.props.mode === 'javascript')
         {
           this.editor.on('cursorActivity', this.onCursorActivity);
+          this.errorLines = [];
+          this.highlightLines = [];
+          PubSub.subscribe('MARK LINE', this.markLine);
+          PubSub.subscribe('SUGGEST', this.autocomplete);
+          PubSub.subscribe('SHOW JS CODE', this.refreshEditor);
         }
       }
 
@@ -56,17 +61,46 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
           editor.focus();
       });
 
-      // Subscribe to events
-      PubSub.subscribe('SUGGEST', this.autocomplete);
-      PubSub.subscribe('SHOW JS CODE', this.refreshEditor);
-      PubSub.subscribe('MARK LINE', this.markLine);
       PubSub.subscribe('RELOAD FRAME', this.getData);
 
+    },
+
+    clearErrorsAddHints: function(){
+      var line;
+      var i;
+      var len;
+      hintTimer = undefined;
+      this.editor.clearGutter('hintGutter');
+      this.editor.clearGutter('highlightGutter');
+      this.editor.clearGutter('errorGutter');
+      this.editor.clearGutter('searchGutter');
+      while (this.errorLines.length > 0) {
+        line = this.errorLines.pop();
+        this.editor.removeLineClass(line, 'text');
+      }
+      while (this.highlightLines.length > 0) {
+        line = this.highlightLines.pop();
+        this.editor.removeLineClass(line, 'text');
+      }
+      var options = JSON.parse(JSON.stringify(sandcastleJsHintOptions));
+      console.log(JSHINT);
+      if (!JSHINT(this.editor.getValue(), options)) {
+        var hints = JSHINT.errors;
+        for (i = 0, len = hints.length; i < len; ++i) {
+          var hint = hints[i];
+          if (hint !== null && hint.reason !== undefined && hint.line > 0) {
+            line = this.editor.setGutterMarker(hint.line-1, 'hintGutter', this.makeLabel(hint.reason, 'hintMarker'));
+            this.editor.addLineClass(line, 'text', 'hintLine');
+            this.errorLines.push(line);
+          }
+        }
+      }
     },
 
     getData: function(){
       if(this.props.mode === 'javascript')
       {
+        this.clearErrorsAddHints();
         PubSub.publish('UPDATE JS', this.editor.getValue());
       }
       else
@@ -84,18 +118,27 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       CodeMirror.commands.autocomplete(this.editor);
     },
 
-    makeLabel: function(msg){
+    makeLabel: function(msg, className){
       var element = document.createElement('abbr');
-      element.style.color = "#822";
-      element.innerHTML = '&times;';
+      element.className = className;
+      switch(className){
+        case 'hintMarker':
+          element.innerHTML = '<span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span>'
+          break;
+        case 'errorMarker':
+          element.innerHTML = '<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>';
+          break;
+        default:
+          element.innerHTML = '&#9654;';
+      }
       element.title = msg;
       return element;
     },
 
     markLine: function(msg, data){
-      console.log(data);
-      var line = this.editor.setGutterMarker(data.line-1, 'errorGutter', this.makeLabel(data.data));
+      var line = this.editor.setGutterMarker(data.line-1, 'errorGutter', this.makeLabel(data.error, 'errorMarker'));
       this.editor.addLineClass(line, 'text', 'errorLine');
+      this.errorLines.push(line);
     },
 
     openDocTab: function(title, link){
@@ -129,8 +172,6 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
           ele.textContent = member.replace('.html', '').replace('module-', '').replace('#', '.');
           ele.href = '../../Build/Documentation/' + member;
           ele.onclick = onDocClick;
-          // ele.setAttribute('data-toggle', 'modal');
-          // ele.setAttribute('data-target', '#docModal');
           docMessage.append(ele);
         }
         this.editor.addWidget(this.editor.getCursor(true), docNode.get(0));
@@ -145,10 +186,10 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       $('#docPopup').css('left', '-999px');
       PubSub.publish('DOC POSITION', pos);
       if(this.docTimer !== undefined){
-        window.clearTimeout(docTimer);
+        window.clearTimeout(this.docTimer);
       }
 
-      doctimer = window.setTimeout(this.showDocPopup, 500);
+      this.docTimer = window.setTimeout(this.showDocPopup, 500);
     },
 
     handleChange: function() {
@@ -158,6 +199,12 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
           if (this.editor.getValue() !== this.props.value) {
             this.props.value = value;
           }
+        }
+        if(this.props.mode === 'javascript'){
+          if(this.hintTimer !== undefined){
+            window.clearTimeout(this.hintTimer);
+          }
+          this.hintTimer = setTimeout(this.clearErrorsAddHints, 550);
         }
       }
     },
@@ -379,7 +426,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
 
     refreshFrame: function(){
       this.getDOMNode().contentWindow.location.reload();
-      var doc = '<html><head><script src="../../Build/Cesium/Cesium.js"></script><script type="text/javascript" src="./Sandcastle-header.js"></script><style>@import url(../../Build/Cesium/Widgets/widgets.css);\nhtml, body, #cesiumContainer {width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;}\n</style></head><body class="sandcastle-loading"><script type="text/javascript" src="./Sandcastle-client.js"></script></body></html>';
+      var doc = '<html><head><script src="../../Build/Cesium/Cesium.js"></script><script type="text/javascript" src="./Sandcastle-header.js"></script><style>@import url(../../Build/Cesium/Widgets/widgets.css);\nhtml, body, #cesiumContainer {width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;}\n</style><base href="http://localhost:3000/Apps/Sandcastle-new/"></base></head><body class="sandcastle-loading"><script type="text/javascript" src="./Sandcastle-client.js"></script></body></html>';
       this.getDOMNode().contentWindow.document.open();
       this.getDOMNode().contentWindow.document.write(doc);
       this.getDOMNode().contentWindow.document.close();

@@ -82,6 +82,25 @@ ul + div.tab-content {
 .CodeMirror {
   height: 100%; }
 
+.CodeMirror pre.errorLine {
+  background: #F2DEDE;
+}
+
+.CodeMirror pre.hintLine {
+    background: #FCF8E3;
+}
+
+.errorMarker .glyphicon-exclamation-sign{
+  color: #E42718;
+  font-size: 12px;
+}
+
+.hintMarker .glyphicon-warning-sign{
+  color: #DD920F;
+  font-size: 11px;
+
+}
+
 #consoleRow {
   position: fixed;
   bottom: 60px; /* Remove this when footer is removed */
