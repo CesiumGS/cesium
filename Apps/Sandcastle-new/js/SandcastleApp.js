@@ -32,7 +32,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
     render: function(){
       return (
         <div role="tabpanel" className="tab-pane active codeContainer" id="jsContainer">
-          <SandcastleCodeMirrorEditor style={{height: 95 + '%'}} textAreaClassName='form-control' defaultValue={this.state.src} mode="javascript" lineWrapping={true} lineNumbers={true} gutters ={['hintGutter', 'errorGutter', 'searchGutter', 'highlightGutter']} matchBrackets={true} indentUnit={4} extraKeys={{'Ctrl-Space': 'autocomplete', 'F8': 'runCesium', 'Tab': 'indentMore', 'Shift-Tab': 'indentLess'}}/>
+          <SandcastleCodeMirrorEditor style={{height: 95 + '%'}} textAreaClassName='form-control' defaultValue={this.state.src} mode="javascript" readOnly={$(window).width()<768? "nocursor":false} lineWrapping={true} lineNumbers={true} gutters ={['hintGutter', 'errorGutter', 'searchGutter', 'highlightGutter']} matchBrackets={true} indentUnit={4} extraKeys={{'Ctrl-Space': 'autocomplete', 'F8': 'runCesium', 'Tab': 'indentMore', 'Shift-Tab': 'indentLess'}}/>
         </div>
       );
     }
@@ -43,6 +43,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
     componentDidMount: function() {
       var isTextArea = this.props.forceTextArea;
       if (!isTextArea) {
+        console.log(this.props.readOnly);
         this.editor = CodeMirror.fromTextArea(this.refs.editor.getDOMNode(), this.props);
         this.editor.on('change', this.handleChange);
         if(this.props.mode === 'javascript')
@@ -233,17 +234,12 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
     },
 
     render: function(){
-      var editor = React.createElement('textarea', {
-        ref: 'editor',
-        value: this.props.value,
-        defaultValue: this.props.defaultValue,
-        readOnly: this.props.readOnly,
-        onChange: this.props.onChange,
-        style: this.props.textAreaStyle,
-        className: this.props.textAreaClassName || this.props.textAreaClass
-      });
-
-      return editor;
+      return (
+        <div className="codeEditorContainer">
+          <div className="visible-xs-block alert alert-info" role="alert"><p className="text-center"><strong>Read-only on mobile devices</strong></p></div>
+          <textarea ref="editor" value={this.props.value} defaultValue={this.props.defaultValue} readOnly={this.props.readOnly} onChange={this.props.onChange} style={this.props.textAreaStyle} className={this.props.textAreaClassName || this.props.textAreaClass} />
+        </div>
+      )
     }
   });
 
@@ -265,7 +261,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
     render: function(){
       return (
         <div role="tabpanel" className="tab-pane codeContainer" id="htmlContainer">
-            <SandcastleCodeMirrorEditor style={{height: 100 + '%'}} textAreaClassName='form-control' defaultValue={this.state.src} mode="text/html" lineNumbers={true} matchBrackets={true} indentUnit={4}/>
+            <SandcastleCodeMirrorEditor style={{height: 100 + '%'}} textAreaClassName='form-control' defaultValue={this.state.src} mode="text/html" readOnly={$(window).width()<768? "nocursor":false} lineNumbers={true} matchBrackets={true} indentUnit={4}/>
         </div>
       );
     }
@@ -289,7 +285,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
     render: function(){
       return (
         <div role="tabpanel" className="tab-pane codeContainer" id="cssContainer">
-            <SandcastleCodeMirrorEditor style={{height: 100 + '%'}} textAreaClassName='form-control' defaultValue={this.state.src} mode="text/css" lineNumbers={true} matchBrackets={true} indentUnit={4}/>
+            <SandcastleCodeMirrorEditor style={{height: 100 + '%'}} textAreaClassName='form-control' defaultValue={this.state.src} mode="text/css" readOnly={$(window).width()<768? "nocursor":false} lineNumbers={true} matchBrackets={true} indentUnit={4}/>
         </div>
       );
     }

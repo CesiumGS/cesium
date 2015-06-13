@@ -61,7 +61,7 @@ ul.nav.nav-tabs {
 ul + div.tab-content {
   padding-top: 42px; }
 
-#appLayout, #bodyContainer, #bodyRow, #codeColumn, #codeColumn div[role="tabpanel"], #codeColumn .tab-content, #cesiumColumn, #cesiumColumn > div, #cesiumFrame, #cesiumFrame > div, #cesiumFrame iframe {
+#appLayout, #bodyContainer, #bodyRow, #codeColumn, #codeColumn div[role="tabpanel"], #codeColumn .tab-content, .codeEditorContainer, #cesiumColumn, #cesiumColumn > div, #cesiumFrame, #cesiumFrame > div, #cesiumFrame iframe {
   height: 100%; }
 
 #cesiumTabs .docTab{
@@ -140,6 +140,10 @@ ul + div.tab-content {
 
 /*# sourceMappingURL=main.css.map */
 @media screen and (max-width: 767px) {
+  .codeContainer .alert{
+    margin-bottom: 0;
+  }
+
   ul + div.tab-content {
     padding-top: 0px;
   }
