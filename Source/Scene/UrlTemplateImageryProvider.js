@@ -509,7 +509,7 @@ define([
             if (typeof part === 'string') {
                 url += part;
             } else {
-                url += partFunctionInvoker(part);
+                url += encodeURIComponent(partFunctionInvoker(part));
             }
         }
 

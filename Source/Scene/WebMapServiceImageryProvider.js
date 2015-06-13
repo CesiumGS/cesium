@@ -31,16 +31,6 @@ define([
         UrlTemplateImageryProvider) {
     "use strict";
 
-    function objectToLowercase(obj) {
-        var result = {};
-        for ( var key in obj) {
-            if (obj.hasOwnProperty(key)) {
-                result[key.toLowerCase()] = obj[key];
-            }
-        }
-        return result;
-    }
-
     /**
      * Provides tiled imagery hosted by a Web Map Service (WMS) server.
      *
@@ -480,6 +470,16 @@ define([
         freezeObject(new GetFeatureInfoFormat('xml', 'text/xml')),
         freezeObject(new GetFeatureInfoFormat('text', 'text/html'))
     ]);
+
+    function objectToLowercase(obj) {
+        var result = {};
+        for ( var key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                result[key.toLowerCase()] = obj[key];
+            }
+        }
+        return result;
+    }
 
     return WebMapServiceImageryProvider;
 });
