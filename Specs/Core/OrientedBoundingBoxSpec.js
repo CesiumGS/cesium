@@ -77,6 +77,17 @@ defineSuite([
         expect(box.halfAxes).toEqual(Matrix3.ZERO);
     });
 
+    it('fromEllipsoidRectangle sets correct default heights', function() {
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var rectangle = new Rectangle(0.0, 0.0, 0.0, 0.0);
+        var box = OrientedBoundingBox.fromEllipsoidRectangle(ellipsoid, rectangle);
+
+        expect(box.center).toEqualEpsilon(new Cartesian3(1.0, 0.0, 0.0), CesiumMath.EPSILON15);
+
+        var rotScale = Matrix3.ZERO;
+        expect(box.halfAxes).toEqualEpsilon(rotScale, CesiumMath.EPSILON15);
+    });
+
     it('fromEllipsoidRectangle throws without ellipsoid', function() {
         var rectangle = new Rectangle(0.0, 0.0, 0.0, 0.0);
         expect(function() {
@@ -179,73 +190,6 @@ defineSuite([
         expect(box.center).toEqualEpsilon(new Cartesian3(0.5, 0.0, 0.0), CesiumMath.EPSILON15);
         expect(box.halfAxes).toEqualEpsilon(new Matrix3(0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0), CesiumMath.EPSILON15);
     });
-
-    /*
-    it('extentsToOrientedBoundingBox works with a result parameter', function() {
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        var origin = Cartesian3.UNIT_X;
-        var pl = new EllipsoidTangentPlane(origin, ellipsoid);
-        var result = new OrientedBoundingBox();
-        result = pl.extentsToOrientedBoundingBox(-0.5, 0.5, -0.5, 0.5, -0.5, 0.5, result);
-        var expected = new OrientedBoundingBox(origin,
-            new Matrix3(0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.0, 0.5, 0.0));
-        expect(result).toEqual(expected);
-    });
-
-    it('extentsToOrientedBoundingBox works without a result parameter', function() {
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        var origin = Cartesian3.UNIT_X;
-        var pl = new EllipsoidTangentPlane(origin, ellipsoid);
-        var result = pl.extentsToOrientedBoundingBox(-0.5, 0.5, -0.5, 0.5, -0.5, 0.5);
-        var expected = new OrientedBoundingBox(origin,
-            new Matrix3(0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.0, 0.5, 0.0));
-        expect(result).toEqual(expected);
-    });
-
-    it('extentsToOrientedBoundingBox throws missing any of the dimensional parameters', function() {
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        var origin = new Cartesian3(1.0, 0.0, 0.0);
-        var pl = new EllipsoidTangentPlane(origin, ellipsoid);
-        var result = new OrientedBoundingBox();
-        expect(function() { pl.extentsToOrientedBoundingBox(undefined, 0.5, -0.5, 0.5, -0.5, 0.5, result);  }).toThrowDeveloperError();
-        expect(function() { pl.extentsToOrientedBoundingBox(-0.5, undefined, -0.5, 0.5, -0.5, 0.5, result); }).toThrowDeveloperError();
-        expect(function() { pl.extentsToOrientedBoundingBox(-0.5, 0.5, undefined, 0.5, -0.5, 0.5, result);  }).toThrowDeveloperError();
-        expect(function() { pl.extentsToOrientedBoundingBox(-0.5, 0.5, -0.5, undefined, -0.5, 0.5, result); }).toThrowDeveloperError();
-        expect(function() { pl.extentsToOrientedBoundingBox(-0.5, 0.5, -0.5, 0.5, undefined, 0.5, result);  }).toThrowDeveloperError();
-        expect(function() { pl.extentsToOrientedBoundingBox(-0.5, 0.5, -0.5, 0.5, -0.5, undefined, result); }).toThrowDeveloperError();
-    });
-
-    it('extentsToOrientedBoundingBox works with some edge-ish cases', function() {
-        var res, exp;
-        var result = new OrientedBoundingBox();
-        var ellipsoid;
-
-        ellipsoid = Ellipsoid.UNIT_SPHERE;
-        res = new EllipsoidTangentPlane(Cartesian3.UNIT_X, ellipsoid).extentsToOrientedBoundingBox(-0.3, 0.3, -0.3, 0.3, -0.3, 0.3, res);
-        exp = new OrientedBoundingBox(Cartesian3.UNIT_X,
-            new Matrix3(0.0, 0.0, 0.3, 0.3, 0.0, 0.0, 0.0, 0.3, 0.0));
-        expect(res.center).toEqualEpsilon(exp.center, CesiumMath.EPSILON15);
-        expect(res.halfAxes).toEqualEpsilon(exp.halfAxes, CesiumMath.EPSILON15);
-
-        ellipsoid = Ellipsoid.UNIT_SPHERE;
-        res = new EllipsoidTangentPlane(Cartesian3.UNIT_Z, ellipsoid).extentsToOrientedBoundingBox(-0.3, 0.3, -0.3, 0.3, -0.3, 0.3, res);
-        expect(res.center).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON15);
-
-        ellipsoid = Ellipsoid.UNIT_SPHERE;
-        res = new EllipsoidTangentPlane(Cartesian3.UNIT_Y, ellipsoid).extentsToOrientedBoundingBox(-0.3, 0.3, -0.3, 0.3, -0.3, 0.3, res);
-        exp = new OrientedBoundingBox(Cartesian3.UNIT_Y,
-            new Matrix3(-0.3, 0.0, 0.0, 0.0, 0.0, 0.3, 0.0, 0.3, 0.0));
-        expect(res.center).toEqualEpsilon(exp.center, CesiumMath.EPSILON15);
-        expect(res.halfAxes).toEqualEpsilon(exp.halfAxes, CesiumMath.EPSILON15);
-
-        ellipsoid = Ellipsoid.UNIT_SPHERE;
-        res = new EllipsoidTangentPlane(Cartesian3.UNIT_X, ellipsoid).extentsToOrientedBoundingBox(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, res);
-        exp = new OrientedBoundingBox(Cartesian3.UNIT_X,
-            new Matrix3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
-        expect(res.center).toEqualEpsilon(exp.center, CesiumMath.EPSILON15);
-        expect(res.halfAxes).toEqualEpsilon(exp.halfAxes, CesiumMath.EPSILON15);
-    });
-    */
 
     var intersectPlaneTestCornersEdgesFaces = function(center, axes) {
         var SQRT1_2 = Math.pow(1.0 / 2.0, 1 / 2.0);
