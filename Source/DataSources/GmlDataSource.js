@@ -93,6 +93,31 @@ define([
         return deferred;
     }
 
+    function processCoordinates(coordString, dimension, crsFunction) {
+        var i;
+        var coordString = coordString.trim();
+        var coords = coordString.split(" ");
+        if(coords.length == dimension) {
+            for(i = 0; i < coords.length; i++) {
+                coords[i] = parseFloat(coords[i]);
+            }
+            return crsFunction(coords);
+        }
+        else {
+            var coordinates = [];
+            for(i = 0; i < coords.length; i += dimension) {
+                if(dimension == 2) {
+                    var c = [parseFloat(coords[i]), parseFloat(coords[i+1])];
+                    coordinates.push(crsFunction(c));
+                } else if(dimension == 3) {
+                    var c = [parseFloat(coords[i]), parseFloat(coords[i+1]), parseFloat(coords[i+2])];
+                    coordinates.push(crsFunction(c));
+                }
+            }
+            return coordinates;
+        }
+    }
+
     function createObject(entityCollection) {
         /*var id = geoJson.id;
         if (!definedNotNull(id) || geoJson.type !== 'Feature') {
@@ -115,7 +140,7 @@ define([
         var documentNode = gml.documentElement;
         var featureCollection = documentNode.getElementsByTagNameNS(gmlns, "featureMember") || documentNode.getElementsByTagNameNS(gmlns, "featureMembers");
         
-/*        var crsFunction = defaultCrsFunction;
+/*        
         var boundByNode = documentNode.getElementsByTagNameNS(gmlns, "BoundBy");
         if(boundByNode) {
         	//crsFunction = getCrsFromBoundBy()
@@ -131,6 +156,7 @@ define([
 
     function processFeature(that, feature, options) {
         var i, j, geometryHandler, geometryElements = [];
+        var crsFunction = defaultCrsFunction;
         var properties = {};
         var elements = feature.children;
         for(i=0; i<elements.length; i++) {
@@ -157,34 +183,28 @@ define([
 
         for(i=0; i<geometryElements.length; i++) {
         	geometryHandler = geometryTypes[geometryElements[i].localName];
-        	geometryHandler(that, geometryElements[i], properties);
+        	geometryHandler(that, geometryElements[i], properties, crsFunction);
         }
     }
 
-    function processPoint(that, point, properties) {
-        var coordinates = point.firstElementChild.textContent;
-        createPoint(that, coordinates, properties);
+    function processPoint(that, point, properties, crsFunction) {
+        var coordString = point.firstElementChild.textContent;
+        createPoint(that, coordString, properties, crsFunction);
     }
 
-    function processMultiPoint(that, multiPoint, properties) {
+    function processMultiPoint(that, multiPoint, properties, crsFunction) {
         var pointMembers = multiPoint.getElementsByTagNameNS(gmlns, "pointMember") || multiPoint.getElementsByTagNameNS(gmlns, "pointMembers");
         for(var i=0; i<pointMembers.length; i++) {
             var points = pointMembers[i].children;
             for(var j=0; j<points.length; j++) {
-            	var coordinates = points[j].firstElementChild.textContent;
-                createPoint(that, coordinates, properties);
+            	var coordString = points[j].firstElementChild.textContent;
+                createPoint(that, coordString, properties, crsFunction);
             }
         }
     }
 
-    function createPoint(that, coordinates, properties) {
-        coordinates = coordinates.split(" ");
-        for(var i=0; i<coordinates.length; i++) {
-            coordinates[i] = parseFloat(coordinates[i]);
-        }
-        if(coordinates.length == 2) {
-            coordinates.push(0.0);
-        }
+    function createPoint(that, coordString, properties, crsFunction) {
+        var coordinates = processCoordinates(coordString, 2, crsFunction);
         var canvasOrPromise = that._pinBuilder.fromColor(defaultMarkerColor, defaultMarkerSize);
 
         that._promises.push(when(canvasOrPromise, function(dataUrl) {
@@ -196,13 +216,29 @@ define([
             entity.addProperty('properties');
             entity.properties = properties;
             entity.billboard = billboard;
-            entity.position = new ConstantPositionProperty(defaultCrsFunction(coordinates));
+            entity.position = new ConstantPositionProperty(coordinates);
         }));
+    }
+
+    function processLineString(that, lineString, properties, crsFunction) {
+        var coordinates = lineString.firstElementChild.textContent;
+        createLineString(that, coordinates, properties, crsFunction);                
+    }
+
+    function createLineString(that, coordString, properties, crsFunction) {
+        var coordinates = processCoordinates(coordString, 2, crsFunction);
+        var polyline = new PolylineGraphics();
+        polyline.material = defaultStrokeMaterialProperty;
+        polyline.width = defaultStrokeWidthProperty;
+        polyline.positions = new ConstantProperty(coordinates);
+
+        var entity = createObject(that._entityCollection);
+        entity.polyline = polyline;
     }
 
     var geometryTypes = {
         //GeometryCollection : processGeometryCollection,
-        //LineString : processLineString,
+        LineString : processLineString,
         //MultiLineString : processMultiLineString,
         MultiPoint : processMultiPoint,
         //MultiPolygon : processMultiPolygon,
