@@ -139,17 +139,21 @@ define([
         var parameters = combine(objectToLowercase(defaultValue(options.parameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.DefaultParameters);
         queryOptions = combine(parameters, queryOptions);
 
-        var pickFeaturesUri = new Uri(options.url);
-        var pickFeaturesQueryOptions = queryToObject(defaultValue(pickFeaturesUri.query, ''));
-        var pickFeaturesParameters = combine(objectToLowercase(defaultValue(options.getFeatureInfoParameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters);
-        pickFeaturesQueryOptions = combine(pickFeaturesParameters, pickFeaturesQueryOptions);
+        var pickFeaturesUri;
+        var pickFeaturesQueryOptions;
+        if (this._enablePickFeatures) {
+            pickFeaturesUri = new Uri(options.url);
+            pickFeaturesQueryOptions = queryToObject(defaultValue(pickFeaturesUri.query, ''));
+            var pickFeaturesParameters = combine(objectToLowercase(defaultValue(options.getFeatureInfoParameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters);
+            pickFeaturesQueryOptions = combine(pickFeaturesParameters, pickFeaturesQueryOptions);
+        }
 
         function setParameter(name, value) {
             if (!defined(queryOptions[name])) {
                 queryOptions[name] = value;
             }
 
-            if (!defined(pickFeaturesQueryOptions[name])) {
+            if (defined(pickFeaturesQueryOptions) && !defined(pickFeaturesQueryOptions[name])) {
                 pickFeaturesQueryOptions[name] = value;
             }
         }
@@ -160,27 +164,27 @@ define([
         setParameter('width', '{width}');
         setParameter('height', '{height}');
 
-        if (!defined(pickFeaturesQueryOptions.query_layers)) {
-            pickFeaturesQueryOptions.query_layers = options.layers;
-        }
-
-        if (!defined(pickFeaturesQueryOptions.x)) {
-            pickFeaturesQueryOptions.x = '{i}';
-        }
-
-        if (!defined(pickFeaturesQueryOptions.y)) {
-            pickFeaturesQueryOptions.y = '{j}';
-        }
-
-        if (!defined(pickFeaturesQueryOptions.info_format)) {
-            pickFeaturesQueryOptions.info_format = '{format}';
-        }
-
         uri.query = objectToQuery(queryOptions);
         var templateUrl = uri.toString().replace(/%7B/g, '{').replace(/%7D/g, '}');
 
         var pickFeaturesTemplateUrl;
-        if (this._enablePickFeatures) {
+        if (defined(pickFeaturesQueryOptions)) {
+            if (!defined(pickFeaturesQueryOptions.query_layers)) {
+                pickFeaturesQueryOptions.query_layers = options.layers;
+            }
+
+            if (!defined(pickFeaturesQueryOptions.x)) {
+                pickFeaturesQueryOptions.x = '{i}';
+            }
+
+            if (!defined(pickFeaturesQueryOptions.y)) {
+                pickFeaturesQueryOptions.y = '{j}';
+            }
+
+            if (!defined(pickFeaturesQueryOptions.info_format)) {
+                pickFeaturesQueryOptions.info_format = '{format}';
+            }
+
             pickFeaturesUri.query = objectToQuery(pickFeaturesQueryOptions);
             pickFeaturesTemplateUrl = pickFeaturesUri.toString().replace(/%7B/g, '{').replace(/%7D/g, '}');
         }
