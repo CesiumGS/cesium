@@ -50,6 +50,10 @@ define([
      *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
      *                 to result in rendering problems.
      * @param {Number} [options.maximumLevel=18] The maximum level-of-detail supported by the imagery provider.
+     * @param {Number} [options.minimumLevelToShow] The minimum terrain level-of-detail at which to show this imagery layer,
+     *                 or undefined to show it at all levels.  Level zero is the least-detailed level.
+     * @param {Number} [options.maximumLevelToShow] The maximum terrain level-of-detail at which to show this imagery layer,
+     *                 or undefined to show it at all levels.  Level zero is the least-detailed level.
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
      * @param {TilingScheme} [options.tilingScheme] The tiling scheme specifying how the ellipsoidal
      * surface is broken into tiles.  If this parameter is not provided, a {@link WebMercatorTilingScheme}
@@ -107,6 +111,8 @@ define([
         this._tileHeight = options.tileHeight;
         this._minimumLevel = options.minimumLevel;
         this._maximumLevel = options.maximumLevel;
+        this._minimumLevelToShow = options.minimumLevelToShow;
+        this._maximumLevelToShow = options.maximumLevelToShow;
         this._rectangle = Rectangle.clone(options.rectangle);
         this._tilingScheme = options.tilingScheme;
 
@@ -378,6 +384,30 @@ define([
                 //>>includeEnd('debug');
 
                 return this._minimumLevel;
+            }
+        },
+
+        /**
+         * Gets the maximum level-of-detail that can be viewed.
+         * @memberof TileMapServiceImageryProvider.prototype
+         * @type {Number}
+         * @readonly
+         */
+        maximumLevelToShow : {
+            get : function() {
+                return this._maximumLevelToShow;
+            }
+        },
+
+        /**
+         * Gets the minimum level-of-detail that can be viewed.
+         * @memberof TileMapServiceImageryProvider.prototype
+         * @type {Number}
+         * @readonly
+         */
+        minimumLevelToShow : {
+            get : function() {
+                return this._minimumLevelToShow;
             }
         },
 
