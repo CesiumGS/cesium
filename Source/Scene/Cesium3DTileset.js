@@ -133,8 +133,8 @@ define([
         /**
          * DOC_TBA
          */
-        this.tileLoad = new Event();
-        this._tileLoadEventsToRaise = [];
+        this.loadProgress = new Event();
+        this._loadProgressEventsToRaise = [];
 
         var that = this;
 
@@ -453,7 +453,7 @@ define([
 
             // Since the pick pass uses a smaller frustum around the pixel of interest,
             // the stats will be different than the normal render pass.
-            var s = isPick ? '[Pick]: ' : '';
+            var s = isPick ? '[Pick ]: ' : '[Color]: ';
             s +=
                 'Visited: ' + stats.visited +
                 // Frustum tests do not include tests for child tile requests or culling the contents.
@@ -466,8 +466,7 @@ define([
                 // Number of commands executed is likely to be higher because of commands overlapping
                 // multiple frustums.
                 ', Commands: ' + stats.numberOfCommands +
-                '\n  ' +
-                'Requests: ' + stats.numberOfPendingRequests +
+                ', Requests: ' + stats.numberOfPendingRequests +
                 ', Processing: ' + stats.numberProcessing;
 
             /*global console*/
@@ -489,9 +488,9 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     function addTileLoadEvent(tiles3D) {
-        if (tiles3D.tileLoad.numberOfListeners > 0) {
+        if (tiles3D.loadProgress.numberOfListeners > 0) {
             var stats = tiles3D._statistics;
-            tiles3D._tileLoadEventsToRaise.push({
+            tiles3D._loadProgressEventsToRaise.push({
                 numberOfPendingRequests : stats.numberOfPendingRequests,
                 numberProcessing : stats.numberProcessing
             });
@@ -501,12 +500,12 @@ define([
     function evenMoreComplicated(tiles3D, numberOfPendingRequests, numberProcessing) {
         return function() {
 // TODO: also pass the tile and state?
-            tiles3D.tileLoad.raiseEvent(numberOfPendingRequests, numberProcessing);
+            tiles3D.loadProgress.raiseEvent(numberOfPendingRequests, numberProcessing);
         };
     }
 
     function raiseEvents(tiles3D, frameState) {
-        var eventsToRaise = tiles3D._tileLoadEventsToRaise;
+        var eventsToRaise = tiles3D._loadProgressEventsToRaise;
         var length = eventsToRaise.length;
         for (var i = 0; i < length; ++i) {
             var numberOfPendingRequests = eventsToRaise[i].numberOfPendingRequests;
