@@ -463,84 +463,35 @@ define([
             return;
         }
 
-        var zoomAlongVector = mode !== SceneMode.SCENE2D;
+        var zoomAlongVector = mode === SceneMode.COLUMBUS_VIEW;
 
-        if ((camera.positionCartographic.height > 1000000.0 && mode === SceneMode.SCENE3D) || mode === SceneMode.SCENE2D) {
+        if (!zoomAlongVector) {
             if (!Cartesian2.equals(startPosition, object._zoomMouseStart)) {
                 object._zoomMouseStart = Cartesian2.clone(startPosition, object._zoomMouseStart);
                 object._zoomWorldPosition = Cartesian3.clone(pickedPosition, object._zoomWorldPosition);
             }
 
-            var canvas = scene.canvas;
-            var offset = scratchZoomOffset;
-            offset.x = canvas.clientWidth / 2;
-            offset.y = canvas.clientHeight / 2;
-
-            var startWorldPosition = object._zoomWorldPosition;
             if (mode === SceneMode.SCENE2D) {
-                var projection = scene.mapProjection;
-                var ellipsoid = projection.ellipsoid;
+                var worldPosition = object._zoomWorldPosition;
+                var endPosition = camera.position;
 
-                var cartographic = projection.unproject(startWorldPosition, scratchZoomCartographic);
-                startWorldPosition = ellipsoid.cartographicToCartesian(cartographic, scratch2DCartesian);
+                var direction = Cartesian3.subtract(worldPosition, endPosition, scratchZoomDirection);
+                Cartesian3.normalize(direction, direction);
+
+                var d = Cartesian3.distance(worldPosition, endPosition) * distance / (camera.getMagnitude() * 0.5);
+                camera.move(direction, d);
+            } else {
+                var pickedNormal = Cartesian3.normalize(pickedPosition, new Cartesian3());
+                var positionNormal = Cartesian3.normalize(camera.position, new Cartesian3());
+                var angle = Math.acos(Cartesian3.dot(pickedNormal, positionNormal));
+                var axis = Cartesian3.cross(pickedNormal, positionNormal, new Cartesian3());
+
+                var denom = Math.abs(angle) > CesiumMath.toRadians(20.0) ? camera.positionCartographic.height * 0.75 : camera.positionCartographic.height - distance;
+                var scalar = distance / denom;
+                camera.rotate(axis, angle * scalar);
             }
-            var start = SceneTransforms.wgs84ToWindowCoordinates(scene, startWorldPosition, scratchStartWC);
 
-            var end = Cartesian2.clone(movement.endPosition, scratchEndClone);
-            end.x = movement.startPosition.x;
-
-            Cartesian2.subtract(offset, start, offset);
-
-            if (Cartesian2.magnitude(offset) > 20.0) {
-                var magnitude = Cartesian2.distance(movement.startPosition, end);
-                Cartesian2.normalize(offset, offset);
-                Cartesian2.multiplyByScalar(offset, magnitude, offset);
-
-                end.x = start.x + offset.x;
-                end.y = start.y + offset.y;
-
-                if (mode === SceneMode.SCENE2D) {
-                    var worldPosition = camera.getPickRay(start, scratchZoomPickRay).origin;
-                    var endPosition = camera.position;
-
-                    var direction = Cartesian3.subtract(worldPosition, endPosition, scratchZoomDirection);
-                    Cartesian3.normalize(direction, direction);
-
-                    var d = Cartesian3.distance(worldPosition, endPosition) * distance / (camera.getMagnitude() * 0.5);
-                    camera.move(direction, d);
-                } else {
-                    var rho = Cartesian3.magnitude(camera.position);
-                    var rotateRate = object._rotateFactor * (rho - object._rotateRateRangeAdjustment);
-
-                    if (rotateRate > object._maximumRotateRate) {
-                        rotateRate = object._maximumRotateRate;
-                    }
-
-                    if (rotateRate < object._minimumRotateRate) {
-                        rotateRate = object._minimumRotateRate;
-                    }
-
-                    var phiWindowRatio = (start.x - end.x) / canvas.clientWidth;
-                    var thetaWindowRatio = (start.y - end.y) / canvas.clientHeight;
-
-                    phiWindowRatio = Math.min(phiWindowRatio, object.maximumMovementRatio);
-                    thetaWindowRatio = Math.min(thetaWindowRatio, object.maximumMovementRatio);
-
-                    var deltaPhi = rotateRate * phiWindowRatio * Math.PI * 2.0;
-                    var deltaTheta = rotateRate * thetaWindowRatio * Math.PI;
-
-                    var constrainedAxis = camera.constrainedAxis;
-                    camera.constrainedAxis = undefined;
-
-                    camera.rotateRight(deltaPhi);
-                    camera.rotateUp(deltaTheta);
-
-                    camera.constrainedAxis = constrainedAxis;
-                }
-
-                camera.zoomIn(distance);
-                zoomAlongVector = false;
-            }
+            camera.zoomIn(distance);
         }
 
         if (zoomAlongVector) {
