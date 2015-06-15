@@ -262,10 +262,11 @@ define([
 
         var center = box.center;
         var normal = plane.normal;
+        var halfAxes = box.halfAxes;
         // plane is used as if it is its normal; the first three components are assumed to be normalized
-        var radEffective = Math.abs(Cartesian3.dot(normal, Matrix3.getColumn(box.halfAxes, 0, scratchCartesian1))) +
-                           Math.abs(Cartesian3.dot(normal, Matrix3.getColumn(box.halfAxes, 1, scratchCartesian2))) +
-                           Math.abs(Cartesian3.dot(normal, Matrix3.getColumn(box.halfAxes, 2, scratchCartesian3)));
+        var radEffective = Math.abs(normal.x * halfAxes[Matrix3.COLUMN0ROW0] + normal.y * halfAxes[Matrix3.COLUMN0ROW1] + normal.z * halfAxes[Matrix3.COLUMN0ROW2]) +
+                           Math.abs(normal.x * halfAxes[Matrix3.COLUMN1ROW0] + normal.y * halfAxes[Matrix3.COLUMN1ROW1] + normal.z * halfAxes[Matrix3.COLUMN1ROW2]) +
+                           Math.abs(normal.x * halfAxes[Matrix3.COLUMN2ROW0] + normal.y * halfAxes[Matrix3.COLUMN2ROW1] + normal.z * halfAxes[Matrix3.COLUMN2ROW2]);
         var distanceToPlane = Cartesian3.dot(normal, center) + plane.distance;
 
         if (distanceToPlane <= -radEffective) {
