@@ -173,6 +173,8 @@ define([
         // W/-x [7]     [3] E/+x
         //      [6] [5] [4]
         //          S/-y
+        // "C" refers to the central lat/long which always align with the tangent point (above).
+        // If the rectangle spans the equator, CW and CE are aligned with the equator; otherwise, they're centered in latitude.
         var perimeterNW = perimeterCartographicScratch[0];
         var perimeterNC = perimeterCartographicScratch[1];
         var perimeterNE = perimeterCartographicScratch[2];
@@ -206,9 +208,9 @@ define([
         perimeterNE.height = perimeterNW.height = perimeterSE.height = perimeterSW.height = minimumHeight;
         ellipsoid.cartographicArrayToCartesianArray(perimeterCartographicScratch, perimeterCartesianScratch);
         var minZ = Math.min(Plane.getPointDistance(plane, perimeterCartesianScratch[0]),
-                            Plane.getPointDistance(plane, perimeterCartesianScratch[1]),
                             Plane.getPointDistance(plane, perimeterCartesianScratch[2]),
-                            Plane.getPointDistance(plane, perimeterCartesianScratch[3]));
+                            Plane.getPointDistance(plane, perimeterCartesianScratch[4]),
+                            Plane.getPointDistance(plane, perimeterCartesianScratch[6]));
         var maxZ = maximumHeight;  // Since the tangent plane touches the surface at height = 0, this is okay
 
         return fromTangentPlaneExtents(tangentPlane, minX, maxX, minY, maxY, minZ, maxZ, result);
