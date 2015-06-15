@@ -48,7 +48,7 @@ define([
     "use strict";
 
     /**
-     * @private
+     * DOC_TBA
      */
     var B3dm3DTileContentProvider = function(url, contentHeader) {
         this._model = undefined;
@@ -80,6 +80,7 @@ define([
         this._pickIds = [];
 
         this._batchTable = undefined;
+        this._models = undefined;
 
         // Dimensions for batch and pick textures
         var textureDimensions;
@@ -107,6 +108,14 @@ define([
     };
 
     defineProperties(B3dm3DTileContentProvider.prototype, {
+        /**
+         * DOC_TBA
+         *
+         * @memberof B3dm3DTileContentProvider.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
         batchSize : {
             get : function() {
                 return this._batchSize;
@@ -134,6 +143,11 @@ define([
         return content._batchValues;
     }
 
+    /**
+     * Use BatchedModel#show
+     *
+     * @private
+     */
     B3dm3DTileContentProvider.prototype.setShow = function(batchId, value) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
@@ -161,6 +175,11 @@ define([
         }
     };
 
+    /**
+     * Use BatchedModel#show
+     *
+     * @private
+     */
     B3dm3DTileContentProvider.prototype.getShow = function(batchId) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
@@ -180,6 +199,11 @@ define([
 
     var scratchColor = new Array(4);
 
+    /**
+     * Use BatchedModel#color
+     *
+     * @private
+     */
     B3dm3DTileContentProvider.prototype.setColor = function(batchId, value) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
@@ -211,6 +235,9 @@ define([
         }
     };
 
+    /**
+     * @private
+     */
     B3dm3DTileContentProvider.prototype.setAllColor = function(value) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
@@ -225,6 +252,11 @@ define([
         }
     };
 
+    /**
+     * Use BatchedModel#color
+     *
+     * @private
+     */
     B3dm3DTileContentProvider.prototype.getColor = function(batchId, color) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
@@ -249,11 +281,48 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-// TODO: functions for?
-//   * number of properties
-//   * get property name
-//   * has property
+    /**
+     * DOC_TBA
+     */
+    B3dm3DTileContentProvider.prototype.hasProperty = function(name) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(name)) {
+            throw new DeveloperError('name is required.');
+        }
+        //>>includeEnd('debug');
 
+        var batchTable = this._batchTable;
+        return defined(batchTable) && defined(batchTable[name]);
+    };
+
+    /**
+     * DOC_TBA
+     *
+     * This may return different values from call to call if {@link BatchedModel#setProperty}
+     * is used to add new properties.
+     */
+    B3dm3DTileContentProvider.prototype.getPropertyNames = function() {
+        var names = [];
+        var batchTable = this._batchTable;
+
+        if (!batchTable) {
+            return names;
+        }
+
+        for (var name in batchTable) {
+            if (batchTable.hasOwnProperty(name)) {
+                names.push(name);
+            }
+        }
+
+        return names;
+    };
+
+    /**
+     * Use BatchedModel#getProperty
+     *
+     * @private
+     */
     B3dm3DTileContentProvider.prototype.getProperty = function(batchId, name) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
@@ -262,7 +331,7 @@ define([
         }
 
         if (!defined(name)) {
-            throw new DeveloperError('color is required.');
+            throw new DeveloperError('name is required.');
         }
         //>>includeEnd('debug');
 
@@ -279,6 +348,11 @@ define([
         return clone(propertyValues[batchId], true);
     };
 
+    /**
+     * Use BatchedModel#setProperty
+     *
+     * @private
+     */
     B3dm3DTileContentProvider.prototype.setProperty = function(batchId, name, value) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
@@ -287,7 +361,7 @@ define([
         }
 
         if (!defined(name)) {
-            throw new DeveloperError('color is required.');
+            throw new DeveloperError('name is required.');
         }
         //>>includeEnd('debug');
 
@@ -305,6 +379,34 @@ define([
         }
 
         propertyValues[batchId] = clone(value, true);
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    function createModels(content) {
+        var batchSize = content._batchSize;
+        if (!defined(content._models) && (batchSize > 0)) {
+            var models = new Array(batchSize);
+            for (var i = 0; i < batchSize; ++i) {
+                models[i] = new BatchedModel(content, i);
+            }
+            content._models = models;
+        }
+    }
+
+    /**
+     * DOC_TBA
+     */
+    B3dm3DTileContentProvider.prototype.getModel = function(batchId) {
+        var batchSize = this._batchSize;
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(batchId) || (batchId < 0) || (batchId > batchSize)) {
+            throw new DeveloperError('batchId is required and between zero and batchSize - 1 (' + batchSize - + ').');
+        }
+        //>>includeEnd('debug');
+
+        createModels(this);
+        return this._models[batchId];
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -558,6 +660,11 @@ define([
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
+    /**
+     * DOC_TBA
+     *
+     * Use Cesium3DTile#requestContent
+     */
     B3dm3DTileContentProvider.prototype.request = function() {
         var that = this;
 
@@ -662,6 +769,9 @@ define([
     function createPickTexture(content, context) {
         var batchSize = content._batchSize;
         if (!defined(content._pickTexture) && (batchSize > 0)) {
+            createModels(content);
+            var models = content._models;
+
             var pickIds = content._pickIds;
             var byteLength = getByteLength(content);
             var bytes = new Uint8Array(byteLength);
@@ -672,7 +782,7 @@ define([
             // not be an issue in WebGL 2.
             for (var i = 0; i < batchSize; ++i) {
 // TODO: What else should go into the owner passed to createPickId?
-                var pickId = context.createPickId(new BatchedModel(content, i));
+                var pickId = context.createPickId(models[i]);
                 pickIds.push(pickId);
 
                 var pickColor = pickId.color;
@@ -708,6 +818,11 @@ define([
         }
     }
 
+    /**
+     * DOC_TBA
+     *
+     * Use Cesium3DTile#update
+     */
     B3dm3DTileContentProvider.prototype.update = function(owner, context, frameState, commandList) {
         // In the PROCESSING state we may be calling update() to move forward
         // the content's resource loading.  In the READY state, it will
@@ -733,10 +848,16 @@ define([
         this._model.update(context, frameState, commandList);
    };
 
+   /**
+    * DOC_TBA
+    */
     B3dm3DTileContentProvider.prototype.isDestroyed = function() {
         return false;
     };
 
+    /**
+     * DOC_TBA
+     */
     B3dm3DTileContentProvider.prototype.destroy = function() {
         this._model = this._model && this._model.destroy();
         this._batchTexture = this._batchTexture && this._batchTexture.destroy();
