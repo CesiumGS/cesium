@@ -127,21 +127,18 @@ define([
      * Computes an OrientedBoundingBox that bounds a {@link Rectangle} on the surface of an {@link Ellipsoid}.
      * There are no guarantees about the orientation of the bounding box.
      *
-     * @param {Ellipsoid} ellipsoid The ellipsoid on which the rectangle is defined.
      * @param {Rectangle} rectangle The cartographic rectangle on the surface of the ellipsoid.
      * @param {Number} [minimumHeight=0.0] The minimum height (elevation) within the tile.
      * @param {Number} [maximumHeight=0.0] The maximum height (elevation) within the tile.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rectangle is defined.
      * @param {OrientedBoundingBox} [result] The object onto which to store the result.
      * @returns {OrientedBoundingBox} The modified result parameter or a new OrientedBoundingBox instance if none was provided.
      *
      * @exception {DeveloperError} rectangle.width must be between 0 and pi.
      * @exception {DeveloperError} rectangle.height must be between 0 and pi.
      */
-    OrientedBoundingBox.fromEllipsoidRectangle = function(ellipsoid, rectangle, minimumHeight, maximumHeight, result) {
+    OrientedBoundingBox.fromRectangle = function(rectangle, minimumHeight, maximumHeight, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(ellipsoid)) {
-            throw new DeveloperError('ellipsoid is required');
-        }
         if (!defined(rectangle)) {
             throw new DeveloperError('rectangle is required');
         }
@@ -155,6 +152,7 @@ define([
 
         minimumHeight = defaultValue(minimumHeight, 0.0);
         maximumHeight = defaultValue(maximumHeight, 0.0);
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
         // If the rectangle does not span the equator, then the bounding box will be aligned with the tangent plane at the center of the rectangle.
         // If the rectangle does span the equator, then the bounding box will be aligned with the tangent plane to the equator at the longitudinal center of the rectangle.

@@ -77,10 +77,20 @@ defineSuite([
         expect(box.halfAxes).toEqual(Matrix3.ZERO);
     });
 
-    it('fromEllipsoidRectangle sets correct default heights', function() {
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+    it('fromRectangle sets correct default ellipsoid', function() {
+        var rectangle = new Rectangle(-0.9, -1.2, 0.5, 0.7);
+        var box1 = OrientedBoundingBox.fromRectangle(rectangle, 0.0, 0.0);
+        var box2 = OrientedBoundingBox.fromRectangle(rectangle, 0.0, 0.0, Ellipsoid.WGS84);
+
+        expect(box1.center).toEqualEpsilon(box2.center, CesiumMath.EPSILON15);
+
+        var rotScale = Matrix3.ZERO;
+        expect(box1.halfAxes).toEqualEpsilon(box2.halfAxes, CesiumMath.EPSILON15);
+    });
+
+    it('fromRectangle sets correct default heights', function() {
         var rectangle = new Rectangle(0.0, 0.0, 0.0, 0.0);
-        var box = OrientedBoundingBox.fromEllipsoidRectangle(ellipsoid, rectangle);
+        var box = OrientedBoundingBox.fromRectangle(rectangle, undefined, undefined, Ellipsoid.UNIT_SPHERE);
 
         expect(box.center).toEqualEpsilon(new Cartesian3(1.0, 0.0, 0.0), CesiumMath.EPSILON15);
 
@@ -88,32 +98,25 @@ defineSuite([
         expect(box.halfAxes).toEqualEpsilon(rotScale, CesiumMath.EPSILON15);
     });
 
-    it('fromEllipsoidRectangle throws without ellipsoid', function() {
-        var rectangle = new Rectangle(0.0, 0.0, 0.0, 0.0);
+    it('fromRectangle throws without rectangle', function() {
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
         expect(function() {
-            OrientedBoundingBox.fromEllipsoidRectangle(undefined, rectangle, 0.0, 0.0);
+            OrientedBoundingBox.fromRectangle(undefined, 0.0, 0.0, ellipsoid);
         }).toThrowDeveloperError();
     });
 
-    it('fromEllipsoidRectangle throws without rectangle', function() {
+    it('fromRectangle throws with invalid rectangles', function() {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        expect(function() {
-            OrientedBoundingBox.fromEllipsoidRectangle(ellipsoid, undefined, 0.0, 0.0);
-        }).toThrowDeveloperError();
+        expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(1.0, -1.0, -1.0, 1.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
+        expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-1.0, 1.0, 1.0, -1.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
+        expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-1.0, 1.0, -2.0, 2.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
+        expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-2.0, 2.0, -1.0, 1.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
     });
 
-    it('fromEllipsoidRectangle throws with invalid rectangles', function() {
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        expect(function() { return OrientedBoundingBox.fromEllipsoidRectangle(ellipsoid, new Rectangle(1.0, -1.0, -1.0, 1.0), 0.0, 0.0); }).toThrowDeveloperError();
-        expect(function() { return OrientedBoundingBox.fromEllipsoidRectangle(ellipsoid, new Rectangle(-1.0, 1.0, 1.0, -1.0), 0.0, 0.0); }).toThrowDeveloperError();
-        expect(function() { return OrientedBoundingBox.fromEllipsoidRectangle(ellipsoid, new Rectangle(-1.0, 1.0, -2.0, 2.0), 0.0, 0.0); }).toThrowDeveloperError();
-        expect(function() { return OrientedBoundingBox.fromEllipsoidRectangle(ellipsoid, new Rectangle(-2.0, 2.0, -1.0, 1.0), 0.0, 0.0); }).toThrowDeveloperError();
-    });
-
-    it('fromEllipsoidRectangle creates an OrientedBoundingBox without a result parameter', function() {
+    it('fromRectangle creates an OrientedBoundingBox without a result parameter', function() {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var rectangle = new Rectangle(0.0, 0.0, 0.0, 0.0);
-        var box = OrientedBoundingBox.fromEllipsoidRectangle(ellipsoid, rectangle, 0.0, 0.0);
+        var box = OrientedBoundingBox.fromRectangle(rectangle, 0.0, 0.0, ellipsoid);
 
         expect(box.center).toEqualEpsilon(new Cartesian3(1.0, 0.0, 0.0), CesiumMath.EPSILON15);
 
@@ -121,11 +124,11 @@ defineSuite([
         expect(box.halfAxes).toEqualEpsilon(rotScale, CesiumMath.EPSILON15);
     });
 
-    it('fromEllipsoidRectangle creates an OrientedBoundingBox with a result parameter', function() {
+    it('fromRectangle creates an OrientedBoundingBox with a result parameter', function() {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var rectangle = new Rectangle(0.0, 0.0, 0.0, 0.0);
         var result = new OrientedBoundingBox();
-        var box = OrientedBoundingBox.fromEllipsoidRectangle(ellipsoid, rectangle, 0.0, 0.0, result);
+        var box = OrientedBoundingBox.fromRectangle(rectangle, 0.0, 0.0, ellipsoid, result);
         expect(box).toBe(result);
 
         expect(box.center).toEqualEpsilon(new Cartesian3(1.0, 0.0, 0.0), CesiumMath.EPSILON15);
@@ -134,7 +137,7 @@ defineSuite([
         expect(box.halfAxes).toEqualEpsilon(rotScale, CesiumMath.EPSILON15);
     });
 
-    it('fromEllipsoidRectangle for interesting, degenerate, and edge-case rectangles', function() {
+    it('fromRectangle for interesting, degenerate, and edge-case rectangles', function() {
         var d45 = CesiumMath.PI_OVER_FOUR;
         var d90 = CesiumMath.PI_OVER_TWO;
         var d135 = 3 * CesiumMath.PI_OVER_FOUR;
@@ -142,51 +145,51 @@ defineSuite([
 
         var box;
 
-        box = OrientedBoundingBox.fromEllipsoidRectangle(Ellipsoid.UNIT_SPHERE,new Rectangle(0.0, 0.0, 0.0, 0.0), 0.0, 0.0);
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(0.0, 0.0, 0.0, 0.0), 0.0, 0.0, Ellipsoid.UNIT_SPHERE);
         expect(box.center).toEqualEpsilon(new Cartesian3(1.0, 0.0, 0.0), CesiumMath.EPSILON15);
         expect(box.halfAxes).toEqualEpsilon(Matrix3.ZERO, CesiumMath.EPSILON15);
 
-        box = OrientedBoundingBox.fromEllipsoidRectangle(Ellipsoid.UNIT_SPHERE, new Rectangle(d180, 0.0, -d180, 0.0), 0.0, 0.0);
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(d180, 0.0, -d180, 0.0), 0.0, 0.0, Ellipsoid.UNIT_SPHERE);
         expect(box.center).toEqualEpsilon(new Cartesian3(-1.0, 0.0, 0.0), CesiumMath.EPSILON15);
         expect(box.halfAxes).toEqualEpsilon(Matrix3.ZERO, CesiumMath.EPSILON15);
 
-        box = OrientedBoundingBox.fromEllipsoidRectangle(Ellipsoid.UNIT_SPHERE, new Rectangle(d180, 0.0, d180, 0.0), 0.0, 0.0);
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(d180, 0.0, d180, 0.0), 0.0, 0.0, Ellipsoid.UNIT_SPHERE);
         expect(box.center).toEqualEpsilon(new Cartesian3(-1.0, 0.0, 0.0), CesiumMath.EPSILON15);
         expect(box.halfAxes).toEqualEpsilon(Matrix3.ZERO, CesiumMath.EPSILON15);
 
-        box = OrientedBoundingBox.fromEllipsoidRectangle(Ellipsoid.UNIT_SPHERE, new Rectangle(0.0, d90, 0.0, d90), 0.0, 0.0);
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(0.0, d90, 0.0, d90), 0.0, 0.0, Ellipsoid.UNIT_SPHERE);
         expect(box.center).toEqualEpsilon(new Cartesian3(0.0, 0.0, 1.0), CesiumMath.EPSILON15);
         expect(box.halfAxes).toEqualEpsilon(Matrix3.ZERO, CesiumMath.EPSILON15);
 
-        box = OrientedBoundingBox.fromEllipsoidRectangle(Ellipsoid.UNIT_SPHERE, new Rectangle(0.0, 0.0, d180, 0.0), 0.0, 0.0);
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(0.0, 0.0, d180, 0.0), 0.0, 0.0, Ellipsoid.UNIT_SPHERE);
         expect(box.center).toEqualEpsilon(new Cartesian3(0.0, 0.5, 0.0), CesiumMath.EPSILON15);
         expect(box.halfAxes).toEqualEpsilon(new Matrix3(-1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0), CesiumMath.EPSILON15);
 
-        box = OrientedBoundingBox.fromEllipsoidRectangle(Ellipsoid.UNIT_SPHERE, new Rectangle(-d90, -d90, d90, d90), 0.0, 0.0);
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(-d90, -d90, d90, d90), 0.0, 0.0, Ellipsoid.UNIT_SPHERE);
         expect(box.center).toEqualEpsilon(new Cartesian3(0.5, 0.0, 0.0), CesiumMath.EPSILON15);
         expect(box.halfAxes).toEqualEpsilon(new Matrix3(0.0, 0.0, 0.5, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0), CesiumMath.EPSILON15);
 
-        box = OrientedBoundingBox.fromEllipsoidRectangle(Ellipsoid.UNIT_SPHERE, new Rectangle(-d90, -d45, d90, d90), 0.0, 0.0);
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(-d90, -d45, d90, d90), 0.0, 0.0, Ellipsoid.UNIT_SPHERE);
         expect(box.center).toEqualEpsilon(new Cartesian3(0.5, 0.0, 0.5 * (1.0 - Math.SQRT1_2)), CesiumMath.EPSILON15);
         expect(box.halfAxes).toEqualEpsilon(new Matrix3(0.0, 0.0, 0.5, 1.0, 0.0, 0.0, 0.0, 0.5 * (1.0 + Math.SQRT1_2), 0.0), CesiumMath.EPSILON15);
 
-        box = OrientedBoundingBox.fromEllipsoidRectangle(Ellipsoid.UNIT_SPHERE, new Rectangle(-d45, 0.0, d45, 0.0), 0.0, 0.0);
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(-d45, 0.0, d45, 0.0), 0.0, 0.0, Ellipsoid.UNIT_SPHERE);
         expect(box.center).toEqualEpsilon(new Cartesian3((1.0 + Math.SQRT1_2) / 2.0, 0.0, 0.0), CesiumMath.EPSILON15);
         expect(box.halfAxes).toEqualEpsilon(new Matrix3(0.0, 0.0, 0.5 * (1.0 - Math.SQRT1_2), Math.SQRT1_2, 0.0, 0.0, 0.0, 0.0, 0.0), CesiumMath.EPSILON15);
 
-        box = OrientedBoundingBox.fromEllipsoidRectangle(Ellipsoid.UNIT_SPHERE, new Rectangle(d135, 0.0, -d135, 0.0), 0.0, 0.0);
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(d135, 0.0, -d135, 0.0), 0.0, 0.0, Ellipsoid.UNIT_SPHERE);
         expect(box.center).toEqualEpsilon(new Cartesian3(-(1.0 + Math.SQRT1_2) / 2.0, 0.0, 0.0), CesiumMath.EPSILON15);
         expect(box.halfAxes).toEqualEpsilon(new Matrix3(0.0, 0.0, -0.5 * (1.0 - Math.SQRT1_2), -Math.SQRT1_2, 0.0, 0.0, 0.0, 0.0, 0.0), CesiumMath.EPSILON15);
 
-        box = OrientedBoundingBox.fromEllipsoidRectangle(Ellipsoid.UNIT_SPHERE, new Rectangle(0.0, -d45, 0.0, d45), 0.0, 0.0);
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(0.0, -d45, 0.0, d45), 0.0, 0.0, Ellipsoid.UNIT_SPHERE);
         expect(box.center).toEqualEpsilon(new Cartesian3((1.0 + Math.SQRT1_2) / 2.0, 0.0, 0.0), CesiumMath.EPSILON15);
         expect(box.halfAxes).toEqualEpsilon(new Matrix3(0.0, 0.0, 0.5 * (1.0 - Math.SQRT1_2), 0.0, 0.0, 0.0, 0.0, Math.SQRT1_2, 0.0), CesiumMath.EPSILON15);
 
-        box = OrientedBoundingBox.fromEllipsoidRectangle(Ellipsoid.UNIT_SPHERE, new Rectangle(-d90, 0.0, d90, 0.0), 0.0, 0.0);
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(-d90, 0.0, d90, 0.0), 0.0, 0.0, Ellipsoid.UNIT_SPHERE);
         expect(box.center).toEqualEpsilon(new Cartesian3(0.5, 0.0, 0.0), CesiumMath.EPSILON15);
         expect(box.halfAxes).toEqualEpsilon(new Matrix3(0.0, 0.0, 0.5, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0), CesiumMath.EPSILON15);
 
-        box = OrientedBoundingBox.fromEllipsoidRectangle(Ellipsoid.UNIT_SPHERE, new Rectangle(0.0, -d90, 0.0, d90), 0.0, 0.0);
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(0.0, -d90, 0.0, d90), 0.0, 0.0, Ellipsoid.UNIT_SPHERE);
         expect(box.center).toEqualEpsilon(new Cartesian3(0.5, 0.0, 0.0), CesiumMath.EPSILON15);
         expect(box.halfAxes).toEqualEpsilon(new Matrix3(0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0), CesiumMath.EPSILON15);
     });

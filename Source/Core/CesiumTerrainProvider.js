@@ -428,7 +428,7 @@ define([
         if (rectangle.width < CesiumMath.PI_OVER_TWO + CesiumMath.EPSILON5) {
             // Here, rectangle.width < pi/2, and rectangle.height < pi
             // (though it would still work with rectangle.width up to pi)
-            orientedBoundingBox = OrientedBoundingBox.fromEllipsoidRectangle(provider._tilingScheme.ellipsoid, rectangle, minimumHeight, maximumHeight);
+            orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, minimumHeight, maximumHeight, provider._tilingScheme.ellipsoid);
         }
 
         return new QuantizedMeshTerrainData({
