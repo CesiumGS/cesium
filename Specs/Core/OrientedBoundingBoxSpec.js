@@ -111,6 +111,10 @@ defineSuite([
         expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-1.0, 1.0, 1.0, -1.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
         expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-1.0, 1.0, -2.0, 2.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
         expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-2.0, 2.0, -1.0, 1.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
+        expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-2.0, -2.0, 2.0, 1.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
+        expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-2.0, -2.0, 1.0, 2.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
+        expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-1.0, -2.0, 2.0, 2.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
+        expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-2.0, -1.0, 2.0, 2.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
     });
 
     it('fromRectangle creates an OrientedBoundingBox without a result parameter', function() {
