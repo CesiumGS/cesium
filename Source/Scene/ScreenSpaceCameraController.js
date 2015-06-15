@@ -501,15 +501,13 @@ define([
 
                 if (mode === SceneMode.SCENE2D) {
                     var worldPosition = camera.getPickRay(start, scratchZoomPickRay).origin;
-                    var endPosition = camera.getPickRay(end, scratchZoomEndRay).origin;
+                    var endPosition = camera.position;
 
                     var direction = Cartesian3.subtract(worldPosition, endPosition, scratchZoomDirection);
                     Cartesian3.normalize(direction, direction);
 
-                    var zScale = Math.min(1.0, Math.max(0.25, (1.0 - camera.getMagnitude() / camera.position.z)));
-                    var widthScale = Math.abs(start.x - (canvas.clientWidth * 0.5)) / canvas.clientWidth * 0.5;
-                    var distanceScale = zScale + widthScale;
-                    camera.move(direction, distance * distanceScale);
+                    var d = Cartesian3.distance(worldPosition, endPosition) * distance / (camera.getMagnitude() * 0.5);
+                    camera.move(direction, d);
                 } else {
                     var rho = Cartesian3.magnitude(camera.position);
                     var rotateRate = object._rotateFactor * (rho - object._rotateRateRangeAdjustment);
