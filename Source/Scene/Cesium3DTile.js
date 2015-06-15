@@ -50,7 +50,7 @@ define([
     "use strict";
 
     /**
-     * @private
+     * DOC_TBA
      */
     var Cesium3DTile = function(baseUrl, header, parent) {
         this._header = header;
@@ -80,32 +80,45 @@ define([
         this._contentsBoundingSphere = rs;
 
         /**
+         * DOC_TBA
+         *
          * @readonly
          */
         this.geometricError = header.geometricError;
 
 // TODO: use default for a smaller tree.json?  Or inherit from parent.  Same for "type" and others.
         /**
+         * DOC_TBA
+         *
          * @readonly
          */
         this.refine = (header.refine === 'replace') ? Cesium3DTileRefine.REPLACE : Cesium3DTileRefine.ADD;
 
         /**
+         * DOC_TBA
+         *
          * @type {Array}
+         * @readonly
          */
         this.children = [];
 
         /**
+         * DOC_TBA
+         *
          * @readonly
          */
         this.parent = parent;
 
         /**
+         * DOC_TBA
+         *
          * @readonly
          */
         this.numberOfChildrenWithoutContent = defined(header.children) ? header.children.length : 0;
 
         /**
+         * DOC_TBA
+         *
          * @type {Promise}
          * @readonly
          */
@@ -141,8 +154,25 @@ define([
 //TODO: that.parent.numberOfChildrenWithoutContent will never reach zero and therefore that.parent will never refine
         });
 
-        // Members that are updated every frame for rendering optimizations
+        /**
+         * DOC_TBA
+         *
+         * @type {Boolean}
+         *
+         * @default true
+         */
+        this.show = true;
+
+        // Members that are updated every frame for rendering optimizations:
+
+        /**
+         * @private
+         */
         this.distanceToCamera = 0;
+
+        /**
+         * @private
+         */
         this.parentFullyVisible = false;
 
         this._debugBox = undefined;
@@ -153,6 +183,19 @@ define([
 
     defineProperties(Cesium3DTile.prototype, {
         /**
+         * DOC_TBA
+         *
+         * @readonly
+         */
+        content : {
+            get : function() {
+                return this._content;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         *
          * @type {Promise}
          * @readonly
          */
@@ -163,22 +206,37 @@ define([
         }
     });
 
+    /**
+     * DOC_TBA
+     */
     Cesium3DTile.prototype.isReady = function() {
         return this._content.state === Cesium3DTileContentState.READY;
     };
 
+    /**
+     * DOC_TBA
+     */
     Cesium3DTile.prototype.isContentUnloaded = function() {
         return this._content.state === Cesium3DTileContentState.UNLOADED;
     };
 
+    /**
+     * DOC_TBA
+     */
     Cesium3DTile.prototype.requestContent = function() {
         this._content.request();
     };
 
+    /**
+     * DOC_TBA
+     */
     Cesium3DTile.prototype.visibility = function(cullingVolume) {
         return cullingVolume.computeVisibility(this._boundingSphere);
     };
 
+    /**
+     * DOC_TBA
+     */
     Cesium3DTile.prototype.contentsVisibility = function(cullingVolume) {
         if (!defined(this._contentsBoundingSphere)) {
             return Intersect.INSIDE;
@@ -187,6 +245,9 @@ define([
         return cullingVolume.computeVisibility(this._contentsBoundingSphere);
     };
 
+    /**
+     * DOC_TBA
+     */
     Cesium3DTile.prototype.distanceToTile = function(frameState) {
         return this._tileBoundingBox.distanceToCamera(frameState);
     };
@@ -273,21 +334,35 @@ define([
         }
     }
 
+    /**
+     * DOC_TBA
+     */
     Cesium3DTile.prototype.update = function(owner, context, frameState, commandList) {
-        applyDebugSettings(this, owner, context, frameState, commandList);
-        this._content.update(owner, context, frameState, commandList);
+        if (this.show) {
+            applyDebugSettings(this, owner, context, frameState, commandList);
+            this._content.update(owner, context, frameState, commandList);
+        }
     };
 
     var scratchCommandList = [];
 
+    /**
+     * DOC_TBA
+     */
     Cesium3DTile.prototype.process = function(owner, context, frameState) {
         this._content.update(owner, context, frameState, scratchCommandList);
     };
 
+    /**
+     * DOC_TBA
+     */
     Cesium3DTile.prototype.isDestroyed = function() {
         return false;
     };
 
+    /**
+     * DOC_TBA
+     */
     Cesium3DTile.prototype.destroy = function() {
         this._content = this._content && this._content.destroy();
         this._debugBox = this._debugBox && this._debugBox.destroy();

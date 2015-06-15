@@ -136,6 +136,12 @@ define([
         this.loadProgress = new Event();
         this._loadProgressEventsToRaise = [];
 
+        /**
+         * DOC_TBA
+         */
+        this.tileReady = new Event();
+        this._tileReadyEventsToRaise = [];
+
         var that = this;
 
         loadJson(baseUrl + 'tiles.json').then(function(tree) {
@@ -237,7 +243,7 @@ define([
     function requestContent(tiles3D, tile) {
         var stats = tiles3D._statistics;
         ++stats.numberOfPendingRequests;
-        addTileLoadEvent(tiles3D);
+        addLoadProgressEvent(tiles3D);
 
         tile.requestContent();
         var removeFunction = removeFromProcessingQueue(tiles3D, tile);
@@ -399,7 +405,7 @@ define([
             var stats = tiles3D._statistics;
             --stats.numberOfPendingRequests;
             ++stats.numberProcessing;
-            addTileLoadEvent(tiles3D);
+            addLoadProgressEvent(tiles3D);
         };
     }
 
@@ -409,7 +415,18 @@ define([
             tiles3D._processingQueue.splice(index, 1);
 
             --tiles3D._statistics.numberProcessing;
-            addTileLoadEvent(tiles3D);
+            addLoadProgressEvent(tiles3D);
+
+            // Check isReady so this event is not raised if the request failed
+            if (tile.isReady()) {
+                if (tiles3D.tileReady.numberOfListeners > 0) {
+                    tiles3D._tileReadyEventsToRaise.push(tile);
+                    // Hide this frame in case, for example, to avoid flashing the
+                    // initial color if the event changes the tile's color
+                    tile.show = false;
+// TODO: we could add a new state instead of using a show property
+                }
+            }
         };
     }
 
@@ -487,7 +504,7 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function addTileLoadEvent(tiles3D) {
+    function addLoadProgressEvent(tiles3D) {
         if (tiles3D.loadProgress.numberOfListeners > 0) {
             var stats = tiles3D._statistics;
             tiles3D._loadProgressEventsToRaise.push({
@@ -499,12 +516,11 @@ define([
 
     function evenMoreComplicated(tiles3D, numberOfPendingRequests, numberProcessing) {
         return function() {
-// TODO: also pass the tile and state?
             tiles3D.loadProgress.raiseEvent(numberOfPendingRequests, numberProcessing);
         };
     }
 
-    function raiseEvents(tiles3D, frameState) {
+    function raiseLoadProgressEvents(tiles3D, frameState) {
         var eventsToRaise = tiles3D._loadProgressEventsToRaise;
         var length = eventsToRaise.length;
         for (var i = 0; i < length; ++i) {
@@ -512,6 +528,25 @@ define([
             var numberProcessing = eventsToRaise[i].numberProcessing;
 
             frameState.afterRender.push(evenMoreComplicated(tiles3D, numberOfPendingRequests, numberProcessing));
+        }
+        eventsToRaise.length = 0;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    function evenMoreComplicated2(tiles3D, tile) {
+        return function() {
+            tiles3D.tileReady.raiseEvent(tile);
+        };
+    }
+
+    function raiseTileReadyEvents(tiles3D, frameState) {
+        var eventsToRaise = tiles3D._tileReadyEventsToRaise;
+        var length = eventsToRaise.length;
+        for (var i = 0; i < length; ++i) {
+            var tile = eventsToRaise[i];
+            tile.show = true;
+            frameState.afterRender.push(evenMoreComplicated2(tiles3D, tile));
         }
         eventsToRaise.length = 0;
     }
@@ -544,7 +579,8 @@ define([
         // Events are raised (added to the afterRender queue) here since promises
         // may resolve outside of the update loop that then raise events, e.g.,
         // model's readyPromise.
-        raiseEvents(this, frameState);
+        raiseLoadProgressEvents(this, frameState);
+        raiseTileReadyEvents(this, frameState);
 
         showStats(this, isPick);
     };
