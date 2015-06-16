@@ -134,6 +134,12 @@ define([
             startHeading = 0.0;
         }
 
+        if (heading > startHeading + Math.PI) {
+            startHeading += CesiumMath.TWO_PI;
+        } else if (heading < startHeading - Math.PI) {
+            startHeading -= CesiumMath.TWO_PI;
+        }
+
         var destCart = ellipsoid.cartesianToCartographic(destination, scratchEndCart);
         if (destCart.height <= 0.0) {
             destCart.height = startCart.height;
@@ -159,7 +165,7 @@ define([
 
             camera.setView({
                 positionCartographic : position,
-                //heading : CesiumMath.lerp(startHeading, heading, time),
+                heading : CesiumMath.lerp(startHeading, heading, time),
                 pitch : CesiumMath.lerp(startPitch, pitch, time),
                 //roll : CesiumMath.lerp(startRoll, roll, time)
             });
