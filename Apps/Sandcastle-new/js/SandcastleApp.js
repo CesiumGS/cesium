@@ -438,24 +438,6 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       PubSub.subscribe('LOAD FRAME', this.loadFrame);
     },
 
-    openNewWindow: function(msg, data){
-      var baseHref = window.location.href;
-      var pos = baseHref.lastIndexOf('/');
-      baseHref = baseHref.substring(0, pos) + '/';
-      var frameDoc = this.getDOMNode().contentWindow.document;
-      var baseElement = frameDoc.createElement('base');
-      baseElement.setAttribute("href", baseHref);
-      frameDoc.head.appendChild(baseElement);
-
-      var htmlBlob = new Blob([frameDoc.children[0].outerHTML], {
-            'type' : 'text/html;charset=utf-8',
-            'endings' : 'native'
-      });
-      var htmlBlobURL = URL.createObjectURL(htmlBlob);
-      window.open(htmlBlobURL);
-      window.focus();
-    },
-
     refreshFrame: function(){
       this.getDOMNode().contentWindow.location.reload();
       var doc = '<html><head><script src="../../Build/Cesium/Cesium.js"></script><script type="text/javascript" src="./Sandcastle-header.js"></script><style>@import url(../../Build/Cesium/Widgets/widgets.css);\nhtml, body, #cesiumContainer {width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;}\n</style><base href="http://localhost:3000/Apps/Sandcastle-new/"></base></head><body class="sandcastle-loading"><script type="text/javascript" src="./Sandcastle-client.js"></script></body></html>';
@@ -886,8 +868,14 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
             + '<head>' + '\n'
             + '<meta name ="description" content="' + description + '">' + '\n'
             + '<title>' + demoName + '</title>' + '\n'
-            + '<script src="../../Build/Cesium/Cesium.js"></script>' + '\n'
             + '<script type="text/javascript" src="./Sandcastle-header.js"></script>' + '\n'
+            + '<script type="text/javascript" src="../../ThirdParty/requirejs-2.1.9/require.js"></script>' + '\n'
+            + '<script type="text/javascript">' + '\n'
+            + 'require.config({' + '\n'
+            + '   baseUrl: \'../../Source\',' + '\n'
+            + '   waitSeconds: 60' + '\n'
+            + '});' + '\n'
+            + '</script>' + '\n'
             + '<style>@import url(../../Build/Cesium/Widgets/widgets.css);\nhtml, body, #cesiumContainer {width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;}\n</style>' + '\n'
             + '</head><body class="sandcastle-loading">' + '\n'
             + '<style>' + '\n'
