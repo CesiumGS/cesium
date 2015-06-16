@@ -21,8 +21,7 @@ define([
         '../Core/TileProviderError',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/when',
-        './ImageryProvider',
-        './GetFeatureInfoFormat'
+        './ImageryProvider'
     ], function(
         Cartesian2,
         Cartesian3,
@@ -45,8 +44,7 @@ define([
         TileProviderError,
         WebMercatorTilingScheme,
         when,
-        ImageryProvider,
-        GetFeatureInfoFormat) {
+        ImageryProvider) {
     "use strict";
 
     /**
@@ -72,8 +70,8 @@ define([
      *     <li><code>{southProjected}</code>: The Southern edge of the tile in projected coordinates of the tiling scheme.</li>
      *     <li><code>{eastProjected}</code>: The Eastern edge of the tile in projected coordinates of the tiling scheme.</li>
      *     <li><code>{northProjected}</code>: The Northern edge of the tile in projected coordinates of the tiling scheme.</li>
-     *     <li><code>{width}</code>: The width of a tile in pixels.</li>
-     *     <li><code>{height}</code>: The height of a tile in pixels.</li>
+     *     <li><code>{width}</code>: The width of each tile in pixels.</li>
+     *     <li><code>{height}</code>: The height of each tile in pixels.</li>
      * </ul>
      * @param {String} [options.pickFeaturesUrl] The URL template to use to pick features.  If this property is not specified,
      *                 {@see UrlTemplateImageryProvider#pickFeatures} will immediately returned undefined, indicating no
@@ -211,8 +209,8 @@ define([
          *  <li> <code>{southProjected}</code>: The Southern edge of the tile in projected coordinates of the tiling scheme.</li>
          *  <li> <code>{eastProjected}</code>: The Eastern edge of the tile in projected coordinates of the tiling scheme.</li>
          *  <li> <code>{northProjected}</code>: The Northern edge of the tile in projected coordinates of the tiling scheme.</li>
-         *  <li> <code>{width}</code>: The width of a tile in pixels.</li>
-         *  <li> <code>{height}</code>: The height of a tile in pixels.</li>
+         *  <li> <code>{width}</code>: The width of each tile in pixels.</li>
+         *  <li> <code>{height}</code>: The height of each tile in pixels.</li>
          * </ul>
          * @memberof UrlTemplateImageryProvider.prototype
          * @type {String}
@@ -221,6 +219,31 @@ define([
         url : {
             get : function() {
                 return this._url;
+            }
+        },
+
+        /**
+         * Gets the URL template to use to use to pick features.  If this property is not specified,
+         * {@see UrlTemplateImageryProvider#pickFeatures} will immediately returned undefined, indicating no
+         * features picked.  The URL template supports all of the keywords supported by the
+         * {@see UrlTemplateImageryProvider#url} property, plus the following:
+         * <ul>
+         *     <li><code>{i}</code>: The pixel column (horizontal coordinate) of the picked position, where the Westernmost pixel is 0.</li>
+         *     <li><code>{j}</code>: The pixel row (vertical coordinate) of the picked position, where the Northernmost pixel is 0.</li>
+         *     <li><code>{reverseI}</code>: The pixel column (horizontal coordinate) of the picked position, where the Easternmost pixel is 0.</li>
+         *     <li><code>{reverseJ}</code>: The pixel row (vertical coordinate) of the picked position, where the Southernmost pixel is 0.</li>
+         *     <li><code>{longitudeDegrees}</code>: The longitude of the picked position in degrees.</li>
+         *     <li><code>{latitudeDegrees}</code>: The latitude of the picked position in degrees.</li>
+         *     <li><code>{longitudeProjected}</code>: The longitude of the picked position in the projected coordinates of the tiling scheme.</li>
+         *     <li><code>{latitudeProjected}</code>: The latitude of the picked position in the projected coordinates of the tiling scheme.</li>
+         *     <li><code>{format}</code>: The format in which to get feature information, as specified in the {@see GetFeatureInfoFormat}.</li>
+         * </ul>
+         * @type {String}
+         * @readonly
+         */
+        pickFeaturesUrl : {
+            get : function() {
+                return this._pickFeaturesUrl;
             }
         },
 
