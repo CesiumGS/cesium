@@ -43,7 +43,6 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
     componentDidMount: function() {
       var isTextArea = this.props.forceTextArea;
       if (!isTextArea) {
-        console.log(this.props.readOnly);
         this.editor = CodeMirror.fromTextArea(this.refs.editor.getDOMNode(), this.props);
         this.editor.on('change', this.handleChange);
         if(this.props.mode === 'javascript')
@@ -67,6 +66,21 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
 
     },
 
+    getScriptFromEditor: function(){
+      return 'function startup(Cesium) {\n' +
+       '    "use strict";\n' +
+       '//Sandcastle_Begin\n' +
+       this.editor.getValue() +
+       '//Sandcastle_End\n' +
+       '    Sandcastle.finishedLoading();\n' +
+       '}\n' +
+       'if (typeof Cesium !== "undefined") {\n' +
+       '    startup(Cesium);\n' +
+       '} else if (typeof require === "function") {\n' +
+       '    require(["Cesium"], startup);\n' +
+       '}\n';
+    },
+
     clearErrorsAddHints: function(){
       var line;
       var i;
@@ -85,12 +99,12 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
         this.editor.removeLineClass(line, 'text');
       }
       var options = JSON.parse(JSON.stringify(sandcastleJsHintOptions));
-      if (!JSHINT(this.editor.getValue(), options)) {
+      if (!JSHINT(this.getScriptFromEditor(), options)) {
         var hints = JSHINT.errors;
         for (i = 0, len = hints.length; i < len; ++i) {
           var hint = hints[i];
           if (hint !== null && hint.reason !== undefined && hint.line > 0) {
-            line = this.editor.setGutterMarker(hint.line-1, 'hintGutter', this.makeLabel(hint.reason, 'hintMarker'));
+            line = this.editor.setGutterMarker(hint.line-4, 'hintGutter', this.makeLabel(hint.reason, 'hintMarker'));
             this.editor.addLineClass(line, 'text', 'hintLine');
             this.errorLines.push(line);
           }
