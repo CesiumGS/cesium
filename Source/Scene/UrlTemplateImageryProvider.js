@@ -196,7 +196,7 @@ define([
             if (typeof part === 'string') {
                 url += part;
             } else {
-                url += part(imageryProvider, x, y, level);
+                url += encodeURIComponent(part(imageryProvider, x, y, level));
             }
         }
 
