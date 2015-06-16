@@ -878,14 +878,14 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       this.cssCode = '';
     },
 
-    getDemoHTML: function(){
+    getDemoHTML: function(title, desc){
       var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
-      var baseHref = window.location.href;
-      var pos = baseHref.lastIndexOf('/');
-      baseHref = baseHref.substring(0, pos) + '/';
+      var description = desc?desc: 'Cesium Demo';
+      var demoName = title?title: 'Cesium Demo';
       return '<html>' + '\n'
             + '<head>' + '\n'
-            + '<base href="' + baseHref + '"></base>' + '\n'
+            + '<meta name ="description" content="' + description + '">' + '\n'
+            + '<title>' + demoName + '</title>' + '\n'
             + '<script src="../../Build/Cesium/Cesium.js"></script>' + '\n'
             + '<script type="text/javascript" src="./Sandcastle-header.js"></script>' + '\n'
             + '<style>@import url(../../Build/Cesium/Widgets/widgets.css);\nhtml, body, #cesiumContainer {width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;}\n</style>' + '\n'
@@ -896,15 +896,17 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
             + this.htmlCode + '\n'
             + '<script type="text/javascript">' + '\n'
             + this.getScriptFromEditor(isFirefox, this.jsCode) + '\n'
-            + '</script></body></html';
+            + '</script></body></html>';
     },
 
     exportStandalone: function(){
       var data;
       var link = document.createElement('a');
       data = this.getDemoHTML();
-      link.setAttribute('href', 'data:text/html;charset=utf-8', encodeURIComponent(data));
+      link.setAttribute('href', 'data:text/html;charset=utf-8,' +  encodeURIComponent(data));
       link.setAttribute('download', 'export.html');
+      link.setAttribute('download', data.title + '.html');
+      link.style.display = 'none';
       if (document.createEvent) {
         var event = document.createEvent('MouseEvents');
         event.initEvent('click', true, true);
@@ -913,17 +915,33 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       else {
         link.click();
       }
-      var octetBlob = new Blob([data], {
-        'type': 'application/octet-stream',
-        'endings': 'native'
-      });
-      var octetBlobURL = URL.createObjectURL(octetBlob);
-      // window.open(octetBlobURL);
+    },
+
+    exportHTML: function(msg, data){
+      var html = this.getDemoHTML(data.title, data.description);
+      console.log(html);
+      var link = document.createElement('a');
+      link.setAttribute('href', 'data:text/html;charset=utf-8,' +  encodeURIComponent(html));
+      link.setAttribute('download', data.title + '.html');
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      if (document.createEvent) {
+        var event = document.createEvent('MouseEvents');
+        event.initEvent('click', true, true);
+        link.dispatchEvent(event);
+      }
+      else {
+        link.click();
+      }
     },
 
     openNewWindow: function(){
       var data;
       data = this.getDemoHTML();
+      var baseHref = window.location.href;
+      var pos = baseHref.lastIndexOf('/');
+      baseHref = baseHref.substring(0, pos) + '/';
+      data = data.replace('<head>', '<head>\n   <base href="' + baseHref + '"></base>');
       var htmlBlob = new Blob([data], {
         'type': 'text/html;charset=utf-8',
         'endings': 'native'
@@ -945,6 +963,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       PubSub.subscribe('UPDATE CSS', this.loadUserCode);
       PubSub.subscribe('EXPORT STANDALONE', this.exportStandalone);
       PubSub.subscribe('NEW WINDOW', this.openNewWindow);
+      PubSub.subscribe('SAVE HTML', this.exportHTML);
     },
 
     componentDidMount: function(){
@@ -1039,6 +1058,79 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
           <SandcastleHeader />
           <SandcastleBody demo={this.demoName}/>
           <SandcastleDocs />
+          <SaveModal />
+        </div>
+      );
+    }
+  });
+
+  var SaveModal = React.createClass({
+    getInitialState: function(){
+      return {titleText: '', descriptionText: ''};
+    },
+
+    saveHTML: function(){
+      var demoName = this.state.titleText;
+      if(demoName === '')
+      {
+        // Required field. Notify the user
+        $($('#titleText').parent().get(0)).addClass('has-error');
+        $('#titleText').tooltip({title: 'Required Field!',trigger:'click manual'});
+        $('#titleText').tooltip('show');
+        return;
+      }
+      else
+      {
+        $($('#titleText').parent().get(0)).removeClass('has-error');
+        $('#titleText').tooltip('destroy');
+      }
+      var description = this.state.descriptionText;
+      var data = {};
+      data.title = demoName;
+      if(description !== ''){
+        data.description = description;
+      }
+      PubSub.publish('SAVE HTML', data);
+      $('#saveModal').modal('hide');
+    },
+
+    handleChange: function(event){
+      // this.setState({[event.target.id]: event.target.value});
+      // Since Chrome does not support the ES6 computed property names feature, use an anonymous function to return an object
+      this.setState(function(){
+        returnObj = {};
+        returnObj[this.target.id] = this.target.value;
+        return returnObj;
+      }.bind(event)());
+    },
+
+    render: function(){
+      return (
+        <div className="modal fade" id="saveModal" tabIndex="-1" role="dialog" aria-labelledby="saveModalLabel" aria-hidden="true">
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <button type="button" className="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 className="modal-title" id="saveModalLabel">Save as HTML</h4>
+              </div>
+              <div className="modal-body">
+                <form id="save_form">
+                  <div className="form-group" has-error>
+                    <label className="control-label" htmlFor="titleText">Title: *</label>
+                    <input type="text" className="form-control" id="titleText" placeholder="Title" onChange={this.handleChange}/>
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="descriptionText">Description:</label>
+                    <input type="text" className="form-control" id="descriptionText" placeholder="Description" onChange={this.handleChange} />
+                  </div>
+                </form>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" form="save_form" className="btn btn-primary" onClick={this.saveHTML}>Save</button>
+              </div>
+            </div>
+          </div>
         </div>
       );
     }
@@ -1126,7 +1218,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
                   <li className="dropdown" id="buttonShare">
                     <a href="#" className="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Share <span className="caret"></span></a>
                     <ul className="dropdown-menu" role="menu">
-                      <li><a href="#" onClick={this.exportStandalone}>Export as standalone</a></li>
+                      <li><a href="#" data-toggle="modal" data-target="#saveModal">Save as HTML</a></li>
                     </ul>
                   </li>
                   <li id="buttonGallery"><a href="#">Gallery</a></li>

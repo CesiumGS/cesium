@@ -138,6 +138,10 @@ ul + div.tab-content {
   display: block;
 }
 
+#saveModal .modal-dialog{
+  z-index: 1045;
+}
+
 /*# sourceMappingURL=main.css.map */
 @media screen and (max-width: 767px) {
   .codeContainer .alert{
