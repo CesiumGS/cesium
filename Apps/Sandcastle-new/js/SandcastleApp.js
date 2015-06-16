@@ -1114,6 +1114,9 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
                 <h4 className="modal-title" id="saveModalLabel">Save as HTML</h4>
               </div>
               <div className="modal-body">
+                <p>You must save the file to this folder: 
+                <code>Apps/Sandcastle/*.html</code>
+                </p>
                 <form id="save_form">
                   <div className="form-group" has-error>
                     <label className="control-label" htmlFor="titleText">Title: *</label>
