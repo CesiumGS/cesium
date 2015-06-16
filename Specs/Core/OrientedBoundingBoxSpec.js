@@ -117,6 +117,12 @@ defineSuite([
         expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-2.0, -1.0, 2.0, 2.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
     });
 
+    it('fromRectangle throws with non-revolution ellipsoids', function() {
+        var rectangle = new Rectangle(0.0, 0.0, 0.0, 0.0);
+        expect(function() { return OrientedBoundingBox.fromRectangle(rectangle, 0.0, 0.0, new Ellipsoid(1.01, 1.00, 1.01)); }).toThrowDeveloperError();
+        expect(function() { return OrientedBoundingBox.fromRectangle(rectangle, 0.0, 0.0, new Ellipsoid(1.00, 1.01, 1.01)); }).toThrowDeveloperError();
+    });
+
     it('fromRectangle creates an OrientedBoundingBox without a result parameter', function() {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var rectangle = new Rectangle(0.0, 0.0, 0.0, 0.0);

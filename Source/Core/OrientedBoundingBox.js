@@ -136,6 +136,7 @@ define([
      *
      * @exception {DeveloperError} rectangle.width must be between 0 and pi.
      * @exception {DeveloperError} rectangle.height must be between 0 and pi.
+     * @exception {DeveloperError} ellipsoid must be an ellipsoid of revolution (<code>radii.x == radii.y</code>)
      */
     OrientedBoundingBox.fromRectangle = function(rectangle, minimumHeight, maximumHeight, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -147,6 +148,9 @@ define([
         }
         if (rectangle.height < 0.0 || rectangle.height > CesiumMath.PI) {
             throw new DeveloperError('Rectangle height must be between 0 and pi');
+        }
+        if (defined(ellipsoid) && !CesiumMath.equalsEpsilon(ellipsoid.radii.x, ellipsoid.radii.y, CesiumMath.EPSILON15)) {
+            throw new DeveloperError('Ellipsoid must be an ellipsoid of revolution (radii.x == radii.y)');
         }
         //>>includeEnd('debug');
 
