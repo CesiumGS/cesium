@@ -417,6 +417,7 @@ define([
     var scratchPositionNormal = new Cartesian3();
     var scratchPickNormal = new Cartesian3();
     var scratchZoomAxis = new Cartesian3();
+    var scratchCameraPositionNormal = new Cartesian3();
 
     function handleZoom(object, startPosition, movement, zoomFactor, distanceMeasure, unitPositionDotDirection) {
         var percentage = 1.0;
@@ -467,6 +468,8 @@ define([
             object._zoomWorldPosition = Cartesian3.clone(pickedPosition, object._zoomWorldPosition);
         }
 
+        var zoomOnVector = mode === SceneMode.COLUMBUS_VIEW;
+
         if (mode === SceneMode.SCENE2D) {
             var worldPosition = object._zoomWorldPosition;
             var endPosition = camera.position;
@@ -477,24 +480,33 @@ define([
             var d = Cartesian3.distance(worldPosition, endPosition) * distance / (camera.getMagnitude() * 0.5);
             camera.move(direction, d * 0.5);
         } else if (mode === SceneMode.SCENE3D) {
-            var canvas = scene.canvas;
 
-            var centerPixel = scratchCenterPixel;
-            centerPixel.x = canvas.clientWidth / 2;
-            centerPixel.y = canvas.clientHeight / 2;
-            var centerPosition = pickGlobe(object, centerPixel, scratchCenterPosition);
-            var positionNormal = Cartesian3.normalize(centerPosition, scratchPositionNormal);
-            var pickedNormal = Cartesian3.normalize(object._zoomWorldPosition, scratchPickNormal);
-            var angle = Math.acos(Cartesian3.dot(pickedNormal, positionNormal));
-            var axis = Cartesian3.cross(pickedNormal, positionNormal, scratchZoomAxis);
+            var cameraPositionNormal = Cartesian3.normalize(camera.position, scratchCameraPositionNormal);
+            if (camera.positionCartographic.height < 3000.0 && Math.abs(Cartesian3.dot(camera.direction, cameraPositionNormal)) < 0.6) {
+                zoomOnVector = true;
+            } else {
+                var canvas = scene.canvas;
 
-            var denom = Math.abs(angle) > CesiumMath.toRadians(20.0) ? camera.positionCartographic.height * 0.75 : camera.positionCartographic.height - distance;
-            var scalar = distance / denom;
-            camera.rotate(axis, angle * scalar);
-        } else {
+                var centerPixel = scratchCenterPixel;
+                centerPixel.x = canvas.clientWidth / 2;
+                centerPixel.y = canvas.clientHeight / 2;
+                var centerPosition = pickGlobe(object, centerPixel, scratchCenterPosition);
+                var positionNormal = Cartesian3.normalize(centerPosition, scratchPositionNormal);
+                var pickedNormal = Cartesian3.normalize(object._zoomWorldPosition, scratchPickNormal);
+                var angle = Math.acos(Cartesian3.dot(pickedNormal, positionNormal));
+                var axis = Cartesian3.cross(pickedNormal, positionNormal, scratchZoomAxis);
+
+                var denom = Math.abs(angle) > CesiumMath.toRadians(20.0) ? camera.positionCartographic.height * 0.75 : camera.positionCartographic.height - distance;
+                var scalar = distance / denom;
+                camera.rotate(axis, angle * scalar);
+            }
+        }
+
+        if (zoomOnVector) {
             var ray;
-            if (Cartesian2.equals(startPosition, object._zoomMouseStart)) {
-                ray = camera.getPickRay(SceneTransforms.wgs84ToWindowCoordinates(scene, object._zoomWorldPosition, scratchZoomOffset), scratchZoomPickRay);
+            var zoomMouseStart = SceneTransforms.wgs84ToWindowCoordinates(scene, object._zoomWorldPosition, scratchZoomOffset);
+            if (mode !== SceneMode.COLUMBUS_VIEW && Cartesian2.equals(startPosition, object._zoomMouseStart) && defined(zoomMouseStart)) {
+                ray = camera.getPickRay(zoomMouseStart, scratchZoomPickRay);
             } else {
                 ray = camera.getPickRay(startPosition, scratchZoomPickRay);
             }
@@ -505,9 +517,7 @@ define([
             }
 
             camera.move(rayDirection, distance);
-        }
-
-        if (mode !== SceneMode.COLUMBUS_VIEW) {
+        } else {
             camera.zoomIn(distance);
         }
     }
