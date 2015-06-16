@@ -139,11 +139,10 @@ handler.setInputAction(function(movement) {
         if (building.getProperty('clicked')) {
             console.log('already clicked');
         } else {
-            var cc3did = building.getProperty('cc3did');
             var longitude = building.getProperty('longitude');
             var latitude = building.getProperty('latitude');
             
-            console.log(cc3did + ': (' + longitude + ', ' + latitude + ')');
+            console.log('(' + longitude + ', ' + latitude + ')');
             building.setProperty('clicked', true);
         }
     }
@@ -211,7 +210,6 @@ handler.setInputAction(function(movement) {
 /*
 city.tileReady.addEventListener(function(tile) {
     var content = tile.content;
-// TODO: use instanceof or check content type?
 // TODO: if this does anything async, e.g., call a REST API, then we need to check
 //       if the tile was unloaded before updating it.
 // TODO: if this does anything async, it could also set tile.show to false until
@@ -306,7 +304,6 @@ function changeColor(tile) {
 	tile.lastTimeColored = lastTimeColored;
 
     var content = tile.content;
-// TODO: use instanceof or check content type?
 
     // Is the tile a Batched 3D Model?
     if (content instanceof Cesium.B3dm3DTileContentProvider) {
@@ -316,6 +313,13 @@ function changeColor(tile) {
             for (var i = 0; i < length; ++i) {
                 var building = content.getModel(i);
                 var height = building.getProperty('height');
+
+                // Some heights are undefined; set them to zero.
+                height = Cesium.defaultValue(height, 0.0);
+                // Some heights are -1; set them to zero.
+                height = Math.max(height, 0.0);
+// TODO: we could also fix these server side
+
                 var index = Math.min(Math.floor(height / heightColors.length), heightColors.length - 1);
                 building.color = heightColors[index];
             }
