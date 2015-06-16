@@ -146,7 +146,7 @@ defineSuite([
             expect(provider.maximumLevel).toBeUndefined();
             expect(provider.minimumLevel).toBe(0);
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.rectangle).toEqual(rectangle);
+            expect(provider.rectangle).toEqualEpsilon(rectangle, CesiumMath.EPSILON14);
             expect(provider.tileDiscardPolicy).toBeUndefined();
 
             spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
