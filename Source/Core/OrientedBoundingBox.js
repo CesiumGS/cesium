@@ -191,7 +191,7 @@ define([
         perimeterSE.longitude = perimeterCE.longitude = perimeterNE.longitude = rectangle.east;
 
         // Compute XY extents using the rectangle at maximum height
-        perimeterNE.height = perimeterNW.height = perimeterSE.height = perimeterSW.height = perimeterNC.height = perimeterSC.height = maximumHeight;
+        perimeterNE.height = perimeterNC.height = perimeterNW.height = perimeterCW.height = perimeterSW.height = perimeterSC.height = perimeterSE.height = perimeterCE.height = maximumHeight;
 
         ellipsoid.cartographicArrayToCartesianArray(perimeterCartographicScratch, perimeterCartesianScratch);
         tangentPlane.projectPointsToNearestOnPlane(perimeterCartesianScratch, perimeterProjectedScratch);

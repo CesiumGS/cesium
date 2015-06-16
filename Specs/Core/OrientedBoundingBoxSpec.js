@@ -147,11 +147,40 @@ defineSuite([
         expect(box.halfAxes).toEqualEpsilon(rotScale, CesiumMath.EPSILON15);
     });
 
+    it('fromRectangle for rectangles with heights', function() {
+        var d90 = CesiumMath.PI_OVER_TWO;
+
+        var box;
+
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(0.0, 0.0, 0.0, 0.0), 1.0, 1.0, Ellipsoid.UNIT_SPHERE);
+        expect(box.center).toEqualEpsilon(new Cartesian3(2.0, 0.0, 0.0), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(Matrix3.ZERO, CesiumMath.EPSILON15);
+
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(0.0, 0.0, 0.0, 0.0), -1.0, -1.0, Ellipsoid.UNIT_SPHERE);
+        expect(box.center).toEqualEpsilon(new Cartesian3(0.0, 0.0, 0.0), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(Matrix3.ZERO, CesiumMath.EPSILON15);
+
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(0.0, 0.0, 0.0, 0.0), -1.0, 1.0, Ellipsoid.UNIT_SPHERE);
+        expect(box.center).toEqualEpsilon(new Cartesian3(1.0, 0.0, 0.0), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(new Matrix3(0, 0, 1, 0, 0, 0, 0, 0, 0), CesiumMath.EPSILON15);
+
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(-d90, -d90, d90, d90), 0.0, 1.0, Ellipsoid.UNIT_SPHERE);
+        expect(box.center).toEqualEpsilon(new Cartesian3(1.0, 0.0, 0.0), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(new Matrix3(0, 0, 1, 2, 0, 0, 0, 2, 0), CesiumMath.EPSILON15);
+
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(-d90, -d90, d90, d90), -1.0, -1.0, Ellipsoid.UNIT_SPHERE);
+        expect(box.center).toEqualEpsilon(new Cartesian3(0.0, 0.0, 0.0), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(Matrix3.ZERO, CesiumMath.EPSILON15);
+
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(-d90, -d90, d90, d90), -1.0, 0.0, Ellipsoid.UNIT_SPHERE);
+        expect(box.center).toEqualEpsilon(new Cartesian3(0.5, 0.0, 0.0), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(new Matrix3(0, 0, 0.5, 1, 0, 0, 0, 1, 0), CesiumMath.EPSILON15);
+    });
+
     it('fromRectangle for interesting, degenerate, and edge-case rectangles', function() {
         var d45 = CesiumMath.PI_OVER_FOUR;
         var d30 = CesiumMath.PI_OVER_SIX;
         var d90 = CesiumMath.PI_OVER_TWO;
-        var d60 = CesiumMath.PI_OVER_THREE;
         var d135 = 3 * CesiumMath.PI_OVER_FOUR;
         var d180 = CesiumMath.PI;
         var sqrt3 = Math.sqrt(3.0);
