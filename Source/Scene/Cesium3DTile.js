@@ -154,15 +154,6 @@ define([
 //TODO: that.parent.numberOfChildrenWithoutContent will never reach zero and therefore that.parent will never refine
         });
 
-        /**
-         * DOC_TBA
-         *
-         * @type {Boolean}
-         *
-         * @default true
-         */
-        this.show = true;
-
         // Members that are updated every frame for rendering optimizations:
 
         /**
@@ -338,10 +329,8 @@ define([
      * DOC_TBA
      */
     Cesium3DTile.prototype.update = function(owner, context, frameState, commandList) {
-        if (this.show) {
-            applyDebugSettings(this, owner, context, frameState, commandList);
-            this._content.update(owner, context, frameState, commandList);
-        }
+        applyDebugSettings(this, owner, context, frameState, commandList);
+        this._content.update(owner, context, frameState, commandList);
     };
 
     var scratchCommandList = [];

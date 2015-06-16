@@ -139,16 +139,9 @@ define([
         /**
          * DOC_TBA
          */
-        this.tileReady = new Event();
-        this._tileReadyEventsToRaise = [];
-
-        /**
-         * DOC_TBA
-         */
 // TODO:
 // * This event fires inside update; the others are painfully deferred until the end of the frame,
 // which also means they are one tick behind for time-dynamic updates.
-// * Do we need the tileReady event given this event?
         this.tileVisible = new Event();
 
         var that = this;
@@ -425,17 +418,6 @@ define([
 
             --tiles3D._statistics.numberProcessing;
             addLoadProgressEvent(tiles3D);
-
-            // Check isReady so this event is not raised if the request failed
-            if (tile.isReady()) {
-                if (tiles3D.tileReady.numberOfListeners > 0) {
-                    tiles3D._tileReadyEventsToRaise.push(tile);
-                    // Hide this frame in case, for example, to avoid flashing the
-                    // initial color if the event changes the tile's color
-                    tile.show = false;
-// TODO: we could add a new state instead of using a show property
-                }
-            }
         };
     }
 
@@ -546,25 +528,6 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function evenMoreComplicated2(tiles3D, tile) {
-        return function() {
-            tiles3D.tileReady.raiseEvent(tile);
-        };
-    }
-
-    function raiseTileReadyEvents(tiles3D, frameState) {
-        var eventsToRaise = tiles3D._tileReadyEventsToRaise;
-        var length = eventsToRaise.length;
-        for (var i = 0; i < length; ++i) {
-            var tile = eventsToRaise[i];
-            tile.show = true;
-            frameState.afterRender.push(evenMoreComplicated2(tiles3D, tile));
-        }
-        eventsToRaise.length = 0;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-
     /**
      * DOC_TBA
      */
@@ -592,7 +555,6 @@ define([
         // may resolve outside of the update loop that then raise events, e.g.,
         // model's readyPromise.
         raiseLoadProgressEvents(this, frameState);
-        raiseTileReadyEvents(this, frameState);
 
         showStats(this, isPick);
     };
