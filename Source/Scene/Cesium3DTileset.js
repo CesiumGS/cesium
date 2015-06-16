@@ -142,6 +142,15 @@ define([
         this.tileReady = new Event();
         this._tileReadyEventsToRaise = [];
 
+        /**
+         * DOC_TBA
+         */
+// TODO:
+// * This event fires inside update; the others are painfully deferred until the end of the frame,
+// which also means they are one tick behind for time-dynamic updates.
+// * Do we need the tileReady event given this event?
+        this.tileVisible = new Event();
+
         var that = this;
 
         loadJson(baseUrl + 'tiles.json').then(function(tree) {
@@ -495,8 +504,11 @@ define([
         var numberOfCommands = commandList.length;
         var selectedTiles = tiles3D._selectedTiles;
         var length = selectedTiles.length;
+        var tileVisible = tiles3D.tileVisible;
         for (var i = 0; i < length; ++i) {
-            selectedTiles[i].update(tiles3D, context, frameState, commandList);
+            var tile = selectedTiles[i];
+            tileVisible.raiseEvent(tile);
+            tile.update(tiles3D, context, frameState, commandList);
         }
 
         tiles3D._statistics.numberOfCommands = (commandList.length - numberOfCommands);
