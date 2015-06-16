@@ -114,6 +114,20 @@ define([
         return update;
     }
 
+    function adjustAngleForLERP(startAngle, endAngle) {
+        if (CesiumMath.equalsEpsilon(startAngle, CesiumMath.TWO_PI, CesiumMath.EPSILON11)) {
+            startAngle = 0.0;
+        }
+
+        if (endAngle > startAngle + Math.PI) {
+            startAngle += CesiumMath.TWO_PI;
+        } else if (endAngle < startAngle - Math.PI) {
+            startAngle -= CesiumMath.TWO_PI;
+        }
+
+        return startAngle;
+    }
+
     var scratchStartPosition = new Cartesian3();
     var scratchStartCart = new Cartographic();
     var scratchEndCart = new Cartographic();
@@ -126,19 +140,9 @@ define([
         var ellipsoid = projection.ellipsoid;
 
         var startCart = Cartographic.clone(camera.positionCartographic, scratchStartCart);
-        var startHeading = camera.heading;
         var startPitch = camera.pitch;
-        var startRoll = camera.roll;
-
-        if (CesiumMath.equalsEpsilon(startHeading, CesiumMath.TWO_PI, CesiumMath.EPSILON11)) {
-            startHeading = 0.0;
-        }
-
-        if (heading > startHeading + Math.PI) {
-            startHeading += CesiumMath.TWO_PI;
-        } else if (heading < startHeading - Math.PI) {
-            startHeading -= CesiumMath.TWO_PI;
-        }
+        var startHeading = adjustAngleForLERP(camera.heading, heading);
+        var startRoll = adjustAngleForLERP(camera.roll, roll);
 
         var destCart = ellipsoid.cartesianToCartographic(destination, scratchEndCart);
         if (destCart.height <= 0.0) {
@@ -167,7 +171,7 @@ define([
                 positionCartographic : position,
                 heading : CesiumMath.lerp(startHeading, heading, time),
                 pitch : CesiumMath.lerp(startPitch, pitch, time),
-                //roll : CesiumMath.lerp(startRoll, roll, time)
+                roll : CesiumMath.lerp(startRoll, roll, time)
             });
         };
 
