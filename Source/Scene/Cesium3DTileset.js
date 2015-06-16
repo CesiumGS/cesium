@@ -65,7 +65,6 @@ define([
         this._url = url;
         this._root = undefined;
         this._geometricError = undefined; // Geometric error when the tree is not rendered at all
-// TODO: a linked list would be better depending on how how it allocates/frees.
         this._processingQueue = [];
         this._selectedTiles = [];
 
