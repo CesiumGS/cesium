@@ -203,7 +203,6 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       var pos = {};
       pos.left = -999;
       $('#docPopup').css('left', '-999px');
-      PubSub.publish('DOC POSITION', pos);
       if(this.docTimer !== undefined){
         window.clearTimeout(this.docTimer);
       }
@@ -994,21 +993,6 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
         top: 0,
         left: -999
       };
-    },
-
-    updatePosition: function(msg, data){
-      if(data.top !== undefined)
-      {
-        this.setState({top: data.top});
-      }
-      if(data.left !== undefined)
-      {
-        this.setState({left: data.left});
-      }
-    },
-
-    componentWillMount: function(){
-      PubSub.subscribe('DOC POSITION', this.updatePosition);
     },
 
     render: function(){
