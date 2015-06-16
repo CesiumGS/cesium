@@ -95,7 +95,7 @@ define([
      * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when
      *        specifying this that the number of tiles at the minimum level is small, such as four or less.  A larger number is
      *        likely to result in rendering problems.
-     * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider.
+     * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
      *        If not specified, there is no limit.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      * @param {Object} [options.proxy] A proxy to use for requests. This object is
@@ -104,9 +104,11 @@ define([
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
+     * @see OpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see TileMapServiceImageryProvider
-     * @see OpenStreetMapImageryProvider
+     * @see WebMapTileServiceImageryProvider
+     * @see UrlTemplateImageryProvider
      *
      * @see {@link http://resources.esri.com/help/9.3/arcgisserver/apis/rest/|ArcGIS Server REST API}
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
