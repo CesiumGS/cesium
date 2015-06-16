@@ -30,7 +30,8 @@ function startup(Cesium) {
 //Sandcastle_Begin
 
 var viewer = new Cesium.Viewer('cesiumContainer');
-var city = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+var scene = viewer.scene;
+var city = scene.primitives.add(new Cesium.Cesium3DTileset({
     url : 'http://localhost:8002/tilesets/Cambridge',
 
     // Defaults:
@@ -43,12 +44,12 @@ var city = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
     debugShowContentsBoundingVolume : false
 }));
 
-viewer.scene.screenSpaceCameraController.minimumZoomDistance = 1;
+scene.screenSpaceCameraController.minimumZoomDistance = 1;
 viewer.camera.setView({
     position : Cesium.Cartesian3.fromDegrees(-71.1106, 42.3736, 5000.0)
 });
 
-viewer.scene.debugShowFramesPerSecond = true;
+scene.debugShowFramesPerSecond = true;
 //viewer.extend(Cesium.viewerCesiumInspectorMixin);
 
 var canvas = viewer.canvas;
@@ -111,7 +112,7 @@ handler.setInputAction(function(movement) {
         return;
     }
 
-    var pickedBuilding = viewer.scene.pick(movement.endPosition);
+    var pickedBuilding = scene.pick(movement.endPosition);
 
     if (Cesium.defined(current.building) && (current.building !== pickedBuilding)) {
         // Restore original color to building that is no longer selected
@@ -130,7 +131,7 @@ handler.setInputAction(function(movement) {
     }
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-var annotations = viewer.scene.primitives.add(new Cesium.LabelCollection());
+var annotations = scene.primitives.add(new Cesium.LabelCollection());
 
 handler.setInputAction(function(movement) {
     var building = current.building;
@@ -159,10 +160,10 @@ handler.setInputAction(function(movement) {
 }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 
 function annotate(movement) {
-    if (Cesium.defined(current.building) && viewer.scene.pickPositionSupported) {
-        var cartesian = viewer.scene.pickPosition(movement.position);
+    if (Cesium.defined(current.building) && scene.pickPositionSupported) {
+        var cartesian = scene.pickPosition(movement.position);
 // TODO: add Cartographic.fromCartesian to Cesium
-        var cartographic = viewer.scene.globe.ellipsoid.cartesianToCartographic(cartesian);
+        var cartographic = scene.globe.ellipsoid.cartesianToCartographic(cartesian);
         var height = cartographic.height.toFixed(2) + ' m';
 
         annotations.add({
@@ -176,8 +177,8 @@ function annotate(movement) {
 }
 
 function zoom(movement) {
-    if (Cesium.defined(current.building) && viewer.scene.pickPositionSupported) {
-        var cartesian = viewer.scene.pickPosition(movement.position);
+    if (Cesium.defined(current.building) && scene.pickPositionSupported) {
+        var cartesian = scene.pickPosition(movement.position);
         var toOldPosition = new Cesium.Cartesian3();
         toOldPosition = Cesium.Cartesian3.subtract(viewer.camera.position, cartesian, toOldPosition);
         toOldPosition = Cesium.Cartesian3.normalize(toOldPosition, toOldPosition);
@@ -207,6 +208,7 @@ handler.setInputAction(function(movement) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+/*
 city.tileReady.addEventListener(function(tile) {
     var content = tile.content;
 // TODO: use instanceof or check content type?
@@ -215,30 +217,28 @@ city.tileReady.addEventListener(function(tile) {
 // TODO: if this does anything async, it could also set tile.show to false until
 //       it is ready so it doesn't flash
 
-    // Does the tile have content?  If it is just used for spatial subdivision, it will not.
-    if (Cesium.defined(content)) {
-        // Is the tile a Batched 3D Model?
-        if (content instanceof Cesium.B3dm3DTileContentProvider) {
-            // Does it have a per-model height property?
-            if (content.hasProperty('height')) {
-	            var length = content.batchSize;
-	            for (var i = 0; i < length; ++i) {
-	                var building = content.getModel(i);
-	                var height = building.getProperty('height');
-	                if (height < 10) {
-	                    building.color = Cesium.Color.RED;
-	                } else if (height < 30) {
-	                    building.color = Cesium.Color.BLUE;
-	                } else if (height < 70) {
-	                    building.color = Cesium.Color.CYAN;
-	                } else {
-	                    building.color = Cesium.Color.ORANGE;
-	                }
-	            }
-	        }
+    // Is the tile a Batched 3D Model?
+    if (content instanceof Cesium.B3dm3DTileContentProvider) {
+        // Does it have a per-model height property?
+        if (content.hasProperty('height')) {
+            var length = content.batchSize;
+            for (var i = 0; i < length; ++i) {
+                var building = content.getModel(i);
+                var height = building.getProperty('height');
+                if (height < 10) {
+                    building.color = Cesium.Color.RED;
+                } else if (height < 30) {
+                    building.color = Cesium.Color.BLUE;
+                } else if (height < 70) {
+                    building.color = Cesium.Color.CYAN;
+                } else {
+                    building.color = Cesium.Color.ORANGE;
+                }
+            }
         }
     }
 });
+*/
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -252,6 +252,8 @@ city.loadProgress.addEventListener(function(numberOfPendingRequests, numberProce
     console.log('Loading: requests: ' + numberOfPendingRequests + ', processing: ' + numberProcessing);
 });
 */
+
+///////////////////////////////////////////////////////////////////////////////
 
 Sandcastle.addToolbarButton('Stats on/off', function() {
     city.debugShowStatistics = !city.debugShowStatistics;
@@ -290,6 +292,52 @@ Sandcastle.addToolbarButton('SSE--', function() {
     city.maximumScreenSpaceError = Math.max(city.maximumScreenSpaceError - 1, 0);
     console.log('New max SSE: ' + city.maximumScreenSpaceError);
 });
+
+///////////////////////////////////////////////////////////////////////////////
+
+var heightColors = new Array(10);
+var lastTimeColored = 0;
+
+function changeColor(tile) {
+	if (Cesium.defined(tile.lastTimeColored) && tile.lastTimeColored === lastTimeColored) {
+        // Tile was already updated with new colors
+        return;
+	}
+	tile.lastTimeColored = lastTimeColored;
+
+    var content = tile.content;
+// TODO: use instanceof or check content type?
+
+    // Is the tile a Batched 3D Model?
+    if (content instanceof Cesium.B3dm3DTileContentProvider) {
+        // Does it have a per-model height property?
+        if (content.hasProperty('height')) {
+            var length = content.batchSize;
+            for (var i = 0; i < length; ++i) {
+                var building = content.getModel(i);
+                var height = building.getProperty('height');
+                var index = Math.min(Math.floor(height / heightColors.length), heightColors.length - 1);
+                building.color = heightColors[index];
+            }
+        }
+    }
+}
+
+Sandcastle.addToolbarButton('Change per height color', function() {
+    var length = heightColors.length;
+    for (var i = 0; i < length; ++i) {
+        heightColors[i] = Cesium.Color.fromRandom({ alpha : 1.0 });
+    }
+    ++lastTimeColored;
+
+    if (city.tileVisible.numberOfListeners === 0) {
+        city.tileVisible.addEventListener(changeColor);
+    }
+});
+
+
+
+///////////////////////////////////////////////////////////////////////////////
 
 //Sandcastle_End
     Sandcastle.finishedLoading();
