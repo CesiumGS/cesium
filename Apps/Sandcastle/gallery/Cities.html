@@ -32,7 +32,8 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
 var city = scene.primitives.add(new Cesium.Cesium3DTileset({
-    url : 'http://localhost:8002/tilesets/Cambridge',
+//    url : 'http://localhost:8002/tilesets/Cambridge',
+    url : 'http://localhost:8002/tilesets/London_Canary_Wharf',
 
     // Defaults:
     maximumScreenSpaceError : 16,
@@ -260,8 +261,10 @@ Sandcastle.addToolbarButton('SSE--', function() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-var heightColors = new Array(10);
+// TODO: we want to know max height/area/etc.
+var colorRamp = [];
 var lastTimeColored = 0;
+var currentPropertyName;
 
 function changeColor(tile) {
 	if (Cesium.defined(tile.lastTimeColored) && tile.lastTimeColored === lastTimeColored) {
@@ -275,35 +278,54 @@ function changeColor(tile) {
     // Is the tile a Batched 3D Model?
     if (content instanceof Cesium.B3dm3DTileContentProvider) {
         // Does it have a per-model height property?
-        if (content.hasProperty('Height')) {
+        if (content.hasProperty(currentPropertyName)) {
             var length = content.batchSize;
             for (var i = 0; i < length; ++i) {
                 var building = content.getModel(i);
-                var height = building.getProperty('Height');
+                var property = building.getProperty(currentPropertyName);
 
                 // Some heights are undefined; set them to zero.
-                height = Cesium.defaultValue(height, 0.0);
+                property = Cesium.defaultValue(property, 0.0);
                 // Some heights are -1; set them to zero.
-                height = Math.max(height, 0.0);
+                property = Math.max(property, 0.0);
 // TODO: we could also fix these server side
 
-                var index = Math.min(Math.floor(height / heightColors.length), heightColors.length - 1);
-                building.color = heightColors[index];
+                var index = Math.min(Math.floor(property / colorRamp.length), colorRamp.length - 1);
+                building.color = colorRamp[index];
             }
         }
     }
 }
 
-Sandcastle.addToolbarButton('Change per height color', function() {
-    var length = heightColors.length;
+function createRandomColors(colors) {
+    var length = colors.length;
     for (var i = 0; i < length; ++i) {
-        heightColors[i] = Cesium.Color.fromRandom({ alpha : 1.0 });
+        colors[i] = Cesium.Color.fromRandom({ alpha : 1.0 });
     }
-    ++lastTimeColored;
+}
 
+function addTileVisibleListener() {
     if (city.tileVisible.numberOfListeners === 0) {
         city.tileVisible.addEventListener(changeColor);
     }
+}
+
+Sandcastle.addToolbarButton('Change per height color', function() {
+    currentPropertyName = 'Height';
+    colorRamp.length = 10;
+
+    createRandomColors(colorRamp);
+    ++lastTimeColored;
+    addTileVisibleListener();
+});
+
+Sandcastle.addToolbarButton('Change per area color', function() {
+    currentPropertyName = 'Area';
+    colorRamp.length = 500;
+
+    createRandomColors(colorRamp);
+    ++lastTimeColored;
+    addTileVisibleListener();
 });
 
 ///////////////////////////////////////////////////////////////////////////////
