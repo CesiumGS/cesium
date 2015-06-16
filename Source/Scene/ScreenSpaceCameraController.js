@@ -401,7 +401,7 @@ define([
             if (controller.enableInputs && enabled) {
                 if (movement) {
                     action(controller, startPosition, movement);
-                } else if (inertiaConstant < 1.0 && !controller._strafing) {
+                } else if (inertiaConstant < 1.0) {
                     maintainInertia(aggregator, type, modifier, inertiaConstant, action, controller, inertiaStateName);
                 }
             }
@@ -1085,7 +1085,10 @@ define([
         var scene = controller._scene;
         var camera = scene.camera;
 
-        var mouseStartPosition = controller._strafeStartPosition;
+        var mouseStartPosition = pickGlobe(controller, movement.startPosition, scratchMousePos);
+        if (!defined(mouseStartPosition)) {
+            return;
+        }
 
         var mousePosition = movement.endPosition;
         var ray = camera.getPickRay(mousePosition, scratchStrafeRay);
