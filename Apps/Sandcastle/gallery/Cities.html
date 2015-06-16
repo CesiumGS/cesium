@@ -208,39 +208,6 @@ handler.setInputAction(function(movement) {
 ///////////////////////////////////////////////////////////////////////////////
 
 /*
-city.tileReady.addEventListener(function(tile) {
-    var content = tile.content;
-// TODO: if this does anything async, e.g., call a REST API, then we need to check
-//       if the tile was unloaded before updating it.
-// TODO: if this does anything async, it could also set tile.show to false until
-//       it is ready so it doesn't flash
-
-    // Is the tile a Batched 3D Model?
-    if (content instanceof Cesium.B3dm3DTileContentProvider) {
-        // Does it have a per-model height property?
-        if (content.hasProperty('height')) {
-            var length = content.batchSize;
-            for (var i = 0; i < length; ++i) {
-                var building = content.getModel(i);
-                var height = building.getProperty('height');
-                if (height < 10) {
-                    building.color = Cesium.Color.RED;
-                } else if (height < 30) {
-                    building.color = Cesium.Color.BLUE;
-                } else if (height < 70) {
-                    building.color = Cesium.Color.CYAN;
-                } else {
-                    building.color = Cesium.Color.ORANGE;
-                }
-            }
-        }
-    }
-});
-*/
-
-///////////////////////////////////////////////////////////////////////////////
-
-/*
 city.loadProgress.addEventListener(function(numberOfPendingRequests, numberProcessing) {
     if ((numberOfPendingRequests === 0) && (numberProcessing === 0)) {
         console.log('Stopped loading');
