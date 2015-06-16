@@ -493,7 +493,7 @@ define([
                 var centerPosition = pickGlobe(object, centerPixel, scratchCenterPosition);
                 var positionNormal = Cartesian3.normalize(centerPosition, scratchPositionNormal);
                 var pickedNormal = Cartesian3.normalize(object._zoomWorldPosition, scratchPickNormal);
-                var angle = Math.acos(Cartesian3.dot(pickedNormal, positionNormal));
+                var angle = CesiumMath.acosClamped(Cartesian3.dot(pickedNormal, positionNormal));
                 var axis = Cartesian3.cross(pickedNormal, positionNormal, scratchZoomAxis);
 
                 var denom = Math.abs(angle) > CesiumMath.toRadians(20.0) ? camera.positionCartographic.height * 0.75 : camera.positionCartographic.height - distance;
