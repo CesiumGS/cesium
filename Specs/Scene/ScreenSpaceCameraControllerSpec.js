@@ -330,7 +330,7 @@ defineSuite([
         updateController();
         expect(position.x).toEqual(camera.position.x);
         expect(position.y).toEqual(camera.position.y);
-        expect(position.z).toEqual(camera.position.z);
+        expect(position.z).toBeGreaterThan(camera.position.z);
         expect(frustumDiff).toBeGreaterThan(camera.frustum.right - camera.frustum.left);
     });
 
@@ -364,7 +364,7 @@ defineSuite([
         moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
         updateController();
         expect(position.x).toEqual(camera.position.x);
-        expect(position.y).toEqual(camera.position.y);
+        expect(position.y).toBeLessThan(camera.position.y);
         expect(position.z).toEqual(camera.position.z);
         expect(frustumDiff).toBeGreaterThan(camera.frustum.right - camera.frustum.left);
     });
