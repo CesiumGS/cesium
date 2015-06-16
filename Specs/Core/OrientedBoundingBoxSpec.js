@@ -149,9 +149,12 @@ defineSuite([
 
     it('fromRectangle for interesting, degenerate, and edge-case rectangles', function() {
         var d45 = CesiumMath.PI_OVER_FOUR;
+        var d30 = CesiumMath.PI_OVER_SIX;
         var d90 = CesiumMath.PI_OVER_TWO;
+        var d60 = CesiumMath.PI_OVER_THREE;
         var d135 = 3 * CesiumMath.PI_OVER_FOUR;
         var d180 = CesiumMath.PI;
+        var sqrt3 = Math.sqrt(3.0);
 
         var box;
 
@@ -179,9 +182,9 @@ defineSuite([
         expect(box.center).toEqualEpsilon(new Cartesian3(0.5, 0.0, 0.0), CesiumMath.EPSILON15);
         expect(box.halfAxes).toEqualEpsilon(new Matrix3(0.0, 0.0, 0.5, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0), CesiumMath.EPSILON15);
 
-        box = OrientedBoundingBox.fromRectangle(new Rectangle(-d90, -d45, d90, d90), 0.0, 0.0, Ellipsoid.UNIT_SPHERE);
-        expect(box.center).toEqualEpsilon(new Cartesian3(0.5, 0.0, 0.5 * (1.0 - Math.SQRT1_2)), CesiumMath.EPSILON15);
-        expect(box.halfAxes).toEqualEpsilon(new Matrix3(0.0, 0.0, 0.5, 1.0, 0.0, 0.0, 0.0, 0.5 * (1.0 + Math.SQRT1_2), 0.0), CesiumMath.EPSILON15);
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(-d90, -d30, d90, d90), 0.0, 0.0, Ellipsoid.UNIT_SPHERE);
+        expect(box.center).toEqualEpsilon(new Cartesian3(0.1875 * sqrt3, 0.0, 0.1875), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(new Matrix3(0, -sqrt3/4, 5*sqrt3/16, 1, 0, 0, 0, 3/4, 5/16), CesiumMath.EPSILON15);
 
         box = OrientedBoundingBox.fromRectangle(new Rectangle(-d45, 0.0, d45, 0.0), 0.0, 0.0, Ellipsoid.UNIT_SPHERE);
         expect(box.center).toEqualEpsilon(new Cartesian3((1.0 + Math.SQRT1_2) / 2.0, 0.0, 0.0), CesiumMath.EPSILON15);
@@ -206,7 +209,6 @@ defineSuite([
 
     var intersectPlaneTestCornersEdgesFaces = function(center, axes) {
         var SQRT1_2 = Math.pow(1.0 / 2.0, 1 / 2.0);
-        var SQRT1_3 = Math.pow(1.0 / 3.0, 1 / 2.0);
         var SQRT3_4 = Math.pow(3.0 / 4.0, 1 / 2.0);
 
         var box = new OrientedBoundingBox(center, Matrix3.multiplyByScalar(axes, 0.5, new Matrix3()));

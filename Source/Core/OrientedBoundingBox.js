@@ -158,13 +158,8 @@ define([
         maximumHeight = defaultValue(maximumHeight, 0.0);
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
-        // If the rectangle does not span the equator, then the bounding box will be aligned with the tangent plane at the center of the rectangle.
-        // If the rectangle does span the equator, then the bounding box will be aligned with the tangent plane to the equator at the longitudinal center of the rectangle.
+        // The bounding box will be aligned with the tangent plane at the center of the rectangle.
         var tangentPointCartographic = Rectangle.center(rectangle, scratchRectangleCenterCartographic);
-        if (rectangle.south < 0.0 && rectangle.north > 0.0) {
-            // The rectangle spans the equator
-            tangentPointCartographic.latitude = 0.0;
-        }
         var tangentPoint = ellipsoid.cartographicToCartesian(tangentPointCartographic, scratchRectangleCenter);
         var tangentPlane = new EllipsoidTangentPlane(tangentPoint, ellipsoid);
         var plane = tangentPlane.plane;
@@ -175,8 +170,8 @@ define([
         // W/-x [7]     [3] E/+x
         //      [6] [5] [4]
         //          S/-y
-        // "C" refers to the central lat/long which always align with the tangent point (above).
-        // If the rectangle spans the equator, CW and CE are aligned with the equator; otherwise, they're centered in latitude.
+        // "C" refers to the central lat/long, which by default aligns with the tangent point (above).
+        // If the rectangle spans the equator, CW and CE are instead aligned with the equator.
         var perimeterNW = perimeterCartographicScratch[0];
         var perimeterNC = perimeterCartographicScratch[1];
         var perimeterNE = perimeterCartographicScratch[2];
@@ -187,7 +182,7 @@ define([
         var perimeterCW = perimeterCartographicScratch[7];
 
         var lonCenter = tangentPointCartographic.longitude;
-        var latCenter = tangentPointCartographic.latitude;
+        var latCenter = (rectangle.south < 0.0 && rectangle.north > 0.0) ? 0.0 : tangentPointCartographic.latitude;
         perimeterSW.latitude = perimeterSC.latitude = perimeterSE.latitude = rectangle.south;
         perimeterCW.latitude = perimeterCE.latitude = latCenter;
         perimeterNW.latitude = perimeterNC.latitude = perimeterNE.latitude = rectangle.north;
@@ -203,7 +198,7 @@ define([
         // See the `perimeterXX` definitions above for what these are
         var minX = Math.min(perimeterProjectedScratch[6].x, perimeterProjectedScratch[7].x, perimeterProjectedScratch[0].x);
         var maxX = Math.max(perimeterProjectedScratch[2].x, perimeterProjectedScratch[3].x, perimeterProjectedScratch[4].x);
-        var minY = Math.min(perimeterProjectedScratch[4].y, perimeterProjectedScratch[6].y, perimeterProjectedScratch[6].y);
+        var minY = Math.min(perimeterProjectedScratch[4].y, perimeterProjectedScratch[5].y, perimeterProjectedScratch[6].y);
         var maxY = Math.max(perimeterProjectedScratch[0].y, perimeterProjectedScratch[1].y, perimeterProjectedScratch[2].y);
 
         // Compute minimum Z using the rectangle at minimum height
