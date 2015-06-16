@@ -45,6 +45,8 @@ define([
      * @see OpenStreetMapImageryProvider
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
+     * @see WebMapTileServiceImageryProvider
+     * @see UrlTemplateImageryProvider
      */
     var SingleTileImageryProvider = function(options) {
         options = defaultValue(options, {});
