@@ -186,6 +186,18 @@ defineSuite([
         expect(box.center).toEqualEpsilon(new Cartesian3(0.1875 * sqrt3, 0.0, 0.1875), CesiumMath.EPSILON15);
         expect(box.halfAxes).toEqualEpsilon(new Matrix3(0, -sqrt3/4, 5*sqrt3/16, 1, 0, 0, 0, 3/4, 5/16), CesiumMath.EPSILON15);
 
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(-d90, -d90, d90, d30), 0.0, 0.0, Ellipsoid.UNIT_SPHERE);
+        expect(box.center).toEqualEpsilon(new Cartesian3(0.1875 * sqrt3, 0.0, -0.1875), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(new Matrix3(0, sqrt3/4, 5*sqrt3/16, 1, 0, 0, 0, 3/4, -5/16), CesiumMath.EPSILON15);
+
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(0.0, -d30, d180, d90), 0.0, 0.0, Ellipsoid.UNIT_SPHERE);
+        expect(box.center).toEqualEpsilon(new Cartesian3(0.0, 0.1875 * sqrt3, 0.1875), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(new Matrix3(-1, 0, 0, 0, -sqrt3/4, 5*sqrt3/16, 0, 3/4, 5/16), CesiumMath.EPSILON15);
+
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(0.0, -d90, d180, d30), 0.0, 0.0, Ellipsoid.UNIT_SPHERE);
+        expect(box.center).toEqualEpsilon(new Cartesian3(0.0, 0.1875 * sqrt3, -0.1875), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(new Matrix3(-1, 0, 0, 0, sqrt3/4, 5*sqrt3/16, 0, 3/4, -5/16), CesiumMath.EPSILON15);
+
         box = OrientedBoundingBox.fromRectangle(new Rectangle(-d45, 0.0, d45, 0.0), 0.0, 0.0, Ellipsoid.UNIT_SPHERE);
         expect(box.center).toEqualEpsilon(new Cartesian3((1.0 + Math.SQRT1_2) / 2.0, 0.0, 0.0), CesiumMath.EPSILON15);
         expect(box.halfAxes).toEqualEpsilon(new Matrix3(0.0, 0.0, 0.5 * (1.0 - Math.SQRT1_2), Math.SQRT1_2, 0.0, 0.0, 0.0, 0.0, 0.0), CesiumMath.EPSILON15);
