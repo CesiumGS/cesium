@@ -318,29 +318,6 @@ defineSuite([
             });
         });
 
-        /*it('does not get confused when base layer imagery overlaps in one direction but not the other', function() {
-            
-            // Prime the pump with some bad data.
-            var wholeWorldProvider = new SingleTileImageryProvider({
-                url : 'Data/Images/Blue.png'
-            });
-
-            var smallProvider = new TileMapServiceImageryProvider({
-                url : 'Data/Images/Green.png',
-                tilingScheme : new WebMercatorTilingScheme(),
-                rectangle : new Rectangle(0.1, 0.2, 0.1, 0.2);
-            });
-
-            return pollToPromise(function() {
-                return wholeWorldProvider.ready && smallProvider.ready;
-            }).then(function() {
-                var tiles = QuadtreeTile.createLevelZeroTiles(terrainProvider.tilingScheme);
-                tiles[0].data = new GlobeSurfaceTile();
-
-                layer._createTileImagerySkeletons(tiles[0], terrainProvider);
-            });
-        });*/
-
         it('handles a non-base layer that does not cover the entire globe', function() {
             var baseProvider = new SingleTileImageryProvider({
                 url : 'Data/Images/Green4x4.png'
