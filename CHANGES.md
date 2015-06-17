@@ -13,6 +13,8 @@ Change Log
 * `Model` can now load Binary glTF from a Uint8Array.
 * Added a new camera mode for horizon views. When the camera is looking at the horizon and a point on terrain above the camera is picked, the camera moves in the plane containing the camera position, up and right vectors.
 * Added `UrlTemplateImageryProvider`.  This new imagery provider allows access to a wide variety of imagery sources, including OpenStreetMap, TMS, WMTS, WMS, WMS-C, and various custom schemes, by specifying a URL template to use to request imagery tiles.
+* The camera now zooms to the point under the mouse cursor.
+* Fixed a bug in `ImageryLayer` that could cause an exception and the render loop to stop when the base layer did not cover the entire globe.
 * Added `Plane.fromCartesian4` to convert old `Cartesian4` plane representations to the new `Plane` format.
 * Added `Plane.ORIGIN_XY_PLANE`/`ORIGIN_YZ_PLANE`/`ORIGIN_ZX_PLANE` constants for commonly-used planes.
 * Added `Matrix2`/`Matrix3`/`Matrix4.ZERO` constants for zero matrices.
