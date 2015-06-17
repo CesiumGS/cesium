@@ -810,43 +810,71 @@ define([
         return context.createVertexArray(vertexArray._attributes, wireframeIndexBuffer);
     }
 
-    function createDebugPrimitive(geometry, color, modelMatrix) {
-        var instance = new GeometryInstance({
-            geometry : geometry,
-            modelMatrix : modelMatrix,
-            attributes : {
-                color : ColorGeometryInstanceAttribute.fromColor(color)
+    var createDebugOrientedBoundingBox;
+    var createDebugBoundingSphere;
+    var debugDestroyPrimitive;
+
+    (function() {
+        var instanceOBB = new GeometryInstance({
+            geometry: BoxOutlineGeometry.fromDimensions({ dimensions: new Cartesian3(2.0, 2.0, 2.0) })
+        });
+        var instanceSphere = new GeometryInstance({
+            geometry: new SphereOutlineGeometry({ radius: 1.0 })
+        });
+        var modelMatrix = new Matrix4();
+        var previousVolume;
+        var primitive;
+
+        function createDebugPrimitive(instance) {
+            return new Primitive({
+                geometryInstances : instance,
+                appearance : new PerInstanceColorAppearance({
+                    translucent : false,
+                    flat : true
+                }),
+                asynchronous : false
+            });
+        }
+
+        createDebugOrientedBoundingBox = function(obb, color) {
+            if (obb === previousVolume) {
+                return primitive;
             }
-        });
+            debugDestroyPrimitive();
 
-        return new Primitive({
-            geometryInstances : instance,
-            appearance : new PerInstanceColorAppearance({
-                translucent : false,
-                flat : true
-            }),
-            asynchronous : false
-        });
-    }
+            previousVolume = obb;
+            modelMatrix = Matrix4.fromRotationTranslation(obb.halfAxes, obb.center, modelMatrix);
 
-    var scratchBVMatrix = new Matrix4();
-    var debugOrientedBoundingBox = BoxOutlineGeometry.fromDimensions({
-        dimensions: new Cartesian3(2.0, 2.0, 2.0),
-        vertexFormat: PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
-    });
-    var createDebugOrientedBoundingBox = function(obb, color) {
-        var modelMatrix = Matrix4.fromRotationTranslation(obb.halfAxes, obb.center, scratchBVMatrix);
-        return createDebugPrimitive(debugOrientedBoundingBox, color, modelMatrix);
-    };
+            instanceOBB.modelMatrix = modelMatrix;
+            instanceOBB.attributes.color = ColorGeometryInstanceAttribute.fromColor(color);
 
-    var debugBoundingSphere = new SphereOutlineGeometry({
-        radius: 1.0
-    });
-    var createDebugSphere = function(sphere, color) {
-        var modelMatrix = Matrix4.fromTranslation(sphere.center);
-        Matrix4.multiplyByUniformScale(modelMatrix, sphere.radius, modelMatrix);
-        return createDebugPrimitive(debugBoundingSphere, color, modelMatrix);
-    };
+            primitive = createDebugPrimitive(instanceOBB);
+            return primitive;
+        };
+
+        createDebugBoundingSphere = function(sphere, color) {
+            if (sphere === previousVolume) {
+                return primitive;
+            }
+            debugDestroyPrimitive();
+
+            previousVolume = sphere;
+            modelMatrix = Matrix4.fromTranslation(sphere.center, modelMatrix);
+            modelMatrix = Matrix4.multiplyByUniformScale(modelMatrix, sphere.radius, modelMatrix);
+
+            instanceSphere.modelMatrix = modelMatrix;
+            instanceSphere.attributes.color = ColorGeometryInstanceAttribute.fromColor(color);
+
+            primitive = createDebugPrimitive(instanceSphere);
+            return primitive;
+        };
+
+        debugDestroyPrimitive = function() {
+            if (defined(primitive)) {
+                primitive.destroy();
+            }
+        };
+    })();
 
     var otherPassesInitialColor = new Cartesian4(0.0, 0.0, 0.0, 0.0);
 
@@ -936,6 +964,10 @@ define([
 
         var initialColor = tileProvider._firstPassInitialColor;
 
+        if (!defined(tileProvider._debug.boundingSphereTile)) {
+            debugDestroyPrimitive();
+        }
+
         do {
             var numberOfDayTextures = 0;
 
@@ -966,7 +998,7 @@ define([
                 if (defined(surfaceTile.orientedBoundingBox)) {
                     createDebugOrientedBoundingBox(surfaceTile.orientedBoundingBox, Color.RED).update(context, frameState, commandList);
                 } else if (defined(surfaceTile.boundingSphere3D)) {
-                    createDebugSphere(surfaceTile.boundingSphere3D, Color.RED).update(context, frameState, commandList);
+                    createDebugBoundingSphere(surfaceTile.boundingSphere3D, Color.RED).update(context, frameState, commandList);
                 }
             }
 
