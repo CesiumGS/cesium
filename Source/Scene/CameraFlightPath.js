@@ -140,7 +140,10 @@ define([
     var scratchCurrentPositionCart = new Cartographic();
     var currentFrame = new Matrix4();
 
-    function createUpdate3D(scene, duration, destination, heading, pitch, roll) {
+    //var scratchCart = new Cartesian3();
+    //var scratchCart2 = new Cartesian3();
+
+    function createUpdate3D(scene, duration, destination, heading, pitch, roll, maxHeight) {
         var camera = scene.camera;
         var projection = scene.mapProjection;
         var ellipsoid = projection.ellipsoid;
@@ -165,13 +168,60 @@ define([
             destCart.longitude += CesiumMath.TWO_PI;
         }
 
+        /*
+        var start = camera.position;
+        var end = destination;
+        var up = camera.up;
+        var right = camera.right;
+        var frustum = camera.frustum;
+
+        diff = Cartesian3.subtract(start, end, scratchCart);
+        var altitude = Cartesian3.magnitude(Cartesian3.add(Cartesian3.multiplyByScalar(diff, 0.5, scratchCart2), end, scratchCart2));
+        var verticalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(up, Cartesian3.dot(diff, up), scratchCart2));
+        var horizontalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(right, Cartesian3.dot(diff, right), scratchCart2));
+        altitude += getAltitude(frustum, verticalDistance, horizontalDistance);
+
+        maxHeight = altitude;
+        */
+
+        var heightFunction;
+        if (defined(maxHeight)) {
+            var a = -2.0 * maxHeight;
+            var b = -maxHeight;
+            var c = maxHeight - startCart.height;
+
+            var q = (-b + Math.sqrt(b * b - 4.0 * a * c)) / (2 * a);
+            var p = (-b - Math.sqrt(b * b - 4.0 * a * c)) / (2 * a);
+
+            var s = Math.min(q, p);
+
+            c = maxHeight - destCart.height;
+
+            q = (-b + Math.sqrt(b * b - 4.0 * a * c)) / (2 * a);
+            p = (-b - Math.sqrt(b * b - 4.0 * a * c)) / (2 * a);
+
+            var e = Math.max(q, p);
+
+            c = maxHeight;
+
+            heightFunction = function(t) {
+                var x = t * (e - s) + s;
+                return c + x * (b + x * a);
+            };
+        }
+
         var update = function(value) {
             var time = value.time / duration;
 
             var position = scratchCurrentPositionCart;
             position.longitude = CesiumMath.lerp(startCart.longitude, destCart.longitude, time);
             position.latitude = CesiumMath.lerp(startCart.latitude, destCart.latitude, time);
-            position.height = CesiumMath.lerp(startCart.height, destCart.height, time);
+
+            if (defined(heightFunction)) {
+                position.height = heightFunction(time);
+            } else {
+                position.height = CesiumMath.lerp(startCart.height, destCart.height, time);
+            }
 
             camera.setView({
                 positionCartographic : position,
