@@ -440,7 +440,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
 
     refreshFrame: function(){
       this.getDOMNode().contentWindow.location.reload();
-      var doc = '<html><head><script src="../../Build/Cesium/Cesium.js"></script><script type="text/javascript" src="./Sandcastle-header.js"></script><style>@import url(../../Build/Cesium/Widgets/widgets.css);\nhtml, body, #cesiumContainer {width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;}\n</style><base href="http://localhost:3000/Apps/Sandcastle-new/"></base></head><body class="sandcastle-loading"><script type="text/javascript" src="./Sandcastle-client.js"></script></body></html>';
+      var doc = '<html><head><script src="../../Build/Cesium/Cesium.js"></script><script type="text/javascript" src="./Sandcastle-header.js"></script><style>@import url(../../Build/Cesium/Widgets/widgets.css);\nhtml, body, #cesiumContainer {width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;}\n</style></head><body class="sandcastle-loading"><script type="text/javascript" src="./Sandcastle-client.js"></script></body></html>';
       this.getDOMNode().contentWindow.document.open();
       this.getDOMNode().contentWindow.document.write(doc);
       this.getDOMNode().contentWindow.document.close();
@@ -450,6 +450,9 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       var frameDoc = this.getDOMNode().contentWindow.document;
       if(frameDoc.readyState === 'complete'){
         var htmlCode = data.html;
+        var styleElement = frameDoc.createElement('style');
+        styleElement.textContent = data.css;
+        frameDoc.body.appendChild(styleElement);
         var htmlElement = frameDoc.createElement('div');
         htmlElement.innerHTML = htmlCode;
         frameDoc.body.appendChild(htmlElement);
@@ -735,8 +738,8 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
           PubSub.publish('CSS CODE', data.css);
           //fetch the js
           var jsText = '';
-          that.requestDemo(id + '/' + id + '.json').done(function(value){
-            jsText += value.js;
+          that.requestDemo(id + '/' + id + '.txt').done(function(value){
+            jsText += value;
             var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
             data.js = that.getScriptFromEditor(isFirefox, jsText);
             that.jsCode = jsText;
@@ -790,8 +793,8 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
           PubSub.publish('CSS CODE', data.css);
           //fetch the js
           var jsText = '';
-          that.requestDemo(id + '/' + id + '.json').done(function(value){
-            jsText += value.js;
+          that.requestDemo(id + '/' + id + '.txt').done(function(value){
+            jsText += value;
             var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
             data.js = that.getScriptFromEditor(isFirefox, jsText);
             PubSub.publish('JS CODE', jsText);
@@ -1017,14 +1020,15 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
     componentWillMount: function(){
       if(window.location.search)
       {
+        var queryParams;
         var query = window.location.search.substring(1).split('&');
         for (var i = 0; i < query.length; ++i) {
           var tags = query[i].split('=');
-          queryParams[tags[0]] = tags[1];
+          // queryParams[tags[0]] = tags[1];
           if(tags[0] == "src")
           {
             // Set the current demo
-            this.demoName = tags[1];
+            this.demoName = decodeURIComponent(tags[1]);
           }
         }
         if(!this.demoName)
@@ -1212,7 +1216,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
                       <li><a href="#" data-toggle="modal" data-target="#saveModal">Save as HTML</a></li>
                     </ul>
                   </li>
-                  <li id="buttonGallery"><a href="#">Gallery</a></li>
+                  <li id="buttonGallery"><a href="gallery.html">Gallery</a></li>
               </ul>
             </div>
           </div>

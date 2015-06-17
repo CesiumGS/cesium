@@ -1,0 +1,21 @@
+var viewer = new Cesium.Viewer('cesiumContainer');
+var scene = viewer.scene;
+
+var instances = [];
+
+for (var i = 0; i < 4; i++) {
+    instances.push(new Cesium.GeometryInstance({
+        geometry : new Cesium.RectangleGeometry({
+            rectangle : Cesium.Rectangle.fromDegrees(-120.0 + i * 10, 30.0, -110.0 + i * 10, 40.0),
+            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+        }),
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 0.7}))
+        }
+    }));
+}
+
+scene.primitives.add(new Cesium.Primitive({
+    geometryInstances : instances,
+    appearance : new Cesium.PerInstanceColorAppearance()
+}));

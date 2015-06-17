@@ -1,0 +1,128 @@
+<!doctype html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang=""> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8" lang=""> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9" lang=""> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang=""> <!--<![endif]-->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Sandcastle Gallery</title>
+
+    <link rel="stylesheet" href="../../ThirdParty/bootstrap-3.3.2/css/bootstrap.min.css">
+    <!-- <link rel="stylesheet" href="css/main.css"> -->
+    <style>
+        .col-sm-2{
+            min-height: 365px;
+        }
+
+        .tab-pane{
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<!--[if lt IE 11]>
+<p class="browserupgrade">You are using an <strong>outdated</strong> browser that does not support WebGL.
+    Please <a href="http://browsehappy.com/">upgrade your browser</a> to use Cesium Sandcastle.</p>
+<![endif]-->
+
+<nav class="navbar navbar-default" id="toolbar">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#toolbar-extend">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="http://cesiumjs.org/" target="_blank"><img src="./img/Cesium_Logo_Color_Overlay.png" style="width: 118px"/></a>
+    </div>
+
+
+    <div class="collapse navbar-collapse" id="toolbar-extend">
+      <ul class="nav navbar-nav">
+          <li id="buttonNew"><a href="#">New</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div id="bodyContainer" class="container-fluid">
+    <div id="bodyRow" class="row">
+        <div id="gallery-tabs" class="col-sm-12">
+            <div role="tabpanel">
+                <ul class="nav nav-tabs" role="tablist">
+                    <li role="presentation" class="active"><a href="#showcases" aria-controls="showcases" role="tab" data-toggle="tab">Showcases</a></li>
+                    <li role="presentation"><a href="#all" aria-controls="all" role="tab" data-toggle="tab">All</a></li>
+                    <li role="presentation"><a href="#tutorials" aria-controls="tutorials" role="tab" data-toggle="tab">Tutorials</a></li>
+                    <li role="presentation"><a href="#geometries" aria-controls="geometries" role="tab" data-toggle="tab">Geometries</a></li>
+                    <li role="presentation"><a href="#beginner" aria-controls="beginner" role="tab" data-toggle="tab">Beginner</a></li>
+                    <li role="presentation"><a href="#datasources" aria-controls="datasources" role="tab" data-toggle="tab">DataSources</a></li>
+                </ul>
+
+                <!-- Tab panes -->
+                <div class="tab-content">
+                    <div role="tabpanel" class="tab-pane active" id="showcases">
+                        <div class="row">
+                        </div>
+
+                    </div>
+
+                    <div role="tabpanel" class="tab-pane" id="all">
+                        <div class="row">
+                            
+                        </div>
+                    </div>
+                    <div role="tabpanel" class="tab-pane" id="tutorials">
+                        <div class="row">
+                            
+                        </div>
+                    </div>
+                    <div role="tabpanel" class="tab-pane" id="geometries">
+                        <div class="row">
+                            
+                        </div>
+                    </div>
+                    <div role="tabpanel" class="tab-pane" id="beginner">
+                        <div class="row">
+                            
+                        </div>
+                    </div>
+                    <div role="tabpanel" class="tab-pane" id="datasources">
+                        <div class="row">
+                            
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="gallery/gallery.js"></script>
+<script src="js/vendor/modernizr-2.8.3-respond-1.4.2.min.js"></script>
+<script src="../../ThirdParty/jquery/dist/jquery.min.js"></script>
+<script src="../../ThirdParty/bootstrap-3.3.2/js/bootstrap.min.js"></script>
+<script type="text/javascript">
+    var demoEle = '<div class="col-sm-2"><div class="thumbnail"><a href="index.html?src={href}"><img src="img/gallery/{image}.jpg" alt="Demo Thumbnail"><div class="caption"><h5>{title}</h5><p class="hidden-xs">{description}</p></div></a></div></div>';
+    for(var demo in gallery){
+        var label = gallery[demo].labels;
+        var desc = gallery[demo].description;
+        var labels = label.split(',');
+        var imgName = demo.substring(demo.indexOf('/')+1);
+        var ele  = demoEle.replace('{image}', imgName);
+        ele = ele.replace('{title}', demo).replace('{description}',desc).replace('{href}', encodeURIComponent(demo));
+        for(var i = labels.length-1; i>= 0; i--)
+        {
+            // get the labels and add the demo to the respective tabs
+            $('.tab-pane#'+labels[i].trim().toLowerCase()+' .row').append(ele);
+        }
+        // Also add them to all tab
+        $('.tab-pane#all .row').append(ele);
+    }
+</script>
+</body>
+</html>
