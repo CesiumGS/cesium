@@ -2349,15 +2349,21 @@ define([
             destination = scene.camera.getRectangleCameraCoordinates(destination, scratchFlyToDestination);
         }
 
-        var direction;
-        var up;
+        var heading;
+        var pitch;
+        var roll;
 
         var orientation = defaultValue(options.orientation, defaultValue.EMPTY_OBJECT);
         if (defined(orientation.heading)) {
-            var heading = defaultValue(orientation.heading, 0.0);
-            var pitch = defaultValue(orientation.pitch, -CesiumMath.PI_OVER_TWO);
-            var roll = defaultValue(orientation.roll, 0.0);
+            heading = orientation.heading;
+            pitch = orientation.pitch;
+            roll = orientation.roll;
+        } else if (defined(orientation.direction)) {
+            var direction = orientation.direction;
+            var up = orientation.up;
 
+            // TODO?
+            /*
             var rotQuat = Quaternion.fromHeadingPitchRoll(heading - CesiumMath.PI_OVER_TWO, pitch, roll, scratchFlyToQuaternion);
             var rotMat = Matrix3.fromQuaternion(rotQuat, scratchFlyToMatrix3);
 
@@ -2369,14 +2375,13 @@ define([
 
             Matrix4.multiplyByPointAsVector(transform, direction, direction);
             Matrix4.multiplyByPointAsVector(transform, up, up);
-        } else if (defined(orientation.direction)) {
-            direction = orientation.direction;
-            up = orientation.up;
+            */
         }
 
         newOptions.destination = destination;
-        newOptions.direction = direction;
-        newOptions.up = up;
+        newOptions.heading = heading;
+        newOptions.pitch = pitch;
+        newOptions.roll = roll;
         newOptions.duration = options.duration;
         newOptions.complete = options.complete;
         newOptions.cancel = options.cancel;

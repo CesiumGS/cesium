@@ -91,29 +91,6 @@ define([
         return Math.max(dx, dy);
     }
 
-    var scratchStart = new Cartesian3();
-
-    function createUpdateCV(scene, duration, destination, heading, pitch, roll) {
-        var camera = scene.camera;
-
-        var start = Cartesian3.clone(camera.position, scratchStart);
-        var startHeading = camera.heading;
-        var startPitch = camera.pitch;
-        var startRoll = camera.roll;
-
-        if (destination.z <= 0.0) {
-            destination.z = start.z;
-        }
-
-        var update = function(value) {
-            var time = value.time / duration;
-
-            Cartesian3.lerp(start, destination, time, camera.position);
-        };
-
-        return update;
-    }
-
     function adjustAngleForLERP(startAngle, endAngle) {
         if (CesiumMath.equalsEpsilon(startAngle, CesiumMath.TWO_PI, CesiumMath.EPSILON11)) {
             startAngle = 0.0;
@@ -126,6 +103,35 @@ define([
         }
 
         return startAngle;
+    }
+
+    var scratchStart = new Cartesian3();
+
+    function createUpdateCV(scene, duration, destination, heading, pitch, roll) {
+        var camera = scene.camera;
+
+        var start = Cartesian3.clone(camera.position, scratchStart);
+        var startPitch = camera.pitch;
+        var startHeading = adjustAngleForLERP(camera.heading, heading);
+        var startRoll = adjustAngleForLERP(camera.roll, roll);
+
+        if (destination.z <= 0.0) {
+            destination.z = start.z;
+        }
+
+        var update = function(value) {
+            var time = value.time / duration;
+
+            camera.setView({
+                heading : CesiumMath.lerp(startHeading, heading, time),
+                pitch : CesiumMath.lerp(startPitch, pitch, time),
+                roll : CesiumMath.lerp(startRoll, roll, time)
+            });
+
+            Cartesian3.lerp(start, destination, time, camera.position);
+        };
+
+        return update;
     }
 
     var scratchStartPosition = new Cartesian3();
@@ -451,7 +457,7 @@ define([
         var update;
         if (scene.mode === SceneMode.SCENE3D) {
             heading = defaultValue(heading, 0.0);
-            pitch = defaultValue(pitch, CesiumMath.toRadians(-89.9));//-CesiumMath.PI_OVER_TWO);
+            pitch = defaultValue(pitch, -CesiumMath.PI_OVER_TWO);
             roll = defaultValue(roll, 0.0);
 
             update = createUpdate3D(scene, duration, destination, heading, pitch, roll);
