@@ -3,18 +3,11 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
-        '../Core/clone',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/EasingFunction',
-        '../Core/HermiteSpline',
-        '../Core/LinearSpline',
         '../Core/Math',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
-        '../Core/Quaternion',
-        '../Core/QuaternionSpline',
         './PerspectiveFrustum',
         './PerspectiveOffCenterFrustum',
         './SceneMode'
@@ -22,18 +15,11 @@ define([
         Cartesian2,
         Cartesian3,
         Cartographic,
-        clone,
         defaultValue,
         defined,
         DeveloperError,
         EasingFunction,
-        HermiteSpline,
-        LinearSpline,
         CesiumMath,
-        Matrix3,
-        Matrix4,
-        Quaternion,
-        QuaternionSpline,
         PerspectiveFrustum,
         PerspectiveOffCenterFrustum,
         SceneMode) {
@@ -48,28 +34,6 @@ define([
      */
     var CameraFlightPath = {
     };
-
-    var c3destination = new Cartesian3();
-    var rotMatrix = new Matrix3();
-    var viewMat = new Matrix3();
-
-    var cqRight = new Cartesian3();
-    var cqUp = new Cartesian3();
-    function createQuaternion(direction, up, result) {
-        Cartesian3.cross(direction, up, cqRight);
-        Cartesian3.cross(cqRight, direction, cqUp);
-        viewMat[0] = cqRight.x;
-        viewMat[1] = cqUp.x;
-        viewMat[2] = -direction.x;
-        viewMat[3] = cqRight.y;
-        viewMat[4] = cqUp.y;
-        viewMat[5] = -direction.y;
-        viewMat[6] = cqRight.z;
-        viewMat[7] = cqUp.z;
-        viewMat[8] = -direction.z;
-
-        return Quaternion.fromRotationMatrix(viewMat, result);
-    }
 
     function getAltitude(frustum, dx, dy) {
         var near;
@@ -168,11 +132,9 @@ define([
         return update;
     }
 
-    var scratchStartPosition = new Cartesian3();
     var scratchStartCart = new Cartographic();
     var scratchEndCart = new Cartographic();
     var scratchCurrentPositionCart = new Cartographic();
-    var currentFrame = new Matrix4();
 
     function createUpdate3D(scene, duration, destination, heading, pitch, roll) {
         var camera = scene.camera;
@@ -220,123 +182,29 @@ define([
         return update;
     }
 
-    var cartScratch1 = new Cartesian3();
-    function createPath2D(camera, ellipsoid, start, end, duration) {
-        if (CesiumMath.equalsEpsilon(Cartesian2.magnitude(start), Cartesian2.magnitude(end), 10000.0)) {
-            return new LinearSpline({
-                points : [start, end],
-                times : [0.0, duration]
-            });
-        }
-
-        // get minimum altitude from which the whole map is visible
-        var radius = ellipsoid.maximumRadius;
-        var frustum = camera.frustum;
-        var maxStartAlt = getAltitude(frustum, Math.PI * radius,  CesiumMath.PI_OVER_TWO * radius);
-
-        var points;
-        var altitude;
-        var incrementPercentage = 0.5;
-        if (start.z > maxStartAlt) {
-            altitude = 0.6 * maxStartAlt;
-        } else {
-            var diff = Cartesian3.subtract(start, end, cartScratch1);
-            altitude = getAltitude(frustum, Math.abs(diff.y), Math.abs(diff.x));
-        }
-
-        var aboveEnd = Cartesian3.clone(end);
-        aboveEnd.z = altitude;
-        var afterStart = Cartesian3.clone(start);
-        afterStart.z = altitude;
-
-        var middle = new Cartesian3();
-        if (end.z > maxStartAlt) {
-            middle = Cartesian3.add(Cartesian3.multiplyByScalar(Cartesian3.subtract(start, end, middle), 0.5, middle), end, middle);
-            points = [ start, middle, end ];
-        } else if (start.z > maxStartAlt) {
-            middle = Cartesian3.add(Cartesian3.multiplyByScalar(Cartesian3.subtract(start, aboveEnd, middle), 0.5, middle), aboveEnd, middle);
-            points = [ start, middle, end ];
-        } else {
-            points = [ start ];
-
-            var v = Cartesian3.subtract(afterStart, aboveEnd, cartScratch1);
-            var distance = Cartesian3.magnitude(v);
-            Cartesian3.normalize(v, v);
-
-            var increment = incrementPercentage * distance;
-            var startCondition = distance - increment;
-            for ( var i = startCondition; i > 0.0; i = i - increment) {
-                var p = new Cartesian3();
-                points.push(Cartesian3.add(Cartesian3.multiplyByScalar(v, i, p), aboveEnd, p));
-            }
-
-            points.push(end);
-        }
-
-        var times = new Array(points.length);
-        var scalar = duration / (points.length - 1);
-        for ( var k = 0; k < points.length; ++k) {
-            times[k] = k * scalar;
-        }
-
-        return HermiteSpline.createNaturalCubic({
-            points : points,
-            times : times
-        });
-    }
-
-    var direction2D = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
-    var right2D = new Cartesian3();
-    right2D = Cartesian3.normalize(Cartesian3.cross(direction2D, Cartesian3.UNIT_Y, right2D), right2D);
-    var up2D = Cartesian3.cross(right2D, direction2D, new Cartesian3());
-    var quat = createQuaternion(direction2D, up2D);
-
-    function createOrientations2D(camera, path, endDirection, endUp) {
-        var points = path.points;
-        var orientations = new Array(points.length);
-        orientations[0] = createQuaternion(camera.direction, camera.up);
-
-        var length = points.length - 1;
-        for (var i = 1; i < length; ++i) {
-            orientations[i] = quat;
-        }
-
-        if (defined(endDirection) && defined(endUp)) {
-            orientations[length] = createQuaternion(endDirection, endUp);
-        } else {
-            orientations[length] = quat;
-        }
-
-        return new QuaternionSpline({
-            points : orientations,
-            times : path.times
-        });
-    }
-
-    function createUpdate2D(scene, destination, duration, direction, up) {
+    function createUpdate2D(scene, destination, duration, heading, pitch, roll) {
         var camera = scene.camera;
-        var ellipsoid = scene.mapProjection.ellipsoid;
 
-        var start = Cartesian3.clone(camera.position);
-        start.z = camera.frustum.right - camera.frustum.left;
+        var start = Cartesian3.clone(camera.position, scratchStart);
+        var startPitch = camera.pitch;
+        var startHeading = adjustAngleForLERP(camera.heading, heading);
+        var startRoll = adjustAngleForLERP(camera.roll, roll);
 
-        var path = createPath2D(camera, ellipsoid, start, destination, duration);
-        var orientations = createOrientations2D(camera, path, Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), up);
-
-        var height = camera.position.z;
+        var startHeight = camera.frustum.right - camera.frustum.left;
+        var heightFunction = createHeightFunction(camera, destination, startHeight, destination.z);
 
         var update = function(value) {
-            var time = value.time;
-            var orientation = orientations.evaluate(time);
-            Matrix3.fromQuaternion(orientation, rotMatrix);
+            var time = value.time / duration;
 
-            camera.position = path.evaluate(time);
-            var zoom = camera.position.z;
-            camera.position.z = height;
+            camera.setView({
+                heading : CesiumMath.lerp(startHeading, heading, time),
+                pitch : CesiumMath.lerp(startPitch, pitch, time),
+                roll : CesiumMath.lerp(startRoll, roll, time)
+            });
 
-            camera.right = Matrix3.getRow(rotMatrix, 0, camera.right);
-            camera.up = Matrix3.getRow(rotMatrix, 1, camera.up);
-            camera.direction = Cartesian3.negate(Matrix3.getRow(rotMatrix, 2, camera.direction), camera.direction);
+            Cartesian2.lerp(start, destination, time, camera.position);
+
+            var zoom = heightFunction(time);
 
             var frustum = camera.frustum;
             var ratio = frustum.top / frustum.right;
@@ -507,7 +375,11 @@ define([
 
             update = createUpdateCV(scene, duration, destination, heading, pitch, roll);
         } else {
-            update = createUpdate2D(scene, destination, duration, direction, up);
+            heading = defaultValue(heading, 0.0);
+            pitch = -CesiumMath.PI_OVER_TWO;
+            roll = defaultValue(roll, 0.0);
+
+            update = createUpdate2D(scene, destination, duration, heading, pitch, roll);
         }
 
         return {
