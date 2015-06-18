@@ -180,7 +180,7 @@ define([
 
         var maxHeight = Math.max(startCart.height, destCart.height);
         var minHeight = Math.min(startCart.height, destCart.height);
-        var altitude = Math.min(getAltitude(frustum, verticalDistance, horizontalDistance) * 0.15, 1000000.0);
+        var altitude = Math.min(getAltitude(frustum, verticalDistance, horizontalDistance) * 0.20, 1000000000.0);
 
         var heightFunction;
         if (maxHeight < altitude) {
@@ -512,7 +512,7 @@ define([
 
         return {
             duration : duration,
-            easingFunction : EasingFunction.QUADRACTIC_IN_OUT,
+            easingFunction : EasingFunction.QUINTIC_IN_OUT,
             startObject : {
                 time : 0.0
             },
