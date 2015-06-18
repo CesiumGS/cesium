@@ -138,8 +138,11 @@ define([
 
     function processFeatureCollection(that, gml) {
         var documentNode = gml.documentElement;
-        var featureCollection = documentNode.getElementsByTagNameNS(gmlns, "featureMember") || documentNode.getElementsByTagNameNS(gmlns, "featureMembers");
-        
+        var featureCollection = documentNode.getElementsByTagNameNS(gmlns, "featureMember");
+        if(featureCollection.length == 0) {
+        	featureCollection = documentNode.getElementsByTagNameNS(gmlns, "featureMembers");
+        }
+
 /*        
         var boundByNode = documentNode.getElementsByTagNameNS(gmlns, "BoundBy");
         if(boundByNode) {
@@ -189,22 +192,27 @@ define([
 
     function processPoint(that, point, properties, crsFunction) {
         var coordString = point.firstElementChild.textContent;
-        createPoint(that, coordString, properties, crsFunction);
+        var coordinates = processCoordinates(coordString, 2, crsFunction);
+        createPoint(that, coordinates, properties, crsFunction);
     }
 
     function processMultiPoint(that, multiPoint, properties, crsFunction) {
-        var pointMembers = multiPoint.getElementsByTagNameNS(gmlns, "pointMember") || multiPoint.getElementsByTagNameNS(gmlns, "pointMembers");
+        var pointMembers = multiPoint.getElementsByTagNameNS(gmlns, "pointMember");
+        if(pointMemers.length == 0) {
+        	pointMembers = multiPoint.getElementsByTagNameNS(gmlns, "pointMembers");
+        }
+
         for(var i=0; i<pointMembers.length; i++) {
             var points = pointMembers[i].children;
             for(var j=0; j<points.length; j++) {
             	var coordString = points[j].firstElementChild.textContent;
-                createPoint(that, coordString, properties, crsFunction);
+		        var coordinates = processCoordinates(coordString, 2, crsFunction);
+                createPoint(that, coordinates, properties, crsFunction);
             }
         }
     }
 
-    function createPoint(that, coordString, properties, crsFunction) {
-        var coordinates = processCoordinates(coordString, 2, crsFunction);
+    function createPoint(that, coordinates, properties, crsFunction) {
         var canvasOrPromise = that._pinBuilder.fromColor(defaultMarkerColor, defaultMarkerSize);
 
         that._promises.push(when(canvasOrPromise, function(dataUrl) {
@@ -221,12 +229,12 @@ define([
     }
 
     function processLineString(that, lineString, properties, crsFunction) {
-        var coordinates = lineString.firstElementChild.textContent;
+        var coordString = lineString.firstElementChild.textContent;
+        var coordinates = processCoordinates(coordString, 2, crsFunction);
         createLineString(that, coordinates, properties, crsFunction);                
     }
 
-    function createLineString(that, coordString, properties, crsFunction) {
-        var coordinates = processCoordinates(coordString, 2, crsFunction);
+    function createLineString(that, coordinates, properties, crsFunction) {
         var polyline = new PolylineGraphics();
         polyline.material = defaultStrokeMaterialProperty;
         polyline.width = defaultStrokeWidthProperty;
