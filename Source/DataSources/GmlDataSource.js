@@ -249,6 +249,46 @@ define([
         }
     }
 
+    function processCurve(that, curve, properties, crsFunction) {
+    	var segments = curve.firstElementChild.children;
+    	curveGeometryHandler = curveType(segments[0].localName);
+    	curveGeometryHandler(that, segments, properties, crsFunction);
+    }
+
+    function processMultiCurve(that, multiCurve, properties, crsFunction) {
+    	var curveMembers = multiCurve.getElementsByTagNameNS(gmlns, "curveMember");
+    	if(curveMembers.length == 0) {
+    		curveMembers = multiCurve.getElementsByTagNameNS(gmlns, "curveMembers");	
+    	}
+
+    	for(var i = 0; i < curveMembers.length; i++) {
+    		var curves = curveMembers[i].children;
+    		for(var j = 0; j < curves.length; j++) {
+    			var segments = curves[j].firstElementChild.children;
+    			curveGeometryHandler = curveType(segments[0].localName);
+    			curveGeometryHandler(that, segments, properties, crsFunction);
+    		}
+    	}
+    }
+
+    function processLineStringSegment(that, segments, properties, crsFunction) {
+    	var coordinates = [];
+    	for(i=0; i<segments.length; i++) {
+    		var coordString = segments[i].firstElementChild.textContent;
+    		segmentPos = processCoordinates(coordString, 2, crsFunction);
+    		if(coordinates.length) {
+    			if(equals(segmentPos[0], coordinates[coordinates.length - 1])) {
+    				coordinates = coordinates.concat(segmentPos);
+    			} else {
+    				; //Error
+    			}
+    		} else {
+    			coordinates = segmentPos;
+    		}
+    	}
+    	createLineString(that, coordinates, properties, crsFunction);
+    }
+
     function createLineString(that, coordinates, properties, crsFunction) {
         var polyline = new PolylineGraphics();
         polyline.material = defaultStrokeMaterialProperty;
@@ -259,11 +299,18 @@ define([
         entity.polyline = polyline;
     }
 
+    var curveTypes = {
+    	LineStringSegment : processLineStringSegment,
+    	//Arc : processArc,
+    	//Circle : processCircle,
+    	//CircleByCenterPoint : processCircleByCenterPoint
+    };
+
     var geometryTypes = {
-    	//Curve : processCurve,
+    	Curve : processCurve,
         //GeometryCollection : processGeometryCollection,
         LineString : processLineString,
-        //MultiCurve : processMultiCurve,
+        MultiCurve : processMultiCurve,
         MultiLineString : processMultiLineString,
         MultiPoint : processMultiPoint,
         //MultiPolygon : processMultiPolygon,
