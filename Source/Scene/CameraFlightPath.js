@@ -140,10 +140,10 @@ define([
     var scratchCurrentPositionCart = new Cartographic();
     var currentFrame = new Matrix4();
 
-    //var scratchCart = new Cartesian3();
-    //var scratchCart2 = new Cartesian3();
+    var scratchCart = new Cartesian3();
+    var scratchCart2 = new Cartesian3();
 
-    function createUpdate3D(scene, duration, destination, heading, pitch, roll, maxHeight) {
+    function createUpdate3D(scene, duration, destination, heading, pitch, roll) {
         var camera = scene.camera;
         var projection = scene.mapProjection;
         var ellipsoid = projection.ellipsoid;
@@ -168,7 +168,6 @@ define([
             destCart.longitude += CesiumMath.TWO_PI;
         }
 
-        /*
         var start = camera.position;
         var end = destination;
         var up = camera.up;
@@ -176,37 +175,24 @@ define([
         var frustum = camera.frustum;
 
         diff = Cartesian3.subtract(start, end, scratchCart);
-        var altitude = Cartesian3.magnitude(Cartesian3.add(Cartesian3.multiplyByScalar(diff, 0.5, scratchCart2), end, scratchCart2));
         var verticalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(up, Cartesian3.dot(diff, up), scratchCart2));
         var horizontalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(right, Cartesian3.dot(diff, right), scratchCart2));
-        altitude += getAltitude(frustum, verticalDistance, horizontalDistance);
 
-        maxHeight = altitude;
-        */
+        var maxHeight = Math.max(startCart.height, destCart.height);
+        var minHeight = Math.min(startCart.height, destCart.height);
+        var altitude = Math.min(getAltitude(frustum, verticalDistance, horizontalDistance) * 0.15, 1000000.0);
 
         var heightFunction;
-        if (defined(maxHeight)) {
-            var a = -2.0 * maxHeight;
-            var b = -maxHeight;
-            var c = maxHeight - startCart.height;
+        if (maxHeight < altitude) {
+            var power = 8.0;
+            var factor = 1000000.0;
 
-            var q = (-b + Math.sqrt(b * b - 4.0 * a * c)) / (2 * a);
-            var p = (-b - Math.sqrt(b * b - 4.0 * a * c)) / (2 * a);
-
-            var s = Math.min(q, p);
-
-            c = maxHeight - destCart.height;
-
-            q = (-b + Math.sqrt(b * b - 4.0 * a * c)) / (2 * a);
-            p = (-b - Math.sqrt(b * b - 4.0 * a * c)) / (2 * a);
-
-            var e = Math.max(q, p);
-
-            c = maxHeight;
+            var s = -Math.pow((altitude - startCart.height) * factor, 1.0 / power);
+            var e = Math.pow((altitude - destCart.height) * factor, 1.0 / power);
 
             heightFunction = function(t) {
                 var x = t * (e - s) + s;
-                return c + x * (b + x * a);
+                return -Math.pow(x, power) / factor + altitude;
             };
         }
 
@@ -506,6 +492,9 @@ define([
 
         var update;
         if (scene.mode === SceneMode.SCENE3D) {
+            duration = Math.ceil(Cartesian3.distance(camera.position, destination) / 1000000.0) + 3.0;
+            duration = Math.min(duration, 10.0);
+
             heading = defaultValue(heading, 0.0);
             pitch = defaultValue(pitch, -CesiumMath.PI_OVER_TWO);
             roll = defaultValue(roll, 0.0);
@@ -523,7 +512,7 @@ define([
 
         return {
             duration : duration,
-            easingFunction : EasingFunction.QUINTIC_OUT,
+            easingFunction : EasingFunction.QUADRACTIC_IN_OUT,
             startObject : {
                 time : 0.0
             },
