@@ -4,12 +4,14 @@ defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/JulianDate',
+        'Core/Quaternion',
         'Core/Transforms',
         'DataSources/BoundingSphereState',
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
         'DataSources/EntityCollection',
         'DataSources/ModelGraphics',
+        'DataSources/ModelTransformProperty',
         'Scene/Globe',
         'Specs/createScene',
         'Specs/pollToPromise'
@@ -18,12 +20,14 @@ defineSuite([
         BoundingSphere,
         Cartesian3,
         JulianDate,
+        Quaternion,
         Transforms,
         BoundingSphereState,
         ConstantPositionProperty,
         ConstantProperty,
         EntityCollection,
         ModelGraphics,
+        ModelTransformProperty,
         Globe,
         createScene,
         pollToPromise) {
@@ -111,6 +115,15 @@ defineSuite([
         model.scale = new ConstantProperty(2);
         model.minimumPixelSize = new ConstantProperty(24.0);
         model.uri = new ConstantProperty(boxUrl);
+
+        var nodeTransforms = {
+                Mesh : new ModelTransformProperty({
+                    scale : new ConstantProperty(Cartesian3.UNIT_X),
+                    translate : new ConstantProperty(Cartesian3.UNIT_Y),
+                    rotate : new ConstantProperty(Quaternion.IDENTITY)
+                })
+        };
+        //model.nodeTransforms
 
         var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantPositionProperty(Cartesian3.fromDegrees(1, 2, 3));

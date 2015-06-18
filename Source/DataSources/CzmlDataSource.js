@@ -52,6 +52,7 @@ define([
         './ImageMaterialProperty',
         './LabelGraphics',
         './ModelGraphics',
+        './ModelTransformProperty',
         './PathGraphics',
         './PointGraphics',
         './PolygonGraphics',
@@ -121,6 +122,7 @@ define([
         ImageMaterialProperty,
         LabelGraphics,
         ModelGraphics,
+        ModelTransformProperty,
         PathGraphics,
         PointGraphics,
         PolygonGraphics,
@@ -1177,6 +1179,36 @@ define([
         processPacketData(Number, model, 'scale', modelData.scale, interval, sourceUri, entityCollection);
         processPacketData(Number, model, 'minimumPixelSize', modelData.minimumPixelSize, interval, sourceUri, entityCollection);
         processPacketData(Uri, model, 'uri', modelData.gltf, interval, sourceUri, entityCollection);
+        processModelNodeTransformations(modelData.nodeTransformations, model, entityCollection);
+    }
+
+    function processModelNodeTransformations(nodeTransformData, model, entityCollection) {
+        if (!defined(nodeTransformData)) {
+            return;
+        }
+
+        var nodeNames = Object.keys(nodeTransformData);
+
+        var length = nodeNames.length;
+        for (var i = 0; i < length; i++) {
+            var nodeName = nodeNames[i];
+            var node = nodeTransformData[nodeName];
+
+            var nodeTransforms = model.nodeTransformations;
+            if(!defined(nodeTransforms)) {
+                nodeTransforms = {};
+            }
+
+            var nodeTransform = nodeTransforms[nodeName];
+            if(!defined(nodeTransform)){
+                nodeTransform = new ModelTransformProperty();
+            }
+
+            processPacketData(Cartesian3, node, 'scale', node.scale, undefined, undefined, entityCollection);
+            processPacketData(Cartesian3, node, 'translate', node.translate, undefined, undefined, entityCollection);
+            processPacketData(Rotation, node, 'rotate', node.rotate, undefined, undefined, entityCollection);
+        }
+
     }
 
     function processPath(entity, packet, entityCollection, sourceUri) {

@@ -7,9 +7,11 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Matrix4',
+        '../Core/RuntimeError',
         '../Scene/Model',
         '../Scene/ModelAnimationLoop',
         './BoundingSphereState',
+        './ModelTransformProperty',
         './Property'
     ], function(
         AssociativeArray,
@@ -19,9 +21,11 @@ define([
         destroyObject,
         DeveloperError,
         Matrix4,
+        RuntimeError,
         Model,
         ModelAnimationLoop,
         BoundingSphereState,
+        ModelTransformProperty,
         Property) {
     "use strict";
     /*global console*/
@@ -126,6 +130,30 @@ define([
             model.scale = Property.getValueOrDefault(modelGraphics._scale, time, defaultScale);
             model.minimumPixelSize = Property.getValueOrDefault(modelGraphics._minimumPixelSize, time, defaultMinimumPixelSize);
             model.modelMatrix = Matrix4.clone(modelMatrix, model.modelMatrix);
+
+            // apply node transformations
+            var nodeTransformations = Property.getValue(modelGraphics._nodeTransformations, time);
+            if(defined(nodeTransformations)) {
+
+                var nodeNames = Object.keys(nodeTransformations);
+                var length = nodeNames.length;
+                for (var j = 0; j < length; j++) {
+                    var nodeName = nodeNames[j];
+                    var transformation = nodeTransformations[nodeName];
+
+                    var modelNode = model.getNode(nodeName);
+                    if(defined(modelNode)) {
+                        var scale = Property.getValue(transformation._scale, time);
+                        var translate = Property.getValue(transformation._translate, time);
+                        var rotate = Property.getValue(transformation._rotate, time);
+                        var order = Property.getValue(transformation._transformationOrder, time);
+
+                        var transformMtx = Matrix4.fromTranslationQuaternionRotationScale(translate, rotate, scale);
+                        modelNode.matrix = transformMtx;
+                    }
+                }
+            }
+
         }
         return true;
     };

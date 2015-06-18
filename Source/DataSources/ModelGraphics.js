@@ -5,14 +5,16 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createPropertyDescriptor'
+        './createPropertyDescriptor',
+        './createRawPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createPropertyDescriptor) {
+        createPropertyDescriptor,
+        createRawPropertyDescriptor) {
     "use strict";
 
     /**
@@ -44,6 +46,8 @@ define([
         this._minimumPixelSizeSubscription = undefined;
         this._uri = undefined;
         this._uriSubscription = undefined;
+        this._nodeTransformations = undefined;
+        this._nodeTransformationsSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -96,7 +100,14 @@ define([
          * @memberof ModelGraphics.prototype
          * @type {Property}
          */
-        uri : createPropertyDescriptor('uri')
+        uri : createPropertyDescriptor('uri'),
+
+        /**
+         * Gets or sets the string Property specifying the 3D transformations to apply to glTF asset nodes.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         */
+        nodeTransformations : createRawPropertyDescriptor('nodeTransformations')
     });
 
     /**
@@ -113,6 +124,8 @@ define([
         result.scale = this.scale;
         result.minimumPixelSize = this.minimumPixelSize;
         result.uri = this.uri;
+        result.nodeTransformations = this.nodeTransformations;
+
         return result;
     };
 
@@ -133,6 +146,7 @@ define([
         this.scale = defaultValue(this.scale, source.scale);
         this.minimumPixelSize = defaultValue(this.minimumPixelSize, source.minimumPixelSize);
         this.uri = defaultValue(this.uri, source.uri);
+        this.nodeTransformations = defaultValue(this.nodeTransformations, source.nodeTransformations);
     };
 
     return ModelGraphics;
