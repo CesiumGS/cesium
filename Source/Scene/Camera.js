@@ -2518,24 +2518,12 @@ define([
         var transform = Transforms.eastNorthUpToFixedFrame(boundingSphere.center, Ellipsoid.WGS84, scratchflyToBoundingSphereTransform);
         Matrix4.multiplyByPoint(transform, position, position);
 
-        var direction;
-        var up;
-
-        if (!scene2D) {
-            direction = Cartesian3.subtract(boundingSphere.center, position, scratchflyToBoundingSphereDirection);
-            Cartesian3.normalize(direction, direction);
-
-            up = Matrix4.multiplyByPointAsVector(transform, Cartesian3.UNIT_Z, scratchflyToBoundingSphereUp);
-            var right = Cartesian3.cross(direction, up, scratchflyToBoundingSphereRight);
-            Cartesian3.cross(right, direction, up);
-            Cartesian3.normalize(up, up);
-        }
-
         this.flyTo({
             destination : position,
             orientation : {
-                direction : direction,
-                up : up
+                heading : offset.heading,
+                pitch : offset.pitch,
+                roll : 0.0
             },
             duration : options.duration,
             complete : options.complete,
