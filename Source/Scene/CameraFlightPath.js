@@ -225,11 +225,30 @@ define([
     var scratchCartographic = new Cartographic();
     var scratchDestination = new Cartesian3();
 
+    function emptyFlight(complete, cancel) {
+        return {
+            startObject : {},
+            stopObject : {},
+            duration : 0.0,
+            complete : complete,
+            cancel : cancel
+        };
+    }
+
+    function wrapCallback(controller, cb) {
+        var wrapped = function() {
+            if (typeof cb === 'function') {
+                cb();
+            }
+
+            controller.enableInputs = true;
+        };
+        return wrapped;
+    }
+
     CameraFlightPath.createTween = function(scene, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var destination = options.destination;
-        var direction = options.direction;
-        var up = options.up;
 
         var projection = scene.mapProjection;
         var ellipsoid = projection.ellipsoid;
@@ -244,11 +263,7 @@ define([
         //>>includeEnd('debug');
 
         if (scene.mode === SceneMode.MORPHING) {
-            return {
-                startObject : {},
-                stopObject: {},
-                duration : 0.0
-            };
+            return emptyFlight();
         }
 
         var convert = defaultValue(options.convert, true);
@@ -258,129 +273,63 @@ define([
             destination = projection.project(scratchCartographic, scratchDestination);
         }
 
-        var duration = defaultValue(options.duration, 3.0);
-        var controller = scene.screenSpaceCameraController;
-        controller.enableInputs = false;
-
-        var wrapCallback = function(cb) {
-            var wrapped = function() {
-                if (typeof cb === 'function') {
-                    cb();
-                }
-
-                controller.enableInputs = true;
-            };
-            return wrapped;
-        };
-        var complete = wrapCallback(options.complete);
-        var cancel = wrapCallback(options.cancel);
-
         var camera = scene.camera;
         var transform = options.endTransform;
         if (defined(transform)) {
             camera._setTransform(transform);
         }
 
+        var duration = options.duration;
+        if (!defined(duration)) {
+            duration = Math.ceil(Cartesian3.distance(camera.position, destination) / 1000000.0) + 3.0;
+            duration = Math.min(duration, 10.0);
+        }
+
+        var mode = scene.mode;
+        var heading = defaultValue(heading, 0.0);
+        var pitch = scene.mode !== SceneMode.SCENE2D ? defaultValue(pitch, -CesiumMath.PI_OVER_TWO) : -CesiumMath.PI_OVER_TWO;
+        var roll = defaultValue(roll, 0.0);
+
+        var controller = scene.screenSpaceCameraController;
+        controller.enableInputs = false;
+
+        var complete = wrapCallback(controller, options.complete);
+        var cancel = wrapCallback(controller, options.cancel);
+
         var frustum = camera.frustum;
-        if (scene.mode === SceneMode.SCENE2D) {
-            if (Cartesian2.equalsEpsilon(camera.position, destination, CesiumMath.EPSILON6) && (CesiumMath.equalsEpsilon(Math.max(frustum.right - frustum.left, frustum.top - frustum.bottom), destination.z, CesiumMath.EPSILON6))) {
-                return {
-                    startObject : {},
-                    stopObject: {},
-                    duration : 0.0,
-                    complete : complete,
-                    cancel: cancel
-                };
-            }
-        } else if (Cartesian3.equalsEpsilon(destination, camera.position, CesiumMath.EPSILON6)) {
-            return {
-                startObject : {},
-                stopObject: {},
-                duration : 0.0,
-                complete : complete,
-                cancel: cancel
-            };
+
+        var empty = scene.mode === SceneMode.SCENE2D;
+        empty = empty && Cartesian2.equalsEpsilon(camera.position, destination, CesiumMath.EPSILON6);
+        empty = empty && CesiumMath.equalsEpsilon(Math.max(frustum.right - frustum.left, frustum.top - frustum.bottom), destination.z, CesiumMath.EPSILON6);
+
+        empty = empty || (scene.mode !== SceneMode.SCENE2D && Cartesian3.equalsEpsilon(destination, camera.position, CesiumMath.EPSILON6));
+
+        if (empty) {
+            return emptyFlight(complete, cancel);
         }
 
         if (duration <= 0.0) {
             var newOnComplete = function() {
-                var position = destination;
-                if (scene.mode === SceneMode.SCENE3D) {
-                    if (!defined(options.direction) && !defined(options.up)){
-                        dirScratch = Cartesian3.normalize(Cartesian3.negate(position, dirScratch), dirScratch);
-                        rightScratch = Cartesian3.normalize(Cartesian3.cross(dirScratch, Cartesian3.UNIT_Z, rightScratch), rightScratch);
-                    } else {
-                        dirScratch = options.direction;
-                        rightScratch = Cartesian3.normalize(Cartesian3.cross(dirScratch, options.up, rightScratch), rightScratch);
-                    }
-                    upScratch = defaultValue(options.up, Cartesian3.cross(rightScratch, dirScratch, upScratch));
-                } else {
-                    if (!defined(options.direction) && !defined(options.up)){
-                        dirScratch = Cartesian3.negate(Cartesian3.UNIT_Z, dirScratch);
-                        rightScratch = Cartesian3.normalize(Cartesian3.cross(dirScratch, Cartesian3.UNIT_Y, rightScratch), rightScratch);
-                    } else {
-                        dirScratch = options.direction;
-                        rightScratch = Cartesian3.normalize(Cartesian3.cross(dirScratch, options.up, rightScratch), rightScratch);
-                    }
-                    upScratch = defaultValue(options.up, Cartesian3.cross(rightScratch, dirScratch, upScratch));
-                }
-
-                Cartesian3.clone(position, camera.position);
-                Cartesian3.clone(dirScratch, camera.direction);
-                Cartesian3.clone(upScratch, camera.up);
-                Cartesian3.clone(rightScratch, camera.right);
-
-                if (scene.mode === SceneMode.SCENE2D) {
-                    var zoom = camera.position.z;
-                    var ratio = frustum.top / frustum.right;
-
-                    var incrementAmount = (zoom - (frustum.right - frustum.left)) * 0.5;
-                    frustum.right += incrementAmount;
-                    frustum.left -= incrementAmount;
-                    frustum.top = ratio * frustum.right;
-                    frustum.bottom = -frustum.top;
-                }
+                camera.setView({
+                    position : destination,
+                    heading : heading,
+                    pitch : pitch,
+                    roll : roll
+                });
 
                 if (typeof complete === 'function') {
                     complete();
                 }
             };
-            return {
-                startObject : {},
-                stopObject: {},
-                duration : 0.0,
-                complete : newOnComplete,
-                cancel: cancel
-            };
+            return emptyFlight(newOnComplete, cancel);
         }
 
-        var heading;
-        var pitch;
-        var roll;
+        var updateFunctions = new Array(4);
+        updateFunctions[SceneMode.SCENE2D] = createUpdate2D;
+        updateFunctions[SceneMode.SCENE3D] = createUpdate3D;
+        updateFunctions[SceneMode.COLUMBUS_VIEW] = createUpdateCV;
 
-        var update;
-        if (scene.mode === SceneMode.SCENE3D) {
-            duration = Math.ceil(Cartesian3.distance(camera.position, destination) / 1000000.0) + 3.0;
-            duration = Math.min(duration, 10.0);
-
-            heading = defaultValue(heading, 0.0);
-            pitch = defaultValue(pitch, -CesiumMath.PI_OVER_TWO);
-            roll = defaultValue(roll, 0.0);
-
-            update = createUpdate3D(scene, duration, destination, heading, pitch, roll);
-        } else if (scene.mode === SceneMode.COLUMBUS_VIEW) {
-            heading = defaultValue(heading, 0.0);
-            pitch = defaultValue(pitch, -CesiumMath.PI_OVER_TWO);
-            roll = defaultValue(roll, 0.0);
-
-            update = createUpdateCV(scene, duration, destination, heading, pitch, roll);
-        } else {
-            heading = defaultValue(heading, 0.0);
-            pitch = -CesiumMath.PI_OVER_TWO;
-            roll = defaultValue(roll, 0.0);
-
-            update = createUpdate2D(scene, destination, duration, heading, pitch, roll);
-        }
+        var update = updateFunctions[mode](scene, duration, destination, heading, pitch, roll);
 
         return {
             duration : duration,
