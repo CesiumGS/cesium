@@ -234,6 +234,21 @@ define([
         createLineString(that, coordinates, properties, crsFunction);                
     }
 
+    function processMultiLineString(that, multiLineString, properties, crsFunction) {
+        var lineStringMembers = multiLineString.getElementsByTagNameNS(gmlns, "lineStringMember");
+        if(lineStringMembers.length == 0) {
+        	lineStringMembers = multiLineString.getElementsByTagNameNS(gmlns, "lineStringMembers");	
+        } 
+        for(var i=0; i<lineStringMembers.length; i++) {
+            var lineStrings = lineStringMembers[i].children;
+            for(var j=0; j<lineStrings.length; j++) {
+                var coordString = lineStrings[j].firstElementChild.textContent;
+		        var coordinates = processCoordinates(coordString, 2, crsFunction);
+                createLineString(that, coordinates, properties, crsFunction);
+            }
+        }
+    }
+
     function createLineString(that, coordinates, properties, crsFunction) {
         var polyline = new PolylineGraphics();
         polyline.material = defaultStrokeMaterialProperty;
@@ -245,9 +260,11 @@ define([
     }
 
     var geometryTypes = {
+    	//Curve : processCurve,
         //GeometryCollection : processGeometryCollection,
         LineString : processLineString,
-        //MultiLineString : processMultiLineString,
+        //MultiCurve : processMultiCurve,
+        MultiLineString : processMultiLineString,
         MultiPoint : processMultiPoint,
         //MultiPolygon : processMultiPolygon,
         Point : processPoint
