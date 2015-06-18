@@ -872,6 +872,8 @@ define([
         debugDestroyPrimitive = function() {
             if (defined(primitive)) {
                 primitive.destroy();
+                primitive = undefined;
+                previousVolume = undefined;
             }
         };
     })();
