@@ -241,14 +241,34 @@ define([
         return b.distanceToCamera - a.distanceToCamera;
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // TODO: make this real and system-wide
+    var RequestScheduler = function() {
+        this.numberOfPendingRequests = 0;
+        /**
+         * @readonly
+         */
+        this.maximumNumberOfPendingRequests = 6;
+    };
+    RequestScheduler.prototype.hasAvailableRequests = function() {
+        return this.numberOfPendingRequests < this.maximumNumberOfPendingRequests;
+    };
+    var requestScheduler = new RequestScheduler();
+    ///////////////////////////////////////////////////////////////////////////
+
     function requestContent(tiles3D, tile) {
+        if (!requestScheduler.hasAvailableRequests()) {
+            return;
+        }
+        ++requestScheduler.numberOfPendingRequests;
+
         var stats = tiles3D._statistics;
         ++stats.numberOfPendingRequests;
         addLoadProgressEvent(tiles3D);
 
         tile.requestContent();
         var removeFunction = removeFromProcessingQueue(tiles3D, tile);
-        when(tile.processingPromise).then(addToProcessingQueue(tiles3D, tile));
+        when(tile.processingPromise).then(addToProcessingQueue(tiles3D, tile)).otherwise(endRequest(tiles3D, tile));
         when(tile.readyPromise).then(removeFunction).otherwise(removeFunction);
     }
 
@@ -323,26 +343,31 @@ define([
                 if (sse > maximumScreenSpaceError) {
                     // Tile does not meet SSE. Refine to them in front-to-back order.
 
-                    // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
-                    computeDistanceToCamera(children, frameState);
+                    // Only sort and refine (render or request children) if any
+                    // children are loaded or request slots are available.
+                    var anyChildrenLoaded = (t.numberOfChildrenWithoutContent < childrenLength);
+                    if (anyChildrenLoaded || requestScheduler.hasAvailableRequests()) {
+                        // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
+                        computeDistanceToCamera(children, frameState);
 
-                    // Sort children by distance for (1) request ordering, and (2) early-z
-                    children.sort(sortChildrenByDistanceToCamera);
+                        // Sort children by distance for (1) request ordering, and (2) early-z
+                        children.sort(sortChildrenByDistanceToCamera);
 // TODO: is pixel size better?
 // TODO: consider priority queue instead of explicit sort, which would no longer be DFS.
 
-                    // With additive refinement, we only request children that are visible, compared
-                    // to replacement refinement where we need all children.
-                    for (k = 0; k < childrenLength; ++k) {
-                        child = children[k];
-                        child.parentFullyVisible = fullyVisible;
+                        // With additive refinement, we only request children that are visible, compared
+                        // to replacement refinement where we need all children.
+                        for (k = 0; k < childrenLength; ++k) {
+                            child = children[k];
+                            child.parentFullyVisible = fullyVisible;
 
-                        // Use parent's geometric error with child's box to see if we already meet the SSE
-                        if (getScreenSpaceError(t.geometricError, child, context, frameState) > maximumScreenSpaceError) {
-                            if (child.isContentUnloaded() && (visible(child, cullingVolume, stats) !== Intersect.OUTSIDE) && outOfCore) {
-                                requestContent(tiles3D, child);
-                            } else {
-                                stack.push(child);
+                            // Use parent's geometric error with child's box to see if we already meet the SSE
+                            if (getScreenSpaceError(t.geometricError, child, context, frameState) > maximumScreenSpaceError) {
+                                if (child.isContentUnloaded() && (visible(child, cullingVolume, stats) !== Intersect.OUTSIDE) && outOfCore) {
+                                    requestContent(tiles3D, child);
+                                } else {
+                                    stack.push(child);
+                                }
                             }
                         }
                     }
@@ -353,7 +378,6 @@ define([
                 // With replacement refinement, the if the tile's SSE
                 // is not sufficient, its children (or ancestors) are
                 // rendered instead
-                var allChildrenLoaded = t.numberOfChildrenWithoutContent === 0;
 
                 if ((sse <= maximumScreenSpaceError) || (childrenLength === 0.0)) {
                     // This tile meets the SSE so add its commands.
@@ -364,19 +388,26 @@ define([
                 } else {
                     // Tile does not meet SSE.
 
-                    // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
-                    computeDistanceToCamera(children, frameState);
+                    // Only sort children by distance if we are going to refine to them
+                    // or slots are available to request them.  If we are just rendering the
+                    // tile (and can't make child requests because no slots are available)
+                    // then the children do not need to be sorted.
+                    var allChildrenLoaded = t.numberOfChildrenWithoutContent === 0;
+                    if (allChildrenLoaded || requestScheduler.hasAvailableRequests()) {
+                        // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
+                        computeDistanceToCamera(children, frameState);
 
-                    // Sort children by distance for (1) request ordering, and (2) early-z
-                    children.sort(sortChildrenByDistanceToCamera);
+                        // Sort children by distance for (1) request ordering, and (2) early-z
+                        children.sort(sortChildrenByDistanceToCamera);
 // TODO: same TODO as above.
+                    }
 
                     if (!allChildrenLoaded) {
                         // Tile does not meet SSE.  Add its commands since it is the best we have and request its children.
                         selectTile(selectedTiles, t, fullyVisible, frameState);
 
                         if (outOfCore) {
-                            for (k = 0; k < childrenLength; ++k) {
+                            for (k = 0; (k < childrenLength) && requestScheduler.hasAvailableRequests(); ++k) {
                                 child = children[k];
 // TODO: we could spin a bit less CPU here and probably above by keeping separate lists for unloaded/ready children.
                                 if (child.isContentUnloaded()) {
@@ -415,6 +446,15 @@ define([
             var index = tiles3D._processingQueue.indexOf(tile);
             tiles3D._processingQueue.splice(index, 1);
 
+            --requestScheduler.numberOfPendingRequests;
+            --tiles3D._statistics.numberProcessing;
+            addLoadProgressEvent(tiles3D);
+        };
+    }
+
+    function endRequest(tiles3D, tile) {
+        return function() {
+            --requestScheduler.numberOfPendingRequests;
             --tiles3D._statistics.numberProcessing;
             addLoadProgressEvent(tiles3D);
         };
