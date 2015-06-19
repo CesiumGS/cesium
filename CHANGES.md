@@ -25,7 +25,7 @@ Change Log
 * Added `EllipsoidTangentPlane.xAxis`/`yAxis`/`zAxis` properties to get the local coordinate system of the tangent plane.
 * Add `QuantizedMeshTerrainData` constructor argument `orientedBoundingBox`.
 * Add `TerrainMesh.orientedBoundingBox` which holds the `OrientedBoundingBox` for the mesh for a single terrain tile.
-* Use `OrientedBoundingBox` when rendering terrain to improve performance of terrain rendering (by **TODO**%) and loading (by **TODO**%).
+* Use `OrientedBoundingBox` when rendering terrain to improve performance of terrain rendering and loading (by up to 50% of terrain tiles, depending on camera view).
 
 ### 1.10 - 2015-06-01
 
