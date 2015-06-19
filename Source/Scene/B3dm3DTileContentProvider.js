@@ -668,6 +668,8 @@ define([
     B3dm3DTileContentProvider.prototype.request = function() {
         var that = this;
 
+        this.state = Cesium3DTileContentState.LOADING;
+
         function failRequest(error) {
             that.state = Cesium3DTileContentState.FAILED;
             that.readyPromise.reject(error);
@@ -732,9 +734,6 @@ define([
                 that.readyPromise.resolve(that);
             }).otherwise(failRequest);
         }).otherwise(failRequest);
-
-// TODO: allow this to not change the state depending on if the request is actually made, e.g., with RequestsByServer.
-        this.state = Cesium3DTileContentState.LOADING;
     };
 
      function applyDebugSettings(owner, content) {
