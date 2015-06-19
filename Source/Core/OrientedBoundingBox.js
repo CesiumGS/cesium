@@ -235,9 +235,6 @@ define([
         return result;
     };
 
-    var scratchCartesian1 = new Cartesian3();
-    var scratchCartesian2 = new Cartesian3();
-    var scratchCartesian3 = new Cartesian3();
     /**
      * Determines which side of a plane the oriented bounding box is located.
      *
@@ -262,10 +259,11 @@ define([
         var center = box.center;
         var normal = plane.normal;
         var halfAxes = box.halfAxes;
+        var normalX = normal.x, normalY = normal.y, normalZ = normal.z;
         // plane is used as if it is its normal; the first three components are assumed to be normalized
-        var radEffective = Math.abs(normal.x * halfAxes[Matrix3.COLUMN0ROW0] + normal.y * halfAxes[Matrix3.COLUMN0ROW1] + normal.z * halfAxes[Matrix3.COLUMN0ROW2]) +
-                           Math.abs(normal.x * halfAxes[Matrix3.COLUMN1ROW0] + normal.y * halfAxes[Matrix3.COLUMN1ROW1] + normal.z * halfAxes[Matrix3.COLUMN1ROW2]) +
-                           Math.abs(normal.x * halfAxes[Matrix3.COLUMN2ROW0] + normal.y * halfAxes[Matrix3.COLUMN2ROW1] + normal.z * halfAxes[Matrix3.COLUMN2ROW2]);
+        var radEffective = Math.abs(normalX * halfAxes[Matrix3.COLUMN0ROW0] + normalY * halfAxes[Matrix3.COLUMN0ROW1] + normalZ * halfAxes[Matrix3.COLUMN0ROW2]) +
+                           Math.abs(normalX * halfAxes[Matrix3.COLUMN1ROW0] + normalY * halfAxes[Matrix3.COLUMN1ROW1] + normalZ * halfAxes[Matrix3.COLUMN1ROW2]) +
+                           Math.abs(normalX * halfAxes[Matrix3.COLUMN2ROW0] + normalY * halfAxes[Matrix3.COLUMN2ROW1] + normalZ * halfAxes[Matrix3.COLUMN2ROW2]);
         var distanceToPlane = Cartesian3.dot(normal, center) + plane.distance;
 
         if (distanceToPlane <= -radEffective) {
