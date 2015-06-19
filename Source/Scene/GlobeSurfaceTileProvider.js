@@ -810,8 +810,8 @@ define([
         return context.createVertexArray(vertexArray._attributes, wireframeIndexBuffer);
     }
 
-    var createDebugOrientedBoundingBox;
-    var createDebugBoundingSphere;
+    var getDebugOrientedBoundingBox;
+    var getDebugBoundingSphere;
     var debugDestroyPrimitive;
 
     (function() {
@@ -836,7 +836,7 @@ define([
             });
         }
 
-        createDebugOrientedBoundingBox = function(obb, color) {
+        getDebugOrientedBoundingBox = function(obb, color) {
             if (obb === previousVolume) {
                 return primitive;
             }
@@ -852,7 +852,7 @@ define([
             return primitive;
         };
 
-        createDebugBoundingSphere = function(sphere, color) {
+        getDebugBoundingSphere = function(sphere, color) {
             if (sphere === previousVolume) {
                 return primitive;
             }
@@ -997,10 +997,13 @@ define([
             ++tileProvider._usedDrawCommands;
 
             if (tile === tileProvider._debug.boundingSphereTile) {
+                // If a debug primitive already exists for this tile, it will not be
+                // re-created, to avoid allocation every frame. If it were possible
+                // to have more than one selected tile, this would have to change.
                 if (defined(surfaceTile.orientedBoundingBox)) {
-                    createDebugOrientedBoundingBox(surfaceTile.orientedBoundingBox, Color.RED).update(context, frameState, commandList);
+                    getDebugOrientedBoundingBox(surfaceTile.orientedBoundingBox, Color.RED).update(context, frameState, commandList);
                 } else if (defined(surfaceTile.boundingSphere3D)) {
-                    createDebugBoundingSphere(surfaceTile.boundingSphere3D, Color.RED).update(context, frameState, commandList);
+                    getDebugBoundingSphere(surfaceTile.boundingSphere3D, Color.RED).update(context, frameState, commandList);
                 }
             }
 
