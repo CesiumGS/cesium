@@ -131,9 +131,9 @@ define([
             model.minimumPixelSize = Property.getValueOrDefault(modelGraphics._minimumPixelSize, time, defaultMinimumPixelSize);
             model.modelMatrix = Matrix4.clone(modelMatrix, model.modelMatrix);
 
-            // apply node transformations
-            var nodeTransformations = Property.getValue(modelGraphics._nodeTransformations, time);
-            if(defined(nodeTransformations)) {
+            // Apply node transformations
+            var nodeTransformations = modelGraphics._nodeTransformations;
+            if(defined(nodeTransformations) && model.ready === true) {
 
                 var nodeNames = Object.keys(nodeTransformations);
                 var length = nodeNames.length;
@@ -143,12 +143,9 @@ define([
 
                     var modelNode = model.getNode(nodeName);
                     if(defined(modelNode)) {
-                        var scale = Property.getValue(transformation._scale, time);
-                        var translate = Property.getValue(transformation._translate, time);
-                        var rotate = Property.getValue(transformation._rotate, time);
-                        var order = Property.getValue(transformation._transformationOrder, time);
+                        var transformResult = transformation.getValue(time);
 
-                        var transformMtx = Matrix4.fromTranslationQuaternionRotationScale(translate, rotate, scale);
+                        var transformMtx = Matrix4.fromTranslationQuaternionRotationScale(transformResult.translate, transformResult.rotate, transformResult.scale);
                         modelNode.matrix = transformMtx;
                     }
                 }
@@ -263,9 +260,7 @@ define([
     }
 
     function onModelReady(model) {
-        model.activeAnimations.addAll({
-            loop : ModelAnimationLoop.REPEAT
-        });
+
     }
 
     function onModelError(error) {
