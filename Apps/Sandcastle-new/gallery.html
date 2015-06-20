@@ -43,8 +43,13 @@
 
     <div class="collapse navbar-collapse" id="toolbar-extend">
       <ul class="nav navbar-nav">
-          <li id="buttonNew"><a href="#">New</a></li>
+          <li id="buttonNew"><a href="index.html">New</a></li>
       </ul>
+      <form class="navbar-form navbar-right" role="search">
+          <div class="form-group">
+              <input type="text" id="searchBox" class="form-control" placeholder="Search">
+          </div>
+      </form>
     </div>
   </div>
 </nav>
@@ -60,6 +65,7 @@
                     <li role="presentation"><a href="#geometries" aria-controls="geometries" role="tab" data-toggle="tab">Geometries</a></li>
                     <li role="presentation"><a href="#beginner" aria-controls="beginner" role="tab" data-toggle="tab">Beginner</a></li>
                     <li role="presentation"><a href="#datasources" aria-controls="datasources" role="tab" data-toggle="tab">DataSources</a></li>
+                    <li role="presentation"><a style="display:none" href="#search" aria-controls="search" role="tab" data-toggle="tab">Search Result</a></li>
                 </ul>
 
                 <!-- Tab panes -->
@@ -95,6 +101,15 @@
                             
                         </div>
                     </div>
+                    <div role="tabpanel" class="tab-pane" id="search">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="error-msg alert alert-danger" role="alert">
+                                    <span>No demos match your search term</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
             </div>
@@ -107,22 +122,78 @@
 <script src="../../ThirdParty/jquery/dist/jquery.min.js"></script>
 <script src="../../ThirdParty/bootstrap-3.3.2/js/bootstrap.min.js"></script>
 <script type="text/javascript">
-    var demoEle = '<div class="col-sm-2"><div class="thumbnail"><a href="index.html?src={href}"><img src="img/gallery/{image}.jpg" alt="Demo Thumbnail"><div class="caption"><h5>{title}</h5><p class="hidden-xs">{description}</p></div></a></div></div>';
+    var demoEle = '<div class="col-sm-2"><div class="thumbnail" id="{demo}"><a href="index.html?src={href}"><img src="img/gallery/{image}.jpg" alt="Demo Thumbnail"><div class="caption"><h5>{title}</h5><p class="hidden-xs">{description}</p></div></a></div></div>';
+    var gallery_demos = [];
     for(var demo in gallery){
-        var label = gallery[demo].labels;
-        var desc = gallery[demo].description;
+        gallery_demos[demo.id] = {};
+        var development = false;
+        var demoData = gallery[demo];
+        var demoName = demoData.name;
+        var label = demoData.labels;
+        var desc = demoData.description;
+        var id = demoData.id;
+        requestCode(demoName, id);
         var labels = label.split(',');
         var imgName = demo.substring(demo.indexOf('/')+1);
         var ele  = demoEle.replace('{image}', imgName);
-        ele = ele.replace('{title}', demo).replace('{description}',desc).replace('{href}', encodeURIComponent(demo));
+        ele = ele.replace('{title}', demo).replace('{description}',desc).replace('{href}', encodeURIComponent(demo)).replace('{demo}',demo.replace(/\s+/g,'').replace(/\)/g,'').replace(/\(/g,'')).replace('3', '');
         for(var i = labels.length-1; i>= 0; i--)
         {
             // get the labels and add the demo to the respective tabs
             $('.tab-pane#'+labels[i].trim().toLowerCase()+' .row').append(ele);
+            if(labels[i].trim().toLowerCase() === 'development')
+                development = true;
         }
-        // Also add them to all tab
-        $('.tab-pane#all .row').append(ele);
+        // Also add them to all and search tab
+        if(!development)
+        {
+            $('.tab-pane#all .row').append(ele);
+            $('.tab-pane#search .row').append(ele);
+        }
     }
+
+    function requestCode(demoName, id){
+        $.ajax({
+            url: 'gallery/' + id + '/' + id + '.txt',
+            handleAs: 'text',
+        }).done(function(value){
+            gallery_demos.push({name: demoName, code: value});
+        }).fail(function(error){
+            console.log(error);
+        });
+    }
+
+    $('#searchBox').keyup(function() {
+        $('#gallery-tabs a[href="#search"]').show();
+        $('#gallery-tabs a[href="#search"]').tab('show');
+        searchTerm = $('#searchBox').val();
+        searchRegExp = new RegExp(searchTerm, 'i');
+        var numDemosShown = 0;
+        if (searchTerm !== '') {
+            for (var i = 0; i < gallery_demos.length; i++) {
+                var demo = gallery_demos[i];
+                if(demo.name.indexOf("development") == -1)
+                {
+                    // Only add non development to search
+                    var demoName = demo.name;
+                    if (searchRegExp.test(demoName) || searchRegExp.test(demo.code)) {
+                        $('.tab-pane#search #'+demoName.replace(/\s+/g,'').replace(/\)/g, '').replace(/\(/g,'').replace('3', '')).parent().show();
+                        ++numDemosShown;
+                    } else {
+                        $('.tab-pane#search #'+demoName.replace(/\s+/g,'').replace(/\)/g, '').replace(/\(/g,'').replace('3', '')).parent().hide();
+                    }
+                }
+            }
+        } else {
+            $('#gallery-tabs a[href="#search"]').hide();
+            $('#gallery-tabs a[href="#showcases"]').tab('show');
+        }
+        if (numDemosShown) {
+            $('.error-msg').hide();
+        } else {
+            $('.error-msg').show();
+        }
+    });
 </script>
 </body>
 </html>
