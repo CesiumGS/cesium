@@ -292,7 +292,7 @@ WebGLGlobeDataSource.prototype._setLoading = function(isLoading) {
 //Now that we've defined our own DataSource, we can use it to load
 //any JSON data formatted for WebGL Globe.
 var dataSource = new WebGLGlobeDataSource();
-dataSource.loadUrl('../../SampleData/population909500.json').then(function() {
+dataSource.loadUrl('../SampleData/population909500.json').then(function() {
 
     //After the initial load, create buttons to let the user switch among series. 
     function createSeriesSetter(seriesName) {

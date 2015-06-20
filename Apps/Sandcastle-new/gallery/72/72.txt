@@ -1,11 +1,11 @@
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 Sandcastle.addDefaultToolbarButton('Satellites', function() {
-    viewer.dataSources.add(Cesium.CzmlDataSource.load('../../SampleData/simple.czml'));
+    viewer.dataSources.add(Cesium.CzmlDataSource.load('../SampleData/simple.czml'));
 });
 
 Sandcastle.addToolbarButton('Vehicle', function() {
-    viewer.dataSources.add(Cesium.CzmlDataSource.load('../../SampleData/Vehicle.czml'));
+    viewer.dataSources.add(Cesium.CzmlDataSource.load('../SampleData/Vehicle.czml'));
 });
 
 Sandcastle.reset = function() {

@@ -77,7 +77,7 @@ var entity = viewer.entities.add({
 
     //Load the Cesium plane model to represent the entity
     model : {
-        uri : '../../SampleData/models/CesiumAir/Cesium_Air.gltf',
+        uri : '../SampleData/models/CesiumAir/Cesium_Air.gltf',
         minimumPixelSize : 64
     },
 

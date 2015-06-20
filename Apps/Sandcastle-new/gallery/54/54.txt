@@ -4,18 +4,18 @@ Sandcastle.addToolbarMenu([{
     text : 'KML - Global Science Facilities',
     onselect : function() {
         viewer.homeButton.viewModel.command();
-        viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/kml/facilities/facilities.kml'));
+        viewer.dataSources.add(Cesium.KmlDataSource.load('../SampleData/kml/facilities/facilities.kml'));
     }
 }, {
     text : 'KMZ with embedded data - GDP per capita',
     onselect : function() {
         viewer.homeButton.viewModel.command();
-        viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/kml/gdpPerCapita2008.kmz'));
+        viewer.dataSources.add(Cesium.KmlDataSource.load('../SampleData/kml/gdpPerCapita2008.kmz'));
     }
 }, {
     text : 'gx KML extensions - Bike Ride',
     onselect : function() {
-        viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/kml/bikeRide.kml')).then(function(dataSource){
+        viewer.dataSources.add(Cesium.KmlDataSource.load('../SampleData/kml/bikeRide.kml')).then(function(dataSource){
             viewer.clock.shouldAnimate = false;
             var rider = dataSource.entities.getById('tour');
             viewer.flyTo(rider).then(function(){
