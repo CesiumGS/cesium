@@ -63,6 +63,8 @@ require({
     document.getElementById('appLayout')
   );
 
+  $('#loading').addClass('hidden');
+
   CodeMirror.commands.runCesium = function(cm) {
     PubSub.publish('RELOAD FRAME', '');
   }

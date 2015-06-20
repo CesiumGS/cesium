@@ -18,6 +18,22 @@ html {
     background-color: #f5f5f5;
     padding: 20px 15px; }
 
+#loading {
+    display: table;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    z-index: 5000;
+    background: #eee;
+    border: none;
+    text-align: center;
+    color: #777;
+}
+#loading span {
+    display: table-cell;
+    vertical-align: middle;
+}
+
 .page-header {
   position: absolute;
   margin: 0;
