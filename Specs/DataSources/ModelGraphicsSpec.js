@@ -26,13 +26,13 @@ defineSuite([
         expect(model.scale).toBeInstanceOf(ConstantProperty);
         expect(model.show).toBeInstanceOf(ConstantProperty);
         expect(model.minimumPixelSize).toBeInstanceOf(ConstantProperty);
-        expect(model.nodeTransformations).toBeInstanceOf(Object);
+        expect(model.nodeTransformations).toBeInstanceOf(ConstantProperty);
 
         expect(model.uri.getValue()).toEqual(options.uri);
         expect(model.scale.getValue()).toEqual(options.scale);
         expect(model.show.getValue()).toEqual(options.show);
         expect(model.minimumPixelSize.getValue()).toEqual(options.minimumPixelSize);
-        expect(model.nodeTransformations).toEqual(options.nodeTransformations);
+        expect(model.nodeTransformations.getValue()).toEqual(options.nodeTransformations);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -70,13 +70,13 @@ defineSuite([
         source.show = new ConstantProperty(true);
         source.scale = new ConstantProperty(1.0);
         source.minimumPixelSize = new ConstantProperty(2.0);
-        source.nodeTransformations = { transform : node1Transforms };
+        source.nodeTransformations = new ConstantProperty({ transform : node1Transforms });
 
         var uri = new ConstantProperty('');
         var show = new ConstantProperty(true);
         var scale = new ConstantProperty(1.0);
         var minimumPixelSize = new ConstantProperty(2.0);
-        var nodeTransformations = { transform : node2Transforms };
+        var nodeTransformations = new ConstantProperty({ transform : node2Transforms });
 
         var target = new ModelGraphics();
         target.uri = uri;

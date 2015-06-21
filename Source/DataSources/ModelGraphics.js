@@ -103,11 +103,11 @@ define([
         uri : createPropertyDescriptor('uri'),
 
         /**
-         * Gets or sets the string Property specifying the 3D transformations to apply to glTF asset nodes.
+         * Gets or sets the object Property specifying the 3D transformations to apply to glTF asset nodes.
          * @memberof ModelGraphics.prototype
          * @type {Property}
          */
-        nodeTransformations : createRawPropertyDescriptor('nodeTransformations')
+        nodeTransformations : createPropertyDescriptor('nodeTransformations')
     });
 
     /**

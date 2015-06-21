@@ -132,7 +132,7 @@ define([
             model.modelMatrix = Matrix4.clone(modelMatrix, model.modelMatrix);
 
             // Apply node transformations
-            var nodeTransformations = modelGraphics._nodeTransformations;
+            var nodeTransformations = Property.getValueOrDefault(modelGraphics._nodeTransformations, time, undefined);
             if(defined(nodeTransformations) && model.ready === true) {
 
                 var nodeNames = Object.keys(nodeTransformations);
