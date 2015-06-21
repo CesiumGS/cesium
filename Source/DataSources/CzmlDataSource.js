@@ -1196,17 +1196,17 @@ define([
 
             var nodeTransforms = model.nodeTransformations;
             if(!defined(nodeTransforms)) {
-                nodeTransforms = {};
+                model.nodeTransformations = nodeTransforms = {};
             }
 
             var nodeTransform = nodeTransforms[nodeName];
             if(!defined(nodeTransform)){
-                nodeTransform = new ModelTransformProperty();
+                nodeTransforms[nodeName] = nodeTransform = new ModelTransformProperty();
             }
 
-            processPacketData(Cartesian3, node, 'scale', node.scale, undefined, undefined, entityCollection);
-            processPacketData(Cartesian3, node, 'translate', node.translate, undefined, undefined, entityCollection);
-            processPacketData(Rotation, node, 'rotate', node.rotate, undefined, undefined, entityCollection);
+            processPacketData(Cartesian3, nodeTransform, 'scale', node.scale, undefined, undefined, entityCollection);
+            processPacketData(Cartesian3, nodeTransform, 'translate', node.translate, undefined, undefined, entityCollection);
+            processPacketData(Quaternion, nodeTransform, 'rotate', node.rotate, undefined, undefined, entityCollection);
         }
 
     }
