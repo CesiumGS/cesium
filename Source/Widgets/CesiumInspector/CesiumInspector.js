@@ -301,7 +301,7 @@ define([
         tbsCheck.type = 'checkbox';
         tbsCheck.setAttribute('data-bind', 'checked: tileBoundingSphere, enable: hasPickedTile, click: showTileBoundingSphere');
         tileBoundingSphere.appendChild(tbsCheck);
-        tileBoundingSphere.appendChild(document.createTextNode('Show bounding sphere'));
+        tileBoundingSphere.appendChild(document.createTextNode('Show bounding volume'));
 
         var renderTile = document.createElement('div');
         pickTileRequired.appendChild(renderTile);

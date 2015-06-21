@@ -4,24 +4,28 @@ define([
         './Cartographic',
         './defaultValue',
         './defined',
+        './deprecationWarning',
         './DeveloperError',
         './Ellipsoid',
         './GeographicProjection',
         './Intersect',
         './Interval',
         './Matrix4',
+        './Plane',
         './Rectangle'
     ], function(
         Cartesian3,
         Cartographic,
         defaultValue,
         defined,
+        deprecationWarning,
         DeveloperError,
         Ellipsoid,
         GeographicProjection,
         Intersect,
         Interval,
         Matrix4,
+        Plane,
         Rectangle) {
     "use strict";
 
@@ -742,16 +746,13 @@ define([
      * Determines which side of a plane a sphere is located.
      *
      * @param {BoundingSphere} sphere The bounding sphere to test.
-     * @param {Cartesian4} plane The coefficients of the plane in Hessian Normal Form, as `ax + by + cz + d = 0`,
-     *                           where (a, b, c) must be a unit normal vector.
-     *                           The coefficients a, b, c, and d are the components x, y, z,
-     *                           and w of the {@link Cartesian4}, respectively.
+     * @param {Plane} plane The plane to test against.
      * @returns {Intersect} {@link Intersect.INSIDE} if the entire sphere is on the side of the plane
      *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire sphere is
      *                      on the opposite side, and {@link Intersect.INTERSECTING} if the sphere
      *                      intersects the plane.
      */
-    BoundingSphere.intersect = function(sphere, plane) {
+    BoundingSphere.intersectPlane = function(sphere, plane) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(sphere)) {
             throw new DeveloperError('sphere is required.');
@@ -764,7 +765,8 @@ define([
 
         var center = sphere.center;
         var radius = sphere.radius;
-        var distanceToPlane = Cartesian3.dot(plane, center) + plane.w;
+        var normal = plane.normal;
+        var distanceToPlane = Cartesian3.dot(normal, center) + plane.distance;
 
         if (distanceToPlane < -radius) {
             // The center point is negative side of the plane normal
@@ -774,6 +776,27 @@ define([
             return Intersect.INTERSECTING;
         }
         return Intersect.INSIDE;
+    };
+
+    var scratchPlane = new Plane(new Cartesian3(), 0.0);
+    /**
+     * Determines which side of a plane a sphere is located.
+     *
+     * @deprecated
+     * @param {BoundingSphere} sphere The bounding sphere to test.
+     * @param {Cartesian4} plane The coefficients of the plane in Hessian Normal Form, as `ax + by + cz + d = 0`,
+     *                           where (a, b, c) must be a unit normal vector.
+     *                           The coefficients a, b, c, and d are the components x, y, z,
+     *                           and w of the {@link Cartesian4}, respectively.
+     * @returns {Intersect} {@link Intersect.INSIDE} if the entire sphere is on the side of the plane
+     *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire sphere is
+     *                      on the opposite side, and {@link Intersect.INTERSECTING} if the sphere
+     *                      intersects the plane.
+     */
+    BoundingSphere.intersect = function(sphere, plane) {
+        deprecationWarning('BoundingSphere.intersect', 'BoundingSphere.intersect() was deprecated in Cesium 1.11.  It will be removed in 1.12.  Use BoundingSphere.intersectPlane() instead.');
+        var p = Plane.fromCartesian4(plane, scratchPlane);
+        return BoundingSphere.intersectPlane(sphere, p);
     };
 
     /**
@@ -1042,6 +1065,20 @@ define([
     /**
      * Determines which side of a plane the sphere is located.
      *
+     * @param {Plane} plane The plane to test against.
+     * @returns {Intersect} {@link Intersect.INSIDE} if the entire sphere is on the side of the plane
+     *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire sphere is
+     *                      on the opposite side, and {@link Intersect.INTERSECTING} if the sphere
+     *                      intersects the plane.
+     */
+    BoundingSphere.prototype.intersectPlane = function(plane) {
+        return BoundingSphere.intersectPlane(this, plane);
+    };
+
+    /**
+     * Determines which side of a plane the sphere is located.
+     *
+     * @deprecated
      * @param {Cartesian4} plane The coefficients of the plane in the for ax + by + cz + d = 0
      *                           where the coefficients a, b, c, and d are the components x, y, z,
      *                           and w of the {@link Cartesian4}, respectively.
