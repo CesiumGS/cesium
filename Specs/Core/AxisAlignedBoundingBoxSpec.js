@@ -3,12 +3,14 @@ defineSuite([
         'Core/AxisAlignedBoundingBox',
         'Core/Cartesian3',
         'Core/Cartesian4',
-        'Core/Intersect'
+        'Core/Intersect',
+        'Core/Plane'
     ], function(
         AxisAlignedBoundingBox,
         Cartesian3,
         Cartesian4,
-        Intersect) {
+        Intersect,
+        Plane) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
@@ -115,45 +117,53 @@ defineSuite([
         expect(box.center).toEqual(positions[0]);
     });
 
-    it('intersect works with box on the positive side of a plane', function() {
+    it('intersectPlane works with box on the positive side of a plane', function() {
         var box = new AxisAlignedBoundingBox(Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()), Cartesian3.ZERO);
         var normal = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
         var position = Cartesian3.UNIT_X;
-        var plane = new Cartesian4(normal.x, normal.y, normal.z, -Cartesian3.dot(normal, position));
-        expect(box.intersect(plane)).toEqual(Intersect.INSIDE);
+        var plane = new Plane(normal, -Cartesian3.dot(normal, position));
+        expect(box.intersectPlane(plane)).toEqual(Intersect.INSIDE);
     });
 
-    it('intersect works with box on the negative side of a plane', function() {
+    it('intersectPlane works with box on the negative side of a plane', function() {
         var box = new AxisAlignedBoundingBox(Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()), Cartesian3.ZERO);
         var normal = Cartesian3.UNIT_X;
         var position = Cartesian3.UNIT_X;
-        var plane = new Cartesian4(normal.x, normal.y, normal.z, -Cartesian3.dot(normal, position));
-        expect(box.intersect(plane)).toEqual(Intersect.OUTSIDE);
+        var plane = new Plane(normal, -Cartesian3.dot(normal, position));
+        expect(box.intersectPlane(plane)).toEqual(Intersect.OUTSIDE);
     });
 
-    it('intersect works with box intersecting a plane', function() {
+    it('intersectPlane works with box intersecting a plane', function() {
         var box = new AxisAlignedBoundingBox(Cartesian3.ZERO, Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()));
         var normal = Cartesian3.UNIT_X;
         var position = Cartesian3.UNIT_X;
-        var plane = new Cartesian4(normal.x, normal.y, normal.z, -Cartesian3.dot(normal, position));
-        expect(box.intersect(plane)).toEqual(Intersect.INTERSECTING);
+        var plane = new Plane(normal, -Cartesian3.dot(normal, position));
+        expect(box.intersectPlane(plane)).toEqual(Intersect.INTERSECTING);
+    });
+
+    it('intersect works the same as intersectPlane in one case', function() {
+        var box = new AxisAlignedBoundingBox(Cartesian3.ZERO, Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()));
+        var normal = Cartesian3.UNIT_X;
+        var position = Cartesian3.UNIT_X;
+        var plane = new Plane(normal, -Cartesian3.dot(normal, position));
+        expect(box.intersect(new Cartesian4(1.0, 0.0, 0.0, -1.0))).toEqual(box.intersectPlane(plane));
     });
 
     it('clone returns undefined with no parameter', function() {
         expect(AxisAlignedBoundingBox.clone()).toBeUndefined();
     });
 
-    it('intersect throws without a box', function() {
-        var plane = new Cartesian4();
+    it('intersectPlane throws without a box', function() {
+        var plane = new Plane(Cartesian3.UNIT_X, 0.0);
         expect(function() {
-            AxisAlignedBoundingBox.intersect(undefined, plane);
+            AxisAlignedBoundingBox.intersectPlane(undefined, plane);
         }).toThrowDeveloperError();
     });
 
-    it('intersect throws without a plane', function() {
+    it('intersectPlane throws without a plane', function() {
         var box = new AxisAlignedBoundingBox();
         expect(function() {
-            AxisAlignedBoundingBox.intersect(box, undefined);
+            AxisAlignedBoundingBox.intersectPlane(box, undefined);
         }).toThrowDeveloperError();
     });
 });
