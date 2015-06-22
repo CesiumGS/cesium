@@ -187,7 +187,7 @@ define([
         return update;
     }
 
-    function createUpdate2D(scene, destination, duration, heading, pitch, roll, optionAltitude) {
+    function createUpdate2D(scene, duration, destination, heading, pitch, roll, optionAltitude) {
         var camera = scene.camera;
 
         var start = Cartesian3.clone(camera.position, scratchStart);
