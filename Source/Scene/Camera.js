@@ -508,6 +508,31 @@ define([
         }
     }
 
+    function getHeading(direction, up) {
+        var heading;
+        if (!CesiumMath.equalsEpsilon(Math.abs(direction.z), 1.0, CesiumMath.EPSILON3)) {
+            heading = Math.atan2(direction.y, direction.x) - CesiumMath.PI_OVER_TWO;
+        } else {
+            heading = Math.atan2(up.y, up.x) - CesiumMath.PI_OVER_TWO;
+        }
+
+        return CesiumMath.TWO_PI - CesiumMath.zeroToTwoPi(heading);
+    }
+
+    function getPitch(direction) {
+        return CesiumMath.PI_OVER_TWO - CesiumMath.acosClamped(direction.z);
+    }
+
+    function getRoll(direction, up, right) {
+        var roll = 0.0;
+        if (!CesiumMath.equalsEpsilon(Math.abs(direction.z), 1.0, CesiumMath.EPSILON3)) {
+            roll = Math.atan2(-right.z, up.z);
+            roll = CesiumMath.zeroToTwoPi(roll + CesiumMath.TWO_PI);
+        }
+
+        return roll;
+    }
+
     var scratchHPRMatrix1 = new Matrix4();
     var scratchHPRMatrix2 = new Matrix4();
 
@@ -663,19 +688,11 @@ define([
                     var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid, scratchHPRMatrix2);
                     this._setTransform(transform);
 
-                    var direction = this.direction;
-                    var up = this.up;
-
-                    var heading;
-                    if (!CesiumMath.equalsEpsilon(Math.abs(direction.z), 1.0, CesiumMath.EPSILON3)) {
-                        heading = Math.atan2(direction.y, direction.x) - CesiumMath.PI_OVER_TWO;
-                    } else {
-                        heading = Math.atan2(up.y, up.x) - CesiumMath.PI_OVER_TWO;
-                    }
+                    var heading = getHeading(this.direction, this.up);
 
                     this._setTransform(oldTransform);
 
-                    return CesiumMath.TWO_PI - CesiumMath.zeroToTwoPi(heading);
+                    return heading;
                 }
 
                 return undefined;
@@ -698,7 +715,7 @@ define([
                     var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid, scratchHPRMatrix2);
                     this._setTransform(transform);
 
-                    var pitch = CesiumMath.PI_OVER_TWO - CesiumMath.acosClamped(this.direction.z);
+                    var pitch = getPitch(this.direction);
 
                     this._setTransform(oldTransform);
 
@@ -725,15 +742,7 @@ define([
                     var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid, scratchHPRMatrix2);
                     this._setTransform(transform);
 
-                    var up = this.up;
-                    var right = this.right;
-                    var direction = this.direction;
-
-                    var roll = 0.0;
-                    if (!CesiumMath.equalsEpsilon(Math.abs(direction.z), 1.0, CesiumMath.EPSILON3)) {
-                        roll = Math.atan2(-right.z, up.z);
-                        roll = CesiumMath.zeroToTwoPi(roll + CesiumMath.TWO_PI);
-                    }
+                    var roll = getRoll(this.direction, this.up, this.right);
 
                     this._setTransform(oldTransform);
 
@@ -2277,13 +2286,18 @@ define([
     var scratchFlyToMatrix4 = new Matrix4();
     var newOptions = {
         destination : undefined,
-        direction : undefined,
-        up : undefined,
+        heading : undefined,
+        pitch : undefined,
+        roll : undefined,
         duration : undefined,
         complete : undefined,
         cancel : undefined,
         endTransform : undefined
     };
+
+    var scratchFlyDirection = new Cartesian3();
+    var scratchFlyUp = new Cartesian3();
+    var scratchFlyRight = new Cartesian3();
 
     /**
      * Flies the camera from its current position to a new position.
@@ -2359,23 +2373,23 @@ define([
             pitch = orientation.pitch;
             roll = orientation.roll;
         } else if (defined(orientation.direction)) {
-            var direction = orientation.direction;
-            var up = orientation.up;
+            var direction = Cartesian3.clone(orientation.direction, scratchFlyDirection);
+            var up = Cartesian3.clone(orientation.up, scratchFlyUp);
 
-            // TODO?
-            /*
-            var rotQuat = Quaternion.fromHeadingPitchRoll(heading - CesiumMath.PI_OVER_TWO, pitch, roll, scratchFlyToQuaternion);
-            var rotMat = Matrix3.fromQuaternion(rotQuat, scratchFlyToMatrix3);
+            if (scene.mode === SceneMode.SCENE3D) {
+                var ellipsoid = this._projection.ellipsoid;
+                var transform = Transforms.eastNorthUpToFixedFrame(destination, ellipsoid, scratchHPRMatrix1);
+                var invTransform = Matrix4.inverseTransformation(transform, scratchHPRMatrix2);
 
-            direction = Matrix3.getColumn(rotMat, 0, scratchFlyToDirection);
-            up = Matrix3.getColumn(rotMat, 2, scratchFlyToUp);
+                Matrix4.multiplyByPointAsVector(invTransform, direction, direction);
+                Matrix4.multiplyByPointAsVector(invTransform, up, up);
+            }
 
-            var ellipsoid = this._projection.ellipsoid;
-            var transform = Transforms.eastNorthUpToFixedFrame(destination, ellipsoid, scratchFlyToMatrix4);
+            var right = Cartesian3.cross(direction, up, scratchFlyRight);
 
-            Matrix4.multiplyByPointAsVector(transform, direction, direction);
-            Matrix4.multiplyByPointAsVector(transform, up, up);
-            */
+            heading = getHeading(direction, up);
+            pitch = getPitch(direction);
+            roll = getRoll(direction, up, right);
         }
 
         newOptions.destination = destination;
