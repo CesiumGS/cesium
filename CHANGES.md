@@ -8,6 +8,10 @@ Change Log
 * Fixed a crash when `viewer.zoomTo` or `viewer.flyTo` were called immediately before or during a scene morph [#2775](https://github.com/AnalyticalGraphicsInc/cesium/issues/2775).
 * Fixed an issue where `Camera` functions would throw an exception if used from within a `Scene.morphComplete` callback [#2776](https://github.com/AnalyticalGraphicsInc/cesium/issues/2776).
 * `Model` can now load Binary glTF from a Uint8Array.
+* Added a new camera mode for horizon views. When the camera is looking at the horizon and a point on terrain above the camera is picked, the camera moves in the plane containing the camera position, up and right vectors.
+* Added `UrlTemplateImageryProvider`.  This new imagery provider allows access to a wide variety of imagery sources, including OpenStreetMap, TMS, WMTS, WMS, WMS-C, and various custom schemes, by specifying a URL template to use to request imagery tiles.
+* The camera now zooms to the point under the mouse cursor.
+* Fixed a bug in `ImageryLayer` that could cause an exception and the render loop to stop when the base layer did not cover the entire globe.
 
 ### 1.10 - 2015-06-01
 

@@ -22,6 +22,7 @@ define([
         './CameraEventAggregator',
         './CameraEventType',
         './SceneMode',
+        './SceneTransforms',
         './TweenCollection'
     ], function(
         Cartesian2,
@@ -46,6 +47,7 @@ define([
         CameraEventAggregator,
         CameraEventType,
         SceneMode,
+        SceneTransforms,
         TweenCollection) {
     "use strict";
 
@@ -235,7 +237,7 @@ define([
          * @type {Number}
          * @default 10000.0
          */
-        this.minimumCollisionTerrainHeight = 10000.0;
+        this.minimumCollisionTerrainHeight = 15000.0;
         /**
          * The minimum height the camera must be before switching from rotating a track ball to
          * free look when clicks originate on the sky on in space.
@@ -271,9 +273,13 @@ define([
         this._tiltCenter = new Cartesian3();
         this._rotateMousePosition = new Cartesian2(-1.0, -1.0);
         this._rotateStartPosition = new Cartesian3();
+        this._strafeStartPosition = new Cartesian3();
+        this._zoomMouseStart = new Cartesian2();
+        this._zoomWorldPosition = new Cartesian3();
         this._tiltCVOffMap = false;
         this._looking = false;
         this._rotating = false;
+        this._strafing = false;
 
         var projection = scene.mapProjection;
         this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
@@ -402,6 +408,17 @@ define([
         }
     }
 
+    var scratchZoomPickRay = new Ray();
+    var scratchPickCartesian = new Cartesian3();
+    var scratchZoomOffset = new Cartesian2();
+    var scratchZoomDirection = new Cartesian3();
+    var scratchCenterPixel = new Cartesian2();
+    var scratchCenterPosition = new Cartesian3();
+    var scratchPositionNormal = new Cartesian3();
+    var scratchPickNormal = new Cartesian3();
+    var scratchZoomAxis = new Cartesian3();
+    var scratchCameraPositionNormal = new Cartesian3();
+
     function handleZoom(object, startPosition, movement, zoomFactor, distanceMeasure, unitPositionDotDirection) {
         var percentage = 1.0;
         if (defined(unitPositionDotDirection)) {
@@ -436,13 +453,82 @@ define([
             distance = distanceMeasure - maxHeight;
         }
 
-        object._scene.camera.zoomIn(distance);
+        var scene = object._scene;
+        var camera = scene.camera;
+        var mode = scene.mode;
+
+        var pickedPosition = mode !== SceneMode.SCENE2D ? pickGlobe(object, startPosition, scratchPickCartesian) : camera.getPickRay(startPosition, scratchZoomPickRay).origin;
+        if (distance <= 0.0 || !defined(pickedPosition)) {
+            camera.zoomIn(distance);
+            return;
+        }
+
+        if (!Cartesian2.equals(startPosition, object._zoomMouseStart)) {
+            object._zoomMouseStart = Cartesian2.clone(startPosition, object._zoomMouseStart);
+            object._zoomWorldPosition = Cartesian3.clone(pickedPosition, object._zoomWorldPosition);
+        }
+
+        var zoomOnVector = mode === SceneMode.COLUMBUS_VIEW;
+
+        if (mode === SceneMode.SCENE2D) {
+            var worldPosition = object._zoomWorldPosition;
+            var endPosition = camera.position;
+
+            var direction = Cartesian3.subtract(worldPosition, endPosition, scratchZoomDirection);
+            Cartesian3.normalize(direction, direction);
+
+            var d = Cartesian3.distance(worldPosition, endPosition) * distance / (camera.getMagnitude() * 0.5);
+            camera.move(direction, d * 0.5);
+        } else if (mode === SceneMode.SCENE3D) {
+
+            var cameraPositionNormal = Cartesian3.normalize(camera.position, scratchCameraPositionNormal);
+            if (camera.positionCartographic.height < 3000.0 && Math.abs(Cartesian3.dot(camera.direction, cameraPositionNormal)) < 0.6) {
+                zoomOnVector = true;
+            } else {
+                var canvas = scene.canvas;
+
+                var centerPixel = scratchCenterPixel;
+                centerPixel.x = canvas.clientWidth / 2;
+                centerPixel.y = canvas.clientHeight / 2;
+                var centerPosition = pickGlobe(object, centerPixel, scratchCenterPosition);
+                if (defined(centerPosition)) {
+                    var positionNormal = Cartesian3.normalize(centerPosition, scratchPositionNormal);
+                    var pickedNormal = Cartesian3.normalize(object._zoomWorldPosition, scratchPickNormal);
+                    var angle = CesiumMath.acosClamped(Cartesian3.dot(pickedNormal, positionNormal));
+                    var axis = Cartesian3.cross(pickedNormal, positionNormal, scratchZoomAxis);
+
+                    var denom = Math.abs(angle) > CesiumMath.toRadians(20.0) ? camera.positionCartographic.height * 0.75 : camera.positionCartographic.height - distance;
+                    var scalar = distance / denom;
+                    camera.rotate(axis, angle * scalar);
+                } else {
+                    zoomOnVector = true;
+                }
+            }
+        }
+
+        if (zoomOnVector) {
+            var ray;
+            var zoomMouseStart = SceneTransforms.wgs84ToWindowCoordinates(scene, object._zoomWorldPosition, scratchZoomOffset);
+            if (mode !== SceneMode.COLUMBUS_VIEW && Cartesian2.equals(startPosition, object._zoomMouseStart) && defined(zoomMouseStart)) {
+                ray = camera.getPickRay(zoomMouseStart, scratchZoomPickRay);
+            } else {
+                ray = camera.getPickRay(startPosition, scratchZoomPickRay);
+            }
+
+            var rayDirection = ray.direction;
+            if (mode === SceneMode.COLUMBUS_VIEW) {
+                Cartesian3.fromElements(rayDirection.y, rayDirection.z, rayDirection.x, rayDirection);
+            }
+
+            camera.move(rayDirection, distance);
+        } else {
+            camera.zoomIn(distance);
+        }
     }
 
     var translate2DStart = new Ray();
     var translate2DEnd = new Ray();
     var scratchTranslateP0 = new Cartesian3();
-    var scratchTranslateP1 = new Cartesian3();
 
     function translate2D(controller, startPosition, movement) {
         var scene = controller._scene;
@@ -450,10 +536,7 @@ define([
         var start = camera.getPickRay(movement.startPosition, translate2DStart).origin;
         var end = camera.getPickRay(movement.endPosition, translate2DEnd).origin;
 
-        var position = camera.position;
-        var p0 = Cartesian3.subtract(start, position, scratchTranslateP0);
-        var p1 = Cartesian3.subtract(end, position, scratchTranslateP1);
-        var direction = Cartesian3.subtract(p0, p1, scratchTranslateP0);
+        var direction = Cartesian3.subtract(start, end, scratchTranslateP0);
         var distance = Cartesian3.magnitude(direction);
 
         if (distance > 0.0) {
@@ -612,8 +695,17 @@ define([
             controller._looking = false;
         }
 
+        if (!Cartesian3.equals(startPosition, controller._strafeMousePosition)) {
+            controller._strafing = false;
+        }
+
         if (controller._looking) {
             look3D(controller, startPosition, movement);
+            return;
+        }
+
+        if (controller._strafing) {
+            strafe(controller, startPosition, movement);
             return;
         }
 
@@ -626,17 +718,20 @@ define([
         var origin = Cartesian3.clone(Cartesian3.ZERO, translateCVOrigin);
         var normal = Cartesian3.UNIT_X;
 
+        var globePos;
         if (camera.position.z < controller.minimumPickingTerrainHeight) {
-            var globePos = pickGlobe(controller, startMouse, translateCVStartPos);
+            globePos = pickGlobe(controller, startMouse, translateCVStartPos);
             if (defined(globePos)) {
                 origin.x = globePos.x;
             }
         }
 
-        if (origin.x > camera.position.z) {
-            var tempY = startMouse.y;
-            startMouse.y = endMouse.y;
-            endMouse.y = tempY;
+        if (origin.x > camera.position.z && defined(globePos)) {
+            Cartesian3.clone(globePos, controller._strafeStartPosition);
+            controller._strafing = true;
+            strafe(controller, startPosition, movement);
+            controller._strafeMousePosition = Cartesian2.clone(startPosition, controller._strafeMousePosition);
+            return;
         }
 
         var plane = Plane.fromPointNormal(origin, normal, translateCVPlane);
@@ -995,6 +1090,42 @@ define([
         }
     }
 
+    var scratchStrafeRay = new Ray();
+    var scratchStrafePlane = new Plane(Cartesian3.ZERO, 0.0);
+    var scratchStrafeIntersection = new Cartesian3();
+    var scratchStrafeDirection = new Cartesian3();
+
+    function strafe(controller, startPosition, movement) {
+        var scene = controller._scene;
+        var camera = scene.camera;
+
+        var mouseStartPosition = pickGlobe(controller, movement.startPosition, scratchMousePos);
+        if (!defined(mouseStartPosition)) {
+            return;
+        }
+
+        var mousePosition = movement.endPosition;
+        var ray = camera.getPickRay(mousePosition, scratchStrafeRay);
+
+        var direction = Cartesian3.clone(camera.direction, scratchStrafeDirection);
+        if (scene.mode === SceneMode.COLUMBUS_VIEW) {
+            Cartesian3.fromElements(direction.z, direction.x, direction.y, direction);
+        }
+
+        var plane = Plane.fromPointNormal(mouseStartPosition, direction, scratchStrafePlane);
+        var intersection = IntersectionTests.rayPlane(ray, plane, scratchStrafeIntersection);
+        if (!defined(intersection)) {
+            return;
+        }
+
+        direction = Cartesian3.subtract(mouseStartPosition, intersection, direction);
+        if (scene.mode === SceneMode.COLUMBUS_VIEW) {
+            Cartesian3.fromElements(direction.y, direction.z, direction.x, direction);
+        }
+
+        Cartesian3.add(camera.position, direction, camera.position);
+    }
+
     var spin3DPick = new Cartesian3();
     var scratchStartRay = new Ray();
     var scratchCartographic = new Cartographic();
@@ -1018,11 +1149,33 @@ define([
 
         var up = controller._ellipsoid.geodeticSurfaceNormal(camera.position, scratchLookUp);
 
+        var height = controller._ellipsoid.cartesianToCartographic(camera.positionWC, scratchCartographic).height;
+        var globe = controller._globe;
+
+        var mousePos;
+        var tangentPick = false;
+        if (defined(globe) && height < controller.minimumPickingTerrainHeight) {
+            mousePos = pickGlobe(controller, movement.startPosition, scratchMousePos);
+            if (defined(mousePos)) {
+                var ray = camera.getPickRay(movement.startPosition, pickGlobeScratchRay);
+                var normal = controller._ellipsoid.geodeticSurfaceNormal(mousePos);
+                tangentPick = Math.abs(Cartesian3.dot(ray.direction, normal)) < 0.05;
+
+                if (tangentPick && !controller._looking) {
+                    controller._rotating = false;
+                    controller._strafing = true;
+                }
+            }
+        }
+
         if (Cartesian2.equals(startPosition, controller._rotateMousePosition)) {
             if (controller._looking) {
                 look3D(controller, startPosition, movement, up);
             } else if (controller._rotating) {
                 rotate3D(controller, startPosition, movement);
+            } else if (controller._strafing) {
+                Cartesian3.clone(mousePos, controller._strafeStartPosition);
+                strafe(controller, startPosition, movement);
             } else {
                 magnitude = Cartesian3.magnitude(controller._rotateStartPosition);
                 radii = scratchRadii;
@@ -1034,20 +1187,25 @@ define([
         } else {
             controller._looking = false;
             controller._rotating = false;
+            controller._strafing = false;
         }
 
-        var height = controller._ellipsoid.cartesianToCartographic(camera.positionWC, scratchCartographic).height;
-        var globe = controller._globe;
         if (defined(globe) && height < controller.minimumPickingTerrainHeight) {
-            var mousePos = pickGlobe(controller, movement.startPosition, scratchMousePos);
             if (defined(mousePos)) {
-                magnitude = Cartesian3.magnitude(mousePos);
-                radii = scratchRadii;
-                radii.x = radii.y = radii.z = magnitude;
-                ellipsoid = Ellipsoid.fromCartesian3(radii, scratchEllipsoid);
-                pan3D(controller, startPosition, movement, ellipsoid);
+                if (Cartesian3.magnitude(camera.position) < Cartesian3.magnitude(mousePos)) {
+                    Cartesian3.clone(mousePos, controller._strafeStartPosition);
 
-                Cartesian3.clone(mousePos, controller._rotateStartPosition);
+                    controller._strafing = true;
+                    strafe(controller, startPosition, movement);
+                } else {
+                    magnitude = Cartesian3.magnitude(mousePos);
+                    radii = scratchRadii;
+                    radii.x = radii.y = radii.z = magnitude;
+                    ellipsoid = Ellipsoid.fromCartesian3(radii, scratchEllipsoid);
+                    pan3D(controller, startPosition, movement, ellipsoid);
+
+                    Cartesian3.clone(mousePos, controller._rotateStartPosition);
+                }
             } else {
                 controller._looking = true;
                 look3D(controller, startPosition, movement, up);
@@ -1121,19 +1279,9 @@ define([
     function pan3D(controller, startPosition, movement, ellipsoid) {
         var scene = controller._scene;
         var camera = scene.camera;
-        var cameraPosMag = Cartesian3.magnitude(camera.position);
 
         var startMousePosition = Cartesian2.clone(movement.startPosition, pan3DStartMousePosition);
         var endMousePosition = Cartesian2.clone(movement.endPosition, pan3DEndMousePosition);
-        if (cameraPosMag < ellipsoid.maximumRadius) {
-            startMousePosition.y = endMousePosition.y;
-            endMousePosition.y = movement.startPosition.y;
-
-            var magnitude = cameraPosMag + (ellipsoid.maximumRadius - cameraPosMag) * 2.0;
-            var radii = scratchRadii;
-            radii.x = radii.y = radii.z = magnitude;
-            ellipsoid = Ellipsoid.fromCartesian3(radii, ellipsoid);
-        }
 
         var p0 = camera.pickEllipsoid(startMousePosition, ellipsoid, pan3DP0);
         var p1 = camera.pickEllipsoid(endMousePosition, ellipsoid, pan3DP1);

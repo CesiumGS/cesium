@@ -105,7 +105,7 @@ defineSuite([
         }).then(function() {
             expect(provider.tileWidth).toEqual(256);
             expect(provider.tileHeight).toEqual(256);
-            expect(provider.maximumLevel).toEqual(23);
+            expect(provider.maximumLevel).toBeUndefined();
             expect(provider.minimumLevel).toEqual(0);
             expect(provider.version).toEqual(version);
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
