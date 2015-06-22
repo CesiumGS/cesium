@@ -32,7 +32,7 @@ define([
     /**
      * @private
      */
-    var Pnts3DTileContentProvider = function(url, contentHeader) {
+    var PointsDTileContentProvider = function(url, contentHeader) {
         this._primitive = undefined;
         this._url = url;
 
@@ -57,7 +57,7 @@ define([
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
-    Pnts3DTileContentProvider.prototype.request = function() {
+    PointsDTileContentProvider.prototype.request = function() {
         var that = this;
 
         this.state = Cesium3DTileContentState.LOADING;
@@ -135,7 +135,7 @@ define([
         }
     }
 
-    Pnts3DTileContentProvider.prototype.update = function(owner, context, frameState, commandList) {
+    PointsDTileContentProvider.prototype.update = function(owner, context, frameState, commandList) {
         // In the PROCESSING state we may be calling update() to move forward
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
@@ -145,15 +145,15 @@ define([
         this._primitive.update(context, frameState, commandList);
     };
 
-    Pnts3DTileContentProvider.prototype.isDestroyed = function() {
+    PointsDTileContentProvider.prototype.isDestroyed = function() {
         return false;
     };
 
-    Pnts3DTileContentProvider.prototype.destroy = function() {
+    PointsDTileContentProvider.prototype.destroy = function() {
         this._primitive = this._primitive && this._primitive.destroy();
 
         return destroyObject(this);
     };
 
-    return Pnts3DTileContentProvider;
+    return PointsDTileContentProvider;
 });
