@@ -276,7 +276,7 @@ function changeColor(tile) {
     var content = tile.content;
 
     // Is the tile a Batched 3D Model?
-    if (content instanceof Cesium.B3dm3DTileContentProvider) {
+    if (content instanceof Cesium.Batched3DModel3DTileContentProvider) {
         // Does it have a per-model height property?
         if (content.hasProperty(currentPropertyName)) {
             var length = content.batchSize;
