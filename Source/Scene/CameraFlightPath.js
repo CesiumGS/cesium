@@ -267,7 +267,7 @@ define([
         var projection = scene.mapProjection;
         var ellipsoid = projection.ellipsoid;
 
-        var altitude = options.maximumAltitude;
+        var maximumHeight = options.maximumHeight;
         var easingFunction = defaultValue(options.easingFunction, EasingFunction.QUINTIC_IN_OUT);
 
         if (scene.mode === SceneMode.MORPHING) {
@@ -323,7 +323,7 @@ define([
 
         if (duration <= 0.0) {
             var newOnComplete = function() {
-                var update = updateFunctions[mode](scene, 1.0, destination, heading, pitch, roll, altitude);
+                var update = updateFunctions[mode](scene, 1.0, destination, heading, pitch, roll, maximumHeight);
                 update({ time: 1.0 });
 
                 if (typeof complete === 'function') {
@@ -333,7 +333,7 @@ define([
             return emptyFlight(newOnComplete, cancel);
         }
 
-        var update = updateFunctions[mode](scene, duration, destination, heading, pitch, roll, altitude);
+        var update = updateFunctions[mode](scene, duration, destination, heading, pitch, roll, maximumHeight);
 
         return {
             duration : duration,

@@ -1967,7 +1967,7 @@ defineSuite([
             cancel : undefined,
             endTransform : undefined,
             convert : undefined,
-            altitude : undefined,
+            maximumHeight : undefined,
             easingFunction : undefined
         };
 
