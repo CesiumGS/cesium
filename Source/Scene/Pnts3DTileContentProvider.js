@@ -5,10 +5,13 @@ define([
         '../Core/destroyObject',
         '../Core/defined',
         '../Core/DeveloperError',
+        '../Core/GeometryInstance',
         '../Core/loadArrayBuffer',
+        '../Core/PointGeometry',
         './Cesium3DTileContentState',
         './getMagic',
-        './PointPrimitiveCollection',
+        './PointAppearance',
+        './Primitive',
         '../ThirdParty/when'
     ], function(
         Cartesian3,
@@ -16,10 +19,13 @@ define([
         destroyObject,
         defined,
         DeveloperError,
+        GeometryInstance,
         loadArrayBuffer,
+        PointGeometry,
         Cesium3DTileContentState,
         getMagic,
-        PointPrimitiveCollection,
+        PointAppearance,
+        Primitive,
         when) {
     "use strict";
 
@@ -27,9 +33,8 @@ define([
      * @private
      */
     var Pnts3DTileContentProvider = function(url, contentHeader) {
-        this._pointCollection = undefined;
+        this._primitive = undefined;
         this._url = url;
-        this._parsedData = undefined;
 
         /**
          * @readonly
@@ -93,30 +98,40 @@ define([
             var colorsOffsetInBytes = positionsOffsetInBytes + (numberOfPoints * (3 * Float64Array.BYTES_PER_ELEMENT));
             var colors = new Uint8Array(arrayBuffer, colorsOffsetInBytes, numberOfPoints * 3);
 
-            that._parsedData = {
-                positions : positions,
-                colors : colors
-            };
+            // TODO: use custom load pipeline, e.g., RTC and provide bounding sphere?
+            // TODO: performance test with 'interleave : true'
+            var instance = new GeometryInstance({
+                geometry : new PointGeometry({
+                    positionsTypedArray : positions,
+                    colorsTypedArray : colors
+                })
+            });
+            var primitive = new Primitive({
+                geometryInstances : instance,
+                appearance : new PointAppearance(),
+                asynchronous : false,
+                allowPicking : false,
+                cull : false
+            });
+
+            that._primitive = primitive;
             that.state = Cesium3DTileContentState.PROCESSING;
             that.processingPromise.resolve(that);
+
+            when(primitive.readyPromise).then(function(primitive) {
+                that.state = Cesium3DTileContentState.READY;
+                that.readyPromise.resolve(that);
+            }).otherwise(failRequest);
         }).otherwise(failRequest);
     };
 
     function applyDebugSettings(owner, content) {
-        var points = content._pointCollection;
-        var length = points.length;
-        var i;
-
         if (owner.debugColorizeTiles && !content._debugColorizeTiles) {
             content._debugColorizeTiles = true;
-            for (i = 0; i < length; ++i) {
-                points.get(i).color = content._debugColor;
-            }
+            content._primitive.appearance.uniforms.highlightColor = content._debugColor;
         } else if (!owner.debugColorizeTiles && content._debugColorizeTiles) {
             content._debugColorizeTiles = false;
-            for (i = 0; i < length; ++i) {
-                points.get(i).color = Color.WHITE;
-            }
+            content._primitive.appearance.uniforms.highlightColor = Color.WHITE;
         }
     }
 
@@ -125,31 +140,9 @@ define([
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
 
-        var points = this._pointCollection;
-        if (this.state === Cesium3DTileContentState.PROCESSING) {
-            points = new PointPrimitiveCollection();
-
-// TODO: fast path with custom primitive
-            var positions = this._parsedData.positions;
-            var colors = this._parsedData.colors;
-            var length = positions.length;
-            for (var i = 0; i < length; i += 3) {
-                points.add({
-                    color : Color.fromBytes(colors[i], colors[i + 1], colors[i + 2]),
-                    position : new Cartesian3(positions[i], positions[i + 1], positions[i + 2])
-                });
-            }
-
-            this._parsedData = undefined; // Release typed arrays
-            this._pointCollection = points;
-            this.state = Cesium3DTileContentState.READY;
-            this.readyPromise.resolve(this);
-            return;
-        }
-
         applyDebugSettings(owner, this);
 
-        points.update(context, frameState, commandList);
+        this._primitive.update(context, frameState, commandList);
     };
 
     Pnts3DTileContentProvider.prototype.isDestroyed = function() {
@@ -157,7 +150,7 @@ define([
     };
 
     Pnts3DTileContentProvider.prototype.destroy = function() {
-        this._pointCollection = this._pointCollection && this._pointCollection.destroy();
+        this._primitive = this._primitive && this._primitive.destroy();
 
         return destroyObject(this);
     };
