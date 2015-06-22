@@ -260,9 +260,7 @@ define([
     }
 
     function onModelReady(model) {
-        model.activeAnimations.addAll({
-            loop : ModelAnimationLoop.REPEAT
-        });
+
     }
 
     function onModelError(error) {
