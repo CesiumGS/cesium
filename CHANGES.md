@@ -12,6 +12,7 @@ Change Log
 * Added `UrlTemplateImageryProvider`.  This new imagery provider allows access to a wide variety of imagery sources, including OpenStreetMap, TMS, WMTS, WMS, WMS-C, and various custom schemes, by specifying a URL template to use to request imagery tiles.
 * The camera now zooms to the point under the mouse cursor.
 * Fixed a bug in `ImageryLayer` that could cause an exception and the render loop to stop when the base layer did not cover the entire globe.
+* Fixed flash/streak rendering artifacts when picking [#2790](https://github.com/AnalyticalGraphicsInc/cesium/issues/2790), [#2811](https://github.com/AnalyticalGraphicsInc/cesium/issues/2811).
 
 ### 1.10 - 2015-06-01
 
