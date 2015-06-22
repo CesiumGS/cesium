@@ -2316,7 +2316,7 @@ define([
      * @param {Boolean} [options.convert=true] When <code>true</code>, the destination is converted to the correct coordinate system for each scene mode. When <code>false</code>, the destination is expected
      *                  to be in the correct coordinate system.
      * @param {Number} [options.altitude] The maximum altitude at the peak of the flight.
-     * @param {EasingFunction} [options.easingFunction] Controls how the time is interpolated over the duration of the flight.
+     * @param {EasingFunction|Camera~EasingFunction} [options.easingFunction] Controls how the time is interpolated over the duration of the flight.
      *
      * @exception {DeveloperError} If either direction or up is given, then both are required.
      *
@@ -2515,7 +2515,7 @@ define([
      * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
      * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
      * @param {Number} [options.altitude] The maximum altitude at the peak of the flight.
-     * @param {EasingFunction} [options.easingFunction] Controls how the time is interpolated over the duration of the flight.
+     * @param {EasingFunction|Camera~EasingFunction} [options.easingFunction] Controls how the time is interpolated over the duration of the flight.
      */
     Camera.prototype.flyToBoundingSphere = function(boundingSphere, options) {
         //>>includeStart('debug', pragmas.debug);
@@ -2598,6 +2598,14 @@ define([
     /**
      * A function that will execute when a flight is cancelled.
      * @callback Camera~FlightCancelledCallback
+     */
+
+    /**
+     * An easing function for flights that maps a number in the range [0, 1] to the same range.
+     * @callback Camera~EasingFunction
+     *
+     * @param {Number} k A number in the range [0, 1]
+     * @returns {Number} A number in the range [0, 1]
      */
 
     return Camera;
