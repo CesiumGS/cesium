@@ -1959,13 +1959,16 @@ defineSuite([
 
         var expectedOptions = {
             destination : options.destination,
-            direction : undefined,
-            up : undefined,
+            heading : undefined,
+            pitch : undefined,
+            roll : undefined,
             duration : undefined,
             complete : undefined,
             cancel : undefined,
             endTransform : undefined,
-            convert : undefined
+            convert : undefined,
+            altitude : undefined,
+            easingFunction : undefined
         };
 
         expect(CameraFlightPath.createTween).toHaveBeenCalledWith(scene, expectedOptions);

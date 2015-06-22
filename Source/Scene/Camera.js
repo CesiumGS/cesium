@@ -2294,7 +2294,7 @@ define([
         cancel : undefined,
         endTransform : undefined,
         altitude : undefined,
-        easingfunction : undefined
+        easingFunction : undefined
     };
 
     var scratchFlyDirection = new Cartesian3();

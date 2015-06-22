@@ -255,12 +255,6 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var destination = options.destination;
 
-        var projection = scene.mapProjection;
-        var ellipsoid = projection.ellipsoid;
-
-        var altitude = options.maximumAltitude;
-        var easingFunction = defaultValue(options.easingFunction, EasingFunction.QUINTIC_IN_OUT);
-
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
@@ -269,6 +263,12 @@ define([
             throw new DeveloperError('destination is required.');
         }
         //>>includeEnd('debug');
+
+        var projection = scene.mapProjection;
+        var ellipsoid = projection.ellipsoid;
+
+        var altitude = options.maximumAltitude;
+        var easingFunction = defaultValue(options.easingFunction, EasingFunction.QUINTIC_IN_OUT);
 
         if (scene.mode === SceneMode.MORPHING) {
             return emptyFlight();
@@ -316,14 +316,15 @@ define([
             return emptyFlight(complete, cancel);
         }
 
+        var updateFunctions = new Array(4);
+        updateFunctions[SceneMode.SCENE2D] = createUpdate2D;
+        updateFunctions[SceneMode.SCENE3D] = createUpdate3D;
+        updateFunctions[SceneMode.COLUMBUS_VIEW] = createUpdateCV;
+
         if (duration <= 0.0) {
             var newOnComplete = function() {
-                camera.setView({
-                    position : destination,
-                    heading : heading,
-                    pitch : pitch,
-                    roll : roll
-                });
+                var update = updateFunctions[mode](scene, 1.0, destination, heading, pitch, roll, altitude);
+                update({ time: 1.0 });
 
                 if (typeof complete === 'function') {
                     complete();
@@ -331,11 +332,6 @@ define([
             };
             return emptyFlight(newOnComplete, cancel);
         }
-
-        var updateFunctions = new Array(4);
-        updateFunctions[SceneMode.SCENE2D] = createUpdate2D;
-        updateFunctions[SceneMode.SCENE3D] = createUpdate3D;
-        updateFunctions[SceneMode.COLUMBUS_VIEW] = createUpdateCV;
 
         var update = updateFunctions[mode](scene, duration, destination, heading, pitch, roll, altitude);
 
