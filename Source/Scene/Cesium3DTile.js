@@ -52,7 +52,7 @@ define([
     /**
      * DOC_TBA
      */
-    var Cesium3DTile = function(baseUrl, header, parent) {
+    var Cesium3DTile = function(tileset, baseUrl, header, parent) {
         this._header = header;
         var contentHeader = header.content;
 
@@ -134,7 +134,7 @@ define([
             var contentFactory = Cesium3DTileContentProviderFactory[contentHeader.type];
 
             if (defined(contentFactory)) {
-                content = contentFactory(url, contentHeader);
+                content = contentFactory(tileset, url, contentHeader);
             } else {
                 throw new DeveloperError('Unknown tile content type, ' + contentHeader.type + ', for ' + url);
             }

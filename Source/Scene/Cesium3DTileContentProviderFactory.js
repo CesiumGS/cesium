@@ -11,11 +11,11 @@ define([
      * @private
      */
     var Cesium3DTileContentProviderFactory = {
-        b3dm : function(url, contentHeader) {
-            return new Batched3DModel3DTileContentProvider(url, contentHeader);
+        b3dm : function(tileset, url, contentHeader) {
+            return new Batched3DModel3DTileContentProvider(tileset, url, contentHeader);
         },
-        pnts : function(url, contentHeader) {
-            return new Points3DTileContentProvider(url, contentHeader);
+        pnts : function(tileset, url, contentHeader) {
+            return new Points3DTileContentProvider(tileset, url, contentHeader);
         }
     };
 

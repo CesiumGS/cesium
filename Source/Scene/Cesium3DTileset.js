@@ -147,7 +147,7 @@ define([
 
         loadJson(baseUrl + 'tiles.json').then(function(tree) {
             that._geometricError = tree.geometricError;
-            that._root = new Cesium3DTile(baseUrl, tree.root, undefined);
+            that._root = new Cesium3DTile(that, baseUrl, tree.root, undefined);
 
             var stack = [];
             stack.push({
@@ -163,7 +163,7 @@ define([
                     var length = children.length;
                     for (var k = 0; k < length; ++k) {
                         var childHeader = children[k];
-                        var childTile = new Cesium3DTile(baseUrl, childHeader, t.cesium3DTile);
+                        var childTile = new Cesium3DTile(that, baseUrl, childHeader, t.cesium3DTile);
                         t.cesium3DTile.children.push(childTile);
 
                         stack.push({

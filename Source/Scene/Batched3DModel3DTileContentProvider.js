@@ -50,9 +50,10 @@ define([
     /**
      * DOC_TBA
      */
-    var Batched3DModel3DTileContentProvider = function(url, contentHeader) {
+    var Batched3DModel3DTileContentProvider = function(tileset, url, contentHeader) {
         this._model = undefined;
         this._url = url;
+        this._tileset = tileset;
 
         /**
          * @readonly
@@ -384,11 +385,12 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     function createModels(content) {
+        var tileset = content._tileset;
         var batchSize = content._batchSize;
         if (!defined(content._models) && (batchSize > 0)) {
             var models = new Array(batchSize);
             for (var i = 0; i < batchSize; ++i) {
-                models[i] = new BatchedModel(content, i);
+                models[i] = new BatchedModel(tileset, content, i);
             }
             content._models = models;
         }
@@ -780,7 +782,6 @@ define([
             // to RGBA in the shader.  The only consider is precision issues, which might
             // not be an issue in WebGL 2.
             for (var i = 0; i < batchSize; ++i) {
-// TODO: What else should go into the owner passed to createPickId?
                 var pickId = context.createPickId(models[i]);
                 pickIds.push(pickId);
 
