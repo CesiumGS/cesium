@@ -60,6 +60,8 @@ define([
         this._entitiesToVisualize = new AssociativeArray();
         this._modelMatrixScratch = new Matrix4();
         this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
+        this._originalNodeMatrixHash = {};
+        this._nodeMatrixScratch = new Matrix4();
     };
 
     /**
@@ -81,6 +83,7 @@ define([
         var modelHash = this._modelHash;
         var primitives = this._primitives;
         var scene = this._scene;
+        var originalNodeMatrixHash = this._originalNodeMatrixHash;
 
         for (var i = 0, len = entities.length; i < len; i++) {
             var entity = entities[i];
@@ -145,8 +148,14 @@ define([
                     if(defined(modelNode)) {
                         var transformResult = transformation.getValue(time);
 
-                        var transformMtx = Matrix4.fromTranslationQuaternionRotationScale(transformResult.translate, transformResult.rotate, transformResult.scale);
-                        modelNode.matrix = transformMtx;
+                        var originalNodeMatrix = originalNodeMatrixHash[nodeName];
+                        if(!defined(originalNodeMatrix)) {
+
+                            originalNodeMatrix = originalNodeMatrixHash[nodeName] = modelNode.matrix.clone();
+                        }
+
+                        var transformMtx = Matrix4.fromTranslationQuaternionRotationScale(transformResult.translate, transformResult.rotate, transformResult.scale, this._nodeMatrixScratch);
+                        modelNode.matrix = Matrix4.multiply(originalNodeMatrix, transformMtx, transformMtx);
                     }
                 }
             }
