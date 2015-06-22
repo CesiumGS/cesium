@@ -299,12 +299,58 @@ define([
         entity.polyline = polyline;
     }
 
+    function processPolygon(that, polygon, properties, crsFunction) {
+        var exterior = polygon.getElementsByTagNameNS(gmlns, "exterior");
+        var interior = polygon.getElementsByTagNameNS(gmlns, "interior");
+
+        if(exterior.length == 0 && interior.length == 0) {
+            var surface = polygon.firstElementChild;
+            surfaceBoundaryHandler = surfaceBoundaryTypes(surface.localName);
+            
+        }
+
+        var polygon = new PolygonGraphics();
+        polygon.outline = new ConstantProperty(true);
+
+        var holes = [], surfaceBoundaryHandler, coordinates;
+        for(var i = 0; i < interior.length; i++) {
+            surfaceBoundaryHandler = surfaceBoundaryTypes(interior[i].localName);
+            coordinates = surfaceBoundaryHandler(interior[i]);
+            holes.push(new PolygonHierarchy(coordinates));
+        }
+
+        if(exterior.length == 1) {
+            exterior = exterior[0];
+        }
+        surfaceBoundaryHandler = surfaceBoundaryTypes(exterior.localName);
+        coordinates = surfaceBoundaryHandler(exterior);
+
+        polygon.hierarchy = new ConstantProperty(new PolygonHierarchy(coordinates, holes));
+        if (coordinates[0].length > 2) {
+            polygon.perPositionHeight = new ConstantProperty(true);
+        }
+
+        var entity = createObject(that._entityCollection);
+        entity.polygon = polygon;
+    }
+
+    function processLinearRing(ring, crsFunction) {
+        var coordString = ring.firstElementChild.textContent;
+        var coordinates = processCoordinates(coordString, 2, crsFunction);
+        return coordinates;
+    }
+
     var curveTypes = {
-    	LineStringSegment : processLineStringSegment,
     	//Arc : processArc,
     	//Circle : processCircle,
     	//CircleByCenterPoint : processCircleByCenterPoint
+        LineStringSegment : processLineStringSegment
     };
+
+    var surfaceBoundaryTypes = {
+        LinearRing : processLinearRing,
+        //Ring : processRing
+    }
 
     var geometryTypes = {
     	Curve : processCurve,
@@ -314,8 +360,8 @@ define([
         MultiLineString : processMultiLineString,
         MultiPoint : processMultiPoint,
         //MultiPolygon : processMultiPolygon,
-        Point : processPoint
-        //Polygon : processPolygon
+        Point : processPoint,
+        Polygon : processPolygon
     };
 
     function loadGml(that, gml, sourceUri) {
