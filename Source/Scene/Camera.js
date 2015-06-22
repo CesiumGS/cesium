@@ -2364,6 +2364,9 @@ define([
 
         var isRectangle = defined(destination.west);
         if (isRectangle) {
+            if (scene.mode !== SceneMode.SCENE3D && destination.west > destination.east) {
+                destination = Rectangle.MAX_VALUE;
+            }
             destination = scene.camera.getRectangleCameraCoordinates(destination, scratchFlyToDestination);
         }
 
