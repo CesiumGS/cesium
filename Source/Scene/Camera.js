@@ -2292,7 +2292,9 @@ define([
         duration : undefined,
         complete : undefined,
         cancel : undefined,
-        endTransform : undefined
+        endTransform : undefined,
+        altitude : undefined,
+        easingfunction : undefined
     };
 
     var scratchFlyDirection = new Cartesian3();
@@ -2313,6 +2315,8 @@ define([
      * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
      * @param {Boolean} [options.convert=true] When <code>true</code>, the destination is converted to the correct coordinate system for each scene mode. When <code>false</code>, the destination is expected
      *                  to be in the correct coordinate system.
+     * @param {Number} [options.altitude] The maximum altitude at the peak of the flight.
+     * @param {EasingFunction} [options.easingFunction] Controls how the time is interpolated over the duration of the flight.
      *
      * @exception {DeveloperError} If either direction or up is given, then both are required.
      *
@@ -2401,6 +2405,8 @@ define([
         newOptions.cancel = options.cancel;
         newOptions.endTransform = options.endTransform;
         newOptions.convert = isRectangle ? false : options.convert;
+        newOptions.altitude = options.altitude;
+        newOptions.easingFunction = options.easingFunction;
 
         scene.tweens.add(CameraFlightPath.createTween(scene, newOptions));
     };
@@ -2508,6 +2514,8 @@ define([
      * @param {Camera~FlightCompleteCallback} [options.complete] The function to execute when the flight is complete.
      * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
      * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
+     * @param {Number} [options.altitude] The maximum altitude at the peak of the flight.
+     * @param {EasingFunction} [options.easingFunction] Controls how the time is interpolated over the duration of the flight.
      */
     Camera.prototype.flyToBoundingSphere = function(boundingSphere, options) {
         //>>includeStart('debug', pragmas.debug);
@@ -2542,7 +2550,9 @@ define([
             duration : options.duration,
             complete : options.complete,
             cancel : options.cancel,
-            endTransform : options.endTransform
+            endTransform : options.endTransform,
+            altitude : options.altitude,
+            easingFunction : options.easingFunction
         });
     };
 
