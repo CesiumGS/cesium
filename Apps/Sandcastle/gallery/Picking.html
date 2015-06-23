@@ -36,6 +36,7 @@ var scene = viewer.scene;
 var handler;
 
 Sandcastle.addDefaultToolbarButton('Show Cartographic Position on Mouse Over', function() {
+    scene.camera.viewRectangle(Cesium.Camera.DEFAULT_VIEW_RECTANGLE, scene.mapProjection.ellipsoid);
     var ellipsoid = scene.globe.ellipsoid;
     var entity = viewer.entities.add({
         label : {
@@ -68,6 +69,7 @@ Sandcastle.addToolbarButton('Pick Entity', function() {
             image : '../images/Cesium_Logo_overlay.png'
         }
     });
+    viewer.zoomTo(entity);
 
     // If the mouse is over the billboard, change its scale and color
     handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
@@ -126,6 +128,8 @@ Sandcastle.addToolbarButton('Drill-Down Picking', function() {
         }
     });
     makeProperty(green, Cesium.Color.GREEN.withAlpha(0.5));
+    
+    viewer.zoomTo(red);
 
     // Move the primitive that the mouse is over to the top.
     handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
