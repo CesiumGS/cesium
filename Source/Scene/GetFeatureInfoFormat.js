@@ -251,18 +251,18 @@ define([
         return [featureInfo];
     }
 
-    var emptyBodyRegex;
+    var emptyBodyRegex= /<body>\s*<\/body>/im;
+    var titleRegex = /<title>(.*)<\/title>/im;
     var wmsServiceExceptionReportRegex;
-    var titleRegex;
-
-    // Don't throw an exception at module load time in old browsers like IE8.
-    if (typeof Object.create !== 'undefined') {
-        emptyBodyRegex= /<body>\s*<\/body>/im;
-        wmsServiceExceptionReportRegex = /<ServiceExceptionReport([^]*)<\/ServiceExceptionReport>/im;
-        titleRegex = /<title>(.*)<\/title>/im;
-    }
 
     function textToFeatureInfo(text) {
+        if (!defined(wmsServiceExceptionReportRegex)) {
+            // IE8's head explodes if it even sees this regular expression (encoded as a regular expression, not a string).
+            // We want IE8 to be able to load modules, even if it can't use them, so we initialize the regex here from
+            // a string.
+            wmsServiceExceptionReportRegex = new RegExp('<ServiceExceptionReport([^]*)<\\/ServiceExceptionReport>', 'im');
+        }
+
         // If the text is HTML and it has an empty body tag, assume it means no features were found.
         if (emptyBodyRegex.test(text)) {
             return undefined;
