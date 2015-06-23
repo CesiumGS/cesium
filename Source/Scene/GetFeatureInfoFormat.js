@@ -251,9 +251,16 @@ define([
         return [featureInfo];
     }
 
-    var emptyBodyRegex= /<body>\s*<\/body>/im;
-    var wmsServiceExceptionReportRegex = /<ServiceExceptionReport([^]*)<\/ServiceExceptionReport>/im;
-    var titleRegex = /<title>(.*)<\/title>/im;
+    var emptyBodyRegex;
+    var wmsServiceExceptionReportRegex;
+    var titleRegex;
+
+    // Don't throw an exception at module load time in old browsers like IE8.
+    if (typeof Object.create !== 'undefined') {
+        emptyBodyRegex= /<body>\s*<\/body>/im;
+        wmsServiceExceptionReportRegex = /<ServiceExceptionReport([^]*)<\/ServiceExceptionReport>/im;
+        titleRegex = /<title>(.*)<\/title>/im;
+    }
 
     function textToFeatureInfo(text) {
         // If the text is HTML and it has an empty body tag, assume it means no features were found.
