@@ -1,10 +1,12 @@
 /*global defineSuite*/
 defineSuite([
         'Core/Plane',
-        'Core/Cartesian3'
+        'Core/Cartesian3',
+        'Core/Cartesian4'
     ], function(
         Plane,
-        Cartesian3) {
+        Cartesian3,
+        Cartesian4) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
@@ -47,6 +49,21 @@ defineSuite([
         expect(plane.distance).toEqual(-Cartesian3.dot(normal, point));
     });
 
+    it('constructs from a Cartesian4 without result', function() {
+        var result = Plane.fromCartesian4(Cartesian4.UNIT_X);
+
+        expect(result.normal).toEqual(Cartesian3.UNIT_X);
+        expect(result.distance).toEqual(0.0);
+    });
+
+    it('constructs from a Cartesian4 with result', function() {
+        var result = new Plane(Cartesian3.UNIT_X, 0.0);
+        Plane.fromCartesian4(Cartesian4.UNIT_X, result);
+
+        expect(result.normal).toEqual(Cartesian3.UNIT_X);
+        expect(result.distance).toEqual(0.0);
+    });
+
     it('fromPointNormal throws without a point', function() {
         expect(function() {
             return Plane.fromPointNormal(undefined, Cartesian3.UNIT_X);
@@ -59,6 +76,12 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('fromCartesian4 throws without coefficients', function() {
+        expect(function() {
+            return Plane.fromCartesian4(undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('gets the distance to a point', function() {
         var plane = new Plane(new Cartesian3(1.0, 2.0, 3.0), 12.34);
         var point = new Cartesian3(4.0, 5.0, 6.0);
@@ -66,10 +89,17 @@ defineSuite([
         expect(Plane.getPointDistance(plane, point)).toEqual(Cartesian3.dot(plane.normal, point) + plane.distance);
     });
 
+    it('getPointDistance throws without a plane', function() {
+        var point = Cartesian3.ZERO;
+        expect(function() {
+            return Plane.getPointDistance(undefined, point);
+        }).toThrowDeveloperError();
+    });
+
     it('getPointDistance throws without a point', function() {
         var plane = new Plane(Cartesian3.UNIT_X, 0.0);
         expect(function() {
-            return Plane.getPointDistance();
+            return Plane.getPointDistance(plane, undefined);
         }).toThrowDeveloperError();
     });
 });

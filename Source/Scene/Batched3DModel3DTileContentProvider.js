@@ -50,9 +50,10 @@ define([
     /**
      * DOC_TBA
      */
-    var B3dm3DTileContentProvider = function(url, contentHeader) {
+    var Batched3DModel3DTileContentProvider = function(tileset, url, contentHeader) {
         this._model = undefined;
         this._url = url;
+        this._tileset = tileset;
 
         /**
          * @readonly
@@ -107,11 +108,11 @@ define([
         this._debugColorizeTiles = false;
     };
 
-    defineProperties(B3dm3DTileContentProvider.prototype, {
+    defineProperties(Batched3DModel3DTileContentProvider.prototype, {
         /**
          * DOC_TBA
          *
-         * @memberof B3dm3DTileContentProvider.prototype
+         * @memberof Batched3DModel3DTileContentProvider.prototype
          *
          * @type {Number}
          * @readonly
@@ -148,7 +149,7 @@ define([
      *
      * @private
      */
-    B3dm3DTileContentProvider.prototype.setShow = function(batchId, value) {
+    Batched3DModel3DTileContentProvider.prototype.setShow = function(batchId, value) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(batchId) || (batchId < 0) || (batchId > batchSize)) {
@@ -180,7 +181,7 @@ define([
      *
      * @private
      */
-    B3dm3DTileContentProvider.prototype.getShow = function(batchId) {
+    Batched3DModel3DTileContentProvider.prototype.getShow = function(batchId) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(batchId) || (batchId < 0) || (batchId > batchSize)) {
@@ -204,7 +205,7 @@ define([
      *
      * @private
      */
-    B3dm3DTileContentProvider.prototype.setColor = function(batchId, value) {
+    Batched3DModel3DTileContentProvider.prototype.setColor = function(batchId, value) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(batchId) || (batchId < 0) || (batchId > batchSize)) {
@@ -238,7 +239,7 @@ define([
     /**
      * @private
      */
-    B3dm3DTileContentProvider.prototype.setAllColor = function(value) {
+    Batched3DModel3DTileContentProvider.prototype.setAllColor = function(value) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
@@ -257,7 +258,7 @@ define([
      *
      * @private
      */
-    B3dm3DTileContentProvider.prototype.getColor = function(batchId, color) {
+    Batched3DModel3DTileContentProvider.prototype.getColor = function(batchId, color) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(batchId) || (batchId < 0) || (batchId > batchSize)) {
@@ -284,7 +285,7 @@ define([
     /**
      * DOC_TBA
      */
-    B3dm3DTileContentProvider.prototype.hasProperty = function(name) {
+    Batched3DModel3DTileContentProvider.prototype.hasProperty = function(name) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(name)) {
             throw new DeveloperError('name is required.');
@@ -301,7 +302,7 @@ define([
      * This may return different values from call to call if {@link BatchedModel#setProperty}
      * is used to add new properties.
      */
-    B3dm3DTileContentProvider.prototype.getPropertyNames = function() {
+    Batched3DModel3DTileContentProvider.prototype.getPropertyNames = function() {
         var names = [];
         var batchTable = this._batchTable;
 
@@ -323,7 +324,7 @@ define([
      *
      * @private
      */
-    B3dm3DTileContentProvider.prototype.getProperty = function(batchId, name) {
+    Batched3DModel3DTileContentProvider.prototype.getProperty = function(batchId, name) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(batchId) || (batchId < 0) || (batchId > batchSize)) {
@@ -353,7 +354,7 @@ define([
      *
      * @private
      */
-    B3dm3DTileContentProvider.prototype.setProperty = function(batchId, name, value) {
+    Batched3DModel3DTileContentProvider.prototype.setProperty = function(batchId, name, value) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(batchId) || (batchId < 0) || (batchId > batchSize)) {
@@ -384,11 +385,12 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     function createModels(content) {
+        var tileset = content._tileset;
         var batchSize = content._batchSize;
         if (!defined(content._models) && (batchSize > 0)) {
             var models = new Array(batchSize);
             for (var i = 0; i < batchSize; ++i) {
-                models[i] = new BatchedModel(content, i);
+                models[i] = new BatchedModel(tileset, content, i);
             }
             content._models = models;
         }
@@ -397,7 +399,7 @@ define([
     /**
      * DOC_TBA
      */
-    B3dm3DTileContentProvider.prototype.getModel = function(batchId) {
+    Batched3DModel3DTileContentProvider.prototype.getModel = function(batchId) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(batchId) || (batchId < 0) || (batchId > batchSize)) {
@@ -665,8 +667,10 @@ define([
      *
      * Use Cesium3DTile#requestContent
      */
-    B3dm3DTileContentProvider.prototype.request = function() {
+    Batched3DModel3DTileContentProvider.prototype.request = function() {
         var that = this;
+
+        this.state = Cesium3DTileContentState.LOADING;
 
         function failRequest(error) {
             that.state = Cesium3DTileContentState.FAILED;
@@ -733,9 +737,6 @@ define([
                 that.readyPromise.resolve(that);
             }).otherwise(failRequest);
         }).otherwise(failRequest);
-
-// TODO: allow this to not change the state depending on if the request is actually made, e.g., with RequestsByServer.
-        this.state = Cesium3DTileContentState.LOADING;
     };
 
      function applyDebugSettings(owner, content) {
@@ -782,7 +783,6 @@ define([
             // to RGBA in the shader.  The only consider is precision issues, which might
             // not be an issue in WebGL 2.
             for (var i = 0; i < batchSize; ++i) {
-// TODO: What else should go into the owner passed to createPickId?
                 var pickId = context.createPickId(models[i]);
                 pickIds.push(pickId);
 
@@ -824,7 +824,7 @@ define([
      *
      * Use Cesium3DTile#update
      */
-    B3dm3DTileContentProvider.prototype.update = function(owner, context, frameState, commandList) {
+    Batched3DModel3DTileContentProvider.prototype.update = function(owner, context, frameState, commandList) {
         // In the PROCESSING state we may be calling update() to move forward
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
@@ -852,14 +852,14 @@ define([
    /**
     * DOC_TBA
     */
-    B3dm3DTileContentProvider.prototype.isDestroyed = function() {
+    Batched3DModel3DTileContentProvider.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
      * DOC_TBA
      */
-    B3dm3DTileContentProvider.prototype.destroy = function() {
+    Batched3DModel3DTileContentProvider.prototype.destroy = function() {
         this._model = this._model && this._model.destroy();
         this._batchTexture = this._batchTexture && this._batchTexture.destroy();
         this._pickTexture = this._pickTexture && this._pickTexture.destroy();
@@ -873,5 +873,5 @@ define([
         return destroyObject(this);
     };
 
-    return B3dm3DTileContentProvider;
+    return Batched3DModel3DTileContentProvider;
 });

@@ -11,6 +11,7 @@ define([
         '../Core/IndexDatatype',
         '../Core/Intersections2D',
         '../Core/Math',
+        '../Core/OrientedBoundingBox',
         './createTaskProcessorWorker'
     ], function(
         AttributeCompression,
@@ -24,6 +25,7 @@ define([
         IndexDatatype,
         Intersections2D,
         CesiumMath,
+        OrientedBoundingBox,
         createTaskProcessorWorker) {
     "use strict";
 
@@ -42,6 +44,7 @@ define([
     var normalsScratch = [];
     var horizonOcclusionPointScratch = new Cartesian3();
     var boundingSphereScratch = new BoundingSphere();
+    var orientedBoundingBoxScratch = new OrientedBoundingBox();
 
     function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
         var isEastChild = parameters.isEastChild;
@@ -239,6 +242,7 @@ define([
         }
 
         var boundingSphere = BoundingSphere.fromVertices(cartesianVertices, Cartesian3.ZERO, 3, boundingSphereScratch);
+        var orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, minimumHeight, maximumHeight, ellipsoid, orientedBoundingBoxScratch);
 
         var occluder = new EllipsoidalOccluder(ellipsoid);
         var horizonOcclusionPoint = occluder.computeHorizonCullingPointFromVertices(boundingSphere.center, cartesianVertices, 3, boundingSphere.center, horizonOcclusionPointScratch);
@@ -285,6 +289,7 @@ define([
             eastIndices : eastIndices,
             northIndices : northIndices,
             boundingSphere : boundingSphere,
+            orientedBoundingBox : orientedBoundingBox,
             horizonOcclusionPoint : horizonOcclusionPoint
         };
     }
