@@ -724,7 +724,8 @@ define([
                 uniformMapLoaded : getUniformMapCallback(that),
                 pickVertexShaderLoaded : getPickVertexShaderCallback(that),
                 pickFragmentShaderLoaded : getPickFragmentShaderCallback(that),
-                pickUniformMapLoaded : getPickUniformMapCallback(that)
+                pickUniformMapLoaded : getPickUniformMapCallback(that),
+                basePath : that._url
             });
 
             that._model = model;
