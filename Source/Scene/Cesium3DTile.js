@@ -6,13 +6,13 @@ define([
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/DeveloperError',
         '../Core/GeometryInstance',
-        '../Core/BoundingSphere',
+        '../Core/BoxOutlineGeometry',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/Intersect',
         '../Core/Matrix4',
-        '../Core/SphereOutlineGeometry',
+        '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
         './Cesium3DTileContentProviderFactory',
         './Cesium3DTileContentState',
@@ -30,13 +30,13 @@ define([
         ColorGeometryInstanceAttribute,
         DeveloperError,
         GeometryInstance,
-        BoundingSphere,
+        BoxOutlineGeometry,
         defined,
         defineProperties,
         destroyObject,
         Intersect,
         Matrix4,
-        SphereOutlineGeometry,
+        OrientedBoundingBox,
         Rectangle,
         Cesium3DTileContentProviderFactory,
         Cesium3DTileContentState,
@@ -65,7 +65,7 @@ define([
             minimumHeight : b[4],
             maximumHeight : b[5]
         });
-        this._boundingSphere = BoundingSphere.fromRectangleWithHeights3D(rectangle, undefined, b[4], b[5]);
+        this._orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, b[4], b[5]);
 // TODO: if the content type has pixel size, like points or billboards, the bounding volume needs
 // to dynamic size bigger like BillboardCollection and PointCollection
 
@@ -77,10 +77,10 @@ define([
             // since it only bounds models in the tile, not the entire tile, children may be
             // outside of this box.
             var cb = contentHeader.box;
-            rs = BoundingSphere.fromRectangleWithHeights3D(new Rectangle(cb[0], cb[1], cb[2], cb[3]), undefined, cb[4], cb[5]);
+            rs = OrientedBoundingBox.fromRectangle(new Rectangle(cb[0], cb[1], cb[2], cb[3]), cb[4], cb[5]);
         }
 
-        this._contentsBoundingSphere = rs;
+        this._contentsOrientedBoundingBox = rs;
 
         /**
          * DOC_TBA
@@ -171,8 +171,8 @@ define([
 
         this._debugBox = undefined;
         this._debugcontentBox = undefined;
-        this._debugSphere = undefined;
-        this._debugContentsSphere = undefined;
+        this._debugOrientedBoundingBox = undefined;
+        this._debugContentsOrientedBoundingBox = undefined;
     };
 
     defineProperties(Cesium3DTile.prototype, {
@@ -225,18 +225,18 @@ define([
      * DOC_TBA
      */
     Cesium3DTile.prototype.visibility = function(cullingVolume) {
-        return cullingVolume.computeVisibility(this._boundingSphere);
+        return cullingVolume.computeVisibility(this._orientedBoundingBox);
     };
 
     /**
      * DOC_TBA
      */
     Cesium3DTile.prototype.contentsVisibility = function(cullingVolume) {
-        if (!defined(this._contentsBoundingSphere)) {
+        if (!defined(this._contentsOrientedBoundingBox)) {
             return Intersect.INSIDE;
         }
 
-        return cullingVolume.computeVisibility(this._contentsBoundingSphere);
+        return cullingVolume.computeVisibility(this._contentsOrientedBoundingBox);
     };
 
     /**
@@ -274,11 +274,11 @@ define([
         return createDebugPrimitive(geometry, color);
     }
 
-    function createDebugSphere(sphere, color) {
-        var geometry = new SphereOutlineGeometry({
-            radius : sphere.radius
+   function createDebugOrientedBox(obb, color) {
+        var geometry = BoxOutlineGeometry.fromDimensions({
+            dimensions: new Cartesian3(2.0, 2.0, 2.0)
         });
-        return createDebugPrimitive(geometry, color, Matrix4.fromTranslation(sphere.center));
+        return createDebugPrimitive(geometry, color, Matrix4.fromRotationTranslation(obb.halfAxes, obb.center));
     }
 
 // TODO: remove workaround for https://github.com/AnalyticalGraphicsInc/cesium/issues/2657
@@ -310,21 +310,21 @@ define([
         }
 
         if (owner.debugShowBoundingVolume) {
-            if (!defined(tile._debugSphere)) {
-                tile._debugSphere = createDebugSphere(tile._boundingSphere, hascontentBox ? Color.WHITE : Color.RED);
+            if (!defined(tile._debugOrientedBoundingBox)) {
+                tile._debugOrientedBoundingBox = createDebugOrientedBox(tile._orientedBoundingBox, hascontentBox ? Color.WHITE : Color.RED);
             }
-            tile._debugSphere.update(context, frameState, commandList);
-        } else if (!owner.debugShowBoundingVolume && defined(tile._debugSphere)) {
-            tile._debugSphere = tile._debugSphere.destroy();
+            tile._debugOrientedBoundingBox.update(context, frameState, commandList);
+        } else if (!owner.debugShowBoundingVolume && defined(tile._debugOrientedBoundingBox)) {
+            tile._debugOrientedBoundingBox = tile._debugOrientedBoundingBox.destroy();
         }
 
         if (owner.debugShowContentsBoundingVolume && hascontentBox) {
-            if (!defined(tile._debugContentsSphere)) {
-                tile._debugContentsSphere = createDebugSphere(tile._contentsBoundingSphere, Color.BLUE);
+            if (!defined(tile._debugContentsOrientedBoundingBox)) {
+                tile._debugContentsOrientedBoundingBox = createDebugOrientedBox(tile._contentsOrientedBoundingBox, Color.BLUE);
             }
-            tile._debugContentsSphere.update(context, frameState, commandList);
-        } else if (!owner.debugShowContentsBoundingVolume && defined(tile._debugContentsSphere)) {
-            tile._debugContentsSphere = tile._debugContentsSphere.destroy();
+            tile._debugContentsOrientedBoundingBox.update(context, frameState, commandList);
+        } else if (!owner.debugShowContentsBoundingVolume && defined(tile._debugContentsOrientedBoundingBox)) {
+            tile._debugContentsOrientedBoundingBox = tile._debugContentsOrientedBoundingBox.destroy();
         }
     }
 
@@ -359,8 +359,8 @@ define([
         this._content = this._content && this._content.destroy();
         this._debugBox = this._debugBox && this._debugBox.destroy();
         this._debugcontentBox = this._debugcontentBox && this._debugcontentBox.destroy();
-        this._debugSphere = this._debugSphere && this._debugSphere.destroy();
-        this._debugContentsSphere = this._debugContentsSphere && this._debugContentsSphere.destroy();
+        this._debugOrientedBoundingBox = this._debugOrientedBoundingBox && this._debugOrientedBoundingBox.destroy();
+        this._debugContentsOrientedBoundingBox = this._debugContentsOrientedBoundingBox && this._debugContentsOrientedBoundingBox.destroy();
         return destroyObject(this);
     };
 
