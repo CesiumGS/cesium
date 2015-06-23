@@ -58,21 +58,26 @@ define([
     var scratchCart = new Cartesian3();
     var scratchCart2 = new Cartesian3();
 
-    function createHeightFunction(camera, destination, startHeight, endHeight) {
-        var start = camera.position;
-        var end = destination;
-        var up = camera.up;
-        var right = camera.right;
-        var frustum = camera.frustum;
+    function createHeightFunction(camera, destination, startHeight, endHeight, optionAltitude) {
+        var altitude = optionAltitude;
+        var maxHeight;
 
-        var diff = Cartesian3.subtract(start, end, scratchCart);
-        var verticalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(up, Cartesian3.dot(diff, up), scratchCart2));
-        var horizontalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(right, Cartesian3.dot(diff, right), scratchCart2));
+        if (!defined(optionAltitude)) {
+            var start = camera.position;
+            var end = destination;
+            var up = camera.up;
+            var right = camera.right;
+            var frustum = camera.frustum;
 
-        var maxHeight = Math.max(startHeight, endHeight);
-        var altitude = Math.min(getAltitude(frustum, verticalDistance, horizontalDistance) * 0.20, 1000000000.0);
+            var diff = Cartesian3.subtract(start, end, scratchCart);
+            var verticalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(up, Cartesian3.dot(diff, up), scratchCart2));
+            var horizontalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(right, Cartesian3.dot(diff, right), scratchCart2));
 
-        if (maxHeight < altitude) {
+            maxHeight = Math.max(startHeight, endHeight);
+            altitude = Math.min(getAltitude(frustum, verticalDistance, horizontalDistance) * 0.20, 1000000000.0);
+        }
+
+        if (defined(optionAltitude) || maxHeight < altitude) {
             var power = 8.0;
             var factor = 1000000.0;
 
@@ -106,7 +111,7 @@ define([
 
     var scratchStart = new Cartesian3();
 
-    function createUpdateCV(scene, duration, destination, heading, pitch, roll) {
+    function createUpdateCV(scene, duration, destination, heading, pitch, roll, optionAltitude) {
         var camera = scene.camera;
 
         var start = Cartesian3.clone(camera.position, scratchStart);
@@ -114,7 +119,7 @@ define([
         var startHeading = adjustAngleForLERP(camera.heading, heading);
         var startRoll = adjustAngleForLERP(camera.roll, roll);
 
-        var heightFunction = createHeightFunction(camera, destination, start.z, destination.z);
+        var heightFunction = createHeightFunction(camera, destination, start.z, destination.z, optionAltitude);
 
         var update = function(value) {
             var time = value.time / duration;
@@ -136,7 +141,7 @@ define([
     var scratchEndCart = new Cartographic();
     var scratchCurrentPositionCart = new Cartographic();
 
-    function createUpdate3D(scene, duration, destination, heading, pitch, roll) {
+    function createUpdate3D(scene, duration, destination, heading, pitch, roll, optionAltitude) {
         var camera = scene.camera;
         var projection = scene.mapProjection;
         var ellipsoid = projection.ellipsoid;
@@ -161,7 +166,7 @@ define([
             destCart.longitude += CesiumMath.TWO_PI;
         }
 
-        var heightFunction = createHeightFunction(camera, destination, startCart.height, destCart.height);
+        var heightFunction = createHeightFunction(camera, destination, startCart.height, destCart.height, optionAltitude);
 
         var update = function(value) {
             var time = value.time / duration;
@@ -182,7 +187,7 @@ define([
         return update;
     }
 
-    function createUpdate2D(scene, destination, duration, heading, pitch, roll) {
+    function createUpdate2D(scene, duration, destination, heading, pitch, roll, optionAltitude) {
         var camera = scene.camera;
 
         var start = Cartesian3.clone(camera.position, scratchStart);
@@ -191,7 +196,7 @@ define([
         var startRoll = adjustAngleForLERP(camera.roll, roll);
 
         var startHeight = camera.frustum.right - camera.frustum.left;
-        var heightFunction = createHeightFunction(camera, destination, startHeight, destination.z);
+        var heightFunction = createHeightFunction(camera, destination, startHeight, destination.z, optionAltitude);
 
         var update = function(value) {
             var time = value.time / duration;
@@ -250,9 +255,6 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var destination = options.destination;
 
-        var projection = scene.mapProjection;
-        var ellipsoid = projection.ellipsoid;
-
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
@@ -261,6 +263,12 @@ define([
             throw new DeveloperError('destination is required.');
         }
         //>>includeEnd('debug');
+
+        var projection = scene.mapProjection;
+        var ellipsoid = projection.ellipsoid;
+
+        var maximumHeight = options.maximumHeight;
+        var easingFunction = defaultValue(options.easingFunction, EasingFunction.QUINTIC_IN_OUT);
 
         if (scene.mode === SceneMode.MORPHING) {
             return emptyFlight();
@@ -308,14 +316,15 @@ define([
             return emptyFlight(complete, cancel);
         }
 
+        var updateFunctions = new Array(4);
+        updateFunctions[SceneMode.SCENE2D] = createUpdate2D;
+        updateFunctions[SceneMode.SCENE3D] = createUpdate3D;
+        updateFunctions[SceneMode.COLUMBUS_VIEW] = createUpdateCV;
+
         if (duration <= 0.0) {
             var newOnComplete = function() {
-                camera.setView({
-                    position : destination,
-                    heading : heading,
-                    pitch : pitch,
-                    roll : roll
-                });
+                var update = updateFunctions[mode](scene, 1.0, destination, heading, pitch, roll, maximumHeight);
+                update({ time: 1.0 });
 
                 if (typeof complete === 'function') {
                     complete();
@@ -324,16 +333,11 @@ define([
             return emptyFlight(newOnComplete, cancel);
         }
 
-        var updateFunctions = new Array(4);
-        updateFunctions[SceneMode.SCENE2D] = createUpdate2D;
-        updateFunctions[SceneMode.SCENE3D] = createUpdate3D;
-        updateFunctions[SceneMode.COLUMBUS_VIEW] = createUpdateCV;
-
-        var update = updateFunctions[mode](scene, duration, destination, heading, pitch, roll);
+        var update = updateFunctions[mode](scene, duration, destination, heading, pitch, roll, maximumHeight);
 
         return {
             duration : duration,
-            easingFunction : EasingFunction.QUINTIC_IN_OUT,
+            easingFunction : easingFunction,
             startObject : {
                 time : 0.0
             },

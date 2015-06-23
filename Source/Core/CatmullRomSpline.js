@@ -5,6 +5,7 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
+        './deprecationWarning',
         './DeveloperError',
         './HermiteSpline',
         './Matrix4',
@@ -15,6 +16,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         HermiteSpline,
         Matrix4,
@@ -110,6 +112,8 @@ define([
      * @alias CatmullRomSpline
      * @constructor
      *
+     * @deprecated
+     *
      * @param {Object} options Object with the following properties:
      * @param {Number[]} options.times An array of strictly increasing, unit-less, floating-point times at each point.
      *                The values are in no way connected to the clock time. They are the parameterization for the curve.
@@ -143,6 +147,8 @@ define([
      * var p1 = spline.evaluate(times[i] + delta); // interpolated value when delta < times[i + 1] - times[i]
      */
     var CatmullRomSpline = function(options) {
+        deprecationWarning('CatmullRomSpline', 'CatmullRomSpline has been deprecated and will be removed in Cesium 1.12.');
+
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var points = options.points;

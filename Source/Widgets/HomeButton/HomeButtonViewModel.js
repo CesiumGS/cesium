@@ -82,7 +82,7 @@ define([
      * @constructor
      *
      * @param {Scene} scene The scene instance to use.
-     * @param {Number} [duration=1.5] The duration of the camera flight in seconds.
+     * @param {Number} [duration] The duration of the camera flight in seconds.
      */
     var HomeButtonViewModel = function(scene, duration) {
         //>>includeStart('debug', pragmas.debug);
@@ -90,8 +90,6 @@ define([
             throw new DeveloperError('scene is required.');
         }
         //>>includeEnd('debug');
-
-        duration = defaultValue(duration, 1.5);
 
         this._scene = scene;
         this._duration = duration;
@@ -139,9 +137,10 @@ define([
         /**
          * Gets or sets the the duration of the camera flight in seconds.
          * A value of zero causes the camera to instantly switch to home view.
+         * The duration will be computed based on the distance when undefined.
          * @memberof HomeButtonViewModel.prototype
          *
-         * @type {Number}
+         * @type {Number|undefined}
          */
         duration : {
             get : function() {
@@ -149,7 +148,7 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (value < 0) {
+                if (defined(value) && value < 0) {
                     throw new DeveloperError('value must be positive.');
                 }
                 //>>includeEnd('debug');
