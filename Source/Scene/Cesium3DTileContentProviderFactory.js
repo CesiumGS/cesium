@@ -1,16 +1,21 @@
 /*global define*/
 define([
-        './B3dm3DTileContentProvider'
+        './Batched3DModel3DTileContentProvider',
+        './Points3DTileContentProvider'
     ], function(
-        B3dm3DTileContentProvider) {
+        Batched3DModel3DTileContentProvider,
+        Points3DTileContentProvider) {
     "use strict";
 
     /**
      * @private
      */
     var Cesium3DTileContentProviderFactory = {
-        b3dm : function(url, contentHeader) {
-            return new B3dm3DTileContentProvider(url, contentHeader);
+        b3dm : function(tileset, url, contentHeader) {
+            return new Batched3DModel3DTileContentProvider(tileset, url, contentHeader);
+        },
+        pnts : function(tileset, url, contentHeader) {
+            return new Points3DTileContentProvider(tileset, url, contentHeader);
         }
     };
 

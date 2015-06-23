@@ -52,10 +52,11 @@ define([
     /**
      * DOC_TBA
      */
-    var Cesium3DTile = function(baseUrl, header, parent) {
+    var Cesium3DTile = function(tileset, baseUrl, header, parent) {
         this._header = header;
         var contentHeader = header.content;
 
+// TODO: For the 3D Tiles spec, we want to change this to basically (x, y, z) to (x, y, z)
         var b = header.box;
         var rectangle = new Rectangle(b[0], b[1], b[2], b[3]);
 
@@ -65,6 +66,8 @@ define([
             maximumHeight : b[5]
         });
         this._boundingSphere = BoundingSphere.fromRectangleWithHeights3D(rectangle, undefined, b[4], b[5]);
+// TODO: if the content type has pixel size, like points or billboards, the bounding volume needs
+// to dynamic size bigger like BillboardCollection and PointCollection
 
         var rs;
         if (defined(contentHeader) && defined(contentHeader.box)) {
@@ -131,7 +134,7 @@ define([
             var contentFactory = Cesium3DTileContentProviderFactory[contentHeader.type];
 
             if (defined(contentFactory)) {
-                content = contentFactory(url, contentHeader);
+                content = contentFactory(tileset, url, contentHeader);
             } else {
                 throw new DeveloperError('Unknown tile content type, ' + contentHeader.type + ', for ' + url);
             }
@@ -280,7 +283,7 @@ define([
 
 // TODO: remove workaround for https://github.com/AnalyticalGraphicsInc/cesium/issues/2657
     function workaround2657(rectangle) {
-        return (rectangle[1] !== rectangle[3]) || (rectangle[0] !== rectangle[2]);
+        return (rectangle[1] !== rectangle[3]) && (rectangle[0] !== rectangle[2]);
     }
 
     function applyDebugSettings(tile, owner, context, frameState, commandList) {

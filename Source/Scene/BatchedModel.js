@@ -10,13 +10,17 @@ define([
     /**
      * DOC_TBA
      */
-    var BatchedModel = function(content, batchId) {
+    var BatchedModel = function(tileset, content, batchId) {
         this._content = content;
         this._batchId = batchId;
         this._color = undefined;  // for calling getColor
 
-// TODO: this should not be here.  It is so pickEntity doesn't crash when pickPosition is called.
-        this.primitive = {};
+        /**
+         * DOC_TBA
+         *
+         * All objects returned by {@link Scene#pick} have a <code>primitive</code> property.
+         */
+        this.primitive = tileset;
     };
 
     defineProperties(BatchedModel.prototype, {
@@ -48,10 +52,16 @@ define([
         }
     });
 
+    /**
+     * DOC_TBA
+     */
     BatchedModel.prototype.getProperty = function(name) {
         return this._content.getProperty(this._batchId, name);
     };
 
+    /**
+     * DOC_TBA
+     */
     BatchedModel.prototype.setProperty = function(name, value) {
         this._content.setProperty(this._batchId, name, value);
     };

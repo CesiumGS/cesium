@@ -64,6 +64,7 @@ define([
 
         this._url = url;
         this._root = undefined;
+        this._properties = undefined; // // Metadata for per-model/point/etc properties
         this._geometricError = undefined; // Geometric error when the tree is not rendered at all
         this._processingQueue = [];
         this._selectedTiles = [];
@@ -143,11 +144,14 @@ define([
 // which also means they are one tick behind for time-dynamic updates.
         this.tileVisible = new Event();
 
+        this._readyPromise = when.defer();
+
         var that = this;
 
         loadJson(baseUrl + 'tiles.json').then(function(tree) {
+            that._properties = tree.properties;
             that._geometricError = tree.geometricError;
-            that._root = new Cesium3DTile(baseUrl, tree.root, undefined);
+            that._root = new Cesium3DTile(that, baseUrl, tree.root, undefined);
 
             var stack = [];
             stack.push({
@@ -163,7 +167,7 @@ define([
                     var length = children.length;
                     for (var k = 0; k < length; ++k) {
                         var childHeader = children[k];
-                        var childTile = new Cesium3DTile(baseUrl, childHeader, t.cesium3DTile);
+                        var childTile = new Cesium3DTile(that, baseUrl, childHeader, t.cesium3DTile);
                         t.cesium3DTile.children.push(childTile);
 
                         stack.push({
@@ -173,10 +177,62 @@ define([
                     }
                 }
             }
+
+            that._readyPromise.resolve(that);
         });
     };
 
     defineProperties(Cesium3DTileset.prototype, {
+        /**
+         * DOC_TBA
+         *
+         * @memberof Cesium3DTileset.prototype
+         *
+         * @type {Object}
+         * @readonly
+         */
+        properties : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this.ready) {
+                    throw new DeveloperError('The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._properties;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         *
+         * @memberof Cesium3DTileset.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default false
+         */
+        ready : {
+            get : function() {
+                return defined(this._root);
+            }
+        },
+
+        /**
+         * DOC_TBA
+         *
+         * @memberof Cesium3DTileset.prototype
+         *
+         * @type {Promise}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise;
+            }
+        },
+
         /**
          * DOC_TBA
          *
