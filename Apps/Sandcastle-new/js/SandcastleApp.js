@@ -43,10 +43,14 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       PubSub.subscribe('JS CODE', this.handleJSCode);
     },
 
+    getEditorCode: function(code){
+      this.setState({src: code});
+    },
+
     render: function(){
       return (
         <div role="tabpanel" className="tab-pane active codeContainer" id="jsContainer">
-          <SandcastleCodeMirrorEditor style={{height: 95 + '%'}} textAreaClassName='form-control' defaultValue={this.state.src} mode="javascript" readOnly={$(window).width()<768? "nocursor":false} lineWrapping={true} lineNumbers={true} gutters ={['hintGutter', 'errorGutter', 'searchGutter', 'highlightGutter']} matchBrackets={true} indentUnit={4} extraKeys={{'Ctrl-Space': 'autocomplete', 'F8': 'runCesium', 'Tab': 'indentMore', 'Shift-Tab': 'indentLess'}}/>
+          <SandcastleCodeMirrorEditor requestChange={this.getEditorCode} style={{height: 95 + '%'}} textAreaClassName='form-control' defaultValue={this.state.src} mode="javascript" readOnly={$(window).width()<768? "nocursor":false} lineWrapping={true} lineNumbers={true} gutters ={['hintGutter', 'errorGutter', 'searchGutter', 'highlightGutter']} matchBrackets={true} indentUnit={4} extraKeys={{'Ctrl-Space': 'autocomplete', 'F8': 'runCesium', 'Tab': 'indentMore', 'Shift-Tab': 'indentLess'}}/>
         </div>
       );
     }
@@ -230,6 +234,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
         if (value !== this.props.value) {
           if (this.editor.getValue() !== this.props.value) {
             this.props.value = value;
+            this.props.requestChange(this.editor.getValue());
           }
         }
         if(this.props.mode === 'javascript'){
@@ -241,9 +246,22 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       }
     },
 
+    shouldComponentUpdate: function(nextProps, nextState){
+      if(this.editor.getValue() === nextProps.defaultValue){
+        console.log(this.props.mode + ' not updating');
+        return false;
+      }
+      return true;
+    },
+
     componentWillUpdate: function(nextProps, nextState){
       // Update with new value from demo
-      this.editor.setValue(nextProps.defaultValue);
+      var currValue = this.editor.getValue();
+      var nextValue = nextProps.defaultValue;
+      if(currValue !== nextValue)
+      {
+        this.editor.setValue(nextProps.defaultValue);
+      }
     },
 
     componentWillMount: function(){
@@ -284,11 +302,15 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
     componentDidMount: function(){
       PubSub.subscribe('HTML CODE', this.handleHTMLCode);
     },
+
+    getEditorCode: function(code){
+      this.setState({src: code});
+    },
     
     render: function(){
       return (
         <div role="tabpanel" className="tab-pane codeContainer" id="htmlContainer">
-            <SandcastleCodeMirrorEditor style={{height: 100 + '%'}} textAreaClassName='form-control' defaultValue={this.state.src} mode="text/html" readOnly={$(window).width()<768? "nocursor":false} lineNumbers={true} matchBrackets={true} indentUnit={4}/>
+            <SandcastleCodeMirrorEditor style={{height: 100 + '%'}} textAreaClassName='form-control' requestChange={this.getEditorCode} defaultValue={this.state.src} mode="text/html" readOnly={$(window).width()<768? "nocursor":false} lineNumbers={true} matchBrackets={true} indentUnit={4}/>
         </div>
       );
     }
@@ -309,10 +331,14 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       PubSub.subscribe('CSS CODE', this.handleCSSCode);
     },
 
+    getEditorCode: function(code){
+      this.setState({src: code});
+    },
+
     render: function(){
       return (
         <div role="tabpanel" className="tab-pane codeContainer" id="cssContainer">
-            <SandcastleCodeMirrorEditor style={{height: 100 + '%'}} textAreaClassName='form-control' defaultValue={this.state.src} mode="text/css" readOnly={$(window).width()<768? "nocursor":false} lineNumbers={true} matchBrackets={true} indentUnit={4}/>
+            <SandcastleCodeMirrorEditor style={{height: 100 + '%'}} textAreaClassName='form-control' requestChange={this.getEditorCode} defaultValue={this.state.src} mode="text/css" readOnly={$(window).width()<768? "nocursor":false} lineNumbers={true} matchBrackets={true} indentUnit={4}/>
         </div>
       );
     }
@@ -976,7 +1002,6 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
 
     exportHTML: function(msg, data){
       var html = this.getDemoHTML(data.title, data.description);
-      console.log(html);
       var link = document.createElement('a');
       link.setAttribute('href', 'data:text/html;charset=utf-8,' +  encodeURIComponent(html));
       link.setAttribute('download', data.title + '.html');
