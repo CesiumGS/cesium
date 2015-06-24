@@ -3,6 +3,8 @@ Change Log
 
 ### 1.11 - 2015-07-01
 
+* Breaking changes
+  * Removed `Camera.clone` that was deprecated in 1.10.
 * Improved the algorithm that `Camera.viewRectangle` uses to select the position of the camera, so that the specified rectangle is now better centered on the screen [#2764](https://github.com/AnalyticalGraphicsInc/cesium/issues/2764).
 * The performance statistics displayed by setting `scene.debugShowFramesPerSecond` to `true` can now be styled using the `cesium-performanceDisplay` CSS classes in `shared.css` [#2779](https://github.com/AnalyticalGraphicsInc/cesium/issues/2779).
 * Fixed a crash when `viewer.zoomTo` or `viewer.flyTo` were called immediately before or during a scene morph [#2775](https://github.com/AnalyticalGraphicsInc/cesium/issues/2775).
@@ -13,6 +15,13 @@ Change Log
 * The camera now zooms to the point under the mouse cursor.
 * Fixed a bug in `ImageryLayer` that could cause an exception and the render loop to stop when the base layer did not cover the entire globe.
 * Fixed flash/streak rendering artifacts when picking [#2790](https://github.com/AnalyticalGraphicsInc/cesium/issues/2790), [#2811](https://github.com/AnalyticalGraphicsInc/cesium/issues/2811).
+* Improved camera flights. [#2825](https://github.com/AnalyticalGraphicsInc/cesium/pull/2825)
+* Fixed camera flights that ended up at the wrong position in Columbus view. [#802](https://github.com/AnalyticalGraphicsInc/cesium/issues/802)
+* Fixed camera flights through the map in 2D. [#804](https://github.com/AnalyticalGraphicsInc/cesium/issues/804)
+* Fixed strange camera flights from opposite sides of the globe. [#1158](https://github.com/AnalyticalGraphicsInc/cesium/issues/1158)
+* Fixed camera flights that wouldn't fly to the home view after zooming out past it. [#1400](https://github.com/AnalyticalGraphicsInc/cesium/issues/1400)
+* Fixed flying to rectangles that cross the IDL in Columbus view and 2D. [#2093](https://github.com/AnalyticalGraphicsInc/cesium/issues/2093)
+* Fixed flights with a pitch of -90 degrees. [#2468](https://github.com/AnalyticalGraphicsInc/cesium/issues/2468)
 
 ### 1.10 - 2015-06-01
 
