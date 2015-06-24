@@ -6,7 +6,6 @@ Change Log
 * Added `incrementallyLoadTextures` to `Model`.  This is `true` by default so a model's textures incrementally appear as they are loaded.
 * Added `vertexShaderLoaded`, `fragmentShaderLoaded`, `uniformMapLoaded`, `pickVertexShaderLoaded`, `pickFragmentShaderLoaded`, and `pickUniformMapLoaded` callbacks to the `Model` constructor and `Model.fromGltf`.
 * Added `Queue.peek`.
-* Added `BoundingSphere.fromRectangleWithHeights3D`.
 
 ### 1.11 - 2015-07-01
 

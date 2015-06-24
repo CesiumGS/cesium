@@ -302,40 +302,6 @@ define([
         return BoundingSphere.fromPoints(positions, result);
     };
 
-    var fromRectangleWithHeights3DScratch = [];
-    var fromRectangleWithHeights3DScratch2 = [];
-
-    /**
-     * DOC_TBA
-     */
-    BoundingSphere.fromRectangleWithHeights3D = function(rectangle, ellipsoid, minimumHeight, maximumHeight, result) {
-        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        minimumHeight = defaultValue(minimumHeight, 0.0);
-        maximumHeight = defaultValue(maximumHeight, 0.0);
-
-        var positions;
-        if (defined(rectangle)) {
-            var bottom = Rectangle.subsample(rectangle, ellipsoid, minimumHeight, fromRectangle3DScratch);
-            var top = Rectangle.subsample(rectangle, ellipsoid, maximumHeight, fromRectangleWithHeights3DScratch);
-
-            var bottomLength = bottom.length;
-            var topLength = top.length;
-            var i;
-            var j = 0;
-            positions = fromRectangleWithHeights3DScratch2;
-            positions.length = bottomLength + topLength;
-
-            for (i = 0; i < bottomLength; ++i) {
-                positions[j++] = bottom[i];
-            }
-            for (i = 0; i < topLength; ++i) {
-                positions[j++] = top[i];
-            }
-        }
-
-        return BoundingSphere.fromPoints(positions, result);
-    };
-
     /**
      * Computes a tight-fitting bounding sphere enclosing a list of 3D points, where the points are
      * stored in a flat array in X, Y, Z, order.  The bounding sphere is computed by running two
