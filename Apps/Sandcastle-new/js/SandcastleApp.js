@@ -361,6 +361,48 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
 
     componentDidMount: function(){
       PubSub.subscribe('RESIZE', this.handleResize);
+      this.resize = false;
+      this.mouseDown = false;
+      var that = this;
+      $('#codeColumn').mousedown(function(e){
+        that.mouseDown = true;
+        if(that.resize)
+        {
+          that.lastX = e.pageX;
+          $('iframe').addClass('disableFrame');
+        }
+      })
+      $('#codeColumn').mouseup(function(e){
+        that.mouseDown =false;
+        $('iframe').removeClass('disableFrame');
+      });
+      $('#bodyRow').mousemove(function(e){
+        var divX = $('#codeColumn').offset().left + $('#codeColumn').width();
+        if(divX - e.pageX <= 10)
+        {
+          // change the cursor
+          $('#codeColumn').addClass('resize');
+          that.resize = true;
+        }
+        else
+        {
+          if(!that.mouseDown)
+          {
+            $('#codeColumn').removeClass('resize');
+            that.resize = false;
+          }
+        }
+
+        if(that.resize && that.mouseDown){
+          // Check that the final width of code column does not go below 390px
+          if($('#codeColumn').width() + (e.pageX - that.lastX) >= 390)
+          {
+            $('#codeColumn').width($('#codeColumn').width() + (e.pageX - that.lastX));
+            $('#cesiumColumn').width($('#cesiumColumn').width() - (e.pageX - that.lastX));
+            that.lastX = e.pageX;
+          }
+        }
+      });
     },
 
     handleNavigation: function(msg, data){

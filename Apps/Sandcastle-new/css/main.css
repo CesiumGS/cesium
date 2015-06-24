@@ -34,6 +34,10 @@ html {
     vertical-align: middle;
 }
 
+.disableFrame{
+  pointer-events: none;
+}
+
 .page-header {
   position: absolute;
   margin: 0;
@@ -68,6 +72,14 @@ html {
 
 #cesiumColumn, #codeColumn {
   padding: 0; }
+
+#codeColumn{
+  min-width: 390px;
+}
+
+.resize{
+  cursor: col-resize;
+}
 
 ul.nav.nav-tabs {
   position: absolute;
