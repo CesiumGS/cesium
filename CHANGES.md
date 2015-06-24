@@ -4,6 +4,7 @@ Change Log
 ### 1.11 - 2015-07-01
 
 * Deprecated
+  * The STK World Terrain url `cesiumjs.org/stk-terrain/world` has been deprecated, use `assets.agi.com/stk-terrain/world` instead.  A redirect will be in place until 1.14.
   * Deprecated `AxisAlignedBoundingBox.intersect` and `BoundingSphere.intersect`.  These will be removed in 1.13.  Use `.intersectPlane` and, if necessary, `Plane.fromCartesian4`.
   * Deprecated the `ObjectOrientedBoundingBox` class.  It will be removed in 1.12.  Use `OrientedBoundingBox` instead.
 * Improved the algorithm that `Camera.viewRectangle` uses to select the position of the camera, so that the specified rectangle is now better centered on the screen [#2764](https://github.com/AnalyticalGraphicsInc/cesium/issues/2764).
@@ -15,6 +16,7 @@ Change Log
 * Added `UrlTemplateImageryProvider`.  This new imagery provider allows access to a wide variety of imagery sources, including OpenStreetMap, TMS, WMTS, WMS, WMS-C, and various custom schemes, by specifying a URL template to use to request imagery tiles.
 * The camera now zooms to the point under the mouse cursor.
 * Fixed a bug in `ImageryLayer` that could cause an exception and the render loop to stop when the base layer did not cover the entire globe.
+* Fixed flash/streak rendering artifacts when picking [#2790](https://github.com/AnalyticalGraphicsInc/cesium/issues/2790), [#2811](https://github.com/AnalyticalGraphicsInc/cesium/issues/2811).
 * Added `Plane.fromCartesian4` to convert old `Cartesian4` plane representations to the new `Plane` format.
 * Added `Plane.ORIGIN_XY_PLANE`/`ORIGIN_YZ_PLANE`/`ORIGIN_ZX_PLANE` constants for commonly-used planes.
 * Added `Matrix2`/`Matrix3`/`Matrix4.ZERO` constants for zero matrices.

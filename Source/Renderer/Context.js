@@ -302,6 +302,7 @@ define([
 
         this._us = us;
         this._currentRenderState = rs;
+        this._currentPassState = ps;
         this._currentFramebuffer = undefined;
         this._maxFrameTextureUnitIndex = 0;
 
@@ -1703,12 +1704,11 @@ define([
     }
 
     function applyRenderState(context, renderState, passState) {
-        var previousState = context._currentRenderState;
-        if (previousState !== renderState) {
-            context._currentRenderState = renderState;
-            RenderState.partialApply(context._gl, previousState, renderState, passState);
-         }
-         // else same render state as before so state is already applied.
+        var previousRenderState = context._currentRenderState;
+        var previousPassState = context._currentPassState;
+        context._currentRenderState = renderState;
+        context._currentPassState = passState;
+        RenderState.partialApply(context._gl, previousRenderState, renderState, previousPassState, passState);
     }
 
     var scratchBackBufferArray;
