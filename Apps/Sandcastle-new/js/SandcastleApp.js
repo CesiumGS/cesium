@@ -9,22 +9,8 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
           <li role="presentation" className="active"><a href="#jsContainer" aria-controls="jsContainer" role="tab" data-toggle="tab">Javascript code</a></li>
           <li role="presentation"><a href="#htmlContainer" aria-controls="htmlContainer" role="tab" data-toggle="tab">HTML</a></li>
           <li role="presentation"><a href="#cssContainer" aria-controls="cssContainer" role="tab" data-toggle="tab">CSS</a></li>
-          <li role="presentation" className="dropdown pull-right">
-            <a className="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
-              Resize <span className="caret"></span>
-            </a>
-            <ul className="dropdown-menu">
-              <li><a href="#" onClick={this.resize.bind(this, 'small')}>Small</a></li>
-              <li><a href="#" onClick={this.resize.bind(this, 'medium')}>Medium</a></li>
-              <li><a href="#" onClick={this.resize.bind(this, 'large')}>Large</a></li>
-            </ul>
-          </li>
         </ul>
       );
-    },
-
-    resize: function(size){
-      PubSub.publish('RESIZE', size);
     }
   });
 
@@ -248,7 +234,6 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
 
     shouldComponentUpdate: function(nextProps, nextState){
       if(this.editor.getValue() === nextProps.defaultValue){
-        console.log(this.props.mode + ' not updating');
         return false;
       }
       return true;
@@ -346,7 +331,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
 
   var SandcastleCode = React.createClass({
     getInitialState: function(){
-      var classes = {"hidden-xs": true, "col-sm-5": true, "col-sm-4": false, "col-sm-7": false};
+      var classes = {"hidden-xs": true, "col-sm-5": true};
       return {
         classes: classes
       };
@@ -360,7 +345,6 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
     },
 
     componentDidMount: function(){
-      PubSub.subscribe('RESIZE', this.handleResize);
       this.resize = false;
       this.mouseDown = false;
       var that = this;
@@ -395,7 +379,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
 
         if(that.resize && that.mouseDown){
           // Check that the final width of code column does not go below 390px
-          if($('#codeColumn').width() + (e.pageX - that.lastX) >= 390)
+          if($('#codeColumn').width() + (e.pageX - that.lastX) >= 390 && $('#codeColumn').width() + (e.pageX - that.lastX) <= $('#bodyRow').width())
           {
             $('#codeColumn').width($('#codeColumn').width() + (e.pageX - that.lastX));
             $('#cesiumColumn').width($('#cesiumColumn').width() - (e.pageX - that.lastX));
@@ -420,29 +404,6 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
         case 'SHOW CSS CODE':
           classes['hidden-xs'] = false;
           break;
-      }
-      this.setState({classes: classes});
-    },
-
-    handleResize: function(msg, data){
-      var classes = this.state.classes;
-      if(data === "small")
-      {
-        classes['col-sm-4'] = true;
-        classes['col-sm-5'] = false;
-        classes['col-sm-7'] = false;
-      }
-      else if(data === "medium")
-      {
-        classes['col-sm-4'] = false;
-        classes['col-sm-5'] = true;
-        classes['col-sm-7'] = false;
-      }
-      else
-      {
-        classes['col-sm-4'] = false;
-        classes['col-sm-5'] = false;
-        classes['col-sm-7'] = true;
       }
       this.setState({classes: classes});
     },
@@ -626,7 +587,6 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
     },
 
     closeDocTab: function(msg, data){
-      console.log("closing doc tab");
       var tabs = this.state.tabs;
       for(var i = tabs.length-1; i>=0; i--)
       {
@@ -661,7 +621,7 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
 
   var SandcastleCesium = React.createClass({
     getInitialState: function(){
-      var classes = {'col-xs-12': true, 'col-sm-7': true, "col-sm-8": false, "col-sm-5": false};
+      var classes = {'col-xs-12': true, 'col-sm-7': true};
       return{
         classes: classes
       };
@@ -672,7 +632,6 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
       PubSub.subscribe('SHOW JS CODE', this.handleNavigation);
       PubSub.subscribe('SHOW HTML CODE', this.handleNavigation);
       PubSub.subscribe('SHOW CSS CODE', this.handleNavigation);
-      PubSub.subscribe('RESIZE', this.handleResize);
     },
 
     handleNavigation: function(msg, data){
@@ -690,30 +649,6 @@ define(['react', 'pubsub', 'CodeMirror/lib/codemirror','CodeMirror/addon/hint/sh
         case 'SHOW CSS CODE':
           classes['hidden-xs'] = true;
           break;
-      }
-      this.setState({classes: classes});
-    },
-
-    handleResize: function(msg, data){
-      // The size passed is for the editor columns, so small would mean large for cesium column
-      var classes = this.state.classes;
-      if(data === "small")
-      {
-        classes['col-sm-8'] = true;
-        classes['col-sm-7'] = false;
-        classes['col-sm-5'] = false;
-      }
-      else if(data === "medium")
-      {
-        classes['col-sm-8'] = false;
-        classes['col-sm-7'] = true;
-        classes['col-sm-5'] = false;
-      }
-      else
-      {
-        classes['col-sm-8'] = false;
-        classes['col-sm-7'] = false;
-        classes['col-sm-5'] = true;
       }
       this.setState({classes: classes});
     },
