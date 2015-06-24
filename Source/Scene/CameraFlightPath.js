@@ -268,7 +268,7 @@ define([
         var ellipsoid = projection.ellipsoid;
 
         var maximumHeight = options.maximumHeight;
-        var easingFunction = defaultValue(options.easingFunction, EasingFunction.QUINTIC_IN_OUT);
+        var easingFunction = options.easingFunction;
 
         if (scene.mode === SceneMode.MORPHING) {
             return emptyFlight();
@@ -334,6 +334,17 @@ define([
         }
 
         var update = updateFunctions[mode](scene, duration, destination, heading, pitch, roll, maximumHeight);
+
+        if (!defined(easingFunction)) {
+            var startHeight = camera.positionCartographic.height;
+            var endHeight = mode === SceneMode.SCENE3D ? ellipsoid.cartesianToCartographic(destination).height : destination.z;
+
+            if (startHeight > endHeight && startHeight > 11500.0) {
+                easingFunction = EasingFunction.CUBIC_OUT;
+            } else {
+                easingFunction = EasingFunction.QUINTIC_IN_OUT;
+            }
+        }
 
         return {
             duration : duration,
