@@ -2,7 +2,8 @@ Change Log
 ==========
 
 ### 1.11 - 2015-07-01
-
+* Deprecated
+  * The STK World Terrain url `cesiumjs.org/stk-terrain/world` has been deprecated, use `assets.agi.com/stk-terrain/world` instead.  A redirect will be in place until 1.14.
 * Improved the algorithm that `Camera.viewRectangle` uses to select the position of the camera, so that the specified rectangle is now better centered on the screen [#2764](https://github.com/AnalyticalGraphicsInc/cesium/issues/2764).
 * The performance statistics displayed by setting `scene.debugShowFramesPerSecond` to `true` can now be styled using the `cesium-performanceDisplay` CSS classes in `shared.css` [#2779](https://github.com/AnalyticalGraphicsInc/cesium/issues/2779).
 * Fixed a crash when `viewer.zoomTo` or `viewer.flyTo` were called immediately before or during a scene morph [#2775](https://github.com/AnalyticalGraphicsInc/cesium/issues/2775).
@@ -12,6 +13,7 @@ Change Log
 * Added `UrlTemplateImageryProvider`.  This new imagery provider allows access to a wide variety of imagery sources, including OpenStreetMap, TMS, WMTS, WMS, WMS-C, and various custom schemes, by specifying a URL template to use to request imagery tiles.
 * The camera now zooms to the point under the mouse cursor.
 * Fixed a bug in `ImageryLayer` that could cause an exception and the render loop to stop when the base layer did not cover the entire globe.
+* Fixed flash/streak rendering artifacts when picking [#2790](https://github.com/AnalyticalGraphicsInc/cesium/issues/2790), [#2811](https://github.com/AnalyticalGraphicsInc/cesium/issues/2811).
 
 ### 1.10 - 2015-06-01
 
