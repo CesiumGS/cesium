@@ -458,7 +458,7 @@ define([
         var mode = scene.mode;
 
         var pickedPosition = mode !== SceneMode.SCENE2D ? pickGlobe(object, startPosition, scratchPickCartesian) : camera.getPickRay(startPosition, scratchZoomPickRay).origin;
-        if (distance <= 0.0 || !defined(pickedPosition)) {
+        if (!defined(pickedPosition)) {
             camera.zoomIn(distance);
             return;
         }
