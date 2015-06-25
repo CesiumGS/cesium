@@ -289,8 +289,8 @@ define([
 
         var duration = options.duration;
         if (!defined(duration)) {
-            duration = Math.ceil(Cartesian3.distance(camera.position, destination) / 1000000.0) + 3.0;
-            duration = Math.min(duration, 10.0);
+            duration = Math.ceil(Cartesian3.distance(camera.position, destination) / 1000000.0) + 2.0;
+            duration = Math.min(duration, 3.0);
         }
 
         var mode = scene.mode;
