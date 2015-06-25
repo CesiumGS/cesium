@@ -2,8 +2,11 @@ Change Log
 ==========
 
 ### 1.11 - 2015-07-01
+
 * Deprecated
   * The STK World Terrain url `cesiumjs.org/stk-terrain/world` has been deprecated, use `assets.agi.com/stk-terrain/world` instead.  A redirect will be in place until 1.14.
+  * Deprecated `AxisAlignedBoundingBox.intersect` and `BoundingSphere.intersect`.  These will be removed in 1.13.  Use `.intersectPlane` and, if necessary, `Plane.fromCartesian4`.
+  * Deprecated the `ObjectOrientedBoundingBox` class.  It will be removed in 1.12.  Use `OrientedBoundingBox` instead.
 * Improved the algorithm that `Camera.viewRectangle` uses to select the position of the camera, so that the specified rectangle is now better centered on the screen [#2764](https://github.com/AnalyticalGraphicsInc/cesium/issues/2764).
 * The performance statistics displayed by setting `scene.debugShowFramesPerSecond` to `true` can now be styled using the `cesium-performanceDisplay` CSS classes in `shared.css` [#2779](https://github.com/AnalyticalGraphicsInc/cesium/issues/2779).
 * Fixed a crash when `viewer.zoomTo` or `viewer.flyTo` were called immediately before or during a scene morph [#2775](https://github.com/AnalyticalGraphicsInc/cesium/issues/2775).
@@ -14,6 +17,17 @@ Change Log
 * The camera now zooms to the point under the mouse cursor.
 * Fixed a bug in `ImageryLayer` that could cause an exception and the render loop to stop when the base layer did not cover the entire globe.
 * Fixed flash/streak rendering artifacts when picking [#2790](https://github.com/AnalyticalGraphicsInc/cesium/issues/2790), [#2811](https://github.com/AnalyticalGraphicsInc/cesium/issues/2811).
+* Added `Plane.fromCartesian4` to convert old `Cartesian4` plane representations to the new `Plane` format.
+* Added `Plane.ORIGIN_XY_PLANE`/`ORIGIN_YZ_PLANE`/`ORIGIN_ZX_PLANE` constants for commonly-used planes.
+* Added `Matrix2`/`Matrix3`/`Matrix4.ZERO` constants for zero matrices.
+* Added `Matrix2`/`Matrix3.multiplyByScale` for multiplying against non-uniform scales.
+* Added `projectPointToNearestOnPlane` and `projectPointsToNearestOnPlane` to `EllipsoidTangentPlane` to project 3D points to the nearest 2D point on an `EllipsoidTangentPlane`.
+* Added `OrientedBoundingBox` class.
+* Added `EllipsoidTangentPlane.plane` property to get the `Plane` for the tangent plane.
+* Added `EllipsoidTangentPlane.xAxis`/`yAxis`/`zAxis` properties to get the local coordinate system of the tangent plane.
+* Add `QuantizedMeshTerrainData` constructor argument `orientedBoundingBox`.
+* Add `TerrainMesh.orientedBoundingBox` which holds the `OrientedBoundingBox` for the mesh for a single terrain tile.
+* Use `OrientedBoundingBox` when rendering terrain and imagery to improve performance of rendering and loading (by up to 50% of terrain/imagery tiles, depending on camera view).
 
 ### 1.10 - 2015-06-01
 

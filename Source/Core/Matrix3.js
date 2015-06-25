@@ -962,6 +962,46 @@ define([
     };
 
     /**
+     * Computes the product of a matrix times a (non-uniform) scale, as if the scale were a scale matrix.
+     *
+     * @param {Matrix3} matrix The matrix on the left-hand side.
+     * @param {Cartesian3} scale The non-uniform scale on the right-hand side.
+     * @param {Matrix3} result The object onto which to store the result.
+     * @returns {Matrix3} The modified result parameter.
+     *
+     * @see Matrix3.fromScale
+     * @see Matrix3.multiplyByUniformScale
+     *
+     * @example
+     * // Instead of Cesium.Matrix3.multiply(m, Cesium.Matrix3.fromScale(scale), m);
+     * Cesium.Matrix3.multiplyByScale(m, scale, m);
+     */
+    Matrix3.multiplyByScale = function(matrix, scale, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(matrix)) {
+            throw new DeveloperError('matrix is required');
+        }
+        if (!defined(scale)) {
+            throw new DeveloperError('scale is required');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
+        //>>includeEnd('debug');
+
+        result[0] = matrix[0] * scale.x;
+        result[1] = matrix[1] * scale.x;
+        result[2] = matrix[2] * scale.x;
+        result[3] = matrix[3] * scale.y;
+        result[4] = matrix[4] * scale.y;
+        result[5] = matrix[5] * scale.y;
+        result[6] = matrix[6] * scale.z;
+        result[7] = matrix[7] * scale.z;
+        result[8] = matrix[8] * scale.z;
+        return result;
+    };
+
+    /**
      * Creates a negated copy of the provided matrix.
      *
      * @param {Matrix3} matrix The matrix to negate.
@@ -1353,6 +1393,16 @@ define([
     Matrix3.IDENTITY = freezeObject(new Matrix3(1.0, 0.0, 0.0,
                                                 0.0, 1.0, 0.0,
                                                 0.0, 0.0, 1.0));
+
+    /**
+     * An immutable Matrix3 instance initialized to the zero matrix.
+     *
+     * @type {Matrix3}
+     * @constant
+     */
+    Matrix3.ZERO = freezeObject(new Matrix3(0.0, 0.0, 0.0,
+                                            0.0, 0.0, 0.0,
+                                            0.0, 0.0, 0.0));
 
     /**
      * The index into Matrix3 for column 0, row 0.
