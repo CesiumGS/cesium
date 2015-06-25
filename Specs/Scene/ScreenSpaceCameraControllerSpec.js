@@ -343,7 +343,7 @@ defineSuite([
         updateController();
         expect(position.x).toEqual(camera.position.x);
         expect(position.y).toEqual(camera.position.y);
-        expect(position.z).toEqual(camera.position.z);
+        expect(position.z).toBeLessThan(camera.position.z);
         expect(frustumDiff).toBeLessThan(camera.frustum.right - camera.frustum.left);
     });
 

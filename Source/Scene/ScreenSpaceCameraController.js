@@ -474,11 +474,13 @@ define([
             var worldPosition = object._zoomWorldPosition;
             var endPosition = camera.position;
 
-            var direction = Cartesian3.subtract(worldPosition, endPosition, scratchZoomDirection);
-            Cartesian3.normalize(direction, direction);
+            if (!Cartesian3.equals(worldPosition, endPosition)) {
+                var direction = Cartesian3.subtract(worldPosition, endPosition, scratchZoomDirection);
+                Cartesian3.normalize(direction, direction);
 
-            var d = Cartesian3.distance(worldPosition, endPosition) * distance / (camera.getMagnitude() * 0.5);
-            camera.move(direction, d * 0.5);
+                var d = Cartesian3.distance(worldPosition, endPosition) * distance / (camera.getMagnitude() * 0.5);
+                camera.move(direction, d * 0.5);
+            }
         } else if (mode === SceneMode.SCENE3D) {
 
             var cameraPositionNormal = Cartesian3.normalize(camera.position, scratchCameraPositionNormal);
