@@ -7,11 +7,11 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/Intersect',
         '../Core/loadJson',
         '../Core/Math',
         './Cesium3DTile',
         './Cesium3DTileRefine',
+        './CullingVolume',
         './SceneMode',
         '../ThirdParty/when'
     ], function(
@@ -22,11 +22,11 @@ define([
         destroyObject,
         DeveloperError,
         Event,
-        Intersect,
         loadJson,
         CesiumMath,
         Cesium3DTile,
         Cesium3DTileRefine,
+        CullingVolume,
         SceneMode,
         when) {
     "use strict";
@@ -252,7 +252,7 @@ define([
         // Exploit temporal coherence: if a tile is completely in the view frustum
         // then so are its children so they do not need to be culled.
         if (tile.parentFullyVisible) {
-            return Intersect.INSIDE;
+            return 0;
         }
 
         ++stats.frustumTests;
@@ -264,7 +264,7 @@ define([
             return true;
         }
 
-        return tile.contentsVisibility(cullingVolume) !== Intersect.OUTSIDE;
+        return tile.contentsVisibility(cullingVolume) !== CullingVolume.MASK_OUTSIDE;
     }
 
     function getScreenSpaceError(geometricError, tile, context, frameState) {
@@ -373,13 +373,13 @@ define([
             var t = stack.pop();
             ++stats.visited;
 
-            var visibility = visible(t, cullingVolume, stats);
-            var fullyVisible = (visibility === Intersect.INSIDE);
-            if (visibility === Intersect.OUTSIDE) {
+            var planeMask = visible(t, cullingVolume, stats);
+            if (planeMask === CullingVolume.MASK_OUTSIDE) {
                 // Tile is completely outside of the view frustum; therefore
                 // so are all of its children.
                 continue;
             }
+            var fullyVisible = (planeMask === CullingVolume.MASK_INSIDE);
 
             // Tile is inside/intersects the view frustum.  How many pixels is its geometric error?
             var sse = getScreenSpaceError(t.geometricError, t, context, frameState);
@@ -416,10 +416,11 @@ define([
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
                             child.parentFullyVisible = fullyVisible;
+                            child.parentPlaneMask = planeMask;
 
                             // Use parent's geometric error with child's box to see if we already meet the SSE
                             if (getScreenSpaceError(t.geometricError, child, context, frameState) > maximumScreenSpaceError) {
-                                if (child.isContentUnloaded() && (visible(child, cullingVolume, stats) !== Intersect.OUTSIDE) && outOfCore) {
+                                if (child.isContentUnloaded() && (visible(child, cullingVolume, stats) !== CullingVolume.MASK_OUTSIDE) && outOfCore) {
                                     requestContent(tiles3D, child);
                                 } else {
                                     stack.push(child);
@@ -476,6 +477,7 @@ define([
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
                             child.parentFullyVisible = fullyVisible;
+                            child.parentPlaneMask = planeMask;
                             stack.push(child);
                         }
                     }

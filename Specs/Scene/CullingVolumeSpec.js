@@ -33,6 +33,18 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('computeVisibilityWithPlaneMask throws without a bounding volume', function() {
+        expect(function() {
+            return new CullingVolume().computeVisibilityWithPlaneMask(undefined, CullingVolume.MASK_INDETERMINATE);
+        }).toThrowDeveloperError();
+    });
+
+    it('computeVisibilityWithPlaneMask throws without a parent plane mask', function() {
+        expect(function() {
+            return new CullingVolume().computeVisibilityWithPlaneMask(new BoundingSphere(), undefined);
+        }).toThrowDeveloperError();
+    });
+
     describe('box intersections', function() {
 
         it('can contain an axis aligned bounding box', function() {
@@ -246,4 +258,6 @@ defineSuite([
             });
         });
     });
+
+    // TODO: add tests for computeVisibilityWithPriorityPlane
 });
