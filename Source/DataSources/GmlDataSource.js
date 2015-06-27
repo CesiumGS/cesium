@@ -337,6 +337,28 @@ define([
         }
     }
 
+    function processSurface(that, surface, properties, crsFunction) {
+    	var patches = surface.firstElementChild.children;
+    	for(i = 0; i < patches.length; i++) {
+    		processPolygon(that, patches[i], properties, crsFunction);
+    	}
+    }
+
+    function processMultiSurface(that, multiSurface, properties, crsFunction) {
+    	var surfaceMembers = multiSurface.getElementsByTagNameNS(gmlns, "surfaceMember");
+    	if(surfaceMembers.length == 0) {
+    		surfaceMembers = multiSurface.getElementsByTagNameNS(gmlns, "surfaceMembers");	
+    	}
+
+    	for(var i = 0; i < surfaceMembers.length; i++) {
+    		var surfaces = surfaceMembers[i].children;
+    		for(var j = 0; j < surfaces.length; j++) {
+    			var surfaceGeometryHandler = surfacePropertyTypes[surfaces[j].localName];
+    			surfaceGeometryHandler(that, surfaces[j], properties, crsFunction);
+    		}
+    	}
+    }
+
     function processLinearRing(ring, holes, crsFunction) {
         var coordString = ring.firstElementChild.textContent;
         var coordinates = processCoordinates(coordString, 2, crsFunction);
