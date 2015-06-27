@@ -185,7 +185,8 @@ define([
         }
 
         for(i=0; i<geometryElements.length; i++) {
-        	geometryHandler = geometryTypes[geometryElements[i].localName];
+        	geometryHandler = geometryPropertyTypes[geometryElements[i].localName];
+        	console.log(geometryElements[i].localName);
         	geometryHandler(that, geometryElements[i], properties, crsFunction);
         }
     }
@@ -242,16 +243,14 @@ define([
         for(var i=0; i<lineStringMembers.length; i++) {
             var lineStrings = lineStringMembers[i].children;
             for(var j=0; j<lineStrings.length; j++) {
-                var coordString = lineStrings[j].firstElementChild.textContent;
-		        var coordinates = processCoordinates(coordString, 2, crsFunction);
-                createLineString(that, coordinates, properties, crsFunction);
+            	processLineString(that, lineStrings[j], properties, crsFunction);
             }
         }
     }
 
     function processCurve(that, curve, properties, crsFunction) {
     	var segments = curve.firstElementChild.children;
-    	curveGeometryHandler = curveType(segments[0].localName);
+    	curveGeometryHandler = curveSegmentTypes(segments[0].localName);
     	curveGeometryHandler(that, segments, properties, crsFunction);
     }
 
@@ -264,9 +263,8 @@ define([
     	for(var i = 0; i < curveMembers.length; i++) {
     		var curves = curveMembers[i].children;
     		for(var j = 0; j < curves.length; j++) {
-    			var segments = curves[j].firstElementChild.children;
-    			curveGeometryHandler = curveType(segments[0].localName);
-    			curveGeometryHandler(that, segments, properties, crsFunction);
+				var curveTypeHandler = curvePropertyTypes[curves[j].localName];
+				curveTypeHandler(that, curves[j], properties, crsFunction);
     		}
     	}
     }
@@ -303,65 +301,70 @@ define([
         var exterior = polygon.getElementsByTagNameNS(gmlns, "exterior");
         var interior = polygon.getElementsByTagNameNS(gmlns, "interior");
 
+        var surfaceBoundary;
         if(exterior.length == 0 && interior.length == 0) {
-            var surface = polygon.firstElementChild;
-            surfaceBoundaryHandler = surfaceBoundaryTypes(surface.localName);
-            
+            surfaceBoundary = polygon.firstElementChild;
+            surfaceBoundaryHandler = surfaceBoundaryTypes[surfaceBoundary.localName];
         }
 
-        var polygon = new PolygonGraphics();
-        polygon.outline = new ConstantProperty(true);
 
-        var holes = [], surfaceBoundaryHandler, coordinates;
+        var holes = [], surfaceBoundaryHandler, surfaceBoundary, coordinates;
         for(var i = 0; i < interior.length; i++) {
-            surfaceBoundaryHandler = surfaceBoundaryTypes(interior[i].localName);
-            coordinates = surfaceBoundaryHandler(interior[i]);
-            holes.push(new PolygonHierarchy(coordinates));
+        	surfaceBoundary = interior.firstElementChild;
+            surfaceBoundaryHandler = surfaceBoundaryTypes(surfaceBoundary.localName);
+            holes.push(surfaceBoundaryHandler(surfaceBoundary, [], crsFunction));
         }
 
         if(exterior.length == 1) {
             exterior = exterior[0];
         }
-        surfaceBoundaryHandler = surfaceBoundaryTypes(exterior.localName);
-        coordinates = surfaceBoundaryHandler(exterior);
+        var surfaceBoundary = exterior.firstElementChild;
+        surfaceBoundaryHandler = surfaceBoundaryTypes[surfaceBoundary.localName];
+        var hierarchy = surfaceBoundaryHandler(surfaceBoundary, crsFunction);
+        createPolygon(that, hierarchy, properties);
+    }
 
-        polygon.hierarchy = new ConstantProperty(new PolygonHierarchy(coordinates, holes));
-        if (coordinates[0].length > 2) {
-            polygon.perPositionHeight = new ConstantProperty(true);
-        }
-
+    function createPolygon(that, hierarchy, properties) {
+        var polygon = new PolygonGraphics();
+        polygon.outline = new ConstantProperty(true);
+        polygon.hierarchy = new ConstantProperty(hierarchy);
         var entity = createObject(that._entityCollection);
         entity.polygon = polygon;
     }
 
-    function processLinearRing(ring, crsFunction) {
-        var coordString = ring.firstElementChild.textContent;
-        var coordinates = processCoordinates(coordString, 2, crsFunction);
-        return coordinates;
-    }
+    var geometryPropertyTypes = {
+    	Point : processPoint,
+    	MultiPoint : processMultiPoint,
+    	LineString : processLineString,
+    	MultiLineString : processMultiLineString,
+    	Curve : processCurve,
+    	MultiCurve : processMultiCurve,
+    	Polygon : processPolygon,
+    	MultiPolygon : processMultiPolygon,
+    	Surface : processSurface,
+    	MultiSurface : processMultiSurface
+    };
 
-    var curveTypes = {
+    var curvePropertyTypes = {
+    	Curve : processCurve,
+    	LineString : processLineString
+    };
+
+    var curveSegmentTypes = {
     	//Arc : processArc,
     	//Circle : processCircle,
     	//CircleByCenterPoint : processCircleByCenterPoint
-        LineStringSegment : processLineStringSegment
+        LineStringSegment : processLineStringSegment    	
+    }
+
+    var surfacePropertyTypes = {
+    	Polygon : processPolygon,
+    	Surface : processSurface
     };
 
     var surfaceBoundaryTypes = {
-        LinearRing : processLinearRing,
+        LinearRing : processLinearRing
         //Ring : processRing
-    }
-
-    var geometryTypes = {
-    	Curve : processCurve,
-        //GeometryCollection : processGeometryCollection,
-        LineString : processLineString,
-        MultiCurve : processMultiCurve,
-        MultiLineString : processMultiLineString,
-        MultiPoint : processMultiPoint,
-        //MultiPolygon : processMultiPolygon,
-        Point : processPoint,
-        Polygon : processPolygon
     };
 
     function loadGml(that, gml, sourceUri) {
