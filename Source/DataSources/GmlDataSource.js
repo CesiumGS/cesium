@@ -324,6 +324,26 @@ define([
         createPolygon(that, hierarchy, properties);
     }
 
+    function processMultiPolygon(that, multiPolygon, properties, crsFunction) {
+        var polygonMembers = multiPolygon.getElementsByTagNameNS(gmlns, "polygonMember");
+        if(lineStringMembers.length == 0) {
+            polygonMembers = multiPolygon.getElementsByTagNameNS(gmlns, "polygonMembers");  
+        } 
+        for(var i = 0; i < polygonMembers.length; i++) {
+            var polygons = polygonMembers[i].children;
+            for(var j = 0; j < polygons.length; j++) {
+                processPolygon(that, polygons[j], properties, crsFunction);
+            }
+        }
+    }
+
+    function processLinearRing(ring, holes, crsFunction) {
+        var coordString = ring.firstElementChild.textContent;
+        var coordinates = processCoordinates(coordString, 2, crsFunction);
+        var hierarchy = new ConstantProperty(new PolygonHierarchy(coordinates, holes));
+        return hierarchy;
+    }
+
     function createPolygon(that, hierarchy, properties) {
         var polygon = new PolygonGraphics();
         polygon.outline = new ConstantProperty(true);
