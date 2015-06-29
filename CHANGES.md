@@ -4,6 +4,7 @@ Change Log
 ### 1.11 - 2015-07-01
 
 * Breaking changes
+  * Removed `Scene.fxaaOrderIndependentTranslucency`, which was deprecated in 1.10. Use `Scene.fxaa` which is now `true` by default.
   * Removed `Camera.clone` that was deprecated in 1.10.
 * Deprecated
   * The STK World Terrain url `cesiumjs.org/stk-terrain/world` has been deprecated, use `assets.agi.com/stk-terrain/world` instead.  A redirect will be in place until 1.14.
