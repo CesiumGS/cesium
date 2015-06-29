@@ -248,22 +248,12 @@ define([
         }
     });
 
-    function visible(tile, cullingVolume, stats) {
-        // Exploit temporal coherence: if a tile is completely in the view frustum
-        // then so are its children so they do not need to be culled.
-        if (tile.parentFullyVisible) {
-            return 0;
-        }
-
+    function visibility(tile, cullingVolume, stats) {
         ++stats.frustumTests;
         return tile.visibility(cullingVolume);
     }
 
     function contentsVisible(tile, cullingVolume) {
-        if (tile.parentFullyVisible) {
-            return true;
-        }
-
         return tile.contentsVisibility(cullingVolume) !== CullingVolume.MASK_OUTSIDE;
     }
 
@@ -328,10 +318,10 @@ define([
         when(tile.readyPromise).then(removeFunction).otherwise(removeFunction);
     }
 
-    function selectTile(selectedTiles, tile, fullyVisible, frameState) {
+    function selectTile(selectedTiles, tile, frameState) {
         // There may also be a tight box around just the tile's contents, e.g., for a city, we may be
         // zoomed into a neighborhood and can cull the skyscrapers in the root node.
-        if (tile.isReady() && (fullyVisible || contentsVisible(tile, frameState.cullingVolume))) {
+        if (tile.isReady() && (contentsVisible(tile, frameState.cullingVolume))) {
             selectedTiles.push(tile);
         }
     }
@@ -351,6 +341,7 @@ define([
 
         var root = tiles3D._root;
         root.distanceToCamera = root.distanceToTile(frameState);
+        root.parentPlaneMask = CullingVolume.MASK_INDETERMINATE;
 
         if (getScreenSpaceError(tiles3D._geometricError, root, context, frameState) <= maximumScreenSpaceError) {
             // The SSE of not rendering the tree is small enough that the tree does not need to be rendered
@@ -373,13 +364,12 @@ define([
             var t = stack.pop();
             ++stats.visited;
 
-            var planeMask = visible(t, cullingVolume, stats);
+            var planeMask = visibility(t, cullingVolume, stats);
             if (planeMask === CullingVolume.MASK_OUTSIDE) {
                 // Tile is completely outside of the view frustum; therefore
                 // so are all of its children.
                 continue;
             }
-            var fullyVisible = (planeMask === CullingVolume.MASK_INSIDE);
 
             // Tile is inside/intersects the view frustum.  How many pixels is its geometric error?
             var sse = getScreenSpaceError(t.geometricError, t, context, frameState);
@@ -393,7 +383,7 @@ define([
             if (t.refine === Cesium3DTileRefine.ADD) {
                 // With additive refinement, the tile is rendered
                 // regardless of if its SSE is sufficient.
-                selectTile(selectedTiles, t, fullyVisible, frameState);
+                selectTile(selectedTiles, t, frameState);
 
 // TODO: experiment with prefetching children
                 if (sse > maximumScreenSpaceError) {
@@ -415,12 +405,12 @@ define([
                         // to replacement refinement where we need all children.
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
-                            child.parentFullyVisible = fullyVisible;
+                            // Store the plane mask so that the child can optimize based on its parent's returned mask
                             child.parentPlaneMask = planeMask;
 
                             // Use parent's geometric error with child's box to see if we already meet the SSE
                             if (getScreenSpaceError(t.geometricError, child, context, frameState) > maximumScreenSpaceError) {
-                                if (child.isContentUnloaded() && (visible(child, cullingVolume, stats) !== CullingVolume.MASK_OUTSIDE) && outOfCore) {
+                                if (child.isContentUnloaded() && (visibility(child, cullingVolume, stats) !== CullingVolume.MASK_OUTSIDE) && outOfCore) {
                                     requestContent(tiles3D, child);
                                 } else {
                                     stack.push(child);
@@ -441,7 +431,7 @@ define([
                     //
                     // We also checked if the tile is a leaf (childrenLength === 0.0) for the potential case when the leaf
                     // node has a non-zero geometric error, e.g., because its contents is another 3D Tiles tree.
-                    selectTile(selectedTiles, t, fullyVisible, frameState);
+                    selectTile(selectedTiles, t, frameState);
                 } else {
                     // Tile does not meet SSE.
 
@@ -461,7 +451,7 @@ define([
 
                     if (!allChildrenLoaded) {
                         // Tile does not meet SSE.  Add its commands since it is the best we have and request its children.
-                        selectTile(selectedTiles, t, fullyVisible, frameState);
+                        selectTile(selectedTiles, t, frameState);
 
                         if (outOfCore) {
                             for (k = 0; (k < childrenLength) && requestScheduler.hasAvailableRequests(); ++k) {
@@ -476,7 +466,7 @@ define([
                         // Tile does not meet SEE and its children are loaded.  Refine to them in front-to-back order.
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
-                            child.parentFullyVisible = fullyVisible;
+                            // Store the plane mask so that the child can optimize based on its parent's returned mask
                             child.parentPlaneMask = planeMask;
                             stack.push(child);
                         }

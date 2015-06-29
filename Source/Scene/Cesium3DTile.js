@@ -17,7 +17,6 @@ define([
         './Cesium3DTileContentProviderFactory',
         './Cesium3DTileContentState',
         './Cesium3DTileRefine',
-        './CullingVolume',
         './Empty3DTileContentProvider',
         './PerInstanceColorAppearance',
         './Primitive',
@@ -42,7 +41,6 @@ define([
         Cesium3DTileContentProviderFactory,
         Cesium3DTileContentState,
         Cesium3DTileRefine,
-        CullingVolume,
         Empty3DTileContentProvider,
         PerInstanceColorAppearance,
         Primitive,
@@ -168,14 +166,9 @@ define([
 
         /**
          * @private
-         */
-        this.parentFullyVisible = false;
-
-        /**
-         * @private
          * @type {Number}
          */
-        this.parentPlaneMask = CullingVolume.MASK_INDETERMINATE;
+        this.parentPlaneMask = undefined;
 
         this._debugBox = undefined;
         this._debugcontentBox = undefined;
@@ -244,7 +237,7 @@ define([
             return Intersect.INSIDE;
         }
 
-        return cullingVolume.computeVisibilityWithPlaneMask(this._contentsOrientedBoundingBox, this.parentPlaneMask);
+        return cullingVolume.computeVisibility(this._contentsOrientedBoundingBox);
     };
 
     /**

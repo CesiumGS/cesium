@@ -65,6 +65,7 @@ define([
     /**
      * Determines whether a bounding volume intersects the culling volume.
      *
+     * @private
      * @param {Object} boundingVolume The bounding volume whose intersection with the culling volume is to be tested.
      * @param {Number} parentPlaneMask A bit mask from the boundingVolume's parent's check against the same culling
      *                                 volume, such that if (planeMask & (1 << planeIndex) === 0), for k < 31, then
@@ -82,9 +83,9 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (parentPlaneMask === CullingVolume.MASK_OUTSIDE) {
-            // parent is completely outside, so this is completely outside.
-            return CullingVolume.MASK_OUTSIDE;
+        if (parentPlaneMask === CullingVolume.MASK_OUTSIDE || parentPlaneMask === CullingVolume.MASK_INSIDE) {
+            // parent is completely outside or completely inside, so this child is as well.
+            return parentPlaneMask;
         }
 
         // Start with MASK_INSIDE (all zeros) so that after the loop, the return value can be compared with MASK_INSIDE.
@@ -115,6 +116,7 @@ define([
      * For plane masks (as used in {@link CullingVolume.prototype.computeVisibilityWithPlaneMask}), this special value
      * represents the case where the object bounding volume is entirely outside the culling volume.
      *
+     * @private
      * @type {Number}
      */
     CullingVolume.MASK_OUTSIDE = 0xffffffff;
@@ -123,6 +125,7 @@ define([
      * For plane masks (as used in {@link CullingVolume.prototype.computeVisibilityWithPlaneMask}), this value
      * represents the case where the object bounding volume is entirely inside the culling volume.
      *
+     * @private
      * @type {Number}
      */
     CullingVolume.MASK_INSIDE = 0x00000000;
@@ -131,6 +134,7 @@ define([
      * For plane masks (as used in {@link CullingVolume.prototype.computeVisibilityWithPlaneMask}), this value
      * represents the case where the object bounding volume (may) intersect all planes of the culling volume.
      *
+     * @private
      * @type {Number}
      */
     CullingVolume.MASK_INDETERMINATE = 0x7fffffff;
