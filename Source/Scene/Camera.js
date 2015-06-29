@@ -2497,6 +2497,9 @@ define([
     var scratchflyToBoundingSphereDirection = new Cartesian3();
     var scratchflyToBoundingSphereUp = new Cartesian3();
     var scratchflyToBoundingSphereRight = new Cartesian3();
+    var scratchFlyToBoundingSphereCart4 = new Cartesian4();
+    var scratchFlyToBoundingSphereQuaternion = new Quaternion();
+    var scratchFlyToBoundingSphereMatrix3 = new Matrix3();
 
     /**
      * Flys the camera to a location where the current view contains the provided bounding sphere.
@@ -2551,6 +2554,14 @@ define([
             Cartesian3.normalize(direction, direction);
 
             up = Matrix4.multiplyByPointAsVector(transform, Cartesian3.UNIT_Z, scratchflyToBoundingSphereUp);
+            if (1.0 - Math.abs(Cartesian3.dot(direction, up)) < CesiumMath.EPSILON6) {
+                var rotateQuat = Quaternion.fromAxisAngle(direction, offset.heading, scratchFlyToBoundingSphereQuaternion);
+                var rotation = Matrix3.fromQuaternion(rotateQuat, scratchFlyToBoundingSphereMatrix3);
+
+                Cartesian3.fromCartesian4(Matrix4.getColumn(transform, 1, scratchFlyToBoundingSphereCart4), up);
+                Matrix3.multiplyByVector(rotation, up, up);
+            }
+
             var right = Cartesian3.cross(direction, up, scratchflyToBoundingSphereRight);
             Cartesian3.cross(right, direction, up);
             Cartesian3.normalize(up, up);
