@@ -949,6 +949,10 @@ define([
         _textures : {},
 
         addTexture : function(path, texture) {
+            if (path instanceof HTMLCanvasElement) {
+                path = path.toDataURL();
+            }
+
             this._textures[path] = {
                 texture : texture,
                 count : 1
@@ -956,6 +960,10 @@ define([
         },
 
         getTexture : function(path) {
+            if (path instanceof HTMLCanvasElement) {
+                path = path.toDataURL();
+            }
+
             var entry = this._textures[path];
 
             if (defined(entry)) {
@@ -967,10 +975,14 @@ define([
         },
 
         releaseTexture : function(path) {
+            if (path instanceof HTMLCanvasElement) {
+                path = path.toDataURL();
+            }
+
             var entry = this._textures[path];
             if (defined(entry) && --entry.count === 0) {
                 entry.texture = entry.texture && entry.texture.destroy();
-                this._textures[path] = undefined;
+                delete this._textures[path];
             }
         }
     };
