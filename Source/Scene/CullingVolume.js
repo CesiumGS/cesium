@@ -80,9 +80,6 @@ define([
         if (!defined(parentPlaneMask)) {
             throw new DeveloperError('parentPlaneMask is required.');
         }
-        if (this.planes.length > 31) {
-            throw new DeveloperError('cannot be called on a CullingVolume with more than 31 planes');
-        }
         //>>includeEnd('debug');
 
         if (parentPlaneMask === CullingVolume.MASK_OUTSIDE) {
@@ -96,8 +93,9 @@ define([
 
         var planes = this.planes;
         for (var k = 0, len = planes.length; k < len; ++k) {
-            var flag = 1 << k;
-            if ((parentPlaneMask & flag) === 0) {
+            // For k greater than 31 (since 31 is the maximum number of INSIDE/INTERSECTING bits we can store), skip the optimization.
+            var flag = (k < 31) ? (1 << k) : 0;
+            if (k < 31 && (parentPlaneMask & flag) === 0) {
                 // boundingVolume is known to be INSIDE this plane.
                 continue;
             }
