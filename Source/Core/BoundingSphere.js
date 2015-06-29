@@ -698,16 +698,34 @@ define([
         }
 
         var leftCenter = left.center;
+        var leftRadius = left.radius;
         var rightCenter = right.center;
+        var rightRadius = right.radius;
 
-        Cartesian3.add(leftCenter, rightCenter, unionScratchCenter);
-        var center = Cartesian3.multiplyByScalar(unionScratchCenter, 0.5, unionScratchCenter);
+        var toRightCenter = Cartesian3.subtract(rightCenter, leftCenter, unionScratch);
+        var centerSeparation = Cartesian3.magnitude(toRightCenter);
 
-        var radius1 = Cartesian3.magnitude(Cartesian3.subtract(leftCenter, center, unionScratch)) + left.radius;
-        var radius2 = Cartesian3.magnitude(Cartesian3.subtract(rightCenter, center, unionScratch)) + right.radius;
+        if (leftRadius >= (centerSeparation + rightRadius)) {
+            // Left sphere wins.
+            left.clone(result);
+            return result;
+        }
 
-        result.radius = Math.max(radius1, radius2);
+        if (rightRadius >= (centerSeparation + leftRadius)) {
+            // Right sphere wins.
+            right.clone(result);
+            return result;
+        }
+
+        // There are two tangent points, one on far side of each sphere.
+        var halfDistanceBetweenTangentPoints = (leftRadius + centerSeparation + rightRadius) * 0.5;
+
+        // Compute the center point halfway between the two tangent points.
+        var center = Cartesian3.multiplyByScalar(toRightCenter,
+                (-leftRadius + halfDistanceBetweenTangentPoints) / centerSeparation, unionScratchCenter);
+        Cartesian3.add(center, leftCenter, center);
         Cartesian3.clone(center, result.center);
+        result.radius = halfDistanceBetweenTangentPoints;
 
         return result;
     };
