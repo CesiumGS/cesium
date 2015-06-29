@@ -11,7 +11,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EllipsoidGeometry',
@@ -66,7 +65,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         destroyObject,
         DeveloperError,
         EllipsoidGeometry,
@@ -479,7 +477,6 @@ define([
          * @default true
          */
         this.fxaa = true;
-        this._fxaaOrderIndependentTranslucency = true;
 
         /**
          * The time in milliseconds to wait before checking if the camera has not moved and fire the cameraMoveEnd event.
@@ -880,25 +877,6 @@ define([
         numberOfFrustums : {
             get : function() {
                 return this._frustumCommandsList.length;
-            }
-        },
-
-        /**
-         * If <code>true</code>, enables Fast Aproximate Anti-aliasing only if order independent translucency
-         * is supported.
-         * @memberof Scene.prototype
-         * @type {Boolean}
-         * @default true
-         *
-         * @deprecated
-         */
-        fxaaOrderIndependentTranslucency : {
-            get : function() {
-                return this._fxaaOrderIndependentTranslucency;
-            },
-            set : function(value) {
-                deprecationWarning('Scene.fxaaOrderIndependentTranslucency', 'Scene.fxaaOrderIndependentTranslucency has been deprecated.  Use Scene.fxaa instead.');
-                this._fxaaOrderIndependentTranslucency = value;
             }
         }
     });
