@@ -55,6 +55,9 @@ define([
             right = Cartesian3.cross(direction, Cartesian3.UNIT_Z, new Cartesian3());
             up = Cartesian3.cross(right, direction, new Cartesian3());
 
+            Cartesian3.normalize(right, right);
+            Cartesian3.normalize(up, up);
+
             scene.camera.flyTo({
                 destination : destination,
                 orientation : {
