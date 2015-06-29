@@ -6,8 +6,6 @@ Change Log
 * Breaking changes
   * Removed `Camera.clone` that was deprecated in 1.10.
 * Deprecated
-  * `CatmullRomSpline` has been deprecated and will be removed in Cesium 1.12.
-  * `HermiteSpline` has been deprecated and will be removed in Cesium 1.12.
   * The STK World Terrain url `cesiumjs.org/stk-terrain/world` has been deprecated, use `assets.agi.com/stk-terrain/world` instead.  A redirect will be in place until 1.14.
   * Deprecated `AxisAlignedBoundingBox.intersect` and `BoundingSphere.intersect`.  These will be removed in 1.13.  Use `.intersectPlane` and, if necessary, `Plane.fromCartesian4`.
   * Deprecated the `ObjectOrientedBoundingBox` class.  It will be removed in 1.12.  Use `OrientedBoundingBox` instead.
