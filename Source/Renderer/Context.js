@@ -870,7 +870,6 @@ define([
                             arrayBufferView : new Uint8Array([255, 255, 255, 255])
                         }
                     });
-                    this._defaultTexture.isDefault = true;
                 }
 
                 return this._defaultTexture;

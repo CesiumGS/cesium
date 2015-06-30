@@ -308,6 +308,8 @@ define([
 
         this._updateFunctions = [];
 
+        this._defaultTexture = undefined;
+
         initializeMaterial(options, this);
         defineProperties(this, {
             type : {
@@ -501,7 +503,7 @@ define([
         for ( var texture in textures) {
             if (textures.hasOwnProperty(texture)) {
                 var instance = textures[texture];
-                if (!instance.isDefault) {
+                if (instance !== this._defaultTexture) {
                     instance.destroy();
                 }
             }
@@ -663,7 +665,10 @@ define([
 
             if (uniformValue instanceof Texture && uniformValue !== texture) {
                 material._texturePaths[uniformId] = undefined;
-                material._textures[uniformId].destroy();
+                var tmp = material._textures[uniformId];
+                if (tmp !== material._defaultTexture) {
+                    tmp.destroy();
+                }
                 material._textures[uniformId] = uniformValue;
 
                 uniformDimensionsName = uniformId + 'Dimensions';
@@ -678,7 +683,10 @@ define([
 
             if (!defined(texture)) {
                 material._texturePaths[uniformId] = undefined;
-                texture = material._textures[uniformId] = context.defaultTexture;
+                if (!defined(material._defaultTexture)) {
+                    material._defaultTexture = context.defaultTexture;
+                }
+                texture = material._textures[uniformId] = material._defaultTexture;
 
                 uniformDimensionsName = uniformId + 'Dimensions';
                 if (uniforms.hasOwnProperty(uniformDimensionsName)) {
@@ -717,7 +725,10 @@ define([
             var uniformValue = material.uniforms[uniformId];
 
             if (uniformValue instanceof CubeMap) {
-                material._textures[uniformId].destroy();
+                var tmp = material._textures[uniformId];
+                if (tmp !== material._defaultTexture) {
+                    tmp.destroy();
+                }
                 material._texturePaths[uniformId] = undefined;
                 material._textures[uniformId] = uniformValue;
                 return;

@@ -148,7 +148,6 @@ define([
         this._preMultiplyAlpha = preMultiplyAlpha;
         this._flipY = flipY;
         this._sampler = undefined;
-        this.isDefault = false;
 
         this.sampler = undefined;
     };
