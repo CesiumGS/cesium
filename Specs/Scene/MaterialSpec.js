@@ -778,4 +778,53 @@ defineSuite([
         expect(material.isDestroyed()).toEqual(true);
         expect(diffuseMap.isDestroyed()).toEqual(true);
     });
+
+    it('_textureCache works with canvas elements', function() {
+        var mockTexture = {
+                destroy : function() {
+                }
+            };
+
+        var canvas = document.createElement('canvas');
+        canvas.height = 1;
+        canvas.width = 1;
+        var context = canvas.getContext('2d');
+        context.rect(0,0,1,1);
+        context.fillStyle = 'red';
+        context.fill();
+
+        var mockTexture2 = {
+                destroy : function() {
+                }
+            };
+
+        var canvas2 = document.createElement('canvas');
+        canvas2.height = 1;
+        canvas2.width = 1;
+        context = canvas.getContext('2d');
+        context.rect(0,0,1,1);
+        context.fillStyle = 'yellow';
+        context.fill();
+
+        expect(Object.keys(Material._textureCache._textures).length).toEqual(0);
+
+        Material._textureCache.addTexture(canvas, mockTexture);
+        expect(Object.keys(Material._textureCache._textures).length).toEqual(1);
+
+        Material._textureCache.addTexture(canvas2, mockTexture2);
+        expect(Object.keys(Material._textureCache._textures).length).toEqual(2);
+
+        expect(Material._textureCache.getTexture(canvas)).toBe(mockTexture);
+        expect(Material._textureCache.getTexture(canvas2)).toBe(mockTexture2);
+
+        Material._textureCache.releaseTexture(canvas2);
+        Material._textureCache.releaseTexture(canvas2);
+        expect(Object.keys(Material._textureCache._textures).length).toEqual(1);
+
+        Material._textureCache.releaseTexture(canvas);
+        Material._textureCache.releaseTexture(canvas);
+        expect(Object.keys(Material._textureCache._textures).length).toEqual(0);
+
+    });
+
 }, 'WebGL');
