@@ -4,6 +4,8 @@ define([
         '../Core/Ellipsoid',
         '../Core/EllipsoidalOccluder',
         '../Core/HeightmapTessellator',
+        '../Core/Math',
+        '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
         './createTaskProcessorWorker'
     ], function(
@@ -11,6 +13,8 @@ define([
         Ellipsoid,
         EllipsoidalOccluder,
         HeightmapTessellator,
+        CesiumMath,
+        OrientedBoundingBox,
         Rectangle,
         createTaskProcessorWorker) {
     "use strict";
@@ -36,6 +40,12 @@ define([
 
         var statistics = HeightmapTessellator.computeVertices(parameters);
         var boundingSphere3D = BoundingSphere.fromVertices(vertices, parameters.relativeToCenter, numberOfAttributes);
+        var orientedBoundingBox;
+        if (parameters.rectangle.width < CesiumMath.PI_OVER_TWO + CesiumMath.EPSILON5) {
+            // Here, rectangle.width < pi/2, and rectangle.height < pi
+            // (though it would still work with rectangle.width up to pi)
+            orientedBoundingBox = OrientedBoundingBox.fromRectangle(parameters.rectangle, statistics.minimumHeight, statistics.maximumHeight, parameters.ellipsoid);
+        }
 
         var ellipsoid = parameters.ellipsoid;
         var occluder = new EllipsoidalOccluder(ellipsoid);
@@ -49,6 +59,7 @@ define([
             gridWidth : arrayWidth,
             gridHeight : arrayHeight,
             boundingSphere3D : boundingSphere3D,
+            orientedBoundingBox : orientedBoundingBox,
             occludeePointInScaledSpace : occludeePointInScaledSpace
         };
     }

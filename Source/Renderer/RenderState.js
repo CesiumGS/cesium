@@ -439,15 +439,15 @@ define([
         applyCull(gl, renderState);
         applyLineWidth(gl, renderState);
         applyPolygonOffset(gl, renderState);
-        applyScissorTest(gl, renderState, passState);
         applyDepthRange(gl, renderState);
         applyDepthTest(gl, renderState);
         applyColorMask(gl, renderState);
         applyDepthMask(gl, renderState);
         applyStencilMask(gl, renderState);
-        applyBlending(gl, renderState, passState);
         applyStencilTest(gl, renderState);
         applySampleCoverage(gl, renderState);
+        applyScissorTest(gl, renderState, passState);
+        applyBlending(gl, renderState, passState);
         applyViewport(gl, renderState, passState);
     };
 
@@ -472,9 +472,6 @@ define([
             funcs.push(applyPolygonOffset);
         }
 
-        // For now, always apply because of passState
-        funcs.push(applyScissorTest);
-
         if ((previousState.depthRange.near !== nextState.depthRange.near) || (previousState.depthRange.far !== nextState.depthRange.far)) {
             funcs.push(applyDepthRange);
         }
@@ -493,9 +490,6 @@ define([
         if (previousState.depthMask !== nextState.depthMask) {
             funcs.push(applyDepthMask);
         }
-
-        // For now, always apply because of passState
-        funcs.push(applyBlending);
 
         if (previousState.stencilMask !== nextState.stencilMask) {
             funcs.push(applyStencilMask);
@@ -520,28 +514,44 @@ define([
             funcs.push(applySampleCoverage);
         }
 
-        // For now, always apply because of passState
-        funcs.push(applyViewport);
-
         return funcs;
     }
 
-    RenderState.partialApply = function(gl, previousState, nextState, passState) {
-        // When a new render state is applied, instead of making WebGL calls for all the states or first
-        // comparing the states one-by-one with the previous state (basically a linear search), we take
-        // advantage of RenderState's immutability, and store a dynamically populated sparse data structure
-        // containing functions that make the minimum number of WebGL calls when transitioning from one state
-        // to the other.  In practice, this works well since state-to-state transitions generally only require a
-        // few WebGL calls, especially if commands are stored by state.
-        var funcs = nextState._applyFunctions[previousState.id];
-        if (!defined(funcs)) {
-            funcs = createFuncs(previousState, nextState);
-            nextState._applyFunctions[previousState.id] = funcs;
+    RenderState.partialApply = function(gl, previousRenderState, renderState, previousPassState, passState) {
+        if (previousRenderState !== renderState) {
+            // When a new render state is applied, instead of making WebGL calls for all the states or first
+            // comparing the states one-by-one with the previous state (basically a linear search), we take
+            // advantage of RenderState's immutability, and store a dynamically populated sparse data structure
+            // containing functions that make the minimum number of WebGL calls when transitioning from one state
+            // to the other.  In practice, this works well since state-to-state transitions generally only require a
+            // few WebGL calls, especially if commands are stored by state.
+            var funcs = renderState._applyFunctions[previousRenderState.id];
+            if (!defined(funcs)) {
+                funcs = createFuncs(previousRenderState, renderState);
+                renderState._applyFunctions[previousRenderState.id] = funcs;
+            }
+
+            var len = funcs.length;
+            for (var i = 0; i < len; ++i) {
+                funcs[i](gl, renderState);
+            }
         }
 
-        var len = funcs.length;
-        for (var i = 0; i < len; ++i) {
-            funcs[i](gl, nextState, passState);
+        var previousScissorTest = (defined(previousPassState.scissorTest)) ? previousPassState.scissorTest : previousRenderState.scissorTest;
+        var scissorTest = (defined(passState.scissorTest)) ? passState.scissorTest : renderState.scissorTest;
+        if (previousScissorTest !== scissorTest) {
+            applyScissorTest(gl, renderState, passState);
+        }
+
+        var previousBlendingEnabled = (defined(previousPassState.blendingEnabled)) ? previousPassState.blendingEnabled : previousRenderState.blending.enabled;
+        var blendingEnabled = (defined(passState.blendingEnabled)) ? passState.blendingEnabled : renderState.blending.enabled;
+        if ((previousBlendingEnabled !== blendingEnabled) ||
+                (blendingEnabled && (previousRenderState.blending !== renderState.blending))) {
+            applyBlending(gl, renderState, passState);
+        }
+
+        if (previousRenderState !== renderState || previousPassState.context !== passState.context) {
+            applyViewport(gl, renderState, passState);
         }
     };
 

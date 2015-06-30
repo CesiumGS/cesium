@@ -3,7 +3,11 @@ Change Log
 
 ### 1.11 - 2015-07-01
 
+* Breaking changes
+  * Removed `Scene.fxaaOrderIndependentTranslucency`, which was deprecated in 1.10. Use `Scene.fxaa` which is now `true` by default.
+  * Removed `Camera.clone` that was deprecated in 1.10.
 * Deprecated
+  * The STK World Terrain url `cesiumjs.org/stk-terrain/world` has been deprecated, use `assets.agi.com/stk-terrain/world` instead.  A redirect will be in place until 1.14.
   * Deprecated `AxisAlignedBoundingBox.intersect` and `BoundingSphere.intersect`.  These will be removed in 1.13.  Use `.intersectPlane` and, if necessary, `Plane.fromCartesian4`.
   * Deprecated the `ObjectOrientedBoundingBox` class.  It will be removed in 1.12.  Use `OrientedBoundingBox` instead.
 * Improved the algorithm that `Camera.viewRectangle` uses to select the position of the camera, so that the specified rectangle is now better centered on the screen [#2764](https://github.com/AnalyticalGraphicsInc/cesium/issues/2764).
@@ -15,6 +19,7 @@ Change Log
 * Added `UrlTemplateImageryProvider`.  This new imagery provider allows access to a wide variety of imagery sources, including OpenStreetMap, TMS, WMTS, WMS, WMS-C, and various custom schemes, by specifying a URL template to use to request imagery tiles.
 * The camera now zooms to the point under the mouse cursor.
 * Fixed a bug in `ImageryLayer` that could cause an exception and the render loop to stop when the base layer did not cover the entire globe.
+* Fixed flash/streak rendering artifacts when picking [#2790](https://github.com/AnalyticalGraphicsInc/cesium/issues/2790), [#2811](https://github.com/AnalyticalGraphicsInc/cesium/issues/2811).
 * Added `Plane.fromCartesian4` to convert old `Cartesian4` plane representations to the new `Plane` format.
 * Added `Plane.ORIGIN_XY_PLANE`/`ORIGIN_YZ_PLANE`/`ORIGIN_ZX_PLANE` constants for commonly-used planes.
 * Added `Matrix2`/`Matrix3`/`Matrix4.ZERO` constants for zero matrices.
@@ -25,7 +30,15 @@ Change Log
 * Added `EllipsoidTangentPlane.xAxis`/`yAxis`/`zAxis` properties to get the local coordinate system of the tangent plane.
 * Add `QuantizedMeshTerrainData` constructor argument `orientedBoundingBox`.
 * Add `TerrainMesh.orientedBoundingBox` which holds the `OrientedBoundingBox` for the mesh for a single terrain tile.
-* Use `OrientedBoundingBox` when rendering terrain to improve performance of terrain rendering and loading (by up to 50% of terrain tiles, depending on camera view).
+* Use `OrientedBoundingBox` when rendering terrain and imagery to improve performance of rendering and loading (by up to 50% of terrain/imagery tiles, depending on camera view).
+* Fixed 2D and Columbus view lighting issue [#2635](https://github.com/AnalyticalGraphicsInc/cesium/issues/2635).
+* Improved camera flights. [#2825](https://github.com/AnalyticalGraphicsInc/cesium/pull/2825)
+* Fixed camera flights that ended up at the wrong position in Columbus view. [#802](https://github.com/AnalyticalGraphicsInc/cesium/issues/802)
+* Fixed camera flights through the map in 2D. [#804](https://github.com/AnalyticalGraphicsInc/cesium/issues/804)
+* Fixed strange camera flights from opposite sides of the globe. [#1158](https://github.com/AnalyticalGraphicsInc/cesium/issues/1158)
+* Fixed camera flights that wouldn't fly to the home view after zooming out past it. [#1400](https://github.com/AnalyticalGraphicsInc/cesium/issues/1400)
+* Fixed flying to rectangles that cross the IDL in Columbus view and 2D. [#2093](https://github.com/AnalyticalGraphicsInc/cesium/issues/2093)
+* Fixed flights with a pitch of -90 degrees. [#2468](https://github.com/AnalyticalGraphicsInc/cesium/issues/2468)
 
 ### 1.10 - 2015-06-01
 
