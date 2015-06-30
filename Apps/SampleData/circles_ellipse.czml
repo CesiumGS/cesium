@@ -1,0 +1,84 @@
+
+[
+  {
+    "id":"document",
+    "name":"simple",
+    "version":"1.0",
+    "clock":{
+      "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
+      "currentTime":"2012-03-15T10:00:00Z",
+      "multiplier":1,
+      "range":"LOOP_STOP",
+      "step":"SYSTEM_CLOCK_MULTIPLIER"
+    }
+  },
+  {
+    "name": "Circles and Ellipses",
+    "description": "Draw circles, ellipses, and extruded volumes that conform to the surface of the globe."
+  },
+  {
+    "id": "circle/greenCircle",
+    "name": "Green Circle",
+    "description": "Green circle at height",
+    "position": {
+      "cartographicDegrees": [-111.0, 40.0, 150000.0]
+    },
+    "ellipse": {
+      "semiMajorAxis": 300000.0,
+      "semiMinorAxis": 300000.0,
+      "height": 200000.0,
+      "material": {
+        "solidColor": {
+          "color":{
+            "rgba": [0,255,0,255]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "circle/redEllipse",
+    "name": "Red Ellipse",
+    "desription": "Red ellipse on surface with outline",
+    "position": {
+      "cartographicDegrees": [-103.0, 40.0, 0]
+    },
+    "ellipse": {
+      "semiMajorAxis": 400000.0,
+      "semiMinorAxis": 250000.0,
+      "material": {
+        "solidColor": {
+          "color":{
+            "rgba": [255,0,0,127]
+          }
+        }
+      },
+      "outline": true,
+      "outlineColor": {
+        "rgba": [255,0,0,255]
+      }
+    }
+  },
+  {
+    "id": "circle/blueEllipse",
+    "name": "Blue Ellipse",
+    "description": "Blue translucent, rotated, and extruded ellipse with outline",
+    "position": {
+      "cartographicDegrees": [-95.0, 40.0, 100000.0]
+    },
+    "ellipse":{
+      "semiMinorAxis": 150000.0,
+      "semiMajorAxis": 300000.0,
+      "extrudedHeight": 200000.0,
+      "rotation": 0.785398163,
+      "material": {
+        "solidColor": {
+          "color": {
+            "rgba": [0,0,255,127]
+          }
+        }
+      },
+      "outline": true
+    }
+  }
+]

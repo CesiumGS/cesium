@@ -1,0 +1,82 @@
+
+[
+  {
+    "id":"document",
+    "name":"simple",
+    "version":"1.0",
+    "clock":{
+      "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
+      "currentTime":"2012-03-15T10:00:00Z",
+      "multiplier":1,
+      "range":"LOOP_STOP",
+      "step":"SYSTEM_CLOCK_MULTIPLIER"
+    }
+  },
+  {
+    "name": "Spheres and Ellipsoids",
+    "description": "Draw spheres and ellipsoids."
+  },
+  {
+    "id": "ellipsoid/blueEllipsoid",
+    "name": "Blue Ellipsoid",
+    "position":{
+      "cartographicDegrees":[-114.0, 40.0, 300000.0]
+    },
+    "ellipsoid":{
+      "radii": {
+        "cartesian": [200000.0, 200000.0, 300000.0]
+      },
+      "material":{
+        "solidColor":{  
+          "color":{
+            "rgba": [0,0,255,255]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "ellipsoid/redSphere",
+    "name": "Red sphere",
+    "description": "Red sphere with black outline",
+    "position":{
+      "cartographicDegrees":[-107.0, 40.0, 300000.0]
+    },
+    "ellipsoid":{
+      "radii": {
+        "cartesian": [300000.0, 300000.0, 300000.0]
+      },
+      "outline": true,
+      "outlineColor":{
+        "rgba": [0,0,0,255]
+      },
+      "material":{
+        "solidColor":{  
+          "color":{
+            "rgba": [255,0,0,128]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "ellipsoid/yellowEllipsoid",
+    "name": "Yellow Ellipsoid",
+    "description": "Yellow ellipsoid outline",
+    "position":{
+      "cartographicDegrees":[-100.0, 40.0, 300000.0]
+    },
+    "ellipsoid":{
+      "radii": {
+        "cartesian": [200000.0, 200000.0, 300000.0]
+      },
+      "fill": false,
+      "outline": true,
+      "outlineColor":{
+        "rgba": [255,255,0,255]
+      },
+      "slicePartitions": 24,
+      "stackPartitions": 36
+    }
+  }
+]

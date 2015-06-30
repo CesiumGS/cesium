@@ -1,0 +1,101 @@
+
+[
+  {
+    "id":"document",
+    "name":"simple",
+    "version":"1.0",
+    "clock":{
+      "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
+      "currentTime":"2012-03-15T10:00:00Z",
+      "multiplier":1,
+      "range":"LOOP_STOP",
+      "step":"SYSTEM_CLOCK_MULTIPLIER"
+    }
+  },
+  {
+    "name": "Polyline",
+    "description": "Draw polylines with various widths and materials."
+  },
+  {
+    "id": "polyline/redline",
+    "name" :"Red line",
+    "description": "Red line on the surface",
+    "polyline":{
+      "positions":{
+        "cartographicDegrees": [-75, 25, 0,
+                                -125, 35, 0]
+      },
+      "width": 5,
+      "material":{
+        "solidColor":{
+          "color":{
+            "rgba": [255,0,0,255]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "polyline/glowingLine",
+    "name" :"Glowing line",
+    "description": "Glowing blue line on the surface",
+    "polyline":{
+      "positions":{
+        "cartographicDegrees": [-75, 37, 0,
+                                -125, 37, 0]
+      },
+      "width": 10,
+      "material":{
+        "polylineGlow":{
+          "glowPower": 0.2,
+          "color":{
+            "rgba": [0,0,255,255]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "polyline/orangeOutlined",
+    "name" :"Orange Line",
+    "description": "Orange line with black outline at height and following the surface",
+    "polyline":{
+      "positions":{
+        "cartographicDegrees": [-75, 39, 250000,
+                                -125, 39, 250000]
+      },
+      "width": 5,
+      "material":{
+        "polylineOutline":{
+          "color":{
+            "rgba": [255,165,0,255]
+          },
+          "outlineColor":{
+            "rgba": [0,0,0,255]
+          },
+          "outlineWidth": 2
+        }
+      }
+    }
+  },
+  {
+    "id": "polyline/purpleArrow",
+    "name" :"Purple Arrow",
+    "description": "Purple straight arrow at height",
+    "polyline":{
+      "positions":{
+        "cartographicDegrees": [-75, 43, 500000,
+                                -125, 43, 500000]
+      },
+      "width": 10,
+      "followSurface": false,
+      "material":{
+        "polylineArrow":{
+          "color":{
+            "rgba": [128,0,128,255]
+          }
+        }
+      }
+    }
+  }
+]

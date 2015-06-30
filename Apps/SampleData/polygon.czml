@@ -1,0 +1,110 @@
+
+[
+  {
+    "id":"document",
+    "name":"simple",
+    "version":"1.0",
+    "clock":{
+      "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
+      "currentTime":"2012-03-15T10:00:00Z",
+      "multiplier":1,
+      "range":"LOOP_STOP",
+      "step":"SYSTEM_CLOCK_MULTIPLIER"
+    }
+  },
+  {
+    "name": "Polygons",
+    "description": "Draw a polygon or extruded polygon on the globe surface."
+  },
+  {
+    "id": "polygon/redPolygon",
+    "name": "Red polygon",
+    "description": "Red polygon on surface", 
+    "polygon":{
+      "positions":{
+        "cartographicDegrees": [-115.0, 37.0, 0.0,
+                                -115.0, 32.0, 0.0,
+                                -107.0, 33.0, 0.0,
+                                -102.0, 31.0, 0.0,
+                                -102.0, 35.0, 0.0]
+      },
+      "material": {
+        "solidColor":{
+          "color":{
+            "rgba": [255,0,0,255]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "polygon/greenPolygon",
+    "name": "Green polygon",
+    "description": "Green extruded polygon", 
+    "polygon":{
+      "positions":{
+        "cartographicDegrees": [-108.0, 42.0, 0.0,
+                                -100.0, 42.0, 0.0,
+                                -104.0, 40.0, 0.0]
+      },
+      "extrudedHeight": 500000.0,
+      "material": {
+        "solidColor":{
+          "color":{
+            "rgba": [0,255,0,255]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "polygon/orangePolygon",
+    "name": "Orange polygon",
+    "description": "Orange polygon with per-position heights and outline", 
+    "polygon":{
+      "positions":{
+        "cartographicDegrees": [-100.0, 25.0, 0.0,
+                                -100.0, 25.0, 100000.0,
+                                -100.0, 30.0, 100000.0,
+                                -108.0, 30.0, 300000.0]
+      },
+      "extrudedHeight": 0,
+      "material": {
+        "solidColor":{
+          "color":{
+            "rgba": [255,165,0,127]
+          }
+        }
+      },
+      "perPositionHeight": true,
+      "outline": true,
+      "outlineColor": {
+        "rgba": [0,0,0,255]
+      }
+    }
+  },
+  {
+    "id": "polygon/bluePolygon",
+    "name": "Blue polygon",
+    "description": "Blue polygon with holes and outline", 
+    "polygon":{
+      "positions":{
+        "cartographicDegrees": [-99.0, 30.0, 0.0,
+                                -85.0, 30.0, 0.0,
+                                -85.0, 40.0, 0.0,
+                                -99.0, 40.0, 0.0]
+      },
+      "material": {
+        "solidColor":{
+          "color":{
+            "rgba": [0,0,255,127]
+          }
+        }
+      },
+      "outline": true,
+      "outlineColor": {
+        "rgba": [0,0,0,255]
+      }
+    }
+  }
+]

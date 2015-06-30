@@ -1,0 +1,30 @@
+
+[
+  {
+    "id":"document",
+    "name":"simple",
+    "version":"1.0",
+    "clock":{
+      "interval":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
+      "currentTime":"2012-03-15T10:00:00Z",
+      "multiplier":1,
+      "range":"LOOP_STOP",
+      "step":"SYSTEM_CLOCK_MULTIPLIER"
+    }
+  },
+  {
+    "name": "3d Models",
+    "description": "Create 3D models using glTF."
+  },
+  {
+    "id": "3dmodels_skinnedcharacter",
+    "name": "Skinned character",
+    "model":{
+      "minimumPixelSize": 128,
+      "gltf": "../SampleData/models/CesiumMan/Cesium_Man.gltf"
+    },
+    "position": {
+      "cartographicDegrees": [-123.0744619, 44.0503706, 0.0]
+    }
+  }
+]
