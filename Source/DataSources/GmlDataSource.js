@@ -11,6 +11,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/getFilenameFromUri',
+        '../Core/loadBlob',
         '../Core/PinBuilder',
         '../Core/PolygonHierarchy',
         '../Core/RuntimeError',
@@ -38,6 +39,7 @@ define([
         DeveloperError,
         Event,
         getFilenameFromUri,
+        loadBlob,
         PinBuilder,
         PolygonHierarchy,
         RuntimeError,
@@ -93,6 +95,15 @@ define([
         return deferred;
     }
 
+    function proxyUrl(url, proxy) {
+        if (defined(proxy)) {
+            if (new Uri(url).isAbsolute()) {
+                url = proxy.getURL(url);
+            }
+        }
+        return url;
+    }
+
     function processCoordinates(coordString, dimension, crsFunction) {
         var i;
         var coordString = coordString.trim();
@@ -142,11 +153,10 @@ define([
         if(featureCollection.length == 0) {
         	featureCollection = documentNode.getElementsByTagNameNS(gmlns, "featureMembers");
         }
-
-/*        
-        var boundByNode = documentNode.getElementsByTagNameNS(gmlns, "BoundBy");
-        if(boundByNode) {
-        	//crsFunction = getCrsFromBoundBy()
+        
+/*        var boundedByNode = documentNode.getElementsByTagNameNS(gmlns, "boundedBy");
+        if(boundedByNode) {
+        	crsFunction = getSrsNameFromBoundBy()
         }
 */        
         for(var i=0; i<featureCollection.length; i++) {
@@ -186,7 +196,6 @@ define([
 
         for(i=0; i<geometryElements.length; i++) {
         	geometryHandler = geometryPropertyTypes[geometryElements[i].localName];
-        	console.log(geometryElements[i].localName);
         	geometryHandler(that, geometryElements[i], properties, crsFunction);
         }
     }
@@ -307,7 +316,6 @@ define([
             surfaceBoundaryHandler = surfaceBoundaryTypes[surfaceBoundary.localName];
         }
 
-
         var holes = [], surfaceBoundaryHandler, surfaceBoundary, coordinates;
         for(var i = 0; i < interior.length; i++) {
         	surfaceBoundary = interior.firstElementChild;
@@ -320,7 +328,7 @@ define([
         }
         var surfaceBoundary = exterior.firstElementChild;
         surfaceBoundaryHandler = surfaceBoundaryTypes[surfaceBoundary.localName];
-        var hierarchy = surfaceBoundaryHandler(surfaceBoundary, crsFunction);
+        var hierarchy = surfaceBoundaryHandler(surfaceBoundary, holes, crsFunction);
         createPolygon(that, hierarchy, properties);
     }
 
@@ -359,16 +367,31 @@ define([
     	}
     }
 
-    function processLinearRing(ring, holes, crsFunction) {
-        var coordString = ring.firstElementChild.textContent;
+    function processLinearRing(linaerRing, holes, crsFunction) {
+        var coordString = LinearRing.firstElementChild.textContent;
         var coordinates = processCoordinates(coordString, 2, crsFunction);
-        var hierarchy = new ConstantProperty(new PolygonHierarchy(coordinates, holes));
+        var hierarchy = new PolygonHierarchy(coordinates, holes);
         return hierarchy;
+    }
+
+    function processRing(ring, holes, crsFunction) {
+    	var curveMember = ring.firstElementChild.firstElementChild;
+    	var coordString, coordinates = [];
+    	if(curveMember.localName === "LineString") {
+    		coordString = curveMember.firstElementChild.textContent;
+    		coordinates = processCoordinates(coordString, 2, crsFunction);
+    	} else if(curveMember.localName === "Curve") {
+
+    	}
+
+    	var hierarchy = new PolygonHierarchy(coordinates, holes);
+    	return hierarchy;
     }
 
     function createPolygon(that, hierarchy, properties) {
         var polygon = new PolygonGraphics();
         polygon.outline = new ConstantProperty(true);
+        console.log(hierarchy);
         polygon.hierarchy = new ConstantProperty(hierarchy);
         var entity = createObject(that._entityCollection);
         entity.polygon = polygon;
@@ -405,8 +428,8 @@ define([
     };
 
     var surfaceBoundaryTypes = {
-        LinearRing : processLinearRing
-        //Ring : processRing
+        LinearRing : processLinearRing,
+        Ring : processRing
     };
 
     function loadGml(that, gml, sourceUri) {
@@ -443,6 +466,140 @@ define([
         this._promises = [];
         this._pinBuilder = new PinBuilder();
     };
+
+    defineProperties(GmlDataSource, {
+        /**
+         * Gets or sets the default size of the map pin created for each point, in pixels.
+         * @memberof GeoJsonDataSource
+         * @type {Number}
+         * @default 48
+         */
+        markerSize : {
+            get : function() {
+                return defaultMarkerSize;
+            },
+            set : function(value) {
+                defaultMarkerSize = value;
+            }
+        },
+        /**
+         * Gets or sets the default symbol of the map pin created for each point.
+         * This can be any valid {@link http://mapbox.com/maki/|Maki} identifier, any single character,
+         * or blank if no symbol is to be used.
+         * @memberof GeoJsonDataSource
+         * @type {String}
+         */
+        markerSymbol : {
+            get : function() {
+                return defaultMarkerSymbol;
+            },
+            set : function(value) {
+                defaultMarkerSymbol = value;
+            }
+        },
+        /**
+         * Gets or sets the default color of the map pin created for each point.
+         * @memberof GeoJsonDataSource
+         * @type {Color}
+         * @default Color.ROYALBLUE
+         */
+        markerColor : {
+            get : function() {
+                return defaultMarkerColor;
+            },
+            set : function(value) {
+                defaultMarkerColor = value;
+            }
+        },
+        /**
+         * Gets or sets the default color of polylines and polygon outlines.
+         * @memberof GeoJsonDataSource
+         * @type {Color}
+         * @default Color.BLACK
+         */
+        stroke : {
+            get : function() {
+                return defaultStroke;
+            },
+            set : function(value) {
+                defaultStroke = value;
+                defaultStrokeMaterialProperty.color.setValue(value);
+            }
+        },
+        /**
+         * Gets or sets the default width of polylines and polygon outlines.
+         * @memberof GeoJsonDataSource
+         * @type {Number}
+         * @default 2.0
+         */
+        strokeWidth : {
+            get : function() {
+                return defaultStrokeWidth;
+            },
+            set : function(value) {
+                defaultStrokeWidth = value;
+                defaultStrokeWidthProperty.setValue(value);
+            }
+        },
+        /**
+         * Gets or sets default color for polygon interiors.
+         * @memberof GeoJsonDataSource
+         * @type {Color}
+         * @default Color.YELLOW
+         */
+        fill : {
+            get : function() {
+                return defaultFill;
+            },
+            set : function(value) {
+                defaultFill = value;
+                defaultFillMaterialProperty = new ColorMaterialProperty(defaultFill);
+            }
+        },
+
+        /**
+         * Gets an object that maps the name of a crs to a callback function which takes a GeoJSON coordinate
+         * and transforms it into a WGS84 Earth-fixed Cartesian.  Older versions of GeoJSON which
+         * supported the EPSG type can be added to this list as well, by specifying the complete EPSG name,
+         * for example 'EPSG:4326'.
+         * @memberof GeoJsonDataSource
+         * @type {Object}
+         */
+        crsNames : {
+            get : function() {
+                return crsNames;
+            }
+        },
+
+        /**
+         * Gets an object that maps the href property of a crs link to a callback function
+         * which takes the crs properties object and returns a Promise that resolves
+         * to a function that takes a GeoJSON coordinate and transforms it into a WGS84 Earth-fixed Cartesian.
+         * Items in this object take precedence over those defined in <code>crsLinkHrefs</code>, assuming
+         * the link has a type specified.
+         * @memberof GeoJsonDataSource
+         * @type {Object}
+         */
+        crsLinkHrefs : {
+            get : function() {
+                return crsLinkHrefs;
+            }
+        },
+
+        /**
+         * Gets an object that maps the type property of a crs link to a callback function
+         * which takes the crs properties object and returns a Promise that resolves
+         * to a function that takes a GeoJSON coordinate and transforms it into a WGS84 Earth-fixed Cartesian.
+         * Items in <code>crsLinkHrefs</code> take precedence over this object.
+         * @memberof GeoJsonDataSource
+         * @type {Object}
+         */
+        crsLinkTypes : {
+            get : function() {
+                return crsLinkTypes;
+            }
+        }
+    });
 
     defineProperties(GmlDataSource.prototype, {
         /**
@@ -525,6 +682,8 @@ define([
             throw new DeveloperError('data is required.');
         }
         DataSource.setLoading(this, true);
+
+   	    options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var sourceUri = options.sourceUri;
 
         var promise = data;
