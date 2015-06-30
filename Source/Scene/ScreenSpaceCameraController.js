@@ -472,6 +472,9 @@ define([
         if (!sameStartPosition) {
             object._zoomMouseStart = Cartesian2.clone(startPosition, object._zoomMouseStart);
             object._zoomWorldPosition = Cartesian3.clone(pickedPosition, object._zoomWorldPosition);
+
+            zoomingOnVector = object._zoomingOnVector = false;
+            rotatingZoom = object._rotatingZoom = false;
         }
 
         var zoomOnVector = mode === SceneMode.COLUMBUS_VIEW;

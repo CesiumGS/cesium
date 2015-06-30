@@ -5,6 +5,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/Math',
+        'Scene/Camera',
         'Specs/createScene'
     ], function(
         SceneTransforms,
@@ -12,6 +13,7 @@ defineSuite([
         Cartesian3,
         Ellipsoid,
         CesiumMath,
+        Camera,
         createScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
@@ -21,7 +23,7 @@ defineSuite([
 
     beforeAll(function() {
         scene = createScene();
-        defaultCamera = scene.camera.clone();
+        defaultCamera = Camera.clone(scene.camera);
     });
 
     afterAll(function() {

@@ -1031,7 +1031,7 @@ defineSuite([
         var target = Cartesian3.fromDegrees(0.0, 0.0);
         var offset = new Cartesian3(0.0, -1.0, 0.0);
 
-        var tempCamera = camera.clone();
+        var tempCamera = Camera.clone(camera);
         tempCamera.lookAt(target, offset);
 
         expect(tempCamera.position).toEqualEpsilon(offset, CesiumMath.EPSILON11);
@@ -1050,7 +1050,7 @@ defineSuite([
         var pitch = CesiumMath.toRadians(-45.0);
         var range = 2.0;
 
-        var tempCamera = camera.clone();
+        var tempCamera = Camera.clone(camera);
         tempCamera.lookAt(target, new HeadingPitchRange(heading, pitch, range));
 
         tempCamera.lookAtTransform(Matrix4.IDENTITY);
@@ -1085,7 +1085,7 @@ defineSuite([
         frustum.top = 1.0;
         frustum.bottom = -1.0;
 
-        var tempCamera = camera.clone();
+        var tempCamera = Camera.clone(camera);
         tempCamera.frustum = frustum;
         tempCamera.update(SceneMode.SCENE2D);
 
@@ -1110,7 +1110,7 @@ defineSuite([
         frustum.top = 1.0;
         frustum.bottom = -1.0;
 
-        var tempCamera = camera.clone();
+        var tempCamera = Camera.clone(camera);
         tempCamera.frustum = frustum;
         tempCamera.update(SceneMode.SCENE2D);
 
@@ -1143,7 +1143,7 @@ defineSuite([
         var offset = new Cartesian3(1.0, 1.0, 0.0);
         var transform = Transforms.eastNorthUpToFixedFrame(target, Ellipsoid.UNIT_SPHERE);
 
-        var tempCamera = camera.clone();
+        var tempCamera = Camera.clone(camera);
         tempCamera.lookAtTransform(transform, offset);
 
         expect(tempCamera.position).toEqualEpsilon(offset, CesiumMath.EPSILON11);
@@ -1185,7 +1185,7 @@ defineSuite([
         var range = 2.0;
         var transform = Transforms.eastNorthUpToFixedFrame(target);
 
-        var tempCamera = camera.clone();
+        var tempCamera = Camera.clone(camera);
         tempCamera.lookAtTransform(transform, new HeadingPitchRange(heading, pitch, range));
 
         tempCamera.lookAtTransform(Matrix4.IDENTITY);
@@ -1214,7 +1214,7 @@ defineSuite([
         frustum.top = 1.0;
         frustum.bottom = -1.0;
 
-        var tempCamera = camera.clone();
+        var tempCamera = Camera.clone(camera);
         tempCamera.frustum = frustum;
         tempCamera.update(SceneMode.SCENE2D);
 
@@ -1239,7 +1239,7 @@ defineSuite([
         frustum.top = 1.0;
         frustum.bottom = -1.0;
 
-        var tempCamera = camera.clone();
+        var tempCamera = Camera.clone(camera);
         tempCamera.frustum = frustum;
         tempCamera.update(SceneMode.SCENE2D);
 
@@ -1959,13 +1959,16 @@ defineSuite([
 
         var expectedOptions = {
             destination : options.destination,
-            direction : undefined,
-            up : undefined,
+            heading : undefined,
+            pitch : undefined,
+            roll : undefined,
             duration : undefined,
             complete : undefined,
             cancel : undefined,
             endTransform : undefined,
-            convert : undefined
+            convert : undefined,
+            maximumHeight : undefined,
+            easingFunction : undefined
         };
 
         expect(CameraFlightPath.createTween).toHaveBeenCalledWith(scene, expectedOptions);
