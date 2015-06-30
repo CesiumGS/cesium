@@ -30,6 +30,7 @@ Change Log
 * Add `QuantizedMeshTerrainData` constructor argument `orientedBoundingBox`.
 * Add `TerrainMesh.orientedBoundingBox` which holds the `OrientedBoundingBox` for the mesh for a single terrain tile.
 * Use `OrientedBoundingBox` when rendering terrain and imagery to improve performance of rendering and loading (by up to 50% of terrain/imagery tiles, depending on camera view).
+* Fixed 2D and Columbus view lighting issue [#2635](https://github.com/AnalyticalGraphicsInc/cesium/issues/2635).
 
 ### 1.10 - 2015-06-01
 
