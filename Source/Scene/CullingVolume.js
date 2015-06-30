@@ -65,13 +65,14 @@ define([
     /**
      * Determines whether a bounding volume intersects the culling volume.
      *
-     * @private
      * @param {Object} boundingVolume The bounding volume whose intersection with the culling volume is to be tested.
      * @param {Number} parentPlaneMask A bit mask from the boundingVolume's parent's check against the same culling
      *                                 volume, such that if (planeMask & (1 << planeIndex) === 0), for k < 31, then
      *                                 the parent (and therefore this) volume is completely inside plane[planeIndex]
      *                                 and that plane check can be skipped.
      * @returns {Number} A plane mask as described above (which can be applied to this boundingVolume's children).
+     * 
+     * @private
      */
     CullingVolume.prototype.computeVisibilityWithPlaneMask = function(boundingVolume, parentPlaneMask) {
         //>>includeStart('debug', pragmas.debug);
