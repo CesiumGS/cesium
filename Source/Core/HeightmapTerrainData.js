@@ -211,7 +211,9 @@ define([
                     result.minimumHeight,
                     result.maximumHeight,
                     result.boundingSphere3D,
-                    result.occludeePointInScaledSpace);
+                    result.occludeePointInScaledSpace,
+                    6,
+                    result.orientedBoundingBox);
         });
     };
 
