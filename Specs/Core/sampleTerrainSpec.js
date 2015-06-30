@@ -33,7 +33,7 @@ defineSuite([
 
     it('queries heights from Small Terrain', function() {
         var terrainProvider = new CesiumTerrainProvider({
-            url : '//cesiumjs.org/smallterrain'
+            url : '//cesiumweb.cloudapp.net/smallterrain'
         });
 
         var positions = [
