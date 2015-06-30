@@ -189,8 +189,35 @@ function cameraEvents() {
     });
 }
 
+function flyInACity() {
+    Sandcastle.declare(flyInACity);
+    
+    var camera = scene.camera;
+    camera.flyTo({
+        destination : Cesium.Cartesian3.fromDegrees(-73.98580932617188, 40.74843406689482, 363.34038727246224),
+        complete : function() {
+            setTimeout(function() {
+                camera.flyTo({
+                    destination : Cesium.Cartesian3.fromDegrees(-73.98585975679403, 40.75759944127251, 186.50838555841779),
+                    orientation : {
+                        heading : Cesium.Math.toRadians(200.0),
+                        pitch : Cesium.Math.toRadians(-50.0)
+                    },
+                    easingFunction : Cesium.EasingFunction.LINEAR_NONE
+                });
+            }, 3000);
+        }
+    });
+}
+
 Sandcastle.addToolbarMenu([{
     text : 'Camera Options'
+}, {
+    text : 'Fly in a city',
+    onselect : function() {
+        flyInACity();
+        Sandcastle.highlight(flyInACity);
+    }
 }, {
     text : 'Fly to San Diego',
     onselect : function() {

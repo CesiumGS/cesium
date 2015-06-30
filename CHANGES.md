@@ -5,6 +5,7 @@ Change Log
 
 * Breaking changes
   * Removed `Scene.fxaaOrderIndependentTranslucency`, which was deprecated in 1.10. Use `Scene.fxaa` which is now `true` by default.
+  * Removed `Camera.clone` that was deprecated in 1.10.
 * Deprecated
   * The STK World Terrain url `cesiumjs.org/stk-terrain/world` has been deprecated, use `assets.agi.com/stk-terrain/world` instead.  A redirect will be in place until 1.14.
   * Deprecated `AxisAlignedBoundingBox.intersect` and `BoundingSphere.intersect`.  These will be removed in 1.13.  Use `.intersectPlane` and, if necessary, `Plane.fromCartesian4`.
@@ -31,6 +32,13 @@ Change Log
 * Add `TerrainMesh.orientedBoundingBox` which holds the `OrientedBoundingBox` for the mesh for a single terrain tile.
 * Use `OrientedBoundingBox` when rendering terrain and imagery to improve performance of rendering and loading (by up to 50% of terrain/imagery tiles, depending on camera view).
 * Fixed 2D and Columbus view lighting issue [#2635](https://github.com/AnalyticalGraphicsInc/cesium/issues/2635).
+* Improved camera flights. [#2825](https://github.com/AnalyticalGraphicsInc/cesium/pull/2825)
+* Fixed camera flights that ended up at the wrong position in Columbus view. [#802](https://github.com/AnalyticalGraphicsInc/cesium/issues/802)
+* Fixed camera flights through the map in 2D. [#804](https://github.com/AnalyticalGraphicsInc/cesium/issues/804)
+* Fixed strange camera flights from opposite sides of the globe. [#1158](https://github.com/AnalyticalGraphicsInc/cesium/issues/1158)
+* Fixed camera flights that wouldn't fly to the home view after zooming out past it. [#1400](https://github.com/AnalyticalGraphicsInc/cesium/issues/1400)
+* Fixed flying to rectangles that cross the IDL in Columbus view and 2D. [#2093](https://github.com/AnalyticalGraphicsInc/cesium/issues/2093)
+* Fixed flights with a pitch of -90 degrees. [#2468](https://github.com/AnalyticalGraphicsInc/cesium/issues/2468)
 
 ### 1.10 - 2015-06-01
 

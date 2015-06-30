@@ -32,10 +32,6 @@ define([
             scene.completeMorph();
         }
 
-        var direction;
-        var right;
-        var up;
-
         if (mode === SceneMode.SCENE2D) {
             scene.camera.flyTo({
                 destination : Rectangle.MAX_VALUE,
@@ -50,16 +46,12 @@ define([
             Cartesian3.normalize(destination, destination);
             Cartesian3.multiplyByScalar(destination, mag, destination);
 
-            direction = Cartesian3.normalize(destination, new Cartesian3());
-            Cartesian3.negate(direction, direction);
-            right = Cartesian3.cross(direction, Cartesian3.UNIT_Z, new Cartesian3());
-            up = Cartesian3.cross(right, direction, new Cartesian3());
-
             scene.camera.flyTo({
                 destination : destination,
                 orientation : {
-                    direction: direction,
-                    up : up
+                    heading : 0.0,
+                    pitch : -Math.PI * 0.5,
+                    roll : 0.0
                 },
                 duration : duration,
                 endTransform : Matrix4.IDENTITY
@@ -68,17 +60,15 @@ define([
             var maxRadii = scene.globe.ellipsoid.maximumRadius;
             var position = new Cartesian3(0.0, -1.0, 1.0);
             position = Cartesian3.multiplyByScalar(Cartesian3.normalize(position, position), 5.0 * maxRadii, position);
-            direction = new Cartesian3();
-            direction = Cartesian3.normalize(Cartesian3.subtract(Cartesian3.ZERO, position, direction), direction);
-            right = Cartesian3.cross(direction, Cartesian3.UNIT_Z, new Cartesian3());
-            up = Cartesian3.cross(right, direction, new Cartesian3());
+            var pitch = -Math.acos(Cartesian3.normalize(position, new Cartesian3()).z);
 
             scene.camera.flyTo({
                 destination : position,
                 duration : duration,
                 orientation : {
-                    direction : direction,
-                    up : up
+                    heading : 0.0,
+                    pitch : pitch,
+                    roll : 0.0
                 },
                 endTransform : Matrix4.IDENTITY,
                 convert : false
@@ -92,7 +82,7 @@ define([
      * @constructor
      *
      * @param {Scene} scene The scene instance to use.
-     * @param {Number} [duration=1.5] The duration of the camera flight in seconds.
+     * @param {Number} [duration] The duration of the camera flight in seconds.
      */
     var HomeButtonViewModel = function(scene, duration) {
         //>>includeStart('debug', pragmas.debug);
@@ -100,8 +90,6 @@ define([
             throw new DeveloperError('scene is required.');
         }
         //>>includeEnd('debug');
-
-        duration = defaultValue(duration, 1.5);
 
         this._scene = scene;
         this._duration = duration;
@@ -149,9 +137,10 @@ define([
         /**
          * Gets or sets the the duration of the camera flight in seconds.
          * A value of zero causes the camera to instantly switch to home view.
+         * The duration will be computed based on the distance when undefined.
          * @memberof HomeButtonViewModel.prototype
          *
-         * @type {Number}
+         * @type {Number|undefined}
          */
         duration : {
             get : function() {
@@ -159,7 +148,7 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (value < 0) {
+                if (defined(value) && value < 0) {
                     throw new DeveloperError('value must be positive.');
                 }
                 //>>includeEnd('debug');

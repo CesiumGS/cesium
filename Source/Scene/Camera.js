@@ -508,6 +508,31 @@ define([
         }
     }
 
+    function getHeading(direction, up) {
+        var heading;
+        if (!CesiumMath.equalsEpsilon(Math.abs(direction.z), 1.0, CesiumMath.EPSILON3)) {
+            heading = Math.atan2(direction.y, direction.x) - CesiumMath.PI_OVER_TWO;
+        } else {
+            heading = Math.atan2(up.y, up.x) - CesiumMath.PI_OVER_TWO;
+        }
+
+        return CesiumMath.TWO_PI - CesiumMath.zeroToTwoPi(heading);
+    }
+
+    function getPitch(direction) {
+        return CesiumMath.PI_OVER_TWO - CesiumMath.acosClamped(direction.z);
+    }
+
+    function getRoll(direction, up, right) {
+        var roll = 0.0;
+        if (!CesiumMath.equalsEpsilon(Math.abs(direction.z), 1.0, CesiumMath.EPSILON3)) {
+            roll = Math.atan2(-right.z, up.z);
+            roll = CesiumMath.zeroToTwoPi(roll + CesiumMath.TWO_PI);
+        }
+
+        return roll;
+    }
+
     var scratchHPRMatrix1 = new Matrix4();
     var scratchHPRMatrix2 = new Matrix4();
 
@@ -663,19 +688,11 @@ define([
                     var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid, scratchHPRMatrix2);
                     this._setTransform(transform);
 
-                    var direction = this.direction;
-                    var up = this.up;
-
-                    var heading;
-                    if (!CesiumMath.equalsEpsilon(Math.abs(direction.z), 1.0, CesiumMath.EPSILON3)) {
-                        heading = Math.atan2(direction.y, direction.x) - CesiumMath.PI_OVER_TWO;
-                    } else {
-                        heading = Math.atan2(up.y, up.x) - CesiumMath.PI_OVER_TWO;
-                    }
+                    var heading = getHeading(this.direction, this.up);
 
                     this._setTransform(oldTransform);
 
-                    return CesiumMath.TWO_PI - CesiumMath.zeroToTwoPi(heading);
+                    return heading;
                 }
 
                 return undefined;
@@ -698,7 +715,7 @@ define([
                     var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid, scratchHPRMatrix2);
                     this._setTransform(transform);
 
-                    var pitch = CesiumMath.PI_OVER_TWO - CesiumMath.acosClamped(this.direction.z);
+                    var pitch = getPitch(this.direction);
 
                     this._setTransform(oldTransform);
 
@@ -725,15 +742,7 @@ define([
                     var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid, scratchHPRMatrix2);
                     this._setTransform(transform);
 
-                    var up = this.up;
-                    var right = this.right;
-                    var direction = this.direction;
-
-                    var roll = 0.0;
-                    if (!CesiumMath.equalsEpsilon(Math.abs(direction.z), 1.0, CesiumMath.EPSILON3)) {
-                        roll = Math.atan2(-right.z, up.z);
-                        roll = CesiumMath.zeroToTwoPi(roll + CesiumMath.TWO_PI);
-                    }
+                    var roll = getRoll(this.direction, this.up, this.right);
 
                     this._setTransform(oldTransform);
 
@@ -2277,13 +2286,20 @@ define([
     var scratchFlyToMatrix4 = new Matrix4();
     var newOptions = {
         destination : undefined,
-        direction : undefined,
-        up : undefined,
+        heading : undefined,
+        pitch : undefined,
+        roll : undefined,
         duration : undefined,
         complete : undefined,
         cancel : undefined,
-        endTransform : undefined
+        endTransform : undefined,
+        maximumHeight : undefined,
+        easingFunction : undefined
     };
+
+    var scratchFlyDirection = new Cartesian3();
+    var scratchFlyUp = new Cartesian3();
+    var scratchFlyRight = new Cartesian3();
 
     /**
      * Flies the camera from its current position to a new position.
@@ -2299,6 +2315,8 @@ define([
      * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
      * @param {Boolean} [options.convert=true] When <code>true</code>, the destination is converted to the correct coordinate system for each scene mode. When <code>false</code>, the destination is expected
      *                  to be in the correct coordinate system.
+     * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
+     * @param {EasingFunction|EasingFunction~Callback} [options.easingFunction] Controls how the time is interpolated over the duration of the flight.
      *
      * @exception {DeveloperError} If either direction or up is given, then both are required.
      *
@@ -2346,42 +2364,52 @@ define([
 
         var isRectangle = defined(destination.west);
         if (isRectangle) {
+            if (scene.mode !== SceneMode.SCENE3D && destination.west > destination.east) {
+                destination = Rectangle.MAX_VALUE;
+            }
             destination = scene.camera.getRectangleCameraCoordinates(destination, scratchFlyToDestination);
         }
 
-        var direction;
-        var up;
+        var heading;
+        var pitch;
+        var roll;
 
         var orientation = defaultValue(options.orientation, defaultValue.EMPTY_OBJECT);
         if (defined(orientation.heading)) {
-            var heading = defaultValue(orientation.heading, 0.0);
-            var pitch = defaultValue(orientation.pitch, -CesiumMath.PI_OVER_TWO);
-            var roll = defaultValue(orientation.roll, 0.0);
-
-            var rotQuat = Quaternion.fromHeadingPitchRoll(heading - CesiumMath.PI_OVER_TWO, pitch, roll, scratchFlyToQuaternion);
-            var rotMat = Matrix3.fromQuaternion(rotQuat, scratchFlyToMatrix3);
-
-            direction = Matrix3.getColumn(rotMat, 0, scratchFlyToDirection);
-            up = Matrix3.getColumn(rotMat, 2, scratchFlyToUp);
-
-            var ellipsoid = this._projection.ellipsoid;
-            var transform = Transforms.eastNorthUpToFixedFrame(destination, ellipsoid, scratchFlyToMatrix4);
-
-            Matrix4.multiplyByPointAsVector(transform, direction, direction);
-            Matrix4.multiplyByPointAsVector(transform, up, up);
+            heading = orientation.heading;
+            pitch = orientation.pitch;
+            roll = orientation.roll;
         } else if (defined(orientation.direction)) {
-            direction = orientation.direction;
-            up = orientation.up;
+            var direction = Cartesian3.clone(orientation.direction, scratchFlyDirection);
+            var up = Cartesian3.clone(orientation.up, scratchFlyUp);
+
+            if (scene.mode === SceneMode.SCENE3D) {
+                var ellipsoid = this._projection.ellipsoid;
+                var transform = Transforms.eastNorthUpToFixedFrame(destination, ellipsoid, scratchHPRMatrix1);
+                var invTransform = Matrix4.inverseTransformation(transform, scratchHPRMatrix2);
+
+                Matrix4.multiplyByPointAsVector(invTransform, direction, direction);
+                Matrix4.multiplyByPointAsVector(invTransform, up, up);
+            }
+
+            var right = Cartesian3.cross(direction, up, scratchFlyRight);
+
+            heading = getHeading(direction, up);
+            pitch = getPitch(direction);
+            roll = getRoll(direction, up, right);
         }
 
         newOptions.destination = destination;
-        newOptions.direction = direction;
-        newOptions.up = up;
+        newOptions.heading = heading;
+        newOptions.pitch = pitch;
+        newOptions.roll = roll;
         newOptions.duration = options.duration;
         newOptions.complete = options.complete;
         newOptions.cancel = options.cancel;
         newOptions.endTransform = options.endTransform;
         newOptions.convert = isRectangle ? false : options.convert;
+        newOptions.maximumHeight = options.maximumHeight;
+        newOptions.easingFunction = options.easingFunction;
 
         scene.tweens.add(CameraFlightPath.createTween(scene, newOptions));
     };
@@ -2469,6 +2497,9 @@ define([
     var scratchflyToBoundingSphereDirection = new Cartesian3();
     var scratchflyToBoundingSphereUp = new Cartesian3();
     var scratchflyToBoundingSphereRight = new Cartesian3();
+    var scratchFlyToBoundingSphereCart4 = new Cartesian4();
+    var scratchFlyToBoundingSphereQuaternion = new Quaternion();
+    var scratchFlyToBoundingSphereMatrix3 = new Matrix3();
 
     /**
      * Flys the camera to a location where the current view contains the provided bounding sphere.
@@ -2489,6 +2520,8 @@ define([
      * @param {Camera~FlightCompleteCallback} [options.complete] The function to execute when the flight is complete.
      * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
      * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
+     * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
+     * @param {EasingFunction|EasingFunction~Callback} [options.easingFunction] Controls how the time is interpolated over the duration of the flight.
      */
     Camera.prototype.flyToBoundingSphere = function(boundingSphere, options) {
         //>>includeStart('debug', pragmas.debug);
@@ -2521,6 +2554,14 @@ define([
             Cartesian3.normalize(direction, direction);
 
             up = Matrix4.multiplyByPointAsVector(transform, Cartesian3.UNIT_Z, scratchflyToBoundingSphereUp);
+            if (1.0 - Math.abs(Cartesian3.dot(direction, up)) < CesiumMath.EPSILON6) {
+                var rotateQuat = Quaternion.fromAxisAngle(direction, offset.heading, scratchFlyToBoundingSphereQuaternion);
+                var rotation = Matrix3.fromQuaternion(rotateQuat, scratchFlyToBoundingSphereMatrix3);
+
+                Cartesian3.fromCartesian4(Matrix4.getColumn(transform, 1, scratchFlyToBoundingSphereCart4), up);
+                Matrix3.multiplyByVector(rotation, up, up);
+            }
+
             var right = Cartesian3.cross(direction, up, scratchflyToBoundingSphereRight);
             Cartesian3.cross(right, direction, up);
             Cartesian3.normalize(up, up);
@@ -2535,25 +2576,10 @@ define([
             duration : options.duration,
             complete : options.complete,
             cancel : options.cancel,
-            endTransform : options.endTransform
+            endTransform : options.endTransform,
+            maximumHeight : options.maximumHeight,
+            easingFunction : options.easingFunction
         });
-    };
-
-    /**
-     * Returns a duplicate of a Camera instance.
-     * @deprecated
-     * @returns {Camera} The provided result parameter or a new copy of the Camera instance.
-     */
-    Camera.prototype.clone = function() {
-        var camera = new Camera(this._scene);
-        camera.position = Cartesian3.clone(this.position);
-        camera.direction = Cartesian3.clone(this.direction);
-        camera.up = Cartesian3.clone(this.up);
-        camera.right = Cartesian3.clone(this.right);
-        camera._transform = Matrix4.clone(this.transform);
-        camera._transformChanged = true;
-        camera.frustum = this.frustum.clone();
-        return camera;
     };
 
     /**
