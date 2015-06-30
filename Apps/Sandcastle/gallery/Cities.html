@@ -182,25 +182,48 @@ function annotate(movement) {
     }
 }
 
-function zoom(movement) {
-    if (Cesium.defined(current.building) && scene.pickPositionSupported) {
-        var cartesian = scene.pickPosition(movement.position);
-        var toOldPosition = new Cesium.Cartesian3();
-        toOldPosition = Cesium.Cartesian3.subtract(viewer.camera.position, cartesian, toOldPosition);
-        toOldPosition = Cesium.Cartesian3.normalize(toOldPosition, toOldPosition);
-// TODO: Don't hardcode 15.  Base on distance?
-        toOldPosition = Cesium.Cartesian3.multiplyByScalar(toOldPosition, 15.0, toOldPosition);
-        var newPosition = new Cesium.Cartesian3();
-        newPosition = Cesium.Cartesian3.add(cartesian, toOldPosition, newPosition);
+function offsetFromHeadingPitchRange(heading, pitch, range) {
+    pitch = Cesium.Math.clamp(pitch, -Cesium.Math.PI_OVER_TWO, Cesium.Math.PI_OVER_TWO);
+    heading = Cesium.Math.zeroToTwoPi(heading) - Cesium.Math.PI_OVER_TWO;
 
-// TODO: need better flights
-        viewer.camera.flyTo({
-            destination : newPosition,
+    var pitchQuat = Cesium.Quaternion.fromAxisAngle(Cesium.Cartesian3.UNIT_Y, -pitch);
+    var headingQuat = Cesium.Quaternion.fromAxisAngle(Cesium.Cartesian3.UNIT_Z, -heading);
+    var rotQuat = Cesium.Quaternion.multiply(headingQuat, pitchQuat, headingQuat);
+    var rotMatrix = Cesium.Matrix3.fromQuaternion(rotQuat);
+
+    var offset = Cesium.Cartesian3.clone(Cesium.Cartesian3.UNIT_X);
+    Cesium.Matrix3.multiplyByVector(rotMatrix, offset, offset);
+    Cesium.Cartesian3.negate(offset, offset);
+    Cesium.Cartesian3.multiplyByScalar(offset, range, offset);
+    return offset;
+}
+
+function zoom(movement) {
+    var building = current.building;
+    if (Cesium.defined(building)) {
+        var longitude = building.getProperty('Longitude');
+        var latitude = building.getProperty('Latitude');
+   		var height = building.getProperty('Height');
+        
+        var positionCartographic = new Cesium.Cartographic(longitude, latitude, height * 0.5);
+        var position = scene.globe.ellipsoid.cartographicToCartesian(positionCartographic);
+        
+        var camera = scene.camera;
+        var heading = camera.heading;
+        var pitch = camera.pitch;
+        
+        var offset = offsetFromHeadingPitchRange(heading, pitch, height * 2.0);
+        
+        var transform = Cesium.Transforms.eastNorthUpToFixedFrame(position);
+        Cesium.Matrix4.multiplyByPoint(transform, offset, position);
+        
+        camera.flyTo({
+            destination : position,
             orientation : {
-                direction : viewer.camera.direction,
-                up : viewer.camera.up
+                heading : heading,
+                pitch : pitch
             },
-            duration : 1.0
+            easingFunction : Cesium.EasingFunction.QUADRATIC_OUT
         });
     }
 }
