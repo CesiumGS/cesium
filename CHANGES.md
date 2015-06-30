@@ -39,6 +39,7 @@ Change Log
 * Fixed camera flights that wouldn't fly to the home view after zooming out past it. [#1400](https://github.com/AnalyticalGraphicsInc/cesium/issues/1400)
 * Fixed flying to rectangles that cross the IDL in Columbus view and 2D. [#2093](https://github.com/AnalyticalGraphicsInc/cesium/issues/2093)
 * Fixed flights with a pitch of -90 degrees. [#2468](https://github.com/AnalyticalGraphicsInc/cesium/issues/2468)
+* Fixed several issues with material caching which resulted in the inability to use an image-based material multiple times. [#2821](https://github.com/AnalyticalGraphicsInc/cesium/issues/2821)
 
 ### 1.10 - 2015-06-01
 
