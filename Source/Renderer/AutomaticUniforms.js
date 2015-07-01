@@ -161,8 +161,10 @@ define([
         }),
 
         /**
-         * An automatic GLSL uniform representing a the depth texture after
-         * only the globe has been rendered.
+         * An automatic GLSL uniform representing the depth after
+         * only the globe has been rendered and packed into an RGBA texture.
+         *
+         * @private
          *
          * @alias czm_globeDepthTexture
          * @glslUniform
@@ -173,7 +175,7 @@ define([
          *
          * // Get the depth at the current fragment
          * vec2 coords = gl_FragCoord.xy / czm_viewport.zw;
-         * float depth = texture2D(czm_globeDepthTexture, coords).r;
+         * float depth = czm_unpackDepth(texture2D(czm_globeDepthTexture, coords));
          */
         czm_globeDepthTexture : new AutomaticUniform({
             size : 1,

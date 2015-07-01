@@ -7,10 +7,12 @@ defineSuite([
         'Core/defaultValue',
         'Core/FeatureDetection',
         'Core/JulianDate',
+        'Core/loadArrayBuffer',
         'Core/Math',
         'Core/Matrix4',
         'Core/PrimitiveType',
         'Core/Transforms',
+        'Scene/HeadingPitchRange',
         'Scene/ModelAnimationLoop',
         'Specs/createScene',
         'Specs/pollToPromise',
@@ -23,10 +25,12 @@ defineSuite([
         defaultValue,
         FeatureDetection,
         JulianDate,
+        loadArrayBuffer,
         CesiumMath,
         Matrix4,
         PrimitiveType,
         Transforms,
+        HeadingPitchRange,
         ModelAnimationLoop,
         createScene,
         pollToPromise,
@@ -38,6 +42,8 @@ defineSuite([
     var texturedBoxUrl = './Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf';
     var texturedBoxSeparateUrl = './Data/Models/Box-Textured-Separate/CesiumTexturedBoxTest.gltf';
     var texturedBoxCustomUrl = './Data/Models/Box-Textured-Custom/CesiumTexturedBoxTest.gltf';
+    var texturedBoxBinaryUrl = './Data/Models/Box-Textured-Binary/CesiumTexturedBoxTest.bgltf';
+    var boxRtcUrl = './Data/Models/Box-RTC/Box.gltf';
     var cesiumAirUrl = './Data/Models/CesiumAir/Cesium_Air.gltf';
     var animBoxesUrl = './Data/Models/anim-test-1-boxes/anim-test-1-boxes.gltf';
     var riggedFigureUrl = './Data/Models/rigged-figure-test/rigged-figure-test.gltf';
@@ -83,8 +89,9 @@ defineSuite([
     function addZoomTo(model) {
         model.zoomTo = function() {
             var camera = scene.camera;
-            var r = Math.max(model.boundingSphere.radius, camera.frustum.near);
-            camera.lookAt( Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cartesian3()), new Cartesian3(r, -r, -r));
+            var center = Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cartesian3());
+            var r = 4.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
+            camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, r));
         };
     }
 
@@ -93,7 +100,7 @@ defineSuite([
 
         var model = primitives.add(Model.fromGltf({
             url : url,
-            modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
+            modelMatrix : defaultValue(options.modelMatrix, Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0))),
             show : false,
             scale : options.scale,
             minimumPixelSize : options.minimumPixelSize,
@@ -442,25 +449,103 @@ defineSuite([
 
     it('renders texturedBoxCustom (all uniform semantics)', function() {
         return loadModel(texturedBoxCustomUrl).then(function(m) {
-            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-
-            m.show = true;
-            m.zoomTo();
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            verifyRender(m);
             primitives.remove(m);
         });
     });
 
-    ///////////////////////////////////////////////////////////////////////////
+    it('renders a model with the CESIUM_binary_glTF extension', function() {
+        return loadModel(texturedBoxBinaryUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a model with the CESIUM_binary_glTF extension as an ArrayBuffer using new Model', function() {
+        return loadArrayBuffer(texturedBoxBinaryUrl).then(function(arrayBuffer) {
+            var model = primitives.add(new Model({
+                gltf : arrayBuffer,
+                modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
+                show : false
+            }));
+            addZoomTo(model);
+
+            return pollToPromise(function() {
+                // Render scene to progressively load the model
+                scene.renderForSpecs();
+                return model.ready;
+            }, {
+                timeout : 10000
+            }).then(function() {
+                verifyRender(model);
+                primitives.remove(model);
+            });
+        });
+    });
+
+    it('loads a model with the CESIUM_binary_glTF extension as an Uint8Array using new Model', function() {
+        return loadArrayBuffer(texturedBoxBinaryUrl).then(function(arrayBuffer) {
+            var model = primitives.add(new Model({
+                gltf : new Uint8Array(arrayBuffer),
+                modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
+                show : false
+            }));
+            addZoomTo(model);
+
+            return pollToPromise(function() {
+                // Render scene to progressively load the model
+                scene.renderForSpecs();
+                return model.ready;
+            }, {
+                timeout : 10000
+            }).then(function() {
+                verifyRender(model);
+                primitives.remove(model);
+            });
+        });
+    });
+
+    it('Throws because of an invalid Binary glTF header - magic', function() {
+        expect(function() {
+            var arrayBuffer = new ArrayBuffer(16);
+            var model = new Model({
+                gltf : arrayBuffer
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('Throws because of an invalid Binary glTF header - version', function() {
+        expect(function() {
+            var arrayBuffer = new ArrayBuffer(16);
+            var bytes = new Uint8Array(arrayBuffer);
+            bytes[0] = 'g'.charCodeAt(0);
+            bytes[1] = 'l'.charCodeAt(0);
+            bytes[2] = 'T'.charCodeAt(0);
+            bytes[3] = 'F'.charCodeAt(0);
+
+            var model = new Model({
+                gltf : arrayBuffer
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('renders a model with the CESIUM_RTC extension', function() {
+        return loadModel(boxRtcUrl, {
+            modelMatrix : Matrix4.IDENTITY,
+            minimumPixelSize : 1
+        }).then(function(m) {
+            var bs = m.boundingSphere;
+            expect(bs.center.equalsEpsilon(new Cartesian3(6378137.0, -0.25, 0.0), CesiumMath.EPSILON14));
+            expect(bs.radius).toEqualEpsilon(0.75, CesiumMath.EPSILON14);
+
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
 
     it('renders textured box with external resources: .glsl, .bin, and .png files', function() {
         return loadModel(texturedBoxSeparateUrl).then(function(m) {
-            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-
-            m.show = true;
-            m.zoomTo();
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
-
+            verifyRender(m);
             primitives.remove(m);
         });
     });
@@ -473,12 +558,7 @@ defineSuite([
     });
 
     it('renders cesiumAir (has translucency)', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-
-        cesiumAirModel.show = true;
-        cesiumAirModel.zoomTo();
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
-        cesiumAirModel.show = false;
+        verifyRender(cesiumAirModel);
     });
 
     it('renders cesiumAir with per-node show (root)', function() {
@@ -985,7 +1065,10 @@ defineSuite([
 
     it('should load a model where WebGL shader optimizer removes an attribute (linux)', function() {
         var url = './Data/Models/test-shader-optimize/test-shader-optimize.gltf';
-        var m = loadModel(url);
+        return loadModel(url).then(function(m) {
+            expect(m).toBeDefined();
+            primitives.remove(m);
+        });
     });
 
     it('releaseGltfJson releases glTFJSON when constructed with fromGltf', function() {

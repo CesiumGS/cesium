@@ -110,7 +110,7 @@ click: function () { closeClicked.raiseEvent(this); }');
             //1. It's an easy way to ensure order of operation so that we can adjust the height.
             //2. Knockout does not bind to elements inside of an iFrame, so we would have to apply a second binding
             //   model anyway.
-            that._descriptionSubscription = subscribeAndEvaluate(viewModel, '_descriptionSanitizedHtml', function(value) {
+            that._descriptionSubscription = subscribeAndEvaluate(viewModel, 'description', function(value) {
                 // Set the frame to small height, force vertical scroll bar to appear, and text to wrap accordingly.
                 frame.style.height = '5px';
                 frameContent.innerHTML = value;
@@ -159,7 +159,7 @@ click: function () { closeClicked.raiseEvent(this); }');
          * Gets the view model.
          * @memberof InfoBox.prototype
          *
-         * @type {SelectionIndicatorViewModel}
+         * @type {InfoBoxViewModel}
          */
         viewModel : {
             get : function() {

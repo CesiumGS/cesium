@@ -1,11 +1,16 @@
 /*global define*/
 define([
+        '../Core/Cartesian3',
+        '../Core/Cartographic',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/Event',
         '../Core/getTimestamp',
         '../Core/Queue',
+        '../Core/Ray',
+        '../Core/Rectangle',
         '../Core/Visibility',
         './QuadtreeOccluders',
         './QuadtreeTile',
@@ -13,12 +18,17 @@ define([
         './SceneMode',
         './TileReplacementQueue'
     ], function(
+        Cartesian3,
+        Cartographic,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
+        Event,
         getTimestamp,
         Queue,
+        Ray,
+        Rectangle,
         Visibility,
         QuadtreeOccluders,
         QuadtreeTile,
@@ -90,6 +100,13 @@ define([
         this._levelZeroTilesReady = false;
         this._loadQueueTimeSlice = 5.0;
 
+        this._addHeightCallbacks = [];
+        this._removeHeightCallbacks = [];
+
+        this._tileToUpdateHeights = [];
+        this._lastTileIndex = 0;
+        this._updateHeightsTimeSlice = 2.0;
+
         /**
          * Gets or sets the maximum screen-space error, in pixels, that is allowed.
          * A higher maximum error will render fewer tiles and improve performance, while a lower
@@ -144,6 +161,16 @@ define([
         var levelZeroTiles = this._levelZeroTiles;
         if (defined(levelZeroTiles)) {
             for (var i = 0; i < levelZeroTiles.length; ++i) {
+                var tile = levelZeroTiles[i];
+                var customData = tile.customData;
+                var customDataLength = customData.length;
+
+                for (var j = 0; j < customDataLength; ++j) {
+                    var data = customData[j];
+                    data.level = 0;
+                    this._addHeightCallbacks.push(data);
+                }
+
                 levelZeroTiles[i].freeResources();
             }
         }
@@ -180,6 +207,31 @@ define([
         for (var i = 0, len = tilesRendered.length; i < len; ++i) {
             tileFunction(tilesRendered[i]);
         }
+    };
+
+    /**
+     * Calls the callback when a new tile is rendered that contains the given cartographic. The only parameter
+     * is the cartesian position on the tile.
+     *
+     * @param {Cartographic} cartographic The cartographic position.
+     * @param {Function} callback The function to be called when a new tile is loaded containing cartographic.
+     * @returns {Function} The function to remove this callback from the quadtree.
+     */
+    QuadtreePrimitive.prototype.updateHeight = function(cartographic, callback) {
+        var primitive = this;
+        var object = {
+            position : undefined,
+            positionCartographic : cartographic,
+            level : -1,
+            callback : callback
+        };
+
+        object.removeFunc = function() {
+            primitive._removeHeightCallbacks.push(object);
+        };
+
+        primitive._addHeightCallbacks.push(object);
+        return object.removeFunc;
     };
 
     /**
@@ -247,6 +299,7 @@ define([
         }
 
         var i;
+        var j;
         var len;
 
         // Clear the render list.
@@ -268,8 +321,8 @@ define([
         // We can't render anything before the level zero tiles exist.
         if (!defined(primitive._levelZeroTiles)) {
             if (primitive._tileProvider.ready) {
-                var terrainTilingScheme = primitive._tileProvider.tilingScheme;
-                primitive._levelZeroTiles = QuadtreeTile.createLevelZeroTiles(terrainTilingScheme);
+                var tilingScheme = primitive._tileProvider.tilingScheme;
+                primitive._levelZeroTiles = QuadtreeTile.createLevelZeroTiles(tilingScheme);
             } else {
                 // Nothing to do until the provider is ready.
                 return;
@@ -282,9 +335,23 @@ define([
         var occluders = primitive._occluders;
 
         var tile;
+        var levelZeroTiles = primitive._levelZeroTiles;
+
+        var customDataAdded = primitive._addHeightCallbacks;
+        var customDataRemoved = primitive._removeHeightCallbacks;
+        var frameNumber = frameState.frameNumber;
+
+        if (customDataAdded.length > 0 || customDataRemoved.length > 0) {
+            for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
+                tile = levelZeroTiles[i];
+                tile._updateCustomData(frameNumber, customDataAdded, customDataRemoved);
+            }
+
+            customDataAdded.length = 0;
+            customDataRemoved.length = 0;
+        }
 
         // Enqueue the root tiles that are renderable and visible.
-        var levelZeroTiles = primitive._levelZeroTiles;
         for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
             tile = levelZeroTiles[i];
             primitive._tileReplacementQueue.markTileRendered(tile);
@@ -309,6 +376,7 @@ define([
             ++debug.tilesVisited;
 
             primitive._tileReplacementQueue.markTileRendered(tile);
+            tile._updateCustomData(frameNumber);
 
             if (tile.level > debug.maxDepth) {
                 debug.maxDepth = tile.level;
@@ -333,7 +401,6 @@ define([
                     }
                 }
             } else {
-                ++debug.tilesWaitingForChildren;
                 // SSE is not good enough but not all children are loaded, so render this tile anyway.
                 addTileToRenderList(primitive, tile);
             }
@@ -450,6 +517,96 @@ define([
         }
     }
 
+    var scratchRay = new Ray();
+    var scratchCartographic = new Cartographic();
+    var scratchPosition = new Cartesian3();
+
+    function updateHeights(primitive, frameState) {
+        var tilesToUpdateHeights = primitive._tileToUpdateHeights;
+        var terrainProvider = primitive._tileProvider.terrainProvider;
+
+        var startTime = getTimestamp();
+        var timeSlice = primitive._updateHeightsTimeSlice;
+        var endTime = startTime + timeSlice;
+
+        var mode = frameState.mode;
+        var projection = frameState.mapProjection;
+        var ellipsoid = projection.ellipsoid;
+
+        while (tilesToUpdateHeights.length > 0) {
+            var tile = tilesToUpdateHeights[tilesToUpdateHeights.length - 1];
+            if (tile !== primitive._lastTileUpdated) {
+                primitive._lastTileIndex = 0;
+            }
+
+            var customData = tile.customData;
+            var customDataLength = customData.length;
+
+            var timeSliceMax = false;
+            for (var i = primitive._lastTileIndex; i < customDataLength; ++i) {
+                var data = customData[i];
+
+                if (tile.level > data.level) {
+                    if (!defined(data.position)) {
+                        data.position = ellipsoid.cartographicToCartesian(data.positionCartographic);
+                    }
+
+                    if (mode === SceneMode.SCENE3D) {
+                        Cartesian3.clone(Cartesian3.ZERO, scratchRay.origin);
+                        Cartesian3.normalize(data.position, scratchRay.direction);
+                    } else {
+                        Cartographic.clone(data.positionCartographic, scratchCartographic);
+
+                        // minimum height for the terrain set, need to get this information from the terrain provider
+                        scratchCartographic.height = -11500.0;
+                        projection.project(scratchCartographic, scratchPosition);
+                        Cartesian3.fromElements(scratchPosition.z, scratchPosition.x, scratchPosition.y, scratchPosition);
+                        Cartesian3.clone(scratchPosition, scratchRay.origin);
+                        Cartesian3.clone(Cartesian3.UNIT_X, scratchRay.direction);
+                    }
+
+                    var position = tile.data.pick(scratchRay, mode, projection, false, scratchPosition);
+                    if (defined(position)) {
+                        data.callback(position);
+                    }
+
+                    data.level = tile.level;
+                } else if (tile.level === data.level) {
+                    var children = tile.children;
+                    var childrenLength = children.length;
+
+                    var child;
+                    for (var j = 0; j < childrenLength; ++j) {
+                        child = children[j];
+                        if (Rectangle.contains(child.rectangle, data.positionCartographic)) {
+                            break;
+                        }
+                    }
+
+                    var tileDataAvailable = terrainProvider.getTileDataAvailable(child.x, child.y, child.level);
+                    if ((defined(tileDataAvailable) && !tileDataAvailable) ||
+                           (defined(parent) && defined(parent.data) && defined(parent.data.terrainData) &&
+                                   !parent.data.terrainData.isChildAvailable(parent.x, parent.y, child.x, child.y))) {
+                            data.removeFunc();
+                    }
+                }
+
+                if (getTimestamp() >= endTime) {
+                    timeSliceMax = true;
+                    break;
+                }
+            }
+
+            if (timeSliceMax) {
+                primitive._lastTileUpdated = tile;
+                primitive._lastTileIndex = i;
+                break;
+            } else {
+                tilesToUpdateHeights.pop();
+            }
+        }
+    }
+
     function tileDistanceSortFunction(a, b) {
         return a._distance - b._distance;
     }
@@ -457,12 +614,21 @@ define([
     function createRenderCommandsForSelectedTiles(primitive, context, frameState, commandList) {
         var tileProvider = primitive._tileProvider;
         var tilesToRender = primitive._tilesToRender;
+        var tilesToUpdateHeights = primitive._tileToUpdateHeights;
 
         tilesToRender.sort(tileDistanceSortFunction);
 
         for (var i = 0, len = tilesToRender.length; i < len; ++i) {
-            tileProvider.showTileThisFrame(tilesToRender[i], context, frameState, commandList);
+            var tile = tilesToRender[i];
+            tileProvider.showTileThisFrame(tile, context, frameState, commandList);
+
+            if (tile._frameRendered !== frameState.frameNumber - 1) {
+                tilesToUpdateHeights.push(tile);
+            }
+            tile._frameRendered = frameState.frameNumber;
         }
+
+        updateHeights(primitive, frameState);
     }
 
     return QuadtreePrimitive;

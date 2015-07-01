@@ -11,6 +11,7 @@ defineSuite([
         'Specs/createCamera',
         'Specs/createContext',
         'Specs/createFrameState',
+        'Specs/pollToPromise',
         'Specs/render'
     ], function(
         Material,
@@ -24,6 +25,7 @@ defineSuite([
         createCamera,
         createContext,
         createFrameState,
+        pollToPromise,
         render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
@@ -318,6 +320,28 @@ defineSuite([
                 }
             }
         });
+        var pixel = renderMaterial(material);
+        expect(pixel).not.toEqual([0, 0, 0, 0]);
+    });
+
+    it('creates a material with an image canvas uniform', function() {
+        var canvas = document.createElement('canvas');
+        var context2D = canvas.getContext('2d');
+        context2D.width = 1;
+        context2D.height = 1;
+        context2D.fillStyle = 'rgb(0,0,255)';
+        context2D.fillRect(0, 0, 1, 1);
+
+        var material = new Material({
+            strict : true,
+            fabric : {
+                type : 'DiffuseMap',
+                uniforms : {
+                    image : canvas
+                }
+            }
+        });
+
         var pixel = renderMaterial(material);
         expect(pixel).not.toEqual([0, 0, 0, 0]);
     });
@@ -719,10 +743,15 @@ defineSuite([
     it('destroys material with texture', function() {
         var material = Material.fromType(Material.DiffuseMapType);
         material.uniforms.image = './Data/Images/Green.png';
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
-        material.destroy();
-        expect(material.isDestroyed()).toEqual(true);
+
+        pollToPromise(function() {
+            return material._loadedImages.length !== 0;
+        }).then(function() {
+            var pixel = renderMaterial(material);
+            expect(pixel).not.toEqual([0, 0, 0, 0]);
+            material.destroy();
+            expect(material.isDestroyed()).toEqual(true);
+        });
     });
 
     it('destroys sub-materials', function() {
@@ -748,12 +777,23 @@ defineSuite([
         });
         material.materials.diffuseMap.uniforms.image = './Data/Images/Green.png';
 
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        pollToPromise(function() {
+            return material.materials.diffuseMap._loadedImages.length !== 0;
+        }).then(function() {
+            var pixel = renderMaterial(material);
+            expect(pixel).not.toEqual([0, 0, 0, 0]);
 
-        var diffuseMap = material.materials.diffuseMap;
-        material.destroy();
-        expect(material.isDestroyed()).toEqual(true);
-        expect(diffuseMap.isDestroyed()).toEqual(true);
+            var diffuseMap = material.materials.diffuseMap;
+            material.destroy();
+            expect(material.isDestroyed()).toEqual(true);
+            expect(diffuseMap.isDestroyed()).toEqual(true);
+        });
     });
+
+    it('does not destroy default material', function() {
+        var material = Material.fromType(Material.DiffuseMapType);
+        renderMaterial(material);
+        material.destroy();
+    });
+
 }, 'WebGL');

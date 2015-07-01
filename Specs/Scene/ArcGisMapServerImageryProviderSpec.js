@@ -791,5 +791,26 @@ defineSuite([
                 expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).toBeUndefined();
             });
         });
+
+        it('picks from individual layers', function() {
+            var provider = new ArcGisMapServerImageryProvider({
+                url : 'made/up/map/server',
+                usePreCachedTilesIfAvailable : false,
+                layers : 'someLayer,anotherLayerYay'
+            });
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                expect(url).toContain('layers=visible:someLayer,anotherLayerYay');
+                loadWithXhr.defaultLoad('Data/ArcGIS/identify-WebMercator.json', responseType, method, data, headers, deferred, overrideMimeType);
+            };
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(pickResult) {
+                    expect(pickResult.length).toBe(1);
+                });
+            });
+        });
     });
 });

@@ -71,7 +71,6 @@ define([
             aggregator._buttonsDown++;
             isDown[key] = true;
             pressTime[key] = new Date();
-            Cartesian2.clone(event.position, eventStartPosition[key]);
         }, ScreenSpaceEventType.PINCH_START, modifier);
 
         aggregator._eventHandler.setInputAction(function() {
@@ -418,7 +417,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (type === CameraEventType.WHEEL) {
+        if (type === CameraEventType.WHEEL || type === CameraEventType.PINCH) {
             return this._currentMousePosition;
         }
 

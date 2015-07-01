@@ -7,11 +7,14 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/freezeObject',
         '../Core/GeographicTilingScheme',
         '../Core/loadJson',
+        '../Core/loadText',
+        '../Core/loadWithXhr',
         '../Core/loadXML',
         '../Core/Math',
         '../Core/objectToQuery',
@@ -20,6 +23,7 @@ define([
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
+        './GetFeatureInfoFormat',
         './ImageryLayerFeatureInfo',
         './ImageryProvider'
     ], function(
@@ -30,11 +34,14 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
         freezeObject,
         GeographicTilingScheme,
         loadJson,
+        loadText,
+        loadWithXhr,
         loadXML,
         CesiumMath,
         objectToQuery,
@@ -43,6 +50,7 @@ define([
         WebMercatorTilingScheme,
         Uri,
         when,
+        GetFeatureInfoFormat,
         ImageryLayerFeatureInfo,
         ImageryProvider) {
     "use strict";
@@ -75,22 +83,19 @@ define([
      *        {@link WebMapServiceImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
      *        without communicating with the server.  Set this property to false if you know your WMS server does not support
      *        GetFeatureInfo or if you don't want this provider's features to be pickable.
-     * @param {Boolean} [options.getFeatureInfoAsGeoJson=true] true if {@link WebMapServiceImageryProvider#pickFeatures} should
-     *        try requesting feature info in GeoJSON format. If getFeatureInfoAsXml is true as well, feature information will be
-     *        requested first as GeoJSON, and then as XML if the GeoJSON request fails.  If both are false, this instance will
-     *        not support feature picking at all.
-     * @param {Boolean} [options.getFeatureInfoAsXml=true] true if {@link WebMapServiceImageryProvider#pickFeatures} should try
-     *        requesting feature info in XML format. If getFeatureInfoAsGeoJson is true as well, feature information will be
-     *        requested first as GeoJSON, and then as XML if the GeoJSON request fails.  If both are false, this instance
-     *        will not support feature picking at all.
+     * @param {GetFeatureInfoFormat[]} [options.getFeatureInfoFormats=WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats] The formats
+     *        in which to try WMS GetFeatureInfo requests.
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
      * @param {TilingScheme} [options.tilingScheme=new GeographicTilingScheme()] The tiling scheme to use to divide the world into tiles.
+     * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
+     *        this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
+     *        parameter is specified, the WGS84 ellipsoid is used.
      * @param {Number} [options.tileWidth=256] The width of each tile in pixels.
      * @param {Number} [options.tileHeight=256] The height of each tile in pixels.
      * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when
      *        specifying this that the number of tiles at the minimum level is small, such as four or less.  A larger number is
      *        likely to result in rendering problems.
-     * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider.
+     * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
      *        If not specified, there is no limit.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      * @param {Object} [options.proxy] A proxy to use for requests. This object is
@@ -99,9 +104,11 @@ define([
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
+     * @see OpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see TileMapServiceImageryProvider
-     * @see OpenStreetMapImageryProvider
+     * @see WebMapTileServiceImageryProvider
+     * @see UrlTemplateImageryProvider
      *
      * @see {@link http://resources.esri.com/help/9.3/arcgisserver/apis/rest/|ArcGIS Server REST API}
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
@@ -132,8 +139,25 @@ define([
         this._proxy = options.proxy;
         this._layers = options.layers;
         this._enablePickFeatures = defaultValue(options.enablePickFeatures, true);
-        this._getFeatureInfoAsGeoJson = defaultValue(options.getFeatureInfoAsGeoJson, true);
-        this._getFeatureInfoAsXml = defaultValue(options.getFeatureInfoAsXml, true);
+        this._getFeatureInfoFormats = defaultValue(options.getFeatureInfoFormats, WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats);
+
+        if (defined(options.getFeatureInfoAsGeoJson) || defined(options.getFeatureInfoAsXml)) {
+            deprecationWarning('WebMapServiceImageryProvider.getFeatureInfo', 'The options.getFeatureInfoAsGeoJson and getFeatureInfoAsXml parameters to WebMapServiceImageryProvider were deprecated in Cesium 1.10 and will be removed in 1.13.  Use options.getFeatureInfoFormats instead.');
+
+            //>>includeStart('debug', pragmas.debug);
+            if (defined(options.getFeatureInfoFormats)) {
+                throw new DeveloperError('options.getFeatureInfoFormats must not be specified if options.getFeatureInfoAsGeoJson or options.getFeatureInfoAsXml are specified.');
+            }
+            //>>includeEnd('debug');
+
+            this._getFeatureInfoFormats = [];
+            if (defaultValue(options.getFeatureInfoAsGeoJson, true)) {
+                this._getFeatureInfoFormats.push(new GetFeatureInfoFormat('json', 'application/json'));
+            }
+            if (defaultValue(options.getFeatureInfoAsXml, true)) {
+                this._getFeatureInfoFormats.push(new GetFeatureInfoFormat('xml', 'text/xml'));
+            }
+        }
 
         // Merge the parameters with the defaults, and make all parameter names lowercase
         this._parameters = combine(objectToLowercase(defaultValue(options.parameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.DefaultParameters);
@@ -145,7 +169,7 @@ define([
         this._maximumLevel = options.maximumLevel; // undefined means no limit
 
         this._rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
-        this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new GeographicTilingScheme();
+        this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new GeographicTilingScheme({ ellipsoid : options.ellipsoid });
 
         this._rectangle = Rectangle.intersection(this._rectangle, this._tilingScheme.rectangle);
 
@@ -452,7 +476,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (!this._enablePickFeatures) {
+        if (!this._enablePickFeatures || this._getFeatureInfoFormats.length === 0) {
             return undefined;
         }
 
@@ -476,33 +500,40 @@ define([
 
         var url;
 
-        if (this._getFeatureInfoAsGeoJson) {
-            url = buildGetFeatureInfoUrl(this, 'application/json', x, y, level, i, j);
+        var formatIndex = 0;
 
-            var that = this;
-            return when(loadJson(url), function(json) {
-                return geoJsonToFeatureInfo(json);
-            }, function(e) {
-                // GeoJSON failed, try XML.
-                if (!that._getFeatureInfoAsXml) {
-                    return when.reject(e);
-                }
+        var that = this;
 
-                url = buildGetFeatureInfoUrl(that, 'text/xml', x, y, level, i, j);
-
-                return when(loadXML(url), function(xml) {
-                    return xmlToFeatureInfo(xml);
-                });
-            });
-        } else if (this._getFeatureInfoAsXml) {
-            url = buildGetFeatureInfoUrl(this, 'text/xml', x, y, level, i, j);
-
-            return when(loadXML(url), function(xml) {
-                return xmlToFeatureInfo(xml);
-            });
-        } else {
-            return undefined;
+        function handleResponse(format, data) {
+            return format.callback(data);
         }
+
+        function doRequest() {
+            if (formatIndex >= that._getFeatureInfoFormats.length) {
+                // No valid formats, so no features picked.
+                return when([]);
+            }
+
+            var format = that._getFeatureInfoFormats[formatIndex];
+            var url = buildGetFeatureInfoUrl(that, format.format, x, y, level, i, j);
+
+            ++formatIndex;
+
+            if (format.type === 'json') {
+                return loadJson(url).then(format.callback).otherwise(doRequest);
+            } else if (format.type === 'xml') {
+                return loadXML(url).then(format.callback).otherwise(doRequest);
+            } else if (format.type === 'text' || format.type === 'html') {
+                return loadText(url).then(format.callback).otherwise(doRequest);
+            } else {
+                return loadWithXhr({
+                    url: url,
+                    responseType: format.format
+                }).then(handleResponse.bind(undefined, format)).otherwise(doRequest);
+            }
+        }
+
+        return doRequest();
     };
 
     /**
@@ -536,6 +567,12 @@ define([
         version : '1.1.1',
         request : 'GetFeatureInfo'
     });
+
+    WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats = freezeObject([
+        freezeObject(new GetFeatureInfoFormat('json', 'application/json')),
+        freezeObject(new GetFeatureInfoFormat('xml', 'text/xml')),
+        freezeObject(new GetFeatureInfoFormat('text', 'text/html'))
+    ]);
 
     function buildImageUrl(imageryProvider, x, y, level) {
         var uri = new Uri(imageryProvider._url);
@@ -629,123 +666,6 @@ define([
         }
 
         return url;
-    }
-
-    function geoJsonToFeatureInfo(json) {
-        var result = [];
-
-        var features = json.features;
-        for (var i = 0; i < features.length; ++i) {
-            var feature = features[i];
-
-            var featureInfo = new ImageryLayerFeatureInfo();
-            featureInfo.data = feature;
-            featureInfo.configureNameFromProperties(feature.properties);
-            featureInfo.configureDescriptionFromProperties(feature.properties);
-
-            // If this is a point feature, use the coordinates of the point.
-            if (feature.geometry.type === 'Point') {
-                var longitude = feature.geometry.coordinates[0];
-                var latitude = feature.geometry.coordinates[1];
-                featureInfo.position = Cartographic.fromDegrees(longitude, latitude);
-            }
-
-            result.push(featureInfo);
-        }
-
-        return result;
-    }
-
-    var mapInfoMxpNamespace = 'http://www.mapinfo.com/mxp';
-    var esriWmsNamespace = 'http://www.esri.com/wms';
-
-    function xmlToFeatureInfo(xml) {
-        var documentElement = xml.documentElement;
-        if (documentElement.localName === 'MultiFeatureCollection' && documentElement.namespaceURI === mapInfoMxpNamespace) {
-            // This looks like a MapInfo MXP response
-            return mapInfoXmlToFeatureInfo(xml);
-        } else if (documentElement.localName === 'FeatureInfoResponse' && documentElement.namespaceURI === esriWmsNamespace) {
-            // This looks like an Esri WMS response
-            return esriXmlToFeatureInfo(xml);
-        } else if (documentElement.localName === 'ServiceExceptionReport') {
-            // This looks like a WMS server error, so no features picked.
-            return undefined;
-        } else {
-            // Unknown response type, so just dump the XML itself into the description.
-            return unknownXmlToFeatureInfo(xml);
-        }
-    }
-
-    function mapInfoXmlToFeatureInfo(xml) {
-        var result = [];
-
-        var multiFeatureCollection = xml.documentElement;
-
-        var features = multiFeatureCollection.getElementsByTagNameNS(mapInfoMxpNamespace, 'Feature');
-        for (var featureIndex = 0; featureIndex < features.length; ++featureIndex) {
-            var feature = features[featureIndex];
-
-            var properties = {};
-
-            var propertyElements = feature.getElementsByTagNameNS(mapInfoMxpNamespace, 'Val');
-            for (var propertyIndex = 0; propertyIndex < propertyElements.length; ++propertyIndex) {
-                var propertyElement = propertyElements[propertyIndex];
-                if (propertyElement.hasAttribute('ref')) {
-                    var name = propertyElement.getAttribute('ref');
-                    var value = propertyElement.textContent.trim();
-                    properties[name] = value;
-                }
-            }
-
-            var featureInfo = new ImageryLayerFeatureInfo();
-            featureInfo.data = feature;
-            featureInfo.configureNameFromProperties(properties);
-            featureInfo.configureDescriptionFromProperties(properties);
-            result.push(featureInfo);
-        }
-
-        return result;
-    }
-
-    function esriXmlToFeatureInfo(xml) {
-        var result = [];
-
-        var featureInfoResponse = xml.documentElement;
-
-        var features = featureInfoResponse.getElementsByTagNameNS(esriWmsNamespace, 'FIELDS');
-        for (var featureIndex = 0; featureIndex < features.length; ++featureIndex) {
-            var feature = features[featureIndex];
-
-            var properties = {};
-
-            var propertyAttributes = feature.attributes;
-            for (var attributeIndex = 0; attributeIndex < propertyAttributes.length; ++attributeIndex) {
-                var attribute = propertyAttributes[attributeIndex];
-                properties[attribute.name] = attribute.value;
-            }
-
-            var featureInfo = new ImageryLayerFeatureInfo();
-            featureInfo.data = feature;
-            featureInfo.configureNameFromProperties(properties);
-            featureInfo.configureDescriptionFromProperties(properties);
-            result.push(featureInfo);
-        }
-
-        return result;
-    }
-
-    function unknownXmlToFeatureInfo(xml) {
-        var xmlText = new XMLSerializer().serializeToString(xml);
-
-        var element = document.createElement('div');
-        var pre = document.createElement('pre');
-        pre.textContent = xmlText;
-        element.appendChild(pre);
-
-        var featureInfo = new ImageryLayerFeatureInfo();
-        featureInfo.data = xml;
-        featureInfo.description = element.innerHTML;
-        return [featureInfo];
     }
 
     return WebMapServiceImageryProvider;

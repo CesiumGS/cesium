@@ -39,14 +39,18 @@ define([
      * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
      * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
-     * @param {Number} [options.maximumLevel=18] The maximum level-of-detail supported by the imagery provider.
+     * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
+     * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {Credit|String} [options.credit='MapQuest, Open Street Map and contributors, CC-BY-SA'] A credit for the data source, which is displayed on the canvas.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
+     * @see GoogleEarthImageryProvider
      * @see SingleTileImageryProvider
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
+     * @see WebMapTileServiceImageryProvider
+     * @see UrlTemplateImageryProvider
      *
      * @see {@link http://wiki.openstreetmap.org/wiki/Main_Page|OpenStreetMap Wiki}
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
@@ -71,13 +75,13 @@ define([
         this._proxy = options.proxy;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
 
-        this._tilingScheme = new WebMercatorTilingScheme();
+        this._tilingScheme = new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid });
 
         this._tileWidth = 256;
         this._tileHeight = 256;
 
         this._minimumLevel = defaultValue(options.minimumLevel, 0);
-        this._maximumLevel = defaultValue(options.maximumLevel, 18);
+        this._maximumLevel = options.maximumLevel;
 
         this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
 

@@ -103,6 +103,7 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each billboard from model to world coordinates.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+     * @param {Scene} [options.scene] Must be passed in for billboards that use the height reference property or will be depth tested against the globe.
      *
      * @performance For best performance, prefer a few collections, each with many billboards, to
      * many collections with only a few billboards each.  Organize collections so that billboards
@@ -119,18 +120,20 @@ define([
      *
      * @example
      * // Create a billboard collection with two billboards
-     * var billboards = new Cesium.BillboardCollection();
+     * var billboards = scene.primitives.add(new Cesium.BillboardCollection());
      * billboards.add({
-     *   position : { x : 1.0, y : 2.0, z : 3.0 },
+     *   position : new Cesium.Cartesian3(1.0, 2.0, 3.0),
      *   image : 'url/to/image'
      * });
      * billboards.add({
-     *   position : { x : 4.0, y : 5.0, z : 6.0 },
+     *   position : new Cesium.Cartesian3(4.0, 5.0, 6.0),
      *   image : 'url/to/another/image'
      * });
      */
     var BillboardCollection = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        this._scene = options.scene;
 
         this._textureAtlas = undefined;
         this._textureAtlasGUID = undefined;
@@ -325,6 +328,15 @@ define([
         }
     });
 
+    function destroyBillboards(billboards) {
+        var length = billboards.length;
+        for (var i = 0; i < length; ++i) {
+            if (billboards[i]) {
+                billboards[i]._destroy();
+            }
+        }
+    }
+
     /**
      * Creates and adds a billboard with the specified initial properties to the collection.
      * The added billboard is returned so it can be modified or removed from the collection later.
@@ -423,7 +435,7 @@ define([
      * billboards.removeAll();
      */
     BillboardCollection.prototype.removeAll = function() {
-        this._destroyBillboards();
+        destroyBillboards(this._billboards);
         this._billboards = [];
         this._billboardsToUpdate = [];
         this._billboardsToUpdateIndex = 0;
@@ -936,7 +948,7 @@ define([
         for ( var i = 0; i < length; ++i) {
             var billboard = billboards[i];
             var position = billboard.position;
-            var actualPosition = Billboard._computeActualPosition(position, frameState, modelMatrix);
+            var actualPosition = Billboard._computeActualPosition(billboard, position, frameState, modelMatrix);
             if (defined(actualPosition)) {
                 billboard._setActualPosition(actualPosition);
 
@@ -1004,6 +1016,8 @@ define([
         boundingVolume.radius += size + offset;
     }
 
+    var scratchWriterArray = [];
+
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -1015,6 +1029,8 @@ define([
      * @exception {RuntimeError} image with id must be in the atlas.
      */
     BillboardCollection.prototype.update = function(context, frameState, commandList) {
+        removeBillboards(this);
+
         var billboards = this._billboards;
         var billboardsLength = billboards.length;
 
@@ -1036,7 +1052,6 @@ define([
             return;
         }
 
-        removeBillboards(this);
         updateMode(this, frameState);
 
         billboards = this._billboards;
@@ -1084,7 +1099,8 @@ define([
         } else {
             // Billboards were modified, but none were added or removed.
             if (billboardsToUpdateLength > 0) {
-                var writers = [];
+                var writers = scratchWriterArray;
+                writers.length = 0;
 
                 if (properties[POSITION_INDEX] || properties[ROTATION_INDEX] || properties[SCALE_INDEX]) {
                     writers.push(writePositionScaleAndRotation);
@@ -1114,6 +1130,7 @@ define([
                     writers.push(writePixelOffsetScaleByDistance);
                 }
 
+                var numWriters = writers.length;
                 vafWriters = this._vaf.writers;
 
                 if ((billboardsToUpdateLength / billboardsLength) > 0.1) {
@@ -1125,7 +1142,7 @@ define([
                         var b = billboardsToUpdate[m];
                         b._dirty = false;
 
-                        for ( var n = 0; n < writers.length; ++n) {
+                        for ( var n = 0; n < numWriters; ++n) {
                             writers[n](this, context, textureAtlasCoordinates, vafWriters, b);
                         }
                     }
@@ -1135,7 +1152,7 @@ define([
                         var bb = billboardsToUpdate[h];
                         bb._dirty = false;
 
-                        for ( var o = 0; o < writers.length; ++o) {
+                        for ( var o = 0; o < numWriters; ++o) {
                             writers[o](this, context, textureAtlasCoordinates, vafWriters, bb);
                         }
                         this._vaf.subCommit(bb._index * 4, 4);
@@ -1176,9 +1193,9 @@ define([
         var va;
         var vaLength;
         var command;
-        var j;
         var vs;
         var fs;
+        var j;
 
         if (pass.render) {
             var colorList = this._colorCommands;
@@ -1216,6 +1233,9 @@ define([
                 }
                 if (this._shaderPixelOffsetScaleByDistance) {
                     vs.defines.push('EYE_DISTANCE_PIXEL_OFFSET');
+                }
+                if (defined(this._scene)) {
+                    vs.defines.push('CLAMPED_TO_GROUND');
                 }
 
                 this._sp = context.replaceShaderProgram(this._sp, vs, BillboardCollectionFS, attributeLocations);
@@ -1281,6 +1301,9 @@ define([
                 }
                 if (this._shaderPixelOffsetScaleByDistance) {
                     vs.defines.push('EYE_DISTANCE_PIXEL_OFFSET');
+                }
+                if (defined(this._scene)) {
+                    vs.defines.push('CLAMPED_TO_GROUND');
                 }
 
                 fs = new ShaderSource({
@@ -1358,19 +1381,9 @@ define([
         this._sp = this._sp && this._sp.destroy();
         this._spPick = this._spPick && this._spPick.destroy();
         this._vaf = this._vaf && this._vaf.destroy();
-        this._destroyBillboards();
+        destroyBillboards(this._billboards);
 
         return destroyObject(this);
-    };
-
-    BillboardCollection.prototype._destroyBillboards = function() {
-        var billboards = this._billboards;
-        var length = billboards.length;
-        for (var i = 0; i < length; ++i) {
-            if (billboards[i]) {
-                billboards[i]._destroy();
-            }
-        }
     };
 
     return BillboardCollection;

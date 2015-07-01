@@ -215,13 +215,6 @@ defineSuite([
         expect(contextAttributes.preserveDrawingBuffer).toEqual(webglOptions.preserveDrawingBuffer);
     });
 
-    it('can enable Order Independent Translucency', function() {
-        widget = new CesiumWidget(container, {
-            orderIndependentTranslucency : true
-        });
-        expect(widget.scene.orderIndependentTranslucency).toBe(true);
-    });
-
     it('can disable Order Independent Translucency', function() {
         widget = new CesiumWidget(container, {
             orderIndependentTranslucency : false

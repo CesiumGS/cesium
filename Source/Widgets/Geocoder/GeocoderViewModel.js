@@ -6,6 +6,7 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
+        '../../Core/Event',
         '../../Core/jsonp',
         '../../Core/Matrix4',
         '../../Core/Rectangle',
@@ -19,6 +20,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        Event,
         jsonp,
         Matrix4,
         Rectangle,
@@ -42,7 +44,7 @@ define([
      *        written to the console reminding you that you must create and supply a Bing Maps
      *        key as soon as possible.  Please do not deploy an application that uses
      *        this widget without creating a separate key for your application.
-     * @param {Number} [options.flightDuration=1.5] The duration of the camera flight to an entered location, in seconds.
+     * @param {Number} [options.flightDuration] The duration of the camera flight to an entered location, in seconds.
      */
     var GeocoderViewModel = function(options) {
         //>>includeStart('debug', pragmas.debug);
@@ -58,10 +60,11 @@ define([
 
         this._key = BingMapsApi.getKey(options.key);
         this._scene = options.scene;
-        this._flightDuration = defaultValue(options.flightDuration, 1.5);
+        this._flightDuration = options.flightDuration;
         this._searchText = '';
         this._isSearchInProgress = false;
         this._geocodeInProgress = undefined;
+        this._complete = new Event();
 
         var that = this;
         this._searchCommand = createCommand(function() {
@@ -114,9 +117,10 @@ define([
         /**
          * Gets or sets the the duration of the camera flight in seconds.
          * A value of zero causes the camera to instantly switch to the geocoding location.
+         * The duration will be computed based on the distance when undefined.
          *
-         * @type {Number}
-         * @default 1.5
+         * @type {Number|undefined}
+         * @default undefined
          */
         this.flightDuration = undefined;
         knockout.defineProperty(this, 'flightDuration', {
@@ -125,7 +129,7 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (value < 0) {
+                if (defined(value) && value < 0) {
                     throw new DeveloperError('value must be positive.');
                 }
                 //>>includeEnd('debug');
@@ -161,6 +165,18 @@ define([
         },
 
         /**
+         * Gets the event triggered on flight completion.
+         * @memberof GeocoderViewModel.prototype
+         *
+         * @type {Event}
+         */
+        complete : {
+            get : function() {
+                return this._complete;
+            }
+        },
+
+        /**
          * Gets the scene to control.
          * @memberof GeocoderViewModel.prototype
          *
@@ -185,6 +201,23 @@ define([
         }
     });
 
+    function updateCamera(viewModel, position) {
+        if (viewModel._flightDuration === 0) {
+            viewModel._scene.camera.setView({position: position});
+            viewModel._complete.raiseEvent();
+        } else {
+            viewModel._scene.camera.flyTo({
+                destination : position,
+                complete: function() {
+                    viewModel._complete.raiseEvent();
+                },
+                duration : viewModel._flightDuration,
+                endTransform : Matrix4.IDENTITY,
+                convert : false
+            });
+        }
+    }
+
     function geocode(viewModel) {
         var query = viewModel.searchText;
 
@@ -202,12 +235,7 @@ define([
             var height = (splitQuery.length === 3) ? +splitQuery[2] : 300.0;
 
             if (!isNaN(longitude) && !isNaN(latitude) && !isNaN(height)) {
-                viewModel._scene.camera.flyTo({
-                    destination : Cartesian3.fromDegrees(longitude, latitude, height),
-                    duration : viewModel._flightDuration,
-                    endTransform : Matrix4.IDENTITY,
-                    convert : false
-                });
+                updateCamera(viewModel, Cartesian3.fromDegrees(longitude, latitude, height));
                 return;
             }
         }
@@ -256,12 +284,7 @@ define([
                 return;
             }
 
-            viewModel._scene.camera.flyTo({
-                destination : position,
-                duration : viewModel._flightDuration,
-                endTransform : Matrix4.IDENTITY,
-                convert : false
-            });
+            updateCamera(viewModel, position);
         }, function() {
             if (geocodeInProgress.cancel) {
                 return;

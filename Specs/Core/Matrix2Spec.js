@@ -367,6 +367,25 @@ defineSuite([
         expect(left).toEqual(expected);
     });
 
+    it('multiplyByScale works', function() {
+        var m = new Matrix2(2, 3, 6, 7);
+        var scale = new Cartesian2(2.0, 3.0);
+        var expected = Matrix2.multiply(m, Matrix2.fromScale(scale), new Matrix2());
+        var result = new Matrix2();
+        var returnedResult = Matrix2.multiplyByScale(m, scale, result);
+        expect(returnedResult).toBe(result);
+        expect(result).toEqual(expected);
+    });
+
+    it('multiplyByScale works with "this" result parameter', function() {
+        var m = new Matrix2(1, 2, 5, 6);
+        var scale = new Cartesian2(1.0, 2.0);
+        var expected = Matrix2.multiply(m, Matrix2.fromScale(scale), new Matrix2());
+        var returnedResult = Matrix2.multiplyByScale(m, scale, m);
+        expect(returnedResult).toBe(m);
+        expect(m).toEqual(expected);
+    });
+
     it('multiplyByVector works', function() {
         var left = new Matrix2(1, 2, 3, 4);
         var right = new Cartesian2(5, 6);
@@ -656,6 +675,19 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('multiplyByScale throws with no matrix parameter', function() {
+        expect(function() {
+            Matrix2.multiplyByScale(undefined, new Cartesian2());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyByScale throws with no scale parameter', function() {
+        var m = new Matrix2();
+        expect(function() {
+            Matrix2.multiplyByScale(m, undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('multiplyByVector throws with no matrix parameter', function() {
         var cartesian = new Cartesian2();
         expect(function() {
@@ -734,6 +766,12 @@ defineSuite([
     it('multiply throws without result parameter', function() {
         expect(function() {
             Matrix2.multiply(new Matrix2(), new Matrix2());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyByScale throws without result parameter', function() {
+        expect(function() {
+            Matrix2.multiplyByScale(new Matrix2(), new Cartesian2());
         }).toThrowDeveloperError();
     });
 

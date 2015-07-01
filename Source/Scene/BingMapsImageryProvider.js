@@ -59,6 +59,7 @@ define([
      * @param {String} [options.culture=''] The culture to use when requesting Bing Maps imagery. Not
      *        all cultures are supported. See {@link http://msdn.microsoft.com/en-us/library/hh441729.aspx}
      *        for information on the supported cultures.
+     * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
      *        is invalid and should be discarded.  If this value is not specified, a default
      *        {@link DiscardMissingTileImagePolicy} is used which requests
@@ -78,6 +79,8 @@ define([
      * @see SingleTileImageryProvider
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
+     * @see WebMapTileServiceImageryProvider
+     * @see UrlTemplateImageryProvider
      *
      * @see {@link http://msdn.microsoft.com/en-us/library/ff701713.aspx|Bing Maps REST Services}
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
@@ -124,7 +127,8 @@ define([
 
         this._tilingScheme = new WebMercatorTilingScheme({
             numberOfLevelZeroTilesX : 2,
-            numberOfLevelZeroTilesY : 2
+            numberOfLevelZeroTilesY : 2,
+            ellipsoid : options.ellipsoid
         });
 
         this._tileWidth = undefined;

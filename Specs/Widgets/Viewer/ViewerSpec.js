@@ -126,6 +126,13 @@ defineSuite([
         expect(viewer.isDestroyed()).toEqual(true);
     });
 
+    it('renders without errors', function() {
+        viewer = new Viewer(container);
+        spyOn(viewer.scene.renderError, 'raiseEvent');
+        viewer.render();
+        expect(viewer.scene.renderError.raiseEvent).not.toHaveBeenCalled();
+    });
+
     it('constructor works with container id string', function() {
         viewer = new Viewer('container');
         expect(viewer.container).toBe(container);
@@ -365,13 +372,6 @@ defineSuite([
         expect(contextAttributes.antialias).toEqual(webglOptions.antialias);
         expect(contextAttributes.premultipliedAlpha).toEqual(webglOptions.premultipliedAlpha);
         expect(contextAttributes.preserveDrawingBuffer).toEqual(webglOptions.preserveDrawingBuffer);
-    });
-
-    it('can enable Order Independent Translucency', function() {
-        viewer = new Viewer(container, {
-            orderIndependentTranslucency : true
-        });
-        expect(viewer.scene.orderIndependentTranslucency).toBe(true);
     });
 
     it('can disable Order Independent Translucency', function() {
@@ -772,6 +772,39 @@ defineSuite([
         viewer.destroy();
     });
 
+    it('selectedEntity sets InfoBox properties', function() {
+        var viewer = new Viewer(container);
+
+        var entity = new Entity();
+
+        var viewModel = viewer.infoBox.viewModel;
+        expect(viewModel.showInfo).toBe(false);
+
+        viewer.selectedEntity = entity;
+
+        viewer.clock.tick();
+        expect(viewModel.showInfo).toBe(true);
+        expect(viewModel.titleText).toEqual(entity.id);
+        expect(viewModel.description).toEqual('');
+
+        entity.name = 'Yes, this is name.';
+        entity.description = 'tubelcane';
+
+        viewer.clock.tick();
+        expect(viewModel.showInfo).toBe(true);
+        expect(viewModel.titleText).toEqual(entity.name);
+        expect(viewModel.description).toEqual(entity.description.getValue());
+
+        viewer.selectedEntity = undefined;
+
+        viewer.clock.tick();
+        expect(viewModel.showInfo).toBe(false);
+        expect(viewModel.titleText).toEqual('');
+        expect(viewModel.description).toEqual('');
+
+        viewer.destroy();
+    });
+
     it('home button resets tracked object', function() {
         viewer = new Viewer(container);
 
@@ -830,6 +863,27 @@ defineSuite([
                 expect(viewer.trackedEntity).toBeUndefined();
                 expect(viewer.scene.camera.transform).toEqual(Matrix4.IDENTITY);
             });
+        });
+    });
+
+    it('does not crash when tracking an object with a position property whose value is undefined.', function() {
+        viewer = new Viewer(container);
+
+        var entity = new Entity();
+        entity.position = new ConstantProperty(undefined);
+        entity.polyline = {
+            positions : [Cartesian3.fromDegrees(0, 0, 0), Cartesian3.fromDegrees(0, 0, 1)]
+        };
+
+        viewer.entities.add(entity);
+        viewer.trackedEntity = entity;
+
+        spyOn(viewer.scene.renderError, 'raiseEvent');
+        return pollToPromise(function() {
+            viewer.render();
+            return viewer.dataSourceDisplay.update(viewer.clock.currentTime);
+        }).then(function() {
+            expect(viewer.scene.renderError.raiseEvent).not.toHaveBeenCalled();
         });
     });
 

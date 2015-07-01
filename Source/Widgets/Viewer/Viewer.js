@@ -18,6 +18,7 @@ define([
         '../../DataSources/DataSourceDisplay',
         '../../DataSources/Entity',
         '../../DataSources/EntityView',
+        '../../DataSources/Property',
         '../../Scene/SceneMode',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when',
@@ -57,6 +58,7 @@ define([
         DataSourceDisplay,
         Entity,
         EntityView,
+        Property,
         SceneMode,
         knockout,
         when,
@@ -126,12 +128,10 @@ define([
         }
 
         // Imagery layer feature picking is asynchronous, so put up a message while loading.
-        var loadingMessage = new Entity('Loading...');
-        loadingMessage.description = {
-            getValue : function() {
-                return 'Loading feature information...';
-            }
-        };
+        var loadingMessage = new Entity({
+            id : 'Loading...',
+            description : 'Loading feature information...'
+        });
 
         when(imageryLayerFeaturePromise, function(features) {
             // Has this async pick been superseded by a later one?
@@ -147,12 +147,10 @@ define([
             // Select the first feature.
             var feature = features[0];
 
-            var entity = new Entity(feature.name);
-            entity.description = {
-                getValue : function() {
-                    return feature.description;
-                }
-            };
+            var entity = new Entity({
+                id : feature.name,
+                description : feature.description
+            });
 
             if (defined(feature.position)) {
                 var ecfPosition = viewer.scene.globe.ellipsoid.cartographicToCartesian(feature.position, cartesian3Scratch);
@@ -165,14 +163,6 @@ define([
             if (viewer.selectedEntity !== loadingMessage) {
                 return;
             }
-
-            var entity = new Entity('None');
-            entity.description = {
-                getValue : function() {
-                    return 'No features found.';
-                }
-            };
-
             viewer.selectedEntity = createNoFeaturesEntity();
         });
 
@@ -180,13 +170,10 @@ define([
     }
 
     function createNoFeaturesEntity() {
-        var entity = new Entity('None');
-        entity.description = {
-            getValue : function() {
-                return 'No features found.';
-            }
-        };
-        return entity;
+        return new Entity({
+            id : 'None',
+            description : 'No features found.'
+        });
     }
 
     /**
@@ -607,7 +594,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         function pickAndTrackObject(e) {
             var entity = pickEntity(that, e);
             if (defined(entity)) {
-                if (defined(entity.position)) {
+                //Only track the entity if it has a valid position at the current time.
+                if (Property.getValueOrUndefined(entity.position, that.clock.currentTime)) {
                     that.trackedEntity = entity;
                 } else {
                     that.zoomTo(entity);
@@ -1024,11 +1012,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                     this._selectedEntity = value;
                     var selectionIndicatorViewModel = defined(this._selectionIndicator) ? this._selectionIndicator.viewModel : undefined;
                     if (defined(value)) {
-                        var infoBoxViewModel = defined(this._infoBox) ? this._infoBox.viewModel : undefined;
-                        if (defined(infoBoxViewModel)) {
-                            infoBoxViewModel.titleText = defined(value.name) ? value.name : value.id;
-                        }
-
                         if (defined(selectionIndicatorViewModel)) {
                             selectionIndicatorViewModel.animateAppear();
                         }
@@ -1336,9 +1319,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             infoBoxViewModel.enableCamera = enableCamera;
             infoBoxViewModel.isCameraTracking = (this.trackedEntity === this.selectedEntity);
 
-            if (showSelection && defined(selectedEntity.description)) {
-                infoBoxViewModel.description = defaultValue(selectedEntity.description.getValue(time), '');
+            if (showSelection) {
+                infoBoxViewModel.titleText = defaultValue(selectedEntity.name, selectedEntity.id);
+                infoBoxViewModel.description = Property.getValueOrDefault(selectedEntity.description, time, '');
             } else {
+                infoBoxViewModel.titleText = '';
                 infoBoxViewModel.description = '';
             }
         }
@@ -1565,7 +1550,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
     function updateZoomTarget(viewer) {
         var entities = viewer._zoomTarget;
-        if (!defined(entities)) {
+        if (!defined(entities) || viewer.scene.mode === SceneMode.MORPHING) {
             return;
         }
 
@@ -1624,8 +1609,19 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             return;
         }
 
-        var scene = viewer.scene;
         var trackedEntity = viewer._trackedEntity;
+        var currentTime = viewer.clock.currentTime;
+
+        //Verify we have a current position at this time. This is only triggered if a position
+        //has become undefined after trackedEntity is set but before the boundingSphere has been
+        //computed. In this case, we will track the entity once it comes back into existence.
+        var currentPosition = Property.getValueOrUndefined(trackedEntity.position, currentTime);
+
+        if (!defined(currentPosition)) {
+            return;
+        }
+
+        var scene = viewer.scene;
 
         var state = viewer._dataSourceDisplay.getBoundingSphere(trackedEntity, false, boundingSphereScratch);
         if (state === BoundingSphereState.PENDING) {
@@ -1643,7 +1639,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         var bs = state !== BoundingSphereState.FAILED ? boundingSphereScratch : undefined;
         viewer._entityView = new EntityView(trackedEntity, scene, scene.mapProjection.ellipsoid, bs);
-        viewer._entityView.update(viewer.clock.currentTime);
+        viewer._entityView.update(currentTime);
         viewer._needTrackedEntityUpdate = false;
     }
 

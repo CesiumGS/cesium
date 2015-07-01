@@ -302,6 +302,7 @@ define([
 
         this._us = us;
         this._currentRenderState = rs;
+        this._currentPassState = ps;
         this._currentFramebuffer = undefined;
         this._maxFrameTextureUnitIndex = 0;
 
@@ -909,10 +910,10 @@ define([
         },
 
         /**
-         * The drawingBufferWidth of the underlying GL context.
+         * The drawingBufferHeight of the underlying GL context.
          * @memberof Context.prototype
          * @type {Number}
-         * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferWidth|drawingBufferWidth}
+         * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferHeight|drawingBufferHeight}
          */
         drawingBufferHeight : {
             get : function() {
@@ -921,10 +922,10 @@ define([
         },
 
         /**
-         * The drawingBufferHeight of the underlying GL context.
+         * The drawingBufferWidth of the underlying GL context.
          * @memberof Context.prototype
          * @type {Number}
-         * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferHeight|drawingBufferHeight}
+         * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferWidth|drawingBufferWidth}
          */
         drawingBufferWidth : {
             get : function() {
@@ -1703,12 +1704,11 @@ define([
     }
 
     function applyRenderState(context, renderState, passState) {
-        var previousState = context._currentRenderState;
-        if (previousState !== renderState) {
-            context._currentRenderState = renderState;
-            RenderState.partialApply(context._gl, previousState, renderState, passState);
-         }
-         // else same render state as before so state is already applied.
+        var previousRenderState = context._currentRenderState;
+        var previousPassState = context._currentPassState;
+        context._currentRenderState = renderState;
+        context._currentPassState = passState;
+        RenderState.partialApply(context._gl, previousRenderState, renderState, previousPassState, passState);
     }
 
     var scratchBackBufferArray;
@@ -1799,11 +1799,11 @@ define([
 
         bindFramebuffer(context, framebuffer);
 
+        applyRenderState(context, rs, passState);
+
         var sp = defaultValue(shaderProgram, drawCommand.shaderProgram);
         sp._bind();
         context._maxFrameTextureUnitIndex = Math.max(context._maxFrameTextureUnitIndex, sp.maximumTextureUnitIndex);
-
-        applyRenderState(context, rs, passState);
     }
 
     function continueDraw(context, drawCommand, shaderProgram) {
@@ -1834,22 +1834,19 @@ define([
         var sp = defaultValue(shaderProgram, drawCommand.shaderProgram);
         sp._setUniforms(drawCommand.uniformMap, context._us, context.validateShaderProgram);
 
+        va._bind();
         var indexBuffer = va.indexBuffer;
 
         if (defined(indexBuffer)) {
             offset = offset * indexBuffer.bytesPerIndex; // offset in vertices to offset in bytes
             count = defaultValue(count, indexBuffer.numberOfIndices);
-
-            va._bind();
             context._gl.drawElements(primitiveType, count, indexBuffer.indexDatatype, offset);
-            va._unBind();
         } else {
             count = defaultValue(count, va.numberOfVertices);
-
-            va._bind();
             context._gl.drawArrays(primitiveType, offset, count);
-            va._unBind();
         }
+
+        va._unBind();
     }
 
     Context.prototype.draw = function(drawCommand, passState, renderState, shaderProgram) {

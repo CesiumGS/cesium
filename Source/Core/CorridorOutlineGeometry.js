@@ -470,9 +470,6 @@ define([
         var extrude = (height !== extrudedHeight);
 
         var cleanPositions = PolylinePipeline.removeDuplicates(positions);
-        if (!defined(cleanPositions)) {
-            cleanPositions = positions;
-        }
 
         if (cleanPositions.length < 2) {
             return undefined;

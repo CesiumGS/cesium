@@ -136,7 +136,7 @@ defineSuite([
         var date = new Date('December 31, 2021 18:00:00 UTC');
         var julianDate = JulianDate.fromDate(date);
         expect(julianDate.dayNumber).toEqual(2459580);
-        expect(julianDate.secondsOfDay).toEqual(21635);
+        expect(julianDate.secondsOfDay).toEqual(21636);
     });
 
     it('Construct a date from a JavaScript Date (4)', function() {
@@ -706,7 +706,7 @@ defineSuite([
 
     it('toDate works on date later than all leap seconds', function() {
         var expectedDate = new Date('11/17/2039 12:00:00 AM UTC');
-        var date = JulianDate.toDate(new JulianDate(2466109, 43235.0, TimeStandard.TAI));
+        var date = JulianDate.toDate(new JulianDate(2466109, 43236.0, TimeStandard.TAI));
         expect(date).toEqual(expectedDate);
     });
 
@@ -1018,7 +1018,7 @@ defineSuite([
     });
 
     it('computeTaiMinusUtc works after all leap seconds', function() {
-        var date = new JulianDate(2556109, 43235.0, TimeStandard.TAI);
-        expect(JulianDate.computeTaiMinusUtc(date)).toEqual(35);
+        var date = new JulianDate(2556109, 43236.0, TimeStandard.TAI);
+        expect(JulianDate.computeTaiMinusUtc(date)).toEqual(36);
     });
 });

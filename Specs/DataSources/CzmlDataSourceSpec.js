@@ -226,41 +226,6 @@ defineSuite([
         expect(clock.multiplier).toEqual(JulianDate.secondsDifference(interval.stop, interval.start) / 120.0);
     });
 
-    it('processUrl loads expected data', function() {
-        var dataSource = new CzmlDataSource();
-        dataSource.processUrl(simpleUrl);
-        return pollToPromise(function() {
-            return dataSource.entities.values.length === 10;
-        });
-    });
-
-    it('processUrl loads data on top of existing', function() {
-        var dataSource = new CzmlDataSource();
-        dataSource.processUrl(simpleUrl);
-
-        return pollToPromise(function() {
-            return dataSource.entities.values.length === 10;
-        }).then(function() {
-            dataSource.processUrl(vehicleUrl);
-            return pollToPromise(function() {
-                return dataSource.entities.values.length > 10;
-            });
-        });
-    });
-
-    it('loadUrl replaces data', function() {
-        var dataSource = new CzmlDataSource();
-        dataSource.processUrl(simpleUrl);
-        return pollToPromise(function() {
-            return dataSource.entities.values.length === 10;
-        }).then(function() {
-            dataSource.loadUrl(vehicleUrl);
-            return pollToPromise(function() {
-                return dataSource.entities.values.length === 1;
-            });
-        });
-    });
-
     it('process loads expected data', function() {
         var dataSource = new CzmlDataSource();
         dataSource.process(simple, simpleUrl);
@@ -427,6 +392,7 @@ defineSuite([
             billboard : {
                 image : 'image.png',
                 scale : 1.0,
+                rotation : 1.3,
                 horizontalOrigin : 'CENTER',
                 verticalOrigin : 'CENTER',
                 color : {
@@ -450,6 +416,7 @@ defineSuite([
 
         expect(entity.billboard).toBeDefined();
         expect(entity.billboard.image.getValue(Iso8601.MINIMUM_VALUE)).toEqual(sourceUri + 'image.png');
+        expect(entity.billboard.rotation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(billboardPacket.billboard.rotation);
         expect(entity.billboard.scale.getValue(Iso8601.MINIMUM_VALUE)).toEqual(billboardPacket.billboard.scale);
         expect(entity.billboard.horizontalOrigin.getValue(Iso8601.MINIMUM_VALUE)).toEqual(HorizontalOrigin.CENTER);
         expect(entity.billboard.verticalOrigin.getValue(Iso8601.MINIMUM_VALUE)).toEqual(VerticalOrigin.CENTER);

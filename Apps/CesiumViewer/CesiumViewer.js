@@ -1,9 +1,12 @@
 /*global define*/
 define([
+        'Cesium/Core/Cartesian3',
         'Cesium/Core/defined',
         'Cesium/Core/formatError',
         'Cesium/Core/getFilenameFromUri',
+        'Cesium/Core/Math',
         'Cesium/Core/queryToObject',
+        'Cesium/Core/objectToQuery',
         'Cesium/DataSources/CzmlDataSource',
         'Cesium/DataSources/GeoJsonDataSource',
         'Cesium/DataSources/KmlDataSource',
@@ -13,10 +16,13 @@ define([
         'Cesium/Widgets/Viewer/viewerDragDropMixin',
         'domReady!'
     ], function(
+        Cartesian3,
         defined,
         formatError,
         getFilenameFromUri,
+        CesiumMath,
         queryToObject,
+        objectToQuery,
         CzmlDataSource,
         GeoJsonDataSource,
         KmlDataSource,
@@ -34,6 +40,9 @@ define([
      * 'stats'  : true,         // Enable the FPS performance display.
      * 'theme'  : 'lighter',    // Use the dark-text-on-light-background theme.
      * 'scene3DOnly' : false    // Enable 3D only mode
+     * 'view' : longitude,latitude,[height,heading,pitch,roll]
+     *    // Using degrees and meters
+     *    // [height,heading,pitch,roll] default is looking straight down, [300,0,-90,0]
      */
     var endUserOptions = queryToObject(window.location.search.substring(1));
 
@@ -86,6 +95,7 @@ define([
         context.throwOnWebGLError = true;
     }
 
+    var view = endUserOptions.view;
     var source = endUserOptions.source;
     if (defined(source)) {
         var loadPromise;
@@ -111,6 +121,8 @@ define([
                         var error = 'No entity with id "' + lookAt + '" exists in the provided data source.';
                         showLoadError(source, error);
                     }
+                } else if (!defined(view)) {
+                    viewer.flyTo(dataSource);
                 }
             }).otherwise(function(error) {
                 showLoadError(source, error);
@@ -131,6 +143,52 @@ define([
             var error = 'Unknown theme: ' + theme;
             viewer.cesiumWidget.showErrorPanel(error, '');
         }
+    }
+
+    if (defined(view)) {
+        var splitQuery = view.split(/[ ,]+/);
+        if (splitQuery.length > 1) {
+            var longitude = !isNaN(+splitQuery[0]) ? +splitQuery[0] : 0.0;
+            var latitude = !isNaN(+splitQuery[1]) ? +splitQuery[1] : 0.0;
+            var height = ((splitQuery.length > 2) && (!isNaN(+splitQuery[2]))) ? +splitQuery[2] : 300.0;
+            var heading = ((splitQuery.length > 3) && (!isNaN(+splitQuery[3]))) ? CesiumMath.toRadians(+splitQuery[3]) : undefined;
+            var pitch = ((splitQuery.length > 4) && (!isNaN(+splitQuery[4]))) ? CesiumMath.toRadians(+splitQuery[4]) : undefined;
+            var roll = ((splitQuery.length > 5) && (!isNaN(+splitQuery[5]))) ? CesiumMath.toRadians(+splitQuery[5]) : undefined;
+
+            viewer.camera.setView({
+                position: Cartesian3.fromDegrees(longitude, latitude, height),
+                heading: heading,
+                pitch: pitch,
+                roll: roll
+            });
+        }
+    }
+
+    function saveCamera() {
+        var position = camera.positionCartographic;
+        var hpr = '';
+        if (defined(camera.heading)) {
+            hpr = ',' + CesiumMath.toDegrees(camera.heading) + ',' + CesiumMath.toDegrees(camera.pitch) + ',' + CesiumMath.toDegrees(camera.roll);
+        }
+        endUserOptions.view = CesiumMath.toDegrees(position.longitude) + ',' + CesiumMath.toDegrees(position.latitude) + ',' + position.height + hpr;
+        history.replaceState(undefined, '', '?' + objectToQuery(endUserOptions));
+    }
+
+    var updateTimer;
+    if (endUserOptions.saveCamera !== 'false') {
+        var camera = viewer.camera;
+        camera.moveStart.addEventListener(function() {
+            if (!defined(updateTimer)) {
+                updateTimer = window.setInterval(saveCamera, 1000);
+            }
+        });
+        camera.moveEnd.addEventListener(function() {
+            if (defined(updateTimer)) {
+                window.clearInterval(updateTimer);
+                updateTimer = undefined;
+            }
+            saveCamera();
+        });
     }
 
     loadingIndicator.style.display = 'none';

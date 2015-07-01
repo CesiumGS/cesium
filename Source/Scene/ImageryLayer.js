@@ -395,12 +395,18 @@ define([
                 rectangle.north = rectangle.south = baseImageryRectangle.north;
             } else if (baseTerrainRectangle.north <= baseImageryRectangle.south) {
                 rectangle.north = rectangle.south = baseImageryRectangle.south;
+            } else {
+                rectangle.south = Math.max(baseTerrainRectangle.south, baseImageryRectangle.south);
+                rectangle.north = Math.min(baseTerrainRectangle.north, baseImageryRectangle.north);
             }
 
             if (baseTerrainRectangle.west >= baseImageryRectangle.east) {
                 rectangle.west = rectangle.east = baseImageryRectangle.east;
             } else if (baseTerrainRectangle.east <= baseImageryRectangle.west) {
                 rectangle.west = rectangle.east = baseImageryRectangle.west;
+            } else {
+                rectangle.west = Math.max(baseTerrainRectangle.west, baseImageryRectangle.west);
+                rectangle.east = Math.min(baseTerrainRectangle.east, baseImageryRectangle.east);
             }
         }
 
@@ -592,7 +598,8 @@ define([
                     imageryProvider.errorEvent,
                     message,
                     imagery.x, imagery.y, imagery.level,
-                    doRequest);
+                    doRequest,
+                    e);
         }
 
         function doRequest() {
@@ -879,7 +886,9 @@ define([
         // to the texture via the FBO, and calling generateMipmap later,
         // will result in the texture appearing blank.  I can't pretend to
         // understand exactly why this is.
-        outputTexture.generateMipmap(MipmapHint.NICEST);
+        if (CesiumMath.isPowerOfTwo(width) && CesiumMath.isPowerOfTwo(height)) {
+            outputTexture.generateMipmap(MipmapHint.NICEST);
+        }
 
         if (defined(reproject.framebuffer)) {
             reproject.framebuffer.destroy();

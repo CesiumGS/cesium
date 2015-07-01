@@ -149,7 +149,7 @@ define([
             xhr.responseType = responseType;
         }
 
-        xhr.onload = function(e) {
+        xhr.onload = function() {
             if (xhr.status === 200) {
                 if (defined(xhr.response)) {
                     deferred.resolve(xhr.response);

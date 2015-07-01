@@ -52,7 +52,7 @@ define([
 
         if (!defined(values)) {
             // Cache miss
-            var buffers = model._loadResources.buffers;
+            var loadResources = model._loadResources;
             var gltf = model.gltf;
             var bufferViews = gltf.bufferViews;
 
@@ -63,7 +63,8 @@ define([
             var count = accessor.count;
 
             // Convert typed array to Cesium types
-            var typedArray = getModelAccessor(accessor).createArrayBufferView(buffers[bufferView.buffer], bufferView.byteOffset + accessor.byteOffset, count);
+            var buffer = loadResources.getBuffer(bufferView);
+            var typedArray = getModelAccessor(accessor).createArrayBufferView(buffer.buffer, buffer.byteOffset + accessor.byteOffset, count);
             var i;
 
             if ((componentType === WebGLRenderingContext.FLOAT) && (type === 'SCALAR')) {
@@ -162,7 +163,7 @@ define([
         if (!defined(matrices)) {
             // Cache miss
 
-            var buffers = model._loadResources.buffers;
+            var loadResources = model._loadResources;
             var gltf = model.gltf;
             var bufferViews = gltf.bufferViews;
 
@@ -171,7 +172,8 @@ define([
             var componentType = accessor.componentType;
             var type = accessor.type;
             var count = accessor.count;
-            var typedArray = getModelAccessor(accessor).createArrayBufferView(buffers[bufferView.buffer], bufferView.byteOffset + accessor.byteOffset, count);
+            var buffer = loadResources.getBuffer(bufferView);
+            var typedArray = getModelAccessor(accessor).createArrayBufferView(buffer.buffer, buffer.byteOffset + accessor.byteOffset, count);
             matrices =  new Array(count);
 
             if ((componentType === WebGLRenderingContext.FLOAT) && (type === 'MAT4')) {

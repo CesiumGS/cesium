@@ -47,10 +47,13 @@ defineSuite([
         scene.primitives.removeAll();
     });
 
-    it('constructor sets values', function() {
+    it('can create and destroy', function() {
         var viewModel = new CesiumInspectorViewModel(scene, performanceContainer);
         expect(viewModel.scene).toBe(scene);
         expect(viewModel.performanceContainer).toBe(performanceContainer);
+        expect(viewModel.isDestroyed()).toEqual(false);
+        viewModel.destroy();
+        expect(viewModel.isDestroyed()).toEqual(true);
     });
 
     it('throws if scene is undefined', function() {
