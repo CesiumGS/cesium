@@ -318,8 +318,8 @@ define([
 
         var holes = [], surfaceBoundaryHandler, surfaceBoundary, coordinates;
         for(var i = 0; i < interior.length; i++) {
-        	surfaceBoundary = interior.firstElementChild;
-            surfaceBoundaryHandler = surfaceBoundaryTypes(surfaceBoundary.localName);
+        	surfaceBoundary = interior[i].firstElementChild;
+            surfaceBoundaryHandler = surfaceBoundaryTypes[surfaceBoundary.localName];
             holes.push(surfaceBoundaryHandler(surfaceBoundary, [], crsFunction));
         }
 
@@ -367,8 +367,8 @@ define([
     	}
     }
 
-    function processLinearRing(linaerRing, holes, crsFunction) {
-        var coordString = LinearRing.firstElementChild.textContent;
+    function processLinearRing(linearRing, holes, crsFunction) {
+        var coordString = linearRing.firstElementChild.textContent;
         var coordinates = processCoordinates(coordString, 2, crsFunction);
         var hierarchy = new PolygonHierarchy(coordinates, holes);
         return hierarchy;
@@ -391,7 +391,6 @@ define([
     function createPolygon(that, hierarchy, properties) {
         var polygon = new PolygonGraphics();
         polygon.outline = new ConstantProperty(true);
-        console.log(hierarchy);
         polygon.hierarchy = new ConstantProperty(hierarchy);
         var entity = createObject(that._entityCollection);
         entity.polygon = polygon;
