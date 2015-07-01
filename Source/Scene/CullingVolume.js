@@ -71,7 +71,7 @@ define([
      *                                 the parent (and therefore this) volume is completely inside plane[planeIndex]
      *                                 and that plane check can be skipped.
      * @returns {Number} A plane mask as described above (which can be applied to this boundingVolume's children).
-     * 
+     *
      * @private
      */
     CullingVolume.prototype.computeVisibilityWithPlaneMask = function(boundingVolume, parentPlaneMask) {
@@ -114,11 +114,11 @@ define([
     };
 
     /**
-     * For plane masks (as used in {@link CullingVolume.prototype.computeVisibilityWithPlaneMask}), this special value
+     * For plane masks (as used in {@link CullingVolume#computeVisibilityWithPlaneMask}), this special value
      * represents the case where the object bounding volume is entirely outside the culling volume.
      *
-     * @private
      * @type {Number}
+     * @private
      */
     CullingVolume.MASK_OUTSIDE = 0xffffffff;
 
@@ -126,8 +126,8 @@ define([
      * For plane masks (as used in {@link CullingVolume.prototype.computeVisibilityWithPlaneMask}), this value
      * represents the case where the object bounding volume is entirely inside the culling volume.
      *
-     * @private
      * @type {Number}
+     * @private
      */
     CullingVolume.MASK_INSIDE = 0x00000000;
 
@@ -135,8 +135,8 @@ define([
      * For plane masks (as used in {@link CullingVolume.prototype.computeVisibilityWithPlaneMask}), this value
      * represents the case where the object bounding volume (may) intersect all planes of the culling volume.
      *
-     * @private
      * @type {Number}
+     * @private
      */
     CullingVolume.MASK_INDETERMINATE = 0x7fffffff;
 

@@ -165,10 +165,13 @@ define([
         this.distanceToCamera = 0;
 
         /**
-         * @private
+         * The plane mask (see {@link CullingVolume#computeVisibilityWithPlaneMask}) of the parent.
+         * (Note: This initial value will not be used as it should be reset before every traversal.)
+         *
          * @type {Number}
+         * @private
          */
-        this.parentPlaneMask = undefined;
+        this.parentPlaneMask = 0;
 
         this._debugBox = undefined;
         this._debugcontentBox = undefined;

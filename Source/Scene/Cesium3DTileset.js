@@ -248,7 +248,7 @@ define([
         }
     });
 
-    function visibility(tile, cullingVolume, stats) {
+    function visible(tile, cullingVolume, stats) {
         ++stats.frustumTests;
         return tile.visibility(cullingVolume);
     }
@@ -318,10 +318,10 @@ define([
         when(tile.readyPromise).then(removeFunction).otherwise(removeFunction);
     }
 
-    function selectTile(selectedTiles, tile, frameState) {
+    function selectTile(selectedTiles, tile, fullyVisible, frameState) {
         // There may also be a tight box around just the tile's contents, e.g., for a city, we may be
         // zoomed into a neighborhood and can cull the skyscrapers in the root node.
-        if (tile.isReady() && (contentsVisible(tile, frameState.cullingVolume))) {
+        if (tile.isReady() && (fullyVisible || contentsVisible(tile, frameState.cullingVolume))) {
             selectedTiles.push(tile);
         }
     }
@@ -364,12 +364,13 @@ define([
             var t = stack.pop();
             ++stats.visited;
 
-            var planeMask = visibility(t, cullingVolume, stats);
+            var planeMask = visible(t, cullingVolume, stats);
             if (planeMask === CullingVolume.MASK_OUTSIDE) {
                 // Tile is completely outside of the view frustum; therefore
                 // so are all of its children.
                 continue;
             }
+            var fullyVisible = (planeMask === CullingVolume.MASK_INSIDE);
 
             // Tile is inside/intersects the view frustum.  How many pixels is its geometric error?
             var sse = getScreenSpaceError(t.geometricError, t, context, frameState);
@@ -383,7 +384,7 @@ define([
             if (t.refine === Cesium3DTileRefine.ADD) {
                 // With additive refinement, the tile is rendered
                 // regardless of if its SSE is sufficient.
-                selectTile(selectedTiles, t, frameState);
+                selectTile(selectedTiles, t, fullyVisible, frameState);
 
 // TODO: experiment with prefetching children
                 if (sse > maximumScreenSpaceError) {
@@ -410,7 +411,7 @@ define([
 
                             // Use parent's geometric error with child's box to see if we already meet the SSE
                             if (getScreenSpaceError(t.geometricError, child, context, frameState) > maximumScreenSpaceError) {
-                                if (child.isContentUnloaded() && (visibility(child, cullingVolume, stats) !== CullingVolume.MASK_OUTSIDE) && outOfCore) {
+                                if (child.isContentUnloaded() && (visible(child, cullingVolume, stats) !== CullingVolume.MASK_OUTSIDE) && outOfCore) {
                                     requestContent(tiles3D, child);
                                 } else {
                                     stack.push(child);
@@ -431,7 +432,7 @@ define([
                     //
                     // We also checked if the tile is a leaf (childrenLength === 0.0) for the potential case when the leaf
                     // node has a non-zero geometric error, e.g., because its contents is another 3D Tiles tree.
-                    selectTile(selectedTiles, t, frameState);
+                    selectTile(selectedTiles, t, fullyVisible, frameState);
                 } else {
                     // Tile does not meet SSE.
 
@@ -451,7 +452,7 @@ define([
 
                     if (!allChildrenLoaded) {
                         // Tile does not meet SSE.  Add its commands since it is the best we have and request its children.
-                        selectTile(selectedTiles, t, frameState);
+                        selectTile(selectedTiles, t, fullyVisible, frameState);
 
                         if (outOfCore) {
                             for (k = 0; (k < childrenLength) && requestScheduler.hasAvailableRequests(); ++k) {
