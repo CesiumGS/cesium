@@ -1965,6 +1965,16 @@ define([
             attributes.show = ShowGeometryInstanceAttribute.toValue(true, attributes.show);
         }
 
+        this._commandList.length = 0;
+        updatePrimitives(this);
+        createPotentiallyVisibleSet(this);
+
+        var passState = this._passState;
+        passState.framebuffer = undefined;
+        passState.blendingEnabled = undefined;
+        passState.scissorTest = undefined;
+        executeCommands(this, passState, defaultValue(this.backgroundColor, Color.BLACK));
+
         return result;
     };
 
