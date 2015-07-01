@@ -37,13 +37,13 @@ defineSuite([
 
     it('constructs with defaults', function() {
         var js = new JobScheduler();
-        expect(js.totalBudget).toEqual(16.68);
+        expect(js.totalBudget).toEqual(50.0);
 
         var budgets = js._budgets;
         expect(budgets.length).toEqual(JobType.NUMBER_OF_JOB_TYPES);
-        expect(budgets[JobType.TEXTURE].total).toEqual(8.0);
-        expect(budgets[JobType.PROGRAM].total).toEqual(2.0);
-        expect(budgets[JobType.BUFFER].total).toEqual(6.68);
+        expect(budgets[JobType.TEXTURE].total).toEqual(10.0);
+        expect(budgets[JobType.PROGRAM].total).toEqual(10.0);
+        expect(budgets[JobType.BUFFER].total).toEqual(30.0);
     });
 
     it('executes a job', function() {

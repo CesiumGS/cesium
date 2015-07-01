@@ -165,9 +165,12 @@ define([
         this.distanceToCamera = 0;
 
         /**
+         * The plane mask of the parent for use with {@link CullingVolume#computeVisibilityWithPlaneMask}).
+         *
+         * @type {Number}
          * @private
          */
-        this.parentFullyVisible = false;
+        this.parentPlaneMask = 0;
 
         this._debugBox = undefined;
         this._debugcontentBox = undefined;
@@ -225,7 +228,7 @@ define([
      * DOC_TBA
      */
     Cesium3DTile.prototype.visibility = function(cullingVolume) {
-        return cullingVolume.computeVisibility(this._orientedBoundingBox);
+        return cullingVolume.computeVisibilityWithPlaneMask(this._orientedBoundingBox, this.parentPlaneMask);
     };
 
     /**

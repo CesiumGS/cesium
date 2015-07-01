@@ -7,11 +7,11 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/Intersect',
         '../Core/loadJson',
         '../Core/Math',
         './Cesium3DTile',
         './Cesium3DTileRefine',
+        './CullingVolume',
         './SceneMode',
         '../ThirdParty/when'
     ], function(
@@ -22,11 +22,11 @@ define([
         destroyObject,
         DeveloperError,
         Event,
-        Intersect,
         loadJson,
         CesiumMath,
         Cesium3DTile,
         Cesium3DTileRefine,
+        CullingVolume,
         SceneMode,
         when) {
     "use strict";
@@ -86,7 +86,6 @@ define([
         this._statistics = {
             // Rendering stats
             visited : 0,
-            frustumTests : 0,
             numberOfCommands : 0,
             // Loading stats
             numberOfPendingRequests : 0,
@@ -94,7 +93,6 @@ define([
 
             lastSelected : -1,
             lastVisited : -1,
-            lastFrustumTests : -1,
             lastNumberOfCommands : -1,
             lastNumberOfPendingRequests : -1,
             lastNumberProcessing : -1
@@ -248,25 +246,6 @@ define([
         }
     });
 
-    function visible(tile, cullingVolume, stats) {
-        // Exploit temporal coherence: if a tile is completely in the view frustum
-        // then so are its children so they do not need to be culled.
-        if (tile.parentFullyVisible) {
-            return Intersect.INSIDE;
-        }
-
-        ++stats.frustumTests;
-        return tile.visibility(cullingVolume);
-    }
-
-    function contentsVisible(tile, cullingVolume) {
-        if (tile.parentFullyVisible) {
-            return true;
-        }
-
-        return tile.contentsVisibility(cullingVolume) !== Intersect.OUTSIDE;
-    }
-
     function getScreenSpaceError(geometricError, tile, context, frameState) {
         // TODO: screenSpaceError2D like QuadtreePrimitive.js
         if (geometricError === 0.0) {
@@ -331,7 +310,8 @@ define([
     function selectTile(selectedTiles, tile, fullyVisible, frameState) {
         // There may also be a tight box around just the tile's contents, e.g., for a city, we may be
         // zoomed into a neighborhood and can cull the skyscrapers in the root node.
-        if (tile.isReady() && (fullyVisible || contentsVisible(tile, frameState.cullingVolume))) {
+        if (tile.isReady() &&
+                (fullyVisible || (tile.contentsVisibility(frameState.cullingVolume) !== CullingVolume.MASK_OUTSIDE))) {
             selectedTiles.push(tile);
         }
     }
@@ -351,6 +331,7 @@ define([
 
         var root = tiles3D._root;
         root.distanceToCamera = root.distanceToTile(frameState);
+        root.parentPlaneMask = CullingVolume.MASK_INDETERMINATE;
 
         if (getScreenSpaceError(tiles3D._geometricError, root, context, frameState) <= maximumScreenSpaceError) {
             // The SSE of not rendering the tree is small enough that the tree does not need to be rendered
@@ -373,13 +354,13 @@ define([
             var t = stack.pop();
             ++stats.visited;
 
-            var visibility = visible(t, cullingVolume, stats);
-            var fullyVisible = (visibility === Intersect.INSIDE);
-            if (visibility === Intersect.OUTSIDE) {
+            var planeMask = t.visibility(cullingVolume);
+            if (planeMask === CullingVolume.MASK_OUTSIDE) {
                 // Tile is completely outside of the view frustum; therefore
                 // so are all of its children.
                 continue;
             }
+            var fullyVisible = (planeMask === CullingVolume.MASK_INSIDE);
 
             // Tile is inside/intersects the view frustum.  How many pixels is its geometric error?
             var sse = getScreenSpaceError(t.geometricError, t, context, frameState);
@@ -415,11 +396,12 @@ define([
                         // to replacement refinement where we need all children.
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
-                            child.parentFullyVisible = fullyVisible;
+                            // Store the plane mask so that the child can optimize based on its parent's returned mask
+                            child.parentPlaneMask = planeMask;
 
                             // Use parent's geometric error with child's box to see if we already meet the SSE
                             if (getScreenSpaceError(t.geometricError, child, context, frameState) > maximumScreenSpaceError) {
-                                if (child.isContentUnloaded() && (visible(child, cullingVolume, stats) !== Intersect.OUTSIDE) && outOfCore) {
+                                if (child.isContentUnloaded() && (child.visibility(cullingVolume) !== CullingVolume.MASK_OUTSIDE) && outOfCore) {
                                     requestContent(tiles3D, child);
                                 } else {
                                     stack.push(child);
@@ -475,7 +457,8 @@ define([
                         // Tile does not meet SEE and its children are loaded.  Refine to them in front-to-back order.
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
-                            child.parentFullyVisible = fullyVisible;
+                            // Store the plane mask so that the child can optimize based on its parent's returned mask
+                            child.parentPlaneMask = planeMask;
                             stack.push(child);
                         }
                     }
@@ -532,7 +515,6 @@ define([
     function clearStats(tiles3D) {
         var stats = tiles3D._statistics;
         stats.visited = 0;
-        stats.frustumTests = 0;
         stats.numberOfCommands = 0;
     }
 
@@ -541,14 +523,12 @@ define([
 
         if (tiles3D.debugShowStatistics && (
             stats.lastVisited !== stats.visited ||
-            stats.lastFrustumTests !== stats.frustumTests ||
             stats.lastNumberOfCommands !== stats.numberOfCommands ||
             stats.lastSelected !== tiles3D._selectedTiles.length ||
             stats.lastNumberOfPendingRequests !== stats.numberOfPendingRequests ||
             stats.lastNumberProcessing !== stats.numberProcessing)) {
 
             stats.lastVisited = stats.visited;
-            stats.lastFrustumTests = stats.frustumTests;
             stats.lastNumberOfCommands = stats.numberOfCommands;
             stats.lastSelected = tiles3D._selectedTiles.length;
             stats.lastNumberOfPendingRequests = stats.numberOfPendingRequests;
@@ -559,10 +539,6 @@ define([
             var s = isPick ? '[Pick ]: ' : '[Color]: ';
             s +=
                 'Visited: ' + stats.visited +
-                // Frustum tests do not include tests for child tile requests or culling the contents.
-                // This number can be less than the number of tiles visited since spatial coherence is
-                // exploited to avoid unnecessary checks.
-                ', Frustum Tests: ' + stats.frustumTests +
                 // Number of commands returned is likely to be higher than the number of tiles selected
                 // because of tiles that create multiple commands.
                 ', Selected: ' + tiles3D._selectedTiles.length +
