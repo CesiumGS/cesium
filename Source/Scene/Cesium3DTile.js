@@ -165,8 +165,7 @@ define([
         this.distanceToCamera = 0;
 
         /**
-         * The plane mask (see {@link CullingVolume#computeVisibilityWithPlaneMask}) of the parent.
-         * (Note: This initial value will not be used as it should be reset before every traversal.)
+         * The plane mask of the parent for use with {@link CullingVolume#computeVisibilityWithPlaneMask}).
          *
          * @type {Number}
          * @private
