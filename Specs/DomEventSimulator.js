@@ -1,10 +1,8 @@
 /*global define*/
 define([
-        'Core/defaultValue',
-        'Core/FeatureDetection'
+        'Core/defaultValue'
     ], function(
-        defaultValue,
-        FeatureDetection) {
+        defaultValue) {
     "use strict";
 
     function createMouseEvent(type, options) {
