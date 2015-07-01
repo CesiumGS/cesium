@@ -597,7 +597,7 @@ define([
          */
         pickPositionSupported : {
             get : function() {
-                return this._context.depthTexture;
+                return defined(this._context.depthTexture) && defined(this._globeDepth);
             }
         },
 
@@ -2068,7 +2068,10 @@ define([
 
         this._transitioner.destroy();
 
-        this._globeDepth.destroy();
+        if (defined(this._globeDepth)) {
+            this._globeDepth.destroy();
+        }
+
         if (defined(this._oit)) {
             this._oit.destroy();
         }
