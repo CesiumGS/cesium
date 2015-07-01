@@ -812,5 +812,34 @@ defineSuite([
                 });
             });
         });
+
+        it('picks using proxy if one is specified', function() {
+            var baseUrl = 'made/up/map/server';
+            var proxy = new DefaultProxy('/proxy/');
+            var layers = '0,1';
+
+            var provider = new ArcGisMapServerImageryProvider({
+                url : baseUrl,
+                usePreCachedTilesIfAvailable : false,
+                layers : layers,
+                proxy : proxy
+            });
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                var proxiedUri = new Uri(url);
+                var originalUriQuery = new Uri(decodeURIComponent(proxiedUri.query)).query;
+
+                // DefaultProxy simply puts the original request as the query string; duplicate it here expect match
+                expect(proxiedUri.toString()).toEqual(proxy.getURL(baseUrl + '/identify?' + originalUriQuery));
+
+                loadWithXhr.defaultLoad('Data/ArcGIS/identify-WebMercator.json', responseType, method, data, headers, deferred, overrideMimeType);
+            };
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5);
+            });
+        });
     });
 });

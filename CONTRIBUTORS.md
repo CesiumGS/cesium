@@ -36,6 +36,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Evax Software](https://github.com/evax)
 * [Aviture](http://aviture.us.com)
    * [Mike Macaulay](https://github.com/mmacaula)
+   * [Nathan Schulte](https://github.com/nmschulte-aviture)
 * [Inovaworks](http://www.inovaworks.com/)
    * [Sergio Flores](https://github.com/relfos)
 * [CubeWerx Inc.](http://www.cubewerx.com/)
