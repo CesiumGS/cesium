@@ -71,7 +71,8 @@ i-cubed Nationwide Prime, Getmapping, AeroGRID, IGN Spain, and IGP Portugal.  Ad
 contributed by the GIS User Community.\nhttp://www.esri.com',
             creationFunction : function() {
                 return new ArcGisMapServerImageryProvider({
-                    url : '//services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
+                    url : '//services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
+                    enablePickFeatures : false
                 });
             }
         }));
@@ -86,7 +87,8 @@ Chile, Colombia, and Venezuela; Ghana; and parts of southern Africa including Bo
 http://www.esri.com',
             creationFunction : function() {
                 return new ArcGisMapServerImageryProvider({
-                    url : '//services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
+                    url : '//services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer',
+                    enablePickFeatures : false
                 });
             }
         }));
@@ -100,7 +102,8 @@ for informational and educational purposes as well as a basemap by GIS professio
 mapping applications.\nhttp://www.esri.com',
             creationFunction : function() {
                 return new ArcGisMapServerImageryProvider({
-                    url : '//services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/'
+                    url : '//services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/',
+                    enablePickFeatures : false
                 });
             }
         }));
