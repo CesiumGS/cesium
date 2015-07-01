@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+### 1.12 - 2015-08-03
+
+* Breaking changes
+  *
+* Deprecated
+  *
+* Fixes Cesium.js failing to parse in IE 8 and 9. While Cesium doesn't work in IE versions less than 11, but this allows for more graceful error handling.
+
 ### 1.11 - 2015-07-01
 
 * Breaking changes
