@@ -8,6 +8,7 @@ Change Log
 * Deprecated
   *
 * Fixes Cesium.js failing to parse in IE 8 and 9. While Cesium doesn't work in IE versions less than 11, but this allows for more graceful error handling.
+* Fix calling `Scene.pickPosition` after calling `Scene.drillPick`. [#2813](https://github.com/AnalyticalGraphicsInc/cesium/issues/2813)
 
 ### 1.11 - 2015-07-01
 
