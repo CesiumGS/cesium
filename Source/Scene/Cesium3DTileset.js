@@ -86,7 +86,6 @@ define([
         this._statistics = {
             // Rendering stats
             visited : 0,
-            frustumTests : 0,
             numberOfCommands : 0,
             // Loading stats
             numberOfPendingRequests : 0,
@@ -94,7 +93,6 @@ define([
 
             lastSelected : -1,
             lastVisited : -1,
-            lastFrustumTests : -1,
             lastNumberOfCommands : -1,
             lastNumberOfPendingRequests : -1,
             lastNumberProcessing : -1
@@ -248,15 +246,6 @@ define([
         }
     });
 
-    function visible(tile, cullingVolume, stats) {
-        ++stats.frustumTests;
-        return tile.visibility(cullingVolume);
-    }
-
-    function contentsVisible(tile, cullingVolume) {
-        return tile.contentsVisibility(cullingVolume) !== CullingVolume.MASK_OUTSIDE;
-    }
-
     function getScreenSpaceError(geometricError, tile, context, frameState) {
         // TODO: screenSpaceError2D like QuadtreePrimitive.js
         if (geometricError === 0.0) {
@@ -321,7 +310,8 @@ define([
     function selectTile(selectedTiles, tile, fullyVisible, frameState) {
         // There may also be a tight box around just the tile's contents, e.g., for a city, we may be
         // zoomed into a neighborhood and can cull the skyscrapers in the root node.
-        if (tile.isReady() && (fullyVisible || contentsVisible(tile, frameState.cullingVolume))) {
+        if (tile.isReady() &&
+                (fullyVisible || (tile.contentsVisibility(frameState.cullingVolume) !== CullingVolume.MASK_OUTSIDE))) {
             selectedTiles.push(tile);
         }
     }
@@ -364,7 +354,7 @@ define([
             var t = stack.pop();
             ++stats.visited;
 
-            var planeMask = visible(t, cullingVolume, stats);
+            var planeMask = t.visibility(cullingVolume);
             if (planeMask === CullingVolume.MASK_OUTSIDE) {
                 // Tile is completely outside of the view frustum; therefore
                 // so are all of its children.
@@ -411,7 +401,7 @@ define([
 
                             // Use parent's geometric error with child's box to see if we already meet the SSE
                             if (getScreenSpaceError(t.geometricError, child, context, frameState) > maximumScreenSpaceError) {
-                                if (child.isContentUnloaded() && (visible(child, cullingVolume, stats) !== CullingVolume.MASK_OUTSIDE) && outOfCore) {
+                                if (child.isContentUnloaded() && (child.visibility(cullingVolume) !== CullingVolume.MASK_OUTSIDE) && outOfCore) {
                                     requestContent(tiles3D, child);
                                 } else {
                                     stack.push(child);
@@ -525,7 +515,6 @@ define([
     function clearStats(tiles3D) {
         var stats = tiles3D._statistics;
         stats.visited = 0;
-        stats.frustumTests = 0;
         stats.numberOfCommands = 0;
     }
 
@@ -534,14 +523,12 @@ define([
 
         if (tiles3D.debugShowStatistics && (
             stats.lastVisited !== stats.visited ||
-            stats.lastFrustumTests !== stats.frustumTests ||
             stats.lastNumberOfCommands !== stats.numberOfCommands ||
             stats.lastSelected !== tiles3D._selectedTiles.length ||
             stats.lastNumberOfPendingRequests !== stats.numberOfPendingRequests ||
             stats.lastNumberProcessing !== stats.numberProcessing)) {
 
             stats.lastVisited = stats.visited;
-            stats.lastFrustumTests = stats.frustumTests;
             stats.lastNumberOfCommands = stats.numberOfCommands;
             stats.lastSelected = tiles3D._selectedTiles.length;
             stats.lastNumberOfPendingRequests = stats.numberOfPendingRequests;
@@ -552,10 +539,6 @@ define([
             var s = isPick ? '[Pick ]: ' : '[Color]: ';
             s +=
                 'Visited: ' + stats.visited +
-                // Frustum tests do not include tests for child tile requests or culling the contents.
-                // This number can be less than the number of tiles visited since spatial coherence is
-                // exploited to avoid unnecessary checks.
-                ', Frustum Tests: ' + stats.frustumTests +
                 // Number of commands returned is likely to be higher than the number of tiles selected
                 // because of tiles that create multiple commands.
                 ', Selected: ' + tiles3D._selectedTiles.length +
