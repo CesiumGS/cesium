@@ -81,3 +81,26 @@
     vertical-align: middle;
     z-index: 0; /* Workaround for rounded raster image corners in Chrome */
 }
+
+.cesium-performanceDisplay-defaultContainer {
+    position: absolute;
+    top: 50px;
+    right: 10px;
+    text-align: right;
+}
+
+.cesium-performanceDisplay {
+    background-color: rgba(40, 40, 40, 0.7);
+    padding: 7px;
+    border-radius: 5px;
+    border: 1px solid #444;
+    font: bold 12px sans-serif;
+}
+
+.cesium-performanceDisplay-fps {
+    color: #e52;
+}
+
+.cesium-performanceDisplay-ms {
+    color: #de3;
+}

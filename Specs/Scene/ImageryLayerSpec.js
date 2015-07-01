@@ -267,6 +267,57 @@ defineSuite([
             });
         });
 
+        it('does not get confused when base layer imagery overlaps in one direction but not the other', function() {
+            // This is a pretty specific test targeted at https://github.com/AnalyticalGraphicsInc/cesium/issues/2815
+            // It arranges for tileImageryBoundsScratch to be a rectangle that is invalid in the WebMercator projection.
+            // Then, it triggers issue #2815 where that stale data is used in a later call.  Prior to the fix this
+            // triggers an exception (use of an undefined reference).
+
+            var wholeWorldProvider = new SingleTileImageryProvider({
+                url : 'Data/Images/Blue.png'
+            });
+
+            var provider = new TileMapServiceImageryProvider({
+                url : 'Data/TMS/SmallArea'
+            });
+
+            var layers = new ImageryLayerCollection();
+            var wholeWorldLayer = layers.addImageryProvider(wholeWorldProvider);
+            var terrainProvider = new EllipsoidTerrainProvider();
+
+            return pollToPromise(function() {
+                return wholeWorldProvider.ready && provider.ready && terrainProvider.ready;
+            }).then(function() {
+                var tiles = QuadtreeTile.createLevelZeroTiles(terrainProvider.tilingScheme);
+                tiles[0].data = new GlobeSurfaceTile();
+                tiles[1].data = new GlobeSurfaceTile();
+
+                wholeWorldLayer._createTileImagerySkeletons(tiles[0], terrainProvider);
+                wholeWorldLayer._createTileImagerySkeletons(tiles[1], terrainProvider);
+
+                layers.removeAll();
+                var layer = layers.addImageryProvider(provider);
+
+                // Use separate tiles for the small area provider.
+                tiles = QuadtreeTile.createLevelZeroTiles(terrainProvider.tilingScheme);
+                tiles[0].data = new GlobeSurfaceTile();
+                tiles[1].data = new GlobeSurfaceTile();
+
+                // The stale data was used in this call prior to the fix.
+                layer._createTileImagerySkeletons(tiles[1], terrainProvider);
+
+                // Same assertions as above as in 'handles a base layer that does not cover the entire globe'
+                // as a sanity check.  Really we're just testing that the call above doesn't throw.
+                expect(tiles[1].data.imagery.length).toBe(2);
+                expect(tiles[1].data.imagery[0].textureCoordinateRectangle.x).toBe(0.0);
+                expect(tiles[1].data.imagery[0].textureCoordinateRectangle.w).toBe(1.0);
+                expect(tiles[1].data.imagery[0].textureCoordinateRectangle.z).toBe(1.0);
+                expect(tiles[1].data.imagery[1].textureCoordinateRectangle.x).toBe(0.0);
+                expect(tiles[1].data.imagery[1].textureCoordinateRectangle.y).toBe(0.0);
+                expect(tiles[1].data.imagery[1].textureCoordinateRectangle.z).toBe(1.0);
+            });
+        });
+
         it('handles a non-base layer that does not cover the entire globe', function() {
             var baseProvider = new SingleTileImageryProvider({
                 url : 'Data/Images/Green4x4.png'

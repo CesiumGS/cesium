@@ -63,7 +63,6 @@ defineSuite([
     afterEach(function() {
         scene.backgroundColor = new Color(0.0, 0.0, 0.0, 0.0);
         scene.debugCommandFilter = undefined;
-        scene.fxaaOrderIndependentTranslucency = true;
         scene.fxaa = false;
         scene.primitives.removeAll();
     });
@@ -356,7 +355,6 @@ defineSuite([
 
         scene.camera.viewRectangle(rectangle);
 
-        scene.fxaaOrderIndependentTranslucency = false;
         scene.fxaa = false;
 
         var pixels = scene.renderForSpecs();

@@ -2,13 +2,17 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/Cartesian3',
         '../Core/DeveloperError',
-        '../Core/Intersect'
+        '../Core/Intersect',
+        '../Core/Plane'
     ], function(
         defaultValue,
         defined,
+        Cartesian3,
         DeveloperError,
-        Intersect) {
+        Intersect,
+        Plane) {
     "use strict";
 
     /**
@@ -30,6 +34,7 @@ define([
         this.planes = defaultValue(planes, []);
     };
 
+    var scratchPlane = new Plane(new Cartesian3(), 0.0);
     /**
      * Determines whether a bounding volume intersects the culling volume.
      *
@@ -46,7 +51,7 @@ define([
         var planes = this.planes;
         var intersecting = false;
         for (var k = 0, len = planes.length; k < len; ++k) {
-            var result = boundingVolume.intersect(planes[k]);
+            var result = boundingVolume.intersectPlane(Plane.fromCartesian4(planes[k], scratchPlane));
             if (result === Intersect.OUTSIDE) {
                 return Intersect.OUTSIDE;
             } else if (result === Intersect.INTERSECTING) {

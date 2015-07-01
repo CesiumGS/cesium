@@ -12,6 +12,7 @@ define([
         './GeometryAttribute',
         './Math',
         './pointInsideTriangle',
+        './PolylinePipeline',
         './PrimitiveType',
         './Queue',
         './WindingOrder'
@@ -28,6 +29,7 @@ define([
         GeometryAttribute,
         CesiumMath,
         pointInsideTriangle,
+        PolylinePipeline,
         PrimitiveType,
         Queue,
         WindingOrder) {
@@ -718,17 +720,10 @@ define([
         }
         //>>includeEnd('debug');
 
-        var length = positions.length;
-        var cleanedPositions = [];
-        for ( var i0 = length - 1, i1 = 0; i1 < length; i0 = i1++) {
-            var v0 = positions[i0];
-            var v1 = positions[i1];
-
-            if (!Cartesian3.equals(v0, v1)) {
-                cleanedPositions.push(v1); // Shallow copy!
-            }
+        var cleanedPositions = PolylinePipeline.removeDuplicates(positions);
+        if (Cartesian3.equals(cleanedPositions[0], cleanedPositions[cleanedPositions.length - 1])) {
+            return cleanedPositions.slice(1);
         }
-
         return cleanedPositions;
     };
 
