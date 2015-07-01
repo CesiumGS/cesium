@@ -89,7 +89,7 @@ defineSuite([
             };
 
             realTerrainProvider = new CesiumTerrainProvider({
-                url : 'http://cesiumweb.cloudapp.net/smallterrain'
+                url : '//s3.amazonaws.com/cesiumjs/smallTerrain'
             });
         });
 
