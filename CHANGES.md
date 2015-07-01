@@ -13,6 +13,7 @@ Change Log
 * Make `ArcGisMapServerImageryprovider` issue `pickFeatures` requests via a proxy if one is specified.
 * Fixed incorrect texture coordinates for `WallGeometry` [#2872](https://github.com/AnalyticalGraphicsInc/cesium/issues/2872)
 * Added `maximumHeight` option to `Viewer.flyTo`. [#2868](https://github.com/AnalyticalGraphicsInc/cesium/issues/2868)
+* Added ArcGIS token-based authentication support to `ArcGisMapServerImageryProvider`
 
 ### 1.11 - 2015-07-01
 
