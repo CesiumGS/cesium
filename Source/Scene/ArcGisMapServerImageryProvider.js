@@ -56,6 +56,7 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {String} options.url The URL of the ArcGIS MapServer service.
+     * @param {String} [options.token] The ArcGIS token used to authenticate with the ArcGIS MapServer service.
      * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
      *        is invalid and should be discarded.  If this value is not specified, a default
      *        {@link DiscardMissingTileImagePolicy} is used for tiled map servers, and a
@@ -117,6 +118,7 @@ define([
         //>>includeEnd('debug');
 
         this._url = options.url;
+        this._token = options.token;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._proxy = options.proxy;
 
@@ -205,10 +207,16 @@ define([
         }
 
         function requestMetadata() {
+            var parameters = {
+                f: 'json'
+            };
+
+            if (defined(that._token)) {
+                parameters.token = that._token;
+            }
+
             var metadata = jsonp(that._url, {
-                parameters : {
-                    f : 'json'
-                },
+                parameters : parameters,
                 proxy : that._proxy
             });
             when(metadata, metadataSuccess, metadataFailure);
@@ -244,6 +252,14 @@ define([
             }
         }
 
+        var token = imageryProvider._token;
+        if (defined(token)) {
+            if (url.indexOf('?') === -1) {
+                url += '?';
+            }
+            url += 'token=' + token;
+        }
+
         var proxy = imageryProvider._proxy;
         if (defined(proxy)) {
             url = proxy.getURL(url);
@@ -262,6 +278,18 @@ define([
         url : {
             get : function() {
                 return this._url;
+            }
+        },
+
+        /**
+         * Gets the ArcGIS token used to authenticate with the ArcGis MapServer service.
+         * @memberof ArcGisMapServerImageryProvider.prototype
+         * @type {String}
+         * @readonly
+         */
+        token : {
+            get : function() {
+                return this._token;
             }
         },
 
@@ -604,6 +632,10 @@ define([
         url += '&layers=visible';
         if (defined(this._layers)) {
             url += ':' + this._layers;
+        }
+
+        if (defined(this._token)) {
+            url += '&token=' + this._token;
         }
 
         if (defined(this._proxy)) {
