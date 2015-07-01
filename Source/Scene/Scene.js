@@ -1342,7 +1342,8 @@ define([
         clear.execute(context, passState);
 
         // Update globe depth rendering based on the current context and clear the globe depth framebuffer.
-        if (defined(scene._globeDepth)) {
+        var useGlobeDepthFramebuffer = !picking && defined(scene._globeDepth);
+        if (useGlobeDepthFramebuffer) {
             scene._globeDepth.update(context);
             scene._globeDepth.clear(context, passState, clearColor);
         }
@@ -1376,7 +1377,7 @@ define([
 
         if (sunVisible && scene.sunBloom) {
             passState.framebuffer = scene._sunPostProcess.update(context);
-        } else if (defined(scene._globeDepth)) {
+        } else if (useGlobeDepthFramebuffer) {
             passState.framebuffer = scene._globeDepth.framebuffer;
         } else if (useFXAA) {
             passState.framebuffer = scene._fxaa.getColorFramebuffer();
@@ -1404,9 +1405,9 @@ define([
             sunCommand.execute(context, passState);
             if (scene.sunBloom) {
                 var framebuffer;
-                if (defined(scene._globeDepth)) {
+                if (useGlobeDepthFramebuffer) {
                     framebuffer = scene._globeDepth.framebuffer;
-                } else if (scene.fxaa) {
+                } else if (useFXAA) {
                     framebuffer = scene._fxaa.getColorFramebuffer();
                 } else {
                     framebuffer = originalFramebuffer;
@@ -1450,7 +1451,7 @@ define([
             var globeDepth = scene.debugShowGlobeDepth ? getDebugGlobeDepth(scene, index) : scene._globeDepth;
 
             var fb;
-            if (scene.debugShowGlobeDepth && defined(globeDepth)) {
+            if (scene.debugShowGlobeDepth && defined(globeDepth) && useGlobeDepthFramebuffer) {
                 fb = passState.framebuffer;
                 passState.framebuffer = globeDepth.framebuffer;
             }
@@ -1464,12 +1465,12 @@ define([
                 executeCommand(commands[j], scene, context, passState);
             }
 
-            if (defined(globeDepth) && (scene.copyGlobeDepth || scene.debugShowGlobeDepth)) {
+            if (defined(globeDepth) && useGlobeDepthFramebuffer && (scene.copyGlobeDepth || scene.debugShowGlobeDepth)) {
                 globeDepth.update(context);
                 globeDepth.executeCopyDepth(context, passState);
             }
 
-            if (scene.debugShowGlobeDepth && defined(globeDepth)) {
+            if (scene.debugShowGlobeDepth && defined(globeDepth) && useGlobeDepthFramebuffer) {
                 passState.framebuffer = fb;
             }
 
@@ -1495,7 +1496,7 @@ define([
             commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
             executeTranslucentCommands(scene, executeCommand, passState, commands);
 
-            if (defined(globeDepth)) {
+            if (defined(globeDepth) && useGlobeDepthFramebuffer) {
                 // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
                 var pickDepth = getPickDepth(scene, index);
                 pickDepth.update(context, globeDepth.framebuffer.depthStencilTexture);
@@ -1503,12 +1504,12 @@ define([
             }
         }
 
-        if (scene.debugShowGlobeDepth && defined(scene._globeDepth)) {
+        if (scene.debugShowGlobeDepth && useGlobeDepthFramebuffer) {
             var gd = getDebugGlobeDepth(scene, scene.debugShowDepthFrustum - 1);
             gd.executeDebugGlobeDepth(context, passState);
         }
 
-        if (scene.debugShowPickDepth && defined(scene._globeDepth)) {
+        if (scene.debugShowPickDepth && useGlobeDepthFramebuffer) {
             var pd = getPickDepth(scene, scene.debugShowDepthFrustum - 1);
             pd.executeDebugPickDepth(context, passState);
         }
@@ -1523,7 +1524,7 @@ define([
             scene._fxaa.execute(context, passState);
         }
 
-        if (!useOIT && !useFXAA && defined(scene._globeDepth)) {
+        if (!useOIT && !useFXAA && useGlobeDepthFramebuffer) {
             passState.framebuffer = originalFramebuffer;
             scene._globeDepth.executeCopyColor(context, passState);
         }
