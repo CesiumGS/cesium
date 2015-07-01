@@ -72,7 +72,7 @@ define([
      * @param {Boolean} [options.usePreCachedTilesIfAvailable=true] If true, the server's pre-cached
      *        tiles are used if they are available.  If false, any pre-cached tiles are ignored and the
      *        'export' service is used.
-     * @param {String} [layers] A comma-separated list of the layers to show, or undefined if all layers should be shown.
+     * @param {String} [options.layers] A comma-separated list of the layers to show, or undefined if all layers should be shown.
      * @param {Boolean} [options.enablePickFeatures=true] If true, {@link ArcGisMapServerImageryProvider#pickFeatures} will invoke
      *        the Identify service on the MapServer and return the features included in the response.  If false,
      *        {@link ArcGisMapServerImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
