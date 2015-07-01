@@ -10,12 +10,7 @@ require({
   },
   paths: {
     jquery: '//code.jquery.com/jquery-1.11.2.min',
-    bootstrap: '../../ThirdParty/bootstrap-3.3.2/js/bootstrap.min',
-    pubsub: 'js/vendor/pubsub',
-    react: '//fb.me/react-with-addons-0.13.3',
-    JSXTransformer: '//fb.me/JSXTransformer-0.13.3',
-    text: 'js/text',
-    jsx: 'js/jsx'
+    bootstrap: '../../ThirdParty/bootstrap-3.3.2/js/bootstrap.min'
   },
   // jsx: {
   // fileExtension: '.jsx',
@@ -33,11 +28,8 @@ require({
     location: '../../ThirdParty/codemirror-4.6'
   }]
 }, [
-  'react',
-  'jsx!js/SandcastleApp',
   'jquery',
   'Source/Cesium',
-  'pubsub',
   'CodeMirror/lib/codemirror',
   'CodeMirror/addon/hint/show-hint',
   'CodeMirror/addon/hint/javascript-hint',
@@ -47,26 +39,74 @@ require({
   'CodeMirror/mode/htmlmixed/htmlmixed',
   'bootstrap'
 ], function(
-  React,
-  SandcastleApp,
   $,
   Cesium,
-  PubSub,
   CodeMirror) {
   "use strict";
 
   //In order for CodeMirror auto-complete to work, Cesium needs to be defined as a global.
   window.Cesium = Cesium;
-
-  React.render(
-    React.createElement(SandcastleApp, null),
-    document.getElementById('appLayout')
-  );
-
   $('#loading').addClass('hidden');
 
-  CodeMirror.commands.runCesium = function(cm) {
-    PubSub.publish('RELOAD FRAME', '');
-  }
+  var jsEditor = CodeMirror.fromTextArea($('#jsEditor').get(0), {
+    mode: 'javascript',
+    gutters: ['hintGutter', 'errorGutter', 'searchGutter', 'highlightGutter'],
+    lineNumbers: true,
+    matchBrackets: true,
+    indentUnit: 4,
+    extraKeys: {
+      'Ctrl-Space': 'autocomplete',
+      'F8': 'runCesium',
+      'Tab': 'indentMore',
+      'Shift-Tab': 'indentLess'
+    }
+  });
+
+  var htmlEditor = CodeMirror.fromTextArea($('#htmlEditor').get(0), {
+    mode: 'text/html',
+    lineNumbers: true,
+    matchBrackets: true,
+    indentUnit: 4,
+    extraKeys: {
+      'Ctrl-Space': 'autocomplete',
+      'F8': 'runCesium',
+      'Tab': 'indentMore',
+      'Shift-Tab': 'indentLess'
+    }
+  });
+
+  var cssEditor = CodeMirror.fromTextArea($('#cssEditor').get(0), {
+    mode: 'text/css',
+    lineNumbers: true,
+    matchBrackets: true,
+    indentUnit: 4,
+    extraKeys: {
+      'Ctrl-Space': 'autocomplete',
+      'F8': 'runCesium',
+      'Tab': 'indentMore',
+      'Shift-Tab': 'indentLess'
+    }
+  });
+
+  $('#codeContainerTabs a[data-toggle="tab"]').on('shown.bs.tab', function(e){
+      if($(e.target).attr("href") === "#htmlContainer")
+      {
+          htmlEditor.refresh();
+          htmlEditor.focus();
+      }
+      else if($(e.target).attr("href") === "#cssContainer")
+      {
+          cssEditor.refresh();
+          cssEditor.focus();
+      }
+      else
+      {
+        jsEditor.refresh();
+        jsEditor.focus();
+      }
+  });
+  // CodeMirror.commands.runCesium = function(cm) {
+  //   PubSub.publish('RELOAD FRAME', '');
+  // }
 
 });

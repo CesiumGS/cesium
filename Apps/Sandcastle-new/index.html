@@ -24,7 +24,137 @@
     Please <a href="http://browsehappy.com/">upgrade your browser</a> to use Cesium Sandcastle.</p>
 <![endif]-->
 <div id="loading"><span>Loading...</span></div>
-<div id="appLayout"></div>
+<div id="appLayout">
+    <nav class="navbar navbar-default" id="toolbar">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#toolbar-extend">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="http://cesiumjs.org/" target="_blank"><img src="./img/Cesium_Logo_Color_Overlay.png" style="width: 118px"
+          /></a>
+        </div>
+
+
+        <div class="collapse navbar-collapse" id="toolbar-extend">
+          <ul class="nav navbar-nav">
+              <li id="buttonNew"><a href="#">New</a></li>
+              <li class="hidden-xs disabled" id="buttonRun"><a href="#">Run (F8)</a></li>
+              <li class="hidden-xs" id="buttonSuggest"><a href="#">Suggest (Ctrl-Space)</a></li>
+              <li class="hidden-xs" id="buttonNewWindow"><a href="#">Open in New Window</a></li>
+              <li id="buttonCesium" class="visible-xs-block"><a href="#" >Preview</a></li>
+              <li id="buttonJSCode" class="visible-xs-block"><a href="#">View JS Code</a></li>
+              <li id="buttonHTMLCode" class="visible-xs-block"><a href="#">View HTML Code</a></li>
+              <li id="buttonCSSCode" class="visible-xs-block"><a href="#">View CSS Code</a></li>
+              <li id="buttonConsole" class="visible-xs-block"><a href="#">Console</a></li>
+              <li class="dropdown" id="buttonShare">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Share <span class="caret"></span></a>
+                <ul class="dropdown-menu" role="menu">
+                  <li><a href="#" data-toggle="modal" data-target="#saveModal">Save as HTML</a></li>
+                </ul>
+              </li>
+              <li id="buttonGallery"><a href="gallery.html">Gallery</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <div id="bodyContainer" class="container-fluid">
+      <div id="bodyRow" class="hidden-xs row">
+        <div id="codeColumn" class="hidden-xs col-sm-5">
+          <div role="tabpanel">
+            <ul class="nav nav-tabs hidden-xs" id="codeContainerTabs" role="tablist">
+              <li role="presentation" class="active"><a href="#jsContainer" aria-controls="jsContainer" role="tab" data-toggle="tab">Javascript code</a></li>
+              <li role="presentation"><a href="#htmlContainer" aria-controls="htmlContainer" role="tab" data-toggle="tab">HTML</a></li>
+              <li role="presentation"><a href="#cssContainer" aria-controls="cssContainer" role="tab" data-toggle="tab">CSS</a></li>
+            </ul>
+            <div class="tab-content">
+                <div role="tabpanel" class="tab-pane active codeContainer" id="jsContainer">
+                    <div class="codeEditorContainer">
+                        <div class="visible-xs-block alert alert-info" role="alert"><p class="text-center"><strong>Read-only on mobile devices</strong></p></div>
+                        <textarea id="jsEditor">// Select a demo form the gallery to load.
+                        </textarea>
+                    </div>
+                </div>
+                <div role="tabpanel" class="tab-pane codeContainer" id="htmlContainer">
+                    <div class="codeEditorContainer">
+                        <div class="visible-xs-block alert alert-info" role="alert"><p class="text-center"><strong>Read-only on mobile devices</strong></p></div>
+                        <textarea id="htmlEditor"><!-- Select a demo from the gallery to load -->
+                        </textarea>
+                    </div>
+                </div>
+                <div role="tabpanel" class="tab-pane codeContainer" id="cssContainer">
+                    <div class="codeEditorContainer">
+                      <div class="visible-xs-block alert alert-info" role="alert"><p class="text-center"><strong>Read-only on mobile devices</strong></p></div>
+                        <textarea id="cssEditor">/* Select a demo form the gallery to load. */
+                        </textarea>
+                    </div>
+                </div>
+            </div>
+          </div>
+        </div>
+        <div id="cesiumColumn" class="col-sm-7 col-xs-12">
+          <div role="tabpanel">
+            <ul class="nav nav-tabs hidden-xs" id="cesiumTabs" role="tablist">
+                <li role="presentation" class="active"><a href="#bucketPane" aria-controls="bucketPane" role="tab" data-toggle="tab">Cesium</a></li>
+            </ul>
+            <div id="cesiumFrame" class="tab-content">
+                <div role="tabpanel" class="tab-pane active" id="bucketPane">
+                    <iframe frameBorder="0" class="fullFrame" id="bucketFrame"></iframe>
+                </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="consoleRow" class="hidden-xs row">
+        <div class="col-md-4 col-xs-12">
+          <div class="panel panel-default">
+            <div class="panel-heading hidden-xs"><a data-toggle="collapse" href="#consoleLog" aria-expanded="false" aria-controls="consoleLog">Console</a></div>
+            <div id="consoleLog" class="panel-collapse collapse" aria-labelledby="consoleLog">
+              <div class="panel-body">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="top:0px; left:-999px" class="tooltip bottom" id="docPopup" role="tooltip">
+      <div class="tooltip-arrow"></div>
+      <div class="tooltip-inner" id="docPopupMessage">
+      </div>
+    </div>
+    <div class="modal fade" id="saveModal" tabIndex="-1" role="dialog" aria-labelledby="saveModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="saveModalLabel">Save as HTML</h4>
+          </div>
+          <div class="modal-body">
+            <p>You must save the file to this folder: 
+            <code>Apps/Sandcastle/*.html</code>
+            </p>
+            <form id="save_form">
+              <div class="form-group" has-error>
+                <label class="control-label" for="titleText">Title: *</label>
+                <input type="text" class="form-control" id="titleText" placeholder="Title" />
+              </div>
+              <div class="form-group">
+                <label for="descriptionText">Description:</label>
+                <input type="text" class="form-control" id="descriptionText" placeholder="Description" />
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="button" form="save_form" class="btn btn-primary">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
 
 <footer class="footer container-fluid">
     <p class="text-muted">
