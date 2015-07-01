@@ -374,13 +374,6 @@ defineSuite([
         expect(contextAttributes.preserveDrawingBuffer).toEqual(webglOptions.preserveDrawingBuffer);
     });
 
-    it('can enable Order Independent Translucency', function() {
-        viewer = new Viewer(container, {
-            orderIndependentTranslucency : true
-        });
-        expect(viewer.scene.orderIndependentTranslucency).toBe(true);
-    });
-
     it('can disable Order Independent Translucency', function() {
         viewer = new Viewer(container, {
             orderIndependentTranslucency : false
