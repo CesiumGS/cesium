@@ -1,7 +1,6 @@
 (function (){
     "use strict";
     /*global console,Sandcastle,window*/
-    var PubSub = window.parent.PubSub;
     function defined(value) {
         return value !== undefined;
     }
@@ -9,13 +8,11 @@
     console.originalLog = console.log;
     console.log = function(d1) {
         // console.originalLog.apply(console, arguments);
-        PubSub.publish('CONSOLE LOG', defined(d1)?d1.toString():'undefined');
     };
 
     console.originalWarn = console.warn;
     console.warn = function(d1) {
         // console.originalWarn.apply(console, arguments);
-        PubSub.publish('CONSOLE WARN', defined(d1)?d1.toString():'undefined');
     };
 
     console.originalError = console.error;
@@ -24,7 +21,6 @@
         var msg = {};
         if (!defined(d1)) {
             msg.data = 'undefined';
-            PubSub.publish('CONSOLE ERROR', msg);
             return;
         }
 
@@ -58,10 +54,8 @@
         if (lineNumber >= 0) {
             msg.data = errorMsg;
             msg.lineNum = lineNumber;
-           PubSub.publish('CONSOLE ERROR', msg);
         } else {
             msg.data = errorMsg;
-            PubSub.publish('CONSOLE ERROR', msg);
         }
     };
 
@@ -89,12 +83,10 @@
             msg.data = errorMsg;
             msg.url = url;
             msg.lineNum = lineNumber;
-            PubSub.publish('CONSOLE ERROR', msg);
         } else {
             var msg = {};
             msg.data = errorMsg;
             msg.url = url;
-            PubSub.publish('CONSOLE ERROR', msg);
         }
         // console.originalError.apply(console, [errorMsg]);
         return false;
