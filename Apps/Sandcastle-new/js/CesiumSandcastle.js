@@ -60,6 +60,7 @@ require({
   var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
   var hintTimer;
   var runDisabled = false;
+  var isMobile = $(window).width() < 768? "nocursor": false;
 
   var jsEditor = CodeMirror.fromTextArea($('#jsEditor').get(0), {
     mode: 'javascript',
@@ -72,7 +73,8 @@ require({
       'F8': 'runCesium',
       'Tab': 'indentMore',
       'Shift-Tab': 'indentLess'
-    }
+    },
+    readOnly: isMobile
   });
 
   jsEditor.on('change', scheduleHint);
@@ -87,7 +89,8 @@ require({
       'F8': 'runCesium',
       'Tab': 'indentMore',
       'Shift-Tab': 'indentLess'
-    }
+    },
+    readOnly: isMobile
   });
 
   var cssEditor = CodeMirror.fromTextArea($('#cssEditor').get(0), {
@@ -100,7 +103,8 @@ require({
       'F8': 'runCesium',
       'Tab': 'indentMore',
       'Shift-Tab': 'indentLess'
-    }
+    },
+    readOnly: isMobile
   });
 
   $('#codeContainerTabs a[data-toggle="tab"]').on('shown.bs.tab', function(e){
@@ -275,13 +279,16 @@ require({
           + '</style>' + '\n'
           + htmlEditor.getValue() + '\n'
           + '<script type="text/javascript">' + '\n'
-          + getScriptFromEditor(isFirefox, jsEditor.getValue()) + '\n'
+          + getScriptFromEditor(jsEditor.getValue(), isFirefox) + '\n'
           + '</script></body></html>';
   }
 
   // The Knockout viewmodel
   function SandcastleViewModel(){
     this.newDemo = function(){
+      // For mobile views
+      $(".navbar-collapse").collapse('hide');
+      this.showPreview();
       // Fetch the hello world demo
       demoName = 'Hello World';
       runDisabled = false;
@@ -289,6 +296,7 @@ require({
     };
 
     this.runDemo = function(){
+      $(".navbar-collapse").collapse('hide');
       // Reload the cesium frame with the new code only if run button is not disabled
       if(!($('#buttonRun').hasClass('disabled')))
       {
@@ -317,7 +325,71 @@ require({
       var htmlBlobURL = URL.createObjectURL(htmlBlob);
       window.open(htmlBlobURL, '_blank');
       window.focus();
-    }
+    };
+
+    this.exportHTML = function(){
+      var title = $('#titleText').val();
+      var desc = $('#descriptionText').val();
+      var html = getDemoHTML(title,desc);
+      var link = document.createElement('a');
+      link.setAttribute('href', 'data:text/html;charset=utf-8,' + encodeURIComponent(html));
+      link.setAttribute('download', title + '.html');
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      if(document.createEvent){
+        var event = document.createEvent('MouseEvents');
+        event.initEvent('click', true, true);
+        link.dispatchEvent(event);
+      }
+      else {
+        link.click();
+      }
+    };
+
+    this.showPreview = function(){
+      $(".navbar-collapse").collapse('hide');
+      $('#bodyRow').removeClass('hidden-xs');
+      $('#codeColumn').addClass('hidden-xs');
+      $('#cesiumColumn').removeClass('hidden-xs');
+      $('#consoleRow').addClass('hidden-xs');
+    };
+
+    this.showJSCode = function(){
+      $(".navbar-collapse").collapse('hide');
+      $('#bodyRow').removeClass('hidden-xs');
+      $('#codeColumn').removeClass('hidden-xs');
+      $('#cesiumColumn').addClass('hidden-xs');
+      $('#consoleRow').addClass('hidden-xs');
+      $('#codeContainerTabs a[href="#jsContainer"]').tab('show');
+      // Since the js editor is active by default, it does not show up on mobile devices when clicked for the first time. Force it
+      jsEditor.focus();
+      jsEditor.refresh();
+    };
+
+    this.showHTMLCode = function(){
+      $(".navbar-collapse").collapse('hide');
+      $('#bodyRow').removeClass('hidden-xs');
+      $('#codeColumn').removeClass('hidden-xs');
+      $('#cesiumColumn').addClass('hidden-xs');
+      $('#consoleRow').addClass('hidden-xs');
+      $('#codeContainerTabs a[href="#htmlContainer"]').tab('show');
+    };
+
+    this.showCSSCode = function(){
+      $(".navbar-collapse").collapse('hide');
+      $('#bodyRow').removeClass('hidden-xs');
+      $('#codeColumn').removeClass('hidden-xs');
+      $('#cesiumColumn').addClass('hidden-xs');
+      $('#consoleRow').addClass('hidden-xs');
+      $('#codeContainerTabs a[href="#cssContainer"]').tab('show');
+    };
+
+    this.showConsole = function(){
+      console.log('show console');
+      $(".navbar-collapse").collapse('hide');
+      $('#bodyRow').addClass('hidden-xs');
+      $('#consoleRow').removeClass('hidden-xs');
+    };
   }
 
 

@@ -45,11 +45,11 @@
               <li class="hidden-xs disabled" id="buttonRun"><a href="#" data-bind="click: runDemo">Run (F8)</a></li>
               <li class="hidden-xs" id="buttonSuggest"><a href="#" data-bind="click:runSuggest">Suggest (Ctrl-Space)</a></li>
               <li class="hidden-xs" id="buttonNewWindow"><a href="#" data-bind="click:newWindow">Open in New Window</a></li>
-              <li id="buttonCesium" class="visible-xs-block"><a href="#" >Preview</a></li>
-              <li id="buttonJSCode" class="visible-xs-block"><a href="#">View JS Code</a></li>
-              <li id="buttonHTMLCode" class="visible-xs-block"><a href="#">View HTML Code</a></li>
-              <li id="buttonCSSCode" class="visible-xs-block"><a href="#">View CSS Code</a></li>
-              <li id="buttonConsole" class="visible-xs-block"><a href="#">Console</a></li>
+              <li id="buttonCesium" class="visible-xs-block"><a href="#" data-bind="click: showPreview">Preview</a></li>
+              <li id="buttonJSCode" class="visible-xs-block"><a href="#" data-bind="click: showJSCode">View JS Code</a></li>
+              <li id="buttonHTMLCode" class="visible-xs-block"><a href="#" data-bind="click: showHTMLCode">View HTML Code</a></li>
+              <li id="buttonCSSCode" class="visible-xs-block"><a href="#" data-bind="click: showCSSCode">View CSS Code</a></li>
+              <li id="buttonConsole" class="visible-xs-block"><a href="#" data-bind="click: showConsole">Console</a></li>
               <li class="dropdown" id="buttonShare">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Share <span class="caret"></span></a>
                 <ul class="dropdown-menu" role="menu">
@@ -62,7 +62,7 @@
       </div>
     </nav>
     <div id="bodyContainer" class="container-fluid">
-      <div id="bodyRow" class="hidden-xs row">
+      <div id="bodyRow" class="row">
         <div id="codeColumn" class="hidden-xs col-sm-5">
           <div role="tabpanel">
             <ul class="nav nav-tabs hidden-xs" id="codeContainerTabs" role="tablist">
@@ -149,7 +149,7 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            <button type="button" form="save_form" class="btn btn-primary">Save</button>
+            <button type="button" form="save_form" class="btn btn-primary" data-bind="click: exportHTML">Save</button>
           </div>
         </div>
       </div>
