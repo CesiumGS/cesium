@@ -99,11 +99,19 @@
           <div role="tabpanel">
             <ul class="nav nav-tabs hidden-xs" id="cesiumTabs" role="tablist">
                 <li role="presentation" class="active"><a href="#bucketPane" aria-controls="bucketPane" role="tab" data-toggle="tab">Cesium</a></li>
+                <!-- ko foreach: docTabs -->
+                    <li role="presentation" class="docTabs"><a aria-controls="" role="tab" data-toggle="tab" data-bind="attr:{ href: '#' + $data + 'Pane', 'aria-controls': $data + 'Pane'}"><span data-bind="text: $data"></span><span class="close" data-bind="click: $root.closeTab">x</span></a></li>
+                <!-- /ko -->
             </ul>
             <div id="cesiumFrame" class="tab-content">
                 <div role="tabpanel" class="tab-pane active" id="bucketPane">
                     <iframe frameBorder="0" class="fullFrame" id="bucketFrame"></iframe>
                 </div>
+            <!-- ko foreach: docContainers -->
+                <div role="tabpanel" class="tab-pane" data-bind="attr:{id: title + 'Pane'}">
+                    <iframe frameBorder="0" class="fullFrame" data-bind="attr:{src: link}"></iframe>
+                </div>
+            <!-- /ko -->
             </div>
           </div>
         </div>

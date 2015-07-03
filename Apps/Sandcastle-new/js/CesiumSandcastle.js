@@ -59,8 +59,23 @@ require({
   var cesiumFrame = $('#bucketFrame');
   var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
   var hintTimer;
+  var docTimer;
   var runDisabled = false;
   var isMobile = $(window).width() < 768? "nocursor": false;
+  var docTypes;
+  var docTabs = ko.observableArray();
+  var docContainers = ko.observableArray();
+
+  // Fetch the documentation keywords
+  $.ajax({
+    'url': '../../Build/Documentation/types.txt',
+    'dataType': 'json',
+    'fail': function(error){
+      console.log("No docs found");
+    }
+  }).done(function(value){
+    docTypes = value;
+  });
 
   var jsEditor = CodeMirror.fromTextArea($('#jsEditor').get(0), {
     mode: 'javascript',
@@ -78,6 +93,7 @@ require({
   });
 
   jsEditor.on('change', scheduleHint);
+  jsEditor.on('cursorActivity', onCursorActivity);
 
   var htmlEditor = CodeMirror.fromTextArea($('#htmlEditor').get(0), {
     mode: 'text/html',
@@ -176,6 +192,58 @@ require({
 
   function clearRun(){
     $('#buttonRun').addClass('disabled');
+  }
+
+  function openDocTab(title, link){
+    // Bootstrap doesn't play nice with periods in tab IDs.
+    var escapeTitle = title.replace('.','_');
+    console.log('opening doc tab');
+    var data = {};
+    data.title = escapeTitle;
+    data.link = link;
+    if(docTabs.indexOf(escapeTitle) == -1)
+    {
+      // Add the doc tab only if it does not already exist
+      docTabs.push(escapeTitle);
+      docContainers.push(data);
+    }
+    $('#cesiumTabs a[href="#'+escapeTitle+'Pane"]').tab('show');
+  }
+  function showDocPopup(){
+    var selectedText = jsEditor.getSelection();
+    var lowerText = selectedText.toLowerCase();
+    var docNode = $('#docPopup');
+    var docMessage = $('#docPopupMessage');
+    var onDocClick = function(){
+      openDocTab(this.textContent, this.href);
+      return false;
+    }
+
+    docTimer = undefined;
+    if(lowerText && lowerText in docTypes && typeof docTypes[lowerText].push === 'function'){
+      docMessage.text('');
+      for(var i = 0, len = docTypes[lowerText].length; i<len; ++i){
+        var member = docTypes[lowerText][i];
+        var ele = document.createElement('a');
+        ele.target = '_blank';
+        ele.textContent = member.replace('.html', '').replace('module-', '').replace('#', '.');
+        ele.href = '../../Build/Documentation/' + member;
+        ele.onclick = onDocClick;
+        docMessage.append(ele);
+      }
+      jsEditor.addWidget(jsEditor.getCursor(true), docNode.get(0));
+      docNode.css('top', (parseInt(docNode.css('top'), 10) - 5) + 'px');
+      $('#docPopup').tooltip('show');
+    }
+  }
+
+  function onCursorActivity(){
+    $('#docPopup').css('left', '-999px');
+    if(docTimer !== undefined){
+      window.clearTimeout(docTimer);
+    }
+
+    docTimer = window.setTimeout(showDocPopup, 500);
   }
 
   function requestDemo(file){
@@ -346,6 +414,23 @@ require({
       }
     };
 
+    this.docTabs = docTabs;
+    this.docContainers = docContainers;
+
+    this.closeTab = function(tab){
+      docTabs.remove(tab);
+      for(var i = docContainers().length-1; i >= 0; i--)
+      {
+        if(docContainers()[i].title === tab)
+        {
+          break;
+        }
+      }
+      docContainers.remove(docContainers()[i]);
+      // Make cesium tab active
+      $('#cesiumTabs a[href="#bucketPane"]').tab('show');
+    }
+
     this.showPreview = function(){
       $(".navbar-collapse").collapse('hide');
       $('#bodyRow').removeClass('hidden-xs');
@@ -385,7 +470,6 @@ require({
     };
 
     this.showConsole = function(){
-      console.log('show console');
       $(".navbar-collapse").collapse('hide');
       $('#bodyRow').addClass('hidden-xs');
       $('#consoleRow').removeClass('hidden-xs');

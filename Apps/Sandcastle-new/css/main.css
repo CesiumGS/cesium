@@ -98,7 +98,12 @@ ul + div.tab-content {
 
 #cesiumTabs .close{
   font-size: 14px;
-  margin-left: 10px;
+  margin-left: 5px;
+  opacity: 0.6;
+}
+
+.nav>.docTabs>a{
+  padding-right: 8px;
 }
 
 #cesiumFrame iframe {
