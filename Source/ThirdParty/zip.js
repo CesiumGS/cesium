@@ -27,7 +27,12 @@
  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **/
 
-define(['../Core/buildModuleUrl'], function(buildModuleUrl) {
+define([
+        '../Core/buildModuleUrl',
+        '../Core/defineProperties'
+    ], function(
+        buildModuleUrl,
+        defineProperties) {
     var tmp = {};
 
 (function(obj) {
@@ -803,14 +808,16 @@ define(['../Core/buildModuleUrl'], function(buildModuleUrl) {
 
 	var workerScriptsPath;
 
-	Object.defineProperty(obj.zip, 'workerScriptsPath', {
-		get : function() {
-			if (typeof workerScriptsPath === 'undefined') {
-				workerScriptsPath = buildModuleUrl('ThirdParty/Workers/');
-			}
-			return workerScriptsPath;
-		}
-	});
+	defineProperties(obj.zip, {
+        'workerScriptsPath' : {
+            get : function() {
+                if (typeof workerScriptsPath === 'undefined') {
+                    workerScriptsPath = buildModuleUrl('ThirdParty/Workers/');
+                }
+                return workerScriptsPath;
+            }
+        }
+    });
 
 })(tmp);
 
