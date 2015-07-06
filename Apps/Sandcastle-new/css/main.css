@@ -116,11 +116,11 @@ ul + div.tab-content {
   height: 100%; }
 
 .CodeMirror pre.errorLine {
-  background: #F2DEDE;
+  background: rgba(220,167,167,0.2);
 }
 
 .CodeMirror pre.hintLine {
-    background: #FCF8E3;
+  background-color: rgba(245,231,158,0.2);
 }
 
 .errorMarker .glyphicon-exclamation-sign{

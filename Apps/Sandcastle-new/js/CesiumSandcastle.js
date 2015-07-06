@@ -65,6 +65,8 @@ require({
   var docTypes;
   var docTabs = ko.observableArray();
   var docContainers = ko.observableArray();
+  var errorLines = [];
+  var highlightLines = [];
 
   // Fetch the documentation keywords
   $.ajax({
@@ -170,11 +172,65 @@ require({
     demoName = "Hello World";
   }
 
+  function scriptLineToEditorLine(line){
+    // editor lines are zero-indexed, plus 3 lines of boilerplate
+    return line - 4;
+  }
+
+  function makeLineLabel(msg, className){
+    var element = document.createElement('abbr');
+    element.className = className;
+    switch(className){
+      case 'hintMarker':
+        element.innerHTML = '<span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span>'
+        break;
+      case 'errorMarker':
+        element.innerHTML = '<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>';
+        break;
+      default:
+        element.innerHTML = '&#9654;';
+    }
+    element.title = msg;
+    return element;
+  }
+  
+  function clearErrorsAddHints(){
+    var line;
+    var i;
+    var len;
+    hintTimer = undefined;
+    jsEditor.clearGutter('hintGutter');
+    jsEditor.clearGutter('highlightGutter');
+    jsEditor.clearGutter('errorGutter');
+    jsEditor.clearGutter('searchGutter');
+    while(errorLines.length > 0){
+      line = errorLines.pop();
+      jsEditor.removeLineClass(line, 'text');
+    }
+    while(highlightLines.length > 0){
+      line = highlightLines.pop();
+      jsEditor.removeLineClass(line, 'text');
+    }
+    var code = jsEditor.getValue();
+    var options = JSON.parse(JSON.stringify(sandcastleJsHintOptions));
+    if (!JSHINT(getScriptFromEditor(false), options)) {
+        var hints = JSHINT.errors;
+        for (i = 0, len = hints.length; i < len; ++i) {
+            var hint = hints[i];
+            if (hint !== null && defined(hint.reason) && hint.line > 0) {
+                line = jsEditor.setGutterMarker(scriptLineToEditorLine(hint.line), 'hintGutter', makeLineLabel(hint.reason, 'hintMarker'));
+                jsEditor.addLineClass(line, 'text', 'hintLine');
+                errorLines.push(line);
+            }
+        }
+    }
+  }
+
   function scheduleHint(){
     if(defined(hintTimer)){
       window.clearTimeout(hintTimer);
     }
-    // hintTimer = setTimeout(clearErrorsAddHints, 500);
+    hintTimer = setTimeout(clearErrorsAddHints, 500);
     highlightRun();
   }
 
@@ -256,13 +312,13 @@ require({
     });
   }
 
-  function getScriptFromEditor(jsCode, addExtra)
+  function getScriptFromEditor(addExtra)
   {
     return 'function startup(Cesium) {\n' +
      '    "use strict";\n' +
      '//Sandcastle_Begin\n' +
      (addExtra ? '\n' : '') +
-     jsCode + '\n' + 
+     jsEditor.getValue() + '\n' + 
      '//Sandcastle_End\n' +
      '    Sandcastle.finishedLoading();\n' +
      '}\n' +
@@ -291,7 +347,7 @@ require({
         var scriptElement = frameDoc.createElement('script');
         scriptElement.setAttribute('id', 'sandcastleCode');
 
-        scriptElement.textContent = getScriptFromEditor(jsEditor.getValue(),isFirefox);
+        scriptElement.textContent = getScriptFromEditor(isFirefox);
         frameDoc.body.appendChild(scriptElement);
       }
       else
@@ -347,7 +403,7 @@ require({
           + '</style>' + '\n'
           + htmlEditor.getValue() + '\n'
           + '<script type="text/javascript">' + '\n'
-          + getScriptFromEditor(jsEditor.getValue(), isFirefox) + '\n'
+          + getScriptFromEditor(isFirefox) + '\n'
           + '</script></body></html>';
   }
 
