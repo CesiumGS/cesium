@@ -67,6 +67,7 @@ require({
   var docContainers = ko.observableArray();
   var errorLines = [];
   var highlightLines = [];
+  var consoleMessages = ko.observableArray();
 
   // Fetch the documentation keywords
   $.ajax({
@@ -147,6 +148,7 @@ require({
   });
 
   CodeMirror.commands.runCesium = function(cm) {
+    consoleMessages.removeAll();
     loadCesiumFrame();
   }
   
@@ -193,7 +195,7 @@ require({
     element.title = msg;
     return element;
   }
-  
+
   function clearErrorsAddHints(){
     var line;
     var i;
@@ -232,6 +234,29 @@ require({
     }
     hintTimer = setTimeout(clearErrorsAddHints, 500);
     highlightRun();
+  }
+
+  function scrollToLine(lineNumber) {
+    if (defined(lineNumber)) {
+      jsEditor.setCursor(lineNumber);
+      // set selection twice in order to force the editor to scroll
+      // to this location if the cursor is already there
+      jsEditor.setSelection({
+          line : lineNumber - 1,
+          ch : 0
+      }, {
+          line : lineNumber - 1,
+          ch : 0
+      });
+      jsEditor.focus();
+      jsEditor.setSelection({
+          line : lineNumber,
+          ch : 0
+      }, {
+          line : lineNumber,
+          ch : 0
+      });
+    }
   }
 
   function highlightRun(){
@@ -376,6 +401,7 @@ require({
       jsEditor.setValue(value);
       jsEditor.clearHistory()
     });
+    consoleMessages.removeAll();
     // Load the iframe with demo code
     loadCesiumFrame();
   }
@@ -407,6 +433,58 @@ require({
           + '</script></body></html>';
   }
 
+  function appendConsole(className, message){
+    var msg = {};
+    switch(className){
+      case 'consoleLog':
+        msg.msgClass='';
+        msg.msg = message;
+        break;
+      case 'consoleError':
+        msg.msgClass="text-danger";
+        msg.msg = message;
+        break;
+      case 'consoleWarn':
+        msg.msgClass="text-warning";
+        msg.msg = message;
+        break;
+    }
+    consoleMessages.push(msg);
+  }
+
+  window.addEventListener('message', function(e) {
+    var line;
+    if (defined(e.data.log)) {
+      // Console log messages from the iframe display in Sandcastle.
+      appendConsole('consoleLog', e.data.log, false);
+    } else if (defined(e.data.error)) {
+      // Console error messages from the iframe display in Sandcastle
+      var errorMsg = e.data.error;
+      var lineNumber = e.data.lineNumber;
+      if (defined(lineNumber)) {
+          errorMsg += ' (on line ';
+
+          if (e.data.url) {
+              errorMsg += lineNumber + ' of ' + e.data.url + ')';
+          } else {
+              lineNumber = scriptLineToEditorLine(lineNumber);
+              errorMsg += (lineNumber + 1) + ')';
+              line = jsEditor.setGutterMarker(lineNumber, 'errorGutter', makeLineLabel(e.data.error, 'errorMarker'));
+              jsEditor.addLineClass(line, 'text', 'errorLine');
+              errorLines.push(line);
+              scrollToLine(lineNumber);
+          }
+      }
+      appendConsole('consoleError', errorMsg, true);
+    } else if (defined(e.data.warn)) {
+      // Console warning messages from the iframe display in Sandcastle.
+      appendConsole('consoleWarn', e.data.warn, true);
+    } else if (defined(e.data.highlight)) {
+      // Hovering objects in the embedded Cesium window.
+      highlightLine(e.data.highlight);
+    }
+  }, true);
+
   // The Knockout viewmodel
   function SandcastleViewModel(){
     this.newDemo = function(){
@@ -424,6 +502,7 @@ require({
       // Reload the cesium frame with the new code only if run button is not disabled
       if(!($('#buttonRun').hasClass('disabled')))
       {
+        consoleMessages.removeAll();
         loadCesiumFrame();
       }
     };
@@ -472,6 +551,8 @@ require({
 
     this.docTabs = docTabs;
     this.docContainers = docContainers;
+
+    this.consoleMessages = consoleMessages;
 
     this.closeTab = function(tab){
       docTabs.remove(tab);

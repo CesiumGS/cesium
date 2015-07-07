@@ -119,9 +119,10 @@
       <div id="consoleRow" class="hidden-xs row">
         <div class="col-md-4 col-xs-12">
           <div class="panel panel-default">
-            <div class="panel-heading hidden-xs"><a data-toggle="collapse" href="#consoleLog" aria-expanded="false" aria-controls="consoleLog">Console</a></div>
+            <div class="panel-heading hidden-xs"><a data-toggle="collapse" href="#consoleLog" aria-expanded="false" aria-controls="consoleLog">Console (<span data-bind="text: consoleMessages().length"></span>)</a></div>
             <div id="consoleLog" class="panel-collapse collapse" aria-labelledby="consoleLog">
-              <div class="panel-body">
+              <div class="panel-body" data-bind="foreach: consoleMessages">
+                <p data-bind="attr: {class: msgClass}, text: msg"></p>
               </div>
             </div>
           </div>

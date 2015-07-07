@@ -8,19 +8,26 @@
     console.originalLog = console.log;
     console.log = function(d1) {
         // console.originalLog.apply(console, arguments);
+        window.parent.postMessage({
+            'log' : defined(d1) ? d1.toString() : 'undefined'
+        }, '*');
     };
 
     console.originalWarn = console.warn;
     console.warn = function(d1) {
         // console.originalWarn.apply(console, arguments);
+        window.parent.postMessage({
+            'warn' : defined(d1) ? d1.toString() : 'undefined'
+        }, '*');
     };
 
     console.originalError = console.error;
     console.error = function(d1) {
         // console.originalError.apply(console, arguments);
-        var msg = {};
         if (!defined(d1)) {
-            msg.data = 'undefined';
+            window.parent.postMessage({
+                'error' : 'undefined'
+            }, '*');
             return;
         }
 
@@ -52,10 +59,14 @@
         }
 
         if (lineNumber >= 0) {
-            msg.data = errorMsg;
-            msg.lineNum = lineNumber;
+            window.parent.postMessage({
+                'error' : errorMsg,
+                'lineNumber' : lineNumber
+            }, '*');
         } else {
-            msg.data = errorMsg;
+            window.parent.postMessage({
+                'error' : errorMsg
+            }, '*');
         }
     };
 
@@ -79,14 +90,16 @@
                 } catch (ex) {
                 }
             }
-            var msg = {};
-            msg.data = errorMsg;
-            msg.url = url;
-            msg.lineNum = lineNumber;
+            window.parent.postMessage({
+                'error' : errorMsg,
+                'url' : url,
+                'lineNumber' : lineNumber
+            }, '*');
         } else {
-            var msg = {};
-            msg.data = errorMsg;
-            msg.url = url;
+            window.parent.postMessage({
+                'error' : errorMsg,
+                'url' : url
+            }, '*');
         }
         // console.originalError.apply(console, [errorMsg]);
         return false;
