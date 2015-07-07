@@ -1464,6 +1464,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * @param {Entity|Entity[]|EntityCollection|DataSource|Promise} target The entity, array of entities, entity collection or data source to view. You can also pass a promise that resolves to one of the previously mentioned types.
      * @param {Object} [options] Object with the following properties:
      * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
+     * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
      * @param {HeadingPitchRange} [options.offset] The offset from the target in the local east-north-up reference frame centered at the target.
      * @returns {Promise} A Promise that resolves to true if the flight was successful or false if the entity is not currently visualized in the scene or the flight was cancelled.
      */
@@ -1590,6 +1591,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             var userOptions = defaultValue(viewer._zoomOptions, {});
             var options = {
                 duration : userOptions.duration,
+                maximumHeight : userOptions.maximumHeight,
                 complete : function() {
                     zoomPromise.resolve(true);
                 },
