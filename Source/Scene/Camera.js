@@ -1585,7 +1585,7 @@ define([
      * determined from the offset, the heading will be north.
      *
      * @param {Matrix4} transform The transformation matrix defining the reference frame.
-     * @param {Cartesian3|HeadingPitchRange} offset The offset from the target in a reference frame centered at the target.
+     * @param {Cartesian3|HeadingPitchRange} [offset] The offset from the target in a reference frame centered at the target.
      *
      * @exception {DeveloperError} lookAtTransform is not supported while morphing.
      *
