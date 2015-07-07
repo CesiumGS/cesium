@@ -606,6 +606,10 @@ define([
             url += ':' + this._layers;
         }
 
+        if (defined(this._proxy)) {
+            url = this._proxy.getURL(url);
+        }
+
         return loadJson(url).then(function(json) {
             var result = [];
 
