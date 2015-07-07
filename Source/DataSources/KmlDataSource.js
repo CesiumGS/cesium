@@ -103,6 +103,11 @@ define([
         WallGraphics) {
     "use strict";
 
+    // IE 8 doesn't have a DOM parser and can't run Cesium anyway, so just bail.
+    if (typeof DOMParser === 'undefined') {
+        return {};
+    }
+
     //This is by no means an exhaustive list of MIME types.
     //The purpose of this list is to be able to accurately identify content embedded
     //in KMZ files. Eventually, we can make this configurable by the end user so they can add

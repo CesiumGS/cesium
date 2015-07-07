@@ -6,6 +6,7 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/defined',
         'Core/Ellipsoid',
         'Core/loadImage',
         'Core/Math',
@@ -25,6 +26,7 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Color,
+        defined,
         Ellipsoid,
         loadImage,
         CesiumMath,
@@ -55,7 +57,7 @@ defineSuite([
         scene = createScene();
         camera = scene.camera;
 
-        heightReferenceSupported = scene._globeDepth.supported && scene.context.maximumVertexTextureImageUnits > 0;
+        heightReferenceSupported = defined(scene._globeDepth) && scene._globeDepth.supported && scene.context.maximumVertexTextureImageUnits > 0;
 
         return when.join(
             loadImage('./Data/Images/Green.png').then(function(result) {
