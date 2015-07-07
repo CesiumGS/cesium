@@ -74,6 +74,13 @@ define([
         return Cartesian3.fromDegrees(coordinates[0], coordinates[1], coordinates[2]);
     }
 
+    var crsNames = {
+    	'EPSG:4326' : defaultCrsFunction,
+    	'urn:ogc:def:crs:EPSG::4326' : defaultCrsFunction,
+    	'urn:ogc:def:crs:EPSG:6.6:4326' : defaultCrsFunction,
+    	'http://www.opengis.net/gml/srs/epsg.xml#4326' : defaultCrsFunction
+    };
+
     var sizes = {
         small : 24,
         medium : 48,
@@ -104,11 +111,13 @@ define([
         return url;
     }
 
-    function processCoordinates(coordString, dimension, crsFunction) {
+    function processCoordinates(coordString, crsProperties) {
         var i;
-        var coordString = coordString.trim();
+        var coordString = coordString.replace(/\s\s+/g, ' ');
         var coords = coordString.split(" ");
-        if(coords.length == dimension) {
+        var crsFunction = crsProperties.crsFunction;
+        var crsDimension = crsProperties.crsDimension;
+        if(coords.length == crsDimension) {
             for(i = 0; i < coords.length; i++) {
                 coords[i] = parseFloat(coords[i]);
             }
@@ -116,11 +125,11 @@ define([
         }
         else {
             var coordinates = [];
-            for(i = 0; i < coords.length; i += dimension) {
-                if(dimension == 2) {
+            for(i = 0; i < coords.length; i += crsDimension) {
+                if(crsDimension == 2) {
                     var c = [parseFloat(coords[i]), parseFloat(coords[i+1])];
                     coordinates.push(crsFunction(c));
-                } else if(dimension == 3) {
+                } else if(crsDimension == 3) {
                     var c = [parseFloat(coords[i]), parseFloat(coords[i+1]), parseFloat(coords[i+2])];
                     coordinates.push(crsFunction(c));
                 }
@@ -130,21 +139,27 @@ define([
     }
 
     function createObject(entityCollection) {
-        /*var id = geoJson.id;
-        if (!definedNotNull(id) || geoJson.type !== 'Feature') {
-            id = createGuid();
-        } else {
-            var i = 2;
-            var finalId = id;
-            while (defined(entityCollection.getById(finalId))) {
-                finalId = id + "_" + i;
-                i++;
-            }
-            id = finalId;
-        }*/
         var id = createGuid();
         var entity = entityCollection.getOrCreateEntity(id);
         return entity;
+    }
+
+    function getCrsProperties(node, crsProperties) {
+    	var crsName = node.getAttribute('srsName');
+    	if(crsName) {
+    		var crsFunction = crsNames[crsName];
+    		if(!defined(crsFunction)) {
+    			return RuntimeError('Unknown crs name: ' + crsName);
+    		}
+    		crsProperties.crsFunction = crsFunction; 
+    	}
+
+    	var crsDimension = node.getAttribute('srsDimension');
+    	if(crsDimension) {
+    		crsDimension = parseInt(crsDimension);
+    		crsProperties.crsDimension = crsDimension;
+    	}
+    	return crsProperties;
     }
 
     function processFeatureCollection(that, gml) {
@@ -153,26 +168,34 @@ define([
         if(featureCollection.length == 0) {
         	featureCollection = documentNode.getElementsByTagNameNS(gmlns, "featureMembers");
         }
-        
-/*        var boundedByNode = documentNode.getElementsByTagNameNS(gmlns, "boundedBy");
+		
+		var crsProperties = {'crsFunction' : defaultCrsFunction, 'crsDimension' : 2};
+        var boundedByNode = documentNode.getElementsByTagNameNS(gmlns, "boundedBy")[0];
         if(boundedByNode) {
-        	crsFunction = getSrsNameFromBoundBy()
+        	crsProperties = getCrsProperties(boundedByNode.firstElementChild, crsProperties);
         }
-*/        
-        for(var i=0; i<featureCollection.length; i++) {
+        
+        for(var i = 0; i < featureCollection.length; i++) {
             var features = featureCollection[i].children;
-            for(var j=0; j<features.length; j++) {
-                processFeature(that, features[j]);
+            for(var j = 0; j < features.length; j++) {
+                processFeature(that, features[j], crsProperties);
             }
         }
     }
 
-    function processFeature(that, feature, options) {
+    function processFeature(that, feature, crsProperties) {
         var i, j, geometryHandler, geometryElements = [];
         var crsFunction = defaultCrsFunction;
         var properties = {};
+
+        var boundedByNode = feature.getElementsByTagNameNS(gmlns, "boundedBy")[0];
+        if(boundedByNode) {
+        	crsProperties = getCrsProperties(feature.firstElementChild, crsProperties);
+	        feature.removeChild(boundedByNode);
+		}
+
         var elements = feature.children;
-        for(i=0; i<elements.length; i++) {
+        for(i = 0; i < elements.length; i++) {
             var childCount = elements[i].childElementCount;
             if(childCount == 0) {
                 //Non-nested non-spatial properties.
@@ -193,20 +216,21 @@ define([
             	}
             }
         }
-
         for(i=0; i<geometryElements.length; i++) {
         	geometryHandler = geometryPropertyTypes[geometryElements[i].localName];
-        	geometryHandler(that, geometryElements[i], properties, crsFunction);
+        	geometryHandler(that, geometryElements[i], properties, crsProperties);
         }
     }
 
-    function processPoint(that, point, properties, crsFunction) {
+    function processPoint(that, point, properties, crsProperties) {
+    	crsProperties = getCrsProperties(point, crsProperties);
         var coordString = point.firstElementChild.textContent;
-        var coordinates = processCoordinates(coordString, 2, crsFunction);
-        createPoint(that, coordinates, properties, crsFunction);
+        var coordinates = processCoordinates(coordString, crsProperties);
+        createPoint(that, coordinates, properties, crsProperties);
     }
 
-    function processMultiPoint(that, multiPoint, properties, crsFunction) {
+    function processMultiPoint(that, multiPoint, properties, crsProperties) {
+        crsProperties = getCrsProperties(multiPoint, crsProperties);
         var pointMembers = multiPoint.getElementsByTagNameNS(gmlns, "pointMember");
         if(pointMemers.length == 0) {
         	pointMembers = multiPoint.getElementsByTagNameNS(gmlns, "pointMembers");
@@ -215,14 +239,12 @@ define([
         for(var i=0; i<pointMembers.length; i++) {
             var points = pointMembers[i].children;
             for(var j=0; j<points.length; j++) {
-            	var coordString = points[j].firstElementChild.textContent;
-		        var coordinates = processCoordinates(coordString, 2, crsFunction);
-                createPoint(that, coordinates, properties, crsFunction);
+            	processPoint(that, points[j], properties, crsProperties);
             }
         }
     }
 
-    function createPoint(that, coordinates, properties, crsFunction) {
+    function createPoint(that, coordinates, properties, crsProperties) {
         var canvasOrPromise = that._pinBuilder.fromColor(defaultMarkerColor, defaultMarkerSize);
 
         that._promises.push(when(canvasOrPromise, function(dataUrl) {
@@ -238,13 +260,15 @@ define([
         }));
     }
 
-    function processLineString(that, lineString, properties, crsFunction) {
+    function processLineString(that, lineString, properties, crsProperties) {
+        crsProperties = getCrsProperties(lineString, crsProperties);
         var coordString = lineString.firstElementChild.textContent;
-        var coordinates = processCoordinates(coordString, 2, crsFunction);
-        createLineString(that, coordinates, properties, crsFunction);                
+        var coordinates = processCoordinates(coordString, crsProperties);
+        createLineString(that, coordinates, properties, crsProperties);                
     }
 
-    function processMultiLineString(that, multiLineString, properties, crsFunction) {
+    function processMultiLineString(that, multiLineString, properties, crsProperties) {
+        crsProperties = getCrsProperties(multiLineString, crsProperties);
         var lineStringMembers = multiLineString.getElementsByTagNameNS(gmlns, "lineStringMember");
         if(lineStringMembers.length == 0) {
         	lineStringMembers = multiLineString.getElementsByTagNameNS(gmlns, "lineStringMembers");	
@@ -252,19 +276,21 @@ define([
         for(var i=0; i<lineStringMembers.length; i++) {
             var lineStrings = lineStringMembers[i].children;
             for(var j=0; j<lineStrings.length; j++) {
-            	processLineString(that, lineStrings[j], properties, crsFunction);
+            	processLineString(that, lineStrings[j], properties, crsProperties);
             }
         }
     }
 
-    function processCurve(that, curve, properties, crsFunction) {
-    	var segments = curve.firstElementChild.children;
+    function processCurve(that, curve, properties, crsProperties) {
+    	crsProperties = getCrsProperties(curve, crsProperties);
+        var segments = curve.firstElementChild.children	;
     	curveGeometryHandler = curveSegmentTypes(segments[0].localName);
-    	curveGeometryHandler(that, segments, properties, crsFunction);
+    	curveGeometryHandler(that, segments, properties, crsProperties);
     }
 
-    function processMultiCurve(that, multiCurve, properties, crsFunction) {
-    	var curveMembers = multiCurve.getElementsByTagNameNS(gmlns, "curveMember");
+    function processMultiCurve(that, multiCurve, properties, crsProperties) {
+    	crsProperties = getCrsProperties(multiCurve, crsProperties);
+        var curveMembers = multiCurve.getElementsByTagNameNS(gmlns, "curveMember");
     	if(curveMembers.length == 0) {
     		curveMembers = multiCurve.getElementsByTagNameNS(gmlns, "curveMembers");	
     	}
@@ -273,16 +299,16 @@ define([
     		var curves = curveMembers[i].children;
     		for(var j = 0; j < curves.length; j++) {
 				var curveTypeHandler = curvePropertyTypes[curves[j].localName];
-				curveTypeHandler(that, curves[j], properties, crsFunction);
+				curveTypeHandler(that, curves[j], properties, crsProperties);
     		}
     	}
     }
 
-    function processLineStringSegment(that, segments, properties, crsFunction) {
+    function processLineStringSegment(that, segments, properties, crsProperties) {
     	var coordinates = [];
     	for(i=0; i<segments.length; i++) {
     		var coordString = segments[i].firstElementChild.textContent;
-    		segmentPos = processCoordinates(coordString, 2, crsFunction);
+    		segmentPos = processCoordinates(coordString, crsProperties);
     		if(coordinates.length) {
     			if(equals(segmentPos[0], coordinates[coordinates.length - 1])) {
     				coordinates = coordinates.concat(segmentPos);
@@ -293,10 +319,10 @@ define([
     			coordinates = segmentPos;
     		}
     	}
-    	createLineString(that, coordinates, properties, crsFunction);
+    	createLineString(that, coordinates, properties);
     }
 
-    function createLineString(that, coordinates, properties, crsFunction) {
+    function createLineString(that, coordinates, properties) {
         var polyline = new PolylineGraphics();
         polyline.material = defaultStrokeMaterialProperty;
         polyline.width = defaultStrokeWidthProperty;
@@ -306,7 +332,8 @@ define([
         entity.polyline = polyline;
     }
 
-    function processPolygon(that, polygon, properties, crsFunction) {
+    function processPolygon(that, polygon, properties, crsProperties) {
+        crsProperties = getCrsProperties(polygon, crsProperties);
         var exterior = polygon.getElementsByTagNameNS(gmlns, "exterior");
         var interior = polygon.getElementsByTagNameNS(gmlns, "interior");
 
@@ -328,11 +355,12 @@ define([
         }
         var surfaceBoundary = exterior.firstElementChild;
         surfaceBoundaryHandler = surfaceBoundaryTypes[surfaceBoundary.localName];
-        var hierarchy = surfaceBoundaryHandler(surfaceBoundary, holes, crsFunction);
+        var hierarchy = surfaceBoundaryHandler(surfaceBoundary, holes, crsProperties);
         createPolygon(that, hierarchy, properties);
     }
 
-    function processMultiPolygon(that, multiPolygon, properties, crsFunction) {
+    function processMultiPolygon(that, multiPolygon, properties, crsProperties) {
+        crsProperties = getCrsProperties(multiPolygon, crsProperties);
         var polygonMembers = multiPolygon.getElementsByTagNameNS(gmlns, "polygonMember");
         if(lineStringMembers.length == 0) {
             polygonMembers = multiPolygon.getElementsByTagNameNS(gmlns, "polygonMembers");  
@@ -340,20 +368,22 @@ define([
         for(var i = 0; i < polygonMembers.length; i++) {
             var polygons = polygonMembers[i].children;
             for(var j = 0; j < polygons.length; j++) {
-                processPolygon(that, polygons[j], properties, crsFunction);
+                processPolygon(that, polygons[j], properties, crsProperties);
             }
         }
     }
 
-    function processSurface(that, surface, properties, crsFunction) {
-    	var patches = surface.firstElementChild.children;
+    function processSurface(that, surface, properties, crsProperties) {
+    	crsProperties = getCrsProperties(surface, crsProperties);
+        var patches = surface.firstElementChild.children;
     	for(i = 0; i < patches.length; i++) {
-    		processPolygon(that, patches[i], properties, crsFunction);
+    		processPolygon(that, patches[i], properties, crsProperties);
     	}
     }
 
-    function processMultiSurface(that, multiSurface, properties, crsFunction) {
-    	var surfaceMembers = multiSurface.getElementsByTagNameNS(gmlns, "surfaceMember");
+    function processMultiSurface(that, multiSurface, properties, crsProperties) {
+    	crsProperties = getCrsProperties(multiSurface, crsProperties);
+        var surfaceMembers = multiSurface.getElementsByTagNameNS(gmlns, "surfaceMember");
     	if(surfaceMembers.length == 0) {
     		surfaceMembers = multiSurface.getElementsByTagNameNS(gmlns, "surfaceMembers");	
     	}
@@ -362,24 +392,24 @@ define([
     		var surfaces = surfaceMembers[i].children;
     		for(var j = 0; j < surfaces.length; j++) {
     			var surfaceGeometryHandler = surfacePropertyTypes[surfaces[j].localName];
-    			surfaceGeometryHandler(that, surfaces[j], properties, crsFunction);
+    			surfaceGeometryHandler(that, surfaces[j], properties, crsProperties);
     		}
     	}
     }
 
-    function processLinearRing(linearRing, holes, crsFunction) {
+    function processLinearRing(linearRing, holes, crsProperties) {
         var coordString = linearRing.firstElementChild.textContent;
-        var coordinates = processCoordinates(coordString, 2, crsFunction);
+        var coordinates = processCoordinates(coordString, crsProperties);
         var hierarchy = new PolygonHierarchy(coordinates, holes);
         return hierarchy;
     }
 
-    function processRing(ring, holes, crsFunction) {
+    function processRing(ring, holes, crsProperties) {
     	var curveMember = ring.firstElementChild.firstElementChild;
     	var coordString, coordinates = [];
     	if(curveMember.localName === "LineString") {
     		coordString = curveMember.firstElementChild.textContent;
-    		coordinates = processCoordinates(coordString, 2, crsFunction);
+    		coordinates = processCoordinates(coordString, crsProerties);
     	} else if(curveMember.localName === "Curve") {
 
     	}
@@ -419,7 +449,7 @@ define([
     	//Circle : processCircle,
     	//CircleByCenterPoint : processCircleByCenterPoint
         LineStringSegment : processLineStringSegment    	
-    }
+    };
 
     var surfacePropertyTypes = {
     	Polygon : processPolygon,
