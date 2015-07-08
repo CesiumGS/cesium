@@ -486,6 +486,51 @@ require({
     }
   }, true);
 
+  // Resizable code editor
+  
+  var resize = false;
+  var mouseDown = false;
+  var lastX;
+  $('#codeColumn').mousedown(function(e){
+    mouseDown = true;
+    if(resize)
+    {
+      lastX = e.pageX;
+      $('iframe').addClass('disableFrame');
+    }
+  })
+  $('#codeColumn').mouseup(function(e){
+    mouseDown =false;
+    $('iframe').removeClass('disableFrame');
+  });
+  $('#bodyRow').mousemove(function(e){
+    var divX = $('#codeColumn').offset().left + $('#codeColumn').width();
+    if(divX - e.pageX <= 10)
+    {
+      // change the cursor
+      $('#codeColumn').addClass('resize');
+      resize = true;
+    }
+    else
+    {
+      if(!mouseDown)
+      {
+        $('#codeColumn').removeClass('resize');
+        resize = false;
+      }
+    }
+
+    if(resize && mouseDown){
+      // Check that the final width of code column does not go below 390px
+      if($('#codeColumn').width() + (e.pageX - lastX) >= 390 && $('#codeColumn').width() + (e.pageX - lastX) <= $('#bodyRow').width())
+      {
+        $('#codeColumn').width($('#codeColumn').width() + (e.pageX - lastX));
+        $('#cesiumColumn').width($('#cesiumColumn').width() - (e.pageX - lastX));
+        lastX = e.pageX;
+      }
+    }
+  });
+
   // The Knockout viewmodel
   function SandcastleViewModel(){
     this.newDemo = function(){
