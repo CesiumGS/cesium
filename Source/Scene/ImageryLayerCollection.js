@@ -342,7 +342,7 @@ define([
      *
      * @param {Ray} ray The ray to test for intersection.
      * @param {Scene} scene The scene.
-     * @return {Promise|ImageryLayerFeatureInfo[]} A promise that resolves to an array of features intersected by the pick ray.
+     * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise that resolves to an array of features intersected by the pick ray.
      *                                             If it can be quickly determined that no features are intersected (for example,
      *                                             because no active imagery providers support {@link ImageryProvider#pickFeatures}
      *                                             or because the pick ray does not intersect the surface), this function will
