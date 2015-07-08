@@ -530,6 +530,25 @@ defineSuite([
         expect(left).toEqual(expected);
     });
 
+    it('multiplyByScale works', function() {
+        var m = new Matrix3(2, 3, 4, 6, 7, 8, 10, 11, 12);
+        var scale = new Cartesian3(2.0, 3.0, 4.0);
+        var expected = Matrix3.multiply(m, Matrix3.fromScale(scale), new Matrix3());
+        var result = new Matrix3();
+        var returnedResult = Matrix3.multiplyByScale(m, scale, result);
+        expect(returnedResult).toBe(result);
+        expect(result).toEqual(expected);
+    });
+
+    it('multiplyByScale works with "this" result parameter', function() {
+        var m = new Matrix3(1, 2, 3, 5, 6, 7, 9, 10, 11);
+        var scale = new Cartesian3(1.0, 2.0, 3.0);
+        var expected = Matrix3.multiply(m, Matrix3.fromScale(scale), new Matrix3());
+        var returnedResult = Matrix3.multiplyByScale(m, scale, m);
+        expect(returnedResult).toBe(m);
+        expect(m).toEqual(expected);
+    });
+
     it('multiplyByVector works', function() {
         var left = new Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9);
         var right = new Cartesian3(10, 11, 12);
@@ -937,6 +956,19 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('multiplyByScale throws with no matrix parameter', function() {
+        expect(function() {
+            Matrix3.multiplyByScale(undefined, new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyByScale throws with no scale parameter', function() {
+        var m = new Matrix3();
+        expect(function() {
+            Matrix3.multiplyByScale(m, undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('multiplyByVector throws with no matrix parameter', function() {
         var cartesian = new Cartesian3();
         expect(function() {
@@ -1051,6 +1083,12 @@ defineSuite([
     it('multiply throws without result parameter', function() {
         expect(function() {
             Matrix3.multiply(new Matrix3(), new Matrix3());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyByScale throws without result parameter', function() {
+        expect(function() {
+            Matrix3.multiplyByScale(new Matrix3(), new Cartesian3());
         }).toThrowDeveloperError();
     });
 

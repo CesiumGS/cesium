@@ -90,7 +90,7 @@ define([
         var rightAscensionOfAscendingNode = longitudeOfNode;
         var trueAnomaly = meanAnomalyToTrueAnomaly(meanLongitude - longitudeOfPerigee, eccentricity);
         var type = chooseOrbit(eccentricity, 0.0);
-        if (type === 'Hyperbolic' && Math.abs(CesiumMath.NegativePiToPi(trueAnomaly)) >= Math.acos(- 1.0 / eccentricity)) {
+        if (type === 'Hyperbolic' && Math.abs(CesiumMath.negativePiToPi(trueAnomaly)) >= Math.acos(- 1.0 / eccentricity)) {
             throw new DeveloperError('The true anomaly of the hyperbolic orbit lies outside of the bounds of the hyperbola.');
         }
         perifocalToCartesianMatrix(argumentOfPeriapsis, inclination, rightAscensionOfAscendingNode, perifocalToEquatorial);

@@ -59,5 +59,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Ayush Khandelwal](https://github.com/ayk115)
 * [Aditya Raisinghani](https://github.com/adi2412)
 * [Ilia Choly](https://github.com/icholy)
+* [Farouk Abdou](https://github.com/kaktus40)
 
 Also see [our contributors page](http://cesiumjs.org/contributors.html) for more information.

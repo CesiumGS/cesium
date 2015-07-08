@@ -11,7 +11,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EllipsoidGeometry',
@@ -66,7 +65,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         destroyObject,
         DeveloperError,
         EllipsoidGeometry,
@@ -479,7 +477,6 @@ define([
          * @default true
          */
         this.fxaa = true;
-        this._fxaaOrderIndependentTranslucency = true;
 
         /**
          * The time in milliseconds to wait before checking if the camera has not moved and fire the cameraMoveEnd event.
@@ -880,25 +877,6 @@ define([
         numberOfFrustums : {
             get : function() {
                 return this._frustumCommandsList.length;
-            }
-        },
-
-        /**
-         * If <code>true</code>, enables Fast Aproximate Anti-aliasing only if order independent translucency
-         * is supported.
-         * @memberof Scene.prototype
-         * @type {Boolean}
-         * @default true
-         *
-         * @deprecated
-         */
-        fxaaOrderIndependentTranslucency : {
-            get : function() {
-                return this._fxaaOrderIndependentTranslucency;
-            },
-            set : function(value) {
-                deprecationWarning('Scene.fxaaOrderIndependentTranslucency', 'Scene.fxaaOrderIndependentTranslucency has been deprecated.  Use Scene.fxaa instead.');
-                this._fxaaOrderIndependentTranslucency = value;
             }
         }
     });
@@ -1647,10 +1625,7 @@ define([
         if (scene.debugShowFramesPerSecond) {
             if (!defined(scene._performanceDisplay)) {
                 var performanceContainer = document.createElement('div');
-                performanceContainer.className = 'cesium-performanceDisplay';
-                performanceContainer.style.position = 'absolute';
-                performanceContainer.style.top = '50px';
-                performanceContainer.style.right = '10px';
+                performanceContainer.className = 'cesium-performanceDisplay-defaultContainer';
                 var container = scene._canvas.parentNode;
                 container.appendChild(performanceContainer);
                 var performanceDisplay = new PerformanceDisplay({container: performanceContainer});
@@ -1886,10 +1861,7 @@ define([
             //>>includeEnd('debug');
         }
 
-        var minimumPosition;
-        var minDistance;
         var numFrustums = this.numberOfFrustums;
-
         for (var i = 0; i < numFrustums; ++i) {
             var pickDepth = getPickDepth(this, i);
             var pixels = context.readPixels({
@@ -1906,21 +1878,15 @@ define([
 
             if (depth > 0.0 && depth < 1.0) {
                 var renderedFrustum = this._frustumCommandsList[i];
-                frustum.near = renderedFrustum.near;
+                frustum.near = renderedFrustum.near * (i !== 0 ? OPAQUE_FRUSTUM_NEAR_OFFSET : 1.0);
                 frustum.far = renderedFrustum.far;
                 uniformState.updateFrustum(frustum);
 
-                var position = SceneTransforms.drawingBufferToWgs84Coordinates(this, drawingBufferPosition, depth, scratchPickDepthPosition);
-                var distance = Cartesian3.distance(position, camera.positionWC);
-
-                if (!defined(minimumPosition) || distance < minDistance) {
-                    minimumPosition = Cartesian3.clone(position, result);
-                    minDistance = distance;
-                }
+                return SceneTransforms.drawingBufferToWgs84Coordinates(this, drawingBufferPosition, depth, result);
             }
         }
 
-        return minimumPosition;
+        return undefined;
     };
 
     /**

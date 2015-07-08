@@ -16,6 +16,7 @@ define([
         '../Core/Intersect',
         '../Core/Math',
         '../Core/Matrix4',
+        '../Core/Plane',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/ShaderSource',
@@ -44,6 +45,7 @@ define([
         Intersect,
         CesiumMath,
         Matrix4,
+        Plane,
         BufferUsage,
         DrawCommand,
         ShaderSource,
@@ -117,7 +119,7 @@ define([
      * // Create a polyline collection with two polylines
      * var polylines = new Cesium.PolylineCollection();
      * polylines.add({
-     *   position : Cesium.Cartesian3.fromDegreesArray([
+     *   positions : Cesium.Cartesian3.fromDegreesArray([
      *     -75.10, 39.57,
      *     -77.02, 38.53,
      *     -80.50, 35.14,
@@ -1046,7 +1048,7 @@ define([
 
     function intersectsIDL(polyline) {
         return Cartesian3.dot(Cartesian3.UNIT_X, polyline._boundingVolume.center) < 0 ||
-            polyline._boundingVolume.intersect(Cartesian4.UNIT_Y) === Intersect.INTERSECTING;
+            polyline._boundingVolume.intersectPlane(Plane.ORIGIN_ZX_PLANE) === Intersect.INTERSECTING;
     }
 
     PolylineBucket.prototype.getPolylinePositionsLength = function(polyline) {

@@ -16,6 +16,9 @@ define([
         './IndexDatatype',
         './loadArrayBuffer',
         './loadJson',
+        './Math',
+        './Matrix3',
+        './OrientedBoundingBox',
         './QuantizedMeshTerrainData',
         './RuntimeError',
         './TerrainProvider',
@@ -38,6 +41,9 @@ define([
         IndexDatatype,
         loadArrayBuffer,
         loadJson,
+        CesiumMath,
+        Matrix3,
+        OrientedBoundingBox,
         QuantizedMeshTerrainData,
         RuntimeError,
         TerrainProvider,
@@ -417,11 +423,26 @@ define([
 
         var skirtHeight = provider.getLevelMaximumGeometricError(level) * 5.0;
 
+        var rectangle = provider._tilingScheme.tileXYToRectangle(x, y, level);
+        var orientedBoundingBox;
+        if (rectangle.width < CesiumMath.PI_OVER_TWO + CesiumMath.EPSILON5) {
+            // Here, rectangle.width < pi/2, and rectangle.height < pi
+            // (though it would still work with rectangle.width up to pi)
+
+            // The skirt is not included in the OBB computation. If this ever
+            // causes any rendering artifacts (cracks), they are expected to be
+            // minor and in the corners of the screen. It's possible that this
+            // might need to be changed - just change to `minimumHeight - skirtHeight`
+            // A similar change might also be needed in `upsampleQuantizedTerrainMesh.js`.
+            orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, minimumHeight, maximumHeight, provider._tilingScheme.ellipsoid);
+        }
+
         return new QuantizedMeshTerrainData({
             center : center,
             minimumHeight : minimumHeight,
             maximumHeight : maximumHeight,
             boundingSphere : boundingSphere,
+            orientedBoundingBox : orientedBoundingBox,
             horizonOcclusionPoint : horizonOcclusionPoint,
             quantizedVertices : encodedVertexBuffer,
             encodedNormals : encodedNormalBuffer,

@@ -169,7 +169,7 @@ defineSuite([
         expect(provider.tileWidth).toEqual(256);
         expect(provider.tileHeight).toEqual(256);
         expect(provider.minimumLevel).toEqual(0);
-        expect(provider.maximumLevel).toEqual(18);
+        expect(provider.maximumLevel).toBeUndefined();
         expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
         expect(provider.rectangle).toEqual(provider.tilingScheme.rectangle);
         expect(provider.credit).toBeUndefined();
