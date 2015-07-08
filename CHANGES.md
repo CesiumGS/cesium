@@ -11,6 +11,7 @@ Change Log
 * Fix calling `Scene.pickPosition` after calling `Scene.drillPick`. [#2813](https://github.com/AnalyticalGraphicsInc/cesium/issues/2813)
 * Fixed a bug that caused `Camera.positionCartographic` to be incorrect. [#2838](https://github.com/AnalyticalGraphicsInc/cesium/issues/2838)
 * Make `ArcGisMapServerImageryprovider` issue `pickFeatures` requests via a proxy if one is specified.
+* Fixed incorrect texture coordinates for `WallGeometry` [#2872](https://github.com/AnalyticalGraphicsInc/cesium/issues/2872)
 
 ### 1.11 - 2015-07-01
 
