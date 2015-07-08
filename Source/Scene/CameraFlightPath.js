@@ -77,7 +77,7 @@ define([
             altitude = Math.min(getAltitude(frustum, verticalDistance, horizontalDistance) * 0.20, 1000000000.0);
         }
 
-        if (defined(optionAltitude) || maxHeight < altitude) {
+        if ((defined(optionAltitude) && optionAltitude < altitude) || maxHeight < altitude) {
             var power = 8.0;
             var factor = 1000000.0;
 
