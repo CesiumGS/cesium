@@ -30,7 +30,7 @@ define([
      * @param {String} [options.data] The data to send with the request, if any.
      * @param {Object} [options.headers] HTTP headers to send with the request, if any.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
-     * @returns {Promise.<Any>} a promise that will resolve to the requested data when loaded.
+     * @returns {Promise.<Object>} a promise that will resolve to the requested data when loaded.
      *
      * @see loadArrayBuffer
      * @see loadBlob
