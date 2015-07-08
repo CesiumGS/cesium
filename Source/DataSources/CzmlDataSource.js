@@ -1539,7 +1539,7 @@ define([
      * @param {String|Object} data A url or CZML object to be processed.
      * @param {Object} [options] An object with the following properties:
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
-     * @returns {Promise} A promise that resolves to the new instance once the data is processed.
+     * @returns {Promise.<CzmlDataSource>} A promise that resolves to the new instance once the data is processed.
      */
     CzmlDataSource.load = function(czml, options) {
         return new CzmlDataSource().load(czml, options);
@@ -1650,7 +1650,7 @@ define([
      * @param {String|Object} czml A url or CZML object to be processed.
      * @param {Object} [options] An object with the following properties:
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
-     * @returns {Promise} A promise that resolves to this instances once the data is processed.
+     * @returns {Promise.<CzmlDataSource>} A promise that resolves to this instances once the data is processed.
      */
     CzmlDataSource.prototype.process = function(czml, options) {
         return load(this, czml, options, false);
@@ -1662,7 +1662,7 @@ define([
      * @param {String|Object} czml A url or CZML object to be processed.
      * @param {Object} [options] An object with the following properties:
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
-     * @returns {Promise} A promise that resolves to this instances once the data is processed.
+     * @returns {Promise.<CzmlDataSource>} A promise that resolves to this instances once the data is processed.
      */
     CzmlDataSource.prototype.load = function(czml, options) {
         return load(this, czml, options, true);

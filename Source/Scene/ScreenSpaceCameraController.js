@@ -505,12 +505,16 @@ define([
                     if (defined(centerPosition)) {
                         var positionNormal = Cartesian3.normalize(centerPosition, scratchPositionNormal);
                         var pickedNormal = Cartesian3.normalize(object._zoomWorldPosition, scratchPickNormal);
-                        var angle = CesiumMath.acosClamped(Cartesian3.dot(pickedNormal, positionNormal));
-                        var axis = Cartesian3.cross(pickedNormal, positionNormal, scratchZoomAxis);
+                        var dotProduct = Cartesian3.dot(pickedNormal, positionNormal);
 
-                        var denom = Math.abs(angle) > CesiumMath.toRadians(20.0) ? camera.positionCartographic.height * 0.75 : camera.positionCartographic.height - distance;
-                        var scalar = distance / denom;
-                        camera.rotate(axis, angle * scalar);
+                        if (dotProduct > 0.0) {
+                            var angle = CesiumMath.acosClamped(dotProduct);
+                            var axis = Cartesian3.cross(pickedNormal, positionNormal, scratchZoomAxis);
+
+                            var denom = Math.abs(angle) > CesiumMath.toRadians(20.0) ? camera.positionCartographic.height * 0.75 : camera.positionCartographic.height - distance;
+                            var scalar = distance / denom;
+                            camera.rotate(axis, angle * scalar);
+                        }
                     } else {
                         zoomOnVector = true;
                     }

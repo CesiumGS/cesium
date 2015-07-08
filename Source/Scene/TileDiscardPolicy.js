@@ -31,8 +31,8 @@ define([
      * Given a tile image, decide whether to discard that image.
      * @function
      *
-     * @param {Image|Promise} image An image, or a promise that will resolve to an image.
-     * @returns {Boolean} A promise that will resolve to true if the tile should be discarded.
+     * @param {Image|Promise.<Image>} image An image, or a promise that will resolve to an image.
+     * @returns {Promise.<Boolean>} A promise that will resolve to true if the tile should be discarded.
      */
     TileDiscardPolicy.prototype.shouldDiscardImage = DeveloperError.throwInstantiationError;
 

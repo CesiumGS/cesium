@@ -153,7 +153,7 @@ define([
      * @param {Number} x The X coordinate of the tile for which to create the terrain data.
      * @param {Number} y The Y coordinate of the tile for which to create the terrain data.
      * @param {Number} level The level of the tile for which to create the terrain data.
-     * @returns {Promise|TerrainMesh} A promise for the terrain mesh, or undefined if too many
+     * @returns {Promise.<TerrainMesh>|undefined} A promise for the terrain mesh, or undefined if too many
      *          asynchronous mesh creations are already in progress and the operation should
      *          be retried later.
      */
@@ -259,7 +259,7 @@ define([
      * @param {Number} descendantX The X coordinate within the tiling scheme of the descendant tile for which we are upsampling.
      * @param {Number} descendantY The Y coordinate within the tiling scheme of the descendant tile for which we are upsampling.
      * @param {Number} descendantLevel The level within the tiling scheme of the descendant tile for which we are upsampling.
-     * @returns {Promise|HeightmapTerrainData} A promise for upsampled heightmap terrain data for the descendant tile,
+     * @returns {Promise.<HeightmapTerrainData>|undefined} A promise for upsampled heightmap terrain data for the descendant tile,
      *          or undefined if too many asynchronous upsample operations are in progress and the request has been
      *          deferred.
      */

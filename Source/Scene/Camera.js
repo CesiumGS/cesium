@@ -398,8 +398,17 @@ define([
     var scratchCartesian = new Cartesian3();
 
     function updateMembers(camera) {
+        var mode = camera._mode;
+
+        var heightChanged = false;
+        var height = 0.0;
+        if (mode === SceneMode.SCENE2D) {
+            height = (camera.frustum.right - camera.frustum.left) * 0.5;
+            heightChanged = height !== camera._positionCartographic.height;
+        }
+
         var position = camera._position;
-        var positionChanged = !Cartesian3.equals(position, camera.position);
+        var positionChanged = !Cartesian3.equals(position, camera.position) || heightChanged;
         if (positionChanged) {
             position = Cartesian3.clone(camera.position, camera._position);
         }
@@ -451,7 +460,6 @@ define([
             camera._positionWC = Matrix4.multiplyByPoint(transform, position, camera._positionWC);
 
             // Compute the Cartographic position of the camera.
-            var mode = camera._mode;
             if (mode === SceneMode.SCENE3D || mode === SceneMode.MORPHING) {
                 camera._positionCartographic = camera._projection.ellipsoid.cartesianToCartographic(camera._positionWC, camera._positionCartographic);
             } else {
@@ -466,7 +474,7 @@ define([
                 // In 2D, the camera height is always 12.7 million meters.
                 // The apparent height is equal to half the frustum width.
                 if (mode === SceneMode.SCENE2D) {
-                    positionENU.z = (camera.frustum.right - camera.frustum.left) * 0.5;
+                    positionENU.z = height;
                 }
 
                 camera._projection.unproject(positionENU, camera._positionCartographic);
@@ -1585,7 +1593,7 @@ define([
      * determined from the offset, the heading will be north.
      *
      * @param {Matrix4} transform The transformation matrix defining the reference frame.
-     * @param {Cartesian3|HeadingPitchRange} offset The offset from the target in a reference frame centered at the target.
+     * @param {Cartesian3|HeadingPitchRange} [offset] The offset from the target in a reference frame centered at the target.
      *
      * @exception {DeveloperError} lookAtTransform is not supported while morphing.
      *
