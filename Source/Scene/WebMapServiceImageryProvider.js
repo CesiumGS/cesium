@@ -102,8 +102,8 @@ define([
 
         this._url = options.url;
         this._layers = options.layers;
-        this._enablePickFeatures = defaultValue(options.enablePickFeatures, true);
-        this._getFeatureInfoFormats = defaultValue(options.getFeatureInfoFormats, WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats);
+
+        var getFeatureInfoFormats = defaultValue(options.getFeatureInfoFormats, WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats);
 
         if (defined(options.getFeatureInfoAsGeoJson) || defined(options.getFeatureInfoAsXml)) {
             deprecationWarning('WebMapServiceImageryProvider.getFeatureInfo', 'The options.getFeatureInfoAsGeoJson and getFeatureInfoAsXml parameters to WebMapServiceImageryProvider were deprecated in Cesium 1.10 and will be removed in 1.13.  Use options.getFeatureInfoFormats instead.');
@@ -114,12 +114,12 @@ define([
             }
             //>>includeEnd('debug');
 
-            this._getFeatureInfoFormats = [];
+            getFeatureInfoFormats = [];
             if (defaultValue(options.getFeatureInfoAsGeoJson, true)) {
-                this._getFeatureInfoFormats.push(new GetFeatureInfoFormat('json', 'application/json'));
+                getFeatureInfoFormats.push(new GetFeatureInfoFormat('json', 'application/json'));
             }
             if (defaultValue(options.getFeatureInfoAsXml, true)) {
-                this._getFeatureInfoFormats.push(new GetFeatureInfoFormat('xml', 'text/xml'));
+                getFeatureInfoFormats.push(new GetFeatureInfoFormat('xml', 'text/xml'));
             }
         }
 
@@ -131,7 +131,7 @@ define([
 
         var pickFeaturesUri;
         var pickFeaturesQueryOptions;
-        if (this._enablePickFeatures) {
+        if (defaultValue(options.enablePickFeatures, true)) {
             pickFeaturesUri = new Uri(options.url);
             pickFeaturesQueryOptions = queryToObject(defaultValue(pickFeaturesUri.query, ''));
             var pickFeaturesParameters = combine(objectToLowercase(defaultValue(options.getFeatureInfoParameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters);
@@ -192,7 +192,7 @@ define([
             proxy : options.proxy,
             tileDiscardPolicy : options.tileDiscardPolicy,
             credit : options.credit,
-            getFeatureInfoFormats : this._getFeatureInfoFormats
+            getFeatureInfoFormats : getFeatureInfoFormats
         });
     };
 
