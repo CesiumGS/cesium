@@ -14,6 +14,7 @@ define([
         './GeographicTilingScheme',
         './HeightmapTerrainData',
         './IndexDatatype',
+        './joinUrls',
         './loadArrayBuffer',
         './loadJson',
         './Math',
@@ -39,6 +40,7 @@ define([
         GeographicTilingScheme,
         HeightmapTerrainData,
         IndexDatatype,
+        joinUrls,
         loadArrayBuffer,
         loadJson,
         CesiumMath,
@@ -100,7 +102,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._url = appendForwardSlash(options.url);
+        this._url = options.url;
         this._proxy = options.proxy;
 
         this._tilingScheme = new GeographicTilingScheme({
@@ -148,7 +150,7 @@ define([
 
         this._ready = false;
 
-        var metadataUrl = this._url + 'layer.json';
+        var metadataUrl = joinUrls(this._url, 'layer.json');
         if (defined(this._proxy)) {
             metadataUrl = this._proxy.getURL(metadataUrl);
         }
@@ -192,7 +194,10 @@ define([
 
             that._tileUrlTemplates = data.tiles;
             for (var i = 0; i < that._tileUrlTemplates.length; ++i) {
-                that._tileUrlTemplates[i] = new Uri(that._tileUrlTemplates[i]).resolve(baseUri).toString().replace('{version}', data.version);
+                var template = new Uri(that._tileUrlTemplates[i]);
+                if (baseUri.query && template.query) {template.query += '&' + baseUri.query;}
+                else if (baseUri.query) {template.query = baseUri.query;}
+                that._tileUrlTemplates[i] = template.resolve(baseUri).toString().replace('{version}', data.version);
             }
 
             that._availableTiles = data.available;
