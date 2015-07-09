@@ -9,7 +9,8 @@ uniform float LODNegativeToleranceOverDistance;
 vec4 clipPointToPlane(vec3 p0, vec3 p1, bool nearPlane)
 {
     const float offset = 1.0;
-    const float denominatorEpsilon = czm_epsilon7;
+    //const float denominatorEpsilon = czm_epsilon7;
+    const float denominatorEpsilon = 1e-15;
     
     vec2 frustum = czm_currentFrustum;
     float planeDistance = nearPlane ? frustum.x : frustum.y;
@@ -50,6 +51,7 @@ vec4 clipPointToPlane(vec3 p0, vec3 p1, bool nearPlane)
         }
     }
     
+    /*
     if (culledByPlane) {
         // the segment is behind the plane. push to plane and
         // slightly offset to prevent precision artifacts
@@ -58,6 +60,7 @@ vec4 clipPointToPlane(vec3 p0, vec3 p1, bool nearPlane)
         float t = (planeDistance + p0.z) + offset;
         p0 = p0 + t * direction;
     }
+    */
     
     return czm_projection * vec4(p0, 1.0);
 }
@@ -70,13 +73,18 @@ void main()
 
     vec3 eyePosition = position.xyz;
     vec3 movedPosition = position.xyz + normal * delta;
-
+    
+    vec3 p0 = (czm_modelViewRelativeToEye * vec4(eyePosition, 1.0)).xyz;
+    vec3 p1 = (czm_modelViewRelativeToEye * vec4(movedPosition, 1.0)).xyz;
+    
+    vec3 diff = p1 - p0;
+    
     if (extrude == 0.0)
     {
-        gl_Position = clipPointToPlane(eyePosition, movedPosition, false);
+        gl_Position = clipPointToPlane(eyePosition, movedPosition, diff.z < 0.0);
     }
     else
     {
-        gl_Position = clipPointToPlane(movedPosition, eyePosition, true);
+        gl_Position = clipPointToPlane(movedPosition, eyePosition, diff.z >= 0.0);
     }
 }
