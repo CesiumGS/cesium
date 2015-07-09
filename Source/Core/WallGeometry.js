@@ -389,6 +389,7 @@ define([
         var recomputeNormal = true;
         length /= 3;
         var i;
+        var s = 0;
         for (i = 0; i < length; ++i) {
             var i3 = i * 3;
             var topPosition = Cartesian3.fromArray(topPositions, i3, scratchCartesian3Position1);
@@ -403,6 +404,14 @@ define([
                 positions[positionIndex++] = topPosition.x;
                 positions[positionIndex++] = topPosition.y;
                 positions[positionIndex++] = topPosition.z;
+            }
+
+            if (vertexFormat.st) {
+                textureCoordinates[stIndex++] = s;
+                textureCoordinates[stIndex++] = 0.0;
+
+                textureCoordinates[stIndex++] = s;
+                textureCoordinates[stIndex++] = 1.0;
             }
 
             if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
@@ -424,6 +433,7 @@ define([
                 if (Cartesian3.equalsEpsilon(nextPosition, groundPosition, CesiumMath.EPSILON6)) {
                     recomputeNormal = true;
                 } else {
+                    s += 1/(wallPositions.length - 1);
                     if (vertexFormat.tangent) {
                         tangent = Cartesian3.normalize(Cartesian3.subtract(nextPosition, groundPosition, tangent), tangent);
                     }
@@ -461,16 +471,6 @@ define([
                     binormals[binormalIndex++] = binormal.y;
                     binormals[binormalIndex++] = binormal.z;
                 }
-            }
-
-            if (vertexFormat.st) {
-                var s = i / (length - 1);
-
-                textureCoordinates[stIndex++] = s;
-                textureCoordinates[stIndex++] = 0.0;
-
-                textureCoordinates[stIndex++] = s;
-                textureCoordinates[stIndex++] = 1.0;
             }
         }
 

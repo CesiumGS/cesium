@@ -395,12 +395,18 @@ define([
                 rectangle.north = rectangle.south = baseImageryRectangle.north;
             } else if (baseTerrainRectangle.north <= baseImageryRectangle.south) {
                 rectangle.north = rectangle.south = baseImageryRectangle.south;
+            } else {
+                rectangle.south = Math.max(baseTerrainRectangle.south, baseImageryRectangle.south);
+                rectangle.north = Math.min(baseTerrainRectangle.north, baseImageryRectangle.north);
             }
 
             if (baseTerrainRectangle.west >= baseImageryRectangle.east) {
                 rectangle.west = rectangle.east = baseImageryRectangle.east;
             } else if (baseTerrainRectangle.east <= baseImageryRectangle.west) {
                 rectangle.west = rectangle.east = baseImageryRectangle.west;
+            } else {
+                rectangle.west = Math.max(baseTerrainRectangle.west, baseImageryRectangle.west);
+                rectangle.east = Math.min(baseTerrainRectangle.east, baseImageryRectangle.east);
             }
         }
 

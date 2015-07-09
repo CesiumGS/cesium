@@ -11,6 +11,7 @@ defineSuite([
         'Specs/createCamera',
         'Specs/createContext',
         'Specs/createFrameState',
+        'Specs/pollToPromise',
         'Specs/render'
     ], function(
         Material,
@@ -24,6 +25,7 @@ defineSuite([
         createCamera,
         createContext,
         createFrameState,
+        pollToPromise,
         render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
@@ -741,10 +743,15 @@ defineSuite([
     it('destroys material with texture', function() {
         var material = Material.fromType(Material.DiffuseMapType);
         material.uniforms.image = './Data/Images/Green.png';
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
-        material.destroy();
-        expect(material.isDestroyed()).toEqual(true);
+
+        pollToPromise(function() {
+            return material._loadedImages.length !== 0;
+        }).then(function() {
+            var pixel = renderMaterial(material);
+            expect(pixel).not.toEqual([0, 0, 0, 0]);
+            material.destroy();
+            expect(material.isDestroyed()).toEqual(true);
+        });
     });
 
     it('destroys sub-materials', function() {
@@ -770,12 +777,23 @@ defineSuite([
         });
         material.materials.diffuseMap.uniforms.image = './Data/Images/Green.png';
 
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        pollToPromise(function() {
+            return material.materials.diffuseMap._loadedImages.length !== 0;
+        }).then(function() {
+            var pixel = renderMaterial(material);
+            expect(pixel).not.toEqual([0, 0, 0, 0]);
 
-        var diffuseMap = material.materials.diffuseMap;
-        material.destroy();
-        expect(material.isDestroyed()).toEqual(true);
-        expect(diffuseMap.isDestroyed()).toEqual(true);
+            var diffuseMap = material.materials.diffuseMap;
+            material.destroy();
+            expect(material.isDestroyed()).toEqual(true);
+            expect(diffuseMap.isDestroyed()).toEqual(true);
+        });
     });
+
+    it('does not destroy default material', function() {
+        var material = Material.fromType(Material.DiffuseMapType);
+        renderMaterial(material);
+        material.destroy();
+    });
+
 }, 'WebGL');
