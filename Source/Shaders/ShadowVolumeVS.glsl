@@ -27,22 +27,15 @@ vec4 clipPointToPlane(vec3 p0, vec3 p1, bool nearPlane)
     
     bool culledByPlane = false;
     
-    if (behindPlane && abs(denominator) < denominatorEpsilon)
-    {
-        // point is behind and parallel to the plane
-        culledByPlane = true;
-    }
-    else if (behindPlane && abs(denominator) > denominatorEpsilon)
+    // point is behind the plane and not parallel
+    if (behindPlane && abs(denominator) > denominatorEpsilon)
     {
         // find intersection of ray and the plane
         // t = (-dot(plane normal, point on plane) - dot(plane normal, ray origin)) / dot(plane normal, ray direction)
         float t = (planeDistance + p0.z) / denominator;
-        if (t < 0.0 || t > magnitude)
-        {
-            // entire segment is behind the plane
-            culledByPlane = true;
-        }
-        else
+        
+        // The intersection is on the segment
+        if (t >= 0.0 && t <= magnitude)
         {
             // compute intersection with plane slightly offset
             // to prevent precision artifacts
@@ -50,17 +43,6 @@ vec4 clipPointToPlane(vec3 p0, vec3 p1, bool nearPlane)
             p0 = p0 + t * direction;
         }
     }
-    
-    /*
-    if (culledByPlane) {
-        // the segment is behind the plane. push to plane and
-        // slightly offset to prevent precision artifacts
-        //p0.z = min(p0.z, -(planeDistance + offset));
-        
-        float t = (planeDistance + p0.z) + offset;
-        p0 = p0 + t * direction;
-    }
-    */
     
     return czm_projection * vec4(p0, 1.0);
 }
