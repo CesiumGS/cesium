@@ -15,17 +15,12 @@ vec4 clipPointToPlane(vec3 p0, vec3 p1, bool nearPlane)
     vec2 frustum = czm_currentFrustum;
     float planeDistance = nearPlane ? frustum.x : frustum.y;
     
-    p0 = (czm_modelViewRelativeToEye * vec4(p0, 1.0)).xyz;
-    p1 = (czm_modelViewRelativeToEye * vec4(p1, 1.0)).xyz;
-    
     vec3 diff = p1 - p0;
     float magnitude = length(diff);
     vec3 direction = normalize(diff);
     float denominator = -direction.z;
     float pointDistance = -(planeDistance + p0.z);
     bool behindPlane = nearPlane ? pointDistance < 0.0 : pointDistance > 0.0;
-    
-    bool culledByPlane = false;
     
     // point is behind the plane and not parallel
     if (behindPlane && abs(denominator) > denominatorEpsilon)
@@ -53,20 +48,20 @@ void main()
     
     float delta = 1.0; // TODO: moving the vertex is a function of the view
 
-    vec3 eyePosition = position.xyz;
+    vec3 origPosition = position.xyz;
     vec3 movedPosition = position.xyz + normal * delta;
     
-    vec3 p0 = (czm_modelViewRelativeToEye * vec4(eyePosition, 1.0)).xyz;
-    vec3 p1 = (czm_modelViewRelativeToEye * vec4(movedPosition, 1.0)).xyz;
+    vec3 origPositionEC = (czm_modelViewRelativeToEye * vec4(origPosition, 1.0)).xyz;
+    vec3 movedPositionEC = (czm_modelViewRelativeToEye * vec4(movedPosition, 1.0)).xyz;
     
-    vec3 diff = p1 - p0;
+    vec3 diff = movedPositionEC - origPositionEC;
     
     if (extrude == 0.0)
     {
-        gl_Position = clipPointToPlane(eyePosition, movedPosition, diff.z < 0.0);
+        gl_Position = clipPointToPlane(origPositionEC, movedPositionEC, diff.z < 0.0);
     }
     else
     {
-        gl_Position = clipPointToPlane(movedPosition, eyePosition, diff.z >= 0.0);
+        gl_Position = clipPointToPlane(movedPositionEC, origPositionEC, diff.z >= 0.0);
     }
 }
