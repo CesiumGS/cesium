@@ -2545,6 +2545,17 @@ define([
                                                 0.0, 0.0, 0.0, 1.0));
 
     /**
+     * An immutable Matrix4 instance initialized to the zero matrix.
+     *
+     * @type {Matrix4}
+     * @constant
+     */
+    Matrix4.ZERO = freezeObject(new Matrix4(0.0, 0.0, 0.0, 0.0,
+                                            0.0, 0.0, 0.0, 0.0,
+                                            0.0, 0.0, 0.0, 0.0,
+                                            0.0, 0.0, 0.0, 0.0));
+
+    /**
      * The index into Matrix4 for column 0, row 0.
      *
      * @type {Number}

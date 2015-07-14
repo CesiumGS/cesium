@@ -5,6 +5,7 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/defined',
         'Core/Ellipsoid',
         'Core/Math',
         'Core/NearFarScalar',
@@ -20,6 +21,7 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Color,
+        defined,
         Ellipsoid,
         CesiumMath,
         NearFarScalar,
@@ -44,7 +46,7 @@ defineSuite([
         scene = createScene();
         camera = scene.camera;
 
-        heightReferenceSupported = scene._globeDepth.supported && scene.context.maximumVertexTextureImageUnits > 0;
+        heightReferenceSupported = defined(scene._globeDepth) && scene._globeDepth.supported && scene.context.maximumVertexTextureImageUnits > 0;
     });
 
     afterAll(function() {
