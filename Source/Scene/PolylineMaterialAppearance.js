@@ -29,6 +29,7 @@ define([
      *
      * @alias PolylineMaterialAppearance
      * @constructor
+     * @implements {Appearance}
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link PolylineMaterialAppearance#renderState} has alpha blending enabled.

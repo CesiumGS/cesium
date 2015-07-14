@@ -23,7 +23,7 @@ define([
      * this base <code>Appearance</code> interface.
      *
      * @alias Appearance
-     * @constructor
+     * @interface
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link Appearance#renderState} has alpha blending enabled.

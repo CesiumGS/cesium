@@ -26,6 +26,7 @@ define([
      *
      * @alias PerInstanceColorAppearance
      * @constructor
+     * @implements {Appearance}
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Boolean} [options.flat=false] When <code>true</code>, flat shading is used in the fragment shader, which means lighting is not taking into account.
