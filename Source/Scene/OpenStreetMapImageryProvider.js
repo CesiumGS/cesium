@@ -42,7 +42,8 @@ define([
      * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {Credit|String} [options.credit='MapQuest, Open Street Map and contributors, CC-BY-SA'] A credit for the data source, which is displayed on the canvas.
-     *
+     * @param {Array} [options.subdomains=['a','b','c']] List of subdomains one of which will be prepended to each tile URL for performance.
+     * 
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
@@ -63,7 +64,7 @@ define([
      */
     var OpenStreetMapImageryProvider = function OpenStreetMapImageryProvider(options) {
         options = defaultValue(options, {});
-
+        
         var url = defaultValue(options.url, '//a.tile.openstreetmap.org/');
 
         if (!trailingSlashRegex.test(url)) {
@@ -72,6 +73,11 @@ define([
 
         this._url = url;
         this._fileExtension = defaultValue(options.fileExtension, 'png');
+        this._subdomains = options.subdomains;
+        if (this._url === '//a.tile.openstreetmap.org/' && this._subdomains === undefined) {
+            this._url = '//tile.openstreetmap.org/';
+            this._subdomains = ['a','b','c'];
+        }
         this._proxy = options.proxy;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
 
@@ -106,8 +112,17 @@ define([
         this._credit = credit;
     };
 
+    function chooseSubdomain(subdomains, x, y) {
+        if (subdomains === undefined) {
+            return '';
+        } else {
+            return subdomains[ (x + y) % subdomains.length ] + '.';
+        }
+    }
+
     function buildImageUrl(imageryProvider, x, y, level) {
-        var url = imageryProvider._url + level + '/' + x + '/' + y + '.' + imageryProvider._fileExtension;
+        var url = imageryProvider.url.replace('//', '//' + chooseSubdomain(imageryProvider._subdomains, x, y));
+        url += level + '/' + x + '/' + y + '.' + imageryProvider._fileExtension;
 
         var proxy = imageryProvider._proxy;
         if (defined(proxy)) {
