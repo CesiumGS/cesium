@@ -67,8 +67,8 @@ define([
      *          ]
      *        }
      * @param {String} [options.path="/default_map"] The path of the Google Earth server hosting the imagery.
-     * @param {Number} [options.maximumLevel=23] The maximum level-of-detail supported by the Google Earth
-     *        Enterprise server.
+     * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the Google Earth
+     *        Enterprise server, or undefined if there is no limit.
      * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
      *        is invalid and should be discarded. To ensure that no tiles are discarded, construct and pass
      *        a {@link NeverTileDiscardPolicy} for this parameter.
@@ -86,6 +86,8 @@ define([
      * @see SingleTileImageryProvider
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
+     * @see WebMapTileServiceImageryProvider
+     * @see UrlTemplateImageryProvider
      *
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
@@ -132,7 +134,7 @@ define([
 
         this._tileWidth = 256;
         this._tileHeight = 256;
-        this._maximumLevel = defaultValue(options.maximumLevel, 23);
+        this._maximumLevel = options.maximumLevel;
         this._imageUrlTemplate = this._url + this._path + '/query?request={request}&channel={channel}&version={version}&x={x}&y={y}&z={zoom}';
 
         this._errorEvent = new Event();
@@ -519,7 +521,7 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
-     * @returns {Promise} A promise for the image that will resolve when the image is available, or
+     * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
@@ -546,7 +548,7 @@ define([
      * @param {Number} level The tile level.
      * @param {Number} longitude The longitude at which to pick features.
      * @param {Number} latitude  The latitude at which to pick features.
-     * @return {Promise} A promise for the picked features that will resolve when the asynchronous
+     * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
      *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
      *                   instances.  The array may be empty if no features are found at the given location.
      *                   It may also be undefined if picking is not supported.

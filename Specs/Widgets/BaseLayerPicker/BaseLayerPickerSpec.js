@@ -2,11 +2,13 @@
 defineSuite([
         'Widgets/BaseLayerPicker/BaseLayerPicker',
         'Core/EllipsoidTerrainProvider',
+        'Core/FeatureDetection',
         'Scene/ImageryLayerCollection',
         'Specs/DomEventSimulator'
     ], function(
         BaseLayerPicker,
         EllipsoidTerrainProvider,
+        FeatureDetection,
         ImageryLayerCollection,
         DomEventSimulator) {
     "use strict";
@@ -35,49 +37,35 @@ defineSuite([
         document.body.removeChild(container);
     });
 
-    it('mousedown event closes dropdown if target is not inside container', function() {
-        var container = document.createElement('div');
-        container.id = 'testContainer';
-        document.body.appendChild(container);
+    function addCloseOnInputSpec(name, func){
+        it(name + ' event closes dropdown if target is not inside container', function() {
+            var container = document.createElement('div');
+            container.id = 'testContainer';
+            document.body.appendChild(container);
 
-        var widget = new BaseLayerPicker('testContainer', {
-            globe : new MockGlobe()
+            var widget = new BaseLayerPicker('testContainer', {
+                globe : new MockGlobe()
+            });
+
+            widget.viewModel.dropDownVisible = true;
+            func(document.body);
+            expect(widget.viewModel.dropDownVisible).toEqual(false);
+
+            widget.viewModel.dropDownVisible = true;
+            func(container.firstChild);
+            expect(widget.viewModel.dropDownVisible).toEqual(true);
+
+            widget.destroy();
+            document.body.removeChild(container);
         });
+    }
 
-        widget.viewModel.dropDownVisible = true;
-        DomEventSimulator.fireMouseDown(document.body);
-        expect(widget.viewModel.dropDownVisible).toEqual(false);
-
-        widget.viewModel.dropDownVisible = true;
-        DomEventSimulator.fireMouseDown(container.firstChild);
-        expect(widget.viewModel.dropDownVisible).toEqual(true);
-
-        widget.destroy();
-        document.body.removeChild(container);
-    });
-
-    it('touchstart event closes dropdown if target is not inside container', function() {
-        var container = document.createElement('div');
-        container.id = 'testContainer';
-        document.body.appendChild(container);
-
-        var widget = new BaseLayerPicker('testContainer', {
-            globe : new MockGlobe()
-        });
-
-        widget.viewModel.dropDownVisible = true;
-
-        widget.viewModel.dropDownVisible = true;
-        DomEventSimulator.fireTouchStart(document.body);
-        expect(widget.viewModel.dropDownVisible).toEqual(false);
-
-        widget.viewModel.dropDownVisible = true;
-        DomEventSimulator.fireTouchStart(container.firstChild);
-        expect(widget.viewModel.dropDownVisible).toEqual(true);
-
-        widget.destroy();
-        document.body.removeChild(container);
-    });
+    if (FeatureDetection.supportsPointerEvents()) {
+        addCloseOnInputSpec('pointerDown', DomEventSimulator.firePointerDown);
+    } else {
+        addCloseOnInputSpec('mousedown', DomEventSimulator.fireMouseDown);
+        addCloseOnInputSpec('touchstart', DomEventSimulator.fireTouchStart);
+    }
 
     it('constructor throws with no layer collection', function() {
         expect(function() {

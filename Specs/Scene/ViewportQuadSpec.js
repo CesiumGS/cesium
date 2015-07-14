@@ -9,6 +9,7 @@ defineSuite([
         'Specs/createCamera',
         'Specs/createContext',
         'Specs/createFrameState',
+        'Specs/pollToPromise',
         'Specs/render'
     ], function(
         ViewportQuad,
@@ -20,6 +21,7 @@ defineSuite([
         createCamera,
         createContext,
         createFrameState,
+        pollToPromise,
         render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
@@ -114,11 +116,15 @@ defineSuite([
         viewportQuad.material = Material.fromType(Material.ImageType);
         viewportQuad.material.uniforms.image = texture;
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        pollToPromise(function() {
+            return viewportQuad.material._loadedImages.length !== 0;
+        }).then(function() {
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, frameState, viewportQuad);
-        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
+            render(context, frameState, viewportQuad);
+            expect(context.readPixels()).toEqual([255, 0, 0, 255]);
+        });
     });
 
     it('isDestroyed', function() {

@@ -35,6 +35,11 @@ define([
      * @private
      */
     var UniformState = function() {
+        /**
+         * @type {Texture}
+         */
+        this.globeDepthTexture = undefined;
+
         this._viewport = new BoundingRectangle();
         this._viewportCartesian4 = new Cartesian4();
         this._viewportDirty = false;

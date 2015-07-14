@@ -1031,7 +1031,7 @@ defineSuite([
         var target = Cartesian3.fromDegrees(0.0, 0.0);
         var offset = new Cartesian3(0.0, -1.0, 0.0);
 
-        var tempCamera = camera.clone();
+        var tempCamera = Camera.clone(camera);
         tempCamera.lookAt(target, offset);
 
         expect(tempCamera.position).toEqualEpsilon(offset, CesiumMath.EPSILON11);
@@ -1050,7 +1050,7 @@ defineSuite([
         var pitch = CesiumMath.toRadians(-45.0);
         var range = 2.0;
 
-        var tempCamera = camera.clone();
+        var tempCamera = Camera.clone(camera);
         tempCamera.lookAt(target, new HeadingPitchRange(heading, pitch, range));
 
         tempCamera.lookAtTransform(Matrix4.IDENTITY);
@@ -1085,7 +1085,7 @@ defineSuite([
         frustum.top = 1.0;
         frustum.bottom = -1.0;
 
-        var tempCamera = camera.clone();
+        var tempCamera = Camera.clone(camera);
         tempCamera.frustum = frustum;
         tempCamera.update(SceneMode.SCENE2D);
 
@@ -1110,7 +1110,7 @@ defineSuite([
         frustum.top = 1.0;
         frustum.bottom = -1.0;
 
-        var tempCamera = camera.clone();
+        var tempCamera = Camera.clone(camera);
         tempCamera.frustum = frustum;
         tempCamera.update(SceneMode.SCENE2D);
 
@@ -1143,7 +1143,7 @@ defineSuite([
         var offset = new Cartesian3(1.0, 1.0, 0.0);
         var transform = Transforms.eastNorthUpToFixedFrame(target, Ellipsoid.UNIT_SPHERE);
 
-        var tempCamera = camera.clone();
+        var tempCamera = Camera.clone(camera);
         tempCamera.lookAtTransform(transform, offset);
 
         expect(tempCamera.position).toEqualEpsilon(offset, CesiumMath.EPSILON11);
@@ -1185,7 +1185,7 @@ defineSuite([
         var range = 2.0;
         var transform = Transforms.eastNorthUpToFixedFrame(target);
 
-        var tempCamera = camera.clone();
+        var tempCamera = Camera.clone(camera);
         tempCamera.lookAtTransform(transform, new HeadingPitchRange(heading, pitch, range));
 
         tempCamera.lookAtTransform(Matrix4.IDENTITY);
@@ -1214,7 +1214,7 @@ defineSuite([
         frustum.top = 1.0;
         frustum.bottom = -1.0;
 
-        var tempCamera = camera.clone();
+        var tempCamera = Camera.clone(camera);
         tempCamera.frustum = frustum;
         tempCamera.update(SceneMode.SCENE2D);
 
@@ -1239,7 +1239,7 @@ defineSuite([
         frustum.top = 1.0;
         frustum.bottom = -1.0;
 
-        var tempCamera = camera.clone();
+        var tempCamera = Camera.clone(camera);
         tempCamera.frustum = frustum;
         tempCamera.update(SceneMode.SCENE2D);
 
@@ -1294,10 +1294,10 @@ defineSuite([
             CesiumMath.toRadians(21.51),
             CesiumMath.toRadians(41.38));
         camera.viewRectangle(rectangle, Ellipsoid.WGS84);
-        expect(camera.position).toEqualEpsilon(new Cartesian3(4481581.054168208, 1754494.5938935655, 4200573.072090136), CesiumMath.EPSILON6);
-        expect(camera.direction).toEqualEpsilon(new Cartesian3(-0.7015530983057745, -0.2746510892984876, -0.6575637074875123), CesiumMath.EPSILON10);
-        expect(camera.up).toEqualEpsilon(new Cartesian3(-0.6123128513437499, -0.23971441651266895, 0.7533989451779698), CesiumMath.EPSILON10);
-        expect(camera.right).toEqualEpsilon(new Cartesian3(-0.36454934142973716, 0.9311840729217532, 0.0), CesiumMath.EPSILON10);
+        expect(camera.position).toEqualEpsilon(new Cartesian3(4481555.454147325, 1754498.0086281248, 4200627.581953675), CesiumMath.EPSILON6);
+        expect(camera.direction).toEqualEpsilon(new Cartesian3(-0.6995108433013301, -0.27385366401082994, -0.6600672320390594), CesiumMath.EPSILON10);
+        expect(camera.up).toEqualEpsilon(new Cartesian3(-0.6146434679470263, -0.24062867269250837, 0.75120652898407), CesiumMath.EPSILON10);
+        expect(camera.right).toEqualEpsilon(new Cartesian3(-0.36455176232452213, 0.9311831251617939, 0), CesiumMath.EPSILON10);
     });
 
     it('views rectangle in 3D (3)', function() {
@@ -1307,10 +1307,23 @@ defineSuite([
             CesiumMath.toRadians(157.0),
             CesiumMath.toRadians(0.0));
         camera.viewRectangle(rectangle);
-        expect(camera.position).toEqualEpsilon(new Cartesian3(-7210721.873278953, 8105929.1576369405, -5972336.199381728), CesiumMath.EPSILON6);
-        expect(camera.direction).toEqualEpsilon(new Cartesian3(0.5822498554483325, -0.6545358652367963, 0.48225294913469874), CesiumMath.EPSILON10);
-        expect(camera.up).toEqualEpsilon(new Cartesian3(-0.32052676705406324, 0.3603199946588929, 0.8760320159964963), CesiumMath.EPSILON10);
-        expect(camera.right).toEqualEpsilon(new Cartesian3(-0.7471597536218517, -0.6646444933705039, 0.0), CesiumMath.EPSILON10);
+        expect(camera.position).toEqualEpsilon(new Cartesian3(-6017603.25625715, 9091606.78076493, -5075070.862292178), CesiumMath.EPSILON6);
+        expect(camera.direction).toEqualEpsilon(new Cartesian3(0.5000640869795608, -0.7555144216716235, 0.4232420909591703), CesiumMath.EPSILON10);
+        expect(camera.up).toEqualEpsilon(new Cartesian3(-0.23360296374117637, 0.35293557895291494, 0.9060166292295686), CesiumMath.EPSILON10);
+        expect(camera.right).toEqualEpsilon(new Cartesian3(-0.8338858220671682, -0.5519369853120581, 0), CesiumMath.EPSILON10);
+    });
+
+    it('views rectangle in 3D (4)', function() {
+        var rectangle = new Rectangle(
+            CesiumMath.toRadians(90.0),
+            CesiumMath.toRadians(-62.0),
+            CesiumMath.toRadians(174.0),
+            CesiumMath.toRadians(-4.0));
+        camera.viewRectangle(rectangle);
+        expect(camera.position).toEqualEpsilon(new Cartesian3(-7307919.685704952, 8116267.060310548, -7085995.891547672), CesiumMath.EPSILON6);
+        expect(camera.direction).toEqualEpsilon(new Cartesian3(0.5607858365117034, -0.622815768168856, 0.5455453826109309), CesiumMath.EPSILON10);
+        expect(camera.up).toEqualEpsilon(new Cartesian3(-0.3650411126627274, 0.4054192281503986, 0.8380812821629494), CesiumMath.EPSILON10);
+        expect(camera.right).toEqualEpsilon(new Cartesian3(-0.7431448254773944, -0.6691306063588581, 0), CesiumMath.EPSILON10);
     });
 
     it('views rectangle in 3D across IDL', function() {
@@ -1946,13 +1959,16 @@ defineSuite([
 
         var expectedOptions = {
             destination : options.destination,
-            direction : undefined,
-            up : undefined,
+            heading : undefined,
+            pitch : undefined,
+            roll : undefined,
             duration : undefined,
             complete : undefined,
             cancel : undefined,
             endTransform : undefined,
-            convert : undefined
+            convert : undefined,
+            maximumHeight : undefined,
+            easingFunction : undefined
         };
 
         expect(CameraFlightPath.createTween).toHaveBeenCalledWith(scene, expectedOptions);

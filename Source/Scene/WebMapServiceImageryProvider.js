@@ -95,7 +95,7 @@ define([
      * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when
      *        specifying this that the number of tiles at the minimum level is small, such as four or less.  A larger number is
      *        likely to result in rendering problems.
-     * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider.
+     * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
      *        If not specified, there is no limit.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      * @param {Object} [options.proxy] A proxy to use for requests. This object is
@@ -104,9 +104,11 @@ define([
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
+     * @see OpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see TileMapServiceImageryProvider
-     * @see OpenStreetMapImageryProvider
+     * @see WebMapTileServiceImageryProvider
+     * @see UrlTemplateImageryProvider
      *
      * @see {@link http://resources.esri.com/help/9.3/arcgisserver/apis/rest/|ArcGIS Server REST API}
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
@@ -431,7 +433,7 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
-     * @returns {Promise} A promise for the image that will resolve when the image is available, or
+     * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
@@ -461,7 +463,7 @@ define([
      * @param {Number} level The tile level.
      * @param {Number} longitude The longitude at which to pick features.
      * @param {Number} latitude  The latitude at which to pick features.
-     * @return {Promise} A promise for the picked features that will resolve when the asynchronous
+     * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
      *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
      *                   instances.  The array may be empty if no features are found at the given location.
      *

@@ -594,7 +594,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         function pickAndTrackObject(e) {
             var entity = pickEntity(that, e);
             if (defined(entity)) {
-                if (defined(entity.position)) {
+                //Only track the entity if it has a valid position at the current time.
+                if (Property.getValueOrUndefined(entity.position, that.clock.currentTime)) {
                     that.trackedEntity = entity;
                 } else {
                     that.zoomTo(entity);
@@ -1437,9 +1438,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * target will be the range. The heading will be determined from the offset. If the heading cannot be
      * determined from the offset, the heading will be north.</p>
      *
-     * @param {Entity|Entity[]|EntityCollection|DataSource|Promise} target The entity, array of entities, entity collection or data source to view. You can also pass a promise that resolves to one of the previously mentioned types.
+     * @param {Entity|Entity[]|EntityCollection|DataSource|Promise.<Entity|Entity[]|EntityCollection|DataSource>} target The entity, array of entities, entity collection or data source to view. You can also pass a promise that resolves to one of the previously mentioned types.
      * @param {HeadingPitchRange} [offset] The offset from the center of the entity in the local east-north-up reference frame.
-     * @returns {Promise} A Promise that resolves to true if the zoom was successful or false if the entity is not currently visualized in the scene or the zoom was cancelled.
+     * @returns {Promise.<Boolean>} A Promise that resolves to true if the zoom was successful or false if the entity is not currently visualized in the scene or the zoom was cancelled.
      */
     Viewer.prototype.zoomTo = function(target, offset) {
         return zoomToOrFly(this, target, offset, false);
@@ -1460,11 +1461,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * target will be the range. The heading will be determined from the offset. If the heading cannot be
      * determined from the offset, the heading will be north.</p>
      *
-     * @param {Entity|Entity[]|EntityCollection|DataSource|Promise} target The entity, array of entities, entity collection or data source to view. You can also pass a promise that resolves to one of the previously mentioned types.
+     * @param {Entity|Entity[]|EntityCollection|DataSource|Promise.<Entity|Entity[]|EntityCollection|DataSource>} target The entity, array of entities, entity collection or data source to view. You can also pass a promise that resolves to one of the previously mentioned types.
      * @param {Object} [options] Object with the following properties:
      * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
+     * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
      * @param {HeadingPitchRange} [options.offset] The offset from the target in the local east-north-up reference frame centered at the target.
-     * @returns {Promise} A Promise that resolves to true if the flight was successful or false if the entity is not currently visualized in the scene or the flight was cancelled.
+     * @returns {Promise.<Boolean>} A Promise that resolves to true if the flight was successful or false if the entity is not currently visualized in the scene or the flight was cancelled.
      */
     Viewer.prototype.flyTo = function(target, options) {
         return zoomToOrFly(this, target, options, true);
@@ -1549,7 +1551,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
     function updateZoomTarget(viewer) {
         var entities = viewer._zoomTarget;
-        if (!defined(entities)) {
+        if (!defined(entities) || viewer.scene.mode === SceneMode.MORPHING) {
             return;
         }
 
@@ -1589,6 +1591,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             var userOptions = defaultValue(viewer._zoomOptions, {});
             var options = {
                 duration : userOptions.duration,
+                maximumHeight : userOptions.maximumHeight,
                 complete : function() {
                     zoomPromise.resolve(true);
                 },
@@ -1608,8 +1611,19 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             return;
         }
 
-        var scene = viewer.scene;
         var trackedEntity = viewer._trackedEntity;
+        var currentTime = viewer.clock.currentTime;
+
+        //Verify we have a current position at this time. This is only triggered if a position
+        //has become undefined after trackedEntity is set but before the boundingSphere has been
+        //computed. In this case, we will track the entity once it comes back into existence.
+        var currentPosition = Property.getValueOrUndefined(trackedEntity.position, currentTime);
+
+        if (!defined(currentPosition)) {
+            return;
+        }
+
+        var scene = viewer.scene;
 
         var state = viewer._dataSourceDisplay.getBoundingSphere(trackedEntity, false, boundingSphereScratch);
         if (state === BoundingSphereState.PENDING) {
@@ -1627,7 +1641,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         var bs = state !== BoundingSphereState.FAILED ? boundingSphereScratch : undefined;
         viewer._entityView = new EntityView(trackedEntity, scene, scene.mapProjection.ellipsoid, bs);
-        viewer._entityView.update(viewer.clock.currentTime);
+        viewer._entityView.update(currentTime);
         viewer._needTrackedEntityUpdate = false;
     }
 

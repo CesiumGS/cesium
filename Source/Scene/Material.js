@@ -308,6 +308,8 @@ define([
 
         this._updateFunctions = [];
 
+        this._defaultTexture = undefined;
+
         initializeMaterial(options, this);
         defineProperties(this, {
             type : {
@@ -411,13 +413,9 @@ define([
             uniformId = loadedImage.id;
             var image = loadedImage.image;
 
-            var texture = Material._textureCache.getTexture(this._texturePaths[uniformId]);
-            if (!defined(texture)) {
-                texture = context.createTexture2D({
-                    source : image
-                });
-                Material._textureCache.addTexture(this._texturePaths[uniformId], texture);
-            }
+            var texture = context.createTexture2D({
+                source : image
+            });
 
             this._textures[uniformId] = texture;
 
@@ -439,9 +437,7 @@ define([
             uniformId = loadedCubeMap.id;
             var images = loadedCubeMap.images;
 
-            var cubeMap = Material._textureCache.getTexture(this._texturePaths[uniformId]);
-            if (!defined(cubeMap)) {
-                cubeMap = context.createCubeMap({
+            var cubeMap = context.createCubeMap({
                     source : {
                         positiveX : images[0],
                         negativeX : images[1],
@@ -451,8 +447,6 @@ define([
                         negativeZ : images[5]
                     }
                 });
-                Material._textureCache.addTexture(this._texturePaths[uniformId], cubeMap);
-            }
 
             this._textures[uniformId] = cubeMap;
         }
@@ -505,14 +499,17 @@ define([
      * material = material && material.destroy();
      */
     Material.prototype.destroy = function() {
-        var materials = this.materials;
-        var uniforms = this.uniforms;
-        for ( var uniformId in uniforms) {
-            if (uniforms.hasOwnProperty(uniformId)) {
-                var path = this._texturePaths[uniformId];
-                Material._textureCache.releaseTexture(path);
+        var textures = this._textures;
+        for ( var texture in textures) {
+            if (textures.hasOwnProperty(texture)) {
+                var instance = textures[texture];
+                if (instance !== this._defaultTexture) {
+                    instance.destroy();
+                }
             }
         }
+
+        var materials = this.materials;
         for ( var material in materials) {
             if (materials.hasOwnProperty(material)) {
                 materials[material].destroy();
@@ -667,8 +664,11 @@ define([
             var uniformDimensions;
 
             if (uniformValue instanceof Texture && uniformValue !== texture) {
-                Material._textureCache.releaseTexture(material._texturePaths[uniformId]);
                 material._texturePaths[uniformId] = undefined;
+                var tmp = material._textures[uniformId];
+                if (tmp !== material._defaultTexture) {
+                    tmp.destroy();
+                }
                 material._textures[uniformId] = uniformValue;
 
                 uniformDimensionsName = uniformId + 'Dimensions';
@@ -683,7 +683,10 @@ define([
 
             if (!defined(texture)) {
                 material._texturePaths[uniformId] = undefined;
-                texture = material._textures[uniformId] = context.defaultTexture;
+                if (!defined(material._defaultTexture)) {
+                    material._defaultTexture = context.defaultTexture;
+                }
+                texture = material._textures[uniformId] = material._defaultTexture;
 
                 uniformDimensionsName = uniformId + 'Dimensions';
                 if (uniforms.hasOwnProperty(uniformDimensionsName)) {
@@ -698,11 +701,7 @@ define([
             }
 
             if (uniformValue !== material._texturePaths[uniformId]) {
-                var newTexture = Material._textureCache.getTexture(uniformValue);
-                if (defined(newTexture)) {
-                    Material._textureCache.releaseTexture(material._texturePaths[uniformId]);
-                    material._textures[uniformId] = newTexture;
-                } else if (typeof uniformValue === 'string') {
+                if (typeof uniformValue === 'string') {
                     when(loadImage(uniformValue), function(image) {
                         material._loadedImages.push({
                             id : uniformId,
@@ -726,7 +725,10 @@ define([
             var uniformValue = material.uniforms[uniformId];
 
             if (uniformValue instanceof CubeMap) {
-                Material._textureCache.releaseTexture(material._texturePaths[uniformId]);
+                var tmp = material._textures[uniformId];
+                if (tmp !== material._defaultTexture) {
+                    tmp.destroy();
+                }
                 material._texturePaths[uniformId] = undefined;
                 material._textures[uniformId] = uniformValue;
                 return;
@@ -747,27 +749,21 @@ define([
                 uniformValue.positiveZ + uniformValue.negativeZ;
 
             if (path !== material._texturePaths[uniformId]) {
-                var newTexture = Material._textureCache.getTexture(path);
-                if (defined(newTexture)) {
-                    Material._textureCache.releaseTexture(material._texturePaths[uniformId]);
-                    material._textures[uniformId] = newTexture;
-                } else {
-                    var promises = [
-                        loadImage(uniformValue.positiveX),
-                        loadImage(uniformValue.negativeX),
-                        loadImage(uniformValue.positiveY),
-                        loadImage(uniformValue.negativeY),
-                        loadImage(uniformValue.positiveZ),
-                        loadImage(uniformValue.negativeZ)
-                    ];
+                var promises = [
+                    loadImage(uniformValue.positiveX),
+                    loadImage(uniformValue.negativeX),
+                    loadImage(uniformValue.positiveY),
+                    loadImage(uniformValue.negativeY),
+                    loadImage(uniformValue.positiveZ),
+                    loadImage(uniformValue.negativeZ)
+                ];
 
-                    when.all(promises).then(function(images) {
-                        material._loadedCubeMaps.push({
-                            id : uniformId,
-                            images : images
-                        });
+                when.all(promises).then(function(images) {
+                    material._loadedCubeMaps.push({
+                        id : uniformId,
+                        images : images
                     });
-                }
+                });
 
                 material._texturePaths[uniformId] = path;
             }
@@ -944,36 +940,6 @@ define([
     function getNumberOfTokens(material, token, excludePeriod) {
         return replaceToken(material, token, token, excludePeriod);
     }
-
-    Material._textureCache = {
-        _textures : {},
-
-        addTexture : function(path, texture) {
-            this._textures[path] = {
-                texture : texture,
-                count : 1
-            };
-        },
-
-        getTexture : function(path) {
-            var entry = this._textures[path];
-
-            if (defined(entry)) {
-                entry.count++;
-                return entry.texture;
-            }
-
-            return undefined;
-        },
-
-        releaseTexture : function(path) {
-            var entry = this._textures[path];
-            if (defined(entry) && --entry.count === 0) {
-                entry.texture = entry.texture && entry.texture.destroy();
-                this._textures[path] = undefined;
-            }
-        }
-    };
 
     Material._materialCache = {
         _materials : {},

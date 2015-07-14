@@ -23,6 +23,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Michael Dunkel](https://github.com/mdunkel)
    * [Pat Mahoney](https://github.com/PatMahoney)
    * [Francesco Linsalata](https://github.com/flinsalata) 
+   * [Kai Ninomiya](https://github.com/kainino0x)
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
    * [Kevin Ring](https://github.com/kring)
@@ -35,6 +36,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Evax Software](https://github.com/evax)
 * [Aviture](http://aviture.us.com)
    * [Mike Macaulay](https://github.com/mmacaula)
+   * [Nathan Schulte](https://github.com/nmschulte-aviture)
 * [Inovaworks](http://www.inovaworks.com/)
    * [Sergio Flores](https://github.com/relfos)
 * [CubeWerx Inc.](http://www.cubewerx.com/)
@@ -58,5 +60,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Ayush Khandelwal](https://github.com/ayk115)
 * [Aditya Raisinghani](https://github.com/adi2412)
 * [Ilia Choly](https://github.com/icholy)
+* [Farouk Abdou](https://github.com/kaktus40)
 
 Also see [our contributors page](http://cesiumjs.org/contributors.html) for more information.

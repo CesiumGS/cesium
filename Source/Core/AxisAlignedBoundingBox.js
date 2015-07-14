@@ -3,14 +3,18 @@ define([
         './Cartesian3',
         './defaultValue',
         './defined',
+        './deprecationWarning',
         './DeveloperError',
-        './Intersect'
+        './Intersect',
+        './Plane'
     ], function(
         Cartesian3,
         defaultValue,
         defined,
+        deprecationWarning,
         DeveloperError,
-        Intersect) {
+        Intersect,
+        Plane) {
     "use strict";
 
     /**
@@ -162,15 +166,13 @@ define([
      * Determines which side of a plane a box is located.
      *
      * @param {AxisAlignedBoundingBox} box The bounding box to test.
-     * @param {Cartesian4} plane The coefficients of the plane in the form <code>ax + by + cz + d = 0</code>
-     *                           where the coefficients a, b, c, and d are the components x, y, z, and w
-     *                           of the {@link Cartesian4}, respectively.
+     * @param {Plane} plane The plane to test against.
      * @returns {Intersect} {@link Intersect.INSIDE} if the entire box is on the side of the plane
      *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire box is
      *                      on the opposite side, and {@link Intersect.INTERSECTING} if the box
      *                      intersects the plane.
      */
-    AxisAlignedBoundingBox.intersect = function(box, plane) {
+    AxisAlignedBoundingBox.intersectPlane = function(box, plane) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(box)) {
             throw new DeveloperError('box is required.');
@@ -182,8 +184,9 @@ define([
 
         intersectScratch = Cartesian3.subtract(box.maximum, box.minimum, intersectScratch);
         var h = Cartesian3.multiplyByScalar(intersectScratch, 0.5, intersectScratch); //The positive half diagonal
-        var e = h.x * Math.abs(plane.x) + h.y * Math.abs(plane.y) + h.z * Math.abs(plane.z);
-        var s = Cartesian3.dot(box.center, plane) + plane.w; //signed distance from center
+        var normal = plane.normal;
+        var e = h.x * Math.abs(normal.x) + h.y * Math.abs(normal.y) + h.z * Math.abs(normal.z);
+        var s = Cartesian3.dot(box.center, normal) + plane.distance; //signed distance from center
 
         if (s - e > 0) {
             return Intersect.INSIDE;
@@ -195,6 +198,26 @@ define([
         }
 
         return Intersect.INTERSECTING;
+    };
+
+    var scratchPlane = new Plane(new Cartesian3(), 0.0);
+    /**
+     * Determines which side of a plane a box is located.
+     *
+     * @deprecated
+     * @param {AxisAlignedBoundingBox} box The bounding box to test.
+     * @param {Cartesian4} plane The coefficients of the plane in the form <code>ax + by + cz + d = 0</code>
+     *                           where the coefficients a, b, c, and d are the components x, y, z, and w
+     *                           of the {@link Cartesian4}, respectively.
+     * @returns {Intersect} {@link Intersect.INSIDE} if the entire box is on the side of the plane
+     *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire box is
+     *                      on the opposite side, and {@link Intersect.INTERSECTING} if the box
+     *                      intersects the plane.
+     */
+    AxisAlignedBoundingBox.intersect = function(box, plane) {
+        deprecationWarning('AxisAlignedBoundingBox.intersect', 'AxisAlignedBoundingBox.intersect() was deprecated in Cesium 1.11.  It will be removed in 1.12.  Use AxisAlignedBoundingBox.intersectPlane() instead.');
+        var p = Plane.fromCartesian4(plane, scratchPlane);
+        return AxisAlignedBoundingBox.intersectPlane(box, p);
     };
 
     /**
@@ -210,6 +233,20 @@ define([
     /**
      * Determines which side of a plane this box is located.
      *
+     * @param {Plane} plane The plane to test against.
+     * @returns {Intersect} {@link Intersect.INSIDE} if the entire box is on the side of the plane
+     *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire box is
+     *                      on the opposite side, and {@link Intersect.INTERSECTING} if the box
+     *                      intersects the plane.
+     */
+    AxisAlignedBoundingBox.prototype.intersectPlane = function(plane) {
+        return AxisAlignedBoundingBox.intersectPlane(this, plane);
+    };
+
+    /**
+     * Determines which side of a plane this box is located.
+     *
+     * @deprecated
      * @param {Cartesian4} plane The coefficients of the plane in the form <code>ax + by + cz + d = 0</code>
      *                           where the coefficients a, b, c, and d are the components x, y, z, and w
      *                           of the {@link Cartesian4}, respectively.

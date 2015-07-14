@@ -651,7 +651,7 @@ define([
             throw new DeveloperError('far must be greater than zero.');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -714,7 +714,7 @@ define([
             throw new DeveloperError('far is required.');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -781,7 +781,7 @@ define([
             throw new DeveloperError('far is required.');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -842,7 +842,7 @@ define([
             throw new DeveloperError('near is required.');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -894,7 +894,7 @@ define([
     Matrix4.computeViewportTransformation = function(viewport, nearDepthRange, farDepthRange, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -1054,7 +1054,7 @@ define([
             throw new DeveloperError('index must be 0, 1, 2, or 3.');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -1077,7 +1077,7 @@ define([
      * @param {Matrix4} matrix The matrix to use.
      * @param {Number} index The zero-based index of the column to set.
      * @param {Cartesian4} cartesian The Cartesian whose values will be assigned to the specified column.
-     * @param {Cartesian4} result The object onto which to store the result.
+     * @param {Matrix4} result The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter.
      *
      * @exception {DeveloperError} index must be 0, 1, 2, or 3.
@@ -1109,7 +1109,7 @@ define([
             throw new DeveloperError('index must be 0, 1, 2, or 3.');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -1119,6 +1119,51 @@ define([
         result[startIndex + 1] = cartesian.y;
         result[startIndex + 2] = cartesian.z;
         result[startIndex + 3] = cartesian.w;
+        return result;
+    };
+
+    /**
+     * Computes a new matrix that replaces the translation in the rightmost column of the provided
+     * matrix with the provided translation.  This assumes the matrix is an affine transformation
+     *
+     * @param {Matrix4} matrix The matrix to use.
+     * @param {Cartesian3} translation The translation that replaces the translation of the provided matrix.
+     * @param {Cartesian4} result The object onto which to store the result.
+     * @returns {Matrix4} The modified result parameter.
+     */
+    Matrix4.setTranslation = function(matrix, translation, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(matrix)) {
+            throw new DeveloperError('matrix is required');
+        }
+        if (!defined(translation)) {
+            throw new DeveloperError('translation is required');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
+        //>>includeEnd('debug');
+
+        result[0] = matrix[0];
+        result[1] = matrix[1];
+        result[2] = matrix[2];
+        result[3] = matrix[3];
+
+        result[4] = matrix[4];
+        result[5] = matrix[5];
+        result[6] = matrix[6];
+        result[7] = matrix[7];
+
+        result[8] = matrix[8];
+        result[9] = matrix[9];
+        result[10] = matrix[10];
+        result[11] = matrix[11];
+
+        result[12] = translation.x;
+        result[13] = translation.y;
+        result[14] = translation.z;
+        result[15] = matrix[15];
+
         return result;
     };
 
@@ -1159,7 +1204,7 @@ define([
             throw new DeveloperError('index must be 0, 1, 2, or 3.');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -1181,7 +1226,7 @@ define([
      * @param {Matrix4} matrix The matrix to use.
      * @param {Number} index The zero-based index of the row to set.
      * @param {Cartesian4} cartesian The Cartesian whose values will be assigned to the specified row.
-     * @param {Cartesian4} result The object onto which to store the result.
+     * @param {Matrix4} result The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter.
      *
      * @exception {DeveloperError} index must be 0, 1, 2, or 3.
@@ -1213,7 +1258,7 @@ define([
             throw new DeveloperError('index must be 0, 1, 2, or 3.');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -1240,7 +1285,7 @@ define([
             throw new DeveloperError('matrix is required.');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -1282,7 +1327,7 @@ define([
             throw new DeveloperError('right is required');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -1376,7 +1421,7 @@ define([
             throw new DeveloperError('right is required');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -1416,7 +1461,7 @@ define([
             throw new DeveloperError('right is required');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -1467,7 +1512,7 @@ define([
             throw new DeveloperError('right is required');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -1555,7 +1600,7 @@ define([
             throw new DeveloperError('rotation is required');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -1633,7 +1678,7 @@ define([
             throw new DeveloperError('translation is required');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -1667,11 +1712,13 @@ define([
     var uniformScaleScratch = new Cartesian3();
 
     /**
-     * Multiplies a transformation matrix (with a bottom row of <code>[0.0, 0.0, 0.0, 1.0]</code>)
+     * Multiplies an affine transformation matrix (with a bottom row of <code>[0.0, 0.0, 0.0, 1.0]</code>)
      * by an implicit uniform scale matrix.  This is an optimization
-     * for <code>Matrix4.multiply(m, Matrix4.fromUniformScale(scale), m);</code> with less allocations and arithmetic operations.
+     * for <code>Matrix4.multiply(m, Matrix4.fromUniformScale(scale), m);</code>, where
+     * <code>m</code> must be an affine matrix.
+     * This function performs fewer allocations and arithmetic operations.
      *
-     * @param {Matrix4} matrix The matrix on the left-hand side.
+     * @param {Matrix4} matrix The affine matrix on the left-hand side.
      * @param {Number} scale The uniform scale on the right-hand side.
      * @param {Matrix4} result The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter.
@@ -1692,7 +1739,7 @@ define([
             throw new DeveloperError('scale is required');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -1703,11 +1750,13 @@ define([
     };
 
     /**
-     * Multiplies a transformation matrix (with a bottom row of <code>[0.0, 0.0, 0.0, 1.0]</code>)
+     * Multiplies an affine transformation matrix (with a bottom row of <code>[0.0, 0.0, 0.0, 1.0]</code>)
      * by an implicit non-uniform scale matrix.  This is an optimization
-     * for <code>Matrix4.multiply(m, Matrix4.fromScale(scale), m);</code> with less allocations and arithmetic operations.
+     * for <code>Matrix4.multiply(m, Matrix4.fromUniformScale(scale), m);</code>, where
+     * <code>m</code> must be an affine matrix.
+     * This function performs fewer allocations and arithmetic operations.
      *
-     * @param {Matrix4} matrix The matrix on the left-hand side.
+     * @param {Matrix4} matrix The affine matrix on the left-hand side.
      * @param {Cartesian3} scale The non-uniform scale on the right-hand side.
      * @param {Matrix4} result The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter.
@@ -1728,7 +1777,7 @@ define([
             throw new DeveloperError('scale is required');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -1777,7 +1826,7 @@ define([
             throw new DeveloperError('cartesian is required');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -1823,7 +1872,7 @@ define([
             throw new DeveloperError('cartesian is required');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -1864,7 +1913,7 @@ define([
             throw new DeveloperError('cartesian is required');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -1914,7 +1963,7 @@ define([
             throw new DeveloperError('scalar must be a number');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -1965,7 +2014,7 @@ define([
             throw new DeveloperError('matrix is required');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -2016,7 +2065,7 @@ define([
             throw new DeveloperError('matrix is required');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -2059,7 +2108,7 @@ define([
             throw new DeveloperError('matrix is required');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -2215,7 +2264,7 @@ define([
             throw new DeveloperError('matrix is required');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -2253,7 +2302,7 @@ define([
             throw new DeveloperError('matrix is required');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -2292,7 +2341,7 @@ define([
             throw new DeveloperError('matrix is required');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -2437,7 +2486,7 @@ define([
             throw new DeveloperError('matrix is required');
         }
         if (!defined(result)) {
-            throw new DeveloperError('result is required,');
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -2494,6 +2543,17 @@ define([
                                                 0.0, 1.0, 0.0, 0.0,
                                                 0.0, 0.0, 1.0, 0.0,
                                                 0.0, 0.0, 0.0, 1.0));
+
+    /**
+     * An immutable Matrix4 instance initialized to the zero matrix.
+     *
+     * @type {Matrix4}
+     * @constant
+     */
+    Matrix4.ZERO = freezeObject(new Matrix4(0.0, 0.0, 0.0, 0.0,
+                                            0.0, 0.0, 0.0, 0.0,
+                                            0.0, 0.0, 0.0, 0.0,
+                                            0.0, 0.0, 0.0, 0.0));
 
     /**
      * The index into Matrix4 for column 0, row 0.
