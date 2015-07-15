@@ -155,6 +155,8 @@ define([
         setParameter('height', '{height}');
 
         uri.query = objectToQuery(queryOptions);
+
+        // objectToQuery escapes the placeholders.  Undo that.
         var templateUrl = uri.toString().replace(/%7B/g, '{').replace(/%7D/g, '}');
 
         var pickFeaturesTemplateUrl;
