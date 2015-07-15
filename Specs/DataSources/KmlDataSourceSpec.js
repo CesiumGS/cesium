@@ -2803,4 +2803,34 @@ defineSuite([
             expect(dataSource.entities.values.length).toBe(2);
         });
     });
+
+    it('Boolean values can use true string', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Polygon>\
+              <altitudeMode>relativeToGround</altitudeMode>\
+              <extrude>1</extrude>\
+            </Polygon>\
+          </Placemark>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.polygon.perPositionHeight.getValue()).toEqual(true);
+        });
+    });
+
+    it('Boolean values can use false string', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Polygon>\
+              <altitudeMode>relativeToGround</altitudeMode>\
+              <extrude>1</extrude>\
+            </Polygon>\
+          </Placemark>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.polygon.perPositionHeight.getValue()).toEqual(true);
+        });
+    });
 });
