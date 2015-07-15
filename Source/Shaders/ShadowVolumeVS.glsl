@@ -1,13 +1,8 @@
-//attribute vec3 positionHigh;
-//attribute vec3 positionLow;
-//attribute vec3 normal;
-//attribute float extrude;
-
 attribute vec3 position3DHigh;
 attribute vec3 position3DLow;
+attribute vec4 color;
 
-uniform float centralBodyMinimumAltitude;
-uniform float LODNegativeToleranceOverDistance;
+varying vec4 v_color;
 
 #ifdef GL_EXT_frag_depth
 // emulated noperspective
@@ -25,12 +20,8 @@ vec4 depthClampFarPlane(vec4 vertexInClipCoordinates)
 
 void main()
 {
-    //vec4 position = czm_translateRelativeToEye(positionHigh, positionLow);
+    v_color = color;
     
-    vec4 position = czm_translateRelativeToEye(position3DHigh, position3DLow);
-    
-    //float delta = 1.0; // TODO: moving the vertex is a function of the view
-    //position.xyz = position.xyz + extrude * normal * delta;
-    
+    vec4 position = czm_computePosition();
     gl_Position = depthClampFarPlane(czm_modelViewProjectionRelativeToEye * position);
 }

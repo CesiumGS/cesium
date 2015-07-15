@@ -90,8 +90,7 @@ define([
                     perPositionHeight : false,
                     extrudedHeight : minAlt,
                     height : maxAlt,
-                    vertexFormat : VertexFormat.POSITION_ONLY//,
-                    //_shadowVolume : true
+                    vertexFormat : VertexFormat.POSITION_ONLY
                 }),
                 attributes : instance.attributes,
                 modelMatrix : Matrix4.IDENTITY,
@@ -109,9 +108,9 @@ define([
             vertexCacheOptimize : options.vertexCacheOptimizations,
             interleave : options.interleave,
             releaseGeometryInstances : options.releaseGeometryInstances,
-            allowPicking : false, // TODO
+            allowPicking : options.allowPicking,
             asynchronous : options.asynchronous,
-            compressVertices : false // TODO
+            compressVertices : options.compressVertices
         };
 
         this._primitive = new Primitive(primitiveOptions);
@@ -144,7 +143,13 @@ define([
         }
 
         if (!defined(this._sp)) {
-            this._sp = context.createShaderProgram(ShadowVolumeVS, ShadowVolumeFS, this._primitive._attributeLocations);
+            var vs = Primitive._createColumbusViewShader(ShadowVolumeVS, frameState.scene3DOnly);
+            vs = Primitive._appendShowToShader(this._primitive, vs);
+
+            var fs = ShadowVolumeFS;
+            var attributeLocations = this._primitive._attributeLocations;
+
+            this._sp = context.replaceShaderProgram(this._sp, vs, fs, attributeLocations);
         }
 
         if (!defined(this._rsStencilPreloadPass)) {
@@ -314,6 +319,10 @@ define([
         for (j = 0; j < length; ++j) {
             commandList.push(colorPassCommands[j]);
         }
+    };
+
+    GroundPrimitive.prototype.getGeometryInstanceAttributes = function(id) {
+        return this._primitive.getGeometryInstanceAttributes(id);
     };
 
     return GroundPrimitive;

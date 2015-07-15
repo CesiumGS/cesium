@@ -2,6 +2,8 @@
 #extension GL_EXT_frag_depth : enable
 #endif
 
+varying vec4 v_color;
+
 #ifdef GL_EXT_frag_depth
 // emulated noperspective
 varying float v_WindowZ;
@@ -16,6 +18,6 @@ void writeDepthClampedToFarPlane()
 
 void main(void)
 {
-    gl_FragColor = vec4(1.0, 1.0, 0.0, 0.5);
+    gl_FragColor = v_color;
     writeDepthClampedToFarPlane();
 }

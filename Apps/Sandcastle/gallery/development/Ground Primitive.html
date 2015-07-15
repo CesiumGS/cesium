@@ -93,11 +93,12 @@ var instance = new Cesium.GeometryInstance({
         vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
     }),
     attributes: {
-        color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
-    }
+        color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED.withAlpha(0.5))
+    },
+    id : 'polygon'
 });
 
-scene.primitives.add(new Cesium.GroundPrimitive({
+var primitive = scene.primitives.add(new Cesium.GroundPrimitive({
     geometryInstances : [instance]/*,
     appearance : new Cesium.PerInstanceColorAppearance({
         closed : true,
