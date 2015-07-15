@@ -177,6 +177,8 @@ define([
             }
 
             that._readyPromise.resolve(that);
+        }).otherwise(function(error) {
+            that._readyPromise.reject(error);
         });
     };
 
