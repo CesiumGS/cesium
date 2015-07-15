@@ -390,6 +390,7 @@ define([
         length /= 3;
         var i;
         var s = 0;
+        var ds = 1/(length - wallPositions.length + 1);
         for (i = 0; i < length; ++i) {
             var i3 = i * 3;
             var topPosition = Cartesian3.fromArray(topPositions, i3, scratchCartesian3Position1);
@@ -433,7 +434,7 @@ define([
                 if (Cartesian3.equalsEpsilon(nextPosition, groundPosition, CesiumMath.EPSILON6)) {
                     recomputeNormal = true;
                 } else {
-                    s += 1/(wallPositions.length - 1);
+                    s += ds;
                     if (vertexFormat.tangent) {
                         tangent = Cartesian3.normalize(Cartesian3.subtract(nextPosition, groundPosition, tangent), tangent);
                     }
