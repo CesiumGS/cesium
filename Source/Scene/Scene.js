@@ -1370,8 +1370,7 @@ define([
         // If supported, configure FXAA to use the globe depth color texture and clear the FXAA framebuffer.
         var useFXAA = !picking && scene.fxaa;
         if (useFXAA) {
-            var fxaaTexture = !useOIT && defined(scene._globeDepth) ? scene._globeDepth._colorTexture : undefined;
-            scene._fxaa.update(context, fxaaTexture);
+            scene._fxaa.update(context);
             scene._fxaa.clear(context, passState, clearColor);
         }
 
@@ -1520,6 +1519,11 @@ define([
         }
 
         if (useFXAA) {
+            if (!useOIT && useGlobeDepthFramebuffer) {
+                passState.framebuffer = scene._fxaa.getColorFramebuffer();
+                scene._globeDepth.executeCopyColor(context, passState);
+            }
+
             passState.framebuffer = originalFramebuffer;
             scene._fxaa.execute(context, passState);
         }
