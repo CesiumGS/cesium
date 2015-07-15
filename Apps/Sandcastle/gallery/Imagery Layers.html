@@ -28,20 +28,19 @@ function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    imageryProvider : new Cesium.UrlTemplateImageryProvider({
-        url : 'http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-        credit : 'Map tiles by CartoDB, under CC BY 3.0. Data by OpenStreetMap, under ODbL.'
+    imageryProvider : new Cesium.ArcGisMapServerImageryProvider({
+        url : '//server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
     }),
     baseLayerPicker : false
 });
 
 var layers = viewer.imageryLayers;
-var blackMarble = layers.addImageryProvider(new Cesium.UrlTemplateImageryProvider({
-    url : '//cesiumjs.org/tilesets/imagery/blackmarble/{z}/{x}/{reverseY}.png',
-    credit : 'Black Marble imagery courtesy NASA Earth Observatory',
-    maximumLevel : 8
+var blackMarble = layers.addImageryProvider(new Cesium.TileMapServiceImageryProvider({
+    url : '//cesiumjs.org/blackmarble',
+    maximumLevel : 8,
+    credit : 'Black Marble imagery courtesy NASA Earth Observatory'
 }));
-blackMarble.alpha = 0.2;
+blackMarble.alpha = 0.5;
 blackMarble.brightness = 2.0;
 
 layers.addImageryProvider(new Cesium.SingleTileImageryProvider({
