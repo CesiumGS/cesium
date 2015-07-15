@@ -22,6 +22,7 @@ define([
         '../Shaders/ShadowVolumeVS',
         './BlendingState',
         './CullFace',
+        './DepthFunction',
         './Pass',
         './StencilFunction',
         './StencilOperation'
@@ -48,6 +49,7 @@ define([
         ShadowVolumeVS,
         BlendingState,
         CullFace,
+        DepthFunction,
         Pass,
         StencilFunction,
         StencilOperation) {
@@ -316,7 +318,49 @@ define([
         }
 
         if (!defined(this._stencilPassCommand)) {
-            var stencilPassRenderState = context.createRenderState({
+            var stencilPreloadRenderState = context.createRenderState({
+                colorMask : {
+                    red : false,
+                    green : false,
+                    blue : false,
+                    alpha : false
+                },
+                stencilTest : {
+                    enabled : true,
+                    frontFunction : StencilFunction.ALWAYS,
+                    frontOperation : {
+                        fail : StencilOperation.KEEP,
+                        zFail : StencilOperation.DECREMENT_WRAP,
+                        zPass : StencilOperation.DECREMENT_WRAP
+                    },
+                    backFunction : StencilFunction.ALWAYS,
+                    backOperation : {
+                        fail : StencilOperation.KEEP,
+                        zFail : StencilOperation.INCREMENT_WRAP,
+                        zPass : StencilOperation.INCREMENT_WRAP
+                    },
+                    reference : 0,
+                    mask : ~0
+                },
+                depthTest : {
+                    enabled : false
+                },
+                depthMask : false
+            });
+
+            this._stencilPreloadCommand = new DrawCommand({
+                primitiveType : PrimitiveType.TRIANGLES,
+                vertexArray : this._va,
+                renderState : stencilPreloadRenderState,
+                shaderProgram : this._sp,
+                uniformMap : this._uniformMap,
+                boundingVolume : this._boundingSphere,
+                owner : this,
+                modelMatrix : Matrix4.IDENTITY,
+                pass : Pass.GROUND
+            });
+
+            var stencilDepthRenderState = context.createRenderState({
                 colorMask : {
                     red : false,
                     green : false,
@@ -341,15 +385,16 @@ define([
                     mask : ~0
                 },
                 depthTest : {
-                    enabled : true
+                    enabled : true,
+                    func : DepthFunction.LESS_OR_EQUAL
                 },
                 depthMask : false
             });
 
-            this._stencilPassCommand = new DrawCommand({
+            this._stencilDepthCommand = new DrawCommand({
                 primitiveType : PrimitiveType.TRIANGLES,
                 vertexArray : this._va,
-                renderState : stencilPassRenderState,
+                renderState : stencilDepthRenderState,
                 shaderProgram : this._sp,
                 uniformMap : this._uniformMap,
                 boundingVolume : this._boundingSphere,
@@ -376,12 +421,8 @@ define([
                     reference : 0,
                     mask : ~0
                 },
-                cull : {
-                    enabled : true,
-                    face : CullFace.BACK
-                },
                 depthTest : {
-                    enabled : true
+                    enabled : false
                 },
                 depthMask : false,
                 blending : BlendingState.ALPHA_BLEND
@@ -433,7 +474,7 @@ define([
             if (this.debugVolume) {
                 commandList.push(this._debugVolumeCommand);
             } else {
-                commandList.push(this._stencilPassCommand, this._colorPassCommand);
+                commandList.push(this._stencilPreloadCommand, this._stencilDepthCommand, this._colorPassCommand);
             }
         }
     };
