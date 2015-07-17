@@ -827,5 +827,20 @@ define([
         });
     };
 
+    EllipseGeometry._createShadowVolume = function(ellipseGeometry, minAlt, maxAlt) {
+        // TODO: stRotation, granularity
+        return new EllipseGeometry({
+            center : ellipseGeometry._center,
+            semiMajorAxis : ellipseGeometry._semiMajorAxis,
+            semiMinorAxis : ellipseGeometry._semiMinorAxis,
+            ellipsoid : ellipseGeometry._ellipsoid,
+            stRotation : 0.0,
+            granularity : ellipseGeometry._granularity,
+            extrudedHeight : minAlt,
+            height : maxAlt,
+            vertexFormat : VertexFormat.POSITION_ONLY
+        });
+    };
+
     return EllipseGeometry;
 });

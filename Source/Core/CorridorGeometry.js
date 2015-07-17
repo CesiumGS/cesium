@@ -845,5 +845,19 @@ define([
         });
     };
 
+    CorridorGeometry._createShadowVolume = function(corridorGeometry, minAlt, maxAlt) {
+        // TODO: granularity
+        return new CorridorGeometry({
+            positions : corridorGeometry._positions,
+            width : corridorGeometry._width,
+            cornerType : corridorGeometry._cornerType,
+            ellipsoid : corridorGeometry._ellipsoid,
+            granularity : CesiumMath.toRadians(6.0),
+            extrudedHeight : minAlt,
+            height : maxAlt,
+            vertexFormat : VertexFormat.POSITION_ONLY
+        });
+    };
+
     return CorridorGeometry;
 });

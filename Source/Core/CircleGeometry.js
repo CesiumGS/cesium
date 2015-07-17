@@ -6,6 +6,7 @@ define([
         './DeveloperError',
         './EllipseGeometry',
         './Ellipsoid',
+        './Math',
         './VertexFormat'
     ], function(
         Cartesian3,
@@ -14,6 +15,7 @@ define([
         DeveloperError,
         EllipseGeometry,
         Ellipsoid,
+        CesiumMath,
         VertexFormat) {
     "use strict";
 
@@ -154,6 +156,20 @@ define([
      */
     CircleGeometry.createGeometry = function(circleGeometry) {
         return EllipseGeometry.createGeometry(circleGeometry._ellipseGeometry);
+    };
+
+    CircleGeometry._createShadowVolume = function(circleGeometry, minAlt, maxAlt) {
+        // TODO: stRotation, granularity
+        return new CircleGeometry({
+            center : circleGeometry._ellipseGeometry._center,
+            radius : circleGeometry._ellipseGeometry._semiMajorAxis,
+            ellipsoid : circleGeometry._ellipseGeometry._ellipsoid,
+            stRotation : 0.0,
+            granularity : circleGeometry._ellipseGeometry._granularity,
+            extrudedHeight : minAlt,
+            height : maxAlt,
+            vertexFormat : VertexFormat.POSITION_ONLY
+        });
     };
 
     return CircleGeometry;

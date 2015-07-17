@@ -715,5 +715,19 @@ define([
         });
     };
 
+    PolygonGeometry._createShadowVolume = function(polygonGeometry, minAlt, maxAlt) {
+        // TODO: stRotation, granularity
+        return new PolygonGeometry({
+            polygonHierarchy : polygonGeometry._polygonHierarchy,
+            ellipsoid : polygonGeometry._ellipsoid,
+            stRotation : 0.0,
+            granularity : CesiumMath.toRadians(6.0),
+            perPositionHeight : false,
+            extrudedHeight : minAlt,
+            height : maxAlt,
+            vertexFormat : VertexFormat.POSITION_ONLY
+        });
+    };
+
     return PolygonGeometry;
 });

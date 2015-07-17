@@ -775,5 +775,21 @@ define([
         });
     };
 
+    RectangleGeometry._createShadowVolume = function(rectangleGeometry, minAlt, maxAlt) {
+        // TODO: stRotation, granularity
+        return new RectangleGeometry({
+            rectangle : rectangleGeometry._rectangle,
+            rotation : rectangleGeometry._rotation,
+            ellipsoid : rectangleGeometry._ellipsoid,
+            stRotation : 0.0,
+            granularity : CesiumMath.toRadians(6.0),
+            extrudedHeight : minAlt,
+            surfaceHeight : maxAlt,
+            closeTop : true,
+            closeBottom : true,
+            vertexFormat : VertexFormat.POSITION_ONLY
+        });
+    };
+
     return RectangleGeometry;
 });

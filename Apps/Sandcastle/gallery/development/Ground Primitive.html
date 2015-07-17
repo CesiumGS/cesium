@@ -41,7 +41,6 @@ var positions = [new Cesium.Cartesian3(-2358138.847340281, -3744072.459541374, 4
                  new Cesium.Cartesian3(-2357231.4925370603, -3745103.7886602185, 4580702.9757762635),
                  new Cesium.Cartesian3(-2355912.902205431, -3744249.029778454, 4582402.154378103),
                  new Cesium.Cartesian3(-2357208.0209552636, -3743553.4420488174, 4581961.863286629)];
-            
 var polygonHierarchy = { positions : positions };
 
 /*
@@ -52,7 +51,10 @@ var positions = Cesium.Cartesian3.fromDegreesArray([
     -102.0, 31.0,
     -102.0, 35.0
 ]);
+var polygonHierarchy = { positions : positions };
+*/
 
+/*
 var polygonHierarchy = {
     positions : Cesium.Cartesian3.fromDegreesArray([
         -99.0, 30.0,
@@ -87,27 +89,86 @@ var polygonHierarchy = {
 };
 */
 
-var instance = new Cesium.GeometryInstance({
-    geometry : new Cesium.PolygonGeometry({
-        polygonHierarchy : polygonHierarchy,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-    }),
-    attributes: {
-        color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED.withAlpha(0.5))
-    },
-    id : 'polygon'
-});
-
 var primitive = scene.primitives.add(new Cesium.GroundPrimitive({
-    geometryInstances : [instance]/*,
-    appearance : new Cesium.PerInstanceColorAppearance({
-        closed : true,
-        translucent : false
-    })*/
+    geometryInstances : new Cesium.GeometryInstance({
+        geometry : new Cesium.PolygonGeometry({
+            polygonHierarchy : polygonHierarchy,
+            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+        }),
+        attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED.withAlpha(0.5))
+        },
+        id : 'polygon'
+    })
 }));
 
 viewer.camera.lookAt(new Cesium.Cartesian3(-2354331.3069306486, -3742016.2427205616, 4581875.591571755), new Cesium.HeadingPitchRange(Cesium.Math.toRadians(20.0), Cesium.Math.toRadians(-35.0), 10000.0));
 viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+
+/*
+// Circle geometry
+scene.primitives.add(new Cesium.GroundPrimitive({
+    geometryInstances: new Cesium.GeometryInstance({
+        geometry : new Cesium.CircleGeometry({
+            center : Cesium.Cartesian3.fromDegrees(-95.0, 43.0),
+            radius : 250000.0
+        }),
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
+        }
+    })
+}));
+*/
+
+/*
+// Ellipse Geometry
+scene.primitives.add(new Cesium.GroundPrimitive({
+    geometryInstances: new Cesium.GeometryInstance({
+        geometry : new Cesium.EllipseGeometry({
+            center : Cesium.Cartesian3.fromDegrees(-100.0, 40.0),
+            semiMinorAxis : 300000.0,
+            semiMajorAxis : 400000.0
+        }),
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
+        }
+    })
+}));
+*/
+
+/*
+// Corridor Geometry
+scene.primitives.add(new Cesium.GroundPrimitive({
+    geometryInstances : new Cesium.GeometryInstance({
+        geometry: new Cesium.CorridorGeometry({
+            positions : Cesium.Cartesian3.fromDegreesArray([
+                    -100.0, 40.0,
+                    -105.0, 40.0,
+                    -105.0, 35.0
+                ]),
+                width : 200000.0
+            }),
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
+        }
+    })
+}));
+*/
+
+/*
+// Rectangle geometry
+scene.primitives.add(new Cesium.GroundPrimitive({
+    geometryInstances : new Cesium.GeometryInstance({
+        geometry : new Cesium.RectangleGeometry({
+            rectangle : Cesium.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0),
+            rotation : Cesium.Math.toRadians(45)
+        }),
+        attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 1.0, 0.0, 0.5))
+        }
+    })
+}));
+*/
 
 //Sandcastle_End
     Sandcastle.finishedLoading();

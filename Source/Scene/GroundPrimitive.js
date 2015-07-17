@@ -1,9 +1,11 @@
 /*global define*/
 define([
+        '../Core/BoundingSphere',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/GeometryInstance',
+        '../Core/isArray',
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/PolygonGeometry',
@@ -21,10 +23,12 @@ define([
         './StencilFunction',
         './StencilOperation'
     ], function(
+        BoundingSphere,
         defaultValue,
         defined,
         DeveloperError,
         GeometryInstance,
+        isArray,
         CesiumMath,
         Matrix4,
         PolygonGeometry,
@@ -71,6 +75,8 @@ define([
         this._readyPromise = when.defer();
 
         var geometryInstances = options.geometryInstances;
+        geometryInstances = isArray(geometryInstances) ? geometryInstances : [geometryInstances];
+
         var length = geometryInstances.length;
 
         var instances = new Array(length);
@@ -82,27 +88,16 @@ define([
         for (var i = 0; i < length; ++i) {
             var instance = geometryInstances[i];
             var geometry = instance.geometry;
-            if (!(geometry instanceof PolygonGeometry)) {
-                // TODO
-                throw new DeveloperError('All geometry must be an instance of PolygonGeometry.');
-            }
 
-            // TODO: stRotation, granularity
-            instances[i] = new GeometryInstance({
-                geometry : new PolygonGeometry({
-                    polygonHierarchy : geometry._polygonHierarchy,
-                    ellipsoid : geometry._ellipsoid,
-                    stRotation : 0.0,
-                    granularity : CesiumMath.toRadians(6.0),
-                    perPositionHeight : false,
-                    extrudedHeight : minAlt,
-                    height : maxAlt,
-                    vertexFormat : VertexFormat.POSITION_ONLY
-                }),
-                attributes : instance.attributes,
-                modelMatrix : Matrix4.IDENTITY,
-                id : instance.id
-            });
+            var instanceType = geometry.constructor;
+            if (defined(instanceType) && defined(instanceType._createShadowVolume)) {
+                instances[i] = new GeometryInstance({
+                    geometry : instanceType._createShadowVolume(geometry, minAlt, maxAlt),
+                    attributes : instance.attributes,
+                    modelMatrix : Matrix4.IDENTITY,
+                    id : instance.id
+                });
+            }
         }
 
         var appearance = new PerInstanceColorAppearance({
@@ -422,15 +417,18 @@ define([
             zPassColorCommand.debugShowBoundingVolume = this.debugShowBoundingVolume;
         }
 
+        var viewerPosition = frameState.camera.position;
+
         length = stencilPreloadCommands.length;
         for (j = 0; j < length; ++j) {
-            commandList.push(stencilPreloadCommands[j]);
-        }
-        for (j = 0; j < length; ++j) {
-            commandList.push(stencilDepthPassCommands[j]);
-        }
-        for (j = 0; j < length; ++j) {
-            commandList.push(colorPassCommands[j]);
+            var preloadCommand = stencilPreloadCommands[j];
+            var boundingSphere = preloadCommand.boundingVolume;
+
+            if (BoundingSphere.distanceSquaredTo(boundingSphere, viewerPosition) < 0.0) {
+                commandList.push(preloadCommand, stencilDepthPassCommands[j], colorPassCommands[j]);
+            } else {
+                commandList.push(zPassStencilCommands[j], zPassColorCommands[j]);
+            }
         }
     };
 
