@@ -151,7 +151,7 @@ define([
     		if(!defined(crsFunction)) {
     			return RuntimeError('Unknown crs name: ' + crsName);
     		}
-    		crsProperties.crsFunction = crsFunction; 
+    		crsProperties.crsFunction = crsFunction;
     	}
 
     	var crsDimension = node.getAttribute('srsDimension');
@@ -168,13 +168,13 @@ define([
         if(featureCollection.length == 0) {
         	featureCollection = documentNode.getElementsByTagNameNS(gmlns, "featureMembers");
         }
-		
+
 		var crsProperties = {'crsFunction' : defaultCrsFunction, 'crsDimension' : 2};
         var boundedByNode = documentNode.getElementsByTagNameNS(gmlns, "boundedBy")[0];
         if(boundedByNode) {
         	crsProperties = getCrsProperties(boundedByNode.firstElementChild, crsProperties);
         }
-        
+
         for(var i = 0; i < featureCollection.length; i++) {
             var features = featureCollection[i].children;
             for(var j = 0; j < features.length; j++) {
@@ -204,7 +204,7 @@ define([
             	//Nested and geometry properties.
             	var subElements = elements[i].children;
             	var prop = {};
-            	for(j=0; j<childCount; j++) {
+            	for(j = 0; j < childCount; j++) {
             		if(subElements[j].namespaceURI === gmlns) {
             			geometryElements.push(subElements[j]);
             		} else {
@@ -216,7 +216,7 @@ define([
             	}
             }
         }
-        for(i=0; i<geometryElements.length; i++) {
+        for(i = 0; i < geometryElements.length; i++) {
         	geometryHandler = geometryPropertyTypes[geometryElements[i].localName];
         	geometryHandler(that, geometryElements[i], properties, crsProperties);
         }
@@ -236,9 +236,9 @@ define([
         	pointMembers = multiPoint.getElementsByTagNameNS(gmlns, "pointMembers");
         }
 
-        for(var i=0; i<pointMembers.length; i++) {
+        for(var i = 0; i < pointMembers.length; i++) {
             var points = pointMembers[i].children;
-            for(var j=0; j<points.length; j++) {
+            for(var j = 0; j < points.length; j++) {
             	processPoint(that, points[j], properties, crsProperties);
             }
         }
@@ -264,18 +264,18 @@ define([
         crsProperties = getCrsProperties(lineString, crsProperties);
         var coordString = lineString.firstElementChild.textContent;
         var coordinates = processCoordinates(coordString, crsProperties);
-        createLineString(that, coordinates, properties, crsProperties);                
+        createPolyline(that, coordinates, properties, crsProperties);
     }
 
     function processMultiLineString(that, multiLineString, properties, crsProperties) {
         crsProperties = getCrsProperties(multiLineString, crsProperties);
         var lineStringMembers = multiLineString.getElementsByTagNameNS(gmlns, "lineStringMember");
         if(lineStringMembers.length == 0) {
-        	lineStringMembers = multiLineString.getElementsByTagNameNS(gmlns, "lineStringMembers");	
-        } 
-        for(var i=0; i<lineStringMembers.length; i++) {
+        	lineStringMembers = multiLineString.getElementsByTagNameNS(gmlns, "lineStringMembers");
+        }
+        for(var i = 0; i < lineStringMembers.length; i++) {
             var lineStrings = lineStringMembers[i].children;
-            for(var j=0; j<lineStrings.length; j++) {
+            for(var j = 0; j < lineStrings.length; j++) {
             	processLineString(that, lineStrings[j], properties, crsProperties);
             }
         }
@@ -283,16 +283,17 @@ define([
 
     function processCurve(that, curve, properties, crsProperties) {
     	crsProperties = getCrsProperties(curve, crsProperties);
-        var segments = curve.firstElementChild.children	;
-    	curveGeometryHandler = curveSegmentTypes(segments[0].localName);
+        var segments = curve.firstElementChild.children;
+        processSegments(that, segments, properties, crsProperties);
+/*    	curveGeometryHandler = curveSegmentTypes(segments[0].localName);
     	curveGeometryHandler(that, segments, properties, crsProperties);
-    }
+*/    }
 
     function processMultiCurve(that, multiCurve, properties, crsProperties) {
     	crsProperties = getCrsProperties(multiCurve, crsProperties);
         var curveMembers = multiCurve.getElementsByTagNameNS(gmlns, "curveMember");
     	if(curveMembers.length == 0) {
-    		curveMembers = multiCurve.getElementsByTagNameNS(gmlns, "curveMembers");	
+    		curveMembers = multiCurve.getElementsByTagNameNS(gmlns, "curveMembers");
     	}
 
     	for(var i = 0; i < curveMembers.length; i++) {
@@ -304,32 +305,96 @@ define([
     	}
     }
 
-    function processLineStringSegment(that, segments, properties, crsProperties) {
-    	var coordinates = [];
-    	for(i=0; i<segments.length; i++) {
-    		var coordString = segments[i].firstElementChild.textContent;
-    		segmentPos = processCoordinates(coordString, crsProperties);
-    		if(coordinates.length) {
-    			if(equals(segmentPos[0], coordinates[coordinates.length - 1])) {
-    				coordinates = coordinates.concat(segmentPos);
-    			} else {
-    				; //Error
-    			}
-    		} else {
-    			coordinates = segmentPos;
-    		}
-    	}
-    	createLineString(that, coordinates, properties);
+    function processSegments(that, segments, properties, crsProperties) {
+        var arcGeometry = {coordinates : [], followSurface : false};
+        var lineStringSegmentGeometry = {coordinates : [], followSurface : true};
+        for(var i = 0; i < segments.length; i++) {
+            var curveGeometryHandler = curveSegmentTypes[segments[i].localName];
+            var geometry = curveGeometryHandler(segments[i], crsProperties);
+            if(segments[i].localName === "LineStringSegment") {
+                if(arcCoordinates.length > 1) {
+                    arcGeometry.coordinates.push(geometry.coordinates[0]);
+                    createPolyline(that, arcGeometry, properties);
+                    arcGeometry.cooridnates.length = 0;
+                }
+                lineStringSegmentGeometry.coordinates.concat(coordinates);
+            } else if(segments[i].localName === "Arc") {
+                if(lineStringSegmentGeometry.coordinates.length > 1) {
+                    lineStringSegmentGeometry.push(geometry.coordinates[0]);
+                    createPolyline(that, lineStringSegmentGeometry, properties);
+                    lineStringSegmentGeometry.coordinates.length = 0;
+                }
+                arcGeometry.coordintes.concat(coordinates);
+            } else if(segments[i].localName === "CircleByCenterPoint") {
+                if(arcGeometry.coordintes.length) {
+                    arcGeometry.cooridnates.push(geometry.coordinates[0]);
+                    createPolyline(that, arcGeometry, properties);
+                    arcGeometry.coordintes.length = 0;
+                } else {
+                    lineStringSegmentGeometry.coordinates.push(geometry.coordinates[0]);
+                    if(lineStringSegmentGeometry.coordintes.length > 1) {
+                        createPolyline(that, lineStringSegmentGeometry, properties);
+                        lineStringSegmentGeometry.coordintes.length = 0;
+                    }
+                }
+                createCircle(that, geometry, properties);
+            } else if(segments[i].localName === "Circle") {
+                if(arcGeometry.coordintes.length) {
+                    arcGeometry.cooridnates.push(geometry.center);
+                    createPolyline(that, arcGeometry, properties);
+                    arcGeometry.coordintes.length = 0;
+                } else {
+                    lineStringSegmentGeometry.coordinates.push(geometry.coordinates[0]);
+                    if(lineStringSegmentGeometry.coordintes.length > 1) {
+                        createPolyline(that, lineStringSegmentGeometry, properties);
+                        lineStringSegmentGeometry.coordintes.length = 0;
+                    }
+                }
+                createCircle(that, geometry, properties);
+            }
+        }
     }
 
-    function createLineString(that, coordinates, properties) {
+    function processLineStringSegment(lineStringSegment, crsProperties) {
+        var geometry = {};
+        var coordString = lineStringSegment.firstElementChild.textContent;
+        geometry.coorinates = processCoordinates(coordString, crsProperties);
+        return geometry;
+    }
+
+    function processArc(arc, crsProperties) {
+        var geometry = {};
+        var coordString = arc.firstElementChild.textContent;
+        geometry.coordinates = processCoordinates(coordString, crsProerties);
+        return geometry;
+    }
+
+    function processCircleByCenterPoint(circleByCenterPoint, crsProperties) {
+        var geometry = {};
+        var elements = circleByCenterPoint.children;
+        var geometry.center = processCooridnates(elements.getElementsByTagNameNS(gmlns, "pos")[0].textContent);
+        var geometry.radius = parseFloat(elements.getElementsByTagNameNS(gmlns, "radius")[0].textContent);
+        return geometry;
+    }
+
+    function processCircle(circleByCenterPoint, crsProperties) {
+
+    }
+
+    function createPolyline(that, geometry, properties) {
         var polyline = new PolylineGraphics();
         polyline.material = defaultStrokeMaterialProperty;
         polyline.width = defaultStrokeWidthProperty;
-        polyline.positions = new ConstantProperty(coordinates);
+        polyline.positions = new ConstantProperty(geometry.coordinates);
+        polyline.followSurface = geometry.followSurface;
 
         var entity = createObject(that._entityCollection);
         entity.polyline = polyline;
+    }
+
+    function createCircle(that, geometry, properties) {
+        var elipse = new ElipseGraphics();
+
     }
 
     function processPolygon(that, polygon, properties, crsProperties) {
@@ -363,8 +428,8 @@ define([
         crsProperties = getCrsProperties(multiPolygon, crsProperties);
         var polygonMembers = multiPolygon.getElementsByTagNameNS(gmlns, "polygonMember");
         if(lineStringMembers.length == 0) {
-            polygonMembers = multiPolygon.getElementsByTagNameNS(gmlns, "polygonMembers");  
-        } 
+            polygonMembers = multiPolygon.getElementsByTagNameNS(gmlns, "polygonMembers");
+        }
         for(var i = 0; i < polygonMembers.length; i++) {
             var polygons = polygonMembers[i].children;
             for(var j = 0; j < polygons.length; j++) {
@@ -385,8 +450,8 @@ define([
     	crsProperties = getCrsProperties(multiSurface, crsProperties);
         var surfaceMembers = multiSurface.getElementsByTagNameNS(gmlns, "surfaceMember");
     	if(surfaceMembers.length == 0) {
-    		surfaceMembers = multiSurface.getElementsByTagNameNS(gmlns, "surfaceMembers");	
-    	}
+    		surfaceMembers = multiSurface.getElementsByTagNameNS(gmlns, "surfaceMembers");
+    	}ß
 
     	for(var i = 0; i < surfaceMembers.length; i++) {
     		var surfaces = surfaceMembers[i].children;
@@ -448,7 +513,7 @@ define([
     	//Arc : processArc,
     	//Circle : processCircle,
     	//CircleByCenterPoint : processCircleByCenterPoint
-        LineStringSegment : processLineStringSegment    	
+        LineStringSegment : processLineStringSegment
     };
 
     var surfacePropertyTypes = {
@@ -472,7 +537,7 @@ define([
             that._changed.raiseEvent(that);
         }
         var crsFunction = defaultCrsFunction;
-        
+
         return when(crsFunction, function (crsFunction) {
             that._entityCollection.removeAll();
             processFeatureCollection(that, gml);
