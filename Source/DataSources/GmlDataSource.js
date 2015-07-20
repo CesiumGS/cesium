@@ -471,13 +471,13 @@ define([
 
     function processRing(ring, holes, crsProperties) {
     	var curveMember = ring.firstElementChild.firstElementChild;
-    	var coordString, coordinates = [];
-    	if(curveMember.localName === "LineString") {
-    		coordString = curveMember.firstElementChild.textContent;
-    		coordinates = processCoordinates(coordString, crsProerties);
-    	} else if(curveMember.localName === "Curve") {
-
-    	}
+    	var segments = curveMember.firstElementChild.children;
+        var coordinates = [];
+        for(i = 0; i < segments.length; i++) {
+            var geometryHandler = curveSegmentTypes[segments[i].localName];
+            var geometry = geometryHandler(segments[i], crsProperties);
+            coordinates.concat(geometry.coordinates);
+        }
 
     	var hierarchy = new PolygonHierarchy(coordinates, holes);
     	return hierarchy;
@@ -510,9 +510,9 @@ define([
     };
 
     var curveSegmentTypes = {
-    	//Arc : processArc,
-    	//Circle : processCircle,
-    	//CircleByCenterPoint : processCircleByCenterPoint
+    	Arc : processArc,
+    	Circle : processCircle,
+    	CircleByCenterPoint : processCircleByCenterPoint
         LineStringSegment : processLineStringSegment
     };
 
