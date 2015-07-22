@@ -9,7 +9,12 @@ Change Log
   *
 * Fixes Cesium.js failing to parse in IE 8 and 9. While Cesium doesn't work in IE versions less than 11, but this allows for more graceful error handling.
 * Fix calling `Scene.pickPosition` after calling `Scene.drillPick`. [#2813](https://github.com/AnalyticalGraphicsInc/cesium/issues/2813)
+* Fixed a bug that caused `Camera.positionCartographic` to be incorrect. [#2838](https://github.com/AnalyticalGraphicsInc/cesium/issues/2838)
 * Make `ArcGisMapServerImageryprovider` issue `pickFeatures` requests via a proxy if one is specified.
+* Fixed incorrect texture coordinates for `WallGeometry` [#2872](https://github.com/AnalyticalGraphicsInc/cesium/issues/2872)
+* Added `maximumHeight` option to `Viewer.flyTo`. [#2868](https://github.com/AnalyticalGraphicsInc/cesium/issues/2868)
+* Added ArcGIS token-based authentication support to `ArcGisMapServerImageryProvider`
+* Added picking support to `UrlTemplateImageryProvider`.
 
 ### 1.11 - 2015-07-01
 

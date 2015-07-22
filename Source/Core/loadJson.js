@@ -26,11 +26,11 @@ define([
      *
      * @exports loadJson
      *
-     * @param {String|Promise} url The URL to request, or a promise for the URL.
+     * @param {String|Promise.<String>} url The URL to request, or a promise for the URL.
      * @param {Object} [headers] HTTP headers to send with the request.
      * 'Accept: application/json,&#42;&#47;&#42;;q=0.01' is added to the request headers automatically
      * if not specified.
-     * @returns {Promise} a promise that will resolve to the requested data when loaded.
+     * @returns {Promise.<Object>} a promise that will resolve to the requested data when loaded.
      *
      * @see loadText
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
