@@ -1,3 +1,5 @@
+define([], function() {
+
 /*!
  * https://github.com/amd/rest3d/tree/master/server/o3dgc
  *
@@ -24,7 +26,6 @@
 
 /*global ArrayBuffer, Uint32Array, Int32Array, Float32Array, Int8Array, Uint8Array, window, performance, Console*/
 
-var o3dgc = (function () {
     "use strict";
     var module, local;
     module = {};
@@ -2911,5 +2912,4 @@ var o3dgc = (function () {
     };
 
     return module;
-})();
-
+});
