@@ -1440,17 +1440,10 @@ define([
         for (i = 0; i < numFrustums; ++i) {
             var index = numFrustums - i - 1;
             var frustumCommands = frustumCommandsList[index];
-            frustum.near = frustumCommands.near;
-            frustum.far = frustumCommands.far;
-
-            if (index !== 0) {
-                // Avoid tearing artifacts between adjacent frustums in the opaque passes
-                frustum.near *= OPAQUE_FRUSTUM_NEAR_OFFSET;
-            }
 
             // Avoid tearing artifacts between adjacent frustums in the opaque passes
-            var overlappedNear = index !== 0 ? frustum.near * OPAQUE_FRUSTUM_NEAR_OFFSET : frustum.near;
-            frustum.near = overlappedNear;
+            frustum.near = index !== 0 ? frustumCommands.near * OPAQUE_FRUSTUM_NEAR_OFFSET : frustumCommands.near;
+            frustum.far = frustumCommands.far;
 
             var globeDepth = scene.debugShowGlobeDepth ? getDebugGlobeDepth(scene, index) : scene._globeDepth;
 
@@ -1478,17 +1471,11 @@ define([
                 passState.framebuffer = fb;
             }
 
-            frustum.near = frustumCommands.near;
-            us.updateFrustum(frustum);
-
             commands = frustumCommands.commands[Pass.GROUND];
             length = frustumCommands.indices[Pass.GROUND];
             for (j = 0; j < length; ++j) {
                 executeCommand(commands[j], scene, context, passState);
             }
-
-            frustum.near = overlappedNear;
-            us.updateFrustum(frustum);
 
             // Execute commands in order by pass up to the translucent pass.
             // Translucent geometry needs special handling (sorting/OIT).

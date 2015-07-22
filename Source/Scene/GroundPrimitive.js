@@ -81,9 +81,13 @@ define([
 
         var instances = new Array(length);
 
-        // TODO
-        var maxAlt = 8500.0;
-        var minAlt = -12000.0;
+        // TODO: use ellipsoid maximum radius and compute for each geometry using its granularity
+        var r = 6378137.0;
+        var granularity = CesiumMath.toRadians(1.0);
+        var delta = (r / Math.cos(granularity * 0.5)) - r;
+
+        var maxAlt = 9000.0 + delta;
+        var minAlt = -75000.0;
 
         for (var i = 0; i < length; ++i) {
             var instance = geometryInstances[i];
@@ -198,13 +202,13 @@ define([
             frontOperation : {
                 fail : StencilOperation.KEEP,
                 zFail : StencilOperation.KEEP,
-                zPass : StencilOperation.DECREMENT
+                zPass : StencilOperation.DECREMENT_WRAP
             },
             backFunction : StencilFunction.NOT_EQUAL,
             backOperation : {
                 fail : StencilOperation.KEEP,
                 zFail : StencilOperation.KEEP,
-                zPass : StencilOperation.DECREMENT
+                zPass : StencilOperation.DECREMENT_WRAP
             },
             reference : 0,
             mask : ~0
@@ -270,7 +274,8 @@ define([
             face : CullFace.BACK
         },
         depthTest : {
-            enabled : true
+            enabled : true,
+            func : DepthFunction.LESS
         },
         depthMask : false,
         blending : BlendingState.ALPHA_BLEND

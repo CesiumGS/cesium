@@ -37,24 +37,14 @@ scene.terrainProvider = new Cesium.CesiumTerrainProvider({
 });
 scene.globe.depthTestAgainstTerrain = true;
 
+/*
 var positions = [new Cesium.Cartesian3(-2358138.847340281, -3744072.459541374, 4581158.5714175375),
                  new Cesium.Cartesian3(-2357231.4925370603, -3745103.7886602185, 4580702.9757762635),
                  new Cesium.Cartesian3(-2355912.902205431, -3744249.029778454, 4582402.154378103),
                  new Cesium.Cartesian3(-2357208.0209552636, -3743553.4420488174, 4581961.863286629)];
 var polygonHierarchy = { positions : positions };
-
-/*
-var positions = Cesium.Cartesian3.fromDegreesArray([
-    -115.0, 37.0,
-    -115.0, 32.0,
-    -107.0, 33.0,
-    -102.0, 31.0,
-    -102.0, 35.0
-]);
-var polygonHierarchy = { positions : positions };
 */
 
-/*
 var polygonHierarchy = {
     positions : Cesium.Cartesian3.fromDegreesArray([
         -99.0, 30.0,
@@ -87,13 +77,11 @@ var polygonHierarchy = {
         }]
     }]
 };
-*/
 
 var primitive = scene.primitives.add(new Cesium.GroundPrimitive({
     geometryInstances : new Cesium.GeometryInstance({
         geometry : new Cesium.PolygonGeometry({
-            polygonHierarchy : polygonHierarchy,
-            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+            polygonHierarchy : polygonHierarchy
         }),
         attributes: {
             color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED.withAlpha(0.5))
@@ -102,8 +90,32 @@ var primitive = scene.primitives.add(new Cesium.GroundPrimitive({
     })
 }));
 
-viewer.camera.lookAt(new Cesium.Cartesian3(-2354331.3069306486, -3742016.2427205616, 4581875.591571755), new Cesium.HeadingPitchRange(Cesium.Math.toRadians(20.0), Cesium.Math.toRadians(-35.0), 10000.0));
-viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+/*
+positions = scene.globe.ellipsoid.cartesianArrayToCartographicArray(positions);
+var delta = Cesium.Math.toRadians(0.01);
+for (var i = 0; i < positions.length; ++i) {
+    var position = positions[i];
+    position.latitude += delta;
+    position.longitude += delta;
+}
+positions = scene.globe.ellipsoid.cartographicArrayToCartesianArray(positions);
+polygonHierarchy = { positions : positions };
+
+scene.primitives.add(new Cesium.GroundPrimitive({
+    geometryInstances : new Cesium.GeometryInstance({
+        geometry : new Cesium.PolygonGeometry({
+            polygonHierarchy : polygonHierarchy
+        }),
+        attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE.withAlpha(0.5))
+        },
+        id : 'polygon'
+    })
+}));
+*/
+
+//viewer.camera.lookAt(new Cesium.Cartesian3(-2354331.3069306486, -3742016.2427205616, 4581875.591571755), new Cesium.HeadingPitchRange(Cesium.Math.toRadians(20.0), Cesium.Math.toRadians(-35.0), 10000.0));
+//viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
 /*
 // Circle geometry
@@ -169,6 +181,8 @@ scene.primitives.add(new Cesium.GroundPrimitive({
     })
 }));
 */
+
+window.Cesium = Cesium;
 
 //Sandcastle_End
     Sandcastle.finishedLoading();

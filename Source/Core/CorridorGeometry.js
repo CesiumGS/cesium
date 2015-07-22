@@ -852,7 +852,7 @@ define([
             width : corridorGeometry._width,
             cornerType : corridorGeometry._cornerType,
             ellipsoid : corridorGeometry._ellipsoid,
-            granularity : CesiumMath.toRadians(6.0),
+            granularity : CesiumMath.toRadians(1.0),
             extrudedHeight : minAlt,
             height : maxAlt,
             vertexFormat : VertexFormat.POSITION_ONLY

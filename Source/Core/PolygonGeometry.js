@@ -721,7 +721,7 @@ define([
             polygonHierarchy : polygonGeometry._polygonHierarchy,
             ellipsoid : polygonGeometry._ellipsoid,
             stRotation : 0.0,
-            granularity : CesiumMath.toRadians(6.0),
+            granularity : CesiumMath.toRadians(1.0),
             perPositionHeight : false,
             extrudedHeight : minAlt,
             height : maxAlt,

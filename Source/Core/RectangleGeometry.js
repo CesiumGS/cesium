@@ -782,7 +782,7 @@ define([
             rotation : rectangleGeometry._rotation,
             ellipsoid : rectangleGeometry._ellipsoid,
             stRotation : 0.0,
-            granularity : CesiumMath.toRadians(6.0),
+            granularity : CesiumMath.toRadians(1.0),
             extrudedHeight : minAlt,
             surfaceHeight : maxAlt,
             closeTop : true,
