@@ -352,7 +352,7 @@ define([
      *
      * @example
      * // Returns 4.0, not 2.0
-     * var d = Cesium.Cartesian3.distance(new Cesium.Cartesian3(1.0, 0.0, 0.0), new Cesium.Cartesian3(3.0, 0.0, 0.0));
+     * var d = Cesium.Cartesian3.distanceSquared(new Cesium.Cartesian3(1.0, 0.0, 0.0), new Cesium.Cartesian3(3.0, 0.0, 0.0));
      */
     Cartesian3.distanceSquared = function(left, right) {
         //>>includeStart('debug', pragmas.debug);
