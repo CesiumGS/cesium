@@ -713,7 +713,7 @@ define([
          * </p>
          *
          * @memberof Model.prototype
-         * @type {Promise}
+         * @type {Promise.<Model>}
          * @readonly
          *
          * @example

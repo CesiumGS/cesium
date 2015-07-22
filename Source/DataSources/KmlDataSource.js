@@ -409,7 +409,11 @@ define([
 
     function queryBooleanValue(node, tagName, namespace) {
         var result = queryFirstNode(node, tagName, namespace);
-        return defined(result) ? result.textContent === '1' : undefined;
+        if (defined(result)) {
+            var value = result.textContent.trim();
+            return value === '1' || /^true$/i.test(value);
+        }
+        return undefined;
     }
 
     function resolveHref(href, proxy, sourceUri, uriResolver) {
@@ -1686,7 +1690,7 @@ define([
      * @param {Object} [options] An object with the following properties:
      * @param {DefaultProxy} [options.proxy] A proxy to be used for loading external data.
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
-     * @returns {Promise} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
+     * @returns {Promise.<KmlDataSource>} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
      */
     KmlDataSource.load = function(data, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -1776,7 +1780,7 @@ define([
      * @param {String|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
      * @param {Object} [options] An object with the following properties:
      * @param {Number} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
-     * @returns {Promise} A promise that will resolve to this instances once the KML is loaded.
+     * @returns {Promise.<KmlDataSource>} A promise that will resolve to this instances once the KML is loaded.
      */
     KmlDataSource.prototype.load = function(data, options) {
         //>>includeStart('debug', pragmas.debug);

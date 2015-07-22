@@ -414,7 +414,7 @@ define([
         /**
          * Gets a promise that resolves when the primitive is ready to render.
          * @memberof Primitive.prototype
-         * @type {Promise}
+         * @type {Promise.<Primitive>}
          * @readonly
          */
         readyPromise : {
