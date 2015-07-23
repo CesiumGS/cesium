@@ -491,6 +491,29 @@ define([
         entity.polygon = polygon;
     }
 
+    function processGeometry(that, geometry, properties, crsProperties) {
+        crsProperties = getCrsProperties(geometry, crsProperties);
+        var geometryMember = geometry.firstElementChild;
+        var geometryHandler = geometryPropertyTypes[geometryMember.localName];
+        geometryHandler(that, geometryMember, properties, crsProperties);
+    }
+
+    function processMultiGeometry(that, multiGeometry, properties, crsProperties) {
+        crsProperties = getCrsProperties(multiGeometry, crsProperties);
+        var geometryMembers = multiGeometry.getElementsByTagNameNS(gmlns, "geometryMember");
+        if(geometryMembers.length == 0) {
+            geometryMembers = multiGeometry.getElementsByTagNameNS(gmlns, "geometryMembers");
+        }
+
+        for(var i = 0; i < geometryMembers.length; i++) {
+            var geometryElements = geometryMembers[i].children;
+            for(var j = 0; j < geometryElements.length; j++) {
+                var geometryHandler = geometryPropertyTypes[geometryElements[j].localName];
+                geometryHandler(that, geometryElements[j], properties, crsProperties);
+            }
+        }
+    }
+
     var geometryPropertyTypes = {
     	Point : processPoint,
     	MultiPoint : processMultiPoint,
@@ -501,7 +524,9 @@ define([
     	Polygon : processPolygon,
     	MultiPolygon : processMultiPolygon,
     	Surface : processSurface,
-    	MultiSurface : processMultiSurface
+    	MultiSurface : processMultiSurface,
+        Geometry : processGeometry,
+        MultiGeometry : processMultiGeometry
     };
 
     var curvePropertyTypes = {
