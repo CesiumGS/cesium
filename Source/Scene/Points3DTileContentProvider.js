@@ -89,13 +89,13 @@ define([
             var numberOfPoints = view.getUint32(byteOffset, true);
             byteOffset += sizeOfUint32;
 
-            // Skip padding so positions offset is 8-byte aligned for 64-bit doubles
+            // Skip padding so positions offset is 8-byte aligned for 32-bit doubles
             byteOffset += sizeOfUint32;
 
             var positionsOffsetInBytes = byteOffset;
-            var positions = new Float64Array(arrayBuffer, positionsOffsetInBytes, numberOfPoints * 3);
+            var positions = new Float32Array(arrayBuffer, positionsOffsetInBytes, numberOfPoints * 3);
 
-            var colorsOffsetInBytes = positionsOffsetInBytes + (numberOfPoints * (3 * Float64Array.BYTES_PER_ELEMENT));
+            var colorsOffsetInBytes = positionsOffsetInBytes + (numberOfPoints * (3 * Float32Array.BYTES_PER_ELEMENT));
             var colors = new Uint8Array(arrayBuffer, colorsOffsetInBytes, numberOfPoints * 3);
 
             // TODO: use custom load pipeline, e.g., RTC, provide bounding sphere, scene3DOnly?
