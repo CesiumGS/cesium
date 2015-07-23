@@ -134,6 +134,10 @@ ul + div.tab-content {
 
 }
 
+.docPane{
+  border-left: 1px solid rgb(221,221,221);
+}
+
 #consoleRow {
   position: fixed;
   bottom: 60px; /* Remove this when footer is removed */
