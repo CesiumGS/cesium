@@ -59,15 +59,9 @@ define([
         this._rsStencilDepthPass = undefined;
         this._rsColorPass = undefined;
 
-        this._rsZPassStencil = undefined;
-        this._rsZPassColor = undefined;
-
         this._stencilPreloadPassCommands = undefined;
         this._stencilDepthPassCommands = undefined;
         this._colorPassCommands = undefined;
-
-        this._zPassStencilCommands = undefined;
-        this._zPassColorCommands = undefined;
 
         this._primitiveCommandList = [];
 
@@ -220,67 +214,6 @@ define([
         blending : BlendingState.ALPHA_BLEND
     };
 
-    var zPassStencilRenderState = {
-        colorMask : {
-            red : false,
-            green : false,
-            blue : false,
-            alpha : false
-        },
-        stencilTest : {
-            enabled : true,
-            frontFunction : StencilFunction.ALWAYS,
-            frontOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.KEEP,
-                zPass : StencilOperation.INCREMENT_WRAP
-            },
-            backFunction : StencilFunction.ALWAYS,
-            backOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.KEEP,
-                zPass : StencilOperation.DECREMENT_WRAP
-            },
-            reference : 0,
-            mask : ~0
-        },
-        depthTest : {
-            enabled : true,
-            func : DepthFunction.LESS
-        },
-        depthMask : false
-    };
-
-    var zPassColorRenderState = {
-        stencilTest : {
-            enabled : true,
-            frontFunction : StencilFunction.NOT_EQUAL,
-            frontOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.KEEP,
-                zPass : StencilOperation.DECREMENT
-            },
-            backFunction : StencilFunction.NOT_EQUAL,
-            backOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.KEEP,
-                zPass : StencilOperation.DECREMENT
-            },
-            reference : 0,
-            mask : ~0
-        },
-        cull : {
-            enabled : true,
-            face : CullFace.BACK
-        },
-        depthTest : {
-            enabled : true,
-            func : DepthFunction.LESS
-        },
-        depthMask : false,
-        blending : BlendingState.ALPHA_BLEND
-    };
-
     GroundPrimitive.prototype.update = function(context, frameState, commandList) {
         // TODO: Determine if supported
         if (!this.show) {
@@ -309,9 +242,6 @@ define([
             this._rsStencilPreloadPass = context.createRenderState(stencilPreloadRenderState);
             this._rsStencilDepthPass = context.createRenderState(stencilDepthRenderState);
             this._rsColorPass = context.createRenderState(colorRenderState);
-
-            this._rsZPassStencil = context.createRenderState(zPassStencilRenderState);
-            this._rsZPassColor = context.createRenderState(zPassColorRenderState);
         }
 
         if (!defined(this._stencilPreloadPassCommands)) {
@@ -320,9 +250,6 @@ define([
             this._stencilPreloadPassCommands = new Array(commandsLength);
             this._stencilDepthPassCommands = new Array(commandsLength);
             this._colorPassCommands = new Array(commandsLength);
-
-            this._zPassStencilCommands = new Array(commandsLength);
-            this._zPassColorCommands = new Array(commandsLength);
 
             for (var i = 0; i < commandsLength; ++i) {
                 var primitiveCommand = primitiveCommandList[i];
@@ -362,39 +289,12 @@ define([
                     modelMatrix : Matrix4.IDENTITY,
                     pass : Pass.GROUND
                 });
-
-                this._zPassStencilCommands[i] = new DrawCommand({
-                    primitiveType : primitiveCommand.primitiveType,
-                    vertexArray : primitiveCommand.vertexArray,
-                    renderState : this._rsZPassStencil,
-                    shaderProgram : this._sp,
-                    uniformMap : primitiveCommand.uniformMap,
-                    boundingVolume : primitiveCommand.boundingVolume,
-                    owner : this,
-                    modelMatrix : Matrix4.IDENTITY,
-                    pass : Pass.GROUND
-                });
-
-                this._zPassColorCommands[i] = new DrawCommand({
-                    primitiveType : primitiveCommand.primitiveType,
-                    vertexArray : primitiveCommand.vertexArray,
-                    renderState : this._rsZPassColor,
-                    shaderProgram : this._sp,
-                    uniformMap : primitiveCommand.uniformMap,
-                    boundingVolume : primitiveCommand.boundingVolume,
-                    owner : this,
-                    modelMatrix : Matrix4.IDENTITY,
-                    pass : Pass.GROUND
-                });
             }
         }
 
         var stencilPreloadCommands = this._stencilPreloadPassCommands;
         var stencilDepthPassCommands = this._stencilDepthPassCommands;
         var colorPassCommands = this._colorPassCommands;
-
-        var zPassStencilCommands = this._zPassStencilCommands;
-        var zPassColorCommands = this._zPassColorCommands;
 
         var j;
         var length = primitiveCommandList.length;
@@ -412,28 +312,10 @@ define([
             var colorCommand = colorPassCommands[j];
             colorCommand.boundingVolume = command.boundingVolume;
             colorCommand.debugShowBoundingVolume = this.debugShowBoundingVolume;
-
-            var zPassStencilCommand = zPassStencilCommands[j];
-            zPassStencilCommand.boundingVolume = command.boundingVolume;
-            zPassStencilCommand.debugShowBoundingVolume = this.debugShowBoundingVolume;
-
-            var zPassColorCommand = zPassColorCommands[j];
-            zPassColorCommand.boundingVolume = command.boundingVolume;
-            zPassColorCommand.debugShowBoundingVolume = this.debugShowBoundingVolume;
         }
 
-        var viewerPosition = frameState.camera.position;
-
-        length = stencilPreloadCommands.length;
         for (j = 0; j < length; ++j) {
-            var preloadCommand = stencilPreloadCommands[j];
-            var boundingSphere = preloadCommand.boundingVolume;
-
-            if (BoundingSphere.distanceSquaredTo(boundingSphere, viewerPosition) < 0.0) {
-                commandList.push(preloadCommand, stencilDepthPassCommands[j], colorPassCommands[j]);
-            } else {
-                commandList.push(zPassStencilCommands[j], zPassColorCommands[j]);
-            }
+            commandList.push(stencilPreloadCommands[j], stencilDepthPassCommands[j], colorPassCommands[j]);
         }
     };
 
