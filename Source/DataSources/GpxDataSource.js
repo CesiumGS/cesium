@@ -469,68 +469,68 @@ define([
         return parseColorString(value, queryStringValue(node, 'colorMode', namespace) === 'random');
     }
 
-    function processTimeStamp(featureNode) {
-        var node = queryFirstNode(featureNode, 'TimeStamp', namespaces.gpxgx);
-        var whenString = queryStringValue(node, 'when', namespaces.gpxgx);
+//    function processTimeStamp(featureNode) {
+//        var node = queryFirstNode(featureNode, 'TimeStamp', namespaces.gpxgx);
+//        var whenString = queryStringValue(node, 'when', namespaces.gpxgx);
+//
+//        if (!defined(node) || !defined(whenString) || whenString.length === 0) {
+//            return undefined;
+//        }
+//
+//        //According to the GPX spec, a TimeStamp represents a "single moment in time"
+//        //However, since Cesium animates much differently than Google Earth, that doesn't
+//        //Make much sense here.  Instead, we use the TimeStamp as the moment the feature
+//        //comes into existence.  This works much better and gives a similar feel to
+//        //GE's experience.
+//        var when = JulianDate.fromIso8601(whenString);
+//        var result = new TimeIntervalCollection();
+//        result.addInterval(new TimeInterval({
+//            start : when,
+//            stop : Iso8601.MAXIMUM_VALUE
+//        }));
+//        return result;
+//    }
 
-        if (!defined(node) || !defined(whenString) || whenString.length === 0) {
-            return undefined;
-        }
-
-        //According to the GPX spec, a TimeStamp represents a "single moment in time"
-        //However, since Cesium animates much differently than Google Earth, that doesn't
-        //Make much sense here.  Instead, we use the TimeStamp as the moment the feature
-        //comes into existence.  This works much better and gives a similar feel to
-        //GE's experience.
-        var when = JulianDate.fromIso8601(whenString);
-        var result = new TimeIntervalCollection();
-        result.addInterval(new TimeInterval({
-            start : when,
-            stop : Iso8601.MAXIMUM_VALUE
-        }));
-        return result;
-    }
-
-    function processTimeSpan(featureNode) {
-        var node = queryFirstNode(featureNode, 'TimeSpan', namespaces.gpxgx);
-        if (!defined(node)) {
-            return undefined;
-        }
-        var result;
-
-        var beginNode = queryFirstNode(node, 'begin', namespaces.gpxgx);
-        var beginDate = defined(beginNode) ? JulianDate.fromIso8601(beginNode.textContent) : undefined;
-
-        var endNode = queryFirstNode(node, 'end', namespaces.gpxgx);
-        var endDate = defined(endNode) ? JulianDate.fromIso8601(endNode.textContent) : undefined;
-
-        if (defined(beginDate) && defined(endDate)) {
-            if (JulianDate.lessThan(endDate, beginDate)) {
-                var tmp = beginDate;
-                beginDate = endDate;
-                endDate = tmp;
-            }
-            result = new TimeIntervalCollection();
-            result.addInterval(new TimeInterval({
-                start : beginDate,
-                stop : endDate
-            }));
-        } else if (defined(beginDate)) {
-            result = new TimeIntervalCollection();
-            result.addInterval(new TimeInterval({
-                start : beginDate,
-                stop : Iso8601.MAXIMUM_VALUE
-            }));
-        } else if (defined(endDate)) {
-            result = new TimeIntervalCollection();
-            result.addInterval(new TimeInterval({
-                start : Iso8601.MINIMUM_VALUE,
-                stop : endDate
-            }));
-        }
-
-        return result;
-    }
+//    function processTimeSpan(featureNode) {
+//        var node = queryFirstNode(featureNode, 'TimeSpan', namespaces.gpxgx);
+//        if (!defined(node)) {
+//            return undefined;
+//        }
+//        var result;
+//
+//        var beginNode = queryFirstNode(node, 'begin', namespaces.gpxgx);
+//        var beginDate = defined(beginNode) ? JulianDate.fromIso8601(beginNode.textContent) : undefined;
+//
+//        var endNode = queryFirstNode(node, 'end', namespaces.gpxgx);
+//        var endDate = defined(endNode) ? JulianDate.fromIso8601(endNode.textContent) : undefined;
+//
+//        if (defined(beginDate) && defined(endDate)) {
+//            if (JulianDate.lessThan(endDate, beginDate)) {
+//                var tmp = beginDate;
+//                beginDate = endDate;
+//                endDate = tmp;
+//            }
+//            result = new TimeIntervalCollection();
+//            result.addInterval(new TimeInterval({
+//                start : beginDate,
+//                stop : endDate
+//            }));
+//        } else if (defined(beginDate)) {
+//            result = new TimeIntervalCollection();
+//            result.addInterval(new TimeInterval({
+//                start : beginDate,
+//                stop : Iso8601.MAXIMUM_VALUE
+//            }));
+//        } else if (defined(endDate)) {
+//            result = new TimeIntervalCollection();
+//            result.addInterval(new TimeInterval({
+//                start : Iso8601.MINIMUM_VALUE,
+//                stop : endDate
+//            }));
+//        }
+//
+//        return result;
+//    }
 
     function createDefaultBillboard() {
         var billboard = new BillboardGraphics();
@@ -936,406 +936,359 @@ define([
 //        }
     }
 
-    function processLineStringOrLinearRing(dataSource, geometryNode, entity, styleEntity) {
-        var coordinatesNode = queryFirstNode(geometryNode, 'coordinates', namespaces.gpx);
-        var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.gpx);
-        var gxAltitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.gx);
-        var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.gpx);
-        var tessellate = queryBooleanValue(geometryNode, 'tessellate', namespaces.gpx);
-        var canExtrude = isExtrudable(altitudeMode, gxAltitudeMode);
-
-        var coordinates = readCoordinates(coordinatesNode);
-        var polyline = styleEntity.polyline;
-        if (canExtrude && extrude) {
-            var wall = new WallGraphics();
-            entity.wall = wall;
-            wall.positions = coordinates;
-            var polygon = styleEntity.polygon;
-
-            if (defined(polygon)) {
-                wall.fill = polygon.fill;
-                wall.outline = polygon.outline;
-                wall.material = polygon.material;
-            }
-
-            if (defined(polyline)) {
-                wall.outlineColor = defined(polyline.material) ? polyline.material.color : Color.WHITE;
-                wall.outlineWidth = polyline.width;
-            }
-        } else {
-            polyline = defined(polyline) ? polyline.clone() : new PolylineGraphics();
-            entity.polyline = polyline;
-            polyline.positions = createPositionPropertyArrayFromAltitudeMode(coordinates, altitudeMode, gxAltitudeMode);
-            if (!tessellate || canExtrude) {
-                polyline.followSurface = false;
-            }
-        }
-    }
-
-    function processPolygon(dataSource, geometryNode, entity, styleEntity) {
-        var outerBoundaryIsNode = queryFirstNode(geometryNode, 'outerBoundaryIs', namespaces.gpx);
-        var linearRingNode = queryFirstNode(outerBoundaryIsNode, 'LinearRing', namespaces.gpx);
-        var coordinatesNode = queryFirstNode(linearRingNode, 'coordinates', namespaces.gpx);
-        var coordinates = readCoordinates(coordinatesNode);
-        var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.gpx);
-        var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.gpx);
-        var gxAltitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.gx);
-        var canExtrude = isExtrudable(altitudeMode, gxAltitudeMode);
-
-        var polygon = defined(styleEntity.polygon) ? styleEntity.polygon.clone() : createDefaultPolygon();
-
-        var polyline = styleEntity.polyline;
-        if (defined(polyline)) {
-            polygon.outlineColor = defined(polyline.material) ? polyline.material.color : Color.WHITE;
-            polygon.outlineWidth = polyline.width;
-        }
-        entity.polygon = polygon;
-
-        if (canExtrude) {
-            polygon.perPositionHeight = true;
-            polygon.extrudedHeight = extrude ? 0 : undefined;
-        }
-
-        if (defined(coordinates)) {
-            var hierarchy = new PolygonHierarchy(coordinates);
-            var innerBoundaryIsNodes = queryChildNodes(geometryNode, 'innerBoundaryIs', namespaces.gpx);
-            for (var j = 0; j < innerBoundaryIsNodes.length; j++) {
-                linearRingNode = queryChildNodes(innerBoundaryIsNodes[j], 'LinearRing', namespaces.gpx);
-                for (var k = 0; k < linearRingNode.length; k++) {
-                    coordinatesNode = queryFirstNode(linearRingNode[k], 'coordinates', namespaces.gpx);
-                    coordinates = readCoordinates(coordinatesNode);
-                    if (defined(coordinates)) {
-                        hierarchy.holes.push(new PolygonHierarchy(coordinates));
-                    }
-                }
-            }
-            polygon.hierarchy = hierarchy;
-        }
-    }
-
-    function processTrack(dataSource, geometryNode, entity, styleEntity) {
-        var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.gpx);
-        var gxAltitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.gx);
-        var coordNodes = queryChildNodes(geometryNode, 'coord', namespaces.gx);
-        var timeNodes = queryChildNodes(geometryNode, 'when', namespaces.gpx);
-        var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.gpx);
-        var canExtrude = isExtrudable(altitudeMode, gxAltitudeMode);
-
-        var length = Math.min(coordNodes.length, timeNodes.length);
-        var coordinates = [];
-        var times = [];
-        for (var i = 0; i < length; i++) {
-            //An empty position is OK according to the spec
-            var position = readCoordinate(coordNodes[i].textContent);
-            if (defined(position)) {
-                coordinates.push(position);
-                times.push(JulianDate.fromIso8601(timeNodes[i].textContent));
-            }
-        }
-        var property = new SampledPositionProperty();
-        property.addSamples(times, coordinates);
-        entity.position = createPositionPropertyFromAltitudeMode(property, altitudeMode, gxAltitudeMode);
-        processPositionGraphics(dataSource, entity, styleEntity);
-        processPathGraphics(dataSource, entity, styleEntity);
-
-        entity.availability = new TimeIntervalCollection();
-
-        if (timeNodes.length > 0) {
-            entity.availability.addInterval(new TimeInterval({
-                start : times[0],
-                stop : times[times.length - 1]
-            }));
-        }
-
-        if (canExtrude && extrude) {
-            createDropLine(dataSource, entity, styleEntity);
-        }
-    }
-
-    function addToMultiTrack(times, positions, composite, availability, dropShowProperty, extrude, altitudeMode, gxAltitudeMode, includeEndPoints) {
-        var start = times[0];
-        var stop = times[times.length - 1];
-
-        var data = new SampledPositionProperty();
-        data.addSamples(times, positions);
-
-        composite.intervals.addInterval(new TimeInterval({
-            start : start,
-            stop : stop,
-            isStartIncluded : includeEndPoints,
-            isStopIncluded : includeEndPoints,
-            data : createPositionPropertyFromAltitudeMode(data, altitudeMode, gxAltitudeMode)
-        }));
-        availability.addInterval(new TimeInterval({
-            start : start,
-            stop : stop,
-            isStartIncluded : includeEndPoints,
-            isStopIncluded : includeEndPoints
-        }));
-        dropShowProperty.intervals.addInterval(new TimeInterval({
-            start : start,
-            stop : stop,
-            isStartIncluded : includeEndPoints,
-            isStopIncluded : includeEndPoints,
-            data : extrude
-        }));
-    }
-
-    function processMultiTrack(dataSource, geometryNode, entity, styleEntity) {
-        // Multitrack options do not work in GE as detailed in the spec,
-        // rather than altitudeMode being at the MultiTrack level,
-        // GE just defers all settings to the underlying track.
-
-        var interpolate = queryBooleanValue(geometryNode, 'interpolate', namespaces.gx);
-        var trackNodes = queryChildNodes(geometryNode, 'Track', namespaces.gx);
-
-        var times;
-        var data;
-        var lastStop;
-        var lastStopPosition;
-        var needDropLine = false;
-        var dropShowProperty = new TimeIntervalCollectionProperty();
-        var availability = new TimeIntervalCollection();
-        var composite = new CompositePositionProperty();
-        for (var i = 0, len = trackNodes.length; i < len; i++) {
-            var trackNode = trackNodes[i];
-            var timeNodes = queryChildNodes(trackNode, 'when', namespaces.gpx);
-            var coordNodes = queryChildNodes(trackNode, 'coord', namespaces.gx);
-            var altitudeMode = queryStringValue(trackNode, 'altitudeMode', namespaces.gpx);
-            var gxAltitudeMode = queryStringValue(trackNode, 'altitudeMode', namespaces.gx);
-            var canExtrude = isExtrudable(altitudeMode, gxAltitudeMode);
-            var extrude = queryBooleanValue(trackNode, 'extrude', namespaces.gpx);
-
-            var length = Math.min(coordNodes.length, timeNodes.length);
-
-            var positions = [];
-            times = [];
-            for (var x = 0; x < length; x++) {
-                //An empty position is OK according to the spec
-                var position = readCoordinate(coordNodes[x].textContent);
-                if (defined(position)) {
-                    positions.push(position);
-                    times.push(JulianDate.fromIso8601(timeNodes[x].textContent));
-                }
-            }
-
-            if (interpolate) {
-                //If we are interpolating, then we need to fill in the end of
-                //the last track and the beginning of this one with a sampled
-                //property.  From testing in Google Earth, this property
-                //is never extruded and always absolute.
-                if (defined(lastStop)) {
-                    addToMultiTrack([lastStop, times[0]], [lastStopPosition, positions[0]], composite, availability, dropShowProperty, false, 'absolute', undefined, false);
-                }
-                lastStop = times[length - 1];
-                lastStopPosition = positions[positions.length - 1];
-            }
-
-            addToMultiTrack(times, positions, composite, availability, dropShowProperty, canExtrude && extrude, altitudeMode, gxAltitudeMode, true);
-            needDropLine = needDropLine || (canExtrude && extrude);
-        }
-
-        entity.availability = availability;
-        entity.position = composite;
-        processPositionGraphics(dataSource, entity, styleEntity);
-        processPathGraphics(dataSource, entity, styleEntity);
-        if (needDropLine) {
-            createDropLine(dataSource, entity, styleEntity);
-            entity.polyline.show = dropShowProperty;
-        }
-    }
-
-    function processMultiGeometry(dataSource, geometryNode, entity, styleEntity) {
-        var childNodes = geometryNode.childNodes;
-        for (var i = 0, len = childNodes.length; i < len; i++) {
-            var childNode = childNodes.item(i);
-            var geometryProcessor = complexTypes[childNode.localName];
-            if (defined(geometryProcessor)) {
-                var childEntity = getOrCreateEntity(childNode, dataSource._entityCollection);
-                childEntity.parent = entity;
-                childEntity.name = entity.name;
-                childEntity.availability = entity.availability;
-                childEntity.description = entity.description;
-                childEntity.gpx = entity.gpx;
-                geometryProcessor(dataSource, childNode, childEntity, styleEntity);
-            }
-        }
-    }
-
-    function processExtendedData(node, entity) {
-        var extendedDataNode = queryFirstNode(node, 'ExtendedData', namespaces.gpx);
-
-        if (!defined(extendedDataNode)) {
-            return undefined;
-        }
-
-        var result = {};
-        var dataNodes = queryChildNodes(extendedDataNode, 'Data', namespaces.gpx);
-        if (defined(dataNodes)) {
-            var length = dataNodes.length;
-            for (var i = 0; i < length; i++) {
-                var dataNode = dataNodes[i];
-                var name = queryStringAttribute(dataNode, 'name');
-                if (defined(name)) {
-                    result[name] = {
-                        displayName : queryStringValue(dataNode, 'displayName', namespaces.gpx),
-                        value : queryStringValue(dataNode, 'value', namespaces.gpx)
-                    };
-                }
-            }
-        }
-        entity.gpx.extendedData = result;
-    }
-
-    var scratchDiv = document.createElement('div');
-    function processDescription(node, entity, styleEntity, uriResolver) {
-        var i;
-        var key;
-        var keys;
-
-        var gpxData = entity.gpx;
-        var extendedData = gpxData.extendedData;
-        var description = queryStringValue(node, 'description', namespaces.gpx);
-
-        var balloonStyle = defaultValue(entity.balloonStyle, styleEntity.balloonStyle);
-
-        var background = Color.WHITE;
-        var foreground = Color.BLACK;
-        var text = description;
-
-        if (defined(balloonStyle)) {
-            background = defaultValue(balloonStyle.bgColor, Color.WHITE);
-            foreground = defaultValue(balloonStyle.textColor, Color.BLACK);
-            text = defaultValue(balloonStyle.text, description);
-        }
-
-        var value;
-        if (defined(text)) {
-            text = text.replace('$[name]', defaultValue(entity.name, ''));
-            text = text.replace('$[description]', defaultValue(description, ''));
-            text = text.replace('$[address]', defaultValue(gpxData.address, ''));
-            text = text.replace('$[Snippet]', defaultValue(gpxData.snippet, ''));
-            text = text.replace('$[id]', entity.id);
-
-            //While not explicitly defined by the OGC spec, in Google Earth
-            //The appearance of geDirections adds the directions to/from links
-            //We simply replace this string with nothing.
-            text = text.replace('$[geDirections]', '');
-
-            if (defined(extendedData)) {
-                var matches = text.match(/\$\[.+?\]/g);
-                if (matches !== null) {
-                    for (i = 0; i < matches.length; i++) {
-                        var token = matches[i];
-                        var propertyName = token.substr(2, token.length - 3);
-                        var isDisplayName = /\/displayName$/.test(propertyName);
-                        propertyName = propertyName.replace(/\/displayName$/, '');
-
-                        value = extendedData[propertyName];
-                        if (defined(value)) {
-                            value = isDisplayName ? value.displayName : value.value;
-                        }
-                        if (defined(value)) {
-                            text = text.replace(token, defaultValue(value, ''));
-                        }
-                    }
-                }
-            }
-        } else if (defined(extendedData)) {
-            //If no description exists, build a table out of the extended data
-            keys = Object.keys(extendedData);
-            if (keys.length > 0) {
-                text = '<table class="cesium-infoBox-defaultTable cesium-infoBox-defaultTable-lighter"><tbody>';
-                for (i = 0; i < keys.length; i++) {
-                    key = keys[i];
-                    value = extendedData[key];
-                    text += '<tr><th>' + defaultValue(value.displayName, key) + '</th><td>' + defaultValue(value.value, '') + '</td></tr>';
-                }
-                text += '</tbody></table>';
-            }
-        }
-
-        if (!defined(text)) {
-            //No description
-            return;
-        }
-
-        //Turns non-explicit links into clickable links.
-        text = autolinker.link(text);
-
-        //Use a temporary div to manipulate the links
-        //so that they open in a new window.
-        scratchDiv.innerHTML = text;
-        var links = scratchDiv.querySelectorAll('a');
-        for (i = 0; i < links.length; i++) {
-            links[i].setAttribute('target', '_blank');
-        }
-
-        //Rewrite any KMZ embedded urls
-        if (defined(uriResolver) && uriResolver.keys.length > 1) {
-            replaceAttributes(scratchDiv, 'a', 'href', uriResolver);
-            replaceAttributes(scratchDiv, 'img', 'src', uriResolver);
-        }
-
-        var tmp = '<div class="cesium-infoBox-description-lighter" style="';
-        tmp += 'overflow:auto;';
-        tmp += 'word-wrap:break-word;';
-        tmp += 'background-color:' + background.toCssColorString() + ';';
-        tmp += 'color:' + foreground.toCssColorString() + ';';
-        tmp += '">';
-        tmp += scratchDiv.innerHTML + '</div>';
-        scratchDiv.innerHTML = '';
-
-        //Set the final HTML as the description.
-        entity.description = tmp;
-    }
-
-    function processFeature(dataSource, parent, featureNode, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var entity = getOrCreateEntity(featureNode, entityCollection);
-        var gpxData = entity.gpx;
-        var styleEntity = computeFinalStyle(entity, dataSource, featureNode, styleCollection, sourceUri, uriResolver);
-
-        var name = queryStringValue(featureNode, 'name', namespaces.gpx);
-        entity.name = name;
-        entity.parent = parent;
-
-        var availability = processTimeSpan(featureNode);
-        if (!defined(availability)) {
-            availability = processTimeStamp(featureNode);
-        }
-        entity.availability = availability;
-
-        var visibility = queryBooleanValue(featureNode, 'visibility', namespaces.gpx);
-        entity.show = defaultValue(visibility, true);
-        //var open = queryBooleanValue(featureNode, 'open', namespaces.gpx);
-
-        var authorNode = queryFirstNode(featureNode, 'author', namespaces.atom);
-        var author = gpxData.author;
-        author.name = queryStringValue(authorNode, 'name', namespaces.atom);
-        author.uri = queryStringValue(authorNode, 'uri', namespaces.atom);
-        author.email = queryStringValue(authorNode, 'email', namespaces.atom);
-
-        var linkNode = queryFirstNode(featureNode, 'link', namespaces.atom);
-        var link = gpxData.link;
-        link.href = queryStringAttribute(linkNode, 'href');
-        link.hreflang = queryStringAttribute(linkNode, 'hreflang');
-        link.rel = queryStringAttribute(linkNode, 'rel');
-        link.type = queryStringAttribute(linkNode, 'type');
-        link.title = queryStringAttribute(linkNode, 'title');
-        link.length = queryStringAttribute(linkNode, 'length');
-
-        gpxData.address = queryStringValue(featureNode, 'address', namespaces.gpx);
-        gpxData.phoneNumber = queryStringValue(featureNode, 'phoneNumber', namespaces.gpx);
-        gpxData.snippet = queryStringValue(featureNode, 'Snippet', namespaces.gpx);
-
-        processExtendedData(featureNode, entity);
-        processDescription(featureNode, entity, styleEntity, uriResolver);
-
-        return {
-            entity : entity,
-            styleEntity : styleEntity
-        };
-    }
+//    function processLineStringOrLinearRing(dataSource, geometryNode, entity, styleEntity) {
+//        var coordinatesNode = queryFirstNode(geometryNode, 'coordinates', namespaces.gpx);
+//        var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.gpx);
+//        var gxAltitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.gx);
+//        var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.gpx);
+//        var tessellate = queryBooleanValue(geometryNode, 'tessellate', namespaces.gpx);
+//        var canExtrude = isExtrudable(altitudeMode, gxAltitudeMode);
+//
+//        var coordinates = readCoordinates(coordinatesNode);
+//        var polyline = styleEntity.polyline;
+//        if (canExtrude && extrude) {
+//            var wall = new WallGraphics();
+//            entity.wall = wall;
+//            wall.positions = coordinates;
+//            var polygon = styleEntity.polygon;
+//
+//            if (defined(polygon)) {
+//                wall.fill = polygon.fill;
+//                wall.outline = polygon.outline;
+//                wall.material = polygon.material;
+//            }
+//
+//            if (defined(polyline)) {
+//                wall.outlineColor = defined(polyline.material) ? polyline.material.color : Color.WHITE;
+//                wall.outlineWidth = polyline.width;
+//            }
+//        } else {
+//            polyline = defined(polyline) ? polyline.clone() : new PolylineGraphics();
+//            entity.polyline = polyline;
+//            polyline.positions = createPositionPropertyArrayFromAltitudeMode(coordinates, altitudeMode, gxAltitudeMode);
+//            if (!tessellate || canExtrude) {
+//                polyline.followSurface = false;
+//            }
+//        }
+//    }
+//
+//    function processPolygon(dataSource, geometryNode, entity, styleEntity) {
+//        var outerBoundaryIsNode = queryFirstNode(geometryNode, 'outerBoundaryIs', namespaces.gpx);
+//        var linearRingNode = queryFirstNode(outerBoundaryIsNode, 'LinearRing', namespaces.gpx);
+//        var coordinatesNode = queryFirstNode(linearRingNode, 'coordinates', namespaces.gpx);
+//        var coordinates = readCoordinates(coordinatesNode);
+//        var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.gpx);
+//        var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.gpx);
+//        var gxAltitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.gx);
+//        var canExtrude = isExtrudable(altitudeMode, gxAltitudeMode);
+//
+//        var polygon = defined(styleEntity.polygon) ? styleEntity.polygon.clone() : createDefaultPolygon();
+//
+//        var polyline = styleEntity.polyline;
+//        if (defined(polyline)) {
+//            polygon.outlineColor = defined(polyline.material) ? polyline.material.color : Color.WHITE;
+//            polygon.outlineWidth = polyline.width;
+//        }
+//        entity.polygon = polygon;
+//
+//        if (canExtrude) {
+//            polygon.perPositionHeight = true;
+//            polygon.extrudedHeight = extrude ? 0 : undefined;
+//        }
+//
+//        if (defined(coordinates)) {
+//            var hierarchy = new PolygonHierarchy(coordinates);
+//            var innerBoundaryIsNodes = queryChildNodes(geometryNode, 'innerBoundaryIs', namespaces.gpx);
+//            for (var j = 0; j < innerBoundaryIsNodes.length; j++) {
+//                linearRingNode = queryChildNodes(innerBoundaryIsNodes[j], 'LinearRing', namespaces.gpx);
+//                for (var k = 0; k < linearRingNode.length; k++) {
+//                    coordinatesNode = queryFirstNode(linearRingNode[k], 'coordinates', namespaces.gpx);
+//                    coordinates = readCoordinates(coordinatesNode);
+//                    if (defined(coordinates)) {
+//                        hierarchy.holes.push(new PolygonHierarchy(coordinates));
+//                    }
+//                }
+//            }
+//            polygon.hierarchy = hierarchy;
+//        }
+//    }
+//
+//    function processTrack(dataSource, geometryNode, entity, styleEntity) {
+//        var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.gpx);
+//        var gxAltitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.gx);
+//        var coordNodes = queryChildNodes(geometryNode, 'coord', namespaces.gx);
+//        var timeNodes = queryChildNodes(geometryNode, 'when', namespaces.gpx);
+//        var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.gpx);
+//        var canExtrude = isExtrudable(altitudeMode, gxAltitudeMode);
+//
+//        var length = Math.min(coordNodes.length, timeNodes.length);
+//        var coordinates = [];
+//        var times = [];
+//        for (var i = 0; i < length; i++) {
+//            //An empty position is OK according to the spec
+//            var position = readCoordinate(coordNodes[i].textContent);
+//            if (defined(position)) {
+//                coordinates.push(position);
+//                times.push(JulianDate.fromIso8601(timeNodes[i].textContent));
+//            }
+//        }
+//        var property = new SampledPositionProperty();
+//        property.addSamples(times, coordinates);
+//        entity.position = createPositionPropertyFromAltitudeMode(property, altitudeMode, gxAltitudeMode);
+//        processPositionGraphics(dataSource, entity, styleEntity);
+//        processPathGraphics(dataSource, entity, styleEntity);
+//
+//        entity.availability = new TimeIntervalCollection();
+//
+//        if (timeNodes.length > 0) {
+//            entity.availability.addInterval(new TimeInterval({
+//                start : times[0],
+//                stop : times[times.length - 1]
+//            }));
+//        }
+//
+//        if (canExtrude && extrude) {
+//            createDropLine(dataSource, entity, styleEntity);
+//        }
+//    }
+//
+//    function addToMultiTrack(times, positions, composite, availability, dropShowProperty, extrude, altitudeMode, gxAltitudeMode, includeEndPoints) {
+//        var start = times[0];
+//        var stop = times[times.length - 1];
+//
+//        var data = new SampledPositionProperty();
+//        data.addSamples(times, positions);
+//
+//        composite.intervals.addInterval(new TimeInterval({
+//            start : start,
+//            stop : stop,
+//            isStartIncluded : includeEndPoints,
+//            isStopIncluded : includeEndPoints,
+//            data : createPositionPropertyFromAltitudeMode(data, altitudeMode, gxAltitudeMode)
+//        }));
+//        availability.addInterval(new TimeInterval({
+//            start : start,
+//            stop : stop,
+//            isStartIncluded : includeEndPoints,
+//            isStopIncluded : includeEndPoints
+//        }));
+//        dropShowProperty.intervals.addInterval(new TimeInterval({
+//            start : start,
+//            stop : stop,
+//            isStartIncluded : includeEndPoints,
+//            isStopIncluded : includeEndPoints,
+//            data : extrude
+//        }));
+//    }
+//
+//    function processMultiTrack(dataSource, geometryNode, entity, styleEntity) {
+//        // Multitrack options do not work in GE as detailed in the spec,
+//        // rather than altitudeMode being at the MultiTrack level,
+//        // GE just defers all settings to the underlying track.
+//
+//        var interpolate = queryBooleanValue(geometryNode, 'interpolate', namespaces.gx);
+//        var trackNodes = queryChildNodes(geometryNode, 'Track', namespaces.gx);
+//
+//        var times;
+//        var data;
+//        var lastStop;
+//        var lastStopPosition;
+//        var needDropLine = false;
+//        var dropShowProperty = new TimeIntervalCollectionProperty();
+//        var availability = new TimeIntervalCollection();
+//        var composite = new CompositePositionProperty();
+//        for (var i = 0, len = trackNodes.length; i < len; i++) {
+//            var trackNode = trackNodes[i];
+//            var timeNodes = queryChildNodes(trackNode, 'when', namespaces.gpx);
+//            var coordNodes = queryChildNodes(trackNode, 'coord', namespaces.gx);
+//            var altitudeMode = queryStringValue(trackNode, 'altitudeMode', namespaces.gpx);
+//            var gxAltitudeMode = queryStringValue(trackNode, 'altitudeMode', namespaces.gx);
+//            var canExtrude = isExtrudable(altitudeMode, gxAltitudeMode);
+//            var extrude = queryBooleanValue(trackNode, 'extrude', namespaces.gpx);
+//
+//            var length = Math.min(coordNodes.length, timeNodes.length);
+//
+//            var positions = [];
+//            times = [];
+//            for (var x = 0; x < length; x++) {
+//                //An empty position is OK according to the spec
+//                var position = readCoordinate(coordNodes[x].textContent);
+//                if (defined(position)) {
+//                    positions.push(position);
+//                    times.push(JulianDate.fromIso8601(timeNodes[x].textContent));
+//                }
+//            }
+//
+//            if (interpolate) {
+//                //If we are interpolating, then we need to fill in the end of
+//                //the last track and the beginning of this one with a sampled
+//                //property.  From testing in Google Earth, this property
+//                //is never extruded and always absolute.
+//                if (defined(lastStop)) {
+//                    addToMultiTrack([lastStop, times[0]], [lastStopPosition, positions[0]], composite, availability, dropShowProperty, false, 'absolute', undefined, false);
+//                }
+//                lastStop = times[length - 1];
+//                lastStopPosition = positions[positions.length - 1];
+//            }
+//
+//            addToMultiTrack(times, positions, composite, availability, dropShowProperty, canExtrude && extrude, altitudeMode, gxAltitudeMode, true);
+//            needDropLine = needDropLine || (canExtrude && extrude);
+//        }
+//
+//        entity.availability = availability;
+//        entity.position = composite;
+//        processPositionGraphics(dataSource, entity, styleEntity);
+//        processPathGraphics(dataSource, entity, styleEntity);
+//        if (needDropLine) {
+//            createDropLine(dataSource, entity, styleEntity);
+//            entity.polyline.show = dropShowProperty;
+//        }
+//    }
+//
+//    function processMultiGeometry(dataSource, geometryNode, entity, styleEntity) {
+//        var childNodes = geometryNode.childNodes;
+//        for (var i = 0, len = childNodes.length; i < len; i++) {
+//            var childNode = childNodes.item(i);
+//            var geometryProcessor = complexTypes[childNode.localName];
+//            if (defined(geometryProcessor)) {
+//                var childEntity = getOrCreateEntity(childNode, dataSource._entityCollection);
+//                childEntity.parent = entity;
+//                childEntity.name = entity.name;
+//                childEntity.availability = entity.availability;
+//                childEntity.description = entity.description;
+//                childEntity.gpx = entity.gpx;
+//                geometryProcessor(dataSource, childNode, childEntity, styleEntity);
+//            }
+//        }
+//    }
+//
+//    function processExtendedData(node, entity) {
+//        var extendedDataNode = queryFirstNode(node, 'ExtendedData', namespaces.gpx);
+//
+//        if (!defined(extendedDataNode)) {
+//            return undefined;
+//        }
+//
+//        var result = {};
+//        var dataNodes = queryChildNodes(extendedDataNode, 'Data', namespaces.gpx);
+//        if (defined(dataNodes)) {
+//            var length = dataNodes.length;
+//            for (var i = 0; i < length; i++) {
+//                var dataNode = dataNodes[i];
+//                var name = queryStringAttribute(dataNode, 'name');
+//                if (defined(name)) {
+//                    result[name] = {
+//                        displayName : queryStringValue(dataNode, 'displayName', namespaces.gpx),
+//                        value : queryStringValue(dataNode, 'value', namespaces.gpx)
+//                    };
+//                }
+//            }
+//        }
+//        entity.gpx.extendedData = result;
+//    }
+//
+//    var scratchDiv = document.createElement('div');
+//    function processDescription(node, entity, styleEntity, uriResolver) {
+//        var i;
+//        var key;
+//        var keys;
+//
+//        var gpxData = entity.gpx;
+//        var extendedData = gpxData.extendedData;
+//        var description = queryStringValue(node, 'description', namespaces.gpx);
+//
+//        var balloonStyle = defaultValue(entity.balloonStyle, styleEntity.balloonStyle);
+//
+//        var background = Color.WHITE;
+//        var foreground = Color.BLACK;
+//        var text = description;
+//
+//        if (defined(balloonStyle)) {
+//            background = defaultValue(balloonStyle.bgColor, Color.WHITE);
+//            foreground = defaultValue(balloonStyle.textColor, Color.BLACK);
+//            text = defaultValue(balloonStyle.text, description);
+//        }
+//
+//        var value;
+//        if (defined(text)) {
+//            text = text.replace('$[name]', defaultValue(entity.name, ''));
+//            text = text.replace('$[description]', defaultValue(description, ''));
+//            text = text.replace('$[address]', defaultValue(gpxData.address, ''));
+//            text = text.replace('$[Snippet]', defaultValue(gpxData.snippet, ''));
+//            text = text.replace('$[id]', entity.id);
+//
+//            //While not explicitly defined by the OGC spec, in Google Earth
+//            //The appearance of geDirections adds the directions to/from links
+//            //We simply replace this string with nothing.
+//            text = text.replace('$[geDirections]', '');
+//
+//            if (defined(extendedData)) {
+//                var matches = text.match(/\$\[.+?\]/g);
+//                if (matches !== null) {
+//                    for (i = 0; i < matches.length; i++) {
+//                        var token = matches[i];
+//                        var propertyName = token.substr(2, token.length - 3);
+//                        var isDisplayName = /\/displayName$/.test(propertyName);
+//                        propertyName = propertyName.replace(/\/displayName$/, '');
+//
+//                        value = extendedData[propertyName];
+//                        if (defined(value)) {
+//                            value = isDisplayName ? value.displayName : value.value;
+//                        }
+//                        if (defined(value)) {
+//                            text = text.replace(token, defaultValue(value, ''));
+//                        }
+//                    }
+//                }
+//            }
+//        } else if (defined(extendedData)) {
+//            //If no description exists, build a table out of the extended data
+//            keys = Object.keys(extendedData);
+//            if (keys.length > 0) {
+//                text = '<table class="cesium-infoBox-defaultTable cesium-infoBox-defaultTable-lighter"><tbody>';
+//                for (i = 0; i < keys.length; i++) {
+//                    key = keys[i];
+//                    value = extendedData[key];
+//                    text += '<tr><th>' + defaultValue(value.displayName, key) + '</th><td>' + defaultValue(value.value, '') + '</td></tr>';
+//                }
+//                text += '</tbody></table>';
+//            }
+//        }
+//
+//        if (!defined(text)) {
+//            //No description
+//            return;
+//        }
+//
+//        //Turns non-explicit links into clickable links.
+//        text = autolinker.link(text);
+//
+//        //Use a temporary div to manipulate the links
+//        //so that they open in a new window.
+//        scratchDiv.innerHTML = text;
+//        var links = scratchDiv.querySelectorAll('a');
+//        for (i = 0; i < links.length; i++) {
+//            links[i].setAttribute('target', '_blank');
+//        }
+//
+//        //Rewrite any KMZ embedded urls
+//        if (defined(uriResolver) && uriResolver.keys.length > 1) {
+//            replaceAttributes(scratchDiv, 'a', 'href', uriResolver);
+//            replaceAttributes(scratchDiv, 'img', 'src', uriResolver);
+//        }
+//
+//        var tmp = '<div class="cesium-infoBox-description-lighter" style="';
+//        tmp += 'overflow:auto;';
+//        tmp += 'word-wrap:break-word;';
+//        tmp += 'background-color:' + background.toCssColorString() + ';';
+//        tmp += 'color:' + foreground.toCssColorString() + ';';
+//        tmp += '">';
+//        tmp += scratchDiv.innerHTML + '</div>';
+//        scratchDiv.innerHTML = '';
+//
+//        //Set the final HTML as the description.
+//        entity.description = tmp;
+//    }
 
     var complexTypes = {
               wpt: processWpt
@@ -1371,140 +1324,32 @@ define([
 //        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
 //        processDocument(dataSource, r.entity, node, entityCollection, styleCollection, sourceUri, uriResolver);
 //    }
-
-    function processPlacemark(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var r = processFeature(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver);
-        var entity = r.entity;
-        var styleEntity = r.styleEntity;
-
-        var hasGeometry = false;
-        var childNodes = placemark.childNodes;
-        for (var i = 0, len = childNodes.length; i < len && !hasGeometry; i++) {
-            var childNode = childNodes.item(i);
-            var geometryProcessor = complexTypes[childNode.localName];
-            if (defined(geometryProcessor)) {
-                geometryProcessor(dataSource, childNode, entity, styleEntity);
-                hasGeometry = true;
-            }
-        }
-
-        if (!hasGeometry) {
-            entity.merge(styleEntity);
-            processPositionGraphics(dataSource, entity, styleEntity);
-        }
-    }
-
-    function processGroundOverlay(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var r = processFeature(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver);
-        var entity = r.entity;
-        var styleEntity = r.stylEntity;
-
-        var geometry;
-        var isLatLonQuad = false;
-
-        var positions = readCoordinates(queryFirstNode(groundOverlay, 'LatLonQuad', namespaces.gx));
-        if (defined(positions)) {
-            geometry = createDefaultPolygon();
-            geometry.hierarchy = new PolygonHierarchy(positions);
-            entity.polygon = geometry;
-            isLatLonQuad = true;
-        } else {
-            geometry = new RectangleGraphics();
-            entity.rectangle = geometry;
-
-            var latLonBox = queryFirstNode(groundOverlay, 'LatLonBox', namespaces.gpx);
-            if (defined(latLonBox)) {
-                var west = queryNumericValue(latLonBox, 'west', namespaces.gpx);
-                var south = queryNumericValue(latLonBox, 'south', namespaces.gpx);
-                var east = queryNumericValue(latLonBox, 'east', namespaces.gpx);
-                var north = queryNumericValue(latLonBox, 'north', namespaces.gpx);
-
-                if (defined(west)) {
-                    west = CesiumMath.negativePiToPi(CesiumMath.toRadians(west));
-                }
-                if (defined(south)) {
-                    south = CesiumMath.negativePiToPi(CesiumMath.toRadians(south));
-                }
-                if (defined(east)) {
-                    east = CesiumMath.negativePiToPi(CesiumMath.toRadians(east));
-                }
-                if (defined(north)) {
-                    north = CesiumMath.negativePiToPi(CesiumMath.toRadians(north));
-                }
-                geometry.coordinates = new Rectangle(west, south, east, north);
-
-                var rotation = queryNumericValue(latLonBox, 'rotation', namespaces.gpx);
-                if (defined(rotation)) {
-                    geometry.rotation = CesiumMath.toRadians(rotation);
-                }
-            }
-        }
-
-        var material;
-        var iconNode = queryFirstNode(groundOverlay, 'Icon', namespaces.gpx);
-        var href = queryStringValue(iconNode, 'href', namespaces.gpx);
-        if (defined(href)) {
-            if (isLatLonQuad) {
-                window.console.log('GPX - gx:LatLonQuad Icon does not support texture projection.');
-            }
-            geometry.material = resolveHref(href, dataSource._proxy, sourceUri, uriResolver);
-        } else {
-            geometry.material = queryColorValue(groundOverlay, 'color', namespaces.gpx);
-        }
-
-        var altitudeMode = queryStringValue(groundOverlay, 'altitudeMode', namespaces.gpx);
-
-        var altitude;
-        if (defined(altitudeMode)) {
-            if (altitudeMode === 'absolute') {
-                //Use height above ellipsoid until we support MSL.
-                geometry.height = queryNumericValue(groundOverlay, 'altitude', namespaces.gpx);
-            } else if (altitudeMode === 'clampToGround') {
-                //Just use the default of 0 until we support terrain
-            } else {
-                window.console.log('GPX - Unknown altitudeMode: ' + altitudeMode);
-            }
-        } else {
-            altitudeMode = queryStringValue(groundOverlay, 'altitudeMode', namespaces.gx);
-            if (altitudeMode === 'relativeToSeaFloor') {
-                window.console.log('GPX - altitudeMode relativeToSeaFloor is currently not supported, treating as absolute.');
-                geometry.height = queryNumericValue(groundOverlay, 'altitude', namespaces.gpx);
-            } else if (altitudeMode === 'clampToSeaFloor') {
-                window.console.log('GPX - altitudeMode clampToSeaFloor is currently not supported, treating as clampToGround.');
-            } else if (defined(altitudeMode)) {
-                window.console.log('GPX - Unknown altitudeMode: ' + altitudeMode);
-            }
-        }
-    }
-
-    function processUnsupported(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
-        window.console.log('GPX - Unsupported feature: ' + node.localName);
-    }
-
-    function processNetworkLink(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
-        var networkEntity = r.entity;
-
-        var link = queryFirstNode(node, 'Link', namespaces.gpx);
-        if (defined(link)) {
-            var linkUrl = queryStringValue(link, 'href', namespaces.gpx);
-            if (defined(linkUrl)) {
-                linkUrl = resolveHref(linkUrl, undefined, sourceUri, uriResolver);
-                var networkLinkSource = new GpxDataSource(dataSource._proxy);
-                var promise = when(networkLinkSource.load(linkUrl), function() {
-                    var entities = networkLinkSource.entities.values;
-                    for (var i = 0; i < entities.length; i++) {
-                        dataSource._entityCollection.suspendEvents();
-                        entities[i].parent = networkEntity;
-                        dataSource._entityCollection.add(entities[i]);
-                        dataSource._entityCollection.resumeEvents();
-                    }
-                });
-
-                dataSource._promises.push(promise);
-            }
-        }
-    }
+//
+//    function processPlacemark(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver) {
+//        var r = processFeature(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver);
+//        var entity = r.entity;
+//        var styleEntity = r.styleEntity;
+//
+//        var hasGeometry = false;
+//        var childNodes = placemark.childNodes;
+//        for (var i = 0, len = childNodes.length; i < len && !hasGeometry; i++) {
+//            var childNode = childNodes.item(i);
+//            var geometryProcessor = complexTypes[childNode.localName];
+//            if (defined(geometryProcessor)) {
+//                geometryProcessor(dataSource, childNode, entity, styleEntity);
+//                hasGeometry = true;
+//            }
+//        }
+//
+//        if (!hasGeometry) {
+//            entity.merge(styleEntity);
+//            processPositionGraphics(dataSource, entity, styleEntity);
+//        }
+//    }
+//
+//    function processUnsupported(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
+//        window.console.log('GPX - Unsupported feature: ' + node.localName);
+//    }
 
     function loadGpx(dataSource, gpx, sourceUri, uriResolver) {
         var entityCollection = dataSource._entityCollection;
@@ -1575,45 +1420,6 @@ define([
             DataSource.setLoading(dataSource, false);
             return dataSource;
         });
-    }
-
-    function loadKmz(dataSource, blob, sourceUri) {
-        var deferred = when.defer();
-        zip.createReader(new zip.BlobReader(blob), function(reader) {
-            reader.getEntries(function(entries) {
-                var promises = [];
-                var foundGPX = false;
-                var uriResolver = {};
-                for (var i = 0; i < entries.length; i++) {
-                    var entry = entries[i];
-                    if (!entry.directory) {
-                        var innerDefer = when.defer();
-                        promises.push(innerDefer.promise);
-                        if (!foundGPX && /\.gpx$/i.test(entry.filename)) {
-                            //Only the first GPX file found in the zip is used.
-                            //https://developers.google.com/gpx/documentation/kmzarchives
-                            foundGPX = true;
-                            loadXmlFromZip(reader, entry, uriResolver, innerDefer);
-                        } else {
-                            loadDataUriFromZip(reader, entry, uriResolver, innerDefer);
-                        }
-                    }
-                }
-                when.all(promises).then(function() {
-                    reader.close();
-                    if (!defined(uriResolver.gpx)) {
-                        deferred.reject(new RuntimeError('KMZ file does not contain a GPX document.'));
-                        return;
-                    }
-                    uriResolver.keys = Object.keys(uriResolver);
-                    return loadGpx(dataSource, uriResolver.gpx, sourceUri, uriResolver);
-                }).then(deferred.resolve).otherwise(deferred.reject);
-            });
-        }, function(e) {
-            deferred.reject(e);
-        });
-
-        return deferred;
     }
 
     /**
@@ -1780,7 +1586,7 @@ define([
             if (dataToLoad instanceof Blob) {
                 return isZipFile(dataToLoad).then(function(isZip) {
                     if (isZip) {
-                        return loadKmz(that, dataToLoad, sourceUri);
+                        //return loadKmz(that, dataToLoad, sourceUri);
                     }
                     return when(readBlobAsText(dataToLoad)).then(function(text) {
                         //There's no official way to validate if a parse was successful.
