@@ -783,8 +783,8 @@ define([
             ellipsoid : rectangleGeometry._ellipsoid,
             stRotation : 0.0,
             granularity : CesiumMath.toRadians(1.0),
-            extrudedHeight : minAlt,
-            surfaceHeight : maxAlt,
+            extrudedHeight : maxAlt,
+            height : minAlt,
             closeTop : true,
             closeBottom : true,
             vertexFormat : VertexFormat.POSITION_ONLY
