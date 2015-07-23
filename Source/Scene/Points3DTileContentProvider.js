@@ -51,6 +51,8 @@ define([
          */
         this.readyPromise = when.defer();
 
+        this.boundingSphere = contentHeader.boundingSphere;
+
         this._debugColor = Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;
     };
@@ -98,12 +100,13 @@ define([
             var colorsOffsetInBytes = positionsOffsetInBytes + (numberOfPoints * (3 * Float32Array.BYTES_PER_ELEMENT));
             var colors = new Uint8Array(arrayBuffer, colorsOffsetInBytes, numberOfPoints * 3);
 
-            // TODO: use custom load pipeline, e.g., RTC, provide bounding sphere, scene3DOnly?
+            // TODO: use custom load pipeline, e.g., RTC, scene3DOnly?
             // TODO: performance test with 'interleave : true'
             var instance = new GeometryInstance({
                 geometry : new PointGeometry({
                     positionsTypedArray : positions,
-                    colorsTypedArray : colors
+                    colorsTypedArray: colors,
+                    boundingSphere: that.boundingSphere
                 })
             });
             var primitive = new Primitive({
