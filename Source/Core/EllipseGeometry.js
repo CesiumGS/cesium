@@ -827,17 +827,22 @@ define([
         });
     };
 
-    EllipseGeometry._createShadowVolume = function(ellipseGeometry, minAlt, maxAlt) {
-        // TODO: stRotation, granularity
+    EllipseGeometry._createShadowVolume = function(ellipseGeometry, minHeightFunc, maxHeightFunc) {
+        var granularity = ellipseGeometry._granularity;
+        var ellipsoid = ellipseGeometry._ellipsoid;
+
+        var minHeight = minHeightFunc(granularity, ellipsoid);
+        var maxHeight = maxHeightFunc(granularity, ellipsoid);
+
         return new EllipseGeometry({
             center : ellipseGeometry._center,
             semiMajorAxis : ellipseGeometry._semiMajorAxis,
             semiMinorAxis : ellipseGeometry._semiMinorAxis,
-            ellipsoid : ellipseGeometry._ellipsoid,
-            stRotation : 0.0,
-            granularity : ellipseGeometry._granularity,
-            extrudedHeight : minAlt,
-            height : maxAlt,
+            ellipsoid : ellipsoid,
+            stRotation : ellipseGeometry._stRotation,
+            granularity : granularity,
+            extrudedHeight : minHeight,
+            height : maxHeight,
             vertexFormat : VertexFormat.POSITION_ONLY
         });
     };

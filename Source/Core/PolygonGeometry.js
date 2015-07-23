@@ -715,16 +715,21 @@ define([
         });
     };
 
-    PolygonGeometry._createShadowVolume = function(polygonGeometry, minAlt, maxAlt) {
-        // TODO: stRotation, granularity
+    PolygonGeometry._createShadowVolume = function(polygonGeometry, minHeightFunc, maxHeightFunc) {
+        var granularity = polygonGeometry._granularity;
+        var ellipsoid = polygonGeometry._ellipsoid;
+
+        var minHeight = minHeightFunc(granularity, ellipsoid);
+        var maxHeight = maxHeightFunc(granularity, ellipsoid);
+
         return new PolygonGeometry({
             polygonHierarchy : polygonGeometry._polygonHierarchy,
-            ellipsoid : polygonGeometry._ellipsoid,
-            stRotation : 0.0,
-            granularity : CesiumMath.toRadians(1.0),
+            ellipsoid : ellipsoid,
+            stRotation : polygonGeometry._stRotation,
+            granularity : granularity,
             perPositionHeight : false,
-            extrudedHeight : minAlt,
-            height : maxAlt,
+            extrudedHeight : minHeight,
+            height : maxHeight,
             vertexFormat : VertexFormat.POSITION_ONLY
         });
     };

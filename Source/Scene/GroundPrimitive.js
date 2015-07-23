@@ -1,21 +1,16 @@
 /*global define*/
 define([
-        '../Core/BoundingSphere',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/GeometryInstance',
         '../Core/isArray',
         '../Core/Math',
-        '../Core/Matrix4',
-        '../Core/PolygonGeometry',
-        '../Core/VertexFormat',
         '../Renderer/DrawCommand',
         '../Shaders/ShadowVolumeFS',
         '../Shaders/ShadowVolumeVS',
         '../ThirdParty/when',
         './BlendingState',
-        './CullFace',
         './DepthFunction',
         './Pass',
         './PerInstanceColorAppearance',
@@ -23,22 +18,17 @@ define([
         './StencilFunction',
         './StencilOperation'
     ], function(
-        BoundingSphere,
         defaultValue,
         defined,
         DeveloperError,
         GeometryInstance,
         isArray,
         CesiumMath,
-        Matrix4,
-        PolygonGeometry,
-        VertexFormat,
         DrawCommand,
         ShadowVolumeFS,
         ShadowVolumeVS,
         when,
         BlendingState,
-        CullFace,
         DepthFunction,
         Pass,
         PerInstanceColorAppearance,
@@ -72,16 +62,7 @@ define([
         geometryInstances = isArray(geometryInstances) ? geometryInstances : [geometryInstances];
 
         var length = geometryInstances.length;
-
         var instances = new Array(length);
-
-        // TODO: use ellipsoid maximum radius and compute for each geometry using its granularity
-        var r = 6378137.0;
-        var granularity = CesiumMath.toRadians(1.0);
-        var delta = (r / Math.cos(granularity * 0.5)) - r;
-
-        var maxAlt = 9000.0 + delta;
-        var minAlt = -75000.0;
 
         for (var i = 0; i < length; ++i) {
             var instance = geometryInstances[i];
@@ -90,9 +71,9 @@ define([
             var instanceType = geometry.constructor;
             if (defined(instanceType) && defined(instanceType._createShadowVolume)) {
                 instances[i] = new GeometryInstance({
-                    geometry : instanceType._createShadowVolume(geometry, minAlt, maxAlt),
+                    geometry : instanceType._createShadowVolume(geometry, computeMinimumHeight, computeMaximumHeight),
                     attributes : instance.attributes,
-                    modelMatrix : Matrix4.IDENTITY,
+                    modelMatrix : instance.modelMatrix,
                     id : instance.id
                 });
             }
@@ -127,6 +108,19 @@ define([
             }
         });
     };
+
+    GroundPrimitive._maxHeight = 9000.0;
+    GroundPrimitive._minHeight = -75000.0;
+
+    function computeMaximumHeight(granularity, ellipsoid) {
+        var r = ellipsoid.maximumRadius;
+        var delta = (r / Math.cos(granularity * 0.5)) - r;
+        return GroundPrimitive._maxHeight + delta;
+    }
+
+    function computeMinimumHeight(granularity, ellipsoid) {
+        return GroundPrimitive._minHeight;
+    }
 
     var stencilPreloadRenderState = {
         colorMask : {
@@ -215,8 +209,7 @@ define([
     };
 
     GroundPrimitive.prototype.update = function(context, frameState, commandList) {
-        // TODO: Determine if supported
-        if (!this.show) {
+        if (!context.fragmentDepth || !this.show) {
             return;
         }
 
@@ -262,7 +255,7 @@ define([
                     uniformMap : primitiveCommand.uniformMap,
                     boundingVolume : primitiveCommand.boundingVolume,
                     owner : this,
-                    modelMatrix : Matrix4.IDENTITY,
+                    modelMatrix : primitiveCommand.modelMatrix,
                     pass : Pass.GROUND
                 });
 
@@ -274,7 +267,7 @@ define([
                     uniformMap : primitiveCommand.uniformMap,
                     boundingVolume : primitiveCommand.boundingVolume,
                     owner : this,
-                    modelMatrix : Matrix4.IDENTITY,
+                    modelMatrix : primitiveCommand.modelMatrix,
                     pass : Pass.GROUND
                 });
 
@@ -286,7 +279,7 @@ define([
                     uniformMap : primitiveCommand.uniformMap,
                     boundingVolume : primitiveCommand.boundingVolume,
                     owner : this,
-                    modelMatrix : Matrix4.IDENTITY,
+                    modelMatrix : primitiveCommand.modelMatrix,
                     pass : Pass.GROUND
                 });
             }
@@ -302,14 +295,17 @@ define([
             var command = primitiveCommandList[j];
 
             var stencilPreloadCommand = stencilPreloadCommands[j];
+            stencilPreloadCommand.modelMatrix = command.modelMatrix;
             stencilPreloadCommand.boundingVolume = command.boundingVolume;
             stencilPreloadCommand.debugShowBoundingVolume = this.debugShowBoundingVolume;
 
             var stencilDepthPassCommand = stencilDepthPassCommands[j];
+            stencilDepthPassCommand.modelMatrix = command.modelMatrix;
             stencilDepthPassCommand.boundingVolume = command.boundingVolume;
             stencilDepthPassCommand.debugShowBoundingVolume = this.debugShowBoundingVolume;
 
             var colorCommand = colorPassCommands[j];
+            colorCommand.modelMatrix = command.modelMatrix;
             colorCommand.boundingVolume = command.boundingVolume;
             colorCommand.debugShowBoundingVolume = this.debugShowBoundingVolume;
         }
@@ -321,6 +317,11 @@ define([
 
     GroundPrimitive.prototype.getGeometryInstanceAttributes = function(id) {
         return this._primitive.getGeometryInstanceAttributes(id);
+    };
+
+    GroundPrimitive.prototype.destroy = function() {
+        this._primitive = this._primitive && this._primitive.destroy();
+        this._sp = this._sp && this._sp.destroy();
     };
 
     return GroundPrimitive;

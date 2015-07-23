@@ -775,16 +775,22 @@ define([
         });
     };
 
-    RectangleGeometry._createShadowVolume = function(rectangleGeometry, minAlt, maxAlt) {
-        // TODO: stRotation, granularity
+    RectangleGeometry._createShadowVolume = function(rectangleGeometry, minHeightFunc, maxHeightFunc) {
+        var granularity = rectangleGeometry._granularity;
+        var ellipsoid = rectangleGeometry._ellipsoid;
+
+        var minHeight = minHeightFunc(granularity, ellipsoid);
+        var maxHeight = maxHeightFunc(granularity, ellipsoid);
+
+        // TODO: stRotation
         return new RectangleGeometry({
             rectangle : rectangleGeometry._rectangle,
             rotation : rectangleGeometry._rotation,
-            ellipsoid : rectangleGeometry._ellipsoid,
-            stRotation : 0.0,
-            granularity : CesiumMath.toRadians(1.0),
-            extrudedHeight : maxAlt,
-            height : minAlt,
+            ellipsoid : ellipsoid,
+            stRotation : rectangleGeometry._stRotation,
+            granularity : granularity,
+            extrudedHeight : maxHeight,
+            height : minHeight,
             closeTop : true,
             closeBottom : true,
             vertexFormat : VertexFormat.POSITION_ONLY

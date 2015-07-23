@@ -158,16 +158,21 @@ define([
         return EllipseGeometry.createGeometry(circleGeometry._ellipseGeometry);
     };
 
-    CircleGeometry._createShadowVolume = function(circleGeometry, minAlt, maxAlt) {
-        // TODO: stRotation, granularity
+    CircleGeometry._createShadowVolume = function(circleGeometry, minHeightFunc, maxHeightFunc) {
+        var granularity = circleGeometry._ellipseGeometry._granularity;
+        var ellipsoid = circleGeometry._ellipseGeometry._ellipsoid;
+
+        var minHeight = minHeightFunc(granularity, ellipsoid);
+        var maxHeight = maxHeightFunc(granularity, ellipsoid);
+
         return new CircleGeometry({
             center : circleGeometry._ellipseGeometry._center,
             radius : circleGeometry._ellipseGeometry._semiMajorAxis,
-            ellipsoid : circleGeometry._ellipseGeometry._ellipsoid,
-            stRotation : 0.0,
-            granularity : circleGeometry._ellipseGeometry._granularity,
-            extrudedHeight : minAlt,
-            height : maxAlt,
+            ellipsoid : ellipsoid,
+            stRotation : circleGeometry._ellipseGeometry._stRotation,
+            granularity : granularity,
+            extrudedHeight : minHeight,
+            height : maxHeight,
             vertexFormat : VertexFormat.POSITION_ONLY
         });
     };
