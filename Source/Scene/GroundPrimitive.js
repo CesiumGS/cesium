@@ -6,7 +6,9 @@ define([
         '../Core/GeometryInstance',
         '../Core/isArray',
         '../Core/Math',
+        '../Core/Matrix4',
         '../Renderer/DrawCommand',
+        '../Renderer/ShaderSource',
         '../Shaders/ShadowVolumeFS',
         '../Shaders/ShadowVolumeVS',
         '../ThirdParty/when',
@@ -24,7 +26,9 @@ define([
         GeometryInstance,
         isArray,
         CesiumMath,
+        Matrix4,
         DrawCommand,
+        ShaderSource,
         ShadowVolumeFS,
         ShadowVolumeVS,
         when,
@@ -44,14 +48,17 @@ define([
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
 
         this._sp = undefined;
+        this._spPick = undefined;
 
         this._rsStencilPreloadPass = undefined;
         this._rsStencilDepthPass = undefined;
         this._rsColorPass = undefined;
+        this._rsPickPass = undefined;
 
         this._stencilPreloadPassCommands = undefined;
         this._stencilDepthPassCommands = undefined;
         this._colorPassCommands = undefined;
+        this._pickCommands = undefined;
 
         this._primitiveCommandList = [];
 
@@ -73,7 +80,7 @@ define([
                 instances[i] = new GeometryInstance({
                     geometry : instanceType._createShadowVolume(geometry, computeMinimumHeight, computeMaximumHeight),
                     attributes : instance.attributes,
-                    modelMatrix : instance.modelMatrix,
+                    modelMatrix : Matrix4.IDENTITY,
                     id : instance.id
                 });
             }
@@ -208,6 +215,30 @@ define([
         blending : BlendingState.ALPHA_BLEND
     };
 
+    var pickRenderState = {
+        stencilTest : {
+            enabled : true,
+            frontFunction : StencilFunction.NOT_EQUAL,
+            frontOperation : {
+                fail : StencilOperation.KEEP,
+                zFail : StencilOperation.KEEP,
+                zPass : StencilOperation.DECREMENT_WRAP
+            },
+            backFunction : StencilFunction.NOT_EQUAL,
+            backOperation : {
+                fail : StencilOperation.KEEP,
+                zFail : StencilOperation.KEEP,
+                zPass : StencilOperation.DECREMENT_WRAP
+            },
+            reference : 0,
+            mask : ~0
+        },
+        depthTest : {
+            enabled : false
+        },
+        depthMask : false
+    };
+
     GroundPrimitive.prototype.update = function(context, frameState, commandList) {
         if (!context.fragmentDepth || !this.show) {
             return;
@@ -229,12 +260,23 @@ define([
             var attributeLocations = this._primitive._attributeLocations;
 
             this._sp = context.replaceShaderProgram(this._sp, vs, fs, attributeLocations);
+
+            if (this._primitive.allowPicking) {
+                var pickFS = new ShaderSource({
+                    sources : [fs],
+                    pickColorQualifier : 'varying'
+                });
+                this._spPick = context.replaceShaderProgram(this._spPick, Primitive._createPickVertexShaderSource(vs), pickFS, attributeLocations);
+            } else {
+                this._spPick = context.createShaderProgram(vs, fs, attributeLocations);
+            }
         }
 
         if (!defined(this._rsStencilPreloadPass)) {
             this._rsStencilPreloadPass = context.createRenderState(stencilPreloadRenderState);
             this._rsStencilDepthPass = context.createRenderState(stencilDepthRenderState);
             this._rsColorPass = context.createRenderState(colorRenderState);
+            this._rsPickPass = context.createRenderState(pickRenderState);
         }
 
         if (!defined(this._stencilPreloadPassCommands)) {
@@ -243,6 +285,7 @@ define([
             this._stencilPreloadPassCommands = new Array(commandsLength);
             this._stencilDepthPassCommands = new Array(commandsLength);
             this._colorPassCommands = new Array(commandsLength);
+            this._pickCommands = new Array(commandsLength);
 
             for (var i = 0; i < commandsLength; ++i) {
                 var primitiveCommand = primitiveCommandList[i];
@@ -255,7 +298,7 @@ define([
                     uniformMap : primitiveCommand.uniformMap,
                     boundingVolume : primitiveCommand.boundingVolume,
                     owner : this,
-                    modelMatrix : primitiveCommand.modelMatrix,
+                    modelMatrix : Matrix4.IDENTITY,
                     pass : Pass.GROUND
                 });
 
@@ -267,7 +310,7 @@ define([
                     uniformMap : primitiveCommand.uniformMap,
                     boundingVolume : primitiveCommand.boundingVolume,
                     owner : this,
-                    modelMatrix : primitiveCommand.modelMatrix,
+                    modelMatrix : Matrix4.IDENTITY,
                     pass : Pass.GROUND
                 });
 
@@ -279,7 +322,19 @@ define([
                     uniformMap : primitiveCommand.uniformMap,
                     boundingVolume : primitiveCommand.boundingVolume,
                     owner : this,
-                    modelMatrix : primitiveCommand.modelMatrix,
+                    modelMatrix : Matrix4.IDENTITY,
+                    pass : Pass.GROUND
+                });
+
+                this._pickCommands[i] = new DrawCommand({
+                    primitiveType : primitiveCommand.primitiveType,
+                    vertexArray : primitiveCommand.vertexArray,
+                    renderState : this._rsPickPass,
+                    shaderProgram : this._spPick,
+                    uniformMap : primitiveCommand.uniformMap,
+                    boundingVolume : primitiveCommand.boundingVolume,
+                    owner : this,
+                    modelMatrix : Matrix4.IDENTITY,
                     pass : Pass.GROUND
                 });
             }
@@ -288,6 +343,7 @@ define([
         var stencilPreloadCommands = this._stencilPreloadPassCommands;
         var stencilDepthPassCommands = this._stencilDepthPassCommands;
         var colorPassCommands = this._colorPassCommands;
+        var pickCommands = this._pickCommands;
 
         var j;
         var length = primitiveCommandList.length;
@@ -295,28 +351,40 @@ define([
             var command = primitiveCommandList[j];
 
             var stencilPreloadCommand = stencilPreloadCommands[j];
-            stencilPreloadCommand.modelMatrix = command.modelMatrix;
             stencilPreloadCommand.boundingVolume = command.boundingVolume;
-            stencilPreloadCommand.debugShowBoundingVolume = this.debugShowBoundingVolume;
 
             var stencilDepthPassCommand = stencilDepthPassCommands[j];
-            stencilDepthPassCommand.modelMatrix = command.modelMatrix;
             stencilDepthPassCommand.boundingVolume = command.boundingVolume;
-            stencilDepthPassCommand.debugShowBoundingVolume = this.debugShowBoundingVolume;
 
             var colorCommand = colorPassCommands[j];
-            colorCommand.modelMatrix = command.modelMatrix;
             colorCommand.boundingVolume = command.boundingVolume;
             colorCommand.debugShowBoundingVolume = this.debugShowBoundingVolume;
+
+            var pickCommand = pickCommands[j];
+            pickCommand.boundingVolume = pickCommand.boundingVolume;
         }
 
-        for (j = 0; j < length; ++j) {
-            commandList.push(stencilPreloadCommands[j], stencilDepthPassCommands[j], colorPassCommands[j]);
+        var passes = frameState.passes;
+
+        if (passes.render) {
+            for (j = 0; j < length; ++j) {
+                commandList.push(stencilPreloadCommands[j], stencilDepthPassCommands[j], colorPassCommands[j]);
+            }
+        }
+
+        if (passes.pick) {
+            for (j = 0; j < length; ++j) {
+                commandList.push(stencilPreloadCommands[j], stencilDepthPassCommands[j], pickCommands[j]);
+            }
         }
     };
 
     GroundPrimitive.prototype.getGeometryInstanceAttributes = function(id) {
         return this._primitive.getGeometryInstanceAttributes(id);
+    };
+
+    GroundPrimitive.prototype.isDestroyed = function() {
+        return false;
     };
 
     GroundPrimitive.prototype.destroy = function() {
