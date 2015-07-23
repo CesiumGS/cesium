@@ -176,6 +176,7 @@ define([
         this._maxScale = 1.0;
         this._maxPixelOffset = 0.0;
         this._allHorizontalCenter = true;
+        this._allVerticalCenter = true;
 
         this._baseVolume = new BoundingSphere();
         this._baseVolumeWC = new BoundingSphere();
@@ -691,6 +692,7 @@ define([
         }
 
         billboardCollection._allHorizontalCenter = billboardCollection._allHorizontalCenter && horizontalOrigin === HorizontalOrigin.CENTER;
+        billboardCollection._allVerticalCenter = billboardCollection._allVerticalCenter && verticalOrigin === HorizontalOrigin.CENTER;
 
         var bottomLeftX = 0;
         var bottomLeftY = 0;
@@ -1008,7 +1010,7 @@ define([
         var pixelScale = Math.max(pixelSize.x, pixelSize.y);
 
         var size = pixelScale * collection._maxScale * collection._maxSize * 2.0;
-        if (collection._allHorizontalCenter) {
+        if (collection._allHorizontalCenter && collection._allVerticalCenter ) {
             size *= 0.5;
         }
 
