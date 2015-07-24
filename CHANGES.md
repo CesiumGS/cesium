@@ -17,6 +17,7 @@ Change Log
 * Added picking support to `UrlTemplateImageryProvider`.
 * Fixed `WallGeometry` bug that caused walls covering a short distance not to render [#2897](https://github.com/AnalyticalGraphicsInc/cesium/issues/2897)
 * Fixed `PolygonGeometry` clockwise winding order bug. 
+* Fixed `BillboardCollection` bounding sphere for billboards with a non-center vertical origin. [#2894](https://github.com/AnalyticalGraphicsInc/cesium/issues/2894)
 
 ### 1.11 - 2015-07-01
 
