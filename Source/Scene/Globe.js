@@ -930,10 +930,17 @@ define([
             }
         }
 
-        if (pass.pick && mode === SceneMode.SCENE3D) {
-            // Not actually pickable, but render depth-only so primitives on the backface
-            // of the globe are not picked.
-            commandList.push(this._depthCommand);
+        if (pass.pick) {
+            if (!this.depthTestAgainstTerrain) {
+                // Render depth plane in 3D so primitives on the backface
+                // of the globe are not picked.
+                if (mode === SceneMode.SCENE3D) {
+                    commandList.push(this._depthCommand);
+                }
+            } else {
+                // Render tile depths for primitives on the ground.
+                surface.update(context, frameState, commandList);
+            }
         }
     };
 
