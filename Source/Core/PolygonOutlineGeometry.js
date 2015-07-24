@@ -50,7 +50,7 @@ define([
         var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
         if (originalWindingOrder === WindingOrder.CLOCKWISE) {
             positions2D.reverse();
-            positions.reverse();
+            positions = positions.slice().reverse();
         }
 
         var subdividedPositions;
@@ -119,7 +119,7 @@ define([
         var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
         if (originalWindingOrder === WindingOrder.CLOCKWISE) {
             positions2D.reverse();
-            positions.reverse();
+            positions = positions.slice().reverse();
         }
 
         var subdividedPositions;
