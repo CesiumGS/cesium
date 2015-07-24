@@ -15,6 +15,7 @@ Change Log
 * Added `maximumHeight` option to `Viewer.flyTo`. [#2868](https://github.com/AnalyticalGraphicsInc/cesium/issues/2868)
 * Added ArcGIS token-based authentication support to `ArcGisMapServerImageryProvider`
 * Added picking support to `UrlTemplateImageryProvider`.
+* Fixed `WallGeometry` bug that caused walls covering a short distance not to render [#2897](https://github.com/AnalyticalGraphicsInc/cesium/issues/2897)
 * Fixed `PolygonGeometry` clockwise winding order bug. 
 
 ### 1.11 - 2015-07-01
