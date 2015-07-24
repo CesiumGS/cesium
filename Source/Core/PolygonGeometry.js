@@ -329,7 +329,7 @@ define([
 
         var windingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
         if (windingOrder === WindingOrder.CLOCKWISE) {
-            outerRing.reverse();
+            outerRing = outerRing.slice().reverse();
         }
 
         var wallGeo = PolygonGeometryLibrary.computeWallGeometry(outerRing, ellipsoid, granularity, perPositionHeight);
@@ -346,7 +346,7 @@ define([
 
             windingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
             if (windingOrder === WindingOrder.COUNTER_CLOCKWISE) {
-                hole.reverse();
+                hole = hole.slice().reverse();
             }
 
             wallGeo = PolygonGeometryLibrary.computeWallGeometry(hole, ellipsoid, granularity);
