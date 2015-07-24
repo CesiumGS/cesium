@@ -138,9 +138,11 @@ define([
         }
     }
 
-    function createObject(entityCollection) {
+    function createObject(entityCollection, properties) {
         var id = createGuid();
         var entity = entityCollection.getOrCreateEntity(id);
+        entity.addProperty('properties');
+        entity.properties = properties;
         return entity;
     }
 
@@ -252,9 +254,7 @@ define([
             billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
             billboard.image = new ConstantProperty(dataUrl);
 
-            var entity = createObject(that._entityCollection);
-            entity.addProperty('properties');
-            entity.properties = properties;
+            var entity = createObject(that._entityCollection, properties);
             entity.billboard = billboard;
             entity.position = new ConstantPositionProperty(coordinates);
         }));
@@ -388,13 +388,14 @@ define([
         polyline.positions = new ConstantProperty(geometry.coordinates);
         polyline.followSurface = geometry.followSurface;
 
-        var entity = createObject(that._entityCollection);
+        var entity = createObject(that._entityCollection, properties);
         entity.polyline = polyline;
     }
 
     function createCircle(that, geometry, properties) {
         var elipse = new ElipseGraphics();
-
+        var entity = createObject(that._entityCollection, properties);
+        entity.elipse = elipse;
     }
 
     function processPolygon(that, polygon, properties, crsProperties) {
@@ -487,7 +488,7 @@ define([
         var polygon = new PolygonGraphics();
         polygon.outline = new ConstantProperty(true);
         polygon.hierarchy = new ConstantProperty(hierarchy);
-        var entity = createObject(that._entityCollection);
+        var entity = createObject(that._entityCollection, properties);
         entity.polygon = polygon;
     }
 
