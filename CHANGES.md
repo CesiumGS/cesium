@@ -15,6 +15,7 @@ Change Log
 * Added `maximumHeight` option to `Viewer.flyTo`. [#2868](https://github.com/AnalyticalGraphicsInc/cesium/issues/2868)
 * Added ArcGIS token-based authentication support to `ArcGisMapServerImageryProvider`
 * Added picking support to `UrlTemplateImageryProvider`.
+* Fixed `BillboardCollection` bounding sphere for billboards with a non-center vertical origin. [#2894](https://github.com/AnalyticalGraphicsInc/cesium/issues/2894)
 
 ### 1.11 - 2015-07-01
 
