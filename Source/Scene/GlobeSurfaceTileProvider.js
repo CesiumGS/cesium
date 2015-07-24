@@ -117,8 +117,11 @@ define([
         this._terrainProvider = options.terrainProvider;
         this._imageryLayers = options.imageryLayers;
         this._surfaceShaderSet = options.surfaceShaderSet;
-        this._renderState = undefined;
-        this._blendRenderState = undefined;
+
+        this._renderStateWithDepth = undefined;
+        this._renderStateWithoutDepth = undefined;
+        this._blendRenderStateWithDepth = undefined;
+        this._blendRenderStateWithoutDepth = undefined;
 
         this._errorEvent = new Event();
 
@@ -326,8 +329,8 @@ define([
      *        commands into this array.
      */
     GlobeSurfaceTileProvider.prototype.endUpdate = function(context, frameState, commandList) {
-        if (!defined(this._renderState)) {
-            this._renderState = context.createRenderState({ // Write color and depth
+        if (!defined(this._renderStateWithDepth)) {
+            this._renderStateWithDepth = context.createRenderState({ // Write color and depth
                 cull : {
                     enabled : true
                 },
@@ -335,10 +338,17 @@ define([
                     enabled : true
                 }
             });
-        }
 
-        if (!defined(this._blendRenderState)) {
-            this._blendRenderState = context.createRenderState({ // Write color and depth
+            this._renderStateWithoutDepth = context.createRenderState({ // Write color only
+                cull : {
+                    enabled : true
+                },
+                depthTest : {
+                    enabled : false
+                }
+            });
+
+            this._blendRenderStateWithDepth = context.createRenderState({ // Write color and depth
                 cull : {
                     enabled : true
                 },
@@ -348,10 +358,17 @@ define([
                 },
                 blending : BlendingState.ALPHA_BLEND
             });
-        }
 
-        this._renderState.depthTest.enabled = frameState.mode === SceneMode.SCENE3D || frameState.mode === SceneMode.COLUMBUS_VIEW;
-        this._blendRenderState.depthTest.enabled = this._renderState.depthTest.enabled;
+            this._blendRenderStateWithoutDepth = context.createRenderState({ // Write color only
+                cull : {
+                    enabled : true
+                },
+                depthTest : {
+                    enabled : false
+                },
+                blending : BlendingState.ALPHA_BLEND
+            });
+        }
 
         // And the tile render commands to the command list, sorted by texture count.
         var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
@@ -960,8 +977,9 @@ define([
         var imageryIndex = 0;
         var imageryLen = tileImageryCollection.length;
 
-        var firstPassRenderState = tileProvider._renderState;
-        var otherPassesRenderState = tileProvider._blendRenderState;
+        var writeDepth = frameState.mode === SceneMode.SCENE3D || frameState.mode === SceneMode.COLUMBUS_VIEW;
+        var firstPassRenderState = writeDepth ? tileProvider._renderStateWithDepth : tileProvider._renderStateWithoutDepth;
+        var otherPassesRenderState = writeDepth ? tileProvider._blendRenderStateWithDepth : tileProvider._blendRenderStateWithoutDepth;
         var renderState = firstPassRenderState;
 
         var initialColor = tileProvider._firstPassInitialColor;
