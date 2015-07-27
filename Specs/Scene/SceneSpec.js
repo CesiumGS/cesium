@@ -205,6 +205,7 @@ defineSuite([
         c.execute = function() {};
 
         scene.primitives.add(new CommandMockPrimitive(c));
+        scene.depthTestAgainstTerrain = true;
 
         expect(scene.renderForSpecs()[0]).not.toEqual(0);  // Red bounding sphere
     });
