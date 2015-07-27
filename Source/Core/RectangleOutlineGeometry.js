@@ -116,7 +116,7 @@ define([
         var minHeight = Math.min(extrudedHeight, surfaceHeight);
         var maxHeight = Math.max(extrudedHeight, surfaceHeight);
         var geo = constructRectangle(options);
-        if (CesiumMath.equalsEpsilon(minHeight, maxHeight, 0.1)) {
+        if (CesiumMath.equalsEpsilon(minHeight, maxHeight, CesiumMath.EPSILON10)) {
             return geo;
         }
         var height = options.height;
