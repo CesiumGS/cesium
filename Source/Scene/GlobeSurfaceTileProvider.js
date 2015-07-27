@@ -117,8 +117,12 @@ define([
         this._terrainProvider = options.terrainProvider;
         this._imageryLayers = options.imageryLayers;
         this._surfaceShaderSet = options.surfaceShaderSet;
-        this._renderState = undefined;
-        this._blendRenderState = undefined;
+
+        this._renderStateWithDepth = undefined;
+        this._renderStateWithoutDepth = undefined;
+        this._blendRenderStateWithDepth = undefined;
+        this._blendRenderStateWithoutDepth = undefined;
+        this._pickRenderState = undefined;
 
         this._errorEvent = new Event();
 
@@ -132,7 +136,9 @@ define([
         this._tilesToRenderByTextureCount = [];
         this._drawCommands = [];
         this._uniformMaps = [];
+        this._pickCommands = [];
         this._usedDrawCommands = 0;
+        this._usedPickCommands = 0;
 
         this._debug = {
             wireframe : false,
@@ -326,8 +332,8 @@ define([
      *        commands into this array.
      */
     GlobeSurfaceTileProvider.prototype.endUpdate = function(context, frameState, commandList) {
-        if (!defined(this._renderState)) {
-            this._renderState = context.createRenderState({ // Write color and depth
+        if (!defined(this._renderStateWithDepth)) {
+            this._renderStateWithDepth = context.createRenderState({ // Write color and depth
                 cull : {
                     enabled : true
                 },
@@ -335,10 +341,17 @@ define([
                     enabled : true
                 }
             });
-        }
 
-        if (!defined(this._blendRenderState)) {
-            this._blendRenderState = context.createRenderState({ // Write color and depth
+            this._renderStateWithoutDepth = context.createRenderState({ // Write color only
+                cull : {
+                    enabled : true
+                },
+                depthTest : {
+                    enabled : false
+                }
+            });
+
+            this._blendRenderStateWithDepth = context.createRenderState({ // Write color and depth
                 cull : {
                     enabled : true
                 },
@@ -348,12 +361,19 @@ define([
                 },
                 blending : BlendingState.ALPHA_BLEND
             });
+
+            this._blendRenderStateWithoutDepth = context.createRenderState({ // Write color only
+                cull : {
+                    enabled : true
+                },
+                depthTest : {
+                    enabled : false
+                },
+                blending : BlendingState.ALPHA_BLEND
+            });
         }
 
-        this._renderState.depthTest.enabled = frameState.mode === SceneMode.SCENE3D || frameState.mode === SceneMode.COLUMBUS_VIEW;
-        this._blendRenderState.depthTest.enabled = this._renderState.depthTest.enabled;
-
-        // And the tile render commands to the command list, sorted by texture count.
+        // Add the tile render commands to the command list, sorted by texture count.
         var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
         for (var textureCountIndex = 0, textureCountLength = tilesToRenderByTextureCount.length; textureCountIndex < textureCountLength; ++textureCountIndex) {
             var tilesToRender = tilesToRenderByTextureCount[textureCountIndex];
@@ -364,6 +384,39 @@ define([
             for (var tileIndex = 0, tileLength = tilesToRender.length; tileIndex < tileLength; ++tileIndex) {
                 addDrawCommandsForTile(this, tilesToRender[tileIndex], context, frameState, commandList);
             }
+        }
+    };
+
+    /**
+     * Adds draw commands for tiles rendered in the previous frame for a pick pass.
+     *
+     * @param {Context} context The rendering context.
+     * @param {FrameState} frameState The frame state.
+     * @param {DrawCommand[]} commandList An array of rendering commands.  This method may push
+     *        commands into this array.
+     */
+    GlobeSurfaceTileProvider.prototype.updateForPick = function(context, frameState, commandList) {
+        if (!defined(this._pickRenderState)) {
+            this._pickRenderState = context.createRenderState({
+                colorMask : {
+                    red : false,
+                    green : false,
+                    blue : false,
+                    alpha : false
+                },
+                depthTest : {
+                    enabled : true
+                }
+            });
+        }
+
+        this._usedPickCommands = 0;
+        var drawCommands = this._drawCommands;
+
+        // Add the tile pick commands from the tiles drawn last frame.
+        var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
+        for (var i = 0, length = this._usedDrawCommands; i < length; ++i) {
+            addPickCommandsForTile(this, drawCommands[i], context, frameState, commandList);
         }
     };
 
@@ -960,8 +1013,9 @@ define([
         var imageryIndex = 0;
         var imageryLen = tileImageryCollection.length;
 
-        var firstPassRenderState = tileProvider._renderState;
-        var otherPassesRenderState = tileProvider._blendRenderState;
+        var writeDepth = frameState.mode === SceneMode.SCENE3D || frameState.mode === SceneMode.COLUMBUS_VIEW;
+        var firstPassRenderState = writeDepth ? tileProvider._renderStateWithDepth : tileProvider._renderStateWithoutDepth;
+        var otherPassesRenderState = writeDepth ? tileProvider._blendRenderStateWithDepth : tileProvider._blendRenderStateWithoutDepth;
         var renderState = firstPassRenderState;
 
         var initialColor = tileProvider._firstPassInitialColor;
@@ -1119,6 +1173,35 @@ define([
             renderState = otherPassesRenderState;
             initialColor = otherPassesInitialColor;
         } while (imageryIndex < imageryLen);
+    }
+
+    function addPickCommandsForTile(tileProvider, drawCommand, context, frameState, commandList) {
+        var pickCommand;
+        if (tileProvider._pickCommands.length <= tileProvider._usedPickCommands) {
+            pickCommand = new DrawCommand();
+            pickCommand.cull = false;
+
+            tileProvider._pickCommands.push(pickCommand);
+        } else {
+            pickCommand = tileProvider._pickCommands[tileProvider._usedPickCommands];
+        }
+
+        ++tileProvider._usedPickCommands;
+
+        var useWebMercatorProjection = frameState.projection instanceof WebMercatorProjection;
+
+        pickCommand.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(context, frameState.mode, useWebMercatorProjection);
+        pickCommand.renderState = tileProvider._pickRenderState;
+
+        pickCommand.owner = drawCommand.owner;
+        pickCommand.primitiveType = drawCommand.primitiveType;
+        pickCommand.vertexArray = drawCommand.vertexArray;
+        pickCommand.uniformMap = drawCommand.uniformMap;
+        pickCommand.boundingVolume = drawCommand.boundingVolume;
+        pickCommand.orientedBoundingBox = pickCommand.orientedBoundingBox;
+        pickCommand.pass = drawCommand.pass;
+
+        commandList.push(pickCommand);
     }
 
     return GlobeSurfaceTileProvider;
