@@ -20,12 +20,9 @@ define([
     var defaultCredit = new Credit('Mapbox', mapboxLogo, 'https://www.mapbox.com');
 
     /**
-     * Provides tiled imagery hosted by OpenStreetMap or another provider of Slippy tiles.  Please be aware
-     * that a default-constructed instance of this class will connect to OpenStreetMap's volunteer-run
-     * servers, so you must conform to their
-     * {@link http://wiki.openstreetmap.org/wiki/Tile_usage_policy|Tile Usage Policy}.
+     * Provides tiled imagery hosted by Mapbox.
      *
-     * @alias OpenStreetMapImageryProvider
+     * @alias MapboxImageryProvider
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
@@ -46,7 +43,7 @@ define([
      * @see {@link https://www.mapbox.com/developers/api/#access-tokens}
      *
      * @example
-     * // OpenStreetMap tile provider
+     * // Mapbox tile provider
      * var mapbox = new Cesium.MapboxImageryProvider({
      *     mapId: 'mapbox.streets',
      *     accessToken: 'thisIsMyAccessToken'
