@@ -10,8 +10,8 @@ define([
         '../Core/PrimitiveType',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
-        '../Shaders/GlobeFSDepth',
-        '../Shaders/GlobeVSDepth',
+        '../Shaders/DepthPlaneFS',
+        '../Shaders/DepthPlaneVS',
         './DepthFunction',
         './Pass',
         './SceneMode'
@@ -26,8 +26,8 @@ define([
         PrimitiveType,
         BufferUsage,
         DrawCommand,
-        GlobeFSDepth,
-        GlobeVSDepth,
+        DepthPlaneFS,
+        DepthPlaneVS,
         DepthFunction,
         Pass,
         SceneMode) {
@@ -97,7 +97,7 @@ define([
         return depthQuadScratch;
     }
 
-    DepthPlane.prototype.update = function(context, frameState, commandList) {
+    DepthPlane.prototype.update = function(context, frameState) {
         this._mode = frameState.mode;
         if (frameState.mode !== SceneMode.SCENE3D) {
             return;
@@ -122,7 +122,7 @@ define([
                 }
             });
 
-            this._sp = context.createShaderProgram(GlobeVSDepth, GlobeFSDepth, {
+            this._sp = context.createShaderProgram(DepthPlaneVS, DepthPlaneFS, {
                 position : 0
             });
 

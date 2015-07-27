@@ -2102,6 +2102,7 @@ define([
         this._debugSphere = this._debugSphere && this._debugSphere.destroy();
         this.sun = this.sun && this.sun.destroy();
         this._sunPostProcess = this._sunPostProcess && this._sunPostProcess.destroy();
+        this._depthPlane = this._depthPlane && this._depthPlane.destroy();
 
         this._transitioner.destroy();
 
