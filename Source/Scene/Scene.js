@@ -497,18 +497,6 @@ define([
          */
         this.copyGlobeDepth = false;
 
-        /**
-         * True if primitives such as billboards, polylines, labels, etc. should be depth-tested
-         * against the terrain surface, or false if such primitives should always be drawn on top
-         * of terrain unless they're on the opposite side of the globe.  The disadvantage of depth
-         * testing primitives against terrain is that slight numerical noise or terrain level-of-detail
-         * switched can sometimes make a primitive that should be on the surface disappear underneath it.
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.depthTestAgainstTerrain = false;
-
         this._performanceDisplay = undefined;
         this._debugSphere = undefined;
 
@@ -1379,7 +1367,7 @@ define([
             }
         }
 
-        if (!scene.depthTestAgainstTerrain && (!defined(scene.globe) || !scene.globe.depthTestAgainstTerrain)) {
+        if (defined(scene.globe) && !scene.globe.depthTestAgainstTerrain) {
             // Update the depth plane that is rendered in 3D when the primitives are
             // not depth tested against terrain so primitives on the backface
             // of the globe are not picked.
@@ -1500,7 +1488,7 @@ define([
                 passState.framebuffer = fb;
             }
 
-            if (!scene.depthTestAgainstTerrain && (!defined(scene.globe) || !scene.globe.depthTestAgainstTerrain)) {
+            if (defined(scene.globe) && !scene.globe.depthTestAgainstTerrain) {
                 clearDepth.execute(context, passState);
                 scene._depthPlane.execute(context, passState);
             }

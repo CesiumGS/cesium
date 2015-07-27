@@ -11,7 +11,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
@@ -57,7 +56,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         destroyObject,
         DeveloperError,
         Ellipsoid,
@@ -248,7 +246,18 @@ define([
          */
         this.showWaterEffect = true;
 
-        this._depthTestAgainstTerrain = false;
+        /**
+         * True if primitives such as billboards, polylines, labels, etc. should be depth-tested
+         * against the terrain surface, or false if such primitives should always be drawn on top
+         * of terrain unless they're on the opposite side of the globe.  The disadvantage of depth
+         * testing primitives against terrain is that slight numerical noise or terrain level-of-detail
+         * switched can sometimes make a primitive that should be on the surface disappear underneath it.
+         *
+         * @type {Boolean}
+         * @default false
+         *
+         */
+        this.depthTestAgainstTerrain = false;
 
         this._oceanNormalMap = undefined;
         this._zoomedOutOceanSpecularIntensity = 0.5;
@@ -301,34 +310,6 @@ define([
             },
             set : function(value) {
                 this._surface.tileProvider.baseColor = value;
-            }
-        },
-
-        /**
-         * True if primitives such as billboards, polylines, labels, etc. should be depth-tested
-         * against the terrain surface, or false if such primitives should always be drawn on top
-         * of terrain unless they're on the opposite side of the globe.  The disadvantage of depth
-         * testing primitives against terrain is that slight numerical noise or terrain level-of-detail
-         * switched can sometimes make a primitive that should be on the surface disappear underneath it.
-         *
-         * @type {Boolean}
-         * @default false
-         *
-         * @deprecated
-         */
-        depthTestAgainstTerrain : {
-            get : function() {
-                deprecationWarning('Globe.depthTestAgainstTerrain', 'Globe.depthTestAgainstTerrain was deprecated in Cesium 1.12.  It will be removed in 1.14.  Use Scene.depthTestAgainstTerrain instead.');
-                return this._depthTestAgainstTerrain;
-            },
-            set : function(value) {
-                deprecationWarning('Globe.depthTestAgainstTerrain', 'Globe.depthTestAgainstTerrain was deprecated in Cesium 1.12.  It will be removed in 1.14.  Use Scene.depthTestAgainstTerrain instead.');
-                //>>includeStart('debug', pragmas.debug);
-                if (!defined(value)) {
-                    throw new DeveloperError('value is required.');
-                }
-                //>>includeEnd('debug');
-                this._depthTestAgainstTerrain = value;
             }
         }
     });
