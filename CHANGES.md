@@ -6,7 +6,7 @@ Change Log
 * Breaking changes
   *
 * Deprecated
-  *
+  * `Globe.depthTestAgainstTerrain` was deprecated.  It will be removed in 1.14.  Use `Scene.depthTestAgainstTerrain` instead.
 * Fixes Cesium.js failing to parse in IE 8 and 9. While Cesium doesn't work in IE versions less than 11, but this allows for more graceful error handling.
 * Fix calling `Scene.pickPosition` after calling `Scene.drillPick`. [#2813](https://github.com/AnalyticalGraphicsInc/cesium/issues/2813)
 * Fixed a bug that caused `Camera.positionCartographic` to be incorrect. [#2838](https://github.com/AnalyticalGraphicsInc/cesium/issues/2838)
@@ -18,6 +18,7 @@ Change Log
 * Fixed `WallGeometry` bug that caused walls covering a short distance not to render [#2897](https://github.com/AnalyticalGraphicsInc/cesium/issues/2897)
 * Fixed `PolygonGeometry` clockwise winding order bug. 
 * Fixed `BillboardCollection` bounding sphere for billboards with a non-center vertical origin. [#2894](https://github.com/AnalyticalGraphicsInc/cesium/issues/2894)
+* The globe depth is now rendered during picking when `Scene.depthTestAgainstTerrain` is `true`.
 
 ### 1.11 - 2015-07-01
 
