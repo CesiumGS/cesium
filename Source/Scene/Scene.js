@@ -33,6 +33,7 @@ define([
         './Camera',
         './CreditDisplay',
         './CullingVolume',
+        './DepthPlane',
         './FrameState',
         './FrustumCommands',
         './FXAA',
@@ -87,6 +88,7 @@ define([
         Camera,
         CreditDisplay,
         CullingVolume,
+        DepthPlane,
         FrameState,
         FrustumCommands,
         FXAA,
@@ -238,6 +240,7 @@ define([
         }
 
         this._globeDepth = globeDepth;
+        this._depthPlane = new DepthPlane();
         this._oit = oit;
         this._fxaa = new FXAA();
 
@@ -493,6 +496,18 @@ define([
          * @private
          */
         this.copyGlobeDepth = false;
+
+        /**
+         * True if primitives such as billboards, polylines, labels, etc. should be depth-tested
+         * against the terrain surface, or false if such primitives should always be drawn on top
+         * of terrain unless they're on the opposite side of the globe.  The disadvantage of depth
+         * testing primitives against terrain is that slight numerical noise or terrain level-of-detail
+         * switched can sometimes make a primitive that should be on the surface disappear underneath it.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.depthTestAgainstTerrain = false;
 
         this._performanceDisplay = undefined;
         this._debugSphere = undefined;
@@ -860,9 +875,14 @@ define([
                 return this._mode;
             },
             set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value)) {
+                    throw new DeveloperError('value is required.');
+                }
                 if (this.scene3DOnly && value !== SceneMode.SCENE3D) {
                     throw new DeveloperError('Only SceneMode.SCENE3D is valid when scene3DOnly is true.');
                 }
+                //>>includeEnd('debug');
                 this._mode = value;
             }
         },
@@ -1359,6 +1379,13 @@ define([
             }
         }
 
+        if (!scene.depthTestAgainstTerrain && (!defined(scene.globe) || !scene.globe.depthTestAgainstTerrain)) {
+            // Update the depth plane that is rendered in 3D when the primitives are
+            // not depth tested against terrain so primitives on the backface
+            // of the globe are not picked.
+            scene._depthPlane.update(context, frameState);
+        }
+
         // If supported, configure OIT to use the globe depth framebuffer and clear the OIT framebuffer.
         var useOIT = !picking && renderTranslucentCommands && defined(scene._oit) && scene._oit.isSupported();
         if (useOIT) {
@@ -1471,6 +1498,11 @@ define([
 
             if (scene.debugShowGlobeDepth && defined(globeDepth) && useGlobeDepthFramebuffer) {
                 passState.framebuffer = fb;
+            }
+
+            if (!scene.depthTestAgainstTerrain && (!defined(scene.globe) || !scene.globe.depthTestAgainstTerrain)) {
+                clearDepth.execute(context, passState);
+                scene._depthPlane.execute(context, passState);
             }
 
             // Execute commands in order by pass up to the translucent pass.
