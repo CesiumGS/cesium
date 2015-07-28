@@ -246,6 +246,7 @@ define([
 
         this._clearColorCommand = new ClearCommand({
             color : new Color(),
+            stencil : 0,
             owner : this
         });
         this._depthClearCommand = new ClearCommand({
@@ -1454,13 +1455,10 @@ define([
         for (i = 0; i < numFrustums; ++i) {
             var index = numFrustums - i - 1;
             var frustumCommands = frustumCommandsList[index];
-            frustum.near = frustumCommands.near;
-            frustum.far = frustumCommands.far;
 
-            if (index !== 0) {
-                // Avoid tearing artifacts between adjacent frustums in the opaque passes
-                frustum.near *= OPAQUE_FRUSTUM_NEAR_OFFSET;
-            }
+            // Avoid tearing artifacts between adjacent frustums in the opaque passes
+            frustum.near = index !== 0 ? frustumCommands.near * OPAQUE_FRUSTUM_NEAR_OFFSET : frustumCommands.near;
+            frustum.far = frustumCommands.far;
 
             var globeDepth = scene.debugShowGlobeDepth ? getDebugGlobeDepth(scene, index) : scene._globeDepth;
 
@@ -1488,6 +1486,12 @@ define([
                 passState.framebuffer = fb;
             }
 
+            commands = frustumCommands.commands[Pass.GROUND];
+            length = frustumCommands.indices[Pass.GROUND];
+            for (j = 0; j < length; ++j) {
+                executeCommand(commands[j], scene, context, passState);
+            }
+
             if (defined(scene.globe) && !scene.globe.depthTestAgainstTerrain) {
                 clearDepth.execute(context, passState);
                 scene._depthPlane.execute(context, passState);
@@ -1495,7 +1499,7 @@ define([
 
             // Execute commands in order by pass up to the translucent pass.
             // Translucent geometry needs special handling (sorting/OIT).
-            var startPass = Pass.GLOBE + 1;
+            var startPass = Pass.GROUND + 1;
             var endPass = Pass.TRANSLUCENT;
             for (var pass = startPass; pass < endPass; ++pass) {
                 commands = frustumCommands.commands[pass];

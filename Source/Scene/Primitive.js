@@ -485,7 +485,7 @@ define([
 
     var positionRegex = /attribute\s+vec(?:3|4)\s+(.*)3DHigh;/g;
 
-    function createColumbusViewShader(primitive, vertexShaderSource, scene3DOnly) {
+    Primitive._createColumbusViewShader = function(vertexShaderSource, scene3DOnly) {
         var match;
 
         var forwardDecl = '';
@@ -538,9 +538,9 @@ define([
         }
 
         return [forwardDecl, attributes, vertexShaderSource, computeFunctions].join('\n');
-    }
+    };
 
-    function createPickVertexShaderSource(vertexShaderSource) {
+    Primitive._createPickVertexShaderSource = function(vertexShaderSource) {
         var renamedVS = vertexShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_old_main()');
         var pickMain =
             'attribute vec4 pickColor; \n' +
@@ -552,9 +552,9 @@ define([
             '}';
 
         return renamedVS + '\n' + pickMain;
-    }
+    };
 
-    function appendShow(primitive, vertexShaderSource) {
+    Primitive._appendShowToShader = function(primitive, vertexShaderSource) {
         if (!defined(primitive._attributeLocations.show)) {
             return vertexShaderSource;
         }
@@ -569,7 +569,7 @@ define([
             '}';
 
         return renamedVS + '\n' + showMain;
-    }
+    };
 
     function modifyForEncodedNormals(primitive, vertexShaderSource) {
         if (!primitive.compressVertices) {
@@ -1082,8 +1082,8 @@ define([
         }
 
         if (createSP) {
-            var vs = createColumbusViewShader(this, appearance.vertexShaderSource, scene3DOnly);
-            vs = appendShow(this, vs);
+            var vs = Primitive._createColumbusViewShader(appearance.vertexShaderSource, scene3DOnly);
+            vs = Primitive._appendShowToShader(this, vs);
             vs = modifyForEncodedNormals(this, vs);
             var fs = appearance.getFragmentShaderSource();
 
@@ -1095,7 +1095,7 @@ define([
                     sources : [fs],
                     pickColorQualifier : 'varying'
                 });
-                this._pickSP = context.replaceShaderProgram(this._pickSP, createPickVertexShaderSource(vs), pickFS, attributeLocations);
+                this._pickSP = context.replaceShaderProgram(this._pickSP, Primitive._createPickVertexShaderSource(vs), pickFS, attributeLocations);
             } else {
                 this._pickSP = context.createShaderProgram(vs, fs, attributeLocations);
             }

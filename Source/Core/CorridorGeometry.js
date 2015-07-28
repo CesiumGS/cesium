@@ -845,5 +845,24 @@ define([
         });
     };
 
+    CorridorGeometry._createShadowVolume = function(corridorGeometry, minHeightFunc, maxHeightFunc) {
+        var granularity = corridorGeometry._granularity;
+        var ellipsoid = corridorGeometry._ellipsoid;
+
+        var minHeight = minHeightFunc(granularity, ellipsoid);
+        var maxHeight = maxHeightFunc(granularity, ellipsoid);
+
+        return new CorridorGeometry({
+            positions : corridorGeometry._positions,
+            width : corridorGeometry._width,
+            cornerType : corridorGeometry._cornerType,
+            ellipsoid : ellipsoid,
+            granularity : granularity,
+            extrudedHeight : minHeight,
+            height : maxHeight,
+            vertexFormat : VertexFormat.POSITION_ONLY
+        });
+    };
+
     return CorridorGeometry;
 });

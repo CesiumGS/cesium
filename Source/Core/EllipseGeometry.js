@@ -827,5 +827,25 @@ define([
         });
     };
 
+    EllipseGeometry._createShadowVolume = function(ellipseGeometry, minHeightFunc, maxHeightFunc) {
+        var granularity = ellipseGeometry._granularity;
+        var ellipsoid = ellipseGeometry._ellipsoid;
+
+        var minHeight = minHeightFunc(granularity, ellipsoid);
+        var maxHeight = maxHeightFunc(granularity, ellipsoid);
+
+        return new EllipseGeometry({
+            center : ellipseGeometry._center,
+            semiMajorAxis : ellipseGeometry._semiMajorAxis,
+            semiMinorAxis : ellipseGeometry._semiMinorAxis,
+            ellipsoid : ellipsoid,
+            stRotation : ellipseGeometry._stRotation,
+            granularity : granularity,
+            extrudedHeight : minHeight,
+            height : maxHeight,
+            vertexFormat : VertexFormat.POSITION_ONLY
+        });
+    };
+
     return EllipseGeometry;
 });
