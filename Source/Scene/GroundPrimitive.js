@@ -2,6 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/GeometryInstance',
         '../Core/isArray',
@@ -22,6 +23,7 @@ define([
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         GeometryInstance,
         isArray,
@@ -41,10 +43,84 @@ define([
         StencilOperation) {
     "use strict";
 
+    /**
+     * A ground primitive represents geometry draped over the terrain in the {@link Scene}.  The geometry must be from a single {@link GeometryInstance}.
+     * Batching multiple geometries is not yet supported.
+     * <p>
+     * A primitive combines geometry instances with an {@link Appearance} that describes the full shading, including
+     * {@link Material} and {@link RenderState}.  Roughly, the geometry instance defines the structure and placement,
+     * and the appearance defines the visual characteristics.  Decoupling geometry and appearance allows us to mix
+     * and match most of them and add a new geometry or appearance independently of each other. Only the {@link PerInstanceColorAppearance}
+     * is supported at this time.
+     * </p>
+     *
+     * @alias GroundPrimitive
+     * @constructor
+     *
+     * @param {Object} [options] Object with the following properties:
+     * @param {Array|GeometryInstance} [options.geometryInstances] A single geometry instance to render.
+     * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
+     * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
+     * @param {Boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
+     * @param {Boolean} [options.compressVertices=true] When <code>true</code>, the geometry vertices are compressed, which will save memory.
+     * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
+     * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
+     * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
+     * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+     *
+     * @see Primitive
+     * @see GeometryInstance
+     * @see Appearance
+     *
+     * @example
+     * var rectangleInstance = new Cesium.GeometryInstance({
+     *   geometry : new Cesium.RectangleGeometry({
+     *     rectangle : Cesium.Rectangle.fromDegrees(-140.0, 30.0, -100.0, 40.0)
+     *   }),
+     *   id : 'rectangle',
+     *   attributes : {
+     *     color : new Cesium.ColorGeometryInstanceAttribute(0.0, 1.0, 1.0, 0.5)
+     *   }
+     * });
+     * scene.primitives.add(new Cesium.GroundPrimitive({
+     *   geometryInstances : rectangleInstance
+     * }));
+     */
     var GroundPrimitive = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        /**
+         * The geometry instances rendered with this primitive.  This may
+         * be <code>undefined</code> if <code>options.releaseGeometryInstances</code>
+         * is <code>true</code> when the primitive is constructed.
+         * <p>
+         * Changing this property after the primitive is rendered has no effect.
+         * </p>
+         *
+         * @type Array
+         *
+         * @default undefined
+         */
+        this.geometryInstances = options.geometryInstances;
+        /**
+         * Determines if the primitive will be shown.  This affects all geometry
+         * instances in the primitive.
+         *
+         * @type Boolean
+         *
+         * @default true
+         */
         this.show = defaultValue(options.show, true);
+        /**
+         * This property is for debugging only; it is not for production use nor is it optimized.
+         * <p>
+         * Draws the bounding sphere for each draw command in the primitive.
+         * </p>
+         *
+         * @type {Boolean}
+         *
+         * @default false
+         */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
 
         this._sp = undefined;
@@ -65,7 +141,7 @@ define([
         this._ready = false;
         this._readyPromise = when.defer();
 
-        var geometryInstances = options.geometryInstances;
+        var geometryInstances = this.geometryInstances;
         geometryInstances = isArray(geometryInstances) ? geometryInstances : [geometryInstances];
 
         var length = geometryInstances.length;
@@ -107,6 +183,10 @@ define([
         this._primitive.readyPromise.then(function(primitive) {
             that._ready = true;
 
+            if (that.releaseGeometryInstances) {
+                that.geometryInstances = undefined;
+            }
+
             var error = primitive._error;
             if (!defined(error)) {
                 that._readyPromise.resolve(that);
@@ -116,8 +196,134 @@ define([
         });
     };
 
+    defineProperties(GroundPrimitive.prototype, {
+        /**
+         * When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
+         *
+         * @memberof GroundPrimitive.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default true
+         */
+        vertexCacheOptimize : {
+            get : function() {
+                return this._primitive.vertexCacheOptimize;
+            }
+        },
+
+        /**
+         * Determines if geometry vertex attributes are interleaved, which can slightly improve rendering performance.
+         *
+         * @memberof GroundPrimitive.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default false
+         */
+        interleave : {
+            get : function() {
+                return this._primitive.interleave;
+            }
+        },
+
+        /**
+         * When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
+         *
+         * @memberof GroundPrimitive.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default true
+         */
+        releaseGeometryInstances : {
+            get : function() {
+                return this._primitive.releaseGeometryInstances;
+            }
+        },
+
+        /**
+         * When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.         *
+         *
+         * @memberof GroundPrimitive.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default true
+         */
+        allowPicking : {
+            get : function() {
+                return this._primitive.allowPicking;
+            }
+        },
+
+        /**
+         * Determines if the geometry instances will be created and batched on a web worker.
+         *
+         * @memberof GroundPrimitive.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default true
+         */
+        asynchronous : {
+            get : function() {
+                return this._primitive.asynchronous;
+            }
+        },
+
+        /**
+         * When <code>true</code>, geometry vertices are compressed, which will save memory.
+         *
+         * @memberof GroundPrimitive.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default true
+         */
+        compressVertices : {
+            get : function() {
+                return this._primitive.compressVertices;
+            }
+        },
+
+        /**
+         * Determines if the primitive is complete and ready to render.  If this property is
+         * true, the primitive will be rendered the next time that {@link GroundPrimitive#update}
+         * is called.
+         *
+         * @memberof GroundPrimitive.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         */
+        ready : {
+            get : function() {
+                return this._ready;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves when the primitive is ready to render.
+         * @memberof GroundPrimitive.prototype
+         * @type {Promise.<GroundPrimitive>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise;
+            }
+        }
+    });
+
     GroundPrimitive._maxHeight = 9000.0;
-    GroundPrimitive._minHeight = -75000.0;
+    GroundPrimitive._minHeight = -100000.0;
 
     function computeMaximumHeight(granularity, ellipsoid) {
         var r = ellipsoid.maximumRadius;
@@ -239,6 +445,17 @@ define([
         depthMask : false
     };
 
+    /**
+     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
+     * get the draw commands needed to render this primitive.
+     * <p>
+     * Do not call this function directly.  This is documented just to
+     * list the exceptions that may be propagated when the scene is rendered:
+     * </p>
+     *
+     * @exception {DeveloperError} All instance geometries must have the same primitiveType.
+     * @exception {DeveloperError} Appearance and material have a uniform with the same name.
+     */
     GroundPrimitive.prototype.update = function(context, frameState, commandList) {
         if (!context.fragmentDepth || !this.show) {
             return;
@@ -379,14 +596,56 @@ define([
         }
     };
 
+    /**
+     * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
+     *
+     * @param {Object} id The id of the {@link GeometryInstance}.
+     * @returns {Object} The typed array in the attribute's format or undefined if the is no instance with id.
+     *
+     * @exception {DeveloperError} must call update before calling getGeometryInstanceAttributes.
+     *
+     * @example
+     * var attributes = primitive.getGeometryInstanceAttributes('an id');
+     * attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA);
+     * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true);
+     */
     GroundPrimitive.prototype.getGeometryInstanceAttributes = function(id) {
         return this._primitive.getGeometryInstanceAttributes(id);
     };
 
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <p>
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     * </p>
+     *
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     *
+     * @see GroundPrimitive#destroy
+     */
     GroundPrimitive.prototype.isDestroyed = function() {
         return false;
     };
 
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <p>
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     * </p>
+     *
+     * @returns {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see GroundPrimitive#isDestroyed
+     *
+     * @example
+     * e = e && e.destroy();
+     */
     GroundPrimitive.prototype.destroy = function() {
         this._primitive = this._primitive && this._primitive.destroy();
         this._sp = this._sp && this._sp.destroy();
