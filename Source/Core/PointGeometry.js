@@ -38,7 +38,7 @@ define([
     PointGeometry.createGeometry = function(pointGeometry) {
         var attributes = new GeometryAttributes();
         attributes.position = new GeometryAttribute({
-            componentDatatype : ComponentDatatype.DOUBLE,
+            componentDatatype : ComponentDatatype.FLOAT,
             componentsPerAttribute : 3,
             values : pointGeometry._positionsTypedArray
         });

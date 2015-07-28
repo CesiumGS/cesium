@@ -114,7 +114,8 @@ define([
                 appearance : new PointAppearance(),
                 asynchronous : false,
                 allowPicking : false,
-                cull : false
+                cull : false,
+                relativeToCenter : that.boundingSphere.center
             });
 
             that._primitive = primitive;
