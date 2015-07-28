@@ -845,7 +845,10 @@ define([
         });
     };
 
-    CorridorGeometry._createShadowVolume = function(corridorGeometry, minHeightFunc, maxHeightFunc) {
+    /**
+     * @private
+     */
+    CorridorGeometry.createShadowVolume = function(corridorGeometry, minHeightFunc, maxHeightFunc) {
         var granularity = corridorGeometry._granularity;
         var ellipsoid = corridorGeometry._ellipsoid;
 

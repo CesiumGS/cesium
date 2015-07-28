@@ -152,9 +152,9 @@ define([
             var geometry = instance.geometry;
 
             var instanceType = geometry.constructor;
-            if (defined(instanceType) && defined(instanceType._createShadowVolume)) {
+            if (defined(instanceType) && defined(instanceType.createShadowVolume)) {
                 instances[i] = new GeometryInstance({
-                    geometry : instanceType._createShadowVolume(geometry, computeMinimumHeight, computeMaximumHeight),
+                    geometry : instanceType.createShadowVolume(geometry, computeMinimumHeight, computeMaximumHeight),
                     attributes : instance.attributes,
                     modelMatrix : Matrix4.IDENTITY,
                     id : instance.id

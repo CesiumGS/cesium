@@ -158,7 +158,10 @@ define([
         return EllipseGeometry.createGeometry(circleGeometry._ellipseGeometry);
     };
 
-    CircleGeometry._createShadowVolume = function(circleGeometry, minHeightFunc, maxHeightFunc) {
+    /**
+     * @private
+     */
+    CircleGeometry.createShadowVolume = function(circleGeometry, minHeightFunc, maxHeightFunc) {
         var granularity = circleGeometry._ellipseGeometry._granularity;
         var ellipsoid = circleGeometry._ellipseGeometry._ellipsoid;
 

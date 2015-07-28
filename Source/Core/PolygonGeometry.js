@@ -715,7 +715,10 @@ define([
         });
     };
 
-    PolygonGeometry._createShadowVolume = function(polygonGeometry, minHeightFunc, maxHeightFunc) {
+    /**
+     * @private
+     */
+    PolygonGeometry.createShadowVolume = function(polygonGeometry, minHeightFunc, maxHeightFunc) {
         var granularity = polygonGeometry._granularity;
         var ellipsoid = polygonGeometry._ellipsoid;
 

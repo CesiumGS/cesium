@@ -775,7 +775,10 @@ define([
         });
     };
 
-    RectangleGeometry._createShadowVolume = function(rectangleGeometry, minHeightFunc, maxHeightFunc) {
+    /**
+     * @private
+     */
+    RectangleGeometry.createShadowVolume = function(rectangleGeometry, minHeightFunc, maxHeightFunc) {
         var granularity = rectangleGeometry._granularity;
         var ellipsoid = rectangleGeometry._ellipsoid;
 
