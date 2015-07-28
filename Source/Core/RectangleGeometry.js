@@ -341,7 +341,7 @@ define([
         var i;
 
         var topBottomGeo = constructRectangle(options);
-        if (CesiumMath.equalsEpsilon(minHeight, maxHeight, 0.1)) {
+        if (CesiumMath.equalsEpsilon(minHeight, maxHeight, CesiumMath.EPSILON10)) {
             return topBottomGeo;
         }
         topBottomGeo = PolygonPipeline.scaleToGeodeticHeight(topBottomGeo, maxHeight, ellipsoid, false);
@@ -554,7 +554,7 @@ define([
         var stRotation = defaultValue(options.stRotation, 0.0);
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
         var extrudedHeight = options.extrudedHeight;
-        var extrude = (defined(extrudedHeight) && Math.abs(surfaceHeight - extrudedHeight) > 1.0);
+        var extrude = defined(extrudedHeight);
         var closeTop = defaultValue(options.closeTop, true);
         var closeBottom = defaultValue(options.closeBottom, true);
 
