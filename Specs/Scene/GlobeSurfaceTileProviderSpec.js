@@ -344,8 +344,11 @@ defineSuite([
             url : 'Data/Images/Red16x16.png'
         }));
 
+        frameState.mode = SceneMode.COLUMBUS_VIEW;
+        frameState.mapProjection = new GeographicProjection(Ellipsoid.WGS84);
+
         frameState.camera.update(SceneMode.COLUMBUS_VIEW);
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
+        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
         return updateUntilDone(globe).then(function() {
             expect(render(context, frameState, globe)).toBeGreaterThan(0);
@@ -358,6 +361,9 @@ defineSuite([
         layerCollection.addImageryProvider(new SingleTileImageryProvider({
             url : 'Data/Images/Red16x16.png'
         }));
+
+        frameState.mode = SceneMode.COLUMBUS_VIEW;
+        frameState.mapProjection = new WebMercatorProjection(Ellipsoid.WGS84);
 
         frameState.camera.update(SceneMode.COLUMBUS_VIEW);
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
@@ -404,6 +410,9 @@ defineSuite([
 
         return updateUntilDone(globe).then(function() {
             expect(render(context, frameState, globe)).toBeGreaterThan(0);
+
+            frameState.mode = SceneMode.COLUMBUS_VIEW;
+            frameState.mapProjection = new GeographicProjection(Ellipsoid.WGS84);
 
             frameState.camera.update(SceneMode.COLUMBUS_VIEW);
             frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
