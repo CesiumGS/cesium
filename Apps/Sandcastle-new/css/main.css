@@ -183,6 +183,14 @@ ul + div.tab-content {
   z-index: 1045;
 }
 
+.tooltip-inner{
+  background: none;
+  border: 1px solid #ccc;
+}
+
+.tooltip.bottom .tooltip-arrow{
+  border-bottom-color: #ccc;
+}
 /*# sourceMappingURL=main.css.map */
 @media screen and (max-width: 767px) {
   .codeContainer .alert{
