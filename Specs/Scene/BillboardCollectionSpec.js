@@ -1198,6 +1198,36 @@ defineSuite([
         expect(actual.radius).toEqual(bs.radius);
     });
 
+    it('computes bounding sphere with non-centered origin', function() {
+        billboards.add({
+            image : greenImage,
+            position : Cartesian3.fromDegrees(-50.0, -50.0)
+        });
+        scene.renderForSpecs();
+        var centeredRadius = scene._commandList[0].boundingVolume.radius;
+        billboards.removeAll();
+
+        billboards.add({
+            image : greenImage,
+            position : Cartesian3.fromDegrees(-50.0, -50.0),
+            verticalOrigin: VerticalOrigin.TOP
+        });
+        scene.renderForSpecs();
+        var verticalRadius = scene._commandList[0].boundingVolume.radius;
+        billboards.removeAll();
+
+        billboards.add({
+            image : greenImage,
+            position : Cartesian3.fromDegrees(-50.0, -50.0),
+            horizontalOrigin: HorizontalOrigin.LEFT
+        });
+        scene.renderForSpecs();
+        var horizontalRadius = scene._commandList[0].boundingVolume.radius;
+
+        expect(verticalRadius).toEqual(2*centeredRadius);
+        expect(horizontalRadius).toEqual(2*centeredRadius);
+    });
+
     it('can create a billboard using a URL', function() {
         scene.renderForSpecs();
 
