@@ -15,7 +15,7 @@ define([
      * Please supply your own access token as soon as possible and prior to deployment.
      * Visit {@link https://www.mapbox.com/help/create-api-access-token/} for details.
      * When Cesium's default access token is used, a message is printed to the console the first
-     * time the Bing Maps API is used.
+     * time the Mapbox API is used.
      *
      * @type {String}
      */
