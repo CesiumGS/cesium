@@ -20,7 +20,7 @@ define([
     "use strict";
 
     /**
-     * A description of a circle on the ellipsoid.
+     * A description of a circle on the ellipsoid. Circle geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
      *
      * @alias CircleGeometry
      * @constructor

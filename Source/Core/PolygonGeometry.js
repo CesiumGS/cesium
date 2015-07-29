@@ -359,7 +359,7 @@ define([
     }
 
     /**
-     * A description of a polygon on the ellipsoid. The polygon is defined by a polygon hierarchy.
+     * A description of a polygon on the ellipsoid. The polygon is defined by a polygon hierarchy. Polygon geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
      *
      * @alias PolygonGeometry
      * @constructor
@@ -488,7 +488,7 @@ define([
     };
 
     /**
-     * A description of a polygon from an array of positions.
+     * A description of a polygon from an array of positions. Polygon geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
      *
      * @param {Cartesian3[]} options.positions An array of positions that defined the corner points of the polygon.
      * @param {Number} [options.height=0.0] The height of the polygon.

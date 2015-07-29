@@ -499,7 +499,7 @@ define([
     }
 
     /**
-     * A description of a cartographic rectangle on an ellipsoid centered at the origin.
+     * A description of a cartographic rectangle on an ellipsoid centered at the origin. Rectangle geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
      *
      * @alias RectangleGeometry
      * @constructor

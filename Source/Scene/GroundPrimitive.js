@@ -55,6 +55,9 @@ define([
      * and match most of them and add a new geometry or appearance independently of each other. Only the {@link PerInstanceColorAppearance}
      * is supported at this time.
      * </p>
+     * <p>
+     * Valid geometries are {@link CircleGeometry}, {@link CorridorGeometry}, {@link EllipseGeometry}, {@link PolygonGeometry}, and {@link RectangleGeometry}.
+     * </p>
      *
      * @alias GroundPrimitive
      * @constructor

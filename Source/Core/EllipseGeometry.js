@@ -588,7 +588,7 @@ define([
     }
 
     /**
-     * A description of an ellipse on an ellipsoid.
+     * A description of an ellipse on an ellipsoid. Ellipse geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
      *
      * @alias EllipseGeometry
      * @constructor
