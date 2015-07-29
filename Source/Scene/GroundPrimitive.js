@@ -141,59 +141,21 @@ define([
         this._ready = false;
         this._readyPromise = when.defer();
 
-        var geometryInstances = this.geometryInstances;
-        geometryInstances = isArray(geometryInstances) ? geometryInstances : [geometryInstances];
-
-        var length = geometryInstances.length;
-        var instances = new Array(length);
-
-        for (var i = 0; i < length; ++i) {
-            var instance = geometryInstances[i];
-            var geometry = instance.geometry;
-
-            var instanceType = geometry.constructor;
-            if (defined(instanceType) && defined(instanceType.createShadowVolume)) {
-                instances[i] = new GeometryInstance({
-                    geometry : instanceType.createShadowVolume(geometry, computeMinimumHeight, computeMaximumHeight),
-                    attributes : instance.attributes,
-                    modelMatrix : Matrix4.IDENTITY,
-                    id : instance.id
-                });
-            }
-        }
+        this._primitive = undefined;
 
         var appearance = new PerInstanceColorAppearance({
             flat : true
         });
 
-        var primitiveOptions = {
-            geometryInstances : instances,
+        this._primitiveOptions = {
             appearance : appearance,
-            vertexCacheOptimize : options.vertexCacheOptimizations,
-            interleave : options.interleave,
-            releaseGeometryInstances : options.releaseGeometryInstances,
-            allowPicking : options.allowPicking,
-            asynchronous : options.asynchronous,
-            compressVertices : options.compressVertices
+            vertexCacheOptimize : defaultValue(options.vertexCacheOptimize, false),
+            interleave : defaultValue(options.interleave, false),
+            releaseGeometryInstances : defaultValue(options.releaseGeometryInstances, true),
+            allowPicking : defaultValue(options.allowPicking, true),
+            asynchronous : defaultValue(options.asynchronous, true),
+            compressVertices : defaultValue(options.compressVertices, true)
         };
-
-        this._primitive = new Primitive(primitiveOptions);
-
-        var that = this;
-        this._primitive.readyPromise.then(function(primitive) {
-            that._ready = true;
-
-            if (that.releaseGeometryInstances) {
-                that.geometryInstances = undefined;
-            }
-
-            var error = primitive._error;
-            if (!defined(error)) {
-                that._readyPromise.resolve(that);
-            } else {
-                that._readyPromise.reject(error);
-            }
-        });
     };
 
     defineProperties(GroundPrimitive.prototype, {
@@ -209,7 +171,7 @@ define([
          */
         vertexCacheOptimize : {
             get : function() {
-                return this._primitive.vertexCacheOptimize;
+                return this._primitiveOptions.vertexCacheOptimize;
             }
         },
 
@@ -225,7 +187,7 @@ define([
          */
         interleave : {
             get : function() {
-                return this._primitive.interleave;
+                return this._primitiveOptions.interleave;
             }
         },
 
@@ -241,7 +203,7 @@ define([
          */
         releaseGeometryInstances : {
             get : function() {
-                return this._primitive.releaseGeometryInstances;
+                return this._primitiveOptions.releaseGeometryInstances;
             }
         },
 
@@ -257,7 +219,7 @@ define([
          */
         allowPicking : {
             get : function() {
-                return this._primitive.allowPicking;
+                return this._primitiveOptions.allowPicking;
             }
         },
 
@@ -273,7 +235,7 @@ define([
          */
         asynchronous : {
             get : function() {
-                return this._primitive.asynchronous;
+                return this._primitiveOptions.asynchronous;
             }
         },
 
@@ -289,7 +251,7 @@ define([
          */
         compressVertices : {
             get : function() {
-                return this._primitive.compressVertices;
+                return this._primitiveOptions.compressVertices;
             }
         },
 
@@ -461,11 +423,57 @@ define([
             return;
         }
 
+        var i;
+        var j;
+        var length;
+
+        if (!defined(this._primitive)) {
+            var geometryInstances = this.geometryInstances;
+            geometryInstances = isArray(geometryInstances) ? geometryInstances : [geometryInstances];
+
+            length = geometryInstances.length;
+            var instances = new Array(length);
+
+            for (i = 0; i < length; ++i) {
+                var instance = geometryInstances[i];
+                var geometry = instance.geometry;
+
+                var instanceType = geometry.constructor;
+                if (defined(instanceType) && defined(instanceType.createShadowVolume)) {
+                    instances[i] = new GeometryInstance({
+                        geometry : instanceType.createShadowVolume(geometry, computeMinimumHeight, computeMaximumHeight),
+                        attributes : instance.attributes,
+                        modelMatrix : Matrix4.IDENTITY,
+                        id : instance.id
+                    });
+                }
+            }
+
+            this._primitiveOptions.geometryInstances = instances;
+            this._primitive = new Primitive(this._primitiveOptions);
+
+            var that = this;
+            this._primitive.readyPromise.then(function(primitive) {
+                that._ready = true;
+
+                if (that.releaseGeometryInstances) {
+                    that.geometryInstances = undefined;
+                }
+
+                var error = primitive._error;
+                if (!defined(error)) {
+                    that._readyPromise.resolve(that);
+                } else {
+                    that._readyPromise.reject(error);
+                }
+            });
+        }
+
         var primitiveCommandList = this._primitiveCommandList;
         primitiveCommandList.length = 0;
         this._primitive.update(context, frameState, primitiveCommandList);
 
-        if (!this._ready) {
+        if (!this._ready || primitiveCommandList.length === 0) {
             return;
         }
 
@@ -504,7 +512,7 @@ define([
             this._colorPassCommands = new Array(commandsLength);
             this._pickCommands = new Array(commandsLength);
 
-            for (var i = 0; i < commandsLength; ++i) {
+            for (i = 0; i < commandsLength; ++i) {
                 var primitiveCommand = primitiveCommandList[i];
 
                 this._stencilPreloadPassCommands[i] = new DrawCommand({
@@ -562,8 +570,7 @@ define([
         var colorPassCommands = this._colorPassCommands;
         var pickCommands = this._pickCommands;
 
-        var j;
-        var length = primitiveCommandList.length;
+        length = primitiveCommandList.length;
         for (j = 0; j < length; ++j) {
             var command = primitiveCommandList[j];
 
