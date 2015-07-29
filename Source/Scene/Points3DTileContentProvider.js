@@ -91,7 +91,7 @@ define([
             var numberOfPoints = view.getUint32(byteOffset, true);
             byteOffset += sizeOfUint32;
 
-            // Skip padding so positions offset is 8-byte aligned for 32-bit floats
+            // Skip padding so positions offset is 4-byte aligned for 32-bit floats
             byteOffset += sizeOfUint32;
 
             var positionsOffsetInBytes = byteOffset;
