@@ -517,6 +517,7 @@ define([
             }
 
             if (!defined(primitive.relativeToCenter)) {
+                // Use GPU RTE
                 if (!scene3DOnly) {
                     attributes +=
                         'attribute vec3 ' + name + '2DHigh;\n' +
@@ -544,6 +545,7 @@ define([
                         '    return p;\n' +
                         '}\n\n';
                 } else {
+                    // Use RTC
                     computeFunctions +=
                         functionName + '\n' +
                         '{\n' +
