@@ -3,6 +3,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/GeometryInstance',
         '../Core/isArray',
@@ -24,6 +25,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        destroyObject,
         DeveloperError,
         GeometryInstance,
         isArray,
@@ -444,7 +446,8 @@ define([
                         geometry : instanceType.createShadowVolume(geometry, computeMinimumHeight, computeMaximumHeight),
                         attributes : instance.attributes,
                         modelMatrix : Matrix4.IDENTITY,
-                        id : instance.id
+                        id : instance.id,
+                        pickPrimitive : this
                     });
                 }
             }
@@ -617,6 +620,11 @@ define([
      * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true);
      */
     GroundPrimitive.prototype.getGeometryInstanceAttributes = function(id) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(this._primitive)) {
+            throw new DeveloperError('must call update before calling getGeometryInstanceAttributes');
+        }
+        //>>includeEnd('debug');
         return this._primitive.getGeometryInstanceAttributes(id);
     };
 
@@ -656,6 +664,7 @@ define([
     GroundPrimitive.prototype.destroy = function() {
         this._primitive = this._primitive && this._primitive.destroy();
         this._sp = this._sp && this._sp.destroy();
+        return destroyObject(this);
     };
 
     return GroundPrimitive;
