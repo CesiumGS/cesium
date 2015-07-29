@@ -263,11 +263,11 @@ define([
         /**
          * @private
          */
-        this.relativeToCenter = options.relativeToCenter;
+        this.rtcCenter = options.rtcCenter;
         this._modifiedModelView = new Matrix4();
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(this.relativeToCenter) && (!defined(this.geometryInstances) || (isArray(this.geometryInstances) && this.geometryInstances !== 1))) {
+        if (!defined(this.rtcCenter) && (!defined(this.geometryInstances) || (isArray(this.geometryInstances) && this.geometryInstances !== 1))) {
             throw new DeveloperError('Relative-to-center rendering only supports one geometry instance.');
         }
         //>>includeEnd('debug');
@@ -516,7 +516,7 @@ define([
                 forwardDecl += functionName + ';\n';
             }
 
-            if (!defined(primitive.relativeToCenter)) {
+            if (!defined(primitive.rtcCenter)) {
                 // Use GPU RTE
                 if (!scene3DOnly) {
                     attributes +=
@@ -755,6 +755,10 @@ define([
 
         if (defined(this._error)) {
             throw this._error;
+        }
+
+        if (defined(this.rtcCenter) && !frameState.scene3DOnly) {
+            throw new DeveloperError('RTC rendering is only available for 3D only scenes.');
         }
 
         if (this._state === PrimitiveState.FAILED) {
@@ -1162,7 +1166,7 @@ define([
             }
             var uniforms = combine(appearanceUniformMap, materialUniformMap);
 
-            if (defined(this.relativeToCenter)) {
+            if (defined(this.rtcCenter)) {
                 uniforms.u_modifiedModelView = function() {
                     return that._modifiedModelView;
                 };
@@ -1280,10 +1284,10 @@ define([
             }
         }
 
-        if (defined(this.relativeToCenter)) {
+        if (defined(this.rtcCenter)) {
             var viewMatrix = frameState.camera.viewMatrix;
             Matrix4.multiply(viewMatrix, this._modelMatrix, this._modifiedModelView);
-            Matrix4.multiplyByPoint(this._modifiedModelView, this.relativeToCenter, rtcScratch);
+            Matrix4.multiplyByPoint(this._modifiedModelView, this.rtcCenter, rtcScratch);
             Matrix4.setTranslation(this._modifiedModelView, rtcScratch, this._modifiedModelView);
         }
 
