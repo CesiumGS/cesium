@@ -66,9 +66,7 @@ define([
             iconUrl: buildModuleUrl('Widgets/Images/ImageryProviders/mapboxSatellite.png'),
             creationFunction: function() {
                 return new MapboxImageryProvider({
-                    url: 'http://api.tiles.mapbox.com/v3/', //TODO: get access token for v4
-                    //accessToken: '',
-                    mapId: 'examples.map-2k9d7u0c' //'mapbox.satellite'
+                    mapId: 'mapbox.satellite'
                 });
             }
         }));
@@ -79,9 +77,7 @@ define([
             iconUrl: buildModuleUrl('Widgets/Images/ImageryProviders/mapboxTerrain.png'),
             creationFunction: function() {
                 return new MapboxImageryProvider({
-                    url: 'http://api.tiles.mapbox.com/v3/', //TODO: get access token for v4
-                    //accessToken: '',
-                    mapId: 'examples.map-i86nkdio' //'mapbox.streets'
+                    mapId: 'mapbox.streets'
                 });
             }
         }));
@@ -92,9 +88,7 @@ define([
             iconUrl: buildModuleUrl('Widgets/Images/ImageryProviders/mapboxStreets.png'),
             creationFunction: function() {
                 return new MapboxImageryProvider({
-                    url: 'http://api.tiles.mapbox.com/v3/', //TODO: get access token for v4
-                    //accessToken: '',
-                    mapId: 'examples.map-i87786ca' //'mapbox.streets-basic'
+                    mapId: 'mapbox.streets-basic'
                 });
             }
         }));
