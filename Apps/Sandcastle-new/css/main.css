@@ -77,6 +77,10 @@ html {
   min-width: 390px;
 }
 
+#cesiumColumn{
+  min-width: 50px;
+}
+
 .resize{
   cursor: col-resize;
 }

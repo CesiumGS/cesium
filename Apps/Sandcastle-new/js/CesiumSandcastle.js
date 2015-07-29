@@ -522,7 +522,7 @@ require({
 
     if(resize && mouseDown){
       // Check that the final width of code column does not go below 390px
-      if($('#codeColumn').width() + (e.pageX - lastX) >= 390 && $('#codeColumn').width() + (e.pageX - lastX) <= $('#bodyRow').width())
+      if($('#codeColumn').width() + (e.pageX - lastX) >= 390 && $('#cesiumColumn').width() - (e.pageX - lastX) >= 50 && $('#codeColumn').width() + (e.pageX - lastX) <= $('#bodyRow').width())
       {
         $('#codeColumn').width($('#codeColumn').width() + (e.pageX - lastX));
         $('#cesiumColumn').width($('#cesiumColumn').width() - (e.pageX - lastX));
