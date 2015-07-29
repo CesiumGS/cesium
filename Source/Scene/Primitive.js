@@ -517,8 +517,8 @@ define([
             }
 
             if (!defined(primitive.relativeToCenter)) {
-                // Use GPU RTE
                 if (!scene3DOnly) {
+                    // Use GPU RTE
                     attributes +=
                         'attribute vec3 ' + name + '2DHigh;\n' +
                         'attribute vec3 ' + name + '2DLow;\n';
@@ -545,7 +545,6 @@ define([
                         '    return p;\n' +
                         '}\n\n';
                 } else {
-                    // Use RTC
                     computeFunctions +=
                         functionName + '\n' +
                         '{\n' +
@@ -553,6 +552,7 @@ define([
                         '}\n\n';
                 }
             } else {
+                // Use RTC
                 vertexShaderSource = vertexShaderSource.replace(/attribute\s+vec(?:3|4)\s+position3DHigh;/g, '');
                 vertexShaderSource = vertexShaderSource.replace(/attribute\s+vec(?:3|4)\s+position3DLow;/g, '');
 
