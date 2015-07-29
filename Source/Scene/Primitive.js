@@ -517,8 +517,8 @@ define([
             }
 
             if (!defined(primitive.relativeToCenter)) {
+                // Use GPU RTE
                 if (!scene3DOnly) {
-                    // Use GPU RTE
                     attributes +=
                         'attribute vec3 ' + name + '2DHigh;\n' +
                         'attribute vec3 ' + name + '2DLow;\n';
