@@ -91,9 +91,6 @@ define([
             var numberOfPoints = view.getUint32(byteOffset, true);
             byteOffset += sizeOfUint32;
 
-            // Skip padding so positions offset is 4-byte aligned for 32-bit floats
-            byteOffset += sizeOfUint32;
-
             var positionsOffsetInBytes = byteOffset;
             var positions = new Float32Array(arrayBuffer, positionsOffsetInBytes, numberOfPoints * 3);
 
