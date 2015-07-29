@@ -465,11 +465,13 @@ define([
         return parseColorString(value, queryStringValue(node, 'colorMode', namespace) === 'random');
     }
 
-    function createDefaultBillboard() {
+    function createDefaultBillboard(proxy, sourceUri, uriResolver) {
         var billboard = new BillboardGraphics();
         billboard.width = BILLBOARD_SIZE;
         billboard.height = BILLBOARD_SIZE;
         billboard.scaleByDistance = new NearFarScalar(2414016, 1.0, 1.6093e+7, 0.1);
+        var DEFAULT_ICON = '../../../Build/Cesium/Assets/Textures/maki/marker.png';
+        billboard.image = resolveHref(DEFAULT_ICON, proxy, sourceUri, uriResolver);
         return billboard;
     }
 
@@ -492,6 +494,9 @@ define([
 
     function processWpt(dataSource, geometryNode, entityCollection, sourceUri, uriResolver) {
 
+        //Required Information:
+        //  <lon> Longitude of the waypoint.
+        //  <lat> Latitude of the waypoint.
         var longitude = queryNumericAttribute(geometryNode, 'lon');
         var latitude = queryNumericAttribute(geometryNode, 'lat');
         var coordinatesString = longitude + ", " + latitude;
@@ -502,15 +507,44 @@ define([
 
         var entity = getOrCreateEntity(geometryNode, entityCollection);
         entity.position = position;
-        entity.billboard = createDefaultBillboard();
-        entity.billboard.image = '../images/Cesium_Logo_overlay.png';
+        entity.billboard = createDefaultBillboard(dataSource._proxy, sourceUri, uriResolver);
 
-        //TODO add support for these and others
-        var elevation = queryNumericValue(geometryNode, 'ele', namespaces.gpx);
+        //Optional Position Information:
+        //  <ele> Elevation of the waypoint.
+        //  <time> Creation date/time of the waypoint
+        //  <magvar> Magnetic variation of the waypoint in degrees
+        //  <geoidheight> Geoid height of the waypoint
+        //      var elevation = queryNumericValue(geometryNode, 'ele', namespaces.gpx);
+        //      var time = queryNumericValue(geometryNode, 'time', namespaces.gpx);
+        //      var magvar = queryNumericValue(geometryNode, 'magvar', namespaces.gpx);
+        //      var geoidheight = queryNumericValue(geometryNode, 'geoidheight', namespaces.gpx);
+
+        //Optional Description Information:
+        //  <name> GPS waypoint name of the waypoint
+        //  <cmt> GPS comment of the waypoint
+        //  <desc> Descriptive description of the waypoint
+        //  <src> Source of the waypoint data
+        //  <link> Link (URI/URL) associated with the waypoint
+        //  <sym> Waypoint symbol
+        //  <type> Type (category) of waypoint
         var name = queryStringValue(geometryNode, 'name', namespaces.gpx);
-        var comment = queryStringValue(geometryNode, 'cmt', namespaces.gpx);
-        var description = queryStringValue(geometryNode, 'desc', namespaces.gpx);
-        var symbol = queryStringValue(geometryNode, 'sym', namespaces.gpx);
+        entity.label = createDefaultLabel();
+        entity.label.text = name;
+        //        var comment = queryStringValue(geometryNode, 'cmt', namespaces.gpx);
+        //        var description = queryStringValue(geometryNode, 'desc', namespaces.gpx);
+        //        var source = queryStringValue(geometryNode, 'src', namespaces.gpx);
+        //        var link = queryLinkgValue(geometryNode, 'link', namespaces.gpx);
+        //        var symbol = queryStringValue(geometryNode, 'sym', namespaces.gpx);
+        //        var type = queryStringValue(geometryNode, 'type', namespaces.gpx);
+
+        //Optional Accuracy Information:
+        //  <fix> Type of GPS fix
+        //  <sat> Number of satellites
+        //  <hdop> HDOP
+        //  <vdop> VDOP
+        //  <pdop> PDOP
+        //  <ageofdgpsdata> Time since last DGPS fix
+        //  <dgpsid> DGPS station ID
     }
 
     var complexTypes = {
