@@ -64,13 +64,14 @@ define([
         this._url = url;
         this._mapId = mapId;
         this._accessToken = MapboxApi.getAccessToken(options.accessToken);
-        this._format = defaultValue(options.format, '.png');
+        var format = defaultValue(options.format, 'png');
+        this._format = format.replace('.', '');
 
         var templateUrl = url;
         if (!trailingSlashRegex.test(url)) {
             templateUrl += '/';
         }
-        templateUrl += mapId + '/{z}/{x}/{y}' + this._format;
+        templateUrl += mapId + '/{z}/{x}/{y}.' + this._format;
         if (defined(this._accessToken)) {
             templateUrl += '?access_token=' + this._accessToken;
         }

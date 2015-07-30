@@ -83,7 +83,7 @@ define([
         }));
 
         providerViewModels.push(new ProviderViewModel({
-            name: 'Mapbox Satellite',
+            name: 'Mapbox Streets Classic',
             tooltip: 'Mapbox streets basic imagery https://www.mapbox.com/maps/',
             iconUrl: buildModuleUrl('Widgets/Images/ImageryProviders/mapboxStreets.png'),
             creationFunction: function() {

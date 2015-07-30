@@ -11,7 +11,7 @@ Change Log
 * Added picking support to `UrlTemplateImageryProvider`.
 * Added ArcGIS token-based authentication support to `ArcGisMapServerImageryProvider`.
 * `ArcGisMapServerImageryProvider` now supports a proxy for `pickFeatures` requests.
-* Added `MapboxImageryProvider`
+* Added `MapboxImageryProvider` to load imagery from [Mapbox](https://www.mapbox.com).
 * Fixed incorrect texture coordinates for `WallGeometry` [#2872](https://github.com/AnalyticalGraphicsInc/cesium/issues/2872)
 * Fixed `WallGeometry` bug that caused walls covering a short distance not to render. [#2897](https://github.com/AnalyticalGraphicsInc/cesium/issues/2897)
 * Fixed `PolygonGeometry` clockwise winding order bug. 
