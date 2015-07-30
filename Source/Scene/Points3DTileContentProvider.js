@@ -112,7 +112,7 @@ define([
                 asynchronous : false,
                 allowPicking : false,
                 cull : false,
-                relativeToCenter : that.boundingSphere.center
+                rtcCenter : that.boundingSphere.center
             });
 
             that._primitive = primitive;
