@@ -241,8 +241,11 @@ define([
         context.strokeStyle = cssColor;
         context.lineWidth = 2;
         context.strokeRect(1, 1, 255, 255);
+        
+        var yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
+        var tmsY = (yTiles - y - 1);
 
-        var label = 'L' + level + 'X' + x + 'Y' + y;
+        var label = 'L' + level + 'X' + x + 'Y' + tmsY;
         context.font = 'bold 25px Arial';
         context.textAlign = 'center';
         context.fillStyle = 'black';
