@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite(['DataSources/GpxDataSource',
              'Core/Cartesian3',
+             'Core/DeveloperError',
              'DataSources/EntityCollection',
              'Core/loadXML',
              'Core/Event',
@@ -8,6 +9,7 @@ defineSuite(['DataSources/GpxDataSource',
             ], function(
                     GpxDataSource,
                     Cartesian3,
+                    DeveloperError,
                     EntityCollection,
                     loadXML,
                     Event,
@@ -43,6 +45,28 @@ defineSuite(['DataSources/GpxDataSource',
         });
     });
 
+    it('Waypoint: throws with invalid coordinates', function() {
+        var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
+            <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="RouteConverter">\
+                <wpt lat="hello" lon="world">\
+                </wpt>\
+            </gpx>';
+        return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).otherwise(function(e) {
+            expect(e).toBeInstanceOf(DeveloperError);
+        });
+    });
+
+    it('Waypoint: throws when no coordinates are given', function() {
+        var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
+            <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="RouteConverter">\
+                <wpt>\
+                </wpt>\
+            </gpx>';
+        return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).otherwise(function(e) {
+            expect(e).toBeInstanceOf(DeveloperError);
+        });
+    });
+
     it('Waypoint: handles simple waypoint', function() {
         var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="RouteConverter">\
@@ -55,6 +79,28 @@ defineSuite(['DataSources/GpxDataSource',
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
             expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(38.737125, -9.139242, undefined));
+        });
+    });
+
+    it('Waypoint: handles multiple waypoints', function() {
+        var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
+            <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="RouteConverter">\
+                <wpt lon="1" lat="2">\
+                    <name>Position 1</name>\
+                </wpt>\
+                <wpt lon="3" lat="4">\
+                    <name>Position 2</name>\
+                </wpt>\
+                <wpt lon="5" lat="6">\
+                <name>Position 3</name>\
+                </wpt>\
+            </gpx>';
+        return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(function(dataSource) {
+            var entities = dataSource.entities.values;
+            expect(entities.length).toEqual(3);
+            expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1, 2, undefined));
+            expect(entities[1].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(3, 4, undefined));
+            expect(entities[2].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(5, 6, undefined));
         });
     });
 
