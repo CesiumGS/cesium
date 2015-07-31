@@ -26,6 +26,7 @@ define([
      * @see SingleTileImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
+     * @see MapboxImageryProvider
      * @see OpenStreetMapImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see WebMapServiceImageryProvider

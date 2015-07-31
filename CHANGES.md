@@ -8,19 +8,20 @@ Change Log
 * Deprecated
   *
 * Added support for `GroundPrimitive` which works much like `Primitive` but it drapes the geometry over terrain. Valid geometries that can be draped on terrain are `CircleGeometry`, `CorridorGeometry`, `EllipseGeometry`, `PolygonGeometry`, and `RectangleGeometry`.
-* Fixes Cesium.js failing to parse in IE 8 and 9. While Cesium doesn't work in IE versions less than 11, but this allows for more graceful error handling.
-* Fix calling `Scene.pickPosition` after calling `Scene.drillPick`. [#2813](https://github.com/AnalyticalGraphicsInc/cesium/issues/2813)
-* Fixed a bug that caused `Camera.positionCartographic` to be incorrect. [#2838](https://github.com/AnalyticalGraphicsInc/cesium/issues/2838)
-* Make `ArcGisMapServerImageryprovider` issue `pickFeatures` requests via a proxy if one is specified.
-* Fixed incorrect texture coordinates for `WallGeometry` [#2872](https://github.com/AnalyticalGraphicsInc/cesium/issues/2872)
 * Added `maximumHeight` option to `Viewer.flyTo`. [#2868](https://github.com/AnalyticalGraphicsInc/cesium/issues/2868)
-* Added ArcGIS token-based authentication support to `ArcGisMapServerImageryProvider`
 * Added picking support to `UrlTemplateImageryProvider`.
-* Fixed `WallGeometry` bug that caused walls covering a short distance not to render [#2897](https://github.com/AnalyticalGraphicsInc/cesium/issues/2897)
+* Added ArcGIS token-based authentication support to `ArcGisMapServerImageryProvider`.
+* `ArcGisMapServerImageryProvider` now supports a proxy for `pickFeatures` requests.
+* Added `MapboxImageryProvider` to load imagery from [Mapbox](https://www.mapbox.com).
+* Fixed incorrect texture coordinates for `WallGeometry` [#2872](https://github.com/AnalyticalGraphicsInc/cesium/issues/2872)
+* Fixed `WallGeometry` bug that caused walls covering a short distance not to render. [#2897](https://github.com/AnalyticalGraphicsInc/cesium/issues/2897)
 * Fixed `PolygonGeometry` clockwise winding order bug. 
-* Fixed `BillboardCollection` bounding sphere for billboards with a non-center vertical origin. [#2894](https://github.com/AnalyticalGraphicsInc/cesium/issues/2894)
-* The globe depth is now rendered during picking when `Scene.depthTestAgainstTerrain` is `true`.
 * Fixed extruded `RectangleGeometry` bug for small heights. [#2823](https://github.com/AnalyticalGraphicsInc/cesium/issues/2823)
+* Fixed `BillboardCollection` bounding sphere for billboards with a non-center vertical origin. [#2894](https://github.com/AnalyticalGraphicsInc/cesium/issues/2894)
+* Fixed a bug that caused `Camera.positionCartographic` to be incorrect. [#2838](https://github.com/AnalyticalGraphicsInc/cesium/issues/2838)
+* Fixed calling `Scene.pickPosition` after calling `Scene.drillPick`. [#2813](https://github.com/AnalyticalGraphicsInc/cesium/issues/2813)
+* The globe depth is now rendered during picking when `Scene.depthTestAgainstTerrain` is `true` so objects behind terrain are not picked.
+* Fixed Cesium.js failing to parse in IE 8 and 9. While Cesium doesn't work in IE versions less than 11, this allows for more graceful error handling.
 
 ### 1.11 - 2015-07-01
 
