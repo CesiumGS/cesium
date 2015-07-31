@@ -502,7 +502,7 @@ define([
         var coordinatesString = longitude + ", " + latitude;
         var position = readCoordinate(coordinatesString);
         if (!defined(position)) {
-            return;
+            throw new DeveloperError('Position Coordinates are required.');
         }
 
         var entity = getOrCreateEntity(geometryNode, entityCollection);
