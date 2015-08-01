@@ -206,10 +206,16 @@ define([
          * @default [{@link CameraEventType.MIDDLE_DRAG}, {@link CameraEventType.PINCH}, {
          *     eventType : {@link CameraEventType.LEFT_DRAG},
          *     modifier : {@link KeyboardEventModifier.CTRL}
+         * }, {
+         *     eventType : {@link CameraEventType.RIGHT_DRAG},
+         *     modifier : {@link KeyboardEventModifier.CTRL}
          * }]
          */
         this.tiltEventTypes = [CameraEventType.MIDDLE_DRAG, CameraEventType.PINCH, {
             eventType : CameraEventType.LEFT_DRAG,
+            modifier : KeyboardEventModifier.CTRL
+        }, {
+            eventType : CameraEventType.RIGHT_DRAG,
             modifier : KeyboardEventModifier.CTRL
         }];
         /**
