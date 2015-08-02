@@ -492,6 +492,84 @@ define([
         return label;
     }
 
+    // This is a list of the Optional Description Information:
+    //  <name> GPS waypoint name of the waypoint
+    //  <cmt> GPS comment of the waypoint
+    //  <desc> Descriptive description of the waypoint
+    //  <src> Source of the waypoint data
+    //  TODO <link> Link (URI/URL) associated with the waypoint
+    //  <type> Type (category) of waypoint
+    var descriptiveInfoTypes = {
+        name : {
+            text : 'Name',
+            tag : 'name'
+        },
+        comment : {
+            text : 'Comment',
+            tag : 'cmt'
+        },
+        description : {
+            text : 'Description',
+            tag : 'desc'
+        },
+        source : {
+            text : 'Source',
+            tag : 'src'
+        },
+        type : {
+            text : 'Type',
+            tag : 'type'
+        }
+
+    };
+    var scratchDiv = document.createElement('div');
+    function processDescription(node, entity, uriResolver) {
+        var i;
+
+        var text = '';
+        var infoTypeNames = Object.keys(descriptiveInfoTypes);
+        var infoTypeNameLength = infoTypeNames.length;
+        for (i = 0; i < infoTypeNameLength; i++) {
+            var infoTypeName = infoTypeNames[i];
+            var infoType = descriptiveInfoTypes[infoTypeName];
+            infoType.value = defaultValue(queryStringValue(node, infoType.tag, namespaces.gpx), '');
+            if (defined(infoType.value) && infoType.value !== '') {
+                text = text + '<p>' + infoType.text + ': ' + infoType.value + '</p>';
+            }
+        }
+
+        if (!defined(text) || text === '') {
+            //No description
+            return;
+        }
+
+        //Turns non-explicit links into clickable links.
+        text = autolinker.link(text);
+
+        //Use a temporary div to manipulate the links
+        //so that they open in a new window.
+        scratchDiv.innerHTML = text;
+        var links = scratchDiv.querySelectorAll('a');
+
+        for (i = 0; i < links.length; i++) {
+            links[i].setAttribute('target', '_blank');
+        }
+
+        var background = Color.WHITE;
+        var foreground = Color.BLACK;
+        var tmp = '<div class="cesium-infoBox-description-lighter" style="';
+        tmp += 'overflow:auto;';
+        tmp += 'word-wrap:break-word;';
+        tmp += 'background-color:' + background.toCssColorString() + ';';
+        tmp += 'color:' + foreground.toCssColorString() + ';';
+        tmp += '">';
+        tmp += scratchDiv.innerHTML + '</div>';
+        scratchDiv.innerHTML = '';
+
+        //return the final HTML as the description.
+        return tmp;
+    }
+
     function processWpt(dataSource, geometryNode, entityCollection, sourceUri, uriResolver) {
 
         //Required Information:
@@ -507,7 +585,14 @@ define([
 
         var entity = getOrCreateEntity(geometryNode, entityCollection);
         entity.position = position;
+        // TODO different icon support
+        // var symbol = queryStringValue(geometryNode, 'sym', namespaces.gpx);
         entity.billboard = createDefaultBillboard(dataSource._proxy, sourceUri, uriResolver);
+
+        var name = queryStringValue(geometryNode, 'name', namespaces.gpx);
+        entity.label = createDefaultLabel();
+        entity.label.text = name;
+        entity.description = processDescription(geometryNode, entity, uriResolver);
 
         //Optional Position Information:
         //  <ele> Elevation of the waypoint.
@@ -518,25 +603,6 @@ define([
         //      var time = queryNumericValue(geometryNode, 'time', namespaces.gpx);
         //      var magvar = queryNumericValue(geometryNode, 'magvar', namespaces.gpx);
         //      var geoidheight = queryNumericValue(geometryNode, 'geoidheight', namespaces.gpx);
-
-        //Optional Description Information:
-        //  <name> GPS waypoint name of the waypoint
-        //  <cmt> GPS comment of the waypoint
-        //  <desc> Descriptive description of the waypoint
-        //  <src> Source of the waypoint data
-        //  <link> Link (URI/URL) associated with the waypoint
-        //  <sym> Waypoint symbol
-        //  <type> Type (category) of waypoint
-        var name = queryStringValue(geometryNode, 'name', namespaces.gpx);
-        entity.label = createDefaultLabel();
-        entity.label.text = name;
-        //        var comment = queryStringValue(geometryNode, 'cmt', namespaces.gpx);
-        //        var description = queryStringValue(geometryNode, 'desc', namespaces.gpx);
-        //        var source = queryStringValue(geometryNode, 'src', namespaces.gpx);
-        //        var link = queryLinkgValue(geometryNode, 'link', namespaces.gpx);
-        //        var symbol = queryStringValue(geometryNode, 'sym', namespaces.gpx);
-        //        var type = queryStringValue(geometryNode, 'type', namespaces.gpx);
-
         //Optional Accuracy Information:
         //  <fix> Type of GPS fix
         //  <sat> Number of satellites
