@@ -528,6 +528,10 @@ require({
         $('#cesiumColumn').width($('#cesiumColumn').width() - (e.pageX - lastX));
         lastX = e.pageX;
       }
+      else
+      {
+        mouseDown = false;
+      }
     }
   });
 
