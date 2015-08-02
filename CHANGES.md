@@ -12,7 +12,7 @@ Change Log
 * Added ArcGIS token-based authentication support to `ArcGisMapServerImageryProvider`.
 * `ArcGisMapServerImageryProvider` now supports a proxy for `pickFeatures` requests.
 * Added `MapboxImageryProvider` to load imagery from [Mapbox](https://www.mapbox.com).
-* The default `CTRL + Left Click Drag` mouse behavior is now also mapped to `CTRL + Right Click Drag` compatibility with Firefox for Mac OS [#2872](https://github.com/AnalyticalGraphicsInc/cesium/pull/2913).
+* The default `CTRL + Left Click Drag` mouse behavior is now duplicated for `CTRL + Right Click Drag` for better compatibility with Firefox on Mac OS [#2872](https://github.com/AnalyticalGraphicsInc/cesium/pull/2913).
 * Fixed incorrect texture coordinates for `WallGeometry` [#2872](https://github.com/AnalyticalGraphicsInc/cesium/issues/2872)
 * Fixed `WallGeometry` bug that caused walls covering a short distance not to render. [#2897](https://github.com/AnalyticalGraphicsInc/cesium/issues/2897)
 * Fixed `PolygonGeometry` clockwise winding order bug. 
