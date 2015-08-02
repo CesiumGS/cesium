@@ -67,6 +67,7 @@ require({
   var docContainers = ko.observableArray();
   var errorLines = [];
   var highlightLines = [];
+  var scriptCodeRegex = /\/\/Sandcastle_Begin\s*([\s\S]*)\/\/Sandcastle_End/;
   var consoleMessages = ko.observableArray();
 
   // Fetch the documentation keywords
@@ -389,18 +390,47 @@ require({
   // Load the demo code
   function loadDemoCode(){
     var demo = gallery[demoName];
-    var id = demo.id;
-    requestDemo(id + '/' + id + '.html').done(function(value){
-      htmlEditor.setValue(value);
+    requestDemo(demo.name + '.html').done(function(value){
+      var code = value;
+      var parser = new DOMParser();
+      var doc = parser.parseFromString(code, 'text/html');
+      var script = doc.querySelector('script[id="cesium_sandcastle_script"]');
+      if (!script) {
+          console.log('Error reading source file: ');
+          return;
+      }
+      var scriptMatch = scriptCodeRegex.exec(script.textContent);
+      if (!scriptMatch) {
+          console.log('Error reading source file: ');
+          return;
+      }
+
+      var scriptCode = scriptMatch[1];
+      jsEditor.setValue(scriptCode);
+      jsEditor.clearHistory();
+
+      var htmlText = '';
+      var cssText = '';
+      var childIndex = 0;
+      var childNode = doc.body.childNodes[childIndex];
+      while (childIndex < doc.body.childNodes.length && childNode !== script){
+        if(childNode.nodeName == 'STYLE')
+        {
+          console.log(childNode);
+          cssText += childNode.innerHTML;
+          childNode = doc.body.childNodes[++childIndex];
+        }
+        else{
+          htmlText += childNode.nodeType === 1 ? childNode.outerHTML : childNode.nodeValue;
+          childNode = doc.body.childNodes[++childIndex];
+        }
+      }
+      htmlText = htmlText.replace(/^\s+/, '');
+      htmlEditor.setValue(htmlText);
       htmlEditor.clearHistory();
-    });
-    requestDemo(id + '/' + id + '.css').done(function(value){
-      cssEditor.setValue(value);
+      cssText = cssText.replace(/^\s+/, '');
+      cssEditor.setValue(cssText);
       cssEditor.clearHistory();
-    });
-    requestDemo(id + '/' + id + '.txt').done(function(value){
-      jsEditor.setValue(value);
-      jsEditor.clearHistory()
     });
     consoleMessages.removeAll();
     // Load the iframe with demo code
