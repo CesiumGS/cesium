@@ -130,7 +130,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
                     <td>\
                         <div class="cesium-navigation-help-rotate">Rotate view</div>\
                         <div class="cesium-navigation-help-details">Middle click + drag, or</div>\
-                        <div class="cesium-navigation-help-details">CTRL + Left click + drag</div>\
+                        <div class="cesium-navigation-help-details">CTRL + Left/Right click + drag</div>\
                     </td>\
                 </tr>\
             </table>';
