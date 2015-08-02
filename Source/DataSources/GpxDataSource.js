@@ -219,14 +219,6 @@ define([
         });
     }
 
-    function loadDataUriFromZip(reader, entry, uriResolver, deferred) {
-        var mimeType = defaultValue(MimeTypes.detectFromFilename(entry.filename), 'application/octet-stream');
-        entry.getData(new zip.Data64URIWriter(mimeType), function(dataUri) {
-            uriResolver[entry.filename] = dataUri;
-            deferred.resolve();
-        });
-    }
-
     function replaceAttributes(div, elementType, attributeName, uriResolver) {
         var keys = uriResolver.keys;
         var baseUri = new Uri('.');
@@ -419,52 +411,6 @@ define([
         return href;
     }
 
-    var colorOptions = {};
-    function parseColorString(value, isRandom) {
-        if (!defined(value)) {
-            return undefined;
-        }
-
-        if(value[0] === '#'){
-            value = value.substring(1);
-        }
-
-        var alpha = parseInt(value.substring(0, 2), 16) / 255.0;
-        var blue = parseInt(value.substring(2, 4), 16) / 255.0;
-        var green = parseInt(value.substring(4, 6), 16) / 255.0;
-        var red = parseInt(value.substring(6, 8), 16) / 255.0;
-
-        if (!isRandom) {
-            return new Color(red, green, blue, alpha);
-        }
-
-        if (red > 0) {
-            colorOptions.maximumRed = red;
-        } else {
-            colorOptions.red = 0;
-        }
-        if (green > 0) {
-            colorOptions.maximumGreen = green;
-        } else {
-            colorOptions.green = 0;
-        }
-        if (blue > 0) {
-            colorOptions.maximumBlue = blue;
-        } else {
-            colorOptions.blue = 0;
-        }
-        colorOptions.alpha = alpha;
-        return Color.fromRandom(colorOptions);
-    }
-
-    function queryColorValue(node, tagName, namespace) {
-        var value = queryStringValue(node, tagName, namespace);
-        if (!defined(value)) {
-            return undefined;
-        }
-        return parseColorString(value, queryStringValue(node, 'colorMode', namespace) === 'random');
-    }
-
     function createDefaultBillboard(proxy, sourceUri, uriResolver) {
         var billboard = new BillboardGraphics();
         billboard.width = BILLBOARD_SIZE;
@@ -528,8 +474,8 @@ define([
 
         var text = '';
         var infoTypeNames = Object.keys(descriptiveInfoTypes);
-        var infoTypeNameLength = infoTypeNames.length;
-        for (i = 0; i < infoTypeNameLength; i++) {
+        var length = infoTypeNames.length;
+        for (i = 0; i < length; i++) {
             var infoTypeName = infoTypeNames[i];
             var infoType = descriptiveInfoTypes[infoTypeName];
             infoType.value = defaultValue(queryStringValue(node, infoType.tag, namespaces.gpx), '');
