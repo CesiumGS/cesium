@@ -4,7 +4,7 @@ Change Log
 ### 1.12 - 2015-08-03
 
 * Breaking changes
-  *
+  * Remove deprecated `ObjectOrientedBoundingBox`. Use `OrientedBoundingBox` instead.
 * Deprecated
   *
 * Added `maximumHeight` option to `Viewer.flyTo`. [#2868](https://github.com/AnalyticalGraphicsInc/cesium/issues/2868)
