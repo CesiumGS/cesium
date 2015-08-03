@@ -182,15 +182,13 @@ define([], function() {
         return pos;
     }
     // Timer class
-    if (typeof window.performance === 'undefined') {
-        window.performance = {};
-    }
-    if (!window.performance.now) {
+    var windowPerformance = typeof window !== 'undefined' && typeof window.performance !== 'undefined' ? window.performance : {};
+    if (!windowPerformance.now) {
         local.nowOffset = Date.now();
         if (performance.timing && performance.timing.navigationStart) {
             local.nowOffset = performance.timing.navigationStart;
         }
-        window.performance.now = function now() {
+        windowPerformance.now = function now() {
             return Date.now() - local.nowOffset;
         };
     }
@@ -199,10 +197,10 @@ define([], function() {
         this.m_end = 0;
     };
     module.Timer.prototype.Tic = function () {
-        this.m_start = window.performance.now();
+        this.m_start = windowPerformance.now();
     };
     module.Timer.prototype.Toc = function () {
-        this.m_end = window.performance.now();
+        this.m_end = windowPerformance.now();
     };
     module.Timer.prototype.GetElapsedTime = function () {
         return this.m_end - this.m_start;
