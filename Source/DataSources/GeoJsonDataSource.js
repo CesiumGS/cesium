@@ -514,7 +514,7 @@ define([
      * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
      * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
      *
-     * @returns {Promise} A promise that will resolve when the data is loaded.
+     * @returns {Promise.<GeoJsonDataSource>} A promise that will resolve when the data is loaded.
      */
     GeoJsonDataSource.load = function(data, options) {
         return new GeoJsonDataSource().load(data, options);
@@ -739,7 +739,7 @@ define([
      * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
      * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
      *
-     * @returns {Promise} a promise that will resolve when the GeoJSON is loaded.
+     * @returns {Promise.<GeoJsonDataSource>} a promise that will resolve when the GeoJSON is loaded.
      */
     GeoJsonDataSource.prototype.load = function(data, options) {
         //>>includeStart('debug', pragmas.debug);

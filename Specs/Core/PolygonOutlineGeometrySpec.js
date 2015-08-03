@@ -188,6 +188,60 @@ defineSuite([
         expect(p.indices.length).toEqual(2 * 12);
     });
 
+    it('doesn\'t reverse clockwise input array', function() {
+        var p = Cartesian3.fromDegreesArray([
+                                             -124.0, 35.0,
+                                             -124.0, 40.0,
+                                             -110.0, 40.0,
+                                             -110.0, 35.0
+                                         ]);
+        var h1 = Cartesian3.fromDegreesArray([
+                                              -122.0, 36.0,
+                                              -112.0, 36.0,
+                                              -112.0, 39.0,
+                                              -122.0, 39.0
+                                          ]);
+        var h2 = Cartesian3.fromDegreesArray([
+                                              -120.0, 36.5,
+                                              -120.0, 38.5,
+                                              -114.0, 38.5,
+                                              -114.0, 36.5
+                                          ]);
+        var hierarchy = {
+            positions : p,
+            holes : [{
+                positions : h1,
+                holes : [{
+                    positions : h2
+                }]
+            }]
+        };
+
+        PolygonOutlineGeometry.createGeometry(new PolygonOutlineGeometry({
+            polygonHierarchy : hierarchy,
+            granularity : CesiumMath.PI_OVER_THREE
+        }));
+
+        expect(p).toEqual(Cartesian3.fromDegreesArray([
+                                                       -124.0, 35.0,
+                                                       -124.0, 40.0,
+                                                       -110.0, 40.0,
+                                                       -110.0, 35.0
+                                                   ]));
+        expect(h1).toEqual(Cartesian3.fromDegreesArray([
+                                                        -122.0, 36.0,
+                                                        -112.0, 36.0,
+                                                        -112.0, 39.0,
+                                                        -122.0, 39.0
+                                                    ]));
+        expect(h2).toEqual(Cartesian3.fromDegreesArray([
+                                                        -120.0, 36.5,
+                                                        -120.0, 38.5,
+                                                        -114.0, 38.5,
+                                                        -114.0, 36.5
+                                                    ]));
+    });
+
     it('computes correct bounding sphere at height 0', function() {
         var p = PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
             positions : Cartesian3.fromDegreesArray([

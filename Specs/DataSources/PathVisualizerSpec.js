@@ -297,7 +297,7 @@ defineSuite([
         var inertialLine = inertialPolylineCollection.get(0);
         expect(inertialLine.show).toEqual(true);
 
-        scene.mode = SceneMode.Scene2D;
+        scene.mode = SceneMode.SCENE2D;
         visualizer.update(time);
 
         //They'll be one inertial polyline collection (with no visible lines)

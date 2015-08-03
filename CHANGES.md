@@ -1,6 +1,26 @@
 Change Log
 ==========
 
+### 1.12 - 2015-08-03
+
+* Breaking changes
+  * Remove deprecated `ObjectOrientedBoundingBox`. Use `OrientedBoundingBox` instead.
+* Added `MapboxImageryProvider` to load imagery from [Mapbox](https://www.mapbox.com).
+* Added `maximumHeight` option to `Viewer.flyTo`. [#2868](https://github.com/AnalyticalGraphicsInc/cesium/issues/2868)
+* Added picking support to `UrlTemplateImageryProvider`.
+* Added ArcGIS token-based authentication support to `ArcGisMapServerImageryProvider`.
+* Added proxy support to `ArcGisMapServerImageryProvider` for `pickFeatures` requests.
+* The default `CTRL + Left Click Drag` mouse behavior is now duplicated for `CTRL + Right Click Drag` for better compatibility with Firefox on Mac OS [#2872](https://github.com/AnalyticalGraphicsInc/cesium/pull/2913).
+* Fixed incorrect texture coordinates for `WallGeometry` [#2872](https://github.com/AnalyticalGraphicsInc/cesium/issues/2872)
+* Fixed `WallGeometry` bug that caused walls covering a short distance not to render. [#2897](https://github.com/AnalyticalGraphicsInc/cesium/issues/2897)
+* Fixed `PolygonGeometry` clockwise winding order bug. 
+* Fixed extruded `RectangleGeometry` bug for small heights. [#2823](https://github.com/AnalyticalGraphicsInc/cesium/issues/2823)
+* Fixed `BillboardCollection` bounding sphere for billboards with a non-center vertical origin. [#2894](https://github.com/AnalyticalGraphicsInc/cesium/issues/2894)
+* Fixed a bug that caused `Camera.positionCartographic` to be incorrect. [#2838](https://github.com/AnalyticalGraphicsInc/cesium/issues/2838)
+* Fixed calling `Scene.pickPosition` after calling `Scene.drillPick`. [#2813](https://github.com/AnalyticalGraphicsInc/cesium/issues/2813)
+* The globe depth is now rendered during picking when `Scene.depthTestAgainstTerrain` is `true` so objects behind terrain are not picked.
+* Fixed Cesium.js failing to parse in IE 8 and 9. While Cesium doesn't work in IE versions less than 11, this allows for more graceful error handling.
+
 ### 1.11 - 2015-07-01
 
 * Breaking changes
