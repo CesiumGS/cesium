@@ -27,13 +27,13 @@ define([
         '../Core/Quaternion',
         '../Core/Queue',
         '../Core/RuntimeError',
+        '../Core/TaskProcessor',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/ShaderSource',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         '../ThirdParty/gltfDefaults',
-        '../ThirdParty/o3dgc',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
         './getModelAccessor',
@@ -72,13 +72,13 @@ define([
         Quaternion,
         Queue,
         RuntimeError,
+        TaskProcessor,
         BufferUsage,
         DrawCommand,
         ShaderSource,
         TextureMinificationFilter,
         TextureWrap,
         gltfDefaults,
-        o3dgc,
         Uri,
         when,
         getModelAccessor,
@@ -117,6 +117,7 @@ define([
 
         this.decompressedViewsToCreate = new Queue();
         this.decompressedViews = {};
+        this.decompressionInFlight = 0;
 
         this.programsToCreate = new Queue();
         this.shaders = {};
@@ -157,6 +158,7 @@ define([
     LoadResources.prototype.finishedResourceCreation = function() {
         return ((this.buffersToCreate.length === 0) &&
                 (this.decompressedViewsToCreate.length === 0) &&
+                (this.decompressionInFlight === 0) &&
                 (this.programsToCreate.length === 0) &&
                 (this.texturesToCreate.length === 0) &&
                 (this.texturesToCreateFromBufferView.length === 0) &&
@@ -166,6 +168,7 @@ define([
     LoadResources.prototype.finishedBuffersCreation = function() {
         return ((this.pendingBufferLoads === 0) &&
                 (this.decompressedViewsToCreate.length === 0) &&
+                (this.decompressionInFlight === 0) &&
                 (this.buffersToCreate.length === 0));
     };
 
@@ -430,7 +433,7 @@ define([
          */
         this.activeAnimations = new ModelAnimationCollection(this);
 
-        this._asynchronous = defaultValue(options.asynchronous, true);
+        this._asynchronous = true;//defaultValue(options.asynchronous, true);
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -732,6 +735,12 @@ define([
      */
     function getSubarray(array, offset, length) {
         return array.subarray(offset, offset + length);
+    }
+
+    function copySubarray(array, offset, length) {
+        var bytesPerElement = array.BYTES_PER_ELEMENT;
+        var buffer = array.buffer.slice(offset * bytesPerElement, (offset + length) * bytesPerElement);
+        return new array.constructor(buffer);
     }
 
     function containsGltfMagic(uint8Array) {
@@ -1292,11 +1301,7 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function alignOffset(offset, alignment) {
-        offset = offset | 0;
-        alignment = alignment | 0;
-        return (Math.ceil(offset / alignment) * alignment) | 0;
-    }
+    var decompressTaskProcessor = new TaskProcessor('decompressMesh');
 
     function createDecompressedView(model) {
         var loadResources = model._loadResources;
@@ -1306,68 +1311,26 @@ define([
         var decompressedView = decompressedViews[name];
 
         var buffer = loadResources.buffers[decompressedView.buffer];
-        var compressedBuffer = getSubarray(buffer, decompressedView.byteOffset, decompressedView.byteLength);
+        var compressedBuffer = copySubarray(buffer, decompressedView.byteOffset, decompressedView.byteLength);
 
-        var decompressedArrayBuffer = new ArrayBuffer(decompressedView.decompressedByteLength);
-        loadResources.decompressedViews[name] = new Uint8Array(decompressedArrayBuffer);
+        var decompressPromise = decompressTaskProcessor.scheduleTask({
+            decompressedByteLength : decompressedView.decompressedByteLength,
+            compressedBuffer : compressedBuffer
+        }, [compressedBuffer.buffer]);
 
-        // Mostly copied from https://github.com/amd/rest3d/blob/master/server/o3dgc/js/index.php
-
-        var bstream = new o3dgc.BinaryStream(compressedBuffer);
-        var decoder = new o3dgc.SC3DMCDecoder();
-        var ifs = new o3dgc.IndexedFaceSet();
-        //var timer = new o3dgc.Timer();
-
-        // Get metadata about the compression
-        //timer.Tic();
-        decoder.DecodeHeader(ifs, bstream);
-        //timer.Toc();
-        //console.log("DecodeHeader: " + timer.GetElapsedTime());
-
-        var i, len;
-        var decompressedViewOffset = 0;
-
-        // Point the decoder at the TypedArrays it should write into
-        if (ifs.GetNCoordIndex() > 0) {
-            len = 3 * ifs.GetNCoordIndex();
-            ifs.SetCoordIndex(new Uint16Array(decompressedArrayBuffer, decompressedViewOffset, len));
-            decompressedViewOffset += len * Uint16Array.BYTES_PER_ELEMENT;
-        }
-        decompressedViewOffset = alignOffset(decompressedViewOffset, Float32Array.BYTES_PER_ELEMENT);
-        if (ifs.GetNCoord() > 0) {
-            len = 3 * ifs.GetNCoord();
-            ifs.SetCoord(new Float32Array(decompressedArrayBuffer, decompressedViewOffset, len));
-            decompressedViewOffset += len * Float32Array.BYTES_PER_ELEMENT;
-        }
-        if (ifs.GetNNormal() > 0) {
-            len = 3 * ifs.GetNNormal();
-            ifs.SetNormal(new Float32Array(decompressedArrayBuffer, decompressedViewOffset, len));
-            decompressedViewOffset += len * Float32Array.BYTES_PER_ELEMENT;
-        }
-        var numFloatAttributes = ifs.GetNumFloatAttributes();
-        for (i = 0; i < numFloatAttributes; i++) {
-            if (ifs.GetNFloatAttribute(i) > 0) {
-                len = ifs.GetFloatAttributeDim(i) * ifs.GetNFloatAttribute(i);
-                ifs.SetFloatAttribute(i, new Float32Array(decompressedArrayBuffer, decompressedViewOffset, len));
-                decompressedViewOffset += len * Float32Array.BYTES_PER_ELEMENT;
-            }
-        }
-        decompressedViewOffset = alignOffset(decompressedViewOffset, Int32Array.BYTES_PER_ELEMENT);
-        var numIntAttributes = ifs.GetNumIntAttributes();
-        for (i = 0; i < numIntAttributes; i++) {
-            if (ifs.GetNIntAttribute(i) > 0) {
-                len = ifs.GetIntAttributeDim(i) * ifs.GetNIntAttribute(i);
-                ifs.SetIntAttribute(i, new Int32Array(decompressedArrayBuffer, decompressedViewOffset, len));
-                decompressedViewOffset += len * Int32Array.BYTES_PER_ELEMENT;
-            }
+        if (!defined(decompressPromise)) {
+            loadResources.decompressedViewsToCreate.enqueue(name);
+            return;
         }
 
-        // Decompress into the specified TypedArrays
-        //timer.Tic();
-        decoder.DecodePlayload(ifs, bstream);
-        //timer.Toc();
-        //console.log("DecodePlayload: " + timer.GetElapsedTime());
-        //console.log(decoder.GetStats());
+        loadResources.decompressionInFlight++;
+
+        when(decompressPromise).then(function(result) {
+            var decompressedArrayBuffer = result.decompressedArrayBuffer;
+            loadResources.decompressedViews[name] = new Uint8Array(decompressedArrayBuffer);
+
+            loadResources.decompressionInFlight--;
+        });
     }
 
     function createDecompressedViews(model, context) {
@@ -1396,7 +1359,7 @@ define([
     function createBuffers(model, context) {
         var loadResources = model._loadResources;
 
-        if (loadResources.pendingBufferLoads !== 0 || loadResources.decompressedViewsToCreate.length !== 0) {
+        if (loadResources.pendingBufferLoads !== 0 || loadResources.decompressedViewsToCreate.length !== 0 || loadResources.decompressionInFlight !== 0) {
             return;
         }
 
