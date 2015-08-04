@@ -372,8 +372,8 @@ define([
     function processCircleByCenterPoint(circleByCenterPoint, crsProperties) {
         var geometry = {};
         var elements = circleByCenterPoint.children;
-        var geometry.center = processCooridnates(elements.getElementsByTagNameNS(gmlns, "pos")[0].textContent);
-        var geometry.radius = parseFloat(elements.getElementsByTagNameNS(gmlns, "radius")[0].textContent);
+        geometry.center = processCooridnates(elements.getElementsByTagNameNS(gmlns, "pos")[0].textContent);
+        geometry.radius = parseFloat(elements.getElementsByTagNameNS(gmlns, "radius")[0].textContent);
         return geometry;
     }
 
@@ -452,7 +452,7 @@ define([
         var surfaceMembers = multiSurface.getElementsByTagNameNS(gmlns, "surfaceMember");
     	if(surfaceMembers.length == 0) {
     		surfaceMembers = multiSurface.getElementsByTagNameNS(gmlns, "surfaceMembers");
-    	}ß
+    	}
 
     	for(var i = 0; i < surfaceMembers.length; i++) {
     		var surfaces = surfaceMembers[i].children;
@@ -538,7 +538,7 @@ define([
     var curveSegmentTypes = {
     	Arc : processArc,
     	Circle : processCircle,
-    	CircleByCenterPoint : processCircleByCenterPoint
+    	CircleByCenterPoint : processCircleByCenterPoint,
         LineStringSegment : processLineStringSegment
     };
 
