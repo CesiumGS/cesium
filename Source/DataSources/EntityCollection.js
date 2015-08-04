@@ -229,7 +229,7 @@ define([
     /**
      * Returns true if the provided entity is in this collection, false otherwise.
      *
-     * @param entity The entity.
+     * @param {Entity} entity The entity.
      * @returns {Boolean} true if the provided entity is in this collection, false otherwise.
      */
     EntityCollection.prototype.contains = function(entity) {

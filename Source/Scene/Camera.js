@@ -856,6 +856,7 @@ define([
      * then the cartesian will be used. If neither is given, then the current camera position
      * will be used.
      *
+     * @param {Object} options Object with the following properties:
      * @param {Cartesian3} [options.position] The cartesian position of the camera.
      * @param {Cartographic} [options.positionCartographic] The cartographic position of the camera.
      * @param {Number} [options.heading] The heading in radians or the current heading will be used if undefined.

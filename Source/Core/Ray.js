@@ -45,7 +45,7 @@ define([
      *
      * @param {Number} t A scalar value.
      * @param {Cartesian3} [result] The object in which the result will be stored.
-     * @returns The modified result parameter, or a new instance if none was provided.
+     * @returns {Cartesian3} The modified result parameter, or a new instance if none was provided.
      *
      * @example
      * //Get the first intersection point of a ray and an ellipsoid.
