@@ -451,7 +451,7 @@ define([
         return label;
     }
 
-    function createDefaultPolyline(){
+    function createDefaultPolyline() {
         var polyline = new PolylineGraphics();
         polyline.width = 5;
         polyline.material = new PolylineOutlineMaterialProperty();
@@ -566,7 +566,6 @@ define([
     }
 
     function processWpt(dataSource, geometryNode, entityCollection, sourceUri, uriResolver) {
-
         var coordinatesString = getCoordinatesString(geometryNode);
         var position = readCoordinate(coordinatesString);
         if (!defined(position)) {
@@ -588,16 +587,7 @@ define([
     //rte represents route - an ordered list of waypoints representing a series of turn points leading to a destination
     function processRte(dataSource, geometryNode, entityCollection, sourceUri, uriResolver) {
         var entity = getOrCreateEntity(geometryNode, entityCollection);
-
         entity.description = processDescription(geometryNode, entity, uriResolver);
-
-//        var name = queryStringValue(geometryNode, 'name', namespaces.gpx);
-//        var comment = queryStringValue(geometryNode, 'cmt', namespaces.gpx);
-//        var description = queryStringValue(geometryNode, 'desc', namespaces.gpx);
-//        var source = queryStringValue(geometryNode, 'src', namespaces.gpx);
-//        //TODO link
-//        var number = queryStringValue(geometryNode, 'number', namespaces.gpx);
-//        var type = queryStringValue(geometryNode, 'type', namespaces.gpx);
 
         //a list of wpt
         var routePoints = queryNodes(geometryNode, 'rtept', namespaces.gpx);
@@ -618,8 +608,8 @@ define([
 
     var complexTypes = {
         wpt : processWpt,
-        rte: processRte,
-        trk: processTrk
+        rte : processRte,
+        trk : processTrk
     };
 
     function processGpx(dataSource, node, entityCollection, sourceUri, uriResolver) {
