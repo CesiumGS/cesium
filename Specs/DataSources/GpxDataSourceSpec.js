@@ -135,7 +135,36 @@ defineSuite(['DataSources/GpxDataSource',
             expect(div.style['word-wrap']).toEqual('break-word');
             expect(div.style['background-color']).toEqual('rgb(255, 255, 255)');
             expect(div.style.color).toEqual('rgb(0, 0, 0)');
-            expect(div.textContent).toEqual('Coordinates: : 1, 2Description: The Description');
+            expect(div.textContent).toEqual('Coordinates: 1, 2Description: The Description');
+        });
+    });
+
+    it('Route: handles simple route', function() {
+        var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
+            <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="RouteConverter">\
+                <rte>\
+                    <name>Test Route</name>\
+                    <rtept lon="9.860624216140083" lat="54.9328621088893">\
+                        <ele>0.0</ele>\
+                        <name>Position 1</name>\
+                    </rtept>\
+                    <rtept lon="9.86092208681491" lat="54.93293237320851">\
+                        <ele>0.0</ele>\
+                        <name>Position 2</name>\
+                    </rtept>\
+                    <rtept lon="9.86187816543752" lat="54.93327743521187">\
+                        <ele>0.0</ele>\
+                        <name>Position 3</name>\
+                    </rtept>\
+                    <rtept lon="9.862439849679859" lat="54.93342326167919">\
+                        <ele>0.0</ele>\
+                        <name>Position 4</name>\
+                    </rtept>\
+                </rte>\
+            </gpx>';
+        return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(function(dataSource) {
+            var entities = dataSource.entities.values;
+            expect(entities.length).toEqual(5); //1 for the route and 4 routepoints
         });
     });
 
