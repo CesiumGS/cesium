@@ -561,7 +561,6 @@ define([
 
         // CESIUM_RTC extension
         this._rtcCenter = undefined;    // in world coordinates
-        this._rtcCenterEye = undefined; // in eye coordinates
     };
 
     defineProperties(Model.prototype, {
@@ -2151,8 +2150,12 @@ define([
         CESIUM_RTC_MODELVIEW : function(uniformState, model) {
             // CESIUM_RTC extension
             var mvRtc = new Matrix4();
+            var translationRtc = new Cartesian3();
             return function() {
-                return Matrix4.setTranslation(uniformState.modelView, model._rtcCenterEye, mvRtc);
+                Matrix4.getTranslation(uniformState.model, translationRtc);
+                Cartesian3.add(translationRtc, model._rtcCenter, translationRtc);
+                Matrix4.multiplyByPoint(uniformState.view, translationRtc, translationRtc);
+                return Matrix4.setTranslation(uniformState.modelView, translationRtc, mvRtc);
             };
         },
         MODELVIEWPROJECTION : function(uniformState, model) {
@@ -3093,7 +3096,6 @@ define([
             var extensions = this.gltf.extensions;
             if (defined(extensions) && defined(extensions.CESIUM_RTC)) {
                 this._rtcCenter = Cartesian3.fromArray(extensions.CESIUM_RTC.center);
-                this._rtcCenterEye = new Cartesian3();
             }
 
             this._loadResources = new LoadResources();
@@ -3188,12 +3190,6 @@ define([
             updatePickIds(this, context);
             updateWireframe(this);
             updateShowBoundingVolume(this);
-
-            if (defined(this._rtcCenter)) {
-                // The CESIUM_RTC extension is use.  Compute the center in eye coordinates so it
-                // can be used to compute the model-view RTC matrix uniforms.
-                Matrix4.multiplyByPoint(frameState.camera.viewMatrix, this._rtcCenter, this._rtcCenterEye);
-            }
         }
 
         if (justLoaded) {
