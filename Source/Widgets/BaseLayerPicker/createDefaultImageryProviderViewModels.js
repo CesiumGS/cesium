@@ -4,6 +4,7 @@ define([
         '../../Scene/ArcGisMapServerImageryProvider',
         '../../Scene/BingMapsImageryProvider',
         '../../Scene/BingMapsStyle',
+        '../../Scene/MapboxImageryProvider',
         '../../Scene/OpenStreetMapImageryProvider',
         '../../Scene/TileMapServiceImageryProvider',
         '../BaseLayerPicker/ProviderViewModel'
@@ -12,6 +13,7 @@ define([
         ArcGisMapServerImageryProvider,
         BingMapsImageryProvider,
         BingMapsStyle,
+        MapboxImageryProvider,
         OpenStreetMapImageryProvider,
         TileMapServiceImageryProvider,
         ProviderViewModel) {
@@ -54,6 +56,39 @@ define([
                 return new BingMapsImageryProvider({
                     url : '//dev.virtualearth.net',
                     mapStyle : BingMapsStyle.ROAD
+                });
+            }
+        }));
+
+        providerViewModels.push(new ProviderViewModel({
+            name: 'Mapbox Satellite',
+            tooltip: 'Mapbox satellite imagery https://www.mapbox.com/maps/',
+            iconUrl: buildModuleUrl('Widgets/Images/ImageryProviders/mapboxSatellite.png'),
+            creationFunction: function() {
+                return new MapboxImageryProvider({
+                    mapId: 'mapbox.satellite'
+                });
+            }
+        }));
+
+        providerViewModels.push(new ProviderViewModel({
+            name: 'Mapbox Streets',
+            tooltip: 'Mapbox streets imagery https://www.mapbox.com/maps/',
+            iconUrl: buildModuleUrl('Widgets/Images/ImageryProviders/mapboxTerrain.png'),
+            creationFunction: function() {
+                return new MapboxImageryProvider({
+                    mapId: 'mapbox.streets'
+                });
+            }
+        }));
+
+        providerViewModels.push(new ProviderViewModel({
+            name: 'Mapbox Streets Classic',
+            tooltip: 'Mapbox streets basic imagery https://www.mapbox.com/maps/',
+            iconUrl: buildModuleUrl('Widgets/Images/ImageryProviders/mapboxStreets.png'),
+            creationFunction: function() {
+                return new MapboxImageryProvider({
+                    mapId: 'mapbox.streets-basic'
                 });
             }
         }));
