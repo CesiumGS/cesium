@@ -43,6 +43,7 @@ define([
         './PathGraphics',
         './PolygonGraphics',
         './PolylineGraphics',
+        './PolylineOutlineMaterialProperty',
         './PositionPropertyArray',
         './RectangleGraphics',
         './ReferenceProperty',
@@ -94,6 +95,7 @@ define([
         PathGraphics,
         PolygonGraphics,
         PolylineGraphics,
+        PolylineOutlineMaterialProperty,
         PositionPropertyArray,
         RectangleGraphics,
         ReferenceProperty,
@@ -295,6 +297,17 @@ define([
         return result;
     }
 
+    function getCoordinatesString(node){
+        var longitude = queryNumericAttribute(node, 'lon');
+        var latitude = queryNumericAttribute(node, 'lat');
+        var elevation = queryNumericValue(node, 'ele', namespaces.gpx);
+        var coordinatesString = longitude + ", " + latitude;
+        if(defined(elevation)){
+            coordinatesString = coordinatesString + ', ' + elevation;
+        }
+        return coordinatesString;
+    }
+
     var gpxNamespaces = [null, undefined, 'http://www.topografix.com/GPX/1/1'];
     var namespaces = {
         gpx : gpxNamespaces
@@ -438,6 +451,16 @@ define([
         return label;
     }
 
+    function createDefaultPolyline(){
+        var polyline = new PolylineGraphics();
+        polyline.width = 5;
+        polyline.material = new PolylineOutlineMaterialProperty();
+        polyline.material.color = Color.RED;
+        polyline.material.outlineWidth = 2;
+        polyline.material.outlineColor = Color.BLACK;
+        return polyline;
+    }
+
     // This is a list of the Optional Description Information:
     //  <name> GPS waypoint name of the waypoint
     //  <cmt> GPS comment of the waypoint
@@ -492,6 +515,9 @@ define([
             if (infoTypeName === 'position') {
                 var longitude = queryNumericAttribute(node, 'lon');
                 var latitude = queryNumericAttribute(node, 'lat');
+                if (!defined(latitude) || !defined(longitude)) {
+                    continue; // no position to show on description
+                }
                 var elevation = queryNumericValue(node, 'ele', namespaces.gpx);
                 text = text + '<p>' + infoType.text + ': ' + longitude + ', ' + latitude;
                 if (defined(elevation)) {
@@ -541,16 +567,7 @@ define([
 
     function processWpt(dataSource, geometryNode, entityCollection, sourceUri, uriResolver) {
 
-        //Required Information:
-        //  <lon> Longitude of the waypoint.
-        //  <lat> Latitude of the waypoint.
-        var longitude = queryNumericAttribute(geometryNode, 'lon');
-        var latitude = queryNumericAttribute(geometryNode, 'lat');
-        var elevation = queryNumericValue(geometryNode, 'ele', namespaces.gpx);
-        var coordinatesString = longitude + ", " + latitude;
-        if(defined(elevation)){
-            coordinatesString = coordinatesString + ', ' + elevation;
-        }
+        var coordinatesString = getCoordinatesString(geometryNode);
         var position = readCoordinate(coordinatesString);
         if (!defined(position)) {
             throw new DeveloperError('Position Coordinates are required.');
@@ -566,31 +583,43 @@ define([
         entity.label = createDefaultLabel();
         entity.label.text = name;
         entity.description = processDescription(geometryNode, entity, uriResolver);
+    }
 
-        //Optional Position Information:
-        //  <ele> Elevation of the waypoint.
-        //  <time> Creation date/time of the waypoint
-        //  <magvar> Magnetic variation of the waypoint in degrees
-        //  <geoidheight> Geoid height of the waypoint
-        //      var elevation = queryNumericValue(geometryNode, 'ele', namespaces.gpx);
-        //      var time = queryNumericValue(geometryNode, 'time', namespaces.gpx);
-        //      var magvar = queryNumericValue(geometryNode, 'magvar', namespaces.gpx);
-        //      var geoidheight = queryNumericValue(geometryNode, 'geoidheight', namespaces.gpx);
-        //Optional Accuracy Information:
-        //  <fix> Type of GPS fix
-        //  <sat> Number of satellites
-        //  <hdop> HDOP
-        //  <vdop> VDOP
-        //  <pdop> PDOP
-        //  <ageofdgpsdata> Time since last DGPS fix
-        //  <dgpsid> DGPS station ID
+    //rte represents route - an ordered list of waypoints representing a series of turn points leading to a destination
+    function processRte(dataSource, geometryNode, entityCollection, sourceUri, uriResolver) {
+        var entity = getOrCreateEntity(geometryNode, entityCollection);
+
+        entity.description = processDescription(geometryNode, entity, uriResolver);
+
+//        var name = queryStringValue(geometryNode, 'name', namespaces.gpx);
+//        var comment = queryStringValue(geometryNode, 'cmt', namespaces.gpx);
+//        var description = queryStringValue(geometryNode, 'desc', namespaces.gpx);
+//        var source = queryStringValue(geometryNode, 'src', namespaces.gpx);
+//        //TODO link
+//        var number = queryStringValue(geometryNode, 'number', namespaces.gpx);
+//        var type = queryStringValue(geometryNode, 'type', namespaces.gpx);
+
+        //a list of wpt
+        var routePoints = queryNodes(geometryNode, 'rtept', namespaces.gpx);
+        var coordinateTuples = new Array(routePoints.length);
+        var coordinate;
+        for (var i = 0; i < routePoints.length; i++) {
+            processWpt(dataSource, routePoints[i], entityCollection, sourceUri, uriResolver);
+            coordinate = getCoordinatesString(routePoints[i]);
+            coordinateTuples[i] = readCoordinate(coordinate);
+        }
+        entity.polyline = createDefaultPolyline();
+        entity.polyline.positions = coordinateTuples;
+    }
+
+    function processTrk(dataSource, geometryNode, entityCollection, sourceUri, uriResolver) {
+
     }
 
     var complexTypes = {
-        wpt : processWpt//,
-//        rte: processRte,
-//        trk: processTrk
-
+        wpt : processWpt,
+        rte: processRte,
+        trk: processTrk
     };
 
     function processGpx(dataSource, node, entityCollection, sourceUri, uriResolver) {
