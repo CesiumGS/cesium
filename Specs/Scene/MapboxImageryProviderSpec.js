@@ -1,8 +1,9 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/OpenStreetMapImageryProvider',
+        'Scene/MapboxImageryProvider',
         'Core/DefaultProxy',
         'Core/loadImage',
+        'Core/Math',
         'Core/Rectangle',
         'Core/WebMercatorTilingScheme',
         'Scene/Imagery',
@@ -11,9 +12,10 @@ defineSuite([
         'Scene/ImageryState',
         'Specs/pollToPromise'
     ], function(
-        OpenStreetMapImageryProvider,
+        MapboxImageryProvider,
         DefaultProxy,
         loadImage,
+        CesiumMath,
         Rectangle,
         WebMercatorTilingScheme,
         Imagery,
@@ -29,16 +31,19 @@ defineSuite([
     });
 
     it('conforms to ImageryProvider interface', function() {
-        expect(OpenStreetMapImageryProvider).toConformToInterface(ImageryProvider);
+        expect(MapboxImageryProvider).toConformToInterface(ImageryProvider);
     });
 
-    it('can be default constructed', function() {
-        return new OpenStreetMapImageryProvider();
+    it('requires the mapId to be specified', function() {
+        expect(function() {
+            return new MapboxImageryProvider({});
+        }).toThrowDeveloperError();
     });
 
     it('returns valid value for hasAlphaChannel', function() {
-        var provider = new OpenStreetMapImageryProvider({
-            url : 'made/up/osm/server/'
+        var provider = new MapboxImageryProvider({
+            url : 'made/up/mapbox/server/',
+            mapId: 'test-id'
         });
 
         return pollToPromise(function() {
@@ -49,8 +54,9 @@ defineSuite([
     });
 
     it('supports a slash at the end of the URL', function() {
-        var provider = new OpenStreetMapImageryProvider({
-            url : 'made/up/osm/server/'
+        var provider = new MapboxImageryProvider({
+            url : 'made/up/mapbox/server/',
+            mapId: 'test-id'
         });
 
         return pollToPromise(function() {
@@ -71,15 +77,16 @@ defineSuite([
     });
 
     it('supports no slash at the endof the URL', function() {
-        var provider = new OpenStreetMapImageryProvider({
-            url : 'made/up/osm/server'
+        var provider = new MapboxImageryProvider({
+            url : 'made/up/mapbox/server',
+            mapId: 'test-id'
         });
 
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
             spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url).toContain('made/up/osm/server/');
+                expect(url).toContain('made/up/mapbox/server/');
 
                 // Just return any old image.
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
@@ -93,11 +100,12 @@ defineSuite([
     });
 
     it('requestImage returns a promise for an image and loads it for cross-origin use', function() {
-        var provider = new OpenStreetMapImageryProvider({
-            url : 'made/up/osm/server/'
+        var provider = new MapboxImageryProvider({
+            url : 'made/up/mapbox/server/',
+            mapId: 'test-id'
         });
 
-        expect(provider.url).toEqual('made/up/osm/server/');
+        expect(provider.url).toEqual('made/up/mapbox/server/');
 
         return pollToPromise(function() {
             return provider.ready;
@@ -120,25 +128,11 @@ defineSuite([
         });
     });
 
-    it('when no credit is supplied, a default one is used', function() {
-        var provider = new OpenStreetMapImageryProvider({
-            url : 'made/up/osm/server'
-        });
-        expect(provider.credit).toBeDefined();
-    });
-
-    it('turns the supplied credit into a logo', function() {
-        var providerWithCredit = new OpenStreetMapImageryProvider({
-            url : 'made/up/osm/server',
-            credit : 'Thanks to our awesome made up source of this imagery!'
-        });
-        expect(providerWithCredit.credit).toBeDefined();
-    });
-
     it('routes requests through a proxy if one is specified', function() {
         var proxy = new DefaultProxy('/proxy/');
-        var provider = new OpenStreetMapImageryProvider({
-            url : 'made/up/osm/server',
+        var provider = new MapboxImageryProvider({
+            url : 'made/up/mapbox/server/',
+            mapId: 'test-id',
             proxy : proxy
         });
 
@@ -148,7 +142,7 @@ defineSuite([
             expect(provider.proxy).toEqual(proxy);
 
             spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url.indexOf(proxy.getURL('made/up/osm/server'))).toEqual(0);
+                expect(url.indexOf(proxy.getURL('made/up/mapbox/server'))).toEqual(0);
 
                 // Just return any old image.
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
@@ -163,8 +157,9 @@ defineSuite([
 
     it('rectangle passed to constructor does not affect tile numbering', function() {
         var rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
-        var provider = new OpenStreetMapImageryProvider({
-            url : 'made/up/osm/server',
+        var provider = new MapboxImageryProvider({
+            url : 'made/up/mapbox/server/',
+            mapId: 'test-id',
             rectangle : rectangle
         });
 
@@ -175,7 +170,7 @@ defineSuite([
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toBeUndefined();
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.rectangle).toEqual(rectangle);
+            expect(provider.rectangle).toEqualEpsilon(rectangle, CesiumMath.EPSILON14);
             expect(provider.tileDiscardPolicy).toBeUndefined();
 
             spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
@@ -193,24 +188,27 @@ defineSuite([
     });
 
     it('uses maximumLevel passed to constructor', function() {
-        var provider = new OpenStreetMapImageryProvider({
-            url : 'made/up/osm/server',
+        var provider = new MapboxImageryProvider({
+            url : 'made/up/mapbox/server/',
+            mapId: 'test-id',
             maximumLevel : 5
         });
         expect(provider.maximumLevel).toEqual(5);
     });
 
     it('uses minimumLevel passed to constructor', function() {
-        var provider = new OpenStreetMapImageryProvider({
-            url : 'made/up/osm/server',
+        var provider = new MapboxImageryProvider({
+            url : 'made/up/mapbox/server/',
+            mapId: 'test-id',
             minimumLevel : 1
         });
         expect(provider.minimumLevel).toEqual(1);
     });
 
     it('raises error event when image cannot be loaded', function() {
-        var provider = new OpenStreetMapImageryProvider({
-            url : 'made/up/osm/server'
+        var provider = new MapboxImageryProvider({
+            url : 'made/up/mapbox/server/',
+            mapId: 'test-id'
         });
 
         var layer = new ImageryLayer(provider);

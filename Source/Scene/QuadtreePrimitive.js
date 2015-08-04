@@ -243,13 +243,21 @@ define([
      *        commands to this array during the update call.
      */
     QuadtreePrimitive.prototype.update = function(context, frameState, commandList) {
-        this._tileProvider.beginUpdate(context, frameState, commandList);
+        var passes = frameState.passes;
 
-        selectTilesForRendering(this, context, frameState);
-        processTileLoadQueue(this, context, frameState);
-        createRenderCommandsForSelectedTiles(this, context, frameState, commandList);
+        if (passes.render) {
+            this._tileProvider.beginUpdate(context, frameState, commandList);
 
-        this._tileProvider.endUpdate(context, frameState, commandList);
+            selectTilesForRendering(this, context, frameState);
+            processTileLoadQueue(this, context, frameState);
+            createRenderCommandsForSelectedTiles(this, context, frameState, commandList);
+
+            this._tileProvider.endUpdate(context, frameState, commandList);
+        }
+
+        if (passes.pick && this._tilesToRender.length > 0) {
+            this._tileProvider.endUpdate(context, frameState, commandList);
+        }
     };
 
     /**
