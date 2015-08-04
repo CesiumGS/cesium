@@ -446,6 +446,17 @@ define([
     //  TODO <link> Link (URI/URL) associated with the waypoint
     //  <type> Type (category) of waypoint
     var descriptiveInfoTypes = {
+        position : {
+            text : 'Coordinates'
+        },
+        elevation : {
+            text : 'Height in meters',
+            tag : 'ele'
+        },
+        time : {
+            text : 'Time',
+            tag : 'time'
+        },
         name : {
             text : 'Name',
             tag : 'name'
@@ -478,9 +489,21 @@ define([
         for (i = 0; i < length; i++) {
             var infoTypeName = infoTypeNames[i];
             var infoType = descriptiveInfoTypes[infoTypeName];
-            infoType.value = defaultValue(queryStringValue(node, infoType.tag, namespaces.gpx), '');
-            if (defined(infoType.value) && infoType.value !== '') {
-                text = text + '<p>' + infoType.text + ': ' + infoType.value + '</p>';
+            if (infoTypeName === 'position') {
+                var longitude = queryNumericAttribute(node, 'lon');
+                var latitude = queryNumericAttribute(node, 'lat');
+                var elevation = queryNumericValue(node, 'ele', namespaces.gpx);
+                text = text + '<p>' + infoType.text + ': ' + longitude + ', ' + latitude;
+                if (defined(elevation)) {
+                    text = text + ', ' + elevation + '</p>';
+                } else {
+                    text = text + '</p>';
+                }
+            } else {
+                infoType.value = defaultValue(queryStringValue(node, infoType.tag, namespaces.gpx), '');
+                if (defined(infoType.value) && infoType.value !== '') {
+                    text = text + '<p>' + infoType.text + ': ' + infoType.value + '</p>';
+                }
             }
         }
 
@@ -523,7 +546,11 @@ define([
         //  <lat> Latitude of the waypoint.
         var longitude = queryNumericAttribute(geometryNode, 'lon');
         var latitude = queryNumericAttribute(geometryNode, 'lat');
+        var elevation = queryNumericValue(geometryNode, 'ele', namespaces.gpx);
         var coordinatesString = longitude + ", " + latitude;
+        if(defined(elevation)){
+            coordinatesString = coordinatesString + ', ' + elevation;
+        }
         var position = readCoordinate(coordinatesString);
         if (!defined(position)) {
             throw new DeveloperError('Position Coordinates are required.');
@@ -560,7 +587,10 @@ define([
     }
 
     var complexTypes = {
-        wpt : processWpt
+        wpt : processWpt//,
+//        rte: processRte,
+//        trk: processTrk
+
     };
 
     function processGpx(dataSource, node, entityCollection, sourceUri, uriResolver) {

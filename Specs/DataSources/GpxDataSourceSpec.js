@@ -71,7 +71,6 @@ defineSuite(['DataSources/GpxDataSource',
         var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="RouteConverter">\
                 <wpt lon="38.737125" lat="-9.139242">\
-                    <ele>0.0</ele>\
                     <name>Position 1</name>\
                 </wpt>\
             </gpx>';
@@ -79,6 +78,21 @@ defineSuite(['DataSources/GpxDataSource',
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
             expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(38.737125, -9.139242, undefined));
+        });
+    });
+
+    it('Waypoint: handles simple waypoint with elevation', function() {
+        var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
+            <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="RouteConverter">\
+                <wpt lon="1" lat="2">\
+                    <ele>3</ele>\
+                    <name>Position 1</name>\
+                </wpt>\
+            </gpx>';
+        return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(function(dataSource) {
+            var entities = dataSource.entities.values;
+            expect(entities.length).toEqual(1);
+            expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1, 2, 3));
         });
     });
 
@@ -101,6 +115,27 @@ defineSuite(['DataSources/GpxDataSource',
             expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1, 2, undefined));
             expect(entities[1].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(3, 4, undefined));
             expect(entities[2].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(5, 6, undefined));
+        });
+    });
+
+    it('Waypoint: handles description', function() {
+        var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
+            <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="RouteConverter">\
+                <wpt lon="1" lat="2">\
+                    <desc>The Description</desc>\
+                </wpt>\
+            </gpx>';
+        return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+
+            var element = document.createElement('div');
+            element.innerHTML = entity.description.getValue();
+
+            var div = element.firstChild;
+            expect(div.style['word-wrap']).toEqual('break-word');
+            expect(div.style['background-color']).toEqual('rgb(255, 255, 255)');
+            expect(div.style.color).toEqual('rgb(0, 0, 0)');
+            expect(div.textContent).toEqual('Coordinates: : 1, 2Description: The Description');
         });
     });
 
