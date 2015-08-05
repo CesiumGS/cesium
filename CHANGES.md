@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.13 - 2015-09-01
+
+* Breaking changes
+* Added `reverseZ` tag to `UrlTemplateImageryProvider`.
+
 ### 1.12 - 2015-08-03
 
 * Breaking changes
