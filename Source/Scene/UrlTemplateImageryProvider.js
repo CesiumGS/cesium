@@ -601,8 +601,8 @@ define([
     }
 
     function reverseZTag(imageryProvider, x, y, level) {
-    	var maximumLevel=imageryProvider.maximumLevel;
-    	return (defined(maximumLevel) && level<maximumLevel) ? maximumLevel-level-1:level;
+        var maximumLevel=imageryProvider.maximumLevel;
+        return (defined(maximumLevel) && level<maximumLevel) ? maximumLevel-level-1:level;
     }
 
     function zTag(imageryProvider, x, y, level) {
