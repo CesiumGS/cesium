@@ -150,6 +150,7 @@ define([
 
         /**
          * An {@link Event} that is fired whenever <code>tick</code>.
+         * @type {Event}
          */
         this.onTick = new Event();
 

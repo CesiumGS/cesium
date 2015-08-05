@@ -438,7 +438,7 @@ define([
      * Given a time, returns true if this object should have data during that time.
      *
      * @param {JulianDate} time The time to check availability for.
-     * @returns true if the object should have data during the provided time, false otherwise.
+     * @returns {Boolean} true if the object should have data during the provided time, false otherwise.
      */
     Entity.prototype.isAvailable = function(time) {
         //>>includeStart('debug', pragmas.debug);

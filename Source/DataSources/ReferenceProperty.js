@@ -225,7 +225,7 @@ define([
      *
      * @param {Entity} targetCollection
      * @param {String} referenceString
-     * @returns A new instance of ReferenceProperty.
+     * @returns {ReferenceProperty} A new instance of ReferenceProperty.
      *
      * @exception {DeveloperError} invalid referenceString.
      */
