@@ -27,6 +27,7 @@ define([
         '../Core/Quaternion',
         '../Core/Queue',
         '../Core/RuntimeError',
+        '../Core/TaskProcessor',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/ShaderSource',
@@ -72,6 +73,7 @@ define([
         Quaternion,
         Queue,
         RuntimeError,
+        TaskProcessor,
         BufferUsage,
         DrawCommand,
         ShaderSource,
@@ -116,6 +118,10 @@ define([
         this.buffers = {};
         this.pendingBufferLoads = 0;
 
+        this.decompressedViewsToCreate = new Queue();
+        this.decompressedViews = {};
+        this.decompressionInFlight = 0;
+
         this.programsToCreate = new Queue();
         this.shaders = {};
         this.pendingShaderLoads = 0;
@@ -138,7 +144,12 @@ define([
     }
 
     LoadResources.prototype.getBuffer = function(bufferView) {
-        return getSubarray(this.buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
+        if (defined(bufferView.extensions) && defined(bufferView.extensions.mesh_compression_open3dgc)) {
+            var decompBuffer = bufferView.extensions.mesh_compression_open3dgc.decompressedView;
+            return getSubarray(this.decompressedViews[decompBuffer], bufferView.byteOffset, bufferView.byteLength);
+        } else {
+            return getSubarray(this.buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
+        }
     };
 
     LoadResources.prototype.finishedPendingBufferLoads = function() {
@@ -147,6 +158,8 @@ define([
 
     LoadResources.prototype.finishedBuffersCreation = function() {
         return ((this.pendingBufferLoads === 0) &&
+                (this.decompressedViewsToCreate.length === 0) &&
+                (this.decompressionInFlight === 0) &&
                 (this.vertexBuffersToCreate.length === 0) &&
                 (this.indexBuffersToCreate.length === 0));
     };
@@ -484,7 +497,7 @@ define([
 
         this._defaultTexture = undefined;
         this._incrementallyLoadTextures = defaultValue(options.incrementallyLoadTextures, true);
-        this._asynchronous = defaultValue(options.asynchronous, true);
+        this._asynchronous = true;//defaultValue(options.asynchronous, true); // TODO
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -797,6 +810,12 @@ define([
      */
     function getSubarray(array, offset, length) {
         return array.subarray(offset, offset + length);
+    }
+
+    function copySubarray(array, offset, length) {
+        var bytesPerElement = array.BYTES_PER_ELEMENT;
+        var buffer = array.buffer.slice(offset * bytesPerElement, (offset + length) * bytesPerElement);
+        return new array.constructor(buffer);
     }
 
     function containsGltfMagic(uint8Array) {
@@ -1119,9 +1138,20 @@ define([
                     var uri = new Uri(buffer.uri);
                     var bufferPath = uri.resolve(model._baseUri).toString();
                     loadArrayBuffer(bufferPath).then(bufferLoad(model, id)).otherwise(getFailedLoadFunction(model, 'buffer', bufferPath));
-                } else if (buffer.type === 'text') {
-                    // GLTF_SPEC: Load compressed .bin with loadText.  https://github.com/KhronosGroup/glTF/issues/230
                 }
+            }
+        }
+    }
+
+    function parseDecompressedViews(model) {
+        var extensions = model.gltf.extensions;
+        if (!defined(extensions) || !defined(extensions.mesh_compression_open3dgc)) {
+            return;
+        }
+        var decompressedViews = extensions.mesh_compression_open3dgc.decompressedViews;
+        for (var name in decompressedViews) {
+            if (decompressedViews.hasOwnProperty(name)) {
+                model._loadResources.decompressedViewsToCreate.enqueue(name);
             }
         }
     }
@@ -1375,6 +1405,7 @@ define([
     function parse(model) {
         if (!model._loadRendererResourcesFromCache) {
             parseBuffers(model);
+            parseDecompressedViews(model);
             parseBufferViews(model);
             parseShaders(model);
             parsePrograms(model);
@@ -1403,6 +1434,63 @@ define([
     CreateVertexBufferJob.prototype.execute = function() {
         createVertexBuffer(this.id, this.model, this.context);
     };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    var decompressTaskProcessor = new TaskProcessor('decompressMesh');
+
+    function createDecompressedView(model) {
+        var loadResources = model._loadResources;
+        var decompressedViews = model.gltf.extensions.mesh_compression_open3dgc.decompressedViews;
+
+        var name = loadResources.decompressedViewsToCreate.dequeue();
+        var decompressedView = decompressedViews[name];
+
+        var buffer = loadResources.buffers[decompressedView.buffer];
+        var compressedBuffer = copySubarray(buffer, decompressedView.byteOffset, decompressedView.byteLength);
+
+        var decompressPromise = decompressTaskProcessor.scheduleTask({
+            decompressedByteLength : decompressedView.decompressedByteLength,
+            compressedBuffer : compressedBuffer
+        }, [compressedBuffer.buffer]);
+
+        if (!defined(decompressPromise)) {
+            loadResources.decompressedViewsToCreate.enqueue(name);
+            return;
+        }
+
+        loadResources.decompressionInFlight++;
+
+        when(decompressPromise).then(function(result) {
+            var decompressedArrayBuffer = result.decompressedArrayBuffer;
+            loadResources.decompressedViews[name] = new Uint8Array(decompressedArrayBuffer);
+
+            loadResources.decompressionInFlight--;
+        });
+    }
+
+    function createDecompressedViews(model, context) {
+        var loadResources = model._loadResources;
+
+        if (loadResources.pendingBufferLoads !== 0) {
+            return;
+        }
+
+        var extensions = model.gltf.extensions;
+        if (!defined(extensions) || !defined(extensions.mesh_compression_open3dgc)) {
+            return;
+        }
+
+        if (model.asynchronous) {
+            if (loadResources.decompressedViewsToCreate.length > 0) {
+                createDecompressedView(model);
+            }
+        } else {
+            while (loadResources.decompressedViewsToCreate.length > 0) {
+                createDecompressedView(model);
+            }
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -1454,7 +1542,7 @@ define([
     function createBuffers(model, context, frameState) {
         var loadResources = model._loadResources;
 
-        if (loadResources.pendingBufferLoads !== 0) {
+        if (loadResources.pendingBufferLoads !== 0 || loadResources.decompressedViewsToCreate.length !== 0 || loadResources.decompressionInFlight !== 0) {
             return;
         }
 
@@ -2694,6 +2782,7 @@ define([
             resources.samplers = cachedResources.samplers;
             resources.renderStates = cachedResources.renderStates;
         } else {
+            createDecompressedViews(model, context);
             createBuffers(model, context, frameState); // using glTF bufferViews
             createPrograms(model, context, frameState);
             createSamplers(model, context);
