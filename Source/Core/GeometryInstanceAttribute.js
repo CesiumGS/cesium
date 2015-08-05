@@ -121,6 +121,8 @@ define([
          * every three elements in <code>values</code> defines one attributes since
          * <code>componentsPerAttribute</code> is 3.
          *
+         * @type {Number[]}
+         *
          * @default undefined
          *
          * @example

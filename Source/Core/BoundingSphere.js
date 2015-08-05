@@ -650,6 +650,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {BoundingSphere} [result] The object into which to store the result.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
      */
     BoundingSphere.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);

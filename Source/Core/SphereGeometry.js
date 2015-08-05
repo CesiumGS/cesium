@@ -94,6 +94,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {SphereGeometry} [result] The object into which to store the result.
+     * @returns {SphereGeometry} The modified result parameter or a new SphereGeometry instance if one was not provided.
      */
     SphereGeometry.unpack = function(array, startingIndex, result) {
         var ellipsoidGeometry = EllipsoidGeometry.unpack(array, startingIndex, scratchEllipsoidGeometry);

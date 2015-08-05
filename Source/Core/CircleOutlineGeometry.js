@@ -119,6 +119,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {CircleOutlineGeometry} [result] The object into which to store the result.
+     * @returns {CircleOutlineGeometry} The modified result parameter or a new CircleOutlineGeometry instance if one was not provided.
      */
     CircleOutlineGeometry.unpack = function(array, startingIndex, result) {
         var ellipseGeometry = EllipseOutlineGeometry.unpack(array, startingIndex, scratchEllipseGeometry);
