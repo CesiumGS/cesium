@@ -2126,6 +2126,7 @@ define([
     }
 
     // This doesn't support LOCAL, which we could add if it is ever used.
+    var scratchTranslationRtc = new Cartesian3();
     var gltfSemanticUniforms = {
         MODEL : function(uniformState, model) {
             return function() {
@@ -2150,12 +2151,11 @@ define([
         CESIUM_RTC_MODELVIEW : function(uniformState, model) {
             // CESIUM_RTC extension
             var mvRtc = new Matrix4();
-            var translationRtc = new Cartesian3();
             return function() {
-                Matrix4.getTranslation(uniformState.model, translationRtc);
-                Cartesian3.add(translationRtc, model._rtcCenter, translationRtc);
-                Matrix4.multiplyByPoint(uniformState.view, translationRtc, translationRtc);
-                return Matrix4.setTranslation(uniformState.modelView, translationRtc, mvRtc);
+                Matrix4.getTranslation(uniformState.model, scratchTranslationRtc);
+                Cartesian3.add(scratchTranslationRtc, model._rtcCenter, scratchTranslationRtc);
+                Matrix4.multiplyByPoint(uniformState.view, scratchTranslationRtc, scratchTranslationRtc);
+                return Matrix4.setTranslation(uniformState.modelView, scratchTranslationRtc, mvRtc);
             };
         },
         MODELVIEWPROJECTION : function(uniformState, model) {
