@@ -66,7 +66,8 @@ define([
         for (i = 0; i < numIntAttributes; i++) {
             if (ifs.GetNIntAttribute(i) > 0) {
                 len = ifs.GetIntAttributeDim(i) * ifs.GetNIntAttribute(i);
-                ifs.SetIntAttribute(i, new Int32Array(decompressedArrayBuffer, decompressedViewOffset, len));
+                // XXX: Load into an Int16Array because Cesium doesn't seem to actually support int32 attributes.
+                ifs.SetIntAttribute(i, new Int16Array(decompressedArrayBuffer, decompressedViewOffset, len));
                 decompressedViewOffset += len * Int32Array.BYTES_PER_ELEMENT;
             }
         }

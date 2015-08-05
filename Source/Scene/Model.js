@@ -813,8 +813,8 @@ define([
     }
 
     function copySubarray(array, offset, length) {
-        var bytesPerElement = array.BYTES_PER_ELEMENT;
-        var buffer = array.buffer.slice(offset * bytesPerElement, (offset + length) * bytesPerElement);
+        offset += array.byteOffset / array.BYTES_PER_ELEMENT;
+        var buffer = array.buffer.slice(offset, offset + length);
         return new array.constructor(buffer);
     }
 
@@ -2087,11 +2087,16 @@ define([
                             // with an attribute that wasn't used and the asset wasn't optimized.
                             if (defined(attributeLocation)) {
                                 var a = accessors[primitiveAttributes[attrName]];
+
+                                var componentType = a.componentType;
+                                // XXX: if uint32, pretend it's really uint16.
+                                componentType = componentType === 5125 ? 5123 : componentType;
+
                                 attrs.push({
                                     index                  : attributeLocation,
                                     vertexBuffer           : rendererBuffers[a.bufferView],
                                     componentsPerAttribute : getModelAccessor(a).componentsPerAttribute,
-                                    componentDatatype      : a.componentType,
+                                    componentDatatype      : componentType,
                                     normalize              : false,
                                     offsetInBytes          : a.byteOffset,
                                     strideInBytes          : a.byteStride
