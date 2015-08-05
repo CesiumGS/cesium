@@ -259,7 +259,7 @@ define([
      *</p>
      *
      * @param {Number} value The number whose hyperbolic sine is to be returned.
-     * @returns The hyperbolic sine of <code>value</code>.
+     * @returns {Number} The hyperbolic sine of <code>value</code>.
      */
     CesiumMath.sinh = function(value) {
         var part1 = Math.pow(Math.E, value);
@@ -285,7 +285,7 @@ define([
      *</p>
      *
      * @param {Number} value The number whose hyperbolic cosine is to be returned.
-     * @returns The hyperbolic cosine of <code>value</code>.
+     * @returns {Number} The hyperbolic cosine of <code>value</code>.
      */
     CesiumMath.cosh = function(value) {
         var part1 = Math.pow(Math.E, value);

@@ -568,7 +568,7 @@ define([
          * <code>blue</code>, and <code>alpha</code> properties as shown in Example 1.  These components range from <code>0.0</code>
          * (no intensity) to <code>1.0</code> (full intensity).
          * @memberof Billboard.prototype
-         * @param {Color}
+         * @type {Color}
          *
          * @example
          * // Example 1. Assign yellow.
