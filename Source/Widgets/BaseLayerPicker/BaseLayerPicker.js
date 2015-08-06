@@ -61,7 +61,7 @@ define([
      *      name : 'Open\u00adStreet\u00adMap',
      *      iconUrl : Cesium.buildModuleUrl('Widgets/Images/ImageryProviders/openStreetMap.png'),
      *      tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable \
-     *map of the world.\nhttp://www.openstreetmap.org',
+     * map of the world.\nhttp://www.openstreetmap.org',
      *      creationFunction : function() {
      *          return new Cesium.OpenStreetMapImageryProvider({
      *              url : '//a.tile.openstreetmap.org/'
@@ -73,7 +73,7 @@ define([
      *      name : 'Black Marble',
      *      iconUrl : Cesium.buildModuleUrl('Widgets/Images/ImageryProviders/blackMarble.png'),
      *      tooltip : 'The lights of cities and villages trace the outlines of civilization \
-     *in this global view of the Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
+     * in this global view of the Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
      *      creationFunction : function() {
      *          return new Cesium.TileMapServiceImageryProvider({
      *              url : '//cesiumjs.org/blackmarble',
@@ -99,10 +99,10 @@ define([
      *
      * //Finally, create the baseLayerPicker widget using our view models.
      * var layers = cesiumWidget.imageryLayers;
-     * var baseLayerPicker = new Cesium.BaseLayerPicker('baseLayerPickerContainer', layers, imageryViewModels);
-     *
-     * //Use the first item in the list as the current selection.
-     * baseLayerPicker.viewModel.selectedItem = imageryViewModels[0];
+     * var baseLayerPicker = new Cesium.BaseLayerPicker('baseLayerPickerContainer', {
+     *     globe : cesiumWidget.scene.globe,
+     *     imageryProviderViewModels : imageryViewModels
+     * });
      */
     var BaseLayerPicker = function(container, options) {
         //>>includeStart('debug', pragmas.debug);
