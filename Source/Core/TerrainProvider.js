@@ -149,6 +149,7 @@ define([
      * {@link Globe.maximumScreenSpaceError} screen pixels and will probably go very slowly.
      * A value of 0.5 will cut the estimated level zero geometric error in half, allowing twice the
      * screen pixels between adjacent heightmap vertices and thus rendering more quickly.
+     * @type {Number}
      */
     TerrainProvider.heightmapTerrainQuality = 0.25;
 

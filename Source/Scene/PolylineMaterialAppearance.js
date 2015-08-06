@@ -197,7 +197,7 @@ define([
      *
      * @function
      *
-     * @returns String The full GLSL fragment shader source.
+     * @returns {String} The full GLSL fragment shader source.
      */
     PolylineMaterialAppearance.prototype.getFragmentShaderSource = Appearance.prototype.getFragmentShaderSource;
 
