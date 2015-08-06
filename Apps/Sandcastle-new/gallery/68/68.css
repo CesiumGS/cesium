@@ -1,7 +1,0 @@
-@import url(templates/bucket.css);
-    
-    #viewChanged {
-        display: none;
-        background-color: red;
-        color: white;
-    }

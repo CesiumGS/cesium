@@ -416,7 +416,6 @@ require({
       while (childIndex < doc.body.childNodes.length && childNode !== script){
         if(childNode.nodeName == 'STYLE')
         {
-          console.log(childNode);
           cssText += childNode.innerHTML;
           childNode = doc.body.childNodes[++childIndex];
         }

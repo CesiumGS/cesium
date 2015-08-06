@@ -1,6 +1,0 @@
-// Cesium.CesiumWidget is similar to Cesium.Viewer, but
-// is trimmed down.  It is just a widget for the 3D globe;
-// it does not include the animation, imagery selection,
-// and other widgets, nor does it depend on the third-party
-// Knockout library.
-var widget = new Cesium.CesiumWidget('cesiumContainer');
