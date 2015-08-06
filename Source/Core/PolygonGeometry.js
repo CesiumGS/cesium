@@ -633,6 +633,7 @@ define([
         this._height = height;
         this._extrudedHeight = defaultValue(extrudedHeight, 0.0);
         this._extrude = extrude;
+        this._open = defaultValue(options.open, false);
         this._polygonHierarchy = polygonHierarchy;
         this._perPositionHeight = perPositionHeight;
         this._workerName = 'createPolygonGeometry';
@@ -641,7 +642,7 @@ define([
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
-        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + VertexFormat.packedLength + 7;
+        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + VertexFormat.packedLength + 8;
     };
 
     /**
@@ -690,7 +691,8 @@ define([
             stRotation : options.stRotation,
             ellipsoid : options.ellipsoid,
             granularity : options.granularity,
-            perPositionHeight : options.perPositionHeight
+            perPositionHeight : options.perPositionHeight,
+            open : options.open
         };
         return new PolygonGeometry(newOptions);
     };
@@ -729,6 +731,7 @@ define([
         array[startingIndex++] = value._stRotation;
         array[startingIndex++] = value._extrude ? 1.0 : 0.0;
         array[startingIndex++] = value._perPositionHeight ? 1.0 : 0.0;
+        array[startingIndex++] = value._open ? 1.0 : 0.0;
         array[startingIndex] = value.packedLength;
     };
 
@@ -772,6 +775,7 @@ define([
         var stRotation = array[startingIndex++];
         var extrude = array[startingIndex++] === 1.0;
         var perPositionHeight = array[startingIndex++] === 1.0;
+        var open = array[startingIndex++] === 1.0;
         var packedLength = array[startingIndex];
 
         if (!defined(result)) {
@@ -787,6 +791,7 @@ define([
         result._stRotation = stRotation;
         result._extrude = extrude;
         result._perPositionHeight = perPositionHeight;
+        result._open = open;
         result.packedLength = packedLength;
         return result;
     };
@@ -807,6 +812,7 @@ define([
         var extrude = polygonGeometry._extrude;
         var polygonHierarchy = polygonGeometry._polygonHierarchy;
         var perPositionHeight = polygonGeometry._perPositionHeight;
+        var open = polygonGeometry._open;
 
         var walls;
         var topAndBottom;
@@ -869,10 +875,12 @@ define([
         if (extrude) {
             for (i = 0; i < polygons.length; i++) {
                 geometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity, polygonHierarchy[i], perPositionHeight);
-                topAndBottom = geometry.topAndBottom;
-                topAndBottom.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(topAndBottom.geometry, height, extrudedHeight, ellipsoid, perPositionHeight);
-                topAndBottom.geometry = computeAttributes(vertexFormat, topAndBottom.geometry, outerPositions, ellipsoid, stRotation, true, false);
-                geometries.push(topAndBottom);
+                if (!open) {
+                    topAndBottom = geometry.topAndBottom;
+                    topAndBottom.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(topAndBottom.geometry, height, extrudedHeight, ellipsoid, perPositionHeight);
+                    topAndBottom.geometry = computeAttributes(vertexFormat, topAndBottom.geometry, outerPositions, ellipsoid, stRotation, true, false);
+                    geometries.push(topAndBottom);
+                }
 
                 walls = geometry.walls;
                 for ( var k = 0; k < walls.length; k++) {
