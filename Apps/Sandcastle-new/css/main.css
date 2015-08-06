@@ -184,7 +184,7 @@ ul + div.tab-content {
 }
 
 .tooltip-inner{
-  background: none;
+  background: #fff;
   border: 1px solid #ccc;
 }
 
