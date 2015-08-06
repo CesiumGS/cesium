@@ -18,7 +18,7 @@
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
-    @import url(../templates/bucket.css);
+    @import url(templates/bucket.css);
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
@@ -31,11 +31,11 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 Sandcastle.addDefaultToolbarButton('Satellites', function() {
-    viewer.dataSources.add(Cesium.CzmlDataSource.load('../../SampleData/simple.czml'));
+    viewer.dataSources.add(Cesium.CzmlDataSource.load('../SampleData/simple.czml'));
 });
 
 Sandcastle.addToolbarButton('Vehicle', function() {
-    viewer.dataSources.add(Cesium.CzmlDataSource.load('../../SampleData/Vehicle.czml'));
+    viewer.dataSources.add(Cesium.CzmlDataSource.load('../SampleData/Vehicle.czml'));
 });
 
 Sandcastle.reset = function() {

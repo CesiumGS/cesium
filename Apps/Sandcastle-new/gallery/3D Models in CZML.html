@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Draw a rectangle or extruded rectangle that conforms to the surface of the globe.">
-    <meta name="cesium-sandcastle-labels" content="Geometries">
+    <meta name="description" content="A simple CZML example showing four satellites in orbit around the Earth, and some ground objects.">
+    <meta name="cesium-sandcastle-labels" content="Showcases, DataSources">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
@@ -18,41 +18,56 @@
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
-    @import url(templates/bucket.css);
+    @import url(../templates/bucket.css);
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
+
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer');
-
-var redRectangle = viewer.entities.add({
-    name : 'Red translucent rectangle with outline',
-    rectangle : {
-        coordinates : Cesium.Rectangle.fromDegrees(-110.0, 20.0, -80.0, 25.0),
-        material : Cesium.Color.RED.withAlpha(0.5),
-        outline : true,
-        outlineColor : Cesium.Color.RED
-    }
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    infoBox : false,
+    selectionIndicator : false
 });
 
-var greenRectangle = viewer.entities.add({
-    name : 'Green translucent, rotated, and extruded rectangle at height with outline',
-    rectangle : {
-        coordinates : Cesium.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0),
-        material : Cesium.Color.GREEN.withAlpha(0.5),
-        rotation : Cesium.Math.toRadians(45),
-        extrudedHeight : 300000.0,
-        height : 100000.0,
-        outline : true,
-        outlineColor : Cesium.Color.GREEN
-    }
-});
+function addCZML(id){
+    viewer.dataSources.removeAll(false);
+    var url = "../SampleData/" + id + ".czml";
+    Cesium.CzmlDataSource.load(url).then(function(val){
+        var ds = val;
+        viewer.dataSources.add(ds);
+        var modelEntity = viewer.dataSources.get(0).entities.getById(id);
+        viewer.trackedEntity = modelEntity;
+    });
+}
 
-viewer.zoomTo(viewer.entities);
+
+var options = [{
+    text : 'Aircraft',
+    onselect : function() {
+        addCZML('3dmodels_aircraft');
+    }
+}, {
+    text : 'Ground vehicle',
+    onselect : function() {
+        addCZML('3dmodels_groundvehicle');
+    }
+}, {
+    text : 'Milk truck',
+    onselect : function() {
+        addCZML('3dmodels_milktruck');
+    }
+}, {
+    text : 'Skinned character',
+    onselect : function() {
+        addCZML('3dmodels_skinnedcharacter');
+    }
+}];
+
+Sandcastle.addToolbarMenu(options);
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
