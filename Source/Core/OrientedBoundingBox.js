@@ -46,7 +46,7 @@ define([
      * @example
      * // Create an OrientedBoundingBox using a transformation matrix, a position where the box will be translated, and a scale.
      * var center = new Cesium.Cartesian3(1.0, 0.0, 0.0);
-     * var halfAxes = Cesium.Matrix3.fromScale(new Cartesian3(1.0, 3.0, 2.0), new Matrix3());
+     * var halfAxes = Cesium.Matrix3.fromScale(new Cesium.Cartesian3(1.0, 3.0, 2.0), new Cesium.Matrix3());
      *
      * var obb = new Cesium.OrientedBoundingBox(center, halfAxes);
      */

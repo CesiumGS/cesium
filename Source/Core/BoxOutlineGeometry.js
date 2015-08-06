@@ -31,6 +31,7 @@ define([
      * @alias BoxOutlineGeometry
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Cartesian3} options.minimumCorner The minimum x, y, and z coordinates of the box.
      * @param {Cartesian3} options.maximumCorner The maximum x, y, and z coordinates of the box.
      *
@@ -70,7 +71,9 @@ define([
     /**
      * Creates an outline of a cube centered at the origin given its dimensions.
      *
+     * @param {Object} options Object with the following properties:
      * @param {Cartesian3} options.dimensions The width, depth, and height of the box stored in the x, y, and z coordinates of the <code>Cartesian3</code>, respectively.
+     * @returns {BoxOutlineGeometry}
      *
      * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
      *

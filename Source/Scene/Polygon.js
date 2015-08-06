@@ -56,11 +56,11 @@ define([
      * @example
      * // Example 1
      * var polygon = new Cesium.Polygon({
-     *   positions : Cartesian3.fromDegreesArray([
+     *   positions : Cesium.Cartesian3.fromDegreesArray([
      *     0.0, 0.0,
      *     10.0, 0.0,
      *     0.0, 10.0
-     *   ]
+     *   ])
      * });
      *
      * @example
@@ -153,7 +153,7 @@ define([
          * polygon.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
-         * polygon.material = Cesium.Material.fromType( Material.StripeType);
+         * polygon.material = Cesium.Material.fromType(Cesium.Material.StripeType);
          */
         this.material = defaultValue(options.material, material);
 

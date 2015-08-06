@@ -633,7 +633,7 @@ define([
          * @example
          * // Example 2.
          * // Have the billboard point east.
-         * billboard.alignedAxis = Cartesian3.UNIT_Z;
+         * billboard.alignedAxis = Cesium.Cartesian3.UNIT_Z;
          * billboard.rotation = -Cesium.Math.PI_OVER_TWO;
          *
          * @example

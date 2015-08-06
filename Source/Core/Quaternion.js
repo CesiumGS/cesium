@@ -185,7 +185,7 @@ define([
      * @param {Number} heading The heading angle in radians.
      * @param {Number} pitch The pitch angle in radians.
      * @param {Number} roll The roll angle in radians.
-     * @param {Quaternion} result The object onto which to store the result.
+     * @param {Quaternion} [result] The object onto which to store the result.
      * @returns {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
      */
     Quaternion.fromHeadingPitchRoll = function(heading, pitch, roll, result) {
@@ -905,13 +905,13 @@ define([
      *
      * @example
      * // 1. compute the squad interpolation between two quaternions on a curve
-     * var s0 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[i - 1], quaternions[i], quaternions[i + 1]);
-     * var s1 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[i], quaternions[i + 1], quaternions[i + 2]);
-     * var q = Cesium.Quaternion.squad(quaternions[i], quaternions[i + 1], s0, s1, t);
+     * var s0 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[i - 1], quaternions[i], quaternions[i + 1], new Cesium.Quaternion());
+     * var s1 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[i], quaternions[i + 1], quaternions[i + 2], new Cesium.Quaternion());
+     * var q = Cesium.Quaternion.squad(quaternions[i], quaternions[i + 1], s0, s1, t, new Cesium.Quaternion());
      *
      * // 2. compute the squad interpolation as above but where the first quaternion is a end point.
-     * var s1 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[0], quaternions[1], quaternions[2]);
-     * var q = Cesium.Quaternion.squad(quaternions[0], quaternions[1], quaternions[0], s1, t);
+     * var s1 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[0], quaternions[1], quaternions[2], new Cesium.Quaternion());
+     * var q = Cesium.Quaternion.squad(quaternions[0], quaternions[1], quaternions[0], s1, t, new Cesium.Quaternion());
      */
     Quaternion.squad = function(q0, q1, s0, s1, t, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -1017,7 +1017,7 @@ define([
      * @param {Quaternion} s0 The first inner quadrangle.
      * @param {Quaternion} s1 The second inner quadrangle.
      * @param {Number} t The time in [0,1] used to interpolate.
-     * @param {Quaternion} [result] The object onto which to store the result.
+     * @param {Quaternion} result The object onto which to store the result.
      * @returns {Quaternion} The modified result parameter or a new instance if none was provided.
      *
      * @see Quaternion#squad

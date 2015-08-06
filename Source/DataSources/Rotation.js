@@ -23,13 +23,13 @@ define([
      * @see PackableForInterpolation
      *
      * @example
-     * var time1 = JulianDate.fromIso8601('2010-05-07T00:00:00');
-     * var time2 = JulianDate.fromIso8601('2010-05-07T00:01:00');
-     * var time3 = JulianDate.fromIso8601('2010-05-07T00:02:00');
+     * var time1 = Cesium.JulianDate.fromIso8601('2010-05-07T00:00:00');
+     * var time2 = Cesium.JulianDate.fromIso8601('2010-05-07T00:01:00');
+     * var time3 = Cesium.JulianDate.fromIso8601('2010-05-07T00:02:00');
      *
-     * var property = new SampledProperty(Rotation);
+     * var property = new Cesium.SampledProperty(Cesium.Rotation);
      * property.addSample(time1, 0);
-     * property.addSample(time3, CesiumMath.toRadians(350));
+     * property.addSample(time3, Cesium.Math.toRadians(350));
      *
      * //Getting the value at time2 will equal 355 degrees instead
      * //of 175 degrees (which is what you get if you construct

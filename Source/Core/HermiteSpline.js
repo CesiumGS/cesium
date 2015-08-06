@@ -270,6 +270,7 @@ define([
      * Creates a spline where the tangents at each control point are the same.
      * The curves are guaranteed to be at least in the class C<sup>1</sup>.
      *
+     * @param {Object} options Object with the following properties:
      * @param {Number[]} options.times The array of control point times.
      * @param {Cartesian3[]} options.points The array of control points.
      * @param {Cartesian3[]} options.tangents The array of tangents at the control points.
@@ -297,7 +298,7 @@ define([
      * }
      * tangents[tangents.length - 1] = new Cesium.Cartesian3(1165345, 112641, 47281);
      *
-     * var spline = new Cesium.HermiteSpline({
+     * var spline = Cesium.HermiteSpline.createC1({
      *     times : times,
      *     points : points,
      *     tangents : tangents
@@ -337,6 +338,7 @@ define([
      * Creates a natural cubic spline. The tangents at the control points are generated
      * to create a curve in the class C<sup>2</sup>.
      *
+     * @param {Object} options Object with the following properties:
      * @param {Number[]} options.times The array of control point times.
      * @param {Cartesian3[]} options.points The array of control points.
      * @returns {HermiteSpline|LinearSpline} A hermite spline or a linear spline if less than 3 control points were given.
@@ -347,7 +349,7 @@ define([
      *
      * @example
      * // Create a natural cubic spline above the earth from Philadelphia to Los Angeles.
-     * var spline = new Cesium.HermiteSpline({
+     * var spline = Cesium.HermiteSpline.createNaturalCubic({
      *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
      *     points : [
      *         new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
@@ -399,6 +401,7 @@ define([
      * Creates a clamped cubic spline. The tangents at the interior control points are generated
      * to create a curve in the class C<sup>2</sup>.
      *
+     * @param {Object} options Object with the following properties:
      * @param {Number[]} options.times The array of control point times.
      * @param {Cartesian3[]} options.points The array of control points.
      * @param {Cartesian3} options.firstTangent The outgoing tangent of the first control point.
@@ -411,7 +414,7 @@ define([
      *
      * @example
      * // Create a clamped cubic spline above the earth from Philadelphia to Los Angeles.
-     * var spline = new Cesium.HermiteSpline({
+     * var spline = Cesium.HermiteSpline.createClampedCubic({
      *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
      *     points : [
      *         new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
