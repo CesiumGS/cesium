@@ -98,6 +98,8 @@
     var tabPanel = '<div role="tabpanel" class="tab-pane" id="{{tabname}}"><div class="row"></div></div>';
     var demoEle = '<div class="col-sm-2"><div class="thumbnail" id="{demo}"><a href="index.html?src={href}"><img src="img/gallery/{image}.jpg" alt="Demo Thumbnail"><div class="caption"><h5>{title}</h5><p class="hidden-xs">{description}</p></div></a></div></div>';
     var gallery_demos = [];
+    var scriptCodeRegex = /\/\/Sandcastle_Begin\s*([\s\S]*)\/\/Sandcastle_End/;
+
     for(var demo in gallery){
         gallery_demos[demo.id] = {};
         var development = false;
@@ -139,10 +141,25 @@
 
     function requestCode(demoName, id){
         $.ajax({
-            url: 'gallery/' + id + '/' + id + '.txt',
+            url: 'gallery/' + demoName + '.html',
             handleAs: 'text',
         }).done(function(value){
-            gallery_demos.push({name: demoName, code: value});
+            var code = value;
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(code, 'text/html');
+            var script = doc.querySelector('script[id="cesium_sandcastle_script"]');
+            if (!script) {
+                console.log('Error reading source file: ' + demoName);
+                return;
+            }
+            var scriptMatch = scriptCodeRegex.exec(script.textContent);
+            if (!scriptMatch) {
+                console.log('Error reading source file: ' + demoName);
+                return;
+            }
+
+            var scriptCode = scriptMatch[1];
+            gallery_demos.push({name: demoName, code: scriptCode});
         }).fail(function(error){
             console.log(error);
         });
