@@ -424,7 +424,6 @@ define([
         return href;
     }
 
-
     function processPositionGraphics(dataSource, entity) {
         var label = entity.label;
         if (!defined(label)) {
@@ -543,9 +542,9 @@ define([
             text : 'Source',
             tag : 'src'
         },
-        number: {
-            text: 'GPS track/route number',
-            tag: 'number'
+        number : {
+            text : 'GPS track/route number',
+            tag : 'number'
         },
         type : {
             text : 'Type',
@@ -662,6 +661,7 @@ define([
         //a list of track segments
         var trackSegs = queryNodes(geometryNode, 'trkseg', namespaces.gpx);
         var trackSegInfo;
+        var nonTimestampedPositions = [];
         var times;
         var data;
         var lastStop;
@@ -674,28 +674,36 @@ define([
             trackSegInfo = processTrkSeg(trackSegs[i]);
             var positions = trackSegInfo.positions;
             times = trackSegInfo.times;
-
-            if (interpolate) { //TODO Copied from KML
-                //If we are interpolating, then we need to fill in the end of
-                //the last track and the beginning of this one with a sampled
-                //property.  From testing in Google Earth, this property
-                //is never extruded and always absolute.
-                if (defined(lastStop)) {
-                    addToTrack([lastStop, times[0]], [lastStopPosition, positions[0]], composite, availability, dropShowProperty, false, 'absolute', undefined, false);
-                }
-                lastStop = times[length - 1];
-                lastStopPosition = positions[positions.length - 1];
-            }
             if (times.length > 0) {
-                addToTrack(times, positions, composite, availability, dropShowProperty, true);
-                //    needDropLine = needDropLine || (canExtrude && extrude);
+                if (interpolate) { //TODO Copied from KML
+                    //If we are interpolating, then we need to fill in the end of
+                    //the last track and the beginning of this one with a sampled
+                    //property.  From testing in Google Earth, this property
+                    //is never extruded and always absolute.
+                    if (defined(lastStop)) {
+                        addToTrack([lastStop, times[0]], [lastStopPosition, positions[0]], composite, availability, dropShowProperty, false, 'absolute', undefined, false);
+                    }
+                    lastStop = times[length - 1];
+                    lastStopPosition = positions[positions.length - 1];
+                }
+                if (times.length > 0) {
+                    addToTrack(times, positions, composite, availability, dropShowProperty, true);
+                    //    needDropLine = needDropLine || (canExtrude && extrude);
+                }
+            } else {
+                nonTimestampedPositions = nonTimestampedPositions.concat(positions);
             }
         }
 
-        entity.availability = availability;
-        entity.position = composite;
-        processPositionGraphics(dataSource, entity);
-        processPathGraphics(dataSource, entity);
+        if (times.length > 0) {
+            entity.availability = availability;
+            entity.position = composite;
+            processPositionGraphics(dataSource, entity);
+            processPathGraphics(dataSource, entity);
+        } else {
+            entity.polyline = createDefaultPolyline();
+            entity.polyline.positions = nonTimestampedPositions;
+        }
         //        if (needDropLine) {
         //            createDropLine(dataSource, entity, styleEntity);
         //            entity.polyline.show = dropShowProperty;
