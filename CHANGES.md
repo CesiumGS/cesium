@@ -1,6 +1,15 @@
 Change Log
 ==========
 
+### 1.11 - 2015-07-01
+
+* Breaking changes
+  *
+* Deprecated
+  *
+* Fix issue where extruded `PolygonGeometry` was always extruding to the ellipsoid surface instead of specified height.
+ 
+
 ### 1.12 - 2015-08-03
 
 * Breaking changes
