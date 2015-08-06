@@ -81,20 +81,20 @@ defineSuite(['DataSources/GpxDataSource',
         });
     });
 
-    it('Waypoint: handles simple waypoint with elevation', function() {
-        var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
-            <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="RouteConverter">\
-                <wpt lon="1" lat="2">\
-                    <ele>3</ele>\
-                    <name>Position 1</name>\
-                </wpt>\
-            </gpx>';
-        return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(function(dataSource) {
-            var entities = dataSource.entities.values;
-            expect(entities.length).toEqual(1);
-            expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1, 2, 3));
-        });
-    });
+//    it('Waypoint: handles simple waypoint with elevation', function() {
+//        var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
+//            <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="RouteConverter">\
+//                <wpt lon="1" lat="2">\
+//                    <ele>3</ele>\
+//                    <name>Position 1</name>\
+//                </wpt>\
+//            </gpx>';
+//        return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(function(dataSource) {
+//            var entities = dataSource.entities.values;
+//            expect(entities.length).toEqual(1);
+//            expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1, 2, 3));
+//        });
+//    });
 
     it('Waypoint: handles multiple waypoints', function() {
         var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\

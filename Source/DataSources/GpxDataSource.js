@@ -302,9 +302,10 @@ define([
         var latitude = queryNumericAttribute(node, 'lat');
         var elevation = queryNumericValue(node, 'ele', namespaces.gpx);
         var coordinatesString = longitude + ", " + latitude;
-        if(defined(elevation)){
-            coordinatesString = coordinatesString + ', ' + elevation;
-        }
+        //TODO disregard elevation for now
+        //if(defined(elevation)){
+        //  coordinatesString = coordinatesString + ', ' + elevation;
+        //}
         return coordinatesString;
     }
 
