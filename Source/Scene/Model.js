@@ -738,8 +738,8 @@ define([
     }
 
     function copySubarray(array, offset, length) {
-        var bytesPerElement = array.BYTES_PER_ELEMENT;
-        var buffer = array.buffer.slice(offset * bytesPerElement, (offset + length) * bytesPerElement);
+        offset += array.byteOffset / array.BYTES_PER_ELEMENT;
+        var buffer = array.buffer.slice(offset, offset + length);
         return new array.constructor(buffer);
     }
 
