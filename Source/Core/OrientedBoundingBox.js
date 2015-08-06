@@ -65,6 +65,114 @@ define([
         this.halfAxes = Matrix3.clone(defaultValue(halfAxes, Matrix3.ZERO));
     };
 
+    var scratchCartesian1 = new Cartesian3();
+    var scratchCartesian2 = new Cartesian3();
+    var scratchCartesian3 = new Cartesian3();
+    var scratchCartesian4 = new Cartesian3();
+    var scratchCartesian5 = new Cartesian3();
+    var scratchCovarianceResult = new Matrix3();
+    var scratchEigenResult = {
+        unitary : new Matrix3(),
+        diagonal : new Matrix3()
+    };
+
+    /**
+     * Computes an instance of an OrientedBoundingBox of the given positions.
+     * This is an implementation of Stefan Gottschalk's Collision Queries using Oriented Bounding Boxes solution (PHD thesis).
+     * Reference: http://gamma.cs.unc.edu/users/gottschalk/main.pdf
+     *
+     * @param {Cartesian3[]} positions List of {@link Cartesian3} points that the bounding box will enclose.
+     * @param {OrientedBoundingBox} [result] The object onto which to store the result.
+     * @returns {OrientedBoundingBox} The modified result parameter or a new OrientedBoundingBox instance if one was not provided.
+     *
+     * @example
+     * // Compute an object oriented bounding box enclosing two points.
+     * var box = Cesium.OrientedBoundingBox.fromPoints([new Cesium.Cartesian3(2, 0, 0), new Cesium.Cartesian3(-2, 0, 0)]);
+     */
+    OrientedBoundingBox.fromPoints = function(positions, result) {
+        if (!defined(result)) {
+            result = new OrientedBoundingBox();
+        }
+
+        if (!defined(positions) || positions.length === 0) {
+            result.halfAxes = Matrix3.ZERO;
+            result.center = Cartesian3.ZERO;
+            return result;
+        }
+
+        var i;
+        var length = positions.length;
+
+        var meanPoint = Cartesian3.clone(positions[0], scratchCartesian1);
+        for (i = 1; i < length; i++) {
+            Cartesian3.add(meanPoint, positions[i], meanPoint);
+        }
+        var invLength = 1.0 / length;
+        Cartesian3.multiplyByScalar(meanPoint, invLength, meanPoint);
+
+        var exx = 0.0;
+        var exy = 0.0;
+        var exz = 0.0;
+        var eyy = 0.0;
+        var eyz = 0.0;
+        var ezz = 0.0;
+        var p;
+
+        for (i = 0; i < length; i++) {
+            p = Cartesian3.subtract(positions[i], meanPoint, scratchCartesian2);
+            exx += p.x * p.x;
+            exy += p.x * p.y;
+            exz += p.x * p.z;
+            eyy += p.y * p.y;
+            eyz += p.y * p.z;
+            ezz += p.z * p.z;
+        }
+
+        exx *= invLength;
+        exy *= invLength;
+        exz *= invLength;
+        eyy *= invLength;
+        eyz *= invLength;
+        ezz *= invLength;
+
+        var covarianceMatrix = scratchCovarianceResult;
+        covarianceMatrix[0] = exx;
+        covarianceMatrix[1] = exy;
+        covarianceMatrix[2] = exz;
+        covarianceMatrix[3] = exy;
+        covarianceMatrix[4] = eyy;
+        covarianceMatrix[5] = eyz;
+        covarianceMatrix[6] = exz;
+        covarianceMatrix[7] = eyz;
+        covarianceMatrix[8] = ezz;
+
+        var eigenDecomposition = Matrix3.computeEigenDecomposition(covarianceMatrix, scratchEigenResult);
+        var rotation = Matrix3.transpose(eigenDecomposition.unitary, result.halfAxes);
+
+        p = Cartesian3.subtract(positions[0], meanPoint, scratchCartesian2);
+        var tempPoint = Matrix3.multiplyByVector(rotation, p, scratchCartesian3);
+        var maxPoint = Cartesian3.clone(tempPoint, scratchCartesian4);
+        var minPoint = Cartesian3.clone(tempPoint, scratchCartesian5);
+
+        for (i = 1; i < length; i++) {
+            p = Cartesian3.subtract(positions[i], meanPoint, p);
+            Matrix3.multiplyByVector(rotation, p, tempPoint);
+            Cartesian3.minimumByComponent(minPoint, tempPoint, minPoint);
+            Cartesian3.maximumByComponent(maxPoint, tempPoint, maxPoint);
+        }
+
+        var center = Cartesian3.add(minPoint, maxPoint, scratchCartesian3);
+        Cartesian3.multiplyByScalar(center, 0.5, center);
+        Matrix3.multiplyByVector(rotation, center, center);
+        Cartesian3.add(meanPoint, center, result.center);
+
+        var scale = Cartesian3.subtract(maxPoint, minPoint, scratchCartesian3);
+        Cartesian3.multiplyByScalar(scale, 0.5, scale);
+        Matrix3.multiplyByScale(result.halfAxes, scale, result.halfAxes);
+
+        return result;
+    };
+
     var scratchOffset = new Cartesian3();
     var scratchScale = new Cartesian3();
     /**

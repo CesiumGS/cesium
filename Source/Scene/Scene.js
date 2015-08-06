@@ -33,6 +33,7 @@ define([
         './Camera',
         './CreditDisplay',
         './CullingVolume',
+        './DepthPlane',
         './FrameState',
         './FrustumCommands',
         './FXAA',
@@ -87,6 +88,7 @@ define([
         Camera,
         CreditDisplay,
         CullingVolume,
+        DepthPlane,
         FrameState,
         FrustumCommands,
         FXAA,
@@ -238,6 +240,7 @@ define([
         }
 
         this._globeDepth = globeDepth;
+        this._depthPlane = new DepthPlane();
         this._oit = oit;
         this._fxaa = new FXAA();
 
@@ -860,9 +863,14 @@ define([
                 return this._mode;
             },
             set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value)) {
+                    throw new DeveloperError('value is required.');
+                }
                 if (this.scene3DOnly && value !== SceneMode.SCENE3D) {
                     throw new DeveloperError('Only SceneMode.SCENE3D is valid when scene3DOnly is true.');
                 }
+                //>>includeEnd('debug');
                 this._mode = value;
             }
         },
@@ -1359,6 +1367,13 @@ define([
             }
         }
 
+        if (defined(scene.globe) && !scene.globe.depthTestAgainstTerrain) {
+            // Update the depth plane that is rendered in 3D when the primitives are
+            // not depth tested against terrain so primitives on the backface
+            // of the globe are not picked.
+            scene._depthPlane.update(context, frameState);
+        }
+
         // If supported, configure OIT to use the globe depth framebuffer and clear the OIT framebuffer.
         var useOIT = !picking && renderTranslucentCommands && defined(scene._oit) && scene._oit.isSupported();
         if (useOIT) {
@@ -1471,6 +1486,11 @@ define([
 
             if (scene.debugShowGlobeDepth && defined(globeDepth) && useGlobeDepthFramebuffer) {
                 passState.framebuffer = fb;
+            }
+
+            if (defined(scene.globe) && !scene.globe.depthTestAgainstTerrain) {
+                clearDepth.execute(context, passState);
+                scene._depthPlane.execute(context, passState);
             }
 
             // Execute commands in order by pass up to the translucent pass.
@@ -2070,6 +2090,7 @@ define([
         this._debugSphere = this._debugSphere && this._debugSphere.destroy();
         this.sun = this.sun && this.sun.destroy();
         this._sunPostProcess = this._sunPostProcess && this._sunPostProcess.destroy();
+        this._depthPlane = this._depthPlane && this._depthPlane.destroy();
 
         this._transitioner.destroy();
 

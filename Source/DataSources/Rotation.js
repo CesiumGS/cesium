@@ -74,6 +74,7 @@ define([
          * @param {Number[]} array The packed array.
          * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
          * @param {Object} [result] The object into which to store the result.
+         * @returns {Object} The modified result parameter or a new Object instance if one was not provided.
          */
         unpack : function(array, startingIndex, result) {
             //>>includeStart('debug', pragmas.debug);
@@ -126,6 +127,7 @@ define([
          * @param {Number} [startingIndex=0] The startingIndex used to convert the array.
          * @param {Number} [lastIndex=packedArray.length] The lastIndex used to convert the array.
          * @param {Object} [result] The object into which to store the result.
+         * @returns {Object} The modified result parameter or a new Object instance if one was not provided.
          */
         unpackInterpolationResult : function(array, sourceArray, firstIndex, lastIndex, result) {
             //>>includeStart('debug', pragmas.debug);

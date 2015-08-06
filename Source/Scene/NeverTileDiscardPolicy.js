@@ -15,7 +15,7 @@ define([], function() {
 
     /**
      * Determines if the discard policy is ready to process images.
-     * @returns True if the discard policy is ready to process images; otherwise, false.
+     * @returns {Boolean} True if the discard policy is ready to process images; otherwise, false.
      */
     NeverTileDiscardPolicy.prototype.isReady = function() {
         return true;
