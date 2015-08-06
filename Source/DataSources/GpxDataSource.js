@@ -424,6 +424,53 @@ define([
         return href;
     }
 
+
+    function processPositionGraphics(dataSource, entity) {
+        var label = entity.label;
+        if (!defined(label)) {
+            label = createDefaultLabel();
+            entity.label = label;
+        }
+        label.text = entity.name;
+
+        var billboard = entity.billboard;
+        if (!defined(billboard)) {
+            billboard = createDefaultBillboard();
+            entity.billboard = billboard;
+        }
+
+        if (!defined(billboard.image)) {
+            billboard.image = dataSource._pinBuilder.fromColor(Color.YELLOW, 64);
+        }
+
+        if (defined(billboard.scale)) {
+            var scale = billboard.scale.getValue();
+            if (scale !== 0) {
+                label.pixelOffset = new Cartesian2((scale * 16) + 1, 0);
+            } else {
+                //Minor tweaks to better match Google Earth.
+                label.pixelOffset = undefined;
+                label.horizontalOrigin = undefined;
+            }
+        }
+    }
+
+    function processPathGraphics(dataSource, entity) {
+        var path = entity.path;
+        if (!defined(path)) {
+            path = new PathGraphics();
+            path.leadTime = 0;
+            entity.path = path;
+        }
+
+        //
+        //        var polyline = styleEntity.polyline;
+        //        if (defined(polyline)) {
+        //            path.material = polyline.material;
+        //            path.width = polyline.width;
+        //        }
+    }
+
     function createDefaultBillboard(proxy, sourceUri, uriResolver) {
         var billboard = new BillboardGraphics();
         billboard.width = BILLBOARD_SIZE;
@@ -473,7 +520,7 @@ define([
             text : 'Coordinates'
         },
         elevation : {
-            text : 'Height in meters',
+            text : 'Elevation in meters',
             tag : 'ele'
         },
         time : {
@@ -495,6 +542,10 @@ define([
         source : {
             text : 'Source',
             tag : 'src'
+        },
+        number: {
+            text: 'GPS track/route number',
+            tag: 'number'
         },
         type : {
             text : 'Type',
@@ -602,8 +653,107 @@ define([
         entity.polyline.positions = coordinateTuples;
     }
 
+    //trk represents a track - an ordered list of points describing a path.
     function processTrk(dataSource, geometryNode, entityCollection, sourceUri, uriResolver) {
+        var entity = getOrCreateEntity(geometryNode, entityCollection);
+        entity.description = processDescription(geometryNode, entity, uriResolver);
 
+        var interpolate = true; //TODO interpolate by default?
+        //a list of track segments
+        var trackSegs = queryNodes(geometryNode, 'trkseg', namespaces.gpx);
+        var trackSegInfo;
+        var times;
+        var data;
+        var lastStop;
+        var lastStopPosition;
+        var needDropLine = false;
+        var dropShowProperty = new TimeIntervalCollectionProperty();
+        var availability = new TimeIntervalCollection();
+        var composite = new CompositePositionProperty();
+        for (var i = 0; i < trackSegs.length; i++) {
+            trackSegInfo = processTrkSeg(trackSegs[i]);
+            var positions = trackSegInfo.positions;
+            times = trackSegInfo.times;
+
+            if (interpolate) { //TODO Copied from KML
+                //If we are interpolating, then we need to fill in the end of
+                //the last track and the beginning of this one with a sampled
+                //property.  From testing in Google Earth, this property
+                //is never extruded and always absolute.
+                if (defined(lastStop)) {
+                    addToTrack([lastStop, times[0]], [lastStopPosition, positions[0]], composite, availability, dropShowProperty, false, 'absolute', undefined, false);
+                }
+                lastStop = times[length - 1];
+                lastStopPosition = positions[positions.length - 1];
+            }
+            if (times.length > 0) {
+                addToTrack(times, positions, composite, availability, dropShowProperty, true);
+                //    needDropLine = needDropLine || (canExtrude && extrude);
+            }
+        }
+
+        entity.availability = availability;
+        entity.position = composite;
+        processPositionGraphics(dataSource, entity);
+        processPathGraphics(dataSource, entity);
+        //        if (needDropLine) {
+        //            createDropLine(dataSource, entity, styleEntity);
+        //            entity.polyline.show = dropShowProperty;
+        //        }
+    }
+
+    function addToTrack(times, positions, composite, availability, dropShowProperty, includeEndPoints) {
+        var start = times[0];
+        var stop = times[times.length - 1];
+
+        var data = new SampledPositionProperty();
+        data.addSamples(times, positions);
+
+        composite.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            isStartIncluded : includeEndPoints,
+            isStopIncluded : includeEndPoints,
+            data : data
+        }));
+        availability.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            isStartIncluded : includeEndPoints,
+            isStopIncluded : includeEndPoints
+        }));
+        dropShowProperty.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            isStartIncluded : includeEndPoints,
+            isStopIncluded : includeEndPoints,
+            data : true
+        }));
+    }
+
+    function processTrkSeg(node) {
+        var result = {
+            positions : [],
+            times : []
+        };
+        var trackPoints = queryNodes(node, 'trkpt', namespaces.gpx);
+        var coordinate;
+        var time;
+        for (var i = 0; i < trackPoints.length; i++) {
+
+            coordinate = getCoordinatesString(trackPoints[i]);
+            var position = readCoordinate(coordinate);
+            if (!defined(position)) {
+                throw new DeveloperError('Trkpt: Position Coordinates are required.');
+            }
+            result.positions.push(position);
+
+            time = queryStringValue(node, 'time', namespaces.gpx);
+            if (defined(time)) {
+                result.times.push(JulianDate.fromIso8601(time));
+            }
+        }
+        return result;
     }
 
     var complexTypes = {
