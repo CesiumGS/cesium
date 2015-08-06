@@ -7,6 +7,15 @@ Change Log
 * Added `vertexShaderLoaded`, `fragmentShaderLoaded`, `uniformMapLoaded`, `pickVertexShaderLoaded`, `pickFragmentShaderLoaded`, and `pickUniformMapLoaded` callbacks to the `Model` constructor and `Model.fromGltf`.
 * Added `Queue.peek`.
 
+### 1.13 - 2015-09-01
+
+* Breaking changes
+  *
+* Deprecated
+  *
+* Fix issue where extruded `PolygonGeometry` was always extruding to the ellipsoid surface instead of specified height.
+ 
+
 ### 1.12 - 2015-08-03
 
 * Breaking changes
