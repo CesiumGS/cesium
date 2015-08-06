@@ -619,8 +619,8 @@ define([
         var perPositionHeight = defaultValue(options.perPositionHeight, false);
 
         var extrudedHeight = options.extrudedHeight;
-        var extrude = (defined(extrudedHeight) && (!CesiumMath.equalsEpsilon(height, extrudedHeight, CesiumMath.EPSILON6) || perPositionHeight));
-        if (extrude) {
+        var extrude = defined(extrudedHeight);
+        if (extrude && !perPositionHeight) {
             var h = extrudedHeight;
             extrudedHeight = Math.min(h, height);
             height = Math.max(h, height);
