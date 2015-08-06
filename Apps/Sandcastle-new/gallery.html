@@ -59,54 +59,18 @@
         <div id="gallery-tabs" class="col-sm-12">
             <div role="tabpanel">
                 <ul class="nav nav-tabs" role="tablist">
-                    <li role="presentation" class="active"><a href="#showcases" aria-controls="showcases" role="tab" data-toggle="tab">Showcases</a></li>
-                    <li role="presentation"><a href="#all" aria-controls="all" role="tab" data-toggle="tab">All</a></li>
-                    <li role="presentation"><a href="#tutorials" aria-controls="tutorials" role="tab" data-toggle="tab">Tutorials</a></li>
-                    <li role="presentation"><a href="#geometries" aria-controls="geometries" role="tab" data-toggle="tab">Geometries</a></li>
-                    <li role="presentation"><a href="#beginner" aria-controls="beginner" role="tab" data-toggle="tab">Beginner</a></li>
-                    <li role="presentation"><a href="#datasources" aria-controls="datasources" role="tab" data-toggle="tab">DataSources</a></li>
-                    <li role="presentation"><a href="#czml" aria-controls="czml" role="tab" data-toggle="tab">CZML</a></li>
-                    <li role="presentation"><a style="display:none" href="#search" aria-controls="search" role="tab" data-toggle="tab">Search Result</a></li>
+                    <li role="presentation" class="active"><a href="#all" aria-controls="all" role="tab" data-toggle="tab">All</a></li>
                 </ul>
 
                 <!-- Tab panes -->
                 <div class="tab-content">
-                    <div role="tabpanel" class="tab-pane active" id="showcases">
-                        <div class="row">
-                        </div>
 
+                    <div role="tabpanel" class="tab-pane active" id="all">
+                        <div class="row">
+                            
+                        </div>
                     </div>
 
-                    <div role="tabpanel" class="tab-pane" id="all">
-                        <div class="row">
-                            
-                        </div>
-                    </div>
-                    <div role="tabpanel" class="tab-pane" id="tutorials">
-                        <div class="row">
-                            
-                        </div>
-                    </div>
-                    <div role="tabpanel" class="tab-pane" id="geometries">
-                        <div class="row">
-                            
-                        </div>
-                    </div>
-                    <div role="tabpanel" class="tab-pane" id="beginner">
-                        <div class="row">
-                            
-                        </div>
-                    </div>
-                    <div role="tabpanel" class="tab-pane" id="datasources">
-                        <div class="row">
-                            
-                        </div>
-                    </div>
-                    <div role="tabpanel" class="tab-pane" id="czml">
-                        <div class="row">
-                            
-                        </div>
-                    </div>
                     <div role="tabpanel" class="tab-pane" id="search">
                         <div class="row">
                             <div class="col-md-12">
@@ -128,6 +92,9 @@
 <script src="../../ThirdParty/jquery/dist/jquery.min.js"></script>
 <script src="../../ThirdParty/bootstrap-3.3.2/js/bootstrap.min.js"></script>
 <script type="text/javascript">
+
+    var tabHeader = '<li role="presentation"><a href="{{tablink}}" aria-controls="{{tabname}}" role="tab" data-toggle="tab">{{tabheading}}</a></li>';
+    var tabPanel = '<div role="tabpanel" class="tab-pane" id="{{tabname}}"><div class="row"></div></div>';
     var demoEle = '<div class="col-sm-2"><div class="thumbnail" id="{demo}"><a href="index.html?src={href}"><img src="img/gallery/{image}.jpg" alt="Demo Thumbnail"><div class="caption"><h5>{title}</h5><p class="hidden-xs">{description}</p></div></a></div></div>';
     var gallery_demos = [];
     for(var demo in gallery){
@@ -145,6 +112,17 @@
         ele = ele.replace('{title}', demo).replace('{description}',desc).replace('{href}', encodeURIComponent(demo)).replace('{demo}',demo.replace(/\s+/g,'').replace(/\)/g,'').replace(/\(/g,'')).replace('3', '');
         for(var i = labels.length-1; i>= 0; i--)
         {
+            // Check if the tab already exists
+            if($('.tab-pane#' + labels[i].trim().toLowerCase() + ' .row').length == 0)
+            {
+                var tabName = labels[i].trim().toLowerCase();
+                // Add the tab link
+                var tab = tabHeader.replace('{{tablink}}', '#'+tabName).replace('{{tabname}}', tabName).replace('{{tabheading}}',labels[i].trim());
+                $('ul.nav-tabs').append(tab);
+                // Add the tab tab panel
+                var tabContent = tabPanel.replace('{{tabname}}', tabName);
+                $('div.tab-content').append(tabContent);
+            }
             // get the labels and add the demo to the respective tabs
             $('.tab-pane#'+labels[i].trim().toLowerCase()+' .row').append(ele);
             if(labels[i].trim().toLowerCase() === 'development')
