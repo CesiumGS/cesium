@@ -484,6 +484,33 @@ define([
         }
 
         return function(source) {
+// TODO: generate entire shader at runtime?
+            var diffuse = 'diffuse = u_diffuse;';
+            var diffuseTexture = 'diffuse = texture2D(u_diffuse, v_texcoord0);';
+            if (Context.maximumVertexTextureImageUnits > 0) {
+                source = 'varying vec3 tiles3d_modelColor; \n' + source;
+                source = source.replace(diffuse, 'diffuse.rgb = tiles3d_modelColor;');
+                source = source.replace(diffuseTexture, 'diffuse.rgb = texture2D(u_diffuse, v_texcoord0).rgb * tiles3d_modelColor;');
+            } else {
+                source =
+                    'uniform sampler2D tiles3d_batchTexture; \n' +
+                    'varying vec2 tiles3d_modelSt; \n' +
+                    source;
+
+                var readColor =
+                    'vec4 modelProperties = texture2D(tiles3d_batchTexture, tiles3d_modelSt); \n' +
+                    'if (modelProperties.a == 0.0) { \n' +
+                    '    discard; \n' +
+                    '}';
+
+                source = source.replace(diffuse, readColor + 'diffuse.rgb = modelProperties.rgb;');
+                source = source.replace(diffuseTexture, readColor + 'diffuse.rgb = texture2D(u_diffuse, v_texcoord0).rgb * modelProperties.rgb;');
+            }
+
+            return source;
+
+// TODO: support both "replace" and "highlight" color?  Highlight is commented out below.
+/*
             var renamedSource = ShaderSource.replaceMain(source, 'gltf_main');
             var newMain;
 
@@ -513,6 +540,7 @@ define([
             }
 
             return renamedSource + '\n' + newMain;
+*/
         };
     }
 
