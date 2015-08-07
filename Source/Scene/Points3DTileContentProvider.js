@@ -51,6 +51,8 @@ define([
          */
         this.readyPromise = when.defer();
 
+        this.boundingSphere = contentHeader.boundingSphere;
+
         this._debugColor = Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;
     };
@@ -89,21 +91,19 @@ define([
             var numberOfPoints = view.getUint32(byteOffset, true);
             byteOffset += sizeOfUint32;
 
-            // Skip padding so positions offset is 8-byte aligned for 64-bit doubles
-            byteOffset += sizeOfUint32;
-
             var positionsOffsetInBytes = byteOffset;
-            var positions = new Float64Array(arrayBuffer, positionsOffsetInBytes, numberOfPoints * 3);
+            var positions = new Float32Array(arrayBuffer, positionsOffsetInBytes, numberOfPoints * 3);
 
-            var colorsOffsetInBytes = positionsOffsetInBytes + (numberOfPoints * (3 * Float64Array.BYTES_PER_ELEMENT));
+            var colorsOffsetInBytes = positionsOffsetInBytes + (numberOfPoints * (3 * Float32Array.BYTES_PER_ELEMENT));
             var colors = new Uint8Array(arrayBuffer, colorsOffsetInBytes, numberOfPoints * 3);
 
-            // TODO: use custom load pipeline, e.g., RTC, provide bounding sphere, scene3DOnly?
+            // TODO: use custom load pipeline, e.g., RTC, scene3DOnly?
             // TODO: performance test with 'interleave : true'
             var instance = new GeometryInstance({
                 geometry : new PointGeometry({
                     positionsTypedArray : positions,
-                    colorsTypedArray : colors
+                    colorsTypedArray: colors,
+                    boundingSphere: that.boundingSphere
                 })
             });
             var primitive = new Primitive({
@@ -111,7 +111,8 @@ define([
                 appearance : new PointAppearance(),
                 asynchronous : false,
                 allowPicking : false,
-                cull : false
+                cull : false,
+                rtcCenter : that.boundingSphere.center
             });
 
             that._primitive = primitive;

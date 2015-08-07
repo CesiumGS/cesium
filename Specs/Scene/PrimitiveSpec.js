@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Primitive',
+        'Core/BoundingSphere',
         'Core/BoxGeometry',
         'Core/Cartesian3',
         'Core/ColorGeometryInstanceAttribute',
@@ -32,6 +33,7 @@ defineSuite([
         'Specs/render'
     ], function(
         Primitive,
+        BoundingSphere,
         BoxGeometry,
         Cartesian3,
         ColorGeometryInstanceAttribute,
@@ -416,6 +418,86 @@ defineSuite([
         primitive = primitive && primitive.destroy();
     });
 
+    it('renders RTC', function() {
+        var dimensions = new Cartesian3(400.0, 300.0, 500.0);
+        var positionOnEllipsoid = Cartesian3.fromDegrees(-105.0, 45.0);
+        var boxModelMatrix = Matrix4.multiplyByTranslation(
+                Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
+                new Cartesian3(0.0, 0.0, dimensions.z * 0.5), new Matrix4());
+
+        var boxGeometry = BoxGeometry.createGeometry(BoxGeometry.fromDimensions({
+            vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+            dimensions : dimensions
+        }));
+
+        var positions = boxGeometry.attributes.position.values;
+        var newPositions = new Float32Array(positions.length);
+        for (var i = 0; i < positions.length; ++i) {
+            newPositions[i] = positions[i];
+        }
+        boxGeometry.attributes.position.values = newPositions;
+        boxGeometry.attributes.position.componentDatatype = ComponentDatatype.FLOAT;
+
+        BoundingSphere.transform(boxGeometry.boundingSphere, boxModelMatrix, boxGeometry.boundingSphere);
+
+        var boxGeometryInstance = new GeometryInstance({
+            geometry : boxGeometry,
+            attributes : {
+                color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 0.5)
+            }
+        });
+
+        var primitive = new Primitive({
+            geometryInstances : boxGeometryInstance,
+            appearance : new PerInstanceColorAppearance({
+                closed: true
+            }),
+            asynchronous : false,
+            allowPicking : false,
+            rtcCenter : boxGeometry.boundingSphere.center
+        });
+
+        frameState.scene3DOnly = true;
+        frameState.camera.viewBoundingSphere(boxGeometry.boundingSphere);
+        us.update(context, frameState);
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+    });
+
+    it('RTC throws with more than one instance', function() {
+        expect(function() {
+            var primitive = new Primitive({
+                geometryInstances : [rectangleInstance1, rectangleInstance2],
+                appearance : new PerInstanceColorAppearance({
+                    closed: true
+                }),
+                asynchronous : false,
+                allowPicking : false,
+                rtcCenter : Cartesian3.ZERO
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('RTC throws if the scene is not 3D only', function() {
+        var primitive = new Primitive({
+            geometryInstances : rectangleInstance1,
+            appearance : new PerInstanceColorAppearance({
+                closed: true
+            }),
+            asynchronous : false,
+            allowPicking : false,
+            rtcCenter : Cartesian3.ZERO
+        });
+
+        expect(function() {
+            primitive.update(context, frameState, []);
+        }).toThrowDeveloperError();
+    });
+
     it('updates model matrix for one instance in 3D', function() {
         var primitive = new Primitive({
             geometryInstances : rectangleInstance1,
@@ -426,7 +508,7 @@ defineSuite([
         var commands = [];
         primitive.update(context, frameState, commands);
         expect(commands.length).toEqual(1);
-        expect(commands[0].modelMatrix).toEqual(Matrix4.IDENTITY);
+        expect(commands[0].modelMatrix).toEqual(rectangleInstance1.modelMatrix);
 
         var modelMatrix = Matrix4.fromUniformScale(10.0);
         primitive.modelMatrix = modelMatrix;
