@@ -137,7 +137,7 @@ define([
      * @param {Color} [result] The object onto which to store the result.
      * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
      *
-     * @example var translucentRed = Cesium.Color.fromColor(Cesium.Color.RED, 0.9);
+     * @example var translucentRed = Cesium.Color.fromAlpha(Cesium.Color.RED, 0.9);
      */
     Color.fromAlpha = function(color, alpha, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -644,7 +644,7 @@ define([
      * @returns {Color} The modified result parameter.
      *
      * @example
-     * var brightBlue = Cesium.Color.BLUE.brighten(0.5, new Color());
+     * var brightBlue = Cesium.Color.BLUE.brighten(0.5, new Cesium.Color());
      */
     Color.prototype.brighten = function(magnitude, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -675,7 +675,7 @@ define([
      * @returns {Color} The modified result parameter.
      *
      * @example
-     * var darkBlue = Cesium.Color.BLUE.darken(0.5, new Color());
+     * var darkBlue = Cesium.Color.BLUE.darken(0.5, new Cesium.Color());
      */
     Color.prototype.darken = function(magnitude, result) {
         //>>includeStart('debug', pragmas.debug);
