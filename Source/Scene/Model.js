@@ -36,6 +36,7 @@ define([
         '../ThirdParty/gltfDefaults',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
+        './decompressOpen3DGC',
         './getModelAccessor',
         './JobType',
         './ModelAnimationCache',
@@ -82,6 +83,7 @@ define([
         gltfDefaults,
         Uri,
         when,
+        decompressOpen3DGC,
         getModelAccessor,
         JobType,
         ModelAnimationCache,
@@ -1437,34 +1439,58 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    var decompressTaskProcessor = new TaskProcessor('decompressMesh');
+    var open3dgcTaskProcessor = new TaskProcessor('decompressOpen3DGC');
 
-    function createDecompressedView(model) {
-        var loadResources = model._loadResources;
-        var decompressedViews = model.gltf.extensions.mesh_compression_open3dgc.decompressedViews;
+    function decompressOpen3dgcSync(buffer, decompressedView) {
+        var compressedBuffer = getSubarray(buffer, decompressedView.byteOffset, decompressedView.byteLength);
 
-        var name = loadResources.decompressedViewsToCreate.dequeue();
-        var decompressedView = decompressedViews[name];
+        var decompressedArrayBuffer = decompressOpen3DGC(decompressedView.decompressedByteLength, compressedBuffer);
 
-        var buffer = loadResources.buffers[decompressedView.buffer];
+        return when(decompressedArrayBuffer);
+    }
+
+    function decompressOpen3dgcAsync(buffer, decompressedView) {
         var compressedBuffer = copySubarray(buffer, decompressedView.byteOffset, decompressedView.byteLength);
 
-        var decompressPromise = decompressTaskProcessor.scheduleTask({
+        return open3dgcTaskProcessor.scheduleTask({
             decompressedByteLength : decompressedView.decompressedByteLength,
             compressedBuffer : compressedBuffer
         }, [compressedBuffer.buffer]);
+    }
 
-        if (!defined(decompressPromise)) {
-            loadResources.decompressedViewsToCreate.enqueue(name);
-            return;
+    function decompressOpen3dgc(model, name) {
+        var decompressedViews = model.gltf.extensions.mesh_compression_open3dgc.decompressedViews;
+
+        var loadResources = model._loadResources;
+        var decompressedView = decompressedViews[name];
+        var buffer = loadResources.buffers[decompressedView.buffer];
+
+        var forceSynchronous = false;
+
+        if (forceSynchronous) {
+            return decompressOpen3dgcSync(buffer, decompressedView);
         }
+
+        var decompressPromise = decompressOpen3dgcAsync(buffer, decompressedView);
+        if (defined(decompressPromise)) {
+            return when(decompressPromise).then(function(result) {
+                return result.decompressedArrayBuffer;
+            });
+        } else {
+            return decompressOpen3dgcSync(buffer, decompressedView);
+        }
+    }
+
+    function createDecompressedView(model) {
+        var loadResources = model._loadResources;
 
         loadResources.decompressionInFlight++;
 
-        when(decompressPromise).then(function(result) {
-            var decompressedArrayBuffer = result.decompressedArrayBuffer;
-            loadResources.decompressedViews[name] = new Uint8Array(decompressedArrayBuffer);
+        var name = loadResources.decompressedViewsToCreate.dequeue();
 
+        var decompressPromise = decompressOpen3dgc(model, name);
+        decompressPromise.then(function(decompressedArrayBuffer) {
+            loadResources.decompressedViews[name] = new Uint8Array(decompressedArrayBuffer);
             loadResources.decompressionInFlight--;
         });
     }

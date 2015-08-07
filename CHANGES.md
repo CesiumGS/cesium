@@ -6,7 +6,6 @@ Change Log
 * Added `incrementallyLoadTextures` to `Model`.  This is `true` by default so a model's textures incrementally appear as they are loaded.
 * Added `vertexShaderLoaded`, `fragmentShaderLoaded`, `uniformMapLoaded`, `pickVertexShaderLoaded`, `pickFragmentShaderLoaded`, and `pickUniformMapLoaded` callbacks to the `Model` constructor and `Model.fromGltf`.
 * Added `Queue.peek`.
-* Added support for glTF compression using the `mesh_compression_open3dgc` glTF extension.
 
 ### 1.13 - 2015-09-01
 
@@ -15,7 +14,7 @@ Change Log
 * Deprecated
   *
 * Fix issue where extruded `PolygonGeometry` was always extruding to the ellipsoid surface instead of specified height.
- 
+* Added support for glTF compression using the `mesh_compression_open3dgc` glTF extension.
 
 ### 1.12 - 2015-08-03
 
