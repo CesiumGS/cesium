@@ -1,10 +1,8 @@
 /*global define*/
 define([
-        '../ThirdParty/o3dgc',
-        './createTaskProcessorWorker'
+        '../ThirdParty/o3dgc'
     ], function(
-        o3dgc,
-        createTaskProcessorWorker ) {
+        o3dgc) {
     "use strict";
 
     function alignOffset(offset, alignment) {
@@ -13,12 +11,8 @@ define([
         return (Math.ceil(offset / alignment) * alignment) | 0;
     }
 
-    function decompressMesh(parameters, transferableObjects) {
-        var decompressedByteLength = parameters.decompressedByteLength;
-        var compressedBuffer = parameters.compressedBuffer;
-
+    function decompressOpen3DGC(decompressedByteLength, compressedBuffer) {
         var decompressedArrayBuffer = new ArrayBuffer(decompressedByteLength);
-        transferableObjects.push(decompressedArrayBuffer);
 
         // Mostly copied from https://github.com/amd/rest3d/blob/master/server/o3dgc/js/index.php
 
@@ -78,10 +72,8 @@ define([
         //console.log("DecodePlayload: " + timer.GetElapsedTime());
         //console.log(decoder.GetStats());
 
-        return {
-            decompressedArrayBuffer : decompressedArrayBuffer
-        };
+        return decompressedArrayBuffer;
     }
 
-    return createTaskProcessorWorker(decompressMesh);
+    return decompressOpen3DGC;
 });
