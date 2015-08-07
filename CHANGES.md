@@ -8,6 +8,15 @@ Change Log
 * Added `Queue.peek`.
 * Added support for glTF compression using the `mesh_compression_open3dgc` glTF extension.
 
+### 1.13 - 2015-09-01
+
+* Breaking changes
+  *
+* Deprecated
+  *
+* Fix issue where extruded `PolygonGeometry` was always extruding to the ellipsoid surface instead of specified height.
+ 
+
 ### 1.12 - 2015-08-03
 
 * Breaking changes
