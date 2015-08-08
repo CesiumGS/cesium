@@ -41,6 +41,7 @@ define([
         './EntityCollection',
         './LabelGraphics',
         './PathGraphics',
+        './PointGraphics',
         './PolygonGraphics',
         './PolylineGraphics',
         './PolylineOutlineMaterialProperty',
@@ -93,6 +94,7 @@ define([
         EntityCollection,
         LabelGraphics,
         PathGraphics,
+        PointGraphics,
         PolygonGraphics,
         PolylineGraphics,
         PolylineOutlineMaterialProperty,
@@ -508,6 +510,13 @@ define([
         return polyline;
     }
 
+    function createDefaultPoint() {
+        var point = new PointGraphics();
+        point.pixelSize = 15;
+        point.color = Color.YELLOW;
+        return point;
+    }
+
     // This is a list of the Optional Description Information:
     //  <name> GPS waypoint name of the waypoint
     //  <cmt> GPS comment of the waypoint
@@ -765,7 +774,24 @@ define([
         return result;
     }
 
+    //TODO check for points inside other complexTypes
+    function processPt(dataSource, geometryNode, entityCollection, sourceUri, uriResolver) {
+        var coordinatesString = getCoordinatesString(geometryNode);
+        var position = readCoordinate(coordinatesString);
+        if (!defined(position)) {
+            throw new DeveloperError('Position Coordinates are required.');
+        }
+
+        var entity = getOrCreateEntity(geometryNode, entityCollection);
+        entity.position = position;
+        entity.point = createDefaultPoint();
+    }
+
+    //TODO
+    //processPtSeg, polygons/polylines?
+
     var complexTypes = {
+        pt : processPt,
         wpt : processWpt,
         rte : processRte,
         trk : processTrk
