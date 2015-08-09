@@ -2,6 +2,8 @@
 defineSuite(['DataSources/GpxDataSource',
              'Core/Cartesian3',
              'Core/DeveloperError',
+             'Core/RequestErrorEvent',
+             'Core/RuntimeError',
              'DataSources/EntityCollection',
              'Core/loadXML',
              'Core/Event',
@@ -10,6 +12,8 @@ defineSuite(['DataSources/GpxDataSource',
                     GpxDataSource,
                     Cartesian3,
                     DeveloperError,
+                    RequestErrorEvent,
+                    RuntimeError,
                     EntityCollection,
                     loadXML,
                     Event,
@@ -42,6 +46,18 @@ defineSuite(['DataSources/GpxDataSource',
         return dataSource.load('Data/GPX/simple.gpx').then(function(source) {
             expect(source).toBe(dataSource);
             expect(source.entities.values.length).toEqual(1);
+        });
+    });
+
+    it('load rejects nonexistent URL', function() {
+        return GpxDataSource.load('test.invalid').otherwise(function(e) {
+            expect(e).toBeInstanceOf(RequestErrorEvent);
+        });
+    });
+
+    it('load rejects loading non-GPX URL', function() {
+        return GpxDataSource.load('Data/Images/Blue.png').otherwise(function(e) {
+            expect(e).toBeInstanceOf(RuntimeError);
         });
     });
 
