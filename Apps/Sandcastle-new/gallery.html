@@ -13,8 +13,8 @@
     <link rel="stylesheet" href="../../ThirdParty/bootstrap-3.3.2/css/bootstrap.min.css">
     <!-- <link rel="stylesheet" href="css/main.css"> -->
     <style>
-        .col-sm-2{
-            min-height: 365px;
+        .col-sm-3{
+            min-height: 345px;
         }
 
         .tab-pane{
@@ -96,23 +96,22 @@
 
     var tabHeader = '<li role="presentation"><a href="{{tablink}}" aria-controls="{{tabname}}" role="tab" data-toggle="tab">{{tabheading}}</a></li>';
     var tabPanel = '<div role="tabpanel" class="tab-pane" id="{{tabname}}"><div class="row"></div></div>';
-    var demoEle = '<div class="col-sm-2"><div class="thumbnail" id="{demo}"><a href="index.html?src={href}"><img src="img/gallery/{image}.jpg" alt="Demo Thumbnail"><div class="caption"><h5>{title}</h5><p class="hidden-xs">{description}</p></div></a></div></div>';
+    var demoEle = '<div class="col-sm-3"><div class="thumbnail" id="{demo}"><a href="index.html?src={href}"><img src="img/gallery/{image}.jpg" alt="Demo Thumbnail"><div class="caption"><h5>{title}</h5><p class="hidden-xs">{description}</p></div></a></div></div>';
     var gallery_demos = [];
     var scriptCodeRegex = /\/\/Sandcastle_Begin\s*([\s\S]*)\/\/Sandcastle_End/;
 
-    for(var demo in gallery){
-        gallery_demos[demo.id] = {};
+    for(var j = 0; j< gallery.length; j++){
         var development = false;
-        var demoData = gallery[demo];
+        var demoData = gallery[j];
         var demoName = demoData.name;
         var label = demoData.labels;
         var desc = demoData.description;
         var id = demoData.id;
         requestCode(demoName, id);
         var labels = label.split(',');
-        var imgName = demo.substring(demo.indexOf('/')+1);
+        var imgName = demoName.substring(demoName.indexOf('/')+1);
         var ele  = demoEle.replace('{image}', imgName);
-        ele = ele.replace('{title}', demo).replace('{description}',desc).replace('{href}', encodeURIComponent(demo)).replace('{demo}',demo.replace(/\s+/g,'').replace(/\)/g,'').replace(/\(/g,'')).replace('3', '');
+        ele = ele.replace('{title}', demoName).replace('{description}',desc).replace('{href}', encodeURIComponent(demoName)).replace('{demo}',demoName.replace(/\s+/g,'').replace(/\)/g,'').replace(/\(/g,'').replace('3', ''));
         for(var i = labels.length-1; i>= 0; i--)
         {
             // Check if the tab already exists
@@ -188,7 +187,7 @@
             }
         } else {
             $('#gallery-tabs a[href="#search"]').hide();
-            $('#gallery-tabs a[href="#showcases"]').tab('show');
+            $('#gallery-tabs a[href="#all"]').tab('show');
         }
         if (numDemosShown) {
             $('.error-msg').hide();

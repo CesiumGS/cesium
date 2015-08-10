@@ -389,7 +389,11 @@ require({
 
   // Load the demo code
   function loadDemoCode(){
-    var demo = gallery[demoName];
+    for(i = gallery.length-1; i>= 0; i--){
+      if(gallery[i].name === demoName)
+        break;
+    }
+    var demo = gallery[i];
     requestDemo(demo.name + '.html').done(function(value){
       var code = value;
       var parser = new DOMParser();
