@@ -182,13 +182,13 @@ function setupLayers() {
     addAdditionalLayerOption(
             'TileMapService Image',
             new Cesium.TileMapServiceImageryProvider({
-                url : '../images/cesium_maptiler/Cesium_Logo_Color'
+                url : 'img/cesium_maptiler/Cesium_Logo_Color'
             }),
             0.2);
     addAdditionalLayerOption(
             'Single Image',
             new Cesium.SingleTileImageryProvider({
-                url : '../images/Cesium_Logo_overlay.png',
+                url : 'img/Cesium_Logo_overlay.png',
                 rectangle : Cesium.Rectangle.fromDegrees(-115.0, 38.0, -107, 39.75)
             }),
             1.0);

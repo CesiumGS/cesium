@@ -63,7 +63,7 @@ for (var y = 0; y < gridHeight; ++y) {
         
         billboardCollection.add({
             position : ellipsoid.cartographicToCartesian(position),
-            image : '../images/facility.gif',
+            image : 'img/facility.gif',
             heightReference : Cesium.HeightReference.CLAMP_TO_GROUND
         });
     }
@@ -75,7 +75,7 @@ Sandcastle.addToolbarButton('Add billboard', function() {
     if (!Cesium.defined(billboard)) {
         billboard = billboardCollection.add({
             position : ellipsoid.cartographicToCartesian(new Cesium.Cartographic(centerLongitude, centerLatitude, 1000.0)),
-            image : '../images/Cesium_Logo_overlay.png',
+            image : 'img/Cesium_Logo_overlay.png',
             scale : 0.7,
             heightReference : Cesium.HeightReference.RELATIVE_TO_GROUND
         });
