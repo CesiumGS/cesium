@@ -15,7 +15,7 @@ define([], function() {
 
     /**
      * Determines if the discard policy is ready to process images.
-     * @returns True if the discard policy is ready to process images; otherwise, false.
+     * @returns {Boolean} True if the discard policy is ready to process images; otherwise, false.
      */
     NeverTileDiscardPolicy.prototype.isReady = function() {
         return true;
@@ -24,8 +24,8 @@ define([], function() {
     /**
      * Given a tile image, decide whether to discard that image.
      *
-     * @param {Image|Promise} image An image, or a promise that will resolve to an image.
-     * @returns A promise that will resolve to true if the tile should be discarded.
+     * @param {Image|Promise.<Image>} image An image, or a promise that will resolve to an image.
+     * @returns {Promise.<Boolean>} A promise that will resolve to true if the tile should be discarded.
      */
     NeverTileDiscardPolicy.prototype.shouldDiscardImage = function(image) {
         return false;

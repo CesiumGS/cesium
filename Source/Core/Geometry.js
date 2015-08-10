@@ -114,7 +114,7 @@ define([
          * geometry.attributes.position = new Cesium.GeometryAttribute({
          *   componentDatatype : Cesium.ComponentDatatype.FLOAT,
          *   componentsPerAttribute : 3,
-         *   values : new Float32Array()
+         *   values : new Float32Array(0)
          * });
          */
         this.attributes = options.attributes;
@@ -164,7 +164,7 @@ define([
      * Computes the number of vertices in a geometry.  The runtime is linear with
      * respect to the number of attributes in a vertex, not the number of vertices.
      *
-     * @param {Cartesian3} geometry The geometry.
+     * @param {Geometry} geometry The geometry.
      * @returns {Number} The number of vertices in the geometry.
      *
      * @example

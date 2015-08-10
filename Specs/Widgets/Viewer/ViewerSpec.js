@@ -24,6 +24,7 @@ defineSuite([
         'Widgets/Animation/Animation',
         'Widgets/BaseLayerPicker/BaseLayerPicker',
         'Widgets/BaseLayerPicker/ProviderViewModel',
+        'Widgets/NavigationHelpButton/NavigationHelpButton',
         'Widgets/CesiumWidget/CesiumWidget',
         'Widgets/FullscreenButton/FullscreenButton',
         'Widgets/Geocoder/Geocoder',
@@ -56,6 +57,7 @@ defineSuite([
         Animation,
         BaseLayerPicker,
         ProviderViewModel,
+        NavigationHelpButton,
         CesiumWidget,
         FullscreenButton,
         Geocoder,
@@ -109,6 +111,7 @@ defineSuite([
         expect(viewer.homeButton).toBeInstanceOf(HomeButton);
         expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
         expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.navigationHelpButton).toBeInstanceOf(NavigationHelpButton);
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
@@ -148,6 +151,7 @@ defineSuite([
         expect(viewer.homeButton).toBeUndefined();
         expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
         expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.navigationHelpButton).toBeInstanceOf(NavigationHelpButton);
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
@@ -166,6 +170,7 @@ defineSuite([
         expect(viewer.homeButton).toBeInstanceOf(HomeButton);
         expect(viewer.sceneModePicker).toBeUndefined();
         expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.navigationHelpButton).toBeInstanceOf(NavigationHelpButton);
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
@@ -184,6 +189,26 @@ defineSuite([
         expect(viewer.homeButton).toBeInstanceOf(HomeButton);
         expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
         expect(viewer.baseLayerPicker).toBeUndefined();
+        expect(viewer.navigationHelpButton).toBeInstanceOf(NavigationHelpButton);
+        expect(viewer.animation).toBeInstanceOf(Animation);
+        expect(viewer.timeline).toBeInstanceOf(Timeline);
+        expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        expect(viewer.selectionIndicator).toBeInstanceOf(SelectionIndicator);
+        viewer.resize();
+        viewer.render();
+    });
+
+    it('can shut off NavigationHelpButton', function() {
+        viewer = new Viewer(container, {
+            navigationHelpButton : false
+        });
+        expect(viewer.container).toBe(container);
+        expect(viewer.cesiumWidget).toBeInstanceOf(CesiumWidget);
+        expect(viewer.geocoder).toBeInstanceOf(Geocoder);
+        expect(viewer.homeButton).toBeInstanceOf(HomeButton);
+        expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
+        expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.navigationHelpButton).toBeUndefined();
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
@@ -202,6 +227,7 @@ defineSuite([
         expect(viewer.homeButton).toBeInstanceOf(HomeButton);
         expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
         expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.navigationHelpButton).toBeInstanceOf(NavigationHelpButton);
         expect(viewer.animation).toBeUndefined();
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
@@ -220,6 +246,7 @@ defineSuite([
         expect(viewer.homeButton).toBeInstanceOf(HomeButton);
         expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
         expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.navigationHelpButton).toBeInstanceOf(NavigationHelpButton);
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeUndefined();
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
@@ -238,6 +265,7 @@ defineSuite([
         expect(viewer.homeButton).toBeInstanceOf(HomeButton);
         expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
         expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.navigationHelpButton).toBeInstanceOf(NavigationHelpButton);
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeUndefined();
@@ -257,6 +285,7 @@ defineSuite([
         expect(viewer.homeButton).toBeInstanceOf(HomeButton);
         expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
         expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.navigationHelpButton).toBeInstanceOf(NavigationHelpButton);
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeUndefined();
         expect(viewer.fullscreenButton).toBeUndefined();
@@ -277,6 +306,7 @@ defineSuite([
         expect(viewer.homeButton).toBeInstanceOf(HomeButton);
         expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
         expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.navigationHelpButton).toBeInstanceOf(NavigationHelpButton);
         expect(viewer.animation).toBeUndefined(Animation);
         expect(viewer.timeline).toBeUndefined();
         expect(viewer.fullscreenButton).toBeUndefined();
@@ -295,6 +325,7 @@ defineSuite([
         expect(viewer.homeButton).toBeInstanceOf(HomeButton);
         expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
         expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.navigationHelpButton).toBeInstanceOf(NavigationHelpButton);
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
@@ -313,6 +344,7 @@ defineSuite([
         expect(viewer.homeButton).toBeInstanceOf(HomeButton);
         expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
         expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.navigationHelpButton).toBeInstanceOf(NavigationHelpButton);
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
@@ -372,13 +404,6 @@ defineSuite([
         expect(contextAttributes.antialias).toEqual(webglOptions.antialias);
         expect(contextAttributes.premultipliedAlpha).toEqual(webglOptions.premultipliedAlpha);
         expect(contextAttributes.preserveDrawingBuffer).toEqual(webglOptions.preserveDrawingBuffer);
-    });
-
-    it('can enable Order Independent Translucency', function() {
-        viewer = new Viewer(container, {
-            orderIndependentTranslucency : true
-        });
-        expect(viewer.scene.orderIndependentTranslucency).toBe(true);
     });
 
     it('can disable Order Independent Translucency', function() {

@@ -133,6 +133,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {Matrix4} [result] The object into which to store the result.
+     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      */
     Matrix4.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -232,7 +233,7 @@ define([
      *
      * @param {Number[]} values The column-major order array.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
      */
     Matrix4.fromColumnMajorArray = function(values, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -250,7 +251,7 @@ define([
      *
      * @param {Number[]} values The row-major order array.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
      */
     Matrix4.fromRowMajorArray = function(values, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -291,7 +292,7 @@ define([
      * @param {Matrix3} rotation The upper left portion of the matrix representing the rotation.
      * @param {Cartesian3} [translation=Cartesian3.ZERO] The upper right portion of the matrix representing the translation.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
      */
     Matrix4.fromRotationTranslation = function(rotation, translation, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -336,7 +337,7 @@ define([
      * @param {Quaternion} rotation The rotation transformation.
      * @param {Cartesian3} scale The non-uniform scale transformation.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
      *
      * @example
      * var result = Cesium.Matrix4.fromTranslationQuaternionRotationScale(
@@ -414,7 +415,7 @@ define([
      *
      * @param {Cartesian3} translation The upper right portion of the matrix representing the translation.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
      *
      * @see Matrix4.multiplyByTranslation
      */
@@ -433,7 +434,7 @@ define([
      *
      * @param {Cartesian3} scale The x, y, and z scale factors.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
      *
      * @example
      * // Creates
@@ -482,7 +483,7 @@ define([
      *
      * @param {Number} scale The uniform scale factor.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
      *
      * @example
      * // Creates
@@ -534,7 +535,7 @@ define([
      *
      * @param {Camera} camera The camera to use.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
      */
     Matrix4.fromCamera = function(camera, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -629,7 +630,7 @@ define([
       * @param {Number} near The distance to the near plane in meters.
       * @param {Number} far The distance to the far plane in meters.
       * @param {Matrix4} result The object in which the result will be stored.
-      * @returns The modified result parameter.
+      * @returns {Matrix4} The modified result parameter.
       *
       * @exception {DeveloperError} fovY must be in [0, PI).
       * @exception {DeveloperError} aspectRatio must be greater than zero.
@@ -691,7 +692,7 @@ define([
     * @param {Number} near The distance to the near plane in meters.
     * @param {Number} far The distance to the far plane in meters.
     * @param {Matrix4} result The object in which the result will be stored.
-    * @returns The modified result parameter.
+    * @returns {Matrix4} The modified result parameter.
     */
     Matrix4.computeOrthographicOffCenter = function(left, right, bottom, top, near, far, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -758,7 +759,7 @@ define([
      * @param {Number} near The distance to the near plane in meters.
      * @param {Number} far The distance to the far plane in meters.
      * @param {Matrix4} result The object in which the result will be stored.
-     * @returns The modified result parameter.
+     * @returns {Matrix4} The modified result parameter.
      */
     Matrix4.computePerspectiveOffCenter = function(left, right, bottom, top, near, far, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -822,7 +823,7 @@ define([
      * @param {Number} near The distance to the near plane in meters.
      * @param {Number} far The distance to the far plane in meters.
      * @param {Matrix4} result The object in which the result will be stored.
-     * @returns The modified result parameter.
+     * @returns {Matrix4} The modified result parameter.
      */
     Matrix4.computeInfinitePerspectiveOffCenter = function(left, right, bottom, top, near, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -880,7 +881,7 @@ define([
      * @param {Number}[nearDepthRange=0.0] The near plane distance in window coordinates.
      * @param {Number}[farDepthRange=1.0] The far plane distance in window coordinates.
      * @param {Matrix4} result The object in which the result will be stored.
-     * @returns The modified result parameter.
+     * @returns {Matrix4} The modified result parameter.
      *
      * @example
      * // Create viewport transformation using an explicit viewport and depth range.
@@ -2543,6 +2544,17 @@ define([
                                                 0.0, 1.0, 0.0, 0.0,
                                                 0.0, 0.0, 1.0, 0.0,
                                                 0.0, 0.0, 0.0, 1.0));
+
+    /**
+     * An immutable Matrix4 instance initialized to the zero matrix.
+     *
+     * @type {Matrix4}
+     * @constant
+     */
+    Matrix4.ZERO = freezeObject(new Matrix4(0.0, 0.0, 0.0, 0.0,
+                                            0.0, 0.0, 0.0, 0.0,
+                                            0.0, 0.0, 0.0, 0.0,
+                                            0.0, 0.0, 0.0, 0.0));
 
     /**
      * The index into Matrix4 for column 0, row 0.

@@ -12,6 +12,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/FeatureDetection',
         '../Core/getStringFromTypedArray',
         '../Core/IndexDatatype',
         '../Core/loadArrayBuffer',
@@ -55,6 +56,7 @@ define([
         destroyObject,
         DeveloperError,
         Event,
+        FeatureDetection,
         getStringFromTypedArray,
         IndexDatatype,
         loadArrayBuffer,
@@ -87,6 +89,12 @@ define([
         SceneMode) {
     "use strict";
     /*global WebGLRenderingContext*/
+
+    // Bail out if the browser doesn't support typed arrays, to prevent the setup function
+    // from failing, since we won't be able to create a WebGL context anyway.
+    if (!FeatureDetection.supportsTypedArrays()) {
+        return {};
+    }
 
     var yUpToZUp = Matrix4.fromRotationTranslation(Matrix3.fromRotationX(CesiumMath.PI_OVER_TWO));
     var boundingSphereCartesian3Scratch = new Cartesian3();
@@ -423,7 +431,7 @@ define([
          * @default false
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
-        this._debugShowBoudingVolume = false;
+        this._debugShowBoundingVolume = false;
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -632,7 +640,7 @@ define([
          * </p>
          *
          * @memberof Model.prototype
-         * @type {Promise}
+         * @type {Promise.<Model>}
          * @readonly
          *
          * @example
@@ -792,7 +800,7 @@ define([
      * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
      * var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
      *
-     * var model = scene.primitives.add(Model.fromGltf({
+     * var model = scene.primitives.add(Cesium.Model.fromGltf({
      *   url : './duck/duck.gltf',
      *   show : true,                     // default
      *   modelMatrix : modelMatrix,

@@ -1,19 +1,73 @@
 Change Log
 ==========
 
+### 1.13 - 2015-09-01
+
+* Breaking changes
+  *
+* Deprecated
+  *
+* Fix issue where extruded `PolygonGeometry` was always extruding to the ellipsoid surface instead of specified height.
+ 
+
+### 1.12 - 2015-08-03
+
+* Breaking changes
+  * Remove deprecated `ObjectOrientedBoundingBox`. Use `OrientedBoundingBox` instead.
+* Added `MapboxImageryProvider` to load imagery from [Mapbox](https://www.mapbox.com).
+* Added `maximumHeight` option to `Viewer.flyTo`. [#2868](https://github.com/AnalyticalGraphicsInc/cesium/issues/2868)
+* Added picking support to `UrlTemplateImageryProvider`.
+* Added ArcGIS token-based authentication support to `ArcGisMapServerImageryProvider`.
+* Added proxy support to `ArcGisMapServerImageryProvider` for `pickFeatures` requests.
+* The default `CTRL + Left Click Drag` mouse behavior is now duplicated for `CTRL + Right Click Drag` for better compatibility with Firefox on Mac OS [#2872](https://github.com/AnalyticalGraphicsInc/cesium/pull/2913).
+* Fixed incorrect texture coordinates for `WallGeometry` [#2872](https://github.com/AnalyticalGraphicsInc/cesium/issues/2872)
+* Fixed `WallGeometry` bug that caused walls covering a short distance not to render. [#2897](https://github.com/AnalyticalGraphicsInc/cesium/issues/2897)
+* Fixed `PolygonGeometry` clockwise winding order bug. 
+* Fixed extruded `RectangleGeometry` bug for small heights. [#2823](https://github.com/AnalyticalGraphicsInc/cesium/issues/2823)
+* Fixed `BillboardCollection` bounding sphere for billboards with a non-center vertical origin. [#2894](https://github.com/AnalyticalGraphicsInc/cesium/issues/2894)
+* Fixed a bug that caused `Camera.positionCartographic` to be incorrect. [#2838](https://github.com/AnalyticalGraphicsInc/cesium/issues/2838)
+* Fixed calling `Scene.pickPosition` after calling `Scene.drillPick`. [#2813](https://github.com/AnalyticalGraphicsInc/cesium/issues/2813)
+* The globe depth is now rendered during picking when `Scene.depthTestAgainstTerrain` is `true` so objects behind terrain are not picked.
+* Fixed Cesium.js failing to parse in IE 8 and 9. While Cesium doesn't work in IE versions less than 11, this allows for more graceful error handling.
+
 ### 1.11 - 2015-07-01
+
+* Breaking changes
+  * Removed `Scene.fxaaOrderIndependentTranslucency`, which was deprecated in 1.10. Use `Scene.fxaa` which is now `true` by default.
+  * Removed `Camera.clone`, which was deprecated in 1.10.
 * Deprecated
   * The STK World Terrain url `cesiumjs.org/stk-terrain/world` has been deprecated, use `assets.agi.com/stk-terrain/world` instead.  A redirect will be in place until 1.14.
-* Improved the algorithm that `Camera.viewRectangle` uses to select the position of the camera, so that the specified rectangle is now better centered on the screen [#2764](https://github.com/AnalyticalGraphicsInc/cesium/issues/2764).
-* The performance statistics displayed by setting `scene.debugShowFramesPerSecond` to `true` can now be styled using the `cesium-performanceDisplay` CSS classes in `shared.css` [#2779](https://github.com/AnalyticalGraphicsInc/cesium/issues/2779).
-* Fixed a crash when `viewer.zoomTo` or `viewer.flyTo` were called immediately before or during a scene morph [#2775](https://github.com/AnalyticalGraphicsInc/cesium/issues/2775).
-* Fixed an issue where `Camera` functions would throw an exception if used from within a `Scene.morphComplete` callback [#2776](https://github.com/AnalyticalGraphicsInc/cesium/issues/2776).
-* `Model` can now load Binary glTF from a Uint8Array.
-* Added a new camera mode for horizon views. When the camera is looking at the horizon and a point on terrain above the camera is picked, the camera moves in the plane containing the camera position, up and right vectors.
-* Added `UrlTemplateImageryProvider`.  This new imagery provider allows access to a wide variety of imagery sources, including OpenStreetMap, TMS, WMTS, WMS, WMS-C, and various custom schemes, by specifying a URL template to use to request imagery tiles.
+  * Deprecated `AxisAlignedBoundingBox.intersect` and `BoundingSphere.intersect`.  These will be removed in 1.13.  Use `AxisAlignedBoundingBox.intersectPlane` and `BoundingSphere.intersectPlane` instead.
+  * Deprecated `ObjectOrientedBoundingBox`.  It will be removed in 1.12.  Use `OrientedBoundingBox` instead.
+* Improved camera flights. [#2825](https://github.com/AnalyticalGraphicsInc/cesium/pull/2825)
 * The camera now zooms to the point under the mouse cursor.
+* Added a new camera mode for horizon views. When the camera is looking at the horizon and a point on terrain above the camera is picked, the camera moves in the plane containing the camera position, up and right vectors.
+* Improved terrain and imagery performance and reduced tile loading by up to 50%, depending on the camera view, by using the new `OrientedBoundingBox` for view frustum culling.  See [Terrain Culling with Oriented Bounding Boxes](http://cesiumjs.org/2015/06/24/Oriented-Bounding-Boxes/).
+* Added `UrlTemplateImageryProvider`.  This new imagery provider allows access to a wide variety of imagery sources, including OpenStreetMap, TMS, WMTS, WMS, WMS-C, and various custom schemes, by specifying a URL template to use to request imagery tiles.
+* Fixed flash/streak rendering artifacts when picking. [#2790](https://github.com/AnalyticalGraphicsInc/cesium/issues/2790), [#2811](https://github.com/AnalyticalGraphicsInc/cesium/issues/2811)
+* Fixed 2D and Columbus view lighting issue. [#2635](https://github.com/AnalyticalGraphicsInc/cesium/issues/2635).
+* Fixed issues with material caching which resulted in the inability to use an image-based material multiple times. [#2821](https://github.com/AnalyticalGraphicsInc/cesium/issues/2821)
+* Improved `Camera.viewRectangle` so that the specified rectangle is now better centered on the screen. [#2764](https://github.com/AnalyticalGraphicsInc/cesium/issues/2764)
+* Fixed a crash when `viewer.zoomTo` or `viewer.flyTo` were called immediately before or during a scene morph. [#2775](https://github.com/AnalyticalGraphicsInc/cesium/issues/2775)
+* Fixed an issue where `Camera` functions would throw an exception if used from within a `Scene.morphComplete` callback. [#2776](https://github.com/AnalyticalGraphicsInc/cesium/issues/2776)
+* Fixed camera flights that ended up at the wrong position in Columbus view. [#802](https://github.com/AnalyticalGraphicsInc/cesium/issues/802)
+* Fixed camera flights through the map in 2D. [#804](https://github.com/AnalyticalGraphicsInc/cesium/issues/804)
+* Fixed strange camera flights from opposite sides of the globe. [#1158](https://github.com/AnalyticalGraphicsInc/cesium/issues/1158)
+* Fixed camera flights that wouldn't fly to the home view after zooming out past it. [#1400](https://github.com/AnalyticalGraphicsInc/cesium/issues/1400)
+* Fixed flying to rectangles that cross the IDL in Columbus view and 2D. [#2093](https://github.com/AnalyticalGraphicsInc/cesium/issues/2093)
+* Fixed flights with a pitch of -90 degrees. [#2468](https://github.com/AnalyticalGraphicsInc/cesium/issues/2468)
+* `Model` can now load Binary glTF from a `Uint8Array`.
 * Fixed a bug in `ImageryLayer` that could cause an exception and the render loop to stop when the base layer did not cover the entire globe.
-* Fixed flash/streak rendering artifacts when picking [#2790](https://github.com/AnalyticalGraphicsInc/cesium/issues/2790), [#2811](https://github.com/AnalyticalGraphicsInc/cesium/issues/2811).
+* The performance statistics displayed when `scene.debugShowFramesPerSecond === true` can now be styled using the `cesium-performanceDisplay` CSS classes in `shared.css` [#2779](https://github.com/AnalyticalGraphicsInc/cesium/issues/2779).
+* Added `Plane.fromCartesian4`.
+* Added `Plane.ORIGIN_XY_PLANE`/`ORIGIN_YZ_PLANE`/`ORIGIN_ZX_PLANE` constants for commonly-used planes.
+* Added `Matrix2`/`Matrix3`/`Matrix4.ZERO` constants.
+* Added `Matrix2`/`Matrix3.multiplyByScale` for multiplying against non-uniform scales.
+* Added `projectPointToNearestOnPlane` and `projectPointsToNearestOnPlane` to `EllipsoidTangentPlane` to project 3D points to the nearest 2D point on an `EllipsoidTangentPlane`.
+* Added `EllipsoidTangentPlane.plane` property to get the `Plane` for the tangent plane.
+* Added `EllipsoidTangentPlane.xAxis`/`yAxis`/`zAxis` properties to get the local coordinate system of the tangent plane.
+* Add `QuantizedMeshTerrainData` constructor argument `orientedBoundingBox`.
+* Add `TerrainMesh.orientedBoundingBox` which holds the `OrientedBoundingBox` for the mesh for a single terrain tile.
 
 ### 1.10 - 2015-06-01
 

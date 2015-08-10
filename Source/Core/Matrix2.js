@@ -76,6 +76,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {Matrix2} [result] The object into which to store the result.
+     * @returns {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
      */
     Matrix2.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -164,7 +165,7 @@ define([
      *
      * @param {Number[]} values The column-major order array.
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
+     * @returns {Matrix2} The modified result parameter, or a new Matrix2 instance if one was not provided.
      */
     Matrix2.fromColumnMajorArray = function(values, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -182,7 +183,7 @@ define([
      *
      * @param {Number[]} values The row-major order array.
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
+     * @returns {Matrix2} The modified result parameter, or a new Matrix2 instance if one was not provided.
      */
     Matrix2.fromRowMajorArray = function(values, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -207,7 +208,7 @@ define([
      *
      * @param {Cartesian2} scale The x and y scale factors.
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
+     * @returns {Matrix2} The modified result parameter, or a new Matrix2 instance if one was not provided.
      *
      * @example
      * // Creates
@@ -240,7 +241,7 @@ define([
      *
      * @param {Number} scale The uniform scale factor.
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
+     * @returns {Matrix2} The modified result parameter, or a new Matrix2 instance if one was not provided.
      *
      * @example
      * // Creates
@@ -273,7 +274,7 @@ define([
      *
      * @param {Number} angle The angle, in radians, of the rotation.  Positive angles are counterclockwise.
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
+     * @returns {Matrix2} The modified result parameter, or a new Matrix2 instance if one was not provided.
      *
      * @example
      * // Rotate a point 45 degrees counterclockwise.
@@ -672,6 +673,41 @@ define([
     };
 
     /**
+     * Computes the product of a matrix times a (non-uniform) scale, as if the scale were a scale matrix.
+     *
+     * @param {Matrix2} matrix The matrix on the left-hand side.
+     * @param {Cartesian2} scale The non-uniform scale on the right-hand side.
+     * @param {Matrix2} result The object onto which to store the result.
+     * @returns {Matrix2} The modified result parameter.
+     *
+     * @see Matrix2.fromScale
+     * @see Matrix2.multiplyByUniformScale
+     *
+     * @example
+     * // Instead of Cesium.Matrix2.multiply(m, Cesium.Matrix2.fromScale(scale), m);
+     * Cesium.Matrix2.multiplyByScale(m, scale, m);
+     */
+    Matrix2.multiplyByScale = function(matrix, scale, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(matrix)) {
+            throw new DeveloperError('matrix is required');
+        }
+        if (!defined(scale)) {
+            throw new DeveloperError('scale is required');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
+        //>>includeEnd('debug');
+
+        result[0] = matrix[0] * scale.x;
+        result[1] = matrix[1] * scale.x;
+        result[2] = matrix[2] * scale.y;
+        result[3] = matrix[3] * scale.y;
+        return result;
+    };
+
+    /**
      * Creates a negated copy of the provided matrix.
      *
      * @param {Matrix2} matrix The matrix to negate.
@@ -811,6 +847,15 @@ define([
      */
     Matrix2.IDENTITY = freezeObject(new Matrix2(1.0, 0.0,
                                                 0.0, 1.0));
+
+    /**
+     * An immutable Matrix2 instance initialized to the zero matrix.
+     *
+     * @type {Matrix2}
+     * @constant
+     */
+    Matrix2.ZERO = freezeObject(new Matrix2(0.0, 0.0,
+                                            0.0, 0.0));
 
     /**
      * The index into Matrix2 for column 0, row 0.

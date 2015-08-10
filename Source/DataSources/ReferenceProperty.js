@@ -69,7 +69,7 @@ define([
      *
      * @param {EntityCollection} targetCollection The entity collection which will be used to resolve the reference.
      * @param {String} targetId The id of the entity which is being referenced.
-     * @param {String} targetPropertyNames The name of the property on the target entity which we will use.
+     * @param {String[]} targetPropertyNames The names of the property on the target entity which we will use.
      *
      * @example
      * var collection = new Cesium.EntityCollection();
@@ -223,9 +223,9 @@ define([
      * property path and . separates sub-properties.  If the reference identifier or
      * or any sub-properties contains a # . or \ they must be escaped.
      *
-     * @param {Entity} targetCollection
+     * @param {EntityCollection} targetCollection
      * @param {String} referenceString
-     * @returns A new instance of ReferenceProperty.
+     * @returns {ReferenceProperty} A new instance of ReferenceProperty.
      *
      * @exception {DeveloperError} invalid referenceString.
      */

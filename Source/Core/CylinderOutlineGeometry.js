@@ -145,6 +145,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {CylinderOutlineGeometry} [result] The object into which to store the result.
+     * @returns {CylinderOutlineGeometry} The modified result parameter or a new CylinderOutlineGeometry instance if one was not provided.
      */
     CylinderOutlineGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);

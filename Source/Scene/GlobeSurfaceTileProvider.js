@@ -1,22 +1,28 @@
 /*global define*/
 define([
         '../Core/BoundingSphere',
+        '../Core/BoxOutlineGeometry',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Color',
+        '../Core/ColorGeometryInstanceAttribute',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/FeatureDetection',
+        '../Core/GeometryInstance',
         '../Core/GeometryPipeline',
         '../Core/IndexDatatype',
         '../Core/Intersect',
         '../Core/Matrix4',
+        '../Core/OrientedBoundingBox',
         '../Core/PrimitiveType',
         '../Core/Rectangle',
+        '../Core/SphereOutlineGeometry',
         '../Core/Visibility',
         '../Core/WebMercatorProjection',
         '../Renderer/BufferUsage',
@@ -24,6 +30,8 @@ define([
         '../Scene/BlendingState',
         '../Scene/DepthFunction',
         '../Scene/Pass',
+        '../Scene/PerInstanceColorAppearance',
+        '../Scene/Primitive',
         '../ThirdParty/when',
         './GlobeSurfaceTile',
         './ImageryLayer',
@@ -32,22 +40,28 @@ define([
         './SceneMode'
     ], function(
         BoundingSphere,
+        BoxOutlineGeometry,
         Cartesian2,
         Cartesian3,
         Cartesian4,
         Color,
+        ColorGeometryInstanceAttribute,
+        defaultValue,
         defined,
         defineProperties,
         destroyObject,
         DeveloperError,
         Event,
         FeatureDetection,
+        GeometryInstance,
         GeometryPipeline,
         IndexDatatype,
         Intersect,
         Matrix4,
+        OrientedBoundingBox,
         PrimitiveType,
         Rectangle,
+        SphereOutlineGeometry,
         Visibility,
         WebMercatorProjection,
         BufferUsage,
@@ -55,6 +69,8 @@ define([
         BlendingState,
         DepthFunction,
         Pass,
+        PerInstanceColorAppearance,
+        Primitive,
         when,
         GlobeSurfaceTile,
         ImageryLayer,
@@ -101,8 +117,10 @@ define([
         this._terrainProvider = options.terrainProvider;
         this._imageryLayers = options.imageryLayers;
         this._surfaceShaderSet = options.surfaceShaderSet;
+
         this._renderState = undefined;
         this._blendRenderState = undefined;
+        this._pickRenderState = undefined;
 
         this._errorEvent = new Event();
 
@@ -116,7 +134,9 @@ define([
         this._tilesToRenderByTextureCount = [];
         this._drawCommands = [];
         this._uniformMaps = [];
+        this._pickCommands = [];
         this._usedDrawCommands = 0;
+        this._usedPickCommands = 0;
 
         this._debug = {
             wireframe : false,
@@ -316,12 +336,11 @@ define([
                     enabled : true
                 },
                 depthTest : {
-                    enabled : true
+                    enabled : true,
+                    func : DepthFunction.LESS
                 }
             });
-        }
 
-        if (!defined(this._blendRenderState)) {
             this._blendRenderState = context.createRenderState({ // Write color and depth
                 cull : {
                     enabled : true
@@ -334,10 +353,7 @@ define([
             });
         }
 
-        this._renderState.depthTest.enabled = frameState.mode === SceneMode.SCENE3D || frameState.mode === SceneMode.COLUMBUS_VIEW;
-        this._blendRenderState.depthTest.enabled = this._renderState.depthTest.enabled;
-
-        // And the tile render commands to the command list, sorted by texture count.
+        // Add the tile render commands to the command list, sorted by texture count.
         var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
         for (var textureCountIndex = 0, textureCountLength = tilesToRenderByTextureCount.length; textureCountIndex < textureCountLength; ++textureCountIndex) {
             var tilesToRender = tilesToRenderByTextureCount[textureCountIndex];
@@ -348,6 +364,39 @@ define([
             for (var tileIndex = 0, tileLength = tilesToRender.length; tileIndex < tileLength; ++tileIndex) {
                 addDrawCommandsForTile(this, tilesToRender[tileIndex], context, frameState, commandList);
             }
+        }
+    };
+
+    /**
+     * Adds draw commands for tiles rendered in the previous frame for a pick pass.
+     *
+     * @param {Context} context The rendering context.
+     * @param {FrameState} frameState The frame state.
+     * @param {DrawCommand[]} commandList An array of rendering commands.  This method may push
+     *        commands into this array.
+     */
+    GlobeSurfaceTileProvider.prototype.updateForPick = function(context, frameState, commandList) {
+        if (!defined(this._pickRenderState)) {
+            this._pickRenderState = context.createRenderState({
+                colorMask : {
+                    red : false,
+                    green : false,
+                    blue : false,
+                    alpha : false
+                },
+                depthTest : {
+                    enabled : true
+                }
+            });
+        }
+
+        this._usedPickCommands = 0;
+        var drawCommands = this._drawCommands;
+
+        // Add the tile pick commands from the tiles drawn last frame.
+        var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
+        for (var i = 0, length = this._usedDrawCommands; i < length; ++i) {
+            addPickCommandsForTile(this, drawCommands[i], context, frameState, commandList);
         }
     };
 
@@ -395,7 +444,7 @@ define([
 
         var cullingVolume = frameState.cullingVolume;
 
-        var boundingVolume = surfaceTile.boundingSphere3D;
+        var boundingVolume = defaultValue(surfaceTile.orientedBoundingBox, surfaceTile.boundingSphere3D);
 
         if (frameState.mode !== SceneMode.SCENE3D) {
             boundingVolume = boundingSphereScratch;
@@ -794,6 +843,74 @@ define([
         return context.createVertexArray(vertexArray._attributes, wireframeIndexBuffer);
     }
 
+    var getDebugOrientedBoundingBox;
+    var getDebugBoundingSphere;
+    var debugDestroyPrimitive;
+
+    (function() {
+        var instanceOBB = new GeometryInstance({
+            geometry: BoxOutlineGeometry.fromDimensions({ dimensions: new Cartesian3(2.0, 2.0, 2.0) })
+        });
+        var instanceSphere = new GeometryInstance({
+            geometry: new SphereOutlineGeometry({ radius: 1.0 })
+        });
+        var modelMatrix = new Matrix4();
+        var previousVolume;
+        var primitive;
+
+        function createDebugPrimitive(instance) {
+            return new Primitive({
+                geometryInstances : instance,
+                appearance : new PerInstanceColorAppearance({
+                    translucent : false,
+                    flat : true
+                }),
+                asynchronous : false
+            });
+        }
+
+        getDebugOrientedBoundingBox = function(obb, color) {
+            if (obb === previousVolume) {
+                return primitive;
+            }
+            debugDestroyPrimitive();
+
+            previousVolume = obb;
+            modelMatrix = Matrix4.fromRotationTranslation(obb.halfAxes, obb.center, modelMatrix);
+
+            instanceOBB.modelMatrix = modelMatrix;
+            instanceOBB.attributes.color = ColorGeometryInstanceAttribute.fromColor(color);
+
+            primitive = createDebugPrimitive(instanceOBB);
+            return primitive;
+        };
+
+        getDebugBoundingSphere = function(sphere, color) {
+            if (sphere === previousVolume) {
+                return primitive;
+            }
+            debugDestroyPrimitive();
+
+            previousVolume = sphere;
+            modelMatrix = Matrix4.fromTranslation(sphere.center, modelMatrix);
+            modelMatrix = Matrix4.multiplyByUniformScale(modelMatrix, sphere.radius, modelMatrix);
+
+            instanceSphere.modelMatrix = modelMatrix;
+            instanceSphere.attributes.color = ColorGeometryInstanceAttribute.fromColor(color);
+
+            primitive = createDebugPrimitive(instanceSphere);
+            return primitive;
+        };
+
+        debugDestroyPrimitive = function() {
+            if (defined(primitive)) {
+                primitive.destroy();
+                primitive = undefined;
+                previousVolume = undefined;
+            }
+        };
+    })();
+
     var otherPassesInitialColor = new Cartesian4(0.0, 0.0, 0.0, 0.0);
 
     function addDrawCommandsForTile(tileProvider, tile, context, frameState, commandList) {
@@ -882,6 +999,10 @@ define([
 
         var initialColor = tileProvider._firstPassInitialColor;
 
+        if (!defined(tileProvider._debug.boundingSphereTile)) {
+            debugDestroyPrimitive();
+        }
+
         do {
             var numberOfDayTextures = 0;
 
@@ -893,6 +1014,7 @@ define([
                 command.owner = tile;
                 command.cull = false;
                 command.boundingVolume = new BoundingSphere();
+                command.orientedBoundingBox = undefined;
 
                 uniformMap = createTileUniformMap();
 
@@ -907,7 +1029,16 @@ define([
 
             ++tileProvider._usedDrawCommands;
 
-            command.debugShowBoundingVolume = (tile === tileProvider._debug.boundingSphereTile);
+            if (tile === tileProvider._debug.boundingSphereTile) {
+                // If a debug primitive already exists for this tile, it will not be
+                // re-created, to avoid allocation every frame. If it were possible
+                // to have more than one selected tile, this would have to change.
+                if (defined(surfaceTile.orientedBoundingBox)) {
+                    getDebugOrientedBoundingBox(surfaceTile.orientedBoundingBox, Color.RED).update(context, frameState, commandList);
+                } else if (defined(surfaceTile.boundingSphere3D)) {
+                    getDebugBoundingSphere(surfaceTile.boundingSphere3D, Color.RED).update(context, frameState, commandList);
+                }
+            }
 
             Cartesian4.clone(initialColor, uniformMap.initialColor);
             uniformMap.oceanNormalMap = oceanNormalMap;
@@ -1002,6 +1133,7 @@ define([
             }
 
             var boundingVolume = command.boundingVolume;
+            var orientedBoundingBox = command.orientedBoundingBox;
 
             if (frameState.mode !== SceneMode.SCENE3D) {
                 BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.mapProjection, surfaceTile.minimumHeight, surfaceTile.maximumHeight, boundingVolume);
@@ -1011,7 +1143,8 @@ define([
                     boundingVolume = BoundingSphere.union(surfaceTile.boundingSphere3D, boundingVolume, boundingVolume);
                 }
             } else {
-                BoundingSphere.clone(surfaceTile.boundingSphere3D, boundingVolume);
+                command.boundingVolume = BoundingSphere.clone(surfaceTile.boundingSphere3D, boundingVolume);
+                command.orientedBoundingBox = OrientedBoundingBox.clone(surfaceTile.orientedBoundingBox, orientedBoundingBox);
             }
 
             commandList.push(command);
@@ -1019,6 +1152,35 @@ define([
             renderState = otherPassesRenderState;
             initialColor = otherPassesInitialColor;
         } while (imageryIndex < imageryLen);
+    }
+
+    function addPickCommandsForTile(tileProvider, drawCommand, context, frameState, commandList) {
+        var pickCommand;
+        if (tileProvider._pickCommands.length <= tileProvider._usedPickCommands) {
+            pickCommand = new DrawCommand();
+            pickCommand.cull = false;
+
+            tileProvider._pickCommands.push(pickCommand);
+        } else {
+            pickCommand = tileProvider._pickCommands[tileProvider._usedPickCommands];
+        }
+
+        ++tileProvider._usedPickCommands;
+
+        var useWebMercatorProjection = frameState.projection instanceof WebMercatorProjection;
+
+        pickCommand.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(context, frameState.mode, useWebMercatorProjection);
+        pickCommand.renderState = tileProvider._pickRenderState;
+
+        pickCommand.owner = drawCommand.owner;
+        pickCommand.primitiveType = drawCommand.primitiveType;
+        pickCommand.vertexArray = drawCommand.vertexArray;
+        pickCommand.uniformMap = drawCommand.uniformMap;
+        pickCommand.boundingVolume = drawCommand.boundingVolume;
+        pickCommand.orientedBoundingBox = pickCommand.orientedBoundingBox;
+        pickCommand.pass = drawCommand.pass;
+
+        commandList.push(pickCommand);
     }
 
     return GlobeSurfaceTileProvider;

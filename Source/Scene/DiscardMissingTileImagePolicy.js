@@ -91,7 +91,7 @@ define([
 
     /**
      * Determines if the discard policy is ready to process images.
-     * @returns True if the discard policy is ready to process images; otherwise, false.
+     * @returns {Boolean} True if the discard policy is ready to process images; otherwise, false.
      */
     DiscardMissingTileImagePolicy.prototype.isReady = function() {
         return this._isReady;
@@ -101,7 +101,7 @@ define([
      * Given a tile image, decide whether to discard that image.
      *
      * @param {Image} image An image to test.
-     * @returns True if the image should be discarded; otherwise, false.
+     * @returns {Boolean} True if the image should be discarded; otherwise, false.
      *
      * @exception {DeveloperError} <code>shouldDiscardImage</code> must not be called before the discard policy is ready.
      */

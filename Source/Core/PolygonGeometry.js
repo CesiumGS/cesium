@@ -98,7 +98,7 @@ define([
         var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
         if (originalWindingOrder === WindingOrder.CLOCKWISE) {
             positions2D.reverse();
-            positions.reverse();
+            positions = positions.slice().reverse();
         }
 
         var indices = PolygonPipeline.triangulate(positions2D);
@@ -486,7 +486,7 @@ define([
 
         var windingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
         if (windingOrder === WindingOrder.CLOCKWISE) {
-            outerRing.reverse();
+            outerRing = outerRing.slice().reverse();
         }
 
         var wallGeo = computeWallIndices(outerRing, ellipsoid, granularity, perPositionHeight);
@@ -503,7 +503,7 @@ define([
 
             windingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
             if (windingOrder === WindingOrder.COUNTER_CLOCKWISE) {
-                hole.reverse();
+                hole = hole.slice().reverse();
             }
 
             wallGeo = computeWallIndices(hole, ellipsoid, granularity);
@@ -619,8 +619,8 @@ define([
         var perPositionHeight = defaultValue(options.perPositionHeight, false);
 
         var extrudedHeight = options.extrudedHeight;
-        var extrude = (defined(extrudedHeight) && (!CesiumMath.equalsEpsilon(height, extrudedHeight, CesiumMath.EPSILON6) || perPositionHeight));
-        if (extrude) {
+        var extrude = defined(extrudedHeight);
+        if (extrude && !perPositionHeight) {
             var h = extrudedHeight;
             extrudedHeight = Math.min(h, height);
             height = Math.max(h, height);
@@ -647,6 +647,7 @@ define([
     /**
      * A description of a polygon from an array of positions.
      *
+     * @param {Object} options Object with the following properties:
      * @param {Cartesian3[]} options.positions An array of positions that defined the corner points of the polygon.
      * @param {Number} [options.height=0.0] The height of the polygon.
      * @param {Number} [options.extrudedHeight] The height of the polygon extrusion.
@@ -655,6 +656,7 @@ define([
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
+     * @returns PolygonGeometry
      *
      * @see PolygonGeometry#createGeometry
      *

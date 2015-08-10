@@ -166,6 +166,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {Cartesian3} [result] The object into which to store the result.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      */
     Cartesian3.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -352,7 +353,7 @@ define([
      *
      * @example
      * // Returns 4.0, not 2.0
-     * var d = Cesium.Cartesian3.distance(new Cesium.Cartesian3(1.0, 0.0, 0.0), new Cesium.Cartesian3(3.0, 0.0, 0.0));
+     * var d = Cesium.Cartesian3.distanceSquared(new Cesium.Cartesian3(1.0, 0.0, 0.0), new Cesium.Cartesian3(3.0, 0.0, 0.0));
      */
     Cartesian3.distanceSquared = function(left, right) {
         //>>includeStart('debug', pragmas.debug);
