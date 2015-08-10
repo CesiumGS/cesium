@@ -203,20 +203,20 @@ function zoom(movement) {
     if (Cesium.defined(building)) {
         var longitude = building.getProperty('Longitude');
         var latitude = building.getProperty('Latitude');
-   		var height = building.getProperty('Height');
-        
+        var height = building.getProperty('Height');
+
         var positionCartographic = new Cesium.Cartographic(longitude, latitude, height * 0.5);
         var position = scene.globe.ellipsoid.cartographicToCartesian(positionCartographic);
-        
+
         var camera = scene.camera;
         var heading = camera.heading;
         var pitch = camera.pitch;
-        
+
         var offset = offsetFromHeadingPitchRange(heading, pitch, height * 2.0);
-        
+
         var transform = Cesium.Transforms.eastNorthUpToFixedFrame(position);
         Cesium.Matrix4.multiplyByPoint(transform, offset, position);
-        
+
         camera.flyTo({
             destination : position,
             orientation : {
