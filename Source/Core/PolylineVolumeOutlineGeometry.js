@@ -101,7 +101,7 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {Cartesian3[]} options.polylinePositions An array of positions that define the center of the polyline volume.
-     * @param {Number} options.shapePositions An array of positions that define the shape to be extruded along the polyline
+     * @param {Cartesian2[]} options.shapePositions An array of positions that define the shape to be extruded along the polyline
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {CornerType} [options.cornerType=CornerType.ROUNDED] Determines the style of the corners.

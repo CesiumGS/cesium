@@ -229,10 +229,10 @@ define([
      * // Example 1:  Add a polyline, specifying all the default values.
      * var p = polylines.add({
      *   show : true,
-     *   positions : ellipsoid.cartographicDegreesToCartesians([
-     *     new Cesium.Cartographic2(-75.10, 39.57),
-     *     new Cesium.Cartographic2(-77.02, 38.53)]),
-     *     width : 1
+     *   positions : ellipsoid.cartographicArrayToCartesianArray([
+           Cesium.Cartographic.fromDegrees(-75.10, 39.57),
+           Cesium.Cartographic.fromDegrees(-77.02, 38.53)]),
+     *   width : 1
      * });
      */
     PolylineCollection.prototype.add = function(polyline) {

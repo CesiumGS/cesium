@@ -351,7 +351,7 @@ define([
      *
      * @example
      * function createVisualizers(scene, dataSource) {
-     *     return [new BillboardVisualizer(scene, dataSource.entities)];
+     *     return [new Cesium.BillboardVisualizer(scene, dataSource.entities)];
      * }
      */
 

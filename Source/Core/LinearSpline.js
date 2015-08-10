@@ -21,6 +21,7 @@ define([
      * @alias LinearSpline
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Number[]} options.times An array of strictly increasing, unit-less, floating-point times at each point.
      *                The values are in no way connected to the clock time. They are the parameterization for the curve.
      * @param {Cartesian3[]} options.points The array of {@link Cartesian3} control points.
