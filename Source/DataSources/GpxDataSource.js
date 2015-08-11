@@ -790,7 +790,28 @@ define([
     //TODO
     //processPtSeg, polygons/polylines?
 
+    function processMetadata(dataSource, node, entityCollection, sourceUri, uriResolver) {
+        var name = queryStringValue(node, 'name', namespaces.gpx);
+        var desc = queryStringValue(node, 'desc', namespaces.gpx);
+        var author = queryStringValue(node, 'author', namespaces.gpx);
+        var email = queryStringValue(node, 'email', namespaces.gpx);
+        //TODO var link = queryStringValue(node, 'link', namespaces.gpx);
+        var time = queryStringValue(node, 'time', namespaces.gpx);
+        var keywords = queryStringValue(node, 'keywords', namespaces.gpx);
+        var bounds = queryStringValue(node, 'bounds', namespaces.gpx);
+        dataSource.metadata = {
+            name : name,
+            description : desc,
+            author : author,
+            email : email,
+            time : time,
+            keywords : keywords,
+            bounds : bounds
+        };
+    }
+
     var complexTypes = {
+        metadata : processMetadata,
         pt : processPt,
         wpt : processWpt,
         rte : processRte,
@@ -823,6 +844,9 @@ define([
         entityCollection.removeAll();
 
         var element = gpx.documentElement;
+        var version = queryStringAttribute(element, 'version');
+        var creator = queryStringAttribute(element, 'creator');
+
         var name = queryStringValue(document, 'name', namespaces.gpx);
         if (!defined(name) && defined(sourceUri)) {
             name = getFilenameFromUri(sourceUri);
@@ -870,6 +894,16 @@ define([
             var changed = false;
             if (dataSource._name !== name) {
                 dataSource._name = name;
+                changed = true;
+            }
+
+            if (dataSource._creator !== creator) {
+                dataSource._creator = creator;
+                changed = true;
+            }
+
+            if (dataSource._version !== version) {
+                dataSource._version = version;
                 changed = true;
             }
 
@@ -923,6 +957,8 @@ define([
         this._clock = undefined;
         this._entityCollection = new EntityCollection();
         this._name = undefined;
+        this._creator = undefined;
+        this._version = undefined;
         this._isLoading = false;
         this._proxy = proxy;
         this._pinBuilder = new PinBuilder();
