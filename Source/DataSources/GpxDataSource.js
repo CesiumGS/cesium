@@ -774,7 +774,7 @@ define([
         return result;
     }
 
-    //TODO check for points inside other complexTypes
+    //TODO check for points inside other complexTypes?
     function processPt(dataSource, geometryNode, entityCollection, sourceUri, uriResolver) {
         var coordinatesString = getCoordinatesString(geometryNode);
         var position = readCoordinate(coordinatesString);
@@ -791,23 +791,90 @@ define([
     //processPtSeg, polygons/polylines?
 
     function processMetadata(dataSource, node, entityCollection, sourceUri, uriResolver) {
-        var name = queryStringValue(node, 'name', namespaces.gpx);
-        var desc = queryStringValue(node, 'desc', namespaces.gpx);
-        var author = queryStringValue(node, 'author', namespaces.gpx);
-        var email = queryStringValue(node, 'email', namespaces.gpx);
-        //TODO var link = queryStringValue(node, 'link', namespaces.gpx);
-        var time = queryStringValue(node, 'time', namespaces.gpx);
-        var keywords = queryStringValue(node, 'keywords', namespaces.gpx);
-        var bounds = queryStringValue(node, 'bounds', namespaces.gpx);
+        //TODO implement getters on the dataSource object?
         dataSource.metadata = {
-            name : name,
-            description : desc,
-            author : author,
-            email : email,
-            time : time,
-            keywords : keywords,
-            bounds : bounds
+            name : queryStringValue(node, 'name', namespaces.gpx),
+            desc : queryStringValue(node, 'desc', namespaces.gpx),
+            author : getPerson(node),
+            copyright : getCopyright(node),
+            link : getLink(node),
+            time : queryStringValue(node, 'time', namespaces.gpx),
+            keywords : queryStringValue(node, 'keywords', namespaces.gpx),
+            bounds : getBounds(node)
         };
+    }
+    /**
+     *  Receives a XML node and returns a personType object, refer to
+     * {@link http://www.topografix.com/gpx/1/1/#type_personType|GPX Schema}
+     */
+    function getPerson(node) {
+        var personNode = queryFirstNode(node, 'author', namespaces.gpx);
+        if (defined(personNode)) {
+            var person = {
+                name : queryStringValue(personNode, 'name', namespaces.gpx),
+                email : getEmail(personNode),
+                link : getLink(personNode)
+            };
+            return person;
+        } else {
+            return null;
+        }
+    }
+    /**
+     *  Receives a XML node and returns an email address (from emailType), refer to
+     * {@link http://www.topografix.com/gpx/1/1/#type_emailType|GPX Schema}
+     */
+    function getEmail(node) {
+        var emailNode = queryFirstNode(node, 'email', namespaces.gpx);
+        if (defined(emailNode)) {
+            var id = queryStringValue(emailNode, 'id', namespaces.gpx);
+            var domain = queryStringValue(emailNode, 'domain', namespaces.gpx);
+            return id + '@' + domain;
+        } else {
+            return null;
+        }
+    }
+    /**
+     *  Receives a XML node and returns a linkType object, refer to
+     * {@link http://www.topografix.com/gpx/1/1/#type_linkType|GPX Schema}
+     */
+    function getLink(node) {
+        var linkNode = queryFirstNode(node, 'link', namespaces.gpx);
+        if (defined(linkNode)) {
+            var link = {
+                href : queryStringAttribute(linkNode, 'href'),
+                text : queryStringValue(linkNode, 'text', namespaces.gpx),
+                mimeType : queryStringValue(linkNode, 'type', namespaces.gpx)
+            };
+            return link;
+        } else {
+            return null;
+        }
+    }
+    /**
+    *  Receives a XML node and returns a copyrightType object, refer to
+    * {@link http://www.topografix.com/gpx/1/1/#type_copyrightType|GPX Schema}
+    */
+    function getCopyright(node) {
+        var copyright = {
+            author : queryStringAttribute(node, 'author'),
+            year : queryStringValue(node, 'year', namespaces.gpx),
+            license : queryStringValue(node, 'license', namespaces.gpx)
+        };
+        return copyright;
+    }
+    /**
+     *  Receives a XML node and returns a boundsType object, refer to
+     * {@link http://www.topografix.com/gpx/1/1/#type_boundsType|GPX Schema}
+     */
+    function getBounds(node) {
+        var bounds = {
+            minLat : queryNumericValue(node, 'minlat'),
+            maxLat : queryNumericValue(node, 'maxlat'),
+            minLon : queryNumericValue(node, 'minlon'),
+            maxLon : queryNumericValue(node, 'maxlon')
+        };
+        return bounds;
     }
 
     var complexTypes = {
