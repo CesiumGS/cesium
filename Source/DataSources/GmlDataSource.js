@@ -23,6 +23,7 @@ define([
         './ConstantPositionProperty',
         './ConstantProperty',
         './DataSource',
+        './EllipseGraphics',
         './EntityCollection',
         './PointGraphics',
         './PolygonGraphics',
@@ -51,6 +52,7 @@ define([
         ConstantPositionProperty,
         ConstantProperty,
         DataSource,
+        EllipseGraphics,
         EntityCollection,
         PointGraphics,
         PolygonGraphics,
@@ -234,7 +236,7 @@ define([
     function processMultiPoint(that, multiPoint, properties, crsProperties) {
         crsProperties = getCrsProperties(multiPoint, crsProperties);
         var pointMembers = multiPoint.getElementsByTagNameNS(gmlns, "pointMember");
-        if(pointMemers.length == 0) {
+        if(pointMembers.length == 0) {
         	pointMembers = multiPoint.getElementsByTagNameNS(gmlns, "pointMembers");
         }
 
@@ -264,7 +266,7 @@ define([
         crsProperties = getCrsProperties(lineString, crsProperties);
         var coordString = lineString.firstElementChild.textContent;
         var coordinates = processCoordinates(coordString, crsProperties);
-        createPolyline(that, coordinates, properties, crsProperties);
+        createPolyline(that, coordinates, true, properties, crsProperties);
     }
 
     function processMultiLineString(that, multiLineString, properties, crsProperties) {
@@ -285,9 +287,7 @@ define([
     	crsProperties = getCrsProperties(curve, crsProperties);
         var segments = curve.firstElementChild.children;
         processSegments(that, segments, properties, crsProperties);
-/*    	curveGeometryHandler = curveSegmentTypes(segments[0].localName);
-    	curveGeometryHandler(that, segments, properties, crsProperties);
-*/    }
+    }
 
     function processMultiCurve(that, multiCurve, properties, crsProperties) {
     	crsProperties = getCrsProperties(multiCurve, crsProperties);
@@ -306,96 +306,94 @@ define([
     }
 
     function processSegments(that, segments, properties, crsProperties) {
-        var arcGeometry = {coordinates : [], followSurface : false};
-        var lineStringSegmentGeometry = {coordinates : [], followSurface : true};
+        var polyline = {coordinates : [], followSurface : true};
         for(var i = 0; i < segments.length; i++) {
             var curveGeometryHandler = curveSegmentTypes[segments[i].localName];
-            var geometry = curveGeometryHandler(segments[i], crsProperties);
-            if(segments[i].localName === "LineStringSegment") {
-                if(arcCoordinates.length > 1) {
-                    arcGeometry.coordinates.push(geometry.coordinates[0]);
-                    createPolyline(that, arcGeometry, properties);
-                    arcGeometry.cooridnates.length = 0;
-                }
-                lineStringSegmentGeometry.coordinates.concat(coordinates);
-            } else if(segments[i].localName === "Arc") {
-                if(lineStringSegmentGeometry.coordinates.length > 1) {
-                    lineStringSegmentGeometry.push(geometry.coordinates[0]);
-                    createPolyline(that, lineStringSegmentGeometry, properties);
-                    lineStringSegmentGeometry.coordinates.length = 0;
-                }
-                arcGeometry.coordintes.concat(coordinates);
-            } else if(segments[i].localName === "CircleByCenterPoint") {
-                if(arcGeometry.coordintes.length) {
-                    arcGeometry.cooridnates.push(geometry.coordinates[0]);
-                    createPolyline(that, arcGeometry, properties);
-                    arcGeometry.coordintes.length = 0;
-                } else {
-                    lineStringSegmentGeometry.coordinates.push(geometry.coordinates[0]);
-                    if(lineStringSegmentGeometry.coordintes.length > 1) {
-                        createPolyline(that, lineStringSegmentGeometry, properties);
-                        lineStringSegmentGeometry.coordintes.length = 0;
-                    }
-                }
-                createCircle(that, geometry, properties);
-            } else if(segments[i].localName === "Circle") {
-                if(arcGeometry.coordintes.length) {
-                    arcGeometry.cooridnates.push(geometry.center);
-                    createPolyline(that, arcGeometry, properties);
-                    arcGeometry.coordintes.length = 0;
-                } else {
-                    lineStringSegmentGeometry.coordinates.push(geometry.coordinates[0]);
-                    if(lineStringSegmentGeometry.coordintes.length > 1) {
-                        createPolyline(that, lineStringSegmentGeometry, properties);
-                        lineStringSegmentGeometry.coordintes.length = 0;
-                    }
-                }
-                createCircle(that, geometry, properties);
-            }
+            var polyline = curveGeometryHandler(that, segments[i], polyline, properties, crsProperties);
+        }
+        if(polyline.coordinates.length > 1) {
+            createPolyline(that, polyline.coordinates, polyline.followSurface, properties);
         }
     }
 
-    function processLineStringSegment(lineStringSegment, crsProperties) {
-        var geometry = {};
+    function processLineStringSegment(that, lineStringSegment, polyline, properties, crsProperties) {
         var coordString = lineStringSegment.firstElementChild.textContent;
-        geometry.coorinates = processCoordinates(coordString, crsProperties);
-        return geometry;
+        var coordinates = processCoordinates(coordString, crsProperties);
+
+        if(polyline.followSurface == false) {
+            polyline.coordinates.push(coordinates[0]);
+            createPolyline(that, polyline.coordintes, polyline.followSurface, properties);
+            polyline.coordinates = [];
+            polyline.followSurface = true;
+        }
+        polyline.coordinates = polyline.coordinates.concat(coordinates);
+        return polyline;
     }
 
-    function processArc(arc, crsProperties) {
-        var geometry = {};
+    function processArc(that, arc, polyline, properties, crsProperties) {
         var coordString = arc.firstElementChild.textContent;
-        geometry.coordinates = processCoordinates(coordString, crsProerties);
-        return geometry;
+        var coordinates = processCoordinates(coordString, crsProperties);
+
+        if(polyline.followSurface == true) {
+            if(polyline.coordinates.length > 0) {
+                polyline.coordinates.push(coordinates[0]);
+                createPolyline(that, polyline.coordinates, polyline.followSurface, properties);
+                polyline.coordinates = [];
+            }
+            polyline.followSurface = false;
+        }
+        polyline.coordinates = polyline.coordinates.concat(coordinates);
+        return polyline;
     }
 
-    function processCircleByCenterPoint(circleByCenterPoint, crsProperties) {
-        var geometry = {};
-        var elements = circleByCenterPoint.children;
-        geometry.center = processCooridnates(elements.getElementsByTagNameNS(gmlns, "pos")[0].textContent);
-        geometry.radius = parseFloat(elements.getElementsByTagNameNS(gmlns, "radius")[0].textContent);
-        return geometry;
+    function processCircleByCenterPoint(that, circleByCenterPoint, polyline, properties, crsProperties) {
+        var elements = circleByCenterPoint;
+        var center = processCoordinates((elements.getElementsByTagNameNS(gmlns, "pos"))[0].textContent, crsProperties);
+        var radius = parseFloat((elements.getElementsByTagNameNS(gmlns, "radius"))[0].textContent);
+        createCircle(that, center, radius, properties);
+
+        if(polyline.followSurface == false) {
+            polyline.coordinates.push(center);
+            createPolyline(that, polyline.coordinates, polyline.followSurface, properties);
+            polyline.coordinates = [];
+            polyline.followSurface = true;
+        }
+        polyline.coordinates.push(center);
+        return polyline;
     }
 
-    function processCircle(circleByCenterPoint, crsProperties) {
+    function processCircle(that, circle, polyline, properties, crsProperties) {
 
+        if(polyline.followSurface == false) {
+            polyline.coordinates.push(center);
+            createPolyline(that, polyline.coordintes, polyline.followSurface, properties);
+            polyline.coordinates = [];
+            polyline.followSurface = true;
+        }
+        polyline.coordinates.push(center);
+        return polyline;
     }
 
-    function createPolyline(that, geometry, properties) {
+    function createPolyline(that, coordinates, followSurface, properties) {
         var polyline = new PolylineGraphics();
         polyline.material = defaultStrokeMaterialProperty;
         polyline.width = defaultStrokeWidthProperty;
-        polyline.positions = new ConstantProperty(geometry.coordinates);
-        polyline.followSurface = geometry.followSurface;
+        polyline.positions = new ConstantProperty(coordinates);
+        polyline.followSurface = followSurface;
 
         var entity = createObject(that._entityCollection, properties);
         entity.polyline = polyline;
     }
 
-    function createCircle(that, geometry, properties) {
-        var elipse = new ElipseGraphics();
+    function createCircle(that, center, radius, properties) {
+        var ellipse = new EllipseGraphics();
+        ellipse.semiMajorAxis = radius;
+        ellipse.semiMinorAxis = radius;
+        ellipse.fill = false;
+        ellipse.outline = true;
         var entity = createObject(that._entityCollection, properties);
-        entity.elipse = elipse;
+        entity.ellipse = ellipse;
+        entity.position = center;
     }
 
     function processPolygon(that, polygon, properties, crsProperties) {
@@ -413,7 +411,7 @@ define([
         for(var i = 0; i < interior.length; i++) {
         	surfaceBoundary = interior[i].firstElementChild;
             surfaceBoundaryHandler = surfaceBoundaryTypes[surfaceBoundary.localName];
-            holes.push(surfaceBoundaryHandler(surfaceBoundary, [], crsFunction));
+            holes.push(surfaceBoundaryHandler(surfaceBoundary, [], crsProperties));
         }
 
         if(exterior.length == 1) {
