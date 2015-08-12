@@ -342,6 +342,7 @@ require({
   }
 
   function loadCesiumFrame(){
+    $('#cesiumTabs a[href="#bucketPane"]').tab('show');
     cesiumFrame.get(0).contentWindow.location.reload();
     var doc = '<html><head><script src="../../Build/Cesium/Cesium.js"></script><script type="text/javascript" src="./Sandcastle-header.js"></script><style>@import url(../../Build/Cesium/Widgets/widgets.css);\nhtml, body, #cesiumContainer {width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;}\n</style></head><body class="sandcastle-loading"><script type="text/javascript" src="./Sandcastle-client.js"></script></body></html>';
     cesiumFrame.get(0).contentWindow.document.open();
