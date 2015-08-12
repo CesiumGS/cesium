@@ -127,6 +127,10 @@ ul + div.tab-content {
   background-color: rgba(245,231,158,0.2);
 }
 
+.CodeMirror pre.searchLine {
+    background: rgba(180, 230, 240, 0.5);
+}
+
 .errorMarker .glyphicon-exclamation-sign{
   color: #E42718;
   font-size: 12px;

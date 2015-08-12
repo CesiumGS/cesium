@@ -72,6 +72,7 @@ require({
   var highlightLines = [];
   var scriptCodeRegex = /\/\/Sandcastle_Begin\s*([\s\S]*)\/\/Sandcastle_End/;
   var consoleMessages = ko.observableArray();
+  var searchTerm;
 
   // Fetch the documentation keywords
   $.ajax({
@@ -193,6 +194,9 @@ require({
       case 'errorMarker':
         element.innerHTML = '<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>';
         break;
+      case 'searchMarker':
+        element.innerHTML = '<span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>';
+        break;
       default:
         element.innerHTML = '&#9654;';
     }
@@ -217,7 +221,9 @@ require({
       line = highlightLines.pop();
       jsEditor.removeLineClass(line, 'text');
     }
-    var code = jsEditor.getValue();
+    if(searchTerm !== ''){
+      runSearch();
+    }
     var options = JSON.parse(JSON.stringify(sandcastleJsHintOptions));
     if (!JSHINT(getScriptFromEditor(false), options)) {
         var hints = JSHINT.errors;
@@ -557,6 +563,33 @@ require({
       }
     }
   });
+
+  // Code search
+  $('#searchBox').keyup(function() {
+    searchTerm = $('#searchBox').val();
+    runSearch();
+  });
+
+  function runSearch(){
+    var len,i, line, searchRegExp;
+    jsEditor.clearGutter('searchGutter');
+    while (errorLines.length > 0) {
+      line = errorLines.pop();
+      jsEditor.removeLineClass(line, 'text');
+    }
+    searchRegExp = new RegExp(searchTerm, 'i');
+    var code = jsEditor.getValue();
+    if (searchTerm !== '') {
+      var codeLines = code.split('\n');
+      for (i = 0, len = codeLines.length; i < len; ++i) {
+        if (searchRegExp.test(codeLines[i])) {
+          line = jsEditor.setGutterMarker(i, 'searchGutter', makeLineLabel('Search: ' + searchTerm, 'searchMarker'));
+          jsEditor.addLineClass(line, 'text', 'searchLine');
+          errorLines.push(line);
+        }
+      }
+    }
+  }
 
   // The Knockout viewmodel
   function SandcastleViewModel(){
