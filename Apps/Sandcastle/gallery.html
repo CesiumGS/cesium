@@ -111,7 +111,7 @@
         var labels = label.split(',');
         var imgName = demoName.substring(demoName.indexOf('/')+1);
         var ele  = demoEle.replace('{image}', imgName);
-        ele = ele.replace('{title}', demoName).replace('{description}',desc).replace('{href}', encodeURIComponent(demoName)).replace('{demo}',demoName.replace(/\s+/g,'').replace(/\)/g,'').replace(/\(/g,'').replace('3', ''));
+        ele = ele.replace('{title}', demoName.substring(demoName.indexOf('/')+1)).replace('{description}',desc).replace('{href}', encodeURIComponent(demoName)).replace('{demo}',demoName.replace(/\s+/g,'').replace(/\)/g,'').replace(/\(/g,'').replace('3', ''));
         for(var i = labels.length-1; i>= 0; i--)
         {
             // Check if the tab already exists
