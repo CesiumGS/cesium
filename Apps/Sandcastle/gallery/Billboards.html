@@ -18,7 +18,7 @@
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
-    @import url(../templates/bucket.css);
+    @import url(templates/bucket.css);
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
@@ -35,7 +35,7 @@ function addBillboard() {
     viewer.entities.add({
         position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
         billboard :{
-            image : '../images/Cesium_Logo_overlay.png'
+            image : 'img/Cesium_Logo_overlay.png'
         }
     });
 }
@@ -46,7 +46,7 @@ function setBillboardProperties() {
     viewer.entities.add({
         position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
         billboard : {
-            image : '../images/Cesium_Logo_overlay.png', // default: undefined
+            image : 'img/Cesium_Logo_overlay.png', // default: undefined
             show : true, // default
             pixelOffset : new Cesium.Cartesian2(0, -50), // default: (0, 0)
             eyeOffset : new Cesium.Cartesian3(0.0, 0.0, 0.0), // default
@@ -68,7 +68,7 @@ function changeBillboardProperties() {
     var entity = viewer.entities.add({
         position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883, 300000.0),
         billboard : {
-            image : '../images/Cesium_Logo_overlay.png'
+            image : 'img/Cesium_Logo_overlay.png'
         }
     });
 
@@ -80,8 +80,8 @@ function changeBillboardProperties() {
 function addMultipleBillboards() {
     Sandcastle.declare(addMultipleBillboards);
 
-    var logoUrl = '../images/Cesium_Logo_overlay.png';
-    var facilityUrl = '../images/facility.gif';
+    var logoUrl = 'img/Cesium_Logo_overlay.png';
+    var facilityUrl = 'img/facility.gif';
 
     viewer.entities.add({
         position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
@@ -109,7 +109,7 @@ function scaleByDistance() {
     viewer.entities.add({
         position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
         billboard : {
-            image : '../images/facility.gif',
+            image : 'img/facility.gif',
             scaleByDistance : new Cesium.NearFarScalar(1.5e2, 2.0, 1.5e7, 0.5)
         }
     });
@@ -121,7 +121,7 @@ function fadeByDistance() {
     viewer.entities.add({
         position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
         billboard : {
-            image : '../images/Cesium_Logo_overlay.png',
+            image : 'img/Cesium_Logo_overlay.png',
             translucencyByDistance : new Cesium.NearFarScalar(1.5e2, 2.0, 1.5e7, 0.5)
         }
     });
@@ -130,8 +130,8 @@ function fadeByDistance() {
 function offsetByDistance() {
     Sandcastle.declare(offsetByDistance);
     Cesium.when.all([
-         Cesium.loadImage('../images/Cesium_Logo_overlay.png'),
-         Cesium.loadImage('../images/facility.gif')
+         Cesium.loadImage('img/Cesium_Logo_overlay.png'),
+         Cesium.loadImage('img/facility.gif')
         ],
         function(images) {
             // As viewer zooms closer to facility billboard,
@@ -168,7 +168,7 @@ function addMarkerBillboards() {
     viewer.entities.add({
         position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
         billboard : {
-            image : '../images/whiteShapes.png',
+            image : 'img/whiteShapes.png',
             imageSubRegion : new Cesium.BoundingRectangle(49, 43, 18, 18),
             color : Cesium.Color.LIME
         }
@@ -176,7 +176,7 @@ function addMarkerBillboards() {
     viewer.entities.add({
         position : Cesium.Cartesian3.fromDegrees(-84.0, 39.0),
         billboard : {
-            image : '../images/whiteShapes.png',
+            image : 'img/whiteShapes.png',
             imageSubRegion : new Cesium.BoundingRectangle(61, 23, 18, 18),
             color : new Cesium.Color(0, 0.5, 1.0, 1.0)
         }
@@ -184,7 +184,7 @@ function addMarkerBillboards() {
     viewer.entities.add({
         position : Cesium.Cartesian3.fromDegrees(-70.0, 41.0),
         billboard : {
-            image : '../images/whiteShapes.png',
+            image : 'img/whiteShapes.png',
             imageSubRegion : new Cesium.BoundingRectangle(67, 80, 14, 14),
             color : new Cesium.Color(0.5, 0.9, 1.0, 1.0)
         }
@@ -192,7 +192,7 @@ function addMarkerBillboards() {
     viewer.entities.add({
         position : Cesium.Cartesian3.fromDegrees(-73.0, 37.0),
         billboard : {
-            image : '../images/whiteShapes.png',
+            image : 'img/whiteShapes.png',
             imageSubRegion : new Cesium.BoundingRectangle(27, 103, 22, 22),
             color : Cesium.Color.RED
         }
@@ -200,7 +200,7 @@ function addMarkerBillboards() {
     viewer.entities.add({
         position : Cesium.Cartesian3.fromDegrees(-79.0, 35.0),
         billboard : {
-            image : '../images/whiteShapes.png',
+            image : 'img/whiteShapes.png',
             imageSubRegion : new Cesium.BoundingRectangle(105, 105, 18, 18),
             color : Cesium.Color.YELLOW
         }

@@ -18,7 +18,7 @@
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
-    @import url(../templates/bucket.css);
+    @import url(templates/bucket.css);
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
@@ -65,7 +65,7 @@ Sandcastle.addToolbarButton('Pick Entity', function() {
     var entity = viewer.entities.add({
         position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
         billboard : {
-            image : '../images/Cesium_Logo_overlay.png'
+            image : 'img/Cesium_Logo_overlay.png'
         }
     });
 
@@ -151,7 +151,7 @@ Sandcastle.addToolbarButton('Pick position', function() {
         name : 'milktruck',
         position : Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706),
         model : {
-            uri : '../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.bgltf'
+            uri : '../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.bgltf'
         }
     });
     viewer.zoomTo(modelEntity);

@@ -88,7 +88,7 @@
     </div>
 </div>
 
-<script src="gallery/gallery.js"></script>
+<script src="gallery/gallery-index.js"></script>
 <script src="js/vendor/modernizr-2.8.3-respond-1.4.2.min.js"></script>
 <script src="../../ThirdParty/jquery/dist/jquery.min.js"></script>
 <script src="../../ThirdParty/bootstrap-3.3.2/js/bootstrap.min.js"></script>
@@ -97,12 +97,12 @@
     var tabHeader = '<li role="presentation"><a href="{{tablink}}" aria-controls="{{tabname}}" role="tab" data-toggle="tab">{{tabheading}}</a></li>';
     var tabPanel = '<div role="tabpanel" class="tab-pane" id="{{tabname}}"><div class="row"></div></div>';
     var demoEle = '<div class="col-sm-3"><div class="thumbnail" id="{demo}"><a href="index.html?src={href}"><img src="img/gallery/{image}.jpg" alt="Demo Thumbnail"><div class="caption"><h5>{title}</h5><p class="hidden-xs">{description}</p></div></a></div></div>';
-    var gallery_demos = [];
+    var galleryList = [];
     var scriptCodeRegex = /\/\/Sandcastle_Begin\s*([\s\S]*)\/\/Sandcastle_End/;
 
-    for(var j = 0; j< gallery.length; j++){
+    for(var j = 0; j< gallery_demos.length; j++){
         var development = false;
-        var demoData = gallery[j];
+        var demoData = gallery_demos[j];
         var demoName = demoData.name;
         var label = demoData.labels;
         var desc = demoData.description;
@@ -158,7 +158,7 @@
             }
 
             var scriptCode = scriptMatch[1];
-            gallery_demos.push({name: demoName, code: scriptCode});
+            galleryList.push({name: demoName, code: scriptCode});
         }).fail(function(error){
             console.log(error);
         });
@@ -171,8 +171,8 @@
         searchRegExp = new RegExp(searchTerm, 'i');
         var numDemosShown = 0;
         if (searchTerm !== '') {
-            for (var i = 0; i < gallery_demos.length; i++) {
-                var demo = gallery_demos[i];
+            for (var i = 0; i < galleryList.length; i++) {
+                var demo = galleryList[i];
                 if(demo.name.indexOf("development") == -1)
                 {
                     // Only add non development to search

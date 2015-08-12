@@ -18,7 +18,7 @@
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
-    @import url(../templates/bucket.css);
+    @import url(templates/bucket.css);
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
@@ -39,7 +39,7 @@ function applyAlphaMapMaterial(primitive, scene) {
                 alphaMaterial : {
                     type : 'AlphaMap',
                     uniforms : {
-                        image : '../images/Cesium_Logo_Color.jpg',
+                        image : 'img/Cesium_Logo_Color.jpg',
                         channel : 'r'
                     }
                 }
@@ -60,13 +60,13 @@ function applyBumpMapMaterial(primitive, scene) {
                 diffuseMaterial : {
                     type : 'DiffuseMap',
                     uniforms : {
-                        image : '../images/bumpmap.png'
+                        image : 'img/bumpmap.png'
                     }
                 },
                 bumpMaterial : {
                     type : 'BumpMap',
                     uniforms : {
-                        image : '../images/bumpmap.png',
+                        image : 'img/bumpmap.png',
                         strength : 0.8
                     }
                 }
@@ -95,14 +95,14 @@ function applyCompositeMaterial(primitive, scene) {
     primitive.material = new Cesium.Material({
             fabric: {
                 uniforms : {
-                    image: '../images/earthspec1k.jpg',
-                    heightField : '../images/earthbump1k.jpg'
+                    image: 'img/earthspec1k.jpg',
+                    heightField : 'img/earthbump1k.jpg'
                 },
                 materials: {
                     bumpMap: {
                         type : 'BumpMap',
                         uniforms : {
-                            image : '../images/earthbump1k.jpg'
+                            image : 'img/earthbump1k.jpg'
                         }
                     }
                 },
@@ -132,7 +132,7 @@ function applyDiffuseMaterial(primitive, scene) {
         fabric : {
             type : 'DiffuseMap',
             uniforms : {
-                image : '../images/Cesium_Logo_Color.jpg'
+                image : 'img/Cesium_Logo_Color.jpg'
             }
         }
     });
@@ -146,13 +146,13 @@ function applyEmissionMapMaterial(primitive, scene) {
                 diffuseMaterial : {
                     type : 'DiffuseMap',
                     uniforms : {
-                        image : '../images/Cesium_Logo_Color.jpg'
+                        image : 'img/Cesium_Logo_Color.jpg'
                     }
                 },
                 emissionMaterial : {
                     type : 'EmissionMap',
                     uniforms : {
-                        image : '../images/checkerboard.png',
+                        image : 'img/checkerboard.png',
                         repeat : {
                             x : 1,
                             y : 0.5
@@ -175,7 +175,7 @@ function applyWaterMaterial(primitive, scene) {
         fabric : {
             type : 'Water',
             uniforms : {
-                specularMap: '../images/earthspec1k.jpg',
+                specularMap: 'img/earthspec1k.jpg',
                 normalMap: require.toUrl('Assets/Textures/waterNormals.jpg'),
                 frequency: 10000.0,
                 animationSpeed: 0.01,
@@ -196,7 +196,7 @@ function applyImageMaterial(primitive, scene) {
         fabric : {
             type : 'Image',
             uniforms : {
-                image : '../images/Cesium_Logo_Color.jpg'
+                image : 'img/Cesium_Logo_Color.jpg'
             }
         }
      });
@@ -210,13 +210,13 @@ function applyNormalMapMaterial(primitive, scene) {
                 diffuseMaterial : {
                     type : 'DiffuseMap',
                     uniforms : {
-                        image : '../images/bumpmap.png'
+                        image : 'img/bumpmap.png'
                     }
                 },
                 normalMap : {
                     type : 'NormalMap',
                     uniforms : {
-                        image : '../images/normalmap.png',
+                        image : 'img/normalmap.png',
                         strength : 0.6
                     }
                 }
@@ -236,7 +236,7 @@ function applySpecularMapMaterial(primitive, scene) {
         fabric : {
             type : 'SpecularMap',
             uniforms : {
-                image : '../images/Cesium_Logo_Color.jpg',
+                image : 'img/Cesium_Logo_Color.jpg',
                 channel : 'r'
             }
         }
