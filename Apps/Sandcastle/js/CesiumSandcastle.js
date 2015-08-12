@@ -60,6 +60,9 @@ require({
   var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
   var hintTimer;
   var docTimer;
+  var demoTitle;
+  var demoDesc;
+  var demoLabels;
   var runDisabled = false;
   var isMobile = $(window).width() < 768? "nocursor": false;
   var docTypes;
@@ -394,6 +397,10 @@ require({
         break;
     }
     var demo = gallery_demos[i];
+    // Set values of save modal
+    $('#titleText').val(demo.name);
+    $('#descriptionText').val(demo.description);
+    $('#labelText').val(demo.labels);
     requestDemo(demo.name + '.html').done(function(value){
       var code = value;
       var parser = new DOMParser();
@@ -441,7 +448,7 @@ require({
   }
   loadDemoCode();
 
-  function getDemoHTML(title, desc){
+  function getDemoHTML(title, desc, labels){
     var description = desc?desc: 'Cesium Demo';
     var demoName = title?title: 'Cesium Demo';
     return '<html>' + '\n'
@@ -617,6 +624,7 @@ require({
     this.exportHTML = function(){
       var title = $('#titleText').val();
       var desc = $('#descriptionText').val();
+      var labels = $('#labelText').val();
       var html = getDemoHTML(title,desc);
       var link = document.createElement('a');
       link.setAttribute('href', 'data:text/html;charset=utf-8,' + encodeURIComponent(html));
