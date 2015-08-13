@@ -72,7 +72,7 @@ require({
   var highlightLines = [];
   var scriptCodeRegex = /\/\/Sandcastle_Begin\s*([\s\S]*)\/\/Sandcastle_End/;
   var consoleMessages = ko.observableArray();
-  var searchTerm;
+  var searchTerm = '';
 
   // Fetch the documentation keywords
   $.ajax({
