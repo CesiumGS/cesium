@@ -223,25 +223,6 @@ define([
         });
     }
 
-    function replaceAttributes(div, elementType, attributeName, uriResolver) {
-        var keys = uriResolver.keys;
-        var baseUri = new Uri('.');
-        var elements = div.querySelectorAll(elementType);
-        for (var i = 0; i < elements.length; i++) {
-            var element = elements[i];
-            var value = element.getAttribute(attributeName);
-            var uri = new Uri(value).resolve(baseUri).toString();
-            var index = keys.indexOf(uri);
-            if (index !== -1) {
-                var key = keys[index];
-                element.setAttribute(attributeName, uriResolver[key]);
-                if (elementType === 'a' && element.getAttribute('download') === null) {
-                    element.setAttribute('download', key);
-                }
-            }
-        }
-    }
-
     function proxyUrl(url, proxy) {
         if (defined(proxy)) {
             if (new Uri(url).isAbsolute()) {
@@ -255,10 +236,6 @@ define([
         var id = queryStringAttribute(node, 'id');
         id = defined(id) ? id : createGuid();
         var entity = entityCollection.getOrCreateEntity(id);
-        if (!defined(entity.gpx)) {
-            entity.addProperty('gpx');
-            entity.gpx = new GpxFeatureData();
-        }
         return entity;
     }
 
@@ -299,7 +276,7 @@ define([
         return result;
     }
 
-    function getCoordinatesString(node){
+    function getCoordinatesString(node) {
         var longitude = queryNumericAttribute(node, 'lon');
         var latitude = queryNumericAttribute(node, 'lat');
         var elevation = queryNumericValue(node, 'ele', namespaces.gpx);
@@ -790,6 +767,10 @@ define([
     //TODO
     //processPtSeg, polygons/polylines?
 
+    /**
+     * Processes a metadaType node and saves the metadata in the dataSource object
+     * {@link http://www.topografix.com/gpx/1/1/#type_metadataType|GPX Schema}
+     */
     function processMetadata(dataSource, node, entityCollection, sourceUri, uriResolver) {
         //TODO implement getters on the dataSource object?
         dataSource.metadata = {
@@ -989,33 +970,21 @@ define([
     }
 
     /**
-     * A {@link DataSource} which processes Keyhole Markup Language 2.2 (GPX).
-     * <p>
-     * GPX support in Cesium is incomplete, but a large amount of the standard,
-     * as well as Google's <code>gx</code> extension namespace, is supported. See Github issue
-     * {@link https://github.com/AnalyticalGraphicsInc/cesium/issues/873|#873} for a
-     * detailed list of what is and isn't support. Cesium will also write information to the
-     * console when it encounters most unsupported features.
-     * </p>
-     * <p>
-     * Non visual feature data, such as <code>atom:author</code> and <code>ExtendedData</code>
-     * is exposed via an instance of {@link GpxFeatureData}, which is added to each {@link Entity}
-     * under the <code>gpx</code> property.
-     * </p>
+     * A {@link DataSource} which processes The GPS Exchange Format (GPX).
      *
      * @alias GpxDataSource
      * @constructor
      *
      * @param {DefaultProxy} [proxy] A proxy to be used for loading external data.
      *
-     * @see {@link http://www.opengeospatial.org/standards/gpx/|Open Geospatial Consortium GPX Standard}
-     * @see {@link https://developers.google.com/gpx/|Google GPX Documentation}
+     * @see {@link http://www.topografix.com/gpx.asp|Topografix GPX Standard}
+     * @see {@link http://www.topografix.com/gpx/1/1/|Topografix GPX Documentation}
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=GPX.html|Cesium Sandcastle GPX Demo}
+     * @demo {@link}
      *
      * @example
      * var viewer = new Cesium.Viewer('cesiumContainer');
-     * viewer.dataSources.add(Cesium.GpxDataSource.load('../../SampleData/facilities.kmz'));
+     * viewer.dataSources.add(Cesium.GpxDataSource.load('../../SampleData/track.gpx'));
      */
     var GpxDataSource = function(proxy) {
         this._changed = new Event();
@@ -1126,7 +1095,7 @@ define([
     /**
      * Asynchronously loads the provided GPX data, replacing any existing data.
      *
-     * @param {String|Document|Blob} data A url, parsed GPX document, or Blob containing binary KMZ data or a parsed GPX document.
+     * @param {String|Document|Blob} data A url, parsed GPX document, or Blob containing binary GPX data or a parsed GPX document.
      * @param {Object} [options] An object with the following properties:
      * @param {Number} [options.sourceUri] Overrides the url to use for resolving relative links and other GPX network features.
      * @returns {Promise} A promise that will resolve to this instances once the GPX is loaded.
@@ -1195,122 +1164,6 @@ define([
             window.console.log(error);
             return when.reject(error);
         });
-    };
-
-    /**
-     * Contains GPX Feature data loaded into the <code>Entity.gpx</code> property by {@link GpxDataSource}.
-     * @alias GpxFeatureData
-     * @constructor
-     */
-    var GpxFeatureData = function() {
-        /**
-         * Gets the atom syndication format author field.
-         * @type Object
-         */
-        this.author = {
-            /**
-             * Gets the name.
-             * @type String
-             * @alias author.name
-             * @memberof! GpxFeatureData#
-             * @property author.name
-             */
-            name : undefined,
-            /**
-             * Gets the URI.
-             * @type String
-             * @alias author.uri
-             * @memberof! GpxFeatureData#
-             * @property author.uri
-             */
-            uri : undefined,
-            /**
-             * Gets the email.
-             * @type String
-             * @alias author.email
-             * @memberof! GpxFeatureData#
-             * @property author.email
-             */
-            email : undefined
-        };
-
-        /**
-         * Gets the link.
-         * @type Object
-         */
-        this.link = {
-            /**
-             * Gets the href.
-             * @type String
-             * @alias link.href
-             * @memberof! GpxFeatureData#
-             * @property link.href
-             */
-            href : undefined,
-            /**
-             * Gets the language of the linked resource.
-             * @type String
-             * @alias link.hreflang
-             * @memberof! GpxFeatureData#
-             * @property link.hreflang
-             */
-            hreflang : undefined,
-            /**
-             * Gets the link relation.
-             * @type String
-             * @alias link.rel
-             * @memberof! GpxFeatureData#
-             * @property link.rel
-             */
-            rel : undefined,
-            /**
-             * Gets the link type.
-             * @type String
-             * @alias link.type
-             * @memberof! GpxFeatureData#
-             * @property link.type
-             */
-            type : undefined,
-            /**
-             * Gets the link title.
-             * @type String
-             * @alias link.title
-             * @memberof! GpxFeatureData#
-             * @property link.title
-             */
-            title : undefined,
-            /**
-             * Gets the link length.
-             * @type String
-             * @alias link.length
-             * @memberof! GpxFeatureData#
-             * @property link.length
-             */
-            length : undefined
-        };
-
-        /**
-         * Gets the unstructured address field.
-         * @type String
-         */
-        this.address = undefined;
-        /**
-         * Gets the phone number.
-         * @type String
-         */
-        this.phoneNumber = undefined;
-        /**
-         * Gets the snippet.
-         * @type String
-         */
-        this.snippet = undefined;
-        /**
-         * Gets the extended data, parsed into a JSON object.
-         * Currently only the <code>Data</code> property is supported.
-         * <code>SchemaData</code> and custom data are ignored.
-         * @type String
-         */
-        this.extendedData = undefined;
     };
 
     return GpxDataSource;
