@@ -768,21 +768,25 @@ define([
     //processPtSeg, polygons/polylines?
 
     /**
-     * Processes a metadaType node and saves the metadata in the dataSource object
+     * Processes a metadaType node and returns a metadata object
      * {@link http://www.topografix.com/gpx/1/1/#type_metadataType|GPX Schema}
      */
-    function processMetadata(dataSource, node, entityCollection, sourceUri, uriResolver) {
-        //TODO implement getters on the dataSource object?
-        dataSource.metadata = {
-            name : queryStringValue(node, 'name', namespaces.gpx),
-            desc : queryStringValue(node, 'desc', namespaces.gpx),
-            author : getPerson(node),
-            copyright : getCopyright(node),
-            link : getLink(node),
-            time : queryStringValue(node, 'time', namespaces.gpx),
-            keywords : queryStringValue(node, 'keywords', namespaces.gpx),
-            bounds : getBounds(node)
-        };
+    function processMetadata(node) {
+        var metadataNode = queryFirstNode(node, 'metadata', namespaces.gpx);
+        if (defined(metadataNode)) {
+            return {
+                name : queryStringValue(metadataNode, 'name', namespaces.gpx),
+                desc : queryStringValue(metadataNode, 'desc', namespaces.gpx),
+                author : getPerson(metadataNode),
+                copyright : getCopyright(metadataNode),
+                link : getLink(metadataNode),
+                time : queryStringValue(metadataNode, 'time', namespaces.gpx),
+                keywords : queryStringValue(metadataNode, 'keywords', namespaces.gpx),
+                bounds : getBounds(metadataNode)
+            };
+        } else {
+            return undefined;
+        }
     }
     /**
      *  Receives a XML node and returns a personType object, refer to
@@ -859,7 +863,6 @@ define([
     }
 
     var complexTypes = {
-        metadata : processMetadata,
         pt : processPt,
         wpt : processWpt,
         rte : processRte,
@@ -895,10 +898,16 @@ define([
         var version = queryStringAttribute(element, 'version');
         var creator = queryStringAttribute(element, 'creator');
 
-        var name = queryStringValue(document, 'name', namespaces.gpx);
+        var name;
+        var metadata = processMetadata(element);
+        if(defined(metadata)){
+            name = metadata.name;
+        }
+
         if (!defined(name) && defined(sourceUri)) {
             name = getFilenameFromUri(sourceUri);
         }
+
 
         if (element.localName === 'gpx') {
             processGpx(dataSource, element, entityCollection, sourceUri, uriResolver);
@@ -993,8 +1002,8 @@ define([
         this._clock = undefined;
         this._entityCollection = new EntityCollection();
         this._name = undefined;
-        this._creator = undefined;
         this._version = undefined;
+        this._creator = undefined;
         this._isLoading = false;
         this._proxy = proxy;
         this._pinBuilder = new PinBuilder();
@@ -1026,6 +1035,18 @@ define([
         name : {
             get : function() {
                 return this._name;
+            }
+        },
+
+        version : {
+            get : function() {
+                return this._version;
+            }
+        },
+
+        creator : {
+            get : function() {
+                return this._creator;
             }
         },
         /**
