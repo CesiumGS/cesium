@@ -322,7 +322,7 @@ define([
 
         if(polyline.followSurface == false) {
             polyline.coordinates.push(coordinates[0]);
-            createPolyline(that, polyline.coordintes, polyline.followSurface, properties);
+            createPolyline(that, polyline.coordinates, polyline.followSurface, properties);
             polyline.coordinates = [];
             polyline.followSurface = true;
         }
@@ -362,11 +362,13 @@ define([
         return polyline;
     }
 
+    //Incomplete. In this case, 3 points on the circumference of the circle will be given and
+    //center and radius needs to be calculated.
     function processCircle(that, circle, polyline, properties, crsProperties) {
-
+        //Raise error for now.
         if(polyline.followSurface == false) {
             polyline.coordinates.push(center);
-            createPolyline(that, polyline.coordintes, polyline.followSurface, properties);
+            createPolyline(that, polyline.coordinates, polyline.followSurface, properties);
             polyline.coordinates = [];
             polyline.followSurface = true;
         }
@@ -468,18 +470,23 @@ define([
         return hierarchy;
     }
 
+    //processRing works with only LineStringSegment. Does not work with Arc,
+    //CircleByCenterPoint and Circle. However, its very rare to find Arc,
+    //CircleByCenterPoint and Circle as part of a polygon boundary.
     function processRing(ring, holes, crsProperties) {
     	var curveMember = ring.firstElementChild.firstElementChild;
     	var segments = curveMember.firstElementChild.children;
         var coordinates = [];
         for(i = 0; i < segments.length; i++) {
-            var geometryHandler = curveSegmentTypes[segments[i].localName];
-            var geometry = geometryHandler(segments[i], crsProperties);
-            coordinates.concat(geometry.coordinates);
+            if(segmengts[i].localName === "LineStringSegment") {
+                var coordString = segments[i].firstElementChild;
+                coordinates.concat(processCoordinates(coordString, crsProperties));
+            } else {
+                //Raise error.
+            }
         }
-
-    	var hierarchy = new PolygonHierarchy(coordinates, holes);
-    	return hierarchy;
+        var hierarchy = new PolygonHierarchy(coordinates, holes);
+        return hierarchy;
     }
 
     function createPolygon(that, hierarchy, properties) {
