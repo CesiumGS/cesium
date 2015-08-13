@@ -61,6 +61,105 @@ defineSuite(['DataSources/GpxDataSource',
         });
     });
 
+    it('sets DataSource creator and version from gpx', function() {
+        var dataSource = new GpxDataSource();
+        var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
+            <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="Test">\
+            </gpx>';
+        return dataSource.load(parser.parseFromString(gpx, "text/xml")).then(function() {
+            expect(dataSource.version).toEqual('1.1');
+            expect(dataSource.creator).toEqual('Test');
+        });
+    });
+
+    it('sets DataSource name from metadata', function() {
+        var dataSource = new GpxDataSource();
+        var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
+            <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="Test">\
+            <metadata>\
+                <name>File Name</name>\
+            </metadata>\
+            </gpx>';
+        return dataSource.load(parser.parseFromString(gpx, "text/xml")).then(function() {
+            expect(dataSource.name).toEqual('File Name');
+        });
+    });
+
+    it('sets DataSource name from sourceUri when not in file', function() {
+        var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
+            <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="Test">\
+            </gpx>';
+
+        return GpxDataSource.load(parser.parseFromString(gpx, "text/xml"), {
+            sourceUri : 'NameFromUri.gpx'
+        }).then(function(dataSource) {
+            expect(dataSource.name).toEqual('NameFromUri.gpx');
+        });
+    });
+
+    it('raises changed event when the name changes', function() {
+        var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
+            <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="Test">\
+            <metadata>\
+                <name>NameInGpx</name>\
+            </metadata>\
+            </gpx>';
+
+        var dataSource = new GpxDataSource();
+
+        var spy = jasmine.createSpy('changedEvent');
+        dataSource.changedEvent.addEventListener(spy);
+
+        return dataSource.load(parser.parseFromString(gpx, "text/xml")).then(function() {
+            //Initial load
+            expect(spy).toHaveBeenCalledWith(dataSource);
+
+            spy.calls.reset();
+            return dataSource.load(parser.parseFromString(gpx, "text/xml")).then(function() {
+                //Loading GPX with same name
+                expect(spy).not.toHaveBeenCalled();
+
+                gpx = gpx.replace('NameInGpx', 'newName');
+                spy.calls.reset();
+                return dataSource.load(parser.parseFromString(gpx, "text/xml")).then(function() {
+                    //Loading KML with different name.
+                    expect(spy).toHaveBeenCalledWith(dataSource);
+                });
+            });
+        });
+    });
+
+    it('raises loadingEvent event at start and end of load', function() {
+        var dataSource = new GpxDataSource();
+
+        var spy = jasmine.createSpy('loadingEvent');
+        dataSource.loadingEvent.addEventListener(spy);
+
+        var promise = dataSource.load('Data/GPX/simple.gpx');
+        expect(spy).toHaveBeenCalledWith(dataSource, true);
+        spy.calls.reset();
+
+        return promise.then(function() {
+            expect(spy).toHaveBeenCalledWith(dataSource, false);
+        });
+    });
+
+    it('Complex Type: name', function() {
+        var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
+            <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="RouteConverter">\
+                <wpt lat="1" lon="2">\
+                    <name>Test</name>\
+                </wpt>\
+            </gpx>';
+
+        return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.name).toBe('Test');
+            expect(entity.label).toBeDefined();
+            expect(entity.label.text.getValue()).toBe('Test');
+        });
+    });
+
     it('Waypoint: throws with invalid coordinates', function() {
         var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="RouteConverter">\
@@ -94,6 +193,7 @@ defineSuite(['DataSources/GpxDataSource',
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
             expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(38.737125, -9.139242, undefined));
+            expect(entities[0].name).toEqual("Position 1");
         });
     });
 

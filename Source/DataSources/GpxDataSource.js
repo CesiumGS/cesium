@@ -616,6 +616,7 @@ define([
         entity.billboard = createDefaultBillboard(dataSource._proxy, sourceUri, uriResolver);
 
         var name = queryStringValue(geometryNode, 'name', namespaces.gpx);
+        entity.name = name;
         entity.label = createDefaultLabel();
         entity.label.text = name;
         entity.description = processDescription(geometryNode, entity, uriResolver);
