@@ -440,9 +440,14 @@ require({
   function getDemoHTML(title, desc, labels){
     var description = desc?desc: 'Cesium Demo';
     var demoName = title?title: 'Cesium Demo';
-    return '<html>' + '\n'
+    return '<!DOCTYPE html>' + '\n'
+          + '<html lang="en">' + '\n'
           + '<head>' + '\n'
+          + '<meta charset="utf-8">' + '\n'
+          + '<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->' + '\n'
+          + '<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">' + '\n'
           + '<meta name ="description" content="' + description + '">' + '\n'
+          + '<meta name ="cesium-sandcastle-labels" content="' + labels + '">' + '\n'
           + '<title>' + demoName + '</title>' + '\n'
           + '<script type="text/javascript" src="./Sandcastle-header.js"></script>' + '\n'
           + '<script type="text/javascript" src="../../ThirdParty/requirejs-2.1.9/require.js"></script>' + '\n'
@@ -458,7 +463,7 @@ require({
           + cssEditor.getValue() + '\n'
           + '</style>' + '\n'
           + htmlEditor.getValue() + '\n'
-          + '<script type="text/javascript">' + '\n'
+          + '<script id="cesium_sandcastle_script" type="text/javascript">' + '\n'
           + getScriptFromEditor(isFirefox) + '\n'
           + '</script></body></html>';
   }
@@ -637,7 +642,7 @@ require({
       var title = $('#titleText').val();
       var desc = $('#descriptionText').val();
       var labels = $('#labelText').val();
-      var html = getDemoHTML(title,desc);
+      var html = getDemoHTML(title,desc,labels);
       var link = document.createElement('a');
       link.setAttribute('href', 'data:text/html;charset=utf-8,' + encodeURIComponent(html));
       link.setAttribute('download', title + '.html');
