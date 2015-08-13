@@ -122,7 +122,7 @@ define([
 
         this.decompressedViewsToCreate = new Queue();
         this.decompressedViews = {};
-        this.decompressionInFlight = 0;
+        this.decompressionInFlight = false;
 
         this.programsToCreate = new Queue();
         this.shaders = {};
@@ -161,7 +161,7 @@ define([
     LoadResources.prototype.finishedBuffersCreation = function() {
         return ((this.pendingBufferLoads === 0) &&
                 (this.decompressedViewsToCreate.length === 0) &&
-                (this.decompressionInFlight === 0) &&
+                (!this.decompressionInFlight) &&
                 (this.vertexBuffersToCreate.length === 0) &&
                 (this.indexBuffersToCreate.length === 0));
     };
@@ -1439,7 +1439,7 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    var open3dgcTaskProcessor = new TaskProcessor('decompressOpen3DGC');
+    var open3dgcTaskProcessor = new TaskProcessor('decompressOpen3DGC', Number.POSITIVE_INFINITY);
 
     function decompressOpen3dgcSync(buffer, decompressedView) {
         var compressedBuffer = getSubarray(buffer, decompressedView.byteOffset, decompressedView.byteLength);
@@ -1472,26 +1472,27 @@ define([
         }
 
         var decompressPromise = decompressOpen3dgcAsync(buffer, decompressedView);
-        if (defined(decompressPromise)) {
-            return when(decompressPromise).then(function(result) {
-                return result.decompressedArrayBuffer;
-            });
-        } else {
-            return decompressOpen3dgcSync(buffer, decompressedView);
-        }
+        return when(decompressPromise).then(function(result) {
+            return result.decompressedArrayBuffer;
+        });
+    }
+
+    function createDecompressClosure(loadResources, name){
+        return function(decompressedArrayBuffer) {
+            loadResources.decompressedViews[name] = new Uint8Array(decompressedArrayBuffer);
+        };
     }
 
     function createDecompressedView(model) {
+        var promises = [];
         var loadResources = model._loadResources;
-
-        loadResources.decompressionInFlight++;
-
-        var name = loadResources.decompressedViewsToCreate.dequeue();
-
-        var decompressPromise = decompressOpen3dgc(model, name);
-        decompressPromise.then(function(decompressedArrayBuffer) {
-            loadResources.decompressedViews[name] = new Uint8Array(decompressedArrayBuffer);
-            loadResources.decompressionInFlight--;
+        while (loadResources.decompressedViewsToCreate.length > 0) {
+            var name = loadResources.decompressedViewsToCreate.dequeue();
+            var decompressPromise = decompressOpen3dgc(model, name);
+            promises.push(decompressPromise.then(createDecompressClosure(loadResources, name)));
+        }
+        when.all(promises, function() {
+            loadResources.decompressionInFlight = false;
         });
     }
 
@@ -1507,15 +1508,8 @@ define([
             return;
         }
 
-        if (model.asynchronous) {
-            if (loadResources.decompressedViewsToCreate.length > 0) {
-                createDecompressedView(model);
-            }
-        } else {
-            while (loadResources.decompressedViewsToCreate.length > 0) {
-                createDecompressedView(model);
-            }
-        }
+        model._loadResources.decompressionInFlight = true;
+        createDecompressedView(model);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1568,7 +1562,7 @@ define([
     function createBuffers(model, context, frameState) {
         var loadResources = model._loadResources;
 
-        if (loadResources.pendingBufferLoads !== 0 || loadResources.decompressedViewsToCreate.length !== 0 || loadResources.decompressionInFlight !== 0) {
+        if (loadResources.pendingBufferLoads !== 0 || loadResources.decompressedViewsToCreate.length !== 0 || loadResources.decompressionInFlight) {
             return;
         }
 
@@ -3231,6 +3225,9 @@ define([
         var justLoaded = false;
 
         if (this._state === ModelState.LOADING) {
+            if(this._loadResources.decompressionInFlight){
+                return;
+            }
             // Create WebGL resources as buffers/shaders/textures are downloaded
             createResources(this, context, frameState);
 
@@ -3271,7 +3268,7 @@ define([
             }
         }
 
-        var show = this.show && (this.scale !== 0.0) && displayConditionPassed;
+        var show = this.show && (this.scale !== 0.0) && displayConditionPassed && (!defined(loadResources) || !loadResources.decompressionInFlight);
 
         if ((show && this._state === ModelState.LOADED) || justLoaded) {
             var animated = this.activeAnimations.update(frameState) || this._cesiumAnimationsDirty;
