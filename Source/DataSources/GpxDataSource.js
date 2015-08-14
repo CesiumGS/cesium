@@ -752,22 +752,6 @@ define([
         return result;
     }
 
-    //TODO check for points inside other complexTypes?
-    function processPt(dataSource, geometryNode, entityCollection, sourceUri, uriResolver) {
-        var coordinatesString = getCoordinatesString(geometryNode);
-        var position = readCoordinate(coordinatesString);
-        if (!defined(position)) {
-            throw new DeveloperError('Position Coordinates are required.');
-        }
-
-        var entity = getOrCreateEntity(geometryNode, entityCollection);
-        entity.position = position;
-        entity.point = createDefaultPoint();
-    }
-
-    //TODO
-    //processPtSeg, polygons/polylines?
-
     /**
      * Processes a metadaType node and returns a metadata object
      * {@link http://www.topografix.com/gpx/1/1/#type_metadataType|GPX Schema}
@@ -864,7 +848,6 @@ define([
     }
 
     var complexTypes = {
-        pt : processPt,
         wpt : processWpt,
         rte : processRte,
         trk : processTrk
