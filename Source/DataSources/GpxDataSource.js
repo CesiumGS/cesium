@@ -787,7 +787,7 @@ define([
             };
             return person;
         } else {
-            return null;
+            return undefined;
         }
     }
     /**
@@ -801,7 +801,7 @@ define([
             var domain = queryStringValue(emailNode, 'domain', namespaces.gpx);
             return id + '@' + domain;
         } else {
-            return null;
+            return undefined;
         }
     }
     /**
@@ -818,7 +818,7 @@ define([
             };
             return link;
         } else {
-            return null;
+            return undefined;
         }
     }
     /**
@@ -831,7 +831,11 @@ define([
             year : queryStringValue(node, 'year', namespaces.gpx),
             license : queryStringValue(node, 'license', namespaces.gpx)
         };
-        return copyright;
+        if (defined(copyright.author) || defined(copyright.year) || defined(copyright.license)) {
+            return copyright;
+        } else {
+            return undefined;
+        }
     }
     /**
      *  Receives a XML node and returns a boundsType object, refer to
@@ -844,7 +848,11 @@ define([
             minLon : queryNumericValue(node, 'minlon'),
             maxLon : queryNumericValue(node, 'maxlon')
         };
-        return bounds;
+        if (defined(bounds.minLat) || defined(bounds.maxLat) || defined(bounds.minLon) || defined(bounds.maxLon)) {
+            return bounds;
+        } else {
+            return undefined;
+        }
     }
 
     var complexTypes = {
@@ -943,6 +951,11 @@ define([
                 changed = true;
             }
 
+            if (dataSource._metadata !== metadata){
+                dataSource._metadata = metadata;
+                changed = true;
+            }
+
             if (dataSource._version !== version) {
                 dataSource._version = version;
                 changed = true;
@@ -988,6 +1001,7 @@ define([
         this._name = undefined;
         this._version = undefined;
         this._creator = undefined;
+        this._metadata = undefined;
         this._isLoading = false;
         this._proxy = proxy;
         this._pinBuilder = new PinBuilder();
@@ -1021,16 +1035,34 @@ define([
                 return this._name;
             }
         },
-
+        /**
+         * Gets the version of the GPX Schema in use.
+         * @memberof GpxDataSource.prototype
+         * @type {String}
+         */
         version : {
             get : function() {
                 return this._version;
             }
         },
-
+        /**
+         * Gets the creator of the GPX document.
+         * @memberof GpxDataSource.prototype
+         * @type {String}
+         */
         creator : {
             get : function() {
                 return this._creator;
+            }
+        },
+        /**
+         * Gets an object containing metadata about the GPX file.
+         * @memberof GpxDataSource.prototype
+         * @type {Object}
+         */
+        creator : {
+            get : function() {
+                return this._metadata;
             }
         },
         /**
