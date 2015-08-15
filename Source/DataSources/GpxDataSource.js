@@ -759,7 +759,7 @@ define([
     function processMetadata(node) {
         var metadataNode = queryFirstNode(node, 'metadata', namespaces.gpx);
         if (defined(metadataNode)) {
-            return {
+            var metadata = {
                 name : queryStringValue(metadataNode, 'name', namespaces.gpx),
                 desc : queryStringValue(metadataNode, 'desc', namespaces.gpx),
                 author : getPerson(metadataNode),
@@ -769,9 +769,11 @@ define([
                 keywords : queryStringValue(metadataNode, 'keywords', namespaces.gpx),
                 bounds : getBounds(metadataNode)
             };
-        } else {
-            return undefined;
+            if (defined(metadata.name) || defined(metadata.desc) || defined(metadata.author) || defined(metadata.copyright) || defined(metadata.link) || defined(metadata.time) || defined(metadata.keywords) || defined(metadata.bounds)) {
+                return metadata;
+            }
         }
+        return undefined;
     }
     /**
      *  Receives a XML node and returns a personType object, refer to
@@ -785,10 +787,11 @@ define([
                 email : getEmail(personNode),
                 link : getLink(personNode)
             };
-            return person;
-        } else {
-            return undefined;
+            if (defined(person.name) || defined(person.email) || defined(person.link)) {
+                return person;
+            }
         }
+        return undefined;
     }
     /**
      *  Receives a XML node and returns an email address (from emailType), refer to
@@ -816,10 +819,11 @@ define([
                 text : queryStringValue(linkNode, 'text', namespaces.gpx),
                 mimeType : queryStringValue(linkNode, 'type', namespaces.gpx)
             };
-            return link;
-        } else {
-            return undefined;
+            if (defined(link.href) || defined(link.text) || defined(link.mimeType)) {
+                return link;
+            }
         }
+        return undefined;
     }
     /**
     *  Receives a XML node and returns a copyrightType object, refer to
@@ -951,7 +955,7 @@ define([
                 changed = true;
             }
 
-            if (dataSource._metadata !== metadata){
+            if (metadataChanged(dataSource._metadata, metadata)){
                 dataSource._metadata = metadata;
                 changed = true;
             }
@@ -973,6 +977,18 @@ define([
             DataSource.setLoading(dataSource, false);
             return dataSource;
         });
+    }
+
+    function metadataChanged(old, current) {
+        if (!defined(old) && !defined(current)) {
+            return false;
+        } else if (defined(old) && defined(current)) {
+            if (old.name !== current.name || old.dec !== current.desc || old.src !== current.src || old.author !== current.author || old.copyright !== current.copyright || old.link !== current.link || old.time !== current.time || old.bounds !== current.bounds) {
+                return true;
+            } else {
+                return false;
+            }
+        }
     }
 
     /**
@@ -1060,7 +1076,7 @@ define([
          * @memberof GpxDataSource.prototype
          * @type {Object}
          */
-        creator : {
+        metadata : {
             get : function() {
                 return this._metadata;
             }
