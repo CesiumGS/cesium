@@ -8,6 +8,9 @@ Change Log
 * Deprecated
   *
 * Fix issue where extruded `PolygonGeometry` was always extruding to the ellipsoid surface instead of specified height.
+* Imagery Layer on small bounding box crash fix.
+* Added Tile Map Service via callback imagery provider.
+* Added Added LoadImageViaCallback, friendly to load images as base64 strings.
  
 
 ### 1.12 - 2015-08-03
