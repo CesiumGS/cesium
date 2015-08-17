@@ -296,6 +296,7 @@ define([
         this._createRenderStatesFunction = options._createRenderStatesFunction;
         this._createShaderProgramFunction = options._createShaderProgramFunction;
         this._createCommandsFunction = options._createCommandsFunction;
+        this._updateAndQueueCommandsFunction = options._updateAndQueueCommandsFunction;
 
         this._createGeometryResults = undefined;
         this._ready = false;
@@ -1160,6 +1161,33 @@ define([
         attributes.length = 0;
     }
 
+    function updateAndQueueCommands(frameState, commandList, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, boundingSpheres, twoPasses) {
+        var passes = frameState.passes;
+        if (passes.render) {
+            var colorLength = colorCommands.length;
+            for (var j = 0; j < colorLength; ++j) {
+                var sphereIndex = twoPasses ? Math.floor(j / 2) : j;
+                colorCommands[j].modelMatrix = modelMatrix;
+                colorCommands[j].boundingVolume = boundingSpheres[sphereIndex];
+                colorCommands[j].cull = cull;
+                colorCommands[j].debugShowBoundingVolume = debugShowBoundingVolume;
+
+                commandList.push(colorCommands[j]);
+            }
+        }
+
+        if (passes.pick) {
+            var pickLength = pickCommands.length;
+            for (var k = 0; k < pickLength; ++k) {
+                pickCommands[k].modelMatrix = modelMatrix;
+                pickCommands[k].boundingVolume = boundingSpheres[k];
+                pickCommands[k].cull = cull;
+
+                commandList.push(pickCommands[k]);
+            }
+        }
+    }
+
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -1284,32 +1312,8 @@ define([
             boundingSpheres = this._boundingSphereMorph;
         }
 
-        var passes = frameState.passes;
-        if (passes.render) {
-            var colorCommands = this._colorCommands;
-            var colorLength = colorCommands.length;
-            for (var j = 0; j < colorLength; ++j) {
-                var sphereIndex = twoPasses ? Math.floor(j / 2) : j;
-                colorCommands[j].modelMatrix = modelMatrix;
-                colorCommands[j].boundingVolume = boundingSpheres[sphereIndex];
-                colorCommands[j].cull = this.cull;
-                colorCommands[j].debugShowBoundingVolume = this.debugShowBoundingVolume;
-
-                commandList.push(colorCommands[j]);
-            }
-        }
-
-        if (passes.pick) {
-            var pickCommands = this._pickCommands;
-            var pickLength = pickCommands.length;
-            for (var k = 0; k < pickLength; ++k) {
-                pickCommands[k].modelMatrix = modelMatrix;
-                pickCommands[k].boundingVolume = boundingSpheres[k];
-                pickCommands[k].cull = this.cull;
-
-                commandList.push(pickCommands[k]);
-            }
-        }
+        var updateAndQueueCommandsFunc = defaultValue(this._updateAndQueueCommandsFunction, updateAndQueueCommands);
+        updateAndQueueCommandsFunc(frameState, commandList, this._colorCommands, this._pickCommands, modelMatrix, this.cull, this.debugShowBoundingVolume, boundingSpheres, twoPasses);
     };
 
     function createGetFunction(name, perInstanceAttributes) {

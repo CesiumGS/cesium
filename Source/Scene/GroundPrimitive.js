@@ -521,6 +521,32 @@ define([
         }
     }
 
+    function updateAndQueueCommands(frameState, commandList, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, boundingSpheres, twoPasses) {
+        var passes = frameState.passes;
+        if (passes.render) {
+            var colorLength = colorCommands.length;
+            for (var j = 0; j < colorLength; ++j) {
+                colorCommands[j].modelMatrix = modelMatrix;
+                colorCommands[j].boundingVolume = boundingSpheres[Math.floor(j / 3)];
+                colorCommands[j].cull = cull;
+                colorCommands[j].debugShowBoundingVolume = debugShowBoundingVolume;
+
+                commandList.push(colorCommands[j]);
+            }
+        }
+
+        if (passes.pick) {
+            var pickLength = pickCommands.length;
+            for (var k = 0; k < pickLength; ++k) {
+                pickCommands[k].modelMatrix = modelMatrix;
+                pickCommands[k].boundingVolume = boundingSpheres[Math.floor(k / 3)];
+                pickCommands[k].cull = cull;
+
+                commandList.push(pickCommands[k]);
+            }
+        }
+    }
+
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -577,6 +603,7 @@ define([
             this._primitiveOptions._createCommandsFunction = function(primitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands) {
                 createCommands(that, undefined, undefined, true, false, colorCommands, pickCommands);
             };
+            this._primitiveOptions._updateAndQueueCommandsFunction = updateAndQueueCommands;
 
             this._primitive = new Primitive(primitiveOptions);
             this._primitive.readyPromise.then(function(primitive) {
