@@ -77,6 +77,75 @@ defineSuite([
         expect(box.halfAxes).toEqual(Matrix3.ZERO);
     });
 
+    it('fromPoints constructs empty box with undefined positions', function() {
+        var box = OrientedBoundingBox.fromPoints(undefined);
+        expect(box.halfAxes).toEqual(Matrix3.ZERO);
+        expect(box.center).toEqual(Cartesian3.ZERO);
+    });
+
+    it('fromPoints constructs empty box with empty positions', function() {
+        var box = OrientedBoundingBox.fromPoints([]);
+        expect(box.halfAxes).toEqual(Matrix3.ZERO);
+        expect(box.center).toEqual(Cartesian3.ZERO);
+    });
+
+    it('fromPoints correct scale', function() {
+        var box = OrientedBoundingBox.fromPoints(positions);
+        expect(box.halfAxes).toEqual(Matrix3.fromScale(new Cartesian3(2.0, 3.0, 4.0)));
+        expect(box.center).toEqual(Cartesian3.ZERO);
+    });
+
+    it('fromPoints correct translation', function() {
+        var translation = new Cartesian3(10.0, -20.0, 30.0);
+        var points = translatePositions(positions, translation);
+        var box = OrientedBoundingBox.fromPoints(points);
+        expect(box.halfAxes).toEqual(Matrix3.fromScale(new Cartesian3(2.0, 3.0, 4.0)));
+        expect(box.center).toEqual(translation);
+    });
+
+    it('fromPoints rotation about z', function() {
+        var result = rotatePositions(positions, Cartesian3.UNIT_Z, CesiumMath.PI_OVER_FOUR);
+        var points = result.points;
+        var rotation = result.rotation;
+
+        var box = OrientedBoundingBox.fromPoints(points);
+        expect(box.halfAxes).toEqualEpsilon(Matrix3.multiplyByScale(rotation, new Cartesian3(3.0, 2.0, 4.0), new Matrix3()), CesiumMath.EPSILON15);
+        expect(box.center).toEqualEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON15);
+    });
+
+    it('fromPoints rotation about y', function() {
+        var result = rotatePositions(positions, Cartesian3.UNIT_Y, CesiumMath.PI_OVER_FOUR);
+        var points = result.points;
+        var rotation = result.rotation;
+
+        var box = OrientedBoundingBox.fromPoints(points);
+        expect(box.halfAxes).toEqualEpsilon(Matrix3.multiplyByScale(rotation, new Cartesian3(4.0, 3.0, 2.0), new Matrix3()), CesiumMath.EPSILON15);
+        expect(box.center).toEqualEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON15);
+    });
+
+    it('fromPoints rotation about x', function() {
+        var result = rotatePositions(positions, Cartesian3.UNIT_X, CesiumMath.PI_OVER_FOUR);
+        var points = result.points;
+        var rotation = result.rotation;
+
+        var box = OrientedBoundingBox.fromPoints(points);
+        expect(box.halfAxes).toEqualEpsilon(Matrix3.multiplyByScale(rotation, new Cartesian3(2.0, 4.0, 3.0), new Matrix3()), CesiumMath.EPSILON15);
+        expect(box.center).toEqualEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON15);
+    });
+
+    it('fromPoints rotation and translation', function() {
+        var result = rotatePositions(positions, Cartesian3.UNIT_Z, CesiumMath.PI_OVER_FOUR);
+        var points = result.points;
+        var rotation = result.rotation;
+
+        var translation = new Cartesian3(-40.0, 20.0, -30.0);
+        points = translatePositions(points, translation);
+
+        var box = OrientedBoundingBox.fromPoints(points);
+        expect(box.halfAxes).toEqualEpsilon(Matrix3.multiplyByScale(rotation, new Cartesian3(3.0, 2.0, 4.0), new Matrix3()), CesiumMath.EPSILON14);
+        expect(box.center).toEqualEpsilon(translation, CesiumMath.EPSILON15);
+    });
+
     it('fromRectangle sets correct default ellipsoid', function() {
         var rectangle = new Rectangle(-0.9, -1.2, 0.5, 0.7);
         var box1 = OrientedBoundingBox.fromRectangle(rectangle, 0.0, 0.0);

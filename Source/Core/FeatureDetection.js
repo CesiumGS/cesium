@@ -175,7 +175,7 @@ define([
     /**
      * Detects whether the current browser supports the full screen standard.
      *
-     * @returns true if the browser supports the full screen standard, false if not.
+     * @returns {Boolean} true if the browser supports the full screen standard, false if not.
      *
      * @see Fullscreen
      * @see {@link http://dvcs.w3.org/hg/fullscreen/raw-file/tip/Overview.html|W3C Fullscreen Living Specification}
@@ -187,7 +187,7 @@ define([
     /**
      * Detects whether the current browser supports typed arrays.
      *
-     * @returns true if the browser supports typed arrays, false if not.
+     * @returns {Boolean} true if the browser supports typed arrays, false if not.
      *
      * @see {@link http://www.khronos.org/registry/typedarray/specs/latest/|Typed Array Specification}
      */
@@ -198,7 +198,7 @@ define([
     /**
      * Detects whether the current browser supports Web Workers.
      *
-     * @returns true if the browsers supports Web Workers, false if not.
+     * @returns {Boolean} true if the browsers supports Web Workers, false if not.
      *
      * @see {@link http://www.w3.org/TR/workers/}
      */

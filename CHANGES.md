@@ -1,18 +1,25 @@
 Change Log
 ==========
 
-### 1.12 - 2015-08-03
+### 1.13 - 2015-09-01
 
 * Breaking changes
   *
 * Deprecated
   *
+* Fix issue where extruded `PolygonGeometry` was always extruding to the ellipsoid surface instead of specified height.
 * Added support for `GroundPrimitive` which works much like `Primitive` but it drapes the geometry over terrain. Valid geometries that can be draped on terrain are `CircleGeometry`, `CorridorGeometry`, `EllipseGeometry`, `PolygonGeometry`, and `RectangleGeometry`.
+
+### 1.12 - 2015-08-03
+
+* Breaking changes
+  * Remove deprecated `ObjectOrientedBoundingBox`. Use `OrientedBoundingBox` instead.
+* Added `MapboxImageryProvider` to load imagery from [Mapbox](https://www.mapbox.com).
 * Added `maximumHeight` option to `Viewer.flyTo`. [#2868](https://github.com/AnalyticalGraphicsInc/cesium/issues/2868)
 * Added picking support to `UrlTemplateImageryProvider`.
 * Added ArcGIS token-based authentication support to `ArcGisMapServerImageryProvider`.
-* `ArcGisMapServerImageryProvider` now supports a proxy for `pickFeatures` requests.
-* Added `MapboxImageryProvider` to load imagery from [Mapbox](https://www.mapbox.com).
+* Added proxy support to `ArcGisMapServerImageryProvider` for `pickFeatures` requests.
+* The default `CTRL + Left Click Drag` mouse behavior is now duplicated for `CTRL + Right Click Drag` for better compatibility with Firefox on Mac OS [#2872](https://github.com/AnalyticalGraphicsInc/cesium/pull/2913).
 * Fixed incorrect texture coordinates for `WallGeometry` [#2872](https://github.com/AnalyticalGraphicsInc/cesium/issues/2872)
 * Fixed `WallGeometry` bug that caused walls covering a short distance not to render. [#2897](https://github.com/AnalyticalGraphicsInc/cesium/issues/2897)
 * Fixed `PolygonGeometry` clockwise winding order bug. 

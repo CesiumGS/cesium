@@ -999,7 +999,7 @@ define([
      *
      * @param {Cartesian2[]} outerRing An array of Cartesian points defining the outer boundary of the polygon.
      * @param {Cartesian2[]} innerRings An array of arrays of Cartesian points, where each array represents a hole in the polygon.
-     * @returns A single list of Cartesian points defining the polygon, including the eliminated inner ring.
+     * @returns {Cartesian2[]} A single list of Cartesian points defining the polygon, including the eliminated inner ring.
      *
      * @exception {DeveloperError} <code>outerRing</code> must not be empty.
      *
