@@ -28,7 +28,7 @@ define([
      * @param {String} [format] The info format to request from the WMS server.  This is usually a
      *        MIME type such as 'application/json' or text/xml'.  If this parameter is not specified, the provider will request 'json'
      *        using 'application/json', 'xml' using 'text/xml', 'html' using 'text/html', and 'text' using 'text/plain'.
-     * @param {Function} [options.callback] A function to invoke with the GetFeatureInfo response from the WMS server
+     * @param {Function} [callback] A function to invoke with the GetFeatureInfo response from the WMS server
      *        in order to produce an array of picked {@link ImageryLayerFeatureInfo} instances.  If this parameter is not specified,
      *        a default function for the type of response is used.
      */
