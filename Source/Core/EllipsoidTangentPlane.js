@@ -41,8 +41,8 @@ define([
      * @alias EllipsoidTangentPlane
      * @constructor
      *
-     * @param {Ellipsoid} ellipsoid The ellipsoid to use.
      * @param {Cartesian3} origin The point on the surface of the ellipsoid where the tangent plane touches.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use.
      *
      * @exception {DeveloperError} origin must not be at the center of the ellipsoid.
      */
