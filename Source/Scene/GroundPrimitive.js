@@ -136,13 +136,6 @@ define([
         this._rsColorPass = undefined;
         this._rsPickPass = undefined;
 
-        this._stencilPreloadPassCommands = undefined;
-        this._stencilDepthPassCommands = undefined;
-        this._colorPassCommands = undefined;
-        this._pickCommands = undefined;
-
-        this._primitiveCommandList = [];
-
         this._ready = false;
         this._readyPromise = when.defer();
 
@@ -153,13 +146,17 @@ define([
         });
 
         this._primitiveOptions = {
+            geometryInstances : undefined,
             appearance : appearance,
             vertexCacheOptimize : defaultValue(options.vertexCacheOptimize, false),
             interleave : defaultValue(options.interleave, false),
             releaseGeometryInstances : defaultValue(options.releaseGeometryInstances, true),
             allowPicking : defaultValue(options.allowPicking, true),
             asynchronous : defaultValue(options.asynchronous, true),
-            compressVertices : defaultValue(options.compressVertices, true)
+            compressVertices : defaultValue(options.compressVertices, true),
+            _createRenderStatesFunction : undefined,
+            _createShaderProgramFunction : undefined,
+            _createCommandsFunction : undefined
         };
     };
 
@@ -213,7 +210,7 @@ define([
         },
 
         /**
-         * When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.         *
+         * When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
          *
          * @memberof GroundPrimitive.prototype
          *
@@ -447,8 +444,81 @@ define([
         }
     }
 
-    function createCommands(primitive, appearance, material, translucent, twoPasses) {
+    function createCommands(groundPrimitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands) {
+        var primitive = groundPrimitive._primitive;
+        var length = primitive._va.length * 3;
 
+        colorCommands.length = length;
+        pickCommands.length = length;
+
+        var vaIndex = 0;
+
+        for (var i = 0; i < length; i += 3) {
+            var vertexArray = primitive._va[vaIndex];
+
+            // stencil preload command
+            var command = colorCommands[i];
+            if (!defined(command)) {
+                command = colorCommands[i] = new DrawCommand({
+                    owner : groundPrimitive,
+                    primitiveType : primitive._primitiveType
+                });
+            }
+
+            command.vertexArray = vertexArray;
+            command.renderState = groundPrimitive._rsStencilPreloadPass;
+            command.shaderProgram = groundPrimitive._sp;
+            command.uniformMap = {};
+            command.pass = Pass.GROUND;
+
+            // stencil depth command
+            command = colorCommands[i + 1];
+            if (!defined(command)) {
+                command = colorCommands[i + 1] = new DrawCommand({
+                    owner : groundPrimitive,
+                    primitiveType : primitive._primitiveType
+                });
+            }
+
+            command.vertexArray = vertexArray;
+            command.renderState = groundPrimitive._rsStencilDepthPass;
+            command.shaderProgram = groundPrimitive._sp;
+            command.uniformMap = {};
+            command.pass = Pass.GROUND;
+
+            // color command
+            command = colorCommands[i + 2];
+            if (!defined(command)) {
+                command = colorCommands[i + 2] = new DrawCommand({
+                    owner : groundPrimitive,
+                    primitiveType : primitive._primitiveType
+                });
+            }
+
+            command.vertexArray = vertexArray;
+            command.renderState = groundPrimitive._rsColorPass;
+            command.shaderProgram = groundPrimitive._sp;
+            command.uniformMap = {};
+            command.pass = Pass.GROUND;
+
+            // pick stencil preload and depth are the same as the color pass
+            pickCommands[i] = colorCommands[i];
+            pickCommands[i + 1] = colorCommands[i + 1];
+
+            command = pickCommands[i + 2];
+            if (!defined(command)) {
+                command = pickCommands[i + 2] = new DrawCommand({
+                    owner : groundPrimitive,
+                    primitiveType : primitive._primitiveType
+                });
+            }
+
+            command.vertexArray = vertexArray;
+            command.renderState = groundPrimitive._rsPickPass;
+            command.shaderProgram = groundPrimitive._spPick;
+            command.uniformMap = {};
+            command.pass = Pass.GROUND;
+        }
     }
 
     /**
@@ -494,10 +564,21 @@ define([
                 }
             }
 
-            this._primitiveOptions.geometryInstances = instances;
-            this._primitive = new Primitive(this._primitiveOptions);
+            var primitiveOptions = this._primitiveOptions;
+            primitiveOptions.geometryInstances = instances;
 
             var that = this;
+            this._primitiveOptions._createRenderStatesFunction = function(primitive, context, appearance, twoPasses) {
+                createRenderStates(that, context);
+            };
+            this._primitiveOptions._createShaderProgramFunction = function(primitive, context, frameState, appearance) {
+                createShaderProgram(that, context, frameState);
+            };
+            this._primitiveOptions._createCommandsFunction = function(primitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands) {
+                createCommands(that, undefined, undefined, true, false, colorCommands, pickCommands);
+            };
+
+            this._primitive = new Primitive(primitiveOptions);
             this._primitive.readyPromise.then(function(primitive) {
                 that._ready = true;
 
@@ -514,114 +595,7 @@ define([
             });
         }
 
-        var primitiveCommandList = this._primitiveCommandList;
-        primitiveCommandList.length = 0;
-        this._primitive.update(context, frameState, primitiveCommandList);
-
-        if (!this._ready || primitiveCommandList.length === 0) {
-            return;
-        }
-
-        createRenderStates(this, context);
-        createShaderProgram(this, context, frameState);
-
-        if (!defined(this._stencilPreloadPassCommands)) {
-            var commandsLength = primitiveCommandList.length;
-
-            this._stencilPreloadPassCommands = new Array(commandsLength);
-            this._stencilDepthPassCommands = new Array(commandsLength);
-            this._colorPassCommands = new Array(commandsLength);
-            this._pickCommands = new Array(commandsLength);
-
-            for (i = 0; i < commandsLength; ++i) {
-                var primitiveCommand = primitiveCommandList[i];
-
-                this._stencilPreloadPassCommands[i] = new DrawCommand({
-                    primitiveType : primitiveCommand.primitiveType,
-                    vertexArray : primitiveCommand.vertexArray,
-                    renderState : this._rsStencilPreloadPass,
-                    shaderProgram : this._sp,
-                    uniformMap : primitiveCommand.uniformMap,
-                    boundingVolume : primitiveCommand.boundingVolume,
-                    owner : this,
-                    modelMatrix : Matrix4.IDENTITY,
-                    pass : Pass.GROUND
-                });
-
-                this._stencilDepthPassCommands[i] = new DrawCommand({
-                    primitiveType : primitiveCommand.primitiveType,
-                    vertexArray : primitiveCommand.vertexArray,
-                    renderState : this._rsStencilDepthPass,
-                    shaderProgram : this._sp,
-                    uniformMap : primitiveCommand.uniformMap,
-                    boundingVolume : primitiveCommand.boundingVolume,
-                    owner : this,
-                    modelMatrix : Matrix4.IDENTITY,
-                    pass : Pass.GROUND
-                });
-
-                this._colorPassCommands[i] = new DrawCommand({
-                    primitiveType : primitiveCommand.primitiveType,
-                    vertexArray : primitiveCommand.vertexArray,
-                    renderState : this._rsColorPass,
-                    shaderProgram : this._sp,
-                    uniformMap : primitiveCommand.uniformMap,
-                    boundingVolume : primitiveCommand.boundingVolume,
-                    owner : this,
-                    modelMatrix : Matrix4.IDENTITY,
-                    pass : Pass.GROUND
-                });
-
-                this._pickCommands[i] = new DrawCommand({
-                    primitiveType : primitiveCommand.primitiveType,
-                    vertexArray : primitiveCommand.vertexArray,
-                    renderState : this._rsPickPass,
-                    shaderProgram : this._spPick,
-                    uniformMap : primitiveCommand.uniformMap,
-                    boundingVolume : primitiveCommand.boundingVolume,
-                    owner : this,
-                    modelMatrix : Matrix4.IDENTITY,
-                    pass : Pass.GROUND
-                });
-            }
-        }
-
-        var stencilPreloadCommands = this._stencilPreloadPassCommands;
-        var stencilDepthPassCommands = this._stencilDepthPassCommands;
-        var colorPassCommands = this._colorPassCommands;
-        var pickCommands = this._pickCommands;
-
-        length = primitiveCommandList.length;
-        for (j = 0; j < length; ++j) {
-            var command = primitiveCommandList[j];
-
-            var stencilPreloadCommand = stencilPreloadCommands[j];
-            stencilPreloadCommand.boundingVolume = command.boundingVolume;
-
-            var stencilDepthPassCommand = stencilDepthPassCommands[j];
-            stencilDepthPassCommand.boundingVolume = command.boundingVolume;
-
-            var colorCommand = colorPassCommands[j];
-            colorCommand.boundingVolume = command.boundingVolume;
-            colorCommand.debugShowBoundingVolume = this.debugShowBoundingVolume;
-
-            var pickCommand = pickCommands[j];
-            pickCommand.boundingVolume = pickCommand.boundingVolume;
-        }
-
-        var passes = frameState.passes;
-
-        if (passes.render) {
-            for (j = 0; j < length; ++j) {
-                commandList.push(stencilPreloadCommands[j], stencilDepthPassCommands[j], colorPassCommands[j]);
-            }
-        }
-
-        if (passes.pick) {
-            for (j = 0; j < length; ++j) {
-                commandList.push(stencilPreloadCommands[j], stencilDepthPassCommands[j], pickCommands[j]);
-            }
-        }
+        this._primitive.update(context, frameState, commandList);
     };
 
     /**
@@ -682,6 +656,7 @@ define([
     GroundPrimitive.prototype.destroy = function() {
         this._primitive = this._primitive && this._primitive.destroy();
         this._sp = this._sp && this._sp.destroy();
+        this._spPick = this._spPick && this._spPick.destroy();
         return destroyObject(this);
     };
 

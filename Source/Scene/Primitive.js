@@ -293,6 +293,10 @@ define([
         this._colorCommands = [];
         this._pickCommands = [];
 
+        this._createRenderStatesFunction = options._createRenderStatesFunction;
+        this._createShaderProgramFunction = options._createShaderProgramFunction;
+        this._createCommandsFunction = options._createCommandsFunction;
+
         this._createGeometryResults = undefined;
         this._ready = false;
         this._readyPromise = when.defer();
@@ -1042,7 +1046,7 @@ define([
         validateShaderMatching(primitive._pickSP, attributeLocations);
     }
 
-    function createCommands(primitive, appearance, material, translucent, twoPasses) {
+    function createCommands(primitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands) {
         // Create uniform map by combining uniforms from the appearance and material if either have uniforms.
         var materialUniformMap = defined(material) ? material._uniforms : undefined;
         var appearanceUniformMap = {};
@@ -1063,9 +1067,6 @@ define([
         var uniforms = combine(appearanceUniformMap, materialUniformMap);
 
         var pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
-
-        var colorCommands = primitive._colorCommands;
-        var pickCommands = primitive._pickCommands;
 
         colorCommands.length = primitive._va.length * (twoPasses ? 2 : 1);
         pickCommands.length = primitive._va.length;
@@ -1233,15 +1234,18 @@ define([
         var twoPasses = appearance.closed && translucent;
 
         if (createRS) {
-            createRenderStates(this, context, appearance, twoPasses);
+            var rsFunc = defaultValue(this._createRenderStatesFunction, createRenderStates);
+            rsFunc(this, context, appearance, twoPasses);
         }
 
         if (createSP) {
-            createShaderProgram(this, context, frameState, appearance);
+            var spFunc = defaultValue(this._createShaderProgramFunction, createShaderProgram);
+            spFunc(this, context, frameState, appearance);
         }
 
         if (createRS || createSP) {
-            createCommands(this, appearance, material, translucent, twoPasses);
+            var commandFunc = defaultValue(this._createCommandsFunction, createCommands);
+            commandFunc(this, appearance, material, translucent, twoPasses, this._colorCommands, this._pickCommands);
         }
 
         updatePerInstanceAttributes(this);
