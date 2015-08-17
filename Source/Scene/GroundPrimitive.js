@@ -412,6 +412,45 @@ define([
         depthMask : false
     };
 
+    function createRenderStates(primitive, context, appearance, twoPasses) {
+        if (defined(primitive._rsStencilPreloadPass)) {
+            return;
+        }
+
+        primitive._rsStencilPreloadPass = context.createRenderState(stencilPreloadRenderState);
+        primitive._rsStencilDepthPass = context.createRenderState(stencilDepthRenderState);
+        primitive._rsColorPass = context.createRenderState(colorRenderState);
+        primitive._rsPickPass = context.createRenderState(pickRenderState);
+    }
+
+    function createShaderProgram(primitive, context, frameState, appearance) {
+        if (defined(primitive._sp)) {
+            return;
+        }
+
+        var vs = Primitive._createColumbusViewShader(ShadowVolumeVS, frameState.scene3DOnly);
+        vs = Primitive._appendShowToShader(primitive._primitive, vs);
+
+        var fs = ShadowVolumeFS;
+        var attributeLocations = primitive._primitive._attributeLocations;
+
+        primitive._sp = context.replaceShaderProgram(primitive._sp, vs, fs, attributeLocations);
+
+        if (primitive._primitive.allowPicking) {
+            var pickFS = new ShaderSource({
+                sources : [fs],
+                pickColorQualifier : 'varying'
+            });
+            primitive._spPick = context.replaceShaderProgram(primitive._spPick, Primitive._createPickVertexShaderSource(vs), pickFS, attributeLocations);
+        } else {
+            primitive._spPick = context.createShaderProgram(vs, fs, attributeLocations);
+        }
+    }
+
+    function createCommands(primitive, appearance, material, translucent, twoPasses) {
+
+    }
+
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -483,32 +522,8 @@ define([
             return;
         }
 
-        if (!defined(this._sp)) {
-            var vs = Primitive._createColumbusViewShader(ShadowVolumeVS, frameState.scene3DOnly);
-            vs = Primitive._appendShowToShader(this._primitive, vs);
-
-            var fs = ShadowVolumeFS;
-            var attributeLocations = this._primitive._attributeLocations;
-
-            this._sp = context.replaceShaderProgram(this._sp, vs, fs, attributeLocations);
-
-            if (this._primitive.allowPicking) {
-                var pickFS = new ShaderSource({
-                    sources : [fs],
-                    pickColorQualifier : 'varying'
-                });
-                this._spPick = context.replaceShaderProgram(this._spPick, Primitive._createPickVertexShaderSource(vs), pickFS, attributeLocations);
-            } else {
-                this._spPick = context.createShaderProgram(vs, fs, attributeLocations);
-            }
-        }
-
-        if (!defined(this._rsStencilPreloadPass)) {
-            this._rsStencilPreloadPass = context.createRenderState(stencilPreloadRenderState);
-            this._rsStencilDepthPass = context.createRenderState(stencilDepthRenderState);
-            this._rsColorPass = context.createRenderState(colorRenderState);
-            this._rsPickPass = context.createRenderState(pickRenderState);
-        }
+        createRenderStates(this, context);
+        createShaderProgram(this, context, frameState);
 
         if (!defined(this._stencilPreloadPassCommands)) {
             var commandsLength = primitiveCommandList.length;
