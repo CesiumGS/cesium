@@ -293,6 +293,7 @@ define([
         this._colorCommands = [];
         this._pickCommands = [];
 
+        this._createBoundingVolumeFunction = options._createBoundingVolumeFunction;
         this._createRenderStatesFunction = options._createRenderStatesFunction;
         this._createShaderProgramFunction = options._createShaderProgramFunction;
         this._createCommandsFunction = options._createCommandsFunction;
@@ -946,21 +947,25 @@ define([
                 vertexArrayAttributes : attributes
             }));
 
-            primitive._boundingSpheres.push(BoundingSphere.clone(geometry.boundingSphere));
-            primitive._boundingSphereWC.push(new BoundingSphere());
+            if (defined(primitive._createBoundingVolumeFunction)) {
+                primitive._createBoundingVolumeFunction(frameState, geometry);
+            } else {
+                primitive._boundingSpheres.push(BoundingSphere.clone(geometry.boundingSphere));
+                primitive._boundingSphereWC.push(new BoundingSphere());
 
-            if (!scene3DOnly) {
-                var center = geometry.boundingSphereCV.center;
-                var x = center.x;
-                var y = center.y;
-                var z = center.z;
-                center.x = z;
-                center.y = x;
-                center.z = y;
+                if (!scene3DOnly) {
+                    var center = geometry.boundingSphereCV.center;
+                    var x = center.x;
+                    var y = center.y;
+                    var z = center.z;
+                    center.x = z;
+                    center.y = x;
+                    center.z = y;
 
-                primitive._boundingSphereCV.push(BoundingSphere.clone(geometry.boundingSphereCV));
-                primitive._boundingSphere2D.push(new BoundingSphere());
-                primitive._boundingSphereMorph.push(new BoundingSphere());
+                    primitive._boundingSphereCV.push(BoundingSphere.clone(geometry.boundingSphereCV));
+                    primitive._boundingSphere2D.push(new BoundingSphere());
+                    primitive._boundingSphereMorph.push(new BoundingSphere());
+                }
             }
         }
 
@@ -1161,7 +1166,40 @@ define([
         attributes.length = 0;
     }
 
-    function updateAndQueueCommands(frameState, commandList, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, boundingSpheres, twoPasses) {
+    function updateAndQueueCommands(primitive, frameState, commandList, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
+        //>>includeStart('debug', pragmas.debug);
+        if (frameState.mode !== SceneMode.SCENE3D && !Matrix4.equals(modelMatrix, Matrix4.IDENTITY)) {
+            throw new DeveloperError('Primitive.modelMatrix is only supported in 3D mode.');
+        }
+        //>>includeEnd('debug');
+
+        if (!Matrix4.equals(modelMatrix, primitive._modelMatrix)) {
+            Matrix4.clone(modelMatrix, primitive._modelMatrix);
+            var length = primitive._boundingSpheres.length;
+            for (var i = 0; i < length; ++i) {
+                var boundingSphere = primitive._boundingSpheres[i];
+                if (defined(boundingSphere)) {
+                    primitive._boundingSphereWC[i] = BoundingSphere.transform(boundingSphere, modelMatrix, primitive._boundingSphereWC[i]);
+                    if (!frameState.scene3DOnly) {
+                        primitive._boundingSphere2D[i] = BoundingSphere.clone(primitive._boundingSphereCV[i], primitive._boundingSphere2D[i]);
+                        primitive._boundingSphere2D[i].center.x = 0.0;
+                        primitive._boundingSphereMorph[i] = BoundingSphere.union(primitive._boundingSphereWC[i], primitive._boundingSphereCV[i]);
+                    }
+                }
+            }
+        }
+
+        var boundingSpheres;
+        if (frameState.mode === SceneMode.SCENE3D) {
+            boundingSpheres = primitive._boundingSphereWC;
+        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
+            boundingSpheres = primitive._boundingSphereCV;
+        } else if (frameState.mode === SceneMode.SCENE2D && defined(primitive._boundingSphere2D)) {
+            boundingSpheres = primitive._boundingSphere2D;
+        } else if (defined(primitive._boundingSphereMorph)) {
+            boundingSpheres = primitive._boundingSphereMorph;
+        }
+
         var passes = frameState.passes;
         if (passes.render) {
             var colorLength = colorCommands.length;
@@ -1278,42 +1316,8 @@ define([
 
         updatePerInstanceAttributes(this);
 
-        var modelMatrix = this.modelMatrix;
-        //>>includeStart('debug', pragmas.debug);
-        if (frameState.mode !== SceneMode.SCENE3D && !Matrix4.equals(modelMatrix, Matrix4.IDENTITY)) {
-            throw new DeveloperError('Primitive.modelMatrix is only supported in 3D mode.');
-        }
-        //>>includeEnd('debug');
-
-        if (!Matrix4.equals(modelMatrix, this._modelMatrix)) {
-            Matrix4.clone(modelMatrix, this._modelMatrix);
-            var length = this._boundingSpheres.length;
-            for (var i = 0; i < length; ++i) {
-                var boundingSphere = this._boundingSpheres[i];
-                if (defined(boundingSphere)) {
-                    this._boundingSphereWC[i] = BoundingSphere.transform(boundingSphere, modelMatrix, this._boundingSphereWC[i]);
-                    if (!frameState.scene3DOnly) {
-                        this._boundingSphere2D[i] = BoundingSphere.clone(this._boundingSphereCV[i], this._boundingSphere2D[i]);
-                        this._boundingSphere2D[i].center.x = 0.0;
-                        this._boundingSphereMorph[i] = BoundingSphere.union(this._boundingSphereWC[i], this._boundingSphereCV[i]);
-                    }
-                }
-            }
-        }
-
-        var boundingSpheres;
-        if (frameState.mode === SceneMode.SCENE3D) {
-            boundingSpheres = this._boundingSphereWC;
-        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
-            boundingSpheres = this._boundingSphereCV;
-        } else if (frameState.mode === SceneMode.SCENE2D && defined(this._boundingSphere2D)) {
-            boundingSpheres = this._boundingSphere2D;
-        } else if (defined(this._boundingSphereMorph)) {
-            boundingSpheres = this._boundingSphereMorph;
-        }
-
         var updateAndQueueCommandsFunc = defaultValue(this._updateAndQueueCommandsFunction, updateAndQueueCommands);
-        updateAndQueueCommandsFunc(frameState, commandList, this._colorCommands, this._pickCommands, modelMatrix, this.cull, this.debugShowBoundingVolume, boundingSpheres, twoPasses);
+        updateAndQueueCommandsFunc(this, frameState, commandList, this._colorCommands, this._pickCommands, this.modelMatrix, this.cull, this.debugShowBoundingVolume, twoPasses);
     };
 
     function createGetFunction(name, perInstanceAttributes) {
