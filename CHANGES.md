@@ -9,6 +9,7 @@ Change Log
   *
 * Fix issue where extruded `PolygonGeometry` was always extruding to the ellipsoid surface instead of specified height.
 * Fix an issue where non-feature nodes prevented KML documents from loading. [#2945](https://github.com/AnalyticalGraphicsInc/cesium/pull/2945).
+* Removed [es5-shim](https://github.com/kriskowal/es5-shim), which is no longer required by the unit tests. [#2933](https://github.com/AnalyticalGraphicsInc/cesium/pull/2945)
 
 ### 1.12 - 2015-08-03
 
