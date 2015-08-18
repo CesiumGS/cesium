@@ -887,7 +887,6 @@ define([
     function loadGpx(dataSource, gpx, sourceUri, uriResolver) {
         var entityCollection = dataSource._entityCollection;
 
-        dataSource._promises = [];
         entityCollection.removeAll();
 
         var element = gpx.documentElement;
@@ -896,7 +895,7 @@ define([
 
         var name;
         var metadata = processMetadata(element);
-        if(defined(metadata)){
+        if (defined(metadata)) {
             name = metadata.name;
         }
 
@@ -904,79 +903,76 @@ define([
             name = getFilenameFromUri(sourceUri);
         }
 
-
         if (element.localName === 'gpx') {
             processGpx(dataSource, element, entityCollection, sourceUri, uriResolver);
         } else {
             window.console.log('GPX - Unsupported node: ' + element.localName);
         }
 
-        return when.all(dataSource._promises, function() {
-            var clock;
-            var availability = entityCollection.computeAvailability();
+        var clock;
+        var availability = entityCollection.computeAvailability();
 
-            var start = availability.start;
-            var stop = availability.stop;
-            var isMinStart = JulianDate.equals(start, Iso8601.MINIMUM_VALUE);
-            var isMaxStop = JulianDate.equals(stop, Iso8601.MAXIMUM_VALUE);
-            if (!isMinStart || !isMaxStop) {
-                var date;
+        var start = availability.start;
+        var stop = availability.stop;
+        var isMinStart = JulianDate.equals(start, Iso8601.MINIMUM_VALUE);
+        var isMaxStop = JulianDate.equals(stop, Iso8601.MAXIMUM_VALUE);
+        if (!isMinStart || !isMaxStop) {
+            var date;
 
-                //If start is min time just start at midnight this morning, local time
-                if (isMinStart) {
-                    date = new Date();
-                    date.setHours(0, 0, 0, 0);
-                    start = JulianDate.fromDate(date);
-                }
-
-                //If stop is max value just stop at midnight tonight, local time
-                if (isMaxStop) {
-                    date = new Date();
-                    date.setHours(24, 0, 0, 0);
-                    stop = JulianDate.fromDate(date);
-                }
-
-                clock = new DataSourceClock();
-                clock.startTime = start;
-                clock.stopTime = stop;
-                clock.currentTime = JulianDate.clone(start);
-                clock.clockRange = ClockRange.LOOP_STOP;
-                clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-                clock.multiplier = Math.round(Math.min(Math.max(JulianDate.secondsDifference(stop, start) / 60, 1), 3.15569e7));
-            }
-            var changed = false;
-            if (dataSource._name !== name) {
-                dataSource._name = name;
-                changed = true;
+            //If start is min time just start at midnight this morning, local time
+            if (isMinStart) {
+                date = new Date();
+                date.setHours(0, 0, 0, 0);
+                start = JulianDate.fromDate(date);
             }
 
-            if (dataSource._creator !== creator) {
-                dataSource._creator = creator;
-                changed = true;
+            //If stop is max value just stop at midnight tonight, local time
+            if (isMaxStop) {
+                date = new Date();
+                date.setHours(24, 0, 0, 0);
+                stop = JulianDate.fromDate(date);
             }
 
-            if (metadataChanged(dataSource._metadata, metadata)){
-                dataSource._metadata = metadata;
-                changed = true;
-            }
+            clock = new DataSourceClock();
+            clock.startTime = start;
+            clock.stopTime = stop;
+            clock.currentTime = JulianDate.clone(start);
+            clock.clockRange = ClockRange.LOOP_STOP;
+            clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+            clock.multiplier = Math.round(Math.min(Math.max(JulianDate.secondsDifference(stop, start) / 60, 1), 3.15569e7));
+        }
+        var changed = false;
+        if (dataSource._name !== name) {
+            dataSource._name = name;
+            changed = true;
+        }
 
-            if (dataSource._version !== version) {
-                dataSource._version = version;
-                changed = true;
-            }
+        if (dataSource._creator !== creator) {
+            dataSource._creator = creator;
+            changed = true;
+        }
 
-            if (clock !== dataSource._clock) {
-                changed = true;
-                dataSource._clock = clock;
-            }
+        if (metadataChanged(dataSource._metadata, metadata)) {
+            dataSource._metadata = metadata;
+            changed = true;
+        }
 
-            if (changed) {
-                dataSource._changed.raiseEvent(dataSource);
-            }
+        if (dataSource._version !== version) {
+            dataSource._version = version;
+            changed = true;
+        }
 
-            DataSource.setLoading(dataSource, false);
-            return dataSource;
-        });
+        if (clock !== dataSource._clock) {
+            changed = true;
+            dataSource._clock = clock;
+        }
+
+        if (changed) {
+            dataSource._changed.raiseEvent(dataSource);
+        }
+
+        DataSource.setLoading(dataSource, false);
+        return dataSource;
     }
 
     function metadataChanged(old, current) {
