@@ -1,5 +1,7 @@
 /*global define*/
 define([
+        '../Core/Cartesian3',
+        '../Core/Cartographic',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -9,6 +11,8 @@ define([
         '../Core/isArray',
         '../Core/Math',
         '../Core/Matrix4',
+        '../Core/OrientedBoundingBox',
+        '../Core/Rectangle',
         '../Renderer/DrawCommand',
         '../Renderer/ShaderSource',
         '../Shaders/ShadowVolumeFS',
@@ -19,9 +23,12 @@ define([
         './Pass',
         './PerInstanceColorAppearance',
         './Primitive',
+        './SceneMode',
         './StencilFunction',
         './StencilOperation'
     ], function(
+        Cartesian3,
+        Cartographic,
         defaultValue,
         defined,
         defineProperties,
@@ -31,6 +38,8 @@ define([
         isArray,
         CesiumMath,
         Matrix4,
+        OrientedBoundingBox,
+        Rectangle,
         DrawCommand,
         ShaderSource,
         ShadowVolumeFS,
@@ -41,6 +50,7 @@ define([
         Pass,
         PerInstanceColorAppearance,
         Primitive,
+        SceneMode,
         StencilFunction,
         StencilOperation) {
     "use strict";
@@ -135,6 +145,11 @@ define([
         this._rsStencilDepthPass = undefined;
         this._rsColorPass = undefined;
         this._rsPickPass = undefined;
+
+        this._boundingVolumes = [];
+        this._boundingVolumesCV = [];
+        this._boundingVolumes2D = [];
+        this._boundingVolumesMorph = [];
 
         this._ready = false;
         this._readyPromise = when.defer();
@@ -288,6 +303,7 @@ define([
 
     GroundPrimitive._maxHeight = 9000.0;
     GroundPrimitive._minHeight = -100000.0;
+    GroundPrimitive._minOBBHeight = -11500.0;
 
     function computeMaximumHeight(granularity, ellipsoid) {
         var r = ellipsoid.maximumRadius;
@@ -409,6 +425,50 @@ define([
         depthMask : false
     };
 
+    var scratchBVCartesianHigh = new Cartesian3();
+    var scratchBVCartesianLow = new Cartesian3();
+    var scratchBVCartesian = new Cartesian3();
+    var scratchBVCartographic = new Cartographic();
+    var scratchBVRectangle = new Rectangle();
+
+    function createBoundingVolume(primitive, frameState, geometry) {
+        var highPositions = geometry.attributes.position3DHigh.values;
+        var lowPositions = geometry.attributes.position3DLow.values;
+        var length = highPositions.length;
+
+        var ellipsoid = frameState.mapProjection.ellipsoid;
+
+        var minLat = Number.POSITIVE_INFINITY;
+        var minLon = Number.POSITIVE_INFINITY;
+        var maxLat = Number.NEGATIVE_INFINITY;
+        var maxLon = Number.NEGATIVE_INFINITY;
+
+        for (var i = 0; i < length; i +=3) {
+            var highPosition = Cartesian3.unpack(highPositions, i, scratchBVCartesianHigh);
+            var lowPosition = Cartesian3.unpack(lowPositions, i, scratchBVCartesianLow);
+
+            var position = Cartesian3.add(highPosition, lowPosition, scratchBVCartesian);
+            var cartographic = ellipsoid.cartesianToCartographic(position, scratchBVCartographic);
+
+            var latitude = cartographic.latitude;
+            var longitude = cartographic.longitude;
+
+            minLat = Math.min(minLat, latitude);
+            minLon = Math.min(minLon, longitude);
+            maxLat = Math.max(maxLat, latitude);
+            maxLon = Math.max(maxLon, longitude);
+        }
+
+        var rectangle = scratchBVRectangle;
+        rectangle.north = maxLat;
+        rectangle.south = minLat;
+        rectangle.east = maxLon;
+        rectangle.west = minLon;
+
+        var obb = OrientedBoundingBox.fromRectangle(rectangle, GroundPrimitive._maxHeight, GroundPrimitive._minOBBHeight, ellipsoid);
+        primitive._boundingVolumes.push(obb);
+    }
+
     function createRenderStates(primitive, context, appearance, twoPasses) {
         if (defined(primitive._rsStencilPreloadPass)) {
             return;
@@ -521,13 +581,24 @@ define([
         }
     }
 
-    function updateAndQueueCommands(frameState, commandList, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, boundingSpheres, twoPasses) {
+    function updateAndQueueCommands(primitive, frameState, commandList, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
+        var boundingVolumes;
+        if (frameState.mode === SceneMode.SCENE3D) {
+            boundingVolumes = primitive._boundingVolumes;
+        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
+            boundingVolumes = primitive._boundingVolumesCV;
+        } else if (frameState.mode === SceneMode.SCENE2D && defined(primitive._boundingVolumes2D)) {
+            boundingVolumes = primitive._boundingVolumes2D;
+        } else if (defined(primitive._boundingVolumesMorph)) {
+            boundingVolumes = primitive._boundingVolumesMorph;
+        }
+
         var passes = frameState.passes;
         if (passes.render) {
             var colorLength = colorCommands.length;
             for (var j = 0; j < colorLength; ++j) {
                 colorCommands[j].modelMatrix = modelMatrix;
-                colorCommands[j].boundingVolume = boundingSpheres[Math.floor(j / 3)];
+                colorCommands[j].boundingVolume = boundingVolumes[Math.floor(j / 3)];
                 colorCommands[j].cull = cull;
                 colorCommands[j].debugShowBoundingVolume = debugShowBoundingVolume;
 
@@ -539,7 +610,7 @@ define([
             var pickLength = pickCommands.length;
             for (var k = 0; k < pickLength; ++k) {
                 pickCommands[k].modelMatrix = modelMatrix;
-                pickCommands[k].boundingVolume = boundingSpheres[Math.floor(k / 3)];
+                pickCommands[k].boundingVolume = boundingVolumes[Math.floor(k / 3)];
                 pickCommands[k].cull = cull;
 
                 commandList.push(pickCommands[k]);
@@ -563,18 +634,14 @@ define([
             return;
         }
 
-        var i;
-        var j;
-        var length;
-
         if (!defined(this._primitive)) {
             var geometryInstances = this.geometryInstances;
             geometryInstances = isArray(geometryInstances) ? geometryInstances : [geometryInstances];
 
-            length = geometryInstances.length;
+            var length = geometryInstances.length;
             var instances = new Array(length);
 
-            for (i = 0; i < length; ++i) {
+            for (var i = 0; i < length; ++i) {
                 var instance = geometryInstances[i];
                 var geometry = instance.geometry;
 
@@ -594,6 +661,9 @@ define([
             primitiveOptions.geometryInstances = instances;
 
             var that = this;
+            this._primitiveOptions._createBoundingVolumeFunction = function(frameState, geometry) {
+                createBoundingVolume(that, frameState, geometry);
+            };
             this._primitiveOptions._createRenderStatesFunction = function(primitive, context, appearance, twoPasses) {
                 createRenderStates(that, context);
             };
@@ -603,7 +673,9 @@ define([
             this._primitiveOptions._createCommandsFunction = function(primitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands) {
                 createCommands(that, undefined, undefined, true, false, colorCommands, pickCommands);
             };
-            this._primitiveOptions._updateAndQueueCommandsFunction = updateAndQueueCommands;
+            this._primitiveOptions._updateAndQueueCommandsFunction = function(primitive, frameState, commandList, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
+                updateAndQueueCommands(that, frameState, commandList, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses);
+            };
 
             this._primitive = new Primitive(primitiveOptions);
             this._primitive.readyPromise.then(function(primitive) {
@@ -622,6 +694,7 @@ define([
             });
         }
 
+        this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
         this._primitive.update(context, frameState, commandList);
     };
 
