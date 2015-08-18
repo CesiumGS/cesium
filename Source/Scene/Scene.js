@@ -1063,11 +1063,11 @@ define([
                 if (defined(boundingVolume)) {
                     if (command.cull &&
                             ((cullingVolume.computeVisibility(boundingVolume) === Intersect.OUTSIDE) ||
-                             (defined(occluder) && !occluder.isBoundingSphereVisible(boundingVolume)))) {
+                             (defined(occluder) && boundingVolume.isOccluded(occluder)))) {
                         continue;
                     }
 
-                    distances = BoundingSphere.computePlaneDistances(boundingVolume, position, direction, distances);
+                    distances = boundingVolume.computePlaneDistances(position, direction, distances);
                     near = Math.min(near, distances.start);
                     far = Math.max(far, distances.stop);
                 } else {
@@ -1260,11 +1260,11 @@ define([
                  ((!defined(command.boundingVolume)) ||
                   !command.cull ||
                   ((cullingVolume.computeVisibility(boundingVolume) !== Intersect.OUTSIDE) &&
-                   (!defined(occluder) || occluder.isBoundingSphereVisible(boundingVolume)))));
+                   (!defined(occluder) || !boundingVolume.isOccluded(occluder)))));
     }
 
     function translucentCompare(a, b, position) {
-        return BoundingSphere.distanceSquaredTo(b.boundingVolume, position) - BoundingSphere.distanceSquaredTo(a.boundingVolume, position);
+        return b.boundingVolume.distanceSquaredTo(position) - a.boundingVolume.distanceSquaredTo(position);
     }
 
     function executeTranslucentCommandsSorted(scene, executeFunction, passState, commands) {
