@@ -384,6 +384,86 @@ define([
         return Intersect.INTERSECTING;
     };
 
+    var scratchCartesianU = new Cartesian3();
+    var scratchCartesianV = new Cartesian3();
+    var scratchCartesianW = new Cartesian3();
+    var scratchPPrime = new Cartesian3();
+
+    /**
+     * Computes the estimated distance squared from the closest point on a bounding box to a point.
+     *
+     * @param {OrientedBoundingBox} box The box.
+     * @param {Cartesian3} cartesian The point
+     * @returns {Number} The estimated distance squared from the bounding sphere to the point.
+     *
+     * @example
+     * // Sort bounding boxes from back to front
+     * boxes.sort(function(a, b) {
+     *     return Cesium.OrientedBoundingBox.distanceSquaredTo(b, camera.positionWC) - Cesium.OrientedBoundingBox.distanceSquaredTo(a, camera.positionWC);
+     * });
+     */
+    OrientedBoundingBox.distanceSquaredTo = function(box, cartesian) {
+        // See Geometric Tools for Computer Graphics 10.4.2
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(box)) {
+            throw new DeveloperError('box is required.');
+        }
+        if (!defined(cartesian)) {
+            throw new DeveloperError('cartesian is required.');
+        }
+        //>>includeEnd('debug');
+
+        var offset = Cartesian3.subtract(cartesian, box.center, scratchOffset);
+
+        var halfAxes = box.halfAxes;
+        var u = Matrix3.getColumn(halfAxes, 0, scratchCartesianU);
+        var v = Matrix3.getColumn(halfAxes, 1, scratchCartesianV);
+        var w = Matrix3.getColumn(halfAxes, 2, scratchCartesianW);
+
+        var uHalf = Cartesian3.magnitude(u);
+        var vHalf = Cartesian3.magnitude(v);
+        var wHalf = Cartesian3.magnitude(w);
+
+        Cartesian3.normalize(u, u);
+        Cartesian3.normalize(v, v);
+        Cartesian3.normalize(w, w);
+
+        var pPrime = scratchPPrime;
+        pPrime.x = Cartesian3.dot(offset, u);
+        pPrime.y = Cartesian3.dot(offset, v);
+        pPrime.w = Cartesian3.dot(offset, w);
+
+        var distanceSquared = 0.0;
+        var d;
+
+        if (pPrime.x < -uHalf) {
+            d = pPrime.x + uHalf;
+            distanceSquared += d * d;
+        } else if (pPrime.x > uHalf) {
+            d = pPrime.x - uHalf;
+            distanceSquared += d * d;
+        }
+
+        if (pPrime.y < -vHalf) {
+            d = pPrime.y + vHalf;
+            distanceSquared += d * d;
+        } else if (pPrime.y > vHalf) {
+            d = pPrime.y - vHalf;
+            distanceSquared += d * d;
+        }
+
+        if (pPrime.z < -wHalf) {
+            d = pPrime.z + wHalf;
+            distanceSquared += d * d;
+        } else if (pPrime.z > wHalf) {
+            d = pPrime.z - wHalf;
+            distanceSquared += d * d;
+        }
+
+        return distanceSquared;
+    };
+
     /**
      * Determines which side of a plane the oriented bounding box is located.
      *
@@ -395,6 +475,22 @@ define([
      */
     OrientedBoundingBox.prototype.intersectPlane = function(plane) {
         return OrientedBoundingBox.intersectPlane(this, plane);
+    };
+
+    /**
+     * Computes the estimated distance squared from the closest point on a bounding box to a point.
+     *
+     * @param {Cartesian3} cartesian The point
+     * @returns {Number} The estimated distance squared from the bounding sphere to the point.
+     *
+     * @example
+     * // Sort bounding boxes from back to front
+     * boxes.sort(function(a, b) {
+     *     return b.distanceSquaredTo(camera.positionWC) - a.distanceSquaredTo(camera.positionWC);
+     * });
+     */
+    OrientedBoundingBox.distanceSquaredTo = function(cartesian) {
+        return OrientedBoundingBox.distanceSquaredTo(this, cartesian);
     };
 
     /**
