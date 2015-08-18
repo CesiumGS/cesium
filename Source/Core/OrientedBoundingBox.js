@@ -514,97 +514,89 @@ define([
         var w = Matrix3.getColumn(halfAxes, 2, scratchCartesianW);
 
         // project first corner
-        var corner = Cartesian3.add(center, u, scratchCorner);
-        Cartesian3.add(corner, v, corner);
+        var corner = Cartesian3.add(u, v, scratchCorner);
         Cartesian3.add(corner, w, corner);
+        Cartesian3.add(corner, center, corner);
 
         var toCenter = Cartesian3.subtract(corner, position, scratchToCenter);
-        var proj = Cartesian3.multiplyByScalar(direction, Cartesian3.dot(direction, toCenter), scratchProj);
-        var mag = Cartesian3.magnitude(proj);
+        var mag = Cartesian3.dot(direction, toCenter);
 
         minDist = Math.min(mag, minDist);
         maxDist = Math.max(mag, maxDist);
 
         // project second corner
-        Cartesian3.add(center, u, scratchCorner);
+        Cartesian3.add(center, u, corner);
         Cartesian3.add(corner, v, corner);
         Cartesian3.subtract(corner, w, corner);
 
         Cartesian3.subtract(corner, position, toCenter);
-        Cartesian3.multiplyByScalar(direction, Cartesian3.dot(direction, toCenter), proj);
-        mag = Cartesian3.magnitude(proj);
+        mag = Cartesian3.dot(direction, toCenter);
 
         minDist = Math.min(mag, minDist);
         maxDist = Math.max(mag, maxDist);
 
         // project third corner
-        Cartesian3.add(center, u, scratchCorner);
+        Cartesian3.add(center, u, corner);
         Cartesian3.subtract(corner, v, corner);
         Cartesian3.add(corner, w, corner);
 
         Cartesian3.subtract(corner, position, toCenter);
-        Cartesian3.multiplyByScalar(direction, Cartesian3.dot(direction, toCenter), proj);
-        mag = Cartesian3.magnitude(proj);
+        mag = Cartesian3.dot(direction, toCenter);
 
         minDist = Math.min(mag, minDist);
         maxDist = Math.max(mag, maxDist);
 
         // project fourth corner
-        Cartesian3.add(center, u, scratchCorner);
+        Cartesian3.add(center, u, corner);
         Cartesian3.subtract(corner, v, corner);
         Cartesian3.subtract(corner, w, corner);
 
         Cartesian3.subtract(corner, position, toCenter);
-        Cartesian3.multiplyByScalar(direction, Cartesian3.dot(direction, toCenter), proj);
-        mag = Cartesian3.magnitude(proj);
+        mag = Cartesian3.dot(direction, toCenter);
 
         minDist = Math.min(mag, minDist);
         maxDist = Math.max(mag, maxDist);
 
         // project fifth corner
-        Cartesian3.subtract(center, u, scratchCorner);
+        Cartesian3.subtract(center, u, corner);
         Cartesian3.add(corner, v, corner);
         Cartesian3.add(corner, w, corner);
 
         Cartesian3.subtract(corner, position, toCenter);
-        Cartesian3.multiplyByScalar(direction, Cartesian3.dot(direction, toCenter), proj);
-        mag = Cartesian3.magnitude(proj);
+        mag = Cartesian3.dot(direction, toCenter);
 
         minDist = Math.min(mag, minDist);
         maxDist = Math.max(mag, maxDist);
 
         // project sixth corner
-        Cartesian3.subtract(center, u, scratchCorner);
+        Cartesian3.subtract(center, u, corner);
         Cartesian3.add(corner, v, corner);
         Cartesian3.subtract(corner, w, corner);
 
         Cartesian3.subtract(corner, position, toCenter);
-        Cartesian3.multiplyByScalar(direction, Cartesian3.dot(direction, toCenter), proj);
-        mag = Cartesian3.magnitude(proj);
+        mag = Cartesian3.dot(direction, toCenter);
 
         minDist = Math.min(mag, minDist);
         maxDist = Math.max(mag, maxDist);
 
         // project seventh corner
-        Cartesian3.subtract(center, u, scratchCorner);
+        Cartesian3.subtract(center, u, corner);
         Cartesian3.subtract(corner, v, corner);
         Cartesian3.add(corner, w, corner);
 
         Cartesian3.subtract(corner, position, toCenter);
-        Cartesian3.multiplyByScalar(direction, Cartesian3.dot(direction, toCenter), proj);
-        mag = Cartesian3.magnitude(proj);
+        mag = Cartesian3.dot(direction, toCenter);
 
         minDist = Math.min(mag, minDist);
         maxDist = Math.max(mag, maxDist);
 
         // project eighth corner
-        Cartesian3.subtract(center, u, scratchCorner);
+        Cartesian3.subtract(center, u, corner);
         Cartesian3.subtract(corner, v, corner);
         Cartesian3.subtract(corner, w, corner);
 
         Cartesian3.subtract(corner, position, toCenter);
-        Cartesian3.multiplyByScalar(direction, Cartesian3.dot(direction, toCenter), proj);
-        mag = Cartesian3.magnitude(proj);
+        mag = Cartesian3.dot(direction, toCenter);
 
         minDist = Math.min(mag, minDist);
         maxDist = Math.max(mag, maxDist);

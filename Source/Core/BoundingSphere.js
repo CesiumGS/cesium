@@ -946,8 +946,7 @@ define([
         }
 
         var toCenter = Cartesian3.subtract(sphere.center, position, scratchCartesian3);
-        var proj = Cartesian3.multiplyByScalar(direction, Cartesian3.dot(direction, toCenter), scratchCartesian3);
-        var mag = Cartesian3.magnitude(proj);
+        var mag = Cartesian3.dot(direction, toCenter);
 
         result.start = mag - sphere.radius;
         result.stop = mag + sphere.radius;
