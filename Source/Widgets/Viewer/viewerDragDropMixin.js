@@ -8,6 +8,7 @@ define([
         '../../Core/wrapFunction',
         '../../DataSources/CzmlDataSource',
         '../../DataSources/GeoJsonDataSource',
+        '../../DataSources/GpxDataSource',
         '../../DataSources/KmlDataSource',
         '../getElement'
     ], function(
@@ -19,6 +20,7 @@ define([
         wrapFunction,
         CzmlDataSource,
         GeoJsonDataSource,
+        GpxDataSource,
         KmlDataSource,
         getElement) {
     "use strict";
@@ -252,6 +254,11 @@ define([
                     });
                 } else if (/\.(kml|kmz)$/i.test(fileName)) {
                     loadPromise = KmlDataSource.load(file, {
+                        sourceUri : fileName,
+                        proxy : proxy
+                    });
+                } else if (/\.gpx$/i.test(fileName)) {
+                    loadPromise = GpxDataSource.load(file, {
                         sourceUri : fileName,
                         proxy : proxy
                     });
