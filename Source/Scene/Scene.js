@@ -2,6 +2,7 @@
 define([
         '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
+        '../Core/BoxGeometry',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
@@ -57,6 +58,7 @@ define([
     ], function(
         BoundingRectangle,
         BoundingSphere,
+        BoxGeometry,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -499,7 +501,7 @@ define([
         this.copyGlobeDepth = false;
 
         this._performanceDisplay = undefined;
-        this._debugSphere = undefined;
+        this._debugVolume = undefined;
 
         var camera = new Camera(this);
         this._camera = camera;
@@ -1185,45 +1187,74 @@ define([
 
         if (command.debugShowBoundingVolume && (defined(command.boundingVolume))) {
             // Debug code to draw bounding volume for command.  Not optimized!
-            // Assumes bounding volume is a bounding sphere.
-            if (defined(scene._debugSphere)) {
-                scene._debugSphere.destroy();
-            }
-
+            // Assumes bounding volume is a bounding sphere or box
             var frameState = scene._frameState;
             var boundingVolume = command.boundingVolume;
-            var radius = boundingVolume.radius;
-            var center = boundingVolume.center;
 
-            var geometry = GeometryPipeline.toWireframe(EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
-                radii : new Cartesian3(radius, radius, radius),
-                vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
-            })));
-
-            if (frameState.mode !== SceneMode.SCENE3D) {
-                center = Matrix4.multiplyByPoint(transformFrom2D, center, center);
-                var projection = frameState.mapProjection;
-                var centerCartographic = projection.unproject(center);
-                center = projection.ellipsoid.cartographicToCartesian(centerCartographic);
+            if (defined(scene._debugVolume)) {
+                scene._debugVolume.destroy();
             }
 
-            scene._debugSphere = new Primitive({
-                geometryInstances : new GeometryInstance({
-                    geometry : geometry,
-                    modelMatrix : Matrix4.multiplyByTranslation(Matrix4.IDENTITY, center, new Matrix4()),
-                    attributes : {
-                        color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
-                    }
-                }),
-                appearance : new PerInstanceColorAppearance({
-                    flat : true,
-                    translucent : false
-                }),
-                asynchronous : false
-            });
+            var geometry;
+            var center;
+
+            if (defined(boundingVolume.radius)) {
+                var radius = boundingVolume.radius;
+                center = boundingVolume.center;
+
+                geometry = GeometryPipeline.toWireframe(EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
+                    radii : new Cartesian3(radius, radius, radius),
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
+                })));
+
+                if (frameState.mode !== SceneMode.SCENE3D) {
+                    center = Matrix4.multiplyByPoint(transformFrom2D, center, center);
+                    var projection = frameState.mapProjection;
+                    var centerCartographic = projection.unproject(center);
+                    center = projection.ellipsoid.cartographicToCartesian(centerCartographic);
+                }
+
+                scene._debugVolume = new Primitive({
+                    geometryInstances : new GeometryInstance({
+                        geometry : geometry,
+                        modelMatrix : Matrix4.multiplyByTranslation(Matrix4.IDENTITY, center, new Matrix4()),
+                        attributes : {
+                            color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
+                        }
+                    }),
+                    appearance : new PerInstanceColorAppearance({
+                        flat : true,
+                        translucent : false
+                    }),
+                    asynchronous : false
+                });
+            } else {
+                center = boundingVolume.center;
+                var halfAxes = boundingVolume.halfAxes;
+
+                geometry = GeometryPipeline.toWireframe(BoxGeometry.createGeometry(BoxGeometry.fromDimensions({
+                    dimensions : new Cartesian3(2.0, 2.0, 2.0),
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
+                })));
+
+                scene._debugVolume = new Primitive({
+                    geometryInstances : new GeometryInstance({
+                        geometry : geometry,
+                        modelMatrix : Matrix4.fromRotationTranslation(halfAxes, center, new Matrix4()),
+                        attributes : {
+                            color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
+                        }
+                    }),
+                    appearance : new PerInstanceColorAppearance({
+                        flat : true,
+                        translucent : false
+                    }),
+                    asynchronous : false
+                });
+            }
 
             var commandList = [];
-            scene._debugSphere.update(context, frameState, commandList);
+            scene._debugVolume.update(context, frameState, commandList);
 
             var framebuffer;
             if (defined(debugFramebuffer)) {
