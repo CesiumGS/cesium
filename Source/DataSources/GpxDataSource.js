@@ -167,16 +167,12 @@ define([
         return result;
     }
 
-    function getCoordinatesString(node) {
+    function readCoordinateFromNode(node) {
         var longitude = queryNumericAttribute(node, 'lon');
         var latitude = queryNumericAttribute(node, 'lat');
         var elevation = queryNumericValue(node, 'ele', namespaces.gpx);
-        var coordinatesString = longitude + ", " + latitude;
-        //TODO disregard elevation for now
-        //if(defined(elevation)){
-        //  coordinatesString = coordinatesString + ', ' + elevation;
-        //}
-        return coordinatesString;
+        elevation = 0; //TODO disregard elevation for now
+        return Cartesian3.fromDegrees(longitude, latitude, elevation);
     }
 
     var gpxNamespaces = [null, undefined, 'http://www.topografix.com/GPX/1/1'];
@@ -468,8 +464,7 @@ define([
     }
 
     function processWpt(dataSource, geometryNode, entityCollection, sourceUri, uriResolver) {
-        var coordinatesString = getCoordinatesString(geometryNode);
-        var position = readCoordinate(coordinatesString);
+        var position = readCoordinateFromNode(geometryNode);
         if (!defined(position)) {
             throw new DeveloperError('Position Coordinates are required.');
         }
@@ -495,11 +490,9 @@ define([
         //a list of wpt
         var routePoints = queryNodes(geometryNode, 'rtept', namespaces.gpx);
         var coordinateTuples = new Array(routePoints.length);
-        var coordinate;
         for (var i = 0; i < routePoints.length; i++) {
             processWpt(dataSource, routePoints[i], entityCollection, sourceUri, uriResolver);
-            coordinate = getCoordinatesString(routePoints[i]);
-            coordinateTuples[i] = readCoordinate(coordinate);
+            coordinateTuples[i] = readCoordinateFromNode(routePoints[i]);
         }
         entity.polyline = createDefaultPolyline();
         entity.polyline.positions = coordinateTuples;
@@ -597,8 +590,7 @@ define([
         var time;
         for (var i = 0; i < trackPoints.length; i++) {
 
-            coordinate = getCoordinatesString(trackPoints[i]);
-            var position = readCoordinate(coordinate);
+            var position = readCoordinateFromNode(trackPoints[i]);
             if (!defined(position)) {
                 throw new DeveloperError('Trkpt: Position Coordinates are required.');
             }
