@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/ClockRange',
@@ -11,7 +10,6 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Ellipsoid',
         '../Core/Event',
         '../Core/getFilenameFromUri',
         '../Core/Iso8601',
@@ -21,8 +19,6 @@ define([
         '../Core/Math',
         '../Core/NearFarScalar',
         '../Core/PinBuilder',
-        '../Core/PolygonHierarchy',
-        '../Core/Rectangle',
         '../Core/RuntimeError',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
@@ -31,7 +27,6 @@ define([
         '../ThirdParty/Autolinker',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
-        '../ThirdParty/zip',
         './BillboardGraphics',
         './CompositePositionProperty',
         './ConstantPositionProperty',
@@ -41,19 +36,12 @@ define([
         './EntityCollection',
         './LabelGraphics',
         './PathGraphics',
-        './PointGraphics',
-        './PolygonGraphics',
         './PolylineGraphics',
         './PolylineOutlineMaterialProperty',
         './PositionPropertyArray',
-        './RectangleGraphics',
-        './ReferenceProperty',
         './SampledPositionProperty',
-        './ScaledPositionProperty',
-        './TimeIntervalCollectionProperty',
-        './WallGraphics'
+        './TimeIntervalCollectionProperty'
     ], function(
-        BoundingRectangle,
         Cartesian2,
         Cartesian3,
         ClockRange,
@@ -64,7 +52,6 @@ define([
         defined,
         defineProperties,
         DeveloperError,
-        Ellipsoid,
         Event,
         getFilenameFromUri,
         Iso8601,
@@ -74,8 +61,6 @@ define([
         CesiumMath,
         NearFarScalar,
         PinBuilder,
-        PolygonHierarchy,
-        Rectangle,
         RuntimeError,
         TimeInterval,
         TimeIntervalCollection,
@@ -84,7 +69,6 @@ define([
         Autolinker,
         Uri,
         when,
-        zip,
         BillboardGraphics,
         CompositePositionProperty,
         ConstantPositionProperty,
@@ -94,84 +78,12 @@ define([
         EntityCollection,
         LabelGraphics,
         PathGraphics,
-        PointGraphics,
-        PolygonGraphics,
         PolylineGraphics,
         PolylineOutlineMaterialProperty,
         PositionPropertyArray,
-        RectangleGraphics,
-        ReferenceProperty,
         SampledPositionProperty,
-        ScaledPositionProperty,
-        TimeIntervalCollectionProperty,
-        WallGraphics) {
+        TimeIntervalCollectionProperty) {
     "use strict";
-
-    //This is by no means an exhaustive list of MIME types.
-    //The purpose of this list is to be able to accurately identify content embedded
-    //in KMZ files. Eventually, we can make this configurable by the end user so they can add
-    //there own content types if they have KMZ files that require it.
-    var MimeTypes = {
-        avi : "video/x-msvideo",
-        bmp : "image/bmp",
-        bz2 : "application/x-bzip2",
-        chm : "application/vnd.ms-htmlhelp",
-        css : "text/css",
-        csv : "text/csv",
-        doc : "application/msword",
-        dvi : "application/x-dvi",
-        eps : "application/postscript",
-        flv : "video/x-flv",
-        gif : "image/gif",
-        gz : "application/x-gzip",
-        htm : "text/html",
-        html : "text/html",
-        ico : "image/vnd.microsoft.icon",
-        jnlp : "application/x-java-jnlp-file",
-        jpeg : "image/jpeg",
-        jpg : "image/jpeg",
-        m3u : "audio/x-mpegurl",
-        m4v : "video/mp4",
-        mathml : "application/mathml+xml",
-        mid : "audio/midi",
-        midi : "audio/midi",
-        mov : "video/quicktime",
-        mp3 : "audio/mpeg",
-        mp4 : "video/mp4",
-        mp4v : "video/mp4",
-        mpeg : "video/mpeg",
-        mpg : "video/mpeg",
-        odp : "application/vnd.oasis.opendocument.presentation",
-        ods : "application/vnd.oasis.opendocument.spreadsheet",
-        odt : "application/vnd.oasis.opendocument.text",
-        ogg : "application/ogg",
-        pdf : "application/pdf",
-        png : "image/png",
-        pps : "application/vnd.ms-powerpoint",
-        ppt : "application/vnd.ms-powerpoint",
-        ps : "application/postscript",
-        qt : "video/quicktime",
-        rdf : "application/rdf+xml",
-        rss : "application/rss+xml",
-        rtf : "application/rtf",
-        svg : "image/svg+xml",
-        swf : "application/x-shockwave-flash",
-        text : "text/plain",
-        tif : "image/tiff",
-        tiff : "image/tiff",
-        txt : "text/plain",
-        wav : "audio/x-wav",
-        wma : "audio/x-ms-wma",
-        wmv : "video/x-ms-wmv",
-        xml : "application/xml",
-        zip : "application/zip",
-
-        detectFromFilename : function(filename) {
-            var ext = filename.toLowerCase();
-            ext = ext.substr(ext.lastIndexOf('.') + 1);
-            return MimeTypes[ext];
-        }
-    };
 
     var parser = new DOMParser();
     var autolinker = new Autolinker({
@@ -189,20 +101,6 @@ define([
 
     var BILLBOARD_SIZE = 32;
 
-    function isZipFile(blob) {
-        var magicBlob = blob.slice(0, Math.min(4, blob.size));
-        var deferred = when.defer();
-        var reader = new FileReader();
-        reader.addEventListener('load', function() {
-            deferred.resolve(new DataView(reader.result).getUint32(0, false) === 0x504b0304);
-        });
-        reader.addEventListener('error', function() {
-            deferred.reject(reader.error);
-        });
-        reader.readAsArrayBuffer(magicBlob);
-        return deferred;
-    }
-
     function readBlobAsText(blob) {
         var deferred = when.defer();
         var reader = new FileReader();
@@ -214,13 +112,6 @@ define([
         });
         reader.readAsText(blob);
         return deferred;
-    }
-
-    function loadXmlFromZip(reader, entry, uriResolver, deferred) {
-        entry.getData(new zip.TextWriter(), function(text) {
-            uriResolver.gpx = parser.parseFromString(text, 'application/xml');
-            deferred.resolve();
-        });
     }
 
     function proxyUrl(url, proxy) {
@@ -378,11 +269,6 @@ define([
         return undefined;
     }
 
-    function queryBooleanValue(node, tagName, namespace) {
-        var result = queryFirstNode(node, tagName, namespace);
-        return defined(result) ? result.textContent === '1' : undefined;
-    }
-
     function resolveHref(href, proxy, sourceUri, uriResolver) {
         if (!defined(href)) {
             return undefined;
@@ -441,13 +327,6 @@ define([
             path.leadTime = 0;
             entity.path = path;
         }
-
-        //
-        //        var polyline = styleEntity.polyline;
-        //        if (defined(polyline)) {
-        //            path.material = polyline.material;
-        //            path.width = polyline.width;
-        //        }
     }
 
     function createDefaultBillboard(proxy, sourceUri, uriResolver) {
@@ -458,13 +337,6 @@ define([
         var DEFAULT_ICON = '../../../Build/Cesium/Assets/Textures/maki/marker.png';
         billboard.image = resolveHref(DEFAULT_ICON, proxy, sourceUri, uriResolver);
         return billboard;
-    }
-
-    function createDefaultPolygon() {
-        var polygon = new PolygonGraphics();
-        polygon.outline = true;
-        polygon.outlineColor = Color.WHITE;
-        return polygon;
     }
 
     function createDefaultLabel() {
@@ -485,13 +357,6 @@ define([
         polyline.material.outlineWidth = 2;
         polyline.material.outlineColor = Color.BLACK;
         return polyline;
-    }
-
-    function createDefaultPoint() {
-        var point = new PointGraphics();
-        point.pixelSize = 15;
-        point.color = Color.YELLOW;
-        return point;
     }
 
     // This is a list of the Optional Description Information:
@@ -676,7 +541,6 @@ define([
                 }
                 if (times.length > 0) {
                     addToTrack(times, positions, composite, availability, dropShowProperty, true);
-                    //    needDropLine = needDropLine || (canExtrude && extrude);
                 }
             } else {
                 nonTimestampedPositions = nonTimestampedPositions.concat(positions);
@@ -692,10 +556,6 @@ define([
             entity.polyline = createDefaultPolyline();
             entity.polyline.positions = nonTimestampedPositions;
         }
-        //        if (needDropLine) {
-        //            createDropLine(dataSource, entity, styleEntity);
-        //            entity.polyline.show = dropShowProperty;
-        //        }
     }
 
     function addToTrack(times, positions, composite, availability, dropShowProperty, includeEndPoints) {
@@ -1017,7 +877,6 @@ define([
         this._isLoading = false;
         this._proxy = proxy;
         this._pinBuilder = new PinBuilder();
-        this._promises = [];
     };
 
     /**
@@ -1170,39 +1029,34 @@ define([
         var that = this;
         return when(promise, function(dataToLoad) {
             if (dataToLoad instanceof Blob) {
-                return isZipFile(dataToLoad).then(function(isZip) {
-                    if (isZip) {
-                        //return loadKmz(that, dataToLoad, sourceUri);
+                return when(readBlobAsText(dataToLoad)).then(function(text) {
+                    //There's no official way to validate if a parse was successful.
+                    //The following check detects the error on various browsers.
+
+                    //IE raises an exception
+                    var gpx;
+                    var error;
+                    try {
+                        gpx = parser.parseFromString(text, 'application/xml');
+                    } catch (e) {
+                        error = e.toString();
                     }
-                    return when(readBlobAsText(dataToLoad)).then(function(text) {
-                        //There's no official way to validate if a parse was successful.
-                        //The following check detects the error on various browsers.
 
-                        //IE raises an exception
-                        var gpx;
-                        var error;
-                        try {
-                            gpx = parser.parseFromString(text, 'application/xml');
-                        } catch (e) {
-                            error = e.toString();
+                    //The pase succeeds on Chrome and Firefox, but the error
+                    //handling is different in each.
+                    if (defined(error) || gpx.body || gpx.documentElement.tagName === 'parsererror') {
+                        //Firefox has error information as the firstChild nodeValue.
+                        var msg = defined(error) ? error : gpx.documentElement.firstChild.nodeValue;
+
+                        //Chrome has it in the body text.
+                        if (!msg) {
+                            msg = gpx.body.innerText;
                         }
 
-                        //The pase succeeds on Chrome and Firefox, but the error
-                        //handling is different in each.
-                        if (defined(error) || gpx.body || gpx.documentElement.tagName === 'parsererror') {
-                            //Firefox has error information as the firstChild nodeValue.
-                            var msg = defined(error) ? error : gpx.documentElement.firstChild.nodeValue;
-
-                            //Chrome has it in the body text.
-                            if (!msg) {
-                                msg = gpx.body.innerText;
-                            }
-
-                            //Return the error
-                            throw new RuntimeError(msg);
-                        }
-                        return loadGpx(that, gpx, sourceUri, undefined);
-                    });
+                        //Return the error
+                        throw new RuntimeError(msg);
+                    }
+                    return loadGpx(that, gpx, sourceUri, undefined);
                 });
             } else {
                 return when(loadGpx(that, dataToLoad, sourceUri, undefined));
