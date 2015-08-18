@@ -479,7 +479,7 @@ define([
 
     function createDefaultPolyline() {
         var polyline = new PolylineGraphics();
-        polyline.width = 5;
+        polyline.width = 4;
         polyline.material = new PolylineOutlineMaterialProperty();
         polyline.material.color = Color.RED;
         polyline.material.outlineWidth = 2;
