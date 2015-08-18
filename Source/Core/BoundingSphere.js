@@ -1066,6 +1066,25 @@ define([
     };
 
     /**
+     * Determines whether or not a sphere is hidden from view by the occluder.
+     *
+     * @param {BoundingSphere} sphere The bounding sphere surrounding the occludee object.
+     * @param {Occluder} occluder The occluder.
+     * @returns {Boolean} <code>true</code> if the sphere is not visible; otherwise <code>false</code>.
+     */
+    BoundingSphere.isOccluded = function(sphere, occluder) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(sphere)) {
+            throw new DeveloperError('sphere is required.');
+        }
+        if (!defined(occluder)) {
+            throw new DeveloperError('occluder is required.');
+        }
+        //>>includeEnd('debug');
+        return !occluder.isBoundingSphereVisible(sphere);
+    };
+
+    /**
      * Compares the provided BoundingSphere componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
      *
@@ -1140,6 +1159,16 @@ define([
      */
     BoundingSphere.prototype.computePlaneDistances = function(position, direction, result) {
         return BoundingSphere.computePlaneDistances(this, position, direction, result);
+    };
+
+    /**
+     * Determines whether or not a sphere is hidden from view by the occluder.
+     *
+     * @param {Occluder} occluder The occluder.
+     * @returns {Boolean} <code>true</code> if the sphere is not visible; otherwise <code>false</code>.
+     */
+    BoundingSphere.prototype.isOccluded = function(occluder) {
+        return BoundingSphere.isOccluded(this, occluder);
     };
 
     /**
