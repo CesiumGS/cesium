@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/defaultValue',
@@ -10,6 +11,7 @@ define([
         '../Core/GeometryInstance',
         '../Core/isArray',
         '../Core/Math',
+        '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
@@ -27,6 +29,7 @@ define([
         './StencilFunction',
         './StencilOperation'
     ], function(
+        BoundingSphere,
         Cartesian3,
         Cartographic,
         defaultValue,
@@ -37,6 +40,7 @@ define([
         GeometryInstance,
         isArray,
         CesiumMath,
+        Matrix3,
         Matrix4,
         OrientedBoundingBox,
         Rectangle,
@@ -147,9 +151,7 @@ define([
         this._rsPickPass = undefined;
 
         this._boundingVolumes = [];
-        this._boundingVolumesCV = [];
         this._boundingVolumes2D = [];
-        this._boundingVolumesMorph = [];
 
         this._ready = false;
         this._readyPromise = when.defer();
@@ -467,6 +469,14 @@ define([
 
         var obb = OrientedBoundingBox.fromRectangle(rectangle, GroundPrimitive._maxHeight, GroundPrimitive._minOBBHeight, ellipsoid);
         primitive._boundingVolumes.push(obb);
+
+        if (!frameState.scene3DOnly) {
+            var projection = frameState.mapProjection;
+            var boundingVolume = BoundingSphere.fromRectangleWithHeights2D(rectangle, projection, GroundPrimitive._maxHeight, GroundPrimitive._minOBBHeight);
+            Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
+
+            primitive._boundingVolumes2D.push(boundingVolume);
+        }
     }
 
     function createRenderStates(primitive, context, appearance, twoPasses) {
@@ -585,12 +595,8 @@ define([
         var boundingVolumes;
         if (frameState.mode === SceneMode.SCENE3D) {
             boundingVolumes = primitive._boundingVolumes;
-        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
-            boundingVolumes = primitive._boundingVolumesCV;
-        } else if (frameState.mode === SceneMode.SCENE2D && defined(primitive._boundingVolumes2D)) {
+        } else if (frameState.mode !== SceneMode.SCENE3D && defined(primitive._boundingVolumes2D)) {
             boundingVolumes = primitive._boundingVolumes2D;
-        } else if (defined(primitive._boundingVolumesMorph)) {
-            boundingVolumes = primitive._boundingVolumesMorph;
         }
 
         var passes = frameState.passes;

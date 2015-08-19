@@ -1196,23 +1196,22 @@ define([
             }
 
             var geometry;
-            var center;
+
+            var center = Cartesian3.clone(boundingVolume.center);
+            if (frameState.mode !== SceneMode.SCENE3D) {
+                center = Matrix4.multiplyByPoint(transformFrom2D, center, center);
+                var projection = frameState.mapProjection;
+                var centerCartographic = projection.unproject(center);
+                center = projection.ellipsoid.cartographicToCartesian(centerCartographic);
+            }
 
             if (defined(boundingVolume.radius)) {
                 var radius = boundingVolume.radius;
-                center = boundingVolume.center;
 
                 geometry = GeometryPipeline.toWireframe(EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
                     radii : new Cartesian3(radius, radius, radius),
                     vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
                 })));
-
-                if (frameState.mode !== SceneMode.SCENE3D) {
-                    center = Matrix4.multiplyByPoint(transformFrom2D, center, center);
-                    var projection = frameState.mapProjection;
-                    var centerCartographic = projection.unproject(center);
-                    center = projection.ellipsoid.cartographicToCartesian(centerCartographic);
-                }
 
                 scene._debugVolume = new Primitive({
                     geometryInstances : new GeometryInstance({
@@ -1229,7 +1228,6 @@ define([
                     asynchronous : false
                 });
             } else {
-                center = boundingVolume.center;
                 var halfAxes = boundingVolume.halfAxes;
 
                 geometry = GeometryPipeline.toWireframe(BoxGeometry.createGeometry(BoxGeometry.fromDimensions({
