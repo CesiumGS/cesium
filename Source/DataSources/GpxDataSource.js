@@ -28,8 +28,6 @@ define([
         '../ThirdParty/Uri',
         '../ThirdParty/when',
         './BillboardGraphics',
-        './CompositePositionProperty',
-        './ConstantPositionProperty',
         './DataSource',
         './DataSourceClock',
         './Entity',
@@ -38,9 +36,7 @@ define([
         './PathGraphics',
         './PolylineGraphics',
         './PolylineOutlineMaterialProperty',
-        './PositionPropertyArray',
-        './SampledPositionProperty',
-        './TimeIntervalCollectionProperty'
+        './SampledPositionProperty'
     ], function(
         Cartesian2,
         Cartesian3,
@@ -70,8 +66,6 @@ define([
         Uri,
         when,
         BillboardGraphics,
-        CompositePositionProperty,
-        ConstantPositionProperty,
         DataSource,
         DataSourceClock,
         Entity,
@@ -80,9 +74,7 @@ define([
         PathGraphics,
         PolylineGraphics,
         PolylineOutlineMaterialProperty,
-        PositionPropertyArray,
-        SampledPositionProperty,
-        TimeIntervalCollectionProperty) {
+        SampledPositionProperty) {
     "use strict";
 
     var parser = new DOMParser();
@@ -231,22 +223,6 @@ define([
         return result;
     }
 
-    function queryChildNodes(node, tagName, namespace) {
-        if (!defined(node)) {
-            return [];
-        }
-        var result = [];
-        var childNodes = node.childNodes;
-        var length = childNodes.length;
-        for (var q = 0; q < length; q++) {
-            var child = childNodes[q];
-            if (child.localName === tagName && namespace.indexOf(child.namespaceURI) !== -1) {
-                result.push(child);
-            }
-        }
-        return result;
-    }
-
     function queryNumericValue(node, tagName, namespace) {
         var resultNode = queryFirstNode(node, tagName, namespace);
         if (defined(resultNode)) {
@@ -283,45 +259,6 @@ define([
             href = proxyUrl(href, proxy);
         }
         return href;
-    }
-
-    function processPositionGraphics(dataSource, entity) {
-        var label = entity.label;
-        if (!defined(label)) {
-            label = createDefaultLabel();
-            entity.label = label;
-        }
-        label.text = entity.name;
-
-        var billboard = entity.billboard;
-        if (!defined(billboard)) {
-            billboard = createDefaultBillboard();
-            entity.billboard = billboard;
-        }
-
-        if (!defined(billboard.image)) {
-            billboard.image = dataSource._pinBuilder.fromColor(Color.YELLOW, 64);
-        }
-
-        if (defined(billboard.scale)) {
-            var scale = billboard.scale.getValue();
-            if (scale !== 0) {
-                label.pixelOffset = new Cartesian2((scale * 16) + 1, 0);
-            } else {
-                //Minor tweaks to better match Google Earth.
-                label.pixelOffset = undefined;
-                label.horizontalOrigin = undefined;
-            }
-        }
-    }
-
-    function processPathGraphics(dataSource, entity) {
-        var path = entity.path;
-        if (!defined(path)) {
-            path = new PathGraphics();
-            path.leadTime = 0;
-            entity.path = path;
-        }
     }
 
     function createDefaultBillboard(proxy, sourceUri, uriResolver) {
