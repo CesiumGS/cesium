@@ -693,6 +693,18 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('isOccluded throws without a sphere', function() {
+        expect(function() {
+            BoundingSphere.isOccluded();
+        }).toThrowDeveloperError();
+    });
+
+    it('isOccluded throws without an occluder', function() {
+        expect(function() {
+            BoundingSphere.isOccluded(new BoundingSphere());
+        }).toThrowDeveloperError();
+    });
+
     function expectBoundingSphereToContainPoint(boundingSphere, point, projection) {
         var pointInCartesian = projection.project(point);
         var distanceFromCenter = Cartesian3.magnitude(Cartesian3.subtract(pointInCartesian, boundingSphere.center, new Cartesian3()));

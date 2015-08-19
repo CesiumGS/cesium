@@ -436,7 +436,7 @@ define([
         var pPrime = scratchPPrime;
         pPrime.x = Cartesian3.dot(offset, u);
         pPrime.y = Cartesian3.dot(offset, v);
-        pPrime.w = Cartesian3.dot(offset, w);
+        pPrime.z = Cartesian3.dot(offset, w);
 
         var distanceSquared = 0.0;
         var d;
@@ -666,7 +666,7 @@ define([
      *     return b.distanceSquaredTo(camera.positionWC) - a.distanceSquaredTo(camera.positionWC);
      * });
      */
-    OrientedBoundingBox.distanceSquaredTo = function(cartesian) {
+    OrientedBoundingBox.prototype.distanceSquaredTo = function(cartesian) {
         return OrientedBoundingBox.distanceSquaredTo(this, cartesian);
     };
 
