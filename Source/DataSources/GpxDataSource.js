@@ -505,7 +505,9 @@ define([
             }
         }
         if (isTimeDynamic) {
-            entity.positions = property;
+            entity.billboard = createDefaultBillboard();
+            entity.billboard.image = resolveHref('../../../Build/Cesium/Assets/Textures/maki/bicycle.png');
+            entity.position = property;
             entity.path = createDefaultPath();
             entity.availability = new TimeIntervalCollection();
             entity.availability.addInterval(new TimeInterval({
