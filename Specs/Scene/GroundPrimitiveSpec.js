@@ -100,13 +100,12 @@ defineSuite([
     };
 
     MockGlobePrimitive.prototype.update = function(context, frameState, commandList) {
-        var tempCommandList = [];
-        this._primitive.update(context, frameState, tempCommandList);
+        var startLength = commandList.length;
+        this._primitive.update(context, frameState, commandList);
 
-        for (var i = 0; i < tempCommandList.length; ++i) {
-            var command = tempCommandList[i];
+        for (var i = startLength; i < commandList.length; ++i) {
+            var command = commandList[i];
             command.pass = Pass.GLOBE;
-            commandList.push(command);
         }
     };
 
@@ -550,7 +549,6 @@ defineSuite([
 
         primitives = primitives && primitives.destroy();
     });
-
 
     it('internally invalid asynchronous geometry resolves promise and sets ready', function() {
         var primitive = new GroundPrimitive({
