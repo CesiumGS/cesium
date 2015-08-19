@@ -171,7 +171,6 @@ define([
         var longitude = queryNumericAttribute(node, 'lon');
         var latitude = queryNumericAttribute(node, 'lat');
         var elevation = queryNumericValue(node, 'ele', namespaces.gpx);
-        elevation = 0; //TODO disregard elevation for now
         return Cartesian3.fromDegrees(longitude, latitude, elevation);
     }
 
@@ -586,7 +585,6 @@ define([
             times : []
         };
         var trackPoints = queryNodes(node, 'trkpt', namespaces.gpx);
-        var coordinate;
         var time;
         for (var i = 0; i < trackPoints.length; i++) {
 
