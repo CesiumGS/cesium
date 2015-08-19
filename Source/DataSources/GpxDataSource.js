@@ -355,7 +355,6 @@ define([
     }
 
     // This is a list of the Optional Description Information:
-    //  <name> GPS waypoint name of the waypoint
     //  <cmt> GPS comment of the waypoint
     //  <desc> Descriptive description of the waypoint
     //  <src> Source of the waypoint data
@@ -365,10 +364,6 @@ define([
         time : {
             text : 'Time',
             tag : 'time'
-        },
-        name : {
-            text : 'Name',
-            tag : 'name'
         },
         comment : {
             text : 'Comment',
