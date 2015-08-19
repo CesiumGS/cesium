@@ -362,13 +362,6 @@ define([
     //  TODO <link> Link (URI/URL) associated with the waypoint
     //  <type> Type (category) of waypoint
     var descriptiveInfoTypes = {
-        position : {
-            text : 'Coordinates'
-        },
-        elevation : {
-            text : 'Elevation in meters',
-            tag : 'ele'
-        },
         time : {
             text : 'Time',
             tag : 'time'
@@ -409,24 +402,9 @@ define([
         for (i = 0; i < length; i++) {
             var infoTypeName = infoTypeNames[i];
             var infoType = descriptiveInfoTypes[infoTypeName];
-            if (infoTypeName === 'position') {
-                var longitude = queryNumericAttribute(node, 'lon');
-                var latitude = queryNumericAttribute(node, 'lat');
-                if (!defined(latitude) || !defined(longitude)) {
-                    continue; // no position to show on description
-                }
-                var elevation = queryNumericValue(node, 'ele', namespaces.gpx);
-                text = text + '<p>' + infoType.text + ': ' + longitude + ', ' + latitude;
-                if (defined(elevation)) {
-                    text = text + ', ' + elevation + '</p>';
-                } else {
-                    text = text + '</p>';
-                }
-            } else {
-                infoType.value = defaultValue(queryStringValue(node, infoType.tag, namespaces.gpx), '');
-                if (defined(infoType.value) && infoType.value !== '') {
-                    text = text + '<p>' + infoType.text + ': ' + infoType.value + '</p>';
-                }
+            infoType.value = defaultValue(queryStringValue(node, infoType.tag, namespaces.gpx), '');
+            if (defined(infoType.value) && infoType.value !== '') {
+                text = text + '<p>' + infoType.text + ': ' + infoType.value + '</p>';
             }
         }
 
