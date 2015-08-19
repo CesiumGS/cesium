@@ -63,7 +63,7 @@ define([
      * A ground primitive represents geometry draped over the terrain in the {@link Scene}.  The geometry must be from a single {@link GeometryInstance}.
      * Batching multiple geometries is not yet supported.
      * <p>
-     * A primitive combines geometry instances with an {@link Appearance} that describes the full shading, including
+     * A primitive combines the geometry instance with an {@link Appearance} that describes the full shading, including
      * {@link Material} and {@link RenderState}.  Roughly, the geometry instance defines the structure and placement,
      * and the appearance defines the visual characteristics.  Decoupling geometry and appearance allows us to mix
      * and match most of them and add a new geometry or appearance independently of each other. Only the {@link PerInstanceColorAppearance}
@@ -77,7 +77,7 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Array|GeometryInstance} [options.geometryInstances] A single geometry instance to render.
+     * @param {GeometryInstance} [options.geometryInstance] A single geometry instance to render.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
      * @param {Boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
@@ -102,14 +102,14 @@ define([
      *   }
      * });
      * scene.primitives.add(new Cesium.GroundPrimitive({
-     *   geometryInstances : rectangleInstance
+     *   geometryInstance : rectangleInstance
      * }));
      */
     var GroundPrimitive = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
-         * The geometry instances rendered with this primitive.  This may
+         * The geometry instance rendered with this primitive.  This may
          * be <code>undefined</code> if <code>options.releaseGeometryInstances</code>
          * is <code>true</code> when the primitive is constructed.
          * <p>
@@ -120,7 +120,7 @@ define([
          *
          * @default undefined
          */
-        this.geometryInstances = options.geometryInstances;
+        this.geometryInstance = options.geometryInstance;
         /**
          * Determines if the primitive will be shown.  This affects all geometry
          * instances in the primitive.
@@ -641,30 +641,22 @@ define([
         }
 
         if (!defined(this._primitive)) {
-            var geometryInstances = this.geometryInstances;
-            geometryInstances = isArray(geometryInstances) ? geometryInstances : [geometryInstances];
+            var instance = this.geometryInstance;
+            var geometry = instance.geometry;
 
-            var length = geometryInstances.length;
-            var instances = new Array(length);
-
-            for (var i = 0; i < length; ++i) {
-                var instance = geometryInstances[i];
-                var geometry = instance.geometry;
-
-                var instanceType = geometry.constructor;
-                if (defined(instanceType) && defined(instanceType.createShadowVolume)) {
-                    instances[i] = new GeometryInstance({
-                        geometry : instanceType.createShadowVolume(geometry, computeMinimumHeight, computeMaximumHeight),
-                        attributes : instance.attributes,
-                        modelMatrix : Matrix4.IDENTITY,
-                        id : instance.id,
-                        pickPrimitive : this
-                    });
-                }
+            var instanceType = geometry.constructor;
+            if (defined(instanceType) && defined(instanceType.createShadowVolume)) {
+                instance = new GeometryInstance({
+                    geometry : instanceType.createShadowVolume(geometry, computeMinimumHeight, computeMaximumHeight),
+                    attributes : instance.attributes,
+                    modelMatrix : Matrix4.IDENTITY,
+                    id : instance.id,
+                    pickPrimitive : this
+                });
             }
 
             var primitiveOptions = this._primitiveOptions;
-            primitiveOptions.geometryInstances = instances;
+            primitiveOptions.geometryInstances = instance;
 
             var that = this;
             this._primitiveOptions._createBoundingVolumeFunction = function(frameState, geometry) {

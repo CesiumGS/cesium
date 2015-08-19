@@ -38,7 +38,7 @@ scene.terrainProvider = new Cesium.CesiumTerrainProvider({
 
 // Circle geometry
 scene.primitives.add(new Cesium.GroundPrimitive({
-    geometryInstances: new Cesium.GeometryInstance({
+    geometryInstance: new Cesium.GeometryInstance({
         geometry : new Cesium.CircleGeometry({
             center : Cesium.Cartesian3.fromDegrees(-95.0, 45.0),
             radius : 250000.0
@@ -51,7 +51,7 @@ scene.primitives.add(new Cesium.GroundPrimitive({
 
 // Ellipse Geometry
 scene.primitives.add(new Cesium.GroundPrimitive({
-    geometryInstances: new Cesium.GeometryInstance({
+    geometryInstance: new Cesium.GeometryInstance({
         geometry : new Cesium.EllipseGeometry({
             center : Cesium.Cartesian3.fromDegrees(-105.0, 40.0),
             semiMinorAxis : 300000.0,
@@ -65,7 +65,7 @@ scene.primitives.add(new Cesium.GroundPrimitive({
 
 // Corridor Geometry
 scene.primitives.add(new Cesium.GroundPrimitive({
-    geometryInstances : new Cesium.GeometryInstance({
+    geometryInstance : new Cesium.GeometryInstance({
         geometry: new Cesium.CorridorGeometry({
             positions : Cesium.Cartesian3.fromDegreesArray([
                     -112.0, 40.0,
@@ -82,7 +82,7 @@ scene.primitives.add(new Cesium.GroundPrimitive({
 
 // Rectangle geometry
 scene.primitives.add(new Cesium.GroundPrimitive({
-    geometryInstances : new Cesium.GeometryInstance({
+    geometryInstance : new Cesium.GeometryInstance({
         geometry : new Cesium.RectangleGeometry({
             rectangle : Cesium.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0),
             rotation : Cesium.Math.toRadians(45)
@@ -101,7 +101,7 @@ var positions = [new Cesium.Cartesian3(-2358138.847340281, -3744072.459541374, 4
 var polygonHierarchy = { positions : positions };
 
 var primitive = scene.primitives.add(new Cesium.GroundPrimitive({
-    geometryInstances : new Cesium.GeometryInstance({
+    geometryInstance : new Cesium.GeometryInstance({
         geometry : new Cesium.PolygonGeometry({
             polygonHierarchy : polygonHierarchy
         }),
@@ -123,7 +123,7 @@ positions = scene.globe.ellipsoid.cartographicArrayToCartesianArray(positions);
 polygonHierarchy = { positions : positions };
 
 scene.primitives.add(new Cesium.GroundPrimitive({
-    geometryInstances : new Cesium.GeometryInstance({
+    geometryInstance : new Cesium.GeometryInstance({
         geometry : new Cesium.PolygonGeometry({
             polygonHierarchy : polygonHierarchy
         }),
