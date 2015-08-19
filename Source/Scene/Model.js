@@ -3225,7 +3225,7 @@ define([
         var justLoaded = false;
 
         if (this._state === ModelState.LOADING) {
-            if(this._loadResources.decompressionInFlight){
+            if(loadResources.decompressionInFlight){
                 return;
             }
             // Create WebGL resources as buffers/shaders/textures are downloaded
