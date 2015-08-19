@@ -354,6 +354,17 @@ define([
         return polyline;
     }
 
+    function createDefaultPath() {
+        var path = new PathGraphics();
+        path.leadTime = 0;
+        path.width = 4;
+        path.material = new PolylineOutlineMaterialProperty();
+        path.material.color = Color.RED;
+        path.material.outlineWidth = 2;
+        path.material.outlineColor = Color.BLACK;
+        return path;
+    }
+
     // This is a list of the Optional Description Information:
     //  <cmt> GPS comment of the waypoint
     //  <desc> Descriptive description of the waypoint
@@ -475,81 +486,36 @@ define([
         var entity = getOrCreateEntity(geometryNode, entityCollection);
         entity.description = processDescription(geometryNode, entity, uriResolver);
 
-        var interpolate = true; //TODO interpolate by default?
-        //a list of track segments
         var trackSegs = queryNodes(geometryNode, 'trkseg', namespaces.gpx);
+        var positions = [];
+        var times = [];
         var trackSegInfo;
-        var nonTimestampedPositions = [];
-        var times;
-        var data;
-        var lastStop;
-        var lastStopPosition;
-        var needDropLine = false;
-        var dropShowProperty = new TimeIntervalCollectionProperty();
-        var availability = new TimeIntervalCollection();
-        var composite = new CompositePositionProperty();
+        var isTimeDynamic = true;
+        var property = new SampledPositionProperty();
         for (var i = 0; i < trackSegs.length; i++) {
             trackSegInfo = processTrkSeg(trackSegs[i]);
-            var positions = trackSegInfo.positions;
-            times = trackSegInfo.times;
-            if (times.length > 0) {
-                if (interpolate) { //TODO Copied from KML
-                    //If we are interpolating, then we need to fill in the end of
-                    //the last track and the beginning of this one with a sampled
-                    //property.  From testing in Google Earth, this property
-                    //is never extruded and always absolute.
-                    if (defined(lastStop)) {
-                        addToTrack([lastStop, times[0]], [lastStopPosition, positions[0]], composite, availability, dropShowProperty, false, 'absolute', undefined, false);
-                    }
-                    lastStop = times[length - 1];
-                    lastStopPosition = positions[positions.length - 1];
-                }
-                if (times.length > 0) {
-                    addToTrack(times, positions, composite, availability, dropShowProperty, true);
-                }
+            positions = positions.concat(trackSegInfo.positions);
+            if (trackSegInfo.times.length > 0) {
+                times = times.concat(trackSegInfo.times);
+                property.addSamples(times, positions);
+                //if one track segment is non dynamic the whole track must also be
+                isTimeDynamic = isTimeDynamic && true;
             } else {
-                nonTimestampedPositions = nonTimestampedPositions.concat(positions);
+                isTimeDynamic = false;
             }
         }
-
-        if (times.length > 0) {
-            entity.availability = availability;
-            entity.position = composite;
-            processPositionGraphics(dataSource, entity);
-            processPathGraphics(dataSource, entity);
+        if (isTimeDynamic) {
+            entity.positions = property;
+            entity.path = createDefaultPath();
+            entity.availability = new TimeIntervalCollection();
+            entity.availability.addInterval(new TimeInterval({
+                start : times[0],
+                stop : times[times.length - 1]
+            }));
         } else {
             entity.polyline = createDefaultPolyline();
-            entity.polyline.positions = nonTimestampedPositions;
+            entity.polyline.positions = positions;
         }
-    }
-
-    function addToTrack(times, positions, composite, availability, dropShowProperty, includeEndPoints) {
-        var start = times[0];
-        var stop = times[times.length - 1];
-
-        var data = new SampledPositionProperty();
-        data.addSamples(times, positions);
-
-        composite.intervals.addInterval(new TimeInterval({
-            start : start,
-            stop : stop,
-            isStartIncluded : includeEndPoints,
-            isStopIncluded : includeEndPoints,
-            data : data
-        }));
-        availability.addInterval(new TimeInterval({
-            start : start,
-            stop : stop,
-            isStartIncluded : includeEndPoints,
-            isStopIncluded : includeEndPoints
-        }));
-        dropShowProperty.intervals.addInterval(new TimeInterval({
-            start : start,
-            stop : stop,
-            isStartIncluded : includeEndPoints,
-            isStopIncluded : includeEndPoints,
-            data : true
-        }));
     }
 
     function processTrkSeg(node) {
@@ -567,7 +533,7 @@ define([
             }
             result.positions.push(position);
 
-            time = queryStringValue(node, 'time', namespaces.gpx);
+            time = queryStringValue(trackPoints[i], 'time', namespaces.gpx);
             if (defined(time)) {
                 result.times.push(JulianDate.fromIso8601(time));
             }
