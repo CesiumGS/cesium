@@ -234,7 +234,7 @@ defineSuite(['DataSources/GpxDataSource',
         });
     });
 
-    it('Waypoint: handles description', function() {
+    it('Description: handles desc', function() {
         var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="RouteConverter">\
                 <wpt lon="1" lat="2">\
@@ -251,9 +251,139 @@ defineSuite(['DataSources/GpxDataSource',
             expect(div.style['word-wrap']).toEqual('break-word');
             expect(div.style['background-color']).toEqual('rgb(255, 255, 255)');
             expect(div.style.color).toEqual('rgb(0, 0, 0)');
-            expect(div.textContent).toEqual('Coordinates: 1, 2Description: The Description');
+            expect(div.textContent).toEqual('Description: The Description');
         });
     });
+
+    it('Description: handles time', function() {
+        var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
+            <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="RouteConverter">\
+                <wpt lon="1" lat="2">\
+                    <time>2015-08-17T00:06Z</time>\
+                </wpt>\
+            </gpx>';
+        return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+
+            var element = document.createElement('div');
+            element.innerHTML = entity.description.getValue();
+
+            var div = element.firstChild;
+            expect(div.style['word-wrap']).toEqual('break-word');
+            expect(div.style['background-color']).toEqual('rgb(255, 255, 255)');
+            expect(div.style.color).toEqual('rgb(0, 0, 0)');
+            expect(div.textContent).toEqual('Time: 2015-08-17T00:06Z');
+        });
+    });
+
+    it('Description: handles comment', function() {
+        var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
+            <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="RouteConverter">\
+                <wpt lon="1" lat="2">\
+                    <cmt>The comment</cmt>\
+                </wpt>\
+            </gpx>';
+        return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+
+            var element = document.createElement('div');
+            element.innerHTML = entity.description.getValue();
+
+            var div = element.firstChild;
+            expect(div.style['word-wrap']).toEqual('break-word');
+            expect(div.style['background-color']).toEqual('rgb(255, 255, 255)');
+            expect(div.style.color).toEqual('rgb(0, 0, 0)');
+            expect(div.textContent).toEqual('Comment: The comment');
+        });
+    });
+
+    it('Description: handles source', function() {
+        var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
+            <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="RouteConverter">\
+                <wpt lon="1" lat="2">\
+                    <src>The source</src>\
+                </wpt>\
+            </gpx>';
+        return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+
+            var element = document.createElement('div');
+            element.innerHTML = entity.description.getValue();
+
+            var div = element.firstChild;
+            expect(div.style['word-wrap']).toEqual('break-word');
+            expect(div.style['background-color']).toEqual('rgb(255, 255, 255)');
+            expect(div.style.color).toEqual('rgb(0, 0, 0)');
+            expect(div.textContent).toEqual('Source: The source');
+        });
+    });
+
+    it('Description: handles gps number', function() {
+        var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
+            <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="RouteConverter">\
+                <wpt lon="1" lat="2">\
+                    <number>The number</number>\
+                </wpt>\
+            </gpx>';
+        return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+
+            var element = document.createElement('div');
+            element.innerHTML = entity.description.getValue();
+
+            var div = element.firstChild;
+            expect(div.style['word-wrap']).toEqual('break-word');
+            expect(div.style['background-color']).toEqual('rgb(255, 255, 255)');
+            expect(div.style.color).toEqual('rgb(0, 0, 0)');
+            expect(div.textContent).toEqual('GPS track/route number: The number');
+        });
+    });
+
+    it('Description: handles type', function() {
+        var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
+            <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="RouteConverter">\
+                <wpt lon="1" lat="2">\
+                    <type>The type</type>\
+                </wpt>\
+            </gpx>';
+        return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+
+            var element = document.createElement('div');
+            element.innerHTML = entity.description.getValue();
+
+            var div = element.firstChild;
+            expect(div.style['word-wrap']).toEqual('break-word');
+            expect(div.style['background-color']).toEqual('rgb(255, 255, 255)');
+            expect(div.style.color).toEqual('rgb(0, 0, 0)');
+            expect(div.textContent).toEqual('Type: The type');
+        });
+    });
+
+    it('Description: handles multiple fields', function() {
+        var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
+            <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="RouteConverter">\
+                <wpt lon="1" lat="2">\
+                    <cmt>The comment</cmt>\
+                    <desc>The description</desc>\
+                    <type>The type</type>\
+                </wpt>\
+            </gpx>';
+        return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+
+            var element = document.createElement('div');
+            element.innerHTML = entity.description.getValue();
+
+            var div = element.firstChild;
+            expect(div.style['word-wrap']).toEqual('break-word');
+            expect(div.style['background-color']).toEqual('rgb(255, 255, 255)');
+            expect(div.style.color).toEqual('rgb(0, 0, 0)');
+            expect(div.textContent).toEqual('Comment: The commentDescription: The descriptionType: The type');
+        });
+    });
+
+
 
     it('Route: handles simple route', function() {
         var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
