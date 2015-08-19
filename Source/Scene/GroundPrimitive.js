@@ -636,7 +636,7 @@ define([
      * @exception {DeveloperError} Appearance and material have a uniform with the same name.
      */
     GroundPrimitive.prototype.update = function(context, frameState, commandList) {
-        if (!context.fragmentDepth || !this.show) {
+        if (!context.fragmentDepth || !this.show || (!defined(this._primitive) && !defined(this.geometryInstance))) {
             return;
         }
 
@@ -680,7 +680,7 @@ define([
                 that._ready = true;
 
                 if (that.releaseGeometryInstances) {
-                    that.geometryInstances = undefined;
+                    that.geometryInstance = undefined;
                 }
 
                 var error = primitive._error;
