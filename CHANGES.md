@@ -8,6 +8,9 @@ Change Log
 * Deprecated
   *
 * Fix issue where extruded `PolygonGeometry` was always extruding to the ellipsoid surface instead of specified height.
+* Fix an issue where non-feature nodes prevented KML documents from loading. [#2945](https://github.com/AnalyticalGraphicsInc/cesium/pull/2945).
+* Removed [es5-shim](https://github.com/kriskowal/es5-shim), which is no longer required by the unit tests. [#2933](https://github.com/AnalyticalGraphicsInc/cesium/pull/2945)
+* Fix issue where `JulianDate` would not parse certain dates properly. [#405](https://github.com/AnalyticalGraphicsInc/cesium/issues/405)
 * Added support for glTF compression using the `mesh_compression_open3dgc` glTF extension.
 
 ### 1.12 - 2015-08-03

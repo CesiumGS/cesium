@@ -35,7 +35,7 @@ define([
      * @alias BaseLayerPicker
      * @constructor
      *
-     * @param {Element} container The parent HTML container node for this widget.
+     * @param {Element|String} container The parent HTML container node or ID for this widget.
      * @param {Object} options Object with the following properties:
      * @param {Globe} options.globe The Globe to use.
      * @param {ProviderViewModel[]} [options.imageryProviderViewModels=[]] The array of ProviderViewModel instances to use for imagery.

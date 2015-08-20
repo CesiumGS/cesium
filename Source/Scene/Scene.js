@@ -523,7 +523,7 @@ define([
          * Gets the canvas element to which this scene is bound.
          * @memberof Scene.prototype
          *
-         * @type {Element}
+         * @type {Canvas}
          * @readonly
          */
         canvas : {
@@ -1927,7 +1927,7 @@ define([
      * @exception {DeveloperError} windowPosition is undefined.
      *
      * @example
-     * var pickedObjects = Cesium.Scene.drillPick(new Cesium.Cartesian2(100.0, 200.0));
+     * var pickedObjects = scene.drillPick(new Cesium.Cartesian2(100.0, 200.0));
      */
     Scene.prototype.drillPick = function(windowPosition, limit) {
         // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead

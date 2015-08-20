@@ -43,6 +43,7 @@ define([
      * Computes the point along the ray given by r(t) = o + t*d,
      * where o is the origin of the ray and d is the direction.
      *
+     * @param {Ray} ray The ray.
      * @param {Number} t A scalar value.
      * @param {Cartesian3} [result] The object in which the result will be stored.
      * @returns {Cartesian3} The modified result parameter, or a new instance if none was provided.
