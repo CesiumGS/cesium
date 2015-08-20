@@ -182,27 +182,26 @@ define([], function() {
         return pos;
     }
 
-    var getTimestamp;
-    if ((typeof performance !== 'undefined') && (typeof performance.now !== 'undefined')) {
-        getTimestamp = function() {
-            return performance.now();
-        };
-    } else {
-        getTimestamp = function() {
-            return Date.now();
+    // Timer class
+    var windowPerformance = (typeof performance !== 'undefined') ? performance : {};
+    if (!windowPerformance.now) {
+        local.nowOffset = Date.now();
+        if (windowPerformance.timing && windowPerformance.timing.navigationStart) {
+            local.nowOffset = windowPerformance.timing.navigationStart;
+        }
+        windowPerformance.now = function now() {
+            return Date.now() - local.nowOffset;
         };
     }
-
-    // Timer class
     module.Timer = function () {
         this.m_start = 0;
         this.m_end = 0;
     };
     module.Timer.prototype.Tic = function () {
-        this.m_start = getTimestamp();
+        this.m_start = windowPerformance.now();
     };
     module.Timer.prototype.Toc = function () {
-        this.m_end = getTimestamp();
+        this.m_end = windowPerformance.now();
     };
     module.Timer.prototype.GetElapsedTime = function () {
         return this.m_end - this.m_start;
