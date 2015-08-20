@@ -1367,7 +1367,9 @@ define([
             }
         }
 
-        if (defined(scene.globe) && !scene.globe.depthTestAgainstTerrain) {
+        var clearGlobeDepth = defined(scene.globe) && (!scene.globe.depthTestAgainstTerrain || scene.mode === SceneMode.SCENE2D);
+        var useDepthPlane = clearGlobeDepth && scene.mode === SceneMode.SCENE3D;
+        if (useDepthPlane) {
             // Update the depth plane that is rendered in 3D when the primitives are
             // not depth tested against terrain so primitives on the backface
             // of the globe are not picked.
@@ -1488,9 +1490,11 @@ define([
                 passState.framebuffer = fb;
             }
 
-            if (defined(scene.globe) && !scene.globe.depthTestAgainstTerrain) {
+            if (clearGlobeDepth) {
                 clearDepth.execute(context, passState);
-                scene._depthPlane.execute(context, passState);
+                if (useDepthPlane) {
+                    scene._depthPlane.execute(context, passState);
+                }
             }
 
             // Execute commands in order by pass up to the translucent pass.
