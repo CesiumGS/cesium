@@ -797,27 +797,6 @@ define([
         return Intersect.INSIDE;
     };
 
-    var scratchPlane = new Plane(new Cartesian3(), 0.0);
-    /**
-     * Determines which side of a plane a sphere is located.
-     *
-     * @deprecated
-     * @param {BoundingSphere} sphere The bounding sphere to test.
-     * @param {Cartesian4} plane The coefficients of the plane in Hessian Normal Form, as `ax + by + cz + d = 0`,
-     *                           where (a, b, c) must be a unit normal vector.
-     *                           The coefficients a, b, c, and d are the components x, y, z,
-     *                           and w of the {@link Cartesian4}, respectively.
-     * @returns {Intersect} {@link Intersect.INSIDE} if the entire sphere is on the side of the plane
-     *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire sphere is
-     *                      on the opposite side, and {@link Intersect.INTERSECTING} if the sphere
-     *                      intersects the plane.
-     */
-    BoundingSphere.intersect = function(sphere, plane) {
-        deprecationWarning('BoundingSphere.intersect', 'BoundingSphere.intersect() was deprecated in Cesium 1.11.  It will be removed in 1.12.  Use BoundingSphere.intersectPlane() instead.');
-        var p = Plane.fromCartesian4(plane, scratchPlane);
-        return BoundingSphere.intersectPlane(sphere, p);
-    };
-
     /**
      * Applies a 4x4 affine transformation matrix to a bounding sphere.
      *
@@ -1110,22 +1089,6 @@ define([
      */
     BoundingSphere.prototype.intersectPlane = function(plane) {
         return BoundingSphere.intersectPlane(this, plane);
-    };
-
-    /**
-     * Determines which side of a plane the sphere is located.
-     *
-     * @deprecated
-     * @param {Cartesian4} plane The coefficients of the plane in the for ax + by + cz + d = 0
-     *                           where the coefficients a, b, c, and d are the components x, y, z,
-     *                           and w of the {@link Cartesian4}, respectively.
-     * @returns {Intersect} {@link Intersect.INSIDE} if the entire sphere is on the side of the plane
-     *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire sphere is
-     *                      on the opposite side, and {@link Intersect.INTERSECTING} if the sphere
-     *                      intersects the plane.
-     */
-    BoundingSphere.prototype.intersect = function(plane) {
-        return BoundingSphere.intersect(this, plane);
     };
 
     /**
