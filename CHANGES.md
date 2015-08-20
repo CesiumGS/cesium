@@ -4,7 +4,7 @@ Change Log
 ### 1.13 - 2015-09-01
 
 * Breaking changes
-  *
+  * Remove deprecated `AxisAlignedBoundingBox.intersect` and `BoundingSphere.intersect`. Use `.intersectPlane` instead.
 * Deprecated
   *
 * Fix issue where extruded `PolygonGeometry` was always extruding to the ellipsoid surface instead of specified height.
