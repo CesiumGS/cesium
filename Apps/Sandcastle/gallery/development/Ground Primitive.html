@@ -45,7 +45,8 @@ scene.primitives.add(new Cesium.GroundPrimitive({
         }),
         attributes : {
             color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
-        }
+        },
+        id : 'circle'
     })
 }));
 
@@ -58,8 +59,9 @@ scene.primitives.add(new Cesium.GroundPrimitive({
             semiMajorAxis : 400000.0
         }),
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 1.0, 0.0, 0.5))
-        }
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 1.0, 1.0, 0.5))
+        },
+        id : 'ellipse'
     })
 }));
 
@@ -76,7 +78,8 @@ scene.primitives.add(new Cesium.GroundPrimitive({
             }),
         attributes : {
             color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 0.0, 1.0, 0.5))
-        }
+        },
+        id : 'corridor'
     })
 }));
 
@@ -89,7 +92,8 @@ scene.primitives.add(new Cesium.GroundPrimitive({
         }),
         attributes: {
             color: Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 1.0, 0.0, 0.5))
-        }
+        },
+        id : 'rectangle'
     })
 }));
 
@@ -107,7 +111,8 @@ var primitive = scene.primitives.add(new Cesium.GroundPrimitive({
         }),
         attributes: {
             color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED.withAlpha(0.5))
-        }
+        },
+        id : 'polygon 1'
     })
 }));
 
@@ -129,7 +134,8 @@ scene.primitives.add(new Cesium.GroundPrimitive({
         }),
         attributes: {
             color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE.withAlpha(0.5))
-        }
+        },
+        id : 'polygon 2'
     })
 }));
 
@@ -137,6 +143,28 @@ Sandcastle.addToolbarButton('View Mount Saint Helens', function() {
     viewer.camera.lookAt(new Cesium.Cartesian3(-2354331.3069306486, -3742016.2427205616, 4581875.591571755), new Cesium.HeadingPitchRange(Cesium.Math.toRadians(20.0), Cesium.Math.toRadians(-35.0), 10000.0));
     viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 });
+
+var currentObject = undefined;
+var lastColor = undefined;
+
+var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+handler.setInputAction(function(movement) {
+    var pickedObject = scene.pick(movement.endPosition);
+    if (Cesium.defined(pickedObject) && pickedObject !== currentObject) {
+        if (Cesium.defined(currentObject)) {
+            currentObject.primitive.getGeometryInstanceAttributes(currentObject.id).color = lastColor;
+        }
+        
+        currentObject = pickedObject;
+        
+        var attributes = currentObject.primitive.getGeometryInstanceAttributes(currentObject.id);
+        lastColor = attributes.color;
+        attributes.color = [255, 255, 0, 128];
+    } else if (!Cesium.defined(pickedObject) && Cesium.defined(currentObject)) {
+        currentObject.primitive.getGeometryInstanceAttributes(currentObject.id).color = lastColor;
+        currentObject = undefined;
+    }
+}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
 //Sandcastle_End
     Sandcastle.finishedLoading();
