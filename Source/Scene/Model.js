@@ -1439,7 +1439,9 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    var open3dgcTaskProcessor = new TaskProcessor('decompressOpen3DGC', Number.POSITIVE_INFINITY);
+    var decompressOpen3DGCTaskProcessors;
+    var concurrency;
+    var counter = 0;
 
     function decompressOpen3dgcSync(buffer, decompressedView) {
         var compressedBuffer = getSubarray(buffer, decompressedView.byteOffset, decompressedView.byteLength);
@@ -1452,10 +1454,24 @@ define([
     function decompressOpen3dgcAsync(buffer, decompressedView) {
         var compressedBuffer = copySubarray(buffer, decompressedView.byteOffset, decompressedView.byteLength);
 
-        return open3dgcTaskProcessor.scheduleTask({
+        if (!defined(decompressOpen3DGCTaskProcessors)) {
+            concurrency = FeatureDetection.hardwareConcurrency;
+            decompressOpen3DGCTaskProcessors = new Array(concurrency);
+            for (var i = 0; i < decompressOpen3DGCTaskProcessors.length; i++) {
+                decompressOpen3DGCTaskProcessors[i] = new TaskProcessor('decompressOpen3DGC', Number.POSITIVE_INFINITY);
+            }
+        }
+
+        var result = decompressOpen3DGCTaskProcessors[counter++].scheduleTask({
             decompressedByteLength : decompressedView.decompressedByteLength,
             compressedBuffer : compressedBuffer
         }, [compressedBuffer.buffer]);
+
+        if (counter === concurrency) {
+            counter = 0;
+        }
+
+        return result;
     }
 
     function decompressOpen3dgc(model, name) {
