@@ -104,13 +104,14 @@ var positions = [new Cesium.Cartesian3(-2358138.847340281, -3744072.459541374, 4
                  new Cesium.Cartesian3(-2357208.0209552636, -3743553.4420488174, 4581961.863286629)];
 var polygonHierarchy = { positions : positions };
 
-var primitive = scene.primitives.add(new Cesium.GroundPrimitive({
+var p0 = scene.primitives.add(new Cesium.GroundPrimitive({
     geometryInstance : new Cesium.GeometryInstance({
         geometry : new Cesium.PolygonGeometry({
             polygonHierarchy : polygonHierarchy
         }),
         attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED.withAlpha(0.5))
+            //color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED.withAlpha(0.5))
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
         },
         id : 'polygon 1'
     })
@@ -127,13 +128,14 @@ for (var i = 0; i < positions.length; ++i) {
 positions = scene.globe.ellipsoid.cartographicArrayToCartesianArray(positions);
 polygonHierarchy = { positions : positions };
 
-scene.primitives.add(new Cesium.GroundPrimitive({
+var p1 = scene.primitives.add(new Cesium.GroundPrimitive({
     geometryInstance : new Cesium.GeometryInstance({
         geometry : new Cesium.PolygonGeometry({
             polygonHierarchy : polygonHierarchy
         }),
         attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE.withAlpha(0.5))
+            //color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE.withAlpha(0.5))
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
         },
         id : 'polygon 2'
     })
@@ -142,6 +144,14 @@ scene.primitives.add(new Cesium.GroundPrimitive({
 Sandcastle.addToolbarButton('View Mount Saint Helens', function() {
     viewer.camera.lookAt(new Cesium.Cartesian3(-2354331.3069306486, -3742016.2427205616, 4581875.591571755), new Cesium.HeadingPitchRange(Cesium.Math.toRadians(20.0), Cesium.Math.toRadians(-35.0), 10000.0));
     viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+});
+
+Sandcastle.addToolbarButton('increase p0', function() {
+    p0.zIndex++;
+});
+
+Sandcastle.addToolbarButton('increase p1', function() {
+    p1.zIndex++;
 });
 
 var currentObject = undefined;

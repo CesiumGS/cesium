@@ -141,6 +141,14 @@ define([
          * @default false
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
+        /**
+         * Determines the order of in relation to other GroundPrimitives. When comparing to another GroundPrimitive,
+         * the primitive with the higher zIndex will be drawn on top.
+         *
+         * @type {Number}
+         * @default 0
+         */
+        this.zIndex = 0;
 
         this._sp = undefined;
         this._spPick = undefined;

@@ -1325,6 +1325,10 @@ define([
         return pickDepth;
     }
 
+    function groundCompare(a, b) {
+        return a.owner.zIndex - b.owner.zIndex;
+    }
+
     var scratchPerspectiveFrustum = new PerspectiveFrustum();
     var scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
     var scratchOrthographicFrustum = new OrthographicFrustum();
@@ -1516,6 +1520,8 @@ define([
             }
 
             commands = frustumCommands.commands[Pass.GROUND];
+            mergeSort(commands, groundCompare);
+
             length = frustumCommands.indices[Pass.GROUND];
             for (j = 0; j < length; ++j) {
                 executeCommand(commands[j], scene, context, passState);
