@@ -18,6 +18,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
         '../Renderer/DrawCommand',
+        '../Renderer/Framebuffer',
         '../Shaders/SunFS',
         '../Shaders/SunTextureFS',
         '../Shaders/SunVS',
@@ -43,6 +44,7 @@ define([
         BufferUsage,
         ClearCommand,
         DrawCommand,
+        Framebuffer,
         SunFS,
         SunTextureFS,
         SunVS,
@@ -166,7 +168,8 @@ define([
                 pixelFormat : PixelFormat.RGBA
             });
 
-            var fbo = context.createFramebuffer({
+            var fbo = new Framebuffer({
+                context : context,
                 colorTextures : [this._texture]
             });
             fbo.destroyAttachments = false;

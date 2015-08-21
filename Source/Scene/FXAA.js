@@ -6,7 +6,9 @@ define([
         '../Core/destroyObject',
         '../Core/PixelFormat',
         '../Renderer/ClearCommand',
+        '../Renderer/Framebuffer',
         '../Renderer/PixelDatatype',
+        '../Renderer/Renderbuffer',
         '../Renderer/RenderbufferFormat',
         '../Shaders/PostProcessFilters/FXAA'
     ], function(
@@ -16,7 +18,9 @@ define([
         destroyObject,
         PixelFormat,
         ClearCommand,
+        Framebuffer,
         PixelDatatype,
+        Renderbuffer,
         RenderbufferFormat,
         FXAAFS) {
     "use strict";
@@ -82,7 +86,8 @@ define([
                     pixelDatatype : PixelDatatype.UNSIGNED_SHORT
                 });
             } else {
-                this._depthRenderbuffer = context.createRenderbuffer({
+                this._depthRenderbuffer = new Renderbuffer({
+                    context : context,
                     width : width,
                     height : height,
                     format : RenderbufferFormat.DEPTH_COMPONENT16
@@ -93,7 +98,8 @@ define([
         if (!defined(this._fbo) || textureChanged) {
             this._fbo = this._fbo && this._fbo.destroy();
 
-            this._fbo = context.createFramebuffer({
+            this._fbo = new Framebuffer({
+                context : context,
                 colorTextures : [this._texture],
                 depthTexture : this._depthTexture,
                 depthRenderbuffer : this._depthRenderbuffer,

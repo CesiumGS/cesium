@@ -4,6 +4,7 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/PixelFormat',
+        '../Renderer/Framebuffer',
         '../Renderer/PixelDatatype',
         '../Shaders/PostProcessFilters/PassThrough'
     ], function(
@@ -11,6 +12,7 @@ define([
         defineProperties,
         destroyObject,
         PixelFormat,
+        Framebuffer,
         PixelDatatype,
         PassThrough) {
     "use strict";
@@ -80,7 +82,8 @@ define([
 
         createTextures(pickDepth, context, width, height);
 
-        pickDepth.framebuffer = context.createFramebuffer({
+        pickDepth.framebuffer = new Framebuffer({
+            context : context,
             colorTextures : [pickDepth._depthTexture],
             destroyAttachments : false
         });

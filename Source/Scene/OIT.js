@@ -5,6 +5,7 @@ define([
         '../Core/destroyObject',
         '../Core/PixelFormat',
         '../Renderer/ClearCommand',
+        '../Renderer/Framebuffer',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
         '../Renderer/ShaderSource',
@@ -18,6 +19,7 @@ define([
         destroyObject,
         PixelFormat,
         ClearCommand,
+        Framebuffer,
         PixelDatatype,
         RenderState,
         ShaderSource,
@@ -121,12 +123,14 @@ define([
 
         // if MRT is supported, attempt to make an FBO with multiple color attachments
         if (oit._translucentMRTSupport) {
-            oit._translucentFBO = context.createFramebuffer({
+            oit._translucentFBO = new Framebuffer({
+                context : context,
                 colorTextures : [oit._accumulationTexture, oit._revealageTexture],
                 depthStencilTexture : oit._depthStencilTexture,
                 destroyAttachments : false
             });
-            oit._adjustTranslucentFBO = context.createFramebuffer({
+            oit._adjustTranslucentFBO = new Framebuffer({
+                context : context,
                 colorTextures : [oit._accumulationTexture, oit._revealageTexture],
                 destroyAttachments : false
             });
@@ -139,21 +143,25 @@ define([
 
         // either MRT isn't supported or FBO creation failed, attempt multipass
         if (!oit._translucentMRTSupport) {
-            oit._translucentFBO = context.createFramebuffer({
+            oit._translucentFBO = new Framebuffer({
+                context : context,
                 colorTextures : [oit._accumulationTexture],
                 depthStencilTexture : oit._depthStencilTexture,
                 destroyAttachments : false
             });
-            oit._alphaFBO = context.createFramebuffer({
+            oit._alphaFBO = new Framebuffer({
+                context : context,
                 colorTextures : [oit._revealageTexture],
                 depthStencilTexture : oit._depthStencilTexture,
                 destroyAttachments : false
             });
-            oit._adjustTranslucentFBO = context.createFramebuffer({
+            oit._adjustTranslucentFBO = new Framebuffer({
+                context : context,
                 colorTextures : [oit._accumulationTexture],
                 destroyAttachments : false
             });
-            oit._adjustAlphaFBO = context.createFramebuffer({
+            oit._adjustAlphaFBO = new Framebuffer({
+                context : context,
                 colorTextures : [oit._revealageTexture],
                 destroyAttachments : false
             });
