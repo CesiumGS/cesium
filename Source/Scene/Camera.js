@@ -687,6 +687,7 @@ define([
          * @memberof Camera.prototype
          *
          * @type {Number}
+         * @readonly
          */
         heading : {
             get : function () {
@@ -714,6 +715,7 @@ define([
          * @memberof Camera.prototype
          *
          * @type {Number}
+         * @readonly
          */
         pitch : {
             get : function() {
@@ -741,6 +743,7 @@ define([
          * @memberof Camera.prototype
          *
          * @type {Number}
+         * @readonly
          */
         roll : {
             get : function() {

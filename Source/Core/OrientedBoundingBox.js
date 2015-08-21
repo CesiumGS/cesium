@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './BoundingSphere',
         './Cartesian2',
         './Cartesian3',
         './Cartographic',
@@ -9,11 +10,13 @@ define([
         './Ellipsoid',
         './EllipsoidTangentPlane',
         './Intersect',
+        './Interval',
         './Plane',
         './Rectangle',
         './Math',
         './Matrix3'
     ], function(
+        BoundingSphere,
         Cartesian2,
         Cartesian3,
         Cartographic,
@@ -23,6 +26,7 @@ define([
         Ellipsoid,
         EllipsoidTangentPlane,
         Intersect,
+        Interval,
         Plane,
         Rectangle,
         CesiumMath,
@@ -384,6 +388,259 @@ define([
         return Intersect.INTERSECTING;
     };
 
+    var scratchCartesianU = new Cartesian3();
+    var scratchCartesianV = new Cartesian3();
+    var scratchCartesianW = new Cartesian3();
+    var scratchPPrime = new Cartesian3();
+
+    /**
+     * Computes the estimated distance squared from the closest point on a bounding box to a point.
+     *
+     * @param {OrientedBoundingBox} box The box.
+     * @param {Cartesian3} cartesian The point
+     * @returns {Number} The estimated distance squared from the bounding sphere to the point.
+     *
+     * @example
+     * // Sort bounding boxes from back to front
+     * boxes.sort(function(a, b) {
+     *     return Cesium.OrientedBoundingBox.distanceSquaredTo(b, camera.positionWC) - Cesium.OrientedBoundingBox.distanceSquaredTo(a, camera.positionWC);
+     * });
+     */
+    OrientedBoundingBox.distanceSquaredTo = function(box, cartesian) {
+        // See Geometric Tools for Computer Graphics 10.4.2
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(box)) {
+            throw new DeveloperError('box is required.');
+        }
+        if (!defined(cartesian)) {
+            throw new DeveloperError('cartesian is required.');
+        }
+        //>>includeEnd('debug');
+
+        var offset = Cartesian3.subtract(cartesian, box.center, scratchOffset);
+
+        var halfAxes = box.halfAxes;
+        var u = Matrix3.getColumn(halfAxes, 0, scratchCartesianU);
+        var v = Matrix3.getColumn(halfAxes, 1, scratchCartesianV);
+        var w = Matrix3.getColumn(halfAxes, 2, scratchCartesianW);
+
+        var uHalf = Cartesian3.magnitude(u);
+        var vHalf = Cartesian3.magnitude(v);
+        var wHalf = Cartesian3.magnitude(w);
+
+        Cartesian3.normalize(u, u);
+        Cartesian3.normalize(v, v);
+        Cartesian3.normalize(w, w);
+
+        var pPrime = scratchPPrime;
+        pPrime.x = Cartesian3.dot(offset, u);
+        pPrime.y = Cartesian3.dot(offset, v);
+        pPrime.z = Cartesian3.dot(offset, w);
+
+        var distanceSquared = 0.0;
+        var d;
+
+        if (pPrime.x < -uHalf) {
+            d = pPrime.x + uHalf;
+            distanceSquared += d * d;
+        } else if (pPrime.x > uHalf) {
+            d = pPrime.x - uHalf;
+            distanceSquared += d * d;
+        }
+
+        if (pPrime.y < -vHalf) {
+            d = pPrime.y + vHalf;
+            distanceSquared += d * d;
+        } else if (pPrime.y > vHalf) {
+            d = pPrime.y - vHalf;
+            distanceSquared += d * d;
+        }
+
+        if (pPrime.z < -wHalf) {
+            d = pPrime.z + wHalf;
+            distanceSquared += d * d;
+        } else if (pPrime.z > wHalf) {
+            d = pPrime.z - wHalf;
+            distanceSquared += d * d;
+        }
+
+        return distanceSquared;
+    };
+
+    var scratchCorner = new Cartesian3();
+    var scratchToCenter = new Cartesian3();
+    var scratchProj = new Cartesian3();
+
+    /**
+     * The distances calculated by the vector from the center of the bounding box to position projected onto direction.
+     * <br>
+     * If you imagine the infinite number of planes with normal direction, this computes the smallest distance to the
+     * closest and farthest planes from position that intersect the bounding box.
+     *
+     * @param {OrientedBoundingBox} box The bounding box to calculate the distance to.
+     * @param {Cartesian3} position The position to calculate the distance from.
+     * @param {Cartesian3} direction The direction from position.
+     * @param {Interval} [result] A Interval to store the nearest and farthest distances.
+     * @returns {Interval} The nearest and farthest distances on the bounding box from position in direction.
+     */
+    OrientedBoundingBox.computePlaneDistances = function(box, position, direction, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(box)) {
+            throw new DeveloperError('box is required.');
+        }
+
+        if (!defined(position)) {
+            throw new DeveloperError('position is required.');
+        }
+
+        if (!defined(direction)) {
+            throw new DeveloperError('direction is required.');
+        }
+        //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            result = new Interval();
+        }
+
+        var minDist = Number.POSITIVE_INFINITY;
+        var maxDist = Number.NEGATIVE_INFINITY;
+
+        var center = box.center;
+        var halfAxes = box.halfAxes;
+
+        var u = Matrix3.getColumn(halfAxes, 0, scratchCartesianU);
+        var v = Matrix3.getColumn(halfAxes, 1, scratchCartesianV);
+        var w = Matrix3.getColumn(halfAxes, 2, scratchCartesianW);
+
+        // project first corner
+        var corner = Cartesian3.add(u, v, scratchCorner);
+        Cartesian3.add(corner, w, corner);
+        Cartesian3.add(corner, center, corner);
+
+        var toCenter = Cartesian3.subtract(corner, position, scratchToCenter);
+        var mag = Cartesian3.dot(direction, toCenter);
+
+        minDist = Math.min(mag, minDist);
+        maxDist = Math.max(mag, maxDist);
+
+        // project second corner
+        Cartesian3.add(center, u, corner);
+        Cartesian3.add(corner, v, corner);
+        Cartesian3.subtract(corner, w, corner);
+
+        Cartesian3.subtract(corner, position, toCenter);
+        mag = Cartesian3.dot(direction, toCenter);
+
+        minDist = Math.min(mag, minDist);
+        maxDist = Math.max(mag, maxDist);
+
+        // project third corner
+        Cartesian3.add(center, u, corner);
+        Cartesian3.subtract(corner, v, corner);
+        Cartesian3.add(corner, w, corner);
+
+        Cartesian3.subtract(corner, position, toCenter);
+        mag = Cartesian3.dot(direction, toCenter);
+
+        minDist = Math.min(mag, minDist);
+        maxDist = Math.max(mag, maxDist);
+
+        // project fourth corner
+        Cartesian3.add(center, u, corner);
+        Cartesian3.subtract(corner, v, corner);
+        Cartesian3.subtract(corner, w, corner);
+
+        Cartesian3.subtract(corner, position, toCenter);
+        mag = Cartesian3.dot(direction, toCenter);
+
+        minDist = Math.min(mag, minDist);
+        maxDist = Math.max(mag, maxDist);
+
+        // project fifth corner
+        Cartesian3.subtract(center, u, corner);
+        Cartesian3.add(corner, v, corner);
+        Cartesian3.add(corner, w, corner);
+
+        Cartesian3.subtract(corner, position, toCenter);
+        mag = Cartesian3.dot(direction, toCenter);
+
+        minDist = Math.min(mag, minDist);
+        maxDist = Math.max(mag, maxDist);
+
+        // project sixth corner
+        Cartesian3.subtract(center, u, corner);
+        Cartesian3.add(corner, v, corner);
+        Cartesian3.subtract(corner, w, corner);
+
+        Cartesian3.subtract(corner, position, toCenter);
+        mag = Cartesian3.dot(direction, toCenter);
+
+        minDist = Math.min(mag, minDist);
+        maxDist = Math.max(mag, maxDist);
+
+        // project seventh corner
+        Cartesian3.subtract(center, u, corner);
+        Cartesian3.subtract(corner, v, corner);
+        Cartesian3.add(corner, w, corner);
+
+        Cartesian3.subtract(corner, position, toCenter);
+        mag = Cartesian3.dot(direction, toCenter);
+
+        minDist = Math.min(mag, minDist);
+        maxDist = Math.max(mag, maxDist);
+
+        // project eighth corner
+        Cartesian3.subtract(center, u, corner);
+        Cartesian3.subtract(corner, v, corner);
+        Cartesian3.subtract(corner, w, corner);
+
+        Cartesian3.subtract(corner, position, toCenter);
+        mag = Cartesian3.dot(direction, toCenter);
+
+        minDist = Math.min(mag, minDist);
+        maxDist = Math.max(mag, maxDist);
+
+        result.start = minDist;
+        result.stop = maxDist;
+        return result;
+    };
+
+    var scratchBoundingSphere = new BoundingSphere();
+
+    /**
+     * Determines whether or not a bounding box is hidden from view by the occluder.
+     *
+     * @param {OrientedBoundingBox} sphere The bounding box surrounding the occludee object.
+     * @param {Occluder} occluder The occluder.
+     * @returns {Boolean} <code>true</code> if the sphere is not visible; otherwise <code>false</code>.
+     */
+    OrientedBoundingBox.isOccluded = function(box, occluder) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(box)) {
+            throw new DeveloperError('box is required.');
+        }
+        if (!defined(occluder)) {
+            throw new DeveloperError('occluder is required.');
+        }
+        //>>includeEnd('debug');
+
+        var halfAxes = box.halfAxes;
+        var u = Matrix3.getColumn(halfAxes, 0, scratchCartesianU);
+        var v = Matrix3.getColumn(halfAxes, 1, scratchCartesianV);
+        var w = Matrix3.getColumn(halfAxes, 2, scratchCartesianW);
+
+        var uHalf = Cartesian3.magnitude(u);
+        var vHalf = Cartesian3.magnitude(v);
+        var wHalf = Cartesian3.magnitude(w);
+
+        var sphere = scratchBoundingSphere;
+        sphere.center = Cartesian3.clone(box.center, sphere.center);
+        sphere.radius = Math.max(uHalf, vHalf, wHalf);
+
+        return !occluder.isBoundingSphereVisible(sphere);
+    };
+
     /**
      * Determines which side of a plane the oriented bounding box is located.
      *
@@ -395,6 +652,47 @@ define([
      */
     OrientedBoundingBox.prototype.intersectPlane = function(plane) {
         return OrientedBoundingBox.intersectPlane(this, plane);
+    };
+
+    /**
+     * Computes the estimated distance squared from the closest point on a bounding box to a point.
+     *
+     * @param {Cartesian3} cartesian The point
+     * @returns {Number} The estimated distance squared from the bounding sphere to the point.
+     *
+     * @example
+     * // Sort bounding boxes from back to front
+     * boxes.sort(function(a, b) {
+     *     return b.distanceSquaredTo(camera.positionWC) - a.distanceSquaredTo(camera.positionWC);
+     * });
+     */
+    OrientedBoundingBox.prototype.distanceSquaredTo = function(cartesian) {
+        return OrientedBoundingBox.distanceSquaredTo(this, cartesian);
+    };
+
+    /**
+     * The distances calculated by the vector from the center of the bounding box to position projected onto direction.
+     * <br>
+     * If you imagine the infinite number of planes with normal direction, this computes the smallest distance to the
+     * closest and farthest planes from position that intersect the bounding box.
+     *
+     * @param {Cartesian3} position The position to calculate the distance from.
+     * @param {Cartesian3} direction The direction from position.
+     * @param {Interval} [result] A Interval to store the nearest and farthest distances.
+     * @returns {Interval} The nearest and farthest distances on the bounding box from position in direction.
+     */
+    OrientedBoundingBox.prototype.computePlaneDistances = function(position, direction, result) {
+        return OrientedBoundingBox.computePlaneDistances(this, position, direction, result);
+    };
+
+    /**
+     * Determines whether or not a bounding box is hidden from view by the occluder.
+     *
+     * @param {Occluder} occluder The occluder.
+     * @returns {Boolean} <code>true</code> if the sphere is not visible; otherwise <code>false</code>.
+     */
+    OrientedBoundingBox.prototype.isOccluded = function(occluder) {
+        return OrientedBoundingBox.isOccluded(this, occluder);
     };
 
     /**

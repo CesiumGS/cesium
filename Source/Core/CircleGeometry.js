@@ -6,6 +6,7 @@ define([
         './DeveloperError',
         './EllipseGeometry',
         './Ellipsoid',
+        './Math',
         './VertexFormat'
     ], function(
         Cartesian3,
@@ -14,11 +15,12 @@ define([
         DeveloperError,
         EllipseGeometry,
         Ellipsoid,
+        CesiumMath,
         VertexFormat) {
     "use strict";
 
     /**
-     * A description of a circle on the ellipsoid.
+     * A description of a circle on the ellipsoid. Circle geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
      *
      * @alias CircleGeometry
      * @constructor
@@ -87,7 +89,7 @@ define([
      * Stores the provided instance into the provided array.
      * @function
      *
-     * @param {Object} value The value to pack.
+     * @param {CircleGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
@@ -155,6 +157,28 @@ define([
      */
     CircleGeometry.createGeometry = function(circleGeometry) {
         return EllipseGeometry.createGeometry(circleGeometry._ellipseGeometry);
+    };
+
+    /**
+     * @private
+     */
+    CircleGeometry.createShadowVolume = function(circleGeometry, minHeightFunc, maxHeightFunc) {
+        var granularity = circleGeometry._ellipseGeometry._granularity;
+        var ellipsoid = circleGeometry._ellipseGeometry._ellipsoid;
+
+        var minHeight = minHeightFunc(granularity, ellipsoid);
+        var maxHeight = maxHeightFunc(granularity, ellipsoid);
+
+        return new CircleGeometry({
+            center : circleGeometry._ellipseGeometry._center,
+            radius : circleGeometry._ellipseGeometry._semiMajorAxis,
+            ellipsoid : ellipsoid,
+            stRotation : circleGeometry._ellipseGeometry._stRotation,
+            granularity : granularity,
+            extrudedHeight : minHeight,
+            height : maxHeight,
+            vertexFormat : VertexFormat.POSITION_ONLY
+        });
     };
 
     return CircleGeometry;
