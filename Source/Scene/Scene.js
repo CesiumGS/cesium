@@ -215,6 +215,7 @@ define([
         this._context = context;
         this._globe = undefined;
         this._primitives = new PrimitiveCollection();
+        this._groundPrimitives = new PrimitiveCollection();
 
         this._tweens = new TweenCollection();
 
@@ -634,6 +635,19 @@ define([
         primitives : {
             get : function() {
                 return this._primitives;
+            }
+        },
+
+        /**
+         * Gets the collection of ground primitives.
+         * @memberof Scene.prototype
+         *
+         * @type {PrimitiveCollection}
+         * @readonly
+         */
+        groundPrimitives : {
+            get : function() {
+                return this._groundPrimitives;
             }
         },
 
@@ -1325,10 +1339,6 @@ define([
         return pickDepth;
     }
 
-    function groundCompare(a, b) {
-        return a.owner.zIndex - b.owner.zIndex;
-    }
-
     var scratchPerspectiveFrustum = new PerspectiveFrustum();
     var scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
     var scratchOrthographicFrustum = new OrthographicFrustum();
@@ -1520,8 +1530,6 @@ define([
             }
 
             commands = frustumCommands.commands[Pass.GROUND];
-            mergeSort(commands, groundCompare);
-
             length = frustumCommands.indices[Pass.GROUND];
             for (j = 0; j < length; ++j) {
                 executeCommand(commands[j], scene, context, passState);
@@ -1612,6 +1620,7 @@ define([
         }
 
         scene._primitives.update(context, frameState, commandList);
+        scene._groundPrimitives.update(context, frameState, commandList);
     }
 
     function callAfterRenderFunctions(frameState) {
@@ -2123,6 +2132,7 @@ define([
         this._screenSpaceCameraController = this._screenSpaceCameraController && this._screenSpaceCameraController.destroy();
         this._pickFramebuffer = this._pickFramebuffer && this._pickFramebuffer.destroy();
         this._primitives = this._primitives && this._primitives.destroy();
+        this._groundPrimitives = this._groundPrimitives && this._groundPrimitives.destroy();
         this._globe = this._globe && this._globe.destroy();
         this.skyBox = this.skyBox && this.skyBox.destroy();
         this.skyAtmosphere = this.skyAtmosphere && this.skyAtmosphere.destroy();
