@@ -1,8 +1,10 @@
 /*global defineSuite*/
 defineSuite([
+        'Renderer/Renderbuffer',
         'Renderer/RenderbufferFormat',
         'Specs/createContext'
     ], 'Renderer/Renderbuffer', function(
+        Renderbuffer,
         RenderbufferFormat,
         createContext) {
     "use strict";
@@ -24,7 +26,8 @@ defineSuite([
     });
 
     it('creates', function() {
-        renderbuffer = context.createRenderbuffer({
+        renderbuffer = new Renderbuffer({
+            context : context,
             format : RenderbufferFormat.DEPTH_COMPONENT16,
             width : 64,
             height : 32
@@ -36,7 +39,9 @@ defineSuite([
     });
 
     it('creates with defaults', function() {
-        renderbuffer = context.createRenderbuffer();
+        renderbuffer = new Renderbuffer({
+            context : context
+        });
 
         expect(renderbuffer.format).toEqual(RenderbufferFormat.RGBA4);
         expect(renderbuffer.width).toEqual(context.canvas.clientWidth);
@@ -44,7 +49,9 @@ defineSuite([
     });
 
     it('destroys', function() {
-        var r = context.createRenderbuffer();
+        var r = new Renderbuffer({
+            context : context
+        });
         expect(r.isDestroyed()).toEqual(false);
         r.destroy();
         expect(r.isDestroyed()).toEqual(true);
@@ -52,7 +59,8 @@ defineSuite([
 
     it('fails to create (format)', function() {
         expect(function() {
-            renderbuffer = context.createRenderbuffer({
+            renderbuffer = new Renderbuffer({
+                context : context,
                 format : 'invalid format'
             });
         }).toThrowDeveloperError();
@@ -60,7 +68,8 @@ defineSuite([
 
     it('fails to create (small width)', function() {
         expect(function() {
-            renderbuffer = context.createRenderbuffer({
+            renderbuffer = new Renderbuffer({
+                context : context,
                 width : 0
             });
         }).toThrowDeveloperError();
@@ -68,7 +77,8 @@ defineSuite([
 
     it('fails to create (large width)', function() {
         expect(function() {
-            renderbuffer = context.createRenderbuffer({
+            renderbuffer = new Renderbuffer({
+                context : context,
                 width : context.maximumRenderbufferSize + 1
             });
         }).toThrowDeveloperError();
@@ -76,7 +86,8 @@ defineSuite([
 
     it('fails to create (small height)', function() {
         expect(function() {
-            renderbuffer = context.createRenderbuffer({
+            renderbuffer = new Renderbuffer({
+                context : context,
                 height : 0
             });
         }).toThrowDeveloperError();
@@ -84,18 +95,27 @@ defineSuite([
 
     it('fails to create (large height)', function() {
         expect(function() {
-            renderbuffer = context.createRenderbuffer({
+            renderbuffer = new Renderbuffer({
+                context : context,
                 height : context.maximumRenderbufferSize + 1
             });
         }).toThrowDeveloperError();
     });
 
     it('fails to destroy', function() {
-        var r = context.createRenderbuffer();
+        var r = new Renderbuffer({
+            context : context
+        });
         r.destroy();
 
         expect(function() {
             r.destroy();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws when there is no context', function() {
+        expect(function() {
+            new Renderbuffer();
         }).toThrowDeveloperError();
     });
 }, 'WebGL');

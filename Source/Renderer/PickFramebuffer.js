@@ -7,6 +7,7 @@ define([
         '../Core/destroyObject',
         './Framebuffer',
         './PassState',
+        './Renderbuffer',
         './RenderbufferFormat'
     ], function(
         BoundingRectangle,
@@ -16,6 +17,7 @@ define([
         destroyObject,
         Framebuffer,
         PassState,
+        Renderbuffer,
         RenderbufferFormat) {
     "use strict";
 
@@ -57,7 +59,8 @@ define([
                     width : width,
                     height : height
                 })],
-                depthRenderbuffer : context.createRenderbuffer({
+                depthRenderbuffer : new Renderbuffer({
+                    context : context,
                     format : RenderbufferFormat.DEPTH_COMPONENT16
                 })
             });

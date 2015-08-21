@@ -1414,39 +1414,6 @@ define([
         return new CubeMap(gl, this._textureFilterAnisotropic, textureTarget, texture, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY);
     };
 
-    Context.prototype.createRenderbuffer = function(options) {
-        var gl = this._gl;
-
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var format = defaultValue(options.format, RenderbufferFormat.RGBA4);
-        var width = defined(options.width) ? options.width : gl.drawingBufferWidth;
-        var height = defined(options.height) ? options.height : gl.drawingBufferHeight;
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!RenderbufferFormat.validate(format)) {
-            throw new DeveloperError('Invalid format.');
-        }
-
-        if (width <= 0) {
-            throw new DeveloperError('Width must be greater than zero.');
-        }
-
-        if (width > this.maximumRenderbufferSize) {
-            throw new DeveloperError('Width must be less than or equal to the maximum renderbuffer size (' + this.maximumRenderbufferSize + ').  Check maximumRenderbufferSize.');
-        }
-
-        if (height <= 0) {
-            throw new DeveloperError('Height must be greater than zero.');
-        }
-
-        if (height > this.maximumRenderbufferSize) {
-            throw new DeveloperError('Height must be less than or equal to the maximum renderbuffer size (' + this.maximumRenderbufferSize + ').  Check maximumRenderbufferSize.');
-        }
-        //>>includeEnd('debug');
-
-        return new Renderbuffer(gl, format, width, height);
-    };
-
     var nextRenderStateId = 0;
     var renderStateCache = {};
 

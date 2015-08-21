@@ -8,6 +8,7 @@ defineSuite([
         'Renderer/DrawCommand',
         'Renderer/Framebuffer',
         'Renderer/PixelDatatype',
+        'Renderer/Renderbuffer',
         'Renderer/RenderbufferFormat',
         'Specs/createContext'
     ], 'Renderer/Framebuffer', function(
@@ -19,6 +20,7 @@ defineSuite([
         DrawCommand,
         Framebuffer,
         PixelDatatype,
+        Renderbuffer,
         RenderbufferFormat,
         createContext) {
     "use strict";
@@ -57,7 +59,8 @@ defineSuite([
     it('has a color renderbuffer attachment', function() {
         framebuffer = new Framebuffer({
             context : context,
-            colorRenderbuffers : [context.createRenderbuffer({
+            colorRenderbuffers : [new Renderbuffer({
+                context : context,
                 format : RenderbufferFormat.RGBA4
             })]
         });
@@ -82,7 +85,8 @@ defineSuite([
     it('has a depth renderbuffer attachment', function() {
         framebuffer = new Framebuffer({
             context : context,
-            depthRenderbuffer : context.createRenderbuffer({
+            depthRenderbuffer : new Renderbuffer({
+                context : context,
                 format : RenderbufferFormat.DEPTH_COMPONENT16
             })
         });
@@ -92,7 +96,8 @@ defineSuite([
     it('has a stencil renderbuffer attachment', function() {
         framebuffer = new Framebuffer({
             context : context,
-            stencilRenderbuffer : context.createRenderbuffer({
+            stencilRenderbuffer : new Renderbuffer({
+                context : context,
                 format : RenderbufferFormat.STENCIL_INDEX8
             })
         });
@@ -117,7 +122,8 @@ defineSuite([
     it('has a depth-stencil renderbuffer attachment', function() {
         framebuffer = new Framebuffer({
             context : context,
-            depthStencilRenderbuffer : context.createRenderbuffer({
+            depthStencilRenderbuffer : new Renderbuffer({
+                context : context,
                 format : RenderbufferFormat.DEPTH_STENCIL
             })
         });
@@ -133,7 +139,8 @@ defineSuite([
 
         framebuffer = new Framebuffer({
             context : context,
-            depthRenderbuffer : context.createRenderbuffer({
+            depthRenderbuffer : new Renderbuffer({
+                context : context,
                 format : RenderbufferFormat.DEPTH_COMPONENT16
             })
         });
@@ -394,7 +401,8 @@ defineSuite([
                 width : 1,
                 height : 1
             })],
-            depthRenderbuffer : context.createRenderbuffer({
+            depthRenderbuffer : new Renderbuffer({
+                context : context,
                 format : RenderbufferFormat.DEPTH_COMPONENT16,
                 width : 1,
                 height : 1
@@ -543,7 +551,8 @@ defineSuite([
                 width : 1,
                 height : 1
             })],
-            depthRenderbuffer : context.createRenderbuffer({
+            depthRenderbuffer : new Renderbuffer({
+                context : context,
                 format : RenderbufferFormat.DEPTH_COMPONENT16,
                 width : 1,
                 height : 1
@@ -559,7 +568,8 @@ defineSuite([
                 width : 1,
                 height : 1
             })],
-            depthRenderbuffer : context.createRenderbuffer({
+            depthRenderbuffer : new Renderbuffer({
+                context : context,
                 format : RenderbufferFormat.DEPTH_COMPONENT16,
                 width : 2,
                 height : 2

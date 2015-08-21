@@ -15,6 +15,7 @@ define([
         '../Renderer/Framebuffer',
         '../Renderer/PassState',
         '../Renderer/PixelDatatype',
+        '../Renderer/Renderbuffer',
         '../Renderer/RenderbufferFormat',
         '../Shaders/PostProcessFilters/AdditiveBlend',
         '../Shaders/PostProcessFilters/BrightPass',
@@ -36,6 +37,7 @@ define([
         Framebuffer,
         PassState,
         PixelDatatype,
+        Renderbuffer,
         RenderbufferFormat,
         AdditiveBlend,
         BrightPass,
@@ -252,7 +254,8 @@ define([
                 fbo = this._fbo = new Framebuffer({
                     context : context,
                     colorTextures : colorTextures,
-                    depthRenderbuffer : context.createRenderbuffer({
+                    depthRenderbuffer : new Renderbuffer({
+                        context : context,
                         format : RenderbufferFormat.DEPTH_COMPONENT16
                     })
                 });

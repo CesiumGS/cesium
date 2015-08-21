@@ -8,6 +8,7 @@ define([
         '../Renderer/ClearCommand',
         '../Renderer/Framebuffer',
         '../Renderer/PixelDatatype',
+        '../Renderer/Renderbuffer',
         '../Renderer/RenderbufferFormat',
         '../Shaders/PostProcessFilters/FXAA'
     ], function(
@@ -19,6 +20,7 @@ define([
         ClearCommand,
         Framebuffer,
         PixelDatatype,
+        Renderbuffer,
         RenderbufferFormat,
         FXAAFS) {
     "use strict";
@@ -84,7 +86,8 @@ define([
                     pixelDatatype : PixelDatatype.UNSIGNED_SHORT
                 });
             } else {
-                this._depthRenderbuffer = context.createRenderbuffer({
+                this._depthRenderbuffer = new Renderbuffer({
+                    context : context,
                     width : width,
                     height : height,
                     format : RenderbufferFormat.DEPTH_COMPONENT16
