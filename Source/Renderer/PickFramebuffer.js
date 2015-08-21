@@ -59,7 +59,7 @@ define([
                     width : width,
                     height : height
                 })],
-                depthStencilRenderbuffer : context.createRenderbuffer({
+                depthStencilRenderbuffer : new Renderbuffer({
                     context : context,
                     format : RenderbufferFormat.DEPTH_STENCIL
                 })
