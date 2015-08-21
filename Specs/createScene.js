@@ -32,6 +32,7 @@ define([
         var contextOptions = options.contextOptions;
         contextOptions.webgl = defaultValue(contextOptions.webgl, {});
         contextOptions.webgl.antialias = defaultValue(contextOptions.webgl.antialias, false);
+        contextOptions.webgl.failIfMajorPerformanceCaveat = false;
 
         var scene = new Scene(options);
 

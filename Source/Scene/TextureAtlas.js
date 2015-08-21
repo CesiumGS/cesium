@@ -11,6 +11,7 @@ define([
         '../Core/loadImage',
         '../Core/PixelFormat',
         '../Core/RuntimeError',
+        '../Renderer/Framebuffer',
         '../ThirdParty/when'
     ], function(
         BoundingRectangle,
@@ -24,6 +25,7 @@ define([
         loadImage,
         PixelFormat,
         RuntimeError,
+        Framebuffer,
         when) {
     "use strict";
 
@@ -159,6 +161,7 @@ define([
 
     // Builds a larger texture and copies the old texture into the new one.
     function resizeAtlas(textureAtlas, image) {
+        var context = textureAtlas._context;
         var numImages = textureAtlas.numberOfImages;
         var scalingFactor = 2.0;
         if (numImages > 0) {
@@ -195,7 +198,8 @@ define([
             });
 
             // Copy old texture into new using an fbo.
-            var framebuffer = textureAtlas._context.createFramebuffer({
+            var framebuffer = new Framebuffer({
+                context : context,
                 colorTextures : [textureAtlas._texture]
             });
             framebuffer._bind();
