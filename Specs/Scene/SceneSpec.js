@@ -129,9 +129,9 @@ defineSuite([
     });
 
     it('constructor throws without options.canvas', function() {
-        expect(function() {
-            return new Scene({});
-        }).toThrowDeveloperError();
+      expect(function() {
+          return new Scene({});
+      }).toThrowDeveloperError();
     });
 
     it('draws background color', function() {
@@ -169,14 +169,13 @@ defineSuite([
         var c = new DrawCommand({
             pass : Pass.OPAQUE
         });
-        c.execute = function() {
-        };
+        c.execute = function() {};
         spyOn(c, 'execute');
 
         scene.primitives.add(new CommandMockPrimitive(c));
 
         scene.debugCommandFilter = function(command) {
-            return command !== c; // Do not execute command
+            return command !== c;   // Do not execute command
         };
 
         scene.renderForSpecs();
@@ -187,8 +186,7 @@ defineSuite([
         var c = new DrawCommand({
             pass : Pass.OPAQUE
         });
-        c.execute = function() {
-        };
+        c.execute = function() {};
         spyOn(c, 'execute');
 
         scene.primitives.add(new CommandMockPrimitive(c));
@@ -206,22 +204,22 @@ defineSuite([
             debugShowBoundingVolume : true,
             boundingVolume : new BoundingSphere(Cartesian3.ZERO, radius)
         });
-        c.execute = function() {
-        };
+        c.execute = function() {};
 
         scene.primitives.add(new CommandMockPrimitive(c));
         scene.depthTestAgainstTerrain = true;
 
-        expect(scene.renderForSpecs()[0]).not.toEqual(0); // Red bounding sphere
+        expect(scene.renderForSpecs()[0]).not.toEqual(0);  // Red bounding sphere
     });
 
     it('debugShowCommands tints commands', function() {
         var c = new DrawCommand({
             pass : Pass.OPAQUE,
-            shaderProgram : scene.context.createShaderProgram('void main() { gl_Position = vec4(1.0); }', 'void main() { gl_FragColor = vec4(1.0); }')
+            shaderProgram : scene.context.createShaderProgram(
+                'void main() { gl_Position = vec4(1.0); }',
+                'void main() { gl_FragColor = vec4(1.0); }')
         });
-        c.execute = function() {
-        };
+        c.execute = function() {};
 
         scene.primitives.add(new CommandMockPrimitive(c));
 
@@ -239,7 +237,7 @@ defineSuite([
     });
 
     it('debugShowGlobeDepth', function() {
-        if (!defined(scene._globeDepth)) {
+        if(!defined(scene._globeDepth)){
             return;
         }
 
