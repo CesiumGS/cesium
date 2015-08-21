@@ -67,9 +67,11 @@ define([
     var Framebuffer = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(options.context)) {
             throw new DeveloperError('options.context is required.');
         }
+        //>>includeEnd('debug');
 
         var context = options.context;
         var gl = context._gl;
