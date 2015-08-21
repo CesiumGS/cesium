@@ -91,6 +91,111 @@ defineSuite(['DataSources/GpxDataSource',
         });
     });
 
+    it('sets DataSource metadata object correctly', function() {
+        var dataSource = new GpxDataSource();
+        var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
+            <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="Test">\
+            <metadata>\
+                <name>The name</name>\
+                <desc>The desc</desc>\
+                <time>The time</time>\
+                <keywords>The keyword</keywords>\
+            </metadata>\
+            </gpx>';
+        return dataSource.load(parser.parseFromString(gpx, "text/xml")).then(function() {
+            var metadata = dataSource.metadata;
+            expect(metadata).toBeDefined();
+
+            expect(metadata.name).toEqual('The name');
+            expect(metadata.desc).toEqual('The desc');
+            expect(metadata.time).toEqual('The time');
+            expect(metadata.keywords).toEqual('The keyword');
+        });
+    });
+
+    it('Metadata: handles personType, emailType and linkType', function() {
+        var dataSource = new GpxDataSource();
+        var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
+            <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="Test">\
+            <metadata>\
+                <author>\
+                    <name>The name</name>\
+                    <email>\
+                        <id>user</id>\
+                        <domain>email.com</domain>\
+                    </email>\
+                    <link href="www.a.com">\
+                        <text>A website</text>\
+                        <type>text/html</type>\
+                    </link>\
+                </author>\
+            </metadata>\
+            </gpx>';
+        return dataSource.load(parser.parseFromString(gpx, "text/xml")).then(function() {
+            var metadata = dataSource.metadata;
+            expect(metadata).toBeDefined();
+
+            var person = metadata.author;
+            expect(person).toBeDefined();
+            expect(person.name).toEqual('The name');
+            expect(person.email).toBeDefined();
+            expect(person.email).toEqual('user@email.com');
+            expect(person.link).toBeDefined();
+            expect(person.link.href).toEqual('www.a.com');
+            expect(person.link.text).toEqual('A website');
+            expect(person.link.mimeType).toEqual('text/html');
+        });
+    });
+
+    it('Metadata: handles copytightType', function() {
+        var dataSource = new GpxDataSource();
+        var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
+            <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="Test">\
+            <metadata>\
+                <copyright author="The author">\
+                    <year>2015</year>\
+                    <license>The license</license>\
+                </copyright>\
+            </metadata>\
+            </gpx>';
+        return dataSource.load(parser.parseFromString(gpx, "text/xml")).then(function() {
+            var metadata = dataSource.metadata;
+            expect(metadata).toBeDefined();
+
+            var copyright = metadata.copyright;
+            expect(copyright).toBeDefined();
+            expect(copyright.author).toEqual('The author');
+            expect(copyright.year).toEqual('2015');
+            expect(copyright.license).toEqual('The license');
+        });
+    });
+
+    it('Metadata: handles boundsType', function() {
+        var dataSource = new GpxDataSource();
+        var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
+            <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="Test">\
+            <metadata>\
+                <bounds>\
+                    <minlat>1</minlat>\
+                    <maxlat>2</maxlat>\
+                    <minlon>3</minlon>\
+                    <maxlon>4</maxlon>\
+                </bounds>\
+            </metadata>\
+            </gpx>';
+        return dataSource.load(parser.parseFromString(gpx, "text/xml")).then(function() {
+            var metadata = dataSource.metadata;
+            expect(metadata).toBeDefined();
+
+            var bounds = metadata.bounds;
+            expect(bounds).toBeDefined();
+            expect(bounds.minLat).toEqual(1);
+            expect(bounds.maxLat).toEqual(2);
+            expect(bounds.minLon).toEqual(3);
+            expect(bounds.maxLon).toEqual(4);
+        });
+    });
+
     it('sets DataSource name from sourceUri when not in file', function() {
         var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="Test">\

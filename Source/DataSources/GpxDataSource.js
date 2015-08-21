@@ -513,33 +513,37 @@ define([
     * {@link http://www.topografix.com/gpx/1/1/#type_copyrightType|GPX Schema}
     */
     function getCopyright(node) {
-        var copyright = {
-            author : queryStringAttribute(node, 'author'),
-            year : queryStringValue(node, 'year', namespaces.gpx),
-            license : queryStringValue(node, 'license', namespaces.gpx)
-        };
-        if (defined(copyright.author) || defined(copyright.year) || defined(copyright.license)) {
-            return copyright;
-        } else {
-            return undefined;
+        var copyrightNode = queryFirstNode(node, 'copyright', namespaces.gpx);
+        if (defined(copyrightNode)) {
+            var copyright = {
+                author : queryStringAttribute(copyrightNode, 'author'),
+                year : queryStringValue(copyrightNode, 'year', namespaces.gpx),
+                license : queryStringValue(copyrightNode, 'license', namespaces.gpx)
+            };
+            if (defined(copyright.author) || defined(copyright.year) || defined(copyright.license)) {
+                return copyright;
+            }
         }
+        return undefined;
     }
     /**
      *  Receives a XML node and returns a boundsType object, refer to
      * {@link http://www.topografix.com/gpx/1/1/#type_boundsType|GPX Schema}
      */
     function getBounds(node) {
-        var bounds = {
-            minLat : queryNumericValue(node, 'minlat'),
-            maxLat : queryNumericValue(node, 'maxlat'),
-            minLon : queryNumericValue(node, 'minlon'),
-            maxLon : queryNumericValue(node, 'maxlon')
-        };
-        if (defined(bounds.minLat) || defined(bounds.maxLat) || defined(bounds.minLon) || defined(bounds.maxLon)) {
-            return bounds;
-        } else {
-            return undefined;
+        var boundsNode = queryFirstNode(node, 'bounds', namespaces.gpx);
+        if (defined(boundsNode)) {
+            var bounds = {
+                minLat : queryNumericValue(boundsNode, 'minlat', namespaces.gpx),
+                maxLat : queryNumericValue(boundsNode, 'maxlat', namespaces.gpx),
+                minLon : queryNumericValue(boundsNode, 'minlon', namespaces.gpx),
+                maxLon : queryNumericValue(boundsNode, 'maxlon', namespaces.gpx)
+            };
+            if (defined(bounds.minLat) || defined(bounds.maxLat) || defined(bounds.minLon) || defined(bounds.maxLon)) {
+                return bounds;
+            }
         }
+        return undefined;
     }
 
     var complexTypes = {
@@ -667,6 +671,8 @@ define([
             } else {
                 return false;
             }
+        } else {
+            return true;
         }
     }
 
