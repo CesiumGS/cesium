@@ -57,7 +57,7 @@ defineSuite([
         expect(r.isDestroyed()).toEqual(true);
     });
 
-    it('fails to create (format)', function() {
+    it('throws when created with invalid format', function() {
         expect(function() {
             renderbuffer = new Renderbuffer({
                 context : context,
@@ -66,7 +66,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('fails to create (small width)', function() {
+    it('throws when created with small width', function() {
         expect(function() {
             renderbuffer = new Renderbuffer({
                 context : context,
@@ -75,7 +75,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('fails to create (large width)', function() {
+    it('throws when created with large width', function() {
         expect(function() {
             renderbuffer = new Renderbuffer({
                 context : context,
@@ -84,7 +84,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('fails to create (small height)', function() {
+    it('throws when created with small height', function() {
         expect(function() {
             renderbuffer = new Renderbuffer({
                 context : context,
@@ -93,7 +93,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('fails to create (large height)', function() {
+    it('throws when created with large height', function() {
         expect(function() {
             renderbuffer = new Renderbuffer({
                 context : context,
@@ -102,7 +102,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('fails to destroy', function() {
+    it('throws when fails to destroy', function() {
         var r = new Renderbuffer({
             context : context
         });
