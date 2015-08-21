@@ -6,6 +6,7 @@ define([
         '../Core/destroyObject',
         '../Core/PixelFormat',
         '../Renderer/ClearCommand',
+        '../Renderer/Framebuffer',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderbufferFormat',
         '../Shaders/PostProcessFilters/FXAA'
@@ -16,6 +17,7 @@ define([
         destroyObject,
         PixelFormat,
         ClearCommand,
+        Framebuffer,
         PixelDatatype,
         RenderbufferFormat,
         FXAAFS) {
@@ -93,7 +95,8 @@ define([
         if (!defined(this._fbo) || textureChanged) {
             this._fbo = this._fbo && this._fbo.destroy();
 
-            this._fbo = context.createFramebuffer({
+            this._fbo = new Framebuffer({
+                context : context,
                 colorTextures : [this._texture],
                 depthTexture : this._depthTexture,
                 depthRenderbuffer : this._depthRenderbuffer,

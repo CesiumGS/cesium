@@ -5,6 +5,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
+        './Framebuffer',
         './PassState',
         './RenderbufferFormat'
     ], function(
@@ -13,6 +14,7 @@ define([
         defaultValue,
         defined,
         destroyObject,
+        Framebuffer,
         PassState,
         RenderbufferFormat) {
     "use strict";
@@ -49,7 +51,8 @@ define([
             this._height = height;
 
             this._fb = this._fb && this._fb.destroy();
-            this._fb = context.createFramebuffer({
+            this._fb = new Framebuffer({
+                context : context,
                 colorTextures : [context.createTexture2D({
                     width : width,
                     height : height

@@ -6,6 +6,7 @@ defineSuite([
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
         'Renderer/DrawCommand',
+        'Renderer/Framebuffer',
         'Renderer/PixelDatatype',
         'Renderer/RenderbufferFormat',
         'Specs/createContext'
@@ -16,6 +17,7 @@ defineSuite([
         BufferUsage,
         ClearCommand,
         DrawCommand,
+        Framebuffer,
         PixelDatatype,
         RenderbufferFormat,
         createContext) {
@@ -42,7 +44,8 @@ defineSuite([
     });
 
     it('has a color texture attachment', function() {
-        framebuffer = context.createFramebuffer({
+        framebuffer = new Framebuffer({
+            context : context,
             colorTextures : [context.createTexture2D({
                 width : 1,
                 height : 1
@@ -52,7 +55,8 @@ defineSuite([
     });
 
     it('has a color renderbuffer attachment', function() {
-        framebuffer = context.createFramebuffer({
+        framebuffer = new Framebuffer({
+            context : context,
             colorRenderbuffers : [context.createRenderbuffer({
                 format : RenderbufferFormat.RGBA4
             })]
@@ -62,7 +66,8 @@ defineSuite([
 
     it('has a depth texture attachment', function() {
         if (context.depthTexture) {
-            framebuffer = context.createFramebuffer({
+            framebuffer = new Framebuffer({
+                context : context,
                 depthTexture : context.createTexture2D({
                     width : 1,
                     height : 1,
@@ -75,7 +80,8 @@ defineSuite([
     });
 
     it('has a depth renderbuffer attachment', function() {
-        framebuffer = context.createFramebuffer({
+        framebuffer = new Framebuffer({
+            context : context,
             depthRenderbuffer : context.createRenderbuffer({
                 format : RenderbufferFormat.DEPTH_COMPONENT16
             })
@@ -84,7 +90,8 @@ defineSuite([
     });
 
     it('has a stencil renderbuffer attachment', function() {
-        framebuffer = context.createFramebuffer({
+        framebuffer = new Framebuffer({
+            context : context,
             stencilRenderbuffer : context.createRenderbuffer({
                 format : RenderbufferFormat.STENCIL_INDEX8
             })
@@ -94,7 +101,8 @@ defineSuite([
 
     it('has a depth-stencil texture attachment', function() {
         if (context.depthTexture) {
-            framebuffer = context.createFramebuffer({
+            framebuffer = new Framebuffer({
+                context : context,
                 depthStencilTexture : context.createTexture2D({
                     width : 1,
                     height : 1,
@@ -107,7 +115,8 @@ defineSuite([
     });
 
     it('has a depth-stencil renderbuffer attachment', function() {
-        framebuffer = context.createFramebuffer({
+        framebuffer = new Framebuffer({
+            context : context,
             depthStencilRenderbuffer : context.createRenderbuffer({
                 format : RenderbufferFormat.DEPTH_STENCIL
             })
@@ -116,11 +125,14 @@ defineSuite([
     });
 
     it('has a depth attachment', function() {
-        framebuffer = context.createFramebuffer();
+        framebuffer = new Framebuffer({
+            context : context
+        });
         expect(framebuffer.hasDepthAttachment).toEqual(false);
         framebuffer.destroy();
 
-        framebuffer = context.createFramebuffer({
+        framebuffer = new Framebuffer({
+            context : context,
             depthRenderbuffer : context.createRenderbuffer({
                 format : RenderbufferFormat.DEPTH_COMPONENT16
             })
@@ -138,7 +150,8 @@ defineSuite([
             width : 1,
             height : 1
         });
-        framebuffer = context.createFramebuffer({
+        framebuffer = new Framebuffer({
+            context : context,
             colorTextures : [colorTexture]
         });
 
@@ -185,7 +198,8 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 2 of 4.  Clear framebuffer color attachment to green.
-        framebuffer = context.createFramebuffer({
+        framebuffer = new Framebuffer({
+            context : context,
             colorTextures : [cubeMap.positiveX]
         });
         framebuffer.destroyAttachments = false;
@@ -229,7 +243,8 @@ defineSuite([
             width : 1,
             height : 1
         });
-        framebuffer = context.createFramebuffer({
+        framebuffer = new Framebuffer({
+            context : context,
             colorTextures : [colorTexture]
         });
 
@@ -330,7 +345,8 @@ defineSuite([
 
     it('draws to a depth texture attachment', function() {
         if (context.depthTexture) {
-            framebuffer = context.createFramebuffer({
+            framebuffer = new Framebuffer({
+                context : context,
                 colorTextures : [context.createTexture2D({
                     width : 1,
                     height : 1
@@ -351,7 +367,8 @@ defineSuite([
 
     it('draws to a depth-stencil texture attachment', function() {
         if (context.depthTexture) {
-            framebuffer = context.createFramebuffer({
+            framebuffer = new Framebuffer({
+                context : context,
                 colorTextures : [context.createTexture2D({
                     width : 1,
                     height : 1
@@ -371,7 +388,8 @@ defineSuite([
     });
 
     it('draws with a depth attachment', function() {
-        framebuffer = context.createFramebuffer({
+        framebuffer = new Framebuffer({
+            context : context,
             colorTextures : [context.createTexture2D({
                 width : 1,
                 height : 1
@@ -451,7 +469,8 @@ defineSuite([
                 width : 1,
                 height : 1
             });
-            framebuffer = context.createFramebuffer({
+            framebuffer = new Framebuffer({
+                context : context,
                 colorTextures : [colorTexture0, colorTexture1]
             });
 
@@ -518,7 +537,8 @@ defineSuite([
     });
 
     it('gets the status of a complete framebuffer', function() {
-        framebuffer = context.createFramebuffer({
+        framebuffer = new Framebuffer({
+            context : context,
             colorTextures : [context.createTexture2D({
                 width : 1,
                 height : 1
@@ -533,7 +553,8 @@ defineSuite([
     });
 
     it('gets the status of a incomplete framebuffer', function() {
-        framebuffer = context.createFramebuffer({
+        framebuffer = new Framebuffer({
+            context : context,
             colorTextures : [context.createTexture2D({
                 width : 1,
                 height : 1
@@ -549,7 +570,9 @@ defineSuite([
 
 
     it('destroys', function() {
-        var f = context.createFramebuffer();
+        var f = new Framebuffer({
+            context : context
+        });
         expect(f.isDestroyed()).toEqual(false);
         f.destroy();
         expect(f.isDestroyed()).toEqual(true);
@@ -557,7 +580,8 @@ defineSuite([
 
     it('throws when created with color texture and color renderbuffer attachments', function() {
         expect(function() {
-            framebuffer = context.createFramebuffer({
+            framebuffer = new Framebuffer({
+                context : context,
                 colorTextures : 'not undefined',
                 colorRenderbuffers : 'not undefined'
             });
@@ -566,7 +590,8 @@ defineSuite([
 
     it('throws when created with depth texture and depth renderbuffer attachments', function() {
       expect(function() {
-            framebuffer = context.createFramebuffer({
+            framebuffer = new Framebuffer({
+                context : context,
                 depthTexture : 'not undefined',
                 depthRenderbuffer : 'not undefined'
             });
@@ -575,7 +600,8 @@ defineSuite([
 
     it('throws when created with depth-stencil texture and depth-stencil renderbuffer attachments', function() {
       expect(function() {
-            framebuffer = context.createFramebuffer({
+            framebuffer = new Framebuffer({
+                context : context,
                 depthStencilTexture : 'not undefined',
                 depthStencilRenderbuffer : 'not undefined'
             });
@@ -584,7 +610,8 @@ defineSuite([
 
     it('throws when created with depth and depth-stencil attachments', function() {
         expect(function() {
-            framebuffer = context.createFramebuffer({
+            framebuffer = new Framebuffer({
+                context : context,
                 depthRenderbuffer : 'not undefined',
                 depthStencilRenderbuffer : 'not undefined'
             });
@@ -593,7 +620,8 @@ defineSuite([
 
     it('throws when created with stencil and depth-stencil attachments', function() {
         expect(function() {
-            framebuffer = context.createFramebuffer({
+            framebuffer = new Framebuffer({
+                context : context,
                 stencilRenderbuffer : 'not undefined',
                 depthStencilRenderbuffer : 'not undefined'
             });
@@ -602,7 +630,8 @@ defineSuite([
 
     it('throws when created with depth and stencil attachments', function() {
         expect(function() {
-            framebuffer = context.createFramebuffer({
+            framebuffer = new Framebuffer({
+                context : context,
                 depthRenderbuffer : 'not undefined',
                 stencilRenderbuffer : 'not undefined'
             });
@@ -612,7 +641,8 @@ defineSuite([
     it('throws when created with a color texture with a non-color pixel format', function() {
         if (context.depthTexture) {
             expect(function() {
-                framebuffer = context.createFramebuffer({
+                framebuffer = new Framebuffer({
+                    context : context,
                     colorTextures : [context.createTexture2D({
                         width : 1,
                         height : 1,
@@ -626,7 +656,8 @@ defineSuite([
 
     it('throws when created with a depth texture without a DEPTH_COMPONENT pixel format', function() {
       expect(function() {
-          framebuffer = context.createFramebuffer({
+          framebuffer = new Framebuffer({
+              context : context,
               depthTexture : context.createTexture2D({
                   width : 1,
                   height : 1
@@ -637,7 +668,8 @@ defineSuite([
 
     it('throws when created with a depth-stencil texture without a DEPTH_STENCIL pixel format', function() {
       expect(function() {
-          framebuffer = context.createFramebuffer({
+          framebuffer = new Framebuffer({
+              context : context,
               depthStencilTexture : context.createTexture2D({
                   width : 1,
                   height : 1
@@ -647,7 +679,8 @@ defineSuite([
     });
 
     it('throws when the depth test is enabled without an appropriate attachment', function() {
-        framebuffer = context.createFramebuffer({
+        framebuffer = new Framebuffer({
+            context : context,
             colorTextures : [context.createTexture2D({
                 width : 1,
                 height : 1
@@ -682,7 +715,8 @@ defineSuite([
 
     it('throws when the number of color texture exceeds the number color attachments supported', function() {
         expect(function() {
-            context.createFramebuffer({
+            new Framebuffer({
+                context : context,
                 colorTextures : new Array(context.maximumColorAttachments + 1)
             });
         }).toThrowDeveloperError();
@@ -690,14 +724,17 @@ defineSuite([
 
     it('throws when the number of color renderbuffers exceeds the number color attachments supported', function() {
         expect(function() {
-            context.createFramebuffer({
+            new Framebuffer({
+                context : context,
                 colorRenderbuffers : new Array(context.maximumColorAttachments + 1)
             });
         }).toThrowDeveloperError();
     });
 
     it('throws when the index to getColorTexture is out of bounds', function(){
-        framebuffer = context.createFramebuffer();
+        framebuffer = new Framebuffer({
+            context : context
+        });
         expect(function() {
             framebuffer.getColorTexture();
         }).toThrowDeveloperError();
@@ -712,7 +749,9 @@ defineSuite([
     });
 
     it('throws when the index to getColorRenderbuffer is out of bounds', function(){
-        framebuffer = context.createFramebuffer();
+        framebuffer = new Framebuffer({
+            context : context
+        });
         expect(function() {
             framebuffer.getColorRenderbuffer();
         }).toThrowDeveloperError();
@@ -727,11 +766,19 @@ defineSuite([
     });
 
     it('fails to destroy', function() {
-        var f = context.createFramebuffer();
+        var f = new Framebuffer({
+            context : context
+        });
         f.destroy();
 
         expect(function() {
             f.destroy();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws when there is no context', function() {
+        expect(function() {
+            new Framebuffer();
         }).toThrowDeveloperError();
     });
 }, 'WebGL');

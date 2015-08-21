@@ -1,58 +1,5 @@
 /*global defineSuite*/
-defineSuite([
-        'Core/BoundingSphere',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/defined',
-        'Core/Ellipsoid',
-        'Core/GeographicProjection',
-        'Core/PixelFormat',
-        'Core/Rectangle',
-        'Core/RuntimeError',
-        'Core/WebMercatorProjection',
-        'Renderer/DrawCommand',
-        'Renderer/PixelDatatype',
-        'Scene/Camera',
-        'Scene/FrameState',
-        'Scene/Globe',
-        'Scene/Pass',
-        'Scene/PrimitiveCollection',
-        'Scene/RectanglePrimitive',
-        'Scene/Scene',
-        'Scene/ScreenSpaceCameraController',
-        'Scene/TweenCollection',
-        'Specs/createScene',
-        'Specs/equals',
-        'Specs/pollToPromise',
-        'Specs/render'
-    ], 'Scene/Scene', function(
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Color,
-        defined,
-        Ellipsoid,
-        GeographicProjection,
-        PixelFormat,
-        Rectangle,
-        RuntimeError,
-        WebMercatorProjection,
-        DrawCommand,
-        PixelDatatype,
-        Camera,
-        FrameState,
-        Globe,
-        Pass,
-        PrimitiveCollection,
-        RectanglePrimitive,
-        Scene,
-        ScreenSpaceCameraController,
-        TweenCollection,
-        createScene,
-        equals,
-        pollToPromise,
-        render) {
+defineSuite(['Core/BoundingSphere', 'Core/Cartesian2', 'Core/Cartesian3', 'Core/Color', 'Core/defined', 'Core/Ellipsoid', 'Core/GeographicProjection', 'Core/PixelFormat', 'Core/Rectangle', 'Core/RuntimeError', 'Core/WebMercatorProjection', 'Renderer/DrawCommand', 'Renderer/Framebuffer', 'Renderer/PixelDatatype', 'Scene/Camera', 'Scene/FrameState', 'Scene/Globe', 'Scene/Pass', 'Scene/PrimitiveCollection', 'Scene/RectanglePrimitive', 'Scene/Scene', 'Scene/ScreenSpaceCameraController', 'Scene/TweenCollection', 'Specs/createScene', 'Specs/equals', 'Specs/pollToPromise', 'Specs/render'], 'Scene/Scene', function(BoundingSphere, Cartesian2, Cartesian3, Color, defined, Ellipsoid, GeographicProjection, PixelFormat, Rectangle, RuntimeError, WebMercatorProjection, DrawCommand, Framebuffer, PixelDatatype, Camera, FrameState, Globe, Pass, PrimitiveCollection, RectanglePrimitive, Scene, ScreenSpaceCameraController, TweenCollection, createScene, equals, pollToPromise, render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,WebGLRenderingContext*/
 
@@ -127,9 +74,9 @@ defineSuite([
     });
 
     it('constructor throws without options.canvas', function() {
-      expect(function() {
-          return new Scene({});
-      }).toThrowDeveloperError();
+        expect(function() {
+            return new Scene({});
+        }).toThrowDeveloperError();
     });
 
     it('draws background color', function() {
@@ -167,13 +114,14 @@ defineSuite([
         var c = new DrawCommand({
             pass : Pass.OPAQUE
         });
-        c.execute = function() {};
+        c.execute = function() {
+        };
         spyOn(c, 'execute');
 
         scene.primitives.add(new CommandMockPrimitive(c));
 
         scene.debugCommandFilter = function(command) {
-            return command !== c;   // Do not execute command
+            return command !== c; // Do not execute command
         };
 
         scene.renderForSpecs();
@@ -184,7 +132,8 @@ defineSuite([
         var c = new DrawCommand({
             pass : Pass.OPAQUE
         });
-        c.execute = function() {};
+        c.execute = function() {
+        };
         spyOn(c, 'execute');
 
         scene.primitives.add(new CommandMockPrimitive(c));
@@ -202,22 +151,22 @@ defineSuite([
             debugShowBoundingVolume : true,
             boundingVolume : new BoundingSphere(Cartesian3.ZERO, radius)
         });
-        c.execute = function() {};
+        c.execute = function() {
+        };
 
         scene.primitives.add(new CommandMockPrimitive(c));
         scene.depthTestAgainstTerrain = true;
 
-        expect(scene.renderForSpecs()[0]).not.toEqual(0);  // Red bounding sphere
+        expect(scene.renderForSpecs()[0]).not.toEqual(0); // Red bounding sphere
     });
 
     it('debugShowCommands tints commands', function() {
         var c = new DrawCommand({
             pass : Pass.OPAQUE,
-            shaderProgram : scene.context.createShaderProgram(
-                'void main() { gl_Position = vec4(1.0); }',
-                'void main() { gl_FragColor = vec4(1.0); }')
+            shaderProgram : scene.context.createShaderProgram('void main() { gl_Position = vec4(1.0); }', 'void main() { gl_FragColor = vec4(1.0); }')
         });
-        c.execute = function() {};
+        c.execute = function() {
+        };
 
         scene.primitives.add(new CommandMockPrimitive(c));
 
@@ -235,7 +184,7 @@ defineSuite([
     });
 
     it('debugShowGlobeDepth', function() {
-        if(!defined(scene._globeDepth)){
+        if (!defined(scene._globeDepth)) {
             return;
         }
 
@@ -376,7 +325,8 @@ defineSuite([
         // Workaround for Firefox on Mac, which does not support RGBA + depth texture
         // attachments, which is allowed by the spec.
         if (context.depthTexture) {
-            var framebuffer = context.createFramebuffer({
+            var framebuffer = new Framebuffer({
+                context : context,
                 colorTextures : [context.createTexture2D({
                     width : 1,
                     height : 1,
