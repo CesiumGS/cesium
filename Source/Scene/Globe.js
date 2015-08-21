@@ -801,7 +801,7 @@ define([
             surface.update(context, frameState, commandList);
         }
 
-        if (pass.pick && this.depthTestAgainstTerrain) {
+        if (pass.pick) {
             surface.update(context, frameState, commandList);
         }
     };

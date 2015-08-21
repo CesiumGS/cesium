@@ -6,6 +6,7 @@ define([
         '../Core/destroyObject',
         '../Core/PixelFormat',
         '../Renderer/ClearCommand',
+        '../Renderer/Framebuffer',
         '../Renderer/PixelDatatype',
         '../Shaders/PostProcessFilters/PassThrough'
     ], function(
@@ -15,6 +16,7 @@ define([
         destroyObject,
         PixelFormat,
         ClearCommand,
+        Framebuffer,
         PixelDatatype,
         PassThrough) {
     "use strict";
@@ -105,13 +107,15 @@ define([
 
         createTextures(globeDepth, context, width, height);
 
-        globeDepth.framebuffer = context.createFramebuffer({
+        globeDepth.framebuffer = new Framebuffer({
+            context : context,
             colorTextures : [globeDepth._colorTexture],
             depthStencilTexture : globeDepth._depthStencilTexture,
             destroyAttachments : false
         });
 
-        globeDepth._copyDepthFramebuffer = context.createFramebuffer({
+        globeDepth._copyDepthFramebuffer = new Framebuffer({
+            context : context,
             colorTextures : [globeDepth._globeDepthTexture],
             destroyAttachments : false
         });
@@ -165,6 +169,7 @@ define([
         if (!defined(globeDepth._clearColorCommand)) {
             globeDepth._clearColorCommand = new ClearCommand({
                 color : new Color(0.0, 0.0, 0.0, 0.0),
+                stencil : 0.0,
                 owner : globeDepth
             });
         }
