@@ -209,7 +209,7 @@ defineSuite([
     });
 
     it('releases geometry instances when releaseGeometryInstances is true', function() {
-        if (!context.fragmentDepth) {
+        if (!GroundPrimitive.isSupported(scene)) {
             return;
         }
 
@@ -226,7 +226,7 @@ defineSuite([
     });
 
     it('does not release geometry instances when releaseGeometryInstances is false', function() {
-        if (!context.fragmentDepth) {
+        if (!GroundPrimitive.isSupported(scene)) {
             return;
         }
 
@@ -243,7 +243,7 @@ defineSuite([
     });
 
     it('adds afterRender promise to frame state', function() {
-        if (!context.fragmentDepth) {
+        if (!GroundPrimitive.isSupported(scene)) {
             return;
         }
 
@@ -262,7 +262,7 @@ defineSuite([
     });
 
     it('does not render when geometryInstance is undefined', function() {
-        if (!context.fragmentDepth) {
+        if (!GroundPrimitive.isSupported(scene)) {
             return;
         }
 
@@ -280,7 +280,7 @@ defineSuite([
     });
 
     it('does not render when show is false', function() {
-        if (!context.fragmentDepth) {
+        if (!GroundPrimitive.isSupported(scene)) {
             return;
         }
 
@@ -307,7 +307,7 @@ defineSuite([
     });
 
     it('does not render other than for the color or pick pass', function() {
-        if (!context.fragmentDepth) {
+        if (!GroundPrimitive.isSupported(scene)) {
             return;
         }
 
@@ -344,7 +344,7 @@ defineSuite([
     }
 
     it('renders in 3D', function() {
-        if (!context.fragmentDepth) {
+        if (!GroundPrimitive.isSupported(scene)) {
             return;
         }
 
@@ -357,7 +357,7 @@ defineSuite([
     });
 
     it('renders in Columbus view when scene3DOnly is false', function() {
-        if (!context.fragmentDepth) {
+        if (!GroundPrimitive.isSupported(scene)) {
             return;
         }
 
@@ -371,7 +371,7 @@ defineSuite([
     });
 
     it('renders in 2D when scene3DOnly is false', function() {
-        if (!context.fragmentDepth) {
+        if (!GroundPrimitive.isSupported(scene)) {
             return;
         }
 
@@ -385,7 +385,7 @@ defineSuite([
     });
 
     it('renders bounding volume with debugShowBoundingVolume', function() {
-        if (!context.fragmentDepth) {
+        if (!GroundPrimitive.isSupported(scene)) {
             return;
         }
 
@@ -403,7 +403,7 @@ defineSuite([
     });
 
     it('get per instance attributes', function() {
-        if (!context.fragmentDepth) {
+        if (!GroundPrimitive.isSupported(scene)) {
             return;
         }
 
@@ -419,7 +419,7 @@ defineSuite([
     });
 
     it('modify color instance attribute', function() {
-        if (!context.fragmentDepth) {
+        if (!GroundPrimitive.isSupported(scene)) {
             return;
         }
 
@@ -443,7 +443,7 @@ defineSuite([
     });
 
     it('modify show instance attribute', function() {
-        if (!context.fragmentDepth) {
+        if (!GroundPrimitive.isSupported(scene)) {
             return;
         }
 
@@ -468,7 +468,7 @@ defineSuite([
     });
 
     it('get bounding sphere from per instance attribute', function() {
-        if (!context.fragmentDepth) {
+        if (!GroundPrimitive.isSupported(scene)) {
             return;
         }
 
@@ -484,7 +484,7 @@ defineSuite([
     });
 
     it('getGeometryInstanceAttributes returns same object each time', function() {
-        if (!context.fragmentDepth) {
+        if (!GroundPrimitive.isSupported(scene)) {
             return;
         }
 
@@ -501,7 +501,7 @@ defineSuite([
     });
 
     it('picking', function() {
-        if (!context.fragmentDepth) {
+        if (!GroundPrimitive.isSupported(scene)) {
             return;
         }
 
@@ -517,7 +517,7 @@ defineSuite([
     });
 
     it('does not pick when allowPicking is false', function() {
-        if (!context.fragmentDepth) {
+        if (!GroundPrimitive.isSupported(scene)) {
             return;
         }
 
@@ -534,7 +534,7 @@ defineSuite([
     });
 
     it('internally invalid asynchronous geometry resolves promise and sets ready', function() {
-        if (!context.fragmentDepth) {
+        if (!GroundPrimitive.isSupported(scene)) {
             return;
         }
 
@@ -566,7 +566,7 @@ defineSuite([
     });
 
     it('internally invalid synchronous geometry resolves promise and sets ready', function() {
-        if (!context.fragmentDepth) {
+        if (!GroundPrimitive.isSupported(scene)) {
             return;
         }
 
@@ -599,7 +599,7 @@ defineSuite([
     });
 
     it('setting per instance attribute throws when value is undefined', function() {
-        if (!context.fragmentDepth) {
+        if (!GroundPrimitive.isSupported(scene)) {
             return;
         }
 
@@ -618,7 +618,7 @@ defineSuite([
     });
 
     it('can disable picking when asynchronous', function() {
-        if (!context.fragmentDepth) {
+        if (!GroundPrimitive.isSupported(scene)) {
             return;
         }
 
@@ -647,7 +647,7 @@ defineSuite([
     });
 
     it('getGeometryInstanceAttributes throws without id', function() {
-        if (!context.fragmentDepth) {
+        if (!GroundPrimitive.isSupported(scene)) {
             return;
         }
 
@@ -677,7 +677,7 @@ defineSuite([
     });
 
     it('getGeometryInstanceAttributes returns undefined if id does not exist', function() {
-        if (!context.fragmentDepth) {
+        if (!GroundPrimitive.isSupported(scene)) {
             return;
         }
 
@@ -699,7 +699,7 @@ defineSuite([
     });
 
     it('renders when using asynchronous pipeline', function() {
-        if (!context.fragmentDepth) {
+        if (!GroundPrimitive.isSupported(scene)) {
             return;
         }
 

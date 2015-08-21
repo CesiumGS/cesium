@@ -303,6 +303,16 @@ define([
         }
     });
 
+    /**
+     * Determines if GroundPrimitive rendering is supported.
+     *
+     * @param {Scene} scene The scene.
+     * @returns {Boolean} <code>true</code> if GroundPrimitives are supported; otherwise, returns <code>false</code>
+     */
+    GroundPrimitive.isSupported = function(scene) {
+        return scene.context.fragmentDepth;
+    };
+
     GroundPrimitive._maxHeight = 9000.0;
     GroundPrimitive._minHeight = -100000.0;
     GroundPrimitive._minOBBHeight = -11500.0;
