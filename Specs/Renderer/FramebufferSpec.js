@@ -725,7 +725,7 @@ defineSuite([
 
     it('throws when the number of color texture exceeds the number color attachments supported', function() {
         expect(function() {
-            new Framebuffer({
+            return new Framebuffer({
                 context : context,
                 colorTextures : new Array(context.maximumColorAttachments + 1)
             });
@@ -734,7 +734,7 @@ defineSuite([
 
     it('throws when the number of color renderbuffers exceeds the number color attachments supported', function() {
         expect(function() {
-            new Framebuffer({
+            return new Framebuffer({
                 context : context,
                 colorRenderbuffers : new Array(context.maximumColorAttachments + 1)
             });
@@ -788,7 +788,7 @@ defineSuite([
 
     it('throws when there is no context', function() {
         expect(function() {
-            new Framebuffer();
+            return new Framebuffer();
         }).toThrowDeveloperError();
     });
 }, 'WebGL');

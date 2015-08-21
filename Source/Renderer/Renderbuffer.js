@@ -19,7 +19,6 @@ define([
      * @private
      */
     function Renderbuffer(options) {
-
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -30,7 +29,7 @@ define([
 
         var context = options.context;
         var gl = context._gl;
-        var maximumRenderbufferSize = context.maximumRenderbufferSize
+        var maximumRenderbufferSize = context.maximumRenderbufferSize;
 
         var format = defaultValue(options.format, RenderbufferFormat.RGBA4);
         var width = defined(options.width) ? options.width : gl.drawingBufferWidth;

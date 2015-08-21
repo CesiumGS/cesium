@@ -115,7 +115,7 @@ defineSuite([
 
     it('throws when there is no context', function() {
         expect(function() {
-            new Renderbuffer();
+            return new Renderbuffer();
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
