@@ -209,6 +209,10 @@ defineSuite([
     });
 
     it('releases geometry instances when releaseGeometryInstances is true', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
         var primitive = new GroundPrimitive({
             geometryInstance : rectangleInstance,
             releaseGeometryInstances : true,
@@ -222,6 +226,10 @@ defineSuite([
     });
 
     it('does not release geometry instances when releaseGeometryInstances is false', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
         var primitive = new GroundPrimitive({
             geometryInstance : rectangleInstance,
             releaseGeometryInstances : false,
@@ -235,6 +243,10 @@ defineSuite([
     });
 
     it('adds afterRender promise to frame state', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
         var primitive = new GroundPrimitive({
             geometryInstance : rectangleInstance,
             releaseGeometryInstances : false,
@@ -250,6 +262,10 @@ defineSuite([
     });
 
     it('does not render when geometryInstance is undefined', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
         var primitive = new GroundPrimitive({
             geometryInstance : undefined,
             appearance : new PerInstanceColorAppearance(),
@@ -264,6 +280,10 @@ defineSuite([
     });
 
     it('does not render when show is false', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
         var primitive = new GroundPrimitive({
             geometryInstance : rectangleInstance,
             asynchronous : false
@@ -287,6 +307,10 @@ defineSuite([
     });
 
     it('does not render other than for the color or pick pass', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
         var primitive = new GroundPrimitive({
             geometryInstance : rectangleInstance,
             asynchronous : false
@@ -320,6 +344,10 @@ defineSuite([
     }
 
     it('renders in 3D', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
         var primitive = new GroundPrimitive({
             geometryInstance : rectangleInstance,
             asynchronous : false
@@ -329,6 +357,10 @@ defineSuite([
     });
 
     it('renders in Columbus view when scene3DOnly is false', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
         var primitive = new GroundPrimitive({
             geometryInstance : rectangleInstance,
             asynchronous : false
@@ -339,6 +371,10 @@ defineSuite([
     });
 
     it('renders in 2D when scene3DOnly is false', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
         var primitive = new GroundPrimitive({
             geometryInstance : rectangleInstance,
             asynchronous : false
@@ -349,6 +385,10 @@ defineSuite([
     });
 
     it('renders bounding volume with debugShowBoundingVolume', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
         scene.primitives.add(new Primitive({
             geometryInstances : rectangleInstance,
             asynchronous : false,
@@ -363,6 +403,10 @@ defineSuite([
     });
 
     it('get per instance attributes', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
         var primitive = new GroundPrimitive({
             geometryInstance : rectangleInstance,
             asynchronous : false
@@ -375,6 +419,10 @@ defineSuite([
     });
 
     it('modify color instance attribute', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
         var primitive = new GroundPrimitive({
             geometryInstance : rectangleInstance,
             asynchronous : false
@@ -395,6 +443,10 @@ defineSuite([
     });
 
     it('modify show instance attribute', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
         rectangleInstance.attributes.show = new ShowGeometryInstanceAttribute(true);
 
         var primitive = new GroundPrimitive({
@@ -416,6 +468,10 @@ defineSuite([
     });
 
     it('get bounding sphere from per instance attribute', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
         var primitive = new GroundPrimitive({
             geometryInstance : rectangleInstance,
             asynchronous : false
@@ -428,6 +484,10 @@ defineSuite([
     });
 
     it('getGeometryInstanceAttributes returns same object each time', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
         var primitive = new GroundPrimitive({
             geometryInstance : rectangleInstance,
             asynchronous : false
@@ -441,6 +501,10 @@ defineSuite([
     });
 
     it('picking', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
         var primitive = new GroundPrimitive({
             geometryInstance : rectangleInstance,
             asynchronous : false
@@ -453,6 +517,10 @@ defineSuite([
     });
 
     it('does not pick when allowPicking is false', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
         var primitive = new GroundPrimitive({
             geometryInstance : rectangleInstance,
             allowPicking : false,
@@ -466,6 +534,10 @@ defineSuite([
     });
 
     it('internally invalid asynchronous geometry resolves promise and sets ready', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
         var primitive = new GroundPrimitive({
             geometryInstance : new GeometryInstance({
                 geometry : PolygonGeometry.fromPositions({
@@ -494,6 +566,10 @@ defineSuite([
     });
 
     it('internally invalid synchronous geometry resolves promise and sets ready', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
         var primitive = new GroundPrimitive({
             geometryInstance : new GeometryInstance({
                 geometry : PolygonGeometry.fromPositions({
@@ -523,6 +599,10 @@ defineSuite([
     });
 
     it('setting per instance attribute throws when value is undefined', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
         var primitive = new GroundPrimitive({
             geometryInstance : rectangleInstance,
             asynchronous : false
@@ -538,6 +618,10 @@ defineSuite([
     });
 
     it('can disable picking when asynchronous', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
         var primitive = new GroundPrimitive({
             geometryInstance : rectangleInstance,
             asynchronous : true,
@@ -563,6 +647,10 @@ defineSuite([
     });
 
     it('getGeometryInstanceAttributes throws without id', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
         var primitive = new GroundPrimitive({
             geometryInstance : rectangleInstance,
             asynchronous : false
@@ -589,6 +677,10 @@ defineSuite([
     });
 
     it('getGeometryInstanceAttributes returns undefined if id does not exist', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
         var primitive = new GroundPrimitive({
             geometryInstance : rectangleInstance,
             asynchronous : false
@@ -607,6 +699,10 @@ defineSuite([
     });
 
     it('renders when using asynchronous pipeline', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
         var primitive = new GroundPrimitive({
             geometryInstance : rectangleInstance
         });

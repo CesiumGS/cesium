@@ -12,8 +12,10 @@ define([
         '../Core/PixelFormat',
         '../Core/Transforms',
         '../Renderer/ClearCommand',
+        '../Renderer/Framebuffer',
         '../Renderer/PassState',
         '../Renderer/PixelDatatype',
+        '../Renderer/Renderbuffer',
         '../Renderer/RenderbufferFormat',
         '../Shaders/PostProcessFilters/AdditiveBlend',
         '../Shaders/PostProcessFilters/BrightPass',
@@ -32,8 +34,10 @@ define([
         PixelFormat,
         Transforms,
         ClearCommand,
+        Framebuffer,
         PassState,
         PixelDatatype,
+        Renderbuffer,
         RenderbufferFormat,
         AdditiveBlend,
         BrightPass,
@@ -236,7 +240,8 @@ define([
             })];
 
             if (context.depthTexture) {
-                fbo = this._fbo = context.createFramebuffer({
+                fbo = this._fbo = new Framebuffer({
+                    context : context,
                     colorTextures :colorTextures,
                     depthTexture : context.createTexture2D({
                         width : width,
@@ -246,21 +251,25 @@ define([
                     })
                 });
             } else {
-                fbo = this._fbo = context.createFramebuffer({
+                fbo = this._fbo = new Framebuffer({
+                    context : context,
                     colorTextures : colorTextures,
-                    depthRenderbuffer : context.createRenderbuffer({
+                    depthRenderbuffer : new Renderbuffer({
+                        context : context,
                         format : RenderbufferFormat.DEPTH_COMPONENT16
                     })
                 });
             }
 
-            this._downSampleFBO1 = context.createFramebuffer({
+            this._downSampleFBO1 = new Framebuffer({
+                context : context,
                 colorTextures : [context.createTexture2D({
                     width : downSampleSize,
                     height : downSampleSize
                 })]
             });
-            this._downSampleFBO2 = context.createFramebuffer({
+            this._downSampleFBO2 = new Framebuffer({
+                context : context,
                 colorTextures : [context.createTexture2D({
                     width : downSampleSize,
                     height : downSampleSize

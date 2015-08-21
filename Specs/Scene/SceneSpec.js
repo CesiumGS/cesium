@@ -12,6 +12,7 @@ defineSuite([
         'Core/RuntimeError',
         'Core/WebMercatorProjection',
         'Renderer/DrawCommand',
+        'Renderer/Framebuffer',
         'Renderer/PixelDatatype',
         'Scene/Camera',
         'Scene/FrameState',
@@ -39,6 +40,7 @@ defineSuite([
         RuntimeError,
         WebMercatorProjection,
         DrawCommand,
+        Framebuffer,
         PixelDatatype,
         Camera,
         FrameState,
@@ -376,7 +378,8 @@ defineSuite([
         // Workaround for Firefox on Mac, which does not support RGBA + depth texture
         // attachments, which is allowed by the spec.
         if (context.depthTexture) {
-            var framebuffer = context.createFramebuffer({
+            var framebuffer = new Framebuffer({
+                context : context,
                 colorTextures : [context.createTexture2D({
                     width : 1,
                     height : 1,
