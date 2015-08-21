@@ -1064,7 +1064,7 @@ define([
     }
 
     function createShaderProgram(primitive, context, frameState, appearance) {
-        var vs = Primitive._createColumbusViewShader(appearance.vertexShaderSource, frameState.scene3DOnly);
+        var vs = Primitive._modifyShaderPosition(primitive, appearance.vertexShaderSource, frameState.scene3DOnly);
         vs = Primitive._appendShowToShader(primitive, vs);
         vs = modifyForEncodedNormals(primitive, vs);
         var fs = appearance.getFragmentShaderSource();
@@ -1105,6 +1105,12 @@ define([
             }
         }
         var uniforms = combine(appearanceUniformMap, materialUniformMap);
+
+        if (defined(primitive.rtcCenter)) {
+            uniforms.u_modifiedModelView = function() {
+                return primitive._modifiedModelView;
+            };
+        }
 
         var pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
 
@@ -1200,6 +1206,8 @@ define([
         attributes.length = 0;
     }
 
+    var rtcScratch = new Cartesian3();
+
     function updateAndQueueCommands(primitive, frameState, commandList, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
         //>>includeStart('debug', pragmas.debug);
         if (frameState.mode !== SceneMode.SCENE3D && !Matrix4.equals(modelMatrix, Matrix4.IDENTITY)) {
@@ -1223,11 +1231,11 @@ define([
             }
         }
 
-        if (defined(this.rtcCenter)) {
+        if (defined(primitive.rtcCenter)) {
             var viewMatrix = frameState.camera.viewMatrix;
-            Matrix4.multiply(viewMatrix, this._modelMatrix, this._modifiedModelView);
-            Matrix4.multiplyByPoint(this._modifiedModelView, this.rtcCenter, rtcScratch);
-            Matrix4.setTranslation(this._modifiedModelView, rtcScratch, this._modifiedModelView);
+            Matrix4.multiply(viewMatrix, primitive._modelMatrix, primitive._modifiedModelView);
+            Matrix4.multiplyByPoint(primitive._modifiedModelView, primitive.rtcCenter, rtcScratch);
+            Matrix4.setTranslation(primitive._modifiedModelView, rtcScratch, primitive._modifiedModelView);
         }
 
         var boundingSpheres;
@@ -1290,6 +1298,10 @@ define([
 
         if (defined(this._error)) {
             throw this._error;
+        }
+
+        if (defined(this.rtcCenter) && !frameState.scene3DOnly) {
+            throw new DeveloperError('RTC rendering is only available for 3D only scenes.');
         }
 
         if (this._state === PrimitiveState.FAILED) {
