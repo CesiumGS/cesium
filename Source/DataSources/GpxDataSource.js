@@ -122,43 +122,6 @@ define([
         return entity;
     }
 
-    function readCoordinate(value) {
-        if (!defined(value)) {
-            return undefined;
-        }
-
-        var digits = value.match(/[^\s,\n]+/g);
-        if (digits.length !== 2 && digits.length !== 3) {
-            window.console.log('GPX - Invalid coordinates: ' + value);
-            return undefined;
-        }
-
-        var longitude = parseFloat(digits[0]);
-        var latitude = parseFloat(digits[1]);
-        var height = parseFloat(digits[2]);
-
-        longitude = isNaN(longitude) ? 0.0 : longitude;
-        latitude = isNaN(latitude) ? 0.0 : latitude;
-        height = isNaN(height) ? 0.0 : height;
-
-        return Cartesian3.fromDegrees(longitude, latitude, height);
-    }
-
-    function readCoordinates(element) {
-        if (!defined(element)) {
-            return undefined;
-        }
-
-        var tuples = element.textContent.match(/[^\s\n]+/g);
-        var length = tuples.length;
-        var result = new Array(length);
-        var resultIndex = 0;
-        for (var i = 0; i < length; i++) {
-            result[resultIndex++] = readCoordinate(tuples[i]);
-        }
-        return result;
-    }
-
     function readCoordinateFromNode(node) {
         var longitude = queryNumericAttribute(node, 'lon');
         var latitude = queryNumericAttribute(node, 'lat');
@@ -240,19 +203,11 @@ define([
         return undefined;
     }
 
-    function resolveHref(href, proxy, sourceUri, uriResolver) {
+    function resolveHref(href, proxy, sourceUri) {
         if (!defined(href)) {
             return undefined;
         }
-        var hrefResolved = false;
-        if (defined(uriResolver)) {
-            var blob = uriResolver[href];
-            if (defined(blob)) {
-                hrefResolved = true;
-                href = blob;
-            }
-        }
-        if (!hrefResolved && defined(sourceUri)) {
+        if (defined(sourceUri)) {
             var baseUri = new Uri(document.location.href);
             sourceUri = new Uri(sourceUri);
             href = new Uri(href).resolve(sourceUri.resolve(baseUri)).toString();
@@ -261,13 +216,13 @@ define([
         return href;
     }
 
-    function createDefaultBillboard(proxy, sourceUri, uriResolver) {
+    function createDefaultBillboard(proxy, sourceUri) {
         var billboard = new BillboardGraphics();
         billboard.width = BILLBOARD_SIZE;
         billboard.height = BILLBOARD_SIZE;
         billboard.scaleByDistance = new NearFarScalar(2414016, 1.0, 1.6093e+7, 0.1);
         var DEFAULT_ICON = '../../../Build/Cesium/Assets/Textures/maki/marker.png';
-        billboard.image = resolveHref(DEFAULT_ICON, proxy, sourceUri, uriResolver);
+        billboard.image = resolveHref(DEFAULT_ICON, proxy, sourceUri);
         return billboard;
     }
 
@@ -336,7 +291,7 @@ define([
 
     };
     var scratchDiv = document.createElement('div');
-    function processDescription(node, entity, uriResolver) {
+    function processDescription(node, entity) {
         var i;
 
         var text = '';
@@ -383,7 +338,7 @@ define([
         return tmp;
     }
 
-    function processWpt(dataSource, geometryNode, entityCollection, sourceUri, uriResolver) {
+    function processWpt(dataSource, geometryNode, entityCollection, sourceUri) {
         var position = readCoordinateFromNode(geometryNode);
         if (!defined(position)) {
             throw new DeveloperError('Position Coordinates are required.');
@@ -393,25 +348,25 @@ define([
         entity.position = position;
         // TODO different icon support
         // var symbol = queryStringValue(geometryNode, 'sym', namespaces.gpx);
-        entity.billboard = createDefaultBillboard(dataSource._proxy, sourceUri, uriResolver);
+        entity.billboard = createDefaultBillboard(dataSource._proxy, sourceUri);
 
         var name = queryStringValue(geometryNode, 'name', namespaces.gpx);
         entity.name = name;
         entity.label = createDefaultLabel();
         entity.label.text = name;
-        entity.description = processDescription(geometryNode, entity, uriResolver);
+        entity.description = processDescription(geometryNode, entity);
     }
 
     //rte represents route - an ordered list of waypoints representing a series of turn points leading to a destination
-    function processRte(dataSource, geometryNode, entityCollection, sourceUri, uriResolver) {
+    function processRte(dataSource, geometryNode, entityCollection, sourceUri) {
         var entity = getOrCreateEntity(geometryNode, entityCollection);
-        entity.description = processDescription(geometryNode, entity, uriResolver);
+        entity.description = processDescription(geometryNode, entity);
 
         //a list of wpt
         var routePoints = queryNodes(geometryNode, 'rtept', namespaces.gpx);
         var coordinateTuples = new Array(routePoints.length);
         for (var i = 0; i < routePoints.length; i++) {
-            processWpt(dataSource, routePoints[i], entityCollection, sourceUri, uriResolver);
+            processWpt(dataSource, routePoints[i], entityCollection, sourceUri);
             coordinateTuples[i] = readCoordinateFromNode(routePoints[i]);
         }
         entity.polyline = createDefaultPolyline();
@@ -419,9 +374,9 @@ define([
     }
 
     //trk represents a track - an ordered list of points describing a path.
-    function processTrk(dataSource, geometryNode, entityCollection, sourceUri, uriResolver) {
+    function processTrk(dataSource, geometryNode, entityCollection, sourceUri) {
         var entity = getOrCreateEntity(geometryNode, entityCollection);
-        entity.description = processDescription(geometryNode, entity, uriResolver);
+        entity.description = processDescription(geometryNode, entity);
 
         var trackSegs = queryNodes(geometryNode, 'trkseg', namespaces.gpx);
         var positions = [];
@@ -593,7 +548,7 @@ define([
         trk : processTrk
     };
 
-    function processGpx(dataSource, node, entityCollection, sourceUri, uriResolver) {
+    function processGpx(dataSource, node, entityCollection, sourceUri) {
         var complexTypeNames = Object.keys(complexTypes);
         var complexTypeNamesLength = complexTypeNames.length;
 
@@ -606,13 +561,13 @@ define([
             for (var q = 0; q < length; q++) {
                 var child = childNodes[q];
                 if (child.localName === typeName && namespaces.gpx.indexOf(child.namespaceURI) !== -1) {
-                    processComplexTypeNode(dataSource, child, entityCollection, sourceUri, uriResolver);
+                    processComplexTypeNode(dataSource, child, entityCollection, sourceUri);
                 }
             }
         }
     }
 
-    function loadGpx(dataSource, gpx, sourceUri, uriResolver) {
+    function loadGpx(dataSource, gpx, sourceUri) {
         var entityCollection = dataSource._entityCollection;
 
         entityCollection.removeAll();
@@ -632,7 +587,7 @@ define([
         }
 
         if (element.localName === 'gpx') {
-            processGpx(dataSource, element, entityCollection, sourceUri, uriResolver);
+            processGpx(dataSource, element, entityCollection, sourceUri);
         } else {
             window.console.log('GPX - Unsupported node: ' + element.localName);
         }
