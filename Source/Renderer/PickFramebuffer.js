@@ -59,9 +59,9 @@ define([
                     width : width,
                     height : height
                 })],
-                depthRenderbuffer : new Renderbuffer({
+                depthStencilRenderbuffer : new Renderbuffer({
                     context : context,
-                    format : RenderbufferFormat.DEPTH_COMPONENT16
+                    format : RenderbufferFormat.DEPTH_STENCIL
                 })
             });
             this._passState.framebuffer = this._fb;

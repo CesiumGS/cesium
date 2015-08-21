@@ -2,6 +2,7 @@
 define([
         '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
+        '../Core/BoxGeometry',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
@@ -57,6 +58,7 @@ define([
     ], function(
         BoundingRectangle,
         BoundingSphere,
+        BoxGeometry,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -246,6 +248,7 @@ define([
 
         this._clearColorCommand = new ClearCommand({
             color : new Color(),
+            stencil : 0,
             owner : this
         });
         this._depthClearCommand = new ClearCommand({
@@ -498,7 +501,7 @@ define([
         this.copyGlobeDepth = false;
 
         this._performanceDisplay = undefined;
-        this._debugSphere = undefined;
+        this._debugVolume = undefined;
 
         var camera = new Camera(this);
         this._camera = camera;
@@ -1062,11 +1065,11 @@ define([
                 if (defined(boundingVolume)) {
                     if (command.cull &&
                             ((cullingVolume.computeVisibility(boundingVolume) === Intersect.OUTSIDE) ||
-                             (defined(occluder) && !occluder.isBoundingSphereVisible(boundingVolume)))) {
+                             (defined(occluder) && boundingVolume.isOccluded(occluder)))) {
                         continue;
                     }
 
-                    distances = BoundingSphere.computePlaneDistances(boundingVolume, position, direction, distances);
+                    distances = boundingVolume.computePlaneDistances(position, direction, distances);
                     near = Math.min(near, distances.start);
                     far = Math.max(far, distances.stop);
                 } else {
@@ -1184,21 +1187,17 @@ define([
 
         if (command.debugShowBoundingVolume && (defined(command.boundingVolume))) {
             // Debug code to draw bounding volume for command.  Not optimized!
-            // Assumes bounding volume is a bounding sphere.
-            if (defined(scene._debugSphere)) {
-                scene._debugSphere.destroy();
-            }
-
+            // Assumes bounding volume is a bounding sphere or box
             var frameState = scene._frameState;
             var boundingVolume = command.boundingVolume;
-            var radius = boundingVolume.radius;
-            var center = boundingVolume.center;
 
-            var geometry = GeometryPipeline.toWireframe(EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
-                radii : new Cartesian3(radius, radius, radius),
-                vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
-            })));
+            if (defined(scene._debugVolume)) {
+                scene._debugVolume.destroy();
+            }
 
+            var geometry;
+
+            var center = Cartesian3.clone(boundingVolume.center);
             if (frameState.mode !== SceneMode.SCENE3D) {
                 center = Matrix4.multiplyByPoint(transformFrom2D, center, center);
                 var projection = frameState.mapProjection;
@@ -1206,23 +1205,54 @@ define([
                 center = projection.ellipsoid.cartographicToCartesian(centerCartographic);
             }
 
-            scene._debugSphere = new Primitive({
-                geometryInstances : new GeometryInstance({
-                    geometry : geometry,
-                    modelMatrix : Matrix4.multiplyByTranslation(Matrix4.IDENTITY, center, new Matrix4()),
-                    attributes : {
-                        color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
-                    }
-                }),
-                appearance : new PerInstanceColorAppearance({
-                    flat : true,
-                    translucent : false
-                }),
-                asynchronous : false
-            });
+            if (defined(boundingVolume.radius)) {
+                var radius = boundingVolume.radius;
+
+                geometry = GeometryPipeline.toWireframe(EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
+                    radii : new Cartesian3(radius, radius, radius),
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
+                })));
+
+                scene._debugVolume = new Primitive({
+                    geometryInstances : new GeometryInstance({
+                        geometry : geometry,
+                        modelMatrix : Matrix4.multiplyByTranslation(Matrix4.IDENTITY, center, new Matrix4()),
+                        attributes : {
+                            color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
+                        }
+                    }),
+                    appearance : new PerInstanceColorAppearance({
+                        flat : true,
+                        translucent : false
+                    }),
+                    asynchronous : false
+                });
+            } else {
+                var halfAxes = boundingVolume.halfAxes;
+
+                geometry = GeometryPipeline.toWireframe(BoxGeometry.createGeometry(BoxGeometry.fromDimensions({
+                    dimensions : new Cartesian3(2.0, 2.0, 2.0),
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
+                })));
+
+                scene._debugVolume = new Primitive({
+                    geometryInstances : new GeometryInstance({
+                        geometry : geometry,
+                        modelMatrix : Matrix4.fromRotationTranslation(halfAxes, center, new Matrix4()),
+                        attributes : {
+                            color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
+                        }
+                    }),
+                    appearance : new PerInstanceColorAppearance({
+                        flat : true,
+                        translucent : false
+                    }),
+                    asynchronous : false
+                });
+            }
 
             var commandList = [];
-            scene._debugSphere.update(context, frameState, commandList);
+            scene._debugVolume.update(context, frameState, commandList);
 
             var framebuffer;
             if (defined(debugFramebuffer)) {
@@ -1259,11 +1289,11 @@ define([
                  ((!defined(command.boundingVolume)) ||
                   !command.cull ||
                   ((cullingVolume.computeVisibility(boundingVolume) !== Intersect.OUTSIDE) &&
-                   (!defined(occluder) || occluder.isBoundingSphereVisible(boundingVolume)))));
+                   (!defined(occluder) || !boundingVolume.isOccluded(occluder)))));
     }
 
     function translucentCompare(a, b, position) {
-        return BoundingSphere.distanceSquaredTo(b.boundingVolume, position) - BoundingSphere.distanceSquaredTo(a.boundingVolume, position);
+        return b.boundingVolume.distanceSquaredTo(position) - a.boundingVolume.distanceSquaredTo(position);
     }
 
     function executeTranslucentCommandsSorted(scene, executeFunction, passState, commands) {
@@ -1454,13 +1484,10 @@ define([
         for (i = 0; i < numFrustums; ++i) {
             var index = numFrustums - i - 1;
             var frustumCommands = frustumCommandsList[index];
-            frustum.near = frustumCommands.near;
-            frustum.far = frustumCommands.far;
 
-            if (index !== 0) {
-                // Avoid tearing artifacts between adjacent frustums in the opaque passes
-                frustum.near *= OPAQUE_FRUSTUM_NEAR_OFFSET;
-            }
+            // Avoid tearing artifacts between adjacent frustums in the opaque passes
+            frustum.near = index !== 0 ? frustumCommands.near * OPAQUE_FRUSTUM_NEAR_OFFSET : frustumCommands.near;
+            frustum.far = frustumCommands.far;
 
             var globeDepth = scene.debugShowGlobeDepth ? getDebugGlobeDepth(scene, index) : scene._globeDepth;
 
@@ -1488,6 +1515,12 @@ define([
                 passState.framebuffer = fb;
             }
 
+            commands = frustumCommands.commands[Pass.GROUND];
+            length = frustumCommands.indices[Pass.GROUND];
+            for (j = 0; j < length; ++j) {
+                executeCommand(commands[j], scene, context, passState);
+            }
+
             if (defined(scene.globe) && !scene.globe.depthTestAgainstTerrain) {
                 clearDepth.execute(context, passState);
                 scene._depthPlane.execute(context, passState);
@@ -1495,7 +1528,7 @@ define([
 
             // Execute commands in order by pass up to the translucent pass.
             // Translucent geometry needs special handling (sorting/OIT).
-            var startPass = Pass.GLOBE + 1;
+            var startPass = Pass.GROUND + 1;
             var endPass = Pass.TRANSLUCENT;
             for (var pass = startPass; pass < endPass; ++pass) {
                 commands = frustumCommands.commands[pass];
