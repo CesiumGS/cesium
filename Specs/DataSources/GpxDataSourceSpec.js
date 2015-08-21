@@ -147,7 +147,7 @@ defineSuite(['DataSources/GpxDataSource',
         });
     });
 
-    it('Metadata: handles copytightType', function() {
+    it('Metadata: handles copyrightType', function() {
         var dataSource = new GpxDataSource();
         var gpx = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="Test">\
