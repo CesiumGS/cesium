@@ -31,6 +31,7 @@ define([
      * @alias BoxOutlineGeometry
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Cartesian3} options.minimumCorner The minimum x, y, and z coordinates of the box.
      * @param {Cartesian3} options.maximumCorner The maximum x, y, and z coordinates of the box.
      *
@@ -70,7 +71,9 @@ define([
     /**
      * Creates an outline of a cube centered at the origin given its dimensions.
      *
+     * @param {Object} options Object with the following properties:
      * @param {Cartesian3} options.dimensions The width, depth, and height of the box stored in the x, y, and z coordinates of the <code>Cartesian3</code>, respectively.
+     * @returns {BoxOutlineGeometry}
      *
      * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
      *
@@ -116,7 +119,7 @@ define([
      * Stores the provided instance into the provided array.
      * @function
      *
-     * @param {Object} value The value to pack.
+     * @param {BoxOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
@@ -149,6 +152,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {BoxOutlineGeometry} [result] The object into which to store the result.
+     * @returns {BoxOutlineGeometry} The modified result parameter or a new BoxOutlineGeometry instance if one was not provided.
      */
     BoxOutlineGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);

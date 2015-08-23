@@ -545,6 +545,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._homeButton = homeButton;
         this._sceneModePicker = sceneModePicker;
         this._baseLayerPicker = baseLayerPicker;
+        this._navigationHelpButton = navigationHelpButton;
         this._animation = animation;
         this._timeline = timeline;
         this._fullscreenButton = fullscreenButton;
@@ -709,6 +710,17 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         baseLayerPicker : {
             get : function() {
                 return this._baseLayerPicker;
+            }
+        },
+
+        /**
+         * Gets the NavigationHelpButton.
+         * @memberof Viewer.prototype
+         * @type {NavigationHelpButton}
+         */
+        navigationHelpButton : {
+            get : function() {
+                return this._navigationHelpButton;
             }
         },
 
@@ -1047,7 +1059,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * to the provided viewer instance.
      *
      * @param {Viewer~ViewerMixin} mixin The Viewer mixin to add to this instance.
-     * @param {Object} options The options object to be passed to the mixin function.
+     * @param {Object} [options] The options object to be passed to the mixin function.
      *
      * @see viewerDragDropMixin
      */

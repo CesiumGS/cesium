@@ -21,6 +21,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
         '../Renderer/DrawCommand',
+        '../Renderer/Framebuffer',
         '../Renderer/MipmapHint',
         '../Renderer/ShaderSource',
         '../Renderer/TextureMagnificationFilter',
@@ -54,6 +55,7 @@ define([
         BufferUsage,
         ClearCommand,
         DrawCommand,
+        Framebuffer,
         MipmapHint,
         ShaderSource,
         TextureMagnificationFilter,
@@ -894,7 +896,8 @@ define([
             reproject.framebuffer.destroy();
         }
 
-        reproject.framebuffer = context.createFramebuffer({
+        reproject.framebuffer = new Framebuffer({
+            context : context,
             colorTextures : [outputTexture]
         });
         reproject.framebuffer.destroyAttachments = false;

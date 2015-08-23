@@ -163,7 +163,7 @@ define([
          * e.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
-         * e.material = Cesium.Material.fromType(Material.StripeType);
+         * e.material = Cesium.Material.fromType(Cesium.Material.StripeType);
          */
         this.material = defaultValue(options.material, Material.fromType(Material.ColorType));
         this._material = undefined;

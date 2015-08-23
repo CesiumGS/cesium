@@ -433,7 +433,7 @@ define([
      * @example
      * //Set the view to in the inertial frame.
      * scene.preRender.addEventListener(function(scene, time) {
-     *    var now = new Cesium.JulianDate();
+     *    var now = Cesium.JulianDate.now();
      *    var offset = Cesium.Matrix4.multiplyByPoint(camera.transform, camera.position, new Cesium.Cartesian3());
      *    var transform = Cesium.Matrix4.fromRotationTranslation(Cesium.Transforms.computeTemeToPseudoFixedMatrix(now));
      *    var inverseTransform = Cesium.Matrix4.inverseTransformation(transform, new Cesium.Matrix4());
@@ -533,7 +533,7 @@ define([
      *
      * @example
      * var interval = new Cesium.TimeInterval(...);
-     * when(preloadIcrfFixed(interval), function() {
+     * when(Cesium.Transforms.preloadIcrfFixed(interval), function() {
      *     // the data is now loaded
      * });
      */
@@ -614,7 +614,7 @@ define([
      *
      * @example
      * // Transform a point from the ICRF axes to the Fixed axes.
-     * var now = new Cesium.JulianDate();
+     * var now = Cesium.JulianDate.now();
      * var pointInFixed = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
      * var fixedToIcrf = Cesium.Transforms.computeIcrfToFixedMatrix(now);
      * var pointInInertial = new Cesium.Cartesian3();

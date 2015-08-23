@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
+        'Specs/createViewer',
         'Widgets/Viewer/viewerPerformanceWatchdogMixin',
-        'Widgets/PerformanceWatchdog/PerformanceWatchdog',
-        'Widgets/Viewer/Viewer'
+        'Widgets/PerformanceWatchdog/PerformanceWatchdog'
     ], function(
+        createViewer,
         viewerPerformanceWatchdogMixin,
-        PerformanceWatchdog,
-        Viewer) {
+        PerformanceWatchdog) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
@@ -28,13 +28,13 @@ defineSuite([
     });
 
     it('mixin sets default values', function() {
-        viewer = new Viewer(container);
+        viewer = createViewer(container);
         viewer.extend(viewerPerformanceWatchdogMixin);
         expect(viewer.performanceWatchdog).toBeInstanceOf(PerformanceWatchdog);
     });
 
     it('mixin sets option values', function() {
-        viewer = new Viewer(container);
+        viewer = createViewer(container);
         viewer.extend(viewerPerformanceWatchdogMixin, {
             lowFrameRateMessage : 'Foo'
         });
