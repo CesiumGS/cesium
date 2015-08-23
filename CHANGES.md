@@ -14,6 +14,7 @@ Change Log
 * Added support for `GroundPrimitive` which works much like `Primitive` but it drapes the geometry over terrain. Valid geometries that can be draped on terrain are `CircleGeometry`, `CorridorGeometry`, `EllipseGeometry`, `PolygonGeometry`, and `RectangleGeometry`.
 * Added `BoundingSphere.isOccluded` and `OrientedBoundingBox.isOccluded` to determine if the volumes are occluded by an `Occluder`.
 * Added `distanceSquaredTo` and `computePlaneDistances` functions to `OrientedBoundingBox`.
+* Added `reverseZ` tag to `UrlTemplateImageryProvider`.
 
 ### 1.12 - 2015-08-03
 
