@@ -8,6 +8,7 @@ defineSuite([
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
         'Renderer/DrawCommand',
+        'Renderer/VertexArray',
         'Specs/createContext'
     ], 'Renderer/Draw', function(
         BoundingRectangle,
@@ -18,6 +19,7 @@ defineSuite([
         BufferUsage,
         ClearCommand,
         DrawCommand,
+        VertexArray,
         createContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,WebGLRenderingContext*/
@@ -48,11 +50,14 @@ defineSuite([
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -68,36 +73,40 @@ defineSuite([
 
     it('draws a white point with an index buffer', function() {
         // Use separate context to work around IE 11.0.9 bug
-        var cxt = createContext();
+        var context = createContext();
 
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = cxt.createShaderProgram(vs, fs);
+        sp = context.createShaderProgram(vs, fs);
 
         // Two indices instead of one is a workaround for NVIDIA:
         //   http://www.khronos.org/message_boards/viewtopic.php?f=44&t=3719
-        var indexBuffer = cxt.createIndexBuffer(new Uint16Array([0, 0]), BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+        var indexBuffer = context.createIndexBuffer(new Uint16Array([0, 0]), BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
 
-        va = cxt.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : cxt.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }], indexBuffer);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }],
+            indexBuffer : indexBuffer
+        });
 
-        ClearCommand.ALL.execute(cxt);
-        expect(cxt.readPixels()).toEqual([0, 0, 0, 0]);
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va
         });
-        command.execute(cxt);
-        expect(cxt.readPixels()).toEqual([255, 255, 255, 255]);
+        command.execute(context);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         sp = sp.destroy();
         va = va.destroy();
-        cxt.destroyForSpecs();
+        context.destroyForSpecs();
     });
 
     it('draws a red point with two vertex buffers', function() {
@@ -113,15 +122,18 @@ defineSuite([
         var fs = 'varying mediump float fs_intensity; void main() { gl_FragColor = vec4(fs_intensity, 0.0, 0.0, 1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }, {
-            index : sp.vertexAttributes.intensity.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 1
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }, {
+                index : sp.vertexAttributes.intensity.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 1
+            }]
+        });
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -151,19 +163,22 @@ defineSuite([
         var stride = 5 * Float32Array.BYTES_PER_ELEMENT;
         var vertexBuffer = context.createVertexBuffer(new Float32Array([0, 0, 0, 1, 1]), BufferUsage.STATIC_DRAW);
 
-        va = context.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : vertexBuffer,
-            componentsPerAttribute : 4,
-            offsetInBytes : 0,
-            strideInBytes : stride
-        }, {
-            index : sp.vertexAttributes.intensity.index,
-            vertexBuffer : vertexBuffer,
-            componentsPerAttribute : 1,
-            offsetInBytes : 4 * Float32Array.BYTES_PER_ELEMENT,
-            strideInBytes : stride
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : vertexBuffer,
+                componentsPerAttribute : 4,
+                offsetInBytes : 0,
+                strideInBytes : stride
+            }, {
+                index : sp.vertexAttributes.intensity.index,
+                vertexBuffer : vertexBuffer,
+                componentsPerAttribute : 1,
+                offsetInBytes : 4 * Float32Array.BYTES_PER_ELEMENT,
+                strideInBytes : stride
+            }]
+        });
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -182,11 +197,14 @@ defineSuite([
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         // 1 of 3:  Clear to black
         ClearCommand.ALL.execute(context);
@@ -228,11 +246,14 @@ defineSuite([
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         // 1 of 3:  Clear to black
         ClearCommand.ALL.execute(context);
@@ -278,11 +299,14 @@ defineSuite([
         var fs = 'void main() { gl_FragColor = vec4(0.5); }';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         // 1 of 3:  Clear to black
         ClearCommand.ALL.execute(context);
@@ -319,11 +343,14 @@ defineSuite([
         var fs = 'void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 0.5); }';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         // 1 of 3:  Clear to black
         ClearCommand.ALL.execute(context);
@@ -360,11 +387,14 @@ defineSuite([
         var fs = 'void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -403,11 +433,14 @@ defineSuite([
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         // 1 of 3:  Clear to black
         ClearCommand.ALL.execute(context);
@@ -449,11 +482,14 @@ defineSuite([
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         // 1 of 3:  Clear to black
         ClearCommand.ALL.execute(context);
@@ -497,11 +533,14 @@ defineSuite([
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.TRIANGLE_STRIP,
@@ -543,11 +582,14 @@ defineSuite([
         var fs = 'void main() { gl_FragColor = vec4(gl_DepthRange.near, gl_DepthRange.far, 0.0, 1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -572,11 +614,14 @@ defineSuite([
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -603,11 +648,14 @@ defineSuite([
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -638,11 +686,14 @@ defineSuite([
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -685,11 +736,14 @@ defineSuite([
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         var rs = context.createRenderState({
             stencilTest : {
@@ -757,11 +811,14 @@ defineSuite([
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         var rs = context.createRenderState({
             frontFace : WindingOrder.CLOCKWISE,
@@ -826,11 +883,14 @@ defineSuite([
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, -1, 0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, -1, 0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -918,7 +978,9 @@ defineSuite([
             context.draw({
                 primitiveType : PrimitiveType.POINTS,
                 shaderProgram : sp,
-                vertexArray : context.createVertexArray(),
+                vertexArray : new VertexArray({
+                    context : context
+                }),
                 offset : -1,
                 count : 1
             });

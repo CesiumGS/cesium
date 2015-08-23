@@ -4,12 +4,14 @@ defineSuite([
         'Core/PrimitiveType',
         'Renderer/BufferUsage',
         'Renderer/DrawCommand',
+        'Renderer/VertexArray',
         'Specs/createContext'
     ], 'Renderer/VertexArray', function(
         ComponentDatatype,
         PrimitiveType,
         BufferUsage,
         DrawCommand,
+        VertexArray,
         createContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
@@ -39,7 +41,10 @@ defineSuite([
         // tightly packed
         }];
 
-        var va = context.createVertexArray(attributes);
+        var va = new VertexArray({
+            context : context,
+            attributes : attributes
+        });
         va._bind();
         va._unBind();
         va = va.destroy();
@@ -52,7 +57,11 @@ defineSuite([
             vertexBuffer : positionBuffer,
             componentsPerAttribute : 3
         }];
-        var va = context.createVertexArray(attributes);
+
+        var va = new VertexArray({
+            context : context,
+            attributes : attributes
+        });
 
         expect(va.numberOfAttributes).toEqual(1);
         expect(va.getAttribute(0).index).toEqual(0);
@@ -86,7 +95,11 @@ defineSuite([
             componentDatatype : ComponentDatatype.FLOAT
         }];
 
-        var va = context.createVertexArray(attributes);
+        var va = new VertexArray({
+            context : context,
+            attributes : attributes
+        });
+
         expect(va.numberOfAttributes).toEqual(2);
         va._bind();
         va._unBind();
@@ -112,7 +125,11 @@ defineSuite([
             strideInBytes : 2 * attributeSize
         }];
 
-        var va = context.createVertexArray(attributes);
+        var va = new VertexArray({
+            context : context,
+            attributes : attributes
+        });
+
         expect(va.numberOfAttributes).toEqual(2);
         va._bind();
         va._unBind();
@@ -122,10 +139,13 @@ defineSuite([
     it('adds attributes', function() {
         var positionBuffer = context.createVertexBuffer(3, BufferUsage.STATIC_DRAW);
 
-        var va = context.createVertexArray([{
-            vertexBuffer : positionBuffer,
-            componentsPerAttribute : 3
-        }]);
+        var va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : positionBuffer,
+                componentsPerAttribute : 3
+            }]
+        });
 
         expect(va.numberOfAttributes).toEqual(1);
         expect(va.getAttribute(0).index).toEqual(0);
@@ -147,7 +167,12 @@ defineSuite([
             vertexBuffer : buffer,
             componentsPerAttribute : 3
         }];
-        var va = context.createVertexArray(attributes);
+
+        var va = new VertexArray({
+            context : context,
+            attributes : attributes
+        });
+
         expect(va.numberOfAttributes).toEqual(1);
         expect(va.getAttribute(0).enabled).toEqual(true);
 
@@ -184,12 +209,15 @@ defineSuite([
             attr : 1
         });
 
-        var va = context.createVertexArray([{
-            vertexBuffer : context.createVertexBuffer(Float32Array.BYTES_PER_ELEMENT, BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 1
-        }, {
-            value : [0.5]
-        }]);
+        var va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : context.createVertexBuffer(Float32Array.BYTES_PER_ELEMENT, BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 1
+            }, {
+                value : [0.5]
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -223,12 +251,15 @@ defineSuite([
             attr : 1
         });
 
-        var va = context.createVertexArray([{
-            vertexBuffer : context.createVertexBuffer(Float32Array.BYTES_PER_ELEMENT, BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 1
-        }, {
-            value : [0.25, 0.75]
-        }]);
+        var va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : context.createVertexBuffer(Float32Array.BYTES_PER_ELEMENT, BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 1
+            }, {
+                value : [0.25, 0.75]
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -262,12 +293,15 @@ defineSuite([
             attr : 1
         });
 
-        var va = context.createVertexArray([{
-            vertexBuffer : context.createVertexBuffer(Float32Array.BYTES_PER_ELEMENT, BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 1
-        }, {
-            value : [0.25, 0.5, 0.75]
-        }]);
+        var va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : context.createVertexBuffer(Float32Array.BYTES_PER_ELEMENT, BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 1
+            }, {
+                value : [0.25, 0.5, 0.75]
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -301,12 +335,15 @@ defineSuite([
             attr : 1
         });
 
-        var va = context.createVertexArray([{
-            vertexBuffer : context.createVertexBuffer(Float32Array.BYTES_PER_ELEMENT, BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 1
-        }, {
-            value : [0.2, 0.4, 0.6, 0.8]
-        }]);
+        var va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : context.createVertexBuffer(Float32Array.BYTES_PER_ELEMENT, BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 1
+            }, {
+                value : [0.2, 0.4, 0.6, 0.8]
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -323,7 +360,14 @@ defineSuite([
     });
 
     it('destroys', function() {
-        var va = context.createVertexArray({});
+        var va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
+
         expect(va.isDestroyed()).toEqual(false);
         va.destroy();
         expect(va.isDestroyed()).toEqual(true);
@@ -335,7 +379,10 @@ defineSuite([
         }];
 
         expect(function() {
-            return context.createVertexArray(attributes);
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
         }).toThrowDeveloperError();
     });
 
@@ -349,7 +396,10 @@ defineSuite([
         }];
 
         expect(function() {
-            return context.createVertexArray(attributes);
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
         }).toThrowDeveloperError();
     });
 
@@ -367,7 +417,10 @@ defineSuite([
         }];
 
         expect(function() {
-            return context.createVertexArray(attributes);
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
         }).toThrowDeveloperError();
     });
 
@@ -379,7 +432,10 @@ defineSuite([
         }];
 
         expect(function() {
-            return context.createVertexArray(attributes);
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
         }).toThrowDeveloperError();
     });
 
@@ -389,7 +445,10 @@ defineSuite([
         }];
 
         expect(function() {
-            return context.createVertexArray(attributes);
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
         }).toThrowDeveloperError();
     });
 
@@ -399,7 +458,10 @@ defineSuite([
         }];
 
         expect(function() {
-            return context.createVertexArray(attributes);
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
         }).toThrowDeveloperError();
     });
 
@@ -409,7 +471,10 @@ defineSuite([
         }];
 
         expect(function() {
-            return context.createVertexArray(attributes);
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
         }).toThrowDeveloperError();
     });
 
@@ -419,7 +484,10 @@ defineSuite([
         }];
 
         expect(function() {
-            return context.createVertexArray(attributes);
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
         }).toThrowDeveloperError();
     });
 
@@ -433,7 +501,10 @@ defineSuite([
         }];
 
         expect(function() {
-            return context.createVertexArray(attributes);
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
         }).toThrowDeveloperError();
     });
 
@@ -447,7 +518,10 @@ defineSuite([
         }];
 
         expect(function() {
-            return context.createVertexArray(attributes);
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
         }).toThrowDeveloperError();
     });
 
@@ -456,7 +530,11 @@ defineSuite([
             value : [0.0, 0.0, 0.0],
             componentsPerAttribute : 3
         }];
-        var va = context.createVertexArray(attributes);
+
+        var va = new VertexArray({
+            context : context,
+            attributes : attributes
+        });
 
         expect(function() {
             return va.getAttribute();
@@ -468,11 +546,24 @@ defineSuite([
             value : [0.0, 0.0, 0.0],
             componentsPerAttribute : 3
         }];
-        var va = context.createVertexArray(attributes);
+
+        var va = new VertexArray({
+            context : context,
+            attributes : attributes
+        });
+
         va.destroy();
 
         expect(function() {
             va.destroy();
         }).toThrowDeveloperError();
     });
+
+    it('throws when there is no context', function() {
+        expect(function() {
+            return new VertexArray();
+        }).toThrowDeveloperError();
+    });
+
+
 }, 'WebGL');

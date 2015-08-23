@@ -32,6 +32,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/ShaderSource',
+        '../Renderer/VertexArray',
         '../Shaders/GlobeFS',
         '../Shaders/GlobeFSPole',
         '../Shaders/GlobeVS',
@@ -77,6 +78,7 @@ define([
         BufferUsage,
         DrawCommand,
         ShaderSource,
+        VertexArray,
         GlobeFS,
         GlobeFSPole,
         GlobeVS,
@@ -581,7 +583,8 @@ define([
                             })
                         }
                     });
-                    globe._northPoleCommand.vertexArray = context.createVertexArrayFromGeometry({
+                    globe._northPoleCommand.vertexArray = VertexArray.fromGeometry({
+                        context : context,
                         geometry : geometry,
                         attributeLocations : {
                             position : 0
@@ -625,7 +628,8 @@ define([
                              })
                          }
                      });
-                     globe._southPoleCommand.vertexArray = context.createVertexArrayFromGeometry({
+                     globe._southPoleCommand.vertexArray = VertexArray.fromGeometry({
+                         context : context,
                          geometry : geometry,
                          attributeLocations : {
                              position : 0

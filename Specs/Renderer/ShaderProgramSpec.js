@@ -13,6 +13,7 @@ defineSuite([
         'Renderer/ClearCommand',
         'Renderer/DrawCommand',
         'Renderer/ShaderSource',
+        'Renderer/VertexArray',
         'Specs/createContext'
     ], function(
         ShaderProgram,
@@ -28,6 +29,7 @@ defineSuite([
         ClearCommand,
         DrawCommand,
         ShaderSource,
+        VertexArray,
         createContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,WebGLRenderingContext*/
@@ -74,11 +76,14 @@ defineSuite([
     });
 
     function renderFragment(context, shaderProgram) {
-        va = context.createVertexArray([{
-            index : shaderProgram.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);

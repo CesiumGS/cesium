@@ -12,6 +12,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/loadCubeMap',
+        '../Renderer/VertexArray',
         '../Shaders/SkyBoxFS',
         '../Shaders/SkyBoxVS',
         './BlendingState',
@@ -29,6 +30,7 @@ define([
         BufferUsage,
         DrawCommand,
         loadCubeMap,
+        VertexArray,
         SkyBoxFS,
         SkyBoxVS,
         BlendingState,
@@ -172,10 +174,11 @@ define([
             }));
             var attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
 
-            command.vertexArray = context.createVertexArrayFromGeometry({
-                geometry: geometry,
-                attributeLocations: attributeLocations,
-                bufferUsage: BufferUsage.STATIC_DRAW
+            command.vertexArray = VertexArray.fromGeometry({
+                context : context,
+                geometry : geometry,
+                attributeLocations : attributeLocations,
+                bufferUsage : BufferUsage.STATIC_DRAW
             });
             command.shaderProgram = context.createShaderProgram(SkyBoxVS, SkyBoxFS, attributeLocations);
             command.renderState = context.createRenderState({

@@ -32,6 +32,7 @@ define([
         '../Renderer/ShaderSource',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
+        '../Renderer/VertexArray',
         '../ThirdParty/gltfDefaults',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
@@ -76,6 +77,7 @@ define([
         ShaderSource,
         TextureMinificationFilter,
         TextureWrap,
+        VertexArray,
         gltfDefaults,
         Uri,
         when,
@@ -1768,7 +1770,11 @@ define([
 
                     var accessor = accessors[primitive.indices];
                     var indexBuffer = rendererBuffers[accessor.bufferView];
-                    rendererVertexArrays[meshName + '.primitive.' + i] = context.createVertexArray(attrs, indexBuffer);
+                    rendererVertexArrays[meshName + '.primitive.' + i] = new VertexArray({
+                        context : context,
+                        attributes : attrs,
+                        indexBuffer : indexBuffer
+                    });
                 }
             }
         }

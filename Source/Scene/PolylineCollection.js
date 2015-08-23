@@ -20,6 +20,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/ShaderSource',
+        '../Renderer/VertexArray',
         '../Shaders/PolylineCommon',
         '../Shaders/PolylineFS',
         '../Shaders/PolylineVS',
@@ -49,6 +50,7 @@ define([
         BufferUsage,
         DrawCommand,
         ShaderSource,
+        VertexArray,
         PolylineCommon,
         PolylineFS,
         PolylineVS,
@@ -889,7 +891,11 @@ define([
                     attributes[10][bufferProperty2D] = buffer2D;
                     attributes[11][bufferProperty2D] = buffer2D;
 
-                    var va = context.createVertexArray(attributes, indexBuffer);
+                    var va = new VertexArray({
+                        context : context,
+                        attributes : attributes,
+                        indexBuffer : indexBuffer
+                    });
                     collection._vertexArrays.push({
                         va : va,
                         buckets : vertexArrayBuckets[k]

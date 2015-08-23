@@ -27,6 +27,7 @@ define([
         '../Core/WebMercatorProjection',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/VertexArray',
         '../Scene/BlendingState',
         '../Scene/DepthFunction',
         '../Scene/Pass',
@@ -66,6 +67,7 @@ define([
         WebMercatorProjection,
         BufferUsage,
         DrawCommand,
+        VertexArray,
         BlendingState,
         DepthFunction,
         Pass,
@@ -840,7 +842,11 @@ define([
 
         var wireframeIndices = geometry.indices;
         var wireframeIndexBuffer = context.createIndexBuffer(wireframeIndices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
-        return context.createVertexArray(vertexArray._attributes, wireframeIndexBuffer);
+        return new VertexArray({
+            context : context,
+            attributes : vertexArray._attributes,
+            indexBuffer : wireframeIndexBuffer
+        });
     }
 
     var getDebugOrientedBoundingBox;
