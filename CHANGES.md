@@ -5,6 +5,7 @@ Change Log
 
 * Breaking changes
   * Remove deprecated `AxisAlignedBoundingBox.intersect` and `BoundingSphere.intersect`. Use `.intersectPlane` instead.
+  * Remove deprecated `getFeatureInfoAsGeoJson` and `getFeatureInfoAsXml` constructor parameters from `WebMapServiceImageryProvider`.
 * Deprecated
   *
 * Fix issue where extruded `PolygonGeometry` was always extruding to the ellipsoid surface instead of specified height.
