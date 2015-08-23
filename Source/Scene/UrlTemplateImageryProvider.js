@@ -62,7 +62,7 @@ define([
      *     <li><code>{s}</code>: One of the available subdomains, used to overcome browser limits on the number of simultaneous requests per host.</li>
      *     <li><code>{reverseX}</code>: The tile X coordinate in the tiling scheme, where 0 is the Easternmost tile.</li>
      *     <li><code>{reverseY}</code>: The tile Y coordinate in the tiling scheme, where 0 is the Southernmost tile.</li>
-     *     <li><code>{reverseZ}</code>: The level of the tile in the tiling scheme.  Level zero is the maximum level of the quadtree pyramid. In order to use reverseZ, maximumLevel must be defined</li>
+     *     <li><code>{reverseZ}</code>: The level of the tile in the tiling scheme, where level zero is the maximum level of the quadtree pyramid.  In order to use reverseZ, maximumLevel must be defined.</li>
      *     <li><code>{westDegrees}</code>: The Western edge of the tile in geodetic degrees.</li>
      *     <li><code>{southDegrees}</code>: The Southern edge of the tile in geodetic degrees.</li>
      *     <li><code>{eastDegrees}</code>: The Eastern edge of the tile in geodetic degrees.</li>
@@ -202,7 +202,7 @@ define([
          *  <li> <code>{s}</code>: One of the available subdomains, used to overcome browser limits on the number of simultaneous requests per host.</li>
          *  <li> <code>{reverseX}</code>: The tile X coordinate in the tiling scheme, where 0 is the Easternmost tile.</li>
          *  <li> <code>{reverseY}</code>: The tile Y coordinate in the tiling scheme, where 0 is the Southernmost tile.</li>
-         *  <li> <code>{reverseZ}</code>: The level of the tile in the tiling scheme.  Level zero is the maximum level of the quadtree pyramid. In order to use reverseZ, maximumLevel must be defined</li>
+         *  <li> <code>{reverseZ}</code>: The level of the tile in the tiling scheme, where level zero is the maximum level of the quadtree pyramid.  In order to use reverseZ, maximumLevel must be defined.</li>
          *  <li> <code>{westDegrees}</code>: The Western edge of the tile in geodetic degrees.</li>
          *  <li> <code>{southDegrees}</code>: The Southern edge of the tile in geodetic degrees.</li>
          *  <li> <code>{eastDegrees}</code>: The Eastern edge of the tile in geodetic degrees.</li>
@@ -601,8 +601,8 @@ define([
     }
 
     function reverseZTag(imageryProvider, x, y, level) {
-        var maximumLevel=imageryProvider.maximumLevel;
-        return (defined(maximumLevel) && level<maximumLevel) ? maximumLevel-level-1:level;
+        var maximumLevel = imageryProvider.maximumLevel;
+        return defined(maximumLevel) && level < maximumLevel ? maximumLevel - level - 1 : level;
     }
 
     function zTag(imageryProvider, x, y, level) {
