@@ -5,6 +5,7 @@ defineSuite([
         'Core/PrimitiveType',
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
+        'Renderer/CubeMap',
         'Renderer/DrawCommand',
         'Renderer/Framebuffer',
         'Renderer/PixelDatatype',
@@ -18,6 +19,7 @@ defineSuite([
         PrimitiveType,
         BufferUsage,
         ClearCommand,
+        CubeMap,
         DrawCommand,
         Framebuffer,
         PixelDatatype,
@@ -200,7 +202,8 @@ defineSuite([
     });
 
     it('clears a cube map face color attachment', function() {
-        var cubeMap = context.createCubeMap({
+        var cubeMap = new CubeMap({
+            context : context,
             width : 1,
             height : 1
         });

@@ -437,7 +437,8 @@ define([
             uniformId = loadedCubeMap.id;
             var images = loadedCubeMap.images;
 
-            var cubeMap = context.createCubeMap({
+            var cubeMap = new CubeMap({
+                    context : context,
                     source : {
                         positiveX : images[0],
                         negativeX : images[1],
