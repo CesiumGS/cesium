@@ -36,135 +36,203 @@ scene.terrainProvider = new Cesium.CesiumTerrainProvider({
     requestVertexNormals : true
 });
 
-// Circle geometry
-scene.primitives.add(new Cesium.GroundPrimitive({
-    geometryInstance: new Cesium.GeometryInstance({
-        geometry : new Cesium.CircleGeometry({
-            center : Cesium.Cartesian3.fromDegrees(-95.0, 45.0),
-            radius : 250000.0
-        }),
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
-        },
-        id : 'circle'
-    })
-}));
-
-// Ellipse Geometry
-scene.primitives.add(new Cesium.GroundPrimitive({
-    geometryInstance: new Cesium.GeometryInstance({
-        geometry : new Cesium.EllipseGeometry({
-            center : Cesium.Cartesian3.fromDegrees(-105.0, 40.0),
-            semiMinorAxis : 300000.0,
-            semiMajorAxis : 400000.0
-        }),
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 1.0, 1.0, 0.5))
-        },
-        id : 'ellipse'
-    })
-}));
-
-// Corridor Geometry
-scene.primitives.add(new Cesium.GroundPrimitive({
-    geometryInstance : new Cesium.GeometryInstance({
-        geometry: new Cesium.CorridorGeometry({
-            positions : Cesium.Cartesian3.fromDegreesArray([
-                    -112.0, 40.0,
-                    -117.0, 40.0,
-                    -117.0, 35.0
-                ]),
-                width : 200000.0
-            }),
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 0.0, 1.0, 0.5))
-        },
-        id : 'corridor'
-    })
-}));
-
-// Rectangle geometry
-scene.primitives.add(new Cesium.GroundPrimitive({
-    geometryInstance : new Cesium.GeometryInstance({
-        geometry : new Cesium.RectangleGeometry({
-            rectangle : Cesium.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0),
-            rotation : Cesium.Math.toRadians(45)
-        }),
-        attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 1.0, 0.0, 0.5))
-        },
-        id : 'rectangle'
-    })
-}));
-
-// Polygon on Mount Saint Helens
-var positions = [new Cesium.Cartesian3(-2358138.847340281, -3744072.459541374, 4581158.5714175375),
-                 new Cesium.Cartesian3(-2357231.4925370603, -3745103.7886602185, 4580702.9757762635),
-                 new Cesium.Cartesian3(-2355912.902205431, -3744249.029778454, 4582402.154378103),
-                 new Cesium.Cartesian3(-2357208.0209552636, -3743553.4420488174, 4581961.863286629)];
-var polygonHierarchy = { positions : positions };
-
-var primitive = scene.primitives.add(new Cesium.GroundPrimitive({
-    geometryInstance : new Cesium.GeometryInstance({
-        geometry : new Cesium.PolygonGeometry({
-            polygonHierarchy : polygonHierarchy
-        }),
-        attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED.withAlpha(0.5))
-        },
-        id : 'polygon 1'
-    })
-}));
-
-// Same polygon slightly offset and overlapping.
-positions = scene.globe.ellipsoid.cartesianArrayToCartographicArray(positions);
-var delta = Cesium.Math.toRadians(0.01);
-for (var i = 0; i < positions.length; ++i) {
-    var position = positions[i];
-    position.latitude += delta;
-    position.longitude += delta;
+function offsetPositions(positions, degreeOffset) {
+    positions = scene.globe.ellipsoid.cartesianArrayToCartographicArray(positions);
+    var delta = Cesium.Math.toRadians(degreeOffset);
+    for (var i = 0; i < positions.length; ++i) {
+        var position = positions[i];
+        position.latitude += delta;
+        position.longitude += delta;
+    }
+    return scene.globe.ellipsoid.cartographicArrayToCartesianArray(positions);
 }
-positions = scene.globe.ellipsoid.cartographicArrayToCartesianArray(positions);
-polygonHierarchy = { positions : positions };
 
-scene.primitives.add(new Cesium.GroundPrimitive({
-    geometryInstance : new Cesium.GeometryInstance({
-        geometry : new Cesium.PolygonGeometry({
-            polygonHierarchy : polygonHierarchy
-        }),
-        attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE.withAlpha(0.5))
-        },
-        id : 'polygon 2'
-    })
-}));
+function createOverlappingPolygons(withAlpha) {
+    var positions = [new Cesium.Cartesian3(-2358138.847340281, -3744072.459541374, 4581158.5714175375),
+                     new Cesium.Cartesian3(-2357231.4925370603, -3745103.7886602185, 4580702.9757762635),
+                     new Cesium.Cartesian3(-2355912.902205431, -3744249.029778454, 4582402.154378103),
+                     new Cesium.Cartesian3(-2357208.0209552636, -3743553.4420488174, 4581961.863286629)];
+    var polygonHierarchy = { positions : positions };
 
-Sandcastle.addToolbarButton('View Mount Saint Helens', function() {
+    var color = Cesium.Color.RED;
+    if (withAlpha) {
+        color = color.withAlpha(0.5);
+    }
+    
+    scene.groundPrimitives.add(new Cesium.GroundPrimitive({
+        geometryInstance : new Cesium.GeometryInstance({
+            geometry : new Cesium.PolygonGeometry({
+                polygonHierarchy : polygonHierarchy
+            }),
+            attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(color)
+            },
+            id : 'polygon 1'
+        })
+    }));
+
+    // Same polygon slightly offset and overlapping.
+    var positionsOffset = offsetPositions(positions, 0.01);
+    polygonHierarchy = { positions : positionsOffset };
+
+    color = Cesium.Color.GREEN;
+    if (withAlpha) {
+        color = color.withAlpha(0.5);
+    }
+    
+    scene.groundPrimitives.add(new Cesium.GroundPrimitive({
+        geometryInstance : new Cesium.GeometryInstance({
+            geometry : new Cesium.PolygonGeometry({
+                polygonHierarchy : polygonHierarchy
+            }),
+            attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(color)
+            },
+            id : 'polygon 2'
+        })
+    }));
+    
+    // Same polygon slightly offset and overlapping.
+    positionsOffset = offsetPositions(positions, -0.01);
+    polygonHierarchy = { positions : positionsOffset };
+
+    color = Cesium.Color.BLUE;
+    if (withAlpha) {
+        color = color.withAlpha(0.5);
+    }
+    
+    scene.groundPrimitives.add(new Cesium.GroundPrimitive({
+        geometryInstance : new Cesium.GeometryInstance({
+            geometry : new Cesium.PolygonGeometry({
+                polygonHierarchy : polygonHierarchy
+            }),
+            attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(color)
+            },
+            id : 'polygon 3'
+        })
+    }));
+}
+
+function viewOverlappingPolygons() {
     viewer.camera.lookAt(new Cesium.Cartesian3(-2354331.3069306486, -3742016.2427205616, 4581875.591571755), new Cesium.HeadingPitchRange(Cesium.Math.toRadians(20.0), Cesium.Math.toRadians(-35.0), 10000.0));
     viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+}
+
+var handler;
+
+Sandcastle.addDefaultToolbarButton('Picking Example', function() {
+    createOverlappingPolygons(true);
+    viewOverlappingPolygons();
+    
+    var currentObject;
+    var lastColor;
+
+    handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+    handler.setInputAction(function(movement) {
+        var pickedObject = scene.pick(movement.endPosition);
+        if (Cesium.defined(pickedObject) && pickedObject !== currentObject) {
+            if (Cesium.defined(currentObject)) {
+                currentObject.primitive.getGeometryInstanceAttributes(currentObject.id).color = lastColor;
+            }
+            
+            currentObject = pickedObject;
+            
+            var attributes = currentObject.primitive.getGeometryInstanceAttributes(currentObject.id);
+            lastColor = attributes.color;
+            attributes.color = [255, 255, 0, 128];
+        } else if (!Cesium.defined(pickedObject) && Cesium.defined(currentObject)) {
+            currentObject.primitive.getGeometryInstanceAttributes(currentObject.id).color = lastColor;
+            currentObject = undefined;
+        }
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 });
 
-var currentObject = undefined;
-var lastColor = undefined;
+Sandcastle.addToolbarButton('Z-Order', function() {
+    createOverlappingPolygons(false);
+    viewOverlappingPolygons();
+    
 
-var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-handler.setInputAction(function(movement) {
-    var pickedObject = scene.pick(movement.endPosition);
-    if (Cesium.defined(pickedObject) && pickedObject !== currentObject) {
-        if (Cesium.defined(currentObject)) {
-            currentObject.primitive.getGeometryInstanceAttributes(currentObject.id).color = lastColor;
+    handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+    handler.setInputAction(function(movement) {
+        var pickedObject = scene.pick(movement.endPosition);
+        if (Cesium.defined(pickedObject)) {
+            scene.groundPrimitives.raiseToTop(pickedObject.primitive);
         }
-        
-        currentObject = pickedObject;
-        
-        var attributes = currentObject.primitive.getGeometryInstanceAttributes(currentObject.id);
-        lastColor = attributes.color;
-        attributes.color = [255, 255, 0, 128];
-    } else if (!Cesium.defined(pickedObject) && Cesium.defined(currentObject)) {
-        currentObject.primitive.getGeometryInstanceAttributes(currentObject.id).color = lastColor;
-        currentObject = undefined;
-    }
-}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+});
+
+Sandcastle.addToolbarButton('Create large polygons', function() {
+    // Circle geometry
+    scene.groundPrimitives.add(new Cesium.GroundPrimitive({
+        geometryInstance: new Cesium.GeometryInstance({
+            geometry : new Cesium.CircleGeometry({
+                center : Cesium.Cartesian3.fromDegrees(-95.0, 45.0),
+                radius : 250000.0
+            }),
+            attributes : {
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
+            },
+            id : 'circle'
+        })
+    }));
+
+    // Ellipse Geometry
+    scene.groundPrimitives.add(new Cesium.GroundPrimitive({
+        geometryInstance: new Cesium.GeometryInstance({
+            geometry : new Cesium.EllipseGeometry({
+                center : Cesium.Cartesian3.fromDegrees(-105.0, 40.0),
+                semiMinorAxis : 300000.0,
+                semiMajorAxis : 400000.0
+            }),
+            attributes : {
+                 color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 1.0, 1.0, 0.5))
+            },
+            id : 'ellipse'
+        })
+    }));
+
+    // Corridor Geometry
+    scene.groundPrimitives.add(new Cesium.GroundPrimitive({
+        geometryInstance : new Cesium.GeometryInstance({
+            geometry: new Cesium.CorridorGeometry({
+                positions : Cesium.Cartesian3.fromDegreesArray([
+                        -112.0, 40.0,
+                        -117.0, 40.0,
+                         -117.0, 35.0
+                    ]),
+                    width : 200000.0
+                }),
+            attributes : {
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 0.0, 1.0, 0.5))
+            },
+            id : 'corridor'
+        })
+    }));
+
+    // Rectangle geometry
+    scene.groundPrimitives.add(new Cesium.GroundPrimitive({
+        geometryInstance : new Cesium.GeometryInstance({
+            geometry : new Cesium.RectangleGeometry({
+                rectangle : Cesium.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0),
+                rotation : Cesium.Math.toRadians(45)
+            }),
+            attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 1.0, 0.0, 0.5))
+            },
+            id : 'rectangle'
+        })
+    }));
+});
+
+Sandcastle.reset = function() {
+    scene.groundPrimitives.removeAll();
+    handler = handler && handler.destroy();
+    
+    //Set the camera to a US centered tilted view and switch back to moving in world coordinates.
+    viewer.camera.lookAt(Cesium.Cartesian3.fromDegrees(-98.0, 40.0), new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0));
+    viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+};
 
 //Sandcastle_End
     Sandcastle.finishedLoading();
