@@ -837,18 +837,15 @@ define([
 
             reproject.vertexArray = new VertexArray({
                 context : context,
-                attributes : [
-                    {
-                        index : reprojectAttributeIndices.position,
-                        vertexBuffer : context.createVertexBuffer(positions, BufferUsage.STATIC_DRAW),
-                        componentsPerAttribute : 2
-                    },
-                    {
-                        index : reprojectAttributeIndices.webMercatorT,
-                        vertexBuffer : context.createVertexBuffer(64 * 2 * 4, BufferUsage.STREAM_DRAW),
-                        componentsPerAttribute : 1
-                    }
-                ],
+                attributes : [{
+                    index : reprojectAttributeIndices.position,
+                    vertexBuffer : context.createVertexBuffer(positions, BufferUsage.STATIC_DRAW),
+                    componentsPerAttribute : 2
+                },{
+                    index : reprojectAttributeIndices.webMercatorT,
+                    vertexBuffer : context.createVertexBuffer(64 * 2 * 4, BufferUsage.STREAM_DRAW),
+                    componentsPerAttribute : 1
+                }],
                 indexBuffer : indexBuffer
             });
 

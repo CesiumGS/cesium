@@ -142,7 +142,6 @@ define([
      * @exception {DeveloperError} Attribute must have a <code>strideInBytes</code> less than or equal to 255 or not specify it.
      * @exception {DeveloperError} Index n is used by more than one attribute.
      *
-     * @see VertexArray.fromGeometry
      * @see Context#createVertexBuffer
      * @see Context#createIndexBuffer
      * @see Context#draw
@@ -434,7 +433,6 @@ define([
      * @exception {DeveloperError} The geometry must have zero or one index lists.
      * @exception {DeveloperError} Index n is used by more than one attribute.
      *
-     * @see VertexArray
      * @see Context#createVertexBuffer
      * @see Context#createIndexBuffer
      * @see GeometryPipeline.createAttributeLocations
