@@ -28,28 +28,7 @@ define([
         TextureMinificationFilter,
         TextureWrap) {
     "use strict";
-
-    /**
-     * options.source can be {@link ImageData}, {@link Image}, {@link Canvas}, or {@link Video}.
-     * options.context is required
-     *
-     * @exception {RuntimeError} When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.  Check context.depthTexture.
-     * @exception {RuntimeError} When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.  Check context.floatingPointTexture.
-     * @exception {DeveloperError} options requires a source field to create an initialized texture or width and height fields to create a blank texture.
-     * @exception {DeveloperError} Width must be greater than zero.
-     * @exception {DeveloperError} Width must be less than or equal to the maximum texture size.
-     * @exception {DeveloperError} Height must be greater than zero.
-     * @exception {DeveloperError} Height must be less than or equal to the maximum texture size.
-     * @exception {DeveloperError} Invalid options.pixelFormat.
-     * @exception {DeveloperError} Invalid options.pixelDatatype.
-     * @exception {DeveloperError} When options.pixelFormat is DEPTH_COMPONENT, options.pixelDatatype must be UNSIGNED_SHORT or UNSIGNED_INT.
-     * @exception {DeveloperError} When options.pixelFormat is DEPTH_STENCIL, options.pixelDatatype must be UNSIGNED_INT_24_8_WEBGL.
-     * @exception {DeveloperError} When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, source cannot be provided.
-     *
-     * @see Context#createSampler
-     *
-     * @private
-     */
+    
     var Texture = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 

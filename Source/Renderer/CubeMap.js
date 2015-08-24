@@ -29,28 +29,6 @@ define([
         TextureWrap) {
     "use strict";
 
-    /**
-     * options.source can be {@link ImageData}, {@link Image}, {@link Canvas}, or {@link Video}.
-     * options.context is required
-     *
-     * @returns {CubeMap} The newly created cube map.
-     *
-     * @exception {RuntimeError} When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.  Check context.floatingPointTexture.
-     * @exception {DeveloperError} options.source requires positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ faces.
-     * @exception {DeveloperError} Each face in options.sources must have the same width and height.
-     * @exception {DeveloperError} options requires a source field to create an initialized cube map or width and height fields to create a blank cube map.
-     * @exception {DeveloperError} Width must equal height.
-     * @exception {DeveloperError} Width and height must be greater than zero.
-     * @exception {DeveloperError} Width and height must be less than or equal to the maximum cube map size.
-     * @exception {DeveloperError} Invalid options.pixelFormat.
-     * @exception {DeveloperError} options.pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.
-     * @exception {DeveloperError} Invalid options.pixelDatatype.
-     *
-     * @see Context#createSampler
-     *
-     * @private
-     */
-
     var CubeMap = function(options) {
 
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -122,11 +100,11 @@ define([
         if (!PixelDatatype.validate(pixelDatatype)) {
             throw new DeveloperError('Invalid options.pixelDatatype.');
         }
-        //>>includeEnd('debug');
 
         if ((pixelDatatype === PixelDatatype.FLOAT) && !context.floatingPointTexture) {
             throw new DeveloperError('When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.');
         }
+        //>>includeEnd('debug');
 
         // Use premultiplied alpha for opaque textures should perform better on Chrome:
         // http://media.tojicode.com/webglCamp4/#20
