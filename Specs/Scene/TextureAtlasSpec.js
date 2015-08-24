@@ -10,6 +10,7 @@ defineSuite([
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
         'Renderer/DrawCommand',
+        'Renderer/VertexArray',
         'Specs/createScene',
         'ThirdParty/when'
     ], function(
@@ -23,6 +24,7 @@ defineSuite([
         BufferUsage,
         ClearCommand,
         DrawCommand,
+        VertexArray,
         createScene,
         when) {
     "use strict";
@@ -90,11 +92,14 @@ void main() {\n\
         });
         sp.allUniforms.u_texture.value = texture;
 
-        var va = context.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        var va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 255]);

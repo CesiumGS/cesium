@@ -5,6 +5,7 @@ Change Log
 
 * Breaking changes
   * Remove deprecated `AxisAlignedBoundingBox.intersect` and `BoundingSphere.intersect`. Use `.intersectPlane` instead.
+  * Remove deprecated `getFeatureInfoAsGeoJson` and `getFeatureInfoAsXml` constructor parameters from `WebMapServiceImageryProvider`.
 * Deprecated
   *
 * Fix issue where extruded `PolygonGeometry` was always extruding to the ellipsoid surface instead of specified height.
@@ -23,6 +24,7 @@ Change Log
 
 * Added `BoundingSphere.isOccluded` and `OrientedBoundingBox.isOccluded` to determine if the volumes are occluded by an `Occluder`.
 * Added `distanceSquaredTo` and `computePlaneDistances` functions to `OrientedBoundingBox`.
+* Added `reverseZ` tag to `UrlTemplateImageryProvider`.
 
 ### 1.12 - 2015-08-03
 

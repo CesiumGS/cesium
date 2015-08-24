@@ -12,6 +12,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/ShaderSource',
+        '../Renderer/VertexArray',
         '../Shaders/SkyAtmosphereFS',
         '../Shaders/SkyAtmosphereVS',
         './BlendingState',
@@ -30,6 +31,7 @@ define([
         BufferUsage,
         DrawCommand,
         ShaderSource,
+        VertexArray,
         SkyAtmosphereFS,
         SkyAtmosphereVS,
         BlendingState,
@@ -151,7 +153,8 @@ define([
                 stackPartitions : 256,
                 vertexFormat : VertexFormat.POSITION_ONLY
             }));
-            command.vertexArray = context.createVertexArrayFromGeometry({
+            command.vertexArray = VertexArray.fromGeometry({
+                context : context,
                 geometry : geometry,
                 attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
                 bufferUsage : BufferUsage.STATIC_DRAW

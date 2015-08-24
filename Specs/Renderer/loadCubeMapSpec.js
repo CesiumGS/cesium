@@ -6,6 +6,7 @@ defineSuite([
         'Core/PrimitiveType',
         'Renderer/BufferUsage',
         'Renderer/DrawCommand',
+        'Renderer/VertexArray',
         'Specs/createContext',
         'ThirdParty/when'
     ], function(
@@ -15,6 +16,7 @@ defineSuite([
         PrimitiveType,
         BufferUsage,
         DrawCommand,
+        VertexArray,
         createContext,
         when) {
     "use strict";
@@ -52,10 +54,13 @@ defineSuite([
             });
             sp.allUniforms.u_texture.value = cm;
 
-            var va = context.createVertexArray([{
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-                componentsPerAttribute : 4
-            }]);
+            var va = new VertexArray({
+                context : context,
+                attributes : [{
+                    vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                    componentsPerAttribute : 4
+                }]
+            });
 
             var command = new DrawCommand({
                 primitiveType : PrimitiveType.POINTS,
