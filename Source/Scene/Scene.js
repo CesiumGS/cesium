@@ -1619,8 +1619,8 @@ define([
             scene._globe.update(context, frameState, commandList);
         }
 
-        scene._primitives.update(context, frameState, commandList);
         scene._groundPrimitives.update(context, frameState, commandList);
+        scene._primitives.update(context, frameState, commandList);
     }
 
     function callAfterRenderFunctions(frameState) {
