@@ -27,6 +27,7 @@ define([
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
+        '../Renderer/VertexArray',
         '../Shaders/ReprojectWebMercatorFS',
         '../Shaders/ReprojectWebMercatorVS',
         '../ThirdParty/when',
@@ -61,6 +62,7 @@ define([
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
+        VertexArray,
         ReprojectWebMercatorFS,
         ReprojectWebMercatorVS,
         when,
@@ -833,18 +835,19 @@ define([
             var indices = TerrainProvider.getRegularGridIndices(2, 64);
             var indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
 
-            reproject.vertexArray = context.createVertexArray([
-                {
+            reproject.vertexArray = new VertexArray({
+                context : context,
+                attributes : [{
                     index : reprojectAttributeIndices.position,
                     vertexBuffer : context.createVertexBuffer(positions, BufferUsage.STATIC_DRAW),
                     componentsPerAttribute : 2
-                },
-                {
+                },{
                     index : reprojectAttributeIndices.webMercatorT,
                     vertexBuffer : context.createVertexBuffer(64 * 2 * 4, BufferUsage.STREAM_DRAW),
                     componentsPerAttribute : 1
-                }
-            ], indexBuffer);
+                }],
+                indexBuffer : indexBuffer
+            });
 
             var vs = new ShaderSource({
                 sources : [ReprojectWebMercatorVS]

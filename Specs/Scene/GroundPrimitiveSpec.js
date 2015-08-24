@@ -164,7 +164,7 @@ defineSuite([
     });
 
     afterEach(function() {
-        scene.primitives.removeAll();
+        scene.groundPrimitives.removeAll();
         depthPrimitive = depthPrimitive && !depthPrimitive.isDestroyed() && depthPrimitive.destroy();
     });
 
@@ -220,7 +220,7 @@ defineSuite([
         });
 
         expect(primitive.geometryInstance).toBeDefined();
-        scene.primitives.add(primitive);
+        scene.groundPrimitives.add(primitive);
         scene.renderForSpecs();
         expect(primitive.geometryInstance).not.toBeDefined();
     });
@@ -237,7 +237,7 @@ defineSuite([
         });
 
         expect(primitive.geometryInstance).toBeDefined();
-        scene.primitives.add(primitive);
+        scene.groundPrimitives.add(primitive);
         scene.renderForSpecs();
         expect(primitive.geometryInstance).toBeDefined();
     });
@@ -253,7 +253,7 @@ defineSuite([
             asynchronous : false
         });
 
-        scene.primitives.add(primitive);
+        scene.groundPrimitives.add(primitive);
         scene.renderForSpecs();
 
         return primitive.readyPromise.then(function(param) {
@@ -333,12 +333,12 @@ defineSuite([
     function verifyGroundPrimitiveRender(primitive, color) {
         scene.camera.viewRectangle(rectangle);
 
-        scene.primitives.add(depthPrimitive);
+        scene.groundPrimitives.add(depthPrimitive);
         var pixels = scene.renderForSpecs();
         expect(pixels).not.toEqual([0, 0, 0, 0]);
         expect(pixels[0]).toEqual(0);
 
-        scene.primitives.add(primitive);
+        scene.groundPrimitives.add(primitive);
         pixels = scene.renderForSpecs();
         expect(pixels).toEqual(color);
     }
@@ -389,7 +389,7 @@ defineSuite([
             return;
         }
 
-        scene.primitives.add(new Primitive({
+        scene.groundPrimitives.add(new Primitive({
             geometryInstances : rectangleInstance,
             asynchronous : false,
             debugShowBoundingVolume : true
@@ -430,9 +430,9 @@ defineSuite([
 
         verifyGroundPrimitiveRender(primitive, rectColor);
 
-        scene.primitives.destroyPrimitives = false;
-        scene.primitives.removeAll();
-        scene.primitives.destroyPrimitives = true;
+        scene.groundPrimitives.destroyPrimitives = false;
+        scene.groundPrimitives.removeAll();
+        scene.groundPrimitives.destroyPrimitives = true;
 
         var newColor = [255, 255, 255, 255];
         var attributes = primitive.getGeometryInstanceAttributes('rectangle');
@@ -456,9 +456,9 @@ defineSuite([
 
         verifyGroundPrimitiveRender(primitive, rectColor);
 
-        scene.primitives.destroyPrimitives = false;
-        scene.primitives.removeAll();
-        scene.primitives.destroyPrimitives = true;
+        scene.groundPrimitives.destroyPrimitives = false;
+        scene.groundPrimitives.removeAll();
+        scene.groundPrimitives.destroyPrimitives = true;
 
         var attributes = primitive.getGeometryInstanceAttributes('rectangle');
         expect(attributes.show).toBeDefined();

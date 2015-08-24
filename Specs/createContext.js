@@ -9,6 +9,7 @@ define([
         'Renderer/ClearCommand',
         'Renderer/Context',
         'Renderer/DrawCommand',
+        'Renderer/VertexArray',
         'Specs/createCanvas',
         'Specs/createFrameState',
         'Specs/destroyCanvas'
@@ -22,6 +23,7 @@ define([
         ClearCommand,
         Context,
         DrawCommand,
+        VertexArray,
         createCanvas,
         createFrameState,
         destroyCanvas) {
@@ -61,11 +63,14 @@ define([
             var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
             var sp = context.createShaderProgram(vs, fs);
 
-            var va = context.createVertexArray([{
-                index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-                componentsPerAttribute : 4
-            }]);
+            var va = new VertexArray({
+                context : context,
+                attributes : [{
+                    index : sp.vertexAttributes.position.index,
+                    vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                    componentsPerAttribute : 4
+                }]
+            });
 
             ClearCommand.ALL.execute(context);
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);

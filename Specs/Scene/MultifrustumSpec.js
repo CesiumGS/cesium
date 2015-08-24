@@ -16,6 +16,7 @@ defineSuite([
         'Renderer/DrawCommand',
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
+        'Renderer/VertexArray',
         'Scene/BillboardCollection',
         'Scene/BlendingState',
         'Scene/Pass',
@@ -39,6 +40,7 @@ defineSuite([
         DrawCommand,
         TextureMagnificationFilter,
         TextureMinificationFilter,
+        VertexArray,
         BillboardCollection,
         BlendingState,
         Pass,
@@ -248,10 +250,11 @@ defineSuite([
                     maximumCorner: maximumCorner
                 }));
                 var attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
-                this._va = context.createVertexArrayFromGeometry({
-                    geometry: geometry,
-                    attributeLocations: attributeLocations,
-                    bufferUsage: BufferUsage.STATIC_DRAW
+                this._va = VertexArray.fromGeometry({
+                    context : context,
+                    geometry : geometry,
+                    attributeLocations : attributeLocations,
+                    bufferUsage : BufferUsage.STATIC_DRAW
                 });
 
                 this._sp = context.createShaderProgram(vs, fs, attributeLocations);

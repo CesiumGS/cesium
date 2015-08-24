@@ -13,6 +13,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/ShaderSource',
+        '../Renderer/VertexArray',
         '../Shaders/EllipsoidFS',
         '../Shaders/EllipsoidVS',
         './BlendingState',
@@ -34,6 +35,7 @@ define([
         BufferUsage,
         DrawCommand,
         ShaderSource,
+        VertexArray,
         EllipsoidFS,
         EllipsoidVS,
         BlendingState,
@@ -247,7 +249,8 @@ define([
             vertexFormat : VertexFormat.POSITION_ONLY
         }));
 
-        vertexArray = context.createVertexArrayFromGeometry({
+        vertexArray = VertexArray.fromGeometry({
+            context : context,
             geometry : geometry,
             attributeLocations : attributeLocations,
             bufferUsage : BufferUsage.STATIC_DRAW,

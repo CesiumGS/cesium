@@ -9,6 +9,7 @@ define([
         '../Core/OrientedBoundingBox',
         '../Core/TileProviderError',
         '../Renderer/BufferUsage',
+        '../Renderer/VertexArray',
         '../ThirdParty/when',
         './terrainAttributeLocations',
         './TerrainState'
@@ -22,6 +23,7 @@ define([
         OrientedBoundingBox,
         TileProviderError,
         BufferUsage,
+        VertexArray,
         when,
         terrainAttributeLocations,
         TerrainState) {
@@ -254,7 +256,11 @@ define([
             ++indexBuffer.referenceCount;
         }
 
-        tileTerrain.vertexArray = context.createVertexArray(attributes, indexBuffer);
+        tileTerrain.vertexArray = new VertexArray({
+            context : context,
+            attributes : attributes,
+            indexBuffer : indexBuffer
+        });
 
         tileTerrain.state = TerrainState.READY;
     }
