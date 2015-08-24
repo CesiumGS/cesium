@@ -22,6 +22,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/ShaderSource',
+        '../Renderer/VertexArray',
         '../ThirdParty/when',
         './CullFace',
         './Pass',
@@ -51,6 +52,7 @@ define([
         BufferUsage,
         DrawCommand,
         ShaderSource,
+        VertexArray,
         when,
         CullFace,
         Pass,
@@ -939,7 +941,8 @@ define([
                 delete attribute.values;
             }
 
-            va.push(context.createVertexArrayFromGeometry({
+            va.push(VertexArray.fromGeometry({
+                context : context,
                 geometry : geometry,
                 attributeLocations : attributeLocations,
                 bufferUsage : BufferUsage.STATIC_DRAW,

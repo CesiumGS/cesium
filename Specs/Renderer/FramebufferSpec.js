@@ -10,6 +10,7 @@ defineSuite([
         'Renderer/PixelDatatype',
         'Renderer/Renderbuffer',
         'Renderer/RenderbufferFormat',
+        'Renderer/VertexArray',
         'Specs/createContext'
     ], 'Renderer/Framebuffer', function(
         Color,
@@ -22,6 +23,7 @@ defineSuite([
         PixelDatatype,
         Renderbuffer,
         RenderbufferFormat,
+        VertexArray,
         createContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,WebGLRenderingContext*/
@@ -179,11 +181,14 @@ defineSuite([
         });
         sp.allUniforms.u_texture.value = colorTexture;
 
-        va = context.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -228,11 +233,14 @@ defineSuite([
         });
         sp.allUniforms.u_cubeMap.value = cubeMap;
 
-        va = context.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -264,11 +272,14 @@ defineSuite([
         var fs = 'void main() { gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -308,11 +319,14 @@ defineSuite([
         var fs = 'void main() { gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -413,11 +427,14 @@ defineSuite([
         var fs = 'void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         // 1 of 3.  Clear framebuffer
         var clearCommand = new ClearCommand({
@@ -491,11 +508,14 @@ defineSuite([
             var fs = '#extension GL_EXT_draw_buffers : enable \n void main() { gl_FragData[0] = vec4(1.0, 0.0, 0.0, 1.0); gl_FragData[1] = vec4(0.0, 1.0, 0.0, 1.0); }';
             sp = context.createShaderProgram(vs, fs);
 
-            va = context.createVertexArray([{
-                index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-                componentsPerAttribute : 4
-            }]);
+            va = new VertexArray({
+                context : context,
+                attributes : [{
+                    index : sp.vertexAttributes.position.index,
+                    vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                    componentsPerAttribute : 4
+                }]
+            });
 
             var command = new DrawCommand({
                 primitiveType : PrimitiveType.POINTS,
@@ -701,11 +721,14 @@ defineSuite([
         var fs = 'void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         expect(function() {
             var command = new DrawCommand({

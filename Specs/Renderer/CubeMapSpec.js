@@ -12,6 +12,7 @@ defineSuite([
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
         'Renderer/TextureWrap',
+        'Renderer/VertexArray',
         'Specs/createContext',
         'ThirdParty/when'
     ], 'Renderer/CubeMap', function(
@@ -27,6 +28,7 @@ defineSuite([
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
+        VertexArray,
         createContext,
         when) {
     "use strict";
@@ -188,10 +190,13 @@ defineSuite([
         });
         sp.allUniforms.u_texture.value = cubeMap;
 
-        va = context.createVertexArray([{
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -254,10 +259,13 @@ defineSuite([
         });
         sp.allUniforms.u_texture.value = cubeMap;
 
-        va = context.createVertexArray([{
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -307,10 +315,13 @@ defineSuite([
         });
         sp.allUniforms.u_texture.value = context.defaultCubeMap;
 
-        va = context.createVertexArray([{
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -389,10 +400,13 @@ defineSuite([
         });
         sp.allUniforms.u_texture.value = cubeMap;
 
-        va = context.createVertexArray([{
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -480,10 +494,13 @@ defineSuite([
             });
             sp.allUniforms.u_texture.value = cubeMap;
 
-            va = context.createVertexArray([{
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-                componentsPerAttribute : 4
-            }]);
+            va = new VertexArray({
+                context : context,
+                attributes : [{
+                    vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                    componentsPerAttribute : 4
+                }]
+            });
 
             var command = new DrawCommand({
                 primitiveType : PrimitiveType.POINTS,
@@ -555,10 +572,13 @@ defineSuite([
         });
         sp.allUniforms.u_texture.value = cubeMap;
 
-        va = context.createVertexArray([{
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -613,10 +633,13 @@ defineSuite([
         });
         sp.allUniforms.u_cubeMap.value = cubeMap;
 
-        va = context.createVertexArray([{
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -701,10 +724,13 @@ defineSuite([
         });
         sp.allUniforms.u_cubeMap.value = cubeMap;
 
-        va = context.createVertexArray([{
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -753,10 +779,13 @@ defineSuite([
         });
         sp.allUniforms.u_cubeMap.value = cubeMap;
 
-        va = context.createVertexArray([{
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -812,10 +841,13 @@ defineSuite([
         sp.allUniforms.u_cubeMap.value = cubeMap;
         sp.allUniforms.u_texture.value = texture;
 
-        va = context.createVertexArray([{
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -854,10 +886,13 @@ defineSuite([
         });
         sp.allUniforms.u_cubeMap.value = cubeMap;
 
-        va = context.createVertexArray([{
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,

@@ -9,6 +9,7 @@ defineSuite([
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
         'Renderer/DrawCommand',
+        'Renderer/VertexArray',
         'Specs/createContext'
     ], 'Renderer/VertexArrayFactory', function(
         ComponentDatatype,
@@ -20,6 +21,7 @@ defineSuite([
         BufferUsage,
         ClearCommand,
         DrawCommand,
+        VertexArray,
         createContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
@@ -41,14 +43,23 @@ defineSuite([
         sp = sp && sp.destroy();
     });
 
-    it('creates with no arguments', function() {
-        va = context.createVertexArrayFromGeometry();
+    it('throws when there is no context', function() {
+        expect(function() {
+            return VertexArray.fromGeometry();
+        }).toThrowDeveloperError();
+    });
+
+    it('creates with no optional arguments', function() {
+        va = VertexArray.fromGeometry({
+            context : context
+        });
         expect(va.numberOfAttributes).toEqual(0);
         expect(va.indexBuffer).not.toBeDefined();
     });
 
     it('creates with no geometry', function() {
-        va = context.createVertexArrayFromGeometry({
+        va = VertexArray.fromGeometry({
+            context : context,
             interleave : true
         });
         expect(va.numberOfAttributes).toEqual(0);
@@ -67,7 +78,8 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS
         });
 
-        var va = context.createVertexArrayFromGeometry({
+        var va = VertexArray.fromGeometry({
+            context : context,
             geometry : geometry,
             attributeLocations : GeometryPipeline.createAttributeLocations(geometry)
         });
@@ -97,7 +109,8 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS
         });
 
-        var va = context.createVertexArrayFromGeometry({
+        var va = VertexArray.fromGeometry({
+            context : context,
             geometry : geometry,
             attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
             interleave : true,
@@ -134,7 +147,8 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS
         });
 
-        var va = context.createVertexArrayFromGeometry({
+        var va = VertexArray.fromGeometry({
+            context : context,
             geometry : geometry,
             attributeLocations : GeometryPipeline.createAttributeLocations(geometry)
         });
@@ -176,7 +190,8 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS
         });
 
-        var va = context.createVertexArrayFromGeometry({
+        var va = VertexArray.fromGeometry({
+            context : context,
             geometry : geometry,
             attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
             interleave : true
@@ -221,7 +236,8 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS
         });
 
-        var va = context.createVertexArrayFromGeometry({
+        var va = VertexArray.fromGeometry({
+            context : context,
             geometry : geometry,
             attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
             interleave : true
@@ -272,7 +288,8 @@ defineSuite([
         });
 
         var attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
-        var va = context.createVertexArrayFromGeometry({
+        var va = VertexArray.fromGeometry({
+            context : context,
             geometry : geometry,
             attributeLocations : attributeLocations,
             interleave : true
@@ -334,7 +351,8 @@ defineSuite([
         });
 
         var attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
-        var va = context.createVertexArrayFromGeometry({
+        var va = VertexArray.fromGeometry({
+            context : context,
             geometry : geometry,
             attributeLocations : attributeLocations,
             interleave : true
@@ -411,7 +429,8 @@ defineSuite([
         });
 
         var attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
-        var va = context.createVertexArrayFromGeometry({
+        var va = VertexArray.fromGeometry({
+            context : context,
             geometry : geometry,
             attributeLocations : attributeLocations,
             interleave : true
@@ -480,7 +499,8 @@ defineSuite([
         });
 
         var attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
-        var va = context.createVertexArrayFromGeometry({
+        var va = VertexArray.fromGeometry({
+            context : context,
             geometry : geometry,
             attributeLocations : attributeLocations,
             interleave : true
@@ -562,7 +582,8 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS
         });
 
-        var va = context.createVertexArrayFromGeometry({
+        var va = VertexArray.fromGeometry({
+            context : context,
             geometry : geometry
         });
 
@@ -591,7 +612,8 @@ defineSuite([
         });
 
         expect(function() {
-            return context.createVertexArrayFromGeometry({
+            return VertexArray.fromGeometry({
+                context : context,
                 geometry : geometry,
                 interleave : true
             });
@@ -616,7 +638,8 @@ defineSuite([
         });
 
         expect(function() {
-            return context.createVertexArrayFromGeometry({
+            return VertexArray.fromGeometry({
+                context : context,
                 geometry : geometry,
                 attributeLocations : {
                     position : 0,
