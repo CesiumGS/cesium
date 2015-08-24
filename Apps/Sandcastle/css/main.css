@@ -49,7 +49,6 @@ html {
 }
 
 #appLayout{
-  padding-bottom: 60px;
   position: absolute;
   width: 100%;
 }
@@ -117,7 +116,7 @@ ul + div.tab-content {
   height: 100%; }
 
 .CodeMirror {
-  height: 100%; }
+  height: 93%; }
 
 .CodeMirror pre.errorLine {
   background: rgba(220,167,167,0.2);
@@ -148,7 +147,7 @@ ul + div.tab-content {
 
 #consoleRow {
   position: fixed;
-  bottom: 60px; /* Remove this when footer is removed */
+  bottom: 0;
   width: 100%;
   z-index: 10;
 }

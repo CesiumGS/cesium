@@ -520,6 +520,19 @@ require({
     }
   }, true);
 
+  // Resize editor when console is open
+  $('a[href="#consoleLog"]').click(function(){
+    console.log("hello there");
+    if($('#consoleLog').hasClass('in')){
+      $($('.CodeMirror')[0]).height('93%');
+    }
+    else
+    {
+      // Reduce size of editor
+      $($('.CodeMirror')[0]).height($($('.CodeMirror')[0]).height()-200);
+    }
+  });
+
   // Resizable code editor
   
   var resize = false;
