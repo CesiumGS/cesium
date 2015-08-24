@@ -5,6 +5,7 @@ defineSuite([
         'Core/Color',
         'Core/loadImage',
         'Renderer/ClearCommand',
+        'Renderer/Texture',
         'Scene/Material',
         'Specs/createCamera',
         'Specs/createContext',
@@ -17,6 +18,7 @@ defineSuite([
         Color,
         loadImage,
         ClearCommand,
+        Texture,
         Material,
         createCamera,
         createContext,
@@ -109,7 +111,8 @@ defineSuite([
     });
 
     it('renders user created texture', function() {
-        var texture = context.createTexture2D({
+        var texture = new Texture({
+            context : context,
             source : testImage
         });
 

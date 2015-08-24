@@ -1,6 +1,5 @@
 /*global defineSuite*/
 defineSuite([
-        'Renderer/Texture',
         'Core/Cartesian2',
         'Core/Color',
         'Core/loadImage',
@@ -10,6 +9,7 @@ defineSuite([
         'Renderer/ClearCommand',
         'Renderer/DrawCommand',
         'Renderer/PixelDatatype',
+        'Renderer/Texture',
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
         'Renderer/TextureWrap',
@@ -17,7 +17,6 @@ defineSuite([
         'Specs/createContext',
         'ThirdParty/when'
     ], function(
-        Texture,
         Cartesian2,
         Color,
         loadImage,
@@ -27,6 +26,7 @@ defineSuite([
         ClearCommand,
         DrawCommand,
         PixelDatatype,
+        Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
@@ -109,7 +109,8 @@ defineSuite([
     }
 
     it('has expected default values for pixel format and datatype', function() {
-        texture = context.createTexture2D({
+        texture = new Texture({
+            context : context,
             source : blueImage
         });
 
@@ -123,7 +124,9 @@ defineSuite([
         });
         command.execute(context);
 
-        texture = context.createTexture2DFromFramebuffer();
+        texture = Texture.fromFramebuffer({
+            context : context
+        });
         expect(texture.width).toEqual(context.canvas.clientWidth);
         expect(texture.height).toEqual(context.canvas.clientHeight);
 
@@ -135,7 +138,8 @@ defineSuite([
     });
 
     it('can copy from the framebuffer', function() {
-        texture = context.createTexture2D({
+        texture = new Texture({
+            context : context,
             source : blueImage,
             pixelFormat : PixelFormat.RGB
         });
@@ -162,7 +166,8 @@ defineSuite([
     });
 
     it('draws the expected texture color', function() {
-        texture = context.createTexture2D({
+        texture = new Texture({
+            context : context,
             source : blueImage,
             pixelFormat : PixelFormat.RGBA
         });
@@ -175,7 +180,8 @@ defineSuite([
             var color = new Color(0.2, 0.4, 0.6, 0.8);
             var floats = new Float32Array([color.red, color.green, color.blue, color.alpha]);
 
-            texture = context.createTexture2D({
+            texture = new Texture({
+                context : context,
                 pixelFormat : PixelFormat.RGBA,
                 pixelDatatype : PixelDatatype.FLOAT,
                 source : {
@@ -191,7 +197,8 @@ defineSuite([
     });
 
     it('renders with premultiplied alpha', function() {
-        texture = context.createTexture2D({
+        texture = new Texture({
+            context : context,
             source : blueAlphaImage,
             pixelFormat : PixelFormat.RGBA,
             preMultiplyAlpha : true
@@ -202,7 +209,8 @@ defineSuite([
     });
 
     it('draws textured blue and red points', function() {
-        texture = context.createTexture2D({
+        texture = new Texture({
+            context : context,
             source : blueOverRedImage,
             pixelFormat : PixelFormat.RGBA
         });
@@ -249,7 +257,8 @@ defineSuite([
     it('can be created from a typed array', function() {
         var bytes = new Uint8Array(Color.GREEN.toBytes());
 
-        texture = context.createTexture2D({
+        texture = new Texture({
+            context : context,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
             source : {
@@ -263,7 +272,8 @@ defineSuite([
     });
 
     it('can copy from a typed array', function() {
-        texture = context.createTexture2D({
+        texture = new Texture({
+            context : context,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
             width : 1,
@@ -281,7 +291,8 @@ defineSuite([
     });
 
     it('can replace a subset of a texture', function() {
-        texture = context.createTexture2D({
+        texture = new Texture({
+            context : context,
             source : blueOverRedImage,
             pixelFormat : PixelFormat.RGBA
         });
@@ -339,7 +350,8 @@ defineSuite([
     });
 
     it('can generate mipmaps', function() {
-        texture = context.createTexture2D({
+        texture = new Texture({
+            context : context,
             source : blueImage,
             pixelFormat : PixelFormat.RGBA
         });
@@ -353,7 +365,8 @@ defineSuite([
     });
 
     it('default sampler returns undefined', function() {
-        texture = context.createTexture2D({
+        texture = new Texture({
+            context : context,
             source : blueImage,
             pixelFormat : PixelFormat.RGBA
         });
@@ -364,7 +377,8 @@ defineSuite([
 
     it('default sampler returns undefined, data type is FLOAT ', function() {
         if (context.floatingPointTexture) {
-            texture = context.createTexture2D({
+            texture = new Texture({
+                context : context,
                 source : blueImage,
                 pixelFormat : PixelFormat.RGBA,
                 pixelDatatype : PixelDatatype.FLOAT
@@ -376,7 +390,8 @@ defineSuite([
     });
 
     it('can set a sampler', function() {
-        texture = context.createTexture2D({
+        texture = new Texture({
+            context : context,
             source : blueImage,
             pixelFormat : PixelFormat.RGBA
         });
@@ -399,7 +414,8 @@ defineSuite([
     });
 
     it('can get width and height', function() {
-        texture = context.createTexture2D({
+        texture = new Texture({
+            context : context,
             source : blueOverRedImage,
             pixelFormat : PixelFormat.RGBA
         });
@@ -409,7 +425,8 @@ defineSuite([
     });
 
     it('can get whether Y is flipped', function() {
-        texture = context.createTexture2D({
+        texture = new Texture({
+            context : context,
             source : blueOverRedImage,
             pixelFormat : PixelFormat.RGBA,
             flipY : true
@@ -419,7 +436,8 @@ defineSuite([
     });
 
     it('can get the dimensions of a texture', function() {
-        texture = context.createTexture2D({
+        texture = new Texture({
+            context : context,
             width : 64,
             height : 16
         });
@@ -428,7 +446,8 @@ defineSuite([
     });
 
     it('can be destroyed', function() {
-        var t = context.createTexture2D({
+        var t = new Texture({
+            context : context,
             source : blueImage,
             pixelFormat : PixelFormat.RGBA
         });
@@ -440,19 +459,22 @@ defineSuite([
 
     it('throws when creating a texture without a options', function() {
         expect(function() {
-            texture = context.createTexture2D();
+            texture = new Texture();
         }).toThrowDeveloperError();
     });
 
     it('throws when creating a texture without a source', function() {
         expect(function() {
-            texture = context.createTexture2D({});
+            texture = new Texture({
+                context : context
+            });
         }).toThrowDeveloperError();
     });
 
     it('throws when creating a texture with width and no height', function() {
         expect(function() {
-            texture = context.createTexture2D({
+            texture = new Texture({
+                context : context,
                 width : 16
             });
         }).toThrowDeveloperError();
@@ -460,7 +482,8 @@ defineSuite([
 
     it('throws when creating a texture with height and no width', function() {
         expect(function() {
-            texture = context.createTexture2D({
+            texture = new Texture({
+                context : context,
                 height : 16
             });
         }).toThrowDeveloperError();
@@ -468,7 +491,8 @@ defineSuite([
 
     it('throws when creating a texture with zero width', function() {
         expect(function() {
-            texture = context.createTexture2D({
+            texture = new Texture({
+                context : context,
                 width : 0,
                 height : 16
             });
@@ -477,7 +501,8 @@ defineSuite([
 
     it('throws when creating a texture with width larger than the maximum texture size', function() {
         expect(function() {
-            texture = context.createTexture2D({
+            texture = new Texture({
+                context : context,
                 width : context.maximumTextureSize + 1,
                 height : 16
             });
@@ -486,7 +511,8 @@ defineSuite([
 
     it('throws when creating a texture with zero height', function() {
         expect(function() {
-            texture = context.createTexture2D({
+            texture = new Texture({
+                context : context,
                 width : 16,
                 height : 0
             });
@@ -495,7 +521,8 @@ defineSuite([
 
     it('throws when creating a texture with height larger than the maximum texture size', function() {
         expect(function() {
-            texture = context.createTexture2D({
+            texture = new Texture({
+                context : context,
                 width : 16,
                 height : context.maximumTextureSize + 1
             });
@@ -504,7 +531,8 @@ defineSuite([
 
     it('throws when creating a texture with an invalid pixel format', function() {
         expect(function() {
-            texture = context.createTexture2D({
+            texture = new Texture({
+                context : context,
                 source : blueImage,
                 pixelFormat : 'invalid PixelFormat'
             });
@@ -513,7 +541,8 @@ defineSuite([
 
     it('throws when creating a texture with an invalid pixel datatype', function() {
         expect(function() {
-            texture = context.createTexture2D({
+            texture = new Texture({
+                context : context,
                 source : blueImage,
                 pixelFormat : PixelFormat.RGBA,
                 pixelDatatype : 'invalid pixelDatatype'
@@ -523,7 +552,8 @@ defineSuite([
 
     it('throws when creating if pixelFormat is DEPTH_COMPONENT and pixelDatatype is not UNSIGNED_SHORT or UNSIGNED_INT', function() {
         expect(function() {
-            texture = context.createTexture2D({
+            texture = new Texture({
+                context : context,
                 pixelFormat : PixelFormat.DEPTH_COMPONENT,
                 pixelDatatype : PixelDatatype.UNSIGNED_BYTE
             });
@@ -532,7 +562,8 @@ defineSuite([
 
     it('throws when creating if pixelFormat is DEPTH_STENCIL and pixelDatatype is not UNSIGNED_INT_24_8_WEBGL', function() {
         expect(function() {
-            texture = context.createTexture2D({
+            texture = new Texture({
+                context : context,
                 pixelFormat : PixelFormat.DEPTH_STENCIL,
                 pixelDatatype : PixelDatatype.UNSIGNED_BYTE
             });
@@ -541,7 +572,8 @@ defineSuite([
 
     it('throws when creating if pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, and source is provided', function() {
         expect(function() {
-            texture = context.createTexture2D({
+            texture = new Texture({
+                context : context,
                 source : blueImage,
                 pixelFormat : PixelFormat.DEPTH_COMPONENT,
                 pixelDatatype : PixelDatatype.UNSIGNED_SHORT
@@ -552,7 +584,8 @@ defineSuite([
     it('throws when creating if pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, and WEBGL_depth_texture is not supported', function() {
         if (!context.depthTexture) {
             expect(function() {
-                texture = context.createTexture2D({
+                texture = new Texture({
+                    context : context,
                     width : 1,
                     height : 1,
                     pixelFormat : PixelFormat.DEPTH_COMPONENT,
@@ -565,7 +598,8 @@ defineSuite([
     it('throws when creating if pixelDatatype is FLOAT, and OES_texture_float is not supported', function() {
         if (!context.floatingPointTexture) {
             expect(function() {
-                texture = context.createTexture2D({
+                texture = new Texture({
+                    context : context,
                     width : 1,
                     height : 1,
                     pixelFormat : PixelFormat.RGBA,
@@ -577,43 +611,72 @@ defineSuite([
 
     it('throws when creating from the framebuffer with an invalid pixel format', function() {
         expect(function() {
-            texture = context.createTexture2DFromFramebuffer('invalid PixelFormat');
+            texture = Texture.fromFramebuffer({
+                context : context,
+                pixelFormat : 'invalid PixelFormat'
+            });
         }).toThrowDeveloperError();
     });
 
     it('throws when creating from the framebuffer if PixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL', function() {
         expect(function() {
-            texture = context.createTexture2DFromFramebuffer(PixelFormat.DEPTH_COMPONENT);
+            texture = Texture.fromFramebuffer({
+                context : context,
+                pixelFormat : PixelFormat.DEPTH_COMPONENT
+            });
         }).toThrowDeveloperError();
     });
 
     it('throws when creating from the framebuffer with a negative framebufferXOffset', function() {
         expect(function() {
-            texture = context.createTexture2DFromFramebuffer(PixelFormat.RGB, -1);
+            texture = Texture.fromFramebuffer({
+                context : context,
+                pixelFormat : PixelFormat.RGB,
+                framebufferXOffset : -1
+            });
         }).toThrowDeveloperError();
     });
 
     it('throws when creating from the framebuffer with a negative framebufferYOffset', function() {
         expect(function() {
-            texture = context.createTexture2DFromFramebuffer(PixelFormat.RGB, 0, -1);
+            texture = Texture.fromFramebuffer({
+                context : context,
+                pixelFormat : PixelFormat.RGB,
+                framebufferXOffset : 0,
+                framebufferYOffset : -1
+            });
         }).toThrowDeveloperError();
     });
 
     it('throws when creating from the framebuffer with a width greater than the canvas clientWidth', function() {
         expect(function() {
-            texture = context.createTexture2DFromFramebuffer(PixelFormat.RGB, 0, 0, context.canvas.clientWidth + 1);
+            texture = Texture.fromFramebuffer({
+                context : context,
+                pixelFormat : PixelFormat.RGB,
+                framebufferXOffset : 0,
+                framebufferYOffset : 0,
+                width : context.canvas.clientWidth + 1
+            });
         }).toThrowDeveloperError();
     });
 
     it('throws when creating from the framebuffer with a height greater than the canvas clientHeight', function() {
         expect(function() {
-            texture = context.createTexture2DFromFramebuffer(PixelFormat.RGB, 0, 0, 1, context.canvas.clientHeight + 1);
+            texture = Texture.fromFramebuffer({
+                context : context,
+                pixelFormat : PixelFormat.RGB,
+                framebufferXOffset : 0,
+                framebufferYOffset : 0,
+                width : 1,
+                height : context.canvas.clientHeight + 1
+            });
         }).toThrowDeveloperError();
     });
 
     it('throws when copying to a texture from the framebuffer with a DEPTH_COMPONENT or DEPTH_STENCIL pixel format', function() {
         if (context.depthTexture) {
-            texture = context.createTexture2D({
+            texture = new Texture({
+                context : context,
                 width : 1,
                 height : 1,
                 pixelFormat : PixelFormat.DEPTH_COMPONENT,
@@ -628,7 +691,8 @@ defineSuite([
 
     it('throws when copying to a texture from the framebuffer with a FLOAT pixel data type', function() {
         if (context.floatingPointTexture) {
-            texture = context.createTexture2D({
+            texture = new Texture({
+                context : context,
                 width : 1,
                 height : 1,
                 pixelFormat : PixelFormat.RGBA,
@@ -642,7 +706,8 @@ defineSuite([
     });
 
     it('throws when copying from the framebuffer with a negative xOffset', function() {
-        texture = context.createTexture2D({
+        texture = new Texture({
+            context : context,
             source : blueImage
         });
 
@@ -652,7 +717,8 @@ defineSuite([
     });
 
     it('throws when copying from the framebuffer with a negative yOffset', function() {
-        texture = context.createTexture2D({
+        texture = new Texture({
+            context : context,
             source : blueImage
         });
 
@@ -662,7 +728,8 @@ defineSuite([
     });
 
     it('throws when copying from the framebuffer with a negative framebufferXOffset', function() {
-        texture = context.createTexture2D({
+        texture = new Texture({
+            context : context,
             source : blueImage
         });
 
@@ -672,7 +739,8 @@ defineSuite([
     });
 
     it('throws when copying from the framebuffer with a negative framebufferYOffset', function() {
-        texture = context.createTexture2D({
+        texture = new Texture({
+            context : context,
             source : blueImage
         });
 
@@ -682,7 +750,8 @@ defineSuite([
     });
 
     it('throws when copying from the framebuffer with a larger width', function() {
-        texture = context.createTexture2D({
+        texture = new Texture({
+            context : context,
             source : blueImage
         });
 
@@ -692,7 +761,8 @@ defineSuite([
     });
 
     it('throws when copying from the framebuffer with a larger height', function() {
-        texture = context.createTexture2D({
+        texture = new Texture({
+            context : context,
             source : blueImage
         });
 
@@ -703,7 +773,8 @@ defineSuite([
 
     it('throws when copying to a texture with a DEPTH_COMPONENT or DEPTH_STENCIL pixel format', function() {
         if (context.depthTexture) {
-            texture = context.createTexture2D({
+            texture = new Texture({
+                context : context,
                 width : 1,
                 height : 1,
                 pixelFormat : PixelFormat.DEPTH_COMPONENT,
@@ -721,7 +792,8 @@ defineSuite([
     });
 
     it('throws when copyFrom is not given a source', function() {
-        texture = context.createTexture2D({
+        texture = new Texture({
+            context : context,
             source : blueImage
         });
 
@@ -731,7 +803,8 @@ defineSuite([
     });
 
     it('throws when copyFrom is given a negative xOffset', function() {
-        texture = context.createTexture2D({
+        texture = new Texture({
+            context : context,
             source : blueImage
         });
 
@@ -741,7 +814,8 @@ defineSuite([
     });
 
     it('throws when copyFrom is given a negative yOffset', function() {
-        texture = context.createTexture2D({
+        texture = new Texture({
+            context : context,
             source : blueImage
         });
 
@@ -751,7 +825,8 @@ defineSuite([
     });
 
     it('throws when copyFrom is given a source with larger width', function() {
-        texture = context.createTexture2D({
+        texture = new Texture({
+            context : context,
             source : blueImage
         });
         var image = new Image();
@@ -763,7 +838,8 @@ defineSuite([
     });
 
     it('throws when copyFrom is given a source with larger height', function() {
-        texture = context.createTexture2D({
+        texture = new Texture({
+            context : context,
             source : blueImage
         });
         var image = new Image();
@@ -776,7 +852,8 @@ defineSuite([
 
     it('throws when generating mipmaps with a DEPTH_COMPONENT or DEPTH_STENCIL pixel format', function() {
         if (context.depthTexture) {
-            texture = context.createTexture2D({
+            texture = new Texture({
+                context : context,
                 width : 1,
                 height : 1,
                 pixelFormat : PixelFormat.DEPTH_COMPONENT,
@@ -790,7 +867,8 @@ defineSuite([
     });
 
     it('throws when generating mipmaps with a non-power of two width', function() {
-        texture = context.createTexture2D({
+        texture = new Texture({
+            context : context,
             width : 3,
             height : 2
         });
@@ -801,7 +879,8 @@ defineSuite([
     });
 
     it('throws when generating mipmaps with a non-power of two height', function() {
-        texture = context.createTexture2D({
+        texture = new Texture({
+            context : context,
             width : 2,
             height : 3
         });
@@ -812,7 +891,8 @@ defineSuite([
     });
 
     it('throws when generating mipmaps with an invalid hint', function() {
-        texture = context.createTexture2D({
+        texture = new Texture({
+            context : context,
             source : blueImage
         });
 
@@ -823,7 +903,8 @@ defineSuite([
 
     it('throws when data type is FLOAT and minification filter is not NEAREST or NEAREST_MIPMAP_NEAREST', function() {
         if (context.floatingPointTexture) {
-            texture = context.createTexture2D({
+            texture = new Texture({
+                context : context,
                 source : blueImage,
                 pixelDatatype : PixelDatatype.FLOAT
             });
@@ -838,7 +919,8 @@ defineSuite([
 
     it('throws when data type is FLOAT and magnification filter is not NEAREST', function() {
         if (context.floatingPointTexture) {
-            texture = context.createTexture2D({
+            texture = new Texture({
+                context : context,
                 source : blueImage,
                 pixelDatatype : PixelDatatype.FLOAT
             });
@@ -852,7 +934,8 @@ defineSuite([
     });
 
     it('throws when destroy is called after destroying', function() {
-        var t = context.createTexture2D({
+        var t = new Texture({
+            context : context,
             source : blueImage,
             pixelFormat : PixelFormat.RGBA
         });

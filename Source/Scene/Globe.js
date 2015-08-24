@@ -32,6 +32,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/ShaderSource',
+        '../Renderer/Texture',
         '../Renderer/VertexArray',
         '../Shaders/GlobeFS',
         '../Shaders/GlobeFSPole',
@@ -78,6 +79,7 @@ define([
         BufferUsage,
         DrawCommand,
         ShaderSource,
+        Texture,
         VertexArray,
         GlobeFS,
         GlobeFSPole,
@@ -749,7 +751,8 @@ define([
                     }
 
                     that._oceanNormalMap = that._oceanNormalMap && that._oceanNormalMap.destroy();
-                    that._oceanNormalMap = context.createTexture2D({
+                    that._oceanNormalMap = new Texture({
+                        context : context,
                         source : image
                     });
                 });

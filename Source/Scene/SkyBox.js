@@ -10,6 +10,7 @@ define([
         '../Core/Matrix4',
         '../Core/VertexFormat',
         '../Renderer/BufferUsage',
+        '../Renderer/CubeMap',
         '../Renderer/DrawCommand',
         '../Renderer/loadCubeMap',
         '../Renderer/VertexArray',
@@ -28,6 +29,7 @@ define([
         Matrix4,
         VertexFormat,
         BufferUsage,
+        CubeMap,
         DrawCommand,
         loadCubeMap,
         VertexArray,
@@ -151,7 +153,8 @@ define([
                 });
             } else {
                 this._cubeMap = this._cubeMap && this._cubeMap.destroy();
-                this._cubeMap = context.createCubeMap({
+                this._cubeMap = new CubeMap({
+                    context : context,
                     source : sources
                 });
             }

@@ -12,6 +12,7 @@ define([
         '../Core/PixelFormat',
         '../Core/RuntimeError',
         '../Renderer/Framebuffer',
+        '../Renderer/Texture',
         '../ThirdParty/when'
     ], function(
         BoundingRectangle,
@@ -26,6 +27,7 @@ define([
         PixelFormat,
         RuntimeError,
         Framebuffer,
+        Texture,
         when) {
     "use strict";
 
@@ -86,7 +88,8 @@ define([
         this._idHash = {};
 
         // Create initial texture and root.
-        this._texture = this._context.createTexture2D({
+        this._texture = new Texture({
+            context : this._context,
             width : initialSize.x,
             height : initialSize.y,
             pixelFormat : this._pixelFormat
@@ -191,7 +194,8 @@ define([
             }
 
             // Copy larger texture.
-            var newTexture = textureAtlas._context.createTexture2D({
+            var newTexture = new Texture({
+                context : textureAtlas._context,
                 width : atlasWidth,
                 height : atlasHeight,
                 pixelFormat : textureAtlas._pixelFormat
@@ -212,7 +216,8 @@ define([
             var initialWidth = scalingFactor * (image.width + textureAtlas._borderWidthInPixels);
             var initialHeight = scalingFactor * (image.height + textureAtlas._borderWidthInPixels);
             textureAtlas._texture = textureAtlas._texture && textureAtlas._texture.destroy();
-            textureAtlas._texture = textureAtlas._context.createTexture2D({
+            textureAtlas._texture = new Texture({
+                context : textureAtlas._context,
                 width : initialWidth,
                 height : initialHeight,
                 pixelFormat : textureAtlas._pixelFormat
