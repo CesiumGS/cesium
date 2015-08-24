@@ -8,7 +8,8 @@ define([
         './Framebuffer',
         './PassState',
         './Renderbuffer',
-        './RenderbufferFormat'
+        './RenderbufferFormat',
+        './Texture'
     ], function(
         BoundingRectangle,
         Color,
@@ -18,7 +19,8 @@ define([
         Framebuffer,
         PassState,
         Renderbuffer,
-        RenderbufferFormat) {
+        RenderbufferFormat,
+        Texture) {
     "use strict";
 
     /**
@@ -55,7 +57,8 @@ define([
             this._fb = this._fb && this._fb.destroy();
             this._fb = new Framebuffer({
                 context : context,
-                colorTextures : [context.createTexture2D({
+                colorTextures : [new Texture({
+                    context : context,
                     width : width,
                     height : height
                 })],

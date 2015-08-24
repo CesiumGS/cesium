@@ -10,6 +10,7 @@ defineSuite([
         'Renderer/CubeMap',
         'Renderer/DrawCommand',
         'Renderer/PixelDatatype',
+        'Renderer/Texture',
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
         'Renderer/TextureWrap',
@@ -27,6 +28,7 @@ defineSuite([
         CubeMap,
         DrawCommand,
         PixelDatatype,
+        Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
@@ -844,7 +846,8 @@ defineSuite([
             }
         });
 
-        var texture = context.createTexture2D({
+        var texture = new Texture({
+            context : context,
             source : blueImage
         });
 

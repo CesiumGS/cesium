@@ -4,6 +4,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/defaultValue',
         'Core/Matrix4',
+        'Renderer/Texture',
         'Scene/OrthographicFrustum',
         'Scene/SceneMode',
         'Specs/createCamera',
@@ -14,6 +15,7 @@ defineSuite([
         Cartesian3,
         defaultValue,
         Matrix4,
+        Texture,
         OrthographicFrustum,
         SceneMode,
         createCamera,
@@ -97,7 +99,8 @@ defineSuite([
     });
 
     it('has czm_globeDepthTexture', function() {
-        context.uniformState.globeDepthTexture = context.createTexture2D({
+        context.uniformState.globeDepthTexture = new Texture({
+            context : context,
             source : {
                 width : 1,
                 height : 1,

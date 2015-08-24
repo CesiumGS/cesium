@@ -46,8 +46,6 @@ define([
      * @exception {DeveloperError} options.pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.
      * @exception {DeveloperError} Invalid options.pixelDatatype.
      *
-     * @see Context#createTexture2D
-     * @see Context#createTexture2DFromFramebuffer
      * @see Context#createSampler
      *
      * @private

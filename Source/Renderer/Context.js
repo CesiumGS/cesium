@@ -859,7 +859,8 @@ define([
         defaultTexture : {
             get : function() {
                 if (this._defaultTexture === undefined) {
-                    this._defaultTexture = this.createTexture2D({
+                    this._defaultTexture = new Texture({
+                        context : this,
                         source : {
                             width : 1,
                             height : 1,
@@ -933,7 +934,7 @@ define([
         /**
          * Gets an object representing the currently bound framebuffer.  While this instance is not an actual
          * {@link Framebuffer}, it is used to represent the default framebuffer in calls to
-         * {@link Context.createTexture2DFromFramebuffer}.
+         * {@link Texture.FromFramebuffer}.
          * @memberof Context.prototype
          * @type {Object}
          */
@@ -1086,107 +1087,6 @@ define([
         });
 
         return buffer;
-    };
-
-    /**
-     * options.source can be {@link ImageData}, {@link Image}, {@link Canvas}, or {@link Video}.
-     *
-     * @exception {RuntimeError} When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.  Check context.depthTexture.
-     * @exception {RuntimeError} When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.  Check context.floatingPointTexture.
-     * @exception {DeveloperError} options requires a source field to create an initialized texture or width and height fields to create a blank texture.
-     * @exception {DeveloperError} Width must be greater than zero.
-     * @exception {DeveloperError} Width must be less than or equal to the maximum texture size.
-     * @exception {DeveloperError} Height must be greater than zero.
-     * @exception {DeveloperError} Height must be less than or equal to the maximum texture size.
-     * @exception {DeveloperError} Invalid options.pixelFormat.
-     * @exception {DeveloperError} Invalid options.pixelDatatype.
-     * @exception {DeveloperError} When options.pixelFormat is DEPTH_COMPONENT, options.pixelDatatype must be UNSIGNED_SHORT or UNSIGNED_INT.
-     * @exception {DeveloperError} When options.pixelFormat is DEPTH_STENCIL, options.pixelDatatype must be UNSIGNED_INT_24_8_WEBGL.
-     * @exception {DeveloperError} When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, source cannot be provided.
-     *
-     * @see Context#createTexture2DFromFramebuffer
-     * @see Context#createSampler
-     */
-    Context.prototype.createTexture2D = function(options) {
-        return new Texture(this, options);
-    };
-
-    /**
-     * Creates a texture, and copies a subimage of the framebuffer to it.  When called without arguments,
-     * the texture is the same width and height as the framebuffer and contains its contents.
-     *
-     * @param {PixelFormat} [pixelFormat=PixelFormat.RGB] The texture's internal pixel format.
-     * @param {Number} [framebufferXOffset=0] An offset in the x direction in the framebuffer where copying begins from.
-     * @param {Number} [framebufferYOffset=0] An offset in the y direction in the framebuffer where copying begins from.
-     * @param {Number} [width=canvas.clientWidth] The width of the texture in texels.
-     * @param {Number} [height=canvas.clientHeight] The height of the texture in texels.
-     * @param {Framebuffer} [framebuffer=defaultFramebuffer] The framebuffer from which to create the texture.  If this
-     *        parameter is not specified, the default framebuffer is used.
-     * @returns {Texture} A texture with contents from the framebuffer.
-     *
-     * @exception {DeveloperError} Invalid pixelFormat.
-     * @exception {DeveloperError} pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.
-     * @exception {DeveloperError} framebufferXOffset must be greater than or equal to zero.
-     * @exception {DeveloperError} framebufferYOffset must be greater than or equal to zero.
-     * @exception {DeveloperError} framebufferXOffset + width must be less than or equal to canvas.clientWidth.
-     * @exception {DeveloperError} framebufferYOffset + height must be less than or equal to canvas.clientHeight.
-     *
-     * @see Context#createTexture2D
-     * @see Context#createSampler
-     *
-     * @example
-     * // Create a texture with the contents of the framebuffer.
-     * var t = context.createTexture2DFromFramebuffer();
-     */
-    Context.prototype.createTexture2DFromFramebuffer = function(pixelFormat, framebufferXOffset, framebufferYOffset, width, height, framebuffer) {
-        var gl = this._gl;
-
-        pixelFormat = defaultValue(pixelFormat, PixelFormat.RGB);
-        framebufferXOffset = defaultValue(framebufferXOffset, 0);
-        framebufferYOffset = defaultValue(framebufferYOffset, 0);
-        width = defaultValue(width, gl.drawingBufferWidth);
-        height = defaultValue(height, gl.drawingBufferHeight);
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!PixelFormat.validate(pixelFormat)) {
-            throw new DeveloperError('Invalid pixelFormat.');
-        }
-
-        if (PixelFormat.isDepthFormat(pixelFormat)) {
-            throw new DeveloperError('pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.');
-        }
-
-        if (framebufferXOffset < 0) {
-            throw new DeveloperError('framebufferXOffset must be greater than or equal to zero.');
-        }
-
-        if (framebufferYOffset < 0) {
-            throw new DeveloperError('framebufferYOffset must be greater than or equal to zero.');
-        }
-
-        if (framebufferXOffset + width > gl.drawingBufferWidth) {
-            throw new DeveloperError('framebufferXOffset + width must be less than or equal to drawingBufferWidth');
-        }
-
-        if (framebufferYOffset + height > gl.drawingBufferHeight) {
-            throw new DeveloperError('framebufferYOffset + height must be less than or equal to drawingBufferHeight.');
-        }
-        //>>includeEnd('debug');
-
-        var texture = new Texture(this, {
-            width : width,
-            height : height,
-            pixelFormat : pixelFormat,
-            source : {
-                framebuffer : defined(framebuffer) ? framebuffer : this.defaultFramebuffer,
-                xOffset : framebufferXOffset,
-                yOffset : framebufferYOffset,
-                width : width,
-                height : height
-            }
-        });
-
-        return texture;
     };
 
     var nextRenderStateId = 0;

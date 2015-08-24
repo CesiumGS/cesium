@@ -8,6 +8,7 @@ define([
         '../Renderer/ClearCommand',
         '../Renderer/Framebuffer',
         '../Renderer/PixelDatatype',
+        '../Renderer/Texture',
         '../Shaders/PostProcessFilters/PassThrough'
     ], function(
         Color,
@@ -18,6 +19,7 @@ define([
         ClearCommand,
         Framebuffer,
         PixelDatatype,
+        Texture,
         PassThrough) {
     "use strict";
 
@@ -79,21 +81,24 @@ define([
     }
 
     function createTextures(globeDepth, context, width, height) {
-        globeDepth._colorTexture = context.createTexture2D({
+        globeDepth._colorTexture = new Texture({
+            context : context,
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE
         });
 
-        globeDepth._depthStencilTexture = context.createTexture2D({
+        globeDepth._depthStencilTexture = new Texture({
+            context : context,
             width : width,
             height : height,
             pixelFormat : PixelFormat.DEPTH_STENCIL,
             pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8_WEBGL
         });
 
-        globeDepth._globeDepthTexture = context.createTexture2D({
+        globeDepth._globeDepthTexture = new Texture({
+            context : context,
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGBA,

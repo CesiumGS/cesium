@@ -19,6 +19,7 @@ define([
         '../Renderer/ClearCommand',
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
+        '../Renderer/Texture',
         '../Renderer/VertexArray',
         '../Shaders/SunFS',
         '../Shaders/SunTextureFS',
@@ -46,6 +47,7 @@ define([
         ClearCommand,
         DrawCommand,
         Framebuffer,
+        Texture,
         VertexArray,
         SunFS,
         SunTextureFS,
@@ -164,7 +166,8 @@ define([
             var size = Math.max(drawingBufferWidth, drawingBufferHeight);
             size = Math.pow(2.0, Math.ceil(Math.log(size) / Math.log(2.0)) - 2.0);
 
-            this._texture = context.createTexture2D({
+            this._texture = new Texture({
+                context : context,
                 width : size,
                 height : size,
                 pixelFormat : PixelFormat.RGBA

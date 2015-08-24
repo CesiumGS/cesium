@@ -24,6 +24,7 @@ define([
         '../Renderer/Framebuffer',
         '../Renderer/MipmapHint',
         '../Renderer/ShaderSource',
+        '../Renderer/Texture',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
@@ -59,6 +60,7 @@ define([
         Framebuffer,
         MipmapHint,
         ShaderSource,
+        Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
@@ -658,7 +660,8 @@ define([
         }
 
         // Imagery does not need to be discarded, so upload it to WebGL.
-        var texture = context.createTexture2D({
+        var texture = new Texture({
+            context : context,
             source : imagery.image,
             pixelFormat : imageryProvider.hasAlphaChannel ? PixelFormat.RGBA : PixelFormat.RGB
         });
@@ -879,7 +882,8 @@ define([
         var northMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
         var oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
 
-        var outputTexture = context.createTexture2D({
+        var outputTexture = new Texture({
+            context : context,
             width : width,
             height : height,
             pixelFormat : texture.pixelFormat,

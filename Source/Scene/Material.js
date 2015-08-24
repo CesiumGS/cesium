@@ -413,7 +413,8 @@ define([
             uniformId = loadedImage.id;
             var image = loadedImage.image;
 
-            var texture = context.createTexture2D({
+            var texture = new Texture({
+                context : context,
                 source : image
             });
 
