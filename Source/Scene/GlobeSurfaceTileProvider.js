@@ -26,6 +26,7 @@ define([
         '../Core/Visibility',
         '../Core/WebMercatorProjection',
         '../Renderer/BufferUsage',
+        '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
         '../Renderer/RenderState',
         '../Renderer/VertexArray',
@@ -67,6 +68,7 @@ define([
         Visibility,
         WebMercatorProjection,
         BufferUsage,
+        ContextLimits,
         DrawCommand,
         RenderState,
         VertexArray,
@@ -935,7 +937,7 @@ define([
 
         var viewMatrix = frameState.camera.viewMatrix;
 
-        var maxTextures = context.maximumTextureImageUnits;
+        var maxTextures = ContextLimits.maximumTextureImageUnits;
 
         var waterMaskTexture = surfaceTile.waterMaskTexture;
         var showReflectiveOcean = tileProvider.hasWaterMask && defined(waterMaskTexture);

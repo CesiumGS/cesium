@@ -15,6 +15,7 @@ define([
         '../Core/Matrix4',
         '../Core/PrimitiveType',
         '../Renderer/BufferUsage',
+        '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
@@ -42,6 +43,7 @@ define([
         Matrix4,
         PrimitiveType,
         BufferUsage,
+        ContextLimits,
         DrawCommand,
         RenderState,
         ShaderProgram,
@@ -683,7 +685,7 @@ define([
     PointPrimitiveCollection.prototype.update = function(context, frameState, commandList) {
         removePointPrimitives(this);
 
-        this._maxTotalPointSize = context.maximumAliasedPointSize;
+        this._maxTotalPointSize = ContextLimits.maximumAliasedPointSize;
 
         updateMode(this, frameState);
 

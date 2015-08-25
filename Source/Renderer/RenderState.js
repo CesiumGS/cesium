@@ -6,7 +6,8 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/RuntimeError',
-        '../Core/WindingOrder'
+        '../Core/WindingOrder',
+        './ContextLimits'
     ], function(
         BoundingRectangle,
         Color,
@@ -14,7 +15,8 @@ define([
         defined,
         DeveloperError,
         RuntimeError,
-        WindingOrder) {
+        WindingOrder,
+        ContextLimits) {
     "use strict";
     /*global WebGLRenderingContext*/
 
@@ -178,13 +180,11 @@ define([
             value : defaultValue(sampleCoverage.value, 1.0),
             invert : defaultValue(sampleCoverage.invert, false)
         };
-        this.viewport = (defined(viewport)) ? new BoundingRectangle(viewport.x, viewport.y,
-            (!defined(viewport.width)) ? context.drawingBufferWidth : viewport.width,
-            (!defined(viewport.height)) ? context.drawingBufferHeight : viewport.height) : undefined;
+        this.viewport = (defined(viewport)) ? new BoundingRectangle(viewport.x, viewport.y, viewport.width, viewport.height) : undefined;
 
         //>>includeStart('debug', pragmas.debug);
-        if ((this.lineWidth < context.minimumAliasedLineWidth) ||
-                (this.lineWidth > context.maximumAliasedLineWidth)) {
+        if ((this.lineWidth < ContextLimits.minimumAliasedLineWidth) ||
+                (this.lineWidth > ContextLimits.maximumAliasedLineWidth)) {
                 throw new DeveloperError('renderState.lineWidth is out of range.  Check minimumAliasedLineWidth and maximumAliasedLineWidth.');
         }
         if (!WindingOrder.validate(this.frontFace)) {
@@ -270,11 +270,11 @@ define([
                 throw new DeveloperError('renderState.viewport.height must be greater than or equal to zero.');
             }
 
-            if (this.viewport.width > context.maximumViewportWidth) {
-                throw new DeveloperError('renderState.viewport.width must be less than or equal to the maximum viewport width (' + this.maximumViewportWidth.toString() + ').  Check maximumViewportWidth.');
+            if (this.viewport.width > ContextLimits.maximumViewportWidth) {
+                throw new DeveloperError('renderState.viewport.width must be less than or equal to the maximum viewport width (' + ContextLimits.maximumViewportWidth.toString() + ').  Check maximumViewportWidth.');
             }
-            if (this.viewport.height > context.maximumViewportHeight) {
-                throw new DeveloperError('renderState.viewport.height must be less than or equal to the maximum viewport height (' + this.maximumViewportHeight.toString() + ').  Check maximumViewportHeight.');
+            if (this.viewport.height > ContextLimits.maximumViewportHeight) {
+                throw new DeveloperError('renderState.viewport.height must be less than or equal to the maximum viewport height (' + ContextLimits.maximumViewportHeight.toString() + ').  Check maximumViewportHeight.');
             }
         }
         //>>includeEnd('debug');

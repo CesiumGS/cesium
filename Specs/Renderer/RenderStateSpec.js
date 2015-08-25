@@ -1,11 +1,13 @@
 /*global defineSuite*/
 defineSuite([
-        'Renderer/RenderState',
         'Core/WindingOrder',
+        'Renderer/ContextLimits',
+        'Renderer/RenderState',
         'Specs/createContext'
     ], function(
-        RenderState,
         WindingOrder,
+        ContextLimits,
+        RenderState,
         createContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
@@ -164,7 +166,7 @@ defineSuite([
                 enabled : true,
                 face : WebGLRenderingContext.FRONT
             },
-            lineWidth : context.maximumAliasedLineWidth,
+            lineWidth : ContextLimits.maximumAliasedLineWidth,
             polygonOffset : {
                 enabled : false,
                 factor : 1,
@@ -415,7 +417,7 @@ defineSuite([
             RenderState.fromCache({
                 context : context,
                 renderState : {
-                    lineWidth : context.minimumAliasedLineWidth - 1
+                    lineWidth : ContextLimits.minimumAliasedLineWidth - 1
                 }
             });
         }).toThrowDeveloperError();
@@ -426,7 +428,7 @@ defineSuite([
             RenderState.fromCache({
                 context : context,
                 renderState : {
-                    lineWidth : context.maximumAliasedLineWidth + 1
+                    lineWidth : ContextLimits.maximumAliasedLineWidth + 1
                 }
             });
         }).toThrowDeveloperError();
@@ -764,7 +766,7 @@ defineSuite([
                 enabled : true,
                 face : WebGLRenderingContext.FRONT
             },
-            lineWidth : context.maximumAliasedLineWidth,
+            lineWidth : ContextLimits.maximumAliasedLineWidth,
             polygonOffset : {
                 enabled : false,
                 factor : 1,

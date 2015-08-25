@@ -7,6 +7,7 @@ defineSuite([
         'Core/WindingOrder',
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
+        'Renderer/ContextLimits',
         'Renderer/DrawCommand',
         'Renderer/RenderState',
         'Renderer/ShaderProgram',
@@ -20,6 +21,7 @@ defineSuite([
         WindingOrder,
         BufferUsage,
         ClearCommand,
+        ContextLimits,
         DrawCommand,
         RenderState,
         ShaderProgram,
@@ -733,7 +735,7 @@ defineSuite([
             renderState : RenderState.fromCache({
                 context : context,
                 renderState : {
-                    lineWidth : context.maximumAliasedLineWidth
+                    lineWidth : ContextLimits.maximumAliasedLineWidth
                 // May only be 1.
                 }
             })
