@@ -16,6 +16,7 @@ define([
         '../Renderer/Context',
         '../Renderer/PixelDatatype',
         '../Renderer/ShaderSource',
+        '../Renderer/Texture',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureMagnificationFilter',
         './Cesium3DTileContentState',
@@ -39,6 +40,7 @@ define([
         Context,
         PixelDatatype,
         ShaderSource,
+        Texture,
         TextureMinificationFilter,
         TextureMagnificationFilter,
         Cesium3DTileContentState,
@@ -779,7 +781,8 @@ define([
 
     function createTexture(content, context, bytes) {
         var dimensions = content._textureDimensions;
-        return context.createTexture2D({
+        return new Texture({
+            context : context,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
             source : {
