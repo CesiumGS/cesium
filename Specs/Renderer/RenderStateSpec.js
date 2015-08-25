@@ -418,7 +418,7 @@ defineSuite([
                     lineWidth : context.minimumAliasedLineWidth - 1
                 }
             });
-        }).toThrowRuntimeError();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (large lineWidth)', function() {
@@ -429,7 +429,7 @@ defineSuite([
                     lineWidth : context.maximumAliasedLineWidth + 1
                 }
             });
-        }).toThrowRuntimeError();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (negative scissorTest.rectangle.width)', function() {
