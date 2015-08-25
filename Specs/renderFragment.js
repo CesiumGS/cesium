@@ -5,6 +5,7 @@ define([
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
         'Renderer/DrawCommand',
+        'Renderer/ShaderProgram',
         'Renderer/VertexArray'
     ], function(
         defaultValue,
@@ -12,13 +13,19 @@ define([
         BufferUsage,
         ClearCommand,
         DrawCommand,
+        ShaderProgram,
         VertexArray) {
     "use strict";
     /*global expect*/
 
     function renderFragment(context, fs, depth, clear) {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
-        var sp = context.createShaderProgram(vs, fs);
+
+        var sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         depth = defaultValue(depth, 0.0);
         var va = new VertexArray({

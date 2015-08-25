@@ -9,6 +9,7 @@ defineSuite([
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
         'Renderer/DrawCommand',
+        'Renderer/ShaderProgram',
         'Renderer/VertexArray',
         'Specs/createContext'
     ], 'Renderer/VertexArrayFactory', function(
@@ -21,6 +22,7 @@ defineSuite([
         BufferUsage,
         ClearCommand,
         DrawCommand,
+        ShaderProgram,
         VertexArray,
         createContext) {
     "use strict";
@@ -318,7 +320,13 @@ defineSuite([
             'void main() { ' +
             '  gl_FragColor = fsColor; ' +
             '}';
-        sp = context.createShaderProgram(vs, fs, attributeLocations);
+
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -375,7 +383,12 @@ defineSuite([
             'void main() { ' +
             '  gl_FragColor = fsColor; ' +
             '}';
-        sp = context.createShaderProgram(vs, fs, attributeLocations);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -456,7 +469,12 @@ defineSuite([
             'void main() { ' +
             '  gl_FragColor = fsColor; ' +
             '}';
-        sp = context.createShaderProgram(vs, fs, attributeLocations);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -530,7 +548,12 @@ defineSuite([
             'void main() { ' +
             '  gl_FragColor = fsColor; ' +
             '}';
-        sp = context.createShaderProgram(vs, fs, attributeLocations);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -562,7 +585,12 @@ defineSuite([
             '  }' +
             '}';
         sp = sp.destroy();
-        sp = context.createShaderProgram(vs2, fs, attributeLocations);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs2,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
 
         command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,

@@ -8,6 +8,7 @@ define([
         '../Renderer/Framebuffer',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
         '../Shaders/AdjustTranslucentFS',
@@ -23,6 +24,7 @@ define([
         Framebuffer,
         PixelDatatype,
         RenderState,
+        ShaderProgram,
         ShaderSource,
         Texture,
         AdjustTranslucentFS,
@@ -409,7 +411,13 @@ define([
                     source +
                     '}\n');
 
-            shader = context.createShaderProgram(shaderProgram.vertexShaderSource, fs, attributeLocations);
+            shader = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : shaderProgram.vertexShaderSource,
+                fragmentShaderSource : fs,
+                attributeLocations : attributeLocations
+            });
+
             cache[id] = shader;
         }
 

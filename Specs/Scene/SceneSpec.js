@@ -14,6 +14,7 @@ defineSuite([
         'Renderer/DrawCommand',
         'Renderer/Framebuffer',
         'Renderer/PixelDatatype',
+        'Renderer/ShaderProgram',
         'Renderer/Texture',
         'Scene/Camera',
         'Scene/FrameState',
@@ -43,6 +44,7 @@ defineSuite([
         DrawCommand,
         Framebuffer,
         PixelDatatype,
+        ShaderProgram,
         Texture,
         Camera,
         FrameState,
@@ -217,9 +219,12 @@ defineSuite([
     it('debugShowCommands tints commands', function() {
         var c = new DrawCommand({
             pass : Pass.OPAQUE,
-            shaderProgram : scene.context.createShaderProgram(
-                'void main() { gl_Position = vec4(1.0); }',
-                'void main() { gl_FragColor = vec4(1.0); }')
+
+            shaderProgram : ShaderProgram.fromCache({
+                context : scene.context,
+                vertexShaderSource : 'void main() { gl_Position = vec4(1.0); }',
+                fragmentShaderSource : 'void main() { gl_FragColor = vec4(1.0); }'
+            })
         });
         c.execute = function() {};
 

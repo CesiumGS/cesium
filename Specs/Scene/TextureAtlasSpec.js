@@ -10,6 +10,7 @@ defineSuite([
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
         'Renderer/DrawCommand',
+        'Renderer/ShaderProgram',
         'Renderer/VertexArray',
         'Specs/createScene',
         'ThirdParty/when'
@@ -24,6 +25,7 @@ defineSuite([
         BufferUsage,
         ClearCommand,
         DrawCommand,
+        ShaderProgram,
         VertexArray,
         createScene,
         when) {
@@ -87,9 +89,16 @@ uniform sampler2D u_texture;\n\
 void main() {\n\
   gl_FragColor = texture2D(u_texture, vec2(' + x + ', ' + y + '));\n\
 }';
-        var sp = context.createShaderProgram(vs, fs, {
-            position : 0
+
+        var sp = ShaderProgram.fromCache({
+            context: context,
+            vertexShaderSource: vs,
+            fragmentShaderSource: fs,
+            attributeLocations: {
+                position: 0
+            }
         });
+
         sp.allUniforms.u_texture.value = texture;
 
         var va = new VertexArray({

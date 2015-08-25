@@ -9,6 +9,7 @@ define([
         'Renderer/ClearCommand',
         'Renderer/Context',
         'Renderer/DrawCommand',
+        'Renderer/ShaderProgram',
         'Renderer/VertexArray',
         'Specs/createCanvas',
         'Specs/createFrameState',
@@ -23,6 +24,7 @@ define([
         ClearCommand,
         Context,
         DrawCommand,
+        ShaderProgram,
         VertexArray,
         createCanvas,
         createFrameState,
@@ -61,7 +63,12 @@ define([
 
         context.verifyDrawForSpecs = function(fs, uniformMap, modelMatrix) {
             var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
-            var sp = context.createShaderProgram(vs, fs);
+
+            var sp = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs
+            });
 
             var va = new VertexArray({
                 context : context,

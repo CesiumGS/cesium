@@ -14,6 +14,7 @@ defineSuite([
         'Core/Matrix4',
         'Renderer/BufferUsage',
         'Renderer/DrawCommand',
+        'Renderer/ShaderProgram',
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
         'Renderer/VertexArray',
@@ -38,6 +39,7 @@ defineSuite([
         Matrix4,
         BufferUsage,
         DrawCommand,
+        ShaderProgram,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         VertexArray,
@@ -257,7 +259,13 @@ defineSuite([
                     bufferUsage : BufferUsage.STATIC_DRAW
                 });
 
-                this._sp = context.createShaderProgram(vs, fs, attributeLocations);
+                this._sp = ShaderProgram.fromCache({
+                    context : context,
+                    vertexShaderSource : vs,
+                    fragmentShaderSource : fs,
+                    attributeLocations : attributeLocations
+                });
+
                 this._rs = context.createRenderState({
                     blending : BlendingState.ALPHA_BLEND
                 });

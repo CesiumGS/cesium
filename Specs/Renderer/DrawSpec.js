@@ -8,6 +8,7 @@ defineSuite([
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
         'Renderer/DrawCommand',
+        'Renderer/ShaderProgram',
         'Renderer/VertexArray',
         'Specs/createContext'
     ], 'Renderer/Draw', function(
@@ -19,6 +20,7 @@ defineSuite([
         BufferUsage,
         ClearCommand,
         DrawCommand,
+        ShaderProgram,
         VertexArray,
         createContext) {
     "use strict";
@@ -48,7 +50,12 @@ defineSuite([
     it('draws a white point', function() {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
@@ -77,7 +84,11 @@ defineSuite([
 
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         // Two indices instead of one is a workaround for NVIDIA:
         //   http://www.khronos.org/message_boards/viewtopic.php?f=44&t=3719
@@ -120,7 +131,11 @@ defineSuite([
             '  fs_intensity = intensity;' +
             '}';
         var fs = 'varying mediump float fs_intensity; void main() { gl_FragColor = vec4(fs_intensity, 0.0, 0.0, 1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
@@ -158,7 +173,11 @@ defineSuite([
             '  fs_intensity = intensity;' +
             '}';
         var fs = 'varying mediump float fs_intensity; void main() { gl_FragColor = vec4(fs_intensity, 0.0, 0.0, 1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         var stride = 5 * Float32Array.BYTES_PER_ELEMENT;
         var vertexBuffer = context.createVertexBuffer(new Float32Array([0, 0, 0, 1, 1]), BufferUsage.STATIC_DRAW);
@@ -195,7 +214,11 @@ defineSuite([
     it('draws with scissor test', function() {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
@@ -244,7 +267,11 @@ defineSuite([
     it('draws with color mask', function() {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
@@ -297,7 +324,11 @@ defineSuite([
     it('draws with additive blending', function() {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(0.5); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
@@ -341,7 +372,11 @@ defineSuite([
     it('draws with alpha blending', function() {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 0.5); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
@@ -385,7 +420,11 @@ defineSuite([
     it('draws with blend color', function() {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
@@ -431,7 +470,11 @@ defineSuite([
     it('draws with culling', function() {
         var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
@@ -480,7 +523,11 @@ defineSuite([
     it('draws with front face winding order', function() {
         var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
@@ -531,7 +578,11 @@ defineSuite([
     it('draws with the depth test', function() {
         var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
@@ -580,7 +631,11 @@ defineSuite([
     it('draws with depth range', function() {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(gl_DepthRange.near, gl_DepthRange.far, 0.0, 1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
@@ -612,7 +667,11 @@ defineSuite([
     it('draws with line width', function() {
         var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
@@ -646,7 +705,11 @@ defineSuite([
     it('draws with polygon offset', function() {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
@@ -684,7 +747,11 @@ defineSuite([
 
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
@@ -734,7 +801,11 @@ defineSuite([
 
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
@@ -809,7 +880,11 @@ defineSuite([
 
         var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
@@ -881,7 +956,11 @@ defineSuite([
     it('draws with an offset and count', function() {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
@@ -934,7 +1013,11 @@ defineSuite([
     it('fails to draw (missing primitiveType)', function() {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         expect(function() {
             context.draw({
@@ -946,7 +1029,11 @@ defineSuite([
     it('fails to draw (primitiveType)', function() {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         expect(function() {
             context.draw({
@@ -959,7 +1046,11 @@ defineSuite([
     it('fails to draw (missing vertexArray)', function() {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         expect(function() {
             context.draw({
@@ -972,7 +1063,11 @@ defineSuite([
     it('fails to draw (negative offset)', function() {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         expect(function() {
             context.draw({

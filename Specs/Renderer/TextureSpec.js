@@ -9,6 +9,7 @@ defineSuite([
         'Renderer/ClearCommand',
         'Renderer/DrawCommand',
         'Renderer/PixelDatatype',
+        'Renderer/ShaderProgram',
         'Renderer/Texture',
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
@@ -26,6 +27,7 @@ defineSuite([
         ClearCommand,
         DrawCommand,
         PixelDatatype,
+        ShaderProgram,
         Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
@@ -85,8 +87,13 @@ defineSuite([
         fs += 'uniform sampler2D u_texture;';
         fs += 'void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)); }';
 
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
         sp.allUniforms.u_texture.value = texture;
 
@@ -224,8 +231,13 @@ defineSuite([
         fs += 'uniform mediump vec2 u_txCoords;';
         fs += 'void main() { gl_FragColor = texture2D(u_texture, u_txCoords); }';
 
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
         sp.allUniforms.u_texture.value = texture;
 
@@ -306,8 +318,13 @@ defineSuite([
         fs += 'uniform mediump vec2 u_txCoords;';
         fs += 'void main() { gl_FragColor = texture2D(u_texture, u_txCoords); }';
 
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
         sp.allUniforms.u_texture.value = texture;
 

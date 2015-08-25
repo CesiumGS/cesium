@@ -6,6 +6,7 @@ defineSuite([
         'Core/PrimitiveType',
         'Renderer/BufferUsage',
         'Renderer/DrawCommand',
+        'Renderer/ShaderProgram',
         'Renderer/VertexArray',
         'Specs/createContext',
         'ThirdParty/when'
@@ -16,6 +17,7 @@ defineSuite([
         PrimitiveType,
         BufferUsage,
         DrawCommand,
+        ShaderProgram,
         VertexArray,
         createContext,
         when) {
@@ -49,8 +51,13 @@ defineSuite([
                 'uniform samplerCube u_texture;' +
                 'uniform mediump vec3 u_direction;' +
                 'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
-            var sp = context.createShaderProgram(vs, fs, {
-                position : 0
+            var sp = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs,
+                attributeLocations : {
+                    position : 0
+                }
             });
             sp.allUniforms.u_texture.value = cm;
 

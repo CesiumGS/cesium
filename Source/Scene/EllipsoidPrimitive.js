@@ -12,6 +12,7 @@ define([
         '../Core/VertexFormat',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
         '../Shaders/EllipsoidFS',
@@ -34,6 +35,7 @@ define([
         VertexFormat,
         BufferUsage,
         DrawCommand,
+        ShaderProgram,
         ShaderSource,
         VertexArray,
         EllipsoidFS,
@@ -368,7 +370,13 @@ define([
                 fs.defines.push('WRITE_DEPTH');
             }
 
-            this._sp = context.replaceShaderProgram(this._sp, EllipsoidVS, fs, attributeLocations);
+            this._sp = ShaderProgram.replaceCache({
+                context : context,
+                shaderProgram : this._sp,
+                vertexShaderSource : EllipsoidVS,
+                fragmentShaderSource : fs,
+                attributeLocations : attributeLocations
+            });
 
             colorCommand.vertexArray = this._va;
             colorCommand.renderState = this._rs;
@@ -413,7 +421,13 @@ define([
                     fs.defines.push('WRITE_DEPTH');
                 }
 
-                this._pickSP = context.replaceShaderProgram(this._pickSP, EllipsoidVS, fs, attributeLocations);
+                this._pickSP = ShaderProgram.replaceCache({
+                    context : context,
+                    shaderProgram : this._pickSP,
+                    vertexShaderSource : EllipsoidVS,
+                    fragmentShaderSource : fs,
+                    attributeLocations : attributeLocations
+                });
 
                 pickCommand.vertexArray = this._va;
                 pickCommand.renderState = this._rs;

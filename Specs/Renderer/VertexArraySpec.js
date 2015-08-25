@@ -4,6 +4,7 @@ defineSuite([
         'Core/PrimitiveType',
         'Renderer/BufferUsage',
         'Renderer/DrawCommand',
+        'Renderer/ShaderProgram',
         'Renderer/VertexArray',
         'Specs/createContext'
     ], 'Renderer/VertexArray', function(
@@ -11,6 +12,7 @@ defineSuite([
         PrimitiveType,
         BufferUsage,
         DrawCommand,
+        ShaderProgram,
         VertexArray,
         createContext) {
     "use strict";
@@ -204,9 +206,14 @@ defineSuite([
         var fs =
             'varying vec4 v_color;' +
             'void main() { gl_FragColor = v_color; }';
-        var sp = context.createShaderProgram(vs, fs, {
-            firefoxWorkaround : 0,
-            attr : 1
+        var sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                firefoxWorkaround : 0,
+                attr : 1
+            }
         });
 
         var va = new VertexArray({
@@ -246,9 +253,14 @@ defineSuite([
         var fs =
             'varying vec4 v_color;' +
             'void main() { gl_FragColor = v_color; }';
-        var sp = context.createShaderProgram(vs, fs, {
-            firefoxWorkaround : 0,
-            attr : 1
+        var sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                firefoxWorkaround : 0,
+                attr : 1
+            }
         });
 
         var va = new VertexArray({
@@ -288,9 +300,14 @@ defineSuite([
         var fs =
             'varying vec4 v_color;' +
             'void main() { gl_FragColor = v_color; }';
-        var sp = context.createShaderProgram(vs, fs, {
-            firefoxWorkaround : 0,
-            attr : 1
+        var sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                firefoxWorkaround : 0,
+                attr : 1
+            }
         });
 
         var va = new VertexArray({
@@ -330,9 +347,14 @@ defineSuite([
         var fs =
             'varying vec4 v_color;' +
             'void main() { gl_FragColor = v_color; }';
-        var sp = context.createShaderProgram(vs, fs, {
-            firefoxWorkaround : 0,
-            attr : 1
+        var sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                firefoxWorkaround : 0,
+                attr : 1
+            }
         });
 
         var va = new VertexArray({
