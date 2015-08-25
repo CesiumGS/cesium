@@ -1,4 +1,4 @@
-define(['../Core/getTimeStamp'], function(getTimeStamp) {
+define([], function() {
 
 /*!
  * https://github.com/amd/rest3d/tree/master/server/o3dgc
@@ -181,16 +181,30 @@ define(['../Core/getTimeStamp'], function(getTimeStamp) {
         }
         return pos;
     }
+
+    var getTimestamp = (function() {
+        if (typeof performance !== 'undefined' && typeof performance.now !== 'undefined') {
+            return function() {
+                return performance.now();
+            };
+        } else {
+            var nowOffset = Date.now();
+            return function() {
+                return Date.now() - nowOffset;
+            };
+        }
+    })();
+
     // Timer class
     module.Timer = function () {
         this.m_start = 0;
         this.m_end = 0;
     };
     module.Timer.prototype.Tic = function () {
-        this.m_start = getTimeStamp();
+        this.m_start = getTimestamp();
     };
     module.Timer.prototype.Toc = function () {
-        this.m_end = getTimeStamp();
+        this.m_end = getTimestamp();
     };
     module.Timer.prototype.GetElapsedTime = function () {
         return this.m_end - this.m_start;
