@@ -196,10 +196,7 @@ define([
             });
 
             command.renderState = RenderState.fromCache({
-                context : context,
-                renderState : {
-                    blending : BlendingState.ALPHA_BLEND
-                }
+                blending : BlendingState.ALPHA_BLEND
             });
         }
 

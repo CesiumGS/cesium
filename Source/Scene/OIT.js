@@ -235,9 +235,7 @@ define([
                 }
             };
             this._compositeCommand = context.createViewportQuadCommand(fs, {
-                renderState : RenderState.fromCache({
-                    context : context
-                }),
+                renderState : RenderState.fromCache(),
                 uniformMap : uniformMap,
                 owner : this
             });
@@ -260,9 +258,7 @@ define([
                 };
 
                 this._adjustTranslucentCommand = context.createViewportQuadCommand(fs, {
-                    renderState : RenderState.fromCache({
-                        context : context
-                    }),
+                    renderState : RenderState.fromCache(),
                     uniformMap : uniformMap,
                     owner : this
                 });
@@ -281,9 +277,7 @@ define([
                 };
 
                 this._adjustTranslucentCommand = context.createViewportQuadCommand(fs, {
-                    renderState : RenderState.fromCache({
-                        context : context
-                    }),
+                    renderState : RenderState.fromCache(),
                     uniformMap : uniformMap,
                     owner : this
                 });
@@ -298,9 +292,7 @@ define([
                 };
 
                 this._adjustAlphaCommand = context.createViewportQuadCommand(fs, {
-                    renderState : RenderState.fromCache({
-                        context : context
-                    }),
+                    renderState : RenderState.fromCache(),
                     uniformMap : uniformMap,
                     owner : this
                 });
@@ -348,10 +340,7 @@ define([
             rs.depthMask = false;
             rs.blending = translucentBlending;
 
-            translucentState = RenderState.fromCache({
-                context : context,
-                renderState : rs
-            });
+            translucentState = RenderState.fromCache(rs);
             cache[renderState.id] = translucentState;
         }
 

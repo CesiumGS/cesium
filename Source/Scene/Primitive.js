@@ -997,21 +997,12 @@ define([
                 enabled : true,
                 face : CullFace.BACK
             };
-            primitive._frontFaceRS = RenderState.fromCache({
-                context : context,
-                renderState : rs
-            });
+            primitive._frontFaceRS = RenderState.fromCache(rs);
 
             rs.cull.face = CullFace.FRONT;
-            primitive._backFaceRS = RenderState.fromCache({
-                context : context,
-                renderState : rs
-            });
+            primitive._backFaceRS = RenderState.fromCache(rs);
         } else {
-            primitive._frontFaceRS = RenderState.fromCache({
-                context : context,
-                renderState : renderState
-            });
+            primitive._frontFaceRS = RenderState.fromCache(renderState);
             primitive._backFaceRS = primitive._frontFaceRS;
         }
 
@@ -1021,10 +1012,7 @@ define([
                 rs.cull = {
                     enabled : false
                 };
-                primitive._pickRS = RenderState.fromCache({
-                    context : context,
-                    renderState : rs
-                });
+                primitive._pickRS = RenderState.fromCache(rs);
             } else {
                 primitive._pickRS = primitive._frontFaceRS;
             }
@@ -1041,15 +1029,9 @@ define([
                 rs.cull = {
                     enabled : false
                 };
-                primitive._pickRS = RenderState.fromCache({
-                    context : context,
-                    renderState : rs
-                });
+                primitive._pickRS = RenderState.fromCache(rs);
             } else {
-                primitive._pickRS = RenderState.fromCache({
-                    context : context,
-                    renderState : rs
-                });
+                primitive._pickRS = RenderState.fromCache(rs);
             }
         }
     }

@@ -300,22 +300,19 @@ define([
             // to be updated as well.
 
             this._rs = RenderState.fromCache({
-                context : context,
-                renderState : {
-                    // Cull front faces - not back faces - so the ellipsoid doesn't
-                    // disappear if the viewer enters the bounding box.
-                    cull : {
-                        enabled : true,
-                        face : CullFace.FRONT
-                    },
-                    depthTest : {
-                        enabled : this._depthTestEnabled
-                    },
-                    // Only write depth when EXT_frag_depth is supported since the depth for
-                    // the bounding box is wrong; it is not the true depth of the ray casted ellipsoid.
-                    depthMask : !translucent && context.fragmentDepth,
-                    blending : translucent ? BlendingState.ALPHA_BLEND : undefined
-                }
+                // Cull front faces - not back faces - so the ellipsoid doesn't
+                // disappear if the viewer enters the bounding box.
+                cull : {
+                    enabled : true,
+                    face : CullFace.FRONT
+                },
+                depthTest : {
+                    enabled : this._depthTestEnabled
+                },
+                // Only write depth when EXT_frag_depth is supported since the depth for
+                // the bounding box is wrong; it is not the true depth of the ray casted ellipsoid.
+                depthMask : !translucent && context.fragmentDepth,
+                blending : translucent ? BlendingState.ALPHA_BLEND : undefined
             });
         }
 

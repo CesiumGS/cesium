@@ -23,12 +23,6 @@ defineSuite([
         context.destroyForSpecs();
     });
 
-    it('throws when there is no context', function() {
-        expect(function() {
-            return RenderState.fromCache();
-        }).toThrowDeveloperError();
-    });
-
     it('creates with defaults', function() {
         var defaultRS = {
             frontFace : WindingOrder.COUNTER_CLOCKWISE,
@@ -106,9 +100,7 @@ defineSuite([
             }
         };
 
-        var rs = RenderState.fromCache({
-            context : context
-        });
+        var rs = RenderState.fromCache();
 
         expect(rs.frontFace).toEqual(defaultRS.frontFace);
         expect(rs.cull.enabled).toEqual(defaultRS.cull.enabled);
@@ -236,10 +228,7 @@ defineSuite([
             }
         };
 
-        var rs = RenderState.fromCache({
-            context : context,
-            renderState : r
-        });
+        var rs = RenderState.fromCache(r);
 
         expect(rs.frontFace).toEqual(r.frontFace);
         expect(rs.cull.enabled).toEqual(r.cull.enabled);
@@ -299,17 +288,12 @@ defineSuite([
             }
         };
 
-        var rs = RenderState.fromCache({
-            context : context,
-            renderState : r
-        });
+        var rs = RenderState.fromCache(r);
         expect(rs.frontFace).toEqual(r.frontFace);
         expect(rs.depthRange.near).toEqual(r.depthRange.near);
         expect(rs.depthRange.far).toEqual(r.depthRange.far);
 
-        var defaultRS = RenderState.fromCache({
-            context : context
-        });
+        var defaultRS = RenderState.fromCache();
         expect(rs.cull.enabled).toEqual(defaultRS.cull.enabled);
         expect(rs.cull.face).toEqual(defaultRS.cull.face);
         expect(rs.cull.lineWidth).toEqual(defaultRS.cull.lineWidth);
@@ -357,30 +341,20 @@ defineSuite([
     });
 
     it('caches render states', function() {
-        var rs = RenderState.fromCache({
-            context : context
-        });
-        var rs2 = RenderState.fromCache({
-            context : context
-        });
+        var rs = RenderState.fromCache();
+        var rs2 = RenderState.fromCache();
         // rs3 is still the same state as rs and rs2, but with a partial definition
         var rs3 = RenderState.fromCache({
-            context : context,
-            renderState : {
-                depthTest : {
-                    enabled : false,
-                    func : WebGLRenderingContext.LESS
-                }
+            depthTest : {
+                enabled : false,
+                func : WebGLRenderingContext.LESS
             }
         });
         // rs4 is a cache miss since it has a different depthTest
         var rs4 = RenderState.fromCache({
-            context : context,
-            renderState : {
-                depthTest : {
-                    enabled : true,
-                    func : WebGLRenderingContext.NEVER
-                }
+            depthTest : {
+                enabled : true,
+                func : WebGLRenderingContext.NEVER
             }
         });
         expect(rs2).toBe(rs);
@@ -391,10 +365,7 @@ defineSuite([
     it('fails to create (frontFace)', function() {
         expect(function() {
             RenderState.fromCache({
-                context : context,
-                renderState : {
-                    frontFace : 'invalid value'
-                }
+                frontFace : 'invalid value'
             });
         }).toThrowDeveloperError();
     });
@@ -402,11 +373,8 @@ defineSuite([
     it('fails to create (cull.face)', function() {
         expect(function() {
             RenderState.fromCache({
-                context : context,
-                renderState : {
-                    cull : {
-                        face : 'invalid value'
-                    }
+                cull : {
+                    face : 'invalid value'
                 }
             });
         }).toThrowDeveloperError();
@@ -415,10 +383,7 @@ defineSuite([
     it('fails to create (small lineWidth)', function() {
         expect(function() {
             RenderState.fromCache({
-                context : context,
-                renderState : {
-                    lineWidth : ContextLimits.minimumAliasedLineWidth - 1
-                }
+                lineWidth : ContextLimits.minimumAliasedLineWidth - 1
             });
         }).toThrowDeveloperError();
     });
@@ -426,10 +391,7 @@ defineSuite([
     it('fails to create (large lineWidth)', function() {
         expect(function() {
             RenderState.fromCache({
-                context : context,
-                renderState : {
-                    lineWidth : ContextLimits.maximumAliasedLineWidth + 1
-                }
+                lineWidth : ContextLimits.maximumAliasedLineWidth + 1
             });
         }).toThrowDeveloperError();
     });
@@ -437,15 +399,12 @@ defineSuite([
     it('fails to create (negative scissorTest.rectangle.width)', function() {
         expect(function() {
             RenderState.fromCache({
-                context : context,
-                renderState : {
-                    scissorTest : {
-                        rectangle : {
-                            x : 0,
-                            y : 0,
-                            width : -1,
-                            height : 0
-                        }
+                scissorTest : {
+                    rectangle : {
+                        x : 0,
+                        y : 0,
+                        width : -1,
+                        height : 0
                     }
                 }
             });
@@ -455,15 +414,12 @@ defineSuite([
     it('fails to create (negative scissorTest.rectangle.height)', function() {
         expect(function() {
             RenderState.fromCache({
-                context : context,
-                renderState : {
-                    scissorTest : {
-                        rectangle : {
-                            x : 0,
-                            y : 0,
-                            width : 0,
-                            height : -1
-                        }
+                scissorTest : {
+                    rectangle : {
+                        x : 0,
+                        y : 0,
+                        width : 0,
+                        height : -1
                     }
                 }
             });
@@ -473,12 +429,9 @@ defineSuite([
     it('fails to create (near > far)', function() {
         expect(function() {
             RenderState.fromCache({
-                context : context,
-                renderState : {
-                    depthRange : {
-                        near : 0.75,
-                        far : 0.25
-                    }
+                depthRange : {
+                    near : 0.75,
+                    far : 0.25
                 }
             });
         }).toThrowDeveloperError();
@@ -487,11 +440,8 @@ defineSuite([
     it('fails to create (near < 0)', function() {
         expect(function() {
             RenderState.fromCache({
-                context : context,
-                renderState : {
-                    depthRange : {
-                        near : -1
-                    }
+                depthRange : {
+                    near : -1
                 }
             });
         }).toThrowDeveloperError();
@@ -500,11 +450,8 @@ defineSuite([
     it('fails to create (far > 1)', function() {
         expect(function() {
             RenderState.fromCache({
-                context : context,
-                renderState : {
-                    depthRange : {
-                        far : 2
-                    }
+                depthRange : {
+                    far : 2
                 }
             });
         }).toThrowDeveloperError();
@@ -513,11 +460,8 @@ defineSuite([
     it('fails to create (depthTest.func)', function() {
         expect(function() {
             RenderState.fromCache({
-                context : context,
-                renderState : {
-                    depthTest : {
-                        func : 'invalid value'
-                    }
+                depthTest : {
+                    func : 'invalid value'
                 }
             });
         }).toThrowDeveloperError();
@@ -526,15 +470,12 @@ defineSuite([
     it('fails to create (blending.color < 0)', function() {
         expect(function() {
             RenderState.fromCache({
-                context : context,
-                renderState : {
-                    blending : {
-                        color : {
-                            red : -1.0,
-                            green : 0.0,
-                            blue : 0.0,
-                            alpha : 0.0
-                        }
+                blending : {
+                    color : {
+                        red : -1.0,
+                        green : 0.0,
+                        blue : 0.0,
+                        alpha : 0.0
                     }
                 }
             });
@@ -544,15 +485,12 @@ defineSuite([
     it('fails to create (blending.color > 1)', function() {
         expect(function() {
             RenderState.fromCache({
-                context : context,
-                renderState : {
-                    blending: {
-                        color: {
-                            red: 0.0,
-                            green: 0.0,
-                            blue: 0.0,
-                            alpha: 2.0
-                        }
+                blending: {
+                    color: {
+                        red: 0.0,
+                        green: 0.0,
+                        blue: 0.0,
+                        alpha: 2.0
                     }
                 }
             });
@@ -562,11 +500,8 @@ defineSuite([
     it('fails to create (blend.equationRgb)', function() {
         expect(function() {
             RenderState.fromCache({
-                context : context,
-                renderState : {
-                    blending: {
-                        equationRgb: 'invalid value'
-                    }
+                blending: {
+                    equationRgb: 'invalid value'
                 }
             });
         }).toThrowDeveloperError();
@@ -575,11 +510,8 @@ defineSuite([
     it('fails to create (blend.equationAlpha)', function() {
         expect(function() {
             RenderState.fromCache({
-                context : context,
-                renderState : {
-                    blending: {
-                        equationAlpha: 'invalid value'
-                    }
+                blending: {
+                    equationAlpha: 'invalid value'
                 }
             });
         }).toThrowDeveloperError();
@@ -588,11 +520,8 @@ defineSuite([
     it('fails to create (blend.functionSourceRgb)', function() {
         expect(function() {
             RenderState.fromCache({
-                context : context,
-                renderState : {
-                    blending: {
-                        functionSourceRgb: 'invalid value'
-                    }
+                blending: {
+                    functionSourceRgb: 'invalid value'
                 }
             });
         }).toThrowDeveloperError();
@@ -601,11 +530,8 @@ defineSuite([
     it('fails to create (blend.functionSourceAlpha)', function() {
         expect(function() {
             RenderState.fromCache({
-                context : context,
-                renderState : {
-                    blending: {
-                        functionSourceAlpha: 'invalid value'
-                    }
+                blending: {
+                    functionSourceAlpha: 'invalid value'
                 }
             });
         }).toThrowDeveloperError();
@@ -614,11 +540,8 @@ defineSuite([
     it('fails to create (blend.functionDestinationRgb)', function() {
         expect(function() {
             RenderState.fromCache({
-                context : context,
-                renderState : {
-                    blending: {
-                        functionDestinationRgb: 'invalid value'
-                    }
+                blending: {
+                    functionDestinationRgb: 'invalid value'
                 }
             });
         }).toThrowDeveloperError();
@@ -627,11 +550,8 @@ defineSuite([
     it('fails to create (blend.functionDestinationAlpha)', function() {
         expect(function() {
             RenderState.fromCache({
-                context : context,
-                renderState : {
-                    blending: {
-                        functionDestinationAlpha: 'invalid value'
-                    }
+                blending: {
+                    functionDestinationAlpha: 'invalid value'
                 }
             });
         }).toThrowDeveloperError();
@@ -640,11 +560,8 @@ defineSuite([
     it('fails to create (stencilTest.frontFunction)', function() {
         expect(function() {
             RenderState.fromCache({
-                context : context,
-                renderState : {
-                    stencilTest: {
-                        frontFunction: 'invalid value'
-                    }
+                stencilTest: {
+                    frontFunction: 'invalid value'
                 }
             });
         }).toThrowDeveloperError();
@@ -653,11 +570,8 @@ defineSuite([
     it('fails to create (stencilTest.backFunction)', function() {
         expect(function() {
             RenderState.fromCache({
-                context : context,
-                renderState : {
-                    stencilTest: {
-                        backFunction: 'invalid value'
-                    }
+                stencilTest: {
+                    backFunction: 'invalid value'
                 }
             });
         }).toThrowDeveloperError();
@@ -666,12 +580,9 @@ defineSuite([
     it('fails to create (stencilTest.frontOperation.fail)', function() {
         expect(function() {
             RenderState.fromCache({
-                context : context,
-                renderState : {
-                    stencilTest: {
-                        frontOperation: {
-                            fail: 'invalid value'
-                        }
+                stencilTest: {
+                    frontOperation: {
+                        fail: 'invalid value'
                     }
                 }
             });
@@ -681,12 +592,9 @@ defineSuite([
     it('fails to create (stencilTest.frontOperation.zFail)', function() {
         expect(function() {
             RenderState.fromCache({
-                context : context,
-                renderState : {
-                    stencilTest: {
-                        frontOperation: {
-                            zFail: 'invalid value'
-                        }
+                stencilTest: {
+                    frontOperation: {
+                        zFail: 'invalid value'
                     }
                 }
             });
@@ -696,12 +604,9 @@ defineSuite([
     it('fails to create (stencilTest.frontOperation.zPass)', function() {
         expect(function() {
             RenderState.fromCache({
-                context : context,
-                renderState : {
-                    stencilTest: {
-                        frontOperation: {
-                            zPass: 'invalid value'
-                        }
+                stencilTest: {
+                    frontOperation: {
+                        zPass: 'invalid value'
                     }
                 }
             });
@@ -711,12 +616,9 @@ defineSuite([
     it('fails to create (stencilTest.backOperation.fail)', function() {
         expect(function() {
             RenderState.fromCache({
-                context : context,
-                renderState : {
-                    stencilTest: {
-                        backOperation: {
-                            fail: 'invalid value'
-                        }
+                stencilTest: {
+                    backOperation: {
+                        fail: 'invalid value'
                     }
                 }
             });
@@ -726,12 +628,9 @@ defineSuite([
     it('fails to create (stencilTest.backOperation.zFail)', function() {
         expect(function() {
             RenderState.fromCache({
-                context : context,
-                renderState : {
-                    stencilTest: {
-                        backOperation: {
-                            zFail: 'invalid value'
-                        }
+                stencilTest: {
+                    backOperation: {
+                        zFail: 'invalid value'
                     }
                 }
             });
@@ -741,12 +640,9 @@ defineSuite([
     it('fails to create (stencilTest.backOperation.zPass)', function() {
         expect(function() {
             RenderState.fromCache({
-                context : context,
-                renderState : {
-                    stencilTest: {
-                        backOperation: {
-                            zPass: 'invalid value'
-                        }
+                stencilTest: {
+                    backOperation: {
+                        zPass: 'invalid value'
                     }
                 }
             });
@@ -836,15 +732,9 @@ defineSuite([
             }
         };
 
-        var r2 = RenderState.fromCache({
-            context : context,
-            renderState : r
-        });
+        var r2 = RenderState.fromCache(r);
 
-        var rs = RenderState.fromCache({
-            context : context,
-            renderState : RenderState.clone(r)
-        });
+        var rs = RenderState.fromCache(RenderState.clone(r));
 
         expect(rs.frontFace).toEqual(r.frontFace);
         expect(rs.cull.enabled).toEqual(r.cull.enabled);

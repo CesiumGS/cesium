@@ -115,9 +115,7 @@ define([
 
         if (!defined(this._command)) {
             this._command = context.createViewportQuadCommand(FXAAFS, {
-                renderState : RenderState.fromCache({
-                    context : context
-                }),
+                renderState : RenderState.fromCache(),
                 owner : this
             });
         }

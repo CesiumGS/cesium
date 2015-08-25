@@ -373,11 +373,8 @@ defineSuite([
             vertexArray : va,
             framebuffer : framebuffer,
             renderState : RenderState.fromCache({
-                context : context,
-                renderState : {
-                    depthTest : {
-                        enabled : true
-                    }
+                depthTest : {
+                    enabled : true
                 }
             })
         });
@@ -510,12 +507,9 @@ defineSuite([
             vertexArray : va,
             framebuffer : framebuffer,
             renderState : RenderState.fromCache({
-                context : context,
-                renderState : {
-                    depthTest : {
-                        enabled : true,
-                        func : WebGLRenderingContext.NEVER
-                    }
+                depthTest : {
+                    enabled : true,
+                    func : WebGLRenderingContext.NEVER
                 }
             })
         });
@@ -531,12 +525,9 @@ defineSuite([
             vertexArray : va,
             framebuffer : framebuffer,
             renderState : RenderState.fromCache({
-                context : context,
-                renderState : {
-                    depthTest : {
-                        enabled : true,
-                        func : WebGLRenderingContext.ALWAYS
-                    }
+                depthTest : {
+                    enabled : true,
+                    func : WebGLRenderingContext.ALWAYS
                 }
             })
         });
@@ -820,11 +811,8 @@ defineSuite([
                 vertexArray : va,
                 framebuffer : framebuffer,
                 renderState : RenderState.fromCache({
-                    context : context,
-                    renderState : {
-                        depthTest : {
-                            enabled : true
-                        }
+                    depthTest : {
+                        enabled : true
                     }
                 })
             });

@@ -51,14 +51,11 @@ defineSuite([
         var command = new ClearCommand({
             color : Color.WHITE,
             renderState : RenderState.fromCache({
-                context : context,
-                renderState : {
-                    colorMask : {
-                        red : true,
-                        green : false,
-                        blue : true,
-                        alpha : false
-                    }
+                colorMask : {
+                    red : true,
+                    green : false,
+                    blue : true,
+                    alpha : false
                 }
             })
         });
@@ -76,12 +73,9 @@ defineSuite([
 
         command.color = Color.BLACK;
         command.renderState = RenderState.fromCache({
-            context : context,
-            renderState : {
-                scissorTest : {
-                    enabled : true,
-                    rectangle : new BoundingRectangle()
-                }
+            scissorTest : {
+                enabled : true,
+                rectangle : new BoundingRectangle()
             }
         });
 
@@ -89,12 +83,9 @@ defineSuite([
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         command.renderState = RenderState.fromCache({
-            context : context,
-            renderState : {
-                scissorTest : {
-                    enabled : true,
-                    rectangle : new BoundingRectangle(0, 0, 1, 1)
-                }
+            scissorTest : {
+                enabled : true,
+                rectangle : new BoundingRectangle(0, 0, 1, 1)
             }
         });
 

@@ -115,9 +115,7 @@ define([
                 '    gl_FragColor = czm_packDepth(texture2D(u_texture, v_textureCoordinates).r);\n' +
                 '}\n';
             pickDepth._copyDepthCommand = context.createViewportQuadCommand(fs, {
-                renderState : RenderState.fromCache({
-                    context : context
-                }),
+                renderState : RenderState.fromCache(),
                 uniformMap : {
                     u_texture : function() {
                         return pickDepth._textureToCopy;

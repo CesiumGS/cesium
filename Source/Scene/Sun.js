@@ -189,10 +189,7 @@ define([
             });
 
             var rs = RenderState.fromCache({
-                context : context,
-                renderState : {
-                    viewport : new BoundingRectangle(0.0, 0.0, size, size)
-                }
+                viewport : new BoundingRectangle(0.0, 0.0, size, size)
             });
 
             this._glowLengthTS = this._glowFactor * 5.0;
@@ -266,10 +263,7 @@ define([
             });
 
             command.renderState = RenderState.fromCache({
-                context : context,
-                renderState : {
-                    blending : BlendingState.ALPHA_BLEND
-                }
+                blending : BlendingState.ALPHA_BLEND
             });
             command.uniformMap = this._uniformMap;
         }

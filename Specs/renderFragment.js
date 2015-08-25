@@ -39,11 +39,8 @@ define([
             }]
         });
         var rs = RenderState.fromCache({
-            context : context,
-            renderState : {
-                depthTest : {
-                    enabled : true
-                }
+            depthTest : {
+                enabled : true
             }
         });
 

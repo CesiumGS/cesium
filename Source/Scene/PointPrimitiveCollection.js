@@ -823,13 +823,10 @@ define([
 
             if (!defined(this._rs)) {
                 this._rs = RenderState.fromCache({
-                    context : context,
-                    renderState : {
-                        depthTest : {
-                            enabled : true
-                        },
-                        blending : BlendingState.ALPHA_BLEND
-                    }
+                    depthTest : {
+                        enabled : true
+                    },
+                    blending : BlendingState.ALPHA_BLEND
                 });
             }
 

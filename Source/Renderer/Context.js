@@ -301,9 +301,7 @@ define([
 
         var us = new UniformState();
         var ps = new PassState(this);
-        var rs = RenderState.fromCache({
-           context : this
-        });
+        var rs = RenderState.fromCache();
 
         this._defaultPassState = ps;
         this._defaultRenderState = rs;

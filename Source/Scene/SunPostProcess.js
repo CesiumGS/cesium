@@ -292,14 +292,9 @@ define([
             this._blurYCommand.framebuffer = this._downSampleFBO2;
 
             var downSampleRenderState = RenderState.fromCache({
-                context : context,
-                renderState : {
-                    viewport : downSampleViewport
-                }
+                viewport : downSampleViewport
             });
-            var upSampleRenderState = RenderState.fromCache({
-                context : context
-            });
+            var upSampleRenderState = RenderState.fromCache();
 
             this._downSampleCommand.uniformMap.u_texture = function() {
                 return fbo.getColorTexture(0);

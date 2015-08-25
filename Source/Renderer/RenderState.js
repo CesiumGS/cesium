@@ -86,17 +86,8 @@ define([
     /**
      * @private
      */
-    var RenderState = function(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.context)) {
-            throw new DeveloperError('options.context is required.');
-        }
-        //>>includeEnd('debug');
-
-        var context = options.context;
-        var rs = defaultValue(options.renderState, {});
+    var RenderState = function(renderState) {
+        var rs = defaultValue(renderState, {});
         var cull = defaultValue(rs.cull, {});
         var polygonOffset = defaultValue(rs.polygonOffset, {});
         var scissorTest = defaultValue(rs.scissorTest, {});
@@ -291,9 +282,7 @@ define([
      * state for a {@link DrawCommand} or {@link ClearCommand}.  All inputs states are optional.  Omitted states
      * use the defaults shown in the example below.
      *
-     * @param {Object} options Object with the following properties:
-     * @param [Object} options.context The context.
-     * @param {Object} [options.renderState] The states defining the render state as shown in the example below.
+     * @param {Object} [renderState] The states defining the render state as shown in the example below.
      *
      * @exception {RuntimeError} renderState.lineWidth is out of range.
      * @exception {DeveloperError} Invalid renderState.frontFace.
@@ -403,23 +392,11 @@ define([
      *      }
      * };
      *
-     * var rs = RenderState.fromCache({
-     *     context : context,
-     *     renderState : defaults
-     * });
+     * var rs = RenderState.fromCache(defaults);
      *
      * @private
      */
-    RenderState.fromCache = function(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.context)) {
-            throw new DeveloperError('options.context is required.');
-        }
-        //>>includeEnd('debug');
-
-        var renderState = options.renderState;
+    RenderState.fromCache = function(renderState) {
         var partialKey = JSON.stringify(renderState);
         var cachedState = renderStateCache[partialKey];
         if (defined(cachedState)) {
@@ -427,10 +404,7 @@ define([
         }
 
         // Cache miss.  Fully define render state and try again.
-        var states = new RenderState({
-            context : options.context,
-            renderState : renderState
-        });
+        var states = new RenderState(renderState);
         var fullKey = JSON.stringify(states);
         cachedState = renderStateCache[fullKey];
         if (!defined(cachedState)) {

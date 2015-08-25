@@ -949,10 +949,7 @@ define([
                 (reproject.renderState.viewport.height !== height)) {
 
             reproject.renderState = RenderState.fromCache({
-                context : context,
-                renderState : {
-                    viewport : new BoundingRectangle(0, 0, width, height)
-                }
+                viewport : new BoundingRectangle(0, 0, width, height)
             });
         }
 
