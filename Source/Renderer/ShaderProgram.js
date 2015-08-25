@@ -67,7 +67,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        return options.context._shaderCache.getShaderProgram(options);
+        return options.context.shaderCache.getShaderProgram(options);
     };
 
     ShaderProgram.replaceCache = function(options) {
@@ -79,7 +79,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        return options.context._shaderCache.replaceShaderProgram(options);
+        return options.context.shaderCache.replaceShaderProgram(options);
     };
 
     defineProperties(ShaderProgram.prototype, {

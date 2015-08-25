@@ -11,7 +11,7 @@ defineSuite([
         'Renderer/PixelDatatype',
         'Renderer/Renderbuffer',
         'Renderer/RenderbufferFormat',
-         'Renderer/ShaderProgram',
+        'Renderer/ShaderProgram',
         'Renderer/Texture',
         'Renderer/VertexArray',
         'Specs/createContext'
