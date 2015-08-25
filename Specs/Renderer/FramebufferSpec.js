@@ -11,6 +11,7 @@ defineSuite([
         'Renderer/PixelDatatype',
         'Renderer/Renderbuffer',
         'Renderer/RenderbufferFormat',
+        'Renderer/RenderState',
         'Renderer/Texture',
         'Renderer/VertexArray',
         'Specs/createContext'
@@ -26,6 +27,7 @@ defineSuite([
         PixelDatatype,
         Renderbuffer,
         RenderbufferFormat,
+        RenderState,
         Texture,
         VertexArray,
         createContext) {
@@ -343,9 +345,12 @@ defineSuite([
             shaderProgram : sp,
             vertexArray : va,
             framebuffer : framebuffer,
-            renderState : context.createRenderState({
-                depthTest : {
-                    enabled : true
+            renderState : RenderState.fromCache({
+                context : context,
+                renderState : {
+                    depthTest : {
+                        enabled : true
+                    }
                 }
             })
         });
@@ -468,10 +473,13 @@ defineSuite([
             shaderProgram : sp,
             vertexArray : va,
             framebuffer : framebuffer,
-            renderState : context.createRenderState({
-                depthTest : {
-                    enabled : true,
-                    func : WebGLRenderingContext.NEVER
+            renderState : RenderState.fromCache({
+                context : context,
+                renderState : {
+                    depthTest : {
+                        enabled : true,
+                        func : WebGLRenderingContext.NEVER
+                    }
                 }
             })
         });
@@ -486,10 +494,13 @@ defineSuite([
             shaderProgram : sp,
             vertexArray : va,
             framebuffer : framebuffer,
-            renderState : context.createRenderState({
-                depthTest : {
-                    enabled : true,
-                    func : WebGLRenderingContext.ALWAYS
+            renderState : RenderState.fromCache({
+                context : context,
+                renderState : {
+                    depthTest : {
+                        enabled : true,
+                        func : WebGLRenderingContext.ALWAYS
+                    }
                 }
             })
         });
@@ -759,9 +770,12 @@ defineSuite([
                 shaderProgram : sp,
                 vertexArray : va,
                 framebuffer : framebuffer,
-                renderState : context.createRenderState({
-                    depthTest : {
-                        enabled : true
+                renderState : RenderState.fromCache({
+                    context : context,
+                    renderState : {
+                        depthTest : {
+                            enabled : true
+                        }
                     }
                 })
             });

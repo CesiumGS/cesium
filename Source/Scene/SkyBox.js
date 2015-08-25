@@ -13,6 +13,7 @@ define([
         '../Renderer/CubeMap',
         '../Renderer/DrawCommand',
         '../Renderer/loadCubeMap',
+        '../Renderer/RenderState',
         '../Renderer/VertexArray',
         '../Shaders/SkyBoxFS',
         '../Shaders/SkyBoxVS',
@@ -32,6 +33,7 @@ define([
         CubeMap,
         DrawCommand,
         loadCubeMap,
+        RenderState,
         VertexArray,
         SkyBoxFS,
         SkyBoxVS,
@@ -184,8 +186,11 @@ define([
                 bufferUsage : BufferUsage.STATIC_DRAW
             });
             command.shaderProgram = context.createShaderProgram(SkyBoxVS, SkyBoxFS, attributeLocations);
-            command.renderState = context.createRenderState({
-                blending : BlendingState.ALPHA_BLEND
+            command.renderState = RenderState.fromCache({
+                context : context,
+                renderState : {
+                    blending : BlendingState.ALPHA_BLEND
+                }
             });
         }
 

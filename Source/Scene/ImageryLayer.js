@@ -23,6 +23,7 @@ define([
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
         '../Renderer/MipmapHint',
+        '../Renderer/RenderState',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
         '../Renderer/TextureMagnificationFilter',
@@ -59,6 +60,7 @@ define([
         DrawCommand,
         Framebuffer,
         MipmapHint,
+        RenderState,
         ShaderSource,
         Texture,
         TextureMagnificationFilter,
@@ -937,8 +939,11 @@ define([
                 (reproject.renderState.viewport.width !== width) ||
                 (reproject.renderState.viewport.height !== height)) {
 
-            reproject.renderState = context.createRenderState({
-                viewport : new BoundingRectangle(0, 0, width, height)
+            reproject.renderState = RenderState.fromCache({
+                context : context,
+                renderState : {
+                    viewport : new BoundingRectangle(0, 0, width, height)
+                }
             });
         }
 

@@ -10,6 +10,7 @@ define([
         '../Renderer/PixelDatatype',
         '../Renderer/Renderbuffer',
         '../Renderer/RenderbufferFormat',
+        '../Renderer/RenderState',
         '../Renderer/Texture',
         '../Shaders/PostProcessFilters/FXAA'
     ], function(
@@ -23,6 +24,7 @@ define([
         PixelDatatype,
         Renderbuffer,
         RenderbufferFormat,
+        RenderState,
         Texture,
         FXAAFS) {
     "use strict";
@@ -113,7 +115,9 @@ define([
 
         if (!defined(this._command)) {
             this._command = context.createViewportQuadCommand(FXAAFS, {
-                renderState : context.createRenderState(),
+                renderState : RenderState.fromCache({
+                    context : context
+                }),
                 owner : this
             });
         }

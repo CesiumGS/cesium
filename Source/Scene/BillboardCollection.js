@@ -17,6 +17,7 @@ define([
         '../Core/Matrix4',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArrayFacade',
         '../Shaders/BillboardCollectionFS',
@@ -45,6 +46,7 @@ define([
         Matrix4,
         BufferUsage,
         DrawCommand,
+        RenderState,
         ShaderSource,
         VertexArrayFacade,
         BillboardCollectionFS,
@@ -1203,11 +1205,14 @@ define([
             var colorList = this._colorCommands;
 
             if (!defined(this._rs)) {
-                this._rs = context.createRenderState({
-                    depthTest : {
-                        enabled : true
-                    },
-                    blending : BlendingState.ALPHA_BLEND
+                this._rs = RenderState.fromCache({
+                    context : context,
+                    renderState : {
+                        depthTest : {
+                            enabled : true
+                        },
+                        blending : BlendingState.ALPHA_BLEND
+                    }
                 });
             }
 

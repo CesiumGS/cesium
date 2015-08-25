@@ -4,6 +4,7 @@ defineSuite([
         'Core/Color',
         'Renderer/ClearCommand',
         'Renderer/Framebuffer',
+        'Renderer/RenderState',
         'Renderer/Texture',
         'Specs/createContext'
     ], 'Renderer/Clear', function(
@@ -11,6 +12,7 @@ defineSuite([
         Color,
         ClearCommand,
         Framebuffer,
+        RenderState,
         Texture,
         createContext) {
     "use strict";
@@ -48,12 +50,15 @@ defineSuite([
 
         var command = new ClearCommand({
             color : Color.WHITE,
-            renderState : context.createRenderState({
-                colorMask : {
-                    red : true,
-                    green : false,
-                    blue : true,
-                    alpha : false
+            renderState : RenderState.fromCache({
+                context : context,
+                renderState : {
+                    colorMask : {
+                        red : true,
+                        green : false,
+                        blue : true,
+                        alpha : false
+                    }
                 }
             })
         });
@@ -70,20 +75,26 @@ defineSuite([
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         command.color = Color.BLACK;
-        command.renderState = context.createRenderState({
-            scissorTest : {
-                enabled : true,
-                rectangle : new BoundingRectangle()
+        command.renderState = RenderState.fromCache({
+            context : context,
+            renderState : {
+                scissorTest : {
+                    enabled : true,
+                    rectangle : new BoundingRectangle()
+                }
             }
         });
 
         command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
-        command.renderState = context.createRenderState({
-            scissorTest : {
-                enabled : true,
-                rectangle : new BoundingRectangle(0, 0, 1, 1)
+        command.renderState = RenderState.fromCache({
+            context : context,
+            renderState : {
+                scissorTest : {
+                    enabled : true,
+                    rectangle : new BoundingRectangle(0, 0, 1, 1)
+                }
             }
         });
 

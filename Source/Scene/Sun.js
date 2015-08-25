@@ -19,6 +19,7 @@ define([
         '../Renderer/ClearCommand',
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
+        '../Renderer/RenderState',
         '../Renderer/Texture',
         '../Renderer/VertexArray',
         '../Shaders/SunFS',
@@ -47,6 +48,7 @@ define([
         ClearCommand,
         DrawCommand,
         Framebuffer,
+        RenderState,
         Texture,
         VertexArray,
         SunFS,
@@ -184,8 +186,11 @@ define([
                 framebuffer : fbo
             });
 
-            var rs = context.createRenderState({
-                viewport : new BoundingRectangle(0.0, 0.0, size, size)
+            var rs = RenderState.fromCache({
+                context : context,
+                renderState : {
+                    viewport : new BoundingRectangle(0.0, 0.0, size, size)
+                }
             });
 
             this._glowLengthTS = this._glowFactor * 5.0;
@@ -251,8 +256,11 @@ define([
                 indexBuffer : indexBuffer
             });
             command.shaderProgram = context.createShaderProgram(SunVS, SunFS, attributeLocations);
-            command.renderState = context.createRenderState({
-                blending : BlendingState.ALPHA_BLEND
+            command.renderState = RenderState.fromCache({
+                context : context,
+                renderState : {
+                    blending : BlendingState.ALPHA_BLEND
+                }
             });
             command.uniformMap = this._uniformMap;
         }
