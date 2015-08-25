@@ -6,11 +6,7 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/Math',
-        '../Core/Matrix3',
         '../Core/Matrix4',
-        '../Core/Transforms',
-        '../Scene/DistanceDisplayCondition',
         '../Scene/Model',
         '../Scene/ModelAnimationLoop',
         './BoundingSphereState',
@@ -22,11 +18,7 @@ define([
         defined,
         destroyObject,
         DeveloperError,
-        CesiumMath,
-        Matrix3,
         Matrix4,
-        Transforms,
-        DistanceDisplayCondition,
         Model,
         ModelAnimationLoop,
         BoundingSphereState,
@@ -115,10 +107,7 @@ define([
                     delete modelHash[entity.id];
                 }
                 model = Model.fromGltf({
-                    url : uri,
-                    displayCondition : new DistanceDisplayCondition(0, 4500.0),
-// TODO: this makes this test fail: http://localhost:8080/Specs/SpecRunner.html?spec=DataSources%2FModelVisualizer%20Computes%20bounding%20sphere.
-                    loadOnlyIfDisplayCondition : true
+                    url : uri
                 });
 
                 model.readyPromise.then(onModelReady).otherwise(onModelError);
