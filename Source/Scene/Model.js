@@ -30,8 +30,10 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/ShaderSource',
+        '../Renderer/Texture',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
+        '../Renderer/VertexArray',
         '../ThirdParty/gltfDefaults',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
@@ -74,8 +76,10 @@ define([
         BufferUsage,
         DrawCommand,
         ShaderSource,
+        Texture,
         TextureMinificationFilter,
         TextureWrap,
+        VertexArray,
         gltfDefaults,
         Uri,
         when,
@@ -1473,7 +1477,8 @@ define([
         var tx;
 
         if (texture.target === WebGLRenderingContext.TEXTURE_2D) {
-            tx = context.createTexture2D({
+            tx = new Texture({
+                context : context,
                 source : source,
                 pixelFormat : texture.internalFormat,
                 pixelDatatype : texture.type,
@@ -1768,7 +1773,11 @@ define([
 
                     var accessor = accessors[primitive.indices];
                     var indexBuffer = rendererBuffers[accessor.bufferView];
-                    rendererVertexArrays[meshName + '.primitive.' + i] = context.createVertexArray(attrs, indexBuffer);
+                    rendererVertexArrays[meshName + '.primitive.' + i] = new VertexArray({
+                        context : context,
+                        attributes : attrs,
+                        indexBuffer : indexBuffer
+                    });
                 }
             }
         }

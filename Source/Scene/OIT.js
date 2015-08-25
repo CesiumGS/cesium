@@ -9,6 +9,7 @@ define([
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
         '../Renderer/ShaderSource',
+        '../Renderer/Texture',
         '../Shaders/AdjustTranslucentFS',
         '../Shaders/CompositeOITFS',
         './BlendEquation',
@@ -23,6 +24,7 @@ define([
         PixelDatatype,
         RenderState,
         ShaderSource,
+        Texture,
         AdjustTranslucentFS,
         CompositeOITFS,
         BlendEquation,
@@ -101,13 +103,15 @@ define([
     function updateTextures(oit, context, width, height) {
         destroyTextures(oit);
 
-        oit._accumulationTexture = context.createTexture2D({
+        oit._accumulationTexture = new Texture({
+            context : context,
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.FLOAT
         });
-        oit._revealageTexture = context.createTexture2D({
+        oit._revealageTexture = new Texture({
+            context : context,
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGBA,

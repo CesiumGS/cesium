@@ -10,8 +10,10 @@ define([
         '../Core/Matrix4',
         '../Core/VertexFormat',
         '../Renderer/BufferUsage',
+        '../Renderer/CubeMap',
         '../Renderer/DrawCommand',
         '../Renderer/loadCubeMap',
+        '../Renderer/VertexArray',
         '../Shaders/SkyBoxFS',
         '../Shaders/SkyBoxVS',
         './BlendingState',
@@ -27,8 +29,10 @@ define([
         Matrix4,
         VertexFormat,
         BufferUsage,
+        CubeMap,
         DrawCommand,
         loadCubeMap,
+        VertexArray,
         SkyBoxFS,
         SkyBoxVS,
         BlendingState,
@@ -149,7 +153,8 @@ define([
                 });
             } else {
                 this._cubeMap = this._cubeMap && this._cubeMap.destroy();
-                this._cubeMap = context.createCubeMap({
+                this._cubeMap = new CubeMap({
+                    context : context,
                     source : sources
                 });
             }
@@ -172,10 +177,11 @@ define([
             }));
             var attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
 
-            command.vertexArray = context.createVertexArrayFromGeometry({
-                geometry: geometry,
-                attributeLocations: attributeLocations,
-                bufferUsage: BufferUsage.STATIC_DRAW
+            command.vertexArray = VertexArray.fromGeometry({
+                context : context,
+                geometry : geometry,
+                attributeLocations : attributeLocations,
+                bufferUsage : BufferUsage.STATIC_DRAW
             });
             command.shaderProgram = context.createShaderProgram(SkyBoxVS, SkyBoxFS, attributeLocations);
             command.renderState = context.createRenderState({

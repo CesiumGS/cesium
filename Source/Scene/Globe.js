@@ -32,6 +32,8 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/ShaderSource',
+        '../Renderer/Texture',
+        '../Renderer/VertexArray',
         '../Shaders/GlobeFS',
         '../Shaders/GlobeFSPole',
         '../Shaders/GlobeVS',
@@ -77,6 +79,8 @@ define([
         BufferUsage,
         DrawCommand,
         ShaderSource,
+        Texture,
+        VertexArray,
         GlobeFS,
         GlobeFSPole,
         GlobeVS,
@@ -581,7 +585,8 @@ define([
                             })
                         }
                     });
-                    globe._northPoleCommand.vertexArray = context.createVertexArrayFromGeometry({
+                    globe._northPoleCommand.vertexArray = VertexArray.fromGeometry({
+                        context : context,
                         geometry : geometry,
                         attributeLocations : {
                             position : 0
@@ -625,7 +630,8 @@ define([
                              })
                          }
                      });
-                     globe._southPoleCommand.vertexArray = context.createVertexArrayFromGeometry({
+                     globe._southPoleCommand.vertexArray = VertexArray.fromGeometry({
+                         context : context,
                          geometry : geometry,
                          attributeLocations : {
                              position : 0
@@ -745,7 +751,8 @@ define([
                     }
 
                     that._oceanNormalMap = that._oceanNormalMap && that._oceanNormalMap.destroy();
-                    that._oceanNormalMap = context.createTexture2D({
+                    that._oceanNormalMap = new Texture({
+                        context : context,
                         source : image
                     });
                 });

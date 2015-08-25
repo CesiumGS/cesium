@@ -6,6 +6,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Math',
+        '../Core/PixelFormat',
         './CubeMapFace',
         './MipmapHint',
         './PixelDatatype',
@@ -19,6 +20,7 @@ define([
         destroyObject,
         DeveloperError,
         CesiumMath,
+        PixelFormat,
         CubeMapFace,
         MipmapHint,
         PixelDatatype,
@@ -27,12 +29,126 @@ define([
         TextureWrap) {
     "use strict";
 
-    /**
-     * @private
-     */
-    var CubeMap = function(gl, textureFilterAnisotropic, textureTarget, texture, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY) {
+    var CubeMap = function(options) {
+
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(options.context)) {
+            throw new DeveloperError('options.context is required.');
+        }
+        //>>includeEnd('debug');
+
+        var context = options.context;
+        var source = options.source;
+        var width;
+        var height;
+
+        if (defined(source)) {
+            var faces = [source.positiveX, source.negativeX, source.positiveY, source.negativeY, source.positiveZ, source.negativeZ];
+
+            //>>includeStart('debug', pragmas.debug);
+            if (!faces[0] || !faces[1] || !faces[2] || !faces[3] || !faces[4] || !faces[5]) {
+                throw new DeveloperError('options.source requires positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ faces.');
+            }
+            //>>includeEnd('debug');
+
+            width = faces[0].width;
+            height = faces[0].height;
+
+            //>>includeStart('debug', pragmas.debug);
+            for ( var i = 1; i < 6; ++i) {
+                if ((Number(faces[i].width) !== width) || (Number(faces[i].height) !== height)) {
+                    throw new DeveloperError('Each face in options.source must have the same width and height.');
+                }
+            }
+            //>>includeEnd('debug');
+        } else {
+            width = options.width;
+            height = options.height;
+        }
+
+        var size = width;
+        var pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
+        var pixelDatatype = defaultValue(options.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(width) || !defined(height)) {
+            throw new DeveloperError('options requires a source field to create an initialized cube map or width and height fields to create a blank cube map.');
+        }
+
+        if (width !== height) {
+            throw new DeveloperError('Width must equal height.');
+        }
+
+        if (size <= 0) {
+            throw new DeveloperError('Width and height must be greater than zero.');
+        }
+
+        if (size > context._maximumCubeMapSize) {
+            throw new DeveloperError('Width and height must be less than or equal to the maximum cube map size (' + context._maximumCubeMapSize + ').  Check maximumCubeMapSize.');
+        }
+
+        if (!PixelFormat.validate(pixelFormat)) {
+            throw new DeveloperError('Invalid options.pixelFormat.');
+        }
+
+        if (PixelFormat.isDepthFormat(pixelFormat)) {
+            throw new DeveloperError('options.pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.');
+        }
+
+        if (!PixelDatatype.validate(pixelDatatype)) {
+            throw new DeveloperError('Invalid options.pixelDatatype.');
+        }
+
+        if ((pixelDatatype === PixelDatatype.FLOAT) && !context.floatingPointTexture) {
+            throw new DeveloperError('When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.');
+        }
+        //>>includeEnd('debug');
+
+        // Use premultiplied alpha for opaque textures should perform better on Chrome:
+        // http://media.tojicode.com/webglCamp4/#20
+        var preMultiplyAlpha = options.preMultiplyAlpha || ((pixelFormat === PixelFormat.RGB) || (pixelFormat === PixelFormat.LUMINANCE));
+        var flipY = defaultValue(options.flipY, true);
+
+        var gl = context._gl;
+        var textureTarget = gl.TEXTURE_CUBE_MAP;
+        var texture = gl.createTexture();
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(textureTarget, texture);
+
+        function createFace(target, sourceFace) {
+            if (sourceFace.arrayBufferView) {
+                gl.texImage2D(target, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, sourceFace.arrayBufferView);
+            } else {
+                gl.texImage2D(target, 0, pixelFormat, pixelFormat, pixelDatatype, sourceFace);
+            }
+        }
+
+        if (defined(source)) {
+            // TODO: _gl.pixelStorei(_gl._UNPACK_ALIGNMENT, 4);
+            gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
+
+            createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_X, source.positiveX);
+            createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, source.negativeX);
+            createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, source.positiveY);
+            createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, source.negativeY);
+            createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, source.positiveZ);
+            createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, source.negativeZ);
+        } else {
+            gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
+            gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
+            gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
+            gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
+            gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
+            gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
+        }
+        gl.bindTexture(textureTarget, null);
+
         this._gl = gl;
-        this._textureFilterAnisotropic = textureFilterAnisotropic;
+        this._textureFilterAnisotropic = context._textureFilterAnisotropic;
         this._textureTarget = textureTarget;
         this._texture = texture;
         this._pixelFormat = pixelFormat;

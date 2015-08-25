@@ -6,6 +6,7 @@ define([
         '../Core/PixelFormat',
         '../Renderer/Framebuffer',
         '../Renderer/PixelDatatype',
+        '../Renderer/Texture',
         '../Shaders/PostProcessFilters/PassThrough'
     ], function(
         defined,
@@ -14,6 +15,7 @@ define([
         PixelFormat,
         Framebuffer,
         PixelDatatype,
+        Texture,
         PassThrough) {
     "use strict";
     /*global WebGLRenderingContext*/
@@ -68,7 +70,8 @@ define([
     }
 
     function createTextures(pickDepth, context, width, height) {
-        pickDepth._depthTexture = context.createTexture2D({
+        pickDepth._depthTexture = new Texture({
+            context : context,
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGBA,

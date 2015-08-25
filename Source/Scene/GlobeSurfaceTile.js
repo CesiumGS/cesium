@@ -11,6 +11,7 @@ define([
         '../Core/PixelFormat',
         '../Core/Rectangle',
         '../Renderer/PixelDatatype',
+        '../Renderer/Texture',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
@@ -31,6 +32,7 @@ define([
         PixelFormat,
         Rectangle,
         PixelDatatype,
+        Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
@@ -631,7 +633,8 @@ define([
         var data = context.cache.tile_waterMaskData;
 
         if (!defined(data)) {
-            var allWaterTexture = context.createTexture2D({
+            var allWaterTexture = new Texture({
+                context : context,
                 pixelFormat : PixelFormat.LUMINANCE,
                 pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
                 source : {
@@ -693,7 +696,8 @@ define([
             }
         } else {
             var textureSize = Math.sqrt(waterMaskLength);
-            texture = context.createTexture2D({
+            texture = new Texture({
+                context : context,
                 pixelFormat : PixelFormat.LUMINANCE,
                 pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
                 source : {

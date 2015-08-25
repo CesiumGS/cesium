@@ -10,6 +10,7 @@ define([
         '../Core/PrimitiveType',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/VertexArray',
         '../Shaders/DepthPlaneFS',
         '../Shaders/DepthPlaneVS',
         './DepthFunction',
@@ -26,6 +27,7 @@ define([
         PrimitiveType,
         BufferUsage,
         DrawCommand,
+        VertexArray,
         DepthPlaneFS,
         DepthPlaneVS,
         DepthFunction,
@@ -152,7 +154,8 @@ define([
                 primitiveType : PrimitiveType.TRIANGLES
             });
 
-            this._va = context.createVertexArrayFromGeometry({
+            this._va = VertexArray.fromGeometry({
+                context : context,
                 geometry : geometry,
                 attributeLocations : {
                     position : 0

@@ -4,13 +4,15 @@ define([
         'Core/PrimitiveType',
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
-        'Renderer/DrawCommand'
+        'Renderer/DrawCommand',
+        'Renderer/VertexArray'
     ], function(
         defaultValue,
         PrimitiveType,
         BufferUsage,
         ClearCommand,
-        DrawCommand) {
+        DrawCommand,
+        VertexArray) {
     "use strict";
     /*global expect*/
 
@@ -19,11 +21,14 @@ define([
         var sp = context.createShaderProgram(vs, fs);
 
         depth = defaultValue(depth, 0.0);
-        var va = context.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0.0, 0.0, depth, 1.0]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        var va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0.0, 0.0, depth, 1.0]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
         var rs = context.createRenderState({
             depthTest : {
                 enabled : true
