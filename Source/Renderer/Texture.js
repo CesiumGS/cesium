@@ -8,6 +8,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/PixelFormat',
+        './ContextLimits',
         './MipmapHint',
         './PixelDatatype',
         './TextureMagnificationFilter',
@@ -22,6 +23,7 @@ define([
         DeveloperError,
         CesiumMath,
         PixelFormat,
+        ContextLimits,
         MipmapHint,
         PixelDatatype,
         TextureMagnificationFilter,
@@ -54,16 +56,16 @@ define([
             throw new DeveloperError('Width must be greater than zero.');
         }
 
-        if (width > context._maximumTextureSize) {
-            throw new DeveloperError('Width must be less than or equal to the maximum texture size (' + context._maximumTextureSize + ').  Check maximumTextureSize.');
+        if (width > ContextLimits.maximumTextureSize) {
+            throw new DeveloperError('Width must be less than or equal to the maximum texture size (' + ContextLimits.maximumTextureSize + ').  Check maximumTextureSize.');
         }
 
         if (height <= 0) {
             throw new DeveloperError('Height must be greater than zero.');
         }
 
-        if (height > context._maximumTextureSize) {
-            throw new DeveloperError('Height must be less than or equal to the maximum texture size (' + context._maximumTextureSize + ').  Check maximumTextureSize.');
+        if (height > ContextLimits.maximumTextureSize) {
+            throw new DeveloperError('Height must be less than or equal to the maximum texture size (' + ContextLimits.maximumTextureSize + ').  Check maximumTextureSize.');
         }
 
         if (!PixelFormat.validate(pixelFormat)) {

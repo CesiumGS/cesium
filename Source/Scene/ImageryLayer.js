@@ -20,6 +20,7 @@ define([
         '../Core/TileProviderError',
         '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
+        '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
         '../Renderer/MipmapHint',
@@ -57,6 +58,7 @@ define([
         TileProviderError,
         BufferUsage,
         ClearCommand,
+        ContextLimits,
         DrawCommand,
         Framebuffer,
         MipmapHint,
@@ -701,7 +703,7 @@ define([
         if (CesiumMath.isPowerOfTwo(texture.width) && CesiumMath.isPowerOfTwo(texture.height)) {
             var mipmapSampler = context.cache.imageryLayer_mipmapSampler;
             if (!defined(mipmapSampler)) {
-                var maximumSupportedAnisotropy = context.maximumTextureFilterAnisotropy;
+                var maximumSupportedAnisotropy = ContextLimits.maximumTextureFilterAnisotropy;
                 mipmapSampler = context.cache.imageryLayer_mipmapSampler = context.createSampler({
                     wrapS : TextureWrap.CLAMP_TO_EDGE,
                     wrapT : TextureWrap.CLAMP_TO_EDGE,
