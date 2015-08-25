@@ -250,28 +250,28 @@ define([
         this._depthBits = gl.getParameter(gl.DEPTH_BITS);
         this._stencilBits = gl.getParameter(gl.STENCIL_BITS);
 
-        ContextLimits.maximumCombinedTextureImageUnits = gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS); // min: 8
-        ContextLimits.maximumCubeMapSize = gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE); // min: 16
-        ContextLimits.maximumFragmentUniformVectors = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS); // min: 16
-        ContextLimits.maximumTextureImageUnits = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS); // min: 8
-        ContextLimits.maximumRenderbufferSize = gl.getParameter(gl.MAX_RENDERBUFFER_SIZE); // min: 1
-        ContextLimits.maximumTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE); // min: 64
-        ContextLimits.maximumVaryingVectors = gl.getParameter(gl.MAX_VARYING_VECTORS); // min: 8
-        ContextLimits.maximumVertexAttributes = gl.getParameter(gl.MAX_VERTEX_ATTRIBS); // min: 8
-        ContextLimits.maximumVertexTextureImageUnits = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS); // min: 0
-        ContextLimits.maximumVertexUniformVectors = gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS); // min: 128
+        ContextLimits._maximumCombinedTextureImageUnits = gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS); // min: 8
+        ContextLimits._maximumCubeMapSize = gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE); // min: 16
+        ContextLimits._maximumFragmentUniformVectors = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS); // min: 16
+        ContextLimits._maximumTextureImageUnits = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS); // min: 8
+        ContextLimits._maximumRenderbufferSize = gl.getParameter(gl.MAX_RENDERBUFFER_SIZE); // min: 1
+        ContextLimits._maximumTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE); // min: 64
+        ContextLimits._maximumVaryingVectors = gl.getParameter(gl.MAX_VARYING_VECTORS); // min: 8
+        ContextLimits._maximumVertexAttributes = gl.getParameter(gl.MAX_VERTEX_ATTRIBS); // min: 8
+        ContextLimits._maximumVertexTextureImageUnits = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS); // min: 0
+        ContextLimits._maximumVertexUniformVectors = gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS); // min: 128
 
         var aliasedLineWidthRange = gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE); // must include 1
-        ContextLimits.minimumAliasedLineWidth = aliasedLineWidthRange[0];
-        ContextLimits.maximumAliasedLineWidth = aliasedLineWidthRange[1];
+        ContextLimits._minimumAliasedLineWidth = aliasedLineWidthRange[0];
+        ContextLimits._maximumAliasedLineWidth = aliasedLineWidthRange[1];
 
         var aliasedPointSizeRange = gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE); // must include 1
-        ContextLimits.minimumAliasedPointSize = aliasedPointSizeRange[0];
-        ContextLimits.maximumAliasedPointSize = aliasedPointSizeRange[1];
+        ContextLimits._minimumAliasedPointSize = aliasedPointSizeRange[0];
+        ContextLimits._maximumAliasedPointSize = aliasedPointSizeRange[1];
 
         var maximumViewportDimensions = gl.getParameter(gl.MAX_VIEWPORT_DIMS);
-        ContextLimits.maximumViewportWidth = maximumViewportDimensions[0];
-        ContextLimits.maximumViewportHeight = maximumViewportDimensions[1];
+        ContextLimits._maximumViewportWidth = maximumViewportDimensions[0];
+        ContextLimits._maximumViewportHeight = maximumViewportDimensions[1];
 
         this._antialias = gl.getContextAttributes().antialias;
 
@@ -283,14 +283,14 @@ define([
 
         var textureFilterAnisotropic = options.allowTextureFilterAnisotropic ? getExtension(gl, ['EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic']) : undefined;
         this._textureFilterAnisotropic = textureFilterAnisotropic;
-        ContextLimits.maximumTextureFilterAnisotropy = defined(textureFilterAnisotropic) ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1.0;
+        ContextLimits._maximumTextureFilterAnisotropy = defined(textureFilterAnisotropic) ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1.0;
 
         this._vertexArrayObject = getExtension(gl, ['OES_vertex_array_object']);
         this._fragDepth = getExtension(gl, ['EXT_frag_depth']);
 
         this._drawBuffers = getExtension(gl, ['WEBGL_draw_buffers']);
-        ContextLimits.maximumDrawBuffers = defined(this._drawBuffers) ? gl.getParameter(this._drawBuffers.MAX_DRAW_BUFFERS_WEBGL) : 1;
-        ContextLimits.maximumColorAttachments = defined(this._drawBuffers) ? gl.getParameter(this._drawBuffers.MAX_COLOR_ATTACHMENTS_WEBGL) : 1; // min when supported: 4
+        ContextLimits._maximumDrawBuffers = defined(this._drawBuffers) ? gl.getParameter(this._drawBuffers.MAX_DRAW_BUFFERS_WEBGL) : 1;
+        ContextLimits._maximumColorAttachments = defined(this._drawBuffers) ? gl.getParameter(this._drawBuffers.MAX_COLOR_ATTACHMENTS_WEBGL) : 1; // min when supported: 4
 
         this._debugShaders = getExtension(gl, ['WEBGL_debug_shaders']);
 
