@@ -116,8 +116,6 @@ define([
          *
          * @type {RenderState}
          * @default undefined
-         *
-         * @see RenderState
          */
         this.renderState = options.renderState;
 

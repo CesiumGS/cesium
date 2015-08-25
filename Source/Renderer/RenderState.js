@@ -185,9 +185,8 @@ define([
         //>>includeStart('debug', pragmas.debug);
         if ((this.lineWidth < context.minimumAliasedLineWidth) ||
                 (this.lineWidth > context.maximumAliasedLineWidth)) {
-                throw new RuntimeError('renderState.lineWidth is out of range.  Check minimumAliasedLineWidth and maximumAliasedLineWidth.');
+                throw new DeveloperError('renderState.lineWidth is out of range.  Check minimumAliasedLineWidth and maximumAliasedLineWidth.');
         }
-
         if (!WindingOrder.validate(this.frontFace)) {
             throw new DeveloperError('Invalid renderState.frontFace.');
         }
@@ -272,14 +271,13 @@ define([
             }
 
             if (this.viewport.width > context.maximumViewportWidth) {
-                throw new RuntimeError('renderState.viewport.width must be less than or equal to the maximum viewport width (' + this.maximumViewportWidth.toString() + ').  Check maximumViewportWidth.');
+                throw new DeveloperError('renderState.viewport.width must be less than or equal to the maximum viewport width (' + this.maximumViewportWidth.toString() + ').  Check maximumViewportWidth.');
             }
             if (this.viewport.height > context.maximumViewportHeight) {
-                throw new RuntimeError('renderState.viewport.height must be less than or equal to the maximum viewport height (' + this.maximumViewportHeight.toString() + ').  Check maximumViewportHeight.');
+                throw new DeveloperError('renderState.viewport.height must be less than or equal to the maximum viewport height (' + this.maximumViewportHeight.toString() + ').  Check maximumViewportHeight.');
             }
         }
         //>>includeEnd('debug');
-
 
         this.id = 0;
         this._applyFunctions = [];
@@ -295,7 +293,7 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param [Object} options.context The context.
-     * @param {Object} options.renderState The states defining the render state as shown in the example below.
+     * @param {Object} [options.renderState] The states defining the render state as shown in the example below.
      *
      * @exception {RuntimeError} renderState.lineWidth is out of range.
      * @exception {DeveloperError} Invalid renderState.frontFace.
@@ -421,7 +419,6 @@ define([
         }
         //>>includeEnd('debug');
 
-        var context = options.context;
         var renderState = options.renderState;
         var partialKey = JSON.stringify(renderState);
         var cachedState = renderStateCache[partialKey];
@@ -431,7 +428,7 @@ define([
 
         // Cache miss.  Fully define render state and try again.
         var states = new RenderState({
-            context : context,
+            context : options.context,
             renderState : renderState
         });
         var fullKey = JSON.stringify(states);
