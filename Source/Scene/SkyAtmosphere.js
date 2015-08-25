@@ -162,14 +162,11 @@ define([
                 bufferUsage : BufferUsage.STATIC_DRAW
             });
             command.renderState = RenderState.fromCache({
-                context : context,
-                renderState : {
-                    cull : {
-                        enabled : true,
-                        face : CullFace.FRONT
-                    },
-                    blending : BlendingState.ALPHA_BLEND
-                }
+                cull : {
+                    enabled : true,
+                    face : CullFace.FRONT
+                },
+                blending : BlendingState.ALPHA_BLEND
             });
 
             var vs = new ShaderSource({

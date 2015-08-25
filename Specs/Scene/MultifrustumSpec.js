@@ -261,10 +261,7 @@ defineSuite([
 
                 this._sp = context.createShaderProgram(vs, fs, attributeLocations);
                 this._rs = RenderState.fromCache({
-                    context : context,
-                    renderState : {
-                        blending : BlendingState.ALPHA_BLEND
-                    }
+                    blending : BlendingState.ALPHA_BLEND
                 });
             }
 

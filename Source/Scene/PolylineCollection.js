@@ -437,25 +437,19 @@ define([
 
         if (!defined(this._opaqueRS) || this._opaqueRS.depthTest.enabled !== useDepthTest) {
             this._opaqueRS = RenderState.fromCache({
-                context : context,
-                renderState : {
-                    depthMask : useDepthTest,
-                    depthTest : {
-                        enabled : useDepthTest
-                    }
+                depthMask : useDepthTest,
+                depthTest : {
+                    enabled : useDepthTest
                 }
             });
         }
 
         if (!defined(this._translucentRS) || this._translucentRS.depthTest.enabled !== useDepthTest) {
             this._translucentRS = RenderState.fromCache({
-                context : context,
-                renderState : {
-                    blending : BlendingState.ALPHA_BLEND,
-                    depthMask : !useDepthTest,
-                    depthTest : {
-                        enabled : useDepthTest
-                    }
+                blending : BlendingState.ALPHA_BLEND,
+                depthMask : !useDepthTest,
+                depthTest : {
+                    enabled : useDepthTest
                 }
             });
         }

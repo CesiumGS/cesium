@@ -258,10 +258,7 @@ defineSuite([
                 }
             };
 
-            expect(RenderState.fromCache).toHaveBeenCalledWith({
-                context : scene.context,
-                renderState : rs
-            });
+            expect(RenderState.fromCache).toHaveBeenCalledWith(rs);
             primitives.remove(model);
         });
     });

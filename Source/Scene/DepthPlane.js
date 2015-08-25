@@ -110,22 +110,19 @@ define([
         var ellipsoid = frameState.mapProjection.ellipsoid;
 
         if (!defined(this._command)) {
-            this._rs = RenderState.fromCache({
-                context : context,
-                renderState : { // Write depth, not color
-                    cull : {
-                        enabled : true
-                    },
-                    depthTest : {
-                        enabled : true,
-                        func : DepthFunction.ALWAYS
-                    },
-                    colorMask : {
-                        red : false,
-                        green : false,
-                        blue : false,
-                        alpha : false
-                    }
+            this._rs = RenderState.fromCache({ // Write depth, not color
+                cull : {
+                    enabled : true
+                },
+                depthTest : {
+                    enabled : true,
+                    func : DepthFunction.ALWAYS
+                },
+                colorMask : {
+                    red : false,
+                    green : false,
+                    blue : false,
+                    alpha : false
                 }
             });
 

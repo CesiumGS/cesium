@@ -337,31 +337,25 @@ define([
      */
     GlobeSurfaceTileProvider.prototype.endUpdate = function(context, frameState, commandList) {
         if (!defined(this._renderState)) {
-            this._renderState = RenderState.fromCache({
-                context : context,
-                renderState : { // Write color and depth
-                    cull : {
-                        enabled : true
-                    },
-                    depthTest : {
-                        enabled : true,
-                        func : DepthFunction.LESS
-                    }
+            this._renderState = RenderState.fromCache({ // Write color and depth
+                cull : {
+                    enabled : true
+                },
+                depthTest : {
+                    enabled : true,
+                    func : DepthFunction.LESS
                 }
             });
 
-            this._blendRenderState = RenderState.fromCache({
-                context : context,
-                renderState : { // Write color and depth
-                    cull : {
-                        enabled : true
-                    },
-                    depthTest : {
-                        enabled : true,
-                        func : DepthFunction.LESS_OR_EQUAL
-                    },
-                    blending : BlendingState.ALPHA_BLEND
-                }
+            this._blendRenderState = RenderState.fromCache({ // Write color and depth
+                cull : {
+                    enabled : true
+                },
+                depthTest : {
+                    enabled : true,
+                    func : DepthFunction.LESS_OR_EQUAL
+                },
+                blending : BlendingState.ALPHA_BLEND
             });
         }
 
@@ -390,17 +384,14 @@ define([
     GlobeSurfaceTileProvider.prototype.updateForPick = function(context, frameState, commandList) {
         if (!defined(this._pickRenderState)) {
             this._pickRenderState = RenderState.fromCache({
-                context : context,
-                renderState : {
-                    colorMask : {
-                        red : false,
-                        green : false,
-                        blue : false,
-                        alpha : false
-                    },
-                    depthTest : {
-                        enabled : true
-                    }
+                colorMask : {
+                    red : false,
+                    green : false,
+                    blue : false,
+                    alpha : false
+                },
+                depthTest : {
+                    enabled : true
                 }
             });
         }

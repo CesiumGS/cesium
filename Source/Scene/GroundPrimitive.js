@@ -496,22 +496,10 @@ define([
             return;
         }
 
-        primitive._rsStencilPreloadPass = RenderState.fromCache({
-            context : context,
-            renderState : stencilPreloadRenderState
-        });
-        primitive._rsStencilDepthPass = RenderState.fromCache({
-            context : context,
-            renderState : stencilDepthRenderState
-        });
-        primitive._rsColorPass = RenderState.fromCache({
-            context : context,
-            renderState : colorRenderState
-        });
-        primitive._rsPickPass = RenderState.fromCache({
-            context : context,
-            renderState : pickRenderState
-        });
+        primitive._rsStencilPreloadPass = RenderState.fromCache(stencilPreloadRenderState);
+        primitive._rsStencilDepthPass = RenderState.fromCache(stencilDepthRenderState);
+        primitive._rsColorPass = RenderState.fromCache(colorRenderState);
+        primitive._rsPickPass = RenderState.fromCache(pickRenderState);
     }
 
     function createShaderProgram(primitive, context, frameState, appearance) {

@@ -149,9 +149,7 @@ define([
                 '    gl_FragColor = czm_packDepth(texture2D(u_texture, v_textureCoordinates).r);\n' +
                 '}\n';
             globeDepth._copyDepthCommand = context.createViewportQuadCommand(fs, {
-                renderState : RenderState.fromCache({
-                    context : context
-                }),
+                renderState : RenderState.fromCache(),
                 uniformMap : {
                     u_texture : function() {
                         return globeDepth._depthStencilTexture;
@@ -165,9 +163,7 @@ define([
 
         if (!defined(globeDepth._copyColorCommand)) {
             globeDepth._copyColorCommand = context.createViewportQuadCommand(PassThrough, {
-                renderState : RenderState.fromCache({
-                    context : context
-                }),
+                renderState : RenderState.fromCache(),
                 uniformMap : {
                     u_texture : function() {
                         return globeDepth._colorTexture;

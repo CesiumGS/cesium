@@ -540,10 +540,7 @@ defineSuite([
             expect(render(context, frameState, globe, commandList)).toBeGreaterThan(0);
 
             var renderStateWithAlphaBlending = RenderState.fromCache({
-                context : context,
-                renderState : {
-                    blending : BlendingState.ALPHA_BLEND
-                }
+                blending : BlendingState.ALPHA_BLEND
             });
 
             var drawCommandsPerTile = {};

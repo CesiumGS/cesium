@@ -1834,58 +1834,55 @@ define([
                     var scissor = defaultValue(statesFunctions.scissor, [0.0, 0.0, 0.0, 0.0]);
 
                     rendererRenderStates[name] = RenderState.fromCache({
-                        context : context,
-                        renderState : {
-                            frontFace : defined(statesFunctions.frontFace) ? statesFunctions.frontFace[0] : WebGLRenderingContext.CCW,
-                            cull : {
-                                enabled : booleanStates[WebGLRenderingContext.CULL_FACE],
-                                face : defined(statesFunctions.cullFace) ? statesFunctions.cullFace[0] : WebGLRenderingContext.BACK
-                            },
-                            lineWidth : defined(statesFunctions.lineWidth) ? statesFunctions.lineWidth[0] : 1.0,
-                            polygonOffset : {
-                                enabled : booleanStates[WebGLRenderingContext.POLYGON_OFFSET_FILL],
-                                factor : polygonOffset[0],
-                                units : polygonOffset[1]
-                            },
-                            scissorTest : {
-                                enabled : booleanStates[WebGLRenderingContext.SCISSOR_TEST],
-                                rectangle : {
-                                    x : scissor[0],
-                                    y : scissor[1],
-                                    width : scissor[2],
-                                    height : scissor[3]
-                                }
-                            },
-                            depthRange : {
-                                near : depthRange[0],
-                                far : depthRange[1]
-                            },
-                            depthTest : {
-                                enabled : booleanStates[WebGLRenderingContext.DEPTH_TEST],
-                                func : defined(statesFunctions.depthFunc) ? statesFunctions.depthFunc[0] : WebGLRenderingContext.LESS
-                            },
-                            colorMask : {
-                                red : colorMask[0],
-                                green : colorMask[1],
-                                blue : colorMask[2],
-                                alpha : colorMask[3]
-                            },
-                            depthMask : defined(statesFunctions.depthMask) ? statesFunctions.depthMask[0] : true,
-                            blending : {
-                                enabled : booleanStates[WebGLRenderingContext.BLEND],
-                                color : {
-                                    red : blendColor[0],
-                                    green : blendColor[1],
-                                    blue : blendColor[2],
-                                    alpha : blendColor[3]
-                                },
-                                equationRgb : blendEquationSeparate[0],
-                                equationAlpha : blendEquationSeparate[1],
-                                functionSourceRgb : blendFuncSeparate[0],
-                                functionSourceAlpha : blendFuncSeparate[1],
-                                functionDestinationRgb : blendFuncSeparate[2],
-                                functionDestinationAlpha : blendFuncSeparate[3]
+                        frontFace : defined(statesFunctions.frontFace) ? statesFunctions.frontFace[0] : WebGLRenderingContext.CCW,
+                        cull : {
+                            enabled : booleanStates[WebGLRenderingContext.CULL_FACE],
+                            face : defined(statesFunctions.cullFace) ? statesFunctions.cullFace[0] : WebGLRenderingContext.BACK
+                        },
+                        lineWidth : defined(statesFunctions.lineWidth) ? statesFunctions.lineWidth[0] : 1.0,
+                        polygonOffset : {
+                            enabled : booleanStates[WebGLRenderingContext.POLYGON_OFFSET_FILL],
+                            factor : polygonOffset[0],
+                            units : polygonOffset[1]
+                        },
+                        scissorTest : {
+                            enabled : booleanStates[WebGLRenderingContext.SCISSOR_TEST],
+                            rectangle : {
+                                x : scissor[0],
+                                y : scissor[1],
+                                width : scissor[2],
+                                height : scissor[3]
                             }
+                        },
+                        depthRange : {
+                            near : depthRange[0],
+                            far : depthRange[1]
+                        },
+                        depthTest : {
+                            enabled : booleanStates[WebGLRenderingContext.DEPTH_TEST],
+                            func : defined(statesFunctions.depthFunc) ? statesFunctions.depthFunc[0] : WebGLRenderingContext.LESS
+                        },
+                        colorMask : {
+                            red : colorMask[0],
+                            green : colorMask[1],
+                            blue : colorMask[2],
+                            alpha : colorMask[3]
+                        },
+                        depthMask : defined(statesFunctions.depthMask) ? statesFunctions.depthMask[0] : true,
+                        blending : {
+                            enabled : booleanStates[WebGLRenderingContext.BLEND],
+                            color : {
+                                red : blendColor[0],
+                                green : blendColor[1],
+                                blue : blendColor[2],
+                                alpha : blendColor[3]
+                            },
+                            equationRgb : blendEquationSeparate[0],
+                            equationAlpha : blendEquationSeparate[1],
+                            functionSourceRgb : blendFuncSeparate[0],
+                            functionSourceAlpha : blendFuncSeparate[1],
+                            functionDestinationRgb : blendFuncSeparate[2],
+                            functionDestinationAlpha : blendFuncSeparate[3]
                         }
                     });
                 }
