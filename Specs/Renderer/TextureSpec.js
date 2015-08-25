@@ -1,5 +1,6 @@
 /*global defineSuite*/
 defineSuite([
+        'Renderer/Texture',
         'Core/Cartesian2',
         'Core/Color',
         'Core/loadImage',
@@ -9,7 +10,6 @@ defineSuite([
         'Renderer/ClearCommand',
         'Renderer/DrawCommand',
         'Renderer/PixelDatatype',
-        'Renderer/Texture',
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
         'Renderer/TextureWrap',
@@ -17,6 +17,7 @@ defineSuite([
         'Specs/createContext',
         'ThirdParty/when'
     ], function(
+        Texture,
         Cartesian2,
         Color,
         loadImage,
@@ -26,7 +27,6 @@ defineSuite([
         ClearCommand,
         DrawCommand,
         PixelDatatype,
-        Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
@@ -413,7 +413,8 @@ defineSuite([
     });
 
     it('can set sampler at construction', function() {
-        texture = context.createTexture2D({
+        texture = new Texture({
+            context : context,
             source : blueImage,
             pixelFormat : PixelFormat.RGBA,
             sampler : context.createSampler({
