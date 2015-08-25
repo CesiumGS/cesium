@@ -183,7 +183,7 @@ define([], function() {
     }
 
     var getTimestamp = (function() {
-        if (typeof performance != 'undefined' && typeof performance.now !== 'undefined') {
+        if (typeof performance !== 'undefined' && typeof performance.now !== 'undefined') {
             return function() {
                 return performance.now();
             };
