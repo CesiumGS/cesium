@@ -15,7 +15,6 @@ define([
         '../Core/IndexDatatype',
         '../Core/Math',
         '../Core/Matrix4',
-        '../Core/PixelFormat',
         '../Core/PrimitiveType',
         '../Core/RuntimeError',
         '../Shaders/ViewportQuadVS',
@@ -52,7 +51,6 @@ define([
         IndexDatatype,
         CesiumMath,
         Matrix4,
-        PixelFormat,
         PrimitiveType,
         RuntimeError,
         ViewportQuadVS,
@@ -866,7 +864,8 @@ define([
         defaultTexture : {
             get : function() {
                 if (this._defaultTexture === undefined) {
-                    this._defaultTexture = this.createTexture2D({
+                    this._defaultTexture = new Texture({
+                        context : this,
                         source : {
                             width : 1,
                             height : 1,
@@ -895,7 +894,8 @@ define([
                         arrayBufferView : new Uint8Array([255, 255, 255, 255])
                     };
 
-                    this._defaultCubeMap = this.createCubeMap({
+                    this._defaultCubeMap = new CubeMap({
+                        context : this,
                         source : {
                             positiveX : face,
                             negativeX : face,
@@ -939,7 +939,7 @@ define([
         /**
          * Gets an object representing the currently bound framebuffer.  While this instance is not an actual
          * {@link Framebuffer}, it is used to represent the default framebuffer in calls to
-         * {@link Context.createTexture2DFromFramebuffer}.
+         * {@link Texture.FromFramebuffer}.
          * @memberof Context.prototype
          * @type {Object}
          */
@@ -1092,242 +1092,6 @@ define([
         });
 
         return buffer;
-    };
-
-    /**
-     * options.source can be {@link ImageData}, {@link Image}, {@link Canvas}, or {@link Video}.
-     *
-     * @exception {RuntimeError} When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.  Check context.depthTexture.
-     * @exception {RuntimeError} When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.  Check context.floatingPointTexture.
-     * @exception {DeveloperError} options requires a source field to create an initialized texture or width and height fields to create a blank texture.
-     * @exception {DeveloperError} Width must be greater than zero.
-     * @exception {DeveloperError} Width must be less than or equal to the maximum texture size.
-     * @exception {DeveloperError} Height must be greater than zero.
-     * @exception {DeveloperError} Height must be less than or equal to the maximum texture size.
-     * @exception {DeveloperError} Invalid options.pixelFormat.
-     * @exception {DeveloperError} Invalid options.pixelDatatype.
-     * @exception {DeveloperError} When options.pixelFormat is DEPTH_COMPONENT, options.pixelDatatype must be UNSIGNED_SHORT or UNSIGNED_INT.
-     * @exception {DeveloperError} When options.pixelFormat is DEPTH_STENCIL, options.pixelDatatype must be UNSIGNED_INT_24_8_WEBGL.
-     * @exception {DeveloperError} When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, source cannot be provided.
-     *
-     * @see Context#createTexture2DFromFramebuffer
-     * @see Context#createCubeMap
-     * @see Context#createSampler
-     */
-    Context.prototype.createTexture2D = function(options) {
-        return new Texture(this, options);
-    };
-
-    /**
-     * Creates a texture, and copies a subimage of the framebuffer to it.  When called without arguments,
-     * the texture is the same width and height as the framebuffer and contains its contents.
-     *
-     * @param {PixelFormat} [pixelFormat=PixelFormat.RGB] The texture's internal pixel format.
-     * @param {Number} [framebufferXOffset=0] An offset in the x direction in the framebuffer where copying begins from.
-     * @param {Number} [framebufferYOffset=0] An offset in the y direction in the framebuffer where copying begins from.
-     * @param {Number} [width=canvas.clientWidth] The width of the texture in texels.
-     * @param {Number} [height=canvas.clientHeight] The height of the texture in texels.
-     * @param {Framebuffer} [framebuffer=defaultFramebuffer] The framebuffer from which to create the texture.  If this
-     *        parameter is not specified, the default framebuffer is used.
-     * @returns {Texture} A texture with contents from the framebuffer.
-     *
-     * @exception {DeveloperError} Invalid pixelFormat.
-     * @exception {DeveloperError} pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.
-     * @exception {DeveloperError} framebufferXOffset must be greater than or equal to zero.
-     * @exception {DeveloperError} framebufferYOffset must be greater than or equal to zero.
-     * @exception {DeveloperError} framebufferXOffset + width must be less than or equal to canvas.clientWidth.
-     * @exception {DeveloperError} framebufferYOffset + height must be less than or equal to canvas.clientHeight.
-     *
-     * @see Context#createTexture2D
-     * @see Context#createCubeMap
-     * @see Context#createSampler
-     *
-     * @example
-     * // Create a texture with the contents of the framebuffer.
-     * var t = context.createTexture2DFromFramebuffer();
-     */
-    Context.prototype.createTexture2DFromFramebuffer = function(pixelFormat, framebufferXOffset, framebufferYOffset, width, height, framebuffer) {
-        var gl = this._gl;
-
-        pixelFormat = defaultValue(pixelFormat, PixelFormat.RGB);
-        framebufferXOffset = defaultValue(framebufferXOffset, 0);
-        framebufferYOffset = defaultValue(framebufferYOffset, 0);
-        width = defaultValue(width, gl.drawingBufferWidth);
-        height = defaultValue(height, gl.drawingBufferHeight);
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!PixelFormat.validate(pixelFormat)) {
-            throw new DeveloperError('Invalid pixelFormat.');
-        }
-
-        if (PixelFormat.isDepthFormat(pixelFormat)) {
-            throw new DeveloperError('pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.');
-        }
-
-        if (framebufferXOffset < 0) {
-            throw new DeveloperError('framebufferXOffset must be greater than or equal to zero.');
-        }
-
-        if (framebufferYOffset < 0) {
-            throw new DeveloperError('framebufferYOffset must be greater than or equal to zero.');
-        }
-
-        if (framebufferXOffset + width > gl.drawingBufferWidth) {
-            throw new DeveloperError('framebufferXOffset + width must be less than or equal to drawingBufferWidth');
-        }
-
-        if (framebufferYOffset + height > gl.drawingBufferHeight) {
-            throw new DeveloperError('framebufferYOffset + height must be less than or equal to drawingBufferHeight.');
-        }
-        //>>includeEnd('debug');
-
-        var texture = new Texture(this, {
-            width : width,
-            height : height,
-            pixelFormat : pixelFormat,
-            source : {
-                framebuffer : defined(framebuffer) ? framebuffer : this.defaultFramebuffer,
-                xOffset : framebufferXOffset,
-                yOffset : framebufferYOffset,
-                width : width,
-                height : height
-            }
-        });
-
-        return texture;
-    };
-
-    /**
-     * options.source can be {@link ImageData}, {@link Image}, {@link Canvas}, or {@link Video}.
-     *
-     * @returns {CubeMap} The newly created cube map.
-     *
-     * @exception {RuntimeError} When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.  Check context.floatingPointTexture.
-     * @exception {DeveloperError} options.source requires positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ faces.
-     * @exception {DeveloperError} Each face in options.sources must have the same width and height.
-     * @exception {DeveloperError} options requires a source field to create an initialized cube map or width and height fields to create a blank cube map.
-     * @exception {DeveloperError} Width must equal height.
-     * @exception {DeveloperError} Width and height must be greater than zero.
-     * @exception {DeveloperError} Width and height must be less than or equal to the maximum cube map size.
-     * @exception {DeveloperError} Invalid options.pixelFormat.
-     * @exception {DeveloperError} options.pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.
-     * @exception {DeveloperError} Invalid options.pixelDatatype.
-     *
-     * @see Context#createTexture2D
-     * @see Context#createTexture2DFromFramebuffer
-     * @see Context#createSampler
-     */
-    Context.prototype.createCubeMap = function(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        var source = options.source;
-        var width;
-        var height;
-
-        if (defined(source)) {
-            var faces = [source.positiveX, source.negativeX, source.positiveY, source.negativeY, source.positiveZ, source.negativeZ];
-
-            //>>includeStart('debug', pragmas.debug);
-            if (!faces[0] || !faces[1] || !faces[2] || !faces[3] || !faces[4] || !faces[5]) {
-                throw new DeveloperError('options.source requires positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ faces.');
-            }
-            //>>includeEnd('debug');
-
-            width = faces[0].width;
-            height = faces[0].height;
-
-            //>>includeStart('debug', pragmas.debug);
-            for ( var i = 1; i < 6; ++i) {
-                if ((Number(faces[i].width) !== width) || (Number(faces[i].height) !== height)) {
-                    throw new DeveloperError('Each face in options.source must have the same width and height.');
-                }
-            }
-            //>>includeEnd('debug');
-        } else {
-            width = options.width;
-            height = options.height;
-        }
-
-        var size = width;
-        var pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
-        var pixelDatatype = defaultValue(options.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(width) || !defined(height)) {
-            throw new DeveloperError('options requires a source field to create an initialized cube map or width and height fields to create a blank cube map.');
-        }
-
-        if (width !== height) {
-            throw new DeveloperError('Width must equal height.');
-        }
-
-        if (size <= 0) {
-            throw new DeveloperError('Width and height must be greater than zero.');
-        }
-
-        if (size > this._maximumCubeMapSize) {
-            throw new DeveloperError('Width and height must be less than or equal to the maximum cube map size (' + this._maximumCubeMapSize + ').  Check maximumCubeMapSize.');
-        }
-
-        if (!PixelFormat.validate(pixelFormat)) {
-            throw new DeveloperError('Invalid options.pixelFormat.');
-        }
-
-        if (PixelFormat.isDepthFormat(pixelFormat)) {
-            throw new DeveloperError('options.pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.');
-        }
-
-        if (!PixelDatatype.validate(pixelDatatype)) {
-            throw new DeveloperError('Invalid options.pixelDatatype.');
-        }
-        //>>includeEnd('debug');
-
-        if ((pixelDatatype === PixelDatatype.FLOAT) && !this.floatingPointTexture) {
-            throw new DeveloperError('When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.');
-        }
-
-        // Use premultiplied alpha for opaque textures should perform better on Chrome:
-        // http://media.tojicode.com/webglCamp4/#20
-        var preMultiplyAlpha = options.preMultiplyAlpha || ((pixelFormat === PixelFormat.RGB) || (pixelFormat === PixelFormat.LUMINANCE));
-        var flipY = defaultValue(options.flipY, true);
-
-        var gl = this._gl;
-        var textureTarget = gl.TEXTURE_CUBE_MAP;
-        var texture = gl.createTexture();
-
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(textureTarget, texture);
-
-        function createFace(target, sourceFace) {
-            if (sourceFace.arrayBufferView) {
-                gl.texImage2D(target, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, sourceFace.arrayBufferView);
-            } else {
-                gl.texImage2D(target, 0, pixelFormat, pixelFormat, pixelDatatype, sourceFace);
-            }
-        }
-
-        if (defined(source)) {
-            // TODO: _gl.pixelStorei(_gl._UNPACK_ALIGNMENT, 4);
-            gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
-            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
-
-            createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_X, source.positiveX);
-            createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, source.negativeX);
-            createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, source.positiveY);
-            createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, source.negativeY);
-            createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, source.positiveZ);
-            createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, source.negativeZ);
-        } else {
-            gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
-            gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
-            gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
-            gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
-            gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
-            gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
-        }
-        gl.bindTexture(textureTarget, null);
-
-        return new CubeMap(gl, this._textureFilterAnisotropic, textureTarget, texture, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY);
     };
 
     var nextRenderStateId = 0;

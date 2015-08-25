@@ -31,6 +31,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/ShaderSource',
+        '../Renderer/Texture',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         '../Renderer/VertexArray',
@@ -79,6 +80,7 @@ define([
         BufferUsage,
         DrawCommand,
         ShaderSource,
+        Texture,
         TextureMinificationFilter,
         TextureWrap,
         VertexArray,
@@ -1844,7 +1846,8 @@ define([
         var tx;
 
         if (texture.target === WebGLRenderingContext.TEXTURE_2D) {
-            tx = context.createTexture2D({
+            tx = new Texture({
+                context : context,
                 source : source,
                 pixelFormat : texture.internalFormat,
                 pixelDatatype : texture.type,

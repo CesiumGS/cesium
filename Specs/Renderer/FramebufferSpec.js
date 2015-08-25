@@ -5,11 +5,13 @@ defineSuite([
         'Core/PrimitiveType',
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
+        'Renderer/CubeMap',
         'Renderer/DrawCommand',
         'Renderer/Framebuffer',
         'Renderer/PixelDatatype',
         'Renderer/Renderbuffer',
         'Renderer/RenderbufferFormat',
+        'Renderer/Texture',
         'Renderer/VertexArray',
         'Specs/createContext'
     ], 'Renderer/Framebuffer', function(
@@ -18,11 +20,13 @@ defineSuite([
         PrimitiveType,
         BufferUsage,
         ClearCommand,
+        CubeMap,
         DrawCommand,
         Framebuffer,
         PixelDatatype,
         Renderbuffer,
         RenderbufferFormat,
+        Texture,
         VertexArray,
         createContext) {
     "use strict";
@@ -50,7 +54,8 @@ defineSuite([
     it('has a color texture attachment', function() {
         framebuffer = new Framebuffer({
             context : context,
-            colorTextures : [context.createTexture2D({
+            colorTextures : [new Texture({
+                context : context,
                 width : 1,
                 height : 1
             })]
@@ -73,7 +78,8 @@ defineSuite([
         if (context.depthTexture) {
             framebuffer = new Framebuffer({
                 context : context,
-                depthTexture : context.createTexture2D({
+                depthTexture : new Texture({
+                    context : context,
                     width : 1,
                     height : 1,
                     pixelFormat : PixelFormat.DEPTH_COMPONENT,
@@ -110,7 +116,8 @@ defineSuite([
         if (context.depthTexture) {
             framebuffer = new Framebuffer({
                 context : context,
-                depthStencilTexture : context.createTexture2D({
+                depthStencilTexture : new Texture({
+                    context : context,
                     width : 1,
                     height : 1,
                     pixelFormat : PixelFormat.DEPTH_STENCIL,
@@ -155,7 +162,8 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 2 of 4.  Clear framebuffer color attachment to green.
-        var colorTexture = context.createTexture2D({
+        var colorTexture = new Texture({
+            context : context,
             width : 1,
             height : 1
         });
@@ -200,7 +208,8 @@ defineSuite([
     });
 
     it('clears a cube map face color attachment', function() {
-        var cubeMap = context.createCubeMap({
+        var cubeMap = new CubeMap({
+            context : context,
             width : 1,
             height : 1
         });
@@ -254,7 +263,8 @@ defineSuite([
     });
 
     it('draws to a color attachment', function() {
-        var colorTexture = context.createTexture2D({
+        var colorTexture = new Texture({
+            context : context,
             width : 1,
             height : 1
         });
@@ -368,11 +378,13 @@ defineSuite([
         if (context.depthTexture) {
             framebuffer = new Framebuffer({
                 context : context,
-                colorTextures : [context.createTexture2D({
+                colorTextures : [new Texture({
+                    context : context,
                     width : 1,
                     height : 1
                 })],
-                depthTexture : context.createTexture2D({
+                depthTexture : new Texture({
+                    context : context,
                     width : 1,
                     height : 1,
                     pixelFormat : PixelFormat.DEPTH_COMPONENT,
@@ -390,11 +402,13 @@ defineSuite([
         if (context.depthTexture) {
             framebuffer = new Framebuffer({
                 context : context,
-                colorTextures : [context.createTexture2D({
+                colorTextures : [new Texture({
+                    context : context,
                     width : 1,
                     height : 1
                 })],
-                depthStencilTexture : context.createTexture2D({
+                depthStencilTexture : new Texture({
+                    context : context,
                     width : 1,
                     height : 1,
                     pixelFormat : PixelFormat.DEPTH_STENCIL,
@@ -411,7 +425,8 @@ defineSuite([
     it('draws with a depth attachment', function() {
         framebuffer = new Framebuffer({
             context : context,
-            colorTextures : [context.createTexture2D({
+            colorTextures : [new Texture({
+                context : context,
                 width : 1,
                 height : 1
             })],
@@ -486,11 +501,13 @@ defineSuite([
 
     it('draws with multiple render targets', function() {
         if (context.drawBuffers) {
-            var colorTexture0 = context.createTexture2D({
+            var colorTexture0 = new Texture({
+                context : context,
                 width : 1,
                 height : 1
             });
-            var colorTexture1 = context.createTexture2D({
+            var colorTexture1 = new Texture({
+                context : context,
                 width : 1,
                 height : 1
             });
@@ -567,7 +584,8 @@ defineSuite([
     it('gets the status of a complete framebuffer', function() {
         framebuffer = new Framebuffer({
             context : context,
-            colorTextures : [context.createTexture2D({
+            colorTextures : [new Texture({
+                context : context,
                 width : 1,
                 height : 1
             })],
@@ -584,7 +602,8 @@ defineSuite([
     it('gets the status of a incomplete framebuffer', function() {
         framebuffer = new Framebuffer({
             context : context,
-            colorTextures : [context.createTexture2D({
+            colorTextures : [new Texture({
+                context : context,
                 width : 1,
                 height : 1
             })],
@@ -673,7 +692,8 @@ defineSuite([
             expect(function() {
                 framebuffer = new Framebuffer({
                     context : context,
-                    colorTextures : [context.createTexture2D({
+                    colorTextures : [new Texture({
+                        context : context,
                         width : 1,
                         height : 1,
                         pixelFormat : PixelFormat.DEPTH_COMPONENT,
@@ -688,7 +708,8 @@ defineSuite([
       expect(function() {
           framebuffer = new Framebuffer({
               context : context,
-              depthTexture : context.createTexture2D({
+              depthTexture : new Texture({
+                  context : context,
                   width : 1,
                   height : 1
               })
@@ -700,7 +721,8 @@ defineSuite([
       expect(function() {
           framebuffer = new Framebuffer({
               context : context,
-              depthStencilTexture : context.createTexture2D({
+              depthStencilTexture : new Texture({
+                  context : context,
                   width : 1,
                   height : 1
               })
@@ -711,7 +733,8 @@ defineSuite([
     it('throws when the depth test is enabled without an appropriate attachment', function() {
         framebuffer = new Framebuffer({
             context : context,
-            colorTextures : [context.createTexture2D({
+            colorTextures : [new Texture({
+                context : context,
                 width : 1,
                 height : 1
             })]

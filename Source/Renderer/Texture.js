@@ -28,13 +28,17 @@ define([
         TextureMinificationFilter,
         TextureWrap) {
     "use strict";
-
-    /**
-     * @private
-     */
-    var Texture = function(context, options) {
+    
+    var Texture = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(options.context)) {
+            throw new DeveloperError('options.context is required.');
+        }
+        //>>includeEnd('debug');
+
+        var context = options.context;
         var source = options.source;
         var width = defined(source) ? source.width : options.width;
         var height = defined(source) ? source.height : options.height;
@@ -150,6 +154,104 @@ define([
         this._sampler = undefined;
 
         this.sampler = options.sampler;
+    };
+
+    /**
+     * Creates a texture, and copies a subimage of the framebuffer to it.  When called without arguments,
+     * the texture is the same width and height as the framebuffer and contains its contents.
+     *
+     * @param {Object} options Object with the following properties:
+     * @param {Context} options.context The context in which the Texture gets created.
+     * @param {PixelFormat} [options.pixelFormat=PixelFormat.RGB] The texture's internal pixel format.
+     * @param {Number} [options.framebufferXOffset=0] An offset in the x direction in the framebuffer where copying begins from.
+     * @param {Number} [options.framebufferYOffset=0] An offset in the y direction in the framebuffer where copying begins from.
+     * @param {Number} [options.width=canvas.clientWidth] The width of the texture in texels.
+     * @param {Number} [options.height=canvas.clientHeight] The height of the texture in texels.
+     * @param {Framebuffer} [options.framebuffer=defaultFramebuffer] The framebuffer from which to create the texture.  If this
+     *        parameter is not specified, the default framebuffer is used.
+     * @returns {Texture} A texture with contents from the framebuffer.
+     *
+     * @exception {DeveloperError} Invalid pixelFormat.
+     * @exception {DeveloperError} pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.
+     * @exception {DeveloperError} framebufferXOffset must be greater than or equal to zero.
+     * @exception {DeveloperError} framebufferYOffset must be greater than or equal to zero.
+     * @exception {DeveloperError} framebufferXOffset + width must be less than or equal to canvas.clientWidth.
+     * @exception {DeveloperError} framebufferYOffset + height must be less than or equal to canvas.clientHeight.
+     *
+     * @see Context#createSampler
+     *
+     * @example
+     * // Create a texture with the contents of the framebuffer.
+     * var t = Texture.fromFramebuffer({
+     *     context : context
+     * });
+     *
+     * @private
+     */
+    Texture.fromFramebuffer = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(options.context)) {
+            throw new DeveloperError('options.context is required.');
+        }
+        //>>includeEnd('debug');
+
+        var context = options.context;
+        var gl = context._gl;
+
+        var pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGB);
+        var framebufferXOffset = defaultValue(options.framebufferXOffset, 0);
+        var framebufferYOffset = defaultValue(options.framebufferYOffset, 0);
+        var width = defaultValue(options.width, gl.drawingBufferWidth);
+        var height = defaultValue(options.height, gl.drawingBufferHeight);
+        var framebuffer = options.framebuffer;
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(options.context)) {
+            throw new DeveloperError('context is required.');
+        }
+
+        if (!PixelFormat.validate(pixelFormat)) {
+            throw new DeveloperError('Invalid pixelFormat.');
+        }
+
+        if (PixelFormat.isDepthFormat(pixelFormat)) {
+            throw new DeveloperError('pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.');
+        }
+
+        if (framebufferXOffset < 0) {
+            throw new DeveloperError('framebufferXOffset must be greater than or equal to zero.');
+        }
+
+        if (framebufferYOffset < 0) {
+            throw new DeveloperError('framebufferYOffset must be greater than or equal to zero.');
+        }
+
+        if (framebufferXOffset + width > gl.drawingBufferWidth) {
+            throw new DeveloperError('framebufferXOffset + width must be less than or equal to drawingBufferWidth');
+        }
+
+        if (framebufferYOffset + height > gl.drawingBufferHeight) {
+            throw new DeveloperError('framebufferYOffset + height must be less than or equal to drawingBufferHeight.');
+        }
+        //>>includeEnd('debug');
+
+        var texture = new Texture({
+            context : context,
+            width : width,
+            height : height,
+            pixelFormat : pixelFormat,
+            source : {
+                framebuffer : defined(framebuffer) ? framebuffer : context.defaultFramebuffer,
+                xOffset : framebufferXOffset,
+                yOffset : framebufferYOffset,
+                width : width,
+                height : height
+            }
+        });
+
+        return texture;
     };
 
     defineProperties(Texture.prototype, {

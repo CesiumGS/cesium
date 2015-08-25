@@ -14,6 +14,7 @@ defineSuite([
         'Renderer/DrawCommand',
         'Renderer/Framebuffer',
         'Renderer/PixelDatatype',
+        'Renderer/Texture',
         'Scene/Camera',
         'Scene/FrameState',
         'Scene/Globe',
@@ -42,6 +43,7 @@ defineSuite([
         DrawCommand,
         Framebuffer,
         PixelDatatype,
+        Texture,
         Camera,
         FrameState,
         Globe,
@@ -380,13 +382,15 @@ defineSuite([
         if (context.depthTexture) {
             var framebuffer = new Framebuffer({
                 context : context,
-                colorTextures : [context.createTexture2D({
+                colorTextures : [new Texture({
+                    context : context,
                     width : 1,
                     height : 1,
                     pixelFormat : PixelFormat.RGBA,
                     pixelDatatype : PixelDatatype.UNSIGNED_BYTE
                 })],
-                depthTexture : context.createTexture2D({
+                depthTexture : new Texture({
+                    context : context,
                     width : 1,
                     height : 1,
                     pixelFormat : PixelFormat.DEPTH_COMPONENT,

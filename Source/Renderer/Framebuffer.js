@@ -49,12 +49,14 @@ define([
      * var height = context.canvas.clientHeight;
      * var framebuffer = new Framebuffer({
      *   context : context,
-     *   colorTextures : [context.createTexture2D({
+     *   colorTextures : [new Texture({
+     *     context : context,
      *     width : width,
      *     height : height,
      *     pixelFormat : PixelFormat.RGBA
      *   })],
-     *   depthTexture : context.createTexture2D({
+     *   depthTexture : new Texture({
+     *     context : context,
      *     width : width,
      *     height : height,
      *     pixelFormat : PixelFormat.DEPTH_COMPONENT,
