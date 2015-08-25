@@ -1510,10 +1510,10 @@ defineSuite([
                         scale : {
                             cartesian : [1.0, 2.0, 3.0]
                         },
-                        translate : {
+                        translation : {
                             cartesian : [4.0, 5.0, 6.0]
                         },
-                        rotate : {
+                        rotation : {
                             unitQuaternion : [0.0, 0.707, 0.0, 0.707]
                         }
                     }
@@ -1554,10 +1554,10 @@ defineSuite([
                         scale : {
                             cartesian : [1.0, 2.0, 3.0]
                         },
-                        translate : {
+                        translation : {
                             cartesian : [4.0, 5.0, 6.0]
                         },
-                        rotate : {
+                        rotation : {
                             unitQuaternion : [0.0, 0.707, 0.0, 0.707]
                         }
                     }

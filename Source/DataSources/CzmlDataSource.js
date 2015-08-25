@@ -1208,8 +1208,8 @@ define([
             }
 
             processPacketData(Cartesian3, nodeTransform, 'scale', node.scale, undefined, undefined, undefined);
-            processPacketData(Cartesian3, nodeTransform, 'translate', node.translate, undefined, undefined, undefined);
-            processPacketData(Quaternion, nodeTransform, 'rotate', node.rotate, undefined, undefined, undefined);
+            processPacketData(Cartesian3, nodeTransform, 'translate', node.translation, undefined, undefined, undefined);
+            processPacketData(Quaternion, nodeTransform, 'rotate', node.rotation, undefined, undefined, undefined);
         }
 
         return nodeTransformationsResult;
