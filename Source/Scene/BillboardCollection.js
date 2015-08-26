@@ -169,6 +169,9 @@ define([
         this._compiledShaderPixelOffsetScaleByDistance = false;
         this._compiledShaderPixelOffsetScaleByDistancePick = false;
 
+        this._shaderCollectionColor = false;
+        this._compiledShaderCollectionColor = false;
+
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
 
         this._maxSize = 0.0;
@@ -253,10 +256,18 @@ define([
                               BufferUsage.STATIC_DRAW  // PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX
                           ];
 
+        this._color = Color.clone(defaultValue(options.color, Color.WHITE));
+        if (options.color) {
+          this._shaderCollectionColor = true;
+        }
+
         var that = this;
         this._uniforms = {
             u_atlas : function() {
                 return that._textureAtlas.texture;
+            },
+            u_color : function() {
+                return that._color;
             }
         };
     };
@@ -274,6 +285,28 @@ define([
                 removeBillboards(this);
                 return this._billboards.length;
             }
+        },
+
+        color : {
+          get : function() {
+            return this._color;
+          },
+          set : function(value) {
+            //>>includeStart('debug', pragmas.debug);
+            if (!defined(value)) {
+              throw new DeveloperError('value is required.');
+            }
+            //>>includeEnd('debug');
+
+            var color = this._color;
+            if (!Color.equals(color, value)) {
+              Color.clone(value, color);
+            }
+
+            if (!this._compiledShaderCollectionColor) {
+              this._shaderCollectionColor = true;
+            }
+          }
         },
 
         /**
@@ -1216,7 +1249,8 @@ define([
                     (this._shaderAlignedAxis && !this._compiledShaderAlignedAxis) ||
                     (this._shaderScaleByDistance && !this._compiledShaderScaleByDistance) ||
                     (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistance) ||
-                    (this._shaderPixelOffsetScaleByDistance && !this._compiledShaderPixelOffsetScaleByDistance)) {
+                    (this._shaderPixelOffsetScaleByDistance && !this._compiledShaderPixelOffsetScaleByDistance) ||
+                    (this._shaderCollectionColor && !this._compiledShaderCollectionColor)) {
 
                 vs = new ShaderSource({
                     sources : [BillboardCollectionVS]
@@ -1240,12 +1274,20 @@ define([
                     vs.defines.push('CLAMPED_TO_GROUND');
                 }
 
-                this._sp = context.replaceShaderProgram(this._sp, vs, BillboardCollectionFS, attributeLocations);
+                fs = new ShaderSource({
+                  sources : [BillboardCollectionFS]
+                });
+                if (this._shaderCollectionColor) {
+                  fs.defines.push('COLLECTION_COLOR');
+                }
+
+                this._sp = context.replaceShaderProgram(this._sp, vs, fs, attributeLocations);
                 this._compiledShaderRotation = this._shaderRotation;
                 this._compiledShaderAlignedAxis = this._shaderAlignedAxis;
                 this._compiledShaderScaleByDistance = this._shaderScaleByDistance;
                 this._compiledShaderTranslucencyByDistance = this._shaderTranslucencyByDistance;
                 this._compiledShaderPixelOffsetScaleByDistance = this._shaderPixelOffsetScaleByDistance;
+                this._compiledShaderCollectionColor = this._shaderCollectionColor;
             }
 
             va = this._vaf.va;

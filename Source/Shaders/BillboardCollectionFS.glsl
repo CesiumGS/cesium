@@ -1,4 +1,5 @@
 uniform sampler2D u_atlas;
+uniform vec4 u_color;
 
 varying vec2 v_textureCoordinates;
 
@@ -12,6 +13,8 @@ void main()
 {
 #ifdef RENDER_FOR_PICK
     vec4 vertexColor = vec4(1.0, 1.0, 1.0, 1.0);
+#elseif COLLECTION_COLOR
+    vec4 vertexColor = u_color;
 #else
     vec4 vertexColor = v_color;
 #endif
