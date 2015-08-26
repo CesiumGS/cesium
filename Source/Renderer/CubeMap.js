@@ -169,7 +169,7 @@ define([
         this._positiveZ = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_POSITIVE_Z, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY);
         this._negativeZ = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY);
 
-        this.sampler = undefined;
+        this.sampler = new Sampler();
     };
 
     defineProperties(CubeMap.prototype, {
@@ -208,34 +208,18 @@ define([
                 return this._sampler;
             },
             set : function(sampler) {
-                var samplerDefined = true;
-                if (!defined(sampler)) {
-                    samplerDefined = false;
-                    var minFilter = TextureMinificationFilter.LINEAR;
-                    var magFilter = TextureMagnificationFilter.LINEAR;
-                    if (this._pixelDatatype === PixelDatatype.FLOAT) {
-                        minFilter = TextureMinificationFilter.NEAREST;
-                        magFilter = TextureMagnificationFilter.NEAREST;
-                    }
+                var minificationFilter = sampler.minificationFilter;
+                var magnificationFilter = sampler.magnificationFilter;
 
-                    sampler = new Sampler({
-                        wrapS : TextureWrap.CLAMP_TO_EDGE,
-                        wrapT : TextureWrap.CLAMP_TO_EDGE,
-                        minificationFilter : minFilter,
-                        magnificationFilter : magFilter,
-                        maximumAnisotropy : 1.0
-                    });
-                }
+                var mipmap =
+                    (minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) ||
+                    (minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) ||
+                    (minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) ||
+                    (minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR);
 
                 if (this._pixelDatatype === PixelDatatype.FLOAT) {
-                    if (sampler.minificationFilter !== TextureMinificationFilter.NEAREST &&
-                            sampler.minificationFilter !== TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) {
-                        throw new DeveloperError('Only NEAREST and NEAREST_MIPMAP_NEAREST minification filters are supported for floating point textures.');
-                    }
-
-                    if (sampler.magnificationFilter !== TextureMagnificationFilter.NEAREST) {
-                        throw new DeveloperError('Only the NEAREST magnification filter is supported for floating point textures.');
-                    }
+                    minificationFilter = mipmap ? TextureMinificationFilter.NEAREST_MIPMAP_NEAREST : TextureMinificationFilter.NEAREST;
+                    magnificationFilter = TextureMagnificationFilter.NEAREST;
                 }
 
                 var gl = this._gl;
@@ -243,8 +227,8 @@ define([
 
                 gl.activeTexture(gl.TEXTURE0);
                 gl.bindTexture(target, this._texture);
-                gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, sampler.minificationFilter);
-                gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, sampler.magnificationFilter);
+                gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, minificationFilter);
+                gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, magnificationFilter);
                 gl.texParameteri(target, gl.TEXTURE_WRAP_S, sampler.wrapS);
                 gl.texParameteri(target, gl.TEXTURE_WRAP_T, sampler.wrapT);
                 if (defined(this._textureFilterAnisotropic)) {
@@ -252,7 +236,7 @@ define([
                 }
                 gl.bindTexture(target, null);
 
-                this._sampler = !samplerDefined ? undefined : sampler;
+                this._sampler = sampler;
             }
         },
         pixelFormat: {
