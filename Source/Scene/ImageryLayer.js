@@ -20,9 +20,11 @@ define([
         '../Core/TileProviderError',
         '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
+        '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
         '../Renderer/MipmapHint',
+        '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
@@ -57,9 +59,11 @@ define([
         TileProviderError,
         BufferUsage,
         ClearCommand,
+        ContextLimits,
         DrawCommand,
         Framebuffer,
         MipmapHint,
+        RenderState,
         ShaderProgram,
         ShaderSource,
         Texture,
@@ -701,7 +705,7 @@ define([
         if (CesiumMath.isPowerOfTwo(texture.width) && CesiumMath.isPowerOfTwo(texture.height)) {
             var mipmapSampler = context.cache.imageryLayer_mipmapSampler;
             if (!defined(mipmapSampler)) {
-                var maximumSupportedAnisotropy = context.maximumTextureFilterAnisotropy;
+                var maximumSupportedAnisotropy = ContextLimits.maximumTextureFilterAnisotropy;
                 mipmapSampler = context.cache.imageryLayer_mipmapSampler = context.createSampler({
                     wrapS : TextureWrap.CLAMP_TO_EDGE,
                     wrapT : TextureWrap.CLAMP_TO_EDGE,
@@ -944,7 +948,7 @@ define([
                 (reproject.renderState.viewport.width !== width) ||
                 (reproject.renderState.viewport.height !== height)) {
 
-            reproject.renderState = context.createRenderState({
+            reproject.renderState = RenderState.fromCache({
                 viewport : new BoundingRectangle(0, 0, width, height)
             });
         }

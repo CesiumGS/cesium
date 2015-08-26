@@ -10,6 +10,7 @@ define([
         '../Core/PrimitiveType',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/VertexArray',
         '../Shaders/DepthPlaneFS',
@@ -28,6 +29,7 @@ define([
         PrimitiveType,
         BufferUsage,
         DrawCommand,
+        RenderState,
         ShaderProgram,
         VertexArray,
         DepthPlaneFS,
@@ -110,7 +112,7 @@ define([
         var ellipsoid = frameState.mapProjection.ellipsoid;
 
         if (!defined(this._command)) {
-            this._rs = context.createRenderState({ // Write depth, not color
+            this._rs = RenderState.fromCache({ // Write depth, not color
                 cull : {
                     enabled : true
                 },

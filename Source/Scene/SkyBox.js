@@ -13,6 +13,7 @@ define([
         '../Renderer/CubeMap',
         '../Renderer/DrawCommand',
         '../Renderer/loadCubeMap',
+        '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/VertexArray',
         '../Shaders/SkyBoxFS',
@@ -33,6 +34,7 @@ define([
         CubeMap,
         DrawCommand,
         loadCubeMap,
+        RenderState,
         ShaderProgram,
         VertexArray,
         SkyBoxFS,
@@ -193,7 +195,7 @@ define([
                 attributeLocations : attributeLocations
             });
 
-            command.renderState = context.createRenderState({
+            command.renderState = RenderState.fromCache({
                 blending : BlendingState.ALPHA_BLEND
             });
         }

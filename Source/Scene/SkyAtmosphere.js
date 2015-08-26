@@ -11,6 +11,7 @@ define([
         '../Core/VertexFormat',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
@@ -31,6 +32,7 @@ define([
         VertexFormat,
         BufferUsage,
         DrawCommand,
+        RenderState,
         ShaderProgram,
         ShaderSource,
         VertexArray,
@@ -161,7 +163,7 @@ define([
                 attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
                 bufferUsage : BufferUsage.STATIC_DRAW
             });
-            command.renderState = context.createRenderState({
+            command.renderState = RenderState.fromCache({
                 cull : {
                     enabled : true,
                     face : CullFace.FRONT

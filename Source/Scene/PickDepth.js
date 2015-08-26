@@ -6,6 +6,7 @@ define([
         '../Core/PixelFormat',
         '../Renderer/Framebuffer',
         '../Renderer/PixelDatatype',
+        '../Renderer/RenderState',
         '../Renderer/Texture',
         '../Shaders/PostProcessFilters/PassThrough'
     ], function(
@@ -15,6 +16,7 @@ define([
         PixelFormat,
         Framebuffer,
         PixelDatatype,
+        RenderState,
         Texture,
         PassThrough) {
     "use strict";
@@ -113,7 +115,7 @@ define([
                 '    gl_FragColor = czm_packDepth(texture2D(u_texture, v_textureCoordinates).r);\n' +
                 '}\n';
             pickDepth._copyDepthCommand = context.createViewportQuadCommand(fs, {
-                renderState : context.createRenderState(),
+                renderState : RenderState.fromCache(),
                 uniformMap : {
                     u_texture : function() {
                         return pickDepth._textureToCopy;

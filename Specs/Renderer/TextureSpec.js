@@ -7,6 +7,7 @@ defineSuite([
         'Core/PrimitiveType',
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
+        'Renderer/ContextLimits',
         'Renderer/DrawCommand',
         'Renderer/PixelDatatype',
         'Renderer/ShaderProgram',
@@ -25,6 +26,7 @@ defineSuite([
         PrimitiveType,
         BufferUsage,
         ClearCommand,
+        ContextLimits,
         DrawCommand,
         PixelDatatype,
         ShaderProgram,
@@ -520,7 +522,7 @@ defineSuite([
         expect(function() {
             texture = new Texture({
                 context : context,
-                width : context.maximumTextureSize + 1,
+                width : ContextLimits.maximumTextureSize + 1,
                 height : 16
             });
         }).toThrowDeveloperError();
@@ -541,7 +543,7 @@ defineSuite([
             texture = new Texture({
                 context : context,
                 width : 16,
-                height : context.maximumTextureSize + 1
+                height : ContextLimits.maximumTextureSize + 1
             });
         }).toThrowDeveloperError();
     });

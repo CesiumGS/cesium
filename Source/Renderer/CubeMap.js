@@ -7,6 +7,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/PixelFormat',
+        './ContextLimits',
         './CubeMapFace',
         './MipmapHint',
         './PixelDatatype',
@@ -21,6 +22,7 @@ define([
         DeveloperError,
         CesiumMath,
         PixelFormat,
+        ContextLimits,
         CubeMapFace,
         MipmapHint,
         PixelDatatype,
@@ -85,8 +87,8 @@ define([
             throw new DeveloperError('Width and height must be greater than zero.');
         }
 
-        if (size > context._maximumCubeMapSize) {
-            throw new DeveloperError('Width and height must be less than or equal to the maximum cube map size (' + context._maximumCubeMapSize + ').  Check maximumCubeMapSize.');
+        if (size > ContextLimits.maximumCubeMapSize) {
+            throw new DeveloperError('Width and height must be less than or equal to the maximum cube map size (' + ContextLimits.maximumCubeMapSize + ').  Check maximumCubeMapSize.');
         }
 
         if (!PixelFormat.validate(pixelFormat)) {

@@ -12,6 +12,7 @@ define([
         '../Core/VertexFormat',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
@@ -35,6 +36,7 @@ define([
         VertexFormat,
         BufferUsage,
         DrawCommand,
+        RenderState,
         ShaderProgram,
         ShaderSource,
         VertexArray,
@@ -297,7 +299,7 @@ define([
             // depth range, the hard-coded values in EllipsoidVS.glsl need
             // to be updated as well.
 
-            this._rs = context.createRenderState({
+            this._rs = RenderState.fromCache({
                 // Cull front faces - not back faces - so the ellipsoid doesn't
                 // disappear if the viewer enters the bounding box.
                 cull : {

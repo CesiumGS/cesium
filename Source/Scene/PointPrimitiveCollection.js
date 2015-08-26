@@ -15,7 +15,9 @@ define([
         '../Core/Matrix4',
         '../Core/PrimitiveType',
         '../Renderer/BufferUsage',
+        '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArrayFacade',
@@ -41,7 +43,9 @@ define([
         Matrix4,
         PrimitiveType,
         BufferUsage,
+        ContextLimits,
         DrawCommand,
+        RenderState,
         ShaderProgram,
         ShaderSource,
         VertexArrayFacade,
@@ -681,7 +685,7 @@ define([
     PointPrimitiveCollection.prototype.update = function(context, frameState, commandList) {
         removePointPrimitives(this);
 
-        this._maxTotalPointSize = context.maximumAliasedPointSize;
+        this._maxTotalPointSize = ContextLimits.maximumAliasedPointSize;
 
         updateMode(this, frameState);
 
@@ -818,7 +822,7 @@ define([
             var colorList = this._colorCommands;
 
             if (!defined(this._rs)) {
-                this._rs = context.createRenderState({
+                this._rs = RenderState.fromCache({
                     depthTest : {
                         enabled : true
                     },

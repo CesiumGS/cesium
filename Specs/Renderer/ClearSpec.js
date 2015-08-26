@@ -4,6 +4,7 @@ defineSuite([
         'Core/Color',
         'Renderer/ClearCommand',
         'Renderer/Framebuffer',
+        'Renderer/RenderState',
         'Renderer/Texture',
         'Specs/createContext'
     ], 'Renderer/Clear', function(
@@ -11,6 +12,7 @@ defineSuite([
         Color,
         ClearCommand,
         Framebuffer,
+        RenderState,
         Texture,
         createContext) {
     "use strict";
@@ -48,7 +50,7 @@ defineSuite([
 
         var command = new ClearCommand({
             color : Color.WHITE,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 colorMask : {
                     red : true,
                     green : false,
@@ -70,7 +72,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         command.color = Color.BLACK;
-        command.renderState = context.createRenderState({
+        command.renderState = RenderState.fromCache({
             scissorTest : {
                 enabled : true,
                 rectangle : new BoundingRectangle()
@@ -80,7 +82,7 @@ defineSuite([
         command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
-        command.renderState = context.createRenderState({
+        command.renderState = RenderState.fromCache({
             scissorTest : {
                 enabled : true,
                 rectangle : new BoundingRectangle(0, 0, 1, 1)

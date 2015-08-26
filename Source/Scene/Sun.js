@@ -19,6 +19,7 @@ define([
         '../Renderer/ClearCommand',
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
+        '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/Texture',
         '../Renderer/VertexArray',
@@ -48,6 +49,7 @@ define([
         ClearCommand,
         DrawCommand,
         Framebuffer,
+        RenderState,
         ShaderProgram,
         Texture,
         VertexArray,
@@ -186,7 +188,7 @@ define([
                 framebuffer : fbo
             });
 
-            var rs = context.createRenderState({
+            var rs = RenderState.fromCache({
                 viewport : new BoundingRectangle(0.0, 0.0, size, size)
             });
 
@@ -260,7 +262,7 @@ define([
                 attributeLocations : attributeLocations
             });
 
-            command.renderState = context.createRenderState({
+            command.renderState = RenderState.fromCache({
                 blending : BlendingState.ALPHA_BLEND
             });
             command.uniformMap = this._uniformMap;

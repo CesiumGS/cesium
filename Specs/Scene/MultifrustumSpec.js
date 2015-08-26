@@ -14,6 +14,7 @@ defineSuite([
         'Core/Matrix4',
         'Renderer/BufferUsage',
         'Renderer/DrawCommand',
+        'Renderer/RenderState',
         'Renderer/ShaderProgram',
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
@@ -39,6 +40,7 @@ defineSuite([
         Matrix4,
         BufferUsage,
         DrawCommand,
+        RenderState,
         ShaderProgram,
         TextureMagnificationFilter,
         TextureMinificationFilter,
@@ -266,7 +268,7 @@ defineSuite([
                     attributeLocations : attributeLocations
                 });
 
-                this._rs = context.createRenderState({
+                this._rs = RenderState.fromCache({
                     blending : BlendingState.ALPHA_BLEND
                 });
             }
