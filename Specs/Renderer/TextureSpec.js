@@ -10,6 +10,7 @@ defineSuite([
         'Renderer/ContextLimits',
         'Renderer/DrawCommand',
         'Renderer/PixelDatatype',
+        'Renderer/Sampler',
         'Renderer/ShaderProgram',
         'Renderer/Texture',
         'Renderer/TextureMagnificationFilter',
@@ -29,6 +30,7 @@ defineSuite([
         ContextLimits,
         DrawCommand,
         PixelDatatype,
+        Sampler,
         ShaderProgram,
         Texture,
         TextureMagnificationFilter,
@@ -376,7 +378,7 @@ defineSuite([
         });
 
         texture.generateMipmap();
-        texture.sampler = context.createSampler({
+        texture.sampler = new Sampler({
             minificationFilter : TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
         });
 
@@ -415,7 +417,7 @@ defineSuite([
             pixelFormat : PixelFormat.RGBA
         });
 
-        var sampler = context.createSampler({
+        var sampler = new Sampler({
             wrapS : TextureWrap.REPEAT,
             wrapT : TextureWrap.MIRRORED_REPEAT,
             minificationFilter : TextureMinificationFilter.NEAREST,
@@ -929,7 +931,7 @@ defineSuite([
             });
 
             expect(function() {
-                texture.sampler = context.createSampler({
+                texture.sampler = new Sampler({
                     minificationFilter : TextureMinificationFilter.LINEAR
                 });
             }).toThrowDeveloperError();
@@ -945,7 +947,7 @@ defineSuite([
             });
 
             expect(function() {
-                texture.sampler = context.createSampler({
+                texture.sampler = new Sampler({
                     magnificationFilter : TextureMagnificationFilter.LINEAR
                 });
             }).toThrowDeveloperError();

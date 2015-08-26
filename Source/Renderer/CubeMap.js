@@ -11,6 +11,7 @@ define([
         './CubeMapFace',
         './MipmapHint',
         './PixelDatatype',
+        './Sampler',
         './TextureMagnificationFilter',
         './TextureMinificationFilter',
         './TextureWrap'
@@ -26,6 +27,7 @@ define([
         CubeMapFace,
         MipmapHint,
         PixelDatatype,
+        Sampler,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap) {
@@ -216,13 +218,13 @@ define([
                         magFilter = TextureMagnificationFilter.NEAREST;
                     }
 
-                    sampler = {
+                    sampler = new Sampler({
                         wrapS : TextureWrap.CLAMP_TO_EDGE,
                         wrapT : TextureWrap.CLAMP_TO_EDGE,
                         minificationFilter : minFilter,
                         magnificationFilter : magFilter,
                         maximumAnisotropy : 1.0
-                    };
+                    });
                 }
 
                 if (this._pixelDatatype === PixelDatatype.FLOAT) {
@@ -250,13 +252,7 @@ define([
                 }
                 gl.bindTexture(target, null);
 
-                this._sampler = !samplerDefined ? undefined : {
-                    wrapS : sampler.wrapS,
-                    wrapT : sampler.wrapT,
-                    minificationFilter : sampler.minificationFilter,
-                    magnificationFilter : sampler.magnificationFilter,
-                    maximumAnisotropy : sampler.maximumAnisotropy
-                };
+                this._sampler = !samplerDefined ? undefined : sampler;
             }
         },
         pixelFormat: {
@@ -311,7 +307,7 @@ define([
      * // Generate mipmaps, and then set the sampler so mipmaps are used for
      * // minification when the cube map is sampled.
      * cubeMap.generateMipmap();
-     * cubeMap.sampler = context.createSampler({
+     * cubeMap.sampler = new Sampler({
      *   minificationFilter : Cesium.TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
      * });
      */

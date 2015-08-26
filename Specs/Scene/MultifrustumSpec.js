@@ -15,6 +15,7 @@ defineSuite([
         'Renderer/BufferUsage',
         'Renderer/DrawCommand',
         'Renderer/RenderState',
+        'Renderer/Sampler',
         'Renderer/ShaderProgram',
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
@@ -41,6 +42,7 @@ defineSuite([
         BufferUsage,
         DrawCommand,
         RenderState,
+        Sampler,
         ShaderProgram,
         TextureMagnificationFilter,
         TextureMinificationFilter,
@@ -110,7 +112,7 @@ defineSuite([
         });
 
         // ANGLE Workaround
-        atlas.texture.sampler = context.createSampler({
+        atlas.texture.sampler = new Sampler({
             minificationFilter : TextureMinificationFilter.NEAREST,
             magnificationFilter : TextureMagnificationFilter.NEAREST
         });

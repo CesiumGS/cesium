@@ -11,6 +11,7 @@ defineSuite([
         'Renderer/CubeMap',
         'Renderer/DrawCommand',
         'Renderer/PixelDatatype',
+        'Renderer/Sampler',
         'Renderer/ShaderProgram',
         'Renderer/Texture',
         'Renderer/TextureMagnificationFilter',
@@ -31,6 +32,7 @@ defineSuite([
         CubeMap,
         DrawCommand,
         PixelDatatype,
+        Sampler,
         ShaderProgram,
         Texture,
         TextureMagnificationFilter,
@@ -146,7 +148,7 @@ defineSuite([
             height : 16
         });
 
-        var sampler = context.createSampler({
+        var sampler = new Sampler({
             wrapS : TextureWrap.REPEAT,
             wrapT : TextureWrap.MIRRORED_REPEAT,
             minificationFilter : TextureMinificationFilter.NEAREST,
@@ -969,7 +971,7 @@ defineSuite([
         });
 
         cubeMap.generateMipmap();
-        cubeMap.sampler = context.createSampler({
+        cubeMap.sampler = new Sampler({
             minificationFilter : TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
         });
 
@@ -1330,7 +1332,7 @@ defineSuite([
             });
 
             expect(function() {
-                cubeMap.sampler = context.createSampler({
+                cubeMap.sampler = new Sampler({
                     minificationFilter : TextureMinificationFilter.LINEAR
                 });
             }).toThrowDeveloperError();
@@ -1347,7 +1349,7 @@ defineSuite([
             });
 
             expect(function() {
-                cubeMap.sampler = context.createSampler({
+                cubeMap.sampler = new Sampler({
                     magnificationFilter : TextureMagnificationFilter.LINEAR
                 });
             }).toThrowDeveloperError();

@@ -25,6 +25,7 @@ define([
         '../Renderer/Framebuffer',
         '../Renderer/MipmapHint',
         '../Renderer/RenderState',
+        '../Renderer/Sampler',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
@@ -64,6 +65,7 @@ define([
         Framebuffer,
         MipmapHint,
         RenderState,
+        Sampler,
         ShaderProgram,
         ShaderSource,
         Texture,
@@ -706,7 +708,7 @@ define([
             var mipmapSampler = context.cache.imageryLayer_mipmapSampler;
             if (!defined(mipmapSampler)) {
                 var maximumSupportedAnisotropy = ContextLimits.maximumTextureFilterAnisotropy;
-                mipmapSampler = context.cache.imageryLayer_mipmapSampler = context.createSampler({
+                mipmapSampler = context.cache.imageryLayer_mipmapSampler = new Sampler({
                     wrapS : TextureWrap.CLAMP_TO_EDGE,
                     wrapT : TextureWrap.CLAMP_TO_EDGE,
                     minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
@@ -719,7 +721,7 @@ define([
         } else {
             var nonMipmapSampler = context.cache.imageryLayer_nonMipmapSampler;
             if (!defined(nonMipmapSampler)) {
-                nonMipmapSampler = context.cache.imageryLayer_nonMipmapSampler = context.createSampler({
+                nonMipmapSampler = context.cache.imageryLayer_nonMipmapSampler = new Sampler({
                     wrapS : TextureWrap.CLAMP_TO_EDGE,
                     wrapT : TextureWrap.CLAMP_TO_EDGE,
                     minificationFilter : TextureMinificationFilter.LINEAR,
@@ -869,7 +871,7 @@ define([
                 attributeLocations : reprojectAttributeIndices
             });
 
-            reproject.sampler = context.createSampler({
+            reproject.sampler = new Sampler({
                 wrapS : TextureWrap.CLAMP_TO_EDGE,
                 wrapT : TextureWrap.CLAMP_TO_EDGE,
                 minificationFilter : TextureMinificationFilter.LINEAR,

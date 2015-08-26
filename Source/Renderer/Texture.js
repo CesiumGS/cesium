@@ -11,6 +11,7 @@ define([
         './ContextLimits',
         './MipmapHint',
         './PixelDatatype',
+        './Sampler',
         './TextureMagnificationFilter',
         './TextureMinificationFilter',
         './TextureWrap'
@@ -26,6 +27,7 @@ define([
         ContextLimits,
         MipmapHint,
         PixelDatatype,
+        Sampler,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap) {
@@ -180,7 +182,7 @@ define([
      * @exception {DeveloperError} framebufferXOffset + width must be less than or equal to canvas.clientWidth.
      * @exception {DeveloperError} framebufferYOffset + height must be less than or equal to canvas.clientHeight.
      *
-     * @see Context#createSampler
+     * @see Sampler
      *
      * @example
      * // Create a texture with the contents of the framebuffer.
@@ -259,7 +261,7 @@ define([
     defineProperties(Texture.prototype, {
         /**
          * The sampler to use when sampling this texture.
-         * Create a sampler by calling {@link Context#createSampler}.  If this
+         * Create a sampler by calling {@link Sampler}.  If this
          * parameter is not specified, a default sampler is used.  The default sampler clamps texture
          * coordinates in both directions, uses linear filtering for both magnification and minifcation,
          * and uses a maximum anisotropy of 1.0.
@@ -281,13 +283,13 @@ define([
                         magFilter = TextureMagnificationFilter.NEAREST;
                     }
 
-                    sampler = {
+                    sampler = new Sampler({
                         wrapS : TextureWrap.CLAMP_TO_EDGE,
                         wrapT : TextureWrap.CLAMP_TO_EDGE,
                         minificationFilter : minFilter,
                         magnificationFilter : magFilter,
                         maximumAnisotropy : 1.0
-                    };
+                    });
                 }
 
                 if (this._pixelDatatype === PixelDatatype.FLOAT) {
@@ -316,13 +318,7 @@ define([
                 }
                 gl.bindTexture(target, null);
 
-                this._sampler = !samplerDefined ? undefined : {
-                    wrapS : sampler.wrapS,
-                    wrapT : sampler.wrapT,
-                    minificationFilter : sampler.minificationFilter,
-                    magnificationFilter : sampler.magnificationFilter,
-                    maximumAnisotropy : sampler.maximumAnisotropy
-                };
+                this._sampler = !samplerDefined ? undefined : sampler;
             }
         },
         pixelFormat : {

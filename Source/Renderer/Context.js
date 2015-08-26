@@ -32,9 +32,6 @@ define([
         './ShaderCache',
         './ShaderProgram',
         './Texture',
-        './TextureMagnificationFilter',
-        './TextureMinificationFilter',
-        './TextureWrap',
         './UniformState',
         './VertexArray'
     ], function(
@@ -70,9 +67,6 @@ define([
         ShaderCache,
         ShaderProgram,
         Texture,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap,
         UniformState,
         VertexArray) {
     "use strict";
@@ -862,40 +856,6 @@ define([
         });
 
         return buffer;
-    };
-
-    Context.prototype.createSampler = function(sampler) {
-        var s = {
-            wrapS : defaultValue(sampler.wrapS, TextureWrap.CLAMP_TO_EDGE),
-            wrapT : defaultValue(sampler.wrapT, TextureWrap.CLAMP_TO_EDGE),
-            minificationFilter : defaultValue(sampler.minificationFilter, TextureMinificationFilter.LINEAR),
-            magnificationFilter : defaultValue(sampler.magnificationFilter, TextureMagnificationFilter.LINEAR),
-            maximumAnisotropy : (defined(sampler.maximumAnisotropy)) ? sampler.maximumAnisotropy : 1.0
-        };
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!TextureWrap.validate(s.wrapS)) {
-            throw new DeveloperError('Invalid sampler.wrapS.');
-        }
-
-        if (!TextureWrap.validate(s.wrapT)) {
-            throw new DeveloperError('Invalid sampler.wrapT.');
-        }
-
-        if (!TextureMinificationFilter.validate(s.minificationFilter)) {
-            throw new DeveloperError('Invalid sampler.minificationFilter.');
-        }
-
-        if (!TextureMagnificationFilter.validate(s.magnificationFilter)) {
-            throw new DeveloperError('Invalid sampler.magnificationFilter.');
-        }
-
-        if (s.maximumAnisotropy < 1.0) {
-            throw new DeveloperError('sampler.maximumAnisotropy must be greater than or equal to one.');
-        }
-        //>>includeEnd('debug');
-
-        return s;
     };
 
     function validateFramebuffer(context, framebuffer) {
