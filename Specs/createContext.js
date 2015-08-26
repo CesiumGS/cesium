@@ -5,6 +5,7 @@ define([
         'Core/defined',
         'Core/PrimitiveType',
         'Core/queryToObject',
+        'Renderer/Buffer',
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
         'Renderer/Context',
@@ -20,6 +21,7 @@ define([
         defined,
         PrimitiveType,
         queryToObject,
+        Buffer,
         BufferUsage,
         ClearCommand,
         Context,
@@ -74,7 +76,7 @@ define([
                 context : context,
                 attributes : [{
                     index : sp.vertexAttributes.position.index,
-                    vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                    vertexBuffer : Buffer.createVertexBuffer(context, new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
                     componentsPerAttribute : 4
                 }]
             });

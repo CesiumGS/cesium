@@ -1,10 +1,12 @@
 /*global defineSuite*/
 defineSuite([
         'Core/IndexDatatype',
+        'Renderer/Buffer',
         'Renderer/BufferUsage',
         'Specs/createContext'
     ], 'Renderer/Buffer', function(
         IndexDatatype,
+        Buffer,
         BufferUsage,
         createContext) {
     "use strict";
@@ -28,7 +30,7 @@ defineSuite([
     });
 
     it('creates vertex buffer', function() {
-        buffer = context.createVertexBuffer(16, BufferUsage.STATIC_DRAW);
+        buffer = Buffer.createVertexBuffer(context, 16, BufferUsage.STATIC_DRAW);
 
         expect(buffer.sizeInBytes).toEqual(16);
         expect(buffer.usage).toEqual(BufferUsage.STATIC_DRAW);
@@ -42,7 +44,7 @@ defineSuite([
         positions[1] = 2.0;
         positions[2] = 3.0;
 
-        buffer = context.createVertexBuffer(sizeInBytes, BufferUsage.STATIC_DRAW);
+        buffer = Buffer.createVertexBuffer(context, sizeInBytes, BufferUsage.STATIC_DRAW);
         buffer.copyFromArrayView(vertices);
     });
 
@@ -52,19 +54,19 @@ defineSuite([
         typedArray[1] = 2.0;
         typedArray[2] = 3.0;
 
-        buffer = context.createVertexBuffer(typedArray, BufferUsage.STATIC_DRAW);
+        buffer = Buffer.createVertexBuffer(context, typedArray, BufferUsage.STATIC_DRAW);
         expect(buffer.sizeInBytes).toEqual(typedArray.byteLength);
         expect(buffer.usage).toEqual(BufferUsage.STATIC_DRAW);
     });
 
     it('only allows typed array or size when creating a vertex buffer', function() {
         expect(function() {
-            buffer = context.createVertexBuffer({}, BufferUsage.STATIC_DRAW);
+            buffer = Buffer.createVertexBuffer(context, {}, BufferUsage.STATIC_DRAW);
         }).toThrowDeveloperError();
     });
 
     it('creates index buffer', function() {
-        buffer = context.createIndexBuffer(6, BufferUsage.STREAM_DRAW, IndexDatatype.UNSIGNED_SHORT);
+        buffer = Buffer.createIndexBuffer(context, 6, BufferUsage.STREAM_DRAW, IndexDatatype.UNSIGNED_SHORT);
 
         expect(buffer.sizeInBytes).toEqual(6);
         expect(buffer.usage).toEqual(BufferUsage.STREAM_DRAW);
@@ -82,7 +84,7 @@ defineSuite([
         indices[1] = 2;
         indices[2] = 3;
 
-        buffer = context.createIndexBuffer(sizeInBytes, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+        buffer = Buffer.createIndexBuffer(context, sizeInBytes, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
         buffer.copyFromArrayView(elements);
     });
 
@@ -92,7 +94,7 @@ defineSuite([
         typedArray[1] = 2;
         typedArray[2] = 3;
 
-        buffer = context.createIndexBuffer(typedArray, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+        buffer = Buffer.createIndexBuffer(context, typedArray, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
         expect(buffer.sizeInBytes).toEqual(typedArray.byteLength);
         expect(buffer.usage).toEqual(BufferUsage.STATIC_DRAW);
         expect(buffer.indexDatatype).toEqual(IndexDatatype.UNSIGNED_SHORT);
@@ -100,12 +102,12 @@ defineSuite([
 
     it('only allows typed array or size when creating a vertex buffer', function() {
         expect(function() {
-            buffer = context.createIndexBuffer({}, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+            buffer = Buffer.createIndexBuffer(context, {}, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
         }).toThrowDeveloperError();
     });
 
     it('destroys', function() {
-        var b = context.createIndexBuffer(3, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_BYTE);
+        var b = Buffer.createIndexBuffer(context, 3, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_BYTE);
         expect(b.isDestroyed()).toEqual(false);
         b.destroy();
         expect(b.isDestroyed()).toEqual(true);
@@ -113,25 +115,25 @@ defineSuite([
 
     it('fails to create', function() {
         expect(function() {
-            buffer = context.createVertexBuffer(0, BufferUsage.STATIC_DRAW);
+            buffer = Buffer.createVertexBuffer(context, 0, BufferUsage.STATIC_DRAW);
         }).toThrowDeveloperError();
     });
 
     it('fails to create again', function() {
         expect(function() {
-            buffer = context.createVertexBuffer(4, 0);
+            buffer = Buffer.createVertexBuffer(context, 4, 0);
         }).toThrowDeveloperError();
     });
 
     it('fails to provide an array view', function() {
-        buffer = context.createVertexBuffer(3, BufferUsage.STATIC_DRAW);
+        buffer = Buffer.createVertexBuffer(context, 3, BufferUsage.STATIC_DRAW);
         expect(function() {
             buffer.copyFromArrayView();
         }).toThrowDeveloperError();
     });
 
     it('fails to copy a large array view', function() {
-        buffer = context.createVertexBuffer(3, BufferUsage.STATIC_DRAW);
+        buffer = Buffer.createVertexBuffer(context, 3, BufferUsage.STATIC_DRAW);
         var elements = new ArrayBuffer(3);
 
         expect(function() {
@@ -140,7 +142,7 @@ defineSuite([
     });
 
     it('fails to destroy', function() {
-        var b = context.createIndexBuffer(3, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_BYTE);
+        var b = Buffer.createIndexBuffer(context, 3, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_BYTE);
         b.destroy();
 
         expect(function() {
