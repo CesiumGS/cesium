@@ -11,6 +11,7 @@ defineSuite([
         'Renderer/CubeMap',
         'Renderer/DrawCommand',
         'Renderer/PixelDatatype',
+        'Renderer/Sampler',
         'Renderer/ShaderProgram',
         'Renderer/Texture',
         'Renderer/TextureMagnificationFilter',
@@ -31,6 +32,7 @@ defineSuite([
         CubeMap,
         DrawCommand,
         PixelDatatype,
+        Sampler,
         ShaderProgram,
         Texture,
         TextureMagnificationFilter,
@@ -114,31 +116,6 @@ defineSuite([
         expect(cubeMap.negativeZ.pixelDatatype).toEqual(PixelDatatype.UNSIGNED_BYTE);
     });
 
-    it('default sampler returns undefined', function() {
-        cubeMap = new CubeMap({
-            context : context,
-            width : 16,
-            height : 16
-        });
-
-        var sampler = cubeMap.sampler;
-        expect(sampler).toBeUndefined();
-    });
-
-    it('default sampler returns undefined, data type is FLOAT ', function() {
-        if (context.floatingPointTexture) {
-            cubeMap = new CubeMap({
-                context : context,
-                width : 16,
-                height : 16,
-                pixelDatatype : PixelDatatype.FLOAT
-            });
-
-            var sampler = cubeMap.sampler;
-            expect(sampler).toBeUndefined();
-        }
-    });
-
     it('sets a sampler', function() {
         cubeMap = new CubeMap({
             context : context,
@@ -146,7 +123,7 @@ defineSuite([
             height : 16
         });
 
-        var sampler = context.createSampler({
+        var sampler = new Sampler({
             wrapS : TextureWrap.REPEAT,
             wrapT : TextureWrap.MIRRORED_REPEAT,
             minificationFilter : TextureMinificationFilter.NEAREST,
@@ -969,7 +946,7 @@ defineSuite([
         });
 
         cubeMap.generateMipmap();
-        cubeMap.sampler = context.createSampler({
+        cubeMap.sampler = new Sampler({
             minificationFilter : TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
         });
 
@@ -1318,40 +1295,6 @@ defineSuite([
         expect(function() {
             cubeMap.generateMipmap('invalid hint');
         }).toThrowDeveloperError();
-    });
-
-    it('throws when data type is FLOAT and minification filter is not NEAREST or NEAREST_MIPMAP_NEAREST', function() {
-        if (context.floatingPointTexture) {
-            cubeMap = new CubeMap({
-                context : context,
-                width : 16,
-                height : 16,
-                pixelDatatype : PixelDatatype.FLOAT
-            });
-
-            expect(function() {
-                cubeMap.sampler = context.createSampler({
-                    minificationFilter : TextureMinificationFilter.LINEAR
-                });
-            }).toThrowDeveloperError();
-        }
-    });
-
-    it('throws when data type is FLOAT and magnification filter is not NEAREST', function() {
-        if (context.floatingPointTexture) {
-            cubeMap = new CubeMap({
-                context : context,
-                width : 16,
-                height : 16,
-                pixelDatatype : PixelDatatype.FLOAT
-            });
-
-            expect(function() {
-                cubeMap.sampler = context.createSampler({
-                    magnificationFilter : TextureMagnificationFilter.LINEAR
-                });
-            }).toThrowDeveloperError();
-        }
     });
 
     it('fails to destroy', function() {

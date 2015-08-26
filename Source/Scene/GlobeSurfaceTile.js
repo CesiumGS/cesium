@@ -11,6 +11,7 @@ define([
         '../Core/PixelFormat',
         '../Core/Rectangle',
         '../Renderer/PixelDatatype',
+        '../Renderer/Sampler',
         '../Renderer/Texture',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
@@ -32,6 +33,7 @@ define([
         PixelFormat,
         Rectangle,
         PixelDatatype,
+        Sampler,
         Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
@@ -645,7 +647,7 @@ define([
             });
             allWaterTexture.referenceCount = 1;
 
-            var sampler = context.createSampler({
+            var sampler = new Sampler({
                 wrapS : TextureWrap.CLAMP_TO_EDGE,
                 wrapT : TextureWrap.CLAMP_TO_EDGE,
                 minificationFilter : TextureMinificationFilter.LINEAR,

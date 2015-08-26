@@ -10,6 +10,7 @@ defineSuite([
         'Renderer/ContextLimits',
         'Renderer/DrawCommand',
         'Renderer/PixelDatatype',
+        'Renderer/Sampler',
         'Renderer/ShaderProgram',
         'Renderer/Texture',
         'Renderer/TextureMagnificationFilter',
@@ -29,6 +30,7 @@ defineSuite([
         ContextLimits,
         DrawCommand,
         PixelDatatype,
+        Sampler,
         ShaderProgram,
         Texture,
         TextureMagnificationFilter,
@@ -376,36 +378,11 @@ defineSuite([
         });
 
         texture.generateMipmap();
-        texture.sampler = context.createSampler({
+        texture.sampler = new Sampler({
             minificationFilter : TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
         });
 
         expect(renderFragment(context)).toEqual(Color.BLUE.toBytes());
-    });
-
-    it('default sampler returns undefined', function() {
-        texture = new Texture({
-            context : context,
-            source : blueImage,
-            pixelFormat : PixelFormat.RGBA
-        });
-
-        var sampler = texture._sampler;
-        expect(sampler).toBeUndefined();
-    });
-
-    it('default sampler returns undefined, data type is FLOAT ', function() {
-        if (context.floatingPointTexture) {
-            texture = new Texture({
-                context : context,
-                source : blueImage,
-                pixelFormat : PixelFormat.RGBA,
-                pixelDatatype : PixelDatatype.FLOAT
-            });
-
-            var sampler = texture.sampler;
-            expect(sampler).toBeUndefined();
-        }
     });
 
     it('can set a sampler', function() {
@@ -415,7 +392,7 @@ defineSuite([
             pixelFormat : PixelFormat.RGBA
         });
 
-        var sampler = context.createSampler({
+        var sampler = new Sampler({
             wrapS : TextureWrap.REPEAT,
             wrapT : TextureWrap.MIRRORED_REPEAT,
             minificationFilter : TextureMinificationFilter.NEAREST,
@@ -918,38 +895,6 @@ defineSuite([
         expect(function() {
             texture.generateMipmap('invalid hint');
         }).toThrowDeveloperError();
-    });
-
-    it('throws when data type is FLOAT and minification filter is not NEAREST or NEAREST_MIPMAP_NEAREST', function() {
-        if (context.floatingPointTexture) {
-            texture = new Texture({
-                context : context,
-                source : blueImage,
-                pixelDatatype : PixelDatatype.FLOAT
-            });
-
-            expect(function() {
-                texture.sampler = context.createSampler({
-                    minificationFilter : TextureMinificationFilter.LINEAR
-                });
-            }).toThrowDeveloperError();
-        }
-    });
-
-    it('throws when data type is FLOAT and magnification filter is not NEAREST', function() {
-        if (context.floatingPointTexture) {
-            texture = new Texture({
-                context : context,
-                source : blueImage,
-                pixelDatatype : PixelDatatype.FLOAT
-            });
-
-            expect(function() {
-                texture.sampler = context.createSampler({
-                    magnificationFilter : TextureMagnificationFilter.LINEAR
-                });
-            }).toThrowDeveloperError();
-        }
     });
 
     it('throws when destroy is called after destroying', function() {

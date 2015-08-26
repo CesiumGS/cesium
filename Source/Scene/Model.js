@@ -30,6 +30,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/RenderState',
+        '../Renderer/Sampler',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
@@ -78,6 +79,7 @@ define([
         BufferUsage,
         DrawCommand,
         RenderState,
+        Sampler,
         ShaderProgram,
         ShaderSource,
         Texture,
@@ -1447,7 +1449,7 @@ define([
                 if (samplers.hasOwnProperty(name)) {
                     var sampler = samplers[name];
 
-                    rendererSamplers[name] = context.createSampler({
+                    rendererSamplers[name] = new Sampler({
                         wrapS : sampler.wrapS,
                         wrapT : sampler.wrapT,
                         minificationFilter : sampler.minFilter,
