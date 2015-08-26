@@ -25,6 +25,7 @@ define([
         '../Core/SphereOutlineGeometry',
         '../Core/Visibility',
         '../Core/WebMercatorProjection',
+        '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
@@ -67,6 +68,7 @@ define([
         SphereOutlineGeometry,
         Visibility,
         WebMercatorProjection,
+        Buffer,
         BufferUsage,
         ContextLimits,
         DrawCommand,
@@ -845,7 +847,7 @@ define([
         GeometryPipeline.toWireframe(geometry);
 
         var wireframeIndices = geometry.indices;
-        var wireframeIndexBuffer = context.createIndexBuffer(wireframeIndices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+        var wireframeIndexBuffer = Buffer.createIndexBuffer(context, wireframeIndices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
         return new VertexArray({
             context : context,
             attributes : vertexArray._attributes,

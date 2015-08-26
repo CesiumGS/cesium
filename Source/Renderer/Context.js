@@ -12,13 +12,11 @@ define([
         '../Core/FeatureDetection',
         '../Core/Geometry',
         '../Core/GeometryAttribute',
-        '../Core/IndexDatatype',
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
         '../Core/RuntimeError',
         '../Shaders/ViewportQuadVS',
-        './Buffer',
         './BufferUsage',
         './ClearCommand',
         './ContextLimits',
@@ -32,9 +30,6 @@ define([
         './ShaderCache',
         './ShaderProgram',
         './Texture',
-        './TextureMagnificationFilter',
-        './TextureMinificationFilter',
-        './TextureWrap',
         './UniformState',
         './VertexArray'
     ], function(
@@ -50,13 +45,11 @@ define([
         FeatureDetection,
         Geometry,
         GeometryAttribute,
-        IndexDatatype,
         CesiumMath,
         Matrix4,
         PrimitiveType,
         RuntimeError,
         ViewportQuadVS,
-        Buffer,
         BufferUsage,
         ClearCommand,
         ContextLimits,
@@ -70,9 +63,6 @@ define([
         ShaderCache,
         ShaderProgram,
         Texture,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap,
         UniformState,
         VertexArray) {
     "use strict";
@@ -727,176 +717,6 @@ define([
             }
         }
     });
-
-    function createBuffer(gl, bufferTarget, typedArrayOrSizeInBytes, usage) {
-        var sizeInBytes;
-
-        if (typeof typedArrayOrSizeInBytes === 'number') {
-            sizeInBytes = typedArrayOrSizeInBytes;
-        } else if (typeof typedArrayOrSizeInBytes === 'object' && typeof typedArrayOrSizeInBytes.byteLength === 'number') {
-            sizeInBytes = typedArrayOrSizeInBytes.byteLength;
-        } else {
-            //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError('typedArrayOrSizeInBytes must be either a typed array or a number.');
-            //>>includeEnd('debug');
-        }
-
-        //>>includeStart('debug', pragmas.debug);
-        if (sizeInBytes <= 0) {
-            throw new DeveloperError('typedArrayOrSizeInBytes must be greater than zero.');
-        }
-
-        if (!BufferUsage.validate(usage)) {
-            throw new DeveloperError('usage is invalid.');
-        }
-        //>>includeEnd('debug');
-
-        var buffer = gl.createBuffer();
-        gl.bindBuffer(bufferTarget, buffer);
-        gl.bufferData(bufferTarget, typedArrayOrSizeInBytes, usage);
-        gl.bindBuffer(bufferTarget, null);
-
-        return new Buffer(gl, bufferTarget, sizeInBytes, usage, buffer);
-    }
-
-    /**
-     * Creates a vertex buffer, which contains untyped vertex data in GPU-controlled memory.
-     * <br /><br />
-     * A vertex array defines the actual makeup of a vertex, e.g., positions, normals, texture coordinates,
-     * etc., by interpreting the raw data in one or more vertex buffers.
-     *
-     * @param {ArrayBufferView|Number} typedArrayOrSizeInBytes A typed array containing the data to copy to the buffer, or a <code>Number</code> defining the size of the buffer in bytes.
-     * @param {BufferUsage} usage Specifies the expected usage pattern of the buffer.  On some GL implementations, this can significantly affect performance.  See {@link BufferUsage}.
-     * @returns {VertexBuffer} The vertex buffer, ready to be attached to a vertex array.
-     *
-     * @exception {DeveloperError} The size in bytes must be greater than zero.
-     * @exception {DeveloperError} Invalid <code>usage</code>.
-     *
-     * @see Context#createIndexBuffer
-     * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGenBuffer.xml|glGenBuffer}
-     * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glBindBuffer.xml|glBindBuffer} with <code>ARRAY_BUFFER</code>
-     * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glBufferData.xml|glBufferData} with <code>ARRAY_BUFFER</code>
-     *
-     * @example
-     * // Example 1. Create a dynamic vertex buffer 16 bytes in size.
-     * var buffer = context.createVertexBuffer(16, BufferUsage.DYNAMIC_DRAW);
-     *
-     * @example
-     * // Example 2. Create a dynamic vertex buffer from three floating-point values.
-     * // The data copied to the vertex buffer is considered raw bytes until it is
-     * // interpreted as vertices using a vertex array.
-     * var positionBuffer = context.createVertexBuffer(new Float32Array([0, 0, 0]),
-     *     BufferUsage.STATIC_DRAW);
-     */
-    Context.prototype.createVertexBuffer = function(typedArrayOrSizeInBytes, usage) {
-        return createBuffer(this._gl, this._gl.ARRAY_BUFFER, typedArrayOrSizeInBytes, usage);
-    };
-
-    /**
-     * Creates an index buffer, which contains typed indices in GPU-controlled memory.
-     * <br /><br />
-     * An index buffer can be attached to a vertex array to select vertices for rendering.
-     * <code>Context.draw</code> can render using the entire index buffer or a subset
-     * of the index buffer defined by an offset and count.
-     *
-     * @param {ArrayBufferView|Number} typedArrayOrSizeInBytes A typed array containing the data to copy to the buffer, or a <code>Number</code> defining the size of the buffer in bytes.
-     * @param {BufferUsage} usage Specifies the expected usage pattern of the buffer.  On some GL implementations, this can significantly affect performance.  See {@link BufferUsage}.
-     * @param {IndexDatatype} indexDatatype The datatype of indices in the buffer.
-     * @returns {IndexBuffer} The index buffer, ready to be attached to a vertex array.
-     *
-     * @exception {DeveloperError} IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system.    Check context.elementIndexUint.
-     * @exception {DeveloperError} The size in bytes must be greater than zero.
-     * @exception {DeveloperError} Invalid <code>usage</code>.
-     * @exception {DeveloperError} Invalid <code>indexDatatype</code>.
-     *
-     * @see Context#createVertexBuffer
-     * @see Context#draw
-     * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGenBuffer.xml|glGenBuffer}
-     * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glBindBuffer.xml|glBindBuffer} with <code>ELEMENT_ARRAY_BUFFER</code>
-     * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glBufferData.xml|glBufferData} with <code>ELEMENT_ARRAY_BUFFER</code>
-     *
-     * @example
-     * // Example 1. Create a stream index buffer of unsigned shorts that is
-     * // 16 bytes in size.
-     * var buffer = context.createIndexBuffer(16, BufferUsage.STREAM_DRAW,
-     *     IndexDatatype.UNSIGNED_SHORT);
-     *
-     * @example
-     * // Example 2. Create a static index buffer containing three unsigned shorts.
-     * var buffer = context.createIndexBuffer(new Uint16Array([0, 1, 2]),
-     *     BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT)
-     */
-    Context.prototype.createIndexBuffer = function(typedArrayOrSizeInBytes, usage, indexDatatype) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!IndexDatatype.validate(indexDatatype)) {
-            throw new DeveloperError('Invalid indexDatatype.');
-        }
-        //>>includeEnd('debug');
-
-        if ((indexDatatype === IndexDatatype.UNSIGNED_INT) && !this.elementIndexUint) {
-            throw new DeveloperError('IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system.  Check context.elementIndexUint.');
-        }
-
-        var bytesPerIndex = IndexDatatype.getSizeInBytes(indexDatatype);
-
-        var gl = this._gl;
-        var buffer = createBuffer(gl, gl.ELEMENT_ARRAY_BUFFER, typedArrayOrSizeInBytes, usage);
-        var numberOfIndices = buffer.sizeInBytes / bytesPerIndex;
-
-        defineProperties(buffer, {
-            indexDatatype: {
-                get : function() {
-                    return indexDatatype;
-                }
-            },
-            bytesPerIndex : {
-                get : function() {
-                    return bytesPerIndex;
-                }
-            },
-            numberOfIndices : {
-                get : function() {
-                    return numberOfIndices;
-                }
-            }
-        });
-
-        return buffer;
-    };
-
-    Context.prototype.createSampler = function(sampler) {
-        var s = {
-            wrapS : defaultValue(sampler.wrapS, TextureWrap.CLAMP_TO_EDGE),
-            wrapT : defaultValue(sampler.wrapT, TextureWrap.CLAMP_TO_EDGE),
-            minificationFilter : defaultValue(sampler.minificationFilter, TextureMinificationFilter.LINEAR),
-            magnificationFilter : defaultValue(sampler.magnificationFilter, TextureMagnificationFilter.LINEAR),
-            maximumAnisotropy : (defined(sampler.maximumAnisotropy)) ? sampler.maximumAnisotropy : 1.0
-        };
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!TextureWrap.validate(s.wrapS)) {
-            throw new DeveloperError('Invalid sampler.wrapS.');
-        }
-
-        if (!TextureWrap.validate(s.wrapT)) {
-            throw new DeveloperError('Invalid sampler.wrapT.');
-        }
-
-        if (!TextureMinificationFilter.validate(s.minificationFilter)) {
-            throw new DeveloperError('Invalid sampler.minificationFilter.');
-        }
-
-        if (!TextureMagnificationFilter.validate(s.magnificationFilter)) {
-            throw new DeveloperError('Invalid sampler.magnificationFilter.');
-        }
-
-        if (s.maximumAnisotropy < 1.0) {
-            throw new DeveloperError('sampler.maximumAnisotropy must be greater than or equal to one.');
-        }
-        //>>includeEnd('debug');
-
-        return s;
-    };
 
     function validateFramebuffer(context, framebuffer) {
         if (context.validateFramebuffer) {

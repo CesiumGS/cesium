@@ -8,6 +8,7 @@ defineSuite([
         'Core/Matrix3',
         'Core/Matrix4',
         'Core/PrimitiveType',
+        'Renderer/Buffer',
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
         'Renderer/DrawCommand',
@@ -24,6 +25,7 @@ defineSuite([
         Matrix3,
         Matrix4,
         PrimitiveType,
+        Buffer,
         BufferUsage,
         ClearCommand,
         DrawCommand,
@@ -80,7 +82,7 @@ defineSuite([
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer(context, new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 4
             }]
         });

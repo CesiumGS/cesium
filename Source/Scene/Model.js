@@ -27,9 +27,11 @@ define([
         '../Core/Quaternion',
         '../Core/Queue',
         '../Core/RuntimeError',
+        '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/RenderState',
+        '../Renderer/Sampler',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
@@ -75,9 +77,11 @@ define([
         Quaternion,
         Queue,
         RuntimeError,
+        Buffer,
         BufferUsage,
         DrawCommand,
         RenderState,
+        Sampler,
         ShaderProgram,
         ShaderSource,
         Texture,
@@ -1291,7 +1295,7 @@ define([
             bufferView = bufferViews[bufferViewName];
 
             // Only ARRAY_BUFFER here.  ELEMENT_ARRAY_BUFFER created below.
-            var vertexBuffer = context.createVertexBuffer(loadResources.getBuffer(bufferView), BufferUsage.STATIC_DRAW);
+            var vertexBuffer = Buffer.createVertexBuffer(context, loadResources.getBuffer(bufferView), BufferUsage.STATIC_DRAW);
             vertexBuffer.vertexArrayDestroyable = false;
             rendererBuffers[bufferViewName] = vertexBuffer;
         }
@@ -1306,7 +1310,7 @@ define([
                 bufferView = bufferViews[accessor.bufferView];
 
                 if ((bufferView.target === WebGLRenderingContext.ELEMENT_ARRAY_BUFFER) && !defined(rendererBuffers[accessor.bufferView])) {
-                    var indexBuffer = context.createIndexBuffer(loadResources.getBuffer(bufferView), BufferUsage.STATIC_DRAW, accessor.componentType);
+                    var indexBuffer = Buffer.createIndexBuffer(context, loadResources.getBuffer(bufferView), BufferUsage.STATIC_DRAW, accessor.componentType);
                     indexBuffer.vertexArrayDestroyable = false;
                     rendererBuffers[accessor.bufferView] = indexBuffer;
                     // In theory, several glTF accessors with different componentTypes could
@@ -1447,7 +1451,7 @@ define([
                 if (samplers.hasOwnProperty(name)) {
                     var sampler = samplers[name];
 
-                    rendererSamplers[name] = context.createSampler({
+                    rendererSamplers[name] = new Sampler({
                         wrapS : sampler.wrapS,
                         wrapT : sampler.wrapT,
                         minificationFilter : sampler.minFilter,
