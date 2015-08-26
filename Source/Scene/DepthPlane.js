@@ -10,6 +10,7 @@ define([
         '../Core/PrimitiveType',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/ShaderProgram',
         '../Renderer/VertexArray',
         '../Shaders/DepthPlaneFS',
         '../Shaders/DepthPlaneVS',
@@ -27,6 +28,7 @@ define([
         PrimitiveType,
         BufferUsage,
         DrawCommand,
+        ShaderProgram,
         VertexArray,
         DepthPlaneFS,
         DepthPlaneVS,
@@ -124,8 +126,13 @@ define([
                 }
             });
 
-            this._sp = context.createShaderProgram(DepthPlaneVS, DepthPlaneFS, {
-                position : 0
+            this._sp = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : DepthPlaneVS,
+                fragmentShaderSource : DepthPlaneFS,
+                attributeLocations : {
+                    position : 0
+                }
             });
 
             this._command = new DrawCommand({

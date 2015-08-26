@@ -11,6 +11,7 @@ define([
         '../Core/VertexFormat',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
         '../Shaders/SkyAtmosphereFS',
@@ -30,6 +31,7 @@ define([
         VertexFormat,
         BufferUsage,
         DrawCommand,
+        ShaderProgram,
         ShaderSource,
         VertexArray,
         SkyAtmosphereFS,
@@ -171,13 +173,21 @@ define([
                 defines : ['SKY_FROM_SPACE'],
                 sources : [SkyAtmosphereVS]
             });
-            this._spSkyFromSpace = context.createShaderProgram(vs, SkyAtmosphereFS);
+            this._spSkyFromSpace = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : SkyAtmosphereFS
+            });
 
             vs = new ShaderSource({
                 defines : ['SKY_FROM_ATMOSPHERE'],
                 sources : [SkyAtmosphereVS]
             });
-            this._spSkyFromAtmosphere = context.createShaderProgram(vs, SkyAtmosphereFS);
+            this._spSkyFromAtmosphere = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : SkyAtmosphereFS
+            });
         }
 
         var cameraPosition = frameState.camera.positionWC;

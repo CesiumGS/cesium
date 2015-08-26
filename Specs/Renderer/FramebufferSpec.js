@@ -11,6 +11,7 @@ defineSuite([
         'Renderer/PixelDatatype',
         'Renderer/Renderbuffer',
         'Renderer/RenderbufferFormat',
+        'Renderer/ShaderProgram',
         'Renderer/Texture',
         'Renderer/VertexArray',
         'Specs/createContext'
@@ -26,6 +27,7 @@ defineSuite([
         PixelDatatype,
         Renderbuffer,
         RenderbufferFormat,
+        ShaderProgram,
         Texture,
         VertexArray,
         createContext) {
@@ -184,8 +186,13 @@ defineSuite([
         // 4 of 4.  Render green to default color buffer by reading from previous color attachment
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'uniform sampler2D u_texture; void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)); }';
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
         sp.allUniforms.u_texture.value = colorTexture;
 
@@ -237,8 +244,13 @@ defineSuite([
         // 4 of 4.  Render green to default color buffer by reading from previous color attachment
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'uniform samplerCube u_cubeMap; void main() { gl_FragColor = textureCube(u_cubeMap, vec3(1.0, 0.0, 0.0)); }';
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
         sp.allUniforms.u_cubeMap.value = cubeMap;
 
@@ -280,7 +292,11 @@ defineSuite([
         // 2 of 4.  Render green point into color attachment.
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
@@ -305,8 +321,13 @@ defineSuite([
         // 4 of 4.  Render green to default color buffer by reading from previous color attachment
         var vs2 = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs2 = 'uniform sampler2D u_texture; void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)); }';
-        var sp2 = context.createShaderProgram(vs2, fs2, {
-            position : 0
+        var sp2 = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs2,
+            fragmentShaderSource : fs2,
+            attributeLocations : {
+                position : 0
+            }
         });
         sp2.allUniforms.u_texture.value = colorTexture;
 
@@ -327,7 +348,11 @@ defineSuite([
         // 1 of 3.  Render green point into color attachment.
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
@@ -357,8 +382,13 @@ defineSuite([
         // 3 of 3.  Render green to default color buffer by reading from previous color attachment
         var vs2 = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs2 = 'uniform sampler2D u_texture; void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)).rrrr; }';
-        var sp2 = context.createShaderProgram(vs2, fs2, {
-            position : 0
+        var sp2 = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs2,
+            fragmentShaderSource : fs2,
+            attributeLocations : {
+                position : 0
+            }
         });
         sp2.allUniforms.u_texture.value = texture;
 
@@ -440,7 +470,11 @@ defineSuite([
 
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
@@ -523,7 +557,11 @@ defineSuite([
             // 2 of 5.  Render red point into color attachment 0 and green point to color attachment 1.
             var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
             var fs = '#extension GL_EXT_draw_buffers : enable \n void main() { gl_FragData[0] = vec4(1.0, 0.0, 0.0, 1.0); gl_FragData[1] = vec4(0.0, 1.0, 0.0, 1.0); }';
-            sp = context.createShaderProgram(vs, fs);
+            sp = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs
+            });
 
             va = new VertexArray({
                 context : context,
@@ -548,8 +586,13 @@ defineSuite([
             // 4 of 5.  Render yellow to default color buffer by reading from previous color attachments
             var vs2 = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
             var fs2 = 'uniform sampler2D u_texture0; uniform sampler2D u_texture1; void main() { gl_FragColor = texture2D(u_texture0, vec2(0.0)) + texture2D(u_texture1, vec2(0.0)); }';
-            var sp2 = context.createShaderProgram(vs2, fs2, {
-                position : 0
+            var sp2 = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs2,
+                fragmentShaderSource : fs2,
+                attributeLocations : {
+                    position : 0
+                }
             });
             sp2.allUniforms.u_texture0.value = colorTexture0;
             sp2.allUniforms.u_texture1.value = colorTexture1;
@@ -742,7 +785,11 @@ defineSuite([
 
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,

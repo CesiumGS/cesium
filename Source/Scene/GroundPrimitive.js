@@ -16,6 +16,7 @@ define([
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
         '../Renderer/DrawCommand',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Shaders/ShadowVolumeFS',
         '../Shaders/ShadowVolumeVS',
@@ -45,6 +46,7 @@ define([
         OrientedBoundingBox,
         Rectangle,
         DrawCommand,
+        ShaderProgram,
         ShaderSource,
         ShadowVolumeFS,
         ShadowVolumeVS,
@@ -511,16 +513,34 @@ define([
         var fs = ShadowVolumeFS;
         var attributeLocations = primitive._primitive._attributeLocations;
 
-        primitive._sp = context.replaceShaderProgram(primitive._sp, vs, fs, attributeLocations);
+
+        primitive._sp = ShaderProgram.replaceCache({
+            context : context,
+            shaderProgram : primitive._sp,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
 
         if (primitive._primitive.allowPicking) {
             var pickFS = new ShaderSource({
                 sources : [fs],
                 pickColorQualifier : 'varying'
             });
-            primitive._spPick = context.replaceShaderProgram(primitive._spPick, Primitive._createPickVertexShaderSource(vs), pickFS, attributeLocations);
+            primitive._spPick = ShaderProgram.replaceCache({
+                context : context,
+                shaderProgram : primitive._spPick,
+                vertexShaderSource : Primitive._createPickVertexShaderSource(vs),
+                fragmentShaderSource : pickFS,
+                attributeLocations : attributeLocations
+            });
         } else {
-            primitive._spPick = context.createShaderProgram(vs, fs, attributeLocations);
+            primitive._spPick = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs,
+                attributeLocations : attributeLocations
+            });
         }
     }
 

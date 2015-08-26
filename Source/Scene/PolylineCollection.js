@@ -19,6 +19,7 @@ define([
         '../Core/Plane',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
         '../Shaders/PolylineCommon',
@@ -49,6 +50,7 @@ define([
         Plane,
         BufferUsage,
         DrawCommand,
+        ShaderProgram,
         ShaderSource,
         VertexArray,
         PolylineCommon,
@@ -1048,8 +1050,20 @@ define([
             sources : fs.sources,
             pickColorQualifier : 'varying'
         });
-        this.shaderProgram = context.createShaderProgram(vs, fs, attributeLocations);
-        this.pickShaderProgram = context.createShaderProgram(vs, fsPick, attributeLocations);
+
+        this.shaderProgram = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
+
+        this.pickShaderProgram = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fsPick,
+            attributeLocations : attributeLocations
+        });
     };
 
     function intersectsIDL(polyline) {

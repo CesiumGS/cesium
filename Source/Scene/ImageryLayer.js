@@ -23,6 +23,7 @@ define([
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
         '../Renderer/MipmapHint',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
         '../Renderer/TextureMagnificationFilter',
@@ -59,6 +60,7 @@ define([
         DrawCommand,
         Framebuffer,
         MipmapHint,
+        ShaderProgram,
         ShaderSource,
         Texture,
         TextureMagnificationFilter,
@@ -856,7 +858,12 @@ define([
                 sources : [ReprojectWebMercatorVS]
             });
 
-            reproject.shaderProgram = context.createShaderProgram(vs, ReprojectWebMercatorFS, reprojectAttributeIndices);
+            reproject.shaderProgram = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : ReprojectWebMercatorFS,
+                attributeLocations : reprojectAttributeIndices
+            });
 
             reproject.sampler = context.createSampler({
                 wrapS : TextureWrap.CLAMP_TO_EDGE,

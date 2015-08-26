@@ -10,6 +10,7 @@ defineSuite([
         'Renderer/CubeMap',
         'Renderer/DrawCommand',
         'Renderer/PixelDatatype',
+        'Renderer/ShaderProgram',
         'Renderer/Texture',
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
@@ -28,6 +29,7 @@ defineSuite([
         CubeMap,
         DrawCommand,
         PixelDatatype,
+        ShaderProgram,
         Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
@@ -197,9 +199,16 @@ defineSuite([
             'uniform samplerCube u_texture;' +
             'uniform mediump vec3 u_direction;' +
             'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
+
         sp.allUniforms.u_texture.value = cubeMap;
 
         va = new VertexArray({
@@ -267,9 +276,16 @@ defineSuite([
             'uniform samplerCube u_texture;' +
             'uniform mediump vec3 u_direction;' +
             'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
+
         sp.allUniforms.u_texture.value = cubeMap;
 
         va = new VertexArray({
@@ -323,9 +339,16 @@ defineSuite([
             'uniform samplerCube u_texture;' +
             'uniform mediump vec3 u_direction;' +
             'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
+
         sp.allUniforms.u_texture.value = context.defaultCubeMap;
 
         va = new VertexArray({
@@ -409,9 +432,16 @@ defineSuite([
             'uniform samplerCube u_texture;' +
             'uniform mediump vec3 u_direction;' +
             'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
+
         sp.allUniforms.u_texture.value = cubeMap;
 
         va = new VertexArray({
@@ -504,9 +534,16 @@ defineSuite([
                 'uniform samplerCube u_texture;' +
                 'uniform mediump vec3 u_direction;' +
                 'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
-            sp = context.createShaderProgram(vs, fs, {
-                position : 0
+
+            sp = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs,
+                attributeLocations : {
+                    position : 0
+                }
             });
+
             sp.allUniforms.u_texture.value = cubeMap;
 
             va = new VertexArray({
@@ -583,9 +620,16 @@ defineSuite([
             'uniform samplerCube u_texture;' +
             'uniform mediump vec3 u_direction;' +
             'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
+
         sp.allUniforms.u_texture.value = cubeMap;
 
         va = new VertexArray({
@@ -645,9 +689,16 @@ defineSuite([
             'uniform samplerCube u_cubeMap;' +
             'uniform mediump vec3 u_direction;' +
             'void main() { gl_FragColor = textureCube(u_cubeMap, normalize(u_direction)); }';
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
+
         sp.allUniforms.u_cubeMap.value = cubeMap;
 
         va = new VertexArray({
@@ -737,9 +788,16 @@ defineSuite([
             'uniform samplerCube u_cubeMap;' +
             'uniform mediump vec3 u_direction;' +
             'void main() { gl_FragColor = textureCube(u_cubeMap, normalize(u_direction)); }';
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
+
         sp.allUniforms.u_cubeMap.value = cubeMap;
 
         va = new VertexArray({
@@ -793,9 +851,16 @@ defineSuite([
         var fs =
             'uniform samplerCube u_cubeMap;' +
             'void main() { gl_FragColor = textureCube(u_cubeMap, vec3(1.0, 0.0, 0.0)); }';
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
+
         sp.allUniforms.u_cubeMap.value = cubeMap;
 
         va = new VertexArray({
@@ -856,9 +921,16 @@ defineSuite([
             'uniform samplerCube u_cubeMap;' +
             'uniform sampler2D u_texture;' +
             'void main() { gl_FragColor = textureCube(u_cubeMap, vec3(1.0, 0.0, 0.0)) + texture2D(u_texture, vec2(0.0)); }';
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
+
         sp.allUniforms.u_cubeMap.value = cubeMap;
         sp.allUniforms.u_texture.value = texture;
 
@@ -903,9 +975,16 @@ defineSuite([
         var fs =
             'uniform samplerCube u_cubeMap;' +
             'void main() { gl_FragColor = textureCube(u_cubeMap, vec3(1.0, 0.0, 0.0)); }';
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
+
         sp.allUniforms.u_cubeMap.value = cubeMap;
 
         va = new VertexArray({

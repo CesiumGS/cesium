@@ -19,6 +19,7 @@ define([
         '../Renderer/ClearCommand',
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
+        '../Renderer/ShaderProgram',
         '../Renderer/Texture',
         '../Renderer/VertexArray',
         '../Shaders/SunFS',
@@ -47,6 +48,7 @@ define([
         ClearCommand,
         DrawCommand,
         Framebuffer,
+        ShaderProgram,
         Texture,
         VertexArray,
         SunFS,
@@ -250,7 +252,14 @@ define([
                 attributes : attributes,
                 indexBuffer : indexBuffer
             });
-            command.shaderProgram = context.createShaderProgram(SunVS, SunFS, attributeLocations);
+
+            command.shaderProgram = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : SunVS,
+                fragmentShaderSource : SunFS,
+                attributeLocations : attributeLocations
+            });
+
             command.renderState = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND
             });

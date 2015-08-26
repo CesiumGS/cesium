@@ -29,6 +29,7 @@ define([
         '../Core/RuntimeError',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
         '../Renderer/TextureMinificationFilter',
@@ -75,6 +76,7 @@ define([
         RuntimeError,
         BufferUsage,
         DrawCommand,
+        ShaderProgram,
         ShaderSource,
         Texture,
         TextureMinificationFilter,
@@ -1345,7 +1347,12 @@ define([
         var vs = getShaderSource(model, shaders[program.vertexShader]);
         var fs = getShaderSource(model, shaders[program.fragmentShader]);
 
-        model._rendererResources.programs[name] = context.createShaderProgram(vs, fs, attributeLocations);
+        model._rendererResources.programs[name] = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
 
         if (model.allowPicking) {
             // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
@@ -1353,7 +1360,13 @@ define([
                 sources : [fs],
                 pickColorQualifier : 'uniform'
             });
-            model._rendererResources.pickPrograms[name] = context.createShaderProgram(vs, pickFS, attributeLocations);
+
+            model._rendererResources.pickPrograms[name] = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : pickFS,
+                attributeLocations : attributeLocations
+            });
         }
     }
 

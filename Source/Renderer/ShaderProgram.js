@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
@@ -9,6 +10,7 @@ define([
         './createUniform',
         './createUniformArray'
     ], function(
+        defaultValue,
         defined,
         defineProperties,
         destroyObject,
@@ -54,6 +56,30 @@ define([
          * @private
          */
         this.id = nextShaderProgramId++;
+    };
+
+    ShaderProgram.fromCache = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(options.context)) {
+            throw new DeveloperError('options.context is required.');
+        }
+        //>>includeEnd('debug');
+
+        return options.context.shaderCache.getShaderProgram(options);
+    };
+
+    ShaderProgram.replaceCache = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(options.context)) {
+            throw new DeveloperError('options.context is required.');
+        }
+        //>>includeEnd('debug');
+
+        return options.context.shaderCache.replaceShaderProgram(options);
     };
 
     defineProperties(ShaderProgram.prototype, {

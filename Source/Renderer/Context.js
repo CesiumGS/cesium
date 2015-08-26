@@ -29,6 +29,7 @@ define([
         './RenderbufferFormat',
         './RenderState',
         './ShaderCache',
+        './ShaderProgram',
         './Texture',
         './TextureMagnificationFilter',
         './TextureMinificationFilter',
@@ -65,6 +66,7 @@ define([
         RenderbufferFormat,
         RenderState,
         ShaderCache,
+        ShaderProgram,
         Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
@@ -943,14 +945,6 @@ define([
         }
     });
 
-    Context.prototype.replaceShaderProgram = function(shaderProgram, vertexShaderSource, fragmentShaderSource, attributeLocations) {
-        return this._shaderCache.replaceShaderProgram(shaderProgram, vertexShaderSource, fragmentShaderSource, attributeLocations);
-    };
-
-    Context.prototype.createShaderProgram = function(vertexShaderSource, fragmentShaderSource, attributeLocations) {
-        return this._shaderCache.getShaderProgram(vertexShaderSource, fragmentShaderSource, attributeLocations);
-    };
-
     function createBuffer(gl, bufferTarget, typedArrayOrSizeInBytes, usage) {
         var sizeInBytes;
 
@@ -1571,7 +1565,12 @@ define([
             vertexArray : vertexArray,
             primitiveType : PrimitiveType.TRIANGLES,
             renderState : overrides.renderState,
-            shaderProgram : this.createShaderProgram(ViewportQuadVS, fragmentShaderSource, viewportQuadAttributeLocations),
+            shaderProgram : ShaderProgram.fromCache({
+                context : this,
+                vertexShaderSource : ViewportQuadVS,
+                fragmentShaderSource : fragmentShaderSource,
+                attributeLocations : viewportQuadAttributeLocations
+            }),
             uniformMap : overrides.uniformMap,
             owner : overrides.owner,
             framebuffer : overrides.framebuffer

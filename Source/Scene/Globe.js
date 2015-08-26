@@ -31,6 +31,7 @@ define([
         '../Core/Transforms',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
         '../Renderer/VertexArray',
@@ -78,6 +79,7 @@ define([
         Transforms,
         BufferUsage,
         DrawCommand,
+        ShaderProgram,
         ShaderSource,
         Texture,
         VertexArray,
@@ -764,7 +766,13 @@ define([
         if (!defined(northPoleCommand.shaderProgram) ||
             !defined(southPoleCommand.shaderProgram)) {
 
-            var poleShaderProgram = context.replaceShaderProgram(northPoleCommand.shaderProgram, GlobeVSPole, GlobeFSPole, terrainAttributeLocations);
+            var poleShaderProgram = ShaderProgram.replaceCache({
+                context : context,
+                shaderProgram : northPoleCommand.shaderProgram,
+                vertexShaderSource : GlobeVSPole,
+                fragmentShaderSource : GlobeFSPole,
+                attributeLocations : terrainAttributeLocations
+            });
 
             northPoleCommand.shaderProgram = poleShaderProgram;
             southPoleCommand.shaderProgram = poleShaderProgram;

@@ -31,6 +31,7 @@ define([
         '../Renderer/ClearCommand',
         '../Renderer/Context',
         '../Renderer/PassState',
+        '../Renderer/ShaderProgram',
         './Camera',
         './CreditDisplay',
         './CullingVolume',
@@ -87,6 +88,7 @@ define([
         ClearCommand,
         Context,
         PassState,
+        ShaderProgram,
         Camera,
         CreditDisplay,
         CullingVolume,
@@ -1170,7 +1172,13 @@ define([
         fs.sources.push(newMain);
 
         var attributeLocations = getAttributeLocations(sp);
-        return context.createShaderProgram(sp.vertexShaderSource, fs, attributeLocations);
+
+        return ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : sp.vertexShaderSource,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
     }
 
     function executeDebugCommand(command, scene, passState, renderState, shaderProgram) {

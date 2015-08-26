@@ -21,6 +21,7 @@ define([
         '../Core/TaskProcessor',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
         '../ThirdParty/when',
@@ -51,6 +52,7 @@ define([
         TaskProcessor,
         BufferUsage,
         DrawCommand,
+        ShaderProgram,
         ShaderSource,
         VertexArray,
         when,
@@ -1039,7 +1041,13 @@ define([
         var fs = appearance.getFragmentShaderSource();
 
         var attributeLocations = primitive._attributeLocations;
-        primitive._sp = context.replaceShaderProgram(primitive._sp, vs, fs, attributeLocations);
+        primitive._sp = ShaderProgram.replaceCache({
+            context : context,
+            shaderProgram : primitive._sp,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
         validateShaderMatching(primitive._sp, attributeLocations);
 
         if (primitive.allowPicking) {
@@ -1047,9 +1055,20 @@ define([
                 sources : [fs],
                 pickColorQualifier : 'varying'
             });
-            primitive._pickSP = context.replaceShaderProgram(primitive._pickSP, Primitive._createPickVertexShaderSource(vs), pickFS, attributeLocations);
+            primitive._pickSP = ShaderProgram.replaceCache({
+                context : context,
+                shaderProgram : primitive._pickSP,
+                vertexShaderSource : Primitive._createPickVertexShaderSource(vs),
+                fragmentShaderSource : pickFS,
+                attributeLocations : attributeLocations
+            });
         } else {
-            primitive._pickSP = context.createShaderProgram(vs, fs, attributeLocations);
+            primitive._pickSP = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs,
+                attributeLocations : attributeLocations
+            });
         }
 
         validateShaderMatching(primitive._pickSP, attributeLocations);

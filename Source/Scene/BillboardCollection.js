@@ -17,6 +17,7 @@ define([
         '../Core/Matrix4',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArrayFacade',
         '../Shaders/BillboardCollectionFS',
@@ -45,6 +46,7 @@ define([
         Matrix4,
         BufferUsage,
         DrawCommand,
+        ShaderProgram,
         ShaderSource,
         VertexArrayFacade,
         BillboardCollectionFS,
@@ -1240,7 +1242,14 @@ define([
                     vs.defines.push('CLAMPED_TO_GROUND');
                 }
 
-                this._sp = context.replaceShaderProgram(this._sp, vs, BillboardCollectionFS, attributeLocations);
+                this._sp = ShaderProgram.replaceCache({
+                    context : context,
+                    shaderProgram : this._sp,
+                    vertexShaderSource : vs,
+                    fragmentShaderSource : BillboardCollectionFS,
+                    attributeLocations : attributeLocations
+                });
+
                 this._compiledShaderRotation = this._shaderRotation;
                 this._compiledShaderAlignedAxis = this._shaderAlignedAxis;
                 this._compiledShaderScaleByDistance = this._shaderScaleByDistance;
@@ -1313,7 +1322,13 @@ define([
                     sources : [BillboardCollectionFS]
                 });
 
-                this._spPick = context.replaceShaderProgram(this._spPick, vs, fs, attributeLocations);
+                this._spPick = ShaderProgram.replaceCache({
+                    context : context,
+                    shaderProgram : this._spPick,
+                    vertexShaderSource : vs,
+                    fragmentShaderSource : fs,
+                    attributeLocations : attributeLocations
+                });
                 this._compiledShaderRotationPick = this._shaderRotation;
                 this._compiledShaderAlignedAxisPick = this._shaderAlignedAxis;
                 this._compiledShaderScaleByDistancePick = this._shaderScaleByDistance;
