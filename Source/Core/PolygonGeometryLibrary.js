@@ -266,7 +266,7 @@ define([
         var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
         if (originalWindingOrder === WindingOrder.CLOCKWISE) {
             positions2D.reverse();
-            positions.slice().reverse();
+            positions = positions.slice().reverse();
         }
 
         var indices = PolygonPipeline.triangulate(positions2D);
