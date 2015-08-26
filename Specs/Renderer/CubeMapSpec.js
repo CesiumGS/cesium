@@ -7,6 +7,7 @@ defineSuite([
         'Core/PrimitiveType',
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
+        'Renderer/ContextLimits',
         'Renderer/CubeMap',
         'Renderer/DrawCommand',
         'Renderer/PixelDatatype',
@@ -25,6 +26,7 @@ defineSuite([
         PrimitiveType,
         BufferUsage,
         ClearCommand,
+        ContextLimits,
         CubeMap,
         DrawCommand,
         PixelDatatype,
@@ -984,8 +986,8 @@ defineSuite([
         expect(function() {
             cubeMap = new CubeMap({
                 context : context,
-                width : context.maximumCubeMapSize + 1,
-                height : context.maximumCubeMapSize + 1
+                width : ContextLimits.maximumCubeMapSize + 1,
+                height : ContextLimits.maximumCubeMapSize + 1
             });
         }).toThrowDeveloperError();
     });

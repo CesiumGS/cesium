@@ -5,6 +5,7 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        './ContextLimits',
         './RenderbufferFormat'
     ], function(
         defaultValue,
@@ -12,6 +13,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        ContextLimits,
         RenderbufferFormat) {
     "use strict";
 
@@ -29,7 +31,7 @@ define([
 
         var context = options.context;
         var gl = context._gl;
-        var maximumRenderbufferSize = context.maximumRenderbufferSize;
+        var maximumRenderbufferSize = ContextLimits.maximumRenderbufferSize;
 
         var format = defaultValue(options.format, RenderbufferFormat.RGBA4);
         var width = defined(options.width) ? options.width : gl.drawingBufferWidth;
@@ -45,7 +47,7 @@ define([
         }
 
         if (width > maximumRenderbufferSize) {
-            throw new DeveloperError('Width must be less than or equal to the maximum renderbuffer size (' + this.maximumRenderbufferSize + ').  Check maximumRenderbufferSize.');
+            throw new DeveloperError('Width must be less than or equal to the maximum renderbuffer size (' + maximumRenderbufferSize + ').  Check maximumRenderbufferSize.');
         }
 
         if (height <= 0) {
@@ -53,7 +55,7 @@ define([
         }
 
         if (height > maximumRenderbufferSize) {
-            throw new DeveloperError('Height must be less than or equal to the maximum renderbuffer size (' + this.maximumRenderbufferSize + ').  Check maximumRenderbufferSize.');
+            throw new DeveloperError('Height must be less than or equal to the maximum renderbuffer size (' + maximumRenderbufferSize + ').  Check maximumRenderbufferSize.');
         }
         //>>includeEnd('debug');
 

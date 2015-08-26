@@ -1,9 +1,11 @@
 /*global defineSuite*/
 defineSuite([
+        'Renderer/ContextLimits',
         'Renderer/Renderbuffer',
         'Renderer/RenderbufferFormat',
         'Specs/createContext'
     ], 'Renderer/Renderbuffer', function(
+        ContextLimits,
         Renderbuffer,
         RenderbufferFormat,
         createContext) {
@@ -79,7 +81,7 @@ defineSuite([
         expect(function() {
             renderbuffer = new Renderbuffer({
                 context : context,
-                width : context.maximumRenderbufferSize + 1
+                width : ContextLimits.maximumRenderbufferSize + 1
             });
         }).toThrowDeveloperError();
     });
@@ -97,7 +99,7 @@ defineSuite([
         expect(function() {
             renderbuffer = new Renderbuffer({
                 context : context,
-                height : context.maximumRenderbufferSize + 1
+                height : ContextLimits.maximumRenderbufferSize + 1
             });
         }).toThrowDeveloperError();
     });

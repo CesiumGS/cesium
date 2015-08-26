@@ -16,6 +16,7 @@ define([
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
         '../Renderer/ShaderSource',
         '../Shaders/ShadowVolumeFS',
         '../Shaders/ShadowVolumeVS',
@@ -45,6 +46,7 @@ define([
         OrientedBoundingBox,
         Rectangle,
         DrawCommand,
+        RenderState,
         ShaderSource,
         ShadowVolumeFS,
         ShadowVolumeVS,
@@ -494,10 +496,10 @@ define([
             return;
         }
 
-        primitive._rsStencilPreloadPass = context.createRenderState(stencilPreloadRenderState);
-        primitive._rsStencilDepthPass = context.createRenderState(stencilDepthRenderState);
-        primitive._rsColorPass = context.createRenderState(colorRenderState);
-        primitive._rsPickPass = context.createRenderState(pickRenderState);
+        primitive._rsStencilPreloadPass = RenderState.fromCache(stencilPreloadRenderState);
+        primitive._rsStencilDepthPass = RenderState.fromCache(stencilDepthRenderState);
+        primitive._rsColorPass = RenderState.fromCache(colorRenderState);
+        primitive._rsPickPass = RenderState.fromCache(pickRenderState);
     }
 
     function createShaderProgram(primitive, context, frameState, appearance) {

@@ -5,12 +5,14 @@ defineSuite([
         'Core/PrimitiveType',
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
+        'Renderer/ContextLimits',
         'Renderer/CubeMap',
         'Renderer/DrawCommand',
         'Renderer/Framebuffer',
         'Renderer/PixelDatatype',
         'Renderer/Renderbuffer',
         'Renderer/RenderbufferFormat',
+        'Renderer/RenderState',
         'Renderer/Texture',
         'Renderer/VertexArray',
         'Specs/createContext'
@@ -20,12 +22,14 @@ defineSuite([
         PrimitiveType,
         BufferUsage,
         ClearCommand,
+        ContextLimits,
         CubeMap,
         DrawCommand,
         Framebuffer,
         PixelDatatype,
         Renderbuffer,
         RenderbufferFormat,
+        RenderState,
         Texture,
         VertexArray,
         createContext) {
@@ -343,7 +347,7 @@ defineSuite([
             shaderProgram : sp,
             vertexArray : va,
             framebuffer : framebuffer,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 depthTest : {
                     enabled : true
                 }
@@ -468,7 +472,7 @@ defineSuite([
             shaderProgram : sp,
             vertexArray : va,
             framebuffer : framebuffer,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 depthTest : {
                     enabled : true,
                     func : WebGLRenderingContext.NEVER
@@ -486,7 +490,7 @@ defineSuite([
             shaderProgram : sp,
             vertexArray : va,
             framebuffer : framebuffer,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 depthTest : {
                     enabled : true,
                     func : WebGLRenderingContext.ALWAYS
@@ -759,7 +763,7 @@ defineSuite([
                 shaderProgram : sp,
                 vertexArray : va,
                 framebuffer : framebuffer,
-                renderState : context.createRenderState({
+                renderState : RenderState.fromCache({
                     depthTest : {
                         enabled : true
                     }
@@ -773,7 +777,7 @@ defineSuite([
         expect(function() {
             return new Framebuffer({
                 context : context,
-                colorTextures : new Array(context.maximumColorAttachments + 1)
+                colorTextures : new Array(ContextLimits.maximumColorAttachments + 1)
             });
         }).toThrowDeveloperError();
     });
@@ -782,7 +786,7 @@ defineSuite([
         expect(function() {
             return new Framebuffer({
                 context : context,
-                colorRenderbuffers : new Array(context.maximumColorAttachments + 1)
+                colorRenderbuffers : new Array(ContextLimits.maximumColorAttachments + 1)
             });
         }).toThrowDeveloperError();
     });
@@ -800,7 +804,7 @@ defineSuite([
         }).toThrowDeveloperError();
 
         expect(function() {
-            framebuffer.getColorTexture(context.maximumColorAttachments + 1);
+            framebuffer.getColorTexture(ContextLimits.maximumColorAttachments + 1);
         }).toThrowDeveloperError();
     });
 
@@ -817,7 +821,7 @@ defineSuite([
         }).toThrowDeveloperError();
 
         expect(function() {
-            framebuffer.getColorRenderbuffer(context.maximumColorAttachments + 1);
+            framebuffer.getColorRenderbuffer(ContextLimits.maximumColorAttachments + 1);
         }).toThrowDeveloperError();
     });
 

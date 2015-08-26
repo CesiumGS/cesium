@@ -26,7 +26,9 @@ define([
         '../Core/Visibility',
         '../Core/WebMercatorProjection',
         '../Renderer/BufferUsage',
+        '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
         '../Renderer/VertexArray',
         '../Scene/BlendingState',
         '../Scene/DepthFunction',
@@ -66,7 +68,9 @@ define([
         Visibility,
         WebMercatorProjection,
         BufferUsage,
+        ContextLimits,
         DrawCommand,
+        RenderState,
         VertexArray,
         BlendingState,
         DepthFunction,
@@ -333,7 +337,7 @@ define([
      */
     GlobeSurfaceTileProvider.prototype.endUpdate = function(context, frameState, commandList) {
         if (!defined(this._renderState)) {
-            this._renderState = context.createRenderState({ // Write color and depth
+            this._renderState = RenderState.fromCache({ // Write color and depth
                 cull : {
                     enabled : true
                 },
@@ -343,7 +347,7 @@ define([
                 }
             });
 
-            this._blendRenderState = context.createRenderState({ // Write color and depth
+            this._blendRenderState = RenderState.fromCache({ // Write color and depth
                 cull : {
                     enabled : true
                 },
@@ -379,7 +383,7 @@ define([
      */
     GlobeSurfaceTileProvider.prototype.updateForPick = function(context, frameState, commandList) {
         if (!defined(this._pickRenderState)) {
-            this._pickRenderState = context.createRenderState({
+            this._pickRenderState = RenderState.fromCache({
                 colorMask : {
                     red : false,
                     green : false,
@@ -924,7 +928,7 @@ define([
 
         var viewMatrix = frameState.camera.viewMatrix;
 
-        var maxTextures = context.maximumTextureImageUnits;
+        var maxTextures = ContextLimits.maximumTextureImageUnits;
 
         var waterMaskTexture = surfaceTile.waterMaskTexture;
         var showReflectiveOcean = tileProvider.hasWaterMask && defined(waterMaskTexture);

@@ -7,7 +7,9 @@ defineSuite([
         'Core/WindingOrder',
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
+        'Renderer/ContextLimits',
         'Renderer/DrawCommand',
+        'Renderer/RenderState',
         'Renderer/VertexArray',
         'Specs/createContext'
     ], 'Renderer/Draw', function(
@@ -18,7 +20,9 @@ defineSuite([
         WindingOrder,
         BufferUsage,
         ClearCommand,
+        ContextLimits,
         DrawCommand,
+        RenderState,
         VertexArray,
         createContext) {
     "use strict";
@@ -215,7 +219,7 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 scissorTest : {
                     enabled : true,
                     rectangle : new BoundingRectangle(1, 1, 0, 0)
@@ -230,7 +234,7 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 scissorTest : {
                     enabled : true,
                     rectangle : new BoundingRectangle(0, 0, 1, 1)
@@ -264,7 +268,7 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 colorMask : {
                     red : true,
                     green : false,
@@ -281,7 +285,7 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 colorMask : {
                     red : false,
                     green : false,
@@ -316,7 +320,7 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 blending : {
                     enabled : true,
                     equationRgb : WebGLRenderingContext.FUNC_ADD, // Optional, default
@@ -360,7 +364,7 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 blending : {
                     enabled : true,
                     equationRgb : WebGLRenderingContext.FUNC_ADD,
@@ -403,7 +407,7 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 blending : {
                     enabled : true,
                     color : {
@@ -451,7 +455,7 @@ defineSuite([
             primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 cull : {
                     enabled : true,
                     face : WebGLRenderingContext.FRONT
@@ -466,7 +470,7 @@ defineSuite([
             primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 cull : {
                     enabled : true,
                     face : WebGLRenderingContext.BACK
@@ -500,7 +504,7 @@ defineSuite([
             primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 frontFace : WindingOrder.CLOCKWISE,
                 cull : {
                     enabled : true,
@@ -516,7 +520,7 @@ defineSuite([
             primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 frontFace : WindingOrder.COUNTER_CLOCKWISE,
                 cull : {
                     enabled : true,
@@ -546,7 +550,7 @@ defineSuite([
             primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 depthTest : {
                     enabled : true,
                     func : WebGLRenderingContext.LEQUAL
@@ -598,7 +602,7 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 depthRange : {
                     near : 0.25,
                     far : 0.75
@@ -630,9 +634,9 @@ defineSuite([
             primitiveType : PrimitiveType.LINES,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
-                lineWidth : context.maximumAliasedLineWidth
-            // May only be 1.
+            renderState : RenderState.fromCache({
+                lineWidth : ContextLimits.maximumAliasedLineWidth
+                // May only be 1.
             })
         });
         command.execute(context);
@@ -664,7 +668,7 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 polygonOffset : {
                     enabled : true,
                     factor : 1,
@@ -702,7 +706,7 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 sampleCoverage : {
                     enabled : true,
                     value : 0,
@@ -717,7 +721,7 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 sampleCoverage : {
                     enabled : false
                 }
@@ -745,7 +749,7 @@ defineSuite([
             }]
         });
 
-        var rs = context.createRenderState({
+        var rs = RenderState.fromCache({
             stencilTest : {
                 enabled : true,
                 frontFunction : WebGLRenderingContext.EQUAL,
@@ -773,7 +777,7 @@ defineSuite([
             primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 colorMask : {
                     red : false,
                     green : false,
@@ -820,7 +824,7 @@ defineSuite([
             }]
         });
 
-        var rs = context.createRenderState({
+        var rs = RenderState.fromCache({
             frontFace : WindingOrder.CLOCKWISE,
             stencilTest : {
                 enabled : true,
@@ -848,7 +852,7 @@ defineSuite([
             primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 frontFace : WindingOrder.CLOCKWISE,
                 colorMask : {
                     red : false,

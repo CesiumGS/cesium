@@ -1,11 +1,13 @@
 /*global defineSuite*/
 defineSuite([
-        'Renderer/RenderState',
         'Core/WindingOrder',
+        'Renderer/ContextLimits',
+        'Renderer/RenderState',
         'Specs/createContext'
     ], function(
-        RenderState,
         WindingOrder,
+        ContextLimits,
+        RenderState,
         createContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
@@ -98,7 +100,7 @@ defineSuite([
             }
         };
 
-        var rs = context.createRenderState();
+        var rs = RenderState.fromCache();
 
         expect(rs.frontFace).toEqual(defaultRS.frontFace);
         expect(rs.cull.enabled).toEqual(defaultRS.cull.enabled);
@@ -156,7 +158,7 @@ defineSuite([
                 enabled : true,
                 face : WebGLRenderingContext.FRONT
             },
-            lineWidth : context.maximumAliasedLineWidth,
+            lineWidth : ContextLimits.maximumAliasedLineWidth,
             polygonOffset : {
                 enabled : false,
                 factor : 1,
@@ -226,7 +228,7 @@ defineSuite([
             }
         };
 
-        var rs = context.createRenderState(r);
+        var rs = RenderState.fromCache(r);
 
         expect(rs.frontFace).toEqual(r.frontFace);
         expect(rs.cull.enabled).toEqual(r.cull.enabled);
@@ -286,12 +288,12 @@ defineSuite([
             }
         };
 
-        var rs = context.createRenderState(r);
+        var rs = RenderState.fromCache(r);
         expect(rs.frontFace).toEqual(r.frontFace);
         expect(rs.depthRange.near).toEqual(r.depthRange.near);
         expect(rs.depthRange.far).toEqual(r.depthRange.far);
 
-        var defaultRS = context.createRenderState();
+        var defaultRS = RenderState.fromCache();
         expect(rs.cull.enabled).toEqual(defaultRS.cull.enabled);
         expect(rs.cull.face).toEqual(defaultRS.cull.face);
         expect(rs.cull.lineWidth).toEqual(defaultRS.cull.lineWidth);
@@ -339,17 +341,17 @@ defineSuite([
     });
 
     it('caches render states', function() {
-        var rs = context.createRenderState();
-        var rs2 = context.createRenderState();
+        var rs = RenderState.fromCache();
+        var rs2 = RenderState.fromCache();
         // rs3 is still the same state as rs and rs2, but with a partial definition
-        var rs3 = context.createRenderState({
+        var rs3 = RenderState.fromCache({
             depthTest : {
                 enabled : false,
                 func : WebGLRenderingContext.LESS
             }
         });
         // rs4 is a cache miss since it has a different depthTest
-        var rs4 = context.createRenderState({
+        var rs4 = RenderState.fromCache({
             depthTest : {
                 enabled : true,
                 func : WebGLRenderingContext.NEVER
@@ -362,7 +364,7 @@ defineSuite([
 
     it('fails to create (frontFace)', function() {
         expect(function() {
-            context.createRenderState({
+            RenderState.fromCache({
                 frontFace : 'invalid value'
             });
         }).toThrowDeveloperError();
@@ -370,7 +372,7 @@ defineSuite([
 
     it('fails to create (cull.face)', function() {
         expect(function() {
-            context.createRenderState({
+            RenderState.fromCache({
                 cull : {
                     face : 'invalid value'
                 }
@@ -380,23 +382,23 @@ defineSuite([
 
     it('fails to create (small lineWidth)', function() {
         expect(function() {
-            context.createRenderState({
-                lineWidth : context.minimumAliasedLineWidth - 1
+            RenderState.fromCache({
+                lineWidth : ContextLimits.minimumAliasedLineWidth - 1
             });
-        }).toThrowRuntimeError();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (large lineWidth)', function() {
         expect(function() {
-            context.createRenderState({
-                lineWidth : context.maximumAliasedLineWidth + 1
+            RenderState.fromCache({
+                lineWidth : ContextLimits.maximumAliasedLineWidth + 1
             });
-        }).toThrowRuntimeError();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (negative scissorTest.rectangle.width)', function() {
         expect(function() {
-            context.createRenderState({
+            RenderState.fromCache({
                 scissorTest : {
                     rectangle : {
                         x : 0,
@@ -411,7 +413,7 @@ defineSuite([
 
     it('fails to create (negative scissorTest.rectangle.height)', function() {
         expect(function() {
-            context.createRenderState({
+            RenderState.fromCache({
                 scissorTest : {
                     rectangle : {
                         x : 0,
@@ -426,7 +428,7 @@ defineSuite([
 
     it('fails to create (near > far)', function() {
         expect(function() {
-            context.createRenderState({
+            RenderState.fromCache({
                 depthRange : {
                     near : 0.75,
                     far : 0.25
@@ -437,7 +439,7 @@ defineSuite([
 
     it('fails to create (near < 0)', function() {
         expect(function() {
-            context.createRenderState({
+            RenderState.fromCache({
                 depthRange : {
                     near : -1
                 }
@@ -447,7 +449,7 @@ defineSuite([
 
     it('fails to create (far > 1)', function() {
         expect(function() {
-            context.createRenderState({
+            RenderState.fromCache({
                 depthRange : {
                     far : 2
                 }
@@ -457,7 +459,7 @@ defineSuite([
 
     it('fails to create (depthTest.func)', function() {
         expect(function() {
-            context.createRenderState({
+            RenderState.fromCache({
                 depthTest : {
                     func : 'invalid value'
                 }
@@ -467,7 +469,7 @@ defineSuite([
 
     it('fails to create (blending.color < 0)', function() {
         expect(function() {
-            context.createRenderState({
+            RenderState.fromCache({
                 blending : {
                     color : {
                         red : -1.0,
@@ -482,13 +484,13 @@ defineSuite([
 
     it('fails to create (blending.color > 1)', function() {
         expect(function() {
-            context.createRenderState({
-                blending : {
-                    color : {
-                        red : 0.0,
-                        green : 0.0,
-                        blue : 0.0,
-                        alpha : 2.0
+            RenderState.fromCache({
+                blending: {
+                    color: {
+                        red: 0.0,
+                        green: 0.0,
+                        blue: 0.0,
+                        alpha: 2.0
                     }
                 }
             });
@@ -497,9 +499,9 @@ defineSuite([
 
     it('fails to create (blend.equationRgb)', function() {
         expect(function() {
-            context.createRenderState({
-                blending : {
-                    equationRgb : 'invalid value'
+            RenderState.fromCache({
+                blending: {
+                    equationRgb: 'invalid value'
                 }
             });
         }).toThrowDeveloperError();
@@ -507,9 +509,9 @@ defineSuite([
 
     it('fails to create (blend.equationAlpha)', function() {
         expect(function() {
-            context.createRenderState({
-                blending : {
-                    equationAlpha : 'invalid value'
+            RenderState.fromCache({
+                blending: {
+                    equationAlpha: 'invalid value'
                 }
             });
         }).toThrowDeveloperError();
@@ -517,9 +519,9 @@ defineSuite([
 
     it('fails to create (blend.functionSourceRgb)', function() {
         expect(function() {
-            context.createRenderState({
-                blending : {
-                    functionSourceRgb : 'invalid value'
+            RenderState.fromCache({
+                blending: {
+                    functionSourceRgb: 'invalid value'
                 }
             });
         }).toThrowDeveloperError();
@@ -527,9 +529,9 @@ defineSuite([
 
     it('fails to create (blend.functionSourceAlpha)', function() {
         expect(function() {
-            context.createRenderState({
-                blending : {
-                    functionSourceAlpha : 'invalid value'
+            RenderState.fromCache({
+                blending: {
+                    functionSourceAlpha: 'invalid value'
                 }
             });
         }).toThrowDeveloperError();
@@ -537,9 +539,9 @@ defineSuite([
 
     it('fails to create (blend.functionDestinationRgb)', function() {
         expect(function() {
-            context.createRenderState({
-                blending : {
-                    functionDestinationRgb : 'invalid value'
+            RenderState.fromCache({
+                blending: {
+                    functionDestinationRgb: 'invalid value'
                 }
             });
         }).toThrowDeveloperError();
@@ -547,9 +549,9 @@ defineSuite([
 
     it('fails to create (blend.functionDestinationAlpha)', function() {
         expect(function() {
-            context.createRenderState({
-                blending : {
-                    functionDestinationAlpha : 'invalid value'
+            RenderState.fromCache({
+                blending: {
+                    functionDestinationAlpha: 'invalid value'
                 }
             });
         }).toThrowDeveloperError();
@@ -557,9 +559,9 @@ defineSuite([
 
     it('fails to create (stencilTest.frontFunction)', function() {
         expect(function() {
-            context.createRenderState({
-                stencilTest : {
-                    frontFunction : 'invalid value'
+            RenderState.fromCache({
+                stencilTest: {
+                    frontFunction: 'invalid value'
                 }
             });
         }).toThrowDeveloperError();
@@ -567,9 +569,9 @@ defineSuite([
 
     it('fails to create (stencilTest.backFunction)', function() {
         expect(function() {
-            context.createRenderState({
-                stencilTest : {
-                    backFunction : 'invalid value'
+            RenderState.fromCache({
+                stencilTest: {
+                    backFunction: 'invalid value'
                 }
             });
         }).toThrowDeveloperError();
@@ -577,10 +579,10 @@ defineSuite([
 
     it('fails to create (stencilTest.frontOperation.fail)', function() {
         expect(function() {
-            context.createRenderState({
-                stencilTest : {
-                    frontOperation : {
-                        fail : 'invalid value'
+            RenderState.fromCache({
+                stencilTest: {
+                    frontOperation: {
+                        fail: 'invalid value'
                     }
                 }
             });
@@ -589,10 +591,10 @@ defineSuite([
 
     it('fails to create (stencilTest.frontOperation.zFail)', function() {
         expect(function() {
-            context.createRenderState({
-                stencilTest : {
-                    frontOperation : {
-                        zFail : 'invalid value'
+            RenderState.fromCache({
+                stencilTest: {
+                    frontOperation: {
+                        zFail: 'invalid value'
                     }
                 }
             });
@@ -601,10 +603,10 @@ defineSuite([
 
     it('fails to create (stencilTest.frontOperation.zPass)', function() {
         expect(function() {
-            context.createRenderState({
-                stencilTest : {
-                    frontOperation : {
-                        zPass : 'invalid value'
+            RenderState.fromCache({
+                stencilTest: {
+                    frontOperation: {
+                        zPass: 'invalid value'
                     }
                 }
             });
@@ -613,10 +615,10 @@ defineSuite([
 
     it('fails to create (stencilTest.backOperation.fail)', function() {
         expect(function() {
-            context.createRenderState({
-                stencilTest : {
-                    backOperation : {
-                        fail : 'invalid value'
+            RenderState.fromCache({
+                stencilTest: {
+                    backOperation: {
+                        fail: 'invalid value'
                     }
                 }
             });
@@ -625,10 +627,10 @@ defineSuite([
 
     it('fails to create (stencilTest.backOperation.zFail)', function() {
         expect(function() {
-            context.createRenderState({
-                stencilTest : {
-                    backOperation : {
-                        zFail : 'invalid value'
+            RenderState.fromCache({
+                stencilTest: {
+                    backOperation: {
+                        zFail: 'invalid value'
                     }
                 }
             });
@@ -637,10 +639,10 @@ defineSuite([
 
     it('fails to create (stencilTest.backOperation.zPass)', function() {
         expect(function() {
-            context.createRenderState({
-                stencilTest : {
-                    backOperation : {
-                        zPass : 'invalid value'
+            RenderState.fromCache({
+                stencilTest: {
+                    backOperation: {
+                        zPass: 'invalid value'
                     }
                 }
             });
@@ -660,7 +662,7 @@ defineSuite([
                 enabled : true,
                 face : WebGLRenderingContext.FRONT
             },
-            lineWidth : context.maximumAliasedLineWidth,
+            lineWidth : ContextLimits.maximumAliasedLineWidth,
             polygonOffset : {
                 enabled : false,
                 factor : 1,
@@ -730,8 +732,9 @@ defineSuite([
             }
         };
 
-        var r2 = context.createRenderState(r);
-        var rs = context.createRenderState(RenderState.clone(r));
+        var r2 = RenderState.fromCache(r);
+
+        var rs = RenderState.fromCache(RenderState.clone(r));
 
         expect(rs.frontFace).toEqual(r.frontFace);
         expect(rs.cull.enabled).toEqual(r.cull.enabled);

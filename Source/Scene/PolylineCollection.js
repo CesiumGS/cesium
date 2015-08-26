@@ -19,6 +19,7 @@ define([
         '../Core/Plane',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
         '../Shaders/PolylineCommon',
@@ -49,6 +50,7 @@ define([
         Plane,
         BufferUsage,
         DrawCommand,
+        RenderState,
         ShaderSource,
         VertexArray,
         PolylineCommon,
@@ -434,7 +436,7 @@ define([
         var useDepthTest = (frameState.morphTime !== 0.0);
 
         if (!defined(this._opaqueRS) || this._opaqueRS.depthTest.enabled !== useDepthTest) {
-            this._opaqueRS = context.createRenderState({
+            this._opaqueRS = RenderState.fromCache({
                 depthMask : useDepthTest,
                 depthTest : {
                     enabled : useDepthTest
@@ -443,7 +445,7 @@ define([
         }
 
         if (!defined(this._translucentRS) || this._translucentRS.depthTest.enabled !== useDepthTest) {
-            this._translucentRS = context.createRenderState({
+            this._translucentRS = RenderState.fromCache({
                 blending : BlendingState.ALPHA_BLEND,
                 depthMask : !useDepthTest,
                 depthTest : {

@@ -5,6 +5,7 @@ define([
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
         'Renderer/DrawCommand',
+        'Renderer/RenderState',
         'Renderer/VertexArray'
     ], function(
         defaultValue,
@@ -12,6 +13,7 @@ define([
         BufferUsage,
         ClearCommand,
         DrawCommand,
+        RenderState,
         VertexArray) {
     "use strict";
     /*global expect*/
@@ -29,7 +31,7 @@ define([
                 componentsPerAttribute : 4
             }]
         });
-        var rs = context.createRenderState({
+        var rs = RenderState.fromCache({
             depthTest : {
                 enabled : true
             }

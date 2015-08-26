@@ -29,6 +29,7 @@ define([
         '../Core/RuntimeError',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
         '../Renderer/TextureMinificationFilter',
@@ -75,6 +76,7 @@ define([
         RuntimeError,
         BufferUsage,
         DrawCommand,
+        RenderState,
         ShaderSource,
         Texture,
         TextureMinificationFilter,
@@ -1831,7 +1833,7 @@ define([
                     var polygonOffset = defaultValue(statesFunctions.polygonOffset, [0.0, 0.0]);
                     var scissor = defaultValue(statesFunctions.scissor, [0.0, 0.0, 0.0, 0.0]);
 
-                    rendererRenderStates[name] = context.createRenderState({
+                    rendererRenderStates[name] = RenderState.fromCache({
                         frontFace : defined(statesFunctions.frontFace) ? statesFunctions.frontFace[0] : WebGLRenderingContext.CCW,
                         cull : {
                             enabled : booleanStates[WebGLRenderingContext.CULL_FACE],

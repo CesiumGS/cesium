@@ -21,6 +21,7 @@ define([
         '../Core/TaskProcessor',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
         '../ThirdParty/when',
@@ -51,6 +52,7 @@ define([
         TaskProcessor,
         BufferUsage,
         DrawCommand,
+        RenderState,
         ShaderSource,
         VertexArray,
         when,
@@ -993,12 +995,12 @@ define([
                 enabled : true,
                 face : CullFace.BACK
             };
-            primitive._frontFaceRS = context.createRenderState(rs);
+            primitive._frontFaceRS = RenderState.fromCache(rs);
 
             rs.cull.face = CullFace.FRONT;
-            primitive._backFaceRS = context.createRenderState(rs);
+            primitive._backFaceRS = RenderState.fromCache(rs);
         } else {
-            primitive._frontFaceRS = context.createRenderState(renderState);
+            primitive._frontFaceRS = RenderState.fromCache(renderState);
             primitive._backFaceRS = primitive._frontFaceRS;
         }
 
@@ -1008,7 +1010,7 @@ define([
                 rs.cull = {
                     enabled : false
                 };
-                primitive._pickRS = context.createRenderState(rs);
+                primitive._pickRS = RenderState.fromCache(rs);
             } else {
                 primitive._pickRS = primitive._frontFaceRS;
             }
@@ -1025,9 +1027,9 @@ define([
                 rs.cull = {
                     enabled : false
                 };
-                primitive._pickRS = context.createRenderState(rs);
+                primitive._pickRS = RenderState.fromCache(rs);
             } else {
-                primitive._pickRS = context.createRenderState(rs);
+                primitive._pickRS = RenderState.fromCache(rs);
             }
         }
     }

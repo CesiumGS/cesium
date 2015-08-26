@@ -19,6 +19,7 @@ define([
         '../Renderer/ClearCommand',
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
+        '../Renderer/RenderState',
         '../Renderer/Texture',
         '../Renderer/VertexArray',
         '../Shaders/SunFS',
@@ -47,6 +48,7 @@ define([
         ClearCommand,
         DrawCommand,
         Framebuffer,
+        RenderState,
         Texture,
         VertexArray,
         SunFS,
@@ -184,7 +186,7 @@ define([
                 framebuffer : fbo
             });
 
-            var rs = context.createRenderState({
+            var rs = RenderState.fromCache({
                 viewport : new BoundingRectangle(0.0, 0.0, size, size)
             });
 
@@ -251,7 +253,7 @@ define([
                 indexBuffer : indexBuffer
             });
             command.shaderProgram = context.createShaderProgram(SunVS, SunFS, attributeLocations);
-            command.renderState = context.createRenderState({
+            command.renderState = RenderState.fromCache({
                 blending : BlendingState.ALPHA_BLEND
             });
             command.uniformMap = this._uniformMap;
