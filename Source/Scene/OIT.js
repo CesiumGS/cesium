@@ -336,7 +336,7 @@ define([
     function getTranslucentRenderState(context, translucentBlending, cache, renderState) {
         var translucentState = cache[renderState.id];
         if (!defined(translucentState)) {
-            var rs = RenderState.clone(renderState);
+            var rs = RenderState.getState(renderState);
             rs.depthMask = false;
             rs.blending = translucentBlending;
 

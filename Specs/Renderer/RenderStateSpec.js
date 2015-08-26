@@ -649,9 +649,9 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('fails to clone without renderState', function() {
+    it('fails to get state without renderState', function() {
         expect(function() {
-            RenderState.clone(undefined);
+            RenderState.getState(undefined);
         }).toThrowDeveloperError();
     });
 
@@ -734,7 +734,7 @@ defineSuite([
 
         var r2 = RenderState.fromCache(r);
 
-        var rs = RenderState.fromCache(RenderState.clone(r));
+        var rs = RenderState.fromCache(RenderState.getState(r));
 
         expect(rs.frontFace).toEqual(r.frontFace);
         expect(rs.cull.enabled).toEqual(r.cull.enabled);

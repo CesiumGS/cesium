@@ -705,7 +705,7 @@ define([
      * @param renderState The render state to be cloned.
      * @returns {Object} The duplicated render state.
      */
-    RenderState.clone = function(renderState) {
+    RenderState.getState = function(renderState) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(renderState)) {
             throw new DeveloperError('renderState is required.');
