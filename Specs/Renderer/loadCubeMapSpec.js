@@ -4,6 +4,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/defined',
         'Core/PrimitiveType',
+        'Renderer/Buffer',
         'Renderer/BufferUsage',
         'Renderer/DrawCommand',
         'Renderer/ShaderProgram',
@@ -15,6 +16,7 @@ defineSuite([
         Cartesian3,
         defined,
         PrimitiveType,
+        Buffer,
         BufferUsage,
         DrawCommand,
         ShaderProgram,
@@ -64,7 +66,7 @@ defineSuite([
             var va = new VertexArray({
                 context : context,
                 attributes : [{
-                    vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                    vertexBuffer : Buffer.createVertexBuffer(context, new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
                     componentsPerAttribute : 4
                 }]
             });

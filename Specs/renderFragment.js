@@ -2,6 +2,7 @@
 define([
         'Core/defaultValue',
         'Core/PrimitiveType',
+        'Renderer/Buffer',
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
         'Renderer/DrawCommand',
@@ -11,6 +12,7 @@ define([
     ], function(
         defaultValue,
         PrimitiveType,
+        Buffer,
         BufferUsage,
         ClearCommand,
         DrawCommand,
@@ -34,7 +36,7 @@ define([
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0.0, 0.0, depth, 1.0]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer(context, new Float32Array([0.0, 0.0, depth, 1.0]), BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 4
             }]
         });

@@ -5,6 +5,7 @@ defineSuite([
         'Core/IndexDatatype',
         'Core/PrimitiveType',
         'Core/WindingOrder',
+        'Renderer/Buffer',
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
         'Renderer/ContextLimits',
@@ -19,6 +20,7 @@ defineSuite([
         IndexDatatype,
         PrimitiveType,
         WindingOrder,
+        Buffer,
         BufferUsage,
         ClearCommand,
         ContextLimits,
@@ -65,7 +67,7 @@ defineSuite([
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer(context, new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 4
             }]
         });
@@ -96,13 +98,13 @@ defineSuite([
 
         // Two indices instead of one is a workaround for NVIDIA:
         //   http://www.khronos.org/message_boards/viewtopic.php?f=44&t=3719
-        var indexBuffer = context.createIndexBuffer(new Uint16Array([0, 0]), BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+        var indexBuffer = Buffer.createIndexBuffer(context, new Uint16Array([0, 0]), BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
 
         va = new VertexArray({
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer(context, new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 4
             }],
             indexBuffer : indexBuffer
@@ -145,11 +147,11 @@ defineSuite([
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer(context, new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 4
             }, {
                 index : sp.vertexAttributes.intensity.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer(context, new Float32Array([1]), BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 1
             }]
         });
@@ -184,7 +186,7 @@ defineSuite([
         });
 
         var stride = 5 * Float32Array.BYTES_PER_ELEMENT;
-        var vertexBuffer = context.createVertexBuffer(new Float32Array([0, 0, 0, 1, 1]), BufferUsage.STATIC_DRAW);
+        var vertexBuffer = Buffer.createVertexBuffer(context, new Float32Array([0, 0, 0, 1, 1]), BufferUsage.STATIC_DRAW);
 
         va = new VertexArray({
             context : context,
@@ -228,7 +230,7 @@ defineSuite([
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer(context, new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 4
             }]
         });
@@ -281,7 +283,7 @@ defineSuite([
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer(context, new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 4
             }]
         });
@@ -338,7 +340,7 @@ defineSuite([
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer(context, new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 4
             }]
         });
@@ -386,7 +388,7 @@ defineSuite([
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer(context, new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 4
             }]
         });
@@ -434,7 +436,7 @@ defineSuite([
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer(context, new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 4
             }]
         });
@@ -484,7 +486,7 @@ defineSuite([
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer(context, new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 4
             }]
         });
@@ -537,7 +539,7 @@ defineSuite([
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer(context, new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 4
             }]
         });
@@ -592,7 +594,7 @@ defineSuite([
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer(context, new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 4
             }]
         });
@@ -645,7 +647,7 @@ defineSuite([
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer(context, new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 4
             }]
         });
@@ -681,7 +683,7 @@ defineSuite([
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer(context, new Float32Array([-1000, -1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 4
             }]
         });
@@ -719,7 +721,7 @@ defineSuite([
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer(context, new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 4
             }]
         });
@@ -761,7 +763,7 @@ defineSuite([
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer(context, new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 4
             }]
         });
@@ -815,7 +817,7 @@ defineSuite([
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer(context, new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 4
             }]
         });
@@ -894,7 +896,7 @@ defineSuite([
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer(context, new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 4
             }]
         });
@@ -970,7 +972,7 @@ defineSuite([
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, -1, 0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer(context, new Float32Array([0, 0, 0, -1, 0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 4
             }]
         });

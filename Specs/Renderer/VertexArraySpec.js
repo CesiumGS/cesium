@@ -2,6 +2,7 @@
 defineSuite([
         'Core/ComponentDatatype',
         'Core/PrimitiveType',
+        'Renderer/Buffer',
         'Renderer/BufferUsage',
         'Renderer/DrawCommand',
         'Renderer/ShaderProgram',
@@ -10,6 +11,7 @@ defineSuite([
     ], 'Renderer/VertexArray', function(
         ComponentDatatype,
         PrimitiveType,
+        Buffer,
         BufferUsage,
         DrawCommand,
         ShaderProgram,
@@ -29,7 +31,7 @@ defineSuite([
     });
 
     it('binds', function() {
-        var positionBuffer = context.createVertexBuffer(3, BufferUsage.STATIC_DRAW);
+        var positionBuffer = Buffer.createVertexBuffer(context, 3, BufferUsage.STATIC_DRAW);
 
         var attributes = [{
             index : 0,
@@ -53,7 +55,7 @@ defineSuite([
     });
 
     it('binds with default values', function() {
-        var positionBuffer = context.createVertexBuffer(3, BufferUsage.STATIC_DRAW);
+        var positionBuffer = Buffer.createVertexBuffer(context, 3, BufferUsage.STATIC_DRAW);
 
         var attributes = [{
             vertexBuffer : positionBuffer,
@@ -82,8 +84,8 @@ defineSuite([
 
     it('binds with multiple buffers', function() {
         var attributeSize = 3 * Float32Array.BYTES_PER_ELEMENT;
-        var positionBuffer = context.createVertexBuffer(attributeSize, BufferUsage.STATIC_DRAW);
-        var normalBuffer = context.createVertexBuffer(attributeSize, BufferUsage.STATIC_DRAW);
+        var positionBuffer = Buffer.createVertexBuffer(context, attributeSize, BufferUsage.STATIC_DRAW);
+        var normalBuffer = Buffer.createVertexBuffer(context, attributeSize, BufferUsage.STATIC_DRAW);
 
         var attributes = [{
             index : 0,
@@ -110,7 +112,7 @@ defineSuite([
 
     it('binds with interleaved buffer', function() {
         var attributeSize = 3 * Float32Array.BYTES_PER_ELEMENT;
-        var buffer = context.createVertexBuffer(attributeSize, BufferUsage.STATIC_DRAW);
+        var buffer = Buffer.createVertexBuffer(context, attributeSize, BufferUsage.STATIC_DRAW);
 
         var attributes = [{
             vertexBuffer : buffer,
@@ -139,7 +141,7 @@ defineSuite([
     });
 
     it('adds attributes', function() {
-        var positionBuffer = context.createVertexBuffer(3, BufferUsage.STATIC_DRAW);
+        var positionBuffer = Buffer.createVertexBuffer(context, 3, BufferUsage.STATIC_DRAW);
 
         var va = new VertexArray({
             context : context,
@@ -163,7 +165,7 @@ defineSuite([
     });
 
     it('modifies attributes', function() {
-        var buffer = context.createVertexBuffer(6, BufferUsage.STATIC_DRAW);
+        var buffer = Buffer.createVertexBuffer(context, 6, BufferUsage.STATIC_DRAW);
 
         var attributes = [{
             vertexBuffer : buffer,
@@ -219,7 +221,7 @@ defineSuite([
         var va = new VertexArray({
             context : context,
             attributes : [{
-                vertexBuffer : context.createVertexBuffer(Float32Array.BYTES_PER_ELEMENT, BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer(context, Float32Array.BYTES_PER_ELEMENT, BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 1
             }, {
                 value : [0.5]
@@ -266,7 +268,7 @@ defineSuite([
         var va = new VertexArray({
             context : context,
             attributes : [{
-                vertexBuffer : context.createVertexBuffer(Float32Array.BYTES_PER_ELEMENT, BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer(context, Float32Array.BYTES_PER_ELEMENT, BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 1
             }, {
                 value : [0.25, 0.75]
@@ -313,7 +315,7 @@ defineSuite([
         var va = new VertexArray({
             context : context,
             attributes : [{
-                vertexBuffer : context.createVertexBuffer(Float32Array.BYTES_PER_ELEMENT, BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer(context, Float32Array.BYTES_PER_ELEMENT, BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 1
             }, {
                 value : [0.25, 0.5, 0.75]
@@ -360,7 +362,7 @@ defineSuite([
         var va = new VertexArray({
             context : context,
             attributes : [{
-                vertexBuffer : context.createVertexBuffer(Float32Array.BYTES_PER_ELEMENT, BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer(context, Float32Array.BYTES_PER_ELEMENT, BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 1
             }, {
                 value : [0.2, 0.4, 0.6, 0.8]
@@ -385,7 +387,7 @@ defineSuite([
         var va = new VertexArray({
             context : context,
             attributes : [{
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer(context, new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 4
             }]
         });
@@ -409,7 +411,7 @@ defineSuite([
     });
 
     it('fails to create (provides both vertexBuffer and value)', function() {
-        var buffer = context.createVertexBuffer(3, BufferUsage.STATIC_DRAW);
+        var buffer = Buffer.createVertexBuffer(context, 3, BufferUsage.STATIC_DRAW);
 
         var attributes = [{
             vertexBuffer : buffer,
@@ -426,7 +428,7 @@ defineSuite([
     });
 
     it('fails to create with duplicate indices', function() {
-        var buffer = context.createVertexBuffer(1, BufferUsage.STATIC_DRAW);
+        var buffer = Buffer.createVertexBuffer(context, 1, BufferUsage.STATIC_DRAW);
 
         var attributes = [{
             index : 1,
@@ -447,7 +449,7 @@ defineSuite([
     });
 
     it('fails to create (componentsPerAttribute missing)', function() {
-        var buffer = context.createVertexBuffer(3, BufferUsage.STATIC_DRAW);
+        var buffer = Buffer.createVertexBuffer(context, 3, BufferUsage.STATIC_DRAW);
 
         var attributes = [{
             vertexBuffer : buffer
@@ -514,7 +516,7 @@ defineSuite([
     });
 
     it('fails to create (componentDatatype)', function() {
-        var buffer = context.createVertexBuffer(3, BufferUsage.STATIC_DRAW);
+        var buffer = Buffer.createVertexBuffer(context, 3, BufferUsage.STATIC_DRAW);
 
         var attributes = [{
             vertexBuffer : buffer,
@@ -531,7 +533,7 @@ defineSuite([
     });
 
     it('fails to create (strideInBytes)', function() {
-        var buffer = context.createVertexBuffer(3, BufferUsage.STATIC_DRAW);
+        var buffer = Buffer.createVertexBuffer(context, 3, BufferUsage.STATIC_DRAW);
 
         var attributes = [{
             vertexBuffer : buffer,
