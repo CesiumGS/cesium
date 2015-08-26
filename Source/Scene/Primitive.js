@@ -21,6 +21,7 @@ define([
         '../Core/TaskProcessor',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
@@ -52,6 +53,7 @@ define([
         TaskProcessor,
         BufferUsage,
         DrawCommand,
+        RenderState,
         ShaderProgram,
         ShaderSource,
         VertexArray,
@@ -995,12 +997,21 @@ define([
                 enabled : true,
                 face : CullFace.BACK
             };
-            primitive._frontFaceRS = context.createRenderState(rs);
+            primitive._frontFaceRS = RenderState.fromCache({
+                context : context,
+                renderState : rs
+            });
 
             rs.cull.face = CullFace.FRONT;
-            primitive._backFaceRS = context.createRenderState(rs);
+            primitive._backFaceRS = RenderState.fromCache({
+                context : context,
+                renderState : rs
+            });
         } else {
-            primitive._frontFaceRS = context.createRenderState(renderState);
+            primitive._frontFaceRS = RenderState.fromCache({
+                context : context,
+                renderState : renderState
+            });
             primitive._backFaceRS = primitive._frontFaceRS;
         }
 
@@ -1010,7 +1021,10 @@ define([
                 rs.cull = {
                     enabled : false
                 };
-                primitive._pickRS = context.createRenderState(rs);
+                primitive._pickRS = RenderState.fromCache({
+                    context : context,
+                    renderState : rs
+                });
             } else {
                 primitive._pickRS = primitive._frontFaceRS;
             }
@@ -1027,9 +1041,15 @@ define([
                 rs.cull = {
                     enabled : false
                 };
-                primitive._pickRS = context.createRenderState(rs);
+                primitive._pickRS = RenderState.fromCache({
+                    context : context,
+                    renderState : rs
+                });
             } else {
-                primitive._pickRS = context.createRenderState(rs);
+                primitive._pickRS = RenderState.fromCache({
+                    context : context,
+                    renderState : rs
+                });
             }
         }
     }

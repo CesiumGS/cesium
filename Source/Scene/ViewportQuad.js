@@ -5,6 +5,7 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Renderer/RenderState',
         '../Renderer/ShaderSource',
         '../Shaders/ViewportQuadFS',
         './BlendingState',
@@ -16,6 +17,7 @@ define([
         defined,
         destroyObject,
         DeveloperError,
+        RenderState,
         ShaderSource,
         ViewportQuadFS,
         BlendingState,
@@ -117,9 +119,12 @@ define([
 
         var rs = this._rs;
         if ((!defined(rs)) || !BoundingRectangle.equals(rs.viewport, this.rectangle)) {
-            this._rs = context.createRenderState({
-                blending : BlendingState.ALPHA_BLEND,
-                viewport : this.rectangle
+            this._rs = RenderState.fromCache({
+                context : context,
+                    renderState : {
+                    blending : BlendingState.ALPHA_BLEND,
+                    viewport : this.rectangle
+                }
             });
         }
 

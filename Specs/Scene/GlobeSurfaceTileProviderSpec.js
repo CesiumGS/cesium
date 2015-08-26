@@ -11,6 +11,7 @@ defineSuite([
         'Core/GeographicProjection',
         'Core/Rectangle',
         'Core/WebMercatorProjection',
+        'Renderer/RenderState',
         'Scene/BlendingState',
         'Scene/Globe',
         'Scene/GlobeSurfaceShaderSet',
@@ -38,6 +39,7 @@ defineSuite([
         GeographicProjection,
         Rectangle,
         WebMercatorProjection,
+        RenderState,
         BlendingState,
         Globe,
         GlobeSurfaceShaderSet,
@@ -535,8 +537,11 @@ defineSuite([
             var commandList = [];
             expect(render(context, frameState, globe, commandList)).toBeGreaterThan(0);
 
-            var renderStateWithAlphaBlending = context.createRenderState({
-                blending : BlendingState.ALPHA_BLEND
+            var renderStateWithAlphaBlending = RenderState.fromCache({
+                context : context,
+                renderState : {
+                    blending : BlendingState.ALPHA_BLEND
+                }
             });
 
             var drawCommandsPerTile = {};

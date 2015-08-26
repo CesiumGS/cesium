@@ -16,6 +16,7 @@ define([
         '../Core/PrimitiveType',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArrayFacade',
@@ -42,6 +43,7 @@ define([
         PrimitiveType,
         BufferUsage,
         DrawCommand,
+        RenderState,
         ShaderProgram,
         ShaderSource,
         VertexArrayFacade,
@@ -818,11 +820,14 @@ define([
             var colorList = this._colorCommands;
 
             if (!defined(this._rs)) {
-                this._rs = context.createRenderState({
-                    depthTest : {
-                        enabled : true
-                    },
-                    blending : BlendingState.ALPHA_BLEND
+                this._rs = RenderState.fromCache({
+                    context : context,
+                    renderState : {
+                        depthTest : {
+                            enabled : true
+                        },
+                        blending : BlendingState.ALPHA_BLEND
+                    }
                 });
             }
 

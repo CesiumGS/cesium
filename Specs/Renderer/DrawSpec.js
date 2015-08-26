@@ -8,6 +8,7 @@ defineSuite([
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
         'Renderer/DrawCommand',
+        'Renderer/RenderState',
         'Renderer/ShaderProgram',
         'Renderer/VertexArray',
         'Specs/createContext'
@@ -20,6 +21,7 @@ defineSuite([
         BufferUsage,
         ClearCommand,
         DrawCommand,
+        RenderState,
         ShaderProgram,
         VertexArray,
         createContext) {
@@ -238,10 +240,13 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
-                scissorTest : {
-                    enabled : true,
-                    rectangle : new BoundingRectangle(1, 1, 0, 0)
+            renderState : RenderState.fromCache({
+                context : context,
+                renderState : {
+                    scissorTest : {
+                        enabled : true,
+                        rectangle : new BoundingRectangle(1, 1, 0, 0)
+                    }
                 }
             })
         });
@@ -253,10 +258,13 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
-                scissorTest : {
-                    enabled : true,
-                    rectangle : new BoundingRectangle(0, 0, 1, 1)
+            renderState : RenderState.fromCache({
+                context : context,
+                renderState : {
+                    scissorTest : {
+                        enabled : true,
+                        rectangle : new BoundingRectangle(0, 0, 1, 1)
+                    }
                 }
             })
         });
@@ -291,12 +299,15 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
-                colorMask : {
-                    red : true,
-                    green : false,
-                    blue : false,
-                    alpha : false
+            renderState : RenderState.fromCache({
+                context : context,
+                renderState : {
+                    colorMask : {
+                        red : true,
+                        green : false,
+                        blue : false,
+                        alpha : false
+                    }
                 }
             })
         });
@@ -308,12 +319,15 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
-                colorMask : {
-                    red : false,
-                    green : false,
-                    blue : true,
-                    alpha : false
+            renderState : RenderState.fromCache({
+                context : context,
+                renderState : {
+                    colorMask : {
+                        red : false,
+                        green : false,
+                        blue : true,
+                        alpha : false
+                    }
                 }
             })
         });
@@ -347,15 +361,18 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
-                blending : {
-                    enabled : true,
-                    equationRgb : WebGLRenderingContext.FUNC_ADD, // Optional, default
-                    equationAlpha : WebGLRenderingContext.FUNC_ADD, // Optional, default
-                    functionSourceRgb : WebGLRenderingContext.ONE, // Optional, default
-                    functionSourceAlpha : WebGLRenderingContext.ONE, // Optional, default
-                    functionDestinationRgb : WebGLRenderingContext.ONE,
-                    functionDestinationAlpha : WebGLRenderingContext.ONE
+            renderState : RenderState.fromCache({
+                context : context,
+                renderState : {
+                    blending : {
+                        enabled : true,
+                        equationRgb : WebGLRenderingContext.FUNC_ADD, // Optional, default
+                        equationAlpha : WebGLRenderingContext.FUNC_ADD, // Optional, default
+                        functionSourceRgb : WebGLRenderingContext.ONE, // Optional, default
+                        functionSourceAlpha : WebGLRenderingContext.ONE, // Optional, default
+                        functionDestinationRgb : WebGLRenderingContext.ONE,
+                        functionDestinationAlpha : WebGLRenderingContext.ONE
+                    }
                 }
             })
         });
@@ -395,15 +412,18 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
-                blending : {
-                    enabled : true,
-                    equationRgb : WebGLRenderingContext.FUNC_ADD,
-                    equationAlpha : WebGLRenderingContext.FUNC_SUBTRACT, // does not actually matter
-                    functionSourceRgb : WebGLRenderingContext.SRC_ALPHA,
-                    functionSourceAlpha : WebGLRenderingContext.ONE, // Don't blend alpha
-                    functionDestinationRgb : WebGLRenderingContext.ONE_MINUS_SRC_ALPHA,
-                    functionDestinationAlpha : WebGLRenderingContext.ZERO
+            renderState : RenderState.fromCache({
+                context : context,
+                renderState : {
+                    blending : {
+                        enabled : true,
+                        equationRgb : WebGLRenderingContext.FUNC_ADD,
+                        equationAlpha : WebGLRenderingContext.FUNC_SUBTRACT, // does not actually matter
+                        functionSourceRgb : WebGLRenderingContext.SRC_ALPHA,
+                        functionSourceAlpha : WebGLRenderingContext.ONE, // Don't blend alpha
+                        functionDestinationRgb : WebGLRenderingContext.ONE_MINUS_SRC_ALPHA,
+                        functionDestinationAlpha : WebGLRenderingContext.ZERO
+                    }
                 }
             })
         });
@@ -442,21 +462,24 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
-                blending : {
-                    enabled : true,
-                    color : {
-                        red : 0.5,
-                        green : 0.5,
-                        blue : 0.5,
-                        alpha : 0.5
-                    },
-                    equationRgb : WebGLRenderingContext.FUNC_SUBTRACT,
-                    equationAlpha : WebGLRenderingContext.FUNC_SUBTRACT,
-                    functionSourceRgb : WebGLRenderingContext.CONSTANT_COLOR,
-                    functionSourceAlpha : WebGLRenderingContext.ONE,
-                    functionDestinationRgb : WebGLRenderingContext.ZERO,
-                    functionDestinationAlpha : WebGLRenderingContext.ZERO
+            renderState : RenderState.fromCache({
+                context : context,
+                renderState : {
+                    blending : {
+                        enabled : true,
+                        color : {
+                            red : 0.5,
+                            green : 0.5,
+                            blue : 0.5,
+                            alpha : 0.5
+                        },
+                        equationRgb : WebGLRenderingContext.FUNC_SUBTRACT,
+                        equationAlpha : WebGLRenderingContext.FUNC_SUBTRACT,
+                        functionSourceRgb : WebGLRenderingContext.CONSTANT_COLOR,
+                        functionSourceAlpha : WebGLRenderingContext.ONE,
+                        functionDestinationRgb : WebGLRenderingContext.ZERO,
+                        functionDestinationAlpha : WebGLRenderingContext.ZERO
+                    }
                 }
             })
         });
@@ -494,10 +517,13 @@ defineSuite([
             primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
-                cull : {
-                    enabled : true,
-                    face : WebGLRenderingContext.FRONT
+            renderState : RenderState.fromCache({
+                context : context,
+                renderState : {
+                    cull : {
+                        enabled : true,
+                        face : WebGLRenderingContext.FRONT
+                    }
                 }
             })
         });
@@ -509,10 +535,13 @@ defineSuite([
             primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
-                cull : {
-                    enabled : true,
-                    face : WebGLRenderingContext.BACK
+            renderState : RenderState.fromCache({
+                context : context,
+                renderState : {
+                    cull : {
+                        enabled : true,
+                        face : WebGLRenderingContext.BACK
+                    }
                 }
             })
         });
@@ -547,11 +576,14 @@ defineSuite([
             primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
-                frontFace : WindingOrder.CLOCKWISE,
-                cull : {
-                    enabled : true,
-                    face : WebGLRenderingContext.BACK
+            renderState : RenderState.fromCache({
+                context : context,
+                renderState : {
+                    frontFace : WindingOrder.CLOCKWISE,
+                    cull : {
+                        enabled : true,
+                        face : WebGLRenderingContext.BACK
+                    }
                 }
             })
         });
@@ -563,11 +595,14 @@ defineSuite([
             primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
-                frontFace : WindingOrder.COUNTER_CLOCKWISE,
-                cull : {
-                    enabled : true,
-                    face : WebGLRenderingContext.BACK
+            renderState : RenderState.fromCache({
+                context : context,
+                renderState : {
+                    frontFace : WindingOrder.COUNTER_CLOCKWISE,
+                    cull : {
+                        enabled : true,
+                        face : WebGLRenderingContext.BACK
+                    }
                 }
             })
         });
@@ -597,10 +632,13 @@ defineSuite([
             primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
-                depthTest : {
-                    enabled : true,
-                    func : WebGLRenderingContext.LEQUAL
+            renderState : RenderState.fromCache({
+                context : context,
+                renderState : {
+                    depthTest : {
+                        enabled : true,
+                        func : WebGLRenderingContext.LEQUAL
+                    }
                 }
             })
         });
@@ -653,10 +691,13 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
-                depthRange : {
-                    near : 0.25,
-                    far : 0.75
+            renderState : RenderState.fromCache({
+                context : context,
+                renderState : {
+                    depthRange : {
+                        near : 0.25,
+                        far : 0.75
+                    }
                 }
             })
         });
@@ -689,9 +730,12 @@ defineSuite([
             primitiveType : PrimitiveType.LINES,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
-                lineWidth : context.maximumAliasedLineWidth
-            // May only be 1.
+            renderState : RenderState.fromCache({
+                context : context,
+                renderState : {
+                    lineWidth : context.maximumAliasedLineWidth
+                // May only be 1.
+                }
             })
         });
         command.execute(context);
@@ -727,11 +771,14 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
-                polygonOffset : {
-                    enabled : true,
-                    factor : 1,
-                    units : 1
+            renderState : RenderState.fromCache({
+                context : context,
+                renderState : {
+                    polygonOffset : {
+                        enabled : true,
+                        factor : 1,
+                        units : 1
+                    }
                 }
             })
         });
@@ -769,11 +816,14 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
-                sampleCoverage : {
-                    enabled : true,
-                    value : 0,
-                    invert : false
+            renderState : RenderState.fromCache({
+                context : context,
+                renderState : {
+                    sampleCoverage : {
+                        enabled : true,
+                        value : 0,
+                        invert : false
+                    }
                 }
             })
         });
@@ -784,9 +834,12 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
-                sampleCoverage : {
-                    enabled : false
+            renderState : RenderState.fromCache({
+                context : context,
+                renderState : {
+                    sampleCoverage : {
+                        enabled : false
+                    }
                 }
             })
         });
@@ -816,12 +869,15 @@ defineSuite([
             }]
         });
 
-        var rs = context.createRenderState({
-            stencilTest : {
-                enabled : true,
-                frontFunction : WebGLRenderingContext.EQUAL,
-                reference : 1,
-                mask : 1
+        var rs = RenderState.fromCache({
+            context : context,
+            renderState : {
+                stencilTest : {
+                    enabled : true,
+                    frontFunction : WebGLRenderingContext.EQUAL,
+                    reference : 1,
+                    mask : 1
+                }
             }
         });
 
@@ -844,17 +900,20 @@ defineSuite([
             primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
-                colorMask : {
-                    red : false,
-                    green : false,
-                    blue : false,
-                    alpha : false
-                },
-                stencilTest : {
-                    enabled : true,
-                    frontOperation : {
-                        zPass : WebGLRenderingContext.INCR
+            renderState : RenderState.fromCache({
+                context : context,
+                renderState : {
+                    colorMask : {
+                        red : false,
+                        green : false,
+                        blue : false,
+                        alpha : false
+                    },
+                    stencilTest : {
+                        enabled : true,
+                        frontOperation : {
+                            zPass : WebGLRenderingContext.INCR
+                        }
                     }
                 }
             })
@@ -895,12 +954,15 @@ defineSuite([
             }]
         });
 
-        var rs = context.createRenderState({
-            frontFace : WindingOrder.CLOCKWISE,
-            stencilTest : {
-                enabled : true,
-                backFunction : WebGLRenderingContext.NOTEQUAL,
-                reference : 0
+        var rs = RenderState.fromCache({
+            context : context,
+            renderState : {
+                frontFace : WindingOrder.CLOCKWISE,
+                stencilTest : {
+                    enabled : true,
+                    backFunction : WebGLRenderingContext.NOTEQUAL,
+                    reference : 0
+                }
             }
         });
 
@@ -923,18 +985,21 @@ defineSuite([
             primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
-                frontFace : WindingOrder.CLOCKWISE,
-                colorMask : {
-                    red : false,
-                    green : false,
-                    blue : false,
-                    alpha : false
-                },
-                stencilTest : {
-                    enabled : true,
-                    backOperation : {
-                        zPass : WebGLRenderingContext.INVERT
+            renderState : RenderState.fromCache({
+                context : context,
+                renderState : {
+                    frontFace : WindingOrder.CLOCKWISE,
+                    colorMask : {
+                        red : false,
+                        green : false,
+                        blue : false,
+                        alpha : false
+                    },
+                    stencilTest : {
+                        enabled : true,
+                        backOperation : {
+                            zPass : WebGLRenderingContext.INVERT
+                        }
                     }
                 }
             })

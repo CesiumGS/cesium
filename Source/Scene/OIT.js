@@ -235,7 +235,9 @@ define([
                 }
             };
             this._compositeCommand = context.createViewportQuadCommand(fs, {
-                renderState : context.createRenderState(),
+                renderState : RenderState.fromCache({
+                    context : context
+                }),
                 uniformMap : uniformMap,
                 owner : this
             });
@@ -258,7 +260,9 @@ define([
                 };
 
                 this._adjustTranslucentCommand = context.createViewportQuadCommand(fs, {
-                    renderState : context.createRenderState(),
+                    renderState : RenderState.fromCache({
+                        context : context
+                    }),
                     uniformMap : uniformMap,
                     owner : this
                 });
@@ -277,7 +281,9 @@ define([
                 };
 
                 this._adjustTranslucentCommand = context.createViewportQuadCommand(fs, {
-                    renderState : context.createRenderState(),
+                    renderState : RenderState.fromCache({
+                        context : context
+                    }),
                     uniformMap : uniformMap,
                     owner : this
                 });
@@ -292,7 +298,9 @@ define([
                 };
 
                 this._adjustAlphaCommand = context.createViewportQuadCommand(fs, {
-                    renderState : context.createRenderState(),
+                    renderState : RenderState.fromCache({
+                        context : context
+                    }),
                     uniformMap : uniformMap,
                     owner : this
                 });
@@ -340,7 +348,10 @@ define([
             rs.depthMask = false;
             rs.blending = translucentBlending;
 
-            translucentState = context.createRenderState(rs);
+            translucentState = RenderState.fromCache({
+                context : context,
+                renderState : rs
+            });
             cache[renderState.id] = translucentState;
         }
 

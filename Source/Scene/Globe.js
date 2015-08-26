@@ -31,6 +31,7 @@ define([
         '../Core/Transforms',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
@@ -79,6 +80,7 @@ define([
         Transforms,
         BufferUsage,
         DrawCommand,
+        RenderState,
         ShaderProgram,
         ShaderSource,
         Texture,
@@ -699,28 +701,40 @@ define([
         if (this._mode !== mode || !defined(this._rsColor)) {
             modeChanged = true;
             if (mode === SceneMode.SCENE3D || mode === SceneMode.COLUMBUS_VIEW) {
-                this._rsColor = context.createRenderState({ // Write color and depth
-                    cull : {
-                        enabled : true
-                    },
-                    depthTest : {
-                        enabled : true
+                this._rsColor = RenderState.fromCache({
+                    context : context,
+                    renderState : { // Write color and depth
+                        cull : {
+                            enabled : true
+                        },
+                        depthTest : {
+                            enabled : true
+                        }
                     }
                 });
-                this._rsColorWithoutDepthTest = context.createRenderState({ // Write color, not depth
-                    cull : {
-                        enabled : true
+                this._rsColorWithoutDepthTest = RenderState.fromCache({
+                    context : context,
+                    renderState : { // Write color, not depth
+                        cull : {
+                            enabled : true
+                        }
                     }
                 });
             } else {
-                this._rsColor = context.createRenderState({
-                    cull : {
-                        enabled : true
+                this._rsColor = RenderState.fromCache({
+                    context : context,
+                    renderState : {
+                        cull : {
+                            enabled : true
+                        }
                     }
                 });
-                this._rsColorWithoutDepthTest = context.createRenderState({
-                    cull : {
-                        enabled : true
+                this._rsColorWithoutDepthTest = RenderState.fromCache({
+                    context : context,
+                    renderState : {
+                        cull : {
+                            enabled : true
+                        }
                     }
                 });
             }

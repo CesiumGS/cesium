@@ -19,6 +19,7 @@ define([
         '../Renderer/ClearCommand',
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
+        '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/Texture',
         '../Renderer/VertexArray',
@@ -48,6 +49,7 @@ define([
         ClearCommand,
         DrawCommand,
         Framebuffer,
+        RenderState,
         ShaderProgram,
         Texture,
         VertexArray,
@@ -186,8 +188,11 @@ define([
                 framebuffer : fbo
             });
 
-            var rs = context.createRenderState({
-                viewport : new BoundingRectangle(0.0, 0.0, size, size)
+            var rs = RenderState.fromCache({
+                context : context,
+                renderState : {
+                    viewport : new BoundingRectangle(0.0, 0.0, size, size)
+                }
             });
 
             this._glowLengthTS = this._glowFactor * 5.0;
@@ -260,8 +265,11 @@ define([
                 attributeLocations : attributeLocations
             });
 
-            command.renderState = context.createRenderState({
-                blending : BlendingState.ALPHA_BLEND
+            command.renderState = RenderState.fromCache({
+                context : context,
+                renderState : {
+                    blending : BlendingState.ALPHA_BLEND
+                }
             });
             command.uniformMap = this._uniformMap;
         }

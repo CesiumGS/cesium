@@ -289,7 +289,9 @@ define([
 
         var us = new UniformState();
         var ps = new PassState(this);
-        var rs = this.createRenderState();
+        var rs = RenderState.fromCache({
+           context : this
+        });
 
         this._defaultPassState = ps;
         this._defaultRenderState = rs;
@@ -1079,153 +1081,6 @@ define([
         });
 
         return buffer;
-    };
-
-    var nextRenderStateId = 0;
-    var renderStateCache = {};
-
-    /**
-     * Validates and then finds or creates an immutable render state, which defines the pipeline
-     * state for a {@link DrawCommand} or {@link ClearCommand}.  All inputs states are optional.  Omitted states
-     * use the defaults shown in the example below.
-     *
-     * @param {Object} [renderState] The states defining the render state as shown in the example below.
-     *
-     * @exception {RuntimeError} renderState.lineWidth is out of range.
-     * @exception {DeveloperError} Invalid renderState.frontFace.
-     * @exception {DeveloperError} Invalid renderState.cull.face.
-     * @exception {DeveloperError} scissorTest.rectangle.width and scissorTest.rectangle.height must be greater than or equal to zero.
-     * @exception {DeveloperError} renderState.depthRange.near can't be greater than renderState.depthRange.far.
-     * @exception {DeveloperError} renderState.depthRange.near must be greater than or equal to zero.
-     * @exception {DeveloperError} renderState.depthRange.far must be less than or equal to zero.
-     * @exception {DeveloperError} Invalid renderState.depthTest.func.
-     * @exception {DeveloperError} renderState.blending.color components must be greater than or equal to zero and less than or equal to one
-     * @exception {DeveloperError} Invalid renderState.blending.equationRgb.
-     * @exception {DeveloperError} Invalid renderState.blending.equationAlpha.
-     * @exception {DeveloperError} Invalid renderState.blending.functionSourceRgb.
-     * @exception {DeveloperError} Invalid renderState.blending.functionSourceAlpha.
-     * @exception {DeveloperError} Invalid renderState.blending.functionDestinationRgb.
-     * @exception {DeveloperError} Invalid renderState.blending.functionDestinationAlpha.
-     * @exception {DeveloperError} Invalid renderState.stencilTest.frontFunction.
-     * @exception {DeveloperError} Invalid renderState.stencilTest.backFunction.
-     * @exception {DeveloperError} Invalid renderState.stencilTest.frontOperation.fail.
-     * @exception {DeveloperError} Invalid renderState.stencilTest.frontOperation.zFail.
-     * @exception {DeveloperError} Invalid renderState.stencilTest.frontOperation.zPass.
-     * @exception {DeveloperError} Invalid renderState.stencilTest.backOperation.fail.
-     * @exception {DeveloperError} Invalid renderState.stencilTest.backOperation.zFail.
-     * @exception {DeveloperError} Invalid renderState.stencilTest.backOperation.zPass.
-     * @exception {DeveloperError} renderState.viewport.width must be greater than or equal to zero.
-     * @exception {DeveloperError} renderState.viewport.width must be less than or equal to the maximum viewport width.
-     * @exception {DeveloperError} renderState.viewport.height must be greater than or equal to zero.
-     * @exception {DeveloperError} renderState.viewport.height must be less than or equal to the maximum viewport height.
-     *
-     * @see DrawCommand
-     * @see ClearCommand
-     *
-     * @example
-     * var defaults = {
-     *     frontFace : WindingOrder.COUNTER_CLOCKWISE,
-     *     cull : {
-     *         enabled : false,
-     *         face : CullFace.BACK
-     *     },
-     *     lineWidth : 1,
-     *     polygonOffset : {
-     *         enabled : false,
-     *         factor : 0,
-     *         units : 0
-     *     },
-     *     scissorTest : {
-     *         enabled : false,
-     *         rectangle : {
-     *             x : 0,
-     *             y : 0,
-     *             width : 0,
-     *             height : 0
-     *         }
-     *     },
-     *     depthRange : {
-     *         near : 0,
-     *         far : 1
-     *     },
-     *     depthTest : {
-     *         enabled : false,
-     *         func : DepthFunction.LESS
-     *      },
-     *     colorMask : {
-     *         red : true,
-     *         green : true,
-     *         blue : true,
-     *         alpha : true
-     *     },
-     *     depthMask : true,
-     *     stencilMask : ~0,
-     *     blending : {
-     *         enabled : false,
-     *         color : {
-     *             red : 0.0,
-     *             green : 0.0,
-     *             blue : 0.0,
-     *             alpha : 0.0
-     *         },
-     *         equationRgb : BlendEquation.ADD,
-     *         equationAlpha : BlendEquation.ADD,
-     *         functionSourceRgb : BlendFunction.ONE,
-     *         functionSourceAlpha : BlendFunction.ONE,
-     *         functionDestinationRgb : BlendFunction.ZERO,
-     *         functionDestinationAlpha : BlendFunction.ZERO
-     *     },
-     *     stencilTest : {
-     *         enabled : false,
-     *         frontFunction : StencilFunction.ALWAYS,
-     *         backFunction : StencilFunction.ALWAYS,
-     *         reference : 0,
-     *         mask : ~0,
-     *         frontOperation : {
-     *             fail : StencilOperation.KEEP,
-     *             zFail : StencilOperation.KEEP,
-     *             zPass : StencilOperation.KEEP
-     *         },
-     *         backOperation : {
-     *             fail : StencilOperation.KEEP,
-     *             zFail : StencilOperation.KEEP,
-     *             zPass : StencilOperation.KEEP
-     *         }
-     *     },
-     *     sampleCoverage : {
-     *         enabled : false,
-     *         value : 1.0,
-     *         invert : false
-     *      }
-     * };
-     *
-     * // Same as just context.createRenderState().
-     * var rs = context.createRenderState(defaults);
-     */
-    Context.prototype.createRenderState = function(renderState) {
-        var partialKey = JSON.stringify(renderState);
-        var cachedState = renderStateCache[partialKey];
-        if (defined(cachedState)) {
-            return cachedState;
-        }
-
-        // Cache miss.  Fully define render state and try again.
-        var states = new RenderState(this, renderState);
-        var fullKey = JSON.stringify(states);
-        cachedState = renderStateCache[fullKey];
-        if (!defined(cachedState)) {
-            states.id = nextRenderStateId++;
-
-            cachedState = states;
-
-            // Cache full render state.  Multiple partially defined render states may map to this.
-            renderStateCache[fullKey] = cachedState;
-        }
-
-        // Cache partial render state so we can skip validation on a cache hit for a partially defined render state
-        renderStateCache[partialKey] = cachedState;
-
-        return cachedState;
     };
 
     Context.prototype.createSampler = function(sampler) {

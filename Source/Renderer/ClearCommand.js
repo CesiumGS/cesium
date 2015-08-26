@@ -53,7 +53,7 @@ define([
          *
          * @default undefined
          *
-         * @see Context#createRenderState
+         * @see RenderState
          */
         this.renderState = options.renderState;
 

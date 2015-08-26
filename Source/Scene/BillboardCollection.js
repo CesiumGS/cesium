@@ -17,6 +17,7 @@ define([
         '../Core/Matrix4',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArrayFacade',
@@ -46,6 +47,7 @@ define([
         Matrix4,
         BufferUsage,
         DrawCommand,
+        RenderState,
         ShaderProgram,
         ShaderSource,
         VertexArrayFacade,
@@ -1205,11 +1207,14 @@ define([
             var colorList = this._colorCommands;
 
             if (!defined(this._rs)) {
-                this._rs = context.createRenderState({
-                    depthTest : {
-                        enabled : true
-                    },
-                    blending : BlendingState.ALPHA_BLEND
+                this._rs = RenderState.fromCache({
+                    context : context,
+                    renderState : {
+                        depthTest : {
+                            enabled : true
+                        },
+                        blending : BlendingState.ALPHA_BLEND
+                    }
                 });
             }
 
