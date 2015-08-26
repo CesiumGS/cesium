@@ -8,27 +8,27 @@ define([
     /**
      * @private
      */
-    var ContextLimits = function(){};
-
-    ContextLimits._maximumCombinedTextureImageUnits = 0;
-    ContextLimits._maximumCubeMapSize = 0;
-    ContextLimits._maximumFragmentUniformVectors = 0;
-    ContextLimits._maximumTextureImageUnits = 0;
-    ContextLimits._maximumRenderbufferSize = 0;
-    ContextLimits._maximumTextureSize = 0;
-    ContextLimits._maximumVaryingVectors = 0;
-    ContextLimits._maximumVertexAttributes = 0;
-    ContextLimits._maximumVertexTextureImageUnits = 0;
-    ContextLimits._maximumVertexUniformVectors = 0;
-    ContextLimits._minimumAliasedLineWidth = 0;
-    ContextLimits._maximumAliasedLineWidth = 0;
-    ContextLimits._minimumAliasedPointSize = 0;
-    ContextLimits._maximumAliasedPointSize = 0;
-    ContextLimits._maximumViewportWidth = 0;
-    ContextLimits._maximumViewportHeight = 0;
-    ContextLimits._maximumTextureFilterAnisotropy = 0;
-    ContextLimits._maximumDrawBuffers = 0;
-    ContextLimits._maximumColorAttachments = 0;
+    var ContextLimits = {
+        _maximumCombinedTextureImageUnits : 0,
+        _maximumCubeMapSize : 0,
+        _maximumFragmentUniformVectors : 0,
+        _maximumTextureImageUnits : 0,
+        _maximumRenderbufferSize : 0,
+        _maximumTextureSize : 0,
+        _maximumVaryingVectors : 0,
+        _maximumVertexAttributes : 0,
+        _maximumVertexTextureImageUnits : 0,
+        _maximumVertexUniformVectors : 0,
+        _minimumAliasedLineWidth : 0,
+        _maximumAliasedLineWidth : 0,
+        _minimumAliasedPointSize : 0,
+        _maximumAliasedPointSize : 0,
+        _maximumViewportWidth : 0,
+        _maximumViewportHeight : 0,
+        _maximumTextureFilterAnisotropy : 0,
+        _maximumDrawBuffers : 0,
+        _maximumColorAttachments : 0
+    };
 
     defineProperties(ContextLimits, {
 

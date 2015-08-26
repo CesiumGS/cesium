@@ -699,12 +699,6 @@ define([
         }
     };
 
-    /**
-     * Duplicates a RenderState instance. The object returned must still be created with {@link RenderState.fromCache}.
-     *
-     * @param renderState The render state to be cloned.
-     * @returns {Object} The duplicated render state.
-     */
     RenderState.getState = function(renderState) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(renderState)) {
