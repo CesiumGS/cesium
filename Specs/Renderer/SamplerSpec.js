@@ -1,9 +1,15 @@
 /*global defineSuite*/
 defineSuite([
         'Renderer/Sampler',
+        'Renderer/TextureMagnificationFilter',
+        'Renderer/TextureMinificationFilter',
+        'Renderer/TextureWrap',
         'Specs/createContext'
     ], 'Renderer/Sampler', function(
         Sampler,
+        TextureMagnificationFilter,
+        TextureMinificationFilter,
+        TextureWrap,
         createContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
@@ -16,6 +22,15 @@ defineSuite([
 
     afterAll(function() {
         context.destroyForSpecs();
+    });
+
+    it('has expected default values', function() {
+        var sampler = new Sampler();
+        expect(sampler.wrapS).toEqual(TextureWrap.CLAMP_TO_EDGE);
+        expect(sampler.wrapT).toEqual(TextureWrap.CLAMP_TO_EDGE);
+        expect(sampler.minificationFilter).toEqual(TextureMinificationFilter.LINEAR);
+        expect(sampler.magnificationFilter).toEqual(TextureMinificationFilter.LINEAR);
+        expect(sampler.maximumAnisotropy).toEqual(1.0);
     });
 
     it('throws when creating a sampler with invalid wrapS', function() {

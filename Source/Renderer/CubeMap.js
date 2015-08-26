@@ -217,6 +217,7 @@ define([
                     (minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) ||
                     (minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR);
 
+                // float textures only support nearest filtering, so override the sampler's settings
                 if (this._pixelDatatype === PixelDatatype.FLOAT) {
                     minificationFilter = mipmap ? TextureMinificationFilter.NEAREST_MIPMAP_NEAREST : TextureMinificationFilter.NEAREST;
                     magnificationFilter = TextureMagnificationFilter.NEAREST;
