@@ -575,6 +575,7 @@ define([
          *
          * @memberof Animation.prototype
          * @type {Element}
+         * @readonly
          */
         container : {
             get : function() {
@@ -587,6 +588,7 @@ define([
          *
          * @memberof Animation.prototype
          * @type {AnimationViewModel}
+         * @readonly
          */
         viewModel : {
             get : function() {
