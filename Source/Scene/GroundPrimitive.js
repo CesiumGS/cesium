@@ -16,6 +16,8 @@ define([
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Shaders/ShadowVolumeFS',
         '../Shaders/ShadowVolumeVS',
@@ -45,6 +47,8 @@ define([
         OrientedBoundingBox,
         Rectangle,
         DrawCommand,
+        RenderState,
+        ShaderProgram,
         ShaderSource,
         ShadowVolumeFS,
         ShadowVolumeVS,
@@ -494,10 +498,10 @@ define([
             return;
         }
 
-        primitive._rsStencilPreloadPass = context.createRenderState(stencilPreloadRenderState);
-        primitive._rsStencilDepthPass = context.createRenderState(stencilDepthRenderState);
-        primitive._rsColorPass = context.createRenderState(colorRenderState);
-        primitive._rsPickPass = context.createRenderState(pickRenderState);
+        primitive._rsStencilPreloadPass = RenderState.fromCache(stencilPreloadRenderState);
+        primitive._rsStencilDepthPass = RenderState.fromCache(stencilDepthRenderState);
+        primitive._rsColorPass = RenderState.fromCache(colorRenderState);
+        primitive._rsPickPass = RenderState.fromCache(pickRenderState);
     }
 
     function createShaderProgram(primitive, context, frameState, appearance) {
@@ -511,16 +515,34 @@ define([
         var fs = ShadowVolumeFS;
         var attributeLocations = primitive._primitive._attributeLocations;
 
-        primitive._sp = context.replaceShaderProgram(primitive._sp, vs, fs, attributeLocations);
+
+        primitive._sp = ShaderProgram.replaceCache({
+            context : context,
+            shaderProgram : primitive._sp,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
 
         if (primitive._primitive.allowPicking) {
             var pickFS = new ShaderSource({
                 sources : [fs],
                 pickColorQualifier : 'varying'
             });
-            primitive._spPick = context.replaceShaderProgram(primitive._spPick, Primitive._createPickVertexShaderSource(vs), pickFS, attributeLocations);
+            primitive._spPick = ShaderProgram.replaceCache({
+                context : context,
+                shaderProgram : primitive._spPick,
+                vertexShaderSource : Primitive._createPickVertexShaderSource(vs),
+                fragmentShaderSource : pickFS,
+                attributeLocations : attributeLocations
+            });
         } else {
-            primitive._spPick = context.createShaderProgram(vs, fs, attributeLocations);
+            primitive._spPick = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs,
+                attributeLocations : attributeLocations
+            });
         }
     }
 

@@ -17,8 +17,11 @@ define([
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/Plane',
+        '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
         '../Shaders/PolylineCommon',
@@ -47,8 +50,11 @@ define([
         CesiumMath,
         Matrix4,
         Plane,
+        Buffer,
         BufferUsage,
         DrawCommand,
+        RenderState,
+        ShaderProgram,
         ShaderSource,
         VertexArray,
         PolylineCommon,
@@ -434,7 +440,7 @@ define([
         var useDepthTest = (frameState.morphTime !== 0.0);
 
         if (!defined(this._opaqueRS) || this._opaqueRS.depthTest.enabled !== useDepthTest) {
-            this._opaqueRS = context.createRenderState({
+            this._opaqueRS = RenderState.fromCache({
                 depthMask : useDepthTest,
                 depthTest : {
                     enabled : useDepthTest
@@ -443,7 +449,7 @@ define([
         }
 
         if (!defined(this._translucentRS) || this._translucentRS.depthTest.enabled !== useDepthTest) {
-            this._translucentRS = context.createRenderState({
+            this._translucentRS = RenderState.fromCache({
                 blending : BlendingState.ALPHA_BLEND,
                 depthMask : !useDepthTest,
                 depthTest : {
@@ -737,13 +743,29 @@ define([
             var widthBufferUsage = collection._buffersUsage[WIDTH_INDEX].bufferUsage;
             var texCoordExpandWidthAndShowBufferUsage = (showBufferUsage === BufferUsage.STREAM_DRAW || widthBufferUsage === BufferUsage.STREAM_DRAW) ? BufferUsage.STREAM_DRAW : BufferUsage.STATIC_DRAW;
 
-            collection._positionBuffer = context.createVertexBuffer(positionArray, positionBufferUsage);
+            collection._positionBuffer = Buffer.createVertexBuffer({
+                context : context,
+                typedArray : positionArray,
+                usage : positionBufferUsage
+            });
             var position3DBuffer;
             if (defined(position3DArray)) {
-                position3DBuffer = context.createVertexBuffer(position3DArray, positionBufferUsage);
+                position3DBuffer = Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : position3DArray,
+                    usage : positionBufferUsage
+                });
             }
-            collection._pickColorBuffer = context.createVertexBuffer(pickColorArray, BufferUsage.STATIC_DRAW);
-            collection._texCoordExpandWidthAndShowBuffer = context.createVertexBuffer(texCoordExpandWidthAndShowArray, texCoordExpandWidthAndShowBufferUsage);
+            collection._pickColorBuffer = Buffer.createVertexBuffer({
+                context : context,
+                typedArray : pickColorArray,
+                usage : BufferUsage.STATIC_DRAW
+            });
+            collection._texCoordExpandWidthAndShowBuffer = Buffer.createVertexBuffer({
+                context : context,
+                typedArray : texCoordExpandWidthAndShowArray,
+                usage : texCoordExpandWidthAndShowBufferUsage
+            });
 
             var pickColorSizeInBytes = 4 * Uint8Array.BYTES_PER_ELEMENT;
             var positionSizeInBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
@@ -756,7 +778,12 @@ define([
 
                 if (indices.length > 0) {
                     var indicesArray = new Uint16Array(indices);
-                    var indexBuffer = context.createIndexBuffer(indicesArray, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+                    var indexBuffer = Buffer.createIndexBuffer({
+                        context : context,
+                        typedArray : indicesArray,
+                        usage : BufferUsage.STATIC_DRAW,
+                        indexDatatype : IndexDatatype.UNSIGNED_SHORT
+                    });
 
                     vbo += vertexBufferOffset[k];
 
@@ -1048,8 +1075,20 @@ define([
             sources : fs.sources,
             pickColorQualifier : 'varying'
         });
-        this.shaderProgram = context.createShaderProgram(vs, fs, attributeLocations);
-        this.pickShaderProgram = context.createShaderProgram(vs, fsPick, attributeLocations);
+
+        this.shaderProgram = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
+
+        this.pickShaderProgram = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fsPick,
+            attributeLocations : attributeLocations
+        });
     };
 
     function intersectsIDL(polyline) {

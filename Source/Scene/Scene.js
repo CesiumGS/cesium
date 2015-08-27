@@ -30,7 +30,9 @@ define([
         '../Core/ShowGeometryInstanceAttribute',
         '../Renderer/ClearCommand',
         '../Renderer/Context',
+        '../Renderer/ContextLimits',
         '../Renderer/PassState',
+        '../Renderer/ShaderProgram',
         './Camera',
         './CreditDisplay',
         './CullingVolume',
@@ -86,7 +88,9 @@ define([
         ShowGeometryInstanceAttribute,
         ClearCommand,
         Context,
+        ContextLimits,
         PassState,
+        ShaderProgram,
         Camera,
         CreditDisplay,
         CullingVolume,
@@ -577,7 +581,7 @@ define([
          */
         maximumAliasedLineWidth : {
             get : function() {
-                return this._context.maximumAliasedLineWidth;
+                return ContextLimits.maximumAliasedLineWidth;
             }
         },
 
@@ -592,7 +596,7 @@ define([
          */
         maximumCubeMapSize : {
             get : function() {
-                return this._context.maximumCubeMapSize;
+                return ContextLimits.maximumCubeMapSize;
             }
         },
 
@@ -1170,7 +1174,13 @@ define([
         fs.sources.push(newMain);
 
         var attributeLocations = getAttributeLocations(sp);
-        return context.createShaderProgram(sp.vertexShaderSource, fs, attributeLocations);
+
+        return ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : sp.vertexShaderSource,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
     }
 
     function executeDebugCommand(command, scene, passState, renderState, shaderProgram) {
@@ -1742,7 +1752,7 @@ define([
      */
     Scene.prototype.clampLineWidth = function(width) {
         var context = this._context;
-        return Math.max(context.minimumAliasedLineWidth, Math.min(width, context.maximumAliasedLineWidth));
+        return Math.max(ContextLimits.minimumAliasedLineWidth, Math.min(width, ContextLimits.maximumAliasedLineWidth));
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();

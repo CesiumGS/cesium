@@ -8,6 +8,7 @@ define([
         '../Core/IndexDatatype',
         '../Core/OrientedBoundingBox',
         '../Core/TileProviderError',
+        '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/VertexArray',
         '../ThirdParty/when',
@@ -22,6 +23,7 @@ define([
         IndexDatatype,
         OrientedBoundingBox,
         TileProviderError,
+        Buffer,
         BufferUsage,
         VertexArray,
         when,
@@ -215,7 +217,11 @@ define([
         var stride;
         var numTexCoordComponents;
         var typedArray = tileTerrain.mesh.vertices;
-        var buffer = context.createVertexBuffer(typedArray, BufferUsage.STATIC_DRAW);
+        var buffer = Buffer.createVertexBuffer({
+            context : context,
+            typedArray : typedArray,
+            usage : BufferUsage.STATIC_DRAW
+        });
         if (terrainProvider.hasVertexNormals) {
             stride = 7 * ComponentDatatype.getSizeInBytes(datatype);
             numTexCoordComponents = 3;
@@ -247,7 +253,12 @@ define([
         if (!defined(indexBuffer) || indexBuffer.isDestroyed()) {
             var indices = tileTerrain.mesh.indices;
             var indexDatatype = (indices.BYTES_PER_ELEMENT === 2) ?  IndexDatatype.UNSIGNED_SHORT : IndexDatatype.UNSIGNED_INT;
-            indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, indexDatatype);
+            indexBuffer = Buffer.createIndexBuffer({
+                context : context,
+                typedArray : indices,
+                usage : BufferUsage.STATIC_DRAW,
+                indexDatatype : indexDatatype
+            });
             indexBuffer.vertexArrayDestroyable = false;
             indexBuffer.referenceCount = 1;
             indexBuffers[context.id] = indexBuffer;

@@ -2,11 +2,13 @@
 define([
         '../Core/defined',
         '../Core/destroyObject',
+        '../Renderer/ShaderProgram',
         '../Scene/SceneMode',
         '../Scene/terrainAttributeLocations'
     ], function(
         defined,
         destroyObject,
+        ShaderProgram,
         SceneMode,
         terrainAttributeLocations) {
     "use strict";
@@ -167,7 +169,13 @@ define([
             vs.sources.push(getPositionMode(sceneMode));
             vs.sources.push(get2DYPositionFraction(useWebMercatorProjection));
 
-            var shader = context.createShaderProgram(vs, fs, this._attributeLocations);
+            var shader = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs,
+                attributeLocations : this._attributeLocations
+            });
+
             surfaceShader = shadersByFlags[flags] = new GlobeSurfaceShader(numberOfDayTextures, flags, shader);
         }
 
@@ -191,7 +199,12 @@ define([
                 '    gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);\n' +
                 '}\n';
 
-            pickShader = this._pickShaderPrograms[flags] = context.createShaderProgram(vs, fs, this._attributeLocations);
+            pickShader = this._pickShaderPrograms[flags] = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs,
+                attributeLocations : this._attributeLocations
+            });
         }
 
         return pickShader;

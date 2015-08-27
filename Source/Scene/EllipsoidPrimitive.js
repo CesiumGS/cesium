@@ -12,6 +12,8 @@ define([
         '../Core/VertexFormat',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
         '../Shaders/EllipsoidFS',
@@ -34,6 +36,8 @@ define([
         VertexFormat,
         BufferUsage,
         DrawCommand,
+        RenderState,
+        ShaderProgram,
         ShaderSource,
         VertexArray,
         EllipsoidFS,
@@ -295,7 +299,7 @@ define([
             // depth range, the hard-coded values in EllipsoidVS.glsl need
             // to be updated as well.
 
-            this._rs = context.createRenderState({
+            this._rs = RenderState.fromCache({
                 // Cull front faces - not back faces - so the ellipsoid doesn't
                 // disappear if the viewer enters the bounding box.
                 cull : {
@@ -368,7 +372,13 @@ define([
                 fs.defines.push('WRITE_DEPTH');
             }
 
-            this._sp = context.replaceShaderProgram(this._sp, EllipsoidVS, fs, attributeLocations);
+            this._sp = ShaderProgram.replaceCache({
+                context : context,
+                shaderProgram : this._sp,
+                vertexShaderSource : EllipsoidVS,
+                fragmentShaderSource : fs,
+                attributeLocations : attributeLocations
+            });
 
             colorCommand.vertexArray = this._va;
             colorCommand.renderState = this._rs;
@@ -413,7 +423,13 @@ define([
                     fs.defines.push('WRITE_DEPTH');
                 }
 
-                this._pickSP = context.replaceShaderProgram(this._pickSP, EllipsoidVS, fs, attributeLocations);
+                this._pickSP = ShaderProgram.replaceCache({
+                    context : context,
+                    shaderProgram : this._pickSP,
+                    vertexShaderSource : EllipsoidVS,
+                    fragmentShaderSource : fs,
+                    attributeLocations : attributeLocations
+                });
 
                 pickCommand.vertexArray = this._va;
                 pickCommand.renderState = this._rs;

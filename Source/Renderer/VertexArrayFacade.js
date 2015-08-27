@@ -6,6 +6,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Math',
+        './Buffer',
         './BufferUsage',
         './VertexArray'
     ], function(
@@ -15,6 +16,7 @@ define([
         destroyObject,
         DeveloperError,
         CesiumMath,
+        Buffer,
         BufferUsage,
         VertexArray) {
     "use strict";
@@ -363,7 +365,11 @@ define([
                 if (vertexBufferDefined) {
                     vertexBuffer.destroy();
                 }
-                buffer.vertexBuffer = vertexArrayFacade._context.createVertexBuffer(buffer.arrayBuffer, buffer.usage);
+                buffer.vertexBuffer = Buffer.createVertexBuffer({
+                    context : vertexArrayFacade._context,
+                    typedArray : buffer.arrayBuffer,
+                    usage : buffer.usage
+                });
                 buffer.vertexBuffer.vertexArrayDestroyable = false;
 
                 return true; // Created new vertex buffer

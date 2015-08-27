@@ -10,6 +10,8 @@ define([
         '../Core/PrimitiveType',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
+        '../Renderer/ShaderProgram',
         '../Renderer/VertexArray',
         '../Shaders/DepthPlaneFS',
         '../Shaders/DepthPlaneVS',
@@ -27,6 +29,8 @@ define([
         PrimitiveType,
         BufferUsage,
         DrawCommand,
+        RenderState,
+        ShaderProgram,
         VertexArray,
         DepthPlaneFS,
         DepthPlaneVS,
@@ -108,7 +112,7 @@ define([
         var ellipsoid = frameState.mapProjection.ellipsoid;
 
         if (!defined(this._command)) {
-            this._rs = context.createRenderState({ // Write depth, not color
+            this._rs = RenderState.fromCache({ // Write depth, not color
                 cull : {
                     enabled : true
                 },
@@ -124,8 +128,13 @@ define([
                 }
             });
 
-            this._sp = context.createShaderProgram(DepthPlaneVS, DepthPlaneFS, {
-                position : 0
+            this._sp = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : DepthPlaneVS,
+                fragmentShaderSource : DepthPlaneFS,
+                attributeLocations : {
+                    position : 0
+                }
             });
 
             this._command = new DrawCommand({

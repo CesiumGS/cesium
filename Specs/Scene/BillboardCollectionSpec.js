@@ -11,6 +11,7 @@ defineSuite([
         'Core/loadImage',
         'Core/Math',
         'Core/NearFarScalar',
+        'Renderer/ContextLimits',
         'Scene/HeightReference',
         'Scene/HorizontalOrigin',
         'Scene/OrthographicFrustum',
@@ -31,6 +32,7 @@ defineSuite([
         loadImage,
         CesiumMath,
         NearFarScalar,
+        ContextLimits,
         HeightReference,
         HorizontalOrigin,
         OrthographicFrustum,
@@ -57,7 +59,7 @@ defineSuite([
         scene = createScene();
         camera = scene.camera;
 
-        heightReferenceSupported = defined(scene._globeDepth) && scene._globeDepth.supported && scene.context.maximumVertexTextureImageUnits > 0;
+        heightReferenceSupported = defined(scene._globeDepth) && scene._globeDepth.supported && ContextLimits.maximumVertexTextureImageUnits > 0;
 
         return when.join(
             loadImage('./Data/Images/Green.png').then(function(result) {

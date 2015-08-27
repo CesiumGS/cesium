@@ -5,10 +5,14 @@ defineSuite([
         'Core/loadImage',
         'Core/PixelFormat',
         'Core/PrimitiveType',
+        'Renderer/Buffer',
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
+        'Renderer/ContextLimits',
         'Renderer/DrawCommand',
         'Renderer/PixelDatatype',
+        'Renderer/Sampler',
+        'Renderer/ShaderProgram',
         'Renderer/Texture',
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
@@ -22,10 +26,14 @@ defineSuite([
         loadImage,
         PixelFormat,
         PrimitiveType,
+        Buffer,
         BufferUsage,
         ClearCommand,
+        ContextLimits,
         DrawCommand,
         PixelDatatype,
+        Sampler,
+        ShaderProgram,
         Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
@@ -85,15 +93,24 @@ defineSuite([
         fs += 'uniform sampler2D u_texture;';
         fs += 'void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)); }';
 
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
         sp.allUniforms.u_texture.value = texture;
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -224,15 +241,24 @@ defineSuite([
         fs += 'uniform mediump vec2 u_txCoords;';
         fs += 'void main() { gl_FragColor = texture2D(u_texture, u_txCoords); }';
 
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
         sp.allUniforms.u_texture.value = texture;
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -306,15 +332,24 @@ defineSuite([
         fs += 'uniform mediump vec2 u_txCoords;';
         fs += 'void main() { gl_FragColor = texture2D(u_texture, u_txCoords); }';
 
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
         sp.allUniforms.u_texture.value = texture;
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -357,36 +392,11 @@ defineSuite([
         });
 
         texture.generateMipmap();
-        texture.sampler = context.createSampler({
+        texture.sampler = new Sampler({
             minificationFilter : TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
         });
 
         expect(renderFragment(context)).toEqual(Color.BLUE.toBytes());
-    });
-
-    it('default sampler returns undefined', function() {
-        texture = new Texture({
-            context : context,
-            source : blueImage,
-            pixelFormat : PixelFormat.RGBA
-        });
-
-        var sampler = texture._sampler;
-        expect(sampler).toBeUndefined();
-    });
-
-    it('default sampler returns undefined, data type is FLOAT ', function() {
-        if (context.floatingPointTexture) {
-            texture = new Texture({
-                context : context,
-                source : blueImage,
-                pixelFormat : PixelFormat.RGBA,
-                pixelDatatype : PixelDatatype.FLOAT
-            });
-
-            var sampler = texture.sampler;
-            expect(sampler).toBeUndefined();
-        }
     });
 
     it('can set a sampler', function() {
@@ -396,7 +406,7 @@ defineSuite([
             pixelFormat : PixelFormat.RGBA
         });
 
-        var sampler = context.createSampler({
+        var sampler = new Sampler({
             wrapS : TextureWrap.REPEAT,
             wrapT : TextureWrap.MIRRORED_REPEAT,
             minificationFilter : TextureMinificationFilter.NEAREST,
@@ -503,7 +513,7 @@ defineSuite([
         expect(function() {
             texture = new Texture({
                 context : context,
-                width : context.maximumTextureSize + 1,
+                width : ContextLimits.maximumTextureSize + 1,
                 height : 16
             });
         }).toThrowDeveloperError();
@@ -524,7 +534,7 @@ defineSuite([
             texture = new Texture({
                 context : context,
                 width : 16,
-                height : context.maximumTextureSize + 1
+                height : ContextLimits.maximumTextureSize + 1
             });
         }).toThrowDeveloperError();
     });
@@ -899,38 +909,6 @@ defineSuite([
         expect(function() {
             texture.generateMipmap('invalid hint');
         }).toThrowDeveloperError();
-    });
-
-    it('throws when data type is FLOAT and minification filter is not NEAREST or NEAREST_MIPMAP_NEAREST', function() {
-        if (context.floatingPointTexture) {
-            texture = new Texture({
-                context : context,
-                source : blueImage,
-                pixelDatatype : PixelDatatype.FLOAT
-            });
-
-            expect(function() {
-                texture.sampler = context.createSampler({
-                    minificationFilter : TextureMinificationFilter.LINEAR
-                });
-            }).toThrowDeveloperError();
-        }
-    });
-
-    it('throws when data type is FLOAT and magnification filter is not NEAREST', function() {
-        if (context.floatingPointTexture) {
-            texture = new Texture({
-                context : context,
-                source : blueImage,
-                pixelDatatype : PixelDatatype.FLOAT
-            });
-
-            expect(function() {
-                texture.sampler = context.createSampler({
-                    magnificationFilter : TextureMagnificationFilter.LINEAR
-                });
-            }).toThrowDeveloperError();
-        }
     });
 
     it('throws when destroy is called after destroying', function() {
