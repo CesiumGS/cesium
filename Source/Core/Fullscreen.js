@@ -33,6 +33,7 @@ define([
          * browser is in fullscreen mode or not, use {@link Fullscreen#fullscreen}.
          * @memberof Fullscreen
          * @type {Object}
+         * @readonly
          */
         element : {
             get : function() {
@@ -51,6 +52,7 @@ define([
          * use {@link Fullscreen#fullscreen}.
          * @memberof Fullscreen
          * @type {String}
+         * @readonly
          */
         changeEventName : {
             get : function() {
@@ -67,6 +69,7 @@ define([
          * occurs.  This event name is intended for use with addEventListener.
          * @memberof Fullscreen
          * @type {String}
+         * @readonly
          */
         errorEventName : {
             get : function() {
@@ -84,6 +87,7 @@ define([
          * adds an "allowfullscreen" attribute (or prefixed equivalent).
          * @memberof Fullscreen
          * @type {Boolean}
+         * @readonly
          */
         enabled : {
             get : function() {
@@ -99,6 +103,7 @@ define([
          * Determines if the browser is currently in fullscreen mode.
          * @memberof Fullscreen
          * @type {Boolean}
+         * @readonly
          */
         fullscreen : {
             get : function() {
