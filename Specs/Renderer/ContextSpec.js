@@ -3,6 +3,7 @@ defineSuite([
         'Renderer/Context',
         'Core/Color',
         'Core/IndexDatatype',
+        'Renderer/Buffer',
         'Renderer/BufferUsage',
         'Renderer/ContextLimits',
         'Specs/createContext',
@@ -11,6 +12,7 @@ defineSuite([
         Context,
         Color,
         IndexDatatype,
+        Buffer,
         BufferUsage,
         ContextLimits,
         createContext,
@@ -178,12 +180,22 @@ defineSuite([
 
     it('gets the element index uint extension', function() {
         if (context.elementIndexUint) {
-            var buffer = context.createIndexBuffer(6, BufferUsage.STREAM_DRAW, IndexDatatype.UNSIGNED_INT);
+            var buffer = Buffer.createIndexBuffer({
+                context : context,
+                sizeInBytes : 6,
+                usage : BufferUsage.STREAM_DRAW,
+                indexDatatype : IndexDatatype.UNSIGNED_INT
+            });
             expect(buffer).toBeDefined();
             buffer.destroy();
         } else {
             expect(function() {
-                context.createIndexBuffer(6, BufferUsage.STREAM_DRAW, IndexDatatype.UNSIGNED_INT);
+                Buffer.createIndexBuffer({
+                    context : context,
+                    sizeInBytes : 6,
+                    usage : BufferUsage.STREAM_DRAW,
+                    indexDatatype : IndexDatatype.UNSIGNED_INT
+                });
             }).toThrowDeveloperError();
         }
     });

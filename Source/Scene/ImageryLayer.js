@@ -18,6 +18,7 @@ define([
         '../Core/Rectangle',
         '../Core/TerrainProvider',
         '../Core/TileProviderError',
+        '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
         '../Renderer/ContextLimits',
@@ -58,6 +59,7 @@ define([
         Rectangle,
         TerrainProvider,
         TileProviderError,
+        Buffer,
         BufferUsage,
         ClearCommand,
         ContextLimits,
@@ -844,17 +846,30 @@ define([
             };
 
             var indices = TerrainProvider.getRegularGridIndices(2, 64);
-            var indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+            var indexBuffer = Buffer.createIndexBuffer({
+                context : context,
+                typedArray : indices,
+                usage : BufferUsage.STATIC_DRAW,
+                indexDatatype : IndexDatatype.UNSIGNED_SHORT
+            });
 
             reproject.vertexArray = new VertexArray({
                 context : context,
                 attributes : [{
                     index : reprojectAttributeIndices.position,
-                    vertexBuffer : context.createVertexBuffer(positions, BufferUsage.STATIC_DRAW),
+                    vertexBuffer : Buffer.createVertexBuffer({
+                        context : context,
+                        typedArray : positions,
+                        usage : BufferUsage.STATIC_DRAW
+                    }),
                     componentsPerAttribute : 2
                 },{
                     index : reprojectAttributeIndices.webMercatorT,
-                    vertexBuffer : context.createVertexBuffer(64 * 2 * 4, BufferUsage.STREAM_DRAW),
+                    vertexBuffer : Buffer.createVertexBuffer({
+                        context : context,
+                        sizeInBytes : 64 * 2 * 4,
+                        usage : BufferUsage.STREAM_DRAW
+                    }),
                     componentsPerAttribute : 1
                 }],
                 indexBuffer : indexBuffer
