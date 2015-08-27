@@ -1025,5 +1025,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    createPackableSpecs(Quaternion, new Quaternion(1, 2, 3, 4), [1, 2, 3, 4]);
+    var q = new Quaternion(1, 2, 3, 4);
+    Quaternion.normalize(q, q);
+    createPackableSpecs(Quaternion, q, [q.x, q.y, q.z, q.w]);
 });

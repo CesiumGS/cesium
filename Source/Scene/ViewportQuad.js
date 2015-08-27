@@ -79,7 +79,7 @@ define([
          * viewportQuad.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
-         * viewportQuad.material = Cesium.Material.fromType(Material.StripeType);
+         * viewportQuad.material = Cesium.Material.fromType(Cesium.Material.StripeType);
          *
          * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
          */

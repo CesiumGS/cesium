@@ -11,6 +11,8 @@ define([
         '../Core/loadImage',
         '../Core/PixelFormat',
         '../Core/RuntimeError',
+        '../Renderer/Framebuffer',
+        '../Renderer/Texture',
         '../ThirdParty/when'
     ], function(
         BoundingRectangle,
@@ -24,6 +26,8 @@ define([
         loadImage,
         PixelFormat,
         RuntimeError,
+        Framebuffer,
+        Texture,
         when) {
     "use strict";
 
@@ -84,7 +88,8 @@ define([
         this._idHash = {};
 
         // Create initial texture and root.
-        this._texture = this._context.createTexture2D({
+        this._texture = new Texture({
+            context : this._context,
             width : initialSize.x,
             height : initialSize.y,
             pixelFormat : this._pixelFormat
@@ -159,6 +164,7 @@ define([
 
     // Builds a larger texture and copies the old texture into the new one.
     function resizeAtlas(textureAtlas, image) {
+        var context = textureAtlas._context;
         var numImages = textureAtlas.numberOfImages;
         var scalingFactor = 2.0;
         if (numImages > 0) {
@@ -188,14 +194,16 @@ define([
             }
 
             // Copy larger texture.
-            var newTexture = textureAtlas._context.createTexture2D({
+            var newTexture = new Texture({
+                context : textureAtlas._context,
                 width : atlasWidth,
                 height : atlasHeight,
                 pixelFormat : textureAtlas._pixelFormat
             });
 
             // Copy old texture into new using an fbo.
-            var framebuffer = textureAtlas._context.createFramebuffer({
+            var framebuffer = new Framebuffer({
+                context : context,
                 colorTextures : [textureAtlas._texture]
             });
             framebuffer._bind();
@@ -208,7 +216,8 @@ define([
             var initialWidth = scalingFactor * (image.width + textureAtlas._borderWidthInPixels);
             var initialHeight = scalingFactor * (image.height + textureAtlas._borderWidthInPixels);
             textureAtlas._texture = textureAtlas._texture && textureAtlas._texture.destroy();
-            textureAtlas._texture = textureAtlas._context.createTexture2D({
+            textureAtlas._texture = new Texture({
+                context : textureAtlas._context,
                 width : initialWidth,
                 height : initialHeight,
                 pixelFormat : textureAtlas._pixelFormat
@@ -309,7 +318,7 @@ define([
      * @param {String} id An identifier to detect whether the image already exists in the atlas.
      * @param {Image|Canvas|String|Promise|TextureAtlas~CreateImageCallback} image An image or canvas to add to the texture atlas,
      *        or a URL to an Image, or a Promise for an image, or a function that creates an image.
-     * @returns {Promise} A Promise for the image index.
+     * @returns {Promise.<Number>} A Promise for the image index.
      */
     TextureAtlas.prototype.addImage = function(id, image) {
         //>>includeStart('debug', pragmas.debug);
@@ -368,7 +377,7 @@ define([
      * @param {String} id The identifier of the existing image.
      * @param {BoundingRectangle} subRegion An {@link BoundingRectangle} sub-region measured in pixels from the bottom-left.
      *
-     * @returns {Promise} A Promise for the image index.
+     * @returns {Promise.<Number>} A Promise for the image index.
      */
     TextureAtlas.prototype.addSubRegion = function(id, subRegion) {
         //>>includeStart('debug', pragmas.debug);

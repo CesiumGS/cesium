@@ -12,6 +12,7 @@ defineSuite([
         'Core/queryToObject',
         'Core/Rectangle',
         'Core/WebMercatorTilingScheme',
+        'Scene/GetFeatureInfoFormat',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryLayerFeatureInfo',
@@ -33,6 +34,7 @@ defineSuite([
         queryToObject,
         Rectangle,
         WebMercatorTilingScheme,
+        GetFeatureInfoFormat,
         Imagery,
         ImageryLayer,
         ImageryLayerFeatureInfo,
@@ -564,12 +566,11 @@ defineSuite([
             });
         });
 
-        it('returns undefined if getFeatureInfoAsGeoJson and getFeatureInfoAsXml are false', function() {
+        it('returns undefined if list of feature info formats is empty', function() {
             var provider = new WebMapServiceImageryProvider({
                 url : 'made/up/wms/server',
                 layers : 'someLayer',
-                getFeatureInfoAsGeoJson : false,
-                getFeatureInfoAsXml : false
+                getFeatureInfoFormats : []
             });
 
             return pollToPromise(function() {
@@ -593,11 +594,13 @@ defineSuite([
             });
         });
 
-        it('requests XML exclusively if getFeatureInfoAsGeoJson is false', function() {
+        it('requests XML exclusively if specified in getFeatureInfoFormats', function() {
             var provider = new WebMapServiceImageryProvider({
                 url : 'made/up/wms/server',
                 layers : 'someLayer',
-                getFeatureInfoAsGeoJson : false
+                getFeatureInfoFormats : [
+                    new GetFeatureInfoFormat('xml')
+                ]
             });
 
             loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
@@ -620,11 +623,13 @@ defineSuite([
             });
         });
 
-        it('requests GeoJSON exclusively if getFeatureInfoAsXml is false', function() {
+        it('requests GeoJSON exclusively if specified in getFeatureInfoFormats', function() {
             var provider = new WebMapServiceImageryProvider({
                 url : 'made/up/wms/server',
                 layers : 'someLayer',
-                getFeatureInfoAsXml : false
+                getFeatureInfoFormats : [
+                    new GetFeatureInfoFormat('json')
+                ]
             });
 
             return pollToPromise(function() {
@@ -641,9 +646,74 @@ defineSuite([
                     }
                 };
 
-                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function() {
-                    fail('should not be called');
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(features) {
+                    expect(features.length).toBe(0);
                 }).otherwise(function() {
+                });
+            });
+        });
+
+        it('uses custom GetFeatureInfo handling function if specified', function() {
+            function fooProcessor(response) {
+                var json = JSON.parse(response);
+                expect(json.custom).toBe(true);
+                var feature = new ImageryLayerFeatureInfo();
+                feature.name = 'Foo processed!';
+                return [feature];
+            }
+
+            var provider = new WebMapServiceImageryProvider({
+                url : 'made/up/wms/server',
+                layers : 'someLayer',
+                getFeatureInfoFormats : [
+                    new GetFeatureInfoFormat('foo', 'application/foo', fooProcessor)
+                ]
+            });
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                    expect(url).toContain('GetFeatureInfo');
+
+                    if (url.indexOf(encodeURIComponent('application/foo')) < 0) {
+                        deferred.reject();
+                    }
+
+                    return loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-Custom.json', responseType, method, data, headers, deferred, overrideMimeType);
+                };
+
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(features) {
+                    expect(features.length).toBe(1);
+                    expect(features[0].name).toEqual('Foo processed!');
+                });
+            });
+        });
+
+        it('works with HTML response', function() {
+            var provider = new WebMapServiceImageryProvider({
+                url : 'made/up/wms/server',
+                layers : 'someLayer'
+            });
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                expect(url).toContain('GetFeatureInfo');
+                if (url.indexOf(encodeURIComponent('text/html')) < 0) {
+                    deferred.reject();
+                }
+                loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo.html', responseType, method, data, headers, deferred, overrideMimeType);
+            };
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(pickResult) {
+                    expect(pickResult.length).toBe(1);
+
+                    var firstResult = pickResult[0];
+                    expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
+                    expect(firstResult.name).toBe('HTML yeah!');
+                    expect(firstResult.description).toContain('great information');
                 });
             });
         });

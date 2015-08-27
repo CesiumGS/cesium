@@ -21,11 +21,14 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
         '../Renderer/DrawCommand',
+        '../Renderer/Framebuffer',
         '../Renderer/MipmapHint',
         '../Renderer/ShaderSource',
+        '../Renderer/Texture',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
+        '../Renderer/VertexArray',
         '../Shaders/ReprojectWebMercatorFS',
         '../Shaders/ReprojectWebMercatorVS',
         '../ThirdParty/when',
@@ -54,11 +57,14 @@ define([
         BufferUsage,
         ClearCommand,
         DrawCommand,
+        Framebuffer,
         MipmapHint,
         ShaderSource,
+        Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
+        VertexArray,
         ReprojectWebMercatorFS,
         ReprojectWebMercatorVS,
         when,
@@ -395,12 +401,18 @@ define([
                 rectangle.north = rectangle.south = baseImageryRectangle.north;
             } else if (baseTerrainRectangle.north <= baseImageryRectangle.south) {
                 rectangle.north = rectangle.south = baseImageryRectangle.south;
+            } else {
+                rectangle.south = Math.max(baseTerrainRectangle.south, baseImageryRectangle.south);
+                rectangle.north = Math.min(baseTerrainRectangle.north, baseImageryRectangle.north);
             }
 
             if (baseTerrainRectangle.west >= baseImageryRectangle.east) {
                 rectangle.west = rectangle.east = baseImageryRectangle.east;
             } else if (baseTerrainRectangle.east <= baseImageryRectangle.west) {
                 rectangle.west = rectangle.east = baseImageryRectangle.west;
+            } else {
+                rectangle.west = Math.max(baseTerrainRectangle.west, baseImageryRectangle.west);
+                rectangle.east = Math.min(baseTerrainRectangle.east, baseImageryRectangle.east);
             }
         }
 
@@ -592,7 +604,8 @@ define([
                     imageryProvider.errorEvent,
                     message,
                     imagery.x, imagery.y, imagery.level,
-                    doRequest);
+                    doRequest,
+                    e);
         }
 
         function doRequest() {
@@ -647,7 +660,8 @@ define([
         }
 
         // Imagery does not need to be discarded, so upload it to WebGL.
-        var texture = context.createTexture2D({
+        var texture = new Texture({
+            context : context,
             source : imagery.image,
             pixelFormat : imageryProvider.hasAlphaChannel ? PixelFormat.RGBA : PixelFormat.RGB
         });
@@ -824,18 +838,19 @@ define([
             var indices = TerrainProvider.getRegularGridIndices(2, 64);
             var indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
 
-            reproject.vertexArray = context.createVertexArray([
-                {
+            reproject.vertexArray = new VertexArray({
+                context : context,
+                attributes : [{
                     index : reprojectAttributeIndices.position,
                     vertexBuffer : context.createVertexBuffer(positions, BufferUsage.STATIC_DRAW),
                     componentsPerAttribute : 2
-                },
-                {
+                },{
                     index : reprojectAttributeIndices.webMercatorT,
                     vertexBuffer : context.createVertexBuffer(64 * 2 * 4, BufferUsage.STREAM_DRAW),
                     componentsPerAttribute : 1
-                }
-            ], indexBuffer);
+                }],
+                indexBuffer : indexBuffer
+            });
 
             var vs = new ShaderSource({
                 sources : [ReprojectWebMercatorVS]
@@ -867,7 +882,8 @@ define([
         var northMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
         var oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
 
-        var outputTexture = context.createTexture2D({
+        var outputTexture = new Texture({
+            context : context,
             width : width,
             height : height,
             pixelFormat : texture.pixelFormat,
@@ -879,13 +895,16 @@ define([
         // to the texture via the FBO, and calling generateMipmap later,
         // will result in the texture appearing blank.  I can't pretend to
         // understand exactly why this is.
-        outputTexture.generateMipmap(MipmapHint.NICEST);
+        if (CesiumMath.isPowerOfTwo(width) && CesiumMath.isPowerOfTwo(height)) {
+            outputTexture.generateMipmap(MipmapHint.NICEST);
+        }
 
         if (defined(reproject.framebuffer)) {
             reproject.framebuffer.destroy();
         }
 
-        reproject.framebuffer = context.createFramebuffer({
+        reproject.framebuffer = new Framebuffer({
+            context : context,
             colorTextures : [outputTexture]
         });
         reproject.framebuffer.destroyAttachments = false;

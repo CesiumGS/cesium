@@ -7,11 +7,14 @@ defineSuite([
         'Core/PrimitiveType',
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
+        'Renderer/CubeMap',
         'Renderer/DrawCommand',
         'Renderer/PixelDatatype',
+        'Renderer/Texture',
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
         'Renderer/TextureWrap',
+        'Renderer/VertexArray',
         'Specs/createContext',
         'ThirdParty/when'
     ], 'Renderer/CubeMap', function(
@@ -22,11 +25,14 @@ defineSuite([
         PrimitiveType,
         BufferUsage,
         ClearCommand,
+        CubeMap,
         DrawCommand,
         PixelDatatype,
+        Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
+        VertexArray,
         createContext,
         when) {
     "use strict";
@@ -73,7 +79,8 @@ defineSuite([
     });
 
     it('gets the pixel format', function() {
-        cubeMap = context.createCubeMap({
+        cubeMap = new CubeMap({
+            context : context,
             width : 16,
             height : 16
         });
@@ -88,7 +95,8 @@ defineSuite([
     });
 
     it('gets the pixel datatype', function() {
-        cubeMap = context.createCubeMap({
+        cubeMap = new CubeMap({
+            context : context,
             width : 16,
             height : 16
         });
@@ -103,7 +111,8 @@ defineSuite([
     });
 
     it('default sampler returns undefined', function() {
-        cubeMap = context.createCubeMap({
+        cubeMap = new CubeMap({
+            context : context,
             width : 16,
             height : 16
         });
@@ -114,7 +123,8 @@ defineSuite([
 
     it('default sampler returns undefined, data type is FLOAT ', function() {
         if (context.floatingPointTexture) {
-            cubeMap = context.createCubeMap({
+            cubeMap = new CubeMap({
+                context : context,
                 width : 16,
                 height : 16,
                 pixelDatatype : PixelDatatype.FLOAT
@@ -126,7 +136,8 @@ defineSuite([
     });
 
     it('sets a sampler', function() {
-        cubeMap = context.createCubeMap({
+        cubeMap = new CubeMap({
+            context : context,
             width : 16,
             height : 16
         });
@@ -147,7 +158,8 @@ defineSuite([
     });
 
     it('gets width and height', function() {
-        cubeMap = context.createCubeMap({
+        cubeMap = new CubeMap({
+            context : context,
             width : 16,
             height : 16
         });
@@ -157,7 +169,8 @@ defineSuite([
     });
 
     it('gets flip Y', function() {
-        cubeMap = context.createCubeMap({
+        cubeMap = new CubeMap({
+            context : context,
             width : 16,
             height : 16,
             flipY : true
@@ -167,7 +180,8 @@ defineSuite([
     });
 
     it('draws with a cube map', function() {
-        cubeMap = context.createCubeMap({
+        cubeMap = new CubeMap({
+            context : context,
             source : {
                 positiveX : blueImage,
                 negativeX : greenImage,
@@ -188,10 +202,13 @@ defineSuite([
         });
         sp.allUniforms.u_texture.value = cubeMap;
 
-        va = context.createVertexArray([{
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -231,7 +248,8 @@ defineSuite([
     });
 
     it('draws with a cube map with premultiplied alpha', function() {
-        cubeMap = context.createCubeMap({
+        cubeMap = new CubeMap({
+            context : context,
             source : {
                 positiveX : blueAlphaImage,
                 negativeX : blueAlphaImage,
@@ -254,10 +272,13 @@ defineSuite([
         });
         sp.allUniforms.u_texture.value = cubeMap;
 
-        va = context.createVertexArray([{
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -307,10 +328,13 @@ defineSuite([
         });
         sp.allUniforms.u_texture.value = context.defaultCubeMap;
 
-        va = context.createVertexArray([{
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -344,7 +368,8 @@ defineSuite([
     });
 
     it('creates a cube map with typed arrays', function() {
-        cubeMap = context.createCubeMap({
+        cubeMap = new CubeMap({
+            context : context,
             source : {
                 positiveX : {
                     width : 1,
@@ -389,10 +414,13 @@ defineSuite([
         });
         sp.allUniforms.u_texture.value = cubeMap;
 
-        va = context.createVertexArray([{
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -434,7 +462,8 @@ defineSuite([
             var positiveZColor = new Color(0.0, 0.0, 1.0, 1.0);
             var negativeZColor = new Color(1.0, 1.0, 0.0, 0.0);
 
-            cubeMap = context.createCubeMap({
+            cubeMap = new CubeMap({
+                context : context,
                 source : {
                     positiveX : {
                         width : 1,
@@ -480,10 +509,13 @@ defineSuite([
             });
             sp.allUniforms.u_texture.value = cubeMap;
 
-            va = context.createVertexArray([{
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-                componentsPerAttribute : 4
-            }]);
+            va = new VertexArray({
+                context : context,
+                attributes : [{
+                    vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                    componentsPerAttribute : 4
+                }]
+            });
 
             var command = new DrawCommand({
                 primitiveType : PrimitiveType.POINTS,
@@ -518,7 +550,8 @@ defineSuite([
     });
 
     it('creates a cube map with typed arrays and images', function() {
-        cubeMap = context.createCubeMap({
+        cubeMap = new CubeMap({
+            context : context,
             source : {
                 positiveX : blueImage,
                 negativeX : greenImage,
@@ -555,10 +588,13 @@ defineSuite([
         });
         sp.allUniforms.u_texture.value = cubeMap;
 
-        va = context.createVertexArray([{
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -592,7 +628,8 @@ defineSuite([
     });
 
     it('copies to a cube map', function() {
-        cubeMap = context.createCubeMap({
+        cubeMap = new CubeMap({
+            context : context,
             width : 1,
             height : 1
         });
@@ -613,10 +650,13 @@ defineSuite([
         });
         sp.allUniforms.u_cubeMap.value = cubeMap;
 
-        va = context.createVertexArray([{
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -656,7 +696,8 @@ defineSuite([
     });
 
     it('copies from a typed array', function() {
-        cubeMap = context.createCubeMap({
+        cubeMap = new CubeMap({
+            context : context,
             width : 1,
             height : 1
         });
@@ -701,10 +742,13 @@ defineSuite([
         });
         sp.allUniforms.u_cubeMap.value = cubeMap;
 
-        va = context.createVertexArray([{
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -738,7 +782,8 @@ defineSuite([
     });
 
     it('copies from the framebuffer', function() {
-        cubeMap = context.createCubeMap({
+        cubeMap = new CubeMap({
+            context : context,
             width : 1,
             height : 1
         });
@@ -753,10 +798,13 @@ defineSuite([
         });
         sp.allUniforms.u_cubeMap.value = cubeMap;
 
-        va = context.createVertexArray([{
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -786,7 +834,8 @@ defineSuite([
     });
 
     it('draws with a cube map and a texture', function() {
-        cubeMap = context.createCubeMap({
+        cubeMap = new CubeMap({
+            context : context,
             source : {
                 positiveX : greenImage,
                 negativeX : greenImage,
@@ -797,7 +846,8 @@ defineSuite([
             }
         });
 
-        var texture = context.createTexture2D({
+        var texture = new Texture({
+            context : context,
             source : blueImage
         });
 
@@ -812,10 +862,13 @@ defineSuite([
         sp.allUniforms.u_cubeMap.value = cubeMap;
         sp.allUniforms.u_texture.value = texture;
 
-        va = context.createVertexArray([{
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -829,7 +882,8 @@ defineSuite([
     });
 
     it('generates mipmaps', function() {
-        cubeMap = context.createCubeMap({
+        cubeMap = new CubeMap({
+            context : context,
             source : {
                 positiveX : blueImage,
                 negativeX : greenImage,
@@ -854,10 +908,13 @@ defineSuite([
         });
         sp.allUniforms.u_cubeMap.value = cubeMap;
 
-        va = context.createVertexArray([{
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -869,7 +926,8 @@ defineSuite([
     });
 
     it('destroys', function() {
-        var c = context.createCubeMap({
+        var c = new CubeMap({
+            context : context,
             width : 16,
             height : 16
         });
@@ -881,19 +939,22 @@ defineSuite([
 
     it('fails to create (options)', function() {
         expect(function() {
-            cubeMap = context.createCubeMap();
+            cubeMap = new CubeMap();
         }).toThrowDeveloperError();
     });
 
     it('fails to create (source)', function() {
         expect(function() {
-            cubeMap = context.createCubeMap({});
+            cubeMap = new CubeMap({
+                context : context
+            });
         }).toThrowDeveloperError();
     });
 
     it('fails to create (width, no height)', function() {
         expect(function() {
-            cubeMap = context.createCubeMap({
+            cubeMap = new CubeMap({
+                context : context,
                 width : 16
             });
         }).toThrowDeveloperError();
@@ -901,7 +962,8 @@ defineSuite([
 
     it('fails to create (width != height)', function() {
         expect(function() {
-            cubeMap = context.createCubeMap({
+            cubeMap = new CubeMap({
+                context : context,
                 width : 16,
                 height : 32
             });
@@ -910,7 +972,8 @@ defineSuite([
 
     it('fails to create (small width)', function() {
         expect(function() {
-            cubeMap = context.createCubeMap({
+            cubeMap = new CubeMap({
+                context : context,
                 width : 0,
                 height : 0
             });
@@ -919,7 +982,8 @@ defineSuite([
 
     it('fails to create (large width)', function() {
         expect(function() {
-            cubeMap = context.createCubeMap({
+            cubeMap = new CubeMap({
+                context : context,
                 width : context.maximumCubeMapSize + 1,
                 height : context.maximumCubeMapSize + 1
             });
@@ -928,7 +992,8 @@ defineSuite([
 
     it('fails to create (PixelFormat)', function() {
         expect(function() {
-            cubeMap = context.createCubeMap({
+            cubeMap = new CubeMap({
+                context : context,
                 width : 16,
                 height : 16,
                 pixelFormat : 'invalid PixelFormat'
@@ -938,7 +1003,8 @@ defineSuite([
 
     it('throws during creation if pixel format is depth or depth-stencil', function() {
         expect(function() {
-            cubeMap = context.createCubeMap({
+            cubeMap = new CubeMap({
+                context : context,
                 width : 16,
                 height : 16,
                 pixelFormat : PixelFormat.DEPTH_COMPONENT
@@ -949,7 +1015,8 @@ defineSuite([
     it('throws during creation if pixelDatatype is FLOAT, and OES_texture_float is not supported', function() {
         if (!context.floatingPointTexture) {
             expect(function() {
-                cubeMap = context.createCubeMap({
+                cubeMap = new CubeMap({
+                    context : context,
                     width : 16,
                     height : 16,
                     pixelDatatype : PixelDatatype.FLOAT
@@ -960,7 +1027,8 @@ defineSuite([
 
     it('fails to create (pixelDatatype)', function() {
         expect(function() {
-            cubeMap = context.createCubeMap({
+            cubeMap = new CubeMap({
+                context : context,
                 width : 16,
                 height : 16,
                 pixelFormat : PixelFormat.RGBA,
@@ -971,7 +1039,8 @@ defineSuite([
 
     it('fails to create (source)', function() {
         expect(function() {
-            cubeMap = context.createCubeMap({
+            cubeMap = new CubeMap({
+                context : context,
                 source : {}
             });
         }).toThrowDeveloperError();
@@ -979,7 +1048,8 @@ defineSuite([
 
     it('fails to create (source width and height)', function() {
         expect(function() {
-            cubeMap = context.createCubeMap({
+            cubeMap = new CubeMap({
+                context : context,
                 source : {
                     positiveX : greenImage, // 1x1
                     negativeX : greenImage, // 1x1
@@ -993,7 +1063,8 @@ defineSuite([
     });
 
     it('fails to copy from an image (source)', function() {
-        cubeMap = context.createCubeMap({
+        cubeMap = new CubeMap({
+            context : context,
             width : 16,
             height : 16
         });
@@ -1004,7 +1075,8 @@ defineSuite([
     });
 
     it('fails to copy from an image (xOffset)', function() {
-        cubeMap = context.createCubeMap({
+        cubeMap = new CubeMap({
+            context : context,
             width : 16,
             height : 16
         });
@@ -1016,7 +1088,8 @@ defineSuite([
     });
 
     it('fails to copy from an image (yOffset)', function() {
-        cubeMap = context.createCubeMap({
+        cubeMap = new CubeMap({
+            context : context,
             width : 16,
             height : 16
         });
@@ -1028,7 +1101,8 @@ defineSuite([
     });
 
     it('fails to copy from an image (width)', function() {
-        cubeMap = context.createCubeMap({
+        cubeMap = new CubeMap({
+            context : context,
             width : 16,
             height : 16
         });
@@ -1041,7 +1115,8 @@ defineSuite([
     });
 
     it('fails to copy from an image (height)', function() {
-        cubeMap = context.createCubeMap({
+        cubeMap = new CubeMap({
+            context : context,
             width : 16,
             height : 16
         });
@@ -1053,9 +1128,10 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('fails to copy from the frame buffer (invalid data type)', function() {
+    it('fails to copy from the framebuffer (invalid data type)', function() {
         if (context.floatingPointTexture) {
-            cubeMap = context.createCubeMap({
+            cubeMap = new CubeMap({
+                context : context,
                 width : 1,
                 height : 1,
                 pixelDatatype : PixelDatatype.FLOAT
@@ -1067,8 +1143,9 @@ defineSuite([
         }
     });
 
-    it('fails to copy from the frame buffer (xOffset)', function() {
-        cubeMap = context.createCubeMap({
+    it('fails to copy from the framebuffer (xOffset)', function() {
+        cubeMap = new CubeMap({
+            context : context,
             width : 1,
             height : 1
         });
@@ -1078,8 +1155,9 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('fails to copy from the frame buffer (yOffset)', function() {
-        cubeMap = context.createCubeMap({
+    it('fails to copy from the framebuffer (yOffset)', function() {
+        cubeMap = new CubeMap({
+            context : context,
             width : 1,
             height : 1
         });
@@ -1089,8 +1167,9 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('fails to copy from the frame buffer (framebufferXOffset)', function() {
-        cubeMap = context.createCubeMap({
+    it('fails to copy from the framebuffer (framebufferXOffset)', function() {
+        cubeMap = new CubeMap({
+            context : context,
             width : 1,
             height : 1
         });
@@ -1100,8 +1179,9 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('fails to copy from the frame buffer (framebufferYOffset)', function() {
-        cubeMap = context.createCubeMap({
+    it('fails to copy from the framebuffer (framebufferYOffset)', function() {
+        cubeMap = new CubeMap({
+            context : context,
             width : 1,
             height : 1
         });
@@ -1111,8 +1191,9 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('fails to copy from the frame buffer (width)', function() {
-        cubeMap = context.createCubeMap({
+    it('fails to copy from the framebuffer (width)', function() {
+        cubeMap = new CubeMap({
+            context : context,
             width : 1,
             height : 1
         });
@@ -1122,8 +1203,9 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('fails to copy from the frame buffer (height)', function() {
-        cubeMap = context.createCubeMap({
+    it('fails to copy from the framebuffer (height)', function() {
+        cubeMap = new CubeMap({
+            context : context,
             width : 1,
             height : 1
         });
@@ -1134,7 +1216,8 @@ defineSuite([
     });
 
     it('fails to generate mipmaps (width)', function() {
-        cubeMap = context.createCubeMap({
+        cubeMap = new CubeMap({
+            context : context,
             width : 3,
             height : 3
         });
@@ -1145,7 +1228,8 @@ defineSuite([
     });
 
     it('fails to generate mipmaps (hint)', function() {
-        cubeMap = context.createCubeMap({
+        cubeMap = new CubeMap({
+            context : context,
             width : 16,
             height : 16
         });
@@ -1157,7 +1241,8 @@ defineSuite([
 
     it('throws when data type is FLOAT and minification filter is not NEAREST or NEAREST_MIPMAP_NEAREST', function() {
         if (context.floatingPointTexture) {
-            cubeMap = context.createCubeMap({
+            cubeMap = new CubeMap({
+                context : context,
                 width : 16,
                 height : 16,
                 pixelDatatype : PixelDatatype.FLOAT
@@ -1173,7 +1258,8 @@ defineSuite([
 
     it('throws when data type is FLOAT and magnification filter is not NEAREST', function() {
         if (context.floatingPointTexture) {
-            cubeMap = context.createCubeMap({
+            cubeMap = new CubeMap({
+                context : context,
                 width : 16,
                 height : 16,
                 pixelDatatype : PixelDatatype.FLOAT
@@ -1188,7 +1274,8 @@ defineSuite([
     });
 
     it('fails to destroy', function() {
-        var c = context.createCubeMap({
+        var c = new CubeMap({
+            context : context,
             width : 16,
             height : 16
         });

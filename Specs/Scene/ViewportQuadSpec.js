@@ -5,10 +5,12 @@ defineSuite([
         'Core/Color',
         'Core/loadImage',
         'Renderer/ClearCommand',
+        'Renderer/Texture',
         'Scene/Material',
         'Specs/createCamera',
         'Specs/createContext',
         'Specs/createFrameState',
+        'Specs/pollToPromise',
         'Specs/render'
     ], function(
         ViewportQuad,
@@ -16,10 +18,12 @@ defineSuite([
         Color,
         loadImage,
         ClearCommand,
+        Texture,
         Material,
         createCamera,
         createContext,
         createFrameState,
+        pollToPromise,
         render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
@@ -107,18 +111,23 @@ defineSuite([
     });
 
     it('renders user created texture', function() {
-        var texture = context.createTexture2D({
+        var texture = new Texture({
+            context : context,
             source : testImage
         });
 
         viewportQuad.material = Material.fromType(Material.ImageType);
         viewportQuad.material.uniforms.image = texture;
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        pollToPromise(function() {
+            return viewportQuad.material._loadedImages.length !== 0;
+        }).then(function() {
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, frameState, viewportQuad);
-        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
+            render(context, frameState, viewportQuad);
+            expect(context.readPixels()).toEqual([255, 0, 0, 255]);
+        });
     });
 
     it('isDestroyed', function() {

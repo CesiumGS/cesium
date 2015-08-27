@@ -1,61 +1,35 @@
 /*global define*/
 define([
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
         '../Core/combine',
-        '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
-        '../Core/Event',
         '../Core/freezeObject',
         '../Core/GeographicTilingScheme',
-        '../Core/loadJson',
-        '../Core/loadXML',
-        '../Core/Math',
         '../Core/objectToQuery',
         '../Core/queryToObject',
-        '../Core/Rectangle',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/Uri',
-        '../ThirdParty/when',
-        './ImageryLayerFeatureInfo',
-        './ImageryProvider'
+        './GetFeatureInfoFormat',
+        './UrlTemplateImageryProvider'
     ], function(
-        Cartesian3,
-        Cartographic,
         combine,
-        Credit,
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
-        Event,
         freezeObject,
         GeographicTilingScheme,
-        loadJson,
-        loadXML,
-        CesiumMath,
         objectToQuery,
         queryToObject,
-        Rectangle,
         WebMercatorTilingScheme,
         Uri,
-        when,
-        ImageryLayerFeatureInfo,
-        ImageryProvider) {
+        GetFeatureInfoFormat,
+        UrlTemplateImageryProvider) {
     "use strict";
-
-    function objectToLowercase(obj) {
-        var result = {};
-        for ( var key in obj) {
-            if (obj.hasOwnProperty(key)) {
-                result[key.toLowerCase()] = obj[key];
-            }
-        }
-        return result;
-    }
 
     /**
      * Provides tiled imagery hosted by a Web Map Service (WMS) server.
@@ -75,14 +49,8 @@ define([
      *        {@link WebMapServiceImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
      *        without communicating with the server.  Set this property to false if you know your WMS server does not support
      *        GetFeatureInfo or if you don't want this provider's features to be pickable.
-     * @param {Boolean} [options.getFeatureInfoAsGeoJson=true] true if {@link WebMapServiceImageryProvider#pickFeatures} should
-     *        try requesting feature info in GeoJSON format. If getFeatureInfoAsXml is true as well, feature information will be
-     *        requested first as GeoJSON, and then as XML if the GeoJSON request fails.  If both are false, this instance will
-     *        not support feature picking at all.
-     * @param {Boolean} [options.getFeatureInfoAsXml=true] true if {@link WebMapServiceImageryProvider#pickFeatures} should try
-     *        requesting feature info in XML format. If getFeatureInfoAsGeoJson is true as well, feature information will be
-     *        requested first as GeoJSON, and then as XML if the GeoJSON request fails.  If both are false, this instance
-     *        will not support feature picking at all.
+     * @param {GetFeatureInfoFormat[]} [options.getFeatureInfoFormats=WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats] The formats
+     *        in which to try WMS GetFeatureInfo requests.
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
      * @param {TilingScheme} [options.tilingScheme=new GeographicTilingScheme()] The tiling scheme to use to divide the world into tiles.
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
@@ -93,7 +61,7 @@ define([
      * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when
      *        specifying this that the number of tiles at the minimum level is small, such as four or less.  A larger number is
      *        likely to result in rendering problems.
-     * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider.
+     * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
      *        If not specified, there is no limit.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      * @param {Object} [options.proxy] A proxy to use for requests. This object is
@@ -102,9 +70,11 @@ define([
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
+     * @see OpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see TileMapServiceImageryProvider
-     * @see OpenStreetMapImageryProvider
+     * @see WebMapTileServiceImageryProvider
+     * @see UrlTemplateImageryProvider
      *
      * @see {@link http://resources.esri.com/help/9.3/arcgisserver/apis/rest/|ArcGIS Server REST API}
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
@@ -131,36 +101,83 @@ define([
         //>>includeEnd('debug');
 
         this._url = options.url;
-        this._tileDiscardPolicy = options.tileDiscardPolicy;
-        this._proxy = options.proxy;
         this._layers = options.layers;
-        this._enablePickFeatures = defaultValue(options.enablePickFeatures, true);
-        this._getFeatureInfoAsGeoJson = defaultValue(options.getFeatureInfoAsGeoJson, true);
-        this._getFeatureInfoAsXml = defaultValue(options.getFeatureInfoAsXml, true);
 
-        // Merge the parameters with the defaults, and make all parameter names lowercase
-        this._parameters = combine(objectToLowercase(defaultValue(options.parameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.DefaultParameters);
-        this._getFeatureInfoParameters = combine(objectToLowercase(defaultValue(options.getFeatureInfoParameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters);
+        var getFeatureInfoFormats = defaultValue(options.getFeatureInfoFormats, WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats);
 
-        this._tileWidth = defaultValue(options.tileWidth, 256);
-        this._tileHeight = defaultValue(options.tileHeight, 256);
-        this._minimumLevel = defaultValue(options.minimumLevel, 0);
-        this._maximumLevel = options.maximumLevel; // undefined means no limit
+        // Build the template URLs for tiles and pickFeatures.
+        var uri = new Uri(options.url);
+        var queryOptions = queryToObject(defaultValue(uri.query, ''));
+        var parameters = combine(objectToLowercase(defaultValue(options.parameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.DefaultParameters);
+        queryOptions = combine(parameters, queryOptions);
 
-        this._rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
-        this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new GeographicTilingScheme({ ellipsoid : options.ellipsoid });
-
-        this._rectangle = Rectangle.intersection(this._rectangle, this._tilingScheme.rectangle);
-
-        var credit = options.credit;
-        if (typeof credit === 'string') {
-            credit = new Credit(credit);
+        var pickFeaturesUri;
+        var pickFeaturesQueryOptions;
+        if (defaultValue(options.enablePickFeatures, true)) {
+            pickFeaturesUri = new Uri(options.url);
+            pickFeaturesQueryOptions = queryToObject(defaultValue(pickFeaturesUri.query, ''));
+            var pickFeaturesParameters = combine(objectToLowercase(defaultValue(options.getFeatureInfoParameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters);
+            pickFeaturesQueryOptions = combine(pickFeaturesParameters, pickFeaturesQueryOptions);
         }
-        this._credit = credit;
 
-        this._errorEvent = new Event();
+        function setParameter(name, value) {
+            if (!defined(queryOptions[name])) {
+                queryOptions[name] = value;
+            }
 
-        this._ready = true;
+            if (defined(pickFeaturesQueryOptions) && !defined(pickFeaturesQueryOptions[name])) {
+                pickFeaturesQueryOptions[name] = value;
+            }
+        }
+
+        setParameter('layers', options.layers);
+        setParameter('srs', options.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'EPSG:4326');
+        setParameter('bbox', '{westProjected},{southProjected},{eastProjected},{northProjected}');
+        setParameter('width', '{width}');
+        setParameter('height', '{height}');
+
+        uri.query = objectToQuery(queryOptions);
+
+        // objectToQuery escapes the placeholders.  Undo that.
+        var templateUrl = uri.toString().replace(/%7B/g, '{').replace(/%7D/g, '}');
+
+        var pickFeaturesTemplateUrl;
+        if (defined(pickFeaturesQueryOptions)) {
+            if (!defined(pickFeaturesQueryOptions.query_layers)) {
+                pickFeaturesQueryOptions.query_layers = options.layers;
+            }
+
+            if (!defined(pickFeaturesQueryOptions.x)) {
+                pickFeaturesQueryOptions.x = '{i}';
+            }
+
+            if (!defined(pickFeaturesQueryOptions.y)) {
+                pickFeaturesQueryOptions.y = '{j}';
+            }
+
+            if (!defined(pickFeaturesQueryOptions.info_format)) {
+                pickFeaturesQueryOptions.info_format = '{format}';
+            }
+
+            pickFeaturesUri.query = objectToQuery(pickFeaturesQueryOptions);
+            pickFeaturesTemplateUrl = pickFeaturesUri.toString().replace(/%7B/g, '{').replace(/%7D/g, '}');
+        }
+
+        // Let UrlTemplateImageryProvider do the actual URL building.
+        this._tileProvider = new UrlTemplateImageryProvider({
+            url : templateUrl,
+            pickFeaturesUrl : pickFeaturesTemplateUrl,
+            tilingScheme : defaultValue(options.tilingScheme, new GeographicTilingScheme({ ellipsoid : options.ellipsoid})),
+            rectangle : options.rectangle,
+            tileWidth : options.tileWidth,
+            tileHeight : options.tileHeight,
+            minimumLevel : options.minimumLevel,
+            maximumLevel : options.maximumLevel,
+            proxy : options.proxy,
+            tileDiscardPolicy : options.tileDiscardPolicy,
+            credit : options.credit,
+            getFeatureInfoFormats : getFeatureInfoFormats
+        });
     };
 
     defineProperties(WebMapServiceImageryProvider.prototype, {
@@ -184,7 +201,7 @@ define([
          */
         proxy : {
             get : function() {
-                return this._proxy;
+                return this._tileProvider.proxy;
             }
         },
 
@@ -209,13 +226,7 @@ define([
          */
         tileWidth : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('tileWidth must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
-                return this._tileWidth;
+                return this._tileProvider.tileWidth;
             }
         },
 
@@ -228,13 +239,7 @@ define([
          */
         tileHeight : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('tileHeight must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
-                return this._tileHeight;
+                return this._tileProvider.tileHeight;
             }
         },
 
@@ -247,13 +252,7 @@ define([
          */
         maximumLevel : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('maximumLevel must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
-                return this._maximumLevel;
+                return this._tileProvider.maximumLevel;
             }
         },
 
@@ -266,13 +265,7 @@ define([
          */
         minimumLevel : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('minimumLevel must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
-                return this._minimumLevel;
+                return this._tileProvider.minimumLevel;
             }
         },
 
@@ -285,13 +278,7 @@ define([
          */
         tilingScheme : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('tilingScheme must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
-                return this._tilingScheme;
+                return this._tileProvider.tilingScheme;
             }
         },
 
@@ -304,13 +291,7 @@ define([
          */
         rectangle : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('rectangle must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
-                return this._rectangle;
+                return this._tileProvider.rectangle;
             }
         },
 
@@ -325,13 +306,7 @@ define([
          */
         tileDiscardPolicy : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('tileDiscardPolicy must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
-                return this._tileDiscardPolicy;
+                return this._tileProvider.tileDiscardPolicy;
             }
         },
 
@@ -345,7 +320,7 @@ define([
          */
         errorEvent : {
             get : function() {
-                return this._errorEvent;
+                return this._tileProvider.errorEvent;
             }
         },
 
@@ -357,7 +332,7 @@ define([
          */
         ready : {
             get : function() {
-                return this._ready;
+                return this._tileProvider.ready;
             }
         },
 
@@ -370,7 +345,7 @@ define([
          */
         credit : {
             get : function() {
-                return this._credit;
+                return this._tileProvider.credit;
             }
         },
 
@@ -386,7 +361,7 @@ define([
          */
         hasAlphaChannel : {
             get : function() {
-                return true;
+                return this._tileProvider.hasAlphaChannel;
             }
         }
     });
@@ -402,7 +377,7 @@ define([
      * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
      */
     WebMapServiceImageryProvider.prototype.getTileCredits = function(x, y, level) {
-        return undefined;
+        return this._tileProvider.getTileCredits(x, y, level);
     };
 
     /**
@@ -412,7 +387,7 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
-     * @returns {Promise} A promise for the image that will resolve when the image is available, or
+     * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
@@ -420,18 +395,8 @@ define([
      * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
      */
     WebMapServiceImageryProvider.prototype.requestImage = function(x, y, level) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        var url = buildImageUrl(this, x, y, level);
-        return ImageryProvider.loadImage(this, url);
+        return this._tileProvider.requestImage(x, y, level);
     };
-
-    var cartographicScratch = new Cartographic();
-    var cartesian3Scratch = new Cartesian3();
 
     /**
      * Asynchronously determines what features, if any, are located at a given longitude and latitude within
@@ -442,70 +407,14 @@ define([
      * @param {Number} level The tile level.
      * @param {Number} longitude The longitude at which to pick features.
      * @param {Number} latitude  The latitude at which to pick features.
-     * @return {Promise} A promise for the picked features that will resolve when the asynchronous
+     * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
      *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
      *                   instances.  The array may be empty if no features are found at the given location.
      *
      * @exception {DeveloperError} <code>pickFeatures</code> must not be called before the imagery provider is ready.
      */
     WebMapServiceImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('pickFeatures must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        if (!this._enablePickFeatures) {
-            return undefined;
-        }
-
-        var rectangle = this._tilingScheme.tileXYToNativeRectangle(x, y, level);
-
-        var projected;
-        if (this._tilingScheme instanceof GeographicTilingScheme) {
-            projected = cartesian3Scratch;
-            projected.x = CesiumMath.toDegrees(longitude);
-            projected.y = CesiumMath.toDegrees(latitude);
-        } else {
-            var cartographic = cartographicScratch;
-            cartographic.longitude = longitude;
-            cartographic.latitude = latitude;
-
-            projected = this._tilingScheme.projection.project(cartographic, cartesian3Scratch);
-        }
-
-        var i = (this._tileWidth * (projected.x - rectangle.west) / rectangle.width) | 0;
-        var j = (this._tileHeight * (rectangle.north - projected.y) / rectangle.height) | 0;
-
-        var url;
-
-        if (this._getFeatureInfoAsGeoJson) {
-            url = buildGetFeatureInfoUrl(this, 'application/json', x, y, level, i, j);
-
-            var that = this;
-            return when(loadJson(url), function(json) {
-                return geoJsonToFeatureInfo(json);
-            }, function(e) {
-                // GeoJSON failed, try XML.
-                if (!that._getFeatureInfoAsXml) {
-                    return when.reject(e);
-                }
-
-                url = buildGetFeatureInfoUrl(that, 'text/xml', x, y, level, i, j);
-
-                return when(loadXML(url), function(xml) {
-                    return xmlToFeatureInfo(xml);
-                });
-            });
-        } else if (this._getFeatureInfoAsXml) {
-            url = buildGetFeatureInfoUrl(this, 'text/xml', x, y, level, i, j);
-
-            return when(loadXML(url), function(xml) {
-                return xmlToFeatureInfo(xml);
-            });
-        } else {
-            return undefined;
-        }
+        return this._tileProvider.pickFeatures(x, y, level, longitude, latitude);
     };
 
     /**
@@ -540,215 +449,20 @@ define([
         request : 'GetFeatureInfo'
     });
 
-    function buildImageUrl(imageryProvider, x, y, level) {
-        var uri = new Uri(imageryProvider._url);
-        var queryOptions = queryToObject(defaultValue(uri.query, ''));
+    WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats = freezeObject([
+        freezeObject(new GetFeatureInfoFormat('json', 'application/json')),
+        freezeObject(new GetFeatureInfoFormat('xml', 'text/xml')),
+        freezeObject(new GetFeatureInfoFormat('text', 'text/html'))
+    ]);
 
-        queryOptions = combine(imageryProvider._parameters, queryOptions);
-
-        if (!defined(queryOptions.layers)) {
-            queryOptions.layers = imageryProvider._layers;
-        }
-
-        if (!defined(queryOptions.srs)) {
-            queryOptions.srs = imageryProvider._tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'EPSG:4326';
-        }
-
-        if (!defined(queryOptions.bbox)) {
-            var nativeRectangle = imageryProvider._tilingScheme.tileXYToNativeRectangle(x, y, level);
-            queryOptions.bbox = nativeRectangle.west + ',' + nativeRectangle.south + ',' + nativeRectangle.east + ',' + nativeRectangle.north;
-        }
-
-        if (!defined(queryOptions.width)) {
-            queryOptions.width = imageryProvider._tileWidth;
-        }
-
-        if (!defined(queryOptions.height)) {
-            queryOptions.height = imageryProvider._tileHeight;
-        }
-
-        uri.query = objectToQuery(queryOptions);
-
-        var url = uri.toString();
-
-        var proxy = imageryProvider._proxy;
-        if (defined(proxy)) {
-            url = proxy.getURL(url);
-        }
-
-        return url;
-    }
-
-    function buildGetFeatureInfoUrl(imageryProvider, infoFormat, x, y, level, i, j) {
-        var uri = new Uri(imageryProvider._url);
-        var queryOptions = queryToObject(defaultValue(uri.query, ''));
-
-        queryOptions = combine(imageryProvider._getFeatureInfoParameters, queryOptions);
-
-        if (!defined(queryOptions.layers)) {
-            queryOptions.layers = imageryProvider._layers;
-        }
-
-        if (!defined(queryOptions.query_layers)) {
-            queryOptions.query_layers = imageryProvider._layers;
-        }
-
-        if (!defined(queryOptions.srs)) {
-            queryOptions.srs = imageryProvider._tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'EPSG:4326';
-        }
-
-        if (!defined(queryOptions.bbox)) {
-            var nativeRectangle = imageryProvider._tilingScheme.tileXYToNativeRectangle(x, y, level);
-            queryOptions.bbox = nativeRectangle.west + ',' + nativeRectangle.south + ',' + nativeRectangle.east + ',' + nativeRectangle.north;
-        }
-
-        if (!defined(queryOptions.x)) {
-            queryOptions.x = i;
-        }
-
-        if (!defined(queryOptions.y)) {
-            queryOptions.y = j;
-        }
-
-        if (!defined(queryOptions.width)) {
-            queryOptions.width = imageryProvider._tileWidth;
-        }
-
-        if (!defined(queryOptions.height)) {
-            queryOptions.height = imageryProvider._tileHeight;
-        }
-
-        if (!defined(queryOptions.info_format)) {
-            queryOptions.info_format = infoFormat;
-        }
-
-        uri.query = objectToQuery(queryOptions);
-
-        var url = uri.toString();
-
-        var proxy = imageryProvider._proxy;
-        if (defined(proxy)) {
-            url = proxy.getURL(url);
-        }
-
-        return url;
-    }
-
-    function geoJsonToFeatureInfo(json) {
-        var result = [];
-
-        var features = json.features;
-        for (var i = 0; i < features.length; ++i) {
-            var feature = features[i];
-
-            var featureInfo = new ImageryLayerFeatureInfo();
-            featureInfo.data = feature;
-            featureInfo.configureNameFromProperties(feature.properties);
-            featureInfo.configureDescriptionFromProperties(feature.properties);
-
-            // If this is a point feature, use the coordinates of the point.
-            if (feature.geometry.type === 'Point') {
-                var longitude = feature.geometry.coordinates[0];
-                var latitude = feature.geometry.coordinates[1];
-                featureInfo.position = Cartographic.fromDegrees(longitude, latitude);
+    function objectToLowercase(obj) {
+        var result = {};
+        for ( var key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                result[key.toLowerCase()] = obj[key];
             }
-
-            result.push(featureInfo);
         }
-
         return result;
-    }
-
-    var mapInfoMxpNamespace = 'http://www.mapinfo.com/mxp';
-    var esriWmsNamespace = 'http://www.esri.com/wms';
-
-    function xmlToFeatureInfo(xml) {
-        var documentElement = xml.documentElement;
-        if (documentElement.localName === 'MultiFeatureCollection' && documentElement.namespaceURI === mapInfoMxpNamespace) {
-            // This looks like a MapInfo MXP response
-            return mapInfoXmlToFeatureInfo(xml);
-        } else if (documentElement.localName === 'FeatureInfoResponse' && documentElement.namespaceURI === esriWmsNamespace) {
-            // This looks like an Esri WMS response
-            return esriXmlToFeatureInfo(xml);
-        } else if (documentElement.localName === 'ServiceExceptionReport') {
-            // This looks like a WMS server error, so no features picked.
-            return undefined;
-        } else {
-            // Unknown response type, so just dump the XML itself into the description.
-            return unknownXmlToFeatureInfo(xml);
-        }
-    }
-
-    function mapInfoXmlToFeatureInfo(xml) {
-        var result = [];
-
-        var multiFeatureCollection = xml.documentElement;
-
-        var features = multiFeatureCollection.getElementsByTagNameNS(mapInfoMxpNamespace, 'Feature');
-        for (var featureIndex = 0; featureIndex < features.length; ++featureIndex) {
-            var feature = features[featureIndex];
-
-            var properties = {};
-
-            var propertyElements = feature.getElementsByTagNameNS(mapInfoMxpNamespace, 'Val');
-            for (var propertyIndex = 0; propertyIndex < propertyElements.length; ++propertyIndex) {
-                var propertyElement = propertyElements[propertyIndex];
-                if (propertyElement.hasAttribute('ref')) {
-                    var name = propertyElement.getAttribute('ref');
-                    var value = propertyElement.textContent.trim();
-                    properties[name] = value;
-                }
-            }
-
-            var featureInfo = new ImageryLayerFeatureInfo();
-            featureInfo.data = feature;
-            featureInfo.configureNameFromProperties(properties);
-            featureInfo.configureDescriptionFromProperties(properties);
-            result.push(featureInfo);
-        }
-
-        return result;
-    }
-
-    function esriXmlToFeatureInfo(xml) {
-        var result = [];
-
-        var featureInfoResponse = xml.documentElement;
-
-        var features = featureInfoResponse.getElementsByTagNameNS(esriWmsNamespace, 'FIELDS');
-        for (var featureIndex = 0; featureIndex < features.length; ++featureIndex) {
-            var feature = features[featureIndex];
-
-            var properties = {};
-
-            var propertyAttributes = feature.attributes;
-            for (var attributeIndex = 0; attributeIndex < propertyAttributes.length; ++attributeIndex) {
-                var attribute = propertyAttributes[attributeIndex];
-                properties[attribute.name] = attribute.value;
-            }
-
-            var featureInfo = new ImageryLayerFeatureInfo();
-            featureInfo.data = feature;
-            featureInfo.configureNameFromProperties(properties);
-            featureInfo.configureDescriptionFromProperties(properties);
-            result.push(featureInfo);
-        }
-
-        return result;
-    }
-
-    function unknownXmlToFeatureInfo(xml) {
-        var xmlText = new XMLSerializer().serializeToString(xml);
-
-        var element = document.createElement('div');
-        var pre = document.createElement('pre');
-        pre.textContent = xmlText;
-        element.appendChild(pre);
-
-        var featureInfo = new ImageryLayerFeatureInfo();
-        featureInfo.data = xml;
-        featureInfo.description = element.innerHTML;
-        return [featureInfo];
     }
 
     return WebMapServiceImageryProvider;

@@ -1,8 +1,10 @@
 /*global defineSuite*/
 defineSuite([
         'Core/BoundingSphere',
+        'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/defined',
         'Core/Ellipsoid',
         'Core/GeographicProjection',
         'Core/PixelFormat',
@@ -10,7 +12,9 @@ defineSuite([
         'Core/RuntimeError',
         'Core/WebMercatorProjection',
         'Renderer/DrawCommand',
+        'Renderer/Framebuffer',
         'Renderer/PixelDatatype',
+        'Renderer/Texture',
         'Scene/Camera',
         'Scene/FrameState',
         'Scene/Globe',
@@ -26,8 +30,10 @@ defineSuite([
         'Specs/render'
     ], 'Scene/Scene', function(
         BoundingSphere,
+        Cartesian2,
         Cartesian3,
         Color,
+        defined,
         Ellipsoid,
         GeographicProjection,
         PixelFormat,
@@ -35,7 +41,9 @@ defineSuite([
         RuntimeError,
         WebMercatorProjection,
         DrawCommand,
+        Framebuffer,
         PixelDatatype,
+        Texture,
         Camera,
         FrameState,
         Globe,
@@ -61,7 +69,6 @@ defineSuite([
     afterEach(function() {
         scene.backgroundColor = new Color(0.0, 0.0, 0.0, 0.0);
         scene.debugCommandFilter = undefined;
-        scene.fxaaOrderIndependentTranslucency = true;
         scene.fxaa = false;
         scene.primitives.removeAll();
     });
@@ -127,7 +134,7 @@ defineSuite([
       expect(function() {
           return new Scene({});
       }).toThrowDeveloperError();
-  });
+    });
 
     it('draws background color', function() {
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
@@ -202,6 +209,7 @@ defineSuite([
         c.execute = function() {};
 
         scene.primitives.add(new CommandMockPrimitive(c));
+        scene.depthTestAgainstTerrain = true;
 
         expect(scene.renderForSpecs()[0]).not.toEqual(0);  // Red bounding sphere
     });
@@ -228,6 +236,28 @@ defineSuite([
         scene.renderForSpecs();
         expect(scene._performanceDisplay).toBeDefined();
         scene.debugShowFramesPerSecond = false;
+    });
+
+    it('debugShowGlobeDepth', function() {
+        if(!defined(scene._globeDepth)){
+            return;
+        }
+
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        scene.camera.viewRectangle(rectangle);
+
+        var rectanglePrimitive = new RectanglePrimitive({
+            rectangle : rectangle,
+            asynchronous : false
+        });
+        rectanglePrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+        scene.primitives.add(rectanglePrimitive);
+
+        expect(scene.renderForSpecs()).toEqual([255, 0, 0, 255]);
+        scene.debugShowGlobeDepth = true;
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        scene.debugShowGlobeDepth = false;
     });
 
     it('opaque/translucent render order (1)', function() {
@@ -336,7 +366,6 @@ defineSuite([
 
         scene.camera.viewRectangle(rectangle);
 
-        scene.fxaaOrderIndependentTranslucency = false;
         scene.fxaa = false;
 
         var pixels = scene.renderForSpecs();
@@ -351,14 +380,17 @@ defineSuite([
         // Workaround for Firefox on Mac, which does not support RGBA + depth texture
         // attachments, which is allowed by the spec.
         if (context.depthTexture) {
-            var framebuffer = context.createFramebuffer({
-                colorTextures : [context.createTexture2D({
+            var framebuffer = new Framebuffer({
+                context : context,
+                colorTextures : [new Texture({
+                    context : context,
                     width : 1,
                     height : 1,
                     pixelFormat : PixelFormat.RGBA,
                     pixelDatatype : PixelDatatype.UNSIGNED_BYTE
                 })],
-                depthTexture : context.createTexture2D({
+                depthTexture : new Texture({
+                    context : context,
                     width : 1,
                     height : 1,
                     pixelFormat : PixelFormat.DEPTH_COMPONENT,
@@ -375,8 +407,11 @@ defineSuite([
         }
 
         var s = createScene();
-        s._oit._translucentMRTSupport = false;
-        s._oit._translucentMultipassSupport = false;
+
+        if (defined(s._oit)) {
+            s._oit._translucentMRTSupport = false;
+            s._oit._translucentMultipassSupport = false;
+        }
 
         s.fxaa = true;
 
@@ -445,35 +480,40 @@ defineSuite([
     it('renders with multipass OIT if MRT is available', function() {
         if (scene.context.drawBuffers) {
             var s = createScene();
-            s._oit._translucentMRTSupport = false;
-            s._oit._translucentMultipassSupport = true;
+            if (defined(s._oit)) {
+                s._oit._translucentMRTSupport = false;
+                s._oit._translucentMultipassSupport = true;
 
-            var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+                var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
-            var rectanglePrimitive = new RectanglePrimitive({
-                rectangle : rectangle,
-                height : 1000.0,
-                asynchronous : false
-            });
-            rectanglePrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
+                var rectanglePrimitive = new RectanglePrimitive({
+                    rectangle : rectangle,
+                    height : 1000.0,
+                    asynchronous : false
+                });
+                rectanglePrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
 
-            var primitives = s.primitives;
-            primitives.add(rectanglePrimitive);
+                var primitives = s.primitives;
+                primitives.add(rectanglePrimitive);
 
-            s.camera.viewRectangle(rectangle);
+                s.camera.viewRectangle(rectangle);
 
-            var pixels = s.renderForSpecs();
-            expect(pixels[0]).not.toEqual(0);
-            expect(pixels[1]).toEqual(0);
-            expect(pixels[2]).toEqual(0);
+                var pixels = s.renderForSpecs();
+                expect(pixels[0]).not.toEqual(0);
+                expect(pixels[1]).toEqual(0);
+                expect(pixels[2]).toEqual(0);
+            }
 
             s.destroyForSpecs();
         }
     });
 
     it('renders with alpha blending if floating point textures are available', function() {
-        if (scene.context.floatingPointTexture) {
-            var s = createScene();
+        if (!scene.context.floatingPointTexture) {
+            return;
+        }
+        var s = createScene();
+        if (defined(s._oit)) {
             s._oit._translucentMRTSupport = false;
             s._oit._translucentMultipassSupport = false;
 
@@ -495,9 +535,75 @@ defineSuite([
             expect(pixels[0]).not.toEqual(0);
             expect(pixels[1]).toEqual(0);
             expect(pixels[2]).toEqual(0);
-
-            s.destroyForSpecs();
         }
+        s.destroyForSpecs();
+    });
+
+    it('copies the globe depth', function() {
+        var scene = createScene();
+        if (defined(scene._globeDepth)) {
+            var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+
+            var rectanglePrimitive = new RectanglePrimitive({
+                rectangle : rectangle,
+                height : 1000.0,
+                asynchronous : false
+            });
+            rectanglePrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
+
+            var primitives = scene.primitives;
+            primitives.add(rectanglePrimitive);
+
+            scene.camera.viewRectangle(rectangle);
+
+            var uniformState = scene.context.uniformState;
+
+            scene.renderForSpecs();
+            expect(uniformState.globeDepthTexture).not.toBeDefined();
+
+            scene.copyGlobeDepth = true;
+            scene.renderForSpecs();
+            expect(uniformState.globeDepthTexture).toBeDefined();
+        }
+
+        scene.destroyForSpecs();
+    });
+
+    it('pickPosition', function() {
+        if (!scene.pickPositionSupported) {
+            return;
+        }
+
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        scene.camera.viewRectangle(rectangle);
+
+        scene.renderForSpecs();
+
+        var canvas = scene.canvas;
+        var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        var position = scene.pickPosition(windowPosition);
+        expect(position).not.toBeDefined();
+
+        var rectanglePrimitive = new RectanglePrimitive({
+            rectangle : rectangle,
+            asynchronous : false
+        });
+        rectanglePrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+        var primitives = scene.primitives;
+        primitives.add(rectanglePrimitive);
+
+        scene.renderForSpecs();
+
+        position = scene.pickPosition(windowPosition);
+        expect(position).toBeDefined();
+    });
+
+    it('pickPosition throws without windowPosition', function() {
+        expect(function() {
+            scene.pickPosition();
+        }).toThrowDeveloperError();
     });
 
     it('isDestroyed', function() {
@@ -567,6 +673,38 @@ defineSuite([
         var spyListener = jasmine.createSpy('listener');
         s.postRender.addEventListener(spyListener);
 
+        s.render();
+
+        expect(spyListener.calls.count()).toBe(1);
+
+        s.destroyForSpecs();
+    });
+
+    it('raises the cameraMoveStart event after moving the camera', function() {
+        var s = createScene();
+        s.render();
+
+        var spyListener = jasmine.createSpy('listener');
+        s.camera.moveStart.addEventListener(spyListener);
+
+        s.camera.moveLeft();
+        s.render();
+
+        expect(spyListener.calls.count()).toBe(1);
+
+        s.destroyForSpecs();
+    });
+
+    it('raises the cameraMoveEvent event when the camera stops moving', function() {
+        var s = createScene();
+        s.render();
+
+        var spyListener = jasmine.createSpy('listener');
+        s.camera.moveEnd.addEventListener(spyListener);
+
+        s.cameraEventWaitTime = 0.0;
+        s.camera.moveLeft();
+        s.render();
         s.render();
 
         expect(spyListener.calls.count()).toBe(1);

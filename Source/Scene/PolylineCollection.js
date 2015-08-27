@@ -16,9 +16,11 @@ define([
         '../Core/Intersect',
         '../Core/Math',
         '../Core/Matrix4',
+        '../Core/Plane',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/ShaderSource',
+        '../Renderer/VertexArray',
         '../Shaders/PolylineCommon',
         '../Shaders/PolylineFS',
         '../Shaders/PolylineVS',
@@ -44,9 +46,11 @@ define([
         Intersect,
         CesiumMath,
         Matrix4,
+        Plane,
         BufferUsage,
         DrawCommand,
         ShaderSource,
+        VertexArray,
         PolylineCommon,
         PolylineFS,
         PolylineVS,
@@ -117,7 +121,7 @@ define([
      * // Create a polyline collection with two polylines
      * var polylines = new Cesium.PolylineCollection();
      * polylines.add({
-     *   position : Cesium.Cartesian3.fromDegreesArray([
+     *   positions : Cesium.Cartesian3.fromDegreesArray([
      *     -75.10, 39.57,
      *     -77.02, 38.53,
      *     -80.50, 35.14,
@@ -227,10 +231,10 @@ define([
      * // Example 1:  Add a polyline, specifying all the default values.
      * var p = polylines.add({
      *   show : true,
-     *   positions : ellipsoid.cartographicDegreesToCartesians([
-     *     new Cesium.Cartographic2(-75.10, 39.57),
-     *     new Cesium.Cartographic2(-77.02, 38.53)]),
-     *     width : 1
+     *   positions : ellipsoid.cartographicArrayToCartesianArray([
+           Cesium.Cartographic.fromDegrees(-75.10, 39.57),
+           Cesium.Cartographic.fromDegrees(-77.02, 38.53)]),
+     *   width : 1
      * });
      */
     PolylineCollection.prototype.add = function(polyline) {
@@ -312,7 +316,7 @@ define([
      * Determines if this collection contains the specified polyline.
      *
      * @param {Polyline} polyline The polyline to check for.
-     * @returns {Boolean} true if this collection contains the billboard, false otherwise.
+     * @returns {Boolean} true if this collection contains the polyline, false otherwise.
      *
      * @see PolylineCollection#get
      */
@@ -887,7 +891,11 @@ define([
                     attributes[10][bufferProperty2D] = buffer2D;
                     attributes[11][bufferProperty2D] = buffer2D;
 
-                    var va = context.createVertexArray(attributes, indexBuffer);
+                    var va = new VertexArray({
+                        context : context,
+                        attributes : attributes,
+                        indexBuffer : indexBuffer
+                    });
                     collection._vertexArrays.push({
                         va : va,
                         buckets : vertexArrayBuckets[k]
@@ -1046,7 +1054,7 @@ define([
 
     function intersectsIDL(polyline) {
         return Cartesian3.dot(Cartesian3.UNIT_X, polyline._boundingVolume.center) < 0 ||
-            polyline._boundingVolume.intersect(Cartesian4.UNIT_Y) === Intersect.INTERSECTING;
+            polyline._boundingVolume.intersectPlane(Plane.ORIGIN_ZX_PLANE) === Intersect.INTERSECTING;
     }
 
     PolylineBucket.prototype.getPolylinePositionsLength = function(polyline) {

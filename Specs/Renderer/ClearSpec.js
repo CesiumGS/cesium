@@ -3,11 +3,15 @@ defineSuite([
         'Core/BoundingRectangle',
         'Core/Color',
         'Renderer/ClearCommand',
+        'Renderer/Framebuffer',
+        'Renderer/Texture',
         'Specs/createContext'
     ], 'Renderer/Clear', function(
         BoundingRectangle,
         Color,
         ClearCommand,
+        Framebuffer,
+        Texture,
         createContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
@@ -88,11 +92,13 @@ defineSuite([
     });
 
     it('clears a framebuffer color attachment', function() {
-        var colorTexture = context.createTexture2D({
+        var colorTexture = new Texture({
+            context : context,
             width : 1,
             height : 1
         });
-        var framebuffer = context.createFramebuffer({
+        var framebuffer = new Framebuffer({
+            context : context,
             colorTextures : [colorTexture]
         });
 

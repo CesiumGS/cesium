@@ -66,6 +66,7 @@ define([
          * The credit text
          * @memberof Credit.prototype
          * @type {String}
+         * @readonly
          */
         text : {
             get : function() {
@@ -77,6 +78,7 @@ define([
          * The source location for the image.
          * @memberof Credit.prototype
          * @type {String}
+         * @readonly
          */
         imageUrl : {
             get : function() {
@@ -88,6 +90,7 @@ define([
          * A URL location for the credit hyperlink
          * @memberof Credit.prototype
          * @type {String}
+         * @readonly
          */
         link : {
             get : function() {
@@ -98,6 +101,7 @@ define([
         /**
          * @memberof Credit.prototype
          * @type {Number}
+         * @readonly
          *
          * @private
          */
@@ -130,7 +134,7 @@ define([
      * Returns true if the credits are equal
      *
      * @param {Credit} left The first credit
-     * @param {Credit} left The second credit
+     * @param {Credit} right The second credit
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     Credit.equals = function(left, right) {

@@ -176,8 +176,7 @@ define([
         this.merge(options);
     };
 
-    function updateShow(entity, isShowing) {
-        var children = entity._children;
+    function updateShow(entity, children, isShowing) {
         var length = children.length;
         for (var i = 0; i < length; i++) {
             var child = children[i];
@@ -185,7 +184,7 @@ define([
             var oldValue = !isShowing && childShow;
             var newValue = isShowing && childShow;
             if (oldValue !== newValue) {
-                child._definitionChanged.raiseEvent(child, 'isShowing', newValue, oldValue);
+                updateShow(child, child._children, isShowing);
             }
         }
         entity._definitionChanged.raiseEvent(entity, 'isShowing', isShowing, !isShowing);
@@ -257,7 +256,7 @@ define([
                 var isShowing = this.isShowing;
 
                 if (wasShowing !== isShowing) {
-                    updateShow(this, isShowing);
+                    updateShow(this, this._children, isShowing);
                 }
 
                 this._definitionChanged.raiseEvent(this, 'show', value, !value);
@@ -271,7 +270,7 @@ define([
          */
         isShowing : {
             get : function() {
-                return this._show && (!defined(this._parent) || this._parent._show);
+                return this._show && (!defined(this._parent) || this._parent.isShowing);
             }
         },
         /**
@@ -302,7 +301,7 @@ define([
                 var isShowing = this.isShowing;
 
                 if (wasShowing !== isShowing) {
-                    updateShow(this, isShowing);
+                    updateShow(this, this._children, isShowing);
                 }
 
                 this._definitionChanged.raiseEvent(this, 'parent', value, oldValue);
@@ -439,7 +438,7 @@ define([
      * Given a time, returns true if this object should have data during that time.
      *
      * @param {JulianDate} time The time to check availability for.
-     * @returns true if the object should have data during the provided time, false otherwise.
+     * @returns {Boolean} true if the object should have data during the provided time, false otherwise.
      */
     Entity.prototype.isAvailable = function(time) {
         //>>includeStart('debug', pragmas.debug);

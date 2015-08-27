@@ -10,6 +10,7 @@ define([
         './IndexDatatype',
         './Intersections2D',
         './Math',
+        './OrientedBoundingBox',
         './TaskProcessor',
         './TerrainMesh'
     ], function(
@@ -23,6 +24,7 @@ define([
         IndexDatatype,
         Intersections2D,
         CesiumMath,
+        OrientedBoundingBox,
         TaskProcessor,
         TerrainMesh) {
     "use strict";
@@ -44,6 +46,7 @@ define([
      * @param {Number} options.minimumHeight The minimum terrain height within the tile, in meters above the ellipsoid.
      * @param {Number} options.maximumHeight The maximum terrain height within the tile, in meters above the ellipsoid.
      * @param {BoundingSphere} options.boundingSphere A sphere bounding all of the vertices in the mesh.
+     * @param {OrientedBoundingBox} [options.orientedBoundingBox] An OrientedBoundingBox bounding all of the vertices in the mesh.
      * @param {Cartesian3} options.horizonOcclusionPoint The horizon occlusion point of the mesh.  If this point
      *                      is below the horizon, the entire tile is assumed to be below the horizon as well.
      *                      The point is expressed in ellipsoid-scaled coordinates.
@@ -88,6 +91,7 @@ define([
      *     indices : new Uint16Array([0, 3, 1,
      *                                0, 2, 3]),
      *     boundingSphere : new Cesium.BoundingSphere(new Cesium.Cartesian3(1.0, 2.0, 3.0), 10000),
+     *     orientedBoundingBox : new Cesium.OrientedBoundingBox(new Cesium.Cartesian3(1.0, 2.0, 3.0), Cesium.Matrix3.fromRotationX(Cesium.Math.PI, new Cesium.Matrix3())),
      *     horizonOcclusionPoint : new Cesium.Cartesian3(3.0, 2.0, 1.0),
      *     westIndices : [0, 1],
      *     southIndices : [0, 1],
@@ -154,6 +158,7 @@ define([
         this._minimumHeight = options.minimumHeight;
         this._maximumHeight = options.maximumHeight;
         this._boundingSphere = options.boundingSphere;
+        this._orientedBoundingBox = options.orientedBoundingBox;
         this._horizonOcclusionPoint = options.horizonOcclusionPoint;
 
         var vertexCount = this._quantizedVertices.length / 3;
@@ -230,7 +235,7 @@ define([
      * @param {Number} x The X coordinate of the tile for which to create the terrain data.
      * @param {Number} y The Y coordinate of the tile for which to create the terrain data.
      * @param {Number} level The level of the tile for which to create the terrain data.
-     * @returns {Promise|TerrainMesh} A promise for the terrain mesh, or undefined if too many
+     * @returns {Promise.<TerrainMesh>|undefined} A promise for the terrain mesh, or undefined if too many
      *          asynchronous mesh creations are already in progress and the operation should
      *          be retried later.
      */
@@ -291,7 +296,8 @@ define([
                     that._maximumHeight,
                     that._boundingSphere,
                     that._horizonOcclusionPoint,
-                    defined(that._encodedNormals) ? 7 : 6);
+                    defined(that._encodedNormals) ? 7 : 6,
+                    that._orientedBoundingBox);
         });
     };
 
@@ -308,7 +314,7 @@ define([
      * @param {Number} descendantX The X coordinate within the tiling scheme of the descendant tile for which we are upsampling.
      * @param {Number} descendantY The Y coordinate within the tiling scheme of the descendant tile for which we are upsampling.
      * @param {Number} descendantLevel The level within the tiling scheme of the descendant tile for which we are upsampling.
-     * @returns {Promise|QuantizedMeshTerrainData} A promise for upsampled heightmap terrain data for the descendant tile,
+     * @returns {Promise.<QuantizedMeshTerrainData>|undefined} A promise for upsampled heightmap terrain data for the descendant tile,
      *          or undefined if too many asynchronous upsample operations are in progress and the request has been
      *          deferred.
      */
@@ -388,6 +394,7 @@ define([
                 minimumHeight : result.minimumHeight,
                 maximumHeight : result.maximumHeight,
                 boundingSphere : BoundingSphere.clone(result.boundingSphere),
+                orientedBoundingBox : OrientedBoundingBox.clone(result.orientedBoundingBox),
                 horizonOcclusionPoint : Cartesian3.clone(result.horizonOcclusionPoint),
                 westIndices : result.westIndices,
                 southIndices : result.southIndices,

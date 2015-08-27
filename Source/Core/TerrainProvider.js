@@ -149,6 +149,7 @@ define([
      * {@link Globe.maximumScreenSpaceError} screen pixels and will probably go very slowly.
      * A value of 0.5 will cut the estimated level zero geometric error in half, allowing twice the
      * screen pixels between adjacent heightmap vertices and thus rendering more quickly.
+     * @type {Number}
      */
     TerrainProvider.heightmapTerrainQuality = 0.25;
 
@@ -176,7 +177,7 @@ define([
      * @param {Boolean} [throttleRequests=true] True if the number of simultaneous requests should be limited,
      *                  or false if the request should be initiated regardless of the number of requests
      *                  already in progress.
-     * @returns {Promise|TerrainData} A promise for the requested geometry.  If this method
+     * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
      *          returns undefined instead of a promise, it is an indication that too many requests are already
      *          pending and the request will be retried later.
      */

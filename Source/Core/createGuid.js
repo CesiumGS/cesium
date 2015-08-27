@@ -7,6 +7,8 @@ define(function() {
      *
      * @exports createGuid
      *
+     * @returns {String}
+     *
      * @see {@link http://www.ietf.org/rfc/rfc4122.txt|RFC 4122 A Universally Unique IDentifier (UUID) URN Namespace}
      *
      * @example

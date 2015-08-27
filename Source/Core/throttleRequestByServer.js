@@ -9,7 +9,6 @@ define([
         defaultValue) {
     "use strict";
 
-    var maximumRequestsPerServer = 6;
     var activeRequests = {};
 
     var pageUri = new Uri(document.location.href);
@@ -34,7 +33,7 @@ define([
      * @param {String} url The URL to request.
      * @param {throttleRequestByServer~RequestFunction} requestFunction The actual function that
      *        makes the request.
-     * @returns {Promise} Either undefined, meaning the request would exceed the maximum number of
+     * @returns {Promise.<Object>|undefined} Either undefined, meaning the request would exceed the maximum number of
      *          parallel requests, or a Promise for the requested data.
      *
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
@@ -59,7 +58,7 @@ define([
         var server = getServer(url);
 
         var activeRequestsForServer = defaultValue(activeRequests[server], 0);
-        if (activeRequestsForServer >= maximumRequestsPerServer) {
+        if (activeRequestsForServer >= throttleRequestByServer.maximumRequestsPerServer) {
             return undefined;
         }
 
@@ -75,11 +74,20 @@ define([
     };
 
     /**
+     * Specifies the maximum number of requests that can be simultaneously open to a single server.  If this value is higher than
+     * the number of requests per server actually allowed by the web browser, Cesium's ability to prioritize requests will be adversely
+     * affected.
+     * @type {Number}
+     * @default 6
+     */
+    throttleRequestByServer.maximumRequestsPerServer = 6;
+
+    /**
      * A function that will make a request if there are available slots to the server.
      * @callback throttleRequestByServer~RequestFunction
      *
      * @param {String} url The url to request.
-     * @returns {Promise} A promise for the requested data.
+     * @returns {Promise.<Object>} A promise for the requested data.
      */
 
     return throttleRequestByServer;

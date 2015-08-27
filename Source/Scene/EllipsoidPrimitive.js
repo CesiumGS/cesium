@@ -13,6 +13,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/ShaderSource',
+        '../Renderer/VertexArray',
         '../Shaders/EllipsoidFS',
         '../Shaders/EllipsoidVS',
         './BlendingState',
@@ -34,6 +35,7 @@ define([
         BufferUsage,
         DrawCommand,
         ShaderSource,
+        VertexArray,
         EllipsoidFS,
         EllipsoidVS,
         BlendingState,
@@ -163,7 +165,7 @@ define([
          * e.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
-         * e.material = Cesium.Material.fromType(Material.StripeType);
+         * e.material = Cesium.Material.fromType(Cesium.Material.StripeType);
          */
         this.material = defaultValue(options.material, Material.fromType(Material.ColorType));
         this._material = undefined;
@@ -198,6 +200,11 @@ define([
          */
         this.onlySunLighting = defaultValue(options.onlySunLighting, false);
         this._onlySunLighting = false;
+
+        /**
+         * @private
+         */
+        this._depthTestEnabled = defaultValue(options.depthTestEnabled, true);
 
         this._sp = undefined;
         this._rs = undefined;
@@ -242,7 +249,8 @@ define([
             vertexFormat : VertexFormat.POSITION_ONLY
         }));
 
-        vertexArray = context.createVertexArrayFromGeometry({
+        vertexArray = VertexArray.fromGeometry({
+            context : context,
             geometry : geometry,
             attributeLocations : attributeLocations,
             bufferUsage : BufferUsage.STATIC_DRAW,
@@ -295,11 +303,10 @@ define([
                     face : CullFace.FRONT
                 },
                 depthTest : {
-                    enabled : true
+                    enabled : this._depthTestEnabled
                 },
-                // Do not write depth since the depth for the bounding box is
-                // wrong; it is not the true depth of the ray casted ellipsoid.
-                // Only write depth when EXT_frag_depth is supported.
+                // Only write depth when EXT_frag_depth is supported since the depth for
+                // the bounding box is wrong; it is not the true depth of the ray casted ellipsoid.
                 depthMask : !translucent && context.fragmentDepth,
                 blending : translucent ? BlendingState.ALPHA_BLEND : undefined
             });

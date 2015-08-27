@@ -205,7 +205,7 @@ define([
      * Removes adjacent duplicate positions in an array of positions.
      *
      * @param {Cartesian3[]} positions The array of positions.
-     * @returns {Cartesian3[]|undefined} A new array of positions with no adjacent duplicate positions or <code>undefined</code> if no duplicates were found.
+     * @returns {Cartesian3[]|undefined} A new array of positions with no adjacent duplicate positions or the input array if no duplicates were found.
      *
      * @example
      * // Returns [(1.0, 1.0, 1.0), (2.0, 2.0, 2.0)]
@@ -224,7 +224,7 @@ define([
 
         var length = positions.length;
         if (length < 2) {
-            return undefined;
+            return positions;
         }
 
         var i;
@@ -240,7 +240,7 @@ define([
         }
 
         if (i === length) {
-            return undefined;
+            return positions;
         }
 
         var cleanedPositions = positions.slice(0, i);
@@ -286,15 +286,29 @@ define([
         }
         //>>includeEnd('debug');
 
+        var length = positions.length;
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var height = defaultValue(options.height, 0);
+
+        if (length < 1) {
+            return [];
+        } else if (length === 1) {
+            var p = ellipsoid.scaleToGeodeticSurface(positions[0], scaleFirst);
+            if (height !== 0) {
+                var n = ellipsoid.geodeticSurfaceNormal(p, cartesian);
+                Cartesian3.multiplyByScalar(n, height, n);
+                Cartesian3.add(p, n, p);
+            }
+
+            return [p.x, p.y, p.z];
+        }
+
         var minDistance = options.minDistance;
         if (!defined(minDistance)) {
             var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
             minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
         }
 
-        var length = positions.length;
         var numPoints = 0;
         var i;
 

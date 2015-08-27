@@ -7,7 +7,6 @@ define([
         '../Core/defined',
         '../Core/definedNotNull',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/getFilenameFromUri',
@@ -35,7 +34,6 @@ define([
         defined,
         definedNotNull,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         Event,
         getFilenameFromUri,
@@ -503,13 +501,6 @@ define([
         this._pinBuilder = new PinBuilder();
     };
 
-    GeoJsonDataSource.fromUrl = function(url, options) {
-        deprecationWarning('GeoJsonDataSource.fromUrl', 'GeoJsonDataSource.fromUrl has been deprecated.  Use GeoJsonDataSource.load instead.');
-        var result = new GeoJsonDataSource();
-        result.load(url, options);
-        return result;
-    };
-
     /**
      * Creates a Promise to a new instance loaded with the provided GeoJSON or TopoJSON data.
      *
@@ -523,7 +514,7 @@ define([
      * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
      * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
      *
-     * @returns {Promise} A promise that will resolve when the data is loaded.
+     * @returns {Promise.<GeoJsonDataSource>} A promise that will resolve when the data is loaded.
      */
     GeoJsonDataSource.load = function(data, options) {
         return new GeoJsonDataSource().load(data, options);
@@ -735,11 +726,6 @@ define([
         }
     });
 
-    GeoJsonDataSource.prototype.loadUrl = function(url, options) {
-        deprecationWarning('GeoJsonDataSource.prototype.loadUrl', 'GeoJsonDataSource.loadUrl has been deprecated.  You can now pass a url to GeoJsonDataSource.load.');
-        return this.load(url, options);
-    };
-
     /**
      * Asynchronously loads the provided GeoJSON or TopoJSON data, replacing any existing data.
      *
@@ -753,7 +739,7 @@ define([
      * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
      * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
      *
-     * @returns {Promise} a promise that will resolve when the GeoJSON is loaded.
+     * @returns {Promise.<GeoJsonDataSource>} a promise that will resolve when the GeoJSON is loaded.
      */
     GeoJsonDataSource.prototype.load = function(data, options) {
         //>>includeStart('debug', pragmas.debug);

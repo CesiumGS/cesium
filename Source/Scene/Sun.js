@@ -18,6 +18,9 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
         '../Renderer/DrawCommand',
+        '../Renderer/Framebuffer',
+        '../Renderer/Texture',
+        '../Renderer/VertexArray',
         '../Shaders/SunFS',
         '../Shaders/SunTextureFS',
         '../Shaders/SunVS',
@@ -43,6 +46,9 @@ define([
         BufferUsage,
         ClearCommand,
         DrawCommand,
+        Framebuffer,
+        Texture,
+        VertexArray,
         SunFS,
         SunTextureFS,
         SunVS,
@@ -160,13 +166,15 @@ define([
             var size = Math.max(drawingBufferWidth, drawingBufferHeight);
             size = Math.pow(2.0, Math.ceil(Math.log(size) / Math.log(2.0)) - 2.0);
 
-            this._texture = context.createTexture2D({
+            this._texture = new Texture({
+                context : context,
                 width : size,
                 height : size,
                 pixelFormat : PixelFormat.RGBA
             });
 
-            var fbo = context.createFramebuffer({
+            var fbo = new Framebuffer({
+                context : context,
                 colorTextures : [this._texture]
             });
             fbo.destroyAttachments = false;
@@ -237,7 +245,11 @@ define([
             }];
             // Workaround Internet Explorer 11.0.8 lack of TRIANGLE_FAN
             var indexBuffer = context.createIndexBuffer(new Uint16Array([0, 1, 2, 0, 2, 3]), BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
-            command.vertexArray = context.createVertexArray(attributes, indexBuffer);
+            command.vertexArray = new VertexArray({
+                context : context,
+                attributes : attributes,
+                indexBuffer : indexBuffer
+            });
             command.shaderProgram = context.createShaderProgram(SunVS, SunFS, attributeLocations);
             command.renderState = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND

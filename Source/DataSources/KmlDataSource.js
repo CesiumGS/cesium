@@ -103,6 +103,11 @@ define([
         WallGraphics) {
     "use strict";
 
+    // IE 8 doesn't have a DOM parser and can't run Cesium anyway, so just bail.
+    if (typeof DOMParser === 'undefined') {
+        return {};
+    }
+
     //This is by no means an exhaustive list of MIME types.
     //The purpose of this list is to be able to accurately identify content embedded
     //in KMZ files. Eventually, we can make this configurable by the end user so they can add
@@ -404,7 +409,11 @@ define([
 
     function queryBooleanValue(node, tagName, namespace) {
         var result = queryFirstNode(node, tagName, namespace);
-        return defined(result) ? result.textContent === '1' : undefined;
+        if (defined(result)) {
+            var value = result.textContent.trim();
+            return value === '1' || /^true$/i.test(value);
+        }
+        return undefined;
     }
 
     function resolveHref(href, proxy, sourceUri, uriResolver) {
@@ -641,9 +650,9 @@ define([
         for (var i = 0, len = styleNode.childNodes.length; i < len; i++) {
             var node = styleNode.childNodes.item(i);
             var material;
-            if (node.nodeName === 'IconStyle') {
+            if (node.localName === 'IconStyle') {
                 processBillboardIcon(dataSource, node, targetEntity, sourceUri, uriResolver);
-            } else if (node.nodeName === 'LabelStyle') {
+            } else if (node.localName === 'LabelStyle') {
                 var label = targetEntity.label;
                 if (!defined(label)) {
                     label = createDefaultLabel();
@@ -652,7 +661,7 @@ define([
                 label.scale = defaultValue(queryNumericValue(node, 'scale', namespaces.kml), label.scale);
                 label.fillColor = defaultValue(queryColorValue(node, 'color', namespaces.kml), label.fillColor);
                 label.text = targetEntity.name;
-            } else if (node.nodeName === 'LineStyle') {
+            } else if (node.localName === 'LineStyle') {
                 var polyline = targetEntity.polyline;
                 if (!defined(polyline)) {
                     polyline = new PolylineGraphics();
@@ -660,7 +669,7 @@ define([
                 }
                 polyline.width = queryNumericValue(node, 'width', namespaces.kml);
                 polyline.material = queryColorValue(node, 'color', namespaces.kml);
-            } else if (node.nodeName === 'PolyStyle') {
+            } else if (node.localName === 'PolyStyle') {
                 var polygon = targetEntity.polygon;
                 if (!defined(polygon)) {
                     polygon = createDefaultPolygon();
@@ -669,7 +678,7 @@ define([
                 polygon.material = defaultValue(queryColorValue(node, 'color', namespaces.kml), polygon.material);
                 polygon.fill = defaultValue(queryBooleanValue(node, 'fill', namespaces.kml), polygon.fill);
                 polygon.outline = defaultValue(queryBooleanValue(node, 'outline', namespaces.kml), polygon.outline);
-            } else if (node.nodeName === 'BalloonStyle') {
+            } else if (node.localName === 'BalloonStyle') {
                 var bgColor = defaultValue(parseColorString(queryStringValue(node, 'bgColor', namespaces.kml)), Color.WHITE);
                 var textColor = defaultValue(parseColorString(queryStringValue(node, 'textColor', namespaces.kml)), Color.BLACK);
                 var text = queryStringValue(node, 'text', namespaces.kml);
@@ -1471,7 +1480,7 @@ define([
     }
 
     function processUnsupported(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
-        window.console.log('KML - Unsupported feature: ' + node.nodeName);
+        window.console.log('KML - Unsupported feature: ' + node.localName);
     }
 
     function processNetworkLink(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
@@ -1510,11 +1519,11 @@ define([
     };
 
     function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var featureProocessor = featureTypes[node.nodeName];
+        var featureProocessor = featureTypes[node.localName];
         if (defined(featureProocessor)) {
             featureProocessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
         } else {
-            window.console.log('KML - Unsupported feature node: ' + node.nodeName);
+            window.console.log('KML - Unsupported feature node: ' + node.localName);
         }
     }
 
@@ -1534,8 +1543,15 @@ define([
         var styleCollection = new EntityCollection();
         return when.all(processStyles(dataSource, kml, styleCollection, sourceUri, false, uriResolver), function() {
             var element = kml.documentElement;
-            if (element.nodeName === 'kml') {
-                element = element.firstElementChild;
+            if (element.localName === 'kml') {
+                var childNodes = element.childNodes;
+                for (var i = 0; i < childNodes.length; i++) {
+                    var tmp = childNodes[i];
+                    if (defined(featureTypes[tmp.localName])) {
+                        element = tmp;
+                        break;
+                    }
+                }
             }
             processFeatureNode(dataSource, element, undefined, entityCollection, styleCollection, sourceUri, uriResolver);
 
@@ -1680,8 +1696,8 @@ define([
      * @param {String|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
      * @param {Object} [options] An object with the following properties:
      * @param {DefaultProxy} [options.proxy] A proxy to be used for loading external data.
-     * @param {Number} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
-     * @returns {Promise} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
+     * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
+     * @returns {Promise.<KmlDataSource>} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
      */
     KmlDataSource.load = function(data, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -1771,7 +1787,7 @@ define([
      * @param {String|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
      * @param {Object} [options] An object with the following properties:
      * @param {Number} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
-     * @returns {Promise} A promise that will resolve to this instances once the KML is loaded.
+     * @returns {Promise.<KmlDataSource>} A promise that will resolve to this instances once the KML is loaded.
      */
     KmlDataSource.prototype.load = function(data, options) {
         //>>includeStart('debug', pragmas.debug);

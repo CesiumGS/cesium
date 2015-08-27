@@ -5,6 +5,12 @@ define([
         defined) {
     "use strict";
 
+    /**
+     * Object for setting and retrieving the default BingMaps API key.
+     *
+     * @namespace
+     * @alias BingMapsApi
+     */
     var BingMapsApi = {
     };
 

@@ -15,7 +15,6 @@ define([
         '../Core/IndexDatatype',
         '../Core/Math',
         '../Core/Matrix4',
-        '../Core/PixelFormat',
         '../Core/PrimitiveType',
         '../Core/RuntimeError',
         '../Shaders/ViewportQuadVS',
@@ -24,11 +23,9 @@ define([
         './ClearCommand',
         './CubeMap',
         './DrawCommand',
-        './Framebuffer',
         './PassState',
         './PickFramebuffer',
         './PixelDatatype',
-        './Renderbuffer',
         './RenderbufferFormat',
         './RenderState',
         './ShaderCache',
@@ -54,7 +51,6 @@ define([
         IndexDatatype,
         CesiumMath,
         Matrix4,
-        PixelFormat,
         PrimitiveType,
         RuntimeError,
         ViewportQuadVS,
@@ -63,11 +59,9 @@ define([
         ClearCommand,
         CubeMap,
         DrawCommand,
-        Framebuffer,
         PassState,
         PickFramebuffer,
         PixelDatatype,
-        Renderbuffer,
         RenderbufferFormat,
         RenderState,
         ShaderCache,
@@ -302,6 +296,7 @@ define([
 
         this._us = us;
         this._currentRenderState = rs;
+        this._currentPassState = ps;
         this._currentFramebuffer = undefined;
         this._maxFrameTextureUnitIndex = 0;
 
@@ -317,7 +312,7 @@ define([
          *     stencil : false,
          *     antialias : true,
          *     premultipliedAlpha : true,
-         *     preserveDrawingBuffer : false
+         *     preserveDrawingBuffer : false,
          *     failIfMajorPerformanceCaveat : true
          *   },
          *   allowTextureFilterAnisotropic : true
@@ -862,7 +857,8 @@ define([
         defaultTexture : {
             get : function() {
                 if (this._defaultTexture === undefined) {
-                    this._defaultTexture = this.createTexture2D({
+                    this._defaultTexture = new Texture({
+                        context : this,
                         source : {
                             width : 1,
                             height : 1,
@@ -891,7 +887,8 @@ define([
                         arrayBufferView : new Uint8Array([255, 255, 255, 255])
                     };
 
-                    this._defaultCubeMap = this.createCubeMap({
+                    this._defaultCubeMap = new CubeMap({
+                        context : this,
                         source : {
                             positiveX : face,
                             negativeX : face,
@@ -909,10 +906,10 @@ define([
         },
 
         /**
-         * The drawingBufferWidth of the underlying GL context.
+         * The drawingBufferHeight of the underlying GL context.
          * @memberof Context.prototype
          * @type {Number}
-         * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferWidth|drawingBufferWidth}
+         * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferHeight|drawingBufferHeight}
          */
         drawingBufferHeight : {
             get : function() {
@@ -921,10 +918,10 @@ define([
         },
 
         /**
-         * The drawingBufferHeight of the underlying GL context.
+         * The drawingBufferWidth of the underlying GL context.
          * @memberof Context.prototype
          * @type {Number}
-         * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferHeight|drawingBufferHeight}
+         * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferWidth|drawingBufferWidth}
          */
         drawingBufferWidth : {
             get : function() {
@@ -935,7 +932,7 @@ define([
         /**
          * Gets an object representing the currently bound framebuffer.  While this instance is not an actual
          * {@link Framebuffer}, it is used to represent the default framebuffer in calls to
-         * {@link Context.createTexture2DFromFramebuffer}.
+         * {@link Texture.FromFramebuffer}.
          * @memberof Context.prototype
          * @type {Object}
          */
@@ -998,7 +995,6 @@ define([
      * @exception {DeveloperError} The size in bytes must be greater than zero.
      * @exception {DeveloperError} Invalid <code>usage</code>.
      *
-     * @see Context#createVertexArray
      * @see Context#createIndexBuffer
      * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGenBuffer.xml|glGenBuffer}
      * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glBindBuffer.xml|glBindBuffer} with <code>ARRAY_BUFFER</code>
@@ -1036,10 +1032,8 @@ define([
      * @exception {DeveloperError} Invalid <code>usage</code>.
      * @exception {DeveloperError} Invalid <code>indexDatatype</code>.
      *
-     * @see Context#createVertexArray
      * @see Context#createVertexBuffer
      * @see Context#draw
-     * @see VertexArray
      * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGenBuffer.xml|glGenBuffer}
      * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glBindBuffer.xml|glBindBuffer} with <code>ELEMENT_ARRAY_BUFFER</code>
      * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glBufferData.xml|glBufferData} with <code>ELEMENT_ARRAY_BUFFER</code>
@@ -1091,406 +1085,6 @@ define([
         });
 
         return buffer;
-    };
-
-    /**
-     * Creates a vertex array, which defines the attributes making up a vertex, and contains an optional index buffer
-     * to select vertices for rendering.  Attributes are defined using object literals as shown in Example 1 below.
-     *
-     * @param {Object[]} [attributes] An optional array of attributes.
-     * @param {IndexBuffer} [indexBuffer] An optional index buffer.
-     *
-     * @returns {VertexArray} The vertex array, ready for use with drawing.
-     *
-     * @exception {DeveloperError} Attribute must have a <code>vertexBuffer</code>.
-     * @exception {DeveloperError} Attribute must have a <code>componentsPerAttribute</code>.
-     * @exception {DeveloperError} Attribute must have a valid <code>componentDatatype</code> or not specify it.
-     * @exception {DeveloperError} Attribute must have a <code>strideInBytes</code> less than or equal to 255 or not specify it.
-     * @exception {DeveloperError} Index n is used by more than one attribute.
-     *
-     * @see Context#createVertexArrayFromGeometry
-     * @see Context#createVertexBuffer
-     * @see Context#createIndexBuffer
-     * @see Context#draw
-     *
-     * @example
-     * // Example 1. Create a vertex array with vertices made up of three floating point
-     * // values, e.g., a position, from a single vertex buffer.  No index buffer is used.
-     * var positionBuffer = context.createVertexBuffer(12, BufferUsage.STATIC_DRAW);
-     * var attributes = [
-     *     {
-     *         index                  : 0,
-     *         enabled                : true,
-     *         vertexBuffer           : positionBuffer,
-     *         componentsPerAttribute : 3,
-     *         componentDatatype      : ComponentDatatype.FLOAT,
-     *         normalize              : false,
-     *         offsetInBytes          : 0,
-     *         strideInBytes          : 0 // tightly packed
-     *     }
-     * ];
-     * var va = context.createVertexArray(attributes);
-     *
-     * @example
-     * // Example 2. Create a vertex array with vertices from two different vertex buffers.
-     * // Each vertex has a three-component position and three-component normal.
-     * var positionBuffer = context.createVertexBuffer(12, BufferUsage.STATIC_DRAW);
-     * var normalBuffer = context.createVertexBuffer(12, BufferUsage.STATIC_DRAW);
-     * var attributes = [
-     *     {
-     *         index                  : 0,
-     *         vertexBuffer           : positionBuffer,
-     *         componentsPerAttribute : 3,
-     *         componentDatatype      : ComponentDatatype.FLOAT
-     *     },
-     *     {
-     *         index                  : 1,
-     *         vertexBuffer           : normalBuffer,
-     *         componentsPerAttribute : 3,
-     *         componentDatatype      : ComponentDatatype.FLOAT
-     *     }
-     * ];
-     * var va = context.createVertexArray(attributes);
-     *
-     * @example
-     * // Example 3. Creates the same vertex layout as Example 2 using a single
-     * // vertex buffer, instead of two.
-     * var buffer = context.createVertexBuffer(24, BufferUsage.STATIC_DRAW);
-     * var attributes = [
-     *     {
-     *         vertexBuffer           : buffer,
-     *         componentsPerAttribute : 3,
-     *         componentDatatype      : ComponentDatatype.FLOAT,
-     *         offsetInBytes          : 0,
-     *         strideInBytes          : 24
-     *     },
-     *     {
-     *         vertexBuffer           : buffer,
-     *         componentsPerAttribute : 3,
-     *         componentDatatype      : ComponentDatatype.FLOAT,
-     *         normalize              : true,
-     *         offsetInBytes          : 12,
-     *         strideInBytes          : 24
-     *     }
-     * ];
-     * var va = context.createVertexArray(attributes);
-     */
-    Context.prototype.createVertexArray = function(attributes, indexBuffer) {
-        return new VertexArray(this._gl, this._vertexArrayObject, attributes, indexBuffer);
-    };
-
-    /**
-     * options.source can be {@link ImageData}, {@link Image}, {@link Canvas}, or {@link Video}.
-     *
-     * @exception {RuntimeError} When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.  Check context.depthTexture.
-     * @exception {RuntimeError} When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.  Check context.floatingPointTexture.
-     * @exception {DeveloperError} options requires a source field to create an initialized texture or width and height fields to create a blank texture.
-     * @exception {DeveloperError} Width must be greater than zero.
-     * @exception {DeveloperError} Width must be less than or equal to the maximum texture size.
-     * @exception {DeveloperError} Height must be greater than zero.
-     * @exception {DeveloperError} Height must be less than or equal to the maximum texture size.
-     * @exception {DeveloperError} Invalid options.pixelFormat.
-     * @exception {DeveloperError} Invalid options.pixelDatatype.
-     * @exception {DeveloperError} When options.pixelFormat is DEPTH_COMPONENT, options.pixelDatatype must be UNSIGNED_SHORT or UNSIGNED_INT.
-     * @exception {DeveloperError} When options.pixelFormat is DEPTH_STENCIL, options.pixelDatatype must be UNSIGNED_INT_24_8_WEBGL.
-     * @exception {DeveloperError} When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, source cannot be provided.
-     *
-     * @see Context#createTexture2DFromFramebuffer
-     * @see Context#createCubeMap
-     * @see Context#createSampler
-     */
-    Context.prototype.createTexture2D = function(options) {
-        return new Texture(this, options);
-    };
-
-    /**
-     * Creates a texture, and copies a subimage of the framebuffer to it.  When called without arguments,
-     * the texture is the same width and height as the framebuffer and contains its contents.
-     *
-     * @param {PixelFormat} [pixelFormat=PixelFormat.RGB] The texture's internal pixel format.
-     * @param {Number} [framebufferXOffset=0] An offset in the x direction in the framebuffer where copying begins from.
-     * @param {Number} [framebufferYOffset=0] An offset in the y direction in the framebuffer where copying begins from.
-     * @param {Number} [width=canvas.clientWidth] The width of the texture in texels.
-     * @param {Number} [height=canvas.clientHeight] The height of the texture in texels.
-     * @param {Framebuffer} [framebuffer=defaultFramebuffer] The framebuffer from which to create the texture.  If this
-     *        parameter is not specified, the default framebuffer is used.
-     * @returns {Texture} A texture with contents from the framebuffer.
-     *
-     * @exception {DeveloperError} Invalid pixelFormat.
-     * @exception {DeveloperError} pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.
-     * @exception {DeveloperError} framebufferXOffset must be greater than or equal to zero.
-     * @exception {DeveloperError} framebufferYOffset must be greater than or equal to zero.
-     * @exception {DeveloperError} framebufferXOffset + width must be less than or equal to canvas.clientWidth.
-     * @exception {DeveloperError} framebufferYOffset + height must be less than or equal to canvas.clientHeight.
-     *
-     * @see Context#createTexture2D
-     * @see Context#createCubeMap
-     * @see Context#createSampler
-     *
-     * @example
-     * // Create a texture with the contents of the framebuffer.
-     * var t = context.createTexture2DFromFramebuffer();
-     */
-    Context.prototype.createTexture2DFromFramebuffer = function(pixelFormat, framebufferXOffset, framebufferYOffset, width, height, framebuffer) {
-        var gl = this._gl;
-
-        pixelFormat = defaultValue(pixelFormat, PixelFormat.RGB);
-        framebufferXOffset = defaultValue(framebufferXOffset, 0);
-        framebufferYOffset = defaultValue(framebufferYOffset, 0);
-        width = defaultValue(width, gl.drawingBufferWidth);
-        height = defaultValue(height, gl.drawingBufferHeight);
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!PixelFormat.validate(pixelFormat)) {
-            throw new DeveloperError('Invalid pixelFormat.');
-        }
-
-        if (PixelFormat.isDepthFormat(pixelFormat)) {
-            throw new DeveloperError('pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.');
-        }
-
-        if (framebufferXOffset < 0) {
-            throw new DeveloperError('framebufferXOffset must be greater than or equal to zero.');
-        }
-
-        if (framebufferYOffset < 0) {
-            throw new DeveloperError('framebufferYOffset must be greater than or equal to zero.');
-        }
-
-        if (framebufferXOffset + width > gl.drawingBufferWidth) {
-            throw new DeveloperError('framebufferXOffset + width must be less than or equal to drawingBufferWidth');
-        }
-
-        if (framebufferYOffset + height > gl.drawingBufferHeight) {
-            throw new DeveloperError('framebufferYOffset + height must be less than or equal to drawingBufferHeight.');
-        }
-        //>>includeEnd('debug');
-
-        var texture = new Texture(this, {
-            width : width,
-            height : height,
-            pixelFormat : pixelFormat,
-            source : {
-                framebuffer : defined(framebuffer) ? framebuffer : this.defaultFramebuffer,
-                xOffset : framebufferXOffset,
-                yOffset : framebufferYOffset,
-                width : width,
-                height : height
-            }
-        });
-
-        return texture;
-    };
-
-    /**
-     * options.source can be {@link ImageData}, {@link Image}, {@link Canvas}, or {@link Video}.
-     *
-     * @returns {CubeMap} The newly created cube map.
-     *
-     * @exception {RuntimeError} When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.  Check context.floatingPointTexture.
-     * @exception {DeveloperError} options.source requires positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ faces.
-     * @exception {DeveloperError} Each face in options.sources must have the same width and height.
-     * @exception {DeveloperError} options requires a source field to create an initialized cube map or width and height fields to create a blank cube map.
-     * @exception {DeveloperError} Width must equal height.
-     * @exception {DeveloperError} Width and height must be greater than zero.
-     * @exception {DeveloperError} Width and height must be less than or equal to the maximum cube map size.
-     * @exception {DeveloperError} Invalid options.pixelFormat.
-     * @exception {DeveloperError} options.pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.
-     * @exception {DeveloperError} Invalid options.pixelDatatype.
-     *
-     * @see Context#createTexture2D
-     * @see Context#createTexture2DFromFramebuffer
-     * @see Context#createSampler
-     */
-    Context.prototype.createCubeMap = function(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        var source = options.source;
-        var width;
-        var height;
-
-        if (defined(source)) {
-            var faces = [source.positiveX, source.negativeX, source.positiveY, source.negativeY, source.positiveZ, source.negativeZ];
-
-            //>>includeStart('debug', pragmas.debug);
-            if (!faces[0] || !faces[1] || !faces[2] || !faces[3] || !faces[4] || !faces[5]) {
-                throw new DeveloperError('options.source requires positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ faces.');
-            }
-            //>>includeEnd('debug');
-
-            width = faces[0].width;
-            height = faces[0].height;
-
-            //>>includeStart('debug', pragmas.debug);
-            for ( var i = 1; i < 6; ++i) {
-                if ((Number(faces[i].width) !== width) || (Number(faces[i].height) !== height)) {
-                    throw new DeveloperError('Each face in options.source must have the same width and height.');
-                }
-            }
-            //>>includeEnd('debug');
-        } else {
-            width = options.width;
-            height = options.height;
-        }
-
-        var size = width;
-        var pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
-        var pixelDatatype = defaultValue(options.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(width) || !defined(height)) {
-            throw new DeveloperError('options requires a source field to create an initialized cube map or width and height fields to create a blank cube map.');
-        }
-
-        if (width !== height) {
-            throw new DeveloperError('Width must equal height.');
-        }
-
-        if (size <= 0) {
-            throw new DeveloperError('Width and height must be greater than zero.');
-        }
-
-        if (size > this._maximumCubeMapSize) {
-            throw new DeveloperError('Width and height must be less than or equal to the maximum cube map size (' + this._maximumCubeMapSize + ').  Check maximumCubeMapSize.');
-        }
-
-        if (!PixelFormat.validate(pixelFormat)) {
-            throw new DeveloperError('Invalid options.pixelFormat.');
-        }
-
-        if (PixelFormat.isDepthFormat(pixelFormat)) {
-            throw new DeveloperError('options.pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.');
-        }
-
-        if (!PixelDatatype.validate(pixelDatatype)) {
-            throw new DeveloperError('Invalid options.pixelDatatype.');
-        }
-        //>>includeEnd('debug');
-
-        if ((pixelDatatype === PixelDatatype.FLOAT) && !this.floatingPointTexture) {
-            throw new DeveloperError('When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.');
-        }
-
-        // Use premultiplied alpha for opaque textures should perform better on Chrome:
-        // http://media.tojicode.com/webglCamp4/#20
-        var preMultiplyAlpha = options.preMultiplyAlpha || ((pixelFormat === PixelFormat.RGB) || (pixelFormat === PixelFormat.LUMINANCE));
-        var flipY = defaultValue(options.flipY, true);
-
-        var gl = this._gl;
-        var textureTarget = gl.TEXTURE_CUBE_MAP;
-        var texture = gl.createTexture();
-
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(textureTarget, texture);
-
-        function createFace(target, sourceFace) {
-            if (sourceFace.arrayBufferView) {
-                gl.texImage2D(target, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, sourceFace.arrayBufferView);
-            } else {
-                gl.texImage2D(target, 0, pixelFormat, pixelFormat, pixelDatatype, sourceFace);
-            }
-        }
-
-        if (defined(source)) {
-            // TODO: _gl.pixelStorei(_gl._UNPACK_ALIGNMENT, 4);
-            gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
-            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
-
-            createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_X, source.positiveX);
-            createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, source.negativeX);
-            createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, source.positiveY);
-            createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, source.negativeY);
-            createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, source.positiveZ);
-            createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, source.negativeZ);
-        } else {
-            gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
-            gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
-            gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
-            gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
-            gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
-            gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
-        }
-        gl.bindTexture(textureTarget, null);
-
-        return new CubeMap(gl, this._textureFilterAnisotropic, textureTarget, texture, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY);
-    };
-
-    /**
-     * Creates a framebuffer with optional initial color, depth, and stencil attachments.
-     * Framebuffers are used for render-to-texture effects; they allow us to render to
-     * textures in one pass, and read from it in a later pass.
-     *
-     * @param {Object} [options] The initial framebuffer attachments as shown in the examplebelow.  The possible properties are <code>colorTextures</code>, <code>colorRenderbuffers</code>, <code>depthTexture</code>, <code>depthRenderbuffer</code>, <code>stencilRenderbuffer</code>, <code>depthStencilTexture</code>, and <code>depthStencilRenderbuffer</code>.
-     * @returns {Framebuffer} The created framebuffer.
-     *
-     * @exception {DeveloperError} Cannot have both color texture and color renderbuffer attachments.
-     * @exception {DeveloperError} Cannot have both a depth texture and depth renderbuffer attachment.
-     * @exception {DeveloperError} Cannot have both a depth-stencil texture and depth-stencil renderbuffer attachment.
-     * @exception {DeveloperError} Cannot have both a depth and depth-stencil renderbuffer.
-     * @exception {DeveloperError} Cannot have both a stencil and depth-stencil renderbuffer.
-     * @exception {DeveloperError} Cannot have both a depth and stencil renderbuffer.
-     * @exception {DeveloperError} The color-texture pixel-format must be a color format.
-     * @exception {DeveloperError} The depth-texture pixel-format must be DEPTH_COMPONENT.
-     * @exception {DeveloperError} The depth-stencil-texture pixel-format must be DEPTH_STENCIL.
-     * @exception {DeveloperError} The number of color attachments exceeds the number supported.
-     *
-     * @see Context#createTexture2D
-     * @see Context#createCubeMap
-     * @see Context#createRenderbuffer
-     *
-     * @example
-     * // Create a framebuffer with color and depth texture attachments.
-     * var width = context.canvas.clientWidth;
-     * var height = context.canvas.clientHeight;
-     * var framebuffer = context.createFramebuffer({
-     *   colorTextures : [context.createTexture2D({
-     *     width : width,
-     *     height : height,
-     *     pixelFormat : PixelFormat.RGBA
-     *   })],
-     *   depthTexture : context.createTexture2D({
-     *     width : width,
-     *     height : height,
-     *     pixelFormat : PixelFormat.DEPTH_COMPONENT,
-     *     pixelDatatype : PixelDatatype.UNSIGNED_SHORT
-     *   })
-     * });
-     */
-    Context.prototype.createFramebuffer = function(options) {
-        return new Framebuffer(this._gl, this._maximumColorAttachments, options);
-    };
-
-    Context.prototype.createRenderbuffer = function(options) {
-        var gl = this._gl;
-
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var format = defaultValue(options.format, RenderbufferFormat.RGBA4);
-        var width = defined(options.width) ? options.width : gl.drawingBufferWidth;
-        var height = defined(options.height) ? options.height : gl.drawingBufferHeight;
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!RenderbufferFormat.validate(format)) {
-            throw new DeveloperError('Invalid format.');
-        }
-
-        if (width <= 0) {
-            throw new DeveloperError('Width must be greater than zero.');
-        }
-
-        if (width > this.maximumRenderbufferSize) {
-            throw new DeveloperError('Width must be less than or equal to the maximum renderbuffer size (' + this.maximumRenderbufferSize + ').  Check maximumRenderbufferSize.');
-        }
-
-        if (height <= 0) {
-            throw new DeveloperError('Height must be greater than zero.');
-        }
-
-        if (height > this.maximumRenderbufferSize) {
-            throw new DeveloperError('Height must be less than or equal to the maximum renderbuffer size (' + this.maximumRenderbufferSize + ').  Check maximumRenderbufferSize.');
-        }
-        //>>includeEnd('debug');
-
-        return new Renderbuffer(gl, format, width, height);
     };
 
     var nextRenderStateId = 0;
@@ -1703,12 +1297,11 @@ define([
     }
 
     function applyRenderState(context, renderState, passState) {
-        var previousState = context._currentRenderState;
-        if (previousState !== renderState) {
-            context._currentRenderState = renderState;
-            RenderState.partialApply(context._gl, previousState, renderState, passState);
-         }
-         // else same render state as before so state is already applied.
+        var previousRenderState = context._currentRenderState;
+        var previousPassState = context._currentPassState;
+        context._currentRenderState = renderState;
+        context._currentPassState = passState;
+        RenderState.partialApply(context._gl, previousRenderState, renderState, previousPassState, passState);
     }
 
     var scratchBackBufferArray;
@@ -1799,11 +1392,11 @@ define([
 
         bindFramebuffer(context, framebuffer);
 
+        applyRenderState(context, rs, passState);
+
         var sp = defaultValue(shaderProgram, drawCommand.shaderProgram);
         sp._bind();
         context._maxFrameTextureUnitIndex = Math.max(context._maxFrameTextureUnitIndex, sp.maximumTextureUnitIndex);
-
-        applyRenderState(context, rs, passState);
     }
 
     function continueDraw(context, drawCommand, shaderProgram) {
@@ -1834,22 +1427,19 @@ define([
         var sp = defaultValue(shaderProgram, drawCommand.shaderProgram);
         sp._setUniforms(drawCommand.uniformMap, context._us, context.validateShaderProgram);
 
+        va._bind();
         var indexBuffer = va.indexBuffer;
 
         if (defined(indexBuffer)) {
             offset = offset * indexBuffer.bytesPerIndex; // offset in vertices to offset in bytes
             count = defaultValue(count, indexBuffer.numberOfIndices);
-
-            va._bind();
             context._gl.drawElements(primitiveType, count, indexBuffer.indexDatatype, offset);
-            va._unBind();
         } else {
             count = defaultValue(count, va.numberOfVertices);
-
-            va._bind();
             context._gl.drawArrays(primitiveType, offset, count);
-            va._unBind();
         }
+
+        va._unBind();
     }
 
     Context.prototype.draw = function(drawCommand, passState, renderState, shaderProgram) {
@@ -1922,278 +1512,6 @@ define([
         return pixels;
     };
 
-    //////////////////////////////////////////////////////////////////////////////////////////
-
-    function computeNumberOfVertices(attribute) {
-        return attribute.values.length / attribute.componentsPerAttribute;
-    }
-
-    function computeAttributeSizeInBytes(attribute) {
-        return ComponentDatatype.getSizeInBytes(attribute.componentDatatype) * attribute.componentsPerAttribute;
-    }
-
-    function interleaveAttributes(attributes) {
-        var j;
-        var name;
-        var attribute;
-
-        // Extract attribute names.
-        var names = [];
-        for (name in attributes) {
-            // Attribute needs to have per-vertex values; not a constant value for all vertices.
-            if (attributes.hasOwnProperty(name) &&
-                    defined(attributes[name]) &&
-                    defined(attributes[name].values)) {
-                names.push(name);
-
-                if (attributes[name].componentDatatype === ComponentDatatype.DOUBLE) {
-                    attributes[name].componentDatatype = ComponentDatatype.FLOAT;
-                    attributes[name].values = ComponentDatatype.createTypedArray(ComponentDatatype.FLOAT, attributes[name].values);
-                }
-            }
-        }
-
-        // Validation.  Compute number of vertices.
-        var numberOfVertices;
-        var namesLength = names.length;
-
-        if (namesLength > 0) {
-            numberOfVertices = computeNumberOfVertices(attributes[names[0]]);
-
-            for (j = 1; j < namesLength; ++j) {
-                var currentNumberOfVertices = computeNumberOfVertices(attributes[names[j]]);
-
-                if (currentNumberOfVertices !== numberOfVertices) {
-                    throw new RuntimeError(
-                        'Each attribute list must have the same number of vertices.  ' +
-                        'Attribute ' + names[j] + ' has a different number of vertices ' +
-                        '(' + currentNumberOfVertices.toString() + ')' +
-                        ' than attribute ' + names[0] +
-                        ' (' + numberOfVertices.toString() + ').');
-                }
-            }
-        }
-
-        // Sort attributes by the size of their components.  From left to right, a vertex stores floats, shorts, and then bytes.
-        names.sort(function(left, right) {
-            return ComponentDatatype.getSizeInBytes(attributes[right].componentDatatype) - ComponentDatatype.getSizeInBytes(attributes[left].componentDatatype);
-        });
-
-        // Compute sizes and strides.
-        var vertexSizeInBytes = 0;
-        var offsetsInBytes = {};
-
-        for (j = 0; j < namesLength; ++j) {
-            name = names[j];
-            attribute = attributes[name];
-
-            offsetsInBytes[name] = vertexSizeInBytes;
-            vertexSizeInBytes += computeAttributeSizeInBytes(attribute);
-        }
-
-        if (vertexSizeInBytes > 0) {
-            // Pad each vertex to be a multiple of the largest component datatype so each
-            // attribute can be addressed using typed arrays.
-            var maxComponentSizeInBytes = ComponentDatatype.getSizeInBytes(attributes[names[0]].componentDatatype); // Sorted large to small
-            var remainder = vertexSizeInBytes % maxComponentSizeInBytes;
-            if (remainder !== 0) {
-                vertexSizeInBytes += (maxComponentSizeInBytes - remainder);
-            }
-
-            // Total vertex buffer size in bytes, including per-vertex padding.
-            var vertexBufferSizeInBytes = numberOfVertices * vertexSizeInBytes;
-
-            // Create array for interleaved vertices.  Each attribute has a different view (pointer) into the array.
-            var buffer = new ArrayBuffer(vertexBufferSizeInBytes);
-            var views = {};
-
-            for (j = 0; j < namesLength; ++j) {
-                name = names[j];
-                var sizeInBytes = ComponentDatatype.getSizeInBytes(attributes[name].componentDatatype);
-
-                views[name] = {
-                    pointer : ComponentDatatype.createTypedArray(attributes[name].componentDatatype, buffer),
-                    index : offsetsInBytes[name] / sizeInBytes, // Offset in ComponentType
-                    strideInComponentType : vertexSizeInBytes / sizeInBytes
-                };
-            }
-
-            // Copy attributes into one interleaved array.
-            // PERFORMANCE_IDEA:  Can we optimize these loops?
-            for (j = 0; j < numberOfVertices; ++j) {
-                for ( var n = 0; n < namesLength; ++n) {
-                    name = names[n];
-                    attribute = attributes[name];
-                    var values = attribute.values;
-                    var view = views[name];
-                    var pointer = view.pointer;
-
-                    var numberOfComponents = attribute.componentsPerAttribute;
-                    for ( var k = 0; k < numberOfComponents; ++k) {
-                        pointer[view.index + k] = values[(j * numberOfComponents) + k];
-                    }
-
-                    view.index += view.strideInComponentType;
-                }
-            }
-
-            return {
-                buffer : buffer,
-                offsetsInBytes : offsetsInBytes,
-                vertexSizeInBytes : vertexSizeInBytes
-            };
-        }
-
-        // No attributes to interleave.
-        return undefined;
-    }
-
-    /**
-     * Creates a vertex array from a geometry.  A geometry contains vertex attributes and optional index data
-     * in system memory, whereas a vertex array contains vertex buffers and an optional index buffer in WebGL
-     * memory for use with rendering.
-     * <br /><br />
-     * The <code>geometry</code> argument should use the standard layout like the geometry returned by {@link BoxGeometry}.
-     * <br /><br />
-     * <code>options</code> can have four properties:
-     * <ul>
-     *   <li><code>geometry</code>:  The source geometry containing data used to create the vertex array.</li>
-     *   <li><code>attributeLocations</code>:  An object that maps geometry attribute names to vertex shader attribute locations.</li>
-     *   <li><code>bufferUsage</code>:  The expected usage pattern of the vertex array's buffers.  On some WebGL implementations, this can significantly affect performance.  See {@link BufferUsage}.  Default: <code>BufferUsage.DYNAMIC_DRAW</code>.</li>
-     *   <li><code>interleave</code>:  Determines if all attributes are interleaved in a single vertex buffer or if each attribute is stored in a separate vertex buffer.  Default: <code>false</code>.</li>
-     * </ul>
-     * <br />
-     * If <code>options</code> is not specified or the <code>geometry</code> contains no data, the returned vertex array is empty.
-     *
-     * @param {Object} [options] An object defining the geometry, attribute indices, buffer usage, and vertex layout used to create the vertex array.
-     *
-     * @exception {RuntimeError} Each attribute list must have the same number of vertices.
-     * @exception {DeveloperError} The geometry must have zero or one index lists.
-     * @exception {DeveloperError} Index n is used by more than one attribute.
-     *
-     * @see Context#createVertexArray
-     * @see Context#createVertexBuffer
-     * @see Context#createIndexBuffer
-     * @see GeometryPipeline.createAttributeLocations
-     * @see ShaderProgram
-     *
-     * @example
-     * // Example 1. Creates a vertex array for rendering a box.  The default dynamic draw
-     * // usage is used for the created vertex and index buffer.  The attributes are not
-     * // interleaved by default.
-     * var geometry = new BoxGeometry();
-     * var va = context.createVertexArrayFromGeometry({
-     *     geometry           : geometry,
-     *     attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
-     * });
-     *
-     * @example
-     * // Example 2. Creates a vertex array with interleaved attributes in a
-     * // single vertex buffer.  The vertex and index buffer have static draw usage.
-     * var va = context.createVertexArrayFromGeometry({
-     *     geometry           : geometry,
-     *     attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
-     *     bufferUsage        : BufferUsage.STATIC_DRAW,
-     *     interleave         : true
-     * });
-     *
-     * @example
-     * // Example 3.  When the caller destroys the vertex array, it also destroys the
-     * // attached vertex buffer(s) and index buffer.
-     * va = va.destroy();
-     */
-    Context.prototype.createVertexArrayFromGeometry = function(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var geometry = defaultValue(options.geometry, defaultValue.EMPTY_OBJECT);
-
-        var bufferUsage = defaultValue(options.bufferUsage, BufferUsage.DYNAMIC_DRAW);
-
-        var attributeLocations = defaultValue(options.attributeLocations, defaultValue.EMPTY_OBJECT);
-        var interleave = defaultValue(options.interleave, false);
-        var createdVAAttributes = options.vertexArrayAttributes;
-
-        var name;
-        var attribute;
-        var vertexBuffer;
-        var vaAttributes = (defined(createdVAAttributes)) ? createdVAAttributes : [];
-        var attributes = geometry.attributes;
-
-        if (interleave) {
-            // Use a single vertex buffer with interleaved vertices.
-            var interleavedAttributes = interleaveAttributes(attributes);
-            if (defined(interleavedAttributes)) {
-                vertexBuffer = this.createVertexBuffer(interleavedAttributes.buffer, bufferUsage);
-                var offsetsInBytes = interleavedAttributes.offsetsInBytes;
-                var strideInBytes = interleavedAttributes.vertexSizeInBytes;
-
-                for (name in attributes) {
-                    if (attributes.hasOwnProperty(name) && defined(attributes[name])) {
-                        attribute = attributes[name];
-
-                        if (defined(attribute.values)) {
-                            // Common case: per-vertex attributes
-                            vaAttributes.push({
-                                index : attributeLocations[name],
-                                vertexBuffer : vertexBuffer,
-                                componentDatatype : attribute.componentDatatype,
-                                componentsPerAttribute : attribute.componentsPerAttribute,
-                                normalize : attribute.normalize,
-                                offsetInBytes : offsetsInBytes[name],
-                                strideInBytes : strideInBytes
-                            });
-                        } else {
-                            // Constant attribute for all vertices
-                            vaAttributes.push({
-                                index : attributeLocations[name],
-                                value : attribute.value,
-                                componentDatatype : attribute.componentDatatype,
-                                normalize : attribute.normalize
-                            });
-                        }
-                    }
-                }
-            }
-        } else {
-            // One vertex buffer per attribute.
-            for (name in attributes) {
-                if (attributes.hasOwnProperty(name) && defined(attributes[name])) {
-                    attribute = attributes[name];
-
-                    var componentDatatype = attribute.componentDatatype;
-                    if (componentDatatype === ComponentDatatype.DOUBLE) {
-                        componentDatatype = ComponentDatatype.FLOAT;
-                    }
-
-                    vertexBuffer = undefined;
-                    if (defined(attribute.values)) {
-                        vertexBuffer = this.createVertexBuffer(ComponentDatatype.createTypedArray(componentDatatype, attribute.values), bufferUsage);
-                    }
-
-                    vaAttributes.push({
-                        index : attributeLocations[name],
-                        vertexBuffer : vertexBuffer,
-                        value : attribute.value,
-                        componentDatatype : componentDatatype,
-                        componentsPerAttribute : attribute.componentsPerAttribute,
-                        normalize : attribute.normalize
-                    });
-                }
-            }
-        }
-
-        var indexBuffer;
-        var indices = geometry.indices;
-        if (defined(indices)) {
-            if ((Geometry.computeNumberOfVertices(geometry) > CesiumMath.SIXTY_FOUR_KILOBYTES) && this.elementIndexUint) {
-                indexBuffer = this.createIndexBuffer(new Uint32Array(indices), bufferUsage, IndexDatatype.UNSIGNED_INT);
-            } else{
-                indexBuffer = this.createIndexBuffer(new Uint16Array(indices), bufferUsage, IndexDatatype.UNSIGNED_SHORT);
-            }
-        }
-
-        return this.createVertexArray(vaAttributes, indexBuffer);
-    };
-
     var viewportQuadAttributeLocations = {
         position : 0,
         textureCoordinates : 1
@@ -2233,7 +1551,8 @@ define([
                 primitiveType : PrimitiveType.TRIANGLES
             });
 
-            vertexArray = this.createVertexArrayFromGeometry({
+            vertexArray = VertexArray.fromGeometry({
+                context : this,
                 geometry : geometry,
                 attributeLocations : {
                     position : 0,

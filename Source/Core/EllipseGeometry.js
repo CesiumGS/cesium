@@ -588,7 +588,7 @@ define([
     }
 
     /**
-     * A description of an ellipse on an ellipsoid.
+     * A description of an ellipse on an ellipsoid. Ellipse geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
      *
      * @alias EllipseGeometry
      * @constructor
@@ -679,7 +679,7 @@ define([
      * Stores the provided instance into the provided array.
      * @function
      *
-     * @param {Object} value The value to pack.
+     * @param {EllipseGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
@@ -736,6 +736,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {EllipseGeometry} [result] The object into which to store the result.
+     * @returns {EllipseGeometry} The modified result parameter or a new EllipseGeometry instance if one was not provided.
      */
     EllipseGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -824,6 +825,29 @@ define([
             indices : geometry.indices,
             primitiveType : PrimitiveType.TRIANGLES,
             boundingSphere : geometry.boundingSphere
+        });
+    };
+
+    /**
+     * @private
+     */
+    EllipseGeometry.createShadowVolume = function(ellipseGeometry, minHeightFunc, maxHeightFunc) {
+        var granularity = ellipseGeometry._granularity;
+        var ellipsoid = ellipseGeometry._ellipsoid;
+
+        var minHeight = minHeightFunc(granularity, ellipsoid);
+        var maxHeight = maxHeightFunc(granularity, ellipsoid);
+
+        return new EllipseGeometry({
+            center : ellipseGeometry._center,
+            semiMajorAxis : ellipseGeometry._semiMajorAxis,
+            semiMinorAxis : ellipseGeometry._semiMinorAxis,
+            ellipsoid : ellipsoid,
+            stRotation : ellipseGeometry._stRotation,
+            granularity : granularity,
+            extrudedHeight : minHeight,
+            height : maxHeight,
+            vertexFormat : VertexFormat.POSITION_ONLY
         });
     };
 

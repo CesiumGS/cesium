@@ -4,6 +4,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/defaultValue',
         'Core/Matrix4',
+        'Renderer/Texture',
         'Scene/OrthographicFrustum',
         'Scene/SceneMode',
         'Specs/createCamera',
@@ -14,6 +15,7 @@ defineSuite([
         Cartesian3,
         defaultValue,
         Matrix4,
+        Texture,
         OrthographicFrustum,
         SceneMode,
         createCamera,
@@ -92,6 +94,22 @@ defineSuite([
             '  bool b2 = (czm_viewportTransformation[0][2] == 0.0) && (czm_viewportTransformation[1][2] == 0.0) && (czm_viewportTransformation[2][2] != 0.0) && (czm_viewportTransformation[3][2] != 0.0); ' +
             '  bool b3 = (czm_viewportTransformation[0][3] == 0.0) && (czm_viewportTransformation[1][3] == 0.0) && (czm_viewportTransformation[2][3] == 0.0) && (czm_viewportTransformation[3][3] == 1.0); ' +
             '  gl_FragColor = vec4(b0 && b1 && b2 && b3); ' +
+            '}';
+        context.verifyDrawForSpecs(fs);
+    });
+
+    it('has czm_globeDepthTexture', function() {
+        context.uniformState.globeDepthTexture = new Texture({
+            context : context,
+            source : {
+                width : 1,
+                height : 1,
+                arrayBufferView : new Uint8Array([255, 255, 255, 255])
+            }
+        });
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(texture2D(czm_globeDepthTexture, vec2(0.5, 0.5)).r == 1.0);' +
             '}';
         context.verifyDrawForSpecs(fs);
     });
