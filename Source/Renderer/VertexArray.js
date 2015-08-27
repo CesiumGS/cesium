@@ -151,7 +151,11 @@ define([
      * @example
      * // Example 1. Create a vertex array with vertices made up of three floating point
      * // values, e.g., a position, from a single vertex buffer.  No index buffer is used.
-     * var positionBuffer = Buffer.createVertexBuffer(context, 12, BufferUsage.STATIC_DRAW);
+     * var positionBuffer = Buffer.createVertexBuffer({
+     *     context : context,
+     *     sizeInBytes : 12,
+     *     usage : BufferUsage.STATIC_DRAW
+     * });
      * var attributes = [
      *     {
      *         index                  : 0,
@@ -172,9 +176,16 @@ define([
      * @example
      * // Example 2. Create a vertex array with vertices from two different vertex buffers.
      * // Each vertex has a three-component position and three-component normal.
-     * var positionBuffer = Buffer.createVertexBuffer(context, 12, BufferUsage.STATIC_DRAW);
-     * var normalBuffer = Buffer.createVertexBuffer(context, 12, BufferUsage.STATIC_DRAW);
-     * var attributes = [
+     * var positionBuffer = Buffer.createVertexBuffer({
+     *     context : context,
+     *     sizeInBytes : 12,
+     *     usage : BufferUsage.STATIC_DRAW
+     * });
+     * var normalBuffer = Buffer.createVertexBuffer({
+     *     context : context,
+     *     sizeInBytes : 12,
+     *     usage : BufferUsage.STATIC_DRAW
+     * });     * var attributes = [
      *     {
      *         index                  : 0,
      *         vertexBuffer           : positionBuffer,
@@ -196,7 +207,11 @@ define([
      * @example
      * // Example 3. Creates the same vertex layout as Example 2 using a single
      * // vertex buffer, instead of two.
-     * var buffer = Buffer.createVertexBuffer(context, 24, BufferUsage.STATIC_DRAW);
+     * var buffer = Buffer.createVertexBuffer({
+     *     context : context,
+     *     sizeInBytes : 24,
+     *     usage : BufferUsage.STATIC_DRAW
+     * });
      * var attributes = [
      *     {
      *         vertexBuffer           : buffer,
@@ -495,7 +510,11 @@ define([
             // Use a single vertex buffer with interleaved vertices.
             var interleavedAttributes = interleaveAttributes(attributes);
             if (defined(interleavedAttributes)) {
-                vertexBuffer = Buffer.createVertexBuffer(context, interleavedAttributes.buffer, bufferUsage);
+                vertexBuffer = Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : interleavedAttributes.buffer,
+                    usage : bufferUsage
+                });
                 var offsetsInBytes = interleavedAttributes.offsetsInBytes;
                 var strideInBytes = interleavedAttributes.vertexSizeInBytes;
 
@@ -539,7 +558,11 @@ define([
 
                     vertexBuffer = undefined;
                     if (defined(attribute.values)) {
-                        vertexBuffer = Buffer.createVertexBuffer(context, ComponentDatatype.createTypedArray(componentDatatype, attribute.values), bufferUsage);
+                        vertexBuffer = Buffer.createVertexBuffer({
+                            context : context,
+                            typedArray : ComponentDatatype.createTypedArray(componentDatatype, attribute.values),
+                            usage : bufferUsage
+                        });
                     }
 
                     vaAttributes.push({
@@ -558,9 +581,19 @@ define([
         var indices = geometry.indices;
         if (defined(indices)) {
             if ((Geometry.computeNumberOfVertices(geometry) > CesiumMath.SIXTY_FOUR_KILOBYTES) && context.elementIndexUint) {
-                indexBuffer = Buffer.createIndexBuffer(context, new Uint32Array(indices), bufferUsage, IndexDatatype.UNSIGNED_INT);
+                indexBuffer = Buffer.createIndexBuffer({
+                    context : context,
+                    typedArray : new Uint32Array(indices),
+                    usage : bufferUsage,
+                    indexDatatype : IndexDatatype.UNSIGNED_INT
+                });
             } else{
-                indexBuffer = Buffer.createIndexBuffer(context, new Uint16Array(indices), bufferUsage, IndexDatatype.UNSIGNED_SHORT);
+                indexBuffer = Buffer.createIndexBuffer({
+                    context : context,
+                    typedArray : new Uint16Array(indices),
+                    usage : bufferUsage,
+                    indexDatatype : IndexDatatype.UNSIGNED_SHORT
+                });
             }
         }
 

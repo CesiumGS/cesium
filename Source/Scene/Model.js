@@ -1295,7 +1295,11 @@ define([
             bufferView = bufferViews[bufferViewName];
 
             // Only ARRAY_BUFFER here.  ELEMENT_ARRAY_BUFFER created below.
-            var vertexBuffer = Buffer.createVertexBuffer(context, loadResources.getBuffer(bufferView), BufferUsage.STATIC_DRAW);
+            var vertexBuffer = Buffer.createVertexBuffer({
+                context : context,
+                typedArray : loadResources.getBuffer(bufferView),
+                usage : BufferUsage.STATIC_DRAW
+            });
             vertexBuffer.vertexArrayDestroyable = false;
             rendererBuffers[bufferViewName] = vertexBuffer;
         }
@@ -1310,7 +1314,12 @@ define([
                 bufferView = bufferViews[accessor.bufferView];
 
                 if ((bufferView.target === WebGLRenderingContext.ELEMENT_ARRAY_BUFFER) && !defined(rendererBuffers[accessor.bufferView])) {
-                    var indexBuffer = Buffer.createIndexBuffer(context, loadResources.getBuffer(bufferView), BufferUsage.STATIC_DRAW, accessor.componentType);
+                    var indexBuffer = Buffer.createIndexBuffer({
+                        context : context,
+                        typedArray : loadResources.getBuffer(bufferView),
+                        usage : BufferUsage.STATIC_DRAW,
+                        indexDatatype : accessor.componentType
+                    });
                     indexBuffer.vertexArrayDestroyable = false;
                     rendererBuffers[accessor.bufferView] = indexBuffer;
                     // In theory, several glTF accessors with different componentTypes could

@@ -241,7 +241,11 @@ define([
             directions[6] = 0.0;
             directions[7] = 255;
 
-            var vertexBuffer = Buffer.createVertexBuffer(context, directions, BufferUsage.STATIC_DRAW);
+            var vertexBuffer = Buffer.createVertexBuffer({
+                context : context,
+                typedArray : directions,
+                usage : BufferUsage.STATIC_DRAW
+            });
             var attributes = [{
                 index : attributeLocations.direction,
                 vertexBuffer : vertexBuffer,
@@ -250,7 +254,12 @@ define([
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE
             }];
             // Workaround Internet Explorer 11.0.8 lack of TRIANGLE_FAN
-            var indexBuffer = Buffer.createIndexBuffer(context, new Uint16Array([0, 1, 2, 0, 2, 3]), BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+            var indexBuffer = Buffer.createIndexBuffer({
+                context : context,
+                typedArray : new Uint16Array([0, 1, 2, 0, 2, 3]),
+                usage : BufferUsage.STATIC_DRAW,
+                indexDatatype : IndexDatatype.UNSIGNED_SHORT
+            });
             command.vertexArray = new VertexArray({
                 context : context,
                 attributes : attributes,

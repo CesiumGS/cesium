@@ -365,7 +365,11 @@ define([
                 if (vertexBufferDefined) {
                     vertexBuffer.destroy();
                 }
-                buffer.vertexBuffer = Buffer.createVertexBuffer(vertexArrayFacade._context, buffer.arrayBuffer, buffer.usage);
+                buffer.vertexBuffer = Buffer.createVertexBuffer({
+                    context : vertexArrayFacade._context,
+                    typedArray : buffer.arrayBuffer,
+                    usage : buffer.usage
+                });
                 buffer.vertexBuffer.vertexArrayDestroyable = false;
 
                 return true; // Created new vertex buffer

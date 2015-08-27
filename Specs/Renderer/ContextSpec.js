@@ -180,12 +180,22 @@ defineSuite([
 
     it('gets the element index uint extension', function() {
         if (context.elementIndexUint) {
-            var buffer = Buffer.createIndexBuffer(context, 6, BufferUsage.STREAM_DRAW, IndexDatatype.UNSIGNED_INT);
+            var buffer = Buffer.createIndexBuffer({
+                context : context,
+                sizeInBytes : 6,
+                usage : BufferUsage.STREAM_DRAW,
+                indexDatatype : IndexDatatype.UNSIGNED_INT
+            });
             expect(buffer).toBeDefined();
             buffer.destroy();
         } else {
             expect(function() {
-                Buffer.createIndexBuffer(context, 6, BufferUsage.STREAM_DRAW, IndexDatatype.UNSIGNED_INT);
+                Buffer.createIndexBuffer({
+                    context : context,
+                    sizeInBytes : 6,
+                    usage : BufferUsage.STREAM_DRAW,
+                    indexDatatype : IndexDatatype.UNSIGNED_INT
+                });
             }).toThrowDeveloperError();
         }
     });

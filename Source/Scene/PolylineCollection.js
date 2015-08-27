@@ -743,13 +743,29 @@ define([
             var widthBufferUsage = collection._buffersUsage[WIDTH_INDEX].bufferUsage;
             var texCoordExpandWidthAndShowBufferUsage = (showBufferUsage === BufferUsage.STREAM_DRAW || widthBufferUsage === BufferUsage.STREAM_DRAW) ? BufferUsage.STREAM_DRAW : BufferUsage.STATIC_DRAW;
 
-            collection._positionBuffer = Buffer.createVertexBuffer(context, positionArray, positionBufferUsage);
+            collection._positionBuffer = Buffer.createVertexBuffer({
+                context : context,
+                typedArray : positionArray,
+                usage : positionBufferUsage
+            });
             var position3DBuffer;
             if (defined(position3DArray)) {
-                position3DBuffer = Buffer.createVertexBuffer(context, position3DArray, positionBufferUsage);
+                position3DBuffer = Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : position3DArray,
+                    usage : positionBufferUsage
+                });
             }
-            collection._pickColorBuffer = Buffer.createVertexBuffer(context, pickColorArray, BufferUsage.STATIC_DRAW);
-            collection._texCoordExpandWidthAndShowBuffer = Buffer.createVertexBuffer(context, texCoordExpandWidthAndShowArray, texCoordExpandWidthAndShowBufferUsage);
+            collection._pickColorBuffer = Buffer.createVertexBuffer({
+                context : context,
+                typedArray : pickColorArray,
+                usage : BufferUsage.STATIC_DRAW
+            });
+            collection._texCoordExpandWidthAndShowBuffer = Buffer.createVertexBuffer({
+                context : context,
+                typedArray : texCoordExpandWidthAndShowArray,
+                usage : texCoordExpandWidthAndShowBufferUsage
+            });
 
             var pickColorSizeInBytes = 4 * Uint8Array.BYTES_PER_ELEMENT;
             var positionSizeInBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
@@ -762,7 +778,12 @@ define([
 
                 if (indices.length > 0) {
                     var indicesArray = new Uint16Array(indices);
-                    var indexBuffer = Buffer.createIndexBuffer(context, indicesArray, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+                    var indexBuffer = Buffer.createIndexBuffer({
+                        context : context,
+                        typedArray : indicesArray,
+                        usage : BufferUsage.STATIC_DRAW,
+                        indexDatatype : IndexDatatype.UNSIGNED_SHORT
+                    });
 
                     vbo += vertexBufferOffset[k];
 

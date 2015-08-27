@@ -943,7 +943,10 @@ define([
             var vaLength = attributes.length;
             for (var j = 0; j < vaLength; ++j) {
                 var attribute = attributes[j];
-                attribute.vertexBuffer = Buffer.createVertexBuffer(context, attribute.values, BufferUsage.DYNAMIC_DRAW);
+                attribute.vertexBuffer = Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : attribute.values,
+                    usage : BufferUsage.DYNAMIC_DRAW});
                 delete attribute.values;
             }
 

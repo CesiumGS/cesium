@@ -847,7 +847,12 @@ define([
         GeometryPipeline.toWireframe(geometry);
 
         var wireframeIndices = geometry.indices;
-        var wireframeIndexBuffer = Buffer.createIndexBuffer(context, wireframeIndices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+        var wireframeIndexBuffer = Buffer.createIndexBuffer({
+            context : context,
+            typedArray : wireframeIndices,
+            usage : BufferUsage.STATIC_DRAW,
+            indexDatatype : IndexDatatype.UNSIGNED_SHORT
+        });
         return new VertexArray({
             context : context,
             attributes : vertexArray._attributes,
