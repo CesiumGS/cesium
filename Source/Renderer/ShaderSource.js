@@ -14,6 +14,9 @@ define([
     "use strict";
 
     function removeComments(source) {
+        // remove inline comments
+        source = source.replace(/\/\/.*/g, '');
+        // remove multiline comment block
         return source.replace(/\/\*\*[\s\S]*?\*\//gm, function(match) {
             // preserve the number of lines in the comment block so the line numbers will be correct when debugging shaders
             var numberOfLines = match.match(/\n/gm).length;

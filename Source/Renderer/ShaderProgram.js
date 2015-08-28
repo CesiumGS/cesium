@@ -7,6 +7,7 @@ define([
         '../Core/DeveloperError',
         '../Core/RuntimeError',
         './AutomaticUniforms',
+        './ContextLimits',
         './createUniform',
         './createUniformArray'
     ], function(
@@ -17,6 +18,7 @@ define([
         DeveloperError,
         RuntimeError,
         AutomaticUniforms,
+        ContextLimits,
         createUniform,
         createUniformArray) {
     "use strict";
@@ -27,7 +29,51 @@ define([
     /**
      * @private
      */
+
+    function extractUniforms(shaderText) {
+        // TODO: regex doesn't work for inline structs
+        var uniformNames = [];
+        var uniformLines = shaderText.match(/uniform[\w\s]*(?=[=\[;])/g);
+        if (uniformLines) {
+            for (var i = 0; i < uniformLines.length; i++) {
+                var line = uniformLines[i].trim();
+                var name = line.slice(line.lastIndexOf(' ') + 1);
+                uniformNames.push(name);
+            }
+        }
+        return uniformNames;
+    }
+
     var ShaderProgram = function(options) {
+        // If a uniform exists in both the vertex and fragment shader but with different precision qualifiers,
+        // give the fragment shader uniform a different name. This fixes shader compilation errors on devices
+        // that only support mediump in the fragment shader.
+        var vertexShaderText = options.vertexShaderText;
+        var fragmentShaderText = options.fragmentShaderText;
+        var duplicateUniformNames = {};
+
+        if (!ContextLimits.highpSupported) {
+            var vertexShaderUniforms = extractUniforms(vertexShaderText);
+            var fragmentShaderUniforms = extractUniforms(fragmentShaderText);
+
+            // Find uniforms used in both
+            var i, j;
+            var uniformName;
+            var duplicateName;
+            for (i = 0; i < vertexShaderUniforms.length; i++) {
+                for (j = 0; j < fragmentShaderUniforms.length; j++) {
+                    if (vertexShaderUniforms[i] === fragmentShaderUniforms[j]) {
+                        uniformName = vertexShaderUniforms[i];
+                        duplicateName = uniformName + "_f";
+                        // Update fragmentShaderText with renamed uniforms
+                        var re = new RegExp(uniformName + "\\b", "g");
+                        fragmentShaderText = fragmentShaderText.replace(re, duplicateName);
+                        duplicateUniformNames[duplicateName] = uniformName;
+                    }
+                }
+            }
+        }
+
         this._gl = options.gl;
         this._logShaderCompilation = options.logShaderCompilation;
         this._debugShaders = options.debugShaders;
@@ -40,6 +86,7 @@ define([
         this._uniforms = undefined;
         this._automaticUniforms = undefined;
         this._manualUniforms = undefined;
+        this._duplicateUniformNames = duplicateUniformNames;
         this._cachedShader = undefined; // Used by ShaderCache
 
         /**
@@ -48,9 +95,9 @@ define([
         this.maximumTextureUnitIndex = undefined;
 
         this._vertexShaderSource = options.vertexShaderSource;
-        this._vertexShaderText = options.vertexShaderText;
+        this._vertexShaderText = vertexShaderText;
         this._fragmentShaderSource = options.fragmentShaderSource;
-        this._fragmentShaderText = options.fragmentShaderText;
+        this._fragmentShaderText = fragmentShaderText;
 
         /**
          * @private
@@ -346,20 +393,28 @@ define([
         };
     }
 
-    function partitionUniforms(uniforms) {
+    function partitionUniforms(shader, uniforms) {
         var automaticUniforms = [];
         var manualUniforms = [];
 
-        for ( var uniform in uniforms) {
+        for (var uniform in uniforms) {
             if (uniforms.hasOwnProperty(uniform)) {
-                var automaticUniform = AutomaticUniforms[uniform];
+                var uniformObject = uniforms[uniform];
+                var uniformName = uniform;
+                // if a duplicate uniform, use it's original name so it is updated correctly
+                var duplicateUniform = shader._duplicateUniformNames[uniformName];
+                if (duplicateUniform) {
+                    uniformObject.name = duplicateUniform;
+                    uniformName = duplicateUniform;
+                }
+                var automaticUniform = AutomaticUniforms[uniformName];
                 if (automaticUniform) {
                     automaticUniforms.push({
-                        uniform : uniforms[uniform],
+                        uniform : uniformObject,
                         automaticUniform : automaticUniform
                     });
                 } else {
-                    manualUniforms.push(uniforms[uniform]);
+                    manualUniforms.push(uniformObject);
                 }
             }
         }
@@ -393,7 +448,7 @@ define([
         var program = createAndLinkProgram(gl, shader, shader._debugShaders);
         var numberOfVertexAttributes = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
         var uniforms = findUniforms(gl, program);
-        var partitionedUniforms = partitionUniforms(uniforms.uniformsByName);
+        var partitionedUniforms = partitionUniforms(shader, uniforms.uniformsByName);
 
         shader._program = program;
         shader._numberOfVertexAttributes = numberOfVertexAttributes;

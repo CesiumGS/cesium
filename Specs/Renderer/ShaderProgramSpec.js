@@ -12,6 +12,7 @@ defineSuite([
         'Renderer/Buffer',
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
+        'Renderer/ContextLimits',
         'Renderer/DrawCommand',
         'Renderer/ShaderSource',
         'Renderer/VertexArray',
@@ -29,6 +30,7 @@ defineSuite([
         Buffer,
         BufferUsage,
         ClearCommand,
+        ContextLimits,
         DrawCommand,
         ShaderSource,
         VertexArray,
@@ -77,7 +79,7 @@ defineSuite([
         }
     });
 
-    function renderFragment(context, shaderProgram) {
+    function renderFragment(context, shaderProgram, uniformMap) {
         va = new VertexArray({
             context : context,
             attributes : [{
@@ -97,7 +99,8 @@ defineSuite([
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : shaderProgram,
-            vertexArray : va
+            vertexArray : va,
+            uniformMap : uniformMap
         });
         command.execute(context);
 
@@ -353,6 +356,27 @@ defineSuite([
         });
 
         expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
+    });
+
+    it('creates duplicate uniforms if precision of uniforms in vertex and fragment shader do not match', function() {
+        var highpSupported = ContextLimits.highpSupported;
+        ContextLimits._highpSupported = false;
+        var vs = 'attribute vec4 position; uniform float u_value; varying float v_value; void main() { gl_PointSize = 1.0; v_value = u_value + czm_viewport.z*0.2; gl_Position = position; }';
+        var fs = 'uniform float u_value; varying float v_value; void main() { gl_FragColor = vec4(u_value + v_value + czm_viewport.z*0.2); }';
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
+        var uniformMap = {
+            u_value : function() {
+                return 0.2;
+            }
+        };
+        expect(sp.allUniforms.u_value).toBeDefined();
+        expect(sp.allUniforms.u_value_f).toBeDefined();
+        expect(renderFragment(context, sp, uniformMap)).toEqual([204, 204, 204, 204]);
+        ContextLimits._highpSupported = highpSupported;
     });
 
     it('1 level function dependency', function() {

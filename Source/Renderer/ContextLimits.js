@@ -27,7 +27,8 @@ define([
         _maximumViewportHeight : 0,
         _maximumTextureFilterAnisotropy : 0,
         _maximumDrawBuffers : 0,
-        _maximumColorAttachments : 0
+        _maximumColorAttachments : 0,
+        _highpSupported : false
     };
 
     defineProperties(ContextLimits, {
@@ -264,7 +265,19 @@ define([
             get: function () {
                 return ContextLimits._maximumColorAttachments;
             }
+        },
+
+        /**
+         * High precision supported in fragment shaders
+         * @memberof ContextLimits
+         * @type {Boolean}
+         */
+        highpSupported : {
+            get: function () {
+                return ContextLimits._highpSupported;
+            }
         }
+
     });
 
     return ContextLimits;
