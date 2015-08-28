@@ -1,5 +1,6 @@
 /*global defineSuite*/
 defineSuite([
+        'Renderer/CubeMap',
         'Core/Cartesian3',
         'Core/Color',
         'Core/loadImage',
@@ -9,7 +10,6 @@ defineSuite([
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
         'Renderer/ContextLimits',
-        'Renderer/CubeMap',
         'Renderer/DrawCommand',
         'Renderer/PixelDatatype',
         'Renderer/Sampler',
@@ -21,7 +21,8 @@ defineSuite([
         'Renderer/VertexArray',
         'Specs/createContext',
         'ThirdParty/when'
-    ], 'Renderer/CubeMap', function(
+    ], function(
+        CubeMap,
         Cartesian3,
         Color,
         loadImage,
@@ -31,7 +32,6 @@ defineSuite([
         BufferUsage,
         ClearCommand,
         ContextLimits,
-        CubeMap,
         DrawCommand,
         PixelDatatype,
         Sampler,

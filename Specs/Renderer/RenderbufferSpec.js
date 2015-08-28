@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-        'Renderer/ContextLimits',
         'Renderer/Renderbuffer',
+        'Renderer/ContextLimits',
         'Renderer/RenderbufferFormat',
         'Specs/createContext'
-    ], 'Renderer/Renderbuffer', function(
-        ContextLimits,
+    ], function(
         Renderbuffer,
+        ContextLimits,
         RenderbufferFormat,
         createContext) {
     "use strict";

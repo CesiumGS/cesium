@@ -1,5 +1,6 @@
 /*global defineSuite*/
 defineSuite([
+        'Renderer/Texture',
         'Core/Cartesian2',
         'Core/Color',
         'Core/loadImage',
@@ -13,7 +14,6 @@ defineSuite([
         'Renderer/PixelDatatype',
         'Renderer/Sampler',
         'Renderer/ShaderProgram',
-        'Renderer/Texture',
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
         'Renderer/TextureWrap',
@@ -21,6 +21,7 @@ defineSuite([
         'Specs/createContext',
         'ThirdParty/when'
     ], function(
+        Texture,
         Cartesian2,
         Color,
         loadImage,
@@ -34,7 +35,6 @@ defineSuite([
         PixelDatatype,
         Sampler,
         ShaderProgram,
-        Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,

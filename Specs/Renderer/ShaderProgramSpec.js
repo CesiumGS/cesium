@@ -1,5 +1,6 @@
 /*global defineSuite*/
 defineSuite([
+        'Renderer/ShaderProgram',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
@@ -12,11 +13,11 @@ defineSuite([
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
         'Renderer/DrawCommand',
-        'Renderer/ShaderProgram',
         'Renderer/ShaderSource',
         'Renderer/VertexArray',
         'Specs/createContext'
     ], function(
+        ShaderProgram,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -29,7 +30,6 @@ defineSuite([
         BufferUsage,
         ClearCommand,
         DrawCommand,
-        ShaderProgram,
         ShaderSource,
         VertexArray,
         createContext) {

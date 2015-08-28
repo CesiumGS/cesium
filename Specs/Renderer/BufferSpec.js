@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-        'Core/IndexDatatype',
         'Renderer/Buffer',
+        'Core/IndexDatatype',
         'Renderer/BufferUsage',
         'Specs/createContext'
-    ], 'Renderer/Buffer', function(
-        IndexDatatype,
+    ], function(
         Buffer,
+        IndexDatatype,
         BufferUsage,
         createContext) {
     "use strict";

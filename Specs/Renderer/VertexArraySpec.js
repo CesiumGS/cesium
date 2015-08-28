@@ -1,21 +1,21 @@
 /*global defineSuite*/
 defineSuite([
+        'Renderer/VertexArray',
         'Core/ComponentDatatype',
         'Core/PrimitiveType',
         'Renderer/Buffer',
         'Renderer/BufferUsage',
         'Renderer/DrawCommand',
         'Renderer/ShaderProgram',
-        'Renderer/VertexArray',
         'Specs/createContext'
-    ], 'Renderer/VertexArray', function(
+    ], function(
+        VertexArray,
         ComponentDatatype,
         PrimitiveType,
         Buffer,
         BufferUsage,
         DrawCommand,
         ShaderProgram,
-        VertexArray,
         createContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/

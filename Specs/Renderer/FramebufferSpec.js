@@ -1,5 +1,6 @@
 /*global defineSuite*/
 defineSuite([
+        'Renderer/Framebuffer',
         'Core/Color',
         'Core/PixelFormat',
         'Core/PrimitiveType',
@@ -9,7 +10,6 @@ defineSuite([
         'Renderer/ContextLimits',
         'Renderer/CubeMap',
         'Renderer/DrawCommand',
-        'Renderer/Framebuffer',
         'Renderer/PixelDatatype',
         'Renderer/Renderbuffer',
         'Renderer/RenderbufferFormat',
@@ -18,7 +18,8 @@ defineSuite([
         'Renderer/Texture',
         'Renderer/VertexArray',
         'Specs/createContext'
-    ], 'Renderer/Framebuffer', function(
+    ], function(
+        Framebuffer,
         Color,
         PixelFormat,
         PrimitiveType,
@@ -28,7 +29,6 @@ defineSuite([
         ContextLimits,
         CubeMap,
         DrawCommand,
-        Framebuffer,
         PixelDatatype,
         Renderbuffer,
         RenderbufferFormat,
