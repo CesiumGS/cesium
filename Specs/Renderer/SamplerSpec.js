@@ -5,7 +5,7 @@ defineSuite([
         'Renderer/TextureMinificationFilter',
         'Renderer/TextureWrap',
         'Specs/createContext'
-    ], 'Renderer/Sampler', function(
+    ], function(
         Sampler,
         TextureMagnificationFilter,
         TextureMinificationFilter,
