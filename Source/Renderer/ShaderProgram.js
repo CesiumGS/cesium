@@ -56,8 +56,8 @@ define([
 
         this._vertexShaderSource = options.vertexShaderSource;
         this._vertexShaderText = options.vertexShaderText;
-        this._fragmentShaderSource = modifiedFS.fragmentShaderSource;
-        this._fragmentShaderText = result.fragmentShaderText;
+        this._fragmentShaderSource = options.fragmentShaderSource;
+        this._fragmentShaderText = modifiedFS.fragmentShaderText;
 
         /**
          * @private
