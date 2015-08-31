@@ -401,7 +401,7 @@ define([
             if (uniforms.hasOwnProperty(uniform)) {
                 var uniformObject = uniforms[uniform];
                 var uniformName = uniform;
-                // if a duplicate uniform, use it's original name so it is updated correctly
+                // if it's a duplicate uniform, use its original name so it is updated correctly
                 var duplicateUniform = shader._duplicateUniformNames[uniformName];
                 if (duplicateUniform) {
                     uniformObject.name = duplicateUniform;
