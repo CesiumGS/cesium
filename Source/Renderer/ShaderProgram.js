@@ -32,8 +32,7 @@ define([
      * @private
      */
     var ShaderProgram = function(options) {
-
-        var result = handleUniformPrecisionMismatches(options.vertexShaderText, options.fragmentShaderText);
+        var modifiedFS = handleUniformPrecisionMismatches(options.vertexShaderText, options.fragmentShaderText);
 
         this._gl = options.gl;
         this._logShaderCompilation = options.logShaderCompilation;
@@ -47,7 +46,7 @@ define([
         this._uniforms = undefined;
         this._automaticUniforms = undefined;
         this._manualUniforms = undefined;
-        this._duplicateUniformNames = result.duplicateUniformNames;
+        this._duplicateUniformNames = modifiedFS.duplicateUniformNames;
         this._cachedShader = undefined; // Used by ShaderCache
 
         /**
@@ -57,7 +56,7 @@ define([
 
         this._vertexShaderSource = options.vertexShaderSource;
         this._vertexShaderText = options.vertexShaderText;
-        this._fragmentShaderSource = options.fragmentShaderSource;
+        this._fragmentShaderSource = modifiedFS.fragmentShaderSource;
         this._fragmentShaderText = result.fragmentShaderText;
 
         /**
@@ -177,6 +176,7 @@ define([
                 }
             }
         }
+
         return {
             fragmentShaderText : fragmentShaderText,
             duplicateUniformNames : duplicateUniformNames
