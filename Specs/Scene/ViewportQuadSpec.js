@@ -106,7 +106,8 @@ defineSuite([
         pollToPromise(function() {
             return viewportQuad.material._loadedImages.length !== 0;
         }).then(function() {
-            expect(scene.context.readPixels()).toEqual([0, 0, 0, 0]);
+            ClearCommand.ALL.execute(scene.context);
+            expect(scene.context.readPixels()).toEqual([0, 0, 0, 255]);
             expect(scene.renderForSpecs()).toEqual([255, 0, 0, 255]);
         });
     });
