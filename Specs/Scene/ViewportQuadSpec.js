@@ -65,18 +65,18 @@ defineSuite([
 
     it('throws when rendered without a rectangle', function() {
         viewportQuad.rectangle = undefined;
+        scene.primitives.add(viewportQuad);
 
         expect(function() {
-            scene.primitives.add(viewportQuad);
             scene.renderForSpecs();
         }).toThrowDeveloperError();
     });
 
     it('throws when rendered without a material', function() {
         viewportQuad.material = undefined;
+        scene.primitives.add(viewportQuad);
 
         expect(function() {
-            scene.primitives.add(viewportQuad);
             scene.renderForSpecs();
         }).toThrowDeveloperError();
     });
