@@ -359,10 +359,10 @@ defineSuite([
     });
 
     it('creates duplicate uniforms if precision of uniforms in vertex and fragment shader do not match', function() {
-        var highpSupported = ContextLimits.highpSupported;
-        ContextLimits._highpSupported = false;
-        var vs = 'attribute vec4 position; uniform float u_value; varying float v_value; void main() { gl_PointSize = 1.0; v_value = u_value + czm_viewport.z*0.2; gl_Position = position; }';
-        var fs = 'uniform float u_value; varying float v_value; void main() { gl_FragColor = vec4(u_value + v_value + czm_viewport.z*0.2); }';
+        var highpFloatSupported = ContextLimits.highpFloatSupported;
+        ContextLimits._highpFloatSupported = false;
+        var vs = 'attribute vec4 position; uniform float u_value; varying float v_value; void main() { gl_PointSize = 1.0; v_value = u_value * czm_viewport.z; gl_Position = position; }';
+        var fs = 'uniform float u_value; varying float v_value; void main() { gl_FragColor = vec4(u_value * v_value * czm_viewport.z); }';
         sp = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : vs,
@@ -370,13 +370,13 @@ defineSuite([
         });
         var uniformMap = {
             u_value : function() {
-                return 0.2;
+                return 1.0;
             }
         };
         expect(sp.allUniforms.u_value).toBeDefined();
-        expect(sp.allUniforms.u_value_f).toBeDefined();
-        expect(renderFragment(context, sp, uniformMap)).toEqual([204, 204, 204, 204]);
-        ContextLimits._highpSupported = highpSupported;
+        expect(sp.allUniforms.czm_mediump_u_value).toBeDefined();
+        expect(renderFragment(context, sp, uniformMap)).not.toEqual([0, 0, 0, 0]);
+        ContextLimits._highpFloatSupported = highpFloatSupported;
     });
 
     it('1 level function dependency', function() {
