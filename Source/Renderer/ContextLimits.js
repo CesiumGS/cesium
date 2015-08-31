@@ -268,7 +268,7 @@ define([
         },
 
         /**
-         * High precision supported in fragment shaders
+         * High precision supported (<code>highp</code>) in fragment shaders.
          * @memberof ContextLimits
          * @type {Boolean}
          */
