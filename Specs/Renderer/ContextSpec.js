@@ -41,22 +41,6 @@ defineSuite([
         expect(context.canvas).not.toBeNull();
     });
 
-    it('get version', function() {
-        expect(context.version).toMatch('WebGL');
-    });
-
-    it('get shadingLanguageVersion', function() {
-        expect(context.shadingLanguageVersion).toMatch('WebGL GLSL ES');
-    });
-
-    it('get vendor', function() {
-        expect(context.vendor).not.toBeNull();
-    });
-
-    it('get renderer', function() {
-        expect(context.renderer).not.toBeNull();
-    });
-
     it('get redBits', function() {
         expect(context.redBits).toEqual(8);
     });

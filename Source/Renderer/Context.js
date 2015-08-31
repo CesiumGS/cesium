@@ -229,10 +229,6 @@ define([
 
         var gl = this._gl = this._originalGLContext;
 
-        this._version = gl.getParameter(gl.VERSION);
-        this._shadingLanguageVersion = gl.getParameter(gl.SHADING_LANGUAGE_VERSION);
-        this._vendor = gl.getParameter(gl.VENDOR);
-        this._renderer = gl.getParameter(gl.RENDERER);
         this._redBits = gl.getParameter(gl.RED_BITS);
         this._greenBits = gl.getParameter(gl.GREEN_BITS);
         this._blueBits = gl.getParameter(gl.BLUE_BITS);
@@ -360,56 +356,6 @@ define([
         uniformState : {
             get : function() {
                 return this._us;
-            }
-        },
-
-        /**
-         * The WebGL version or release number of the form &lt;WebGL&gt;&lt;space&gt;&lt;version number&gt;&lt;space&gt;&lt;vendor-specific information&gt;.
-         * @memberof Context.prototype
-         * @type {String}
-         * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGetString.xml|glGetString} with <code>VERSION</code>.
-         */
-        version : {
-            get : function() {
-                return this._version;
-            }
-        },
-
-        /**
-         * The version or release number for the shading language of the form WebGL&lt;space&gt;GLSL&lt;space&gt;ES&lt;space&gt;&lt;version number&gt;&lt;space&gt;&lt;vendor-specific information&gt;.
-         * @memberof Context.prototype
-         * @type {String}
-         * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGetString.xml|glGetString} with <code>SHADING_LANGUAGE_VERSION</code>.
-         */
-        shadingLanguageVersion : {
-            get : function() {
-                return this._shadingLanguageVersion;
-            }
-        },
-
-        /**
-         * The company responsible for the WebGL implementation.
-         * @memberof Context.prototype
-         * @type {String}
-         */
-        vendor : {
-            get : function() {
-                return this._vendor;
-            }
-        },
-
-        /**
-         * The name of the renderer/configuration/hardware platform. For example, this may be the model of the
-         * video card, e.g., 'GeForce 8800 GTS/PCI/SSE2', or the browser-dependent name of the GL implementation, e.g.
-         * 'Mozilla' or 'ANGLE.'
-         * @memberof Context.prototype
-         * @type {String}
-         * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGetString.xml|glGetString} with <code>RENDERER</code>.
-         * @see {@link http://code.google.com/p/angleproject/|ANGLE}
-         */
-        renderer : {
-            get : function() {
-                return this._renderer;
             }
         },
 
