@@ -40,7 +40,6 @@ defineSuite([
     beforeEach(function() {
         viewportQuad = new ViewportQuad();
         viewportQuad.rectangle = new BoundingRectangle(0, 0, 2, 2);
-        scene.primitives.add(viewportQuad);
     });
 
     afterEach(function() {
@@ -68,6 +67,7 @@ defineSuite([
         viewportQuad.rectangle = undefined;
 
         expect(function() {
+            scene.primitives.add(viewportQuad);
             scene.renderForSpecs();
         }).toThrowDeveloperError();
     });
@@ -76,21 +76,21 @@ defineSuite([
         viewportQuad.material = undefined;
 
         expect(function() {
+            scene.primitives.add(viewportQuad);
             scene.renderForSpecs();
         }).toThrowDeveloperError();
     });
 
     it('does not render when show is false', function() {
-        ClearCommand.ALL.execute(scene.context);
-        expect(scene.context.readPixels()).toEqual([0, 0, 0, 255]);
-
         viewportQuad.show = false;
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        scene.primitives.add(viewportQuad);
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
     });
 
     it('renders material', function() {
-        ClearCommand.ALL.execute(scene.context);
-        expect(scene.context.readPixels()).toEqual([0, 0, 0, 255]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        scene.primitives.add(viewportQuad);
         expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
@@ -106,8 +106,8 @@ defineSuite([
         pollToPromise(function() {
             return viewportQuad.material._loadedImages.length !== 0;
         }).then(function() {
-            ClearCommand.ALL.execute(scene.context);
-            expect(scene.context.readPixels()).toEqual([0, 0, 0, 255]);
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+            scene.primitives.add(viewportQuad);
             expect(scene.renderForSpecs()).toEqual([255, 0, 0, 255]);
         });
     });
