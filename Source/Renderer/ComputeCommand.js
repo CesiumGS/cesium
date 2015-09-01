@@ -10,7 +10,7 @@ define([
     "use strict";
 
     /**
-     * Represents a command to the renderer for compute.
+     * Represents a command to the renderer for GPU Compute (using old-school GPGPU).
      *
      * @private
      */
