@@ -27,7 +27,9 @@ define([
         _maximumViewportHeight : 0,
         _maximumTextureFilterAnisotropy : 0,
         _maximumDrawBuffers : 0,
-        _maximumColorAttachments : 0
+        _maximumColorAttachments : 0,
+        _highpFloatSupported: false,
+        _highpIntSupported: false
     };
 
     defineProperties(ContextLimits, {
@@ -264,7 +266,30 @@ define([
             get: function () {
                 return ContextLimits._maximumColorAttachments;
             }
+        },
+
+        /**
+         * High precision float supported (<code>highp</code>) in fragment shaders.
+         * @memberof ContextLimits
+         * @type {Boolean}
+         */
+        highpFloatSupported : {
+            get: function () {
+                return ContextLimits._highpFloatSupported;
+            }
+        },
+
+        /**
+         * High precision int supported (<code>highp</code>) in fragment shaders.
+         * @memberof ContextLimits
+         * @type {Boolean}
+         */
+        highpIntSupported : {
+            get: function () {
+                return ContextLimits._highpIntSupported;
+            }
         }
+
     });
 
     return ContextLimits;

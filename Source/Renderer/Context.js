@@ -259,6 +259,11 @@ define([
         ContextLimits._maximumViewportWidth = maximumViewportDimensions[0];
         ContextLimits._maximumViewportHeight = maximumViewportDimensions[1];
 
+        var highpFloat = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT);
+        ContextLimits._highpFloatSupported = highpFloat.precision !== 0;
+        var highpInt = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_INT);
+        ContextLimits._highpIntSupported = highpInt.rangeMax !== 0;
+
         this._antialias = gl.getContextAttributes().antialias;
 
         // Query and initialize extensions
