@@ -21,6 +21,7 @@ define([
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
+        '../Renderer/ComputeCommand',
         '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
@@ -62,6 +63,7 @@ define([
         Buffer,
         BufferUsage,
         ClearCommand,
+        ComputeCommand,
         ContextLimits,
         DrawCommand,
         Framebuffer,
@@ -812,10 +814,8 @@ define([
 
         if (!defined(reproject)) {
             reproject = context.cache.imageryLayer_reproject = {
-                framebuffer : undefined,
                 vertexArray : undefined,
                 shaderProgram : undefined,
-                renderState : undefined,
                 sampler : undefined,
                 destroy : function() {
                     if (defined(this.framebuffer)) {
@@ -927,16 +927,6 @@ define([
             outputTexture.generateMipmap(MipmapHint.NICEST);
         }
 
-        if (defined(reproject.framebuffer)) {
-            reproject.framebuffer.destroy();
-        }
-
-        reproject.framebuffer = new Framebuffer({
-            context : context,
-            colorTextures : [outputTexture]
-        });
-        reproject.framebuffer.destroyAttachments = false;
-
         var south = rectangle.south;
         var north = rectangle.north;
 
@@ -955,30 +945,16 @@ define([
 
         reproject.vertexArray.getAttribute(1).vertexBuffer.copyFromArrayView(webMercatorT);
 
-        var command = new ClearCommand({
-            color : Color.BLACK,
-            framebuffer : reproject.framebuffer
-        });
-        command.execute(context);
-
-        if ((!defined(reproject.renderState)) ||
-                (reproject.renderState.viewport.width !== width) ||
-                (reproject.renderState.viewport.height !== height)) {
-
-            reproject.renderState = RenderState.fromCache({
-                viewport : new BoundingRectangle(0, 0, width, height)
-            });
-        }
-
-        var drawCommand = new DrawCommand({
-            framebuffer : reproject.framebuffer,
+        var computeCommand = new ComputeCommand({
             shaderProgram : reproject.shaderProgram,
-            renderState : reproject.renderState,
-            primitiveType : PrimitiveType.TRIANGLES,
+            outputTexture : outputTexture,
+            uniformMap : uniformMap,
             vertexArray : reproject.vertexArray,
-            uniformMap : uniformMap
+            persists : true,
+            owner : imageryLayer
         });
-        drawCommand.execute(context);
+
+        computeCommand.execute(context);
 
         return outputTexture;
     }

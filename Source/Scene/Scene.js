@@ -230,6 +230,7 @@ define([
         this._commandList = [];
         this._frustumCommandsList = [];
         this._overlayCommandList = [];
+        this._computeCommandList = [];
 
         this._pickFramebuffer = undefined;
 
@@ -1031,6 +1032,7 @@ define([
     function createPotentiallyVisibleSet(scene) {
         var commandList = scene._commandList;
         var overlayList = scene._overlayCommandList;
+        var computeList = scene._computeCommandList;
 
         var cullingVolume = scene._frameState.cullingVolume;
         var camera = scene._camera;
@@ -1054,6 +1056,7 @@ define([
             }
         }
         overlayList.length = 0;
+        computeList.length = 0;
 
         var near = Number.MAX_VALUE;
         var far = Number.MIN_VALUE;
@@ -1076,7 +1079,9 @@ define([
             var command = commandList[i];
             var pass = command.pass;
 
-            if (pass === Pass.OVERLAY) {
+            if (pass === Pass.COMPUTE) {
+                computeList.push(command);
+            } else if (pass === Pass.OVERLAY) {
                 overlayList.push(command);
             } else {
                 var boundingVolume = command.boundingVolume;
@@ -1615,6 +1620,15 @@ define([
         }
     }
 
+    function executeComputeCommands(scene) {
+        var context = scene.context;
+        var commandList = scene._computeCommandList;
+        var length = commandList.length;
+        for (var i = 0; i < length; ++i) {
+            commandList[i].execute(context);
+        }
+    }
+
     function executeOverlayCommands(scene, passState) {
         var context = scene.context;
         var commandList = scene._overlayCommandList;
@@ -1695,6 +1709,7 @@ define([
 
         scene._commandList.length = 0;
         scene._overlayCommandList.length = 0;
+        scene._computeCommandList.length = 0;
 
         updatePrimitives(scene);
         createPotentiallyVisibleSet(scene);
@@ -1704,6 +1719,7 @@ define([
         passState.blendingEnabled = undefined;
         passState.scissorTest = undefined;
 
+        executeComputeCommands(scene);
         executeCommands(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
         executeOverlayCommands(scene, passState);
 
@@ -2154,7 +2170,6 @@ define([
         this.sun = this.sun && this.sun.destroy();
         this._sunPostProcess = this._sunPostProcess && this._sunPostProcess.destroy();
         this._depthPlane = this._depthPlane && this._depthPlane.destroy();
-
         this._transitioner.destroy();
 
         if (defined(this._globeDepth)) {

@@ -18,6 +18,7 @@ define([
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
+        '../Renderer/ComputeCommand',
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
         '../Renderer/RenderState',
@@ -49,6 +50,7 @@ define([
         Buffer,
         BufferUsage,
         ClearCommand,
+        ComputeCommand,
         DrawCommand,
         Framebuffer,
         RenderState,
@@ -179,21 +181,6 @@ define([
                 pixelFormat : PixelFormat.RGBA
             });
 
-            var fbo = new Framebuffer({
-                context : context,
-                colorTextures : [this._texture]
-            });
-            fbo.destroyAttachments = false;
-
-            var clearCommand = new ClearCommand({
-                color : new Color(0.0, 0.0, 0.0, 0.0),
-                framebuffer : fbo
-            });
-
-            var rs = RenderState.fromCache({
-                viewport : new BoundingRectangle(0.0, 0.0, size, size)
-            });
-
             this._glowLengthTS = this._glowFactor * 5.0;
             this._radiusTS = (1.0 / (1.0 + 2.0 * this._glowLengthTS)) * 0.5;
 
@@ -207,18 +194,14 @@ define([
                 }
             };
 
-            var drawCommand = context.createViewportQuadCommand(SunTextureFS, {
-                renderState : rs,
+            var computeCommand = new ComputeCommand({
+                fragmentShaderSource : SunTextureFS,
+                outputTexture : this._texture,
                 uniformMap : uniformMap,
-                framebuffer : fbo,
                 owner : this
             });
 
-            clearCommand.execute(context);
-            drawCommand.execute(context);
-
-            drawCommand.shaderProgram.destroy();
-            fbo.destroy();
+            computeCommand.execute(context);
         }
 
         var command = this._command;

@@ -19,6 +19,7 @@ define([
         '../Shaders/ViewportQuadVS',
         './BufferUsage',
         './ClearCommand',
+        './ComputeEngine',
         './ContextLimits',
         './CubeMap',
         './DrawCommand',
@@ -52,6 +53,7 @@ define([
         ViewportQuadVS,
         BufferUsage,
         ClearCommand,
+        ComputeEngine,
         ContextLimits,
         CubeMap,
         DrawCommand,
@@ -299,6 +301,7 @@ define([
         this._defaultTexture = undefined;
         this._defaultCubeMap = undefined;
 
+        this._computeEngine = new ComputeEngine(this);
         this._us = us;
         this._currentRenderState = rs;
         this._currentPassState = ps;
@@ -665,6 +668,16 @@ define([
         defaultFramebuffer : {
             get : function() {
                 return defaultFramebufferMarker;
+            }
+        },
+
+        /**
+         * @memberof Context.prototype
+         * @type {ComputeEngine}
+         */
+        computeEngine : {
+            get : function() {
+                return this._computeEngine;
             }
         }
     });
@@ -1088,6 +1101,7 @@ define([
         this._shaderCache = this._shaderCache.destroy();
         this._defaultTexture = this._defaultTexture && this._defaultTexture.destroy();
         this._defaultCubeMap = this._defaultCubeMap && this._defaultCubeMap.destroy();
+        this._computeEngine = this._computeEngine && this._computeEngine.destroy();
 
         return destroyObject(this);
     };
