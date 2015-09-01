@@ -15,8 +15,11 @@ define([
         '../Core/IndexDatatype',
         '../Core/Math',
         '../Core/Matrix4',
+        '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArrayFacade',
         '../Shaders/BillboardCollectionFS',
@@ -43,8 +46,11 @@ define([
         IndexDatatype,
         CesiumMath,
         Matrix4,
+        Buffer,
         BufferUsage,
         DrawCommand,
+        RenderState,
+        ShaderProgram,
         ShaderSource,
         VertexArrayFacade,
         BillboardCollectionFS,
@@ -543,7 +549,12 @@ define([
 
         // PERFORMANCE_IDEA:  Should we reference count billboard collections, and eventually delete this?
         // Is this too much memory to allocate up front?  Should we dynamically grow it?
-        indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+        indexBuffer = Buffer.createIndexBuffer({
+            context : context,
+            typedArray : indices,
+            usage : BufferUsage.STATIC_DRAW,
+            indexDatatype : IndexDatatype.UNSIGNED_SHORT
+        });
         indexBuffer.vertexArrayDestroyable = false;
         context.cache.billboardCollection_indexBuffer = indexBuffer;
         return indexBuffer;
@@ -1203,7 +1214,7 @@ define([
             var colorList = this._colorCommands;
 
             if (!defined(this._rs)) {
-                this._rs = context.createRenderState({
+                this._rs = RenderState.fromCache({
                     depthTest : {
                         enabled : true
                     },
@@ -1240,7 +1251,14 @@ define([
                     vs.defines.push('CLAMPED_TO_GROUND');
                 }
 
-                this._sp = context.replaceShaderProgram(this._sp, vs, BillboardCollectionFS, attributeLocations);
+                this._sp = ShaderProgram.replaceCache({
+                    context : context,
+                    shaderProgram : this._sp,
+                    vertexShaderSource : vs,
+                    fragmentShaderSource : BillboardCollectionFS,
+                    attributeLocations : attributeLocations
+                });
+
                 this._compiledShaderRotation = this._shaderRotation;
                 this._compiledShaderAlignedAxis = this._shaderAlignedAxis;
                 this._compiledShaderScaleByDistance = this._shaderScaleByDistance;
@@ -1313,7 +1331,13 @@ define([
                     sources : [BillboardCollectionFS]
                 });
 
-                this._spPick = context.replaceShaderProgram(this._spPick, vs, fs, attributeLocations);
+                this._spPick = ShaderProgram.replaceCache({
+                    context : context,
+                    shaderProgram : this._spPick,
+                    vertexShaderSource : vs,
+                    fragmentShaderSource : fs,
+                    attributeLocations : attributeLocations
+                });
                 this._compiledShaderRotationPick = this._shaderRotation;
                 this._compiledShaderAlignedAxisPick = this._shaderAlignedAxis;
                 this._compiledShaderScaleByDistancePick = this._shaderScaleByDistance;

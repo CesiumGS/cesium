@@ -30,7 +30,7 @@ define([
      *     vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL,
      *     dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0),
      *     minimumCorner : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0),
-     *     maximumCorner : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0)  
+     *     maximumCorner : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0)
      *   }),
      *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
      *     Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 1000000.0), new Cesium.Matrix4()),
@@ -101,7 +101,7 @@ define([
          */
         normalize : {
             get : function() {
-                return true;
+                return false;
             }
         }
     });

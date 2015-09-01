@@ -19,9 +19,13 @@ define([
         '../Core/Matrix4',
         '../Core/subdivideArray',
         '../Core/TaskProcessor',
+        '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
+        '../Renderer/VertexArray',
         '../ThirdParty/when',
         './CullFace',
         './Pass',
@@ -48,9 +52,13 @@ define([
         Matrix4,
         subdivideArray,
         TaskProcessor,
+        Buffer,
         BufferUsage,
         DrawCommand,
+        RenderState,
+        ShaderProgram,
         ShaderSource,
+        VertexArray,
         when,
         CullFace,
         Pass,
@@ -293,6 +301,12 @@ define([
         this._colorCommands = [];
         this._pickCommands = [];
 
+        this._createBoundingVolumeFunction = options._createBoundingVolumeFunction;
+        this._createRenderStatesFunction = options._createRenderStatesFunction;
+        this._createShaderProgramFunction = options._createShaderProgramFunction;
+        this._createCommandsFunction = options._createCommandsFunction;
+        this._updateAndQueueCommandsFunction = options._updateAndQueueCommandsFunction;
+
         this._createGeometryResults = undefined;
         this._ready = false;
         this._readyPromise = when.defer();
@@ -485,7 +499,7 @@ define([
 
     var positionRegex = /attribute\s+vec(?:3|4)\s+(.*)3DHigh;/g;
 
-    function createColumbusViewShader(primitive, vertexShaderSource, scene3DOnly) {
+    Primitive._createColumbusViewShader = function(vertexShaderSource, scene3DOnly) {
         var match;
 
         var forwardDecl = '';
@@ -538,9 +552,9 @@ define([
         }
 
         return [forwardDecl, attributes, vertexShaderSource, computeFunctions].join('\n');
-    }
+    };
 
-    function createPickVertexShaderSource(vertexShaderSource) {
+    Primitive._createPickVertexShaderSource = function(vertexShaderSource) {
         var renamedVS = vertexShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_old_main()');
         var pickMain =
             'attribute vec4 pickColor; \n' +
@@ -552,9 +566,9 @@ define([
             '}';
 
         return renamedVS + '\n' + pickMain;
-    }
+    };
 
-    function appendShow(primitive, vertexShaderSource) {
+    Primitive._appendShowToShader = function(primitive, vertexShaderSource) {
         if (!defined(primitive._attributeLocations.show)) {
             return vertexShaderSource;
         }
@@ -569,7 +583,7 @@ define([
             '}';
 
         return renamedVS + '\n' + showMain;
-    }
+    };
 
     function modifyForEncodedNormals(primitive, vertexShaderSource) {
         if (!primitive.compressVertices) {
@@ -696,6 +710,551 @@ define([
     var createGeometryTaskProcessors;
     var combineGeometryTaskProcessor = new TaskProcessor('combineGeometry', Number.POSITIVE_INFINITY);
 
+    function loadAsynchronous(primitive, context, frameState) {
+        var instances;
+        var geometry;
+        var i;
+        var j;
+
+        var instanceIds = primitive._instanceIds;
+
+        if (primitive._state === PrimitiveState.READY) {
+            instances = (isArray(primitive.geometryInstances)) ? primitive.geometryInstances : [primitive.geometryInstances];
+            var length = primitive._numberOfInstances = instances.length;
+
+            var promises = [];
+            var subTasks = [];
+            for (i = 0; i < length; ++i) {
+                geometry = instances[i].geometry;
+                instanceIds.push(instances[i].id);
+
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(geometry._workerName)) {
+                    throw new DeveloperError('_workerName must be defined for asynchronous geometry.');
+                }
+                //>>includeEnd('debug');
+
+                subTasks.push({
+                    moduleName : geometry._workerName,
+                    geometry : geometry
+                });
+            }
+
+            if (!defined(createGeometryTaskProcessors)) {
+                createGeometryTaskProcessors = new Array(numberOfCreationWorkers);
+                for (i = 0; i < numberOfCreationWorkers; i++) {
+                    createGeometryTaskProcessors[i] = new TaskProcessor('createGeometry', Number.POSITIVE_INFINITY);
+                }
+            }
+
+            var subTask;
+            subTasks = subdivideArray(subTasks, numberOfCreationWorkers);
+
+            for (i = 0; i < subTasks.length; i++) {
+                var packedLength = 0;
+                var workerSubTasks = subTasks[i];
+                var workerSubTasksLength = workerSubTasks.length;
+                for (j = 0; j < workerSubTasksLength; ++j) {
+                    subTask = workerSubTasks[j];
+                    geometry = subTask.geometry;
+                    if (defined(geometry.constructor.pack)) {
+                        subTask.offset = packedLength;
+                        packedLength += defaultValue(geometry.constructor.packedLength, geometry.packedLength);
+                    }
+                }
+
+                var subTaskTransferableObjects;
+
+                if (packedLength > 0) {
+                    var array = new Float64Array(packedLength);
+                    subTaskTransferableObjects = [array.buffer];
+
+                    for (j = 0; j < workerSubTasksLength; ++j) {
+                        subTask = workerSubTasks[j];
+                        geometry = subTask.geometry;
+                        if (defined(geometry.constructor.pack)) {
+                            geometry.constructor.pack(geometry, array, subTask.offset);
+                            subTask.geometry = array;
+                        }
+                    }
+                }
+
+                promises.push(createGeometryTaskProcessors[i].scheduleTask({
+                    subTasks : subTasks[i]
+                }, subTaskTransferableObjects));
+            }
+
+            primitive._state = PrimitiveState.CREATING;
+
+            when.all(promises, function(results) {
+                primitive._createGeometryResults = results;
+                primitive._state = PrimitiveState.CREATED;
+            }).otherwise(function(error) {
+                setReady(primitive, frameState, PrimitiveState.FAILED, error);
+            });
+        } else if (primitive._state === PrimitiveState.CREATED) {
+            var transferableObjects = [];
+            instances = (isArray(primitive.geometryInstances)) ? primitive.geometryInstances : [primitive.geometryInstances];
+
+            var allowPicking = primitive.allowPicking;
+            var scene3DOnly = frameState.scene3DOnly;
+            var projection = frameState.mapProjection;
+
+            var promise = combineGeometryTaskProcessor.scheduleTask(PrimitivePipeline.packCombineGeometryParameters({
+                createGeometryResults : primitive._createGeometryResults,
+                instances : instances,
+                pickIds : allowPicking ? createPickIds(context, primitive, instances) : undefined,
+                ellipsoid : projection.ellipsoid,
+                projection : projection,
+                elementIndexUintSupported : context.elementIndexUint,
+                scene3DOnly : scene3DOnly,
+                allowPicking : allowPicking,
+                vertexCacheOptimize : primitive.vertexCacheOptimize,
+                compressVertices : primitive.compressVertices,
+                modelMatrix : primitive.modelMatrix
+            }, transferableObjects), transferableObjects);
+
+            primitive._createGeometryResults = undefined;
+            primitive._state = PrimitiveState.COMBINING;
+
+            when(promise, function(packedResult) {
+                var result = PrimitivePipeline.unpackCombineGeometryResults(packedResult);
+                primitive._geometries = result.geometries;
+                primitive._attributeLocations = result.attributeLocations;
+                primitive._vaAttributes = result.vaAttributes;
+                primitive._perInstanceAttributeLocations = result.perInstanceAttributeLocations;
+                primitive.modelMatrix = Matrix4.clone(result.modelMatrix, primitive.modelMatrix);
+                primitive._validModelMatrix = !Matrix4.equals(primitive.modelMatrix, Matrix4.IDENTITY);
+
+                var validInstancesIndices = packedResult.validInstancesIndices;
+                var invalidInstancesIndices = packedResult.invalidInstancesIndices;
+                var instanceIds = primitive._instanceIds;
+                var reorderedInstanceIds = new Array(instanceIds.length);
+
+                var validLength = validInstancesIndices.length;
+                for (var i = 0; i < validLength; ++i) {
+                    reorderedInstanceIds[i] = instanceIds[validInstancesIndices[i]];
+                }
+
+                var invalidLength = invalidInstancesIndices.length;
+                for (var j = 0; j < invalidLength; ++j) {
+                    reorderedInstanceIds[validLength + j] = instanceIds[invalidInstancesIndices[j]];
+                }
+
+                primitive._instanceIds = reorderedInstanceIds;
+
+                if (defined(primitive._geometries)) {
+                    primitive._state = PrimitiveState.COMBINED;
+                } else {
+                    setReady(primitive, frameState, PrimitiveState.FAILED, undefined);
+                }
+            }).otherwise(function(error) {
+                setReady(primitive, frameState, PrimitiveState.FAILED, error);
+            });
+        }
+    }
+
+    function loadSynchronous(primitive, context, frameState) {
+        var instances = (isArray(primitive.geometryInstances)) ? primitive.geometryInstances : [primitive.geometryInstances];
+        var length = primitive._numberOfInstances = instances.length;
+
+        var geometries = new Array(length);
+        var clonedInstances = new Array(length);
+
+        var invalidInstances = [];
+        var instanceIds = primitive._instanceIds;
+
+        var instance;
+        var i;
+
+        var geometryIndex = 0;
+        for (i = 0; i < length; i++) {
+            instance = instances[i];
+            var geometry = instance.geometry;
+
+            var createdGeometry;
+            if (defined(geometry.attributes) && defined(geometry.primitiveType)) {
+                createdGeometry = cloneGeometry(geometry);
+            } else {
+                createdGeometry = geometry.constructor.createGeometry(geometry);
+            }
+
+            if (defined(createdGeometry)) {
+                geometries[geometryIndex] = createdGeometry;
+                clonedInstances[geometryIndex++] = cloneInstance(instance, createdGeometry);
+                instanceIds.push(instance.id);
+            } else {
+                invalidInstances.push(instance);
+            }
+        }
+
+        geometries.length = geometryIndex;
+        clonedInstances.length = geometryIndex;
+
+        var allowPicking = primitive.allowPicking;
+        var scene3DOnly = frameState.scene3DOnly;
+        var projection = frameState.mapProjection;
+
+        var result = PrimitivePipeline.combineGeometry({
+            instances : clonedInstances,
+            invalidInstances : invalidInstances,
+            pickIds : allowPicking ? createPickIds(context, primitive, clonedInstances) : undefined,
+            ellipsoid : projection.ellipsoid,
+            projection : projection,
+            elementIndexUintSupported : context.elementIndexUint,
+            scene3DOnly : scene3DOnly,
+            allowPicking : allowPicking,
+            vertexCacheOptimize : primitive.vertexCacheOptimize,
+            compressVertices : primitive.compressVertices,
+            modelMatrix : primitive.modelMatrix
+        });
+
+        primitive._geometries = result.geometries;
+        primitive._attributeLocations = result.attributeLocations;
+        primitive._vaAttributes = result.vaAttributes;
+        primitive._perInstanceAttributeLocations = result.vaAttributeLocations;
+        primitive.modelMatrix = Matrix4.clone(result.modelMatrix, primitive.modelMatrix);
+        primitive._validModelMatrix = !Matrix4.equals(primitive.modelMatrix, Matrix4.IDENTITY);
+
+        for (i = 0; i < invalidInstances.length; ++i) {
+            instance = invalidInstances[i];
+            instanceIds.push(instance.id);
+        }
+
+        if (defined(primitive._geometries)) {
+            primitive._state = PrimitiveState.COMBINED;
+        } else {
+            setReady(primitive, frameState, PrimitiveState.FAILED, undefined);
+        }
+    }
+
+    function createVertexArray(primitive, context, frameState) {
+        var attributeLocations = primitive._attributeLocations;
+        var geometries = primitive._geometries;
+        var vaAttributes = primitive._vaAttributes;
+        var scene3DOnly = frameState.scene3DOnly;
+
+        var va = [];
+        var length = geometries.length;
+        for (var i = 0; i < length; ++i) {
+            var geometry = geometries[i];
+
+            var attributes = vaAttributes[i];
+            var vaLength = attributes.length;
+            for (var j = 0; j < vaLength; ++j) {
+                var attribute = attributes[j];
+                attribute.vertexBuffer = Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : attribute.values,
+                    usage : BufferUsage.DYNAMIC_DRAW});
+                delete attribute.values;
+            }
+
+            va.push(VertexArray.fromGeometry({
+                context : context,
+                geometry : geometry,
+                attributeLocations : attributeLocations,
+                bufferUsage : BufferUsage.STATIC_DRAW,
+                interleave : primitive._interleave,
+                vertexArrayAttributes : attributes
+            }));
+
+            if (defined(primitive._createBoundingVolumeFunction)) {
+                primitive._createBoundingVolumeFunction(frameState, geometry);
+            } else {
+                primitive._boundingSpheres.push(BoundingSphere.clone(geometry.boundingSphere));
+                primitive._boundingSphereWC.push(new BoundingSphere());
+
+                if (!scene3DOnly) {
+                    var center = geometry.boundingSphereCV.center;
+                    var x = center.x;
+                    var y = center.y;
+                    var z = center.z;
+                    center.x = z;
+                    center.y = x;
+                    center.z = y;
+
+                    primitive._boundingSphereCV.push(BoundingSphere.clone(geometry.boundingSphereCV));
+                    primitive._boundingSphere2D.push(new BoundingSphere());
+                    primitive._boundingSphereMorph.push(new BoundingSphere());
+                }
+            }
+        }
+
+        primitive._va = va;
+        primitive._primitiveType = geometries[0].primitiveType;
+
+        if (primitive.releaseGeometryInstances) {
+            primitive.geometryInstances = undefined;
+        }
+
+        primitive._geometries = undefined;
+        setReady(primitive, frameState, PrimitiveState.COMPLETE, undefined);
+    }
+
+    function createRenderStates(primitive, context, appearance, twoPasses) {
+        var renderState = appearance.getRenderState();
+        var rs;
+
+        if (twoPasses) {
+            rs = clone(renderState, false);
+            rs.cull = {
+                enabled : true,
+                face : CullFace.BACK
+            };
+            primitive._frontFaceRS = RenderState.fromCache(rs);
+
+            rs.cull.face = CullFace.FRONT;
+            primitive._backFaceRS = RenderState.fromCache(rs);
+        } else {
+            primitive._frontFaceRS = RenderState.fromCache(renderState);
+            primitive._backFaceRS = primitive._frontFaceRS;
+        }
+
+        if (primitive.allowPicking) {
+            if (twoPasses) {
+                rs = clone(renderState, false);
+                rs.cull = {
+                    enabled : false
+                };
+                primitive._pickRS = RenderState.fromCache(rs);
+            } else {
+                primitive._pickRS = primitive._frontFaceRS;
+            }
+        } else {
+            rs = clone(renderState, false);
+            rs.colorMask = {
+                red : false,
+                green : false,
+                blue : false,
+                alpha : false
+            };
+
+            if (twoPasses) {
+                rs.cull = {
+                    enabled : false
+                };
+                primitive._pickRS = RenderState.fromCache(rs);
+            } else {
+                primitive._pickRS = RenderState.fromCache(rs);
+            }
+        }
+    }
+
+    function createShaderProgram(primitive, context, frameState, appearance) {
+        var vs = Primitive._createColumbusViewShader(appearance.vertexShaderSource, frameState.scene3DOnly);
+        vs = Primitive._appendShowToShader(primitive, vs);
+        vs = modifyForEncodedNormals(primitive, vs);
+        var fs = appearance.getFragmentShaderSource();
+
+        var attributeLocations = primitive._attributeLocations;
+        primitive._sp = ShaderProgram.replaceCache({
+            context : context,
+            shaderProgram : primitive._sp,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
+        validateShaderMatching(primitive._sp, attributeLocations);
+
+        if (primitive.allowPicking) {
+            var pickFS = new ShaderSource({
+                sources : [fs],
+                pickColorQualifier : 'varying'
+            });
+            primitive._pickSP = ShaderProgram.replaceCache({
+                context : context,
+                shaderProgram : primitive._pickSP,
+                vertexShaderSource : Primitive._createPickVertexShaderSource(vs),
+                fragmentShaderSource : pickFS,
+                attributeLocations : attributeLocations
+            });
+        } else {
+            primitive._pickSP = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs,
+                attributeLocations : attributeLocations
+            });
+        }
+
+        validateShaderMatching(primitive._pickSP, attributeLocations);
+    }
+
+    function createCommands(primitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands) {
+        // Create uniform map by combining uniforms from the appearance and material if either have uniforms.
+        var materialUniformMap = defined(material) ? material._uniforms : undefined;
+        var appearanceUniformMap = {};
+        var appearanceUniforms = appearance.uniforms;
+        if (defined(appearanceUniforms)) {
+            // Convert to uniform map of functions for the renderer
+            for (var name in appearanceUniforms) {
+                if (appearanceUniforms.hasOwnProperty(name)) {
+                    if (defined(materialUniformMap) && defined(materialUniformMap[name])) {
+                        // Later, we could rename uniforms behind-the-scenes if needed.
+                        throw new DeveloperError('Appearance and material have a uniform with the same name: ' + name);
+                    }
+
+                    appearanceUniformMap[name] = getUniformFunction(appearanceUniforms, name);
+                }
+            }
+        }
+        var uniforms = combine(appearanceUniformMap, materialUniformMap);
+
+        var pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
+
+        colorCommands.length = primitive._va.length * (twoPasses ? 2 : 1);
+        pickCommands.length = primitive._va.length;
+
+        var length = colorCommands.length;
+        var m = 0;
+        var vaIndex = 0;
+        for (var i = 0; i < length; ++i) {
+            var colorCommand;
+
+            if (twoPasses) {
+                colorCommand = colorCommands[i];
+                if (!defined(colorCommand)) {
+                    colorCommand = colorCommands[i] = new DrawCommand({
+                        owner : primitive,
+                        primitiveType : primitive._primitiveType
+                    });
+                }
+                colorCommand.vertexArray = primitive._va[vaIndex];
+                colorCommand.renderState = primitive._backFaceRS;
+                colorCommand.shaderProgram = primitive._sp;
+                colorCommand.uniformMap = uniforms;
+                colorCommand.pass = pass;
+
+                ++i;
+            }
+
+            colorCommand = colorCommands[i];
+            if (!defined(colorCommand)) {
+                colorCommand = colorCommands[i] = new DrawCommand({
+                    owner : primitive,
+                    primitiveType : primitive._primitiveType
+                });
+            }
+            colorCommand.vertexArray = primitive._va[vaIndex];
+            colorCommand.renderState = primitive._frontFaceRS;
+            colorCommand.shaderProgram = primitive._sp;
+            colorCommand.uniformMap = uniforms;
+            colorCommand.pass = pass;
+
+            var pickCommand = pickCommands[m];
+            if (!defined(pickCommand)) {
+                pickCommand = pickCommands[m] = new DrawCommand({
+                    owner : primitive,
+                    primitiveType : primitive._primitiveType
+                });
+            }
+            pickCommand.vertexArray = primitive._va[vaIndex];
+            pickCommand.renderState = primitive._pickRS;
+            pickCommand.shaderProgram = primitive._pickSP;
+            pickCommand.uniformMap = uniforms;
+            pickCommand.pass = pass;
+            ++m;
+
+            ++vaIndex;
+        }
+    }
+
+    function updatePerInstanceAttributes(primitive) {
+        if (primitive._dirtyAttributes.length === 0) {
+            return;
+        }
+
+        var attributes = primitive._dirtyAttributes;
+        var length = attributes.length;
+        for (var i = 0; i < length; ++i) {
+            var attribute = attributes[i];
+            var value = attribute.value;
+            var indices = attribute.indices;
+            var indicesLength = indices.length;
+            for (var j = 0; j < indicesLength; ++j) {
+                var index = indices[j];
+                var offset = index.offset;
+                var count = index.count;
+
+                var vaAttribute = index.attribute;
+                var componentDatatype = vaAttribute.componentDatatype;
+                var componentsPerAttribute = vaAttribute.componentsPerAttribute;
+
+                var typedArray = ComponentDatatype.createTypedArray(componentDatatype, count * componentsPerAttribute);
+                for (var k = 0; k < count; ++k) {
+                    typedArray.set(value, k * componentsPerAttribute);
+                }
+
+                var offsetInBytes = offset * componentsPerAttribute * ComponentDatatype.getSizeInBytes(componentDatatype);
+                vaAttribute.vertexBuffer.copyFromArrayView(typedArray, offsetInBytes);
+            }
+            attribute.dirty = false;
+        }
+
+        attributes.length = 0;
+    }
+
+    function updateAndQueueCommands(primitive, frameState, commandList, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
+        //>>includeStart('debug', pragmas.debug);
+        if (frameState.mode !== SceneMode.SCENE3D && !Matrix4.equals(modelMatrix, Matrix4.IDENTITY)) {
+            throw new DeveloperError('Primitive.modelMatrix is only supported in 3D mode.');
+        }
+        //>>includeEnd('debug');
+
+        if (!Matrix4.equals(modelMatrix, primitive._modelMatrix)) {
+            Matrix4.clone(modelMatrix, primitive._modelMatrix);
+            var length = primitive._boundingSpheres.length;
+            for (var i = 0; i < length; ++i) {
+                var boundingSphere = primitive._boundingSpheres[i];
+                if (defined(boundingSphere)) {
+                    primitive._boundingSphereWC[i] = BoundingSphere.transform(boundingSphere, modelMatrix, primitive._boundingSphereWC[i]);
+                    if (!frameState.scene3DOnly) {
+                        primitive._boundingSphere2D[i] = BoundingSphere.clone(primitive._boundingSphereCV[i], primitive._boundingSphere2D[i]);
+                        primitive._boundingSphere2D[i].center.x = 0.0;
+                        primitive._boundingSphereMorph[i] = BoundingSphere.union(primitive._boundingSphereWC[i], primitive._boundingSphereCV[i]);
+                    }
+                }
+            }
+        }
+
+        var boundingSpheres;
+        if (frameState.mode === SceneMode.SCENE3D) {
+            boundingSpheres = primitive._boundingSphereWC;
+        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
+            boundingSpheres = primitive._boundingSphereCV;
+        } else if (frameState.mode === SceneMode.SCENE2D && defined(primitive._boundingSphere2D)) {
+            boundingSpheres = primitive._boundingSphere2D;
+        } else if (defined(primitive._boundingSphereMorph)) {
+            boundingSpheres = primitive._boundingSphereMorph;
+        }
+
+        var passes = frameState.passes;
+        if (passes.render) {
+            var colorLength = colorCommands.length;
+            for (var j = 0; j < colorLength; ++j) {
+                var sphereIndex = twoPasses ? Math.floor(j / 2) : j;
+                colorCommands[j].modelMatrix = modelMatrix;
+                colorCommands[j].boundingVolume = boundingSpheres[sphereIndex];
+                colorCommands[j].cull = cull;
+                colorCommands[j].debugShowBoundingVolume = debugShowBoundingVolume;
+
+                commandList.push(colorCommands[j]);
+            }
+        }
+
+        if (passes.pick) {
+            var pickLength = pickCommands.length;
+            for (var k = 0; k < pickLength; ++k) {
+                pickCommands[k].modelMatrix = modelMatrix;
+                pickCommands[k].boundingVolume = boundingSpheres[k];
+                pickCommands[k].cull = cull;
+
+                commandList.push(pickCommands[k]);
+            }
+        }
+    }
+
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -725,279 +1284,16 @@ define([
             return;
         }
 
-        var projection = frameState.mapProjection;
-        var colorCommand;
-        var pickCommand;
-        var geometry;
-        var attributes;
-        var attribute;
-        var length;
-        var i;
-        var j;
-        var index;
-        var promise;
-        var instance;
-        var instances;
-        var clonedInstances;
-        var geometries;
-        var allowPicking = this.allowPicking;
-        var instanceIds = this._instanceIds;
-        var scene3DOnly = frameState.scene3DOnly;
-        var that = this;
-
         if (this._state !== PrimitiveState.COMPLETE && this._state !== PrimitiveState.COMBINED) {
             if (this.asynchronous) {
-                if (this._state === PrimitiveState.READY) {
-                    instances = (isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
-                    this._numberOfInstances = length = instances.length;
-
-                    var promises = [];
-                    var subTasks = [];
-                    for (i = 0; i < length; ++i) {
-                        geometry = instances[i].geometry;
-                        instanceIds.push(instances[i].id);
-
-                        //>>includeStart('debug', pragmas.debug);
-                        if (!defined(geometry._workerName)) {
-                            throw new DeveloperError('_workerName must be defined for asynchronous geometry.');
-                        }
-                        //>>includeEnd('debug');
-
-                        subTasks.push({
-                            moduleName : geometry._workerName,
-                            geometry : geometry
-                        });
-                    }
-
-                    if (!defined(createGeometryTaskProcessors)) {
-                        createGeometryTaskProcessors = new Array(numberOfCreationWorkers);
-                        for (i = 0; i < numberOfCreationWorkers; i++) {
-                            createGeometryTaskProcessors[i] = new TaskProcessor('createGeometry', Number.POSITIVE_INFINITY);
-                        }
-                    }
-
-                    var subTask;
-                    subTasks = subdivideArray(subTasks, numberOfCreationWorkers);
-
-                    for (i = 0; i < subTasks.length; i++) {
-                        var packedLength = 0;
-                        var workerSubTasks = subTasks[i];
-                        var workerSubTasksLength = workerSubTasks.length;
-                        for (j = 0; j < workerSubTasksLength; ++j) {
-                            subTask = workerSubTasks[j];
-                            geometry = subTask.geometry;
-                            if (defined(geometry.constructor.pack)) {
-                                subTask.offset = packedLength;
-                                packedLength += defaultValue(geometry.constructor.packedLength, geometry.packedLength);
-                            }
-                        }
-
-                        var subTaskTransferableObjects;
-
-                        if (packedLength > 0) {
-                            var array = new Float64Array(packedLength);
-                            subTaskTransferableObjects = [array.buffer];
-
-                            for (j = 0; j < workerSubTasksLength; ++j) {
-                                subTask = workerSubTasks[j];
-                                geometry = subTask.geometry;
-                                if (defined(geometry.constructor.pack)) {
-                                    geometry.constructor.pack(geometry, array, subTask.offset);
-                                    subTask.geometry = array;
-                                }
-                            }
-                        }
-
-                        promises.push(createGeometryTaskProcessors[i].scheduleTask({
-                            subTasks : subTasks[i]
-                        }, subTaskTransferableObjects));
-                    }
-
-                    this._state = PrimitiveState.CREATING;
-
-                    when.all(promises, function(results) {
-                        that._createGeometryResults = results;
-                        that._state = PrimitiveState.CREATED;
-                    }).otherwise(function(error) {
-                        setReady(that, frameState, PrimitiveState.FAILED, error);
-                    });
-                } else if (this._state === PrimitiveState.CREATED) {
-                    var transferableObjects = [];
-                    instances = (isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
-
-                    promise = combineGeometryTaskProcessor.scheduleTask(PrimitivePipeline.packCombineGeometryParameters({
-                        createGeometryResults : this._createGeometryResults,
-                        instances : instances,
-                        pickIds : allowPicking ? createPickIds(context, this, instances) : undefined,
-                        ellipsoid : projection.ellipsoid,
-                        projection : projection,
-                        elementIndexUintSupported : context.elementIndexUint,
-                        scene3DOnly : scene3DOnly,
-                        allowPicking : allowPicking,
-                        vertexCacheOptimize : this.vertexCacheOptimize,
-                        compressVertices : this.compressVertices,
-                        modelMatrix : this.modelMatrix
-                    }, transferableObjects), transferableObjects);
-
-                    this._createGeometryResults = undefined;
-                    this._state = PrimitiveState.COMBINING;
-
-                    when(promise, function(packedResult) {
-                        var result = PrimitivePipeline.unpackCombineGeometryResults(packedResult);
-                        that._geometries = result.geometries;
-                        that._attributeLocations = result.attributeLocations;
-                        that._vaAttributes = result.vaAttributes;
-                        that._perInstanceAttributeLocations = result.perInstanceAttributeLocations;
-                        that.modelMatrix = Matrix4.clone(result.modelMatrix, that.modelMatrix);
-                        that._validModelMatrix = !Matrix4.equals(that.modelMatrix, Matrix4.IDENTITY);
-
-                        var validInstancesIndices = packedResult.validInstancesIndices;
-                        var invalidInstancesIndices = packedResult.invalidInstancesIndices;
-                        var instanceIds = that._instanceIds;
-                        var reorderedInstanceIds = new Array(instanceIds.length);
-
-                        var validLength = validInstancesIndices.length;
-                        for (var i = 0; i < validLength; ++i) {
-                            reorderedInstanceIds[i] = instanceIds[validInstancesIndices[i]];
-                        }
-
-                        var invalidLength = invalidInstancesIndices.length;
-                        for (var j = 0; j < invalidLength; ++j) {
-                            reorderedInstanceIds[validLength + j] = instanceIds[invalidInstancesIndices[j]];
-                        }
-
-                        that._instanceIds = reorderedInstanceIds;
-
-                        if (defined(that._geometries)) {
-                            that._state = PrimitiveState.COMBINED;
-                        } else {
-                            setReady(that, frameState, PrimitiveState.FAILED, undefined);
-                        }
-                    }).otherwise(function(error) {
-                        setReady(that, frameState, PrimitiveState.FAILED, error);
-                    });
-                }
+                loadAsynchronous(this, context, frameState);
             } else {
-                instances = (isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
-                this._numberOfInstances = length = instances.length;
-
-                geometries = new Array(length);
-                clonedInstances = new Array(length);
-
-                var invalidInstances = [];
-
-                var geometryIndex = 0;
-                for (i = 0; i < length; i++) {
-                    instance = instances[i];
-                    geometry = instance.geometry;
-
-                    var createdGeometry;
-                    if (defined(geometry.attributes) && defined(geometry.primitiveType)) {
-                        createdGeometry = cloneGeometry(geometry);
-                    } else {
-                        createdGeometry = geometry.constructor.createGeometry(geometry);
-                    }
-
-                    if (defined(createdGeometry)) {
-                        geometries[geometryIndex] = createdGeometry;
-                        clonedInstances[geometryIndex++] = cloneInstance(instance, createdGeometry);
-                        instanceIds.push(instance.id);
-                    } else {
-                        invalidInstances.push(instance);
-                    }
-                }
-
-                geometries.length = geometryIndex;
-                clonedInstances.length = geometryIndex;
-
-                var result = PrimitivePipeline.combineGeometry({
-                    instances : clonedInstances,
-                    invalidInstances : invalidInstances,
-                    pickIds : allowPicking ? createPickIds(context, this, clonedInstances) : undefined,
-                    ellipsoid : projection.ellipsoid,
-                    projection : projection,
-                    elementIndexUintSupported : context.elementIndexUint,
-                    scene3DOnly : scene3DOnly,
-                    allowPicking : allowPicking,
-                    vertexCacheOptimize : this.vertexCacheOptimize,
-                    compressVertices : this.compressVertices,
-                    modelMatrix : this.modelMatrix
-                });
-
-                this._geometries = result.geometries;
-                this._attributeLocations = result.attributeLocations;
-                this._vaAttributes = result.vaAttributes;
-                this._perInstanceAttributeLocations = result.vaAttributeLocations;
-                this.modelMatrix = Matrix4.clone(result.modelMatrix, this.modelMatrix);
-                this._validModelMatrix = !Matrix4.equals(this.modelMatrix, Matrix4.IDENTITY);
-
-                for (i = 0; i < invalidInstances.length; ++i) {
-                    instance = invalidInstances[i];
-                    instanceIds.push(instance.id);
-                }
-
-                if (defined(this._geometries)) {
-                    this._state = PrimitiveState.COMBINED;
-                } else {
-                    setReady(this, frameState, PrimitiveState.FAILED, undefined);
-                }
+                loadSynchronous(this, context, frameState);
             }
         }
 
-        var attributeLocations = this._attributeLocations;
-
         if (this._state === PrimitiveState.COMBINED) {
-            geometries = this._geometries;
-            var vaAttributes = this._vaAttributes;
-
-            var va = [];
-            length = geometries.length;
-            for (i = 0; i < length; ++i) {
-                geometry = geometries[i];
-
-                attributes = vaAttributes[i];
-                var vaLength = attributes.length;
-                for (j = 0; j < vaLength; ++j) {
-                    attribute = attributes[j];
-                    attribute.vertexBuffer = context.createVertexBuffer(attribute.values, BufferUsage.DYNAMIC_DRAW);
-                    delete attribute.values;
-                }
-
-                va.push(context.createVertexArrayFromGeometry({
-                    geometry : geometry,
-                    attributeLocations : attributeLocations,
-                    bufferUsage : BufferUsage.STATIC_DRAW,
-                    interleave : this._interleave,
-                    vertexArrayAttributes : attributes
-                }));
-
-                this._boundingSpheres.push(BoundingSphere.clone(geometry.boundingSphere));
-                this._boundingSphereWC.push(new BoundingSphere());
-
-                if (!scene3DOnly) {
-                    var center = geometry.boundingSphereCV.center;
-                    var x = center.x;
-                    var y = center.y;
-                    var z = center.z;
-                    center.x = z;
-                    center.y = x;
-                    center.z = y;
-
-                    this._boundingSphereCV.push(BoundingSphere.clone(geometry.boundingSphereCV));
-                    this._boundingSphere2D.push(new BoundingSphere());
-                    this._boundingSphereMorph.push(new BoundingSphere());
-                }
-            }
-
-            this._va = va;
-            this._primitiveType = geometries[0].primitiveType;
-
-            if (this.releaseGeometryInstances) {
-                this.geometryInstances = undefined;
-            }
-
-            this._geometries = undefined;
-            setReady(this, frameState, PrimitiveState.COMPLETE, undefined);
+            createVertexArray(this, context, frameState);
         }
 
         if (!this.show || this._state !== PrimitiveState.COMPLETE) {
@@ -1033,246 +1329,24 @@ define([
         var twoPasses = appearance.closed && translucent;
 
         if (createRS) {
-            var renderState = appearance.getRenderState();
-            var rs;
-
-            if (twoPasses) {
-                rs = clone(renderState, false);
-                rs.cull = {
-                    enabled : true,
-                    face : CullFace.BACK
-                };
-                this._frontFaceRS = context.createRenderState(rs);
-
-                rs.cull.face = CullFace.FRONT;
-                this._backFaceRS = context.createRenderState(rs);
-            } else {
-                this._frontFaceRS = context.createRenderState(renderState);
-                this._backFaceRS = this._frontFaceRS;
-            }
-
-            if (allowPicking) {
-                if (twoPasses) {
-                    rs = clone(renderState, false);
-                    rs.cull = {
-                        enabled : false
-                    };
-                    this._pickRS = context.createRenderState(rs);
-                } else {
-                    this._pickRS = this._frontFaceRS;
-                }
-            } else {
-                rs = clone(renderState, false);
-                rs.colorMask = {
-                    red : false,
-                    green : false,
-                    blue : false,
-                    alpha : false
-                };
-
-                if (twoPasses) {
-                    rs.cull = {
-                        enabled : false
-                    };
-                    this._pickRS = context.createRenderState(rs);
-                } else {
-                    this._pickRS = context.createRenderState(rs);
-                }
-            }
+            var rsFunc = defaultValue(this._createRenderStatesFunction, createRenderStates);
+            rsFunc(this, context, appearance, twoPasses);
         }
 
         if (createSP) {
-            var vs = createColumbusViewShader(this, appearance.vertexShaderSource, scene3DOnly);
-            vs = appendShow(this, vs);
-            vs = modifyForEncodedNormals(this, vs);
-            var fs = appearance.getFragmentShaderSource();
-
-            this._sp = context.replaceShaderProgram(this._sp, vs, fs, attributeLocations);
-            validateShaderMatching(this._sp, attributeLocations);
-
-            if (allowPicking) {
-                var pickFS = new ShaderSource({
-                    sources : [fs],
-                    pickColorQualifier : 'varying'
-                });
-                this._pickSP = context.replaceShaderProgram(this._pickSP, createPickVertexShaderSource(vs), pickFS, attributeLocations);
-            } else {
-                this._pickSP = context.createShaderProgram(vs, fs, attributeLocations);
-            }
-
-            validateShaderMatching(this._pickSP, attributeLocations);
+            var spFunc = defaultValue(this._createShaderProgramFunction, createShaderProgram);
+            spFunc(this, context, frameState, appearance);
         }
-
-        var colorCommands = this._colorCommands;
-        var pickCommands = this._pickCommands;
 
         if (createRS || createSP) {
-            // Create uniform map by combining uniforms from the appearance and material if either have uniforms.
-            var materialUniformMap = defined(material) ? material._uniforms : undefined;
-            var appearanceUniformMap = {};
-            var appearanceUniforms = appearance.uniforms;
-            if (defined(appearanceUniforms)) {
-                // Convert to uniform map of functions for the renderer
-                for (var name in appearanceUniforms) {
-                    if (appearanceUniforms.hasOwnProperty(name)) {
-                        if (defined(materialUniformMap) && defined(materialUniformMap[name])) {
-                            // Later, we could rename uniforms behind-the-scenes if needed.
-                            throw new DeveloperError('Appearance and material have a uniform with the same name: ' + name);
-                        }
-
-                        appearanceUniformMap[name] = getUniformFunction(appearanceUniforms, name);
-                    }
-                }
-            }
-            var uniforms = combine(appearanceUniformMap, materialUniformMap);
-
-            var pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
-
-            colorCommands.length = this._va.length * (twoPasses ? 2 : 1);
-            pickCommands.length = this._va.length;
-
-            length = colorCommands.length;
-            var m = 0;
-            var vaIndex = 0;
-            for (i = 0; i < length; ++i) {
-                if (twoPasses) {
-                    colorCommand = colorCommands[i];
-                    if (!defined(colorCommand)) {
-                        colorCommand = colorCommands[i] = new DrawCommand({
-                            owner : this,
-                            primitiveType : this._primitiveType
-                        });
-                    }
-                    colorCommand.vertexArray = this._va[vaIndex];
-                    colorCommand.renderState = this._backFaceRS;
-                    colorCommand.shaderProgram = this._sp;
-                    colorCommand.uniformMap = uniforms;
-                    colorCommand.pass = pass;
-
-                    ++i;
-                }
-
-                colorCommand = colorCommands[i];
-                if (!defined(colorCommand)) {
-                    colorCommand = colorCommands[i] = new DrawCommand({
-                        owner : this,
-                        primitiveType : this._primitiveType
-                    });
-                }
-                colorCommand.vertexArray = this._va[vaIndex];
-                colorCommand.renderState = this._frontFaceRS;
-                colorCommand.shaderProgram = this._sp;
-                colorCommand.uniformMap = uniforms;
-                colorCommand.pass = pass;
-
-                pickCommand = pickCommands[m];
-                if (!defined(pickCommand)) {
-                    pickCommand = pickCommands[m] = new DrawCommand({
-                        owner : this,
-                        primitiveType : this._primitiveType
-                    });
-                }
-                pickCommand.vertexArray = this._va[vaIndex];
-                pickCommand.renderState = this._pickRS;
-                pickCommand.shaderProgram = this._pickSP;
-                pickCommand.uniformMap = uniforms;
-                pickCommand.pass = pass;
-                ++m;
-
-                ++vaIndex;
-            }
+            var commandFunc = defaultValue(this._createCommandsFunction, createCommands);
+            commandFunc(this, appearance, material, translucent, twoPasses, this._colorCommands, this._pickCommands);
         }
 
-        // Update per-instance attributes
-        if (this._dirtyAttributes.length > 0) {
-            attributes = this._dirtyAttributes;
-            length = attributes.length;
-            for (i = 0; i < length; ++i) {
-                attribute = attributes[i];
-                var value = attribute.value;
-                var indices = attribute.indices;
-                var indicesLength = indices.length;
-                for (j = 0; j < indicesLength; ++j) {
-                    index = indices[j];
-                    var offset = index.offset;
-                    var count = index.count;
+        updatePerInstanceAttributes(this);
 
-                    var vaAttribute = index.attribute;
-                    var componentDatatype = vaAttribute.componentDatatype;
-                    var componentsPerAttribute = vaAttribute.componentsPerAttribute;
-
-                    var typedArray = ComponentDatatype.createTypedArray(componentDatatype, count * componentsPerAttribute);
-                    for (var k = 0; k < count; ++k) {
-                        typedArray.set(value, k * componentsPerAttribute);
-                    }
-
-                    var offsetInBytes = offset * componentsPerAttribute * ComponentDatatype.getSizeInBytes(componentDatatype);
-                    vaAttribute.vertexBuffer.copyFromArrayView(typedArray, offsetInBytes);
-                }
-                attribute.dirty = false;
-            }
-
-            attributes.length = 0;
-        }
-
-        var modelMatrix = this.modelMatrix;
-        //>>includeStart('debug', pragmas.debug);
-        if (frameState.mode !== SceneMode.SCENE3D && !Matrix4.equals(modelMatrix, Matrix4.IDENTITY)) {
-            throw new DeveloperError('Primitive.modelMatrix is only supported in 3D mode.');
-        }
-        //>>includeEnd('debug');
-
-        if (!Matrix4.equals(modelMatrix, this._modelMatrix)) {
-            Matrix4.clone(modelMatrix, this._modelMatrix);
-            length = this._boundingSpheres.length;
-            for (i = 0; i < length; ++i) {
-                var boundingSphere = this._boundingSpheres[i];
-                if (defined(boundingSphere)) {
-                    this._boundingSphereWC[i] = BoundingSphere.transform(boundingSphere, modelMatrix, this._boundingSphereWC[i]);
-                    if (!scene3DOnly) {
-                        this._boundingSphere2D[i] = BoundingSphere.clone(this._boundingSphereCV[i], this._boundingSphere2D[i]);
-                        this._boundingSphere2D[i].center.x = 0.0;
-                        this._boundingSphereMorph[i] = BoundingSphere.union(this._boundingSphereWC[i], this._boundingSphereCV[i]);
-                    }
-                }
-            }
-        }
-
-        var boundingSpheres;
-        if (frameState.mode === SceneMode.SCENE3D) {
-            boundingSpheres = this._boundingSphereWC;
-        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
-            boundingSpheres = this._boundingSphereCV;
-        } else if (frameState.mode === SceneMode.SCENE2D && defined(this._boundingSphere2D)) {
-            boundingSpheres = this._boundingSphere2D;
-        } else if (defined(this._boundingSphereMorph)) {
-            boundingSpheres = this._boundingSphereMorph;
-        }
-
-        var passes = frameState.passes;
-        if (passes.render) {
-            length = colorCommands.length;
-            for (i = 0; i < length; ++i) {
-                var sphereIndex = twoPasses ? Math.floor(i / 2) : i;
-                colorCommands[i].modelMatrix = modelMatrix;
-                colorCommands[i].boundingVolume = boundingSpheres[sphereIndex];
-                colorCommands[i].cull = this.cull;
-                colorCommands[i].debugShowBoundingVolume = this.debugShowBoundingVolume;
-
-                commandList.push(colorCommands[i]);
-            }
-        }
-
-        if (passes.pick) {
-            length = pickCommands.length;
-            for (i = 0; i < length; ++i) {
-                pickCommands[i].modelMatrix = modelMatrix;
-                pickCommands[i].boundingVolume = boundingSpheres[i];
-                pickCommands[i].cull = this.cull;
-
-                commandList.push(pickCommands[i]);
-            }
-        }
+        var updateAndQueueCommandsFunc = defaultValue(this._updateAndQueueCommandsFunction, updateAndQueueCommands);
+        updateAndQueueCommandsFunc(this, frameState, commandList, this._colorCommands, this._pickCommands, this.modelMatrix, this.cull, this.debugShowBoundingVolume, twoPasses);
     };
 
     function createGetFunction(name, perInstanceAttributes) {

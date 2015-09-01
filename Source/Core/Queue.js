@@ -14,6 +14,7 @@ define(function() {
 
         /**
          * The length of the queue.
+         * @type {Number}
          */
         this.length = 0;
     };

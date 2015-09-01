@@ -6,7 +6,9 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Math',
-        './BufferUsage'
+        './Buffer',
+        './BufferUsage',
+        './VertexArray'
     ], function(
         ComponentDatatype,
         defaultValue,
@@ -14,7 +16,9 @@ define([
         destroyObject,
         DeveloperError,
         CesiumMath,
-        BufferUsage) {
+        Buffer,
+        BufferUsage,
+        VertexArray) {
     "use strict";
 
     /**
@@ -338,7 +342,11 @@ define([
                 attributes = attributes.concat(this._precreated);
 
                 va.push({
-                    va : this._context.createVertexArray(attributes, indexBuffer),
+                    va : new VertexArray({
+                        context : this._context,
+                        attributes : attributes,
+                        indexBuffer : indexBuffer
+                    }),
                     indicesCount : 1.5 * ((k !== (numberOfVertexArrays - 1)) ? CesiumMath.SIXTY_FOUR_KILOBYTES : (this._size % CesiumMath.SIXTY_FOUR_KILOBYTES))
                 // TODO: not hardcode 1.5, this assumes 6 indicies per 4 vertices (as for Billboard quads).
                 });
@@ -357,7 +365,11 @@ define([
                 if (vertexBufferDefined) {
                     vertexBuffer.destroy();
                 }
-                buffer.vertexBuffer = vertexArrayFacade._context.createVertexBuffer(buffer.arrayBuffer, buffer.usage);
+                buffer.vertexBuffer = Buffer.createVertexBuffer({
+                    context : vertexArrayFacade._context,
+                    typedArray : buffer.arrayBuffer,
+                    usage : buffer.usage
+                });
                 buffer.vertexBuffer.vertexArrayDestroyable = false;
 
                 return true; // Created new vertex buffer

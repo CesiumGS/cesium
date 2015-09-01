@@ -12,7 +12,10 @@ defineSuite([
         'Core/RuntimeError',
         'Core/WebMercatorProjection',
         'Renderer/DrawCommand',
+        'Renderer/Framebuffer',
         'Renderer/PixelDatatype',
+        'Renderer/ShaderProgram',
+        'Renderer/Texture',
         'Scene/Camera',
         'Scene/FrameState',
         'Scene/Globe',
@@ -39,7 +42,10 @@ defineSuite([
         RuntimeError,
         WebMercatorProjection,
         DrawCommand,
+        Framebuffer,
         PixelDatatype,
+        ShaderProgram,
+        Texture,
         Camera,
         FrameState,
         Globe,
@@ -213,9 +219,12 @@ defineSuite([
     it('debugShowCommands tints commands', function() {
         var c = new DrawCommand({
             pass : Pass.OPAQUE,
-            shaderProgram : scene.context.createShaderProgram(
-                'void main() { gl_Position = vec4(1.0); }',
-                'void main() { gl_FragColor = vec4(1.0); }')
+
+            shaderProgram : ShaderProgram.fromCache({
+                context : scene.context,
+                vertexShaderSource : 'void main() { gl_Position = vec4(1.0); }',
+                fragmentShaderSource : 'void main() { gl_FragColor = vec4(1.0); }'
+            })
         });
         c.execute = function() {};
 
@@ -376,14 +385,17 @@ defineSuite([
         // Workaround for Firefox on Mac, which does not support RGBA + depth texture
         // attachments, which is allowed by the spec.
         if (context.depthTexture) {
-            var framebuffer = context.createFramebuffer({
-                colorTextures : [context.createTexture2D({
+            var framebuffer = new Framebuffer({
+                context : context,
+                colorTextures : [new Texture({
+                    context : context,
                     width : 1,
                     height : 1,
                     pixelFormat : PixelFormat.RGBA,
                     pixelDatatype : PixelDatatype.UNSIGNED_BYTE
                 })],
-                depthTexture : context.createTexture2D({
+                depthTexture : new Texture({
+                    context : context,
                     width : 1,
                     height : 1,
                     pixelFormat : PixelFormat.DEPTH_COMPONENT,

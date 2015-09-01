@@ -15,9 +15,15 @@ define([
         '../Core/Matrix4',
         '../Core/PixelFormat',
         '../Core/PrimitiveType',
+        '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
         '../Renderer/DrawCommand',
+        '../Renderer/Framebuffer',
+        '../Renderer/RenderState',
+        '../Renderer/ShaderProgram',
+        '../Renderer/Texture',
+        '../Renderer/VertexArray',
         '../Shaders/SunFS',
         '../Shaders/SunTextureFS',
         '../Shaders/SunVS',
@@ -40,9 +46,15 @@ define([
         Matrix4,
         PixelFormat,
         PrimitiveType,
+        Buffer,
         BufferUsage,
         ClearCommand,
         DrawCommand,
+        Framebuffer,
+        RenderState,
+        ShaderProgram,
+        Texture,
+        VertexArray,
         SunFS,
         SunTextureFS,
         SunVS,
@@ -160,13 +172,15 @@ define([
             var size = Math.max(drawingBufferWidth, drawingBufferHeight);
             size = Math.pow(2.0, Math.ceil(Math.log(size) / Math.log(2.0)) - 2.0);
 
-            this._texture = context.createTexture2D({
+            this._texture = new Texture({
+                context : context,
                 width : size,
                 height : size,
                 pixelFormat : PixelFormat.RGBA
             });
 
-            var fbo = context.createFramebuffer({
+            var fbo = new Framebuffer({
+                context : context,
                 colorTextures : [this._texture]
             });
             fbo.destroyAttachments = false;
@@ -176,7 +190,7 @@ define([
                 framebuffer : fbo
             });
 
-            var rs = context.createRenderState({
+            var rs = RenderState.fromCache({
                 viewport : new BoundingRectangle(0.0, 0.0, size, size)
             });
 
@@ -227,7 +241,11 @@ define([
             directions[6] = 0.0;
             directions[7] = 255;
 
-            var vertexBuffer = context.createVertexBuffer(directions, BufferUsage.STATIC_DRAW);
+            var vertexBuffer = Buffer.createVertexBuffer({
+                context : context,
+                typedArray : directions,
+                usage : BufferUsage.STATIC_DRAW
+            });
             var attributes = [{
                 index : attributeLocations.direction,
                 vertexBuffer : vertexBuffer,
@@ -236,10 +254,26 @@ define([
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE
             }];
             // Workaround Internet Explorer 11.0.8 lack of TRIANGLE_FAN
-            var indexBuffer = context.createIndexBuffer(new Uint16Array([0, 1, 2, 0, 2, 3]), BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
-            command.vertexArray = context.createVertexArray(attributes, indexBuffer);
-            command.shaderProgram = context.createShaderProgram(SunVS, SunFS, attributeLocations);
-            command.renderState = context.createRenderState({
+            var indexBuffer = Buffer.createIndexBuffer({
+                context : context,
+                typedArray : new Uint16Array([0, 1, 2, 0, 2, 3]),
+                usage : BufferUsage.STATIC_DRAW,
+                indexDatatype : IndexDatatype.UNSIGNED_SHORT
+            });
+            command.vertexArray = new VertexArray({
+                context : context,
+                attributes : attributes,
+                indexBuffer : indexBuffer
+            });
+
+            command.shaderProgram = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : SunVS,
+                fragmentShaderSource : SunFS,
+                attributeLocations : attributeLocations
+            });
+
+            command.renderState = RenderState.fromCache({
                 blending : BlendingState.ALPHA_BLEND
             });
             command.uniformMap = this._uniformMap;
