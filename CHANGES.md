@@ -23,6 +23,7 @@ Change Log
 * Removed [es5-shim](https://github.com/kriskowal/es5-shim), which is no longer required by the unit tests. [#2933](https://github.com/AnalyticalGraphicsInc/cesium/pull/2945)
 * Added `BoundingSphere.isOccluded` and `OrientedBoundingBox.isOccluded` to determine if the volumes are occluded by an `Occluder`.
 * Added `distanceSquaredTo` and `computePlaneDistances` functions to `OrientedBoundingBox`.
+* Fixed a GLSL precision issue that enables Cesium to now support Mali-400MP GPUs and other mobile GPUs where GLSL shaders did not compile. [#2984](https://github.com/AnalyticalGraphicsInc/cesium/pull/2984)
 
 ### 1.12 - 2015-08-03
 
