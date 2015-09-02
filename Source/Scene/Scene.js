@@ -29,6 +29,7 @@ define([
         '../Core/Occluder',
         '../Core/ShowGeometryInstanceAttribute',
         '../Renderer/ClearCommand',
+        '../Renderer/ComputeEngine',
         '../Renderer/Context',
         '../Renderer/ContextLimits',
         '../Renderer/PassState',
@@ -87,6 +88,7 @@ define([
         Occluder,
         ShowGeometryInstanceAttribute,
         ClearCommand,
+        ComputeEngine,
         Context,
         ContextLimits,
         PassState,
@@ -217,6 +219,7 @@ define([
         this._passState = new PassState(context);
         this._canvas = canvas;
         this._context = context;
+        this._computeEngine = context.computeEngine;
         this._globe = undefined;
         this._primitives = new PrimitiveCollection();
         this._groundPrimitives = new PrimitiveCollection();
@@ -812,6 +815,17 @@ define([
             }
         },
 
+
+        /**
+         * @memberof Scene.prototype
+         * @type {ComputeEngine}
+         */
+        computeEngine : {
+            get : function() {
+                return this._computeEngine;
+            }
+        },
+
         /**
          * This property is for debugging only; it is not for production use.
          * <p>
@@ -1385,8 +1399,10 @@ define([
         var renderPass = frameState.passes.render;
         var skyBoxCommand = (renderPass && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
         var skyAtmosphereCommand = (renderPass && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
-        var sunCommand = (renderPass && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
-        var sunVisible = isVisible(sunCommand, frameState);
+        var sunCommands = (renderPass && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
+        var sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
+        var sunComputeCommand = defined(sunCommands) ? sunCommands.computeCommand : undefined;
+        var sunVisible = isVisible(sunDrawCommand, frameState);
         var moonCommand = (renderPass && defined(scene.moon)) ? scene.moon.update(context, frameState) : undefined;
         var moonVisible = isVisible(moonCommand, frameState);
 
@@ -1477,7 +1493,10 @@ define([
         }
 
         if (sunVisible) {
-            sunCommand.execute(context, passState);
+            if (defined(sunComputeCommand)) {
+                sunComputeCommand.execute(scene.computeEngine);
+            }
+            sunDrawCommand.execute(context, passState);
             if (scene.sunBloom) {
                 var framebuffer;
                 if (useGlobeDepthFramebuffer) {
@@ -1625,7 +1644,7 @@ define([
         var commandList = scene._computeCommandList;
         var length = commandList.length;
         for (var i = 0; i < length; ++i) {
-            commandList[i].execute(context);
+            commandList[i].execute(scene.computeEngine);
         }
     }
 
@@ -2159,6 +2178,7 @@ define([
      */
     Scene.prototype.destroy = function() {
         this._tweens.removeAll();
+        //this._computeEngine = this._computeEngine && this._computeEngine.destroy();
         this._screenSpaceCameraController = this._screenSpaceCameraController && this._screenSpaceCameraController.destroy();
         this._pickFramebuffer = this._pickFramebuffer && this._pickFramebuffer.destroy();
         this._primitives = this._primitives && this._primitives.destroy();

@@ -59,8 +59,8 @@ define([
         this.outputTexture = options.outputTexture;
 
         /**
-         * Whether this command will persist beyond this call.
-         * If not, resources will be destroyed after completion.
+         * Whether the renderer resources will persist beyond this call. If not, they
+         * will be destroyed after completion.
          *
          * @type {Boolean}
          * @default false
@@ -94,8 +94,8 @@ define([
      *
      * @param {Context} context The context that processes the compute command.
      */
-    ComputeCommand.prototype.execute = function(context) {
-        context.computeEngine.execute(this);
+    ComputeCommand.prototype.execute = function(computeEngine) {
+        computeEngine.execute(this);
     };
 
     return ComputeCommand;

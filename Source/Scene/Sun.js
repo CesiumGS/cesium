@@ -161,6 +161,7 @@ define([
 
         var drawingBufferWidth = scene.drawingBufferWidth;
         var drawingBufferHeight = scene.drawingBufferHeight;
+        var computeCommand;
 
         if (!defined(this._texture) ||
                 drawingBufferWidth !== this._drawingBufferWidth ||
@@ -194,14 +195,12 @@ define([
                 }
             };
 
-            var computeCommand = new ComputeCommand({
+            computeCommand = new ComputeCommand({
                 fragmentShaderSource : SunTextureFS,
                 outputTexture : this._texture,
                 uniformMap : uniformMap,
                 owner : this
             });
-
-            computeCommand.execute(context);
         }
 
         var command = this._command;
@@ -303,7 +302,10 @@ define([
         this._size = Math.ceil(Cartesian2.magnitude(Cartesian2.subtract(limbWC, positionWC, scratchCartesian4)));
         this._size = 2.0 * this._size * (1.0 + 2.0 * this._glowLengthTS);
 
-        return command;
+        return {
+            computeCommand : computeCommand,
+            drawCommand : command
+        };
     };
 
     /**

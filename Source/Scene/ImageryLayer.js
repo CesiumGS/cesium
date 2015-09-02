@@ -954,7 +954,7 @@ define([
             owner : imageryLayer
         });
 
-        computeCommand.execute(context);
+        computeCommand.execute(context.computeEngine);
 
         return outputTexture;
     }

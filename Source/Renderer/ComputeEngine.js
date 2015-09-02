@@ -49,7 +49,20 @@ define([
         this._viewportQuadVertexArray = undefined;
     };
 
-    function createViewportQuadVertexArray(computeEngine) {
+    var viewportQuadAttributeLocations = {
+        position : 0,
+        textureCoordinates : 1
+    };
+
+    var renderStateScratch;
+    var drawCommandScratch = new DrawCommand({
+        primitiveType : PrimitiveType.TRIANGLES
+    });
+    var clearCommandScratch = new ClearCommand({
+        color : new Color(0.0, 0.0, 0.0, 0.0)
+    });
+
+    function getViewportQuadVertexArray(computeEngine) {
         var vertexArray = computeEngine._viewportQuadVertexArray;
 
         if (!defined(vertexArray)) {
@@ -99,11 +112,6 @@ define([
         return vertexArray;
     }
 
-    var viewportQuadAttributeLocations = {
-        position : 0,
-        textureCoordinates : 1
-    };
-
     function createFramebuffer(context, texture) {
         var fbo = new Framebuffer({
             context : context,
@@ -122,11 +130,16 @@ define([
         });
     }
 
-    function createRenderState(width, height)
-    {
-        return RenderState.fromCache({
-            viewport : new BoundingRectangle(0.0, 0.0, width, height)
-        });
+    function createRenderState(width, height) {
+        if ((!defined(renderStateScratch)) ||
+            (renderStateScratch.viewport.width !== width) ||
+            (renderStateScratch.viewport.height !== height)) {
+
+            renderStateScratch = RenderState.fromCache({
+                viewport : new BoundingRectangle(0, 0, width, height)
+            });
+        }
+        return renderStateScratch;
     }
 
     ComputeEngine.prototype.execute = function(computeCommand) {
@@ -149,27 +162,22 @@ define([
         var height = texture.height;
 
         var context = this._context;
-        var vertexArray = computeCommand.vertexArray || createViewportQuadVertexArray(this);
-        var shaderProgram = computeCommand.shaderProgram || createViewportQuadShader(context, computeCommand.fragmentShaderSource);
+        var vertexArray = defined(computeCommand.vertexArray) ? computeCommand.vertexArray : getViewportQuadVertexArray(this);
+        var shaderProgram = defined(computeCommand.shaderProgram) ? computeCommand.shaderProgram : createViewportQuadShader(context, computeCommand.fragmentShaderSource);
         var framebuffer = createFramebuffer(context, texture);
         var renderState = createRenderState(width, height);
         var uniformMap = defaultValue(computeCommand.uniformMap, defaultValue.EMPTY_OBJECT);
 
-        var clearCommand = new ClearCommand({
-            color : new Color(0.0, 0.0, 0.0, 0.0),
-            framebuffer : framebuffer,
-            renderState : renderState
-        });
+        var clearCommand = clearCommandScratch;
+        clearCommand.framebuffer = framebuffer;
+        clearCommand.renderState = renderState;
 
-        var drawCommand = new DrawCommand({
-            vertexArray : vertexArray,
-            primitiveType : PrimitiveType.TRIANGLES,
-            renderState : renderState,
-            shaderProgram : shaderProgram,
-            uniformMap : uniformMap,
-            framebuffer : framebuffer,
-            owner : computeCommand.owner
-        });
+        var drawCommand = drawCommandScratch;
+        drawCommand.vertexArray = vertexArray;
+        drawCommand.renderState = renderState;
+        drawCommand.shaderProgram = shaderProgram;
+        drawCommand.uniformMap = uniformMap;
+        drawCommand.framebuffer = framebuffer;
 
         clearCommand.execute(context);
         drawCommand.execute(context);
@@ -178,7 +186,6 @@ define([
         if (!computeCommand.persists) {
             shaderProgram.destroy();
         }
-
     };
 
     ComputeEngine.prototype.isDestroyed = function() {
