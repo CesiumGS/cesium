@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+### 1.14 - 2015-10-01
+
+* Breaking changes
+  * ...
+* Deprecated
+  * ...
+* Fix zooming in 2D when tracking an object. The zoom was based on location rather than the tracked object. [#2991](https://github.com/AnalyticalGraphicsInc/cesium/issues/2991)
+
 ### 1.13 - 2015-09-01
 
 * Breaking changes
