@@ -219,7 +219,7 @@ define([
         this._passState = new PassState(context);
         this._canvas = canvas;
         this._context = context;
-        this._computeEngine = context.computeEngine;
+        this._computeEngine = new ComputeEngine(context);
         this._globe = undefined;
         this._primitives = new PrimitiveCollection();
         this._groundPrimitives = new PrimitiveCollection();
@@ -1492,10 +1492,11 @@ define([
             executeCommand(skyAtmosphereCommand, scene, context, passState);
         }
 
+        if (defined(sunComputeCommand)) {
+            sunComputeCommand.execute(scene.computeEngine);
+        }
+
         if (sunVisible) {
-            if (defined(sunComputeCommand)) {
-                sunComputeCommand.execute(scene.computeEngine);
-            }
             sunDrawCommand.execute(context, passState);
             if (scene.sunBloom) {
                 var framebuffer;
@@ -2178,7 +2179,7 @@ define([
      */
     Scene.prototype.destroy = function() {
         this._tweens.removeAll();
-        //this._computeEngine = this._computeEngine && this._computeEngine.destroy();
+        this._computeEngine = this._computeEngine && this._computeEngine.destroy();
         this._screenSpaceCameraController = this._screenSpaceCameraController && this._screenSpaceCameraController.destroy();
         this._pickFramebuffer = this._pickFramebuffer && this._pickFramebuffer.destroy();
         this._primitives = this._primitives && this._primitives.destroy();

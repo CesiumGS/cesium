@@ -53,7 +53,6 @@ define([
         position : 0,
         textureCoordinates : 1
     };
-
     var renderStateScratch;
     var drawCommandScratch = new DrawCommand({
         primitiveType : PrimitiveType.TRIANGLES
@@ -147,12 +146,18 @@ define([
         if (!defined(computeCommand)) {
             throw new DeveloperError('computeCommand is required.');
         }
+        //>>includeEnd('debug');
 
+        if (defined(computeCommand.preExecutionCallback)) {
+            computeCommand.preExecutionCallback(computeCommand);
+        }
+
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(computeCommand.fragmentShaderSource) && !defined(computeCommand.shaderProgram)) {
             throw new DeveloperError('computeCommand.fragmentShaderSource or computeCommand.shaderProgram is required.');
         }
 
-        if(!defined(computeCommand.outputTexture)) {
+        if (!defined(computeCommand.outputTexture)) {
             throw new DeveloperError('computeCommand.outputTexture is required.');
         }
         //>>includeEnd('debug');
@@ -185,6 +190,13 @@ define([
 
         if (!computeCommand.persists) {
             shaderProgram.destroy();
+            if (defined(computeCommand.vertexArray)) {
+                vertexArray.destroy();
+            }
+        }
+
+        if (defined(computeCommand.callback)) {
+            computeCommand.callback(texture);
         }
     };
 

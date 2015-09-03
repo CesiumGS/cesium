@@ -683,30 +683,7 @@ define([
         imagery.state = ImageryState.TEXTURE_LOADED;
     };
 
-    /**
-     * Reproject a texture to a {@link GeographicProjection}, if necessary, and generate
-     * mipmaps for the geographic texture.
-     *
-     * @private
-     *
-     * @param {Context} context The rendered context to use.
-     * @param {Imagery} imagery The imagery instance to reproject.
-     */
-    ImageryLayer.prototype._reprojectTexture = function(context, imagery) {
-        var texture = imagery.texture;
-        var rectangle = imagery.rectangle;
-
-        // Reproject this texture if it is not already in a geographic projection and
-        // the pixels are more than 1e-5 radians apart.  The pixel spacing cutoff
-        // avoids precision problems in the reprojection transformation while making
-        // no noticeable difference in the georeferencing of the image.
-        if (!(this._imageryProvider.tilingScheme instanceof GeographicTilingScheme) &&
-            rectangle.width / texture.width > 1e-5) {
-                var reprojectedTexture = reprojectToGeographic(this, context, texture, imagery.rectangle);
-                texture.destroy();
-                imagery.texture = texture = reprojectedTexture;
-        }
-
+    function finalizeReprojectTexture(imageryLayer, context, imagery, texture) {
         // Use mipmaps if this texture has power-of-two dimensions.
         if (CesiumMath.isPowerOfTwo(texture.width) && CesiumMath.isPowerOfTwo(texture.height)) {
             var mipmapSampler = context.cache.imageryLayer_mipmapSampler;
@@ -717,7 +694,7 @@ define([
                     wrapT : TextureWrap.CLAMP_TO_EDGE,
                     minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
                     magnificationFilter : TextureMagnificationFilter.LINEAR,
-                    maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(this._maximumAnisotropy, maximumSupportedAnisotropy))
+                    maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(imageryLayer._maximumAnisotropy, maximumSupportedAnisotropy))
                 });
             }
             texture.generateMipmap(MipmapHint.NICEST);
@@ -736,6 +713,47 @@ define([
         }
 
         imagery.state = ImageryState.READY;
+    }
+
+    /**
+     * Reproject a texture to a {@link GeographicProjection}, if necessary, and generate
+     * mipmaps for the geographic texture.
+     *
+     * @private
+     *
+     * @param {Context} context The rendered context to use.
+     * @param {Imagery} imagery The imagery instance to reproject.
+     */
+
+    ImageryLayer.prototype._reprojectTexture = function(context, commandList, imagery) {
+        var texture = imagery.texture;
+        var rectangle = imagery.rectangle;
+
+        // Reproject this texture if it is not already in a geographic projection and
+        // the pixels are more than 1e-5 radians apart.  The pixel spacing cutoff
+        // avoids precision problems in the reprojection transformation while making
+        // no noticeable difference in the georeferencing of the image.
+        if (!(this._imageryProvider.tilingScheme instanceof GeographicTilingScheme) &&
+            rectangle.width / texture.width > 1e-5) {
+                var that = this;
+                var computeCommand = new ComputeCommand({
+                    persists : true,
+                    owner : this,
+                    // Update render resources right before execution instead of now.
+                    // This allows different ImageryLayers to share the same vao and buffers.
+                    preExecutionCallback : function(command) {
+                        reprojectToGeographic(command, context, texture, imagery.rectangle);
+                    },
+                    callback : function(outputTexture) {
+                        texture.destroy();
+                        imagery.texture = outputTexture;
+                        finalizeReprojectTexture(that, context, imagery, outputTexture);
+                    }
+                });
+                commandList.push(computeCommand);
+        } else {
+            finalizeReprojectTexture(this, context, imagery, texture);
+        }
     };
 
     ImageryLayer.prototype.getImageryFromCache = function(x, y, level, imageryRectangle) {
@@ -774,7 +792,7 @@ define([
 
     var float32ArrayScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(2 * 64) : undefined;
 
-    function reprojectToGeographic(imageryLayer, context, texture, rectangle) {
+    function reprojectToGeographic(command, context, texture, rectangle) {
         // This function has gone through a number of iterations, because GPUs are awesome.
         //
         // Originally, we had a very simple vertex shader and computed the Web Mercator texture coordinates
@@ -945,18 +963,10 @@ define([
 
         reproject.vertexArray.getAttribute(1).vertexBuffer.copyFromArrayView(webMercatorT);
 
-        var computeCommand = new ComputeCommand({
-            shaderProgram : reproject.shaderProgram,
-            outputTexture : outputTexture,
-            uniformMap : uniformMap,
-            vertexArray : reproject.vertexArray,
-            persists : true,
-            owner : imageryLayer
-        });
-
-        computeCommand.execute(context.computeEngine);
-
-        return outputTexture;
+        command.shaderProgram = reproject.shaderProgram;
+        command.outputTexture = outputTexture;
+        command.uniformMap = uniformMap;
+        command.vertexArray = reproject.vertexArray;
     }
 
     /**

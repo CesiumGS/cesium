@@ -59,6 +59,24 @@ define([
         this.outputTexture = options.outputTexture;
 
         /**
+         * Function that is called after the ComputeCommand is executed. Takes the output
+         * texture as its single argument.
+         *
+         * @type {Function}
+         * @default undefined
+         */
+        this.callback = options.callback;
+
+        /**
+         * Function that is called immediately before the ComputeCommand is executed. Used to
+         * update any renderer resources. Takes the ComputeCommand as its single argument.
+         *
+         * @type {Function}
+         * @default undefined
+         */
+        this.preExecutionCallback = options.preExecutionCallback;
+
+        /**
          * Whether the renderer resources will persist beyond this call. If not, they
          * will be destroyed after completion.
          *

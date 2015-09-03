@@ -80,7 +80,7 @@ define([
         return this.referenceCount;
     };
 
-    Imagery.prototype.processStateMachine = function(context) {
+    Imagery.prototype.processStateMachine = function(context, commandList) {
         if (this.state === ImageryState.UNLOADED) {
             this.state = ImageryState.TRANSITIONING;
             this.imageryLayer._requestImagery(this);
@@ -93,7 +93,7 @@ define([
 
         if (this.state === ImageryState.TEXTURE_LOADED) {
             this.state = ImageryState.TRANSITIONING;
-            this.imageryLayer._reprojectTexture(context, this);
+            this.imageryLayer._reprojectTexture(context, commandList, this);
         }
     };
 
