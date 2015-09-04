@@ -83,9 +83,9 @@ defineSuite([
         scene.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
         return updateUntilDone(globe).then(function() {
-            scene._globe = undefined;
+            scene.globe.show = false;
             expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-            scene._globe = globe;
+            scene.globe.show = true;
             expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
         });
     });
@@ -100,9 +100,9 @@ defineSuite([
         scene.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
         return updateUntilDone(globe).then(function() {
-            scene._globe = undefined;
+            scene.globe.show = false;
             expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-            scene._globe = globe;
+            scene.globe.show = true;
             expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
         });
     });
@@ -133,9 +133,9 @@ defineSuite([
             scene.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
             return updateUntilDone(globe).then(function() {
-                scene._globe = undefined;
+                scene.globe.show = false;
                 expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-                scene._globe = globe;
+                scene.globe.show = true;
                 expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
             });
         });

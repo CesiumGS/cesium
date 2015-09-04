@@ -724,7 +724,6 @@ define([
      * @param {Context} context The rendered context to use.
      * @param {Imagery} imagery The imagery instance to reproject.
      */
-
     ImageryLayer.prototype._reprojectTexture = function(context, commandList, imagery) {
         var texture = imagery.texture;
         var rectangle = imagery.rectangle;
@@ -741,10 +740,10 @@ define([
                     owner : this,
                     // Update render resources right before execution instead of now.
                     // This allows different ImageryLayers to share the same vao and buffers.
-                    preExecutionCallback : function(command) {
+                    preExecute : function(command) {
                         reprojectToGeographic(command, context, texture, imagery.rectangle);
                     },
-                    callback : function(outputTexture) {
+                    postExecute : function(outputTexture) {
                         texture.destroy();
                         imagery.texture = outputTexture;
                         finalizeReprojectTexture(that, context, imagery, outputTexture);

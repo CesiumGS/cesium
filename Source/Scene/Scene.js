@@ -230,10 +230,10 @@ define([
 
         this._sunPostProcess = undefined;
 
+        this._computeCommandList = [];
         this._commandList = [];
         this._frustumCommandsList = [];
         this._overlayCommandList = [];
-        this._computeCommandList = [];
 
         this._pickFramebuffer = undefined;
 
@@ -815,17 +815,6 @@ define([
             }
         },
 
-
-        /**
-         * @memberof Scene.prototype
-         * @type {ComputeEngine}
-         */
-        computeEngine : {
-            get : function() {
-                return this._computeEngine;
-            }
-        },
-
         /**
          * This property is for debugging only; it is not for production use.
          * <p>
@@ -1044,9 +1033,9 @@ define([
     var distances = new Interval();
 
     function createPotentiallyVisibleSet(scene) {
+        var computeList = scene._computeCommandList;
         var commandList = scene._commandList;
         var overlayList = scene._overlayCommandList;
-        var computeList = scene._computeCommandList;
 
         var cullingVolume = scene._frameState.cullingVolume;
         var camera = scene._camera;
@@ -1069,8 +1058,9 @@ define([
                 frustumCommandsList[n].indices[p] = 0;
             }
         }
-        overlayList.length = 0;
+
         computeList.length = 0;
+        overlayList.length = 0;
 
         var near = Number.MAX_VALUE;
         var far = Number.MIN_VALUE;
@@ -1493,7 +1483,7 @@ define([
         }
 
         if (defined(sunComputeCommand)) {
-            sunComputeCommand.execute(scene.computeEngine);
+            sunComputeCommand.execute(scene._computeEngine);
         }
 
         if (sunVisible) {
@@ -1641,11 +1631,10 @@ define([
     }
 
     function executeComputeCommands(scene) {
-        var context = scene.context;
         var commandList = scene._computeCommandList;
         var length = commandList.length;
         for (var i = 0; i < length; ++i) {
-            commandList[i].execute(scene.computeEngine);
+            commandList[i].execute(scene._computeEngine);
         }
     }
 
@@ -1727,9 +1716,9 @@ define([
         var context = scene.context;
         us.update(context, frameState);
 
+        scene._computeCommandList.length = 0;
         scene._commandList.length = 0;
         scene._overlayCommandList.length = 0;
-        scene._computeCommandList.length = 0;
 
         updatePrimitives(scene);
         createPotentiallyVisibleSet(scene);

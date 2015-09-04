@@ -97,10 +97,7 @@ define([
             vertexArray = VertexArray.fromGeometry({
                 context : computeEngine._context,
                 geometry : geometry,
-                attributeLocations : {
-                    position : 0,
-                    textureCoordinates : 1
-                },
+                attributeLocations : viewportQuadAttributeLocations,
                 bufferUsage : BufferUsage.STATIC_DRAW,
                 interleave : true
             });
@@ -111,12 +108,12 @@ define([
         return vertexArray;
     }
 
-    function createFramebuffer(context, texture) {
+    function createFramebuffer(context, outputTexture) {
         var fbo = new Framebuffer({
             context : context,
-            colorTextures : [texture]
+            colorTextures : [outputTexture],
+            destroyAttachments : false
         });
-        fbo.destroyAttachments = false;
         return fbo;
     }
 
@@ -148,8 +145,8 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (defined(computeCommand.preExecutionCallback)) {
-            computeCommand.preExecutionCallback(computeCommand);
+        if (defined(computeCommand.preExecute)) {
+            computeCommand.preExecute(computeCommand);
         }
 
         //>>includeStart('debug', pragmas.debug);
@@ -162,20 +159,21 @@ define([
         }
         //>>includeEnd('debug');
 
-        var texture = computeCommand.outputTexture;
-        var width = texture.width;
-        var height = texture.height;
+        var outputTexture = computeCommand.outputTexture;
+        var width = outputTexture.width;
+        var height = outputTexture.height;
 
         var context = this._context;
         var vertexArray = defined(computeCommand.vertexArray) ? computeCommand.vertexArray : getViewportQuadVertexArray(this);
         var shaderProgram = defined(computeCommand.shaderProgram) ? computeCommand.shaderProgram : createViewportQuadShader(context, computeCommand.fragmentShaderSource);
-        var framebuffer = createFramebuffer(context, texture);
+        var framebuffer = createFramebuffer(context, outputTexture);
         var renderState = createRenderState(width, height);
-        var uniformMap = defaultValue(computeCommand.uniformMap, defaultValue.EMPTY_OBJECT);
+        var uniformMap = computeCommand.uniformMap;
 
         var clearCommand = clearCommandScratch;
         clearCommand.framebuffer = framebuffer;
         clearCommand.renderState = renderState;
+        clearCommand.execute(context);
 
         var drawCommand = drawCommandScratch;
         drawCommand.vertexArray = vertexArray;
@@ -183,9 +181,8 @@ define([
         drawCommand.shaderProgram = shaderProgram;
         drawCommand.uniformMap = uniformMap;
         drawCommand.framebuffer = framebuffer;
-
-        clearCommand.execute(context);
         drawCommand.execute(context);
+
         framebuffer.destroy();
 
         if (!computeCommand.persists) {
@@ -195,8 +192,8 @@ define([
             }
         }
 
-        if (defined(computeCommand.callback)) {
-            computeCommand.callback(texture);
+        if (defined(computeCommand.postExecute)) {
+            computeCommand.postExecute(outputTexture);
         }
     };
 

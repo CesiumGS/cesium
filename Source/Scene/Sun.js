@@ -86,11 +86,19 @@ define([
          */
         this.show = true;
 
-        this._command = new DrawCommand({
+        this._drawCommand = new DrawCommand({
             primitiveType : PrimitiveType.TRIANGLES,
             boundingVolume : new BoundingSphere(),
             owner : this
         });
+        this._computeCommand = new ComputeCommand({
+            persists : false,
+            owner : this
+        });
+        this._commands = {
+            drawCommand : undefined,
+            computeCommand : undefined
+        };
         this._boundingVolume = new BoundingSphere();
         this._boundingVolume2D = new BoundingSphere();
 
@@ -195,17 +203,15 @@ define([
                 }
             };
 
-            computeCommand = new ComputeCommand({
-                fragmentShaderSource : SunTextureFS,
-                outputTexture : this._texture,
-                uniformMap : uniformMap,
-                owner : this
-            });
+            computeCommand = this._computeCommand;
+            computeCommand.fragmentShaderSource = SunTextureFS;
+            computeCommand.outputTexture = this._texture;
+            computeCommand.uniformMap = uniformMap;
         }
 
-        var command = this._command;
+        var drawCommand = this._drawCommand;
 
-        if (!defined(command.vertexArray)) {
+        if (!defined(drawCommand.vertexArray)) {
             var attributeLocations = {
                 direction : 0
             };
@@ -242,23 +248,23 @@ define([
                 usage : BufferUsage.STATIC_DRAW,
                 indexDatatype : IndexDatatype.UNSIGNED_SHORT
             });
-            command.vertexArray = new VertexArray({
+            drawCommand.vertexArray = new VertexArray({
                 context : context,
                 attributes : attributes,
                 indexBuffer : indexBuffer
             });
 
-            command.shaderProgram = ShaderProgram.fromCache({
+            drawCommand.shaderProgram = ShaderProgram.fromCache({
                 context : context,
                 vertexShaderSource : SunVS,
                 fragmentShaderSource : SunFS,
                 attributeLocations : attributeLocations
             });
 
-            command.renderState = RenderState.fromCache({
+            drawCommand.renderState = RenderState.fromCache({
                 blending : BlendingState.ALPHA_BLEND
             });
-            command.uniformMap = this._uniformMap;
+            drawCommand.uniformMap = this._uniformMap;
         }
 
         var sunPosition = context.uniformState.sunPositionWC;
@@ -276,9 +282,9 @@ define([
         boundingVolume2D.radius = boundingVolume.radius;
 
         if (mode === SceneMode.SCENE3D) {
-            BoundingSphere.clone(boundingVolume, command.boundingVolume);
+            BoundingSphere.clone(boundingVolume, drawCommand.boundingVolume);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
-            BoundingSphere.clone(boundingVolume2D, command.boundingVolume);
+            BoundingSphere.clone(boundingVolume2D, drawCommand.boundingVolume);
         }
 
         var position = SceneTransforms.computeActualWgs84Position(frameState, sunPosition, scratchCartesian4);
@@ -302,10 +308,9 @@ define([
         this._size = Math.ceil(Cartesian2.magnitude(Cartesian2.subtract(limbWC, positionWC, scratchCartesian4)));
         this._size = 2.0 * this._size * (1.0 + 2.0 * this._glowLengthTS);
 
-        return {
-            computeCommand : computeCommand,
-            drawCommand : command
-        };
+        this._commands.drawCommand = drawCommand;
+        this._commands.computeCommand = computeCommand;
+        return this._commands;
     };
 
     /**
@@ -340,7 +345,7 @@ define([
      * sun = sun && sun.destroy();
      */
     Sun.prototype.destroy = function() {
-        var command = this._command;
+        var command = this._drawCommand;
         command.vertexArray = command.vertexArray && command.vertexArray.destroy();
         command.shaderProgram = command.shaderProgram && command.shaderProgram.destroy();
 
