@@ -91,12 +91,8 @@ define([
             boundingVolume : new BoundingSphere(),
             owner : this
         });
-        this._computeCommand = new ComputeCommand({
-            persists : false,
-            owner : this
-        });
         this._commands = {
-            drawCommand : undefined,
+            drawCommand : this._drawCommand,
             computeCommand : undefined
         };
         this._boundingVolume = new BoundingSphere();
@@ -169,7 +165,6 @@ define([
 
         var drawingBufferWidth = scene.drawingBufferWidth;
         var drawingBufferHeight = scene.drawingBufferHeight;
-        var computeCommand;
 
         if (!defined(this._texture) ||
                 drawingBufferWidth !== this._drawingBufferWidth ||
@@ -203,10 +198,15 @@ define([
                 }
             };
 
-            computeCommand = this._computeCommand;
-            computeCommand.fragmentShaderSource = SunTextureFS;
-            computeCommand.outputTexture = this._texture;
-            computeCommand.uniformMap = uniformMap;
+            this._commands.computeCommand = new ComputeCommand({
+                fragmentShaderSource : SunTextureFS,
+                outputTexture  : this._texture,
+                persists : false,
+                owner : this,
+                postExecute : function() {
+                    that._commands.computeCommand = undefined;
+                }
+            });
         }
 
         var drawCommand = this._drawCommand;
@@ -308,8 +308,6 @@ define([
         this._size = Math.ceil(Cartesian2.magnitude(Cartesian2.subtract(limbWC, positionWC, scratchCartesian4)));
         this._size = 2.0 * this._size * (1.0 + 2.0 * this._glowLengthTS);
 
-        this._commands.drawCommand = drawCommand;
-        this._commands.computeCommand = computeCommand;
         return this._commands;
     };
 

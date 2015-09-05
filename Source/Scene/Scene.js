@@ -1482,11 +1482,10 @@ define([
             executeCommand(skyAtmosphereCommand, scene, context, passState);
         }
 
-        if (defined(sunComputeCommand)) {
-            sunComputeCommand.execute(scene._computeEngine);
-        }
-
         if (sunVisible) {
+            if (defined(sunComputeCommand)) {
+                sunComputeCommand.execute(scene._computeEngine);
+            }
             sunDrawCommand.execute(context, passState);
             if (scene.sunBloom) {
                 var framebuffer;

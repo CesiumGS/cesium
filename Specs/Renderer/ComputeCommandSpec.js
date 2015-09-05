@@ -78,7 +78,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('renderer resources are destroyed if persists is set to false', function() {
+    it('renderer resources are preserved or destroyed based on the persists flag', function() {
         var vertexShader = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fragmentShader = 'void main() { gl_FragColor = vec4(1.0); }';
         var shaderProgram = ShaderProgram.fromCache({
@@ -113,7 +113,7 @@ defineSuite([
             outputTexture : outputTexture
         });
 
-        // check that resources are not destroyed when persists is true
+        // check that resources are preserved when persists is true
         computeCommand.persists = true;
         scene.primitives.add(new CommandMockPrimitive(computeCommand));
         scene.renderForSpecs();
@@ -124,8 +124,8 @@ defineSuite([
         expect(vertexArray.isDestroyed()).toEqual(false);
         expect(outputTexture.isDestroyed()).toEqual(false);
 
-        // check that resources are destroyed when persists is false
-        // except outputTexture which is not destroyed by the compute command
+        // check that resources are destroyed when persists is false, except
+        // outputTexture which is always preserved
         computeCommand.persists = false;
         scene.primitives.add(new CommandMockPrimitive(computeCommand));
         scene.renderForSpecs();
