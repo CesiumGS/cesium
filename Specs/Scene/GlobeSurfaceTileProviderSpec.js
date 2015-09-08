@@ -11,6 +11,8 @@ defineSuite([
         'Core/GeographicProjection',
         'Core/Rectangle',
         'Core/WebMercatorProjection',
+        'Renderer/ContextLimits',
+        'Renderer/RenderState',
         'Scene/BlendingState',
         'Scene/Globe',
         'Scene/GlobeSurfaceShaderSet',
@@ -38,6 +40,8 @@ defineSuite([
         GeographicProjection,
         Rectangle,
         WebMercatorProjection,
+        ContextLimits,
+        RenderState,
         BlendingState,
         Globe,
         GlobeSurfaceShaderSet,
@@ -523,7 +527,7 @@ defineSuite([
         var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
 
-        for (var i = 0; i < context.maximumTextureImageUnits + 1; ++i) {
+        for (var i = 0; i < ContextLimits.maximumTextureImageUnits + 1; ++i) {
             layerCollection.addImageryProvider(new SingleTileImageryProvider({
                 url : 'Data/Images/Red16x16.png'
             }));
@@ -535,7 +539,7 @@ defineSuite([
             var commandList = [];
             expect(render(context, frameState, globe, commandList)).toBeGreaterThan(0);
 
-            var renderStateWithAlphaBlending = context.createRenderState({
+            var renderStateWithAlphaBlending = RenderState.fromCache({
                 blending : BlendingState.ALPHA_BLEND
             });
 

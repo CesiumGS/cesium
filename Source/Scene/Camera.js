@@ -65,6 +65,8 @@ define([
      *
      * @constructor
      *
+     * @param {Scene} scene The scene.
+     *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera.html|Cesium Sandcastle Camera Demo}
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera%20Tutorial.html">Sandcastle Example</a> from the <a href="http://cesiumjs.org/2013/02/13/Cesium-Camera-Tutorial/|Camera Tutorial}
      *
@@ -693,6 +695,7 @@ define([
          * @memberof Camera.prototype
          *
          * @type {Number}
+         * @readonly
          */
         heading : {
             get : function () {
@@ -720,6 +723,7 @@ define([
          * @memberof Camera.prototype
          *
          * @type {Number}
+         * @readonly
          */
         pitch : {
             get : function() {
@@ -747,6 +751,7 @@ define([
          * @memberof Camera.prototype
          *
          * @type {Number}
+         * @readonly
          */
         roll : {
             get : function() {
@@ -864,6 +869,7 @@ define([
      * then the cartesian will be used. If neither is given, then the current camera position
      * will be used.
      *
+     * @param {Object} options Object with the following properties:
      * @param {Cartesian3} [options.position] The cartesian position of the camera.
      * @param {Cartographic} [options.positionCartographic] The cartographic position of the camera.
      * @param {Number} [options.heading] The heading in radians or the current heading will be used if undefined.
@@ -1553,7 +1559,7 @@ define([
      * viewer.camera.lookAt(center, new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0));
      *
      * // 2. Using a HeadingPitchRange offset
-     * var center = Cartesian3.fromDegrees(-72.0, 40.0);
+     * var center = Cesium.Cartesian3.fromDegrees(-72.0, 40.0);
      * var heading = Cesium.Math.toRadians(50.0);
      * var pitch = Cesium.Math.toRadians(-20.0);
      * var range = 5000.0;
@@ -1619,7 +1625,7 @@ define([
      * viewer.camera.lookAtTransform(transform, new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0));
      *
      * // 2. Using a HeadingPitchRange offset
-     * var transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(-72.0, 40.0));
+     * var transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-72.0, 40.0));
      * var heading = Cesium.Math.toRadians(50.0);
      * var pitch = Cesium.Math.toRadians(-20.0);
      * var range = 5000.0;
@@ -2125,7 +2131,7 @@ define([
      *
      * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
      * @param {Ray} [result] The object onto which to store the result.
-     * @returns {Object} Returns the {@link Cartesian3} position and direction of the ray.
+     * @returns {Ray} Returns the {@link Cartesian3} position and direction of the ray.
      */
     Camera.prototype.getPickRay = function(windowPosition, result) {
         //>>includeStart('debug', pragmas.debug);

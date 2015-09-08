@@ -377,6 +377,7 @@ define([
 
     /**
      * Gets or sets the default array of known clock multipliers associated with new instances of the shuttle ring.
+     * @type {Number[]}
      */
     AnimationViewModel.defaultTicks = [//
     0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0,//
@@ -401,7 +402,7 @@ define([
     /**
      * Gets a copy of the array of positive known clock multipliers to associate with the shuttle ring.
      *
-     * @returns The array of known clock multipliers associated with the shuttle ring.
+     * @returns {Number[]} The array of known clock multipliers associated with the shuttle ring.
      */
     AnimationViewModel.prototype.getShuttleRingTicks = function() {
         return this._sortedFilteredPositiveTicks.slice(0);

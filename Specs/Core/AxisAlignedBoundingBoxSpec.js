@@ -141,14 +141,6 @@ defineSuite([
         expect(box.intersectPlane(plane)).toEqual(Intersect.INTERSECTING);
     });
 
-    it('intersect works the same as intersectPlane in one case', function() {
-        var box = new AxisAlignedBoundingBox(Cartesian3.ZERO, Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()));
-        var normal = Cartesian3.UNIT_X;
-        var position = Cartesian3.UNIT_X;
-        var plane = new Plane(normal, -Cartesian3.dot(normal, position));
-        expect(box.intersect(new Cartesian4(1.0, 0.0, 0.0, -1.0))).toEqual(box.intersectPlane(plane));
-    });
-
     it('clone returns undefined with no parameter', function() {
         expect(AxisAlignedBoundingBox.clone()).toBeUndefined();
     });

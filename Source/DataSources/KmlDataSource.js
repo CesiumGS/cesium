@@ -1544,7 +1544,14 @@ define([
         return when.all(processStyles(dataSource, kml, styleCollection, sourceUri, false, uriResolver), function() {
             var element = kml.documentElement;
             if (element.localName === 'kml') {
-                element = element.firstElementChild;
+                var childNodes = element.childNodes;
+                for (var i = 0; i < childNodes.length; i++) {
+                    var tmp = childNodes[i];
+                    if (defined(featureTypes[tmp.localName])) {
+                        element = tmp;
+                        break;
+                    }
+                }
             }
             processFeatureNode(dataSource, element, undefined, entityCollection, styleCollection, sourceUri, uriResolver);
 

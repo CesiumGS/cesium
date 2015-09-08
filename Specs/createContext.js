@@ -5,10 +5,13 @@ define([
         'Core/defined',
         'Core/PrimitiveType',
         'Core/queryToObject',
+        'Renderer/Buffer',
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
         'Renderer/Context',
         'Renderer/DrawCommand',
+        'Renderer/ShaderProgram',
+        'Renderer/VertexArray',
         'Specs/createCanvas',
         'Specs/createFrameState',
         'Specs/destroyCanvas'
@@ -18,10 +21,13 @@ define([
         defined,
         PrimitiveType,
         queryToObject,
+        Buffer,
         BufferUsage,
         ClearCommand,
         Context,
         DrawCommand,
+        ShaderProgram,
+        VertexArray,
         createCanvas,
         createFrameState,
         destroyCanvas) {
@@ -34,6 +40,8 @@ define([
         options.webgl = clone(defaultValue(options.webgl, {}));
         options.webgl.alpha = defaultValue(options.webgl.alpha, true);
         options.webgl.antialias = defaultValue(options.webgl.antialias, false);
+        options.webgl.failIfMajorPerformanceCaveat = false;
+
 
         var canvas = createCanvas(canvasWidth, canvasHeight);
         var context = new Context(canvas, options);
@@ -57,13 +65,25 @@ define([
 
         context.verifyDrawForSpecs = function(fs, uniformMap, modelMatrix) {
             var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
-            var sp = context.createShaderProgram(vs, fs);
 
-            var va = context.createVertexArray([{
-                index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-                componentsPerAttribute : 4
-            }]);
+            var sp = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs
+            });
+
+            var va = new VertexArray({
+                context : context,
+                attributes : [{
+                    index : sp.vertexAttributes.position.index,
+                    vertexBuffer : Buffer.createVertexBuffer({
+                        context : context,
+                        typedArray : new Float32Array([0, 0, 0, 1]),
+                        usage : BufferUsage.STATIC_DRAW
+                    }),
+                    componentsPerAttribute : 4
+                }]
+            });
 
             ClearCommand.ALL.execute(context);
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);

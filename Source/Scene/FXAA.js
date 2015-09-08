@@ -6,8 +6,12 @@ define([
         '../Core/destroyObject',
         '../Core/PixelFormat',
         '../Renderer/ClearCommand',
+        '../Renderer/Framebuffer',
         '../Renderer/PixelDatatype',
+        '../Renderer/Renderbuffer',
         '../Renderer/RenderbufferFormat',
+        '../Renderer/RenderState',
+        '../Renderer/Texture',
         '../Shaders/PostProcessFilters/FXAA'
     ], function(
         Cartesian2,
@@ -16,8 +20,12 @@ define([
         destroyObject,
         PixelFormat,
         ClearCommand,
+        Framebuffer,
         PixelDatatype,
+        Renderbuffer,
         RenderbufferFormat,
+        RenderState,
+        Texture,
         FXAAFS) {
     "use strict";
 
@@ -67,7 +75,8 @@ define([
             this._depthTexture = this._depthTexture && this._depthTexture.destroy();
             this._depthRenderbuffer = this._depthRenderbuffer && this._depthRenderbuffer.destroy();
 
-            this._texture = context.createTexture2D({
+            this._texture = new Texture({
+                context : context,
                 width : width,
                 height : height,
                 pixelFormat : PixelFormat.RGBA,
@@ -75,14 +84,16 @@ define([
             });
 
             if (context.depthTexture) {
-                this._depthTexture = context.createTexture2D({
+                this._depthTexture = new Texture({
+                    context : context,
                     width : width,
                     height : height,
                     pixelFormat : PixelFormat.DEPTH_COMPONENT,
                     pixelDatatype : PixelDatatype.UNSIGNED_SHORT
                 });
             } else {
-                this._depthRenderbuffer = context.createRenderbuffer({
+                this._depthRenderbuffer = new Renderbuffer({
+                    context : context,
                     width : width,
                     height : height,
                     format : RenderbufferFormat.DEPTH_COMPONENT16
@@ -93,7 +104,8 @@ define([
         if (!defined(this._fbo) || textureChanged) {
             this._fbo = this._fbo && this._fbo.destroy();
 
-            this._fbo = context.createFramebuffer({
+            this._fbo = new Framebuffer({
+                context : context,
                 colorTextures : [this._texture],
                 depthTexture : this._depthTexture,
                 depthRenderbuffer : this._depthRenderbuffer,
@@ -103,7 +115,7 @@ define([
 
         if (!defined(this._command)) {
             this._command = context.createViewportQuadCommand(FXAAFS, {
-                renderState : context.createRenderState(),
+                renderState : RenderState.fromCache(),
                 owner : this
             });
         }
