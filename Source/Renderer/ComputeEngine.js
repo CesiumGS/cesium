@@ -17,8 +17,7 @@ define([
         './DrawCommand',
         './Framebuffer',
         './RenderState',
-        './ShaderProgram',
-        './VertexArray'
+        './ShaderProgram'
     ], function(
         BoundingRectangle,
         Color,
@@ -37,8 +36,7 @@ define([
         DrawCommand,
         Framebuffer,
         RenderState,
-        ShaderProgram,
-        VertexArray) {
+        ShaderProgram) {
     "use strict";
 
     /**
@@ -46,13 +44,8 @@ define([
      */
     var ComputeEngine = function(context) {
         this._context = context;
-        this._viewportQuadVertexArray = undefined;
     };
 
-    var viewportQuadAttributeLocations = {
-        position : 0,
-        textureCoordinates : 1
-    };
     var renderStateScratch;
     var drawCommandScratch = new DrawCommand({
         primitiveType : PrimitiveType.TRIANGLES
@@ -61,60 +54,12 @@ define([
         color : new Color(0.0, 0.0, 0.0, 0.0)
     });
 
-    function getViewportQuadVertexArray(computeEngine) {
-        var vertexArray = computeEngine._viewportQuadVertexArray;
-
-        if (!defined(vertexArray)) {
-            var geometry = new Geometry({
-                attributes : {
-                    position : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.FLOAT,
-                        componentsPerAttribute : 2,
-                        values : [
-                            -1.0, -1.0,
-                            1.0, -1.0,
-                            1.0,  1.0,
-                            -1.0,  1.0
-                        ]
-                    }),
-
-                    textureCoordinates : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.FLOAT,
-                        componentsPerAttribute : 2,
-                        values : [
-                            0.0, 0.0,
-                            1.0, 0.0,
-                            1.0, 1.0,
-                            0.0, 1.0
-                        ]
-                    })
-                },
-                // Workaround Internet Explorer 11.0.8 lack of TRIANGLE_FAN
-                indices : new Uint16Array([0, 1, 2, 0, 2, 3]),
-                primitiveType : PrimitiveType.TRIANGLES
-            });
-
-            vertexArray = VertexArray.fromGeometry({
-                context : computeEngine._context,
-                geometry : geometry,
-                attributeLocations : viewportQuadAttributeLocations,
-                bufferUsage : BufferUsage.STATIC_DRAW,
-                interleave : true
-            });
-
-            computeEngine._viewportQuadVertexArray = vertexArray;
-        }
-
-        return vertexArray;
-    }
-
     function createFramebuffer(context, outputTexture) {
-        var fbo = new Framebuffer({
+        return new Framebuffer({
             context : context,
             colorTextures : [outputTexture],
             destroyAttachments : false
         });
-        return fbo;
     }
 
     function createViewportQuadShader(context, fragmentShaderSource) {
@@ -122,7 +67,10 @@ define([
             context : context,
             vertexShaderSource : ViewportQuadVS,
             fragmentShaderSource : fragmentShaderSource,
-            attributeLocations : viewportQuadAttributeLocations
+            attributeLocations : {
+                position : 0,
+                textureCoordinates : 1
+            }
         });
     }
 
@@ -145,6 +93,7 @@ define([
         }
         //>>includeEnd('debug');
 
+        // This may modify the command's resources, so do error checking afterwards
         if (defined(computeCommand.preExecute)) {
             computeCommand.preExecute(computeCommand);
         }
@@ -164,7 +113,7 @@ define([
         var height = outputTexture.height;
 
         var context = this._context;
-        var vertexArray = defined(computeCommand.vertexArray) ? computeCommand.vertexArray : getViewportQuadVertexArray(this);
+        var vertexArray = defined(computeCommand.vertexArray) ? computeCommand.vertexArray : context.getViewportQuadVertexArray();
         var shaderProgram = defined(computeCommand.shaderProgram) ? computeCommand.shaderProgram : createViewportQuadShader(context, computeCommand.fragmentShaderSource);
         var framebuffer = createFramebuffer(context, outputTexture);
         var renderState = createRenderState(width, height);
@@ -202,7 +151,6 @@ define([
     };
 
     ComputeEngine.prototype.destroy = function() {
-        this._viewportQuadVertexArray = this._viewportQuadVertexArray && this._viewportQuadVertexArray.destroy();
         return destroyObject(this);
     };
 

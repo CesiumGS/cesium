@@ -31,7 +31,7 @@ defineSuite([
 
     beforeAll(function() {
         scene = createScene();
-        context = scene._context;
+        context = scene.context;
     });
 
     afterAll(function() {
