@@ -918,7 +918,7 @@ define([
         textureCoordinates : 1
     };
 
-    Context.prototype.createViewportQuadCommand = function(fragmentShaderSource, overrides) {
+    Context.prototype.getViewportQuadVertexArray = function() {
         // Per-context cache for viewport quads
         var vertexArray = this.cache.viewportQuad_vertexArray;
 
@@ -955,10 +955,7 @@ define([
             vertexArray = VertexArray.fromGeometry({
                 context : this,
                 geometry : geometry,
-                attributeLocations : {
-                    position : 0,
-                    textureCoordinates : 1
-                },
+                attributeLocations : viewportQuadAttributeLocations,
                 bufferUsage : BufferUsage.STATIC_DRAW,
                 interleave : true
             });
@@ -966,10 +963,14 @@ define([
             this.cache.viewportQuad_vertexArray = vertexArray;
         }
 
+        return vertexArray;
+    };
+
+    Context.prototype.createViewportQuadCommand = function(fragmentShaderSource, overrides) {
         overrides = defaultValue(overrides, defaultValue.EMPTY_OBJECT);
 
         return new DrawCommand({
-            vertexArray : vertexArray,
+            vertexArray : this.getViewportQuadVertexArray(),
             primitiveType : PrimitiveType.TRIANGLES,
             renderState : overrides.renderState,
             shaderProgram : ShaderProgram.fromCache({
