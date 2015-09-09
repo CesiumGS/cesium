@@ -422,6 +422,23 @@ define([
         return cachedState;
     };
 
+    /**
+     * Use sparingly until we have a real solution for removing render states from the cache, e.g. TextureAtlas
+     * polutting the cache on resize.
+     *
+     * @private
+     */
+    RenderState.removeFromCache = function(renderState) {
+        // remove full key
+        var states = new RenderState(renderState);
+        var fullKey = JSON.stringify(states);
+        delete renderStateCache[fullKey];
+
+        // remove partial key
+        var partialKey = JSON.stringify(renderState);
+        delete renderStateCache[partialKey];
+    };
+
     function enableOrDisable(gl, glEnum, enable) {
         if (enable) {
             gl.enable(glEnum);
