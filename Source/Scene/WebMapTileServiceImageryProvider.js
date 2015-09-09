@@ -13,7 +13,8 @@ define([
         '../Core/Rectangle',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/Uri',
-        './ImageryProvider'
+        './ImageryProvider',
+        './UrlTemplateImageryProvider'
     ], function(
         combine,
         Credit,
@@ -28,7 +29,8 @@ define([
         Rectangle,
         WebMercatorTilingScheme,
         Uri,
-        ImageryProvider) {
+        ImageryProvider,
+        UrlTemplateImageryProvider) {
     "use strict";
 
     /**
@@ -50,6 +52,7 @@ define([
      * @param {TilingScheme} [options.tilingScheme] The tiling scheme corresponding to the organization of the tiles in the TileMatrixSet.
      * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle covered by the layer.
+     * @param {Number} [options.minimumRetrievingLevel=0] The minimum level-of-detail to retrieve.
      * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
      * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
@@ -120,6 +123,7 @@ define([
         this._tileWidth = defaultValue(options.tileWidth, 256);
         this._tileHeight = defaultValue(options.tileHeight, 256);
 
+        this._minimumRetrievingLevel = defaultValue(options.minimumRetrievingLevel, 0);
         this._minimumLevel = defaultValue(options.minimumLevel, 0);
         this._maximumLevel = options.maximumLevel;
 
@@ -403,6 +407,9 @@ define([
      * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
      */
     WebMapTileServiceImageryProvider.prototype.requestImage = function(x, y, level) {
+        if (level < this._minimumRetrievingLevel) {
+          return UrlTemplateImageryProvider.transparentCanvas;
+        }
         var url = buildImageUrl(this, x, y, level);
         return ImageryProvider.loadImage(this, url);
     };
