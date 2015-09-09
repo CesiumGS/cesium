@@ -429,12 +429,12 @@ define([
      * @private
      */
     RenderState.removeFromCache = function(renderState) {
-        // remove full key
+        // remove full key if it exists
         var states = new RenderState(renderState);
         var fullKey = JSON.stringify(states);
         delete renderStateCache[fullKey];
 
-        // remove partial key
+        // remove partial key if it exists
         var partialKey = JSON.stringify(renderState);
         delete renderStateCache[partialKey];
     };
