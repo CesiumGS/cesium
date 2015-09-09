@@ -304,8 +304,7 @@ defineSuite([
             // update until the load queue is empty.
             return pollToPromise(function() {
                 globe._surface._debug.enableDebugOutput = true;
-                var commandList = [];
-                globe.update(scene.context, scene.frameState, commandList);
+                scene.render();
                 return globe._surface.tileProvider.ready && globe._surface._tileLoadQueue.length === 0 && globe._surface._debug.tilesWaitingForChildren === 0;
             });
         }

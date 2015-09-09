@@ -678,7 +678,7 @@ define([
         return funcs;
     }
 
-    RenderState.partialApply = function(gl, previousRenderState, renderState, previousPassState, passState) {
+    RenderState.partialApply = function(gl, previousRenderState, renderState, previousPassState, passState, clear) {
         if (previousRenderState !== renderState) {
             // When a new render state is applied, instead of making WebGL calls for all the states or first
             // comparing the states one-by-one with the previous state (basically a linear search), we take
@@ -700,7 +700,10 @@ define([
 
         var previousScissorTest = (defined(previousPassState.scissorTest)) ? previousPassState.scissorTest : previousRenderState.scissorTest;
         var scissorTest = (defined(passState.scissorTest)) ? passState.scissorTest : renderState.scissorTest;
-        if (previousScissorTest !== scissorTest) {
+
+        // Our scissor rectangle can get out of sync with the GL scissor rectangle on clears.
+        // Seems to be a problem only on ANGLE. See https://github.com/AnalyticalGraphicsInc/cesium/issues/2994
+        if ((previousScissorTest !== scissorTest) || clear) {
             applyScissorTest(gl, renderState, passState);
         }
 

@@ -238,9 +238,9 @@ defineSuite([
         // 2 of 4.  Clear framebuffer color attachment to green.
         framebuffer = new Framebuffer({
             context : context,
-            colorTextures : [cubeMap.positiveX]
+            colorTextures : [cubeMap.positiveX],
+            destroyAttachments : false
         });
-        framebuffer.destroyAttachments = false;
 
         var clearCommand = new ClearCommand({
             color : new Color (0.0, 1.0, 0.0, 1.0),
