@@ -697,12 +697,12 @@ define([
         }
     }
 
-    function applyRenderState(context, renderState, passState) {
+    function applyRenderState(context, renderState, passState, clear) {
         var previousRenderState = context._currentRenderState;
         var previousPassState = context._currentPassState;
         context._currentRenderState = renderState;
         context._currentPassState = passState;
-        RenderState.partialApply(context._gl, previousRenderState, renderState, previousPassState, passState);
+        RenderState.partialApply(context._gl, previousRenderState, renderState, previousPassState, passState, clear);
     }
 
     var scratchBackBufferArray;
@@ -771,7 +771,7 @@ define([
         }
 
         var rs = defaultValue(clearCommand.renderState, this._defaultRenderState);
-        applyRenderState(this, rs, passState);
+        applyRenderState(this, rs, passState, true);
 
         // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
         var framebuffer = defaultValue(clearCommand.framebuffer, passState.framebuffer);
@@ -793,7 +793,7 @@ define([
 
         bindFramebuffer(context, framebuffer);
 
-        applyRenderState(context, rs, passState);
+        applyRenderState(context, rs, passState, false);
 
         var sp = defaultValue(shaderProgram, drawCommand.shaderProgram);
         sp._bind();
