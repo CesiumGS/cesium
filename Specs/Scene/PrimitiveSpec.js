@@ -328,6 +328,7 @@ defineSuite([
         scene.camera.viewRectangle(rectangle);
 
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
         scene.primitives.add(primitive);
         expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     }
