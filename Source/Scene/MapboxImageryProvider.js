@@ -81,7 +81,8 @@ define([
             if (typeof credit === 'string') {
                 credit = new Credit(credit);
             }
-            defaultCredit2.push(credit);
+            defaultCredit1 = credit;
+            defaultCredit2.length = 0;
         }
 
         this._imageryProvider = new UrlTemplateImageryProvider({
