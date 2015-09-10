@@ -56,7 +56,7 @@ define([
         var mapId = options.mapId;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(mapId)) {
-            throw new DeveloperError('options.url is required.');
+            throw new DeveloperError('options.mapId is required.');
         }
         //>>includeEnd('debug');
 
