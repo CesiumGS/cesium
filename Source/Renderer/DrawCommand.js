@@ -95,6 +95,14 @@ define([
         this.offset = defaultValue(options.offset, 0);
 
         /**
+         * The number of instances to draw.
+         *
+         * @type {Number}
+         * @default 1
+         */
+        this.instanceCount = defaultValue(options.instanceCount, 1);
+
+        /**
          * The shader program to apply.
          *
          * @type {ShaderProgram}
