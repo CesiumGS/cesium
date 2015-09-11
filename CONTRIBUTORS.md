@@ -63,5 +63,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Ilia Choly](https://github.com/icholy)
 * [Farouk Abdou](https://github.com/kaktus40)
 * [Stéphane Lozier](https://github.com/slozier)
+* [Adam Cole](https://github.com/adamdavidcole)
+* [Tiffany Lu](https://github.com/tiffanylu)
 
 Also see [our contributors page](http://cesiumjs.org/contributors.html) for more information.
