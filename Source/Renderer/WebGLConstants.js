@@ -9,7 +9,7 @@ define([
      * WebGL constants.
      *
      * This file provides a workaround for Safari 9 where WebGL constants can't be accessed
-     * through WebGLRenderingContext.
+     * through WebGLRenderingContext.  See https://github.com/AnalyticalGraphicsInc/cesium/issues/2989
      *
      * @private
      */
