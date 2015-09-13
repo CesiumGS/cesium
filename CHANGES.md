@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+### 1.15 - 2015-11-02
+
+* Breaking changes
+  * ...
+* Deprecated
+  * ...
+* Added CZML examples to Sandcastle.  See the new CZML tab.
+
 ### 1.14 - 2015-10-01
 
 * Breaking changes
