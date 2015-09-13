@@ -7,6 +7,8 @@ Change Log
   * ...
 * Deprecated
   * ...
+* Added `subdomains` option to `WebMapTileServiceImageryProvider`.
+* Added `subdomains` option to `WebMapServiceImageryProvider`.
 * Fix zooming in 2D when tracking an object. The zoom was based on location rather than the tracked object. [#2991](https://github.com/AnalyticalGraphicsInc/cesium/issues/2991)
 * Added `options.credit` parameter to `MapboxImageryProvider`.
 
