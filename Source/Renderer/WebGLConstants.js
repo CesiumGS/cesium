@@ -310,7 +310,13 @@ define([
         UNPACK_PREMULTIPLY_ALPHA_WEBGL : 0x9241,
         CONTEXT_LOST_WEBGL : 0x9242,
         UNPACK_COLORSPACE_CONVERSION_WEBGL : 0x9243,
-        BROWSER_DEFAULT_WEBGL : 0x9244
+        BROWSER_DEFAULT_WEBGL : 0x9244,
+
+        // Extensions
+        UNSIGNED_INT_24_8_WEBGL : 0x84FA,
+
+        // Desktop OpenGL
+        DOUBLE : 0x140A
     };
 
     return freezeObject(WebGLConstants);

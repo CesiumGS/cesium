@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        '../Core/freezeObject'
+        '../Core/freezeObject',
+        '../Renderer/WebGLConstants'
     ], function(
-        freezeObject) {
+        freezeObject,
+        WebGLConstants) {
     "use strict";
 
     /**
@@ -13,68 +15,68 @@ define([
      */
     var StencilFunction = {
         /**
-         * 0x0200. The stencil test never passes.
+         * The stencil test never passes.
          *
          * @type {Number}
          * @constant
          */
-        NEVER : 0x0200,
+        NEVER : WebGLConstants.NEVER,
 
         /**
-         * 0x0201.  The stencil test passes when the masked reference value is less than the masked stencil value.
+         * The stencil test passes when the masked reference value is less than the masked stencil value.
          *
          * @type {Number}
          * @constant
          */
-        LESS : 0x0201,
+        LESS : WebGLConstants.LESS,
 
         /**
-         * 0x0202.  The stencil test passes when the masked reference value is equal to the masked stencil value.
+         * The stencil test passes when the masked reference value is equal to the masked stencil value.
          *
          * @type {Number}
          * @constant
          */
-        EQUAL : 0x0202,
+        EQUAL : WebGLConstants.EQUAL,
 
         /**
-         * 0x0203.  The stencil test passes when the masked reference value is less than or equal to the masked stencil value.
+         * The stencil test passes when the masked reference value is less than or equal to the masked stencil value.
          *
          * @type {Number}
          * @constant
          */
-        LESS_OR_EQUAL : 0x0203, // WebGL: LEQUAL
+        LESS_OR_EQUAL : WebGLConstants.LEQUAL,
 
         /**
-         * 0x0204.  The stencil test passes when the masked reference value is greater than the masked stencil value.
+         * The stencil test passes when the masked reference value is greater than the masked stencil value.
          *
          * @type {Number}
          * @constant
          */
-        GREATER : 0x0204,
+        GREATER : WebGLConstants.GREATER,
 
         /**
-         * 0x0205.  The stencil test passes when the masked reference value is not equal to the masked stencil value.
+         * The stencil test passes when the masked reference value is not equal to the masked stencil value.
          *
          * @type {Number}
          * @constant
          */
-        NOT_EQUAL : 0x0205, // WebGL: NOTEQUAL
+        NOT_EQUAL : WebGLConstants.NOTEQUAL,
 
         /**
-         * 0x0206.  The stencil test passes when the masked reference value is greater than or equal to the masked stencil value.
+         * The stencil test passes when the masked reference value is greater than or equal to the masked stencil value.
          *
          * @type {Number}
          * @constant
          */
-        GREATER_OR_EQUAL : 0x0206, // WebGL: GEQUAL
+        GREATER_OR_EQUAL : WebGLConstants.GEQUAL,
 
         /**
-         * 0x0207.  The stencil test always passes.
+         * The stencil test always passes.
          *
          * @type {Number}
          * @constant
          */
-        ALWAYS : 0x0207
+        ALWAYS : WebGLConstants.ALWAYS
     };
 
     return freezeObject(StencilFunction);
