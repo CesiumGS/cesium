@@ -38,7 +38,7 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.url The URL of the WMS service. The URL has the same keywords as the UrlTemplateImageryProvider.
+     * @param {String} options.url The URL of the WMS service. The URL supports the same keywords as the {@link UrlTemplateImageryProvider}.
      * @param {String} options.layers The layers to include, separated by commas.
      * @param {Object} [options.parameters=WebMapServiceImageryProvider.DefaultParameters] Additional parameters
      *        to pass to the WMS server in the GetMap URL.
