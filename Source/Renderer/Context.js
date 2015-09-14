@@ -859,17 +859,17 @@ define([
         if (defined(indexBuffer)) {
             offset = offset * indexBuffer.bytesPerIndex; // offset in vertices to offset in bytes
             count = defaultValue(count, indexBuffer.numberOfIndices);
-            if (instanceCount > 1) {
-                context._instancedArrays.drawElementsInstancedANGLE(primitiveType, count, indexBuffer.indexDatatype, offset, instanceCount);
-            } else {
+            if (instanceCount === 1) {
                 context._gl.drawElements(primitiveType, count, indexBuffer.indexDatatype, offset);
+            } else {
+                context._instancedArrays.drawElementsInstancedANGLE(primitiveType, count, indexBuffer.indexDatatype, offset, instanceCount);
             }
         } else {
             count = defaultValue(count, va.numberOfVertices);
-            if (instanceCount > 1) {
-                context._instancedArrays.drawArraysInstancedANGLE(primitiveType, offset, count, instanceCount);
-            } else {
+            if (instanceCount === 1) {
                 context._gl.drawArrays(primitiveType, offset, count);
+            } else {
+                context._instancedArrays.drawArraysInstancedANGLE(primitiveType, offset, count, instanceCount);
             }
         }
 
