@@ -14,7 +14,9 @@ defineSuite([
         'Renderer/DrawCommand',
         'Renderer/Framebuffer',
         'Renderer/PixelDatatype',
+        'Renderer/ShaderProgram',
         'Renderer/Texture',
+        'Renderer/WebGLConstants',
         'Scene/Camera',
         'Scene/FrameState',
         'Scene/Globe',
@@ -43,7 +45,9 @@ defineSuite([
         DrawCommand,
         Framebuffer,
         PixelDatatype,
+        ShaderProgram,
         Texture,
+        WebGLConstants,
         Camera,
         FrameState,
         Globe,
@@ -58,7 +62,7 @@ defineSuite([
         pollToPromise,
         render) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,WebGLRenderingContext*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
 
@@ -217,9 +221,12 @@ defineSuite([
     it('debugShowCommands tints commands', function() {
         var c = new DrawCommand({
             pass : Pass.OPAQUE,
-            shaderProgram : scene.context.createShaderProgram(
-                'void main() { gl_Position = vec4(1.0); }',
-                'void main() { gl_FragColor = vec4(1.0); }')
+
+            shaderProgram : ShaderProgram.fromCache({
+                context : scene.context,
+                vertexShaderSource : 'void main() { gl_Position = vec4(1.0); }',
+                fragmentShaderSource : 'void main() { gl_FragColor = vec4(1.0); }'
+            })
         });
         c.execute = function() {};
 
@@ -401,7 +408,7 @@ defineSuite([
             var status = framebuffer.status;
             framebuffer.destroy();
 
-            if (status !== WebGLRenderingContext.FRAMEBUFFER_COMPLETE) {
+            if (status !== WebGLConstants.FRAMEBUFFER_COMPLETE) {
                 return;
             }
         }

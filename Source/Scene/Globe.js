@@ -31,6 +31,8 @@ define([
         '../Core/Transforms',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
         '../Renderer/VertexArray',
@@ -78,6 +80,8 @@ define([
         Transforms,
         BufferUsage,
         DrawCommand,
+        RenderState,
+        ShaderProgram,
         ShaderSource,
         Texture,
         VertexArray,
@@ -697,7 +701,7 @@ define([
         if (this._mode !== mode || !defined(this._rsColor)) {
             modeChanged = true;
             if (mode === SceneMode.SCENE3D || mode === SceneMode.COLUMBUS_VIEW) {
-                this._rsColor = context.createRenderState({ // Write color and depth
+                this._rsColor = RenderState.fromCache({ // Write color and depth
                     cull : {
                         enabled : true
                     },
@@ -705,18 +709,18 @@ define([
                         enabled : true
                     }
                 });
-                this._rsColorWithoutDepthTest = context.createRenderState({ // Write color, not depth
+                this._rsColorWithoutDepthTest = RenderState.fromCache({ // Write color, not depth
                     cull : {
                         enabled : true
                     }
                 });
             } else {
-                this._rsColor = context.createRenderState({
+                this._rsColor = RenderState.fromCache({
                     cull : {
                         enabled : true
                     }
                 });
-                this._rsColorWithoutDepthTest = context.createRenderState({
+                this._rsColorWithoutDepthTest = RenderState.fromCache({
                     cull : {
                         enabled : true
                     }
@@ -764,7 +768,13 @@ define([
         if (!defined(northPoleCommand.shaderProgram) ||
             !defined(southPoleCommand.shaderProgram)) {
 
-            var poleShaderProgram = context.replaceShaderProgram(northPoleCommand.shaderProgram, GlobeVSPole, GlobeFSPole, terrainAttributeLocations);
+            var poleShaderProgram = ShaderProgram.replaceCache({
+                context : context,
+                shaderProgram : northPoleCommand.shaderProgram,
+                vertexShaderSource : GlobeVSPole,
+                fragmentShaderSource : GlobeFSPole,
+                attributeLocations : terrainAttributeLocations
+            });
 
             northPoleCommand.shaderProgram = poleShaderProgram;
             southPoleCommand.shaderProgram = poleShaderProgram;

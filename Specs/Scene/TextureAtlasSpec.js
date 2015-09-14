@@ -7,9 +7,11 @@ defineSuite([
         'Core/Math',
         'Core/PixelFormat',
         'Core/PrimitiveType',
+        'Renderer/Buffer',
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
         'Renderer/DrawCommand',
+        'Renderer/ShaderProgram',
         'Renderer/VertexArray',
         'Specs/createScene',
         'ThirdParty/when'
@@ -21,9 +23,11 @@ defineSuite([
         CesiumMath,
         PixelFormat,
         PrimitiveType,
+        Buffer,
         BufferUsage,
         ClearCommand,
         DrawCommand,
+        ShaderProgram,
         VertexArray,
         createScene,
         when) {
@@ -87,16 +91,27 @@ uniform sampler2D u_texture;\n\
 void main() {\n\
   gl_FragColor = texture2D(u_texture, vec2(' + x + ', ' + y + '));\n\
 }';
-        var sp = context.createShaderProgram(vs, fs, {
-            position : 0
+
+        var sp = ShaderProgram.fromCache({
+            context: context,
+            vertexShaderSource: vs,
+            fragmentShaderSource: fs,
+            attributeLocations: {
+                position: 0
+            }
         });
+
         sp.allUniforms.u_texture.value = texture;
 
         var va = new VertexArray({
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });

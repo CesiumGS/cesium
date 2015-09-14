@@ -8,8 +8,10 @@ define([
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/PixelFormat',
+        './ContextLimits',
         './MipmapHint',
         './PixelDatatype',
+        './Sampler',
         './TextureMagnificationFilter',
         './TextureMinificationFilter',
         './TextureWrap'
@@ -22,8 +24,10 @@ define([
         DeveloperError,
         CesiumMath,
         PixelFormat,
+        ContextLimits,
         MipmapHint,
         PixelDatatype,
+        Sampler,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap) {
@@ -54,16 +58,16 @@ define([
             throw new DeveloperError('Width must be greater than zero.');
         }
 
-        if (width > context._maximumTextureSize) {
-            throw new DeveloperError('Width must be less than or equal to the maximum texture size (' + context._maximumTextureSize + ').  Check maximumTextureSize.');
+        if (width > ContextLimits.maximumTextureSize) {
+            throw new DeveloperError('Width must be less than or equal to the maximum texture size (' + ContextLimits.maximumTextureSize + ').  Check maximumTextureSize.');
         }
 
         if (height <= 0) {
             throw new DeveloperError('Height must be greater than zero.');
         }
 
-        if (height > context._maximumTextureSize) {
-            throw new DeveloperError('Height must be less than or equal to the maximum texture size (' + context._maximumTextureSize + ').  Check maximumTextureSize.');
+        if (height > ContextLimits.maximumTextureSize) {
+            throw new DeveloperError('Height must be less than or equal to the maximum texture size (' + ContextLimits.maximumTextureSize + ').  Check maximumTextureSize.');
         }
 
         if (!PixelFormat.validate(pixelFormat)) {
@@ -153,7 +157,7 @@ define([
         this._flipY = flipY;
         this._sampler = undefined;
 
-        this.sampler = options.sampler;
+        this.sampler = defined(options.sampler) ? options.sampler : new Sampler();
     };
 
     /**
@@ -178,7 +182,7 @@ define([
      * @exception {DeveloperError} framebufferXOffset + width must be less than or equal to canvas.clientWidth.
      * @exception {DeveloperError} framebufferYOffset + height must be less than or equal to canvas.clientHeight.
      *
-     * @see Context#createSampler
+     * @see Sampler
      *
      * @example
      * // Create a texture with the contents of the framebuffer.
@@ -257,7 +261,7 @@ define([
     defineProperties(Texture.prototype, {
         /**
          * The sampler to use when sampling this texture.
-         * Create a sampler by calling {@link Context#createSampler}.  If this
+         * Create a sampler by calling {@link Sampler}.  If this
          * parameter is not specified, a default sampler is used.  The default sampler clamps texture
          * coordinates in both directions, uses linear filtering for both magnification and minifcation,
          * and uses a maximum anisotropy of 1.0.
@@ -269,34 +273,19 @@ define([
                 return this._sampler;
             },
             set : function(sampler) {
-                var samplerDefined = true;
-                if (!defined(sampler)) {
-                    samplerDefined = false;
-                    var minFilter = TextureMinificationFilter.LINEAR;
-                    var magFilter = TextureMagnificationFilter.LINEAR;
-                    if (this._pixelDatatype === PixelDatatype.FLOAT) {
-                        minFilter = TextureMinificationFilter.NEAREST;
-                        magFilter = TextureMagnificationFilter.NEAREST;
-                    }
+                var minificationFilter = sampler.minificationFilter;
+                var magnificationFilter = sampler.magnificationFilter;
 
-                    sampler = {
-                        wrapS : TextureWrap.CLAMP_TO_EDGE,
-                        wrapT : TextureWrap.CLAMP_TO_EDGE,
-                        minificationFilter : minFilter,
-                        magnificationFilter : magFilter,
-                        maximumAnisotropy : 1.0
-                    };
-                }
+                var mipmap =
+                    (minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) ||
+                    (minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) ||
+                    (minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) ||
+                    (minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR);
 
+                // float textures only support nearest filtering, so override the sampler's settings
                 if (this._pixelDatatype === PixelDatatype.FLOAT) {
-                    if (sampler.minificationFilter !== TextureMinificationFilter.NEAREST &&
-                            sampler.minificationFilter !== TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) {
-                        throw new DeveloperError('Only NEAREST and NEAREST_MIPMAP_NEAREST minification filters are supported for floating point textures.');
-                    }
-
-                    if (sampler.magnificationFilter !== TextureMagnificationFilter.NEAREST) {
-                        throw new DeveloperError('Only the NEAREST magnification filter is supported for floating point textures.');
-                    }
+                    minificationFilter = mipmap ? TextureMinificationFilter.NEAREST_MIPMAP_NEAREST : TextureMinificationFilter.NEAREST;
+                    magnificationFilter = TextureMagnificationFilter.NEAREST;
                 }
 
                 var gl = this._context._gl;
@@ -304,9 +293,8 @@ define([
 
                 gl.activeTexture(gl.TEXTURE0);
                 gl.bindTexture(target, this._texture);
-                gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, sampler.minificationFilter);
-                gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, sampler.magnificationFilter);
-
+                gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, minificationFilter);
+                gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, magnificationFilter);
                 gl.texParameteri(target, gl.TEXTURE_WRAP_S, sampler.wrapS);
                 gl.texParameteri(target, gl.TEXTURE_WRAP_T, sampler.wrapT);
                 if (defined(this._textureFilterAnisotropic)) {
@@ -314,13 +302,7 @@ define([
                 }
                 gl.bindTexture(target, null);
 
-                this._sampler = !samplerDefined ? undefined : {
-                    wrapS : sampler.wrapS,
-                    wrapT : sampler.wrapT,
-                    minificationFilter : sampler.minificationFilter,
-                    magnificationFilter : sampler.magnificationFilter,
-                    maximumAnisotropy : sampler.maximumAnisotropy
-                };
+                this._sampler = sampler;
             }
         },
         pixelFormat : {

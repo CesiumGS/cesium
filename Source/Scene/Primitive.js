@@ -20,8 +20,11 @@ define([
         '../Core/Matrix4',
         '../Core/subdivideArray',
         '../Core/TaskProcessor',
+        '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
         '../ThirdParty/when',
@@ -51,8 +54,11 @@ define([
         Matrix4,
         subdivideArray,
         TaskProcessor,
+        Buffer,
         BufferUsage,
         DrawCommand,
+        RenderState,
+        ShaderProgram,
         ShaderSource,
         VertexArray,
         when,
@@ -971,7 +977,10 @@ define([
             var vaLength = attributes.length;
             for (var j = 0; j < vaLength; ++j) {
                 var attribute = attributes[j];
-                attribute.vertexBuffer = context.createVertexBuffer(attribute.values, BufferUsage.DYNAMIC_DRAW);
+                attribute.vertexBuffer = Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : attribute.values,
+                    usage : BufferUsage.DYNAMIC_DRAW});
                 delete attribute.values;
             }
 
@@ -1027,12 +1036,12 @@ define([
                 enabled : true,
                 face : CullFace.BACK
             };
-            primitive._frontFaceRS = context.createRenderState(rs);
+            primitive._frontFaceRS = RenderState.fromCache(rs);
 
             rs.cull.face = CullFace.FRONT;
-            primitive._backFaceRS = context.createRenderState(rs);
+            primitive._backFaceRS = RenderState.fromCache(rs);
         } else {
-            primitive._frontFaceRS = context.createRenderState(renderState);
+            primitive._frontFaceRS = RenderState.fromCache(renderState);
             primitive._backFaceRS = primitive._frontFaceRS;
         }
 
@@ -1042,7 +1051,7 @@ define([
                 rs.cull = {
                     enabled : false
                 };
-                primitive._pickRS = context.createRenderState(rs);
+                primitive._pickRS = RenderState.fromCache(rs);
             } else {
                 primitive._pickRS = primitive._frontFaceRS;
             }
@@ -1059,9 +1068,9 @@ define([
                 rs.cull = {
                     enabled : false
                 };
-                primitive._pickRS = context.createRenderState(rs);
+                primitive._pickRS = RenderState.fromCache(rs);
             } else {
-                primitive._pickRS = context.createRenderState(rs);
+                primitive._pickRS = RenderState.fromCache(rs);
             }
         }
     }
@@ -1073,7 +1082,13 @@ define([
         var fs = appearance.getFragmentShaderSource();
 
         var attributeLocations = primitive._attributeLocations;
-        primitive._sp = context.replaceShaderProgram(primitive._sp, vs, fs, attributeLocations);
+        primitive._sp = ShaderProgram.replaceCache({
+            context : context,
+            shaderProgram : primitive._sp,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
         validateShaderMatching(primitive._sp, attributeLocations);
 
         if (primitive.allowPicking) {
@@ -1081,9 +1096,20 @@ define([
                 sources : [fs],
                 pickColorQualifier : 'varying'
             });
-            primitive._pickSP = context.replaceShaderProgram(primitive._pickSP, Primitive._createPickVertexShaderSource(vs), pickFS, attributeLocations);
+            primitive._pickSP = ShaderProgram.replaceCache({
+                context : context,
+                shaderProgram : primitive._pickSP,
+                vertexShaderSource : Primitive._createPickVertexShaderSource(vs),
+                fragmentShaderSource : pickFS,
+                attributeLocations : attributeLocations
+            });
         } else {
-            primitive._pickSP = context.createShaderProgram(vs, fs, attributeLocations);
+            primitive._pickSP = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs,
+                attributeLocations : attributeLocations
+            });
         }
 
         validateShaderMatching(primitive._pickSP, attributeLocations);

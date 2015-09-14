@@ -12,6 +12,8 @@ defineSuite([
         'Core/Matrix4',
         'Core/PrimitiveType',
         'Core/Transforms',
+        'Renderer/RenderState',
+        'Renderer/WebGLConstants',
         'Scene/HeadingPitchRange',
         'Scene/ModelAnimationLoop',
         'Specs/createScene',
@@ -30,13 +32,15 @@ defineSuite([
         Matrix4,
         PrimitiveType,
         Transforms,
+        RenderState,
+        WebGLConstants,
         HeadingPitchRange,
         ModelAnimationLoop,
         createScene,
         pollToPromise,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,WebGLRenderingContext*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var boxUrl = './Data/Models/Box/CesiumBoxTest.gltf';
     var texturedBoxUrl = './Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf';
@@ -196,7 +200,7 @@ defineSuite([
             gltf : texturedBoxModel.gltf
         }));
 
-        spyOn(scene.context, 'createRenderState').and.callThrough();
+        spyOn(RenderState, 'fromCache').and.callThrough();
 
         return pollToPromise(function() {
             // Render scene to progressively load the model
@@ -204,10 +208,10 @@ defineSuite([
             return model.ready;
         }, { timeout : 10000 }).then(function() {
             var rs = {
-                frontFace : WebGLRenderingContext.CCW,
+                frontFace : WebGLConstants.CCW,
                 cull : {
                     enabled : true,
-                    face : WebGLRenderingContext.BACK
+                    face : WebGLConstants.BACK
                 },
                 lineWidth : 1.0,
                 polygonOffset : {
@@ -230,7 +234,7 @@ defineSuite([
                 },
                 depthTest : {
                     enabled : true,
-                    func : WebGLRenderingContext.LESS
+                    func : WebGLConstants.LESS
                 },
                 colorMask : {
                     red : true,
@@ -247,16 +251,16 @@ defineSuite([
                         blue : 0.0,
                         alpha : 0.0
                     },
-                    equationRgb : WebGLRenderingContext.FUNC_ADD,
-                    equationAlpha : WebGLRenderingContext.FUNC_ADD,
-                    functionSourceRgb : WebGLRenderingContext.ONE,
-                    functionSourceAlpha : WebGLRenderingContext.ONE,
-                    functionDestinationRgb : WebGLRenderingContext.ZERO,
-                    functionDestinationAlpha : WebGLRenderingContext.ZERO
+                    equationRgb : WebGLConstants.FUNC_ADD,
+                    equationAlpha : WebGLConstants.FUNC_ADD,
+                    functionSourceRgb : WebGLConstants.ONE,
+                    functionSourceAlpha : WebGLConstants.ONE,
+                    functionDestinationRgb : WebGLConstants.ZERO,
+                    functionDestinationAlpha : WebGLConstants.ZERO
                 }
             };
 
-            expect(scene.context.createRenderState).toHaveBeenCalledWith(rs);
+            expect(RenderState.fromCache).toHaveBeenCalledWith(rs);
             primitives.remove(model);
         });
     });

@@ -5,14 +5,16 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/PixelFormat'
+        '../Core/PixelFormat',
+        './ContextLimits'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         destroyObject,
         DeveloperError,
-        PixelFormat) {
+        PixelFormat,
+        ContextLimits) {
     "use strict";
 
     function attachTexture(framebuffer, attachment, texture) {
@@ -75,9 +77,8 @@ define([
         }
         //>>includeEnd('debug');
 
-        var context = options.context;
-        var gl = context._gl;
-        var maximumColorAttachments = context.maximumColorAttachments;
+        var gl = options.context._gl;
+        var maximumColorAttachments = ContextLimits.maximumColorAttachments;
 
         this._gl = gl;
         this._framebuffer = gl.createFramebuffer();
@@ -239,7 +240,7 @@ define([
 
     defineProperties(Framebuffer.prototype, {
         /**
-         * The status of the framebuffer. If the status is not WebGLRenderingContext.COMPLETE,
+         * The status of the framebuffer. If the status is not WebGLConstants.COMPLETE,
          * a {@link DeveloperError} will be thrown when attempting to render to the framebuffer.
          * @memberof Framebuffer.prototype
          * @type {Number}

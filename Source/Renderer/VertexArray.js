@@ -10,6 +10,7 @@ define([
         '../Core/IndexDatatype',
         '../Core/Math',
         '../Core/RuntimeError',
+        './Buffer',
         './BufferUsage'
     ], function(
         ComponentDatatype,
@@ -22,6 +23,7 @@ define([
         IndexDatatype,
         CesiumMath,
         RuntimeError,
+        Buffer,
         BufferUsage) {
     "use strict";
 
@@ -142,14 +144,18 @@ define([
      * @exception {DeveloperError} Attribute must have a <code>strideInBytes</code> less than or equal to 255 or not specify it.
      * @exception {DeveloperError} Index n is used by more than one attribute.
      *
-     * @see Context#createVertexBuffer
-     * @see Context#createIndexBuffer
+     * @see Buffer#createVertexBuffer
+     * @see Buffer#createIndexBuffer
      * @see Context#draw
      *
      * @example
      * // Example 1. Create a vertex array with vertices made up of three floating point
      * // values, e.g., a position, from a single vertex buffer.  No index buffer is used.
-     * var positionBuffer = context.createVertexBuffer(12, BufferUsage.STATIC_DRAW);
+     * var positionBuffer = Buffer.createVertexBuffer({
+     *     context : context,
+     *     sizeInBytes : 12,
+     *     usage : BufferUsage.STATIC_DRAW
+     * });
      * var attributes = [
      *     {
      *         index                  : 0,
@@ -170,8 +176,16 @@ define([
      * @example
      * // Example 2. Create a vertex array with vertices from two different vertex buffers.
      * // Each vertex has a three-component position and three-component normal.
-     * var positionBuffer = context.createVertexBuffer(12, BufferUsage.STATIC_DRAW);
-     * var normalBuffer = context.createVertexBuffer(12, BufferUsage.STATIC_DRAW);
+     * var positionBuffer = Buffer.createVertexBuffer({
+     *     context : context,
+     *     sizeInBytes : 12,
+     *     usage : BufferUsage.STATIC_DRAW
+     * });
+     * var normalBuffer = Buffer.createVertexBuffer({
+     *     context : context,
+     *     sizeInBytes : 12,
+     *     usage : BufferUsage.STATIC_DRAW
+     * });
      * var attributes = [
      *     {
      *         index                  : 0,
@@ -194,7 +208,11 @@ define([
      * @example
      * // Example 3. Creates the same vertex layout as Example 2 using a single
      * // vertex buffer, instead of two.
-     * var buffer = context.createVertexBuffer(24, BufferUsage.STATIC_DRAW);
+     * var buffer = Buffer.createVertexBuffer({
+     *     context : context,
+     *     sizeInBytes : 24,
+     *     usage : BufferUsage.STATIC_DRAW
+     * });
      * var attributes = [
      *     {
      *         vertexBuffer           : buffer,
@@ -433,8 +451,8 @@ define([
      * @exception {DeveloperError} The geometry must have zero or one index lists.
      * @exception {DeveloperError} Index n is used by more than one attribute.
      *
-     * @see Context#createVertexBuffer
-     * @see Context#createIndexBuffer
+     * @see Buffer#createVertexBuffer
+     * @see Buffer#createIndexBuffer
      * @see GeometryPipeline.createAttributeLocations
      * @see ShaderProgram
      *
@@ -493,7 +511,11 @@ define([
             // Use a single vertex buffer with interleaved vertices.
             var interleavedAttributes = interleaveAttributes(attributes);
             if (defined(interleavedAttributes)) {
-                vertexBuffer = context.createVertexBuffer(interleavedAttributes.buffer, bufferUsage);
+                vertexBuffer = Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : interleavedAttributes.buffer,
+                    usage : bufferUsage
+                });
                 var offsetsInBytes = interleavedAttributes.offsetsInBytes;
                 var strideInBytes = interleavedAttributes.vertexSizeInBytes;
 
@@ -537,7 +559,11 @@ define([
 
                     vertexBuffer = undefined;
                     if (defined(attribute.values)) {
-                        vertexBuffer = context.createVertexBuffer(ComponentDatatype.createTypedArray(componentDatatype, attribute.values), bufferUsage);
+                        vertexBuffer = Buffer.createVertexBuffer({
+                            context : context,
+                            typedArray : ComponentDatatype.createTypedArray(componentDatatype, attribute.values),
+                            usage : bufferUsage
+                        });
                     }
 
                     vaAttributes.push({
@@ -556,9 +582,19 @@ define([
         var indices = geometry.indices;
         if (defined(indices)) {
             if ((Geometry.computeNumberOfVertices(geometry) > CesiumMath.SIXTY_FOUR_KILOBYTES) && context.elementIndexUint) {
-                indexBuffer = context.createIndexBuffer(new Uint32Array(indices), bufferUsage, IndexDatatype.UNSIGNED_INT);
+                indexBuffer = Buffer.createIndexBuffer({
+                    context : context,
+                    typedArray : new Uint32Array(indices),
+                    usage : bufferUsage,
+                    indexDatatype : IndexDatatype.UNSIGNED_INT
+                });
             } else{
-                indexBuffer = context.createIndexBuffer(new Uint16Array(indices), bufferUsage, IndexDatatype.UNSIGNED_SHORT);
+                indexBuffer = Buffer.createIndexBuffer({
+                    context : context,
+                    typedArray : new Uint16Array(indices),
+                    usage : bufferUsage,
+                    indexDatatype : IndexDatatype.UNSIGNED_SHORT
+                });
             }
         }
 

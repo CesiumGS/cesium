@@ -15,7 +15,10 @@ define([
         '../Core/Matrix4',
         '../Core/PrimitiveType',
         '../Renderer/BufferUsage',
+        '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArrayFacade',
         '../Shaders/PointPrimitiveCollectionFS',
@@ -40,7 +43,10 @@ define([
         Matrix4,
         PrimitiveType,
         BufferUsage,
+        ContextLimits,
         DrawCommand,
+        RenderState,
+        ShaderProgram,
         ShaderSource,
         VertexArrayFacade,
         PointPrimitiveCollectionFS,
@@ -679,7 +685,7 @@ define([
     PointPrimitiveCollection.prototype.update = function(context, frameState, commandList) {
         removePointPrimitives(this);
 
-        this._maxTotalPointSize = context.maximumAliasedPointSize;
+        this._maxTotalPointSize = ContextLimits.maximumAliasedPointSize;
 
         updateMode(this, frameState);
 
@@ -816,7 +822,7 @@ define([
             var colorList = this._colorCommands;
 
             if (!defined(this._rs)) {
-                this._rs = context.createRenderState({
+                this._rs = RenderState.fromCache({
                     depthTest : {
                         enabled : true
                     },
@@ -838,7 +844,14 @@ define([
                     vs.defines.push('EYE_DISTANCE_TRANSLUCENCY');
                 }
 
-                this._sp = context.replaceShaderProgram(this._sp, vs, PointPrimitiveCollectionFS, attributeLocations);
+                this._sp = ShaderProgram.replaceCache({
+                    context : context,
+                    shaderProgram : this._sp,
+                    vertexShaderSource : vs,
+                    fragmentShaderSource : PointPrimitiveCollectionFS,
+                    attributeLocations : attributeLocations
+                });
+
                 this._compiledShaderScaleByDistance = this._shaderScaleByDistance;
                 this._compiledShaderTranslucencyByDistance = this._shaderTranslucencyByDistance;
             }
@@ -893,7 +906,14 @@ define([
                     sources : [PointPrimitiveCollectionFS]
                 });
 
-                this._spPick = context.replaceShaderProgram(this._spPick, vs, fs, attributeLocations);
+                this._spPick = ShaderProgram.replaceCache({
+                    context : context,
+                    shaderProgram : this._spPick,
+                    vertexShaderSource : vs,
+                    fragmentShaderSource : fs,
+                    attributeLocations : attributeLocations
+                });
+
                 this._compiledShaderScaleByDistancePick = this._shaderScaleByDistance;
                 this._compiledShaderTranslucencyByDistancePick = this._shaderTranslucencyByDistance;
             }

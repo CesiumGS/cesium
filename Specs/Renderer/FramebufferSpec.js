@@ -1,36 +1,46 @@
 /*global defineSuite*/
 defineSuite([
+        'Renderer/Framebuffer',
         'Core/Color',
         'Core/PixelFormat',
         'Core/PrimitiveType',
+        'Renderer/Buffer',
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
+        'Renderer/ContextLimits',
         'Renderer/CubeMap',
         'Renderer/DrawCommand',
-        'Renderer/Framebuffer',
         'Renderer/PixelDatatype',
         'Renderer/Renderbuffer',
         'Renderer/RenderbufferFormat',
+        'Renderer/RenderState',
+        'Renderer/ShaderProgram',
         'Renderer/Texture',
         'Renderer/VertexArray',
+        'Renderer/WebGLConstants',
         'Specs/createContext'
-    ], 'Renderer/Framebuffer', function(
+    ], function(
+        Framebuffer,
         Color,
         PixelFormat,
         PrimitiveType,
+        Buffer,
         BufferUsage,
         ClearCommand,
+        ContextLimits,
         CubeMap,
         DrawCommand,
-        Framebuffer,
         PixelDatatype,
         Renderbuffer,
         RenderbufferFormat,
+        RenderState,
+        ShaderProgram,
         Texture,
         VertexArray,
+        WebGLConstants,
         createContext) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,WebGLRenderingContext*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var context;
     var sp;
@@ -184,8 +194,13 @@ defineSuite([
         // 4 of 4.  Render green to default color buffer by reading from previous color attachment
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'uniform sampler2D u_texture; void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)); }';
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
         sp.allUniforms.u_texture.value = colorTexture;
 
@@ -193,7 +208,11 @@ defineSuite([
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -221,9 +240,9 @@ defineSuite([
         // 2 of 4.  Clear framebuffer color attachment to green.
         framebuffer = new Framebuffer({
             context : context,
-            colorTextures : [cubeMap.positiveX]
+            colorTextures : [cubeMap.positiveX],
+            destroyAttachments : false
         });
-        framebuffer.destroyAttachments = false;
 
         var clearCommand = new ClearCommand({
             color : new Color (0.0, 1.0, 0.0, 1.0),
@@ -237,8 +256,13 @@ defineSuite([
         // 4 of 4.  Render green to default color buffer by reading from previous color attachment
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'uniform samplerCube u_cubeMap; void main() { gl_FragColor = textureCube(u_cubeMap, vec3(1.0, 0.0, 0.0)); }';
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
         sp.allUniforms.u_cubeMap.value = cubeMap;
 
@@ -246,7 +270,11 @@ defineSuite([
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -280,13 +308,21 @@ defineSuite([
         // 2 of 4.  Render green point into color attachment.
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -305,8 +341,13 @@ defineSuite([
         // 4 of 4.  Render green to default color buffer by reading from previous color attachment
         var vs2 = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs2 = 'uniform sampler2D u_texture; void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)); }';
-        var sp2 = context.createShaderProgram(vs2, fs2, {
-            position : 0
+        var sp2 = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs2,
+            fragmentShaderSource : fs2,
+            attributeLocations : {
+                position : 0
+            }
         });
         sp2.allUniforms.u_texture.value = colorTexture;
 
@@ -327,13 +368,21 @@ defineSuite([
         // 1 of 3.  Render green point into color attachment.
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -343,7 +392,7 @@ defineSuite([
             shaderProgram : sp,
             vertexArray : va,
             framebuffer : framebuffer,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 depthTest : {
                     enabled : true
                 }
@@ -357,8 +406,13 @@ defineSuite([
         // 3 of 3.  Render green to default color buffer by reading from previous color attachment
         var vs2 = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs2 = 'uniform sampler2D u_texture; void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)).rrrr; }';
-        var sp2 = context.createShaderProgram(vs2, fs2, {
-            position : 0
+        var sp2 = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs2,
+            fragmentShaderSource : fs2,
+            attributeLocations : {
+                position : 0
+            }
         });
         sp2.allUniforms.u_texture.value = texture;
 
@@ -392,7 +446,7 @@ defineSuite([
                 })
             });
 
-            if (framebuffer.status === WebGLRenderingContext.FRAMEBUFFER_COMPLETE) {
+            if (framebuffer.status === WebGLConstants.FRAMEBUFFER_COMPLETE) {
                 expect(renderDepthAttachment(framebuffer, framebuffer.depthTexture)).toEqualEpsilon([128, 128, 128, 128], 1);
             }
         }
@@ -416,7 +470,7 @@ defineSuite([
                 })
             });
 
-            if (framebuffer.status === WebGLRenderingContext.FRAMEBUFFER_COMPLETE) {
+            if (framebuffer.status === WebGLConstants.FRAMEBUFFER_COMPLETE) {
                 expect(renderDepthAttachment(framebuffer, framebuffer.depthStencilTexture)).toEqualEpsilon([128, 128, 128, 128], 1);
             }
         }
@@ -440,13 +494,21 @@ defineSuite([
 
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -468,10 +530,10 @@ defineSuite([
             shaderProgram : sp,
             vertexArray : va,
             framebuffer : framebuffer,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 depthTest : {
                     enabled : true,
-                    func : WebGLRenderingContext.NEVER
+                    func : WebGLConstants.NEVER
                 }
             })
         });
@@ -486,10 +548,10 @@ defineSuite([
             shaderProgram : sp,
             vertexArray : va,
             framebuffer : framebuffer,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 depthTest : {
                     enabled : true,
-                    func : WebGLRenderingContext.ALWAYS
+                    func : WebGLConstants.ALWAYS
                 }
             })
         });
@@ -523,13 +585,21 @@ defineSuite([
             // 2 of 5.  Render red point into color attachment 0 and green point to color attachment 1.
             var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
             var fs = '#extension GL_EXT_draw_buffers : enable \n void main() { gl_FragData[0] = vec4(1.0, 0.0, 0.0, 1.0); gl_FragData[1] = vec4(0.0, 1.0, 0.0, 1.0); }';
-            sp = context.createShaderProgram(vs, fs);
+            sp = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs
+            });
 
             va = new VertexArray({
                 context : context,
                 attributes : [{
                     index : sp.vertexAttributes.position.index,
-                    vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                    vertexBuffer : Buffer.createVertexBuffer({
+                        context : context,
+                        typedArray : new Float32Array([0, 0, 0, 1]),
+                        usage : BufferUsage.STATIC_DRAW
+                    }),
                     componentsPerAttribute : 4
                 }]
             });
@@ -548,8 +618,13 @@ defineSuite([
             // 4 of 5.  Render yellow to default color buffer by reading from previous color attachments
             var vs2 = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
             var fs2 = 'uniform sampler2D u_texture0; uniform sampler2D u_texture1; void main() { gl_FragColor = texture2D(u_texture0, vec2(0.0)) + texture2D(u_texture1, vec2(0.0)); }';
-            var sp2 = context.createShaderProgram(vs2, fs2, {
-                position : 0
+            var sp2 = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs2,
+                fragmentShaderSource : fs2,
+                attributeLocations : {
+                    position : 0
+                }
             });
             sp2.allUniforms.u_texture0.value = colorTexture0;
             sp2.allUniforms.u_texture1.value = colorTexture1;
@@ -596,7 +671,7 @@ defineSuite([
                 height : 1
             })
         });
-        expect(framebuffer.status).toEqual(WebGLRenderingContext.FRAMEBUFFER_COMPLETE);
+        expect(framebuffer.status).toEqual(WebGLConstants.FRAMEBUFFER_COMPLETE);
     });
 
     it('gets the status of a incomplete framebuffer', function() {
@@ -614,7 +689,7 @@ defineSuite([
                 height : 2
             })
         });
-        expect(framebuffer.status).not.toEqual(WebGLRenderingContext.FRAMEBUFFER_COMPLETE);
+        expect(framebuffer.status).not.toEqual(WebGLConstants.FRAMEBUFFER_COMPLETE);
     });
 
 
@@ -742,13 +817,21 @@ defineSuite([
 
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -759,7 +842,7 @@ defineSuite([
                 shaderProgram : sp,
                 vertexArray : va,
                 framebuffer : framebuffer,
-                renderState : context.createRenderState({
+                renderState : RenderState.fromCache({
                     depthTest : {
                         enabled : true
                     }
@@ -773,7 +856,7 @@ defineSuite([
         expect(function() {
             return new Framebuffer({
                 context : context,
-                colorTextures : new Array(context.maximumColorAttachments + 1)
+                colorTextures : new Array(ContextLimits.maximumColorAttachments + 1)
             });
         }).toThrowDeveloperError();
     });
@@ -782,7 +865,7 @@ defineSuite([
         expect(function() {
             return new Framebuffer({
                 context : context,
-                colorRenderbuffers : new Array(context.maximumColorAttachments + 1)
+                colorRenderbuffers : new Array(ContextLimits.maximumColorAttachments + 1)
             });
         }).toThrowDeveloperError();
     });
@@ -800,7 +883,7 @@ defineSuite([
         }).toThrowDeveloperError();
 
         expect(function() {
-            framebuffer.getColorTexture(context.maximumColorAttachments + 1);
+            framebuffer.getColorTexture(ContextLimits.maximumColorAttachments + 1);
         }).toThrowDeveloperError();
     });
 
@@ -817,7 +900,7 @@ defineSuite([
         }).toThrowDeveloperError();
 
         expect(function() {
-            framebuffer.getColorRenderbuffer(context.maximumColorAttachments + 1);
+            framebuffer.getColorRenderbuffer(ContextLimits.maximumColorAttachments + 1);
         }).toThrowDeveloperError();
     });
 

@@ -8,6 +8,7 @@ define([
         '../Renderer/ClearCommand',
         '../Renderer/Framebuffer',
         '../Renderer/PixelDatatype',
+        '../Renderer/RenderState',
         '../Renderer/Texture',
         '../Shaders/PostProcessFilters/PassThrough'
     ], function(
@@ -19,6 +20,7 @@ define([
         ClearCommand,
         Framebuffer,
         PixelDatatype,
+        RenderState,
         Texture,
         PassThrough) {
     "use strict";
@@ -147,7 +149,7 @@ define([
                 '    gl_FragColor = czm_packDepth(texture2D(u_texture, v_textureCoordinates).r);\n' +
                 '}\n';
             globeDepth._copyDepthCommand = context.createViewportQuadCommand(fs, {
-                renderState : context.createRenderState(),
+                renderState : RenderState.fromCache(),
                 uniformMap : {
                     u_texture : function() {
                         return globeDepth._depthStencilTexture;
@@ -161,7 +163,7 @@ define([
 
         if (!defined(globeDepth._copyColorCommand)) {
             globeDepth._copyColorCommand = context.createViewportQuadCommand(PassThrough, {
-                renderState : context.createRenderState(),
+                renderState : RenderState.fromCache(),
                 uniformMap : {
                     u_texture : function() {
                         return globeDepth._colorTexture;

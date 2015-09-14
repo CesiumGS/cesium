@@ -1,11 +1,13 @@
 /*global define*/
 define([
+        '../Renderer/WebGLConstants',
         './defaultValue',
         './defined',
         './DeveloperError',
         './FeatureDetection',
         './freezeObject'
     ], function(
+        WebGLConstants,
         defaultValue,
         defined,
         DeveloperError,
@@ -33,9 +35,8 @@ define([
          *
          * @type {Number}
          * @constant
-         * @default 0x1400
          */
-        BYTE : 0x1400,
+        BYTE : WebGLConstants.BYTE,
 
         /**
          * 8-bit unsigned byte corresponding to <code>UNSIGNED_BYTE</code> and the type
@@ -43,9 +44,8 @@ define([
          *
          * @type {Number}
          * @constant
-         * @default 0x1401
          */
-        UNSIGNED_BYTE : 0x1401,
+        UNSIGNED_BYTE : WebGLConstants.UNSIGNED_BYTE,
 
         /**
          * 16-bit signed short corresponding to <code>SHORT</code> and the type
@@ -53,9 +53,8 @@ define([
          *
          * @type {Number}
          * @constant
-         * @default 0x1402
          */
-        SHORT : 0x1402,
+        SHORT : WebGLConstants.SHORT,
 
         /**
          * 16-bit unsigned short corresponding to <code>UNSIGNED_SHORT</code> and the type
@@ -63,9 +62,8 @@ define([
          *
          * @type {Number}
          * @constant
-         * @default 0x1403
          */
-        UNSIGNED_SHORT : 0x1403,
+        UNSIGNED_SHORT : WebGLConstants.UNSIGNED_SHORT,
 
         /**
          * 32-bit floating-point corresponding to <code>FLOAT</code> and the type
@@ -73,9 +71,8 @@ define([
          *
          * @type {Number}
          * @constant
-         * @default 0x1406
          */
-        FLOAT : 0x1406,
+        FLOAT : WebGLConstants.FLOAT,
 
         /**
          * 64-bit floating-point corresponding to <code>gl.DOUBLE</code> (in Desktop OpenGL;
@@ -88,7 +85,7 @@ define([
          * @constant
          * @default 0x140A
          */
-        DOUBLE : 0x140A
+        DOUBLE : WebGLConstants.DOUBLE
     };
 
     /**

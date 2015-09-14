@@ -17,6 +17,7 @@ define([
         '../Renderer/PixelDatatype',
         '../Renderer/Renderbuffer',
         '../Renderer/RenderbufferFormat',
+        '../Renderer/RenderState',
         '../Renderer/Texture',
         '../Shaders/PostProcessFilters/AdditiveBlend',
         '../Shaders/PostProcessFilters/BrightPass',
@@ -40,6 +41,7 @@ define([
         PixelDatatype,
         Renderbuffer,
         RenderbufferFormat,
+        RenderState,
         Texture,
         AdditiveBlend,
         BrightPass,
@@ -289,10 +291,10 @@ define([
             this._blurXCommand.framebuffer = this._downSampleFBO1;
             this._blurYCommand.framebuffer = this._downSampleFBO2;
 
-            var downSampleRenderState = context.createRenderState({
+            var downSampleRenderState = RenderState.fromCache({
                 viewport : downSampleViewport
             });
-            var upSampleRenderState = context.createRenderState();
+            var upSampleRenderState = RenderState.fromCache();
 
             this._downSampleCommand.uniformMap.u_texture = function() {
                 return fbo.getColorTexture(0);

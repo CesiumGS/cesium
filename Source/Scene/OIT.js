@@ -8,8 +8,10 @@ define([
         '../Renderer/Framebuffer',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
+        '../Renderer/WebGLConstants',
         '../Shaders/AdjustTranslucentFS',
         '../Shaders/CompositeOITFS',
         './BlendEquation',
@@ -23,14 +25,15 @@ define([
         Framebuffer,
         PixelDatatype,
         RenderState,
+        ShaderProgram,
         ShaderSource,
         Texture,
+        WebGLConstants,
         AdjustTranslucentFS,
         CompositeOITFS,
         BlendEquation,
         BlendFunction) {
     "use strict";
-    /*global WebGLRenderingContext*/
 
     /**
      * @private
@@ -122,7 +125,7 @@ define([
     function updateFramebuffers(oit, context) {
         destroyFramebuffers(oit);
 
-        var completeFBO = WebGLRenderingContext.FRAMEBUFFER_COMPLETE;
+        var completeFBO = WebGLConstants.FRAMEBUFFER_COMPLETE;
         var supported = true;
 
         // if MRT is supported, attempt to make an FBO with multiple color attachments
@@ -233,7 +236,7 @@ define([
                 }
             };
             this._compositeCommand = context.createViewportQuadCommand(fs, {
-                renderState : context.createRenderState(),
+                renderState : RenderState.fromCache(),
                 uniformMap : uniformMap,
                 owner : this
             });
@@ -256,7 +259,7 @@ define([
                 };
 
                 this._adjustTranslucentCommand = context.createViewportQuadCommand(fs, {
-                    renderState : context.createRenderState(),
+                    renderState : RenderState.fromCache(),
                     uniformMap : uniformMap,
                     owner : this
                 });
@@ -275,7 +278,7 @@ define([
                 };
 
                 this._adjustTranslucentCommand = context.createViewportQuadCommand(fs, {
-                    renderState : context.createRenderState(),
+                    renderState : RenderState.fromCache(),
                     uniformMap : uniformMap,
                     owner : this
                 });
@@ -290,7 +293,7 @@ define([
                 };
 
                 this._adjustAlphaCommand = context.createViewportQuadCommand(fs, {
-                    renderState : context.createRenderState(),
+                    renderState : RenderState.fromCache(),
                     uniformMap : uniformMap,
                     owner : this
                 });
@@ -334,11 +337,11 @@ define([
     function getTranslucentRenderState(context, translucentBlending, cache, renderState) {
         var translucentState = cache[renderState.id];
         if (!defined(translucentState)) {
-            var rs = RenderState.clone(renderState);
+            var rs = RenderState.getState(renderState);
             rs.depthMask = false;
             rs.blending = translucentBlending;
 
-            translucentState = context.createRenderState(rs);
+            translucentState = RenderState.fromCache(rs);
             cache[renderState.id] = translucentState;
         }
 
@@ -409,7 +412,13 @@ define([
                     source +
                     '}\n');
 
-            shader = context.createShaderProgram(shaderProgram.vertexShaderSource, fs, attributeLocations);
+            shader = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : shaderProgram.vertexShaderSource,
+                fragmentShaderSource : fs,
+                attributeLocations : attributeLocations
+            });
+
             cache[id] = shader;
         }
 

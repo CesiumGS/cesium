@@ -11,6 +11,7 @@ define([
         '../Core/PixelFormat',
         '../Core/Rectangle',
         '../Renderer/PixelDatatype',
+        '../Renderer/Sampler',
         '../Renderer/Texture',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
@@ -32,6 +33,7 @@ define([
         PixelFormat,
         Rectangle,
         PixelDatatype,
+        Sampler,
         Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
@@ -293,7 +295,7 @@ define([
         }
     };
 
-    GlobeSurfaceTile.processStateMachine = function(tile, context, terrainProvider, imageryLayerCollection) {
+    GlobeSurfaceTile.processStateMachine = function(tile, context, commandList, terrainProvider, imageryLayerCollection) {
         var surfaceTile = tile.data;
         if (!defined(surfaceTile)) {
             surfaceTile = tile.data = new GlobeSurfaceTile();
@@ -343,7 +345,7 @@ define([
                 }
             }
 
-            var thisTileDoneLoading = tileImagery.processStateMachine(tile, context);
+            var thisTileDoneLoading = tileImagery.processStateMachine(tile, context, commandList);
             isDoneLoading = isDoneLoading && thisTileDoneLoading;
 
             // The imagery is renderable as soon as we have any renderable imagery for this region.
@@ -645,7 +647,7 @@ define([
             });
             allWaterTexture.referenceCount = 1;
 
-            var sampler = context.createSampler({
+            var sampler = new Sampler({
                 wrapS : TextureWrap.CLAMP_TO_EDGE,
                 wrapT : TextureWrap.CLAMP_TO_EDGE,
                 minificationFilter : TextureMinificationFilter.LINEAR,

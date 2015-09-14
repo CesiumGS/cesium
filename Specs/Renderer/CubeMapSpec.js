@@ -1,15 +1,19 @@
 /*global defineSuite*/
 defineSuite([
+        'Renderer/CubeMap',
         'Core/Cartesian3',
         'Core/Color',
         'Core/loadImage',
         'Core/PixelFormat',
         'Core/PrimitiveType',
+        'Renderer/Buffer',
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
-        'Renderer/CubeMap',
+        'Renderer/ContextLimits',
         'Renderer/DrawCommand',
         'Renderer/PixelDatatype',
+        'Renderer/Sampler',
+        'Renderer/ShaderProgram',
         'Renderer/Texture',
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
@@ -17,17 +21,21 @@ defineSuite([
         'Renderer/VertexArray',
         'Specs/createContext',
         'ThirdParty/when'
-    ], 'Renderer/CubeMap', function(
+    ], function(
+        CubeMap,
         Cartesian3,
         Color,
         loadImage,
         PixelFormat,
         PrimitiveType,
+        Buffer,
         BufferUsage,
         ClearCommand,
-        CubeMap,
+        ContextLimits,
         DrawCommand,
         PixelDatatype,
+        Sampler,
+        ShaderProgram,
         Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
@@ -110,31 +118,6 @@ defineSuite([
         expect(cubeMap.negativeZ.pixelDatatype).toEqual(PixelDatatype.UNSIGNED_BYTE);
     });
 
-    it('default sampler returns undefined', function() {
-        cubeMap = new CubeMap({
-            context : context,
-            width : 16,
-            height : 16
-        });
-
-        var sampler = cubeMap.sampler;
-        expect(sampler).toBeUndefined();
-    });
-
-    it('default sampler returns undefined, data type is FLOAT ', function() {
-        if (context.floatingPointTexture) {
-            cubeMap = new CubeMap({
-                context : context,
-                width : 16,
-                height : 16,
-                pixelDatatype : PixelDatatype.FLOAT
-            });
-
-            var sampler = cubeMap.sampler;
-            expect(sampler).toBeUndefined();
-        }
-    });
-
     it('sets a sampler', function() {
         cubeMap = new CubeMap({
             context : context,
@@ -142,7 +125,7 @@ defineSuite([
             height : 16
         });
 
-        var sampler = context.createSampler({
+        var sampler = new Sampler({
             wrapS : TextureWrap.REPEAT,
             wrapT : TextureWrap.MIRRORED_REPEAT,
             minificationFilter : TextureMinificationFilter.NEAREST,
@@ -197,15 +180,26 @@ defineSuite([
             'uniform samplerCube u_texture;' +
             'uniform mediump vec3 u_direction;' +
             'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
+
         sp.allUniforms.u_texture.value = cubeMap;
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -267,15 +261,26 @@ defineSuite([
             'uniform samplerCube u_texture;' +
             'uniform mediump vec3 u_direction;' +
             'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
+
         sp.allUniforms.u_texture.value = cubeMap;
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -323,15 +328,26 @@ defineSuite([
             'uniform samplerCube u_texture;' +
             'uniform mediump vec3 u_direction;' +
             'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
+
         sp.allUniforms.u_texture.value = context.defaultCubeMap;
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -409,15 +425,26 @@ defineSuite([
             'uniform samplerCube u_texture;' +
             'uniform mediump vec3 u_direction;' +
             'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
+
         sp.allUniforms.u_texture.value = cubeMap;
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -504,15 +531,26 @@ defineSuite([
                 'uniform samplerCube u_texture;' +
                 'uniform mediump vec3 u_direction;' +
                 'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
-            sp = context.createShaderProgram(vs, fs, {
-                position : 0
+
+            sp = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs,
+                attributeLocations : {
+                    position : 0
+                }
             });
+
             sp.allUniforms.u_texture.value = cubeMap;
 
             va = new VertexArray({
                 context : context,
                 attributes : [{
-                    vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                    vertexBuffer : Buffer.createVertexBuffer({
+                        context : context,
+                        typedArray : new Float32Array([0, 0, 0, 1]),
+                        usage : BufferUsage.STATIC_DRAW
+                    }),
                     componentsPerAttribute : 4
                 }]
             });
@@ -583,15 +621,26 @@ defineSuite([
             'uniform samplerCube u_texture;' +
             'uniform mediump vec3 u_direction;' +
             'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
+
         sp.allUniforms.u_texture.value = cubeMap;
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -645,15 +694,26 @@ defineSuite([
             'uniform samplerCube u_cubeMap;' +
             'uniform mediump vec3 u_direction;' +
             'void main() { gl_FragColor = textureCube(u_cubeMap, normalize(u_direction)); }';
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
+
         sp.allUniforms.u_cubeMap.value = cubeMap;
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -737,15 +797,26 @@ defineSuite([
             'uniform samplerCube u_cubeMap;' +
             'uniform mediump vec3 u_direction;' +
             'void main() { gl_FragColor = textureCube(u_cubeMap, normalize(u_direction)); }';
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
+
         sp.allUniforms.u_cubeMap.value = cubeMap;
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -793,15 +864,26 @@ defineSuite([
         var fs =
             'uniform samplerCube u_cubeMap;' +
             'void main() { gl_FragColor = textureCube(u_cubeMap, vec3(1.0, 0.0, 0.0)); }';
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
+
         sp.allUniforms.u_cubeMap.value = cubeMap;
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -856,16 +938,27 @@ defineSuite([
             'uniform samplerCube u_cubeMap;' +
             'uniform sampler2D u_texture;' +
             'void main() { gl_FragColor = textureCube(u_cubeMap, vec3(1.0, 0.0, 0.0)) + texture2D(u_texture, vec2(0.0)); }';
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
+
         sp.allUniforms.u_cubeMap.value = cubeMap;
         sp.allUniforms.u_texture.value = texture;
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -895,7 +988,7 @@ defineSuite([
         });
 
         cubeMap.generateMipmap();
-        cubeMap.sampler = context.createSampler({
+        cubeMap.sampler = new Sampler({
             minificationFilter : TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
         });
 
@@ -903,15 +996,26 @@ defineSuite([
         var fs =
             'uniform samplerCube u_cubeMap;' +
             'void main() { gl_FragColor = textureCube(u_cubeMap, vec3(1.0, 0.0, 0.0)); }';
-        sp = context.createShaderProgram(vs, fs, {
-            position : 0
+
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
         });
+
         sp.allUniforms.u_cubeMap.value = cubeMap;
 
         va = new VertexArray({
             context : context,
             attributes : [{
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -984,8 +1088,8 @@ defineSuite([
         expect(function() {
             cubeMap = new CubeMap({
                 context : context,
-                width : context.maximumCubeMapSize + 1,
-                height : context.maximumCubeMapSize + 1
+                width : ContextLimits.maximumCubeMapSize + 1,
+                height : ContextLimits.maximumCubeMapSize + 1
             });
         }).toThrowDeveloperError();
     });
@@ -1237,40 +1341,6 @@ defineSuite([
         expect(function() {
             cubeMap.generateMipmap('invalid hint');
         }).toThrowDeveloperError();
-    });
-
-    it('throws when data type is FLOAT and minification filter is not NEAREST or NEAREST_MIPMAP_NEAREST', function() {
-        if (context.floatingPointTexture) {
-            cubeMap = new CubeMap({
-                context : context,
-                width : 16,
-                height : 16,
-                pixelDatatype : PixelDatatype.FLOAT
-            });
-
-            expect(function() {
-                cubeMap.sampler = context.createSampler({
-                    minificationFilter : TextureMinificationFilter.LINEAR
-                });
-            }).toThrowDeveloperError();
-        }
-    });
-
-    it('throws when data type is FLOAT and magnification filter is not NEAREST', function() {
-        if (context.floatingPointTexture) {
-            cubeMap = new CubeMap({
-                context : context,
-                width : 16,
-                height : 16,
-                pixelDatatype : PixelDatatype.FLOAT
-            });
-
-            expect(function() {
-                cubeMap.sampler = context.createSampler({
-                    magnificationFilter : TextureMagnificationFilter.LINEAR
-                });
-            }).toThrowDeveloperError();
-        }
     });
 
     it('fails to destroy', function() {

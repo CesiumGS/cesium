@@ -5,10 +5,15 @@ defineSuite([
         'Core/IndexDatatype',
         'Core/PrimitiveType',
         'Core/WindingOrder',
+        'Renderer/Buffer',
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
+        'Renderer/ContextLimits',
         'Renderer/DrawCommand',
+        'Renderer/RenderState',
+        'Renderer/ShaderProgram',
         'Renderer/VertexArray',
+        'Renderer/WebGLConstants',
         'Specs/createContext'
     ], 'Renderer/Draw', function(
         BoundingRectangle,
@@ -16,13 +21,18 @@ defineSuite([
         IndexDatatype,
         PrimitiveType,
         WindingOrder,
+        Buffer,
         BufferUsage,
         ClearCommand,
+        ContextLimits,
         DrawCommand,
+        RenderState,
+        ShaderProgram,
         VertexArray,
+        WebGLConstants,
         createContext) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,WebGLRenderingContext*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var context;
     var sp;
@@ -48,13 +58,22 @@ defineSuite([
     it('draws a white point', function() {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -77,17 +96,30 @@ defineSuite([
 
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         // Two indices instead of one is a workaround for NVIDIA:
         //   http://www.khronos.org/message_boards/viewtopic.php?f=44&t=3719
-        var indexBuffer = context.createIndexBuffer(new Uint16Array([0, 0]), BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+        var indexBuffer = Buffer.createIndexBuffer({
+            context : context,
+            typedArray : new Uint16Array([0, 0]),
+            usage : BufferUsage.STATIC_DRAW,
+            indexDatatype : IndexDatatype.UNSIGNED_SHORT
+        });
 
         va = new VertexArray({
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }],
             indexBuffer : indexBuffer
@@ -120,17 +152,29 @@ defineSuite([
             '  fs_intensity = intensity;' +
             '}';
         var fs = 'varying mediump float fs_intensity; void main() { gl_FragColor = vec4(fs_intensity, 0.0, 0.0, 1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }, {
                 index : sp.vertexAttributes.intensity.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 1
             }]
         });
@@ -158,10 +202,18 @@ defineSuite([
             '  fs_intensity = intensity;' +
             '}';
         var fs = 'varying mediump float fs_intensity; void main() { gl_FragColor = vec4(fs_intensity, 0.0, 0.0, 1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         var stride = 5 * Float32Array.BYTES_PER_ELEMENT;
-        var vertexBuffer = context.createVertexBuffer(new Float32Array([0, 0, 0, 1, 1]), BufferUsage.STATIC_DRAW);
+        var vertexBuffer = Buffer.createVertexBuffer({
+            context : context,
+            typedArray : new Float32Array([0, 0, 0, 1, 1]),
+            usage : BufferUsage.STATIC_DRAW
+        });
 
         va = new VertexArray({
             context : context,
@@ -195,13 +247,21 @@ defineSuite([
     it('draws with scissor test', function() {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -215,7 +275,7 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 scissorTest : {
                     enabled : true,
                     rectangle : new BoundingRectangle(1, 1, 0, 0)
@@ -230,7 +290,7 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 scissorTest : {
                     enabled : true,
                     rectangle : new BoundingRectangle(0, 0, 1, 1)
@@ -244,13 +304,21 @@ defineSuite([
     it('draws with color mask', function() {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -264,7 +332,7 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 colorMask : {
                     red : true,
                     green : false,
@@ -281,7 +349,7 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 colorMask : {
                     red : false,
                     green : false,
@@ -297,13 +365,21 @@ defineSuite([
     it('draws with additive blending', function() {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(0.5); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -316,15 +392,15 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 blending : {
                     enabled : true,
-                    equationRgb : WebGLRenderingContext.FUNC_ADD, // Optional, default
-                    equationAlpha : WebGLRenderingContext.FUNC_ADD, // Optional, default
-                    functionSourceRgb : WebGLRenderingContext.ONE, // Optional, default
-                    functionSourceAlpha : WebGLRenderingContext.ONE, // Optional, default
-                    functionDestinationRgb : WebGLRenderingContext.ONE,
-                    functionDestinationAlpha : WebGLRenderingContext.ONE
+                    equationRgb : WebGLConstants.FUNC_ADD, // Optional, default
+                    equationAlpha : WebGLConstants.FUNC_ADD, // Optional, default
+                    functionSourceRgb : WebGLConstants.ONE, // Optional, default
+                    functionSourceAlpha : WebGLConstants.ONE, // Optional, default
+                    functionDestinationRgb : WebGLConstants.ONE,
+                    functionDestinationAlpha : WebGLConstants.ONE
                 }
             })
         });
@@ -341,13 +417,21 @@ defineSuite([
     it('draws with alpha blending', function() {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 0.5); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -360,15 +444,15 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 blending : {
                     enabled : true,
-                    equationRgb : WebGLRenderingContext.FUNC_ADD,
-                    equationAlpha : WebGLRenderingContext.FUNC_SUBTRACT, // does not actually matter
-                    functionSourceRgb : WebGLRenderingContext.SRC_ALPHA,
-                    functionSourceAlpha : WebGLRenderingContext.ONE, // Don't blend alpha
-                    functionDestinationRgb : WebGLRenderingContext.ONE_MINUS_SRC_ALPHA,
-                    functionDestinationAlpha : WebGLRenderingContext.ZERO
+                    equationRgb : WebGLConstants.FUNC_ADD,
+                    equationAlpha : WebGLConstants.FUNC_SUBTRACT, // does not actually matter
+                    functionSourceRgb : WebGLConstants.SRC_ALPHA,
+                    functionSourceAlpha : WebGLConstants.ONE, // Don't blend alpha
+                    functionDestinationRgb : WebGLConstants.ONE_MINUS_SRC_ALPHA,
+                    functionDestinationAlpha : WebGLConstants.ZERO
                 }
             })
         });
@@ -385,13 +469,21 @@ defineSuite([
     it('draws with blend color', function() {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -403,7 +495,7 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 blending : {
                     enabled : true,
                     color : {
@@ -412,12 +504,12 @@ defineSuite([
                         blue : 0.5,
                         alpha : 0.5
                     },
-                    equationRgb : WebGLRenderingContext.FUNC_SUBTRACT,
-                    equationAlpha : WebGLRenderingContext.FUNC_SUBTRACT,
-                    functionSourceRgb : WebGLRenderingContext.CONSTANT_COLOR,
-                    functionSourceAlpha : WebGLRenderingContext.ONE,
-                    functionDestinationRgb : WebGLRenderingContext.ZERO,
-                    functionDestinationAlpha : WebGLRenderingContext.ZERO
+                    equationRgb : WebGLConstants.FUNC_SUBTRACT,
+                    equationAlpha : WebGLConstants.FUNC_SUBTRACT,
+                    functionSourceRgb : WebGLConstants.CONSTANT_COLOR,
+                    functionSourceAlpha : WebGLConstants.ONE,
+                    functionDestinationRgb : WebGLConstants.ZERO,
+                    functionDestinationAlpha : WebGLConstants.ZERO
                 }
             })
         });
@@ -431,13 +523,21 @@ defineSuite([
     it('draws with culling', function() {
         var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -451,10 +551,10 @@ defineSuite([
             primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 cull : {
                     enabled : true,
-                    face : WebGLRenderingContext.FRONT
+                    face : WebGLConstants.FRONT
                 }
             })
         });
@@ -466,10 +566,10 @@ defineSuite([
             primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 cull : {
                     enabled : true,
-                    face : WebGLRenderingContext.BACK
+                    face : WebGLConstants.BACK
                 }
             })
         });
@@ -480,13 +580,21 @@ defineSuite([
     it('draws with front face winding order', function() {
         var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -500,11 +608,11 @@ defineSuite([
             primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 frontFace : WindingOrder.CLOCKWISE,
                 cull : {
                     enabled : true,
-                    face : WebGLRenderingContext.BACK
+                    face : WebGLConstants.BACK
                 }
             })
         });
@@ -516,11 +624,11 @@ defineSuite([
             primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 frontFace : WindingOrder.COUNTER_CLOCKWISE,
                 cull : {
                     enabled : true,
-                    face : WebGLRenderingContext.BACK
+                    face : WebGLConstants.BACK
                 }
             })
         });
@@ -531,13 +639,21 @@ defineSuite([
     it('draws with the depth test', function() {
         var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -546,10 +662,10 @@ defineSuite([
             primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 depthTest : {
                     enabled : true,
-                    func : WebGLRenderingContext.LEQUAL
+                    func : WebGLConstants.LEQUAL
                 }
             })
         });
@@ -580,13 +696,21 @@ defineSuite([
     it('draws with depth range', function() {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(gl_DepthRange.near, gl_DepthRange.far, 0.0, 1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -598,7 +722,7 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 depthRange : {
                     near : 0.25,
                     far : 0.75
@@ -612,13 +736,21 @@ defineSuite([
     it('draws with line width', function() {
         var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([-1000, -1000, 0, 1, 1000, 1000, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -630,9 +762,9 @@ defineSuite([
             primitiveType : PrimitiveType.LINES,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
-                lineWidth : context.maximumAliasedLineWidth
-            // May only be 1.
+            renderState : RenderState.fromCache({
+                lineWidth : ContextLimits.maximumAliasedLineWidth
+                // May only be 1.
             })
         });
         command.execute(context);
@@ -646,13 +778,21 @@ defineSuite([
     it('draws with polygon offset', function() {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -664,7 +804,7 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 polygonOffset : {
                     enabled : true,
                     factor : 1,
@@ -684,13 +824,21 @@ defineSuite([
 
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -702,7 +850,7 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 sampleCoverage : {
                     enabled : true,
                     value : 0,
@@ -717,7 +865,7 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 sampleCoverage : {
                     enabled : false
                 }
@@ -734,21 +882,29 @@ defineSuite([
 
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
 
-        var rs = context.createRenderState({
+        var rs = RenderState.fromCache({
             stencilTest : {
                 enabled : true,
-                frontFunction : WebGLRenderingContext.EQUAL,
+                frontFunction : WebGLConstants.EQUAL,
                 reference : 1,
                 mask : 1
             }
@@ -773,7 +929,7 @@ defineSuite([
             primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 colorMask : {
                     red : false,
                     green : false,
@@ -783,7 +939,7 @@ defineSuite([
                 stencilTest : {
                     enabled : true,
                     frontOperation : {
-                        zPass : WebGLRenderingContext.INCR
+                        zPass : WebGLConstants.INCR
                     }
                 }
             })
@@ -809,22 +965,30 @@ defineSuite([
 
         var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
 
-        var rs = context.createRenderState({
+        var rs = RenderState.fromCache({
             frontFace : WindingOrder.CLOCKWISE,
             stencilTest : {
                 enabled : true,
-                backFunction : WebGLRenderingContext.NOTEQUAL,
+                backFunction : WebGLConstants.NOTEQUAL,
                 reference : 0
             }
         });
@@ -848,7 +1012,7 @@ defineSuite([
             primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 frontFace : WindingOrder.CLOCKWISE,
                 colorMask : {
                     red : false,
@@ -859,7 +1023,7 @@ defineSuite([
                 stencilTest : {
                     enabled : true,
                     backOperation : {
-                        zPass : WebGLRenderingContext.INVERT
+                        zPass : WebGLConstants.INVERT
                     }
                 }
             })
@@ -881,13 +1045,21 @@ defineSuite([
     it('draws with an offset and count', function() {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         va = new VertexArray({
             context : context,
             attributes : [{
                 index : sp.vertexAttributes.position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, -1, 0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, -1, 0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
                 componentsPerAttribute : 4
             }]
         });
@@ -934,7 +1106,11 @@ defineSuite([
     it('fails to draw (missing primitiveType)', function() {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         expect(function() {
             context.draw({
@@ -946,7 +1122,11 @@ defineSuite([
     it('fails to draw (primitiveType)', function() {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         expect(function() {
             context.draw({
@@ -959,7 +1139,11 @@ defineSuite([
     it('fails to draw (missing vertexArray)', function() {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         expect(function() {
             context.draw({
@@ -972,7 +1156,11 @@ defineSuite([
     it('fails to draw (negative offset)', function() {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
 
         expect(function() {
             context.draw({
