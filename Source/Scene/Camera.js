@@ -845,6 +845,8 @@ define([
         Matrix4.multiplyByPointAsVector(inverse, direction, this.direction);
         Matrix4.multiplyByPointAsVector(inverse, up, this.up);
         Cartesian3.cross(this.direction, this.up, this.right);
+
+        updateMembers(this);
     };
 
     var scratchSetViewCartesian = new Cartesian3();
