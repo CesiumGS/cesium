@@ -136,7 +136,7 @@ define([
 
             // Apply node transformations
             var nodeTransformations = Property.getValueOrDefault(modelGraphics._nodeTransformations, time, undefined);
-            if(defined(nodeTransformations) && model.ready === true) {
+            if (defined(nodeTransformations) && model.ready === true) {
 
                 var nodeNames = Object.keys(nodeTransformations);
                 var length = nodeNames.length;
@@ -145,11 +145,11 @@ define([
                     var transformation = nodeTransformations[nodeName];
 
                     var modelNode = model.getNode(nodeName);
-                    if(defined(modelNode)) {
+                    if (defined(modelNode)) {
                         var transformResult = transformation.getValue(time);
 
                         var originalNodeMatrix = originalNodeMatrixHash[nodeName];
-                        if(!defined(originalNodeMatrix)) {
+                        if (!defined(originalNodeMatrix)) {
 
                             originalNodeMatrix = originalNodeMatrixHash[nodeName] = modelNode.matrix.clone();
                         }

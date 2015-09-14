@@ -70,13 +70,17 @@ defineSuite([
         source.show = new ConstantProperty(true);
         source.scale = new ConstantProperty(1.0);
         source.minimumPixelSize = new ConstantProperty(2.0);
-        source.nodeTransformations = new ConstantProperty({ transform : node1Transforms });
+        source.nodeTransformations = new ConstantProperty({
+            transform : node1Transforms
+        });
 
         var uri = new ConstantProperty('');
         var show = new ConstantProperty(true);
         var scale = new ConstantProperty(1.0);
         var minimumPixelSize = new ConstantProperty(2.0);
-        var nodeTransformations = new ConstantProperty({ transform : node2Transforms });
+        var nodeTransformations = new ConstantProperty({
+            transform : node2Transforms
+        });
 
         var target = new ModelGraphics();
         target.uri = uri;
