@@ -14,7 +14,9 @@ define([
         '../Core/loadArrayBuffer',
         '../Core/PixelFormat',
         '../Renderer/Context',
+        '../Renderer/ContextLimits',
         '../Renderer/PixelDatatype',
+        '../Renderer/Sampler',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
         '../Renderer/TextureMinificationFilter',
@@ -38,7 +40,9 @@ define([
         loadArrayBuffer,
         PixelFormat,
         Context,
+        ContextLimits,
         PixelDatatype,
+        Sampler,
         ShaderSource,
         Texture,
         TextureMinificationFilter,
@@ -92,8 +96,8 @@ define([
         if (batchSize > 0) {
             // PERFORMANCE_IDEA: this can waste memory in the last row in the uncommon case
             // when more than one row is needed (e.g., > 16K models in one tile)
-            var width = Math.min(batchSize, Context.maximumTextureSize);
-            var height = Math.ceil(batchSize / Context.maximumTextureSize);
+            var width = Math.min(batchSize, ContextLimits.maximumTextureSize);
+            var height = Math.ceil(batchSize / ContextLimits.maximumTextureSize);
             var stepX = 1.0 / width;
             var centerX = stepX * 0.5;
             var stepY = 1.0 / height;
@@ -451,7 +455,7 @@ define([
             var renamedSource = ShaderSource.replaceMain(source, 'gltf_main');
             var newMain;
 
-            if (Context.maximumVertexTextureImageUnits > 0) {
+            if (ContextLimits.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, perform per patched model (e.g., building) show/hide in the vertex shader
                 newMain =
                     'uniform sampler2D tiles3d_batchTexture; \n' +
@@ -489,7 +493,7 @@ define([
 // TODO: generate entire shader at runtime?
 //            var diffuse = 'diffuse = u_diffuse;';
 //            var diffuseTexture = 'diffuse = texture2D(u_diffuse, v_texcoord0);';
-//            if (Context.maximumVertexTextureImageUnits > 0) {
+//            if (ContextLimits.maximumVertexTextureImageUnits > 0) {
 //                source = 'varying vec3 tiles3d_modelColor; \n' + source;
 //                source = source.replace(diffuse, 'diffuse.rgb = tiles3d_modelColor;');
 //                source = source.replace(diffuseTexture, 'diffuse.rgb = texture2D(u_diffuse, v_texcoord0).rgb * tiles3d_modelColor;');
@@ -515,7 +519,7 @@ define([
             var renamedSource = ShaderSource.replaceMain(source, 'gltf_main');
             var newMain;
 
-            if (Context.maximumVertexTextureImageUnits > 0) {
+            if (ContextLimits.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, per patched model (e.g., building) show/hide already
                 // happened in the fragment shader
                 newMain =
@@ -580,7 +584,7 @@ define([
             var renamedSource = ShaderSource.replaceMain(source, 'gltf_main');
             var newMain;
 
-            if (Context.maximumVertexTextureImageUnits > 0) {
+            if (ContextLimits.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, perform per patched model (e.g., building) show/hide in the vertex shader
                 newMain =
                     'uniform sampler2D tiles3d_batchTexture; \n' +
@@ -618,7 +622,7 @@ define([
             var renamedSource = ShaderSource.replaceMain(source, 'gltf_main');
             var newMain;
 
-            if (Context.maximumVertexTextureImageUnits > 0) {
+            if (ContextLimits.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, per patched model (e.g., building) show/hide already
                 // happened in the fragment shader
                 newMain =
@@ -790,7 +794,7 @@ define([
                 height : dimensions.y,
                 arrayBufferView : bytes
             },
-            sampler : context.createSampler({
+            sampler : new Sampler({
                 minificationFilter : TextureMinificationFilter.NEAREST,
                 magnificationFilter : TextureMagnificationFilter.NEAREST
             })

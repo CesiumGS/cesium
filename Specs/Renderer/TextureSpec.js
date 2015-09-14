@@ -398,31 +398,6 @@ defineSuite([
         expect(renderFragment(context)).toEqual(Color.BLUE.toBytes());
     });
 
-    it('default sampler returns undefined', function() {
-        texture = new Texture({
-            context : context,
-            source : blueImage,
-            pixelFormat : PixelFormat.RGBA
-        });
-
-        var sampler = texture._sampler;
-        expect(sampler).toBeUndefined();
-    });
-
-    it('default sampler returns undefined, data type is FLOAT ', function() {
-        if (context.floatingPointTexture) {
-            texture = new Texture({
-                context : context,
-                source : blueImage,
-                pixelFormat : PixelFormat.RGBA,
-                pixelDatatype : PixelDatatype.FLOAT
-            });
-
-            var sampler = texture.sampler;
-            expect(sampler).toBeUndefined();
-        }
-    });
-
     it('can set a sampler property', function() {
         texture = new Texture({
             context : context,
@@ -452,7 +427,7 @@ defineSuite([
             context : context,
             source : blueImage,
             pixelFormat : PixelFormat.RGBA,
-            sampler : context.createSampler({
+            sampler : new Sampler({
                 wrapS : TextureWrap.REPEAT,
                 wrapT : TextureWrap.MIRRORED_REPEAT,
                 minificationFilter : TextureMinificationFilter.NEAREST,
