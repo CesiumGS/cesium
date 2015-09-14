@@ -124,7 +124,8 @@ define([
 
                 modelData = {
                     modelPrimitive : model,
-                    uri : uri
+                    uri : uri,
+                    animationsRunning : false
                 };
                 modelHash[entity.id] = modelData;
             }
@@ -133,6 +134,20 @@ define([
             model.scale = Property.getValueOrDefault(modelGraphics._scale, time, defaultScale);
             model.minimumPixelSize = Property.getValueOrDefault(modelGraphics._minimumPixelSize, time, defaultMinimumPixelSize);
             model.modelMatrix = Matrix4.clone(modelMatrix, model.modelMatrix);
+
+            var runAnimations = Property.getValueOrDefault(modelGraphics._runAnimations, time, true);
+            if (model.ready && modelData.animationsRunning !== runAnimations) {
+                if (runAnimations === true) {
+                    model.activeAnimations.addAll({
+                        loop : ModelAnimationLoop.REPEAT
+                    });
+                    modelData.animationsRunning = true;
+                }
+                else {
+                    model.activeAnimations.removeAll();
+                    modelData.animationsRunning = false;
+                }
+            }
 
             // Apply node transformations
             var nodeTransformations = Property.getValueOrDefault(modelGraphics._nodeTransformations, time, undefined);
