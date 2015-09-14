@@ -7,7 +7,8 @@ define([
         '../Core/DeveloperError',
         '../Core/RuntimeError',
         '../Core/WindingOrder',
-        './ContextLimits'
+        './ContextLimits',
+        './WebGLConstants'
     ], function(
         BoundingRectangle,
         Color,
@@ -16,71 +17,71 @@ define([
         DeveloperError,
         RuntimeError,
         WindingOrder,
-        ContextLimits) {
+        ContextLimits,
+        WebGLConstants) {
     "use strict";
-    /*global WebGLRenderingContext*/
 
     function validateBlendEquation(blendEquation) {
-        return ((blendEquation === WebGLRenderingContext.FUNC_ADD) ||
-                (blendEquation === WebGLRenderingContext.FUNC_SUBTRACT) ||
-                (blendEquation === WebGLRenderingContext.FUNC_REVERSE_SUBTRACT));
+        return ((blendEquation === WebGLConstants.FUNC_ADD) ||
+                (blendEquation === WebGLConstants.FUNC_SUBTRACT) ||
+                (blendEquation === WebGLConstants.FUNC_REVERSE_SUBTRACT));
     }
 
     function validateBlendFunction(blendFunction) {
-        return ((blendFunction === WebGLRenderingContext.ZERO) ||
-                (blendFunction === WebGLRenderingContext.ONE) ||
-                (blendFunction === WebGLRenderingContext.SRC_COLOR) ||
-                (blendFunction === WebGLRenderingContext.ONE_MINUS_SRC_COLOR) ||
-                (blendFunction === WebGLRenderingContext.DST_COLOR) ||
-                (blendFunction === WebGLRenderingContext.ONE_MINUS_DST_COLOR) ||
-                (blendFunction === WebGLRenderingContext.SRC_ALPHA) ||
-                (blendFunction === WebGLRenderingContext.ONE_MINUS_SRC_ALPHA) ||
-                (blendFunction === WebGLRenderingContext.DST_ALPHA) ||
-                (blendFunction === WebGLRenderingContext.ONE_MINUS_DST_ALPHA) ||
-                (blendFunction === WebGLRenderingContext.CONSTANT_COLOR) ||
-                (blendFunction === WebGLRenderingContext.ONE_MINUS_CONSTANT_COLOR) ||
-                (blendFunction === WebGLRenderingContext.CONSTANT_ALPHA) ||
-                (blendFunction === WebGLRenderingContext.ONE_MINUS_CONSTANT_ALPHA) ||
-                (blendFunction === WebGLRenderingContext.SRC_ALPHA_SATURATE));
+        return ((blendFunction === WebGLConstants.ZERO) ||
+                (blendFunction === WebGLConstants.ONE) ||
+                (blendFunction === WebGLConstants.SRC_COLOR) ||
+                (blendFunction === WebGLConstants.ONE_MINUS_SRC_COLOR) ||
+                (blendFunction === WebGLConstants.DST_COLOR) ||
+                (blendFunction === WebGLConstants.ONE_MINUS_DST_COLOR) ||
+                (blendFunction === WebGLConstants.SRC_ALPHA) ||
+                (blendFunction === WebGLConstants.ONE_MINUS_SRC_ALPHA) ||
+                (blendFunction === WebGLConstants.DST_ALPHA) ||
+                (blendFunction === WebGLConstants.ONE_MINUS_DST_ALPHA) ||
+                (blendFunction === WebGLConstants.CONSTANT_COLOR) ||
+                (blendFunction === WebGLConstants.ONE_MINUS_CONSTANT_COLOR) ||
+                (blendFunction === WebGLConstants.CONSTANT_ALPHA) ||
+                (blendFunction === WebGLConstants.ONE_MINUS_CONSTANT_ALPHA) ||
+                (blendFunction === WebGLConstants.SRC_ALPHA_SATURATE));
     }
 
     function validateCullFace(cullFace) {
-        return ((cullFace === WebGLRenderingContext.FRONT) ||
-                (cullFace === WebGLRenderingContext.BACK) ||
-                (cullFace === WebGLRenderingContext.FRONT_AND_BACK));
+        return ((cullFace === WebGLConstants.FRONT) ||
+                (cullFace === WebGLConstants.BACK) ||
+                (cullFace === WebGLConstants.FRONT_AND_BACK));
     }
 
     function validateDepthFunction(depthFunction) {
-        return ((depthFunction === WebGLRenderingContext.NEVER) ||
-                (depthFunction === WebGLRenderingContext.LESS) ||
-                (depthFunction === WebGLRenderingContext.EQUAL) ||
-                (depthFunction === WebGLRenderingContext.LEQUAL) ||
-                (depthFunction === WebGLRenderingContext.GREATER) ||
-                (depthFunction === WebGLRenderingContext.NOTEQUAL) ||
-                (depthFunction === WebGLRenderingContext.GEQUAL) ||
-                (depthFunction === WebGLRenderingContext.ALWAYS));
+        return ((depthFunction === WebGLConstants.NEVER) ||
+                (depthFunction === WebGLConstants.LESS) ||
+                (depthFunction === WebGLConstants.EQUAL) ||
+                (depthFunction === WebGLConstants.LEQUAL) ||
+                (depthFunction === WebGLConstants.GREATER) ||
+                (depthFunction === WebGLConstants.NOTEQUAL) ||
+                (depthFunction === WebGLConstants.GEQUAL) ||
+                (depthFunction === WebGLConstants.ALWAYS));
     }
 
     function validateStencilFunction (stencilFunction) {
-        return ((stencilFunction === WebGLRenderingContext.NEVER) ||
-                (stencilFunction === WebGLRenderingContext.LESS) ||
-                (stencilFunction === WebGLRenderingContext.EQUAL) ||
-                (stencilFunction === WebGLRenderingContext.LEQUAL) ||
-                (stencilFunction === WebGLRenderingContext.GREATER) ||
-                (stencilFunction === WebGLRenderingContext.NOTEQUAL) ||
-                (stencilFunction === WebGLRenderingContext.GEQUAL) ||
-                (stencilFunction === WebGLRenderingContext.ALWAYS));
+        return ((stencilFunction === WebGLConstants.NEVER) ||
+                (stencilFunction === WebGLConstants.LESS) ||
+                (stencilFunction === WebGLConstants.EQUAL) ||
+                (stencilFunction === WebGLConstants.LEQUAL) ||
+                (stencilFunction === WebGLConstants.GREATER) ||
+                (stencilFunction === WebGLConstants.NOTEQUAL) ||
+                (stencilFunction === WebGLConstants.GEQUAL) ||
+                (stencilFunction === WebGLConstants.ALWAYS));
     }
 
     function validateStencilOperation(stencilOperation) {
-        return ((stencilOperation === WebGLRenderingContext.ZERO) ||
-                (stencilOperation === WebGLRenderingContext.KEEP) ||
-                (stencilOperation === WebGLRenderingContext.REPLACE) ||
-                (stencilOperation === WebGLRenderingContext.INCR) ||
-                (stencilOperation === WebGLRenderingContext.DECR) ||
-                (stencilOperation === WebGLRenderingContext.INVERT) ||
-                (stencilOperation === WebGLRenderingContext.INCR_WRAP) ||
-                (stencilOperation === WebGLRenderingContext.DECR_WRAP));
+        return ((stencilOperation === WebGLConstants.ZERO) ||
+                (stencilOperation === WebGLConstants.KEEP) ||
+                (stencilOperation === WebGLConstants.REPLACE) ||
+                (stencilOperation === WebGLConstants.INCR) ||
+                (stencilOperation === WebGLConstants.DECR) ||
+                (stencilOperation === WebGLConstants.INVERT) ||
+                (stencilOperation === WebGLConstants.INCR_WRAP) ||
+                (stencilOperation === WebGLConstants.DECR_WRAP));
     }
 
     /**
@@ -106,7 +107,7 @@ define([
         this.frontFace = defaultValue(rs.frontFace, WindingOrder.COUNTER_CLOCKWISE);
         this.cull = {
             enabled : defaultValue(cull.enabled, false),
-            face : defaultValue(cull.face, WebGLRenderingContext.BACK)
+            face : defaultValue(cull.face, WebGLConstants.BACK)
         };
         this.lineWidth = defaultValue(rs.lineWidth, 1.0);
         this.polygonOffset = {
@@ -124,7 +125,7 @@ define([
         };
         this.depthTest = {
             enabled : defaultValue(depthTest.enabled, false),
-            func : defaultValue(depthTest.func, WebGLRenderingContext.LESS) // func, because function is a JavaScript keyword
+            func : defaultValue(depthTest.func, WebGLConstants.LESS) // func, because function is a JavaScript keyword
         };
         this.colorMask = {
             red : defaultValue(colorMask.red, true),
@@ -142,28 +143,28 @@ define([
                 defaultValue(blendingColor.blue, 0.0),
                 defaultValue(blendingColor.alpha, 0.0)
             ),
-            equationRgb : defaultValue(blending.equationRgb, WebGLRenderingContext.FUNC_ADD),
-            equationAlpha : defaultValue(blending.equationAlpha, WebGLRenderingContext.FUNC_ADD),
-            functionSourceRgb : defaultValue(blending.functionSourceRgb, WebGLRenderingContext.ONE),
-            functionSourceAlpha : defaultValue(blending.functionSourceAlpha, WebGLRenderingContext.ONE),
-            functionDestinationRgb : defaultValue(blending.functionDestinationRgb, WebGLRenderingContext.ZERO),
-            functionDestinationAlpha : defaultValue(blending.functionDestinationAlpha, WebGLRenderingContext.ZERO)
+            equationRgb : defaultValue(blending.equationRgb, WebGLConstants.FUNC_ADD),
+            equationAlpha : defaultValue(blending.equationAlpha, WebGLConstants.FUNC_ADD),
+            functionSourceRgb : defaultValue(blending.functionSourceRgb, WebGLConstants.ONE),
+            functionSourceAlpha : defaultValue(blending.functionSourceAlpha, WebGLConstants.ONE),
+            functionDestinationRgb : defaultValue(blending.functionDestinationRgb, WebGLConstants.ZERO),
+            functionDestinationAlpha : defaultValue(blending.functionDestinationAlpha, WebGLConstants.ZERO)
         };
         this.stencilTest = {
             enabled : defaultValue(stencilTest.enabled, false),
-            frontFunction : defaultValue(stencilTest.frontFunction, WebGLRenderingContext.ALWAYS),
-            backFunction : defaultValue(stencilTest.backFunction, WebGLRenderingContext.ALWAYS),
+            frontFunction : defaultValue(stencilTest.frontFunction, WebGLConstants.ALWAYS),
+            backFunction : defaultValue(stencilTest.backFunction, WebGLConstants.ALWAYS),
             reference : defaultValue(stencilTest.reference, 0),
             mask : defaultValue(stencilTest.mask, ~0),
             frontOperation : {
-                fail : defaultValue(stencilTestFrontOperation.fail, WebGLRenderingContext.KEEP),
-                zFail : defaultValue(stencilTestFrontOperation.zFail, WebGLRenderingContext.KEEP),
-                zPass : defaultValue(stencilTestFrontOperation.zPass, WebGLRenderingContext.KEEP)
+                fail : defaultValue(stencilTestFrontOperation.fail, WebGLConstants.KEEP),
+                zFail : defaultValue(stencilTestFrontOperation.zFail, WebGLConstants.KEEP),
+                zPass : defaultValue(stencilTestFrontOperation.zPass, WebGLConstants.KEEP)
             },
             backOperation : {
-                fail : defaultValue(stencilTestBackOperation.fail, WebGLRenderingContext.KEEP),
-                zFail : defaultValue(stencilTestBackOperation.zFail, WebGLRenderingContext.KEEP),
-                zPass : defaultValue(stencilTestBackOperation.zPass, WebGLRenderingContext.KEEP)
+                fail : defaultValue(stencilTestBackOperation.fail, WebGLConstants.KEEP),
+                zFail : defaultValue(stencilTestBackOperation.zFail, WebGLConstants.KEEP),
+                zPass : defaultValue(stencilTestBackOperation.zPass, WebGLConstants.KEEP)
             }
         };
         this.sampleCoverage = {
@@ -661,7 +662,7 @@ define([
         return funcs;
     }
 
-    RenderState.partialApply = function(gl, previousRenderState, renderState, previousPassState, passState) {
+    RenderState.partialApply = function(gl, previousRenderState, renderState, previousPassState, passState, clear) {
         if (previousRenderState !== renderState) {
             // When a new render state is applied, instead of making WebGL calls for all the states or first
             // comparing the states one-by-one with the previous state (basically a linear search), we take
@@ -683,7 +684,10 @@ define([
 
         var previousScissorTest = (defined(previousPassState.scissorTest)) ? previousPassState.scissorTest : previousRenderState.scissorTest;
         var scissorTest = (defined(passState.scissorTest)) ? passState.scissorTest : renderState.scissorTest;
-        if (previousScissorTest !== scissorTest) {
+
+        // Our scissor rectangle can get out of sync with the GL scissor rectangle on clears.
+        // Seems to be a problem only on ANGLE. See https://github.com/AnalyticalGraphicsInc/cesium/issues/2994
+        if ((previousScissorTest !== scissorTest) || clear) {
             applyScissorTest(gl, renderState, passState);
         }
 

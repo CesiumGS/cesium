@@ -2006,7 +2006,7 @@ define([
     };
 
     /**
-     * View an rectangle on an ellipsoid or map.
+     * View a rectangle on an ellipsoid or map.
      *
      * @param {Rectangle} rectangle The rectangle to view.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to view.
