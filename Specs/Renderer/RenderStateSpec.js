@@ -3,15 +3,16 @@ defineSuite([
         'Renderer/RenderState',
         'Core/WindingOrder',
         'Renderer/ContextLimits',
+        'Renderer/WebGLConstants',
         'Specs/createContext'
     ], function(
         RenderState,
         WindingOrder,
         ContextLimits,
+        WebGLConstants,
         createContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
-    /*global WebGLRenderingContext*/
 
     var context;
 
@@ -28,7 +29,7 @@ defineSuite([
             frontFace : WindingOrder.COUNTER_CLOCKWISE,
             cull : {
                 enabled : false,
-                face : WebGLRenderingContext.BACK
+                face : WebGLConstants.BACK
             },
             lineWidth : 1,
             polygonOffset : {
@@ -51,7 +52,7 @@ defineSuite([
             },
             depthTest : {
                 enabled : false,
-                func : WebGLRenderingContext.LESS
+                func : WebGLConstants.LESS
             },
             colorMask : {
                 red : true,
@@ -69,28 +70,28 @@ defineSuite([
                     blue : 0.0,
                     alpha : 0.0
                 },
-                equationRgb : WebGLRenderingContext.FUNC_ADD,
-                equationAlpha : WebGLRenderingContext.FUNC_ADD,
-                functionSourceRgb : WebGLRenderingContext.ONE,
-                functionSourceAlpha : WebGLRenderingContext.ONE,
-                functionDestinationRgb : WebGLRenderingContext.ZERO,
-                functionDestinationAlpha : WebGLRenderingContext.ZERO
+                equationRgb : WebGLConstants.FUNC_ADD,
+                equationAlpha : WebGLConstants.FUNC_ADD,
+                functionSourceRgb : WebGLConstants.ONE,
+                functionSourceAlpha : WebGLConstants.ONE,
+                functionDestinationRgb : WebGLConstants.ZERO,
+                functionDestinationAlpha : WebGLConstants.ZERO
             },
             stencilTest : {
                 enabled : false,
-                frontFunction : WebGLRenderingContext.ALWAYS,
-                backFunction : WebGLRenderingContext.ALWAYS,
+                frontFunction : WebGLConstants.ALWAYS,
+                backFunction : WebGLConstants.ALWAYS,
                 reference : 0,
                 mask : ~0,
                 frontOperation : {
-                    fail : WebGLRenderingContext.KEEP,
-                    zFail : WebGLRenderingContext.KEEP,
-                    zPass : WebGLRenderingContext.KEEP
+                    fail : WebGLConstants.KEEP,
+                    zFail : WebGLConstants.KEEP,
+                    zPass : WebGLConstants.KEEP
                 },
                 backOperation : {
-                    fail : WebGLRenderingContext.KEEP,
-                    zFail : WebGLRenderingContext.KEEP,
-                    zPass : WebGLRenderingContext.KEEP
+                    fail : WebGLConstants.KEEP,
+                    zFail : WebGLConstants.KEEP,
+                    zPass : WebGLConstants.KEEP
                 }
             },
             sampleCoverage : {
@@ -156,7 +157,7 @@ defineSuite([
             frontFace : WindingOrder.CLOCKWISE,
             cull : {
                 enabled : true,
-                face : WebGLRenderingContext.FRONT
+                face : WebGLConstants.FRONT
             },
             lineWidth : ContextLimits.maximumAliasedLineWidth,
             polygonOffset : {
@@ -179,7 +180,7 @@ defineSuite([
             },
             depthTest : {
                 enabled : true,
-                func : WebGLRenderingContext.GREATER
+                func : WebGLConstants.GREATER
             },
             colorMask : {
                 red : false,
@@ -197,28 +198,28 @@ defineSuite([
                     blue : 1.0,
                     alpha : 1.0
                 },
-                equationRgb : WebGLRenderingContext.FUNC_SUBTRACT,
-                equationAlpha : WebGLRenderingContext.FUNC_SUBTRACT,
-                functionSourceRgb : WebGLRenderingContext.ZERO,
-                functionSourceAlpha : WebGLRenderingContext.ZERO,
-                functionDestinationRgb : WebGLRenderingContext.ONE,
-                functionDestinationAlpha : WebGLRenderingContext.ONE
+                equationRgb : WebGLConstants.FUNC_SUBTRACT,
+                equationAlpha : WebGLConstants.FUNC_SUBTRACT,
+                functionSourceRgb : WebGLConstants.ZERO,
+                functionSourceAlpha : WebGLConstants.ZERO,
+                functionDestinationRgb : WebGLConstants.ONE,
+                functionDestinationAlpha : WebGLConstants.ONE
             },
             stencilTest : {
                 enabled : true,
-                frontFunction : WebGLRenderingContext.NEVER,
-                backFunction : WebGLRenderingContext.NEVER,
+                frontFunction : WebGLConstants.NEVER,
+                backFunction : WebGLConstants.NEVER,
                 reference : 1,
                 mask : 0,
                 frontOperation : {
-                    fail : WebGLRenderingContext.REPLACE,
-                    zFail : WebGLRenderingContext.REPLACE,
-                    zPass : WebGLRenderingContext.REPLACE
+                    fail : WebGLConstants.REPLACE,
+                    zFail : WebGLConstants.REPLACE,
+                    zPass : WebGLConstants.REPLACE
                 },
                 backOperation : {
-                    fail : WebGLRenderingContext.REPLACE,
-                    zFail : WebGLRenderingContext.REPLACE,
-                    zPass : WebGLRenderingContext.REPLACE
+                    fail : WebGLConstants.REPLACE,
+                    zFail : WebGLConstants.REPLACE,
+                    zPass : WebGLConstants.REPLACE
                 }
             },
             sampleCoverage : {
@@ -347,14 +348,14 @@ defineSuite([
         var rs3 = RenderState.fromCache({
             depthTest : {
                 enabled : false,
-                func : WebGLRenderingContext.LESS
+                func : WebGLConstants.LESS
             }
         });
         // rs4 is a cache miss since it has a different depthTest
         var rs4 = RenderState.fromCache({
             depthTest : {
                 enabled : true,
-                func : WebGLRenderingContext.NEVER
+                func : WebGLConstants.NEVER
             }
         });
         expect(rs2).toBe(rs);
@@ -660,7 +661,7 @@ defineSuite([
             frontFace : WindingOrder.CLOCKWISE,
             cull : {
                 enabled : true,
-                face : WebGLRenderingContext.FRONT
+                face : WebGLConstants.FRONT
             },
             lineWidth : ContextLimits.maximumAliasedLineWidth,
             polygonOffset : {
@@ -683,7 +684,7 @@ defineSuite([
             },
             depthTest : {
                 enabled : true,
-                func : WebGLRenderingContext.GREATER
+                func : WebGLConstants.GREATER
             },
             colorMask : {
                 red : false,
@@ -701,28 +702,28 @@ defineSuite([
                     blue : 1.0,
                     alpha : 1.0
                 },
-                equationRgb : WebGLRenderingContext.FUNC_SUBTRACT,
-                equationAlpha : WebGLRenderingContext.FUNC_SUBTRACT,
-                functionSourceRgb : WebGLRenderingContext.ZERO,
-                functionSourceAlpha : WebGLRenderingContext.ZERO,
-                functionDestinationRgb : WebGLRenderingContext.ONE,
-                functionDestinationAlpha : WebGLRenderingContext.ONE
+                equationRgb : WebGLConstants.FUNC_SUBTRACT,
+                equationAlpha : WebGLConstants.FUNC_SUBTRACT,
+                functionSourceRgb : WebGLConstants.ZERO,
+                functionSourceAlpha : WebGLConstants.ZERO,
+                functionDestinationRgb : WebGLConstants.ONE,
+                functionDestinationAlpha : WebGLConstants.ONE
             },
             stencilTest : {
                 enabled : true,
-                frontFunction : WebGLRenderingContext.NEVER,
-                backFunction : WebGLRenderingContext.NEVER,
+                frontFunction : WebGLConstants.NEVER,
+                backFunction : WebGLConstants.NEVER,
                 reference : 1,
                 mask : 0,
                 frontOperation : {
-                    fail : WebGLRenderingContext.REPLACE,
-                    zFail : WebGLRenderingContext.REPLACE,
-                    zPass : WebGLRenderingContext.REPLACE
+                    fail : WebGLConstants.REPLACE,
+                    zFail : WebGLConstants.REPLACE,
+                    zPass : WebGLConstants.REPLACE
                 },
                 backOperation : {
-                    fail : WebGLRenderingContext.REPLACE,
-                    zFail : WebGLRenderingContext.REPLACE,
-                    zPass : WebGLRenderingContext.REPLACE
+                    fail : WebGLConstants.REPLACE,
+                    zFail : WebGLConstants.REPLACE,
+                    zPass : WebGLConstants.REPLACE
                 }
             },
             sampleCoverage : {

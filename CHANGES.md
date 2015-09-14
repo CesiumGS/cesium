@@ -11,6 +11,7 @@ Change Log
 * Added `subdomains` option to the `WebMapServiceImageryProvider` constructor.
 * Fix zooming in 2D when tracking an object. The zoom was based on location rather than the tracked object. [#2991](https://github.com/AnalyticalGraphicsInc/cesium/issues/2991)
 * Added `options.credit` parameter to `MapboxImageryProvider`.
+* Provided a workaround for Safari 9 where WebGL constants can't be accessed through `WebGLRenderingContext`. Now constants are hard-coded in `WebGLConstants`. [#2989](https://github.com/AnalyticalGraphicsInc/cesium/issues/2989)
 
 ### 1.13 - 2015-09-01
 
