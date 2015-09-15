@@ -272,6 +272,7 @@ define([
         //>>includeEnd('debug');
 
         this.id = 0;
+        this._referenceCount = 0;
         this._applyFunctions = [];
     };
 
@@ -401,6 +402,7 @@ define([
         var partialKey = JSON.stringify(renderState);
         var cachedState = renderStateCache[partialKey];
         if (defined(cachedState)) {
+            ++cachedState._referenceCount;
             return cachedState;
         }
 
@@ -417,6 +419,8 @@ define([
             renderStateCache[fullKey] = cachedState;
         }
 
+        ++cachedState._referenceCount;
+
         // Cache partial render state so we can skip validation on a cache hit for a partially defined render state
         renderStateCache[partialKey] = cachedState;
 
@@ -424,20 +428,28 @@ define([
     };
 
     /**
-     * Use sparingly until we have a real solution for removing render states from the cache, e.g. TextureAtlas
-     * polutting the cache on resize.
-     *
      * @private
      */
     RenderState.removeFromCache = function(renderState) {
-        // remove full key if it exists
+        // decrement partial key reference count
+        var partialKey = JSON.stringify(renderState);
+        var cachedState = renderStateCache[partialKey];
+        if (defined(cachedState)) {
+            --cachedState._referenceCount;
+
+            if (cachedState._referenceCount === 0) {
+                // remove partial key
+                delete renderStateCache[partialKey];
+            }
+        }
+
+        // remove full key if reference count is zero
         var states = new RenderState(renderState);
         var fullKey = JSON.stringify(states);
-        delete renderStateCache[fullKey];
-
-        // remove partial key if it exists
-        var partialKey = JSON.stringify(renderState);
-        delete renderStateCache[partialKey];
+        cachedState = renderStateCache[fullKey];
+        if (defined(cachedState) && cachedState._referenceCount === 0) {
+            delete renderStateCache[fullKey];
+        }
     };
 
     function enableOrDisable(gl, glEnum, enable) {

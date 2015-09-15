@@ -230,9 +230,10 @@ define([
             });
 
             var command = textureAtlas._copyCommand;
-            command.renderState = RenderState.fromCache({
+            var renderState = {
                 viewport : new BoundingRectangle(0, 0, oldAtlasWidth, oldAtlasHeight)
-            });
+            };
+            command.renderState = RenderState.fromCache(renderState);
 
             framebuffer._bind();
             command.execute(textureAtlas._context);
@@ -240,7 +241,7 @@ define([
             framebuffer.destroy();
             textureAtlas._texture = newTexture;
 
-            RenderState.removeFromCache(command.renderState);
+            RenderState.removeFromCache(renderState);
             command.renderState = undefined;
         } else {
             // First image exceeds initialSize
