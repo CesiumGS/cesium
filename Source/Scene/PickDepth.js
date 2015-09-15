@@ -20,7 +20,6 @@ define([
         Texture,
         PassThrough) {
     "use strict";
-    /*global WebGLRenderingContext*/
 
     /**
      * @private

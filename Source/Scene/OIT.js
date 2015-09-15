@@ -11,6 +11,7 @@ define([
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
+        '../Renderer/WebGLConstants',
         '../Shaders/AdjustTranslucentFS',
         '../Shaders/CompositeOITFS',
         './BlendEquation',
@@ -27,12 +28,12 @@ define([
         ShaderProgram,
         ShaderSource,
         Texture,
+        WebGLConstants,
         AdjustTranslucentFS,
         CompositeOITFS,
         BlendEquation,
         BlendFunction) {
     "use strict";
-    /*global WebGLRenderingContext*/
 
     /**
      * @private
@@ -124,7 +125,7 @@ define([
     function updateFramebuffers(oit, context) {
         destroyFramebuffers(oit);
 
-        var completeFBO = WebGLRenderingContext.FRAMEBUFFER_COMPLETE;
+        var completeFBO = WebGLConstants.FRAMEBUFFER_COMPLETE;
         var supported = true;
 
         // if MRT is supported, attempt to make an FBO with multiple color attachments

@@ -16,6 +16,7 @@ defineSuite([
         'Renderer/PixelDatatype',
         'Renderer/ShaderProgram',
         'Renderer/Texture',
+        'Renderer/WebGLConstants',
         'Scene/Camera',
         'Scene/FrameState',
         'Scene/Globe',
@@ -46,6 +47,7 @@ defineSuite([
         PixelDatatype,
         ShaderProgram,
         Texture,
+        WebGLConstants,
         Camera,
         FrameState,
         Globe,
@@ -60,7 +62,7 @@ defineSuite([
         pollToPromise,
         render) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,WebGLRenderingContext*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
 
@@ -406,7 +408,7 @@ defineSuite([
             var status = framebuffer.status;
             framebuffer.destroy();
 
-            if (status !== WebGLRenderingContext.FRAMEBUFFER_COMPLETE) {
+            if (status !== WebGLConstants.FRAMEBUFFER_COMPLETE) {
                 return;
             }
         }
