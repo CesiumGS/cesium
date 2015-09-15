@@ -2569,7 +2569,7 @@ define([
     var scratchFlyToBoundingSphereMatrix3 = new Matrix3();
 
     /**
-     * Flys the camera to a location where the current view contains the provided bounding sphere.
+     * Flies the camera to a location where the current view contains the provided bounding sphere.
      *
      * <p> The offset is heading/pitch/range in the local east-north-up reference frame centered at the center of the bounding sphere.
      * The heading and the pitch angles are defined in the local east-north-up reference frame.
