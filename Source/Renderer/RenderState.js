@@ -447,7 +447,7 @@ define([
         var states = new RenderState(renderState);
         var fullKey = JSON.stringify(states);
         cachedState = renderStateCache[fullKey];
-        if (defined(cachedState) && cachedState._referenceCount === 0) {
+        if (defined(cachedState) && (cachedState._referenceCount === 0)) {
             delete renderStateCache[fullKey];
         }
     };
