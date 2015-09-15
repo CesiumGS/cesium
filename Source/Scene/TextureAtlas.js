@@ -235,6 +235,8 @@ define([
             };
             command.renderState = RenderState.fromCache(renderState);
 
+            // Copy by rendering a viewport quad, instead of using Texture.copyFromFramebuffer,
+            // to workaround a Chrome 45 issue, https://github.com/AnalyticalGraphicsInc/cesium/issues/2997
             framebuffer._bind();
             command.execute(textureAtlas._context);
             framebuffer._unBind();
