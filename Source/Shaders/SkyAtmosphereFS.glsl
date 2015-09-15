@@ -49,8 +49,25 @@ void main (void)
     vec3 direction = normalize(v_positionEC);
     czm_ray ray = czm_ray(vec3(0.0), direction);
     
-    czm_raySegment intersection = czm_rayEllipsoidIntersectionInterval(ray, ellipsoid);
-    if (!czm_isEmpty(intersection)) {
+    vec3 radii = ellipsoid.radii;
+    float maxRadius = max(radii.x, max(radii.y, radii.z));
+    vec3 ellipsoidCenter = czm_modelView[3].xyz;
+    
+    float t1 = -1.0;
+    float t2 = -1.0;
+    
+    float b = -2.0 * dot(direction, ellipsoidCenter);
+    float c = dot(ellipsoidCenter, ellipsoidCenter) - maxRadius * maxRadius;
+
+    float discriminant = b * b - 4.0 * c;
+    if (discriminant >= 0.0) {
+        t1 = (-b - sqrt(discriminant)) * 0.5;
+        t2 = (-b + sqrt(discriminant)) * 0.5;
+    }
+    
+    if (t1 < 0.0 && t2 < 0.0) {
+        // the ray through the fragment intersected the sphere approximating
+        // the ellipsoid behind the ray origin.
         discard;
     }
     
