@@ -2833,4 +2833,22 @@ defineSuite([
             expect(entity.polygon.perPositionHeight.getValue()).toEqual(true);
         });
     });
+
+    it('Properly finds the root feature node when it is not the first child of the KML node', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <NetworkLinkControl>\
+            </NetworkLinkControl>\
+            <Placemark>\
+            <name>bob</name>\
+            </Placemark>\
+            </kml>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.name).toBe('bob');
+            expect(entity.label).toBeDefined();
+            expect(entity.label.text.getValue()).toBe('bob');
+        });
+    });
 });

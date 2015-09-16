@@ -9,6 +9,7 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/Math',
         'Core/NearFarScalar',
+        'Renderer/ContextLimits',
         'Scene/HeightReference',
         'Scene/HorizontalOrigin',
         'Scene/LabelStyle',
@@ -25,6 +26,7 @@ defineSuite([
         Ellipsoid,
         CesiumMath,
         NearFarScalar,
+        ContextLimits,
         HeightReference,
         HorizontalOrigin,
         LabelStyle,
@@ -46,7 +48,7 @@ defineSuite([
         scene = createScene();
         camera = scene.camera;
 
-        heightReferenceSupported = defined(scene._globeDepth) && scene._globeDepth.supported && scene.context.maximumVertexTextureImageUnits > 0;
+        heightReferenceSupported = defined(scene._globeDepth) && scene._globeDepth.supported && ContextLimits.maximumVertexTextureImageUnits > 0;
     });
 
     afterAll(function() {

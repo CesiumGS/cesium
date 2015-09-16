@@ -38,7 +38,7 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.url The URL of the WMS service.
+     * @param {String} options.url The URL of the WMS service. The URL supports the same keywords as the {@link UrlTemplateImageryProvider}.
      * @param {String} options.layers The layers to include, separated by commas.
      * @param {Object} [options.parameters=WebMapServiceImageryProvider.DefaultParameters] Additional parameters
      *        to pass to the WMS server in the GetMap URL.
@@ -66,6 +66,9 @@ define([
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      * @param {Object} [options.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
+     * @param {String|String[]} [options.subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
+     *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
+     *                          an array, each element in the array is a subdomain.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
@@ -104,24 +107,6 @@ define([
         this._layers = options.layers;
 
         var getFeatureInfoFormats = defaultValue(options.getFeatureInfoFormats, WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats);
-
-        if (defined(options.getFeatureInfoAsGeoJson) || defined(options.getFeatureInfoAsXml)) {
-            deprecationWarning('WebMapServiceImageryProvider.getFeatureInfo', 'The options.getFeatureInfoAsGeoJson and getFeatureInfoAsXml parameters to WebMapServiceImageryProvider were deprecated in Cesium 1.10 and will be removed in 1.13.  Use options.getFeatureInfoFormats instead.');
-
-            //>>includeStart('debug', pragmas.debug);
-            if (defined(options.getFeatureInfoFormats)) {
-                throw new DeveloperError('options.getFeatureInfoFormats must not be specified if options.getFeatureInfoAsGeoJson or options.getFeatureInfoAsXml are specified.');
-            }
-            //>>includeEnd('debug');
-
-            getFeatureInfoFormats = [];
-            if (defaultValue(options.getFeatureInfoAsGeoJson, true)) {
-                getFeatureInfoFormats.push(new GetFeatureInfoFormat('json', 'application/json'));
-            }
-            if (defaultValue(options.getFeatureInfoAsXml, true)) {
-                getFeatureInfoFormats.push(new GetFeatureInfoFormat('xml', 'text/xml'));
-            }
-        }
 
         // Build the template URLs for tiles and pickFeatures.
         var uri = new Uri(options.url);
@@ -192,6 +177,7 @@ define([
             minimumLevel : options.minimumLevel,
             maximumLevel : options.maximumLevel,
             proxy : options.proxy,
+            subdomains: options.subdomains,
             tileDiscardPolicy : options.tileDiscardPolicy,
             credit : options.credit,
             getFeatureInfoFormats : getFeatureInfoFormats

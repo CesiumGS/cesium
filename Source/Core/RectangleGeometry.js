@@ -341,7 +341,7 @@ define([
         var i;
 
         var topBottomGeo = constructRectangle(options);
-        if (CesiumMath.equalsEpsilon(minHeight, maxHeight, 0.1)) {
+        if (CesiumMath.equalsEpsilon(minHeight, maxHeight, CesiumMath.EPSILON10)) {
             return topBottomGeo;
         }
         topBottomGeo = PolygonPipeline.scaleToGeodeticHeight(topBottomGeo, maxHeight, ellipsoid, false);
@@ -499,7 +499,7 @@ define([
     }
 
     /**
-     * A description of a cartographic rectangle on an ellipsoid centered at the origin.
+     * A description of a cartographic rectangle on an ellipsoid centered at the origin. Rectangle geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
      *
      * @alias RectangleGeometry
      * @constructor
@@ -554,7 +554,7 @@ define([
         var stRotation = defaultValue(options.stRotation, 0.0);
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
         var extrudedHeight = options.extrudedHeight;
-        var extrude = (defined(extrudedHeight) && Math.abs(surfaceHeight - extrudedHeight) > 1.0);
+        var extrude = defined(extrudedHeight);
         var closeTop = defaultValue(options.closeTop, true);
         var closeBottom = defaultValue(options.closeBottom, true);
 
@@ -591,7 +591,7 @@ define([
     /**
      * Stores the provided instance into the provided array.
      *
-     * @param {BoundingSphere} value The value to pack.
+     * @param {RectangleGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
@@ -649,6 +649,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {RectangleGeometry} [result] The object into which to store the result.
+     * @returns {RectangleGeometry} The modified result parameter or a new RectangleGeometry instance if one was not provided.
      */
     RectangleGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -775,7 +776,10 @@ define([
         });
     };
 
-    RectangleGeometry._createShadowVolume = function(rectangleGeometry, minHeightFunc, maxHeightFunc) {
+    /**
+     * @private
+     */
+    RectangleGeometry.createShadowVolume = function(rectangleGeometry, minHeightFunc, maxHeightFunc) {
         var granularity = rectangleGeometry._granularity;
         var ellipsoid = rectangleGeometry._ellipsoid;
 

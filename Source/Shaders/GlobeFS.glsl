@@ -225,8 +225,8 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
     float highAltitudeFade = linearFade(0.0, 60000.0, positionToEyeECLength);
     float lowAltitudeFade = 1.0 - linearFade(20000.0, 60000.0, positionToEyeECLength);
     vec3 normalTangentSpace = 
-    	(highAltitudeFade * normalTangentSpaceHighAltitude) + 
-    	(lowAltitudeFade * normalTangentSpaceLowAltitude);
+        (highAltitudeFade * normalTangentSpaceHighAltitude) + 
+        (lowAltitudeFade * normalTangentSpaceLowAltitude);
     normalTangentSpace = normalize(normalTangentSpace);
     
     // fade out the normal perturbation as we move farther from the water surface

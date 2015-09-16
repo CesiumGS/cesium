@@ -4,6 +4,7 @@ define([
         '../../Scene/ArcGisMapServerImageryProvider',
         '../../Scene/BingMapsImageryProvider',
         '../../Scene/BingMapsStyle',
+        '../../Scene/MapboxImageryProvider',
         '../../Scene/OpenStreetMapImageryProvider',
         '../../Scene/TileMapServiceImageryProvider',
         '../BaseLayerPicker/ProviderViewModel'
@@ -12,6 +13,7 @@ define([
         ArcGisMapServerImageryProvider,
         BingMapsImageryProvider,
         BingMapsStyle,
+        MapboxImageryProvider,
         OpenStreetMapImageryProvider,
         TileMapServiceImageryProvider,
         ProviderViewModel) {
@@ -59,6 +61,39 @@ define([
         }));
 
         providerViewModels.push(new ProviderViewModel({
+            name: 'Mapbox Satellite',
+            tooltip: 'Mapbox satellite imagery https://www.mapbox.com/maps/',
+            iconUrl: buildModuleUrl('Widgets/Images/ImageryProviders/mapboxSatellite.png'),
+            creationFunction: function() {
+                return new MapboxImageryProvider({
+                    mapId: 'mapbox.satellite'
+                });
+            }
+        }));
+
+        providerViewModels.push(new ProviderViewModel({
+            name: 'Mapbox Streets',
+            tooltip: 'Mapbox streets imagery https://www.mapbox.com/maps/',
+            iconUrl: buildModuleUrl('Widgets/Images/ImageryProviders/mapboxTerrain.png'),
+            creationFunction: function() {
+                return new MapboxImageryProvider({
+                    mapId: 'mapbox.streets'
+                });
+            }
+        }));
+
+        providerViewModels.push(new ProviderViewModel({
+            name: 'Mapbox Streets Classic',
+            tooltip: 'Mapbox streets basic imagery https://www.mapbox.com/maps/',
+            iconUrl: buildModuleUrl('Widgets/Images/ImageryProviders/mapboxStreets.png'),
+            creationFunction: function() {
+                return new MapboxImageryProvider({
+                    mapId: 'mapbox.streets-basic'
+                });
+            }
+        }));
+
+        providerViewModels.push(new ProviderViewModel({
             name : 'ESRI World Imagery',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/esriWorldImagery.png'),
             tooltip : '\
@@ -71,7 +106,8 @@ i-cubed Nationwide Prime, Getmapping, AeroGRID, IGN Spain, and IGP Portugal.  Ad
 contributed by the GIS User Community.\nhttp://www.esri.com',
             creationFunction : function() {
                 return new ArcGisMapServerImageryProvider({
-                    url : '//services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
+                    url : '//services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
+                    enablePickFeatures : false
                 });
             }
         }));
@@ -86,7 +122,8 @@ Chile, Colombia, and Venezuela; Ghana; and parts of southern Africa including Bo
 http://www.esri.com',
             creationFunction : function() {
                 return new ArcGisMapServerImageryProvider({
-                    url : '//services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
+                    url : '//services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer',
+                    enablePickFeatures : false
                 });
             }
         }));
@@ -100,7 +137,8 @@ for informational and educational purposes as well as a basemap by GIS professio
 mapping applications.\nhttp://www.esri.com',
             creationFunction : function() {
                 return new ArcGisMapServerImageryProvider({
-                    url : '//services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/'
+                    url : '//services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/',
+                    enablePickFeatures : false
                 });
             }
         }));

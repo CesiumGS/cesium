@@ -25,8 +25,12 @@ define([
         '../Core/SphereOutlineGeometry',
         '../Core/Visibility',
         '../Core/WebMercatorProjection',
+        '../Renderer/Buffer',
         '../Renderer/BufferUsage',
+        '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
+        '../Renderer/VertexArray',
         '../Scene/BlendingState',
         '../Scene/DepthFunction',
         '../Scene/Pass',
@@ -64,8 +68,12 @@ define([
         SphereOutlineGeometry,
         Visibility,
         WebMercatorProjection,
+        Buffer,
         BufferUsage,
+        ContextLimits,
         DrawCommand,
+        RenderState,
+        VertexArray,
         BlendingState,
         DepthFunction,
         Pass,
@@ -331,7 +339,7 @@ define([
      */
     GlobeSurfaceTileProvider.prototype.endUpdate = function(context, frameState, commandList) {
         if (!defined(this._renderState)) {
-            this._renderState = context.createRenderState({ // Write color and depth
+            this._renderState = RenderState.fromCache({ // Write color and depth
                 cull : {
                     enabled : true
                 },
@@ -341,7 +349,7 @@ define([
                 }
             });
 
-            this._blendRenderState = context.createRenderState({ // Write color and depth
+            this._blendRenderState = RenderState.fromCache({ // Write color and depth
                 cull : {
                     enabled : true
                 },
@@ -377,7 +385,7 @@ define([
      */
     GlobeSurfaceTileProvider.prototype.updateForPick = function(context, frameState, commandList) {
         if (!defined(this._pickRenderState)) {
-            this._pickRenderState = context.createRenderState({
+            this._pickRenderState = RenderState.fromCache({
                 colorMask : {
                     red : false,
                     green : false,
@@ -422,8 +430,8 @@ define([
      *
      * @exception {DeveloperError} <code>loadTile</code> must not be called before the tile provider is ready.
      */
-    GlobeSurfaceTileProvider.prototype.loadTile = function(context, frameState, tile) {
-        GlobeSurfaceTile.processStateMachine(tile, context, this._terrainProvider, this._imageryLayers);
+    GlobeSurfaceTileProvider.prototype.loadTile = function(context, frameState, commandList, tile) {
+        GlobeSurfaceTile.processStateMachine(tile, context, commandList, this._terrainProvider, this._imageryLayers);
     };
 
     var boundingSphereScratch = new BoundingSphere();
@@ -839,8 +847,17 @@ define([
         GeometryPipeline.toWireframe(geometry);
 
         var wireframeIndices = geometry.indices;
-        var wireframeIndexBuffer = context.createIndexBuffer(wireframeIndices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
-        return context.createVertexArray(vertexArray._attributes, wireframeIndexBuffer);
+        var wireframeIndexBuffer = Buffer.createIndexBuffer({
+            context : context,
+            typedArray : wireframeIndices,
+            usage : BufferUsage.STATIC_DRAW,
+            indexDatatype : IndexDatatype.UNSIGNED_SHORT
+        });
+        return new VertexArray({
+            context : context,
+            attributes : vertexArray._attributes,
+            indexBuffer : wireframeIndexBuffer
+        });
     }
 
     var getDebugOrientedBoundingBox;
@@ -918,7 +935,7 @@ define([
 
         var viewMatrix = frameState.camera.viewMatrix;
 
-        var maxTextures = context.maximumTextureImageUnits;
+        var maxTextures = ContextLimits.maximumTextureImageUnits;
 
         var waterMaskTexture = surfaceTile.waterMaskTexture;
         var showReflectiveOcean = tileProvider.hasWaterMask && defined(waterMaskTexture);

@@ -2,6 +2,7 @@
 define([
         '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
+        '../Core/BoxGeometry',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
@@ -28,8 +29,11 @@ define([
         '../Core/Occluder',
         '../Core/ShowGeometryInstanceAttribute',
         '../Renderer/ClearCommand',
+        '../Renderer/ComputeEngine',
         '../Renderer/Context',
+        '../Renderer/ContextLimits',
         '../Renderer/PassState',
+        '../Renderer/ShaderProgram',
         './Camera',
         './CreditDisplay',
         './CullingVolume',
@@ -57,6 +61,7 @@ define([
     ], function(
         BoundingRectangle,
         BoundingSphere,
+        BoxGeometry,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -83,8 +88,11 @@ define([
         Occluder,
         ShowGeometryInstanceAttribute,
         ClearCommand,
+        ComputeEngine,
         Context,
+        ContextLimits,
         PassState,
+        ShaderProgram,
         Camera,
         CreditDisplay,
         CullingVolume,
@@ -211,8 +219,10 @@ define([
         this._passState = new PassState(context);
         this._canvas = canvas;
         this._context = context;
+        this._computeEngine = new ComputeEngine(context);
         this._globe = undefined;
         this._primitives = new PrimitiveCollection();
+        this._groundPrimitives = new PrimitiveCollection();
 
         this._tweens = new TweenCollection();
 
@@ -220,6 +230,7 @@ define([
 
         this._sunPostProcess = undefined;
 
+        this._computeCommandList = [];
         this._commandList = [];
         this._frustumCommandsList = [];
         this._overlayCommandList = [];
@@ -499,7 +510,7 @@ define([
         this.copyGlobeDepth = false;
 
         this._performanceDisplay = undefined;
-        this._debugSphere = undefined;
+        this._debugVolume = undefined;
 
         var camera = new Camera(this);
         this._camera = camera;
@@ -524,7 +535,7 @@ define([
          * Gets the canvas element to which this scene is bound.
          * @memberof Scene.prototype
          *
-         * @type {Element}
+         * @type {Canvas}
          * @readonly
          */
         canvas : {
@@ -574,7 +585,7 @@ define([
          */
         maximumAliasedLineWidth : {
             get : function() {
-                return this._context.maximumAliasedLineWidth;
+                return ContextLimits.maximumAliasedLineWidth;
             }
         },
 
@@ -589,7 +600,7 @@ define([
          */
         maximumCubeMapSize : {
             get : function() {
-                return this._context.maximumCubeMapSize;
+                return ContextLimits.maximumCubeMapSize;
             }
         },
 
@@ -632,6 +643,19 @@ define([
         primitives : {
             get : function() {
                 return this._primitives;
+            }
+        },
+
+        /**
+         * Gets the collection of ground primitives.
+         * @memberof Scene.prototype
+         *
+         * @type {PrimitiveCollection}
+         * @readonly
+         */
+        groundPrimitives : {
+            get : function() {
+                return this._groundPrimitives;
             }
         },
 
@@ -1009,6 +1033,7 @@ define([
     var distances = new Interval();
 
     function createPotentiallyVisibleSet(scene) {
+        var computeList = scene._computeCommandList;
         var commandList = scene._commandList;
         var overlayList = scene._overlayCommandList;
 
@@ -1033,6 +1058,8 @@ define([
                 frustumCommandsList[n].indices[p] = 0;
             }
         }
+
+        computeList.length = 0;
         overlayList.length = 0;
 
         var near = Number.MAX_VALUE;
@@ -1056,18 +1083,20 @@ define([
             var command = commandList[i];
             var pass = command.pass;
 
-            if (pass === Pass.OVERLAY) {
+            if (pass === Pass.COMPUTE) {
+                computeList.push(command);
+            } else if (pass === Pass.OVERLAY) {
                 overlayList.push(command);
             } else {
                 var boundingVolume = command.boundingVolume;
                 if (defined(boundingVolume)) {
                     if (command.cull &&
                             ((cullingVolume.computeVisibility(boundingVolume) === Intersect.OUTSIDE) ||
-                             (defined(occluder) && !occluder.isBoundingSphereVisible(boundingVolume)))) {
+                             (defined(occluder) && boundingVolume.isOccluded(occluder)))) {
                         continue;
                     }
 
-                    distances = BoundingSphere.computePlaneDistances(boundingVolume, position, direction, distances);
+                    distances = boundingVolume.computePlaneDistances(position, direction, distances);
                     near = Math.min(near, distances.start);
                     far = Math.max(far, distances.stop);
                 } else {
@@ -1154,7 +1183,13 @@ define([
         fs.sources.push(newMain);
 
         var attributeLocations = getAttributeLocations(sp);
-        return context.createShaderProgram(sp.vertexShaderSource, fs, attributeLocations);
+
+        return ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : sp.vertexShaderSource,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
     }
 
     function executeDebugCommand(command, scene, passState, renderState, shaderProgram) {
@@ -1185,21 +1220,17 @@ define([
 
         if (command.debugShowBoundingVolume && (defined(command.boundingVolume))) {
             // Debug code to draw bounding volume for command.  Not optimized!
-            // Assumes bounding volume is a bounding sphere.
-            if (defined(scene._debugSphere)) {
-                scene._debugSphere.destroy();
-            }
-
+            // Assumes bounding volume is a bounding sphere or box
             var frameState = scene._frameState;
             var boundingVolume = command.boundingVolume;
-            var radius = boundingVolume.radius;
-            var center = boundingVolume.center;
 
-            var geometry = GeometryPipeline.toWireframe(EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
-                radii : new Cartesian3(radius, radius, radius),
-                vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
-            })));
+            if (defined(scene._debugVolume)) {
+                scene._debugVolume.destroy();
+            }
 
+            var geometry;
+
+            var center = Cartesian3.clone(boundingVolume.center);
             if (frameState.mode !== SceneMode.SCENE3D) {
                 center = Matrix4.multiplyByPoint(transformFrom2D, center, center);
                 var projection = frameState.mapProjection;
@@ -1207,23 +1238,54 @@ define([
                 center = projection.ellipsoid.cartographicToCartesian(centerCartographic);
             }
 
-            scene._debugSphere = new Primitive({
-                geometryInstances : new GeometryInstance({
-                    geometry : geometry,
-                    modelMatrix : Matrix4.multiplyByTranslation(Matrix4.IDENTITY, center, new Matrix4()),
-                    attributes : {
-                        color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
-                    }
-                }),
-                appearance : new PerInstanceColorAppearance({
-                    flat : true,
-                    translucent : false
-                }),
-                asynchronous : false
-            });
+            if (defined(boundingVolume.radius)) {
+                var radius = boundingVolume.radius;
+
+                geometry = GeometryPipeline.toWireframe(EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
+                    radii : new Cartesian3(radius, radius, radius),
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
+                })));
+
+                scene._debugVolume = new Primitive({
+                    geometryInstances : new GeometryInstance({
+                        geometry : geometry,
+                        modelMatrix : Matrix4.multiplyByTranslation(Matrix4.IDENTITY, center, new Matrix4()),
+                        attributes : {
+                            color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
+                        }
+                    }),
+                    appearance : new PerInstanceColorAppearance({
+                        flat : true,
+                        translucent : false
+                    }),
+                    asynchronous : false
+                });
+            } else {
+                var halfAxes = boundingVolume.halfAxes;
+
+                geometry = GeometryPipeline.toWireframe(BoxGeometry.createGeometry(BoxGeometry.fromDimensions({
+                    dimensions : new Cartesian3(2.0, 2.0, 2.0),
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
+                })));
+
+                scene._debugVolume = new Primitive({
+                    geometryInstances : new GeometryInstance({
+                        geometry : geometry,
+                        modelMatrix : Matrix4.fromRotationTranslation(halfAxes, center, new Matrix4()),
+                        attributes : {
+                            color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
+                        }
+                    }),
+                    appearance : new PerInstanceColorAppearance({
+                        flat : true,
+                        translucent : false
+                    }),
+                    asynchronous : false
+                });
+            }
 
             var commandList = [];
-            scene._debugSphere.update(context, frameState, commandList);
+            scene._debugVolume.update(context, frameState, commandList);
 
             var framebuffer;
             if (defined(debugFramebuffer)) {
@@ -1260,11 +1322,11 @@ define([
                  ((!defined(command.boundingVolume)) ||
                   !command.cull ||
                   ((cullingVolume.computeVisibility(boundingVolume) !== Intersect.OUTSIDE) &&
-                   (!defined(occluder) || occluder.isBoundingSphereVisible(boundingVolume)))));
+                   (!defined(occluder) || !boundingVolume.isOccluded(occluder)))));
     }
 
     function translucentCompare(a, b, position) {
-        return BoundingSphere.distanceSquaredTo(b.boundingVolume, position) - BoundingSphere.distanceSquaredTo(a.boundingVolume, position);
+        return b.boundingVolume.distanceSquaredTo(position) - a.boundingVolume.distanceSquaredTo(position);
     }
 
     function executeTranslucentCommandsSorted(scene, executeFunction, passState, commands) {
@@ -1327,8 +1389,10 @@ define([
         var renderPass = frameState.passes.render;
         var skyBoxCommand = (renderPass && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
         var skyAtmosphereCommand = (renderPass && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
-        var sunCommand = (renderPass && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
-        var sunVisible = isVisible(sunCommand, frameState);
+        var sunCommands = (renderPass && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
+        var sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
+        var sunComputeCommand = defined(sunCommands) ? sunCommands.computeCommand : undefined;
+        var sunVisible = isVisible(sunDrawCommand, frameState);
         var moonCommand = (renderPass && defined(scene.moon)) ? scene.moon.update(context, frameState) : undefined;
         var moonVisible = isVisible(moonCommand, frameState);
 
@@ -1368,7 +1432,9 @@ define([
             }
         }
 
-        if (defined(scene.globe) && !scene.globe.depthTestAgainstTerrain) {
+        var clearGlobeDepth = defined(scene.globe) && (!scene.globe.depthTestAgainstTerrain || scene.mode === SceneMode.SCENE2D);
+        var useDepthPlane = clearGlobeDepth && scene.mode === SceneMode.SCENE3D;
+        if (useDepthPlane) {
             // Update the depth plane that is rendered in 3D when the primitives are
             // not depth tested against terrain so primitives on the backface
             // of the globe are not picked.
@@ -1417,7 +1483,10 @@ define([
         }
 
         if (sunVisible) {
-            sunCommand.execute(context, passState);
+            if (defined(sunComputeCommand)) {
+                sunComputeCommand.execute(scene._computeEngine);
+            }
+            sunDrawCommand.execute(context, passState);
             if (scene.sunBloom) {
                 var framebuffer;
                 if (useGlobeDepthFramebuffer) {
@@ -1492,9 +1561,11 @@ define([
                 executeCommand(commands[j], scene, context, passState);
             }
 
-            if (defined(scene.globe) && !scene.globe.depthTestAgainstTerrain) {
+            if (clearGlobeDepth) {
                 clearDepth.execute(context, passState);
-                scene._depthPlane.execute(context, passState);
+                if (useDepthPlane) {
+                    scene._depthPlane.execute(context, passState);
+                }
             }
 
             // Execute commands in order by pass up to the translucent pass.
@@ -1558,6 +1629,14 @@ define([
         }
     }
 
+    function executeComputeCommands(scene) {
+        var commandList = scene._computeCommandList;
+        var length = commandList.length;
+        for (var i = 0; i < length; ++i) {
+            commandList[i].execute(scene._computeEngine);
+        }
+    }
+
     function executeOverlayCommands(scene, passState) {
         var context = scene.context;
         var commandList = scene._overlayCommandList;
@@ -1576,6 +1655,7 @@ define([
             scene._globe.update(context, frameState, commandList);
         }
 
+        scene._groundPrimitives.update(context, frameState, commandList);
         scene._primitives.update(context, frameState, commandList);
     }
 
@@ -1635,6 +1715,7 @@ define([
         var context = scene.context;
         us.update(context, frameState);
 
+        scene._computeCommandList.length = 0;
         scene._commandList.length = 0;
         scene._overlayCommandList.length = 0;
 
@@ -1646,6 +1727,7 @@ define([
         passState.blendingEnabled = undefined;
         passState.scissorTest = undefined;
 
+        executeComputeCommands(scene);
         executeCommands(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
         executeOverlayCommands(scene, passState);
 
@@ -1694,7 +1776,7 @@ define([
      */
     Scene.prototype.clampLineWidth = function(width) {
         var context = this._context;
-        return Math.max(context.minimumAliasedLineWidth, Math.min(width, context.maximumAliasedLineWidth));
+        return Math.max(ContextLimits.minimumAliasedLineWidth, Math.min(width, ContextLimits.maximumAliasedLineWidth));
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();
@@ -1931,7 +2013,7 @@ define([
      * @exception {DeveloperError} windowPosition is undefined.
      *
      * @example
-     * var pickedObjects = Cesium.Scene.drillPick(new Cesium.Cartesian2(100.0, 200.0));
+     * var pickedObjects = scene.drillPick(new Cesium.Cartesian2(100.0, 200.0));
      */
     Scene.prototype.drillPick = function(windowPosition, limit) {
         // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead
@@ -2085,9 +2167,11 @@ define([
      */
     Scene.prototype.destroy = function() {
         this._tweens.removeAll();
+        this._computeEngine = this._computeEngine && this._computeEngine.destroy();
         this._screenSpaceCameraController = this._screenSpaceCameraController && this._screenSpaceCameraController.destroy();
         this._pickFramebuffer = this._pickFramebuffer && this._pickFramebuffer.destroy();
         this._primitives = this._primitives && this._primitives.destroy();
+        this._groundPrimitives = this._groundPrimitives && this._groundPrimitives.destroy();
         this._globe = this._globe && this._globe.destroy();
         this.skyBox = this.skyBox && this.skyBox.destroy();
         this.skyAtmosphere = this.skyAtmosphere && this.skyAtmosphere.destroy();
@@ -2095,7 +2179,6 @@ define([
         this.sun = this.sun && this.sun.destroy();
         this._sunPostProcess = this._sunPostProcess && this._sunPostProcess.destroy();
         this._depthPlane = this._depthPlane && this._depthPlane.destroy();
-
         this._transitioner.destroy();
 
         if (defined(this._globeDepth)) {

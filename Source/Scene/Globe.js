@@ -31,7 +31,11 @@ define([
         '../Core/Transforms',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
+        '../Renderer/Texture',
+        '../Renderer/VertexArray',
         '../Shaders/GlobeFS',
         '../Shaders/GlobeFSPole',
         '../Shaders/GlobeVS',
@@ -76,7 +80,11 @@ define([
         Transforms,
         BufferUsage,
         DrawCommand,
+        RenderState,
+        ShaderProgram,
         ShaderSource,
+        Texture,
+        VertexArray,
         GlobeFS,
         GlobeFSPole,
         GlobeVS,
@@ -581,7 +589,8 @@ define([
                             })
                         }
                     });
-                    globe._northPoleCommand.vertexArray = context.createVertexArrayFromGeometry({
+                    globe._northPoleCommand.vertexArray = VertexArray.fromGeometry({
+                        context : context,
                         geometry : geometry,
                         attributeLocations : {
                             position : 0
@@ -625,7 +634,8 @@ define([
                              })
                          }
                      });
-                     globe._southPoleCommand.vertexArray = context.createVertexArrayFromGeometry({
+                     globe._southPoleCommand.vertexArray = VertexArray.fromGeometry({
+                         context : context,
                          geometry : geometry,
                          attributeLocations : {
                              position : 0
@@ -691,7 +701,7 @@ define([
         if (this._mode !== mode || !defined(this._rsColor)) {
             modeChanged = true;
             if (mode === SceneMode.SCENE3D || mode === SceneMode.COLUMBUS_VIEW) {
-                this._rsColor = context.createRenderState({ // Write color and depth
+                this._rsColor = RenderState.fromCache({ // Write color and depth
                     cull : {
                         enabled : true
                     },
@@ -699,18 +709,18 @@ define([
                         enabled : true
                     }
                 });
-                this._rsColorWithoutDepthTest = context.createRenderState({ // Write color, not depth
+                this._rsColorWithoutDepthTest = RenderState.fromCache({ // Write color, not depth
                     cull : {
                         enabled : true
                     }
                 });
             } else {
-                this._rsColor = context.createRenderState({
+                this._rsColor = RenderState.fromCache({
                     cull : {
                         enabled : true
                     }
                 });
-                this._rsColorWithoutDepthTest = context.createRenderState({
+                this._rsColorWithoutDepthTest = RenderState.fromCache({
                     cull : {
                         enabled : true
                     }
@@ -745,7 +755,8 @@ define([
                     }
 
                     that._oceanNormalMap = that._oceanNormalMap && that._oceanNormalMap.destroy();
-                    that._oceanNormalMap = context.createTexture2D({
+                    that._oceanNormalMap = new Texture({
+                        context : context,
                         source : image
                     });
                 });
@@ -757,7 +768,13 @@ define([
         if (!defined(northPoleCommand.shaderProgram) ||
             !defined(southPoleCommand.shaderProgram)) {
 
-            var poleShaderProgram = context.replaceShaderProgram(northPoleCommand.shaderProgram, GlobeVSPole, GlobeFSPole, terrainAttributeLocations);
+            var poleShaderProgram = ShaderProgram.replaceCache({
+                context : context,
+                shaderProgram : northPoleCommand.shaderProgram,
+                vertexShaderSource : GlobeVSPole,
+                fragmentShaderSource : GlobeFSPole,
+                attributeLocations : terrainAttributeLocations
+            });
 
             northPoleCommand.shaderProgram = poleShaderProgram;
             southPoleCommand.shaderProgram = poleShaderProgram;
@@ -801,7 +818,7 @@ define([
             surface.update(context, frameState, commandList);
         }
 
-        if (pass.pick && this.depthTestAgainstTerrain) {
+        if (pass.pick) {
             surface.update(context, frameState, commandList);
         }
     };

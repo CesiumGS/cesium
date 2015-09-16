@@ -359,8 +359,7 @@ define([
      *         console.log('Number of features: ' + features.length);
      *         if (features.length > 0) {
      *             console.log('First feature name: ' + features[0].name);
-     *             }
-     *         });
+     *         }
      *     });
      * }
      */
