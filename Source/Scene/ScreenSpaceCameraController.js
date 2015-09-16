@@ -155,7 +155,7 @@ define([
          * @type {Number}
          * @default 20.0
          */
-        this.minimumZoomDistance = 20.0;
+        this.minimumZoomDistance = 1.0;
         /**
          * The maximum magnitude, in meters, of the camera position when zooming. Defaults to positive infinity.
          * @type {Number}
