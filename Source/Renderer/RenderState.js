@@ -272,7 +272,6 @@ define([
         //>>includeEnd('debug');
 
         this.id = 0;
-        this._referenceCount = 0;
         this._applyFunctions = [];
     };
 
@@ -402,8 +401,8 @@ define([
         var partialKey = JSON.stringify(renderState);
         var cachedState = renderStateCache[partialKey];
         if (defined(cachedState)) {
-            ++cachedState._referenceCount;
-            return cachedState;
+            ++cachedState.referenceCount;
+            return cachedState.state;
         }
 
         // Cache miss.  Fully define render state and try again.
@@ -413,43 +412,71 @@ define([
         if (!defined(cachedState)) {
             states.id = nextRenderStateId++;
 
-            cachedState = states;
+            cachedState = {
+                referenceCount : 0,
+                state : states
+            };
 
             // Cache full render state.  Multiple partially defined render states may map to this.
             renderStateCache[fullKey] = cachedState;
         }
 
-        ++cachedState._referenceCount;
+        ++cachedState.referenceCount;
 
         // Cache partial render state so we can skip validation on a cache hit for a partially defined render state
-        renderStateCache[partialKey] = cachedState;
+        renderStateCache[partialKey] = {
+            referenceCount : 1,
+            state : cachedState.state
+        };
 
-        return cachedState;
+        return cachedState.state;
     };
 
     /**
      * @private
      */
     RenderState.removeFromCache = function(renderState) {
+        var states = new RenderState(renderState);
+        var fullKey = JSON.stringify(states);
+        var fullCachedState = renderStateCache[fullKey];
+
         // decrement partial key reference count
         var partialKey = JSON.stringify(renderState);
         var cachedState = renderStateCache[partialKey];
         if (defined(cachedState)) {
-            --cachedState._referenceCount;
+            --cachedState.referenceCount;
 
-            if (cachedState._referenceCount === 0) {
+            if (cachedState.referenceCount === 0) {
                 // remove partial key
                 delete renderStateCache[partialKey];
+
+                // decrement full key reference count
+                if (defined(fullCachedState)) {
+                    --fullCachedState.referenceCount;
+                }
             }
         }
 
         // remove full key if reference count is zero
-        var states = new RenderState(renderState);
-        var fullKey = JSON.stringify(states);
-        cachedState = renderStateCache[fullKey];
-        if (defined(cachedState) && (cachedState._referenceCount === 0)) {
+        if (defined(fullCachedState) && (fullCachedState.referenceCount === 0)) {
             delete renderStateCache[fullKey];
         }
+    };
+
+    /**
+     * This function is for testing purposes only.
+     * @private
+     */
+    RenderState.getCache = function() {
+        return renderStateCache;
+    };
+
+    /**
+     * This function is for testing purposes only.
+     * @private
+     */
+    RenderState.clearCache = function() {
+        renderStateCache = {};
     };
 
     function enableOrDisable(gl, glEnum, enable) {

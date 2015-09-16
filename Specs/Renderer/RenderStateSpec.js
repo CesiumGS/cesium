@@ -363,6 +363,52 @@ defineSuite([
         expect(rs4).not.toBe(rs);
     });
 
+    it('removes from render cache', function() {
+        RenderState.clearCache();
+        var cache = RenderState.getCache();
+
+        var rs = RenderState.fromCache();
+        var undefinedKey = JSON.stringify(undefined);
+        var fullKey = JSON.stringify(new RenderState());
+
+        expect(cache[fullKey].referenceCount).toEqual(1);
+        expect(cache[undefinedKey].referenceCount).toEqual(1);
+
+        var rs2 = RenderState.fromCache();
+
+        expect(cache[fullKey].referenceCount).toEqual(1);
+        expect(cache[undefinedKey].referenceCount).toEqual(2);
+
+        // rs3 is still the same state as rs and rs2, but with a partial definition
+        var param = {
+            depthTest : {
+                enabled : false,
+                func : WebGLConstants.LESS
+            }
+        };
+        var rs3 = RenderState.fromCache(param);
+        var paramKey = JSON.stringify(param);
+
+        expect(rs2).toBe(rs);
+        expect(rs3).toBe(rs);
+
+        expect(cache[fullKey].referenceCount).toEqual(2);
+        expect(cache[undefinedKey].referenceCount).toEqual(2);
+        expect(cache[paramKey].referenceCount).toEqual(1);
+
+        RenderState.removeFromCache(param);
+
+        expect(cache[fullKey].referenceCount).toEqual(1);
+        expect(cache[undefinedKey].referenceCount).toEqual(2);
+        expect(cache[paramKey]).not.toBeDefined();
+
+        RenderState.removeFromCache();
+        RenderState.removeFromCache();
+
+        expect(cache[undefinedKey]).not.toBeDefined();
+        expect(cache[fullKey]).not.toBeDefined();
+    });
+
     it('fails to create (frontFace)', function() {
         expect(function() {
             RenderState.fromCache({
