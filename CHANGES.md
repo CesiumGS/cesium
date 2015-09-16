@@ -15,6 +15,7 @@ Change Log
 * Fixed an issue with drill picking at low frame rates that would cause a crash. [#3010](https://github.com/AnalyticalGraphicsInc/cesium/pull/3010)
 * Fixed a bug that prevented `setView` from working across all scene modes.
 * Fixed a bug that caused `camera.positionWC` to occasionally return the incorrect value.
+* Added a workaround for Chrome 45, where the first character in a label with a small font size would not appear. [#3011](https://github.com/AnalyticalGraphicsInc/cesium/pull/3011)
 * Fixed issues causing the terrain and sky to disappear when the camera is near the surface. [#2415](https://github.com/AnalyticalGraphicsInc/cesium/issues/2415) and [#2271](https://github.com/AnalyticalGraphicsInc/cesium/issues/2271)
 
 ### 1.13 - 2015-09-01
