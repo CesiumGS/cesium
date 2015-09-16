@@ -5,7 +5,6 @@ defineSuite([
         'Core/ColorGeometryInstanceAttribute',
         'Core/defaultValue',
         'Core/defined',
-        'Core/Ellipsoid',
         'Core/GeometryInstance',
         'Core/Math',
         'Core/Matrix4',
@@ -23,7 +22,6 @@ defineSuite([
         ColorGeometryInstanceAttribute,
         defaultValue,
         defined,
-        Ellipsoid,
         GeometryInstance,
         CesiumMath,
         Matrix4,
@@ -40,7 +38,6 @@ defineSuite([
 
     var scene;
     var context;
-    var ellipsoid;
     var rectangle;
     var primitives;
 
@@ -48,7 +45,6 @@ defineSuite([
         scene = createScene();
         scene.primitives.destroyPrimitives = false;
         context = scene.context;
-        ellipsoid = Ellipsoid.WGS84;
         rectangle = Rectangle.fromDegrees(-80.0, 20.0, -70.0, 30.0);
     });
 
@@ -85,7 +81,6 @@ defineSuite([
         return new Primitive({
             geometryInstances : new GeometryInstance({
                 geometry : new RectangleGeometry({
-                    ellipsoid : ellipsoid,
                     rectangle : rectangle
                 }),
                 attributes : {
