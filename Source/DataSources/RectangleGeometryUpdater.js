@@ -13,6 +13,7 @@ define([
         '../Core/RectangleGeometry',
         '../Core/RectangleOutlineGeometry',
         '../Core/ShowGeometryInstanceAttribute',
+        '../Scene/GroundPrimitive',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
@@ -35,6 +36,7 @@ define([
         RectangleGeometry,
         RectangleOutlineGeometry,
         ShowGeometryInstanceAttribute,
+        GroundPrimitive,
         MaterialAppearance,
         PerInstanceColorAppearance,
         Primitive,
@@ -465,7 +467,8 @@ define([
             !Property.isConstant(rotation) || //
             !Property.isConstant(outlineWidth) || //
             !Property.isConstant(closeBottom) || //
-            !Property.isConstant(closeTop)) {
+            !Property.isConstant(closeTop) ||
+            (!defined(height) && !defined(extrudedHeight))) {
             if (!this._dynamic) {
                 this._dynamic = true;
                 this._geometryChanged.raiseEvent(this);
@@ -537,7 +540,8 @@ define([
         var geometryUpdater = this._geometryUpdater;
         var entity = geometryUpdater._entity;
         var rectangle = entity.rectangle;
-        if (!entity.isShowing || !entity.isAvailable(time) || !Property.getValueOrDefault(rectangle.show, time, true)) {
+        var isAvailable = entity.isAvailable(time);
+        if (!entity.isShowing || !isAvailable || !Property.getValueOrDefault(rectangle.show, time, true)) {
             return;
         }
 
@@ -560,17 +564,42 @@ define([
             var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
             this._material = material;
 
-            var appearance = new MaterialAppearance({
-                material : material,
-                translucent : material.isTranslucent(),
-                closed : defined(options.extrudedHeight)
-            });
+            var attributes;
+            var appearance;
+            if (geometryUpdater._materialProperty instanceof ColorMaterialProperty) {
+                appearance = new PerInstanceColorAppearance({
+                    flat : true,
+                    translucent : material.isTranslucent(),
+                    closed : defined(options.extrudedHeight)
+                });
+
+                var currentColor = Color.WHITE;
+                if (defined(geometryUpdater._materialProperty.color) && (geometryUpdater._materialProperty.color.isConstant)) {
+                    currentColor = geometryUpdater._materialProperty.color.getValue(time);
+                }
+                attributes = {
+                    show : true,
+                    color : ColorGeometryInstanceAttribute.fromColor(currentColor)
+                };
+            }
+            else {
+                appearance = new MaterialAppearance({
+                    material : material,
+                    translucent : material.isTranslucent(),
+                    closed : defined(options.extrudedHeight)
+                });
+                attributes = {
+                    show : true
+                };
+            }
+
             options.vertexFormat = appearance.vertexFormat;
 
-            this._primitive = primitives.add(new Primitive({
+            this._primitive = primitives.add(new GroundPrimitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
-                    geometry : new RectangleGeometry(options)
+                    geometry : new RectangleGeometry(options),
+                    attributes: attributes
                 }),
                 appearance : appearance,
                 asynchronous : false
