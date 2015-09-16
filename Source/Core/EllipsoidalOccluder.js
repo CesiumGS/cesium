@@ -129,6 +129,7 @@ define([
      * occluder.isScaledSpacePointVisible(scaledSpacePoint); //returns true
      */
     EllipsoidalOccluder.prototype.isScaledSpacePointVisible = function(occludeeScaledSpacePosition) {
+        // Disable occlusion culling when the viewer is under the ellipsoid to avoid false occulsion.
         if (this._distanceToLimbInScaledSpaceSquared < 0.0) {
             return true;
         }
