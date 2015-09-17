@@ -322,8 +322,16 @@ define([
 
                 if (gltf instanceof Uint8Array) {
                     // Binary glTF
+                    var result = parseBinaryGltfHeader(gltf);
+
+                    // CESIUM_binary_glTF is from the beginning of the file but
+                    //  KHR_binary_glTF is from the beginning of the binary section
+                    if (result.binaryOffset !== 0) {
+                        gltf = new Uint8Array(gltf, result.binaryOffset);
+                    }
+
                     cachedGltf = new CachedGltf({
-                        gltf : parseBinaryGltfHeader(gltf),
+                        gltf : result.glTF,
                         bgltf : gltf,
                         ready : true
                     });
@@ -762,14 +770,28 @@ define([
 
         byteOffset += sizeOfUint32; // Skip length
 
-        var jsonOffset = view.getUint32(byteOffset, true);
+        var sceneLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
-        var jsonLength = view.getUint32(byteOffset, true);
+        var sceneFormat = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
-        var json = getStringFromTypedArray(getSubarray(uint8Array, jsonOffset, jsonLength));
-        return JSON.parse(json);
+        var sceneOffset = byteOffset;
+        var binOffset = sceneOffset + sceneLength;
+
+        // If sceneFormat isn't 0 (JSON) then we are using the CESIUM_binary_glTF extension
+        // This means the last 2 integers of the header are jsonOffset & jsonLength
+        if (sceneFormat !== 0) {
+            sceneOffset = sceneLength;
+            sceneLength = sceneFormat;
+            binOffset = 0;
+        }
+
+        var json = getStringFromTypedArray(getSubarray(uint8Array, sceneOffset, sceneLength));
+        return {
+            glTF: JSON.parse(json),
+            binaryOffset: binOffset
+        };
     }
 
     /**
@@ -866,7 +888,13 @@ define([
                 var array = new Uint8Array(arrayBuffer);
                 if (containsGltfMagic(array)) {
                     // Load binary glTF
-                    cachedGltf.makeReady(parseBinaryGltfHeader(array), array);
+                    var result = parseBinaryGltfHeader(array);
+                    // CESIUM_binary_glTF is from the beginning of the file but
+                    //  KHR_binary_glTF is from the beginning of the binary section
+                    if (result.binaryOffset !== 0) {
+                        array = new Uint8Array(arrayBuffer, result.binaryOffset);
+                    }
+                    cachedGltf.makeReady(result.glTF, array);
                 } else {
                     // Load text (JSON) glTF
                     var json = getStringFromTypedArray(array);
@@ -1035,7 +1063,7 @@ define([
             if (buffers.hasOwnProperty(name)) {
                 var buffer = buffers[name];
 
-                if (name === 'CESIUM_binary_glTF') {
+                if (name === 'CESIUM_binary_glTF' || name === 'KHR_binary_glTF') {
                     // Buffer is the binary glTF file itself that is already loaded
                     var loadResources = model._loadResources;
                     loadResources.buffers[name] = model._cachedGltf.bgltf;
@@ -1081,10 +1109,19 @@ define([
                 var shader = shaders[name];
 
                 // Shader references either uri (external or base64-encoded) or bufferView
-                if (defined(shader.extensions) && defined(shader.extensions.CESIUM_binary_glTF)) {
+                if (defined(shader.extensions) &&
+                    (defined(shader.extensions.CESIUM_binary_glTF) || defined(shader.extensions.KHR_binary_glTF))) {
+                    var binary;
+                    if (defined(shader.extensions.CESIUM_binary_glTF)) {
+                        binary = shader.extensions.CESIUM_binary_glTF;
+                    }
+                    else { // defined(shader.extensions.KHR_binary_glTF)
+                        binary = shader.extensions.KHR_binary_glTF;
+                    }
+
                     model._loadResources.shaders[name] = {
                         source : undefined,
-                        bufferView : shader.extensions.CESIUM_binary_glTF.bufferView
+                        bufferView : binary.bufferView
                     };
                 } else {
                     ++model._loadResources.pendingShaderLoads;
@@ -1125,8 +1162,15 @@ define([
                 var gltfImage = images[textures[name].source];
 
                 // Image references either uri (external or base64-encoded) or bufferView
-                if (defined(gltfImage.extensions) && defined(gltfImage.extensions.CESIUM_binary_glTF)) {
-                    var binary = gltfImage.extensions.CESIUM_binary_glTF;
+                if (defined(gltfImage.extensions) &&
+                    (defined(gltfImage.extensions.CESIUM_binary_glTF) || defined(gltfImage.extensions.KHR_binary_glTF))) {
+                    var binary;
+                    if (defined(gltfImage.extensions.CESIUM_binary_glTF)) {
+                        binary = gltfImage.extensions.CESIUM_binary_glTF;
+                    }
+                    else { // defined(gltfImage.extensions.KHR_binary_glTF)
+                        binary = gltfImage.extensions.KHR_binary_glTF;
+                    }
                     model._loadResources.texturesToCreateFromBufferView.enqueue({
                         name : name,
                         image : undefined,
