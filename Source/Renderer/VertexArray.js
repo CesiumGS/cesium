@@ -95,6 +95,9 @@ define([
 
             attr.disableVertexAttribArray = function(gl) {
                 gl.disableVertexAttribArray(this.index);
+                if (this.instanceDivisor > 0) {
+                    instancedArraysExtension.vertexAttribDivisorANGLE(this.index, 0);
+                }
             };
         } else {
             // Less common case: value array for the same data for each vertex
@@ -332,6 +335,7 @@ define([
         this._numberOfVertices = numberOfVertices;
         this._gl = gl;
         this._vaoExtension = vertexArrayObject;
+        this._instancedArraysExtension = instancedArrays;
         this._vao = vao;
         this._attributes = vaAttributes;
         this._indexBuffer = indexBuffer;
@@ -669,9 +673,28 @@ define([
         return this._attributes[index];
     };
 
+    // Work around for ANGLE, where the attribute divisor seems to be part of the global state instead
+    // of the VAO state. This function is called when the vao is bound/unbound, and should be removed
+    // once the ANGLE issue is resolved.
+    function setVertexAttribDivisor(vertexArray, enabled) {
+        var attributes = vertexArray._attributes;
+        var instancedArraysExtension = vertexArray._instancedArraysExtension;
+        var length = attributes.length;
+        for ( var i = 0; i < length; ++i) {
+            var attribute = attributes[i];
+            if (attribute.enabled && attribute.instanceDivisor > 0) {
+                var divisor = enabled ? attribute.instanceDivisor : 0;
+                instancedArraysExtension.vertexAttribDivisorANGLE(attribute.index, divisor);
+            }
+        }
+    }
+
     VertexArray.prototype._bind = function() {
         if (defined(this._vao)) {
             this._vaoExtension.bindVertexArrayOES(this._vao);
+            if (defined(this._instancedArraysExtension)) {
+                setVertexAttribDivisor(this, true);
+            }
         } else {
             bind(this._gl, this._attributes, this._indexBuffer);
         }
@@ -680,6 +703,9 @@ define([
     VertexArray.prototype._unBind = function() {
         if (defined(this._vao)) {
             this._vaoExtension.bindVertexArrayOES(null);
+            if (defined(this._instancedArraysExtension)) {
+                setVertexAttribDivisor(this, false);
+            }
         } else {
             var attributes = this._attributes;
             var gl = this._gl;
