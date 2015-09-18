@@ -327,7 +327,7 @@ define([
                     // CESIUM_binary_glTF is from the beginning of the file but
                     //  KHR_binary_glTF is from the beginning of the binary section
                     if (result.binaryOffset !== 0) {
-                        gltf = new Uint8Array(gltf, result.binaryOffset);
+                        gltf = new Uint8Array(gltf.buffer, result.binaryOffset);
                     }
 
                     cachedGltf = new CachedGltf({

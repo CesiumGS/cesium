@@ -47,6 +47,7 @@ defineSuite([
     var texturedBoxSeparateUrl = './Data/Models/Box-Textured-Separate/CesiumTexturedBoxTest.gltf';
     var texturedBoxCustomUrl = './Data/Models/Box-Textured-Custom/CesiumTexturedBoxTest.gltf';
     var texturedBoxBinaryUrl = './Data/Models/Box-Textured-Binary/CesiumTexturedBoxTest.bgltf';
+    var texturedBoxKhrBinaryUrl = './Data/Models/Box-Textured-Binary/CesiumTexturedBoxTest.glb';
     var boxRtcUrl = './Data/Models/Box-RTC/Box.gltf';
     var cesiumAirUrl = './Data/Models/CesiumAir/Cesium_Air.gltf';
     var animBoxesUrl = './Data/Models/anim-test-1-boxes/anim-test-1-boxes.gltf';
@@ -489,6 +490,57 @@ defineSuite([
 
     it('loads a model with the CESIUM_binary_glTF extension as an Uint8Array using new Model', function() {
         return loadArrayBuffer(texturedBoxBinaryUrl).then(function(arrayBuffer) {
+            var model = primitives.add(new Model({
+                gltf : new Uint8Array(arrayBuffer),
+                modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
+                show : false
+            }));
+            addZoomTo(model);
+
+            return pollToPromise(function() {
+                // Render scene to progressively load the model
+                scene.renderForSpecs();
+                return model.ready;
+            }, {
+                timeout : 10000
+            }).then(function() {
+                verifyRender(model);
+                primitives.remove(model);
+            });
+        });
+    });
+
+    it('renders a model with the KHR_binary_glTF extension', function() {
+        return loadModel(texturedBoxKhrBinaryUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a model with the KHR_binary_glTF extension as an ArrayBuffer using new Model', function() {
+        return loadArrayBuffer(texturedBoxKhrBinaryUrl).then(function(arrayBuffer) {
+            var model = primitives.add(new Model({
+                gltf : arrayBuffer,
+                modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
+                show : false
+            }));
+            addZoomTo(model);
+
+            return pollToPromise(function() {
+                // Render scene to progressively load the model
+                scene.renderForSpecs();
+                return model.ready;
+            }, {
+                timeout : 10000
+            }).then(function() {
+                verifyRender(model);
+                primitives.remove(model);
+            });
+        });
+    });
+
+    it('loads a model with the KHR_binary_glTF extension as an Uint8Array using new Model', function() {
+        return loadArrayBuffer(texturedBoxKhrBinaryUrl).then(function(arrayBuffer) {
             var model = primitives.add(new Model({
                 gltf : new Uint8Array(arrayBuffer),
                 modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
