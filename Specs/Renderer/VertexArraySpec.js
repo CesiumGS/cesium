@@ -45,7 +45,8 @@ defineSuite([
             componentDatatype : ComponentDatatype.FLOAT,
             normalize : false,
             offsetInBytes : 0,
-            strideInBytes : 0
+            strideInBytes : 0,
+            instanceDivisor : 0
         // tightly packed
         }];
 
@@ -84,6 +85,7 @@ defineSuite([
         expect(va.getAttribute(0).normalize).toEqual(false);
         expect(va.getAttribute(0).offsetInBytes).toEqual(0);
         expect(va.getAttribute(0).strideInBytes).toEqual(0);
+        expect(va.getAttribute(0).instanceDivisor).toEqual(0);
 
         va._bind();
         va._unBind();
@@ -184,6 +186,7 @@ defineSuite([
         expect(va.getAttribute(0).normalize).toEqual(false);
         expect(va.getAttribute(0).offsetInBytes).toEqual(0);
         expect(va.getAttribute(0).strideInBytes).toEqual(0);
+        expect(va.getAttribute(0).instanceDivisor).toEqual(0);
 
         va = va.destroy();
     });
@@ -657,5 +660,103 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('throws if instanceDivisor is less than zero', function() {
+        var buffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 3,
+            usage : BufferUsage.STATIC_DRAW
+        });
 
+        var attributes = [{
+            vertexBuffer : buffer,
+            componentsPerAttribute : 3,
+            instanceDivisor : -1
+        }];
+
+        expect(function() {
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if all attributes are instanced', function() {
+        var buffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 3,
+            usage : BufferUsage.STATIC_DRAW
+        });
+
+        var attributes = [{
+            vertexBuffer : buffer,
+            componentsPerAttribute : 3,
+            instanceDivisor : 1
+        }];
+
+        expect(function() {
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if an attribute has an instanceDivisor and is not backed by a buffer', function() {
+        var buffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 3,
+            usage : BufferUsage.STATIC_DRAW
+        });
+
+        var attributes = [{
+            index : 0,
+            vertexBuffer : buffer,
+            componentsPerAttribute : 3
+        }, {
+            index : 1,
+            value : [0.0, 0.0, 1.0],
+            componentsPerAttribute : 3,
+            instanceDivisor : 1
+        }];
+
+        expect(function() {
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('throws when instanceDivisor is greater than zero and the instanced arrays extension is not supported.', function() {
+        // disable extension
+        var instancedArrays = context._instancedArrays;
+        context._instancedArrays = undefined;
+
+        var buffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 3,
+            usage : BufferUsage.STATIC_DRAW
+        });
+
+        var attributes = [{
+            index : 0,
+            vertexBuffer : buffer,
+            componentsPerAttribute : 3
+        }, {
+            index : 1,
+            vertexBuffer : buffer,
+            componentsPerAttribute : 3,
+            instanceDivisor : 1
+        }];
+
+        expect(function() {
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
+        }).toThrowDeveloperError();
+
+        context._instancedArrays = instancedArrays;
+    });
 }, 'WebGL');

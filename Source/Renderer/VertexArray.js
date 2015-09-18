@@ -84,11 +84,12 @@ define([
         if (hasVertexBuffer) {
             // Common case: vertex buffer for per-vertex data
             attr.vertexAttrib = function(gl) {
+                var index = this.index;
                 gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer._getBuffer());
-                gl.vertexAttribPointer(this.index, this.componentsPerAttribute, this.componentDatatype, this.normalize, this.strideInBytes, this.offsetInBytes);
-                gl.enableVertexAttribArray(this.index);
+                gl.vertexAttribPointer(index, this.componentsPerAttribute, this.componentDatatype, this.normalize, this.strideInBytes, this.offsetInBytes);
+                gl.enableVertexAttribArray(index);
                 if (this.instanceDivisor > 0) {
-                    instancedArraysExtension.vertexAttribDivisorANGLE(this.index, this.instanceDivisor);
+                    instancedArraysExtension.vertexAttribDivisorANGLE(index, this.instanceDivisor);
                 }
             };
 
@@ -179,7 +180,7 @@ define([
      *         normalize              : false,
      *         offsetInBytes          : 0,
      *         strideInBytes          : 0 // tightly packed
-     *         instanceDivisor        : 0
+     *         instanceDivisor        : 0 // not instanced
      *     }
      * ];
      * var va = new VertexArray({
@@ -275,14 +276,16 @@ define([
         var vaAttributes = [];
         var numberOfVertices = 1;   // if every attribute is backed by a single value
 
-        for (i = 0; i < attributes.length; ++i) {
+        var length = attributes.length;
+        for (i = 0; i < length; ++i) {
             addAttribute(vaAttributes, attributes[i], i, instancedArrays);
         }
 
-        for (i = 0; i < vaAttributes.length; ++i) {
+        length = vaAttributes.length;
+        for (i = 0; i < length; ++i) {
             var attribute = vaAttributes[i];
 
-            if (defined(attribute.vertexBuffer) && attribute.instanceDivisor === 0) {
+            if (defined(attribute.vertexBuffer) && (attribute.instanceDivisor === 0)) {
                 // This assumes that each vertex buffer in the vertex array has the same number of vertices.
                 var bytes = attribute.strideInBytes || (attribute.componentsPerAttribute * ComponentDatatype.getSizeInBytes(attribute.componentDatatype));
                 numberOfVertices = attribute.vertexBuffer.sizeInBytes / bytes;
@@ -293,7 +296,7 @@ define([
         //>>includeStart('debug', pragmas.debug);
         // Verify all attribute names are unique
         var uniqueIndices = {};
-        for (i = 0; i < vaAttributes.length; ++i) {
+        for (i = 0; i < length; ++i) {
             var index = vaAttributes[i].index;
             if (uniqueIndices[index]) {
                 throw new DeveloperError('Index ' + index + ' is used by more than one attribute.');
@@ -302,10 +305,13 @@ define([
         }
 
         // Verify that not all attributes are instanced
-        if (vaAttributes.length > 0) {
+        if (length > 0) {
             var allAttributesInstanced = true;
-            for (i = 0; i < vaAttributes.length; ++i) {
-                allAttributesInstanced = allAttributesInstanced && (vaAttributes[i].instanceDivisor > 0);
+            for (i = 0; i < length; ++i) {
+                if (vaAttributes[i].instanceDivisor === 0) {
+                    allAttributesInstanced = false;
+                    break;
+                }
             }
             if (allAttributesInstanced) {
                 throw new DeveloperError('At least one attribute must set instanceDivisor to 0.');

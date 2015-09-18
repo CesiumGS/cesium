@@ -833,15 +833,15 @@ define([
         }
 
         if (offset < 0) {
-            throw new DeveloperError('drawCommand.offset must be omitted or greater than or equal to zero.');
+            throw new DeveloperError('drawCommand.offset must be greater than or equal to zero.');
         }
 
         if (count < 0) {
-            throw new DeveloperError('drawCommand.count must be omitted or greater than or equal to zero.');
+            throw new DeveloperError('drawCommand.count must be greater than or equal to zero.');
         }
 
         if (instanceCount < 1) {
-            throw new DeveloperError('drawCommand.instanceCount must be omitted or greater than or equal to one');
+            throw new DeveloperError('drawCommand.instanceCount must be greater than or equal to one.');
         }
 
         if (instanceCount > 1 && !context.instancedArrays) {
