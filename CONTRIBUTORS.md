@@ -65,5 +65,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Stéphane Lozier](https://github.com/slozier)
 * [Adam Cole](https://github.com/adamdavidcole)
 * [Tiffany Lu](https://github.com/tiffanylu)
+* [Olivier Terral](https://github.com/oterral)
 
 Also see [our contributors page](http://cesiumjs.org/contributors.html) for more information.

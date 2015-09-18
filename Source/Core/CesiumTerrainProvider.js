@@ -494,8 +494,7 @@ define([
 
         var tmsY = (yTiles - y - 1);
 
-        // Use the first URL template.  In the future we should use them all.
-        var url = urlTemplates[0].replace('{z}', level).replace('{x}', x).replace('{y}', tmsY);
+        var url = urlTemplates[(x + tmsY + level) % urlTemplates.length].replace('{z}', level).replace('{x}', x).replace('{y}', tmsY);
 
         var proxy = this._proxy;
         if (defined(proxy)) {
