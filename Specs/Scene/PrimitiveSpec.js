@@ -6,6 +6,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/ColorGeometryInstanceAttribute',
         'Core/ComponentDatatype',
+        'Core/defined',
         'Core/Ellipsoid',
         'Core/Geometry',
         'Core/GeometryAttribute',
@@ -19,6 +20,7 @@ defineSuite([
         'Core/RuntimeError',
         'Core/ShowGeometryInstanceAttribute',
         'Core/Transforms',
+        'Scene/Camera',
         'Scene/MaterialAppearance',
         'Scene/OrthographicFrustum',
         'Scene/PerInstanceColorAppearance',
@@ -34,6 +36,7 @@ defineSuite([
         Cartesian3,
         ColorGeometryInstanceAttribute,
         ComponentDatatype,
+        defined,
         Ellipsoid,
         Geometry,
         GeometryAttribute,
@@ -47,6 +50,7 @@ defineSuite([
         RuntimeError,
         ShowGeometryInstanceAttribute,
         Transforms,
+        Camera,
         MaterialAppearance,
         OrthographicFrustum,
         PerInstanceColorAppearance,
@@ -327,8 +331,9 @@ defineSuite([
 
     function verifyPrimitiveRender(primitive, rectangle) {
         scene.primitives.removeAll();
-        scene.camera.viewRectangle(rectangle);
-
+        if (defined(rectangle)){
+            scene.camera.viewRectangle(rectangle);
+        }
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
         scene.primitives.add(primitive);
@@ -399,15 +404,16 @@ defineSuite([
             rtcCenter : boxGeometry.boundingSphere.center
         });
 
-        frameState.scene3DOnly = true;
-        frameState.camera.viewBoundingSphere(boxGeometry.boundingSphere);
-        us.update(context, frameState);
+        // create test camera
+        var camera = scene.camera;
+        var testCamera = new Camera(scene);
+        testCamera.viewBoundingSphere(boxGeometry.boundingSphere);
+        scene._camera = testCamera;
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        scene.frameState.scene3DOnly = true;
+        verifyPrimitiveRender(primitive);
 
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene._camera = camera;
     });
 
     it('RTC throws with more than one instance', function() {
@@ -436,7 +442,7 @@ defineSuite([
         });
 
         expect(function() {
-            primitive.update(context, frameState, []);
+            verifyPrimitiveRender(primitive);
         }).toThrowDeveloperError();
     });
 
@@ -451,7 +457,7 @@ defineSuite([
         var commands = [];
         primitive.update(context, frameState, commands);
         expect(commands.length).toEqual(1);
-        expect(commands[0].modelMatrix).toEqual(rectangleInstance1.modelMatrix);
+        expect(commands[0].modelMatrix).toEqual(Matrix4.IDENTITY);
 
         var modelMatrix = Matrix4.fromUniformScale(10.0);
         primitive.modelMatrix = modelMatrix;
