@@ -682,7 +682,7 @@ define([
         var length = attributes.length;
         for ( var i = 0; i < length; ++i) {
             var attribute = attributes[i];
-            if (attribute.enabled && attribute.instanceDivisor > 0) {
+            if (attribute.enabled && (attribute.instanceDivisor > 0)) {
                 var divisor = enabled ? attribute.instanceDivisor : 0;
                 instancedArraysExtension.vertexAttribDivisorANGLE(attribute.index, divisor);
             }
