@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-  <meta name="description" content="CZML Polygon + Time">
+  <meta name="description" content="CZML Polygon">
   <meta name="cesium-sandcastle-labels" content="CZML">
   <title>Cesium Demo</title>
   <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -31,66 +31,74 @@ function startup(Cesium) {
   var czml = [
     {
       "id" : "document",
-      "name" : "CZML Geometries: Polygon + Time",
+      "name" : "CZML Geometries: Polygon",
       "version" : "1.0"
     }, {
-      "id" : "california",
-      "availability":"2015-09-20T00:00:00Z/2015-09-20T12:00:00Z",
+      "id" : "Red polygon on surface",
       "polygon" : {
         "positions" : {
           "cartographicDegrees" : [
-            -120, 42, 50000,
-            -124, 42, 30500,
-            -124.5, 40, 3000,
-            -123, 38, 0,
-            -122, 36, 0,
-            -120.8, 34.2, 0,
-            -118, 34, 0,
-            -117, 32.2, 6000,
-            -115.5, 32.5, 1530,
-            -115, 35, 1530,
-            -120, 39, 30500
+            -115.0, 37.0, 0,
+            -115.0, 32.0, 0,
+            -107.0, 33.0, 0,
+            -102.0, 31.0, 0,
+            -102.0, 35.0, 0
           ]
         },
         "show" : true,
         "material" : {
           "solidColor" : {
             "color" : {
-              "rgba" : [255, 0, 0, 150]
+              "rgbaf" : [1,0,0,1]
             }
           }
-        },
-        "perPositionHeight" : true,
-        "extrudedHeight": 0
+        }
       }
-    },
-    {
-      "id" : "pennsylvania",
-      "availability":"2015-09-20T02:00:00Z/2015-09-20T14:00:00Z",
+    }, {
+      "id" : "Green extruded polygon",
       "polygon" : {
         "positions" : {
           "cartographicDegrees" : [
-            -75.5, 42, 0,
-            -79.8, 42, 0,
-            -79.9, 42.3, 0,
-            -80.5, 42, 0,
-            -80.5, 39.8, 0,
-            -75.7, 39.8, 0,
-            -74.5, 40.2, 0,
-            -75.2, 40.8, 0,
-            -74.7, 41.3, 0
+            -108.0, 42.0, 0,
+            -100.0, 42.0, 0,
+            -104.0, 40.0, 0
           ]
         },
         "show" : true,
         "material" : {
           "solidColor" : {
             "color" : {
-              "rgba" : [0, 255, 0, 150]
+              "rgbaf" : [0,1,0,1]
             }
           }
         },
-        "height" : 50000,
-        "extrudedHeight": 200000
+        "extrudedHeight" : 500000.0
+      }
+    }, {
+      "id" : "Orange polygon with per-position heights and outline",
+      "polygon" : {
+        "positions" : {
+          "cartographicDegrees" : [
+            -108.0, 25.0, 100000,
+             -100.0, 25.0, 100000,
+             -100.0, 30.0, 100000,
+             -108.0, 30.0, 300000
+          ]
+        },
+        "show" : true,
+        "material" : {
+          "solidColor" : {
+            "color" : {
+              "rgbaf" : [1,0.5,0,0.5]
+            }
+          }
+        },
+        "extrudedHeight" : 0,
+        "perPositionHeight" : true,
+        "outline" : true,
+        "outlineColor" : {
+          "rgbaf" : [0, 0, 0, 1]
+        }
       }
     }
   ];
