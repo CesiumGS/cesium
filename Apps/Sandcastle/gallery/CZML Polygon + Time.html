@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+  <meta name="description" content="CZML Polygon + Time">
+  <meta name="cesium-sandcastle-labels" content="CZML">
+  <title>Cesium Demo</title>
+  <script type="text/javascript" src="../Sandcastle-header.js"></script>
+  <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
+  <script type="text/javascript">
+  require.config({
+    baseUrl : '../../../Source',
+    waitSeconds : 60
+  });
+  </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+@import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+  "use strict";
+  //Sandcastle_Begin
+  var czml = [
+    {
+      "id" : "document",
+      "name" : "CZML Geometries: Polygon + Time",
+      "version" : "1.0"
+    }, {
+      "id" : "california",
+      "availability":"2015-09-20T00:00:00Z/2015-09-20T12:00:00Z",
+      "polygon" : {
+        "positions" : {
+          "cartographicDegrees" : [
+            -120, 42, 5000,
+            -124, 42, 3050,
+            -124.5, 40, 300,
+            -123, 38, 0,
+            -122, 36, 0,
+            -120.8, 34.2, 0,
+            -118, 34, 0,
+            -117, 32.2, 600,
+            -115.5, 32.5, 153,
+            -115, 35, 153,
+            -120, 39, 3050
+          ]
+        },
+        "show" : true,
+        "material" : {
+          "solidColor" : {
+            "color" : {
+              "rgba" : [255, 0, 0, 150]
+            }
+          }
+        },
+        "height" : 50000,
+        "extrudedHeight": 200000
+      }
+    },
+    {
+      "id" : "pennsylvania",
+      "availability":"2015-09-20T02:00:00Z/2015-09-20T14:00:00Z",
+      "polygon" : {
+        "positions" : {
+          "cartographicDegrees" : [
+            -75.5, 42, 0,
+            -79.8, 42, 0,
+            -79.9, 42.3, 0,
+            -80.5, 42, 0,
+            -80.5, 39.8, 0,
+            -75.7, 39.8, 0,
+            -74.5, 40.2, 0,
+            -75.2, 40.8, 0,
+            -74.7, 41.3, 0
+          ]
+        },
+        "show" : true,
+        "material" : {
+          "solidColor" : {
+            "color" : {
+              "rgba" : [0, 255, 0, 150]
+            }
+          }
+        },
+        "height" : 50000,
+        "extrudedHeight": 200000
+      }
+    }
+  ];
+
+  var viewer = new Cesium.Viewer('cesiumContainer');
+  viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
+
+  //Sandcastle_End
+  Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+  startup(Cesium);
+} else if (typeof require === "function") {
+  require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>
