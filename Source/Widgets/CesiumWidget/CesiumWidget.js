@@ -605,7 +605,10 @@ define([
 
         element.appendChild(overlay);
 
-        console.error(title + '\n' + message + '\n' + errorDetails);
+        //IE8 does not have a console object unless the dev tools are open.
+        if (typeof console !== 'undefined') {
+            console.error(title + '\n' + message + '\n' + errorDetails);
+        }
     };
 
     /**

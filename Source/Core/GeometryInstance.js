@@ -32,17 +32,17 @@ define([
      * // Create geometry for a box, and two instances that refer to it.
      * // One instance positions the box on the bottom and colored aqua.
      * // The other instance positions the box on the top and color white.
-     * var geometry = new Cesium.BoxGeometry({
+     * var geometry = Cesium.BoxGeometry.fromDimensions({
      *   vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL,
      *   dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0)
-     * }),
+     * });
      * var instanceBottom = new Cesium.GeometryInstance({
      *   geometry : geometry,
      *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
      *     Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 1000000.0), new Cesium.Matrix4()),
      *   attributes : {
-     *     color : new Cesium.ColorGeometryInstanceAttribute(Cesium.Color.AQUA)
-     *   }
+     *     color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.AQUA)
+     *   },
      *   id : 'bottom'
      * });
      * var instanceTop = new Cesium.GeometryInstance({
@@ -50,8 +50,8 @@ define([
      *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
      *     Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 3000000.0), new Cesium.Matrix4()),
      *   attributes : {
-     *     color : new Cesium.ColorGeometryInstanceAttribute(Cesium.Color.AQUA)
-     *   }
+     *     color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.AQUA)
+     *   },
      *   id : 'top'
      * });
      */

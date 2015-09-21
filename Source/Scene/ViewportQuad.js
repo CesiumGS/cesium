@@ -5,6 +5,7 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Renderer/RenderState',
         '../Renderer/ShaderSource',
         '../Shaders/ViewportQuadFS',
         './BlendingState',
@@ -16,6 +17,7 @@ define([
         defined,
         destroyObject,
         DeveloperError,
+        RenderState,
         ShaderSource,
         ViewportQuadFS,
         BlendingState,
@@ -79,7 +81,7 @@ define([
          * viewportQuad.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
-         * viewportQuad.material = Cesium.Material.fromType(Material.StripeType);
+         * viewportQuad.material = Cesium.Material.fromType(Cesium.Material.StripeType);
          *
          * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
          */
@@ -117,7 +119,7 @@ define([
 
         var rs = this._rs;
         if ((!defined(rs)) || !BoundingRectangle.equals(rs.viewport, this.rectangle)) {
-            this._rs = context.createRenderState({
+            this._rs = RenderState.fromCache({
                 blending : BlendingState.ALPHA_BLEND,
                 viewport : this.rectangle
             });

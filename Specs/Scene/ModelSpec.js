@@ -12,6 +12,7 @@ defineSuite([
         'Core/Matrix4',
         'Core/PrimitiveType',
         'Core/Transforms',
+        'Renderer/RenderState',
         'Scene/HeadingPitchRange',
         'Scene/ModelAnimationLoop',
         'Specs/createScene',
@@ -30,6 +31,7 @@ defineSuite([
         Matrix4,
         PrimitiveType,
         Transforms,
+        RenderState,
         HeadingPitchRange,
         ModelAnimationLoop,
         createScene,
@@ -196,7 +198,7 @@ defineSuite([
             gltf : texturedBoxModel.gltf
         }));
 
-        spyOn(scene.context, 'createRenderState').and.callThrough();
+        spyOn(RenderState, 'fromCache').and.callThrough();
 
         return pollToPromise(function() {
             // Render scene to progressively load the model
@@ -256,7 +258,7 @@ defineSuite([
                 }
             };
 
-            expect(scene.context.createRenderState).toHaveBeenCalledWith(rs);
+            expect(RenderState.fromCache).toHaveBeenCalledWith(rs);
             primitives.remove(model);
         });
     });

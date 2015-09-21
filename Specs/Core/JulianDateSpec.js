@@ -146,6 +146,13 @@ defineSuite([
         expect(julianDate.secondsOfDay).toEqual(34);
     });
 
+    it('Construct a date from a JavaScript Date (5)', function() {
+        var jsDate = new Date('11/17/2039 12:00:00 AM UTC');
+        var julianDate = JulianDate.fromDate(jsDate);
+        expect(julianDate.dayNumber).toEqual(2466109);
+        expect(julianDate.secondsOfDay).toEqual(43236);
+    });
+
     it('Fail to construct from an undefined JavaScript Date', function() {
         expect(function() {
             return JulianDate.fromDate(undefined);

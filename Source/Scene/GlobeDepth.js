@@ -6,7 +6,10 @@ define([
         '../Core/destroyObject',
         '../Core/PixelFormat',
         '../Renderer/ClearCommand',
+        '../Renderer/Framebuffer',
         '../Renderer/PixelDatatype',
+        '../Renderer/RenderState',
+        '../Renderer/Texture',
         '../Shaders/PostProcessFilters/PassThrough'
     ], function(
         Color,
@@ -15,7 +18,10 @@ define([
         destroyObject,
         PixelFormat,
         ClearCommand,
+        Framebuffer,
         PixelDatatype,
+        RenderState,
+        Texture,
         PassThrough) {
     "use strict";
 
@@ -77,21 +83,24 @@ define([
     }
 
     function createTextures(globeDepth, context, width, height) {
-        globeDepth._colorTexture = context.createTexture2D({
+        globeDepth._colorTexture = new Texture({
+            context : context,
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE
         });
 
-        globeDepth._depthStencilTexture = context.createTexture2D({
+        globeDepth._depthStencilTexture = new Texture({
+            context : context,
             width : width,
             height : height,
             pixelFormat : PixelFormat.DEPTH_STENCIL,
             pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8_WEBGL
         });
 
-        globeDepth._globeDepthTexture = context.createTexture2D({
+        globeDepth._globeDepthTexture = new Texture({
+            context : context,
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGBA,
@@ -105,13 +114,15 @@ define([
 
         createTextures(globeDepth, context, width, height);
 
-        globeDepth.framebuffer = context.createFramebuffer({
+        globeDepth.framebuffer = new Framebuffer({
+            context : context,
             colorTextures : [globeDepth._colorTexture],
             depthStencilTexture : globeDepth._depthStencilTexture,
             destroyAttachments : false
         });
 
-        globeDepth._copyDepthFramebuffer = context.createFramebuffer({
+        globeDepth._copyDepthFramebuffer = new Framebuffer({
+            context : context,
             colorTextures : [globeDepth._globeDepthTexture],
             destroyAttachments : false
         });
@@ -138,7 +149,7 @@ define([
                 '    gl_FragColor = czm_packDepth(texture2D(u_texture, v_textureCoordinates).r);\n' +
                 '}\n';
             globeDepth._copyDepthCommand = context.createViewportQuadCommand(fs, {
-                renderState : context.createRenderState(),
+                renderState : RenderState.fromCache(),
                 uniformMap : {
                     u_texture : function() {
                         return globeDepth._depthStencilTexture;
@@ -152,7 +163,7 @@ define([
 
         if (!defined(globeDepth._copyColorCommand)) {
             globeDepth._copyColorCommand = context.createViewportQuadCommand(PassThrough, {
-                renderState : context.createRenderState(),
+                renderState : RenderState.fromCache(),
                 uniformMap : {
                     u_texture : function() {
                         return globeDepth._colorTexture;
@@ -165,6 +176,7 @@ define([
         if (!defined(globeDepth._clearColorCommand)) {
             globeDepth._clearColorCommand = new ClearCommand({
                 color : new Color(0.0, 0.0, 0.0, 0.0),
+                stencil : 0.0,
                 owner : globeDepth
             });
         }

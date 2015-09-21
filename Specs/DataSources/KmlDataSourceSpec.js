@@ -2803,4 +2803,52 @@ defineSuite([
             expect(dataSource.entities.values.length).toBe(2);
         });
     });
+
+    it('Boolean values can use true string', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Polygon>\
+              <altitudeMode>relativeToGround</altitudeMode>\
+              <extrude>1</extrude>\
+            </Polygon>\
+          </Placemark>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.polygon.perPositionHeight.getValue()).toEqual(true);
+        });
+    });
+
+    it('Boolean values can use false string', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Polygon>\
+              <altitudeMode>relativeToGround</altitudeMode>\
+              <extrude>1</extrude>\
+            </Polygon>\
+          </Placemark>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.polygon.perPositionHeight.getValue()).toEqual(true);
+        });
+    });
+
+    it('Properly finds the root feature node when it is not the first child of the KML node', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <NetworkLinkControl>\
+            </NetworkLinkControl>\
+            <Placemark>\
+            <name>bob</name>\
+            </Placemark>\
+            </kml>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.name).toBe('bob');
+            expect(entity.label).toBeDefined();
+            expect(entity.label.text.getValue()).toBe('bob');
+        });
+    });
 });

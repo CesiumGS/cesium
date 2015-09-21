@@ -410,14 +410,6 @@ defineSuite([
         expect(sphere.intersectPlane(plane)).toEqual(Intersect.INTERSECTING);
     });
 
-    it('intersect works the same as intersectPlane in one case', function() {
-        var sphere = new BoundingSphere(Cartesian3.UNIT_X, 0.5);
-        var normal = Cartesian3.UNIT_X;
-        var position = Cartesian3.UNIT_X;
-        var plane = new Plane(normal, -Cartesian3.dot(normal, position));
-        expect(sphere.intersect(new Cartesian4(1.0, 0.0, 0.0, -1.0))).toEqual(sphere.intersectPlane(plane));
-    });
-
     it('expands to contain another sphere', function() {
         var bs1 = new BoundingSphere(Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()), 1.0);
         var bs2 = new BoundingSphere(Cartesian3.UNIT_X, 1.0);
@@ -690,6 +682,18 @@ defineSuite([
     it('computePlaneDistances throws without a direction', function() {
         expect(function() {
             BoundingSphere.computePlaneDistances(new BoundingSphere(), new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('isOccluded throws without a sphere', function() {
+        expect(function() {
+            BoundingSphere.isOccluded();
+        }).toThrowDeveloperError();
+    });
+
+    it('isOccluded throws without an occluder', function() {
+        expect(function() {
+            BoundingSphere.isOccluded(new BoundingSphere());
         }).toThrowDeveloperError();
     });
 

@@ -545,6 +545,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._homeButton = homeButton;
         this._sceneModePicker = sceneModePicker;
         this._baseLayerPicker = baseLayerPicker;
+        this._navigationHelpButton = navigationHelpButton;
         this._animation = animation;
         this._timeline = timeline;
         this._fullscreenButton = fullscreenButton;
@@ -616,6 +617,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
          * Gets the parent container.
          * @memberof Viewer.prototype
          * @type {Element}
+         * @readonly
          */
         container : {
             get : function() {
@@ -628,6 +630,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
          * {@link CreditDisplay} and potentially other things.
          * @memberof Viewer.prototype
          * @type {Element}
+         * @readonly
          */
         bottomContainer : {
             get : function() {
@@ -639,6 +642,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
          * Gets the CesiumWidget.
          * @memberof Viewer.prototype
          * @type {CesiumWidget}
+         * @readonly
          */
         cesiumWidget : {
             get : function() {
@@ -650,6 +654,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
          * Gets the selection indicator.
          * @memberof Viewer.prototype
          * @type {SelectionIndicator}
+         * @readonly
          */
         selectionIndicator : {
             get : function() {
@@ -661,6 +666,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
          * Gets the info box.
          * @memberof Viewer.prototype
          * @type {InfoBox}
+         * @readonly
          */
         infoBox : {
             get : function() {
@@ -672,6 +678,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
          * Gets the Geocoder.
          * @memberof Viewer.prototype
          * @type {Geocoder}
+         * @readonly
          */
         geocoder : {
             get : function() {
@@ -683,6 +690,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
          * Gets the HomeButton.
          * @memberof Viewer.prototype
          * @type {HomeButton}
+         * @readonly
          */
         homeButton : {
             get : function() {
@@ -694,6 +702,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
          * Gets the SceneModePicker.
          * @memberof Viewer.prototype
          * @type {SceneModePicker}
+         * @readonly
          */
         sceneModePicker : {
             get : function() {
@@ -705,6 +714,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
          * Gets the BaseLayerPicker.
          * @memberof Viewer.prototype
          * @type {BaseLayerPicker}
+         * @readonly
          */
         baseLayerPicker : {
             get : function() {
@@ -713,9 +723,22 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         },
 
         /**
+         * Gets the NavigationHelpButton.
+         * @memberof Viewer.prototype
+         * @type {NavigationHelpButton}
+         * @readonly
+         */
+        navigationHelpButton : {
+            get : function() {
+                return this._navigationHelpButton;
+            }
+        },
+
+        /**
          * Gets the Animation widget.
          * @memberof Viewer.prototype
          * @type {Animation}
+         * @readonly
          */
         animation : {
             get : function() {
@@ -727,6 +750,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
          * Gets the Timeline widget.
          * @memberof Viewer.prototype
          * @type {Timeline}
+         * @readonly
          */
         timeline : {
             get : function() {
@@ -738,6 +762,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
          * Gets the FullscreenButton.
          * @memberof Viewer.prototype
          * @type {FullscreenButton}
+         * @readonly
          */
         fullscreenButton : {
             get : function() {
@@ -749,6 +774,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
          * Gets the display used for {@link DataSource} visualization.
          * @memberof Viewer.prototype
          * @type {DataSourceDisplay}
+         * @readonly
          */
         dataSourceDisplay : {
             get : function() {
@@ -761,6 +787,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
          * This is a shortcut to [dataSourceDisplay.defaultDataSource.entities]{@link Viewer#dataSourceDisplay}.
          * @memberof Viewer.prototype
          * @type {EntityCollection}
+         * @readonly
          */
         entities : {
             get : function() {
@@ -772,6 +799,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
          * Gets the set of {@link DataSource} instances to be visualized.
          * @memberof Viewer.prototype
          * @type {DataSourceCollection}
+         * @readonly
          */
         dataSources : {
             get : function() {
@@ -783,6 +811,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
          * Gets the canvas.
          * @memberof Viewer.prototype
          * @type {Canvas}
+         * @readonly
          */
         canvas : {
             get : function() {
@@ -794,6 +823,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
          * Gets the Cesium logo element.
          * @memberof Viewer.prototype
          * @type {Element}
+         * @readonly
          */
         cesiumLogo : {
             get : function() {
@@ -805,6 +835,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
          * Gets the scene.
          * @memberof Viewer.prototype
          * @type {Scene}
+         * @readonly
          */
         scene : {
             get : function() {
@@ -857,6 +888,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
          * Gets the clock.
          * @memberof Viewer.prototype
          * @type {Clock}
+         * @readonly
          */
         clock : {
             get : function() {
@@ -868,6 +900,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
          * Gets the screen space event handler.
          * @memberof Viewer.prototype
          * @type {ScreenSpaceEventHandler}
+         * @readonly
          */
         screenSpaceEventHandler : {
             get : function() {
@@ -1047,7 +1080,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * to the provided viewer instance.
      *
      * @param {Viewer~ViewerMixin} mixin The Viewer mixin to add to this instance.
-     * @param {Object} options The options object to be passed to the mixin function.
+     * @param {Object} [options] The options object to be passed to the mixin function.
      *
      * @see viewerDragDropMixin
      */
@@ -1438,9 +1471,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * target will be the range. The heading will be determined from the offset. If the heading cannot be
      * determined from the offset, the heading will be north.</p>
      *
-     * @param {Entity|Entity[]|EntityCollection|DataSource|Promise} target The entity, array of entities, entity collection or data source to view. You can also pass a promise that resolves to one of the previously mentioned types.
+     * @param {Entity|Entity[]|EntityCollection|DataSource|Promise.<Entity|Entity[]|EntityCollection|DataSource>} target The entity, array of entities, entity collection or data source to view. You can also pass a promise that resolves to one of the previously mentioned types.
      * @param {HeadingPitchRange} [offset] The offset from the center of the entity in the local east-north-up reference frame.
-     * @returns {Promise} A Promise that resolves to true if the zoom was successful or false if the entity is not currently visualized in the scene or the zoom was cancelled.
+     * @returns {Promise.<Boolean>} A Promise that resolves to true if the zoom was successful or false if the entity is not currently visualized in the scene or the zoom was cancelled.
      */
     Viewer.prototype.zoomTo = function(target, offset) {
         return zoomToOrFly(this, target, offset, false);
@@ -1461,11 +1494,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * target will be the range. The heading will be determined from the offset. If the heading cannot be
      * determined from the offset, the heading will be north.</p>
      *
-     * @param {Entity|Entity[]|EntityCollection|DataSource|Promise} target The entity, array of entities, entity collection or data source to view. You can also pass a promise that resolves to one of the previously mentioned types.
+     * @param {Entity|Entity[]|EntityCollection|DataSource|Promise.<Entity|Entity[]|EntityCollection|DataSource>} target The entity, array of entities, entity collection or data source to view. You can also pass a promise that resolves to one of the previously mentioned types.
      * @param {Object} [options] Object with the following properties:
      * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
+     * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
      * @param {HeadingPitchRange} [options.offset] The offset from the target in the local east-north-up reference frame centered at the target.
-     * @returns {Promise} A Promise that resolves to true if the flight was successful or false if the entity is not currently visualized in the scene or the flight was cancelled.
+     * @returns {Promise.<Boolean>} A Promise that resolves to true if the flight was successful or false if the entity is not currently visualized in the scene or the flight was cancelled.
      */
     Viewer.prototype.flyTo = function(target, options) {
         return zoomToOrFly(this, target, options, true);
@@ -1590,6 +1624,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             var userOptions = defaultValue(viewer._zoomOptions, {});
             var options = {
                 duration : userOptions.duration,
+                maximumHeight : userOptions.maximumHeight,
                 complete : function() {
                     zoomPromise.resolve(true);
                 },

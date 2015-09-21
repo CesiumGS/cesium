@@ -65,6 +65,8 @@ define([
      *
      * @constructor
      *
+     * @param {Scene} scene The scene.
+     *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera.html|Cesium Sandcastle Camera Demo}
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera%20Tutorial.html">Sandcastle Example</a> from the <a href="http://cesiumjs.org/2013/02/13/Cesium-Camera-Tutorial/|Camera Tutorial}
      *
@@ -398,8 +400,17 @@ define([
     var scratchCartesian = new Cartesian3();
 
     function updateMembers(camera) {
+        var mode = camera._mode;
+
+        var heightChanged = false;
+        var height = 0.0;
+        if (mode === SceneMode.SCENE2D) {
+            height = (camera.frustum.right - camera.frustum.left) * 0.5;
+            heightChanged = height !== camera._positionCartographic.height;
+        }
+
         var position = camera._position;
-        var positionChanged = !Cartesian3.equals(position, camera.position);
+        var positionChanged = !Cartesian3.equals(position, camera.position) || heightChanged;
         if (positionChanged) {
             position = Cartesian3.clone(camera.position, camera._position);
         }
@@ -451,7 +462,6 @@ define([
             camera._positionWC = Matrix4.multiplyByPoint(transform, position, camera._positionWC);
 
             // Compute the Cartographic position of the camera.
-            var mode = camera._mode;
             if (mode === SceneMode.SCENE3D || mode === SceneMode.MORPHING) {
                 camera._positionCartographic = camera._projection.ellipsoid.cartesianToCartographic(camera._positionWC, camera._positionCartographic);
             } else {
@@ -466,7 +476,7 @@ define([
                 // In 2D, the camera height is always 12.7 million meters.
                 // The apparent height is equal to half the frustum width.
                 if (mode === SceneMode.SCENE2D) {
-                    positionENU.z = (camera.frustum.right - camera.frustum.left) * 0.5;
+                    positionENU.z = height;
                 }
 
                 camera._projection.unproject(positionENU, camera._positionCartographic);
@@ -677,6 +687,7 @@ define([
          * @memberof Camera.prototype
          *
          * @type {Number}
+         * @readonly
          */
         heading : {
             get : function () {
@@ -704,6 +715,7 @@ define([
          * @memberof Camera.prototype
          *
          * @type {Number}
+         * @readonly
          */
         pitch : {
             get : function() {
@@ -731,6 +743,7 @@ define([
          * @memberof Camera.prototype
          *
          * @type {Number}
+         * @readonly
          */
         roll : {
             get : function() {
@@ -848,6 +861,7 @@ define([
      * then the cartesian will be used. If neither is given, then the current camera position
      * will be used.
      *
+     * @param {Object} options Object with the following properties:
      * @param {Cartesian3} [options.position] The cartesian position of the camera.
      * @param {Cartographic} [options.positionCartographic] The cartographic position of the camera.
      * @param {Number} [options.heading] The heading in radians or the current heading will be used if undefined.
@@ -1529,7 +1543,7 @@ define([
      * viewer.camera.lookAt(center, new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0));
      *
      * // 2. Using a HeadingPitchRange offset
-     * var center = Cartesian3.fromDegrees(-72.0, 40.0);
+     * var center = Cesium.Cartesian3.fromDegrees(-72.0, 40.0);
      * var heading = Cesium.Math.toRadians(50.0);
      * var pitch = Cesium.Math.toRadians(-20.0);
      * var range = 5000.0;
@@ -1585,7 +1599,7 @@ define([
      * determined from the offset, the heading will be north.
      *
      * @param {Matrix4} transform The transformation matrix defining the reference frame.
-     * @param {Cartesian3|HeadingPitchRange} offset The offset from the target in a reference frame centered at the target.
+     * @param {Cartesian3|HeadingPitchRange} [offset] The offset from the target in a reference frame centered at the target.
      *
      * @exception {DeveloperError} lookAtTransform is not supported while morphing.
      *
@@ -1595,7 +1609,7 @@ define([
      * viewer.camera.lookAtTransform(transform, new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0));
      *
      * // 2. Using a HeadingPitchRange offset
-     * var transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(-72.0, 40.0));
+     * var transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-72.0, 40.0));
      * var heading = Cesium.Math.toRadians(50.0);
      * var pitch = Cesium.Math.toRadians(-20.0);
      * var range = 5000.0;
@@ -2101,7 +2115,7 @@ define([
      *
      * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
      * @param {Ray} [result] The object onto which to store the result.
-     * @returns {Object} Returns the {@link Cartesian3} position and direction of the ray.
+     * @returns {Ray} Returns the {@link Cartesian3} position and direction of the ray.
      */
     Camera.prototype.getPickRay = function(windowPosition, result) {
         //>>includeStart('debug', pragmas.debug);

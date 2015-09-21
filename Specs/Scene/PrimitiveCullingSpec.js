@@ -8,6 +8,7 @@ defineSuite([
         'Core/loadImage',
         'Core/Math',
         'Core/Occluder',
+        'Renderer/Sampler',
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
         'Scene/BillboardCollection',
@@ -34,6 +35,7 @@ defineSuite([
         loadImage,
         CesiumMath,
         Occluder,
+        Sampler,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         BillboardCollection,
@@ -360,7 +362,7 @@ defineSuite([
         });
 
         // ANGLE Workaround
-        atlas.texture.sampler = context.createSampler({
+        atlas.texture.sampler = new Sampler({
             minificationFilter : TextureMinificationFilter.NEAREST,
             magnificationFilter : TextureMagnificationFilter.NEAREST
         });

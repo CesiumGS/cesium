@@ -146,7 +146,7 @@ defineSuite([
             expect(provider.maximumLevel).toBeUndefined();
             expect(provider.minimumLevel).toBe(0);
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.rectangle).toEqual(rectangle);
+            expect(provider.rectangle).toEqualEpsilon(rectangle, CesiumMath.EPSILON14);
             expect(provider.tileDiscardPolicy).toBeUndefined();
 
             spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
@@ -223,17 +223,18 @@ defineSuite([
         });
     });
 
-    it('evaluation of pattern X Y reverseX reverseY Z', function() {
+    it('evaluation of pattern X Y reverseX reverseY Z reverseZ', function() {
         var provider = new UrlTemplateImageryProvider({
-            url: 'made/up/tms/server/{z}/{reverseY}/{y}/{reverseX}/{x}.PNG',
-            tilingScheme: new GeographicTilingScheme()
+            url: 'made/up/tms/server/{z}/{reverseZ}/{reverseY}/{y}/{reverseX}/{x}.PNG',
+            tilingScheme: new GeographicTilingScheme(),
+            maximumLevel: 6
         });
 
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
             spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url).toEqual('made/up/tms/server/2/2/1/4/3.PNG');
+                expect(url).toEqual('made/up/tms/server/2/3/2/1/4/3.PNG');
 
                 // Just return any old image.
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);

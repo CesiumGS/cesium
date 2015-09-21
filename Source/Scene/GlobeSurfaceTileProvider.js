@@ -25,8 +25,12 @@ define([
         '../Core/SphereOutlineGeometry',
         '../Core/Visibility',
         '../Core/WebMercatorProjection',
+        '../Renderer/Buffer',
         '../Renderer/BufferUsage',
+        '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
+        '../Renderer/VertexArray',
         '../Scene/BlendingState',
         '../Scene/DepthFunction',
         '../Scene/Pass',
@@ -64,8 +68,12 @@ define([
         SphereOutlineGeometry,
         Visibility,
         WebMercatorProjection,
+        Buffer,
         BufferUsage,
+        ContextLimits,
         DrawCommand,
+        RenderState,
+        VertexArray,
         BlendingState,
         DepthFunction,
         Pass,
@@ -117,8 +125,10 @@ define([
         this._terrainProvider = options.terrainProvider;
         this._imageryLayers = options.imageryLayers;
         this._surfaceShaderSet = options.surfaceShaderSet;
+
         this._renderState = undefined;
         this._blendRenderState = undefined;
+        this._pickRenderState = undefined;
 
         this._errorEvent = new Event();
 
@@ -132,7 +142,9 @@ define([
         this._tilesToRenderByTextureCount = [];
         this._drawCommands = [];
         this._uniformMaps = [];
+        this._pickCommands = [];
         this._usedDrawCommands = 0;
+        this._usedPickCommands = 0;
 
         this._debug = {
             wireframe : false,
@@ -327,18 +339,17 @@ define([
      */
     GlobeSurfaceTileProvider.prototype.endUpdate = function(context, frameState, commandList) {
         if (!defined(this._renderState)) {
-            this._renderState = context.createRenderState({ // Write color and depth
+            this._renderState = RenderState.fromCache({ // Write color and depth
                 cull : {
                     enabled : true
                 },
                 depthTest : {
-                    enabled : true
+                    enabled : true,
+                    func : DepthFunction.LESS
                 }
             });
-        }
 
-        if (!defined(this._blendRenderState)) {
-            this._blendRenderState = context.createRenderState({ // Write color and depth
+            this._blendRenderState = RenderState.fromCache({ // Write color and depth
                 cull : {
                     enabled : true
                 },
@@ -350,10 +361,7 @@ define([
             });
         }
 
-        this._renderState.depthTest.enabled = frameState.mode === SceneMode.SCENE3D || frameState.mode === SceneMode.COLUMBUS_VIEW;
-        this._blendRenderState.depthTest.enabled = this._renderState.depthTest.enabled;
-
-        // And the tile render commands to the command list, sorted by texture count.
+        // Add the tile render commands to the command list, sorted by texture count.
         var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
         for (var textureCountIndex = 0, textureCountLength = tilesToRenderByTextureCount.length; textureCountIndex < textureCountLength; ++textureCountIndex) {
             var tilesToRender = tilesToRenderByTextureCount[textureCountIndex];
@@ -364,6 +372,39 @@ define([
             for (var tileIndex = 0, tileLength = tilesToRender.length; tileIndex < tileLength; ++tileIndex) {
                 addDrawCommandsForTile(this, tilesToRender[tileIndex], context, frameState, commandList);
             }
+        }
+    };
+
+    /**
+     * Adds draw commands for tiles rendered in the previous frame for a pick pass.
+     *
+     * @param {Context} context The rendering context.
+     * @param {FrameState} frameState The frame state.
+     * @param {DrawCommand[]} commandList An array of rendering commands.  This method may push
+     *        commands into this array.
+     */
+    GlobeSurfaceTileProvider.prototype.updateForPick = function(context, frameState, commandList) {
+        if (!defined(this._pickRenderState)) {
+            this._pickRenderState = RenderState.fromCache({
+                colorMask : {
+                    red : false,
+                    green : false,
+                    blue : false,
+                    alpha : false
+                },
+                depthTest : {
+                    enabled : true
+                }
+            });
+        }
+
+        this._usedPickCommands = 0;
+        var drawCommands = this._drawCommands;
+
+        // Add the tile pick commands from the tiles drawn last frame.
+        var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
+        for (var i = 0, length = this._usedDrawCommands; i < length; ++i) {
+            addPickCommandsForTile(this, drawCommands[i], context, frameState, commandList);
         }
     };
 
@@ -806,8 +847,17 @@ define([
         GeometryPipeline.toWireframe(geometry);
 
         var wireframeIndices = geometry.indices;
-        var wireframeIndexBuffer = context.createIndexBuffer(wireframeIndices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
-        return context.createVertexArray(vertexArray._attributes, wireframeIndexBuffer);
+        var wireframeIndexBuffer = Buffer.createIndexBuffer({
+            context : context,
+            typedArray : wireframeIndices,
+            usage : BufferUsage.STATIC_DRAW,
+            indexDatatype : IndexDatatype.UNSIGNED_SHORT
+        });
+        return new VertexArray({
+            context : context,
+            attributes : vertexArray._attributes,
+            indexBuffer : wireframeIndexBuffer
+        });
     }
 
     var getDebugOrientedBoundingBox;
@@ -885,7 +935,7 @@ define([
 
         var viewMatrix = frameState.camera.viewMatrix;
 
-        var maxTextures = context.maximumTextureImageUnits;
+        var maxTextures = ContextLimits.maximumTextureImageUnits;
 
         var waterMaskTexture = surfaceTile.waterMaskTexture;
         var showReflectiveOcean = tileProvider.hasWaterMask && defined(waterMaskTexture);
@@ -1119,6 +1169,35 @@ define([
             renderState = otherPassesRenderState;
             initialColor = otherPassesInitialColor;
         } while (imageryIndex < imageryLen);
+    }
+
+    function addPickCommandsForTile(tileProvider, drawCommand, context, frameState, commandList) {
+        var pickCommand;
+        if (tileProvider._pickCommands.length <= tileProvider._usedPickCommands) {
+            pickCommand = new DrawCommand();
+            pickCommand.cull = false;
+
+            tileProvider._pickCommands.push(pickCommand);
+        } else {
+            pickCommand = tileProvider._pickCommands[tileProvider._usedPickCommands];
+        }
+
+        ++tileProvider._usedPickCommands;
+
+        var useWebMercatorProjection = frameState.projection instanceof WebMercatorProjection;
+
+        pickCommand.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(context, frameState.mode, useWebMercatorProjection);
+        pickCommand.renderState = tileProvider._pickRenderState;
+
+        pickCommand.owner = drawCommand.owner;
+        pickCommand.primitiveType = drawCommand.primitiveType;
+        pickCommand.vertexArray = drawCommand.vertexArray;
+        pickCommand.uniformMap = drawCommand.uniformMap;
+        pickCommand.boundingVolume = drawCommand.boundingVolume;
+        pickCommand.orientedBoundingBox = pickCommand.orientedBoundingBox;
+        pickCommand.pass = drawCommand.pass;
+
+        commandList.push(pickCommand);
     }
 
     return GlobeSurfaceTileProvider;

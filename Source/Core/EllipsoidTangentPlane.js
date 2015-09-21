@@ -37,12 +37,12 @@ define([
     /**
      * A plane tangent to the provided ellipsoid at the provided origin.
      * If origin is not on the surface of the ellipsoid, it's surface projection will be used.
-     * If origin as at the center of the ellipsoid, an exception will be thrown.
+     * If origin is at the center of the ellipsoid, an exception will be thrown.
      * @alias EllipsoidTangentPlane
      * @constructor
      *
-     * @param {Ellipsoid} ellipsoid The ellipsoid to use.
      * @param {Cartesian3} origin The point on the surface of the ellipsoid where the tangent plane touches.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use.
      *
      * @exception {DeveloperError} origin must not be at the center of the ellipsoid.
      */

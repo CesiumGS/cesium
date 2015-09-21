@@ -3,9 +3,10 @@ define(function() {
     "use strict";
 
     /**
-     * Returns true if the object is defined and not null, returns false otherwise.
-     *
      * @exports definedNotNull
+     *
+     * @param {Object} value The object.
+     * @returns {Boolean} Returns true if the object is defined and not null, returns false otherwise.
      *
      * @example
      * if (Cesium.definedNotNull(positions)) {

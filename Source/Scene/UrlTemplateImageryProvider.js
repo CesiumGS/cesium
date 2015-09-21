@@ -1,7 +1,9 @@
 /*global define*/
 define([
         '../Core/Cartesian2',
+        '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/combine',
         '../Core/Math',
         '../Core/Credit',
         '../Core/defaultValue',
@@ -9,7 +11,11 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/freezeObject',
         '../Core/GeographicTilingScheme',
+        '../Core/loadJson',
+        '../Core/loadText',
+        '../Core/loadWithXhr',
         '../Core/loadXML',
         '../Core/Rectangle',
         '../Core/TileProviderError',
@@ -18,7 +24,9 @@ define([
         './ImageryProvider'
     ], function(
         Cartesian2,
+        Cartesian3,
         Cartographic,
+        combine,
         CesiumMath,
         Credit,
         defaultValue,
@@ -26,7 +34,11 @@ define([
         defineProperties,
         DeveloperError,
         Event,
+        freezeObject,
         GeographicTilingScheme,
+        loadJson,
+        loadText,
+        loadWithXhr,
         loadXML,
         Rectangle,
         TileProviderError,
@@ -42,22 +54,40 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {String} [options.url='']  The URL template to use to request tiles.  It has the following keywords:
+     * @param {String} [options.url]  The URL template to use to request tiles.  It has the following keywords:
      * <ul>
-     *  <li> <code>{z}</code>: The level of the tile in the tiling scheme.  Level zero is the root of the quadtree pyramid.</li>
-     *  <li> <code>{x}</code>: The tile X coordinate in the tiling scheme, where 0 is the Westernmost tile.</li>
-     *  <li> <code>{y}</code>: The tile Y coordinate in the tiling scheme, where 0 is the Northernmost tile.</li>
-     *  <li> <code>{s}</code>: One of the available subdomains, used to overcome browser limits on the number of simultaneous requests per host.</li>
-     *  <li> <code>{reverseX}</code>: The tile X coordinate in the tiling scheme, where 0 is the Easternmost tile.</li>
-     *  <li> <code>{reverseY}</code>: The tile Y coordinate in the tiling scheme, where 0 is the Southernmost tile.</li>
-     *  <li> <code>{westDegrees}</code>: The Western edge of the tile in geodetic degrees.</li>
-     *  <li> <code>{southDegrees}</code>: The Southern edge of the tile in geodetic degrees.</li>
-     *  <li> <code>{eastDegrees}</code>: The Eastern edge of the tile in geodetic degrees.</li>
-     *  <li> <code>{northDegrees}</code>: The Northern edge of the tile in geodetic degrees.</li>
-     *  <li> <code>{westProjected}</code>: The Western edge of the tile in projected coordinates of the tiling scheme.</li>
-     *  <li> <code>{southProjected}</code>: The Southern edge of the tile in projected coordinates of the tiling scheme.</li>
-     *  <li> <code>{eastProjected}</code>: The Eastern edge of the tile in projected coordinates of the tiling scheme.</li>
-     *  <li> <code>{northProjected}</code>: The Northern edge of the tile in projected coordinates of the tiling scheme.</li>
+     *     <li><code>{z}</code>: The level of the tile in the tiling scheme.  Level zero is the root of the quadtree pyramid.</li>
+     *     <li><code>{x}</code>: The tile X coordinate in the tiling scheme, where 0 is the Westernmost tile.</li>
+     *     <li><code>{y}</code>: The tile Y coordinate in the tiling scheme, where 0 is the Northernmost tile.</li>
+     *     <li><code>{s}</code>: One of the available subdomains, used to overcome browser limits on the number of simultaneous requests per host.</li>
+     *     <li><code>{reverseX}</code>: The tile X coordinate in the tiling scheme, where 0 is the Easternmost tile.</li>
+     *     <li><code>{reverseY}</code>: The tile Y coordinate in the tiling scheme, where 0 is the Southernmost tile.</li>
+     *     <li><code>{reverseZ}</code>: The level of the tile in the tiling scheme, where level zero is the maximum level of the quadtree pyramid.  In order to use reverseZ, maximumLevel must be defined.</li>
+     *     <li><code>{westDegrees}</code>: The Western edge of the tile in geodetic degrees.</li>
+     *     <li><code>{southDegrees}</code>: The Southern edge of the tile in geodetic degrees.</li>
+     *     <li><code>{eastDegrees}</code>: The Eastern edge of the tile in geodetic degrees.</li>
+     *     <li><code>{northDegrees}</code>: The Northern edge of the tile in geodetic degrees.</li>
+     *     <li><code>{westProjected}</code>: The Western edge of the tile in projected coordinates of the tiling scheme.</li>
+     *     <li><code>{southProjected}</code>: The Southern edge of the tile in projected coordinates of the tiling scheme.</li>
+     *     <li><code>{eastProjected}</code>: The Eastern edge of the tile in projected coordinates of the tiling scheme.</li>
+     *     <li><code>{northProjected}</code>: The Northern edge of the tile in projected coordinates of the tiling scheme.</li>
+     *     <li><code>{width}</code>: The width of each tile in pixels.</li>
+     *     <li><code>{height}</code>: The height of each tile in pixels.</li>
+     * </ul>
+     * @param {String} [options.pickFeaturesUrl] The URL template to use to pick features.  If this property is not specified,
+     *                 {@see UrlTemplateImageryProvider#pickFeatures} will immediately returned undefined, indicating no
+     *                 features picked.  The URL template supports all of the keywords supported by the <code>url</code>
+     *                 parameter, plus the following:
+     * <ul>
+     *     <li><code>{i}</code>: The pixel column (horizontal coordinate) of the picked position, where the Westernmost pixel is 0.</li>
+     *     <li><code>{j}</code>: The pixel row (vertical coordinate) of the picked position, where the Northernmost pixel is 0.</li>
+     *     <li><code>{reverseI}</code>: The pixel column (horizontal coordinate) of the picked position, where the Easternmost pixel is 0.</li>
+     *     <li><code>{reverseJ}</code>: The pixel row (vertical coordinate) of the picked position, where the Southernmost pixel is 0.</li>
+     *     <li><code>{longitudeDegrees}</code>: The longitude of the picked position in degrees.</li>
+     *     <li><code>{latitudeDegrees}</code>: The latitude of the picked position in degrees.</li>
+     *     <li><code>{longitudeProjected}</code>: The longitude of the picked position in the projected coordinates of the tiling scheme.</li>
+     *     <li><code>{latitudeProjected}</code>: The latitude of the picked position in the projected coordinates of the tiling scheme.</li>
+     *     <li><code>{format}</code>: The format in which to get feature information, as specified in the {@see GetFeatureInfoFormat}.</li>
      * </ul>
      * @param {String|String[]} [options.subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
      *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
@@ -82,6 +112,9 @@ define([
      *                  present, will be ignored.  If this property is true, any images without an alpha channel will
      *                  be treated as if their alpha is 1.0 everywhere.  When this property is false, memory usage
      *                  and texture upload time are potentially reduced.
+     * @param {GetFeatureInfoFormat[]} [options.getFeatureInfoFormats] The formats in which to get feature information at a
+     *                                 specific location when {@see UrlTemplateImageryProvider#pickFeatures} is invoked.  If this
+     *                                 parameter is not specified, feature picking is disabled.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
@@ -124,8 +157,11 @@ define([
         //>>includeEnd('debug');
 
         this._url = options.url;
+        this._pickFeaturesUrl = options.pickFeaturesUrl;
         this._proxy = options.proxy;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
+        this._getFeatureInfoFormats = options.getFeatureInfoFormats;
+        
         this._errorEvent = new Event();
         
         this._subdomains = options.subdomains;
@@ -143,6 +179,7 @@ define([
         this._maximumLevel = options.maximumLevel;
         this._tilingScheme = defaultValue(options.tilingScheme, new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid }));
         this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
+        this._rectangle = Rectangle.intersection(this._rectangle, this._tilingScheme.rectangle);
         this._hasAlphaChannel = defaultValue(options.hasAlphaChannel, true);
 
         var credit = options.credit;
@@ -151,62 +188,9 @@ define([
         }
         this._credit = credit;
 
-        var url = this._url;
-        var parts = [];
-        var nextIndex = 0;
-        var minIndex;
-        var minTag;
-        var tagList = Object.keys(tags);
-
-        while (nextIndex < url.length) {
-            minIndex = Number.MAX_VALUE;
-            minTag = undefined;
-
-            for (var i = 0; i < tagList.length; ++i) {
-                var thisIndex = url.indexOf(tagList[i], nextIndex);
-                if (thisIndex >= 0 && thisIndex < minIndex) {
-                    minIndex = thisIndex;
-                    minTag = tagList[i];
-                }
-            }
-
-            if (!defined(minTag)) {
-                parts.push(url.substring(nextIndex));
-                nextIndex = url.length;
-            } else {
-                if (nextIndex < minIndex) {
-                    parts.push(url.substring(nextIndex, minIndex));
-                }
-                parts.push(tags[minTag]);
-                nextIndex = minIndex + minTag.length;
-            }
-        }
-
-        this._urlParts = parts;
+        this._urlParts = urlTemplateToParts(this._url, tags);
+        this._pickFeaturesUrlParts = urlTemplateToParts(this._pickFeaturesUrl, pickFeaturesTags);
     };
-
-    function buildImageUrl(imageryProvider, x, y, level) {
-        degreesScratchComputed = false;
-        projectedScratchComputed = false;
-
-        var url = '';
-        var parts = imageryProvider._urlParts;
-        for (var i = 0; i < parts.length; ++i) {
-            var part = parts[i];
-            if (typeof part === 'string') {
-                url += part;
-            } else {
-                url += encodeURIComponent(part(imageryProvider, x, y, level));
-            }
-        }
-
-        var proxy = imageryProvider._proxy;
-        if (defined(proxy)) {
-            url = proxy.getURL(url);
-        }
-
-        return url;
-    }
 
     defineProperties(UrlTemplateImageryProvider.prototype, {
         /**
@@ -218,6 +202,7 @@ define([
          *  <li> <code>{s}</code>: One of the available subdomains, used to overcome browser limits on the number of simultaneous requests per host.</li>
          *  <li> <code>{reverseX}</code>: The tile X coordinate in the tiling scheme, where 0 is the Easternmost tile.</li>
          *  <li> <code>{reverseY}</code>: The tile Y coordinate in the tiling scheme, where 0 is the Southernmost tile.</li>
+         *  <li> <code>{reverseZ}</code>: The level of the tile in the tiling scheme, where level zero is the maximum level of the quadtree pyramid.  In order to use reverseZ, maximumLevel must be defined.</li>
          *  <li> <code>{westDegrees}</code>: The Western edge of the tile in geodetic degrees.</li>
          *  <li> <code>{southDegrees}</code>: The Southern edge of the tile in geodetic degrees.</li>
          *  <li> <code>{eastDegrees}</code>: The Eastern edge of the tile in geodetic degrees.</li>
@@ -226,6 +211,8 @@ define([
          *  <li> <code>{southProjected}</code>: The Southern edge of the tile in projected coordinates of the tiling scheme.</li>
          *  <li> <code>{eastProjected}</code>: The Eastern edge of the tile in projected coordinates of the tiling scheme.</li>
          *  <li> <code>{northProjected}</code>: The Northern edge of the tile in projected coordinates of the tiling scheme.</li>
+         *  <li> <code>{width}</code>: The width of each tile in pixels.</li>
+         *  <li> <code>{height}</code>: The height of each tile in pixels.</li>
          * </ul>
          * @memberof UrlTemplateImageryProvider.prototype
          * @type {String}
@@ -234,6 +221,31 @@ define([
         url : {
             get : function() {
                 return this._url;
+            }
+        },
+
+        /**
+         * Gets the URL template to use to use to pick features.  If this property is not specified,
+         * {@see UrlTemplateImageryProvider#pickFeatures} will immediately returned undefined, indicating no
+         * features picked.  The URL template supports all of the keywords supported by the
+         * {@see UrlTemplateImageryProvider#url} property, plus the following:
+         * <ul>
+         *     <li><code>{i}</code>: The pixel column (horizontal coordinate) of the picked position, where the Westernmost pixel is 0.</li>
+         *     <li><code>{j}</code>: The pixel row (vertical coordinate) of the picked position, where the Northernmost pixel is 0.</li>
+         *     <li><code>{reverseI}</code>: The pixel column (horizontal coordinate) of the picked position, where the Easternmost pixel is 0.</li>
+         *     <li><code>{reverseJ}</code>: The pixel row (vertical coordinate) of the picked position, where the Southernmost pixel is 0.</li>
+         *     <li><code>{longitudeDegrees}</code>: The longitude of the picked position in degrees.</li>
+         *     <li><code>{latitudeDegrees}</code>: The latitude of the picked position in degrees.</li>
+         *     <li><code>{longitudeProjected}</code>: The longitude of the picked position in the projected coordinates of the tiling scheme.</li>
+         *     <li><code>{latitudeProjected}</code>: The latitude of the picked position in the projected coordinates of the tiling scheme.</li>
+         *     <li><code>{format}</code>: The format in which to get feature information, as specified in the {@see GetFeatureInfoFormat}.</li>
+         * </ul>
+         * @type {String}
+         * @readonly
+         */
+        pickFeaturesUrl : {
+            get : function() {
+                return this._pickFeaturesUrl;
             }
         },
 
@@ -429,7 +441,7 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
-     * @returns {Promise} A promise for the image that will resolve when the image is available, or
+     * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
@@ -448,14 +460,129 @@ define([
      * @param {Number} level The tile level.
      * @param {Number} longitude The longitude at which to pick features.
      * @param {Number} latitude  The latitude at which to pick features.
-     * @return {Promise} A promise for the picked features that will resolve when the asynchronous
+     * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
      *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
      *                   instances.  The array may be empty if no features are found at the given location.
      *                   It may also be undefined if picking is not supported.
      */
-    UrlTemplateImageryProvider.prototype.pickFeatures = function() {
-        return undefined;
+    UrlTemplateImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
+        if (!defined(this._pickFeaturesUrl) || this._getFeatureInfoFormats.length === 0) {
+            return undefined;
+        }
+
+        var formatIndex = 0;
+
+        var that = this;
+
+        function handleResponse(format, data) {
+            return format.callback(data);
+        }
+
+        function doRequest() {
+            if (formatIndex >= that._getFeatureInfoFormats.length) {
+                // No valid formats, so no features picked.
+                return when([]);
+            }
+
+            var format = that._getFeatureInfoFormats[formatIndex];
+            var url = buildPickFeaturesUrl(that, x, y, level, longitude, latitude, format.format);
+
+            ++formatIndex;
+
+            if (format.type === 'json') {
+                return loadJson(url).then(format.callback).otherwise(doRequest);
+            } else if (format.type === 'xml') {
+                return loadXML(url).then(format.callback).otherwise(doRequest);
+            } else if (format.type === 'text' || format.type === 'html') {
+                return loadText(url).then(format.callback).otherwise(doRequest);
+            } else {
+                return loadWithXhr({
+                    url: url,
+                    responseType: format.format
+                }).then(handleResponse.bind(undefined, format)).otherwise(doRequest);
+            }
+        }
+
+        return doRequest();
     };
+
+    function buildImageUrl(imageryProvider, x, y, level) {
+        degreesScratchComputed = false;
+        projectedScratchComputed = false;
+
+        return buildUrl(imageryProvider, imageryProvider._urlParts, function(partFunction) {
+            return partFunction(imageryProvider, x, y, level);
+        });
+    }
+
+    function buildPickFeaturesUrl(imageryProvider, x, y, level, longitude, latitude, format) {
+        degreesScratchComputed = false;
+        projectedScratchComputed = false;
+        ijScratchComputed = false;
+        longitudeLatitudeProjectedScratchComputed = false;
+
+        return buildUrl(imageryProvider, imageryProvider._pickFeaturesUrlParts, function(partFunction) {
+            return partFunction(imageryProvider, x, y, level, longitude, latitude, format);
+        });
+    }
+
+    function buildUrl(imageryProvider, parts, partFunctionInvoker) {
+        var url = '';
+
+        for (var i = 0; i < parts.length; ++i) {
+            var part = parts[i];
+            if (typeof part === 'string') {
+                url += part;
+            } else {
+                url += encodeURIComponent(partFunctionInvoker(part));
+            }
+        }
+
+        var proxy = imageryProvider._proxy;
+        if (defined(proxy)) {
+            url = proxy.getURL(url);
+        }
+
+        return url;
+    }
+
+    function urlTemplateToParts(url, tags) {
+        if (!defined(url)) {
+            return undefined;
+        }
+
+        var parts = [];
+        var nextIndex = 0;
+        var minIndex;
+        var minTag;
+        var tagList = Object.keys(tags);
+
+        while (nextIndex < url.length) {
+            minIndex = Number.MAX_VALUE;
+            minTag = undefined;
+
+            for (var i = 0; i < tagList.length; ++i) {
+                var thisIndex = url.indexOf(tagList[i], nextIndex);
+                if (thisIndex >= 0 && thisIndex < minIndex) {
+                    minIndex = thisIndex;
+                    minTag = tagList[i];
+                }
+            }
+
+            if (!defined(minTag)) {
+                parts.push(url.substring(nextIndex));
+                nextIndex = url.length;
+            } else {
+                if (nextIndex < minIndex) {
+                    parts.push(url.substring(nextIndex, minIndex));
+                }
+                parts.push(tags[minTag]);
+                nextIndex = minIndex + minTag.length;
+            }
+        }
+
+        return parts;
+    }
 
     function xTag(imageryProvider, x, y, level) {
         return x;
@@ -471,6 +598,11 @@ define([
 
     function reverseYTag(imageryProvider, x, y, level) {
         return imageryProvider.tilingScheme.getNumberOfYTilesAtLevel(level) - y - 1;
+    }
+
+    function reverseZTag(imageryProvider, x, y, level) {
+        var maximumLevel = imageryProvider.maximumLevel;
+        return defined(maximumLevel) && level < maximumLevel ? maximumLevel - level - 1 : level;
     }
 
     function zTag(imageryProvider, x, y, level) {
@@ -552,6 +684,99 @@ define([
         return projectedScratch.north;
     }
 
+    function widthTag(imageryProvider, x, y, level) {
+        return imageryProvider.tileWidth;
+    }
+
+    function heightTag(imageryProvider, x, y, level) {
+        return imageryProvider.tileHeight;
+    }
+
+    var ijScratchComputed = false;
+    var ijScratch = new Cartesian2();
+
+    function iTag(imageryProvider, x, y, level, longitude, latitude, format) {
+        computeIJ(imageryProvider, x, y, level, longitude, latitude);
+        return ijScratch.x;
+    }
+
+    function jTag(imageryProvider, x, y, level, longitude, latitude, format) {
+        computeIJ(imageryProvider, x, y, level, longitude, latitude);
+        return ijScratch.y;
+    }
+
+    function reverseITag(imageryProvider, x, y, level, longitude, latitude, format) {
+        computeIJ(imageryProvider, x, y, level, longitude, latitude);
+        return imageryProvider.tileWidth - ijScratch.x - 1;
+    }
+
+    function reverseJTag(imageryProvider, x, y, level, longitude, latitude, format) {
+        computeIJ(imageryProvider, x, y, level, longitude, latitude);
+        return imageryProvider.tileHeight - ijScratch.y - 1;
+    }
+
+    var rectangleScratch = new Rectangle();
+
+    function computeIJ(imageryProvider, x, y, level, longitude, latitude, format) {
+        if (ijScratchComputed) {
+            return;
+        }
+
+        computeLongitudeLatitudeProjected(imageryProvider, x, y, level, longitude, latitude);
+        var projected = longitudeLatitudeProjectedScratch;
+
+        var rectangle = imageryProvider.tilingScheme.tileXYToNativeRectangle(x, y, level, rectangleScratch);
+        ijScratch.x = (imageryProvider.tileWidth * (projected.x - rectangle.west) / rectangle.width) | 0;
+        ijScratch.y = (imageryProvider.tileHeight * (rectangle.north - projected.y) / rectangle.height) | 0;
+        ijScratchComputed = true;
+    }
+
+    function longitudeDegreesTag(imageryProvider, x, y, level, longitude, latitude, format) {
+        return CesiumMath.toDegrees(longitude);
+    }
+
+    function latitudeDegreesTag(imageryProvider, x, y, level, longitude, latitude, format) {
+        return CesiumMath.toDegrees(latitude);
+    }
+
+    var longitudeLatitudeProjectedScratchComputed = false;
+    var longitudeLatitudeProjectedScratch = new Cartesian3();
+
+    function longitudeProjectedTag(imageryProvider, x, y, level, longitude, latitude, format) {
+        computeLongitudeLatitudeProjected(imageryProvider, x, y, level, longitude, latitude);
+        return longitudeLatitudeProjectedScratch.x;
+    }
+
+    function latitudeProjectedTag(imageryProvider, x, y, level, longitude, latitude, format) {
+        computeLongitudeLatitudeProjected(imageryProvider, x, y, level, longitude, latitude);
+        return longitudeLatitudeProjectedScratch.y;
+    }
+
+    var cartographicScratch = new Cartographic();
+
+    function computeLongitudeLatitudeProjected(imageryProvider, x, y, level, longitude, latitude, format) {
+        if (longitudeLatitudeProjectedScratchComputed) {
+            return;
+        }
+
+        var projected;
+        if (imageryProvider.tilingScheme instanceof GeographicTilingScheme) {
+            longitudeLatitudeProjectedScratch.x = CesiumMath.toDegrees(longitude);
+            longitudeLatitudeProjectedScratch.y = CesiumMath.toDegrees(latitude);
+        } else {
+            var cartographic = cartographicScratch;
+            cartographic.longitude = longitude;
+            cartographic.latitude = latitude;
+            projected = imageryProvider.tilingScheme.projection.project(cartographic, longitudeLatitudeProjectedScratch);
+        }
+
+        longitudeLatitudeProjectedScratchComputed = true;
+    }
+
+    function formatTag(imageryProvider, x, y, level, longitude, latitude, format) {
+        return format;
+    }
+
     var tags = {
         '{x}': xTag,
         '{y}': yTag,
@@ -559,6 +784,7 @@ define([
         '{s}': sTag,
         '{reverseX}': reverseXTag,
         '{reverseY}': reverseYTag,
+        '{reverseZ}': reverseZTag,
         '{westDegrees}': westDegreesTag,
         '{southDegrees}': southDegreesTag,
         '{eastDegrees}': eastDegreesTag,
@@ -566,8 +792,22 @@ define([
         '{westProjected}': westProjectedTag,
         '{southProjected}': southProjectedTag,
         '{eastProjected}': eastProjectedTag,
-        '{northProjected}': northProjectedTag
+        '{northProjected}': northProjectedTag,
+        '{width}': widthTag,
+        '{height}': heightTag
     };
+
+    var pickFeaturesTags = combine(tags, {
+        '{i}' : iTag,
+        '{j}' : jTag,
+        '{reverseI}' : reverseITag,
+        '{reverseJ}' : reverseJTag,
+        '{longitudeDegrees}' : longitudeDegreesTag,
+        '{latitudeDegrees}' : latitudeDegreesTag,
+        '{longitudeProjected}' : longitudeProjectedTag,
+        '{latitudeProjected}' : latitudeProjectedTag,
+        '{format}' : formatTag
+    });
 
     return UrlTemplateImageryProvider;
 });

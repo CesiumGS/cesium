@@ -25,7 +25,7 @@ define([
      * @alias Clock
      * @constructor
      *
-     * @param {Object} options Object with the following properties:
+     * @param {Object} [options] Object with the following properties:
      * @param {JulianDate} [options.startTime] The start time of the clock.
      * @param {JulianDate} [options.stopTime] The stop time of the clock.
      * @param {JulianDate} [options.currentTime] The current time.
@@ -150,6 +150,7 @@ define([
 
         /**
          * An {@link Event} that is fired whenever <code>tick</code>.
+         * @type {Event}
          */
         this.onTick = new Event();
 
