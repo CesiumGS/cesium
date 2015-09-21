@@ -45,6 +45,7 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
+    var context;
     var camera;
     var billboards;
     var heightReferenceSupported;
@@ -57,6 +58,7 @@ defineSuite([
 
     beforeAll(function() {
         scene = createScene();
+        context = scene.context;
         camera = scene.camera;
 
         heightReferenceSupported = defined(scene._globeDepth) && scene._globeDepth.supported && ContextLimits.maximumVertexTextureImageUnits > 0;
@@ -783,6 +785,25 @@ defineSuite([
         billboards.debugShowBoundingVolume = true;
 
         expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+    });
+
+    it('renders billboards when instancing is disabled', function() {
+        // disable extension
+        var instancedArrays = context._instancedArrays;
+        context._instancedArrays = undefined;
+
+        billboards.add({
+            position : Cartesian3.ZERO,
+            image : greenImage
+        });
+        billboards.add({
+            position : new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
+            image : blueImage
+        });
+
+        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]); // instancing
+
+        context._instancedArrays = instancedArrays;
     });
 
     it('updates 10% of billboards', function() {

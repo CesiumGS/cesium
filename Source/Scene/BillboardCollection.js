@@ -189,6 +189,9 @@ define([
         this._compiledShaderPixelOffsetScaleByDistance = false;
         this._compiledShaderPixelOffsetScaleByDistancePick = false;
 
+        this._compiledShaderInstanced = false;
+        this._compiledShaderInstancedPick = false;
+
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
 
         this._maxSize = 0.0;
@@ -1167,13 +1170,13 @@ define([
      * @exception {RuntimeError} image with id must be in the atlas.
      */
     BillboardCollection.prototype.update = function(context, frameState, commandList) {
-        this._instanced = context.instancedArrays;
-        attributeLocations = this._instanced ? attributeLocationsInstanced : attributeLocationsBatched;
-        getIndexBuffer = this._instanced ? getIndexBufferInstanced : getIndexBufferBatched;
-
         removeBillboards(this);
         var billboards = this._billboards;
         var billboardsLength = billboards.length;
+
+        this._instanced = context.instancedArrays && (billboardsLength > 1);
+        attributeLocations = this._instanced ? attributeLocationsInstanced : attributeLocationsBatched;
+        getIndexBuffer = this._instanced ? getIndexBufferInstanced : getIndexBufferBatched;
 
         var textureAtlas = this._textureAtlas;
         if (!defined(textureAtlas)) {
@@ -1356,11 +1359,12 @@ define([
             }
 
             if (!defined(this._sp) ||
-                    (this._shaderRotation && !this._compiledShaderRotation) ||
-                    (this._shaderAlignedAxis && !this._compiledShaderAlignedAxis) ||
-                    (this._shaderScaleByDistance && !this._compiledShaderScaleByDistance) ||
-                    (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistance) ||
-                    (this._shaderPixelOffsetScaleByDistance && !this._compiledShaderPixelOffsetScaleByDistance)) {
+                    (this._shaderRotation !== this._compiledShaderRotation) ||
+                    (this._shaderAlignedAxis !== this._compiledShaderAlignedAxis) ||
+                    (this._shaderScaleByDistance !== this._compiledShaderScaleByDistance) ||
+                    (this._shaderTranslucencyByDistance !== this._compiledShaderTranslucencyByDistance) ||
+                    (this._shaderPixelOffsetScaleByDistance !== this._compiledShaderPixelOffsetScaleByDistance) ||
+                    (this._instanced !== this._compiledShaderInstanced)) {
 
                 vs = new ShaderSource({
                     sources : [BillboardCollectionVS]
@@ -1400,6 +1404,7 @@ define([
                 this._compiledShaderScaleByDistance = this._shaderScaleByDistance;
                 this._compiledShaderTranslucencyByDistance = this._shaderTranslucencyByDistance;
                 this._compiledShaderPixelOffsetScaleByDistance = this._shaderPixelOffsetScaleByDistance;
+                this._compiledShaderInstanced = this._instanced;
             }
 
             va = this._vaf.va;
@@ -1437,11 +1442,12 @@ define([
             var pickList = this._pickCommands;
 
             if (!defined(this._spPick) ||
-                    (this._shaderRotation && !this._compiledShaderRotationPick) ||
-                    (this._shaderAlignedAxis && !this._compiledShaderAlignedAxisPick) ||
-                    (this._shaderScaleByDistance && !this._compiledShaderScaleByDistancePick) ||
-                    (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistancePick) ||
-                    (this._shaderPixelOffsetScaleByDistance && !this._compiledShaderPixelOffsetScaleByDistancePick)) {
+                    (this._shaderRotation !== this._compiledShaderRotationPick) ||
+                    (this._shaderAlignedAxis !== this._compiledShaderAlignedAxisPick) ||
+                    (this._shaderScaleByDistance !== this._compiledShaderScaleByDistancePick) ||
+                    (this._shaderTranslucencyByDistance !== this._compiledShaderTranslucencyByDistancePick) ||
+                    (this._shaderPixelOffsetScaleByDistance !== this._compiledShaderPixelOffsetScaleByDistancePick) ||
+                    (this._instanced !== this._compiledShaderInstancedPick)) {
 
                 vs = new ShaderSource({
                     defines : ['RENDER_FOR_PICK'],
@@ -1487,6 +1493,7 @@ define([
                 this._compiledShaderScaleByDistancePick = this._shaderScaleByDistance;
                 this._compiledShaderTranslucencyByDistancePick = this._shaderTranslucencyByDistance;
                 this._compiledShaderPixelOffsetScaleByDistancePick = this._shaderPixelOffsetScaleByDistance;
+                this._compiledShaderInstancedPick = this._instanced;
             }
 
             va = this._vaf.va;

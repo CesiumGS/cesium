@@ -681,7 +681,9 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws if all attributes are instanced', function() {
+    // Direct3D 9 requires vertex attribute zero to not be instanced. While ANGLE can work around this, it is best
+    // to follow this convention. This test also guarantees that not all vertex attributes are instanced.
+    it('throws if vertex attribute zero is instanced', function() {
         var buffer = Buffer.createVertexBuffer({
             context : context,
             sizeInBytes : 3,
@@ -689,9 +691,14 @@ defineSuite([
         });
 
         var attributes = [{
+            index : 0,
             vertexBuffer : buffer,
             componentsPerAttribute : 3,
             instanceDivisor : 1
+        }, {
+            index : 1,
+            vertexBuffer : buffer,
+            componentsPerAttribute : 3
         }];
 
         expect(function() {

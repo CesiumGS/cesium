@@ -11,7 +11,8 @@ define([
         '../Core/Math',
         '../Core/RuntimeError',
         './Buffer',
-        './BufferUsage'
+        './BufferUsage',
+        './ContextLimits'
     ], function(
         ComponentDatatype,
         defaultValue,
@@ -24,7 +25,8 @@ define([
         CesiumMath,
         RuntimeError,
         Buffer,
-        BufferUsage) {
+        BufferUsage,
+        ContextLimits) {
     "use strict";
 
     function addAttribute(attributes, attribute, index, instancedArraysExtension) {
@@ -62,8 +64,11 @@ define([
         if (defined(attribute.instanceDivisor) && (attribute.instanceDivisor < 0)) {
             throw new DeveloperError('attribute must have an instanceDivisor greater than or equal to zero');
         }
-        if(defined(attribute.instanceDivisor) && hasValue) {
+        if (defined(attribute.instanceDivisor) && hasValue) {
             throw new DeveloperError('attribute cannot have have an instanceDivisor if it is not backed by a buffer');
+        }
+        if (defined(attribute.instanceDivisor) && (attribute.instanceDivisor > 0) && (attribute.index === 0)) {
+            throw new DeveloperError('attribute zero cannot have an instanceDivisor greater than 0');
         }
         //>>includeEnd('debug');
 
@@ -278,6 +283,7 @@ define([
         var i;
         var vaAttributes = [];
         var numberOfVertices = 1;   // if every attribute is backed by a single value
+        var hasInstancedAttributes = false;
 
         var length = attributes.length;
         for (i = 0; i < length; ++i) {
@@ -296,6 +302,13 @@ define([
             }
         }
 
+        for (i = 0; i < length; ++i) {
+            if (vaAttributes[i].instanceDivisor > 0) {
+                hasInstancedAttributes = true;
+                break;
+            }
+        }
+
         //>>includeStart('debug', pragmas.debug);
         // Verify all attribute names are unique
         var uniqueIndices = {};
@@ -305,20 +318,6 @@ define([
                 throw new DeveloperError('Index ' + index + ' is used by more than one attribute.');
             }
             uniqueIndices[index] = true;
-        }
-
-        // Verify that not all attributes are instanced
-        if (length > 0) {
-            var allAttributesInstanced = true;
-            for (i = 0; i < length; ++i) {
-                if (vaAttributes[i].instanceDivisor === 0) {
-                    allAttributesInstanced = false;
-                    break;
-                }
-            }
-            if (allAttributesInstanced) {
-                throw new DeveloperError('At least one attribute must set instanceDivisor to 0.');
-            }
         }
         //>>includeEnd('debug');
 
@@ -333,6 +332,7 @@ define([
         }
 
         this._numberOfVertices = numberOfVertices;
+        this._hasInstancedAttributes = hasInstancedAttributes;
         this._gl = gl;
         this._vaoExtension = vertexArrayObject;
         this._instancedArraysExtension = instancedArrays;
@@ -674,17 +674,41 @@ define([
     };
 
     // Work around for ANGLE, where the attribute divisor seems to be part of the global state instead
-    // of the VAO state. This function is called when the vao is bound/unbound, and should be removed
+    // of the VAO state. This function is called when the vao is bound, and should be removed
     // once the ANGLE issue is resolved.
-    function setVertexAttribDivisor(vertexArray, enabled) {
+    var divisors = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]; // at most 16 vertex attributes
+    var hadInstancedAttributes = false;
+
+    function setVertexAttribDivisor(vertexArray) {
+        var hasInstancedAttributes = vertexArray._hasInstancedAttributes;
+        if (!hasInstancedAttributes && !hadInstancedAttributes) {
+            return;
+        }
+        hadInstancedAttributes = hasInstancedAttributes;
+
         var attributes = vertexArray._attributes;
+        var maxAttributes = ContextLimits.maximumVertexAttributes;
         var instancedArraysExtension = vertexArray._instancedArraysExtension;
-        var length = attributes.length;
-        for ( var i = 0; i < length; ++i) {
-            var attribute = attributes[i];
-            if (attribute.enabled && (attribute.instanceDivisor > 0)) {
-                var divisor = enabled ? attribute.instanceDivisor : 0;
-                instancedArraysExtension.vertexAttribDivisorANGLE(attribute.index, divisor);
+        var i;
+
+        if (hasInstancedAttributes) {
+            var length = attributes.length;
+            for (i = 0; i < length; ++i) {
+                var attribute = attributes[i];
+                if (attribute.enabled) {
+                    var divisor = attribute.instanceDivisor;
+                    var index = attribute.index;
+                    if (divisor !== divisors[index]) {
+                        instancedArraysExtension.vertexAttribDivisorANGLE(index, divisor);
+                        divisors[index] = divisor;
+                    }
+                }
+            }
+        } else {
+            for (i = 0; i < maxAttributes; ++i) {
+                if (divisors[i] > 0) {
+                    instancedArraysExtension.vertexAttribDivisorANGLE(i, 0);
+                }
             }
         }
     }
@@ -693,7 +717,7 @@ define([
         if (defined(this._vao)) {
             this._vaoExtension.bindVertexArrayOES(this._vao);
             if (defined(this._instancedArraysExtension)) {
-                setVertexAttribDivisor(this, true);
+                setVertexAttribDivisor(this);
             }
         } else {
             bind(this._gl, this._attributes, this._indexBuffer);
@@ -703,9 +727,6 @@ define([
     VertexArray.prototype._unBind = function() {
         if (defined(this._vao)) {
             this._vaoExtension.bindVertexArrayOES(null);
-            if (defined(this._instancedArraysExtension)) {
-                setVertexAttribDivisor(this, false);
-            }
         } else {
             var attributes = this._attributes;
             var gl = this._gl;
