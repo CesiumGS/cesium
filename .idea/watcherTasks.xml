@@ -15,10 +15,10 @@
       </option>
       <option name="outputFromStdout" value="false" />
       <option name="passParentEnvs" value="true" />
-      <option name="program" value="$PROJECT_DIR$/Tools/apache-ant-1.8.2/bin/ant.bat" />
+      <option name="program" value="$ProjectFileDir$/Tools/apache-ant-1.8.2/bin/ant.bat" />
       <option name="scopeName" value="Project Files" />
       <option name="trackOnlyRoot" value="false" />
-      <option name="workingDir" value="C:\Git\AnalyticalGraphicsInc\cesium" />
+      <option name="workingDir" value="$ProjectFileDir$" />
       <envs />
     </TaskOptions>
   </component>
