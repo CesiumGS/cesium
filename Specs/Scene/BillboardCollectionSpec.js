@@ -126,6 +126,7 @@ defineSuite([
         expect(b.height).not.toBeDefined();
         expect(b.id).not.toBeDefined();
         expect(b.heightReference).toEqual(HeightReference.NONE);
+        expect(b.sizeInMeters).toEqual(false);
     });
 
     it('can add and remove before first update.', function() {
@@ -157,6 +158,7 @@ defineSuite([
             pixelOffsetScaleByDistance : new NearFarScalar(1.0, 1.0, 1.0e6, 0.0),
             width : 300.0,
             height : 200.0,
+            sizeInMeters : true,
             id : 'id'
         });
 
@@ -179,6 +181,7 @@ defineSuite([
         expect(b.pixelOffsetScaleByDistance).toEqual(new NearFarScalar(1.0, 1.0, 1.0e6, 0.0));
         expect(b.width).toEqual(300.0);
         expect(b.height).toEqual(200.0);
+        expect(b.sizeInMeters).toEqual(true);
         expect(b.id).toEqual('id');
     });
 
@@ -200,6 +203,7 @@ defineSuite([
         b.scaleByDistance = new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0);
         b.translucencyByDistance = new NearFarScalar(1.0e6, 1.0, 1.0e8, 0.0);
         b.pixelOffsetScaleByDistance = new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0);
+        b.sizeInMeters = true;
 
         expect(b.show).toEqual(false);
         expect(b.position).toEqual(new Cartesian3(1.0, 2.0, 3.0));
@@ -220,10 +224,27 @@ defineSuite([
         expect(b.pixelOffsetScaleByDistance).toEqual(new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0));
         expect(b.width).toEqual(300.0);
         expect(b.height).toEqual(200.0);
+        expect(b.sizeInMeters).toEqual(true);
     });
 
     it('is not destroyed', function() {
         expect(billboards.isDestroyed()).toEqual(false);
+    });
+
+    it('renders billboard with sizeInMeters', function() {
+        billboards.add({
+            position : Cartesian3.ZERO,
+            image : greenImage,
+            width : 2.0,
+            height : 2.0,
+            sizeInMeters : true
+        });
+
+        camera.position = new Cartesian3(2.0, 0.0, 0.0);
+        expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
+
+        camera.position = new Cartesian3(1e6, 0.0, 0.0);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
     });
 
     it('disables billboard scaleByDistance', function() {
