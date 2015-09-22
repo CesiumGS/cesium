@@ -19,6 +19,7 @@ Change Log
 * Fixed issues causing the terrain and sky to disappear when the camera is near the surface. [#2415](https://github.com/AnalyticalGraphicsInc/cesium/issues/2415) and [#2271](https://github.com/AnalyticalGraphicsInc/cesium/issues/2271)
 * Changed the `ScreenSpaceCameraController.minimumZoomDistance` default from `20.0` to `1.0`.
 * Used all the template urls defined in the CesiumTerrain provider.[#3038](https://github.com/AnalyticalGraphicsInc/cesium/pull/3038)
+* Added `Billboard.sizeInMeters`. `true` sets the billboard size to be measured in meters; otherwise, the size of the billboard is measured in pixels.
 
 ### 1.13 - 2015-09-01
 

@@ -695,6 +695,13 @@ define([
             }
         },
 
+        /**
+         * Gets or sets if the billboard size is in meters or pixels. <code>true</code> to size the billboard in meters;
+         * otherwise, the size is in pixels.
+         * @memberof Billboard.prototype
+         * @type {Boolean}
+         * @default false
+         */
         sizeInMeters : {
             get : function() {
                 return this._sizeInMeters;
