@@ -18,18 +18,14 @@ defineSuite([
         'Core/RuntimeError',
         'Core/ShowGeometryInstanceAttribute',
         'Core/Transforms',
-        'Renderer/ClearCommand',
         'Scene/MaterialAppearance',
         'Scene/OrthographicFrustum',
         'Scene/PerInstanceColorAppearance',
         'Scene/SceneMode',
         'Specs/BadGeometry',
-        'Specs/createContext',
         'Specs/createFrameState',
         'Specs/createScene',
-        'Specs/pick',
-        'Specs/pollToPromise',
-        'Specs/render'
+        'Specs/pollToPromise'
     ], function(
         Primitive,
         BoxGeometry,
@@ -49,24 +45,19 @@ defineSuite([
         RuntimeError,
         ShowGeometryInstanceAttribute,
         Transforms,
-        ClearCommand,
         MaterialAppearance,
         OrthographicFrustum,
         PerInstanceColorAppearance,
         SceneMode,
         BadGeometry,
-        createContext,
         createFrameState,
         createScene,
-        pick,
-        pollToPromise,
-        render) {
+        pollToPromise) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
 
+    var scene;
     var context;
-    var frameState;
-    var us;
 
     var ellipsoid;
 
@@ -76,23 +67,21 @@ defineSuite([
     var rectangleInstance1;
     var rectangleInstance2;
 
+    var primitive;
+
     beforeAll(function() {
-        context = createContext();
-        frameState = createFrameState();
-
-        us = context.uniformState;
-        us.update(context, frameState);
-
+        scene = createScene();
+        scene.primitives.destroyPrimitives = false;
+        context = scene.context;
         ellipsoid = Ellipsoid.WGS84;
     });
 
     afterAll(function() {
-        context.destroyForSpecs();
+        scene.destroyForSpecs();
     });
 
     beforeEach(function() {
-        //Since we don't create a scene, we need to manually clean out the frameState.afterRender array before each test.
-        frameState.afterRender.length = 0;
+        scene.morphTo3D(0);
 
         rectangle1 = Rectangle.fromDegrees(-80.0, 20.0, -70.0, 30.0);
         rectangle2 = Rectangle.fromDegrees(70.0, 20.0, 80.0, 30.0);
@@ -128,8 +117,13 @@ defineSuite([
         });
     });
 
+    afterEach(function() {
+        scene.primitives.removeAll();
+        primitive = primitive && !primitive.isDestroyed() && primitive.destroy();
+    });
+
     it('default constructs', function() {
-        var primitive = new Primitive();
+        primitive = new Primitive();
         expect(primitive.geometryInstances).not.toBeDefined();
         expect(primitive.appearance).not.toBeDefined();
         expect(primitive.modelMatrix).toEqual(Matrix4.IDENTITY);
@@ -149,7 +143,7 @@ defineSuite([
         var appearance = {};
         var modelMatrix = Matrix4.fromUniformScale(5.0);
 
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : geometryInstances,
             appearance : appearance,
             modelMatrix : modelMatrix,
@@ -179,7 +173,7 @@ defineSuite([
     });
 
     it('releases geometry instances when releaseGeometryInstances is true', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
             releaseGeometryInstances : true,
@@ -187,14 +181,13 @@ defineSuite([
         });
 
         expect(primitive.geometryInstances).toBeDefined();
-        primitive.update(context, frameState, []);
+        scene.primitives.add(primitive);
+        scene.renderForSpecs();
         expect(primitive.geometryInstances).not.toBeDefined();
-
-        primitive = primitive && primitive.destroy();
     });
 
     it('does not release geometry instances when releaseGeometryInstances is false', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
             releaseGeometryInstances : false,
@@ -202,51 +195,48 @@ defineSuite([
         });
 
         expect(primitive.geometryInstances).toBeDefined();
-        primitive.update(context, frameState, []);
+        scene.primitives.add(primitive);
+        scene.renderForSpecs();
         expect(primitive.geometryInstances).toBeDefined();
-
-        primitive = primitive && primitive.destroy();
     });
 
     it('adds afterRender promise to frame state', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
             releaseGeometryInstances : false,
             asynchronous : false
         });
 
-        primitive.update(context, frameState, []);
-        expect(frameState.afterRender.length).toEqual(1);
-        frameState.afterRender[0]();
+        scene.primitives.add(primitive);
+        scene.renderForSpecs();
 
         return primitive.readyPromise.then(function(param) {
             expect(param.ready).toBe(true);
-            primitive = primitive && primitive.destroy();
         });
     });
 
     it('does not render when geometryInstances is an empty array', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : [],
             appearance : new PerInstanceColorAppearance(),
             asynchronous : false
         });
 
+        var frameState = createFrameState();
         var commands = [];
         primitive.update(context, frameState, commands);
         expect(commands.length).toEqual(0);
-
-        primitive = primitive && primitive.destroy();
     });
 
     it('does not render when show is false', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
             asynchronous : false
         });
 
+        var frameState = createFrameState();
         var commands = [];
         primitive.update(context, frameState, commands);
         expect(commands.length).toBeGreaterThan(0);
@@ -255,68 +245,58 @@ defineSuite([
         primitive.show = false;
         primitive.update(context, frameState, commands);
         expect(commands.length).toEqual(0);
-
-        primitive = primitive && primitive.destroy();
     });
 
     it('does not render other than for the color or pick pass', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
             asynchronous : false
         });
 
+        var frameState = createFrameState();
         frameState.passes.render = false;
         frameState.passes.pick = false;
 
         var commands = [];
         primitive.update(context, frameState, commands);
         expect(commands.length).toEqual(0);
-
-        frameState.passes.render = true;
-        frameState.passes.pick = false;
-
-        primitive = primitive && primitive.destroy();
     });
 
     it('does not render when scene3DOnly is true and the scene mode is SCENE2D', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
             asynchronous : false
         });
 
+        var frameState = createFrameState();
         frameState.mode = SceneMode.SCENE2D;
         frameState.scene3DOnly = true;
 
         var commands = [];
         primitive.update(context, frameState, commands);
         expect(commands.length).toEqual(0);
-
-        frameState.mode = SceneMode.SCENE3D;
-        primitive = primitive && primitive.destroy();
     });
 
     it('does not render when scene3DOnly is true and the scene mode is COLUMBUS_VIEW', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
             asynchronous : false
         });
 
+        var frameState = createFrameState();
         frameState.mode = SceneMode.COLUMBUS_VIEW;
         frameState.scene3DOnly = true;
 
         var commands = [];
         primitive.update(context, frameState, commands);
         expect(commands.length).toEqual(0);
-
-        frameState.mode = SceneMode.SCENE3D;
-        primitive = primitive && primitive.destroy();
     });
 
     it('renders in two passes for closed, translucent geometry', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : new GeometryInstance({
                 geometry : BoxGeometry.fromDimensions({
                     vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
@@ -334,95 +314,58 @@ defineSuite([
             asynchronous : false
         });
 
+        var frameState = createFrameState();
+
+        // set scene3DOnly to true so that the geometry is not split due to the IDL
+        frameState.scene3DOnly = true;
         var commands = [];
         primitive.update(context, frameState, commands);
         expect(commands.length).toEqual(2);
-
-        primitive = primitive && primitive.destroy();
     });
 
+    function verifyPrimitiveRender(primitive, rectangle) {
+        scene.primitives.removeAll();
+        scene.camera.viewRectangle(rectangle);
+
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        scene.primitives.add(primitive);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+    }
+
     it('renders in Columbus view when scene3DOnly is false', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
             asynchronous : false
         });
 
-        frameState.scene3DOnly = false;
-        frameState.mode = SceneMode.COLUMBUS_VIEW;
-        frameState.morphTime = SceneMode.getMorphTime(frameState.mode);
-        frameState.camera.update(frameState.mode);
+        scene.morphToColumbusView(0);
 
-        frameState.camera.viewRectangle(rectangle1);
-        us.update(context, frameState);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
-        frameState.camera.viewRectangle(rectangle2);
-        us.update(context, frameState);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
-        frameState = createFrameState(); // reset frame state
-        primitive = primitive && primitive.destroy();
+        verifyPrimitiveRender(primitive, rectangle1);
+        verifyPrimitiveRender(primitive, rectangle2);
     });
 
     it('renders in 2D when scene3DOnly is false', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
             asynchronous : false
         });
 
-        frameState.scene3DOnly = false;
-        frameState.mode = SceneMode.SCENE2D;
-        frameState.morphTime = SceneMode.getMorphTime(frameState.mode);
-
-        var frustum = new OrthographicFrustum();
-        frustum.right = Ellipsoid.WGS84.maximumRadius * Math.PI;
-        frustum.left = -frustum.right;
-        frustum.top = frustum.right;
-        frustum.bottom = -frustum.top;
-        frameState.camera.frustum = frustum;
-        frameState.camera.update(frameState.mode);
-
-        frameState.camera.viewRectangle(rectangle1);
-        us.update(context, frameState);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
-        frameState.camera.viewRectangle(rectangle2);
-        us.update(context, frameState);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
-        frameState = createFrameState(); // reset frame state
-        primitive = primitive && primitive.destroy();
+        scene.morphTo2D(0);
+        verifyPrimitiveRender(primitive, rectangle1);
+        verifyPrimitiveRender(primitive, rectangle2);
     });
 
     it('updates model matrix for one instance in 3D', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : rectangleInstance1,
             appearance : new PerInstanceColorAppearance(),
             asynchronous : false
         });
 
+        var frameState = createFrameState();
         var commands = [];
         primitive.update(context, frameState, commands);
         expect(commands.length).toEqual(1);
@@ -435,22 +378,21 @@ defineSuite([
         primitive.update(context, frameState, commands);
         expect(commands.length).toEqual(1);
         expect(commands[0].modelMatrix).toEqual(modelMatrix);
-
-        primitive = primitive && primitive.destroy();
     });
 
     it('updates model matrix for more than one instance in 3D with equal model matrices in 3D only scene', function() {
-        frameState.scene3DOnly = true;
-
         var modelMatrix = Matrix4.fromUniformScale(2.0);
         rectangleInstance1.modelMatrix = modelMatrix;
         rectangleInstance2.modelMatrix = modelMatrix;
 
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
             asynchronous : false
         });
+
+        var frameState = createFrameState();
+        frameState.scene3DOnly = true;
 
         var commands = [];
         primitive.update(context, frameState, commands);
@@ -464,15 +406,9 @@ defineSuite([
         primitive.update(context, frameState, commands);
         expect(commands.length).toEqual(1);
         expect(commands[0].modelMatrix).toEqual(modelMatrix);
-
-        primitive = primitive && primitive.destroy();
-
-        frameState.scene3DOnly = false;
     });
 
     it('computes model matrix when given one for a single instance and for the primitive in 3D only', function() {
-        frameState.scene3DOnly = true;
-
         var instanceModelMatrix = Matrix4.fromUniformScale(2.0);
 
         var dimensions = new Cartesian3(400000.0, 300000.0, 500000.0);
@@ -492,7 +428,7 @@ defineSuite([
                 color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
             }
         });
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : boxGeometryInstance,
             modelMatrix : primitiveModelMatrix,
             appearance : new PerInstanceColorAppearance({
@@ -504,23 +440,23 @@ defineSuite([
 
         var expectedModelMatrix = Matrix4.multiplyTransformation(primitiveModelMatrix, instanceModelMatrix, new Matrix4());
 
+        var frameState = createFrameState();
+        frameState.scene3DOnly = true;
+
         var commands = [];
         primitive.update(context, frameState, commands);
         expect(commands.length).toEqual(1);
         expect(commands[0].modelMatrix).toEqual(expectedModelMatrix);
-
-        primitive = primitive && primitive.destroy();
-
-        frameState.scene3DOnly = false;
     });
 
     it('update model matrix throws in Columbus view', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
             asynchronous : false
         });
 
+        var frameState = createFrameState();
         frameState.mode = SceneMode.COLUMBUS_VIEW;
 
         var commands = [];
@@ -535,18 +471,16 @@ defineSuite([
         expect(function() {
             primitive.update(context, frameState, commands);
         }).toThrowDeveloperError();
-
-        frameState = createFrameState(); // reset frame state
-        primitive = primitive && primitive.destroy();
     });
 
     it('update model matrix throws in 2D', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
             asynchronous : false
         });
 
+        var frameState = createFrameState();
         frameState.mode = SceneMode.SCENE2D;
 
         var commands = [];
@@ -561,19 +495,17 @@ defineSuite([
         expect(function() {
             primitive.update(context, frameState, []);
         }).toThrowDeveloperError();
-
-        frameState = createFrameState(); // reset frame state
-        primitive = primitive && primitive.destroy();
     });
 
     it('renders bounding volume with debugShowBoundingVolume', function() {
-        var scene = createScene();
-        scene.primitives.add(new Primitive({
+        primitive = new Primitive({
             geometryInstances : rectangleInstance1,
             appearance : new PerInstanceColorAppearance(),
             asynchronous : false,
             debugShowBoundingVolume : true
-        }));
+        });
+
+        scene.primitives.add(primitive);
         scene.camera.viewRectangle(rectangle1);
         var pixels = scene.renderForSpecs();
         expect(pixels[0]).not.toEqual(0);
@@ -583,65 +515,30 @@ defineSuite([
     });
 
     it('transforms to world coordinates', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
             asynchronous : false
         });
 
-        frameState.camera.viewRectangle(rectangle1);
-        us.update(context, frameState);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
-        frameState.camera.viewRectangle(rectangle2);
-        us.update(context, frameState);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
+        verifyPrimitiveRender(primitive, rectangle1);
+        verifyPrimitiveRender(primitive, rectangle2);
         expect(primitive.modelMatrix).toEqual(Matrix4.IDENTITY);
-
-        primitive = primitive && primitive.destroy();
     });
 
     it('does not transform to world coordinates', function() {
         rectangleInstance2.modelMatrix = Matrix4.clone(rectangleInstance1.modelMatrix);
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
             asynchronous : false
         });
 
-        frameState.scene3DOnly = true;
-        frameState.camera.viewRectangle(rectangle1);
-        us.update(context, frameState);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
-        frameState.camera.viewRectangle(rectangle2);
-        us.update(context, frameState);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
+        scene.frameState.scene3DOnly = true;
+        verifyPrimitiveRender(primitive, rectangle1);
+        verifyPrimitiveRender(primitive, rectangle2);
         expect(primitive.modelMatrix).not.toEqual(Matrix4.IDENTITY);
-
-        primitive = primitive && primitive.destroy();
+        scene.frameState.scene3DOnly = true;
     });
 
     it('get common per instance attributes', function() {
@@ -651,12 +548,14 @@ defineSuite([
             value : [0.5]
         });
 
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
             asynchronous : false
         });
-        primitive.update(context, frameState, []);
+
+        scene.primitives.add(primitive);
+        scene.renderForSpecs();
 
         var attributes = primitive.getGeometryInstanceAttributes('rectangle1');
         expect(attributes.color).toBeDefined();
@@ -666,178 +565,126 @@ defineSuite([
         expect(attributes.color).toBeDefined();
         expect(attributes.show).toBeDefined();
         expect(attributes.not_used).not.toBeDefined();
-
-        primitive = primitive && primitive.destroy();
     });
 
     it('modify color instance attribute', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : rectangleInstance1,
             appearance : new PerInstanceColorAppearance(),
             asynchronous : false
         });
 
-        frameState.camera.viewRectangle(rectangle1);
-        us.update(context, frameState);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, primitive);
-        var pixels = context.readPixels();
-        expect(pixels).not.toEqual([0, 0, 0, 0]);
+        scene.camera.viewRectangle(rectangle1);
+        scene.primitives.add(primitive);
+        var pixels = scene.renderForSpecs();
+        expect(pixels).not.toEqual([0, 0, 0, 255]);
 
         var attributes = primitive.getGeometryInstanceAttributes('rectangle1');
         expect(attributes.color).toBeDefined();
         attributes.color = [255, 255, 255, 255];
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, primitive);
-        var newPixels = context.readPixels();
-        expect(newPixels).not.toEqual([0, 0, 0, 0]);
+        var newPixels = scene.renderForSpecs();
+        expect(newPixels).not.toEqual([0, 0, 0, 255]);
         expect(newPixels).not.toEqual(pixels);
-
-        primitive = primitive && primitive.destroy();
     });
 
     it('modify show instance attribute', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : rectangleInstance1,
             appearance : new PerInstanceColorAppearance(),
             asynchronous : false
         });
 
-        frameState.camera.viewRectangle(rectangle1);
-        us.update(context, frameState);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(primitive);
+        scene.camera.viewRectangle(rectangle1);
+        var pixels = scene.renderForSpecs();
+        expect(pixels).not.toEqual([0, 0, 0, 255]);
 
         var attributes = primitive.getGeometryInstanceAttributes('rectangle1');
         expect(attributes.show).toBeDefined();
         attributes.show = [0];
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, primitive);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        primitive = primitive && primitive.destroy();
+        var newPixels = scene.renderForSpecs();
+        expect(newPixels).toEqual([0, 0, 0, 255]);
     });
 
     it('get bounding sphere from per instance attribute', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : rectangleInstance1,
             appearance : new PerInstanceColorAppearance(),
             asynchronous : false
         });
 
-        frameState.camera.viewRectangle(rectangle1);
-        us.update(context, frameState);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        verifyPrimitiveRender(primitive, rectangle1);
 
         var attributes = primitive.getGeometryInstanceAttributes('rectangle1');
         expect(attributes.boundingSphere).toBeDefined();
-
-        var rectangleGeometry = RectangleGeometry.createGeometry(rectangleInstance1.geometry);
-        var expected = rectangleGeometry.boundingSphere;
-        expect(attributes.boundingSphere).toEqual(expected);
-
-        primitive = primitive && primitive.destroy();
     });
 
     it('getGeometryInstanceAttributes returns same object each time', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : rectangleInstance1,
             appearance : new PerInstanceColorAppearance(),
             asynchronous : false
         });
 
-        frameState.camera.viewRectangle(rectangle1);
-        us.update(context, frameState);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        verifyPrimitiveRender(primitive, rectangle1);
 
         var attributes = primitive.getGeometryInstanceAttributes('rectangle1');
         var attributes2 = primitive.getGeometryInstanceAttributes('rectangle1');
         expect(attributes).toBe(attributes2);
-
-        primitive = primitive && primitive.destroy();
     });
 
     it('picking', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
             asynchronous : false
         });
 
-        frameState.camera.viewRectangle(rectangle1);
-        us.update(context, frameState);
+        verifyPrimitiveRender(primitive, rectangle1);
 
-        var pickObject = pick(context, frameState, primitive);
+        var pickObject = scene.pickForSpecs();
         expect(pickObject.primitive).toEqual(primitive);
         expect(pickObject.id).toEqual('rectangle1');
 
-        frameState.camera.viewRectangle(rectangle2);
-        us.update(context, frameState);
+        verifyPrimitiveRender(primitive, rectangle2);
 
-        pickObject = pick(context, frameState, primitive);
+        pickObject = scene.pickForSpecs();
         expect(pickObject.primitive).toEqual(primitive);
         expect(pickObject.id).toEqual('rectangle2');
-
-        primitive = primitive && primitive.destroy();
     });
 
     it('does not pick when allowPicking is false', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : [rectangleInstance1],
             appearance : new PerInstanceColorAppearance(),
             allowPicking : false,
             asynchronous : false
         });
 
-        frameState.camera.viewRectangle(rectangle1);
-        us.update(context, frameState);
+        verifyPrimitiveRender(primitive, rectangle1);
 
-        var pickObject = pick(context, frameState, primitive);
+        var pickObject = scene.pickForSpecs();
         expect(pickObject).not.toBeDefined();
-
-        primitive = primitive && primitive.destroy();
     });
 
     it('does not cull when cull is false', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : rectangleInstance1,
             appearance : new PerInstanceColorAppearance(),
             asynchronous : false,
             cull : false
         });
 
+        var frameState = createFrameState();
         var commands = [];
         primitive.update(context, frameState, commands);
         expect(commands[0].cull).toEqual(false);
-
-        primitive = primitive && primitive.destroy();
     });
 
     it('update throws when geometry primitive types are different', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : [
                 new GeometryInstance({
                     geometry : new Geometry({
@@ -868,13 +715,15 @@ defineSuite([
             asynchronous : false
         });
 
+        var frameState = createFrameState();
+
         expect(function() {
             primitive.update(context, frameState, []);
         }).toThrowDeveloperError();
     });
 
     it('failed geometry rejects promise and throws on next update', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : [new GeometryInstance({
                 geometry : new BadGeometry()
             })],
@@ -883,6 +732,8 @@ defineSuite([
             }),
             compressVertices : false
         });
+
+        var frameState = createFrameState();
 
         return pollToPromise(function() {
             if (frameState.afterRender.length > 0) {
@@ -904,7 +755,7 @@ defineSuite([
     });
 
     it('internally invalid asynchronous geometry resolves promise and sets ready', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : [new GeometryInstance({
                 geometry : PolygonGeometry.fromPositions({
                     positions : []
@@ -915,6 +766,8 @@ defineSuite([
             }),
             compressVertices : false
         });
+
+        var frameState = createFrameState();
 
         return pollToPromise(function() {
             if (frameState.afterRender.length > 0) {
@@ -932,7 +785,7 @@ defineSuite([
     });
 
     it('internally invalid synchronous geometry resolves promise and sets ready', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : [new GeometryInstance({
                 geometry : PolygonGeometry.fromPositions({
                     positions : []
@@ -944,6 +797,8 @@ defineSuite([
             asynchronous : false,
             compressVertices : false
         });
+
+        var frameState = createFrameState();
 
         return pollToPromise(function() {
             if (frameState.afterRender.length > 0) {
@@ -961,7 +816,7 @@ defineSuite([
     });
 
     it('shader validation', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new MaterialAppearance({
                 materialSupport : MaterialAppearance.MaterialSupport.ALL
@@ -970,35 +825,38 @@ defineSuite([
             compressVertices : false
         });
 
+        var frameState = createFrameState();
+
         expect(function() {
             primitive.update(context, frameState, []);
         }).toThrowDeveloperError();
     });
 
     it('setting per instance attribute throws when value is undefined', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : rectangleInstance1,
             appearance : new PerInstanceColorAppearance(),
             asynchronous : false
         });
 
+        var frameState = createFrameState();
         primitive.update(context, frameState, []);
         var attributes = primitive.getGeometryInstanceAttributes('rectangle1');
 
         expect(function() {
             attributes.color = undefined;
         }).toThrowDeveloperError();
-
-        primitive = primitive && primitive.destroy();
     });
 
     it('can disable picking when asynchronous', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : rectangleInstance1,
             appearance : new PerInstanceColorAppearance(),
             asynchronous : true,
             allowPicking : false
         });
+
+        var frameState = createFrameState();
 
         return pollToPromise(function() {
             primitive.update(context, frameState, []);
@@ -1011,29 +869,26 @@ defineSuite([
             expect(function() {
                 attributes.color = undefined;
             }).toThrowDeveloperError();
-
-            primitive = primitive && primitive.destroy();
         });
     });
 
     it('getGeometryInstanceAttributes throws without id', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : rectangleInstance1,
             appearance : new PerInstanceColorAppearance(),
             asynchronous : false
         });
 
-        primitive.update(context, frameState, []);
+        scene.primitives.add(primitive);
+        scene.renderForSpecs();
 
         expect(function() {
             primitive.getGeometryInstanceAttributes();
         }).toThrowDeveloperError();
-
-        primitive = primitive && primitive.destroy();
     });
 
     it('getGeometryInstanceAttributes throws if update was not called', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : rectangleInstance1,
             appearance : new PerInstanceColorAppearance(),
             asynchronous : false
@@ -1042,62 +897,56 @@ defineSuite([
         expect(function() {
             primitive.getGeometryInstanceAttributes('rectangle1');
         }).toThrowDeveloperError();
-
-        primitive = primitive && primitive.destroy();
     });
 
     it('getGeometryInstanceAttributes returns undefined if id does not exist', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : rectangleInstance1,
             appearance : new PerInstanceColorAppearance(),
             asynchronous : false
         });
 
-        primitive.update(context, frameState, []);
+        scene.primitives.add(primitive);
+        scene.renderForSpecs();
 
         expect(primitive.getGeometryInstanceAttributes('unknown')).not.toBeDefined();
-
-        primitive = primitive && primitive.destroy();
     });
 
     it('isDestroyed', function() {
-        var p = new Primitive();
-        expect(p.isDestroyed()).toEqual(false);
-        p.destroy();
-        expect(p.isDestroyed()).toEqual(true);
+        primitive = new Primitive();
+        expect(primitive.isDestroyed()).toEqual(false);
+        primitive.destroy();
+        expect(primitive.isDestroyed()).toEqual(true);
     });
 
     it('renders when using asynchronous pipeline', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : rectangleInstance1,
             appearance : new PerInstanceColorAppearance({
                 flat : true
             })
         });
 
-        frameState.camera.viewRectangle(rectangle1);
-        us.update(context, frameState);
+        var frameState = createFrameState();
 
         return pollToPromise(function() {
-            return render(context, frameState, primitive) > 0;
+            primitive.update(context, frameState, []);
+            if (frameState.afterRender.length > 0) {
+                frameState.afterRender[0]();
+            }
+            return primitive.ready;
         }).then(function() {
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-            render(context, frameState, primitive);
-            var pixels = context.readPixels();
-            expect(pixels).not.toEqual([0, 0, 0, 0]);
-
-            primitive = primitive && primitive.destroy();
+            verifyPrimitiveRender(primitive, rectangle1);
         });
     });
 
     it('destroy before asynchonous pipeline is complete', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : rectangleInstance1,
             appearance : new PerInstanceColorAppearance()
         });
 
+        var frameState = createFrameState();
         primitive.update(context, frameState, []);
 
         primitive.destroy();

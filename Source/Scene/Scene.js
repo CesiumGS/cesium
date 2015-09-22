@@ -29,6 +29,7 @@ define([
         '../Core/Occluder',
         '../Core/ShowGeometryInstanceAttribute',
         '../Renderer/ClearCommand',
+        '../Renderer/ComputeEngine',
         '../Renderer/Context',
         '../Renderer/ContextLimits',
         '../Renderer/PassState',
@@ -87,6 +88,7 @@ define([
         Occluder,
         ShowGeometryInstanceAttribute,
         ClearCommand,
+        ComputeEngine,
         Context,
         ContextLimits,
         PassState,
@@ -217,6 +219,7 @@ define([
         this._passState = new PassState(context);
         this._canvas = canvas;
         this._context = context;
+        this._computeEngine = new ComputeEngine(context);
         this._globe = undefined;
         this._primitives = new PrimitiveCollection();
         this._groundPrimitives = new PrimitiveCollection();
@@ -227,6 +230,7 @@ define([
 
         this._sunPostProcess = undefined;
 
+        this._computeCommandList = [];
         this._commandList = [];
         this._frustumCommandsList = [];
         this._overlayCommandList = [];
@@ -1029,6 +1033,7 @@ define([
     var distances = new Interval();
 
     function createPotentiallyVisibleSet(scene) {
+        var computeList = scene._computeCommandList;
         var commandList = scene._commandList;
         var overlayList = scene._overlayCommandList;
 
@@ -1053,6 +1058,8 @@ define([
                 frustumCommandsList[n].indices[p] = 0;
             }
         }
+
+        computeList.length = 0;
         overlayList.length = 0;
 
         var near = Number.MAX_VALUE;
@@ -1076,7 +1083,9 @@ define([
             var command = commandList[i];
             var pass = command.pass;
 
-            if (pass === Pass.OVERLAY) {
+            if (pass === Pass.COMPUTE) {
+                computeList.push(command);
+            } else if (pass === Pass.OVERLAY) {
                 overlayList.push(command);
             } else {
                 var boundingVolume = command.boundingVolume;
@@ -1380,8 +1389,10 @@ define([
         var renderPass = frameState.passes.render;
         var skyBoxCommand = (renderPass && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
         var skyAtmosphereCommand = (renderPass && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
-        var sunCommand = (renderPass && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
-        var sunVisible = isVisible(sunCommand, frameState);
+        var sunCommands = (renderPass && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
+        var sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
+        var sunComputeCommand = defined(sunCommands) ? sunCommands.computeCommand : undefined;
+        var sunVisible = isVisible(sunDrawCommand, frameState);
         var moonCommand = (renderPass && defined(scene.moon)) ? scene.moon.update(context, frameState) : undefined;
         var moonVisible = isVisible(moonCommand, frameState);
 
@@ -1472,7 +1483,10 @@ define([
         }
 
         if (sunVisible) {
-            sunCommand.execute(context, passState);
+            if (defined(sunComputeCommand)) {
+                sunComputeCommand.execute(scene._computeEngine);
+            }
+            sunDrawCommand.execute(context, passState);
             if (scene.sunBloom) {
                 var framebuffer;
                 if (useGlobeDepthFramebuffer) {
@@ -1615,6 +1629,14 @@ define([
         }
     }
 
+    function executeComputeCommands(scene) {
+        var commandList = scene._computeCommandList;
+        var length = commandList.length;
+        for (var i = 0; i < length; ++i) {
+            commandList[i].execute(scene._computeEngine);
+        }
+    }
+
     function executeOverlayCommands(scene, passState) {
         var context = scene.context;
         var commandList = scene._overlayCommandList;
@@ -1693,6 +1715,7 @@ define([
         var context = scene.context;
         us.update(context, frameState);
 
+        scene._computeCommandList.length = 0;
         scene._commandList.length = 0;
         scene._overlayCommandList.length = 0;
 
@@ -1704,6 +1727,7 @@ define([
         passState.blendingEnabled = undefined;
         passState.scissorTest = undefined;
 
+        executeComputeCommands(scene);
         executeCommands(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
         executeOverlayCommands(scene, passState);
 
@@ -2143,6 +2167,7 @@ define([
      */
     Scene.prototype.destroy = function() {
         this._tweens.removeAll();
+        this._computeEngine = this._computeEngine && this._computeEngine.destroy();
         this._screenSpaceCameraController = this._screenSpaceCameraController && this._screenSpaceCameraController.destroy();
         this._pickFramebuffer = this._pickFramebuffer && this._pickFramebuffer.destroy();
         this._primitives = this._primitives && this._primitives.destroy();
@@ -2154,7 +2179,6 @@ define([
         this.sun = this.sun && this.sun.destroy();
         this._sunPostProcess = this._sunPostProcess && this._sunPostProcess.destroy();
         this._depthPlane = this._depthPlane && this._depthPlane.destroy();
-
         this._transitioner.destroy();
 
         if (defined(this._globeDepth)) {

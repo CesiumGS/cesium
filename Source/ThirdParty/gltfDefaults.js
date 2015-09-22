@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        '../Core/defined'
+        '../Core/defined',
+        '../Renderer/WebGLConstants'
     ], function(
         defaultValue,
-        defined) {
+        defined,
+        WebGLConstants) {
     "use strict";
 
     function accessorDefaults(gltf) {
@@ -205,7 +207,7 @@ define([
                     }
 
                     // Backwards compatibility for glTF 0.8. primitive was renamed to mode.
-                    var defaultMode = defaultValue(primitive.primitive, WebGLRenderingContext.TRIANGLES);
+                    var defaultMode = defaultValue(primitive.primitive, WebGLConstants.TRIANGLES);
 
                     primitive.mode = defaultValue(primitive.mode, defaultMode);
                 }
@@ -280,10 +282,10 @@ define([
         for (var name in samplers) {
             if (samplers.hasOwnProperty(name)) {
                 var sampler = samplers[name];
-                sampler.magFilter = defaultValue(sampler.magFilter, WebGLRenderingContext.LINEAR);
-                sampler.minFilter = defaultValue(sampler.minFilter, WebGLRenderingContext.NEAREST_MIPMAP_LINEAR);
-                sampler.wrapS = defaultValue(sampler.wrapS, WebGLRenderingContext.REPEAT);
-                sampler.wrapT = defaultValue(sampler.wrapT, WebGLRenderingContext.REPEAT);
+                sampler.magFilter = defaultValue(sampler.magFilter, WebGLConstants.LINEAR);
+                sampler.minFilter = defaultValue(sampler.minFilter, WebGLConstants.NEAREST_MIPMAP_LINEAR);
+                sampler.wrapS = defaultValue(sampler.wrapS, WebGLConstants.REPEAT);
+                sampler.wrapT = defaultValue(sampler.wrapT, WebGLConstants.REPEAT);
             }
         }
     }
@@ -387,10 +389,10 @@ define([
         for (var name in textures) {
             if (textures.hasOwnProperty(name)) {
                 var texture = textures[name];
-                texture.format = defaultValue(texture.format, WebGLRenderingContext.RGBA);
+                texture.format = defaultValue(texture.format, WebGLConstants.RGBA);
                 texture.internalFormat = defaultValue(texture.internalFormat, texture.format);
-                texture.target = defaultValue(texture.target, WebGLRenderingContext.TEXTURE_2D);
-                texture.type = defaultValue(texture.type, WebGLRenderingContext.UNSIGNED_BYTE);
+                texture.target = defaultValue(texture.target, WebGLConstants.TEXTURE_2D);
+                texture.type = defaultValue(texture.type, WebGLConstants.UNSIGNED_BYTE);
             }
         }
     }

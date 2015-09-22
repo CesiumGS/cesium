@@ -430,8 +430,8 @@ define([
      *
      * @exception {DeveloperError} <code>loadTile</code> must not be called before the tile provider is ready.
      */
-    GlobeSurfaceTileProvider.prototype.loadTile = function(context, frameState, tile) {
-        GlobeSurfaceTile.processStateMachine(tile, context, this._terrainProvider, this._imageryLayers);
+    GlobeSurfaceTileProvider.prototype.loadTile = function(context, frameState, commandList, tile) {
+        GlobeSurfaceTile.processStateMachine(tile, context, commandList, this._terrainProvider, this._imageryLayers);
     };
 
     var boundingSphereScratch = new BoundingSphere();

@@ -205,6 +205,25 @@ defineSuite([
         expect(provider.minimumLevel).toEqual(1);
     });
 
+
+    it('when no credit is supplied, the provider adds a default credit', function() {
+        var provider = new MapboxImageryProvider({
+            url : 'made/up/mapbox/server/',
+            mapId: 'test-id'
+        });
+        expect(provider.credit.text).toEqual('© Mapbox © OpenStreetMap');
+    });
+
+    it('turns the supplied credit into a logo', function() {
+        var creditText = 'Thanks to our awesome made up source of this imagery!';
+        var providerWithCredit = new MapboxImageryProvider({
+            url : 'made/up/mapbox/server/',
+            mapId: 'test-id',
+            credit: creditText
+        });
+        expect(providerWithCredit.credit.text).toEqual(creditText);
+    });
+
     it('raises error event when image cannot be loaded', function() {
         var provider = new MapboxImageryProvider({
             url : 'made/up/mapbox/server/',

@@ -413,7 +413,7 @@ define([
         var heightChanged = false;
         var height = 0.0;
         if (mode === SceneMode.SCENE2D) {
-            height = (camera.frustum.right - camera.frustum.left) * 0.5;
+            height = camera.frustum.right - camera.frustum.left;
             heightChanged = height !== camera._positionCartographic.height;
         }
 
@@ -853,6 +853,8 @@ define([
         Matrix4.multiplyByPointAsVector(inverse, direction, this.direction);
         Matrix4.multiplyByPointAsVector(inverse, up, this.up);
         Cartesian3.cross(this.direction, this.up, this.right);
+
+        updateMembers(this);
     };
 
     var scratchSetViewCartesian = new Cartesian3();
@@ -861,6 +863,91 @@ define([
     var scratchSetViewQuaternion = new Quaternion();
     var scratchSetViewMatrix3 = new Matrix3();
     var scratchSetViewCartographic = new Cartographic();
+
+    function setView3D(camera, cartesian, cartographic, heading, pitch, roll, ellipsoid) {
+        if (!defined(cartesian)) {
+            if (defined(cartographic)) {
+                cartesian = ellipsoid.cartographicToCartesian(cartographic, scratchSetViewCartesian);
+            } else {
+                cartesian = Cartesian3.clone(camera.positionWC, scratchSetViewCartesian);
+            }
+        }
+
+        var currentTransform = Matrix4.clone(camera.transform, scratchSetViewTransform1);
+        var localTransform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, scratchSetViewTransform2);
+        camera._setTransform(localTransform);
+
+        Cartesian3.clone(Cartesian3.ZERO, camera.position);
+
+        var rotQuat = Quaternion.fromHeadingPitchRoll(heading - CesiumMath.PI_OVER_TWO, pitch, roll, scratchSetViewQuaternion);
+        var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
+
+        Matrix3.getColumn(rotMat, 0, camera.direction);
+        Matrix3.getColumn(rotMat, 2, camera.up);
+        Cartesian3.cross(camera.direction, camera.up, camera.right);
+
+        camera._setTransform(currentTransform);
+    }
+
+    function setViewCV(camera, cartesian, cartographic, heading, pitch, roll, ellipsoid, projection) {
+        var currentTransform = Matrix4.clone(camera.transform, scratchSetViewTransform1);
+        camera._setTransform(Matrix4.IDENTITY);
+
+        if (defined(cartesian) && !Cartesian3.equals(cartesian, camera.positionWC)) {
+            cartographic = ellipsoid.cartesianToCartographic(cartesian);
+        }
+
+        if (defined(cartographic)) {
+            cartesian = projection.project(cartographic, scratchSetViewCartesian);
+            Cartesian3.clone(cartesian, camera.position);
+        }
+
+        var rotQuat = Quaternion.fromHeadingPitchRoll(heading - CesiumMath.PI_OVER_TWO, pitch, roll, scratchSetViewQuaternion);
+        var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
+
+        Matrix3.getColumn(rotMat, 0, camera.direction);
+        Matrix3.getColumn(rotMat, 2, camera.up);
+        Cartesian3.cross(camera.direction, camera.up, camera.right);
+
+        camera._setTransform(currentTransform);
+    }
+
+    function setView2D(camera, cartesian, cartographic, heading, pitch, roll, ellipsoid, projection) {
+        pitch = -CesiumMath.PI_OVER_TWO;
+        roll = 0.0;
+
+        var currentTransform = Matrix4.clone(camera.transform, scratchSetViewTransform1);
+        camera._setTransform(Matrix4.IDENTITY);
+
+        if (defined(cartesian) && !Cartesian3.equals(cartesian, camera.positionWC)) {
+            cartographic = ellipsoid.cartesianToCartographic(cartesian);
+        }
+
+        if (defined(cartographic)) {
+            cartesian = projection.project(cartographic, scratchSetViewCartesian);
+            Cartesian2.clone(cartesian, camera.position);
+
+            var newLeft = -cartographic.height * 0.5;
+            var newRight = -newLeft;
+
+            var frustum = camera.frustum;
+            if (newRight > newLeft) {
+                var ratio = frustum.top / frustum.right;
+                frustum.right = newRight;
+                frustum.left = newLeft;
+                frustum.top = frustum.right * ratio;
+                frustum.bottom = -frustum.top;
+            }
+        }
+
+        var rotQuat = Quaternion.fromHeadingPitchRoll(heading - CesiumMath.PI_OVER_TWO, pitch, roll, scratchSetViewQuaternion);
+        var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
+
+        Matrix3.getColumn(rotMat, 2, camera.up);
+        Cartesian3.cross(camera.direction, camera.up, camera.right);
+
+        camera._setTransform(currentTransform);
+    }
 
     /**
      * Sets the camera position and orientation with heading, pitch and roll angles.
@@ -904,11 +991,9 @@ define([
 
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        var scene2D = this._mode === SceneMode.SCENE2D;
-
         var heading = defaultValue(options.heading, this.heading);
-        var pitch = scene2D ? -CesiumMath.PI_OVER_TWO : defaultValue(options.pitch, this.pitch);
-        var roll = scene2D ? 0.0 : defaultValue(options.roll, this.roll);
+        var pitch = defaultValue(options.pitch, this.pitch);
+        var roll = defaultValue(options.roll, this.roll);
 
         var cartesian = options.position;
         var cartographic = options.positionCartographic;
@@ -916,45 +1001,13 @@ define([
         var projection = this._projection;
         var ellipsoid = projection.ellipsoid;
 
-        if (!defined(cartesian)) {
-            if (defined(cartographic)) {
-                cartesian = ellipsoid.cartographicToCartesian(cartographic, scratchSetViewCartesian);
-            } else {
-                cartesian = Cartesian3.clone(this.positionWC, scratchSetViewCartesian);
-            }
-        }
-
-        var currentTransform = Matrix4.clone(this.transform, scratchSetViewTransform1);
-        var localTransform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, scratchSetViewTransform2);
-        this._setTransform(localTransform);
-
-        if (scene2D) {
-            Cartesian2.clone(Cartesian3.ZERO, this.position);
-
-            var cartographic2D = ellipsoid.cartesianToCartographic(cartesian, scratchSetViewCartographic);
-            var newLeft = -cartographic2D.height * 0.5;
-            var newRight = -newLeft;
-
-            var frustum = this.frustum;
-            if (newRight > newLeft) {
-                var ratio = frustum.top / frustum.right;
-                frustum.right = newRight;
-                frustum.left = newLeft;
-                frustum.top = frustum.right * ratio;
-                frustum.bottom = -frustum.top;
-            }
+        if (this._mode === SceneMode.SCENE3D) {
+            setView3D(this, cartesian, cartographic, heading, pitch, roll, ellipsoid);
+        } else if (this._mode === SceneMode.SCENE2D) {
+            setView2D(this, cartesian, cartographic, heading, pitch, roll, ellipsoid, projection);
         } else {
-            Cartesian3.clone(Cartesian3.ZERO, this.position);
+            setViewCV(this, cartesian, cartographic, heading, pitch, roll, ellipsoid, projection);
         }
-
-        var rotQuat = Quaternion.fromHeadingPitchRoll(heading - CesiumMath.PI_OVER_TWO, pitch, roll, scratchSetViewQuaternion);
-        var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
-
-        Matrix3.getColumn(rotMat, 0, this.direction);
-        Matrix3.getColumn(rotMat, 2, this.up);
-        Cartesian3.cross(this.direction, this.up, this.right);
-
-        this._setTransform(currentTransform);
     };
 
     /**
@@ -1969,7 +2022,7 @@ define([
     };
 
     /**
-     * View an rectangle on an ellipsoid or map.
+     * View a rectangle on an ellipsoid or map.
      *
      * @param {Rectangle} rectangle The rectangle to view.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to view.
@@ -2532,7 +2585,7 @@ define([
     var scratchFlyToBoundingSphereMatrix3 = new Matrix3();
 
     /**
-     * Flys the camera to a location where the current view contains the provided bounding sphere.
+     * Flies the camera to a location where the current view contains the provided bounding sphere.
      *
      * <p> The offset is heading/pitch/range in the local east-north-up reference frame centered at the center of the bounding sphere.
      * The heading and the pitch angles are defined in the local east-north-up reference frame.

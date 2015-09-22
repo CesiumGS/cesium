@@ -31,7 +31,8 @@ define([
         './ShaderProgram',
         './Texture',
         './UniformState',
-        './VertexArray'
+        './VertexArray',
+        './WebGLConstants'
     ], function(
         clone,
         Color,
@@ -64,7 +65,8 @@ define([
         ShaderProgram,
         Texture,
         UniformState,
-        VertexArray) {
+        VertexArray,
+        WebGLConstants) {
     "use strict";
     /*global WebGLRenderingContext*/
 
@@ -697,18 +699,18 @@ define([
         }
     }
 
-    function applyRenderState(context, renderState, passState) {
+    function applyRenderState(context, renderState, passState, clear) {
         var previousRenderState = context._currentRenderState;
         var previousPassState = context._currentPassState;
         context._currentRenderState = renderState;
         context._currentPassState = passState;
-        RenderState.partialApply(context._gl, previousRenderState, renderState, previousPassState, passState);
+        RenderState.partialApply(context._gl, previousRenderState, renderState, previousPassState, passState, clear);
     }
 
     var scratchBackBufferArray;
     // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
     if (typeof WebGLRenderingContext !== 'undefined') {
-        scratchBackBufferArray = [WebGLRenderingContext.BACK];
+        scratchBackBufferArray = [WebGLConstants.BACK];
     }
 
     function bindFramebuffer(context, framebuffer) {
@@ -771,7 +773,7 @@ define([
         }
 
         var rs = defaultValue(clearCommand.renderState, this._defaultRenderState);
-        applyRenderState(this, rs, passState);
+        applyRenderState(this, rs, passState, true);
 
         // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
         var framebuffer = defaultValue(clearCommand.framebuffer, passState.framebuffer);
@@ -793,7 +795,7 @@ define([
 
         bindFramebuffer(context, framebuffer);
 
-        applyRenderState(context, rs, passState);
+        applyRenderState(context, rs, passState, false);
 
         var sp = defaultValue(shaderProgram, drawCommand.shaderProgram);
         sp._bind();
@@ -918,7 +920,7 @@ define([
         textureCoordinates : 1
     };
 
-    Context.prototype.createViewportQuadCommand = function(fragmentShaderSource, overrides) {
+    Context.prototype.getViewportQuadVertexArray = function() {
         // Per-context cache for viewport quads
         var vertexArray = this.cache.viewportQuad_vertexArray;
 
@@ -955,10 +957,7 @@ define([
             vertexArray = VertexArray.fromGeometry({
                 context : this,
                 geometry : geometry,
-                attributeLocations : {
-                    position : 0,
-                    textureCoordinates : 1
-                },
+                attributeLocations : viewportQuadAttributeLocations,
                 bufferUsage : BufferUsage.STATIC_DRAW,
                 interleave : true
             });
@@ -966,10 +965,14 @@ define([
             this.cache.viewportQuad_vertexArray = vertexArray;
         }
 
+        return vertexArray;
+    };
+
+    Context.prototype.createViewportQuadCommand = function(fragmentShaderSource, overrides) {
         overrides = defaultValue(overrides, defaultValue.EMPTY_OBJECT);
 
         return new DrawCommand({
-            vertexArray : vertexArray,
+            vertexArray : this.getViewportQuadVertexArray(),
             primitiveType : PrimitiveType.TRIANGLES,
             renderState : overrides.renderState,
             shaderProgram : ShaderProgram.fromCache({

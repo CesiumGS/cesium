@@ -1,10 +1,12 @@
 /*global define*/
 define([
+        '../Renderer/WebGLConstants',
         './defined',
         './DeveloperError',
         './freezeObject',
         './Math'
     ], function(
+        WebGLConstants,
         defined,
         DeveloperError,
         freezeObject,
@@ -20,31 +22,31 @@ define([
      */
     var IndexDatatype = {
         /**
-         * 0x1401.  8-bit unsigned byte corresponding to <code>UNSIGNED_BYTE</code> and the type
+         * 8-bit unsigned byte corresponding to <code>UNSIGNED_BYTE</code> and the type
          * of an element in <code>Uint8Array</code>.
          *
          * @type {Number}
          * @constant
          */
-        UNSIGNED_BYTE : 0x1401,
+        UNSIGNED_BYTE : WebGLConstants.UNSIGNED_BYTE,
 
         /**
-         * 0x1403.  16-bit unsigned short corresponding to <code>UNSIGNED_SHORT</code> and the type
+         * 16-bit unsigned short corresponding to <code>UNSIGNED_SHORT</code> and the type
          * of an element in <code>Uint16Array</code>.
          *
          * @type {Number}
          * @constant
          */
-        UNSIGNED_SHORT : 0x1403,
+        UNSIGNED_SHORT : WebGLConstants.UNSIGNED_SHORT,
 
         /**
-         * 0x1405.  32-bit unsigned int corresponding to <code>UNSIGNED_INT</code> and the type
+         * 32-bit unsigned int corresponding to <code>UNSIGNED_INT</code> and the type
          * of an element in <code>Uint32Array</code>.
          *
          * @type {Number}
          * @constant
          */
-        UNSIGNED_INT : 0x1405
+        UNSIGNED_INT : WebGLConstants.UNSIGNED_INT
     };
 
     /**
