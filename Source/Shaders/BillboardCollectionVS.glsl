@@ -43,7 +43,15 @@ vec4 computePositionWindowCoordinates(vec4 positionEC, vec2 imageSize, float sca
     }
     
     vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
-    positionWC.xy += (origin * abs(halfSize));
+    
+    if (sizeInMeters)
+    {
+        positionWC.xy += (origin * abs(halfSize)) / czm_metersPerPixel(positionEC);
+    }
+    else
+    {
+        positionWC.xy += (origin * abs(halfSize));
+    }
     
 #if defined(ROTATION) || defined(ALIGNED_AXIS)
     if (!all(equal(alignedAxis, vec3(0.0))) || rotation != 0.0)

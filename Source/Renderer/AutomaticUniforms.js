@@ -1087,6 +1087,38 @@ define([
             }
         }),
 
+        czm_frustumTop : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.frustumTop;
+            }
+        }),
+
+        czm_frustumBottom : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.frustumBottom;
+            }
+        }),
+
+        czm_frustumRight : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.frustumRight;
+            }
+        }),
+
+        czm_frustumLeft : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.frustumLeft;
+            }
+        }),
+
         /**
          * An automatic GLSL uniform representing the sun position in world coordinates.
          *

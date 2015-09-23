@@ -53,6 +53,10 @@ define([
         this._infiniteProjection = Matrix4.clone(Matrix4.IDENTITY);
         this._entireFrustum = new Cartesian2();
         this._currentFrustum = new Cartesian2();
+        this._frustumTop = undefined;
+        this._frustumBottom = undefined;
+        this._frustumRight = undefined;
+        this._frustumLeft = undefined;
 
         this._frameState = undefined;
         this._temeToPseudoFixed = Matrix3.clone(Matrix4.IDENTITY);
@@ -632,6 +636,30 @@ define([
             }
         },
 
+        frustumTop : {
+            get : function() {
+                return this._frustumTop;
+            }
+        },
+
+        frustumBottom : {
+            get : function() {
+                return this._frustumBottom;
+            }
+        },
+
+        frustumRight : {
+            get : function() {
+                return this._frustumRight;
+            }
+        },
+
+        frustumLeft : {
+            get : function() {
+                return this._frustumLeft;
+            }
+        },
+
         /**
          * The the height (<code>x</code>) and the height squared (<code>y</code>)
          * in meters of the camera above the 2D world plane. This uniform is only valid
@@ -844,6 +872,15 @@ define([
         }
         this._currentFrustum.x = frustum.near;
         this._currentFrustum.y = frustum.far;
+
+        if (!defined(frustum.top)) {
+            frustum = frustum._offCenterFrustum;
+        }
+
+        this._frustumTop = frustum.top;
+        this._frustumBottom = frustum.bottom;
+        this._frustumRight = frustum.right;
+        this._frustumLeft = frustum.left;
     };
 
     /**
