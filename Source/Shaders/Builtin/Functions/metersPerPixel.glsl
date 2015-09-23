@@ -1,4 +1,6 @@
 /**
+ * Computes the size of a pixel in meters at a distance from the eye.
+ 
  * @name czm_metersPerPixel
  * @glslFunction
  *
@@ -29,6 +31,5 @@ float czm_metersPerPixel(vec4 positionEC)
 	    pixelWidth = 2.0 * distanceToPixel * tanTheta / width;
     }
 
-    float pixelSize = max(pixelWidth, pixelHeight);
-    return pixelSize;
+    return max(pixelWidth, pixelHeight);
 }

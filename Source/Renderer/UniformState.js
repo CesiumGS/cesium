@@ -636,24 +636,40 @@ define([
             }
         },
 
+        /**
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
         frustumTop : {
             get : function() {
                 return this._frustumTop;
             }
         },
 
+        /**
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
         frustumBottom : {
             get : function() {
                 return this._frustumBottom;
             }
         },
 
+        /**
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
         frustumRight : {
             get : function() {
                 return this._frustumRight;
             }
         },
 
+        /**
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
         frustumLeft : {
             get : function() {
                 return this._frustumLeft;

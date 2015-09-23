@@ -1087,6 +1087,12 @@ define([
             }
         }),
 
+        /**
+         * Defines the top clipping plane.
+         *
+         * @alias czm_frustumTop
+         * @glslUniform
+         */
         czm_frustumTop : new AutomaticUniform({
             size : 1,
             datatype : WebGLConstants.FLOAT,
@@ -1095,6 +1101,12 @@ define([
             }
         }),
 
+        /**
+         * Defines the bottom clipping plane.
+         *
+         * @alias czm_frustumBottom
+         * @glslUniform
+         */
         czm_frustumBottom : new AutomaticUniform({
             size : 1,
             datatype : WebGLConstants.FLOAT,
@@ -1103,6 +1115,12 @@ define([
             }
         }),
 
+        /**
+         * Defines the right clipping plane.
+         *
+         * @alias czm_frustumRight
+         * @glslUniform
+         */
         czm_frustumRight : new AutomaticUniform({
             size : 1,
             datatype : WebGLConstants.FLOAT,
@@ -1111,6 +1129,12 @@ define([
             }
         }),
 
+        /**
+         * Defines the left clipping plane.
+         *
+         * @alias czm_frustumLeft
+         * @glslUniform
+         */
         czm_frustumLeft : new AutomaticUniform({
             size : 1,
             datatype : WebGLConstants.FLOAT,
