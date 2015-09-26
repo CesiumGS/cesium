@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-  <meta name="description" content="CZML Dynamic Polygon - Interpolation">
+  <meta name="description" content="CZML Dynamic Polygon - Intervals">
   <meta name="cesium-sandcastle-labels" content="CZML">
   <title>Cesium Demo</title>
   <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -31,36 +31,47 @@ function startup(Cesium) {
   var czml = [
     {
       "id" : "document",
-      "name" : "CZML Dynamic Polygon - Interpolation",
+      "name" : "CZML Polygon - Intervals",
       "version" : "1.0"
     }, {
-      "id" : "material",
-      "color" : [
-        {
-          "interval" : "2012-08-04T16:00:00Z/2012-08-04T16:30:00Z",
-          "number" : [1, 0, 1, 1]
-        },
-        {
-          "interval" : "2012-08-04T16:30:00Z/2012-08-04T17:00:00Z",
-          "number" : [0, 1, 1, 1]
-        }
-      ]
-    }, {
-      "id": "thing",
+      "id": "Dynamic Polygon with Intervals",
       "availability":"2012-08-04T16:00:00Z/2012-08-04T17:00:00Z",
       "polygon": {
-        "positions": {
-          "references": [
-            "v1#position",
-            "v2#position",
-            "v3#position"
-          ]
-        },
+        "positions": [
+          {
+            "interval" : "2012-08-04T16:00:00Z/2012-08-04T16:20:00Z",
+            "cartographicDegrees" : [
+              -50, 20, 50000,
+              -50, 40, 400000,
+              -40, 40, 0,
+              -40, 20, 0
+            ]
+          },
+          {
+            "interval" : "2012-08-04T16:20:00Z/2012-08-04T16:40:00Z",
+            "cartographicDegrees": [
+              -35, 50, 5000000,
+              -35, 10, 30,
+              -45, 30, 4000
+            ]
+          },
+          {
+            "interval" : "2012-08-04T16:40:00Z/2012-08-04T17:00:00Z",
+            "cartographicDegrees" : [
+              -70, 10, 0,
+              -80, 10, 0,
+              -80, 20, 0,
+              -70, 20, 0
+            ]
+          }
+        ],
+        "perPositionHeight" : true,
+        "extrudedHeight": 0,
         "material": {
           "solidColor": {
             "color": [
               {
-                "interval" : "2012-08-04T16:00:00Z/2012-08-04T16:25:00Z",
+                "interval" : "2012-08-04T16:00:00Z/2012-08-04T16:30:00Z",
                 "rgbaf" : [1, 0, 1, 1]
               }, {
                 "interval" : "2012-08-04T16:30:00Z/2012-08-04T17:00:00Z",
@@ -70,48 +81,11 @@ function startup(Cesium) {
           }
         }
       }
-    }, {
-      "id": "v1",
-      "position": {
-        "interpolationAlgorithm": "LAGRANGE",
-        "interpolationDegree": 1,
-        "interval" : "2012-08-04T16:00:00Z/2012-08-04T17:00:00Z",
-        "epoch" : "2012-08-04T16:00:00Z",
-        "cartographicDegrees": [
-          0, -70, 35, 0,
-          160, -75, 35, 0,
-          400, -70, 40, 0,
-          1800, -60, 40, 0,
-          3600, -40, 20, 0
-        ]
-      }
-    }, {
-      "id": "v2",
-      "position": {
-        "interval" : "2012-08-04T16:00:00Z/2012-08-04T17:00:00Z",
-        "cartographicDegrees": [
-          -55.0, 20, 0.0
-        ]
-      }
-    }, {
-      "id": "v3",
-      "position": {
-        "interpolationAlgorithm": "LAGRANGE",
-        "interpolationDegree": 1,
-        "interval" : "2012-08-04T16:00:00Z/2012-08-04T17:00:00Z",
-        "epoch" : "2012-08-04T16:00:00Z",
-        "cartographicDegrees": [
-          0, -45.0, 60, 0,
-          400, -30, 80, 0,
-          3600, -30, 70, 0
-        ]
-      }
     }
   ];
 
   var viewer = new Cesium.Viewer('cesiumContainer');
   viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
-
 
   //Sandcastle_End
   Sandcastle.finishedLoading();
