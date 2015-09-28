@@ -1431,35 +1431,27 @@ define([
 
         // Add node transform uniform, the gltf node's offset which is the same for every instance
         globalDeclarations += 'uniform mat4 czm_instanced_nodeTransform;\n';
+        globalDeclarations += 'uniform mat4 czm_instanced_boundingVolumeModelView;\n';
         
-        // Create model matrix from the attributes
+        // Construct model view matrix
         globalDeclarations += 'mat4 czm_instanced_model;\n';
+        globalDeclarations += 'mat4 czm_instanced_modelView;\n';
         globalDefinitions += 'czm_instanced_model = mat4(czm_modelMatrixRow0.x, czm_modelMatrixRow1.x, czm_modelMatrixRow2.x, 0.0, czm_modelMatrixRow0.y, czm_modelMatrixRow1.y, czm_modelMatrixRow2.y, 0.0, czm_modelMatrixRow0.z, czm_modelMatrixRow1.z, czm_modelMatrixRow2.z, 0.0, czm_modelMatrixRow0.w, czm_modelMatrixRow1.w, czm_modelMatrixRow2.w, 1.0);\n';
-        globalDefinitions += 'czm_instanced_model = czm_instanced_model * czm_instanced_nodeTransform;\n';
+        globalDefinitions += 'czm_instanced_modelView = czm_instanced_boundingVolumeModelView * czm_instanced_model * czm_instanced_nodeTransform;\n';
 
         for (var uniform in perInstanceUniforms) {
             if (perInstanceUniforms.hasOwnProperty(uniform)) {
                 var semantic = perInstanceUniforms[uniform];
                 var globalVarName;
 
-                // The modelViewInverseTranspose matrix (aka normal matrix) almost always appears alongside a modelView
-                // matrix, so re-use the pre-existing modelView matrix. Since we don't know which uniform will appear
-                // first in the loop check to make sure the modelView matrix is not added twice.
-
                 if (semantic === 'MODEL') {
-                    // Definition and declaration are already added
                     globalVarName = 'czm_instanced_model';
                 } else if (semantic === 'MODELVIEW') {
                     globalVarName = 'czm_instanced_modelView';
-                    if (!hasModelViewMatrix) {
-                        globalDeclarations += 'mat4 czm_instanced_modelView;\n';
-                        globalDefinitions += 'czm_instanced_modelView = czm_view * czm_instanced_model;\n';
-                        hasModelViewMatrix = true;
-                    }
                 } else if (semantic === 'MODELVIEWPROJECTION') {
                     globalVarName = 'czm_instanced_modelViewProjection';
                     globalDeclarations += 'mat4 czm_instanced_modelViewProjection;\n';
-                    globalDefinitions += 'czm_instanced_modelViewProjection = czm_viewProjection * czm_instanced_model;\n';
+                    globalDefinitions += 'czm_instanced_modelViewProjection = czm_projection * czm_instanced_modelView;\n';
                 } else if (semantic === 'MODELINVERSE') {
                     globalVarName = 'czm_instanced_inverseModel';
                     globalDeclarations += 'mat4 czm_instanced_inverseModel;\n';
@@ -1467,23 +1459,17 @@ define([
                 } else if (semantic === 'MODELVIEWINVERSE') {
                     globalVarName = 'czm_instanced_inverseModelView';
                     globalDeclarations += 'mat4 czm_instanced_inverseModelView;\n';
-                    globalDefinitions += 'czm_instanced_inverseModelView = inverse(czm_instanced_model) * czm_inverseView;\n';
+                    globalDefinitions += 'czm_instanced_inverseModelView = inverse(czm_instanced_modelView);\n';
                 } else if (semantic === 'MODELVIEWPROJECTIONINVERSE') {
                     globalVarName = 'czm_instanced_inverseModelViewProjection';
                     globalDeclarations += 'mat4 czm_instanced_inverseModelViewProjection;\n';
-                    globalDefinitions += 'czm_instanced_inverseModelViewProjection = inverse(czm_instanced_model) * czm_inverseViewProjection;\n';
+                    globalDefinitions += 'czm_instanced_inverseModelViewProjection = inverse(czm_projection * czm_instanced_modelView);\n';
                 } else if (semantic === 'MODELINVERSETRANSPOSE') {
                     // Non-uniform scale is not supported for instancing, so inverse-transpose matrix is simplified
                     globalVarName = 'czm_instanced_modelInverseTranspose';
                     globalDeclarations += 'mat3 czm_instanced_modelInverseTranspose;\n';
                     globalDefinitions += 'czm_instanced_modelInverseTranspose = mat3(czm_instanced_model);\n';
                 } else if (semantic === 'MODELVIEWINVERSETRANSPOSE') {
-                    // Non-uniform scale is not supported for instancing, so inverse-transpose matrix is simplified
-                    if (!hasModelViewMatrix) {
-                        globalDeclarations += 'mat4 czm_instanced_modelView;\n';
-                        globalDefinitions += 'czm_instanced_modelView = czm_view * czm_instanced_model;\n';
-                        hasModelViewMatrix = true;
-                    }
                     globalVarName = 'czm_instanced_modelViewInverseTranspose';
                     globalDeclarations += 'mat3 czm_instanced_modelViewInverseTranspose;\n';
                     globalDefinitions += 'czm_instanced_modelViewInverseTranspose = mat3(czm_instanced_modelView);\n';
@@ -2545,9 +2531,11 @@ define([
                     var pickId = context.createPickId(owner);
                     pickIds.push(pickId);
 
-                    var pickUniformMap = uniformMap;
+                    var pickUniformMap;
 
-                    if (!model._instanced) {
+                    if (model._instanced) {
+                        pickUniformMap = clone(uniformMap);
+                    } else {
                         pickUniformMap = combine(uniformMap, {
                             czm_pickColor : createPickColorFunction(pickId.color)
                         });
