@@ -792,16 +792,25 @@ defineSuite([
         var instancedArrays = context._instancedArrays;
         context._instancedArrays = undefined;
 
-        billboards.add({
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        var b1 = billboards.add({
             position : Cartesian3.ZERO,
             image : greenImage
         });
-        billboards.add({
+        expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
+
+        var b2 = billboards.add({
             position : new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
             image : blueImage
         });
+        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]); // instancing
+        billboards.remove(b2);
+        expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
+
+        billboards.remove(b1);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
         context._instancedArrays = instancedArrays;
     });

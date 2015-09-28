@@ -333,6 +333,7 @@ define([
 
         this._numberOfVertices = numberOfVertices;
         this._hasInstancedAttributes = hasInstancedAttributes;
+        this._context = context;
         this._gl = gl;
         this._vaoExtension = vertexArrayObject;
         this._instancedArraysExtension = instancedArrays;
@@ -676,16 +677,15 @@ define([
     // Work around for ANGLE, where the attribute divisor seems to be part of the global state instead
     // of the VAO state. This function is called when the vao is bound, and should be removed
     // once the ANGLE issue is resolved.
-    var divisors = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]; // at most 16 vertex attributes
-    var hadInstancedAttributes = false;
-
     function setVertexAttribDivisor(vertexArray) {
+        var context = vertexArray._context;
         var hasInstancedAttributes = vertexArray._hasInstancedAttributes;
-        if (!hasInstancedAttributes && !hadInstancedAttributes) {
+        if (!hasInstancedAttributes && !context._previousDrawInstanced) {
             return;
         }
-        hadInstancedAttributes = hasInstancedAttributes;
+        context._previousDrawInstanced = hasInstancedAttributes;
 
+        var divisors = context._vertexAttribDivisors;
         var attributes = vertexArray._attributes;
         var maxAttributes = ContextLimits.maximumVertexAttributes;
         var instancedArraysExtension = vertexArray._instancedArraysExtension;
