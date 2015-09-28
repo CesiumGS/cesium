@@ -532,7 +532,7 @@ define([
             primitive._spPick = ShaderProgram.replaceCache({
                 context : context,
                 shaderProgram : primitive._spPick,
-                vertexShaderSource : Primitive._createPickVertexShaderSource(vs),
+                vertexShaderSource : ShaderSource.createPickVertexShaderSource(vs),
                 fragmentShaderSource : pickFS,
                 attributeLocations : attributeLocations
             });
