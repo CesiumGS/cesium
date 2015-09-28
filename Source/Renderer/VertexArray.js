@@ -674,7 +674,7 @@ define([
         return this._attributes[index];
     };
 
-    // Work around for ANGLE, where the attribute divisor seems to be part of the global state instead
+    // Workaround for ANGLE, where the attribute divisor seems to be part of the global state instead
     // of the VAO state. This function is called when the vao is bound, and should be removed
     // once the ANGLE issue is resolved.
     function setVertexAttribDivisor(vertexArray) {
