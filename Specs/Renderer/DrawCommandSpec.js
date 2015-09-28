@@ -19,7 +19,7 @@ defineSuite([
         expect(c.vertexArray).toBeUndefined();
         expect(c.count).toBeUndefined();
         expect(c.offset).toEqual(0);
-        expect(c.instanceCount).toEqual(1);
+        expect(c.instanceCount).toEqual(0);
         expect(c.shaderProgram).toBeUndefined();
         expect(c.uniformMap).toBeUndefined();
         expect(c.renderState).toBeUndefined();

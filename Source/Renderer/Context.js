@@ -847,11 +847,11 @@ define([
             throw new DeveloperError('drawCommand.count must be greater than or equal to zero.');
         }
 
-        if (instanceCount < 1) {
-            throw new DeveloperError('drawCommand.instanceCount must be greater than or equal to one.');
+        if (instanceCount < 0) {
+            throw new DeveloperError('drawCommand.instanceCount must be greater than or equal to zero.');
         }
 
-        if (instanceCount > 1 && !context.instancedArrays) {
+        if (instanceCount > 0 && !context.instancedArrays) {
             throw new DeveloperError('Instanced arrays extension is not supported');
         }
         //>>includeEnd('debug');
@@ -866,14 +866,14 @@ define([
         if (defined(indexBuffer)) {
             offset = offset * indexBuffer.bytesPerIndex; // offset in vertices to offset in bytes
             count = defaultValue(count, indexBuffer.numberOfIndices);
-            if (instanceCount === 1) {
+            if (instanceCount === 0) {
                 context._gl.drawElements(primitiveType, count, indexBuffer.indexDatatype, offset);
             } else {
                 context._instancedArrays.drawElementsInstancedANGLE(primitiveType, count, indexBuffer.indexDatatype, offset, instanceCount);
             }
         } else {
             count = defaultValue(count, va.numberOfVertices);
-            if (instanceCount === 1) {
+            if (instanceCount === 0) {
                 context._gl.drawArrays(primitiveType, offset, count);
             } else {
                 context._instancedArrays.drawArraysInstancedANGLE(primitiveType, offset, count, instanceCount);

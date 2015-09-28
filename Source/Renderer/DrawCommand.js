@@ -100,7 +100,7 @@ define([
          * @type {Number}
          * @default 1
          */
-        this.instanceCount = defaultValue(options.instanceCount, 1);
+        this.instanceCount = defaultValue(options.instanceCount, 0);
 
         /**
          * The shader program to apply.
