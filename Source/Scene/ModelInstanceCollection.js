@@ -60,9 +60,6 @@ define([
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for the collection.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the instances in wireframe.
-     *
-     * @see Model
-     * @see Model.fromGltf
      */
     var ModelInstanceCollection = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
