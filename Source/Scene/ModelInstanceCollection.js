@@ -64,7 +64,6 @@ define([
      * @see Model
      * @see Model.fromGltf
      */
-
     var ModelInstanceCollection = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
