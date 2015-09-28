@@ -308,7 +308,7 @@ define([
         this._currentFramebuffer = undefined;
         this._maxFrameTextureUnitIndex = 0;
 
-        // Vertex attribute divisor state cache. Work around for ANGLE (also look at VertexArray.setVertexAttribDivisor)
+        // Vertex attribute divisor state cache. Workaround for ANGLE (also look at VertexArray.setVertexAttribDivisor)
         this._vertexAttribDivisors = [];
         this._previousDrawInstanced = false;
         for (var i = 0; i < ContextLimits._maximumVertexAttributes; i++) {
