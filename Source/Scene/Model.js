@@ -186,6 +186,9 @@ define([
     function setCachedGltf(model, cachedGltf) {
         model._cachedGltf = cachedGltf;
         model._animationIds = getAnimationIds(cachedGltf);
+        if (model._instanced) {
+            model._perInstanceUniforms = getPerInstanceUniforms(cachedGltf);
+        }
     }
 
     // glTF JSON can be big given embedded geometry, textures, and animations, so we
@@ -250,6 +253,43 @@ define([
         return animationIds;
     }
 
+    function getPerInstanceUniforms(cachedGltf) {
+        // Find all the uniforms that are updated per instance. Usually these are uniforms that include a model
+        // matrix. They will be changed to take an instanced vertex attribute instead.
+        var perInstanceUniforms = {};
+        if (defined(cachedGltf) && defined(cachedGltf.gltf)) {
+            var techniques = cachedGltf.gltf.techniques;
+            for (var techniqueName in techniques) {
+                if (techniques.hasOwnProperty(techniqueName)) {
+                    var technique = techniques[techniqueName];
+                    var parameters = technique.parameters;
+                    var pass = technique.passes[technique.pass];
+                    var instanceProgram = pass.instanceProgram;
+                    var programName = instanceProgram.program;
+                    // Different techniques may share the same program, skip if already processed.
+                    // This assumes techniques that share a program do not declare different semantics for the same uniforms.
+                    if (!defined(perInstanceUniforms[programName])) {
+                        var uniformMap = {};
+                        perInstanceUniforms[programName] = uniformMap;
+                        var uniforms = instanceProgram.uniforms;
+                        for (var uniformName in uniforms) {
+                            if (uniforms.hasOwnProperty(uniformName)) {
+                                var parameterName = uniforms[uniformName];
+                                var parameter = parameters[parameterName];
+                                var semantic = parameter.semantic;
+                                if (defined(semantic) && (semantic.indexOf('MODEL') > -1)) {
+                                    uniformMap[uniformName] = semantic;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return perInstanceUniforms;
+    }
+
     var gltfCache = {};
 
     ///////////////////////////////////////////////////////////////////////////
@@ -287,6 +327,8 @@ define([
      * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
+     * @param {Boolean} [options.instanced=false] Whether the model will be instanced.
+     * @param {Object} [options.instancedAttributes] Instanced attributes for the vertex array.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      *
@@ -305,6 +347,10 @@ define([
         this._cachedGltf = undefined;
         this._releaseGltfJson = defaultValue(options.releaseGltfJson, false);
         this._animationIds = undefined;
+        this._perInstanceUniforms = undefined;
+        this._instanced = defaultValue(options.instanced, false);
+        this._instancedAttributes = options.instancedAttributes;
+
 
         var cachedGltf;
         if (defined(cacheKey) && defined(gltfCache[cacheKey]) && gltfCache[cacheKey].ready) {
@@ -490,7 +536,6 @@ define([
             programs : {},
             pickPrograms : {},
             textures : {},
-
             samplers : {},
             renderStates : {}
         };
@@ -789,6 +834,7 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {String} options.url The url to the .gltf file.
+     * @param {String} [options.cacheKey] The cache key for this model.
      * @param {Object} [options.headers] HTTP headers to send with the request.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
@@ -796,6 +842,8 @@ define([
      * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
+     * @param {Boolean} [options.instanced=false] Whether the model will be instanced.
+     * @param {Object} [options.instancedAttributes] Instanced attributes for the vertex array.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @returns {Model} The newly created model.
@@ -841,6 +889,12 @@ define([
         // If no cache key is provided, use the absolute URL, since two URLs with
         // different relative paths could point to the same model.
         var cacheKey = defaultValue(options.cacheKey, getAbsoluteURL(url));
+
+        // Instanced models will create different renderer resources, so change the cache key.
+        var instanced = defaultValue(options.instanced, false);
+        if (instanced) {
+            cacheKey = cacheKey + '(instanced)';
+        }
 
         options = clone(options);
         options.basePath = getBasePath(url);
@@ -1355,14 +1409,136 @@ define([
         return getStringFromTypedArray(loadResources.getBuffer(bufferView));
     }
 
-    function createProgram(name, model, context) {
+    function createVertexShaderInstanced(name, shaderSource, model) {
+        var perInstanceUniforms = model._perInstanceUniforms[name];
+        if (perInstanceUniforms.length === 0) {
+            return shaderSource;
+        }
+
+        // All per-instance uniforms will be replaced with global variables.
+        var globalDeclarations = '';
+        var globalDefinitions = '';
+        var hasModelViewMatrix = false;
+        var regex;
+
+        // Add instanced attributes
+        var instancedAttributes = model._instancedAttributes;
+        for (var attrName in instancedAttributes) {
+            if (instancedAttributes.hasOwnProperty(attrName)) {
+                globalDeclarations += 'attribute vec4 ' + attrName + ';\n';
+            }
+        }
+
+        // Add node transform uniform, the gltf node's offset which is the same for every instance
+        globalDeclarations += 'uniform mat4 czm_instanced_nodeTransform;\n';
+        
+        // Create model matrix from the attributes
+        globalDeclarations += 'mat4 czm_instanced_model;\n';
+        globalDefinitions += 'czm_instanced_model = mat4(czm_modelMatrixRow0.x, czm_modelMatrixRow1.x, czm_modelMatrixRow2.x, 0.0, czm_modelMatrixRow0.y, czm_modelMatrixRow1.y, czm_modelMatrixRow2.y, 0.0, czm_modelMatrixRow0.z, czm_modelMatrixRow1.z, czm_modelMatrixRow2.z, 0.0, czm_modelMatrixRow0.w, czm_modelMatrixRow1.w, czm_modelMatrixRow2.w, 1.0);\n';
+        globalDefinitions += 'czm_instanced_model = czm_instanced_model * czm_instanced_nodeTransform;\n';
+
+        for (var uniform in perInstanceUniforms) {
+            if (perInstanceUniforms.hasOwnProperty(uniform)) {
+                var semantic = perInstanceUniforms[uniform];
+                var globalVarName;
+
+                // The modelViewInverseTranspose matrix (aka normal matrix) almost always appears alongside a modelView
+                // matrix, so re-use the pre-existing modelView matrix. Since we don't know which uniform will appear
+                // first in the loop check to make sure the modelView matrix is not added twice.
+
+                if (semantic === 'MODEL') {
+                    // Definition and declaration are already added
+                    globalVarName = 'czm_instanced_model';
+                } else if (semantic === 'MODELVIEW') {
+                    globalVarName = 'czm_instanced_modelView';
+                    if (!hasModelViewMatrix) {
+                        globalDeclarations += 'mat4 czm_instanced_modelView;\n';
+                        globalDefinitions += 'czm_instanced_modelView = czm_view * czm_instanced_model;\n';
+                        hasModelViewMatrix = true;
+                    }
+                } else if (semantic === 'MODELVIEWPROJECTION') {
+                    globalVarName = 'czm_instanced_modelViewProjection';
+                    globalDeclarations += 'mat4 czm_instanced_modelViewProjection;\n';
+                    globalDefinitions += 'czm_instanced_modelViewProjection = czm_viewProjection * czm_instanced_model;\n';
+                } else if (semantic === 'MODELINVERSE') {
+                    globalVarName = 'czm_instanced_inverseModel';
+                    globalDeclarations += 'mat4 czm_instanced_inverseModel;\n';
+                    globalDefinitions += 'czm_instanced_inverseModel = inverse(czm_instanced_model);\n';
+                } else if (semantic === 'MODELVIEWINVERSE') {
+                    globalVarName = 'czm_instanced_inverseModelView';
+                    globalDeclarations += 'mat4 czm_instanced_inverseModelView;\n';
+                    globalDefinitions += 'czm_instanced_inverseModelView = inverse(czm_instanced_model) * czm_inverseView;\n';
+                } else if (semantic === 'MODELVIEWPROJECTIONINVERSE') {
+                    globalVarName = 'czm_instanced_inverseModelViewProjection';
+                    globalDeclarations += 'mat4 czm_instanced_inverseModelViewProjection;\n';
+                    globalDefinitions += 'czm_instanced_inverseModelViewProjection = inverse(czm_instanced_model) * czm_inverseViewProjection;\n';
+                } else if (semantic === 'MODELINVERSETRANSPOSE') {
+                    // Non-uniform scale is not supported for instancing, so inverse-transpose matrix is simplified
+                    globalVarName = 'czm_instanced_modelInverseTranspose';
+                    globalDeclarations += 'mat3 czm_instanced_modelInverseTranspose;\n';
+                    globalDefinitions += 'czm_instanced_modelInverseTranspose = mat3(czm_instanced_model);\n';
+                } else if (semantic === 'MODELVIEWINVERSETRANSPOSE') {
+                    // Non-uniform scale is not supported for instancing, so inverse-transpose matrix is simplified
+                    if (!hasModelViewMatrix) {
+                        globalDeclarations += 'mat4 czm_instanced_modelView;\n';
+                        globalDefinitions += 'czm_instanced_modelView = czm_view * czm_instanced_model;\n';
+                        hasModelViewMatrix = true;
+                    }
+                    globalVarName = 'czm_instanced_modelViewInverseTranspose';
+                    globalDeclarations += 'mat3 czm_instanced_modelViewInverseTranspose;\n';
+                    globalDefinitions += 'czm_instanced_modelViewInverseTranspose = mat3(czm_instanced_modelView);\n';
+                }
+
+                // Remove the uniform declaration
+                regex = new RegExp('uniform.*' + uniform + '.*');
+                shaderSource = shaderSource.replace(regex, '');
+
+                // Replace all occurrences of the uniform with the global variable
+                regex = new RegExp(uniform + '\\b', 'g');
+                shaderSource = shaderSource.replace(regex, globalVarName);
+            }
+        }
+
+        // Place definitions into the main function
+        shaderSource = shaderSource.replace(/void\s+main\s*\([\s\S]*?{/, 'void main() {\n' + globalDefinitions);
+
+        // Append declarations to the top of the shader
+        shaderSource = globalDeclarations + shaderSource;
+
+        return shaderSource;
+    }
+
+    function createPickVertexShaderInstanced(shaderSource) {
+        var pickSource =
+            'varying vec4 czm_pickColor;\n' +
+            'void main() {\n' +
+            'vec4 pickColor = czm_instanceData;\n' +
+            'czm_pickColor = pickColor;\n';
+        return shaderSource.replace(/void\s+main\s*\([\s\S]*?{/, 'void main() {\n' + pickSource);
+    }
+
+    function createProgramInstanced(name, model, context) {
         var programs = model.gltf.programs;
         var shaders = model._loadResources.shaders;
         var program = programs[name];
 
-        var attributeLocations = createAttributeLocations(program.attributes);
         var vs = getShaderSource(model, shaders[program.vertexShader]);
         var fs = getShaderSource(model, shaders[program.fragmentShader]);
+
+        // Assume the fragment shader does not need to be modified for instancing
+        vs = createVertexShaderInstanced(name, vs, model);
+
+        var attributeLocations = createAttributeLocations(program.attributes);
+        var attributeCount = program.attributes.length;
+
+        var instancedAttributes = model._instancedAttributes;
+        for (var attrName in instancedAttributes) {
+            if (instancedAttributes.hasOwnProperty(attrName)) {
+                attributeLocations[attrName] = attributeCount;
+                instancedAttributes[attrName].index = attributeCount;
+                attributeCount++;
+            }
+        }
 
         model._rendererResources.programs[name] = ShaderProgram.fromCache({
             context : context,
@@ -1373,10 +1549,38 @@ define([
 
         if (model.allowPicking) {
             // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
-            var pickFS = new ShaderSource({
-                sources : [fs],
-                pickColorQualifier : 'uniform'
+            var pickFS = ShaderSource.createPickFragmentShaderSource(fs, 'varying');
+            var pickVS = createPickVertexShaderInstanced(vs);
+
+            model._rendererResources.pickPrograms[name] = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : pickVS,
+                fragmentShaderSource : pickFS,
+                attributeLocations : attributeLocations
             });
+        }
+    }
+
+    function createProgram(name, model, context) {
+        var programs = model.gltf.programs;
+        var shaders = model._loadResources.shaders;
+        var program = programs[name];
+
+        var vs = getShaderSource(model, shaders[program.vertexShader]);
+        var fs = getShaderSource(model, shaders[program.fragmentShader]);
+
+        var attributeLocations = createAttributeLocations(program.attributes);
+
+        model._rendererResources.programs[name] = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
+
+        if (model.allowPicking) {
+            // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
+            var pickFS = ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
 
             model._rendererResources.pickPrograms[name] = ShaderProgram.fromCache({
                 context : context,
@@ -1401,17 +1605,19 @@ define([
             return;
         }
 
+        var createProgramFunction = model._instanced ? createProgramInstanced : createProgram;
+
         if (model.asynchronous) {
             // Create one program per frame
             if (loadResources.programsToCreate.length > 0) {
                 name = loadResources.programsToCreate.dequeue();
-                createProgram(name, model, context);
+                createProgramFunction(name, model, context);
             }
         } else {
             // Create all loaded programs this frame
             while (loadResources.programsToCreate.length > 0) {
                 name = loadResources.programsToCreate.dequeue();
-                createProgram(name, model, context);
+                createProgramFunction(name, model, context);
             }
         }
     }
@@ -1563,8 +1769,12 @@ define([
         // Note: WebGL shader compiler may have optimized and removed some attributes from programAttributeLocations
         for (var location in programAttributeLocations){
             if (programAttributeLocations.hasOwnProperty(location)) {
-                var parameter = parameters[attributes[location]];
-                attributeLocations[parameter.semantic] = programAttributeLocations[location].index;
+                var attribute = attributes[location];
+                // Ignore attributes that are added dynamically (like for instancing)
+                if (defined(attribute)) {
+                    var parameter = parameters[attribute];
+                    attributeLocations[parameter.semantic] = programAttributeLocations[location].index;
+                }
             }
         }
 
@@ -1670,12 +1880,11 @@ define([
 
     function getChannelEvaluator(model, runtimeNode, targetPath, spline) {
         return function(localAnimationTime) {
-//  Workaround for https://github.com/KhronosGroup/glTF/issues/219
-/*
-            if (targetPath === 'translation') {
-                return;
-            }
-*/
+            //  Workaround for https://github.com/KhronosGroup/glTF/issues/219
+
+            //if (targetPath === 'translation') {
+            //    return;
+            //}
             runtimeNode[targetPath] = spline.evaluate(localAnimationTime, runtimeNode[targetPath]);
             runtimeNode.dirtyNumber = model._maxDirtyNumber;
         };
@@ -1779,9 +1988,10 @@ define([
                     // https://github.com/KhronosGroup/glTF/issues/258
 
                     var attributeLocations = getAttributeLocations(model, primitive);
+                    var attrName;
                     var attrs = [];
                     var primitiveAttributes = primitive.attributes;
-                    for (var attrName in primitiveAttributes) {
+                    for (attrName in primitiveAttributes) {
                         if (primitiveAttributes.hasOwnProperty(attrName)) {
                             var attributeLocation = attributeLocations[attrName];
                             // Skip if the attribute is not used by the material, e.g., because the asset was exported
@@ -1801,12 +2011,22 @@ define([
                         }
                     }
 
+                    if (model._instanced) {
+                        var instancedAttributes = model._instancedAttributes;
+                        for (attrName in instancedAttributes) {
+                            if (instancedAttributes.hasOwnProperty(attrName)) {
+                                attrs.push(instancedAttributes[attrName]);
+                            }
+                        }
+                    }
+
+                    var vertexArrayName = meshName + '.primitive.' + i;
                     var accessor = accessors[primitive.indices];
                     var indexBuffer = rendererBuffers[accessor.bufferView];
-                    rendererVertexArrays[meshName + '.primitive.' + i] = new VertexArray({
-                        context : context,
-                        attributes : attrs,
-                        indexBuffer : indexBuffer
+                    rendererVertexArrays[vertexArrayName] = new VertexArray({
+                        context: context,
+                        attributes: attrs,
+                        indexBuffer: indexBuffer
                     });
                 }
             }
@@ -1992,7 +2212,7 @@ define([
                 return uniformState.viewportCartesian4;
             };
         }
-        // JOINTMATRIX created in createCommands()
+        // JOINTMATRIX created in createCommand()
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -2147,6 +2367,10 @@ define([
                 var pass = technique.passes[technique.pass];
                 var instanceProgram = pass.instanceProgram;
                 var uniforms = instanceProgram.uniforms;
+                var perInstanceUniforms;
+                if (model._instanced) {
+                    perInstanceUniforms = model._perInstanceUniforms[instanceProgram.program];
+                }
 
                 var uniformMap = {};
                 var uniformValues = {};
@@ -2169,7 +2393,9 @@ define([
                         //
                         // https://github.com/KhronosGroup/glTF/issues/142
 
-                        if (defined(instanceParameters[parameterName])) {
+                        if (model._instanced && defined(perInstanceUniforms[name])) {
+                            // This uniform will be replaced with an instanced vertex attribute, don't include in uniform map.
+                        } else if (defined(instanceParameters[parameterName])) {
                             // Parameter overrides by the instance technique
                             var uv = gltfUniformFunctions[parameter.type](instanceParameters[parameterName], model);
                             uniformMap[name] = uv.func;
@@ -2211,6 +2437,12 @@ define([
     function createJointMatricesFunction(runtimeNode) {
         return function() {
             return runtimeNode.computedJointMatrices;
+        };
+    }
+
+    function createNodeTransformFunction(runtimeNode, i) {
+        return function() {
+            return runtimeNode.commands[i].command.modelMatrix;
         };
     }
 
@@ -2263,7 +2495,8 @@ define([
                     boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(a.min), Cartesian3.fromArray(a.max));
                 }
 
-                var vertexArray = rendererVertexArrays[name + '.primitive.' + i];
+                var vertexArrayName = name + '.primitive.' + i;
+                var vertexArray = rendererVertexArrays[vertexArrayName];
                 var count = ix.count;
                 var offset = (ix.byteOffset / IndexDatatype.getSizeInBytes(ix.componentType));  // glTF has offset in bytes.  Cesium has offsets in indices
 
@@ -2274,6 +2507,12 @@ define([
                     jointUniformMap[um.jointMatrixUniformName] = createJointMatricesFunction(runtimeNode);
 
                     uniformMap = combine(uniformMap, jointUniformMap);
+                }
+
+                if (model._instanced) {
+                    uniformMap = combine(uniformMap, {
+                        czm_instanced_nodeTransform : createNodeTransformFunction(runtimeNode, i)
+                    });
                 }
 
                 var rs = rendererRenderStates[instanceTechnique.technique];
@@ -2306,10 +2545,13 @@ define([
                     var pickId = context.createPickId(owner);
                     pickIds.push(pickId);
 
-                    var pickUniformMap = combine(
-                        uniformMap, {
+                    var pickUniformMap = uniformMap;
+
+                    if (!model._instanced) {
+                        pickUniformMap = combine(uniformMap, {
                             czm_pickColor : createPickColorFunction(pickId.color)
                         });
+                    }
 
                     pickCommand = new DrawCommand({
                         boundingVolume : new BoundingSphere(), // updated in update()
@@ -2502,7 +2744,7 @@ define([
                             var command = primitiveCommand.command;
                             Matrix4.multiplyTransformation(computedModelMatrix, transformToRoot, command.modelMatrix);
 
-                            // PERFORMANCE_IDEA: Can use transformWithoutScale if no node up to the root has scale (inclug animation)
+                            // PERFORMANCE_IDEA: Can use transformWithoutScale if no node up to the root has scale (including animation)
                             BoundingSphere.transform(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
 
                             if (defined(model._rtcCenter)) {
@@ -2924,6 +3166,11 @@ define([
             return;
         }
 
+        // ModelInstanceCollection handles the model's command list directly
+        if (this._instanced) {
+            return;
+        }
+
         // We don't check show at the top of the function since we
         // want to be able to progressively load models when they are not shown,
         // and then have them visible immediately when show is set to true.
@@ -2944,7 +3191,7 @@ define([
                 }
             }
 
-            if (passes.pick) {
+            if (passes.pick && this.allowPicking) {
                 for (i = 0; i < length; ++i) {
                     nc = nodeCommands[i];
                     if (nc.show) {

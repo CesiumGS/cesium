@@ -182,20 +182,13 @@ define([
             return '\n';
         });
 
+        // Remove precision qualifier
+        combinedSources = combinedSources.replace(/precision\s(lowp|mediump|highp)\s(float|int);/, '');
+
         // Replace main() for picked if desired.
         var pickColorQualifier = shaderSource.pickColorQualifier;
         if (defined(pickColorQualifier)) {
-            combinedSources = combinedSources.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_old_main()');
-            combinedSources += '\
-\n' + pickColorQualifier + ' vec4 czm_pickColor;\n\
-void main()\n\
-{\n\
-    czm_old_main();\n\
-    if (gl_FragColor.a == 0.0) {\n\
-        discard;\n\
-    }\n\
-    gl_FragColor = czm_pickColor;\n\
-}';
+            combinedSources = ShaderSource.createPickFragmentShaderSource(combinedSources, pickColorQualifier);
         }
 
         // combine into single string
@@ -330,6 +323,34 @@ void main()\n\
             }
         }
     }
+
+    ShaderSource.createPickVertexShaderSource = function(vertexShaderSource) {
+        var renamedVS = vertexShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_old_main()');
+        var pickMain = 'attribute vec4 pickColor; \n' +
+            'varying vec4 czm_pickColor; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    czm_old_main(); \n' +
+            '    czm_pickColor = pickColor; \n' +
+            '}';
+
+        return renamedVS + '\n' + pickMain;
+    };
+
+    ShaderSource.createPickFragmentShaderSource = function(fragmentShaderSource, pickColorQualifier) {
+        var renamedFS = fragmentShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_old_main()');
+        var pickMain = pickColorQualifier + ' vec4 czm_pickColor; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    czm_old_main(); \n' +
+            '    if (gl_FragColor.a == 0.0) { \n' +
+            '       discard; \n' +
+            '    } \n' +
+            '    gl_FragColor = czm_pickColor; \n' +
+            '}';
+
+        return renamedFS + '\n' + pickMain;
+    };
 
     return ShaderSource;
 });
