@@ -347,10 +347,10 @@ define([
         this._cachedGltf = undefined;
         this._releaseGltfJson = defaultValue(options.releaseGltfJson, false);
         this._animationIds = undefined;
-        this._perInstanceUniforms = undefined;
+
         this._instanced = defaultValue(options.instanced, false);
         this._instancedAttributes = options.instancedAttributes;
-
+        this._perInstanceUniforms = undefined;
 
         var cachedGltf;
         if (defined(cacheKey) && defined(gltfCache[cacheKey]) && gltfCache[cacheKey].ready) {
