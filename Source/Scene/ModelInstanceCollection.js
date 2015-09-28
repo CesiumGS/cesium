@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian3',
         '../Core/clone',
         '../Core/Color',
+        '../Core/combine',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
@@ -22,6 +23,7 @@ define([
         Cartesian3,
         clone,
         Color,
+        combine,
         ComponentDatatype,
         defaultValue,
         defined,
@@ -72,6 +74,8 @@ define([
 
         this._model = undefined;
         this._boundingSphere = undefined;
+        this._boundingSphereModel = undefined;
+        this._boundingSphereModelView = undefined;
         this._instancingEnabled = false;
         this._instances = defaultValue(options.instances, []);
         this._show = options.show;
@@ -125,6 +129,21 @@ define([
         }
     });
 
+    function computeBoundingSphere(collection) {
+        var points = [];
+        var instanceCount = collection.instanceCount;
+        for (var i = 0; i < instanceCount; i++) {
+            var translation = new Cartesian3();
+            Matrix4.getTranslation(collection._instances[i].modelMatrix, translation);
+            points.push(translation);
+        }
+
+        var boundingSphere = BoundingSphere.fromPoints(points);
+        collection._boundingSphere = boundingSphere;
+        collection._boundingSphereModel = Matrix4.fromTranslation(boundingSphere.center);
+        collection._boundingSphereModelView = new Matrix4();
+    }
+
     function createModel(context, frameState, commandList, collection) {
         var i;
         var instanceCount = collection.instanceCount;
@@ -138,7 +157,10 @@ define([
             allowPicking : collection._allowPicking
         };
 
+        computeBoundingSphere(collection);
+
         if (collection._instancingEnabled) {
+            var center = collection._boundingSphere.center;
             var typedArray = new Float32Array(instanceCount * 16);
             for (i = 0; i < instanceCount; ++i) {
                 var instance = collection._instances[i];
@@ -149,15 +171,15 @@ define([
                 typedArray[i * 16 + 0] = modelMatrix[0];
                 typedArray[i * 16 + 1] = modelMatrix[4];
                 typedArray[i * 16 + 2] = modelMatrix[8];
-                typedArray[i * 16 + 3] = modelMatrix[12];
+                typedArray[i * 16 + 3] = modelMatrix[12] - center.x;
                 typedArray[i * 16 + 4] = modelMatrix[1];
                 typedArray[i * 16 + 5] = modelMatrix[5];
                 typedArray[i * 16 + 6] = modelMatrix[9];
-                typedArray[i * 16 + 7] = modelMatrix[13];
+                typedArray[i * 16 + 7] = modelMatrix[13] - center.y;
                 typedArray[i * 16 + 8] = modelMatrix[2];
                 typedArray[i * 16 + 9] = modelMatrix[6];
                 typedArray[i * 16 + 10] = modelMatrix[10];
-                typedArray[i * 16 + 11] = modelMatrix[14];
+                typedArray[i * 16 + 11] = modelMatrix[14] - center.z;
 
                 // Other instance data like pickColor, color, etc. Colors can be packed like in BillboardCollection as needed.
                 typedArray[i * 16 + 12] = pickColor.red;
@@ -196,21 +218,13 @@ define([
         collection._model = Model.fromGltf(modelOptions);
     }
 
-    function computeBoundingSphere(collection) {
-        var points = [];
-        var instanceCount = collection.instanceCount;
-        for (var i = 0; i < instanceCount; i++) {
-            var translation = new Cartesian3();
-            Matrix4.getTranslation(collection._instances[i].modelMatrix, translation);
-            points.push(translation);
-        }
-
-        var boundingSphere = BoundingSphere.fromPoints(points);
-        boundingSphere.radius += collection.model._boundingSphere.radius;
-        return boundingSphere;
+    function createBoundingVolumeModelViewFunction(collection, context) {
+        return function() {
+            return Matrix4.multiplyTransformation(context._us.view, collection._boundingSphereModel, collection._boundingSphereModelView);
+        };
     }
 
-    function createCommands(collection, drawCommands, pickCommands) {
+    function createCommands(collection, drawCommands, pickCommands, context) {
         collection._modelCommands = drawCommands;
 
         var i, j;
@@ -219,23 +233,37 @@ define([
         var instanceCount = collection.instanceCount;
         var allowPicking = collection.allowPicking;
 
-        var boundingSphere = computeBoundingSphere(collection);
-        var modelMatrix = Matrix4.fromTranslation(boundingSphere.center);
-        collection._boundingSphere = boundingSphere;
+        var boundingSphere = collection._boundingSphere;
+        var boundingSphereModel = collection._boundingSphereModel;
+        boundingSphere.radius += collection.model._boundingSphere.radius;
 
         if (collection._instancingEnabled) {
             for (i = 0; i < commandCount; ++i) {
                 command = clone(drawCommands[i]);
+
+                var uniformMap = combine(command.uniformMap, {
+                    czm_instanced_boundingVolumeModelView : createBoundingVolumeModelViewFunction(collection, context)
+                });
+
                 command.instanceCount = instanceCount;
-                command.modelMatrix = modelMatrix;
+                command.modelMatrix = boundingSphereModel;
                 command.boundingVolume = boundingSphere;
+                command.uniformMap = uniformMap;
+
                 collection._drawCommands.push(command);
 
                 if (allowPicking) {
                     command = clone(pickCommands[i]);
+
+                    uniformMap = combine(command.uniformMap, {
+                        czm_instanced_boundingVolumeModelView : createBoundingVolumeModelViewFunction(collection, context)
+                    });
+
                     command.instanceCount = instanceCount;
-                    command.modelMatrix = modelMatrix;
+                    command.modelMatrix = boundingSphereModel;
                     command.boundingVolume = boundingSphere;
+                    command.uniformMap = uniformMap;
+
                     collection._pickCommands.push(command);
                 }
             }
@@ -345,7 +373,7 @@ define([
             this._ready = true;
 
             var modelCommands = getModelCommands(model);
-            createCommands(this, modelCommands.draw, modelCommands.pick);
+            createCommands(this, modelCommands.draw, modelCommands.pick, context);
 
             this._readyPromise.resolve(this);
             return;
