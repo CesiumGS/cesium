@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+### 1.15 - 2015-11-02
+* Breaking changes
+  * ...
+* Deprecated
+  * ...
+* Adding instancing support via the ANGLE_instanced_arrays extension. Using instancing in `BillboardCollection` and the new `ModelInstanceCollection` primitive.
+
+
 ### 1.14 - 2015-10-01
 
 * Breaking changes
