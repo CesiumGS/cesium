@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-### 1.15 - 2015-11-01
+### 1.15 - 2015-11-02
 * Breaking changes
   * ...
 * Deprecated
