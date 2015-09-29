@@ -15,10 +15,15 @@ float czm_metersPerPixel(vec4 positionEC)
     float pixelWidth;
     float pixelHeight;
     
+    float top = czm_frustumPlanes.x;
+    float bottom = czm_frustumPlanes.y;
+    float left = czm_frustumPlanes.z;
+    float right = czm_frustumPlanes.w;
+    
     if (czm_sceneMode == czm_sceneMode2D)
     {
-        float frustumWidth = czm_frustumRight - czm_frustumLeft;
-        float frustumHeight = czm_frustumTop - czm_frustumBottom;
+        float frustumWidth = right - left;
+        float frustumHeight = top - bottom;
         pixelWidth = frustumWidth / width;
         pixelHeight = frustumHeight / height;
     }
@@ -26,9 +31,9 @@ float czm_metersPerPixel(vec4 positionEC)
     {
         float distanceToPixel = -positionEC.z;
         float inverseNear = 1.0 / czm_currentFrustum.x;
-        float tanTheta = czm_frustumTop * inverseNear;
+        float tanTheta = top * inverseNear;
         pixelHeight = 2.0 * distanceToPixel * tanTheta / height;
-        tanTheta = czm_frustumRight * inverseNear;
+        tanTheta = right * inverseNear;
         pixelWidth = 2.0 * distanceToPixel * tanTheta / width;
     }
 

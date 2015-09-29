@@ -293,8 +293,4 @@ defineSuite([
             '}';
         context.verifyDrawForSpecs(fs);
     });
-
-    it('has czm_metersPerPixel', function() {
-
-    });
 }, 'WebGL');

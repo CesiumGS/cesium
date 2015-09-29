@@ -768,35 +768,11 @@ defineSuite([
         context.verifyDrawForSpecs(fs);
     });
 
-    it('has czm_frustumTop', function() {
+    it('has czm_frustumPlanes', function() {
         var us = context.uniformState;
         us.update(context, createFrameState(createMockCamera()));
 
-        var fs = 'void main() { gl_FragColor = vec4(czm_frustumTop == 2.0); }';
-        context.verifyDrawForSpecs(fs);
-    });
-
-    it('has czm_frustumBottom', function() {
-        var us = context.uniformState;
-        us.update(context, createFrameState(createMockCamera()));
-
-        var fs = 'void main() { gl_FragColor = vec4(czm_frustumBottom == -2.0); }';
-        context.verifyDrawForSpecs(fs);
-    });
-
-    it('has czm_frustumRight', function() {
-        var us = context.uniformState;
-        us.update(context, createFrameState(createMockCamera()));
-
-        var fs = 'void main() { gl_FragColor = vec4(czm_frustumRight == 1.0); }';
-        context.verifyDrawForSpecs(fs);
-    });
-
-    it('has czm_frustumLeft', function() {
-        var us = context.uniformState;
-        us.update(context, createFrameState(createMockCamera()));
-
-        var fs = 'void main() { gl_FragColor = vec4(czm_frustumLeft == -1.0); }';
+        var fs = 'void main() { gl_FragColor = vec4(equal(czm_frustumPlanes, vec4(2.0, -2.0, -1.0, 1.0))); }';
         context.verifyDrawForSpecs(fs);
     });
 

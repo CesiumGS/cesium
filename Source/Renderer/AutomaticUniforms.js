@@ -1088,58 +1088,17 @@ define([
         }),
 
         /**
-         * Defines the top clipping plane.
+         * The distances to the frustum planes. The top, bottom, left and right distances are
+         * the x, y, z, and w components, respectively.
          *
-         * @alias czm_frustumTop
+         * @alias czm_frustumPlanes
          * @glslUniform
          */
-        czm_frustumTop : new AutomaticUniform({
+        czm_frustumPlanes : new AutomaticUniform({
             size : 1,
-            datatype : WebGLConstants.FLOAT,
+            datatype : WebGLConstants.FLOAT_VEC4,
             getValue : function(uniformState) {
-                return uniformState.frustumTop;
-            }
-        }),
-
-        /**
-         * Defines the bottom clipping plane.
-         *
-         * @alias czm_frustumBottom
-         * @glslUniform
-         */
-        czm_frustumBottom : new AutomaticUniform({
-            size : 1,
-            datatype : WebGLConstants.FLOAT,
-            getValue : function(uniformState) {
-                return uniformState.frustumBottom;
-            }
-        }),
-
-        /**
-         * Defines the right clipping plane.
-         *
-         * @alias czm_frustumRight
-         * @glslUniform
-         */
-        czm_frustumRight : new AutomaticUniform({
-            size : 1,
-            datatype : WebGLConstants.FLOAT,
-            getValue : function(uniformState) {
-                return uniformState.frustumRight;
-            }
-        }),
-
-        /**
-         * Defines the left clipping plane.
-         *
-         * @alias czm_frustumLeft
-         * @glslUniform
-         */
-        czm_frustumLeft : new AutomaticUniform({
-            size : 1,
-            datatype : WebGLConstants.FLOAT,
-            getValue : function(uniformState) {
-                return uniformState.frustumLeft;
+                return uniformState.frustumPlanes;
             }
         }),
 

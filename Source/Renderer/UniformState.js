@@ -53,10 +53,7 @@ define([
         this._infiniteProjection = Matrix4.clone(Matrix4.IDENTITY);
         this._entireFrustum = new Cartesian2();
         this._currentFrustum = new Cartesian2();
-        this._frustumTop = undefined;
-        this._frustumBottom = undefined;
-        this._frustumRight = undefined;
-        this._frustumLeft = undefined;
+        this._frustumPlanes = new Cartesian4();
 
         this._frameState = undefined;
         this._temeToPseudoFixed = Matrix3.clone(Matrix4.IDENTITY);
@@ -637,42 +634,14 @@ define([
         },
 
         /**
+         * The distances to the frustum planes. The top, bottom, left and right distances are
+         * the x, y, z, and w components, respectively.
          * @memberof UniformState.prototype
-         * @type {Number}
+         * @type {Cartesian4}
          */
-        frustumTop : {
+        frustumPlanes : {
             get : function() {
-                return this._frustumTop;
-            }
-        },
-
-        /**
-         * @memberof UniformState.prototype
-         * @type {Number}
-         */
-        frustumBottom : {
-            get : function() {
-                return this._frustumBottom;
-            }
-        },
-
-        /**
-         * @memberof UniformState.prototype
-         * @type {Number}
-         */
-        frustumRight : {
-            get : function() {
-                return this._frustumRight;
-            }
-        },
-
-        /**
-         * @memberof UniformState.prototype
-         * @type {Number}
-         */
-        frustumLeft : {
-            get : function() {
-                return this._frustumLeft;
+                return this._frustumPlanes;
             }
         },
 
@@ -893,10 +862,10 @@ define([
             frustum = frustum._offCenterFrustum;
         }
 
-        this._frustumTop = frustum.top;
-        this._frustumBottom = frustum.bottom;
-        this._frustumRight = frustum.right;
-        this._frustumLeft = frustum.left;
+        this._frustumPlanes.x = frustum.top;
+        this._frustumPlanes.y = frustum.bottom;
+        this._frustumPlanes.z = frustum.left;
+        this._frustumPlanes.w = frustum.right;
     };
 
     /**
