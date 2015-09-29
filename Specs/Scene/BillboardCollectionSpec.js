@@ -6,10 +6,12 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/defined',
         'Core/Ellipsoid',
         'Core/loadImage',
         'Core/Math',
         'Core/NearFarScalar',
+        'Renderer/ContextLimits',
         'Scene/HeightReference',
         'Scene/HorizontalOrigin',
         'Scene/OrthographicFrustum',
@@ -25,10 +27,12 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Color,
+        defined,
         Ellipsoid,
         loadImage,
         CesiumMath,
         NearFarScalar,
+        ContextLimits,
         HeightReference,
         HorizontalOrigin,
         OrthographicFrustum,
@@ -55,7 +59,7 @@ defineSuite([
         scene = createScene();
         camera = scene.camera;
 
-        heightReferenceSupported = scene._globeDepth.supported && scene.context.maximumVertexTextureImageUnits > 0;
+        heightReferenceSupported = defined(scene._globeDepth) && scene._globeDepth.supported && ContextLimits.maximumVertexTextureImageUnits > 0;
 
         return when.join(
             loadImage('./Data/Images/Green.png').then(function(result) {
@@ -1194,6 +1198,36 @@ defineSuite([
 
         expect(actual.center).toEqual(bs.center);
         expect(actual.radius).toEqual(bs.radius);
+    });
+
+    it('computes bounding sphere with non-centered origin', function() {
+        billboards.add({
+            image : greenImage,
+            position : Cartesian3.fromDegrees(-50.0, -50.0)
+        });
+        scene.renderForSpecs();
+        var centeredRadius = scene._commandList[0].boundingVolume.radius;
+        billboards.removeAll();
+
+        billboards.add({
+            image : greenImage,
+            position : Cartesian3.fromDegrees(-50.0, -50.0),
+            verticalOrigin: VerticalOrigin.TOP
+        });
+        scene.renderForSpecs();
+        var verticalRadius = scene._commandList[0].boundingVolume.radius;
+        billboards.removeAll();
+
+        billboards.add({
+            image : greenImage,
+            position : Cartesian3.fromDegrees(-50.0, -50.0),
+            horizontalOrigin: HorizontalOrigin.LEFT
+        });
+        scene.renderForSpecs();
+        var horizontalRadius = scene._commandList[0].boundingVolume.radius;
+
+        expect(verticalRadius).toEqual(2*centeredRadius);
+        expect(horizontalRadius).toEqual(2*centeredRadius);
     });
 
     it('can create a billboard using a URL', function() {

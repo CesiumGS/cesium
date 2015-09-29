@@ -15,9 +15,16 @@ define([
         '../Core/Matrix4',
         '../Core/PixelFormat',
         '../Core/PrimitiveType',
+        '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
+        '../Renderer/ComputeCommand',
         '../Renderer/DrawCommand',
+        '../Renderer/Framebuffer',
+        '../Renderer/RenderState',
+        '../Renderer/ShaderProgram',
+        '../Renderer/Texture',
+        '../Renderer/VertexArray',
         '../Shaders/SunFS',
         '../Shaders/SunTextureFS',
         '../Shaders/SunVS',
@@ -40,9 +47,16 @@ define([
         Matrix4,
         PixelFormat,
         PrimitiveType,
+        Buffer,
         BufferUsage,
         ClearCommand,
+        ComputeCommand,
         DrawCommand,
+        Framebuffer,
+        RenderState,
+        ShaderProgram,
+        Texture,
+        VertexArray,
         SunFS,
         SunTextureFS,
         SunVS,
@@ -72,11 +86,15 @@ define([
          */
         this.show = true;
 
-        this._command = new DrawCommand({
+        this._drawCommand = new DrawCommand({
             primitiveType : PrimitiveType.TRIANGLES,
             boundingVolume : new BoundingSphere(),
             owner : this
         });
+        this._commands = {
+            drawCommand : this._drawCommand,
+            computeCommand : undefined
+        };
         this._boundingVolume = new BoundingSphere();
         this._boundingVolume2D = new BoundingSphere();
 
@@ -160,24 +178,11 @@ define([
             var size = Math.max(drawingBufferWidth, drawingBufferHeight);
             size = Math.pow(2.0, Math.ceil(Math.log(size) / Math.log(2.0)) - 2.0);
 
-            this._texture = context.createTexture2D({
+            this._texture = new Texture({
+                context : context,
                 width : size,
                 height : size,
                 pixelFormat : PixelFormat.RGBA
-            });
-
-            var fbo = context.createFramebuffer({
-                colorTextures : [this._texture]
-            });
-            fbo.destroyAttachments = false;
-
-            var clearCommand = new ClearCommand({
-                color : new Color(0.0, 0.0, 0.0, 0.0),
-                framebuffer : fbo
-            });
-
-            var rs = context.createRenderState({
-                viewport : new BoundingRectangle(0.0, 0.0, size, size)
             });
 
             this._glowLengthTS = this._glowFactor * 5.0;
@@ -193,23 +198,20 @@ define([
                 }
             };
 
-            var drawCommand = context.createViewportQuadCommand(SunTextureFS, {
-                renderState : rs,
-                uniformMap : uniformMap,
-                framebuffer : fbo,
-                owner : this
+            this._commands.computeCommand = new ComputeCommand({
+                fragmentShaderSource : SunTextureFS,
+                outputTexture  : this._texture,
+                persists : false,
+                owner : this,
+                postExecute : function() {
+                    that._commands.computeCommand = undefined;
+                }
             });
-
-            clearCommand.execute(context);
-            drawCommand.execute(context);
-
-            drawCommand.shaderProgram.destroy();
-            fbo.destroy();
         }
 
-        var command = this._command;
+        var drawCommand = this._drawCommand;
 
-        if (!defined(command.vertexArray)) {
+        if (!defined(drawCommand.vertexArray)) {
             var attributeLocations = {
                 direction : 0
             };
@@ -227,7 +229,11 @@ define([
             directions[6] = 0.0;
             directions[7] = 255;
 
-            var vertexBuffer = context.createVertexBuffer(directions, BufferUsage.STATIC_DRAW);
+            var vertexBuffer = Buffer.createVertexBuffer({
+                context : context,
+                typedArray : directions,
+                usage : BufferUsage.STATIC_DRAW
+            });
             var attributes = [{
                 index : attributeLocations.direction,
                 vertexBuffer : vertexBuffer,
@@ -236,13 +242,29 @@ define([
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE
             }];
             // Workaround Internet Explorer 11.0.8 lack of TRIANGLE_FAN
-            var indexBuffer = context.createIndexBuffer(new Uint16Array([0, 1, 2, 0, 2, 3]), BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
-            command.vertexArray = context.createVertexArray(attributes, indexBuffer);
-            command.shaderProgram = context.createShaderProgram(SunVS, SunFS, attributeLocations);
-            command.renderState = context.createRenderState({
+            var indexBuffer = Buffer.createIndexBuffer({
+                context : context,
+                typedArray : new Uint16Array([0, 1, 2, 0, 2, 3]),
+                usage : BufferUsage.STATIC_DRAW,
+                indexDatatype : IndexDatatype.UNSIGNED_SHORT
+            });
+            drawCommand.vertexArray = new VertexArray({
+                context : context,
+                attributes : attributes,
+                indexBuffer : indexBuffer
+            });
+
+            drawCommand.shaderProgram = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : SunVS,
+                fragmentShaderSource : SunFS,
+                attributeLocations : attributeLocations
+            });
+
+            drawCommand.renderState = RenderState.fromCache({
                 blending : BlendingState.ALPHA_BLEND
             });
-            command.uniformMap = this._uniformMap;
+            drawCommand.uniformMap = this._uniformMap;
         }
 
         var sunPosition = context.uniformState.sunPositionWC;
@@ -260,9 +282,9 @@ define([
         boundingVolume2D.radius = boundingVolume.radius;
 
         if (mode === SceneMode.SCENE3D) {
-            BoundingSphere.clone(boundingVolume, command.boundingVolume);
+            BoundingSphere.clone(boundingVolume, drawCommand.boundingVolume);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
-            BoundingSphere.clone(boundingVolume2D, command.boundingVolume);
+            BoundingSphere.clone(boundingVolume2D, drawCommand.boundingVolume);
         }
 
         var position = SceneTransforms.computeActualWgs84Position(frameState, sunPosition, scratchCartesian4);
@@ -286,7 +308,7 @@ define([
         this._size = Math.ceil(Cartesian2.magnitude(Cartesian2.subtract(limbWC, positionWC, scratchCartesian4)));
         this._size = 2.0 * this._size * (1.0 + 2.0 * this._glowLengthTS);
 
-        return command;
+        return this._commands;
     };
 
     /**
@@ -321,7 +343,7 @@ define([
      * sun = sun && sun.destroy();
      */
     Sun.prototype.destroy = function() {
-        var command = this._command;
+        var command = this._drawCommand;
         command.vertexArray = command.vertexArray && command.vertexArray.destroy();
         command.shaderProgram = command.shaderProgram && command.shaderProgram.destroy();
 

@@ -30,17 +30,17 @@ define([
         '../Core/Rectangle',
         '../Core/Transforms',
         '../Renderer/BufferUsage',
-        '../Renderer/ClearCommand',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
+        '../Renderer/Texture',
+        '../Renderer/VertexArray',
         '../Shaders/GlobeFS',
-        '../Shaders/GlobeFSDepth',
         '../Shaders/GlobeFSPole',
         '../Shaders/GlobeVS',
-        '../Shaders/GlobeVSDepth',
         '../Shaders/GlobeVSPole',
         '../ThirdParty/when',
-        './DepthFunction',
         './GlobeSurfaceShaderSet',
         './GlobeSurfaceTileProvider',
         './ImageryLayerCollection',
@@ -79,17 +79,17 @@ define([
         Rectangle,
         Transforms,
         BufferUsage,
-        ClearCommand,
         DrawCommand,
+        RenderState,
+        ShaderProgram,
         ShaderSource,
+        Texture,
+        VertexArray,
         GlobeFS,
-        GlobeFSDepth,
         GlobeFSPole,
         GlobeVS,
-        GlobeVSDepth,
         GlobeVSPole,
         when,
-        DepthFunction,
         GlobeSurfaceShaderSet,
         GlobeSurfaceTileProvider,
         ImageryLayerCollection,
@@ -142,17 +142,6 @@ define([
         this._rsColor = undefined;
         this._rsColorWithoutDepthTest = undefined;
 
-        this._clearDepthCommand = new ClearCommand({
-            depth : 1.0,
-            stencil : 0,
-            owner : this
-        });
-
-        this._depthCommand = new DrawCommand({
-            boundingVolume : new BoundingSphere(Cartesian3.ZERO, ellipsoid.maximumRadius),
-            pass : Pass.OPAQUE,
-            owner : this
-        });
         this._northPoleCommand = new DrawCommand({
             pass : Pass.OPAQUE,
             owner : this
@@ -210,18 +199,6 @@ define([
         this._oceanNormalMapUrl = undefined;
 
         /**
-         * True if primitives such as billboards, polylines, labels, etc. should be depth-tested
-         * against the terrain surface, or false if such primitives should always be drawn on top
-         * of terrain unless they're on the opposite side of the globe.  The disadvantage of depth
-         * testing primitives against terrain is that slight numerical noise or terrain level-of-detail
-         * switched can sometimes make a primitive that should be on the surface disappear underneath it.
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.depthTestAgainstTerrain = false;
-
-        /**
          * The maximum screen-space error used to drive level-of-detail refinement.  Higher
          * values will provide better performance but lower visual quality.
          *
@@ -276,6 +253,19 @@ define([
          * @default true
          */
         this.showWaterEffect = true;
+
+        /**
+         * True if primitives such as billboards, polylines, labels, etc. should be depth-tested
+         * against the terrain surface, or false if such primitives should always be drawn on top
+         * of terrain unless they're on the opposite side of the globe.  The disadvantage of depth
+         * testing primitives against terrain is that slight numerical noise or terrain level-of-detail
+         * switched can sometimes make a primitive that should be on the surface disappear underneath it.
+         *
+         * @type {Boolean}
+         * @default false
+         *
+         */
+        this.depthTestAgainstTerrain = false;
 
         this._oceanNormalMap = undefined;
         this._zoomedOutOceanSpecularIntensity = 0.5;
@@ -490,59 +480,6 @@ define([
         return ellipsoid.cartesianToCartographic(intersection, scratchGetHeightCartographic).height;
     };
 
-    var depthQuadScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(12) : [];
-    var scratchCartesian1 = new Cartesian3();
-    var scratchCartesian2 = new Cartesian3();
-    var scratchCartesian3 = new Cartesian3();
-    var scratchCartesian4 = new Cartesian3();
-
-    function computeDepthQuad(globe, frameState) {
-        var radii = globe._ellipsoid.radii;
-        var p = frameState.camera.positionWC;
-
-        // Find the corresponding position in the scaled space of the ellipsoid.
-        var q = Cartesian3.multiplyComponents(globe._ellipsoid.oneOverRadii, p, scratchCartesian1);
-
-        var qMagnitude = Cartesian3.magnitude(q);
-        var qUnit = Cartesian3.normalize(q, scratchCartesian2);
-
-        // Determine the east and north directions at q.
-        var eUnit = Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, q, scratchCartesian3), scratchCartesian3);
-        var nUnit = Cartesian3.normalize(Cartesian3.cross(qUnit, eUnit, scratchCartesian4), scratchCartesian4);
-
-        // Determine the radius of the 'limb' of the ellipsoid.
-        var wMagnitude = Math.sqrt(Cartesian3.magnitudeSquared(q) - 1.0);
-
-        // Compute the center and offsets.
-        var center = Cartesian3.multiplyByScalar(qUnit, 1.0 / qMagnitude, scratchCartesian1);
-        var scalar = wMagnitude / qMagnitude;
-        var eastOffset = Cartesian3.multiplyByScalar(eUnit, scalar, scratchCartesian2);
-        var northOffset = Cartesian3.multiplyByScalar(nUnit, scalar, scratchCartesian3);
-
-        // A conservative measure for the longitudes would be to use the min/max longitudes of the bounding frustum.
-        var upperLeft = Cartesian3.add(center, northOffset, scratchCartesian4);
-        Cartesian3.subtract(upperLeft, eastOffset, upperLeft);
-        Cartesian3.multiplyComponents(radii, upperLeft, upperLeft);
-        Cartesian3.pack(upperLeft, depthQuadScratch, 0);
-
-        var lowerLeft = Cartesian3.subtract(center, northOffset, scratchCartesian4);
-        Cartesian3.subtract(lowerLeft, eastOffset, lowerLeft);
-        Cartesian3.multiplyComponents(radii, lowerLeft, lowerLeft);
-        Cartesian3.pack(lowerLeft, depthQuadScratch, 3);
-
-        var upperRight = Cartesian3.add(center, northOffset, scratchCartesian4);
-        Cartesian3.add(upperRight, eastOffset, upperRight);
-        Cartesian3.multiplyComponents(radii, upperRight, upperRight);
-        Cartesian3.pack(upperRight, depthQuadScratch, 6);
-
-        var lowerRight = Cartesian3.subtract(center, northOffset, scratchCartesian4);
-        Cartesian3.add(lowerRight, eastOffset, lowerRight);
-        Cartesian3.multiplyComponents(radii, lowerRight, lowerRight);
-        Cartesian3.pack(lowerRight, depthQuadScratch, 9);
-
-        return depthQuadScratch;
-    }
-
     var rightScratch = new Cartesian3();
     var upScratch = new Cartesian3();
     var negativeZ = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
@@ -652,7 +589,8 @@ define([
                             })
                         }
                     });
-                    globe._northPoleCommand.vertexArray = context.createVertexArrayFromGeometry({
+                    globe._northPoleCommand.vertexArray = VertexArray.fromGeometry({
+                        context : context,
                         geometry : geometry,
                         attributeLocations : {
                             position : 0
@@ -696,7 +634,8 @@ define([
                              })
                          }
                      });
-                     globe._southPoleCommand.vertexArray = context.createVertexArrayFromGeometry({
+                     globe._southPoleCommand.vertexArray = VertexArray.fromGeometry({
+                         context : context,
                          geometry : geometry,
                          attributeLocations : {
                              position : 0
@@ -762,7 +701,7 @@ define([
         if (this._mode !== mode || !defined(this._rsColor)) {
             modeChanged = true;
             if (mode === SceneMode.SCENE3D || mode === SceneMode.COLUMBUS_VIEW) {
-                this._rsColor = context.createRenderState({ // Write color and depth
+                this._rsColor = RenderState.fromCache({ // Write color and depth
                     cull : {
                         enabled : true
                     },
@@ -770,33 +709,18 @@ define([
                         enabled : true
                     }
                 });
-                this._rsColorWithoutDepthTest = context.createRenderState({ // Write color, not depth
+                this._rsColorWithoutDepthTest = RenderState.fromCache({ // Write color, not depth
                     cull : {
                         enabled : true
-                    }
-                });
-                this._depthCommand.renderState = context.createRenderState({ // Write depth, not color
-                    cull : {
-                        enabled : true
-                    },
-                    depthTest : {
-                        enabled : true,
-                        func : DepthFunction.ALWAYS
-                    },
-                    colorMask : {
-                        red : false,
-                        green : false,
-                        blue : false,
-                        alpha : false
                     }
                 });
             } else {
-                this._rsColor = context.createRenderState({
+                this._rsColor = RenderState.fromCache({
                     cull : {
                         enabled : true
                     }
                 });
-                this._rsColorWithoutDepthTest = context.createRenderState({
+                this._rsColorWithoutDepthTest = RenderState.fromCache({
                     cull : {
                         enabled : true
                     }
@@ -811,39 +735,6 @@ define([
 
         northPoleCommand.renderState = this._rsColorWithoutDepthTest;
         southPoleCommand.renderState = this._rsColorWithoutDepthTest;
-
-        // update depth plane
-        var depthQuad = computeDepthQuad(this, frameState);
-
-        // depth plane
-        if (!this._depthCommand.vertexArray) {
-            var geometry = new Geometry({
-                attributes : {
-                    position : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.FLOAT,
-                        componentsPerAttribute : 3,
-                        values : depthQuad
-                    })
-                },
-                indices : [0, 1, 2, 2, 1, 3],
-                primitiveType : PrimitiveType.TRIANGLES
-            });
-            this._depthCommand.vertexArray = context.createVertexArrayFromGeometry({
-                geometry : geometry,
-                attributeLocations : {
-                    position : 0
-                },
-                bufferUsage : BufferUsage.DYNAMIC_DRAW
-            });
-        } else {
-            this._depthCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(depthQuad);
-        }
-
-        if (!defined(this._depthCommand.shaderProgram)) {
-            this._depthCommand.shaderProgram = context.createShaderProgram(GlobeVSDepth, GlobeFSDepth, {
-                position : 0
-            });
-        }
 
         var surface = this._surface;
         var tileProvider = surface.tileProvider;
@@ -864,7 +755,8 @@ define([
                     }
 
                     that._oceanNormalMap = that._oceanNormalMap && that._oceanNormalMap.destroy();
-                    that._oceanNormalMap = context.createTexture2D({
+                    that._oceanNormalMap = new Texture({
+                        context : context,
                         source : image
                     });
                 });
@@ -876,7 +768,13 @@ define([
         if (!defined(northPoleCommand.shaderProgram) ||
             !defined(southPoleCommand.shaderProgram)) {
 
-            var poleShaderProgram = context.replaceShaderProgram(northPoleCommand.shaderProgram, GlobeVSPole, GlobeFSPole, terrainAttributeLocations);
+            var poleShaderProgram = ShaderProgram.replaceCache({
+                context : context,
+                shaderProgram : northPoleCommand.shaderProgram,
+                vertexShaderSource : GlobeVSPole,
+                fragmentShaderSource : GlobeFSPole,
+                attributeLocations : terrainAttributeLocations
+            });
 
             northPoleCommand.shaderProgram = poleShaderProgram;
             southPoleCommand.shaderProgram = poleShaderProgram;
@@ -918,22 +816,10 @@ define([
             tileProvider.enableLighting = this.enableLighting;
 
             surface.update(context, frameState, commandList);
-
-            // render depth plane
-            if (mode === SceneMode.SCENE3D || mode === SceneMode.COLUMBUS_VIEW) {
-                if (!this.depthTestAgainstTerrain) {
-                    commandList.push(this._clearDepthCommand);
-                    if (mode === SceneMode.SCENE3D) {
-                        commandList.push(this._depthCommand);
-                    }
-                }
-            }
         }
 
-        if (pass.pick && mode === SceneMode.SCENE3D) {
-            // Not actually pickable, but render depth-only so primitives on the backface
-            // of the globe are not picked.
-            commandList.push(this._depthCommand);
+        if (pass.pick) {
+            surface.update(context, frameState, commandList);
         }
     };
 
@@ -976,9 +862,6 @@ define([
 
         this._northPoleCommand.shaderProgram = this._northPoleCommand.shaderProgram && this._northPoleCommand.shaderProgram.destroy();
         this._southPoleCommand.shaderProgram = this._northPoleCommand.shaderProgram;
-
-        this._depthCommand.shaderProgram = this._depthCommand.shaderProgram && this._depthCommand.shaderProgram.destroy();
-        this._depthCommand.vertexArray = this._depthCommand.vertexArray && this._depthCommand.vertexArray.destroy();
 
         this._surface = this._surface && this._surface.destroy();
 

@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        'Core/Cartesian2',
         'Core/clone',
         'Core/defaultValue',
         'Core/defined',
@@ -8,6 +9,7 @@ define([
         'Specs/createCanvas',
         'Specs/destroyCanvas'
     ], function(
+        Cartesian2,
         clone,
         defaultValue,
         defined,
@@ -32,6 +34,7 @@ define([
         var contextOptions = options.contextOptions;
         contextOptions.webgl = defaultValue(contextOptions.webgl, {});
         contextOptions.webgl.antialias = defaultValue(contextOptions.webgl.antialias, false);
+        contextOptions.webgl.failIfMajorPerformanceCaveat = false;
 
         var scene = new Scene(options);
 
@@ -55,6 +58,10 @@ define([
             scene.initializeFrame();
             scene.render(time);
             return scene.context.readPixels();
+        };
+
+        scene.pickForSpecs = function() {
+            return scene.pick(new Cartesian2(0, 0));
         };
 
         scene.rethrowRenderErrors = defaultValue(options.rethrowRenderErrors, true);

@@ -22,6 +22,7 @@ define([
         './CameraEventAggregator',
         './CameraEventType',
         './SceneMode',
+        './SceneTransforms',
         './TweenCollection'
     ], function(
         Cartesian2,
@@ -46,6 +47,7 @@ define([
         CameraEventAggregator,
         CameraEventType,
         SceneMode,
+        SceneTransforms,
         TweenCollection) {
     "use strict";
 
@@ -153,7 +155,7 @@ define([
          * @type {Number}
          * @default 20.0
          */
-        this.minimumZoomDistance = 20.0;
+        this.minimumZoomDistance = 1.0;
         /**
          * The maximum magnitude, in meters, of the camera position when zooming. Defaults to positive infinity.
          * @type {Number}
@@ -204,10 +206,16 @@ define([
          * @default [{@link CameraEventType.MIDDLE_DRAG}, {@link CameraEventType.PINCH}, {
          *     eventType : {@link CameraEventType.LEFT_DRAG},
          *     modifier : {@link KeyboardEventModifier.CTRL}
+         * }, {
+         *     eventType : {@link CameraEventType.RIGHT_DRAG},
+         *     modifier : {@link KeyboardEventModifier.CTRL}
          * }]
          */
         this.tiltEventTypes = [CameraEventType.MIDDLE_DRAG, CameraEventType.PINCH, {
             eventType : CameraEventType.LEFT_DRAG,
+            modifier : KeyboardEventModifier.CTRL
+        }, {
+            eventType : CameraEventType.RIGHT_DRAG,
             modifier : KeyboardEventModifier.CTRL
         }];
         /**
@@ -235,7 +243,7 @@ define([
          * @type {Number}
          * @default 10000.0
          */
-        this.minimumCollisionTerrainHeight = 10000.0;
+        this.minimumCollisionTerrainHeight = 15000.0;
         /**
          * The minimum height the camera must be before switching from rotating a track ball to
          * free look when clicks originate on the sky on in space.
@@ -272,10 +280,14 @@ define([
         this._rotateMousePosition = new Cartesian2(-1.0, -1.0);
         this._rotateStartPosition = new Cartesian3();
         this._strafeStartPosition = new Cartesian3();
+        this._zoomMouseStart = new Cartesian2();
+        this._zoomWorldPosition = new Cartesian3();
         this._tiltCVOffMap = false;
         this._looking = false;
         this._rotating = false;
         this._strafing = false;
+        this._zoomingOnVector = false;
+        this._rotatingZoom = false;
 
         var projection = scene.mapProjection;
         this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
@@ -397,12 +409,23 @@ define([
             if (controller.enableInputs && enabled) {
                 if (movement) {
                     action(controller, startPosition, movement);
-                } else if (inertiaConstant < 1.0 && !controller._strafing) {
+                } else if (inertiaConstant < 1.0) {
                     maintainInertia(aggregator, type, modifier, inertiaConstant, action, controller, inertiaStateName);
                 }
             }
         }
     }
+
+    var scratchZoomPickRay = new Ray();
+    var scratchPickCartesian = new Cartesian3();
+    var scratchZoomOffset = new Cartesian2();
+    var scratchZoomDirection = new Cartesian3();
+    var scratchCenterPixel = new Cartesian2();
+    var scratchCenterPosition = new Cartesian3();
+    var scratchPositionNormal = new Cartesian3();
+    var scratchPickNormal = new Cartesian3();
+    var scratchZoomAxis = new Cartesian3();
+    var scratchCameraPositionNormal = new Cartesian3();
 
     function handleZoom(object, startPosition, movement, zoomFactor, distanceMeasure, unitPositionDotDirection) {
         var percentage = 1.0;
@@ -438,13 +461,104 @@ define([
             distance = distanceMeasure - maxHeight;
         }
 
-        object._scene.camera.zoomIn(distance);
+        var scene = object._scene;
+        var camera = scene.camera;
+        var mode = scene.mode;
+
+        var pickedPosition;
+        if (defined(object._globe)) {
+            pickedPosition = mode !== SceneMode.SCENE2D ? pickGlobe(object, startPosition, scratchPickCartesian) : camera.getPickRay(startPosition, scratchZoomPickRay).origin;
+        }
+
+        if (!defined(pickedPosition)) {
+            camera.zoomIn(distance);
+            return;
+        }
+
+        var sameStartPosition = Cartesian2.equals(startPosition, object._zoomMouseStart);
+        var zoomingOnVector = object._zoomingOnVector;
+        var rotatingZoom = object._rotatingZoom;
+
+        if (!sameStartPosition) {
+            object._zoomMouseStart = Cartesian2.clone(startPosition, object._zoomMouseStart);
+            object._zoomWorldPosition = Cartesian3.clone(pickedPosition, object._zoomWorldPosition);
+
+            zoomingOnVector = object._zoomingOnVector = false;
+            rotatingZoom = object._rotatingZoom = false;
+        }
+
+        var zoomOnVector = mode === SceneMode.COLUMBUS_VIEW;
+
+        if (!sameStartPosition || rotatingZoom) {
+            if (mode === SceneMode.SCENE2D) {
+                var worldPosition = object._zoomWorldPosition;
+                var endPosition = camera.position;
+
+                if (!Cartesian3.equals(worldPosition, endPosition)) {
+                    var direction = Cartesian3.subtract(worldPosition, endPosition, scratchZoomDirection);
+                    Cartesian3.normalize(direction, direction);
+
+                    var d = Cartesian3.distance(worldPosition, endPosition) * distance / (camera.getMagnitude() * 0.5);
+                    camera.move(direction, d * 0.5);
+                }
+            } else if (mode === SceneMode.SCENE3D) {
+                var cameraPositionNormal = Cartesian3.normalize(camera.position, scratchCameraPositionNormal);
+                if (camera.positionCartographic.height < 3000.0 && Math.abs(Cartesian3.dot(camera.direction, cameraPositionNormal)) < 0.6) {
+                    zoomOnVector = true;
+                } else {
+                    var canvas = scene.canvas;
+
+                    var centerPixel = scratchCenterPixel;
+                    centerPixel.x = canvas.clientWidth / 2;
+                    centerPixel.y = canvas.clientHeight / 2;
+                    var centerPosition = pickGlobe(object, centerPixel, scratchCenterPosition);
+                    if (defined(centerPosition)) {
+                        var positionNormal = Cartesian3.normalize(centerPosition, scratchPositionNormal);
+                        var pickedNormal = Cartesian3.normalize(object._zoomWorldPosition, scratchPickNormal);
+                        var dotProduct = Cartesian3.dot(pickedNormal, positionNormal);
+
+                        if (dotProduct > 0.0) {
+                            var angle = CesiumMath.acosClamped(dotProduct);
+                            var axis = Cartesian3.cross(pickedNormal, positionNormal, scratchZoomAxis);
+
+                            var denom = Math.abs(angle) > CesiumMath.toRadians(20.0) ? camera.positionCartographic.height * 0.75 : camera.positionCartographic.height - distance;
+                            var scalar = distance / denom;
+                            camera.rotate(axis, angle * scalar);
+                        }
+                    } else {
+                        zoomOnVector = true;
+                    }
+                }
+            }
+
+            object._rotatingZoom = !zoomOnVector;
+        }
+
+        if ((!sameStartPosition && zoomOnVector) || zoomingOnVector) {
+            var ray;
+            var zoomMouseStart = SceneTransforms.wgs84ToWindowCoordinates(scene, object._zoomWorldPosition, scratchZoomOffset);
+            if (mode !== SceneMode.COLUMBUS_VIEW && Cartesian2.equals(startPosition, object._zoomMouseStart) && defined(zoomMouseStart)) {
+                ray = camera.getPickRay(zoomMouseStart, scratchZoomPickRay);
+            } else {
+                ray = camera.getPickRay(startPosition, scratchZoomPickRay);
+            }
+
+            var rayDirection = ray.direction;
+            if (mode === SceneMode.COLUMBUS_VIEW) {
+                Cartesian3.fromElements(rayDirection.y, rayDirection.z, rayDirection.x, rayDirection);
+            }
+
+            camera.move(rayDirection, distance);
+
+            object._zoomingOnVector = true;
+        } else {
+            camera.zoomIn(distance);
+        }
     }
 
     var translate2DStart = new Ray();
     var translate2DEnd = new Ray();
     var scratchTranslateP0 = new Cartesian3();
-    var scratchTranslateP1 = new Cartesian3();
 
     function translate2D(controller, startPosition, movement) {
         var scene = controller._scene;
@@ -452,10 +566,7 @@ define([
         var start = camera.getPickRay(movement.startPosition, translate2DStart).origin;
         var end = camera.getPickRay(movement.endPosition, translate2DEnd).origin;
 
-        var position = camera.position;
-        var p0 = Cartesian3.subtract(start, position, scratchTranslateP0);
-        var p1 = Cartesian3.subtract(end, position, scratchTranslateP1);
-        var direction = Cartesian3.subtract(p0, p1, scratchTranslateP0);
+        var direction = Cartesian3.subtract(start, end, scratchTranslateP0);
         var distance = Cartesian3.magnitude(direction);
 
         if (distance > 0.0) {
@@ -1018,7 +1129,10 @@ define([
         var scene = controller._scene;
         var camera = scene.camera;
 
-        var mouseStartPosition = controller._strafeStartPosition;
+        var mouseStartPosition = pickGlobe(controller, movement.startPosition, scratchMousePos);
+        if (!defined(mouseStartPosition)) {
+            return;
+        }
 
         var mousePosition = movement.endPosition;
         var ray = camera.getPickRay(mousePosition, scratchStrafeRay);

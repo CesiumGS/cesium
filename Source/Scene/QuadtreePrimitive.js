@@ -243,13 +243,21 @@ define([
      *        commands to this array during the update call.
      */
     QuadtreePrimitive.prototype.update = function(context, frameState, commandList) {
-        this._tileProvider.beginUpdate(context, frameState, commandList);
+        var passes = frameState.passes;
 
-        selectTilesForRendering(this, context, frameState);
-        processTileLoadQueue(this, context, frameState);
-        createRenderCommandsForSelectedTiles(this, context, frameState, commandList);
+        if (passes.render) {
+            this._tileProvider.beginUpdate(context, frameState, commandList);
 
-        this._tileProvider.endUpdate(context, frameState, commandList);
+            selectTilesForRendering(this, context, frameState);
+            processTileLoadQueue(this, context, frameState, commandList);
+            createRenderCommandsForSelectedTiles(this, context, frameState, commandList);
+
+            this._tileProvider.endUpdate(context, frameState, commandList);
+        }
+
+        if (passes.pick && this._tilesToRender.length > 0) {
+            this._tileProvider.endUpdate(context, frameState, commandList);
+        }
     };
 
     /**
@@ -491,7 +499,7 @@ define([
         primitive._tileLoadQueue.push(tile);
     }
 
-    function processTileLoadQueue(primitive, context, frameState) {
+    function processTileLoadQueue(primitive, context, frameState, commandList) {
         var tileLoadQueue = primitive._tileLoadQueue;
         var tileProvider = primitive._tileProvider;
 
@@ -510,7 +518,7 @@ define([
         for (var len = tileLoadQueue.length - 1, i = len; i >= 0; --i) {
             var tile = tileLoadQueue[i];
             primitive._tileReplacementQueue.markTileRendered(tile);
-            tileProvider.loadTile(context, frameState, tile);
+            tileProvider.loadTile(context, frameState, commandList, tile);
             if (getTimestamp() >= endTime) {
                 break;
             }

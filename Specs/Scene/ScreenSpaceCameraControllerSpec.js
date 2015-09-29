@@ -161,6 +161,11 @@ defineSuite([
         var ellipsoid = Ellipsoid.WGS84;
         scene.mapProjection = new GeographicProjection(ellipsoid);
 
+        scene.frameState = {
+            mode : scene.mode,
+            mapProjection : scene.mapProjection
+        };
+
         var maxRadii = ellipsoid.maximumRadius;
         var frustum = new OrthographicFrustum();
         frustum.right = maxRadii * Math.PI;
@@ -183,6 +188,11 @@ defineSuite([
         var ellipsoid = Ellipsoid.WGS84;
         scene.mapProjection = new GeographicProjection(ellipsoid);
 
+        scene.frameState = {
+            mode : scene.mode,
+            mapProjection : scene.mapProjection
+        };
+
         var maxRadii = ellipsoid.maximumRadius;
         camera.position = new Cartesian3(0.0, 0.0, maxRadii);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
@@ -195,6 +205,11 @@ defineSuite([
 
         var ellipsoid = Ellipsoid.WGS84;
         scene.mapProjection = new GeographicProjection(ellipsoid);
+
+        scene.frameState = {
+            mode : scene.mode,
+            mapProjection : scene.mapProjection
+        };
     }
 
     it('constructor throws without a scene', function() {
@@ -1036,7 +1051,7 @@ defineSuite([
         updateController();
 
         camera.setView({
-            position : Cartesian3.fromDegrees(-72.0, 40.0, 1.0)
+            position : Cartesian3.fromDegrees(-72.0, 40.0, -10.0)
         });
 
         updateController();
@@ -1052,7 +1067,7 @@ defineSuite([
         updateController();
 
         camera.setView({
-            position : Cartesian3.fromDegrees(-72.0, 40.0, 1.0)
+            position : Cartesian3.fromDegrees(-72.0, 40.0, -10.0)
         });
 
         updateController();
@@ -1083,7 +1098,7 @@ defineSuite([
 
         updateController();
 
-        expect(camera.positionWC.x).toBeGreaterThanOrEqualTo(controller.minimumZoomDistance);
+        expect(camera.positionWC.x).toEqualEpsilon(controller.minimumZoomDistance, CesiumMath.EPSILON8);
     });
 
     it('is destroyed', function() {

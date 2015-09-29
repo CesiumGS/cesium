@@ -65,6 +65,8 @@ define([
      *
      * @constructor
      *
+     * @param {Scene} scene The scene.
+     *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera.html|Cesium Sandcastle Camera Demo}
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera%20Tutorial.html">Sandcastle Example</a> from the <a href="http://cesiumjs.org/2013/02/13/Cesium-Camera-Tutorial/|Camera Tutorial}
      *
@@ -398,8 +400,17 @@ define([
     var scratchCartesian = new Cartesian3();
 
     function updateMembers(camera) {
+        var mode = camera._mode;
+
+        var heightChanged = false;
+        var height = 0.0;
+        if (mode === SceneMode.SCENE2D) {
+            height = camera.frustum.right - camera.frustum.left;
+            heightChanged = height !== camera._positionCartographic.height;
+        }
+
         var position = camera._position;
-        var positionChanged = !Cartesian3.equals(position, camera.position);
+        var positionChanged = !Cartesian3.equals(position, camera.position) || heightChanged;
         if (positionChanged) {
             position = Cartesian3.clone(camera.position, camera._position);
         }
@@ -451,7 +462,6 @@ define([
             camera._positionWC = Matrix4.multiplyByPoint(transform, position, camera._positionWC);
 
             // Compute the Cartographic position of the camera.
-            var mode = camera._mode;
             if (mode === SceneMode.SCENE3D || mode === SceneMode.MORPHING) {
                 camera._positionCartographic = camera._projection.ellipsoid.cartesianToCartographic(camera._positionWC, camera._positionCartographic);
             } else {
@@ -466,7 +476,7 @@ define([
                 // In 2D, the camera height is always 12.7 million meters.
                 // The apparent height is equal to half the frustum width.
                 if (mode === SceneMode.SCENE2D) {
-                    positionENU.z = (camera.frustum.right - camera.frustum.left) * 0.5;
+                    positionENU.z = height;
                 }
 
                 camera._projection.unproject(positionENU, camera._positionCartographic);
@@ -506,6 +516,31 @@ define([
         if (positionChanged || directionChanged || upChanged || rightChanged || transformChanged) {
             updateViewMatrix(camera);
         }
+    }
+
+    function getHeading(direction, up) {
+        var heading;
+        if (!CesiumMath.equalsEpsilon(Math.abs(direction.z), 1.0, CesiumMath.EPSILON3)) {
+            heading = Math.atan2(direction.y, direction.x) - CesiumMath.PI_OVER_TWO;
+        } else {
+            heading = Math.atan2(up.y, up.x) - CesiumMath.PI_OVER_TWO;
+        }
+
+        return CesiumMath.TWO_PI - CesiumMath.zeroToTwoPi(heading);
+    }
+
+    function getPitch(direction) {
+        return CesiumMath.PI_OVER_TWO - CesiumMath.acosClamped(direction.z);
+    }
+
+    function getRoll(direction, up, right) {
+        var roll = 0.0;
+        if (!CesiumMath.equalsEpsilon(Math.abs(direction.z), 1.0, CesiumMath.EPSILON3)) {
+            roll = Math.atan2(-right.z, up.z);
+            roll = CesiumMath.zeroToTwoPi(roll + CesiumMath.TWO_PI);
+        }
+
+        return roll;
     }
 
     var scratchHPRMatrix1 = new Matrix4();
@@ -652,6 +687,7 @@ define([
          * @memberof Camera.prototype
          *
          * @type {Number}
+         * @readonly
          */
         heading : {
             get : function () {
@@ -663,19 +699,11 @@ define([
                     var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid, scratchHPRMatrix2);
                     this._setTransform(transform);
 
-                    var direction = this.direction;
-                    var up = this.up;
-
-                    var heading;
-                    if (!CesiumMath.equalsEpsilon(Math.abs(direction.z), 1.0, CesiumMath.EPSILON3)) {
-                        heading = Math.atan2(direction.y, direction.x) - CesiumMath.PI_OVER_TWO;
-                    } else {
-                        heading = Math.atan2(up.y, up.x) - CesiumMath.PI_OVER_TWO;
-                    }
+                    var heading = getHeading(this.direction, this.up);
 
                     this._setTransform(oldTransform);
 
-                    return CesiumMath.TWO_PI - CesiumMath.zeroToTwoPi(heading);
+                    return heading;
                 }
 
                 return undefined;
@@ -687,6 +715,7 @@ define([
          * @memberof Camera.prototype
          *
          * @type {Number}
+         * @readonly
          */
         pitch : {
             get : function() {
@@ -698,7 +727,7 @@ define([
                     var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid, scratchHPRMatrix2);
                     this._setTransform(transform);
 
-                    var pitch = CesiumMath.PI_OVER_TWO - CesiumMath.acosClamped(this.direction.z);
+                    var pitch = getPitch(this.direction);
 
                     this._setTransform(oldTransform);
 
@@ -714,6 +743,7 @@ define([
          * @memberof Camera.prototype
          *
          * @type {Number}
+         * @readonly
          */
         roll : {
             get : function() {
@@ -725,15 +755,7 @@ define([
                     var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid, scratchHPRMatrix2);
                     this._setTransform(transform);
 
-                    var up = this.up;
-                    var right = this.right;
-                    var direction = this.direction;
-
-                    var roll = 0.0;
-                    if (!CesiumMath.equalsEpsilon(Math.abs(direction.z), 1.0, CesiumMath.EPSILON3)) {
-                        roll = Math.atan2(-right.z, up.z);
-                        roll = CesiumMath.zeroToTwoPi(roll + CesiumMath.TWO_PI);
-                    }
+                    var roll = getRoll(this.direction, this.up, this.right);
 
                     this._setTransform(oldTransform);
 
@@ -823,6 +845,8 @@ define([
         Matrix4.multiplyByPointAsVector(inverse, direction, this.direction);
         Matrix4.multiplyByPointAsVector(inverse, up, this.up);
         Cartesian3.cross(this.direction, this.up, this.right);
+
+        updateMembers(this);
     };
 
     var scratchSetViewCartesian = new Cartesian3();
@@ -832,6 +856,91 @@ define([
     var scratchSetViewMatrix3 = new Matrix3();
     var scratchSetViewCartographic = new Cartographic();
 
+    function setView3D(camera, cartesian, cartographic, heading, pitch, roll, ellipsoid) {
+        if (!defined(cartesian)) {
+            if (defined(cartographic)) {
+                cartesian = ellipsoid.cartographicToCartesian(cartographic, scratchSetViewCartesian);
+            } else {
+                cartesian = Cartesian3.clone(camera.positionWC, scratchSetViewCartesian);
+            }
+        }
+
+        var currentTransform = Matrix4.clone(camera.transform, scratchSetViewTransform1);
+        var localTransform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, scratchSetViewTransform2);
+        camera._setTransform(localTransform);
+
+        Cartesian3.clone(Cartesian3.ZERO, camera.position);
+
+        var rotQuat = Quaternion.fromHeadingPitchRoll(heading - CesiumMath.PI_OVER_TWO, pitch, roll, scratchSetViewQuaternion);
+        var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
+
+        Matrix3.getColumn(rotMat, 0, camera.direction);
+        Matrix3.getColumn(rotMat, 2, camera.up);
+        Cartesian3.cross(camera.direction, camera.up, camera.right);
+
+        camera._setTransform(currentTransform);
+    }
+
+    function setViewCV(camera, cartesian, cartographic, heading, pitch, roll, ellipsoid, projection) {
+        var currentTransform = Matrix4.clone(camera.transform, scratchSetViewTransform1);
+        camera._setTransform(Matrix4.IDENTITY);
+
+        if (defined(cartesian) && !Cartesian3.equals(cartesian, camera.positionWC)) {
+            cartographic = ellipsoid.cartesianToCartographic(cartesian);
+        }
+
+        if (defined(cartographic)) {
+            cartesian = projection.project(cartographic, scratchSetViewCartesian);
+            Cartesian3.clone(cartesian, camera.position);
+        }
+
+        var rotQuat = Quaternion.fromHeadingPitchRoll(heading - CesiumMath.PI_OVER_TWO, pitch, roll, scratchSetViewQuaternion);
+        var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
+
+        Matrix3.getColumn(rotMat, 0, camera.direction);
+        Matrix3.getColumn(rotMat, 2, camera.up);
+        Cartesian3.cross(camera.direction, camera.up, camera.right);
+
+        camera._setTransform(currentTransform);
+    }
+
+    function setView2D(camera, cartesian, cartographic, heading, pitch, roll, ellipsoid, projection) {
+        pitch = -CesiumMath.PI_OVER_TWO;
+        roll = 0.0;
+
+        var currentTransform = Matrix4.clone(camera.transform, scratchSetViewTransform1);
+        camera._setTransform(Matrix4.IDENTITY);
+
+        if (defined(cartesian) && !Cartesian3.equals(cartesian, camera.positionWC)) {
+            cartographic = ellipsoid.cartesianToCartographic(cartesian);
+        }
+
+        if (defined(cartographic)) {
+            cartesian = projection.project(cartographic, scratchSetViewCartesian);
+            Cartesian2.clone(cartesian, camera.position);
+
+            var newLeft = -cartographic.height * 0.5;
+            var newRight = -newLeft;
+
+            var frustum = camera.frustum;
+            if (newRight > newLeft) {
+                var ratio = frustum.top / frustum.right;
+                frustum.right = newRight;
+                frustum.left = newLeft;
+                frustum.top = frustum.right * ratio;
+                frustum.bottom = -frustum.top;
+            }
+        }
+
+        var rotQuat = Quaternion.fromHeadingPitchRoll(heading - CesiumMath.PI_OVER_TWO, pitch, roll, scratchSetViewQuaternion);
+        var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
+
+        Matrix3.getColumn(rotMat, 2, camera.up);
+        Cartesian3.cross(camera.direction, camera.up, camera.right);
+
+        camera._setTransform(currentTransform);
+    }
+
     /**
      * Sets the camera position and orientation with heading, pitch and roll angles.
      *
@@ -839,6 +948,7 @@ define([
      * then the cartesian will be used. If neither is given, then the current camera position
      * will be used.
      *
+     * @param {Object} options Object with the following properties:
      * @param {Cartesian3} [options.position] The cartesian position of the camera.
      * @param {Cartographic} [options.positionCartographic] The cartographic position of the camera.
      * @param {Number} [options.heading] The heading in radians or the current heading will be used if undefined.
@@ -873,11 +983,9 @@ define([
 
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        var scene2D = this._mode === SceneMode.SCENE2D;
-
         var heading = defaultValue(options.heading, this.heading);
-        var pitch = scene2D ? -CesiumMath.PI_OVER_TWO : defaultValue(options.pitch, this.pitch);
-        var roll = scene2D ? 0.0 : defaultValue(options.roll, this.roll);
+        var pitch = defaultValue(options.pitch, this.pitch);
+        var roll = defaultValue(options.roll, this.roll);
 
         var cartesian = options.position;
         var cartographic = options.positionCartographic;
@@ -885,45 +993,13 @@ define([
         var projection = this._projection;
         var ellipsoid = projection.ellipsoid;
 
-        if (!defined(cartesian)) {
-            if (defined(cartographic)) {
-                cartesian = ellipsoid.cartographicToCartesian(cartographic, scratchSetViewCartesian);
-            } else {
-                cartesian = Cartesian3.clone(this.positionWC, scratchSetViewCartesian);
-            }
-        }
-
-        var currentTransform = Matrix4.clone(this.transform, scratchSetViewTransform1);
-        var localTransform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, scratchSetViewTransform2);
-        this._setTransform(localTransform);
-
-        if (scene2D) {
-            Cartesian2.clone(Cartesian3.ZERO, this.position);
-
-            var cartographic2D = ellipsoid.cartesianToCartographic(cartesian, scratchSetViewCartographic);
-            var newLeft = -cartographic2D.height * 0.5;
-            var newRight = -newLeft;
-
-            var frustum = this.frustum;
-            if (newRight > newLeft) {
-                var ratio = frustum.top / frustum.right;
-                frustum.right = newRight;
-                frustum.left = newLeft;
-                frustum.top = frustum.right * ratio;
-                frustum.bottom = -frustum.top;
-            }
+        if (this._mode === SceneMode.SCENE3D) {
+            setView3D(this, cartesian, cartographic, heading, pitch, roll, ellipsoid);
+        } else if (this._mode === SceneMode.SCENE2D) {
+            setView2D(this, cartesian, cartographic, heading, pitch, roll, ellipsoid, projection);
         } else {
-            Cartesian3.clone(Cartesian3.ZERO, this.position);
+            setViewCV(this, cartesian, cartographic, heading, pitch, roll, ellipsoid, projection);
         }
-
-        var rotQuat = Quaternion.fromHeadingPitchRoll(heading - CesiumMath.PI_OVER_TWO, pitch, roll, scratchSetViewQuaternion);
-        var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
-
-        Matrix3.getColumn(rotMat, 0, this.direction);
-        Matrix3.getColumn(rotMat, 2, this.up);
-        Cartesian3.cross(this.direction, this.up, this.right);
-
-        this._setTransform(currentTransform);
     };
 
     /**
@@ -1520,7 +1596,7 @@ define([
      * viewer.camera.lookAt(center, new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0));
      *
      * // 2. Using a HeadingPitchRange offset
-     * var center = Cartesian3.fromDegrees(-72.0, 40.0);
+     * var center = Cesium.Cartesian3.fromDegrees(-72.0, 40.0);
      * var heading = Cesium.Math.toRadians(50.0);
      * var pitch = Cesium.Math.toRadians(-20.0);
      * var range = 5000.0;
@@ -1576,7 +1652,7 @@ define([
      * determined from the offset, the heading will be north.
      *
      * @param {Matrix4} transform The transformation matrix defining the reference frame.
-     * @param {Cartesian3|HeadingPitchRange} offset The offset from the target in a reference frame centered at the target.
+     * @param {Cartesian3|HeadingPitchRange} [offset] The offset from the target in a reference frame centered at the target.
      *
      * @exception {DeveloperError} lookAtTransform is not supported while morphing.
      *
@@ -1586,7 +1662,7 @@ define([
      * viewer.camera.lookAtTransform(transform, new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0));
      *
      * // 2. Using a HeadingPitchRange offset
-     * var transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(-72.0, 40.0));
+     * var transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-72.0, 40.0));
      * var heading = Cesium.Math.toRadians(50.0);
      * var pitch = Cesium.Math.toRadians(-20.0);
      * var range = 5000.0;
@@ -1930,7 +2006,7 @@ define([
     };
 
     /**
-     * View an rectangle on an ellipsoid or map.
+     * View a rectangle on an ellipsoid or map.
      *
      * @param {Rectangle} rectangle The rectangle to view.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to view.
@@ -2092,7 +2168,7 @@ define([
      *
      * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
      * @param {Ray} [result] The object onto which to store the result.
-     * @returns {Object} Returns the {@link Cartesian3} position and direction of the ray.
+     * @returns {Ray} Returns the {@link Cartesian3} position and direction of the ray.
      */
     Camera.prototype.getPickRay = function(windowPosition, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -2277,13 +2353,20 @@ define([
     var scratchFlyToMatrix4 = new Matrix4();
     var newOptions = {
         destination : undefined,
-        direction : undefined,
-        up : undefined,
+        heading : undefined,
+        pitch : undefined,
+        roll : undefined,
         duration : undefined,
         complete : undefined,
         cancel : undefined,
-        endTransform : undefined
+        endTransform : undefined,
+        maximumHeight : undefined,
+        easingFunction : undefined
     };
+
+    var scratchFlyDirection = new Cartesian3();
+    var scratchFlyUp = new Cartesian3();
+    var scratchFlyRight = new Cartesian3();
 
     /**
      * Flies the camera from its current position to a new position.
@@ -2293,12 +2376,14 @@ define([
      * @param {Object} [options.orientation] An object that contains either direction and up properties or heading, pith and roll properties. By default, the direction will point
      * towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D. The up direction will point towards local north in 3D and in the positive
      * y direction in Columbus view or 2D.
-     * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
+     * @param {Number} [options.duration] The duration of the flight in seconds. If ommitted, Cesium attempts to calculate an ideal duration based on the distance to be traveled by the flight.
      * @param {Camera~FlightCompleteCallback} [options.complete] The function to execute when the flight is complete.
      * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
      * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
      * @param {Boolean} [options.convert=true] When <code>true</code>, the destination is converted to the correct coordinate system for each scene mode. When <code>false</code>, the destination is expected
      *                  to be in the correct coordinate system.
+     * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
+     * @param {EasingFunction|EasingFunction~Callback} [options.easingFunction] Controls how the time is interpolated over the duration of the flight.
      *
      * @exception {DeveloperError} If either direction or up is given, then both are required.
      *
@@ -2346,42 +2431,52 @@ define([
 
         var isRectangle = defined(destination.west);
         if (isRectangle) {
+            if (scene.mode !== SceneMode.SCENE3D && destination.west > destination.east) {
+                destination = Rectangle.MAX_VALUE;
+            }
             destination = scene.camera.getRectangleCameraCoordinates(destination, scratchFlyToDestination);
         }
 
-        var direction;
-        var up;
+        var heading;
+        var pitch;
+        var roll;
 
         var orientation = defaultValue(options.orientation, defaultValue.EMPTY_OBJECT);
         if (defined(orientation.heading)) {
-            var heading = defaultValue(orientation.heading, 0.0);
-            var pitch = defaultValue(orientation.pitch, -CesiumMath.PI_OVER_TWO);
-            var roll = defaultValue(orientation.roll, 0.0);
-
-            var rotQuat = Quaternion.fromHeadingPitchRoll(heading - CesiumMath.PI_OVER_TWO, pitch, roll, scratchFlyToQuaternion);
-            var rotMat = Matrix3.fromQuaternion(rotQuat, scratchFlyToMatrix3);
-
-            direction = Matrix3.getColumn(rotMat, 0, scratchFlyToDirection);
-            up = Matrix3.getColumn(rotMat, 2, scratchFlyToUp);
-
-            var ellipsoid = this._projection.ellipsoid;
-            var transform = Transforms.eastNorthUpToFixedFrame(destination, ellipsoid, scratchFlyToMatrix4);
-
-            Matrix4.multiplyByPointAsVector(transform, direction, direction);
-            Matrix4.multiplyByPointAsVector(transform, up, up);
+            heading = orientation.heading;
+            pitch = orientation.pitch;
+            roll = orientation.roll;
         } else if (defined(orientation.direction)) {
-            direction = orientation.direction;
-            up = orientation.up;
+            var direction = Cartesian3.clone(orientation.direction, scratchFlyDirection);
+            var up = Cartesian3.clone(orientation.up, scratchFlyUp);
+
+            if (scene.mode === SceneMode.SCENE3D) {
+                var ellipsoid = this._projection.ellipsoid;
+                var transform = Transforms.eastNorthUpToFixedFrame(destination, ellipsoid, scratchHPRMatrix1);
+                var invTransform = Matrix4.inverseTransformation(transform, scratchHPRMatrix2);
+
+                Matrix4.multiplyByPointAsVector(invTransform, direction, direction);
+                Matrix4.multiplyByPointAsVector(invTransform, up, up);
+            }
+
+            var right = Cartesian3.cross(direction, up, scratchFlyRight);
+
+            heading = getHeading(direction, up);
+            pitch = getPitch(direction);
+            roll = getRoll(direction, up, right);
         }
 
         newOptions.destination = destination;
-        newOptions.direction = direction;
-        newOptions.up = up;
+        newOptions.heading = heading;
+        newOptions.pitch = pitch;
+        newOptions.roll = roll;
         newOptions.duration = options.duration;
         newOptions.complete = options.complete;
         newOptions.cancel = options.cancel;
         newOptions.endTransform = options.endTransform;
         newOptions.convert = isRectangle ? false : options.convert;
+        newOptions.maximumHeight = options.maximumHeight;
+        newOptions.easingFunction = options.easingFunction;
 
         scene.tweens.add(CameraFlightPath.createTween(scene, newOptions));
     };
@@ -2469,9 +2564,12 @@ define([
     var scratchflyToBoundingSphereDirection = new Cartesian3();
     var scratchflyToBoundingSphereUp = new Cartesian3();
     var scratchflyToBoundingSphereRight = new Cartesian3();
+    var scratchFlyToBoundingSphereCart4 = new Cartesian4();
+    var scratchFlyToBoundingSphereQuaternion = new Quaternion();
+    var scratchFlyToBoundingSphereMatrix3 = new Matrix3();
 
     /**
-     * Flys the camera to a location where the current view contains the provided bounding sphere.
+     * Flies the camera to a location where the current view contains the provided bounding sphere.
      *
      * <p> The offset is heading/pitch/range in the local east-north-up reference frame centered at the center of the bounding sphere.
      * The heading and the pitch angles are defined in the local east-north-up reference frame.
@@ -2484,11 +2582,13 @@ define([
      *
      * @param {BoundingSphere} boundingSphere The bounding sphere to view, in world coordinates.
      * @param {Object} [options] Object with the following properties:
-     * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
+     * @param {Number} [options.duration] The duration of the flight in seconds. If ommitted, Cesium attempts to calculate an ideal duration based on the distance to be traveled by the flight.
      * @param {HeadingPitchRange} [options.offset] The offset from the target in the local east-north-up reference frame centered at the target.
      * @param {Camera~FlightCompleteCallback} [options.complete] The function to execute when the flight is complete.
      * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
      * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
+     * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
+     * @param {EasingFunction|EasingFunction~Callback} [options.easingFunction] Controls how the time is interpolated over the duration of the flight.
      */
     Camera.prototype.flyToBoundingSphere = function(boundingSphere, options) {
         //>>includeStart('debug', pragmas.debug);
@@ -2521,6 +2621,14 @@ define([
             Cartesian3.normalize(direction, direction);
 
             up = Matrix4.multiplyByPointAsVector(transform, Cartesian3.UNIT_Z, scratchflyToBoundingSphereUp);
+            if (1.0 - Math.abs(Cartesian3.dot(direction, up)) < CesiumMath.EPSILON6) {
+                var rotateQuat = Quaternion.fromAxisAngle(direction, offset.heading, scratchFlyToBoundingSphereQuaternion);
+                var rotation = Matrix3.fromQuaternion(rotateQuat, scratchFlyToBoundingSphereMatrix3);
+
+                Cartesian3.fromCartesian4(Matrix4.getColumn(transform, 1, scratchFlyToBoundingSphereCart4), up);
+                Matrix3.multiplyByVector(rotation, up, up);
+            }
+
             var right = Cartesian3.cross(direction, up, scratchflyToBoundingSphereRight);
             Cartesian3.cross(right, direction, up);
             Cartesian3.normalize(up, up);
@@ -2535,25 +2643,10 @@ define([
             duration : options.duration,
             complete : options.complete,
             cancel : options.cancel,
-            endTransform : options.endTransform
+            endTransform : options.endTransform,
+            maximumHeight : options.maximumHeight,
+            easingFunction : options.easingFunction
         });
-    };
-
-    /**
-     * Returns a duplicate of a Camera instance.
-     * @deprecated
-     * @returns {Camera} The provided result parameter or a new copy of the Camera instance.
-     */
-    Camera.prototype.clone = function() {
-        var camera = new Camera(this._scene);
-        camera.position = Cartesian3.clone(this.position);
-        camera.direction = Cartesian3.clone(this.direction);
-        camera.up = Cartesian3.clone(this.up);
-        camera.right = Cartesian3.clone(this.right);
-        camera._transform = Matrix4.clone(this.transform);
-        camera._transformChanged = true;
-        camera.frustum = this.frustum.clone();
-        return camera;
     };
 
     /**

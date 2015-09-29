@@ -12,7 +12,10 @@ define([
         '../Core/VertexFormat',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
+        '../Renderer/VertexArray',
         '../Shaders/EllipsoidFS',
         '../Shaders/EllipsoidVS',
         './BlendingState',
@@ -33,7 +36,10 @@ define([
         VertexFormat,
         BufferUsage,
         DrawCommand,
+        RenderState,
+        ShaderProgram,
         ShaderSource,
+        VertexArray,
         EllipsoidFS,
         EllipsoidVS,
         BlendingState,
@@ -163,7 +169,7 @@ define([
          * e.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
-         * e.material = Cesium.Material.fromType(Material.StripeType);
+         * e.material = Cesium.Material.fromType(Cesium.Material.StripeType);
          */
         this.material = defaultValue(options.material, Material.fromType(Material.ColorType));
         this._material = undefined;
@@ -247,7 +253,8 @@ define([
             vertexFormat : VertexFormat.POSITION_ONLY
         }));
 
-        vertexArray = context.createVertexArrayFromGeometry({
+        vertexArray = VertexArray.fromGeometry({
+            context : context,
             geometry : geometry,
             attributeLocations : attributeLocations,
             bufferUsage : BufferUsage.STATIC_DRAW,
@@ -292,7 +299,7 @@ define([
             // depth range, the hard-coded values in EllipsoidVS.glsl need
             // to be updated as well.
 
-            this._rs = context.createRenderState({
+            this._rs = RenderState.fromCache({
                 // Cull front faces - not back faces - so the ellipsoid doesn't
                 // disappear if the viewer enters the bounding box.
                 cull : {
@@ -365,7 +372,13 @@ define([
                 fs.defines.push('WRITE_DEPTH');
             }
 
-            this._sp = context.replaceShaderProgram(this._sp, EllipsoidVS, fs, attributeLocations);
+            this._sp = ShaderProgram.replaceCache({
+                context : context,
+                shaderProgram : this._sp,
+                vertexShaderSource : EllipsoidVS,
+                fragmentShaderSource : fs,
+                attributeLocations : attributeLocations
+            });
 
             colorCommand.vertexArray = this._va;
             colorCommand.renderState = this._rs;
@@ -410,7 +423,13 @@ define([
                     fs.defines.push('WRITE_DEPTH');
                 }
 
-                this._pickSP = context.replaceShaderProgram(this._pickSP, EllipsoidVS, fs, attributeLocations);
+                this._pickSP = ShaderProgram.replaceCache({
+                    context : context,
+                    shaderProgram : this._pickSP,
+                    vertexShaderSource : EllipsoidVS,
+                    fragmentShaderSource : fs,
+                    attributeLocations : attributeLocations
+                });
 
                 pickCommand.vertexArray = this._va;
                 pickCommand.renderState = this._rs;

@@ -6,8 +6,11 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/IndexDatatype',
+        '../Core/OrientedBoundingBox',
         '../Core/TileProviderError',
+        '../Renderer/Buffer',
         '../Renderer/BufferUsage',
+        '../Renderer/VertexArray',
         '../ThirdParty/when',
         './terrainAttributeLocations',
         './TerrainState'
@@ -18,8 +21,11 @@ define([
         defined,
         DeveloperError,
         IndexDatatype,
+        OrientedBoundingBox,
         TileProviderError,
+        Buffer,
         BufferUsage,
+        VertexArray,
         when,
         terrainAttributeLocations,
         TerrainState) {
@@ -78,6 +84,7 @@ define([
         surfaceTile.minimumHeight = mesh.minimumHeight;
         surfaceTile.maximumHeight = mesh.maximumHeight;
         surfaceTile.boundingSphere3D = BoundingSphere.clone(mesh.boundingSphere3D, surfaceTile.boundingSphere3D);
+        surfaceTile.orientedBoundingBox = OrientedBoundingBox.clone(mesh.orientedBoundingBox, surfaceTile.orientedBoundingBox);
 
         tile.data.occludeePointInScaledSpace = Cartesian3.clone(mesh.occludeePointInScaledSpace, surfaceTile.occludeePointInScaledSpace);
 
@@ -210,7 +217,11 @@ define([
         var stride;
         var numTexCoordComponents;
         var typedArray = tileTerrain.mesh.vertices;
-        var buffer = context.createVertexBuffer(typedArray, BufferUsage.STATIC_DRAW);
+        var buffer = Buffer.createVertexBuffer({
+            context : context,
+            typedArray : typedArray,
+            usage : BufferUsage.STATIC_DRAW
+        });
         if (terrainProvider.hasVertexNormals) {
             stride = 7 * ComponentDatatype.getSizeInBytes(datatype);
             numTexCoordComponents = 3;
@@ -242,7 +253,12 @@ define([
         if (!defined(indexBuffer) || indexBuffer.isDestroyed()) {
             var indices = tileTerrain.mesh.indices;
             var indexDatatype = (indices.BYTES_PER_ELEMENT === 2) ?  IndexDatatype.UNSIGNED_SHORT : IndexDatatype.UNSIGNED_INT;
-            indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, indexDatatype);
+            indexBuffer = Buffer.createIndexBuffer({
+                context : context,
+                typedArray : indices,
+                usage : BufferUsage.STATIC_DRAW,
+                indexDatatype : indexDatatype
+            });
             indexBuffer.vertexArrayDestroyable = false;
             indexBuffer.referenceCount = 1;
             indexBuffers[context.id] = indexBuffer;
@@ -251,7 +267,11 @@ define([
             ++indexBuffer.referenceCount;
         }
 
-        tileTerrain.vertexArray = context.createVertexArray(attributes, indexBuffer);
+        tileTerrain.vertexArray = new VertexArray({
+            context : context,
+            attributes : attributes,
+            indexBuffer : indexBuffer
+        });
 
         tileTerrain.state = TerrainState.READY;
     }

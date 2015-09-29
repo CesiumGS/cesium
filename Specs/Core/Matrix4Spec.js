@@ -662,6 +662,14 @@ defineSuite([
         var returnedResult = Matrix4.multiplyByScale(m, scale, result);
         expect(returnedResult).toBe(result);
         expect(result).toEqual(expected);
+
+        m = new Matrix4(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 0, 0, 0, 1);
+        scale = new Cartesian3(2.0, 3.0, 4.0);
+        expected = Matrix4.multiply(m, Matrix4.fromScale(scale), new Matrix4());
+        result = new Matrix4();
+        returnedResult = Matrix4.multiplyByScale(m, scale, result);
+        expect(returnedResult).toBe(result);
+        expect(result).toEqual(expected);
     });
 
     it('multiplyByScale works with "this" result parameter', function() {
