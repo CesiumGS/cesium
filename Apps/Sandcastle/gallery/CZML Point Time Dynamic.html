@@ -38,16 +38,16 @@
                 "id" : "point 1",
                 name: "point1",
                 "position" : {
-                    "epoch": "2012-05-02T12:00:00Z",
-                    "cartesian" : [
-                            0, -111.0, 40.0, 150000.0,
-                            60, -90, 35, 150000.0,
-                            90, -75, 30, 150000.0,
-                            120, -60, 25, 150000.0,
-                            150, -45, 20, 150000.0,
-                            185, -20, 10, 150000.0
-                    ],
                     "interpolationAlgorithm": "LAGRANGE",
+                    "interpolationDegree": 1,
+                    "interval" : "2012-08-04T16:00:00Z/2012-08-04T17:00:00Z",
+                    "epoch" : "2012-08-04T16:00:00Z",
+                    "cartographicRadians": [
+                        0,                0,             0, 150000,
+                        1000,     Math.PI/4,     Math.PI/3, 150000,
+                        2000, 2 * Math.PI/4, 2 * Math.PI/3, 150000,
+                        3000, 3 * Math.PI/4,     Math.PI,   150000
+                    ]
                 },
                 "point": {
                     "color": {
