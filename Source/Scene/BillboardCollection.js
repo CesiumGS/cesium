@@ -183,6 +183,7 @@ define([
         this._maxPixelOffset = 0.0;
         this._allHorizontalCenter = true;
         this._allVerticalCenter = true;
+        this._allSizedInMeters = true;
 
         this._baseVolume = new BoundingSphere();
         this._baseVolumeWC = new BoundingSphere();
@@ -834,6 +835,8 @@ define([
         var pickColor = billboard.getPickId(context).color;
         var sizeInMeters = billboard.sizeInMeters ? 1.0 : 0.0;
 
+        billboardCollection._allSizedInMeters = billboardCollection._allSizedInMeters && sizeInMeters === 1.0;
+
         var height = 0;
         var index = billboard._imageIndex;
         if (index !== -1) {
@@ -1009,17 +1012,20 @@ define([
     var scratchToCenter = new Cartesian3();
     var scratchProj = new Cartesian3();
     function updateBoundingVolume(collection, context, frameState, boundingVolume) {
-        var camera = frameState.camera;
-        var frustum = camera.frustum;
+        var pixelScale = 1.0;
+        if (!collection._allSizedInMeters || collection._maxPixelOffset !== 0.0) {
+            var camera = frameState.camera;
+            var frustum = camera.frustum;
 
-        var toCenter = Cartesian3.subtract(camera.positionWC, boundingVolume.center, scratchToCenter);
-        var proj = Cartesian3.multiplyByScalar(camera.directionWC, Cartesian3.dot(toCenter, camera.directionWC), scratchProj);
-        var distance = Math.max(0.0, Cartesian3.magnitude(proj) - boundingVolume.radius);
+            var toCenter = Cartesian3.subtract(camera.positionWC, boundingVolume.center, scratchToCenter);
+            var proj = Cartesian3.multiplyByScalar(camera.directionWC, Cartesian3.dot(toCenter, camera.directionWC), scratchProj);
+            var distance = Math.max(0.0, Cartesian3.magnitude(proj) - boundingVolume.radius);
 
-        scratchDrawingBufferDimensions.x = context.drawingBufferWidth;
-        scratchDrawingBufferDimensions.y = context.drawingBufferHeight;
-        var pixelSize = frustum.getPixelSize(scratchDrawingBufferDimensions, distance);
-        var pixelScale = Math.max(pixelSize.x, pixelSize.y);
+            scratchDrawingBufferDimensions.x = context.drawingBufferWidth;
+            scratchDrawingBufferDimensions.y = context.drawingBufferHeight;
+            var pixelSize = frustum.getPixelSize(scratchDrawingBufferDimensions, distance);
+            pixelScale = Math.max(pixelSize.x, pixelSize.y);
+        }
 
         var size = pixelScale * collection._maxScale * collection._maxSize * 2.0;
         if (collection._allHorizontalCenter && collection._allVerticalCenter ) {
