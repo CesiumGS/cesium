@@ -31,36 +31,34 @@
         var czml = [
             {
                 "id" : "document",
-                "name" : "CZML Point Time Dynamic",
+                "name" : "CZML Polygon - Interpolating References",
                 "version" : "1.0"
-            },
-            {
-                "id" : "point 1",
-                name: "point1",
-                "position" : {
-                    "interpolationAlgorithm": "LAGRANGE",
-                    "interpolationDegree": 1,
-                    "interval" : "2012-08-04T16:00:00Z/2012-08-04T17:00:00Z",
-                    "epoch" : "2012-08-04T16:00:00Z",
-                    "cartographicRadians": [
-                        0,                0,             0, 150000,
-                        1000,     Math.PI/4,     Math.PI/3, 150000,
-                        2000, 2 * Math.PI/4, 2 * Math.PI/3, 150000,
-                        3000, 3 * Math.PI/4,     Math.PI,   150000
+            }, {
+                "id": "Dynamic Polygon with Reference Properties",
+                "availability":"2012-08-04T16:00:00Z/2012-08-04T17:00:00Z",
+                "position": {
+                    "referenceFrame": "INERTIAL",
+                    "epoch": "2012-08-04T16:00:00Z",
+                    "cartographicDegrees": [
+                        0,     180,     90,  1500000,
+                        1000,  360,    180,  1500000,
+                        2000,  180,    270,  1500000,
+                        3000,  360,    360,  1500000
                     ]
                 },
                 "point": {
                     "color": {
-                        rgba: [100,0, 200, 255]
+                        rgba: [50,0, 200, 255]
                     },
                     "outlineColor": {
-                        rgba: [200,0, 200, 255]
+                        rgba: [200,0, 20, 20]
                     },
                     "pixelSize": {
-                        "number": 10
+                        "number": 15
                     },
                     "show": true
                 }
+
             }
         ];
 
