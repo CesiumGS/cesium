@@ -64,7 +64,7 @@ function createCollection(url, count) {
     }));
 
     collection.readyPromise.then(function(collection) {
-        var model = collection.model;
+        var model = collection._model;
 
         // Play and loop all animations at half-speed
         model.activeAnimations.addAll({
