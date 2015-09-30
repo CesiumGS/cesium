@@ -31,20 +31,20 @@ function startup(Cesium) {
   var czml = [
     {
       "id" : "document",
-      "name" : "CZML Geometries: Box",
+      "name" : "CZML Geometries: Rectangle",
       "version" : "1.0"
     }, {
       "id" : "redRectangle",
       "rectangle" : {
         "show" : true,
-        "coordinates" : { "wsenDegrees" : [-120,40,-110,50] },
+        "coordinates" : { "wsenDegrees" : [-120, 40, -110, 50] },
         "height" : 600000,
         "extrudedHeight" : 0,
         "fill" : true,
         "material" : {
           "solidColor" : {
             "color": {
-              "rgba" : [255,0,0,100]
+              "rgba" : [255, 0, 0, 100]
             }
           }
         },
@@ -54,10 +54,10 @@ function startup(Cesium) {
         }
       }
     }, {
-      "id" : "blueRectangle",
+      "id" : "stripeRectangle",
       "rectangle" : {
         "show" : true,
-        "coordinates" : { "wsenDegrees" : [-105,40,-95,50] },
+        "coordinates" : { "wsenDegrees" : [-105, 40, -95, 50] },
         "height" : 0,
         "fill" : true,
         "material" : {
@@ -71,10 +71,10 @@ function startup(Cesium) {
       }
     },
     {
-      "id" : "greenRectangle",
+      "id" : "yellowOutlineRectangle",
       "rectangle" : {
         "show" : true,
-        "coordinates" : { "wsenDegrees" : [-90,40,-80,50] },
+        "coordinates" : { "wsenDegrees" : [-90, 40, -80, 50] },
         "height" : 600000,
         "extrudedHeight" : 0,
         "fill" : false,
@@ -87,7 +87,7 @@ function startup(Cesium) {
       }
     },
     {
-      "id" : "textureRectangle",
+      "id" : "textureRectangleHover",
       "rectangle" : {
         "show" : true,
         "coordinates" : { "wsenDegrees" : [-75, 40, -65, 50] },
@@ -95,7 +95,7 @@ function startup(Cesium) {
         "fill" : true,
         "material" : {
           "image" : {
-            "image" : { "uri" : "http://40.media.tumblr.com/a59206e1cb802e57f7bb8a8e21f4a6cc/tumblr_mpm8elCdHt1szzj4go1_1280.jpg" }
+            "image" : { "uri" : "https://raw.githubusercontent.com/AnalyticalGraphicsInc/cesium/master/Apps/Sandcastle/images/Cesium_Logo_Color.jpg" }
           }
         }
       }
