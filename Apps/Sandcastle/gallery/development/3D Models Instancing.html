@@ -30,117 +30,226 @@ function startup(Cesium) {
 
 var debugShowBoundingVolume = false;
 var debugWireframe = false;
-var globeVisible = false;
+var globeVisible = true;
 
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    globe : globeVisible,
-    skyAtmosphere : globeVisible
+    globe : globeVisible ? undefined : false,
+    skyAtmosphere : globeVisible ? undefined : false
 });
 
 var scene = viewer.scene;
+var context = scene.context;
+var camera = viewer.camera;
+scene.debugShowFramesPerSecond = true;
 
-function createCollection(url, count) {
-    var instances = [];
-    var longitude = -123.0744619;
-    var latitude = 44.0503706;
-    var height = 5000.0;
-    for (var i = 0; i < count; ++i) {
-        var heading = Math.random();
-        var pitch = Math.random();
-        var roll = Math.random();
-        var position = new Cesium.Cartesian3.fromDegrees(longitude, latitude, height + i * 20);
+var instancedArraysExtension = context._instancedArrays;
+var count = 1024;
+var spacing = 0.0002;
+var url = '../../SampleData/models/CesiumAir/Cesium_Air.bgltf';
+var dynamic = false;
+var useCollection = true;
 
-        var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(position, heading, pitch, roll);
-        instances.push({
-            modelMatrix : modelMatrix
-        });
-    }
+var centerLongitude = -123.0744619;
+var centerLatitude = 44.0503706;
+var height = 5000.0;
 
+function orientCamera(center, radius) {
+    var controller = scene.screenSpaceCameraController;
+    var r = Math.max(radius, camera.frustum.near);
+    controller.minimumZoomDistance = r * 0.5;
+
+    var heading = Cesium.Math.toRadians(230.0);
+    var pitch = Cesium.Math.toRadians(-20.0);
+    camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, r * 2.0));
+}
+
+function createCollection(instances) {
     var collection = scene.primitives.add(new Cesium.ModelInstanceCollection({
         url : url,
         instances : instances,
+        dynamic : dynamic,
         debugShowBoundingVolume : debugShowBoundingVolume,
         debugWireframe : debugWireframe
     }));
 
     collection.readyPromise.then(function(collection) {
-        var model = collection._model;
-
         // Play and loop all animations at half-speed
-        model.activeAnimations.addAll({
+        collection._model.activeAnimations.addAll({
             speedup : 0.5,
             loop : Cesium.ModelAnimationLoop.REPEAT
         });
-
-        var camera = viewer.camera;
-
-        // Zoom to model
-        var controller = scene.screenSpaceCameraController;
-        var r = 2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
-        controller.minimumZoomDistance = r * 0.5;
-
-        var origin = collection.boundingSphere.center;
-        var heading = Cesium.Math.toRadians(230.0);
-        var pitch = Cesium.Math.toRadians(-20.0);
-        camera.lookAt(origin, new Cesium.HeadingPitchRange(heading, pitch, r * 2.0));
+        orientCamera(collection.boundingSphere.center, collection.boundingSphere.radius);
     }).otherwise(function(error){
         window.alert(error);
     });
 }
 
-var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-handler.setInputAction(function(movement) {
-    var pick = scene.pick(movement.endPosition);
-    if (Cesium.defined(pick) && Cesium.defined(pick.node) && Cesium.defined(pick.mesh)) {
-        // Output glTF node and mesh under the mouse. 
-        console.log('node: ' + pick.node.name + '. mesh: ' + pick.mesh.name);
+function createModels(instances) {
+    var points = [];
+    var model;
+
+    var length = instances.length;
+    for (var i = 0; i < length; ++i) {
+        var instance = instances[i];
+        var modelMatrix = instance.modelMatrix;
+        var translation = new Cesium.Cartesian3();
+        Cesium.Matrix4.getTranslation(modelMatrix, translation);
+        points.push(translation);
+
+        model = Cesium.Model.fromGltf({
+            url : url,
+            modelMatrix : modelMatrix,
+            debugShowBoundingVolume : debugShowBoundingVolume,
+            debugWireframe : debugWireframe
+        });
+
+        scene.primitives.add(model);
+
+        model.readyPromise.then(function(model) {
+            // Play and loop all animations at half-speed
+            model.activeAnimations.addAll({
+                speedup : 0.5,
+                loop : Cesium.ModelAnimationLoop.REPEAT
+            });
+        }).otherwise(function(error){
+            window.alert(error);
+        });
     }
-}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-///////////////////////////////////////////////////////////////////////////
+    model.readyPromise.then(function(model) {
+        var boundingSphere = new Cesium.BoundingSphere();
+        Cesium.BoundingSphere.fromPoints(points, boundingSphere);
+        orientCamera(boundingSphere.center, boundingSphere.radius + model.boundingSphere.radius);
+    });
+}
 
-createCollection('../../SampleData/models/CesiumAir/Cesium_Air.bgltf', 10);
+function reset() {
+    scene.primitives.removeAll();
 
-//function createModel(url, height) {
-//    height = Cesium.defaultValue(height, 0.0);
-//
-//    var origin = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height);
-//    var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, 0.0, 0.0, 0.0);
-//
-//    var model = scene.primitives.add(Cesium.Model.fromGltf({
-//        url : url,
-//        modelMatrix : modelMatrix,
-//        debugShowBoundingVolume : true
-//
-//        //minimumPixelSize : 128
-//    }));
-//
-//    model.readyPromise.then(function(model) {
-//        // Play and loop all animations at half-speed
-//        model.activeAnimations.addAll({
-//            speedup : 0.5,
-//            loop : Cesium.ModelAnimationLoop.REPEAT
-//        });
-//
-//        var camera = viewer.camera;
-//
-//        // Zoom to model
-//        var controller = scene.screenSpaceCameraController;
-//        var r = 2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
-//        controller.minimumZoomDistance = r * 0.5;
-//
-//        var center = Cesium.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cesium.Cartesian3());
-//        var heading = Cesium.Math.toRadians(230.0);
-//        var pitch = Cesium.Math.toRadians(-20.0);
-//        camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, r * 2.0));
-//    }).otherwise(function(error) {
-//        window.alert(error);
-//    });
-//}
+    var instances = [];
+    var gridSize = Math.sqrt(count);
 
-// height, heading, pitch, roll
-//createModel('../../SampleData/models/CesiumAir/Cesium_Air.bgltf', 5000.0);
-//createModel('../../SampleData/models/CesiumAir/Cesium_Air.bgltf', 5020.0, 0.0, 0.0, -20.0);
+    for (var y = 0; y < gridSize; ++y) {
+        for (var x = 0; x < gridSize; ++x) {
+            var longitude = centerLongitude + spacing * (x - gridSize/2);
+            var latitude = centerLatitude + spacing * (y - gridSize/2);
+            var position = Cesium.Cartesian3.fromDegrees(longitude, latitude, height);
+
+            var heading = Math.random();
+            var pitch = Math.random();
+            var roll = Math.random();
+            var scale = (Math.random() + 1.0)/2.0;
+
+            var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(position, heading, pitch, roll);
+            Cesium.Matrix4.multiplyByUniformScale(modelMatrix, scale, modelMatrix);
+
+            instances.push({
+                modelMatrix : modelMatrix
+            });
+        }
+    }
+
+    useCollection ? createCollection(instances) : createModels(instances);
+}
+
+Sandcastle.addToolbarMenu([ {
+    text : '1024 instances',
+    onselect : function() {
+        count = 1024;
+        reset();
+    }
+}, {
+    text : '100 instances',
+    onselect : function() {
+        count = 100;
+        reset();
+    }
+}, {
+    text : '25 instances',
+    onselect : function() {
+        count = 25;
+        reset();
+    }
+}, {
+    text : '4 instances',
+    onselect : function() {
+        count = 4;
+        reset();
+    }
+}, {
+    text : '10000 instances',
+    onselect : function() {
+        count = 10000;
+        reset();
+    }
+}]);
+
+Sandcastle.addToolbarMenu([ {
+    text : 'Aircraft',
+    onselect : function() {
+        url = '../../SampleData/models/CesiumAir/Cesium_Air.bgltf';
+        spacing = 0.0002;
+        reset();
+    }
+}, {
+    text : 'Ground vehicle',
+    onselect : function() {
+        url = '../../SampleData/models/CesiumGround/Cesium_Ground.bgltf';
+        spacing = 0.00008;
+        reset();
+    }
+}, {
+    text : 'Milk truck',
+    onselect : function() {
+        url = '../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.bgltf';
+        spacing = 0.00008;
+        reset();
+    }
+}, {
+    text : 'Skinned character',
+    onselect : function() {
+        url = '../../SampleData/models/CesiumMan/Cesium_Man.bgltf';
+        spacing = 0.00001;
+        reset();
+    }
+}]);
+
+
+Sandcastle.addToolbarMenu([ {
+    text : 'Instancing Enabled',
+    onselect : function() {
+        context._instancedArrays = instancedArraysExtension;
+        useCollection = true;
+        reset();
+    }
+}, {
+    text : 'Instancing Disabled',
+    onselect : function() {
+        context._instancedArrays = undefined;
+        useCollection = true;
+        reset();
+    }
+}, {
+    text : 'Individual models',
+    onselect : function() {
+        useCollection = false;
+        reset();
+    }
+}]);
+
+Sandcastle.addToolbarMenu([ {
+    text : 'Static',
+    onselect : function() {
+        dynamic = false;
+        reset();
+    }
+}, {
+    text : 'Dynamic',
+    onselect : function() {
+        dynamic = true;
+        reset();
+    }
+}]);
 
 //Sandcastle_End
 Sandcastle.finishedLoading();
