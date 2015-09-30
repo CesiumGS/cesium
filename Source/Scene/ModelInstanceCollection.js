@@ -546,14 +546,12 @@ define([
     function getModelCommands(model) {
         var nodeCommands = model._nodeCommands;
         var length = nodeCommands.length;
-        var i;
-        var nc;
 
         var drawCommands = [];
         var pickCommands = [];
 
-        for (i = 0; i < length; ++i) {
-            nc = nodeCommands[i];
+        for (var i = 0; i < length; ++i) {
+            var nc = nodeCommands[i];
             if (nc.show) {
                 drawCommands.push(nc.command);
                 pickCommands.push(nc.pickCommand);
