@@ -513,16 +513,14 @@ define([
             return;
         }
 
-        var i;
-        var j;
         var modelCommands = collection._modelCommands;
         var commandsLength = modelCommands.length;
         var instancesLength = collection.instancesLength;
         var allowPicking = collection.allowPicking;
 
-        for (i = 0; i < commandsLength; ++i) {
+        for (var i = 0; i < commandsLength; ++i) {
             var modelCommand = modelCommands[i];
-            for (j = 0; j < instancesLength; ++j) {
+            for (var j = 0; j < instancesLength; ++j) {
                 var commandIndex = i*instancesLength+j;
                 var drawCommand = collection._drawCommands[commandIndex];
                 var instanceMatrix = collection._instances[j].modelMatrix;
