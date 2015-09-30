@@ -423,9 +423,12 @@ define([
             return undefined;
         }
 
-        if (!defined(gltf.allExtensions)) {
-            gltf.allExtensions = [];
+        if (defined(gltf.allExtensions)) {
+            gltf.extensionsUsed = gltf.allExtensions;
+            gltf.allExtensions = undefined;
         }
+        gltf.extensionsUsed = defaultValue(gltf.extensionsUsed, []);
+
         accessorDefaults(gltf);
         animationDefaults(gltf);
         assetDefaults(gltf);
