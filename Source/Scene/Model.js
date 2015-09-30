@@ -781,7 +781,12 @@ define([
         return JSON.parse(json);
     }
 
-    Model.getDefaultCacheKey = function(url) {
+    /**
+     * Get the default cache key from the provided url
+     *
+     * @private
+     */
+    Model._getDefaultCacheKey = function(url) {
         return getAbsoluteURL(url);
     };
 
@@ -853,7 +858,7 @@ define([
         var url = options.url;
         // If no cache key is provided, use the absolute URL, since two URLs with
         // different relative paths could point to the same model.
-        var cacheKey = defaultValue(options.cacheKey, Model.getDefaultCacheKey(url));
+        var cacheKey = defaultValue(options.cacheKey, Model._getDefaultCacheKey(url));
 
         options = clone(options);
         options.basePath = getBasePath(url);

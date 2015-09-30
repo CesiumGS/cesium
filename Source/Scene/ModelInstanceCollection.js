@@ -12,6 +12,7 @@ define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Matrix4',
+        '../Core/PrimitiveType',
         '../Core/RuntimeError',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
@@ -33,6 +34,7 @@ define([
         DeveloperError,
         destroyObject,
         Matrix4,
+        PrimitiveType,
         RuntimeError,
         Buffer,
         BufferUsage,
@@ -58,14 +60,19 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.url The url to the .gltf file.
-     * @param {Boolean} [options.dynamic] Collection is set to stream instance data every frame.
+     * @param {String} [options.url] The url to the .gltf file.
      * @param {Object} [options.headers] HTTP headers to send with the request.
+     * @param {Object|ArrayBuffer|Uint8Array} [options.gltf] The object for the glTF JSON or an arraybuffer of Binary glTF defined by the CESIUM_binary_glTF extension.
+     * @param {String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
+     * @param {Boolean} [options.dynamic] Collection is set to stream instance data every frame.
      * @param {Boolean} [options.show=true] Determines if the collection will be shown.
      * @param {Boolean} [options.allowPicking=false] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for the collection.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the instances in wireframe.
+     *
+     * @exception {DeveloperError} Must specify either <options.gltf> or <options.url>, but not both.
+     * @exception {DeveloperError} Shader program cannot be optimized for instancing. Parameters cannot have any of the following semantics: MODEL, MODELINVERSE, MODELVIEWINVERSE, MODELVIEWPROJECTIONINVERSE, MODELINVERSETRANSPOSE.
      *
      * @private
      */
@@ -73,22 +80,26 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.url)) {
-            throw new DeveloperError('options.url is required.');
+        if (!defined(options.gltf) && !defined(options.url)) {
+            throw new DeveloperError('Either options.gltf or options.url is required.');
+        }
+
+        if (defined(options.gltf) && defined(options.url)) {
+            throw new DeveloperError('Cannot pass in both options.gltf and options.url.');
         }
         //>>includeEnd('debug');
 
         this._instances = defaultValue(options.instances, []);
         this._instancingSupported = false;
         this._dynamic = defaultValue(options.dynamic, false);
-        this._show = options.show;
+        this._show = defaultValue(options.show, true);
         this._allowPicking = defaultValue(options.allowPicking, false);
         this._ready = false;
         this._readyPromise = when.defer();
         this._state = LoadState.NEEDS_LOAD;
 
         this._model = undefined;
-        this._typedArray = undefined;
+        this._instanceDataArray = undefined;
         this._vertexBuffer = undefined;
         this._createVertexBuffer = true;
         this._instancedAttributes = undefined;
@@ -104,11 +115,39 @@ define([
 
         // Passed on to Model
         this._url = options.url;
-        this._cacheKey = options.cacheKey;
         this._headers = options.headers;
+        this._gltf = options.gltf;
+        this._basePath = options.basePath;
+        this._cacheKey = options.cacheKey;
         this._asynchronous = options.asynchronous;
-        this._debugShowBoundingVolume = options.debugShowBoundingVolume;
-        this._debugWireframe = options.debugWireframe;
+
+        /**
+         * This property is for debugging only; it is not for production use nor is it optimized.
+         * <p>
+         * Draws the bounding sphere for each draw command in the model.  A glTF primitive corresponds
+         * to one draw command.  A glTF mesh has an array of primitives, often of length one.
+         * </p>
+         *
+         * @type {Boolean}
+         *
+         * @default false
+         */
+        this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
+        this._debugShowBoundingVolume = false;
+
+        /**
+         * This property is for debugging only; it is not for production use nor is it optimized.
+         * <p>
+         * Draws the model in wireframe.
+         * </p>
+         *
+         * @type {Boolean}
+         *
+         * @default false
+         */
+        this.debugWireframe = defaultValue(options.debugWireframe, false);
+        this._debugWireframe = false;
+
     };
 
     defineProperties(ModelInstanceCollection.prototype, {
@@ -122,7 +161,7 @@ define([
                 return this._allowPicking;
             }
         },
-        instancesLength : {
+        length : {
             get : function() {
                 return this._instances.length;
             }
@@ -173,8 +212,10 @@ define([
                                 if (supportedSemantics.indexOf(semantic) > -1) {
                                     uniformMap[uniformName] = semantic;
                                 } else {
-                                    // TODO : Maybe fail silently and fallback to a different approach
-                                    throw new RuntimeError('Model shader cannot be optimized for instancing');
+                                    throw new DeveloperError('Shader program cannot be optimized for instancing. ' +
+                                        'Parameter "' + parameter + '" in program "' + programName +
+                                        '" uses unsupported semantic "' + semantic + '"'
+                                    );
                                 }
                             }
                         }
@@ -208,7 +249,6 @@ define([
             }
 
             shaderHeader += 'uniform mat4 czm_instanced_nodeLocal;\n';
-            shaderHeader += 'uniform mat4 czm_instanced_boundsModelView;\n';
             shaderHeader += 'mat4 czm_instanced_modelView;\n';
             shaderMain += 'mat4 czm_instanced_model = mat4(czm_modelMatrixRow0.x, czm_modelMatrixRow1.x, czm_modelMatrixRow2.x, 0.0, czm_modelMatrixRow0.y, czm_modelMatrixRow1.y, czm_modelMatrixRow2.y, 0.0, czm_modelMatrixRow0.z, czm_modelMatrixRow1.z, czm_modelMatrixRow2.z, 0.0, czm_modelMatrixRow0.w, czm_modelMatrixRow1.w, czm_modelMatrixRow2.w, 1.0);\n';
 
@@ -217,7 +257,8 @@ define([
                 shaderMain += 'czm_instanced_modelView = czm_instanced_model * czm_instanced_nodeLocal;\n';
             } else {
                 // czm_instanced_model is the model's local offset from the bounding volume
-                shaderMain += 'czm_instanced_modelView = czm_instanced_boundsModelView * czm_instanced_model * czm_instanced_nodeLocal;\n';
+                shaderHeader += 'uniform mat4 czm_instanced_collectionModelView;\n';
+                shaderMain += 'czm_instanced_modelView = czm_instanced_collectionModelView * czm_instanced_model * czm_instanced_nodeLocal;\n';
             }
 
             for (var uniform in instancedUniforms) {
@@ -290,7 +331,7 @@ define([
     function getUniformMapCallback(collection, context) {
         return function(uniformMap, programName, node) {
             uniformMap = combine(uniformMap, {
-                czm_instanced_boundsModelView : (collection._dynamic ? undefined : createBoundsModelViewFunction(collection, context)),
+                czm_instanced_collectionModelView : (collection._dynamic ? undefined : createBoundsModelViewFunction(collection, context)),
                 czm_instanced_nodeLocal : createNodeLocalFunction(node)
             });
 
@@ -320,17 +361,17 @@ define([
             return;
         }
 
-        var typedArray = collection._typedArray;
+        var instanceDataArray = collection._instanceDataArray;
         var vertexBuffer = collection._vertexBuffer;
         var createVertexBuffer = collection._createVertexBuffer;
 
-        var instancesLength = collection.instancesLength;
+        var instancesLength = collection.length;
         var dynamic = collection._dynamic;
         var viewMatrix = context.uniformState.view;
         var center = dynamic ? Cartesian3.ZERO : collection._boundingSphere.center;
 
         if (createVertexBuffer) {
-            typedArray = new Float32Array(instancesLength * 16);
+            instanceDataArray = new Float32Array(instancesLength * 16);
         }
 
         for (var i = 0; i < instancesLength; ++i) {
@@ -344,45 +385,46 @@ define([
                 instanceMatrix = modelMatrix;
             }
 
+            var offset = i * 16;
+
             // First three rows of the model matrix
-            typedArray[i * 16 + 0] = instanceMatrix[0];
-            typedArray[i * 16 + 1] = instanceMatrix[4];
-            typedArray[i * 16 + 2] = instanceMatrix[8];
-            typedArray[i * 16 + 3] = instanceMatrix[12] - center.x;
-            typedArray[i * 16 + 4] = instanceMatrix[1];
-            typedArray[i * 16 + 5] = instanceMatrix[5];
-            typedArray[i * 16 + 6] = instanceMatrix[9];
-            typedArray[i * 16 + 7] = instanceMatrix[13] - center.y;
-            typedArray[i * 16 + 8] = instanceMatrix[2];
-            typedArray[i * 16 + 9] = instanceMatrix[6];
-            typedArray[i * 16 + 10] = instanceMatrix[10];
-            typedArray[i * 16 + 11] = instanceMatrix[14] - center.z;
+            instanceDataArray[offset + 0]  = instanceMatrix[0];
+            instanceDataArray[offset + 1]  = instanceMatrix[4];
+            instanceDataArray[offset + 2]  = instanceMatrix[8];
+            instanceDataArray[offset + 3]  = instanceMatrix[12] - center.x;
+            instanceDataArray[offset + 4]  = instanceMatrix[1];
+            instanceDataArray[offset + 5]  = instanceMatrix[5];
+            instanceDataArray[offset + 6]  = instanceMatrix[9];
+            instanceDataArray[offset + 7]  = instanceMatrix[13] - center.y;
+            instanceDataArray[offset + 8]  = instanceMatrix[2];
+            instanceDataArray[offset + 9]  = instanceMatrix[6];
+            instanceDataArray[offset + 10] = instanceMatrix[10];
+            instanceDataArray[offset + 11] = instanceMatrix[14] - center.z;
 
             // Other instance data like pickColor, color, etc. Colors can be packed like in BillboardCollection as needed.
-            typedArray[i * 16 + 12] = pickColor.red;
-            typedArray[i * 16 + 13] = pickColor.green;
-            typedArray[i * 16 + 14] = pickColor.blue;
-            typedArray[i * 16 + 15] = pickColor.alpha;
+            instanceDataArray[offset + 12] = pickColor.red;
+            instanceDataArray[offset + 13] = pickColor.green;
+            instanceDataArray[offset + 14] = pickColor.blue;
+            instanceDataArray[offset + 15] = pickColor.alpha;
         }
 
         if (createVertexBuffer) {
-            var usage = dynamic ? BufferUsage.STREAM_DRAW : BufferUsage.STATIC_DRAW;
             vertexBuffer = Buffer.createVertexBuffer({
                 context : context,
-                typedArray : typedArray,
-                usage : usage
+                typedArray : instanceDataArray,
+                usage : dynamic ? BufferUsage.STREAM_DRAW : BufferUsage.STATIC_DRAW
             });
             collection._vertexBuffer = vertexBuffer;
-            collection._typedArray = typedArray;
+            collection._instanceDataArray = instanceDataArray;
             collection._createVertexBuffer = false;
         } else {
-            vertexBuffer.copyFromArrayView(typedArray);
+            vertexBuffer.copyFromArrayView(instanceDataArray);
         }
     }
 
     function updateBoundingSphere(collection) {
         var points = [];
-        var instancesLength = collection.instancesLength;
+        var instancesLength = collection.length;
         for (var i = 0; i < instancesLength; i++) {
             var translation = new Cartesian3();
             Matrix4.getTranslation(collection._instances[i].modelMatrix, translation);
@@ -395,15 +437,14 @@ define([
     }
 
     function createModel(collection, context) {
-        var i;
         var instancingSupported = collection._instancingSupported;
         var modelOptions = {
             url : collection._url,
-            cacheKey : collection._cacheKey,
             headers : collection._headers,
+            gltf : collection._gltf,
+            basePath : collection._basePath,
+            cacheKey : collection._cacheKey,
             asynchronous : collection._asynchronous,
-            debugShowBoundingVolume : collection._debugShowBoundingVolume,
-            debugWireframe : collection._debugWireframe,
             allowPicking : collection._allowPicking,
             precreatedAttributes : undefined,
             vertexShaderLoaded : undefined,
@@ -424,7 +465,7 @@ define([
             var componentSizeInBytes = ComponentDatatype.getSizeInBytes(ComponentDatatype.FLOAT);
             var instancedAttributes = {};
 
-            for (i = 0; i < 4; ++i) {
+            for (var i = 0; i < 4; ++i) {
                 instancedAttributes[attributeNames[i]] = {
                     index                  : 0, // updated in Model
                     vertexBuffer           : collection._vertexBuffer,
@@ -440,9 +481,14 @@ define([
             collection._instancedAttributes = instancedAttributes;
 
             // Instanced models will create different renderer resources, so change the cache key.
+            var cacheKey = collection._cacheKey;
             var url = collection._url;
-            var cacheKey = defaultValue(collection._cacheKey, Model.getDefaultCacheKey(url));
-            cacheKey += '(instanced)';
+            if (defined(url)) {
+                cacheKey = defaultValue(cacheKey, Model._getDefaultCacheKey(url));
+            }
+            if (defined(cacheKey)) {
+                cacheKey += '#instanced';
+            }
 
             modelOptions.precreatedAttributes = instancedAttributes;
             modelOptions.vertexShaderLoaded = getVertexShaderCallback(collection);
@@ -454,7 +500,11 @@ define([
             modelOptions.ignoreCommands = true;
         }
 
-        collection._model = Model.fromGltf(modelOptions);
+        if (defined(collection._url)) {
+            collection._model = Model.fromGltf(modelOptions);
+        } else {
+            collection._model = new Model(modelOptions);
+        }
     }
 
     function createCommands(collection, drawCommands, pickCommands) {
@@ -464,12 +514,12 @@ define([
         var j;
         var command;
         var commandsLength = drawCommands.length;
-        var instancesLength = collection.instancesLength;
+        var instancesLength = collection.length;
         var allowPicking = collection.allowPicking;
 
         var boundingSphere = collection._boundingSphere;
         var boundingSphereModel = collection._boundingSphereModel;
-        boundingSphere.radius += collection._model._boundingSphere.radius;
+        boundingSphere.radius += collection._model.boundingSphere.radius;
 
         if (collection._instancingSupported) {
             for (i = 0; i < commandsLength; ++i) {
@@ -507,6 +557,32 @@ define([
         }
     }
 
+    function updateWireframe(collection) {
+        if (collection._debugWireframe !== collection.debugWireframe) {
+            collection._debugWireframe = collection.debugWireframe;
+
+            // This assumes the original primitive was TRIANGLES and that the triangles
+            // are connected for the wireframe to look perfect.
+            var primitiveType = collection.debugWireframe ? PrimitiveType.LINES : PrimitiveType.TRIANGLES;
+            var commands = collection._drawCommands;
+            var length = commands.length;
+            for (var i = 0; i < length; i++) {
+                commands[i].primitiveType = primitiveType;
+            }
+        }
+    }
+    function updateShowBoundingVolume(collection) {
+        if (collection.debugShowBoundingVolume !== collection._debugShowBoundingVolume) {
+            collection._debugShowBoundingVolume = collection.debugShowBoundingVolume;
+
+            var commands = collection._drawCommands;
+            var length = commands.length;
+            for (var i = 0; i < length; i++) {
+                commands[i].debugShowBoundingVolume = collection.debugShowBoundingVolume;
+            }
+        }
+    }
+
     function updateCommands(collection) {
         // Only applies when instancing is disabled. The instanced shader handles node transformations.
         if (collection._instancingSupported) {
@@ -515,13 +591,13 @@ define([
 
         var modelCommands = collection._modelCommands;
         var commandsLength = modelCommands.length;
-        var instancesLength = collection.instancesLength;
+        var instancesLength = collection.length;
         var allowPicking = collection.allowPicking;
 
         for (var i = 0; i < commandsLength; ++i) {
             var modelCommand = modelCommands[i];
             for (var j = 0; j < instancesLength; ++j) {
-                var commandIndex = i*instancesLength+j;
+                var commandIndex = i * instancesLength + j;
                 var drawCommand = collection._drawCommands[commandIndex];
                 var instanceMatrix = collection._instances[j].modelMatrix;
                 var nodeMatrix = modelCommand.modelMatrix;
@@ -562,16 +638,18 @@ define([
         };
     }
 
+    var emptyCommandList = [];
+
     ModelInstanceCollection.prototype.update = function(context, frameState, commandList) {
         if (frameState.mode !== SceneMode.SCENE3D) {
             return;
         }
 
-        if (this._show === false) {
+        if (!this._show) {
             return;
         }
 
-        if (this.instancesLength === 0) {
+        if (this.length === 0) {
             return;
         }
 
@@ -583,16 +661,16 @@ define([
         }
 
         var model = this._model;
-        model.update(context, frameState, []);
+        model.update(context, frameState, emptyCommandList);
 
-        if (model._ready && (this._state === LoadState.LOADING)) {
+        if (model.ready && (this._state === LoadState.LOADING)) {
             this._state = LoadState.LOADED;
             this._ready = true;
 
             var modelCommands = getModelCommands(model);
             createCommands(this, modelCommands.draw, modelCommands.pick);
 
-            this._readyPromise.resolve(this);
+            this.readyPromise.resolve(this);
             return;
         }
 
@@ -609,6 +687,9 @@ define([
         if (this._dynamic) {
             updateVertexBuffer(this, context);
         }
+
+        updateWireframe(this);
+        updateShowBoundingVolume(this);
 
         var passes = frameState.passes;
         var commands;
