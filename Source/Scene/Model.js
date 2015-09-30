@@ -306,7 +306,7 @@ define([
         this._releaseGltfJson = defaultValue(options.releaseGltfJson, false);
         this._animationIds = undefined;
 
-        // These additional options are for internal use
+        // Undocumented options
         this._precreatedAttributes = options.precreatedAttributes;
         this._vertexShaderLoaded = options.vertexShaderLoaded;
         this._fragmentShaderLoaded = options.fragmentShaderLoaded;
