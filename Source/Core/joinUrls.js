@@ -13,7 +13,7 @@ define(['../ThirdParty/Uri'],
      */
     var joinUrls = function(first, second, appendSlash) {
 
-        appendSlash = typeof addSlash !== 'undefined' ? appendSlash : true;
+        appendSlash = typeof appendSlash !== 'undefined' ? appendSlash : true;
 
         if (!(first instanceof URI)) {
             first = new URI(first);

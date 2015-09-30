@@ -8,31 +8,119 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
-    var qulifiedUrl = "http://www.url.com";
-    var qulifiedUrlWithPath= "http://www.url.com/some/path";
+    var queryString = "a=some&b=query";
+
+    var qualifiedUrl = "http://www.url.com";
+    var qualifiedUrlWithQueryString = "http://www.url.com" + "?" + queryString;
+    var qualifiedUrlWithPath = "http://www.url.com/some/path";
 
     var absolutePath = "/some/path";
+    var absolutePathWithQueryString = absolutePath + "?" + queryString;
     var relativePath = "some/path";
 
-    var absoluteFileUrl = "/file.extension";
-    var relativeFileUrl = "file.extension";
+    var expectedQualifiedUrl = qualifiedUrl + absolutePath;
 
+    var expectedRelativePath = relativePath + absolutePath;
+    var expectedAbsolutePath = absolutePath + absolutePath;
 
-    it('appends correctly to qulified url', function() {
-        expect(joinUrls(goodFirstUrl1, goodSecondUrl2, false)).toEqual(goodFirstUrl1+goodSecondUrl2);
+    var expectedQualifiedUrlWithQueryString = expectedQualifiedUrl + "?" + queryString;
+    var expectedAbsolutePathWithQueryString = expectedAbsolutePath + "?" + queryString;
+
+    var qualifiedUri = new URI(qualifiedUrl);
+    var pathUri = new URI(absolutePath);
+
+    it('appends slash by default', function() {
+        expect(joinUrls(qualifiedUrl, absolutePath)).toEqual(expectedQualifiedUrl);
     });
 
-    it('appendes correctly to url path', function() {
-        expect(joinUrls(goodFirstUrl2, goodSecondUrl2, false)).toEqual(goodFirstUrl2+goodSecondUrl2);
+    it('does not append slash when appendSlash is false', function() {
+        expect(joinUrls(absolutePath, relativePath, false)).toEqual(absolutePath+relativePath);
     });
 
-    it('works when appendSlash is undefined', function() {
-        expect(joinUrls(goodFirstUrl1, goodSecondUrl2)).toEqual(true);
+    it('appends absolute path correctly to qualified url', function() {
+        expect(joinUrls(qualifiedUrl, absolutePath)).toEqual(expectedQualifiedUrl);
     });
 
-    it('appendes correctly when both urls are qualified', function() {
-        expect(joinUrls(goodFirstUrl2, goodSecondUrl2, false)).toEqual(goodFirstUrl1+goodSecondUrl2);
+    it('appends relative path correctly to qualified url', function() {
+        expect(joinUrls(qualifiedUrl, absolutePath)).toEqual(expectedQualifiedUrl);
     });
 
+    it('appends absolute path correctly to qualified url with path', function() {
+        expect(joinUrls(qualifiedUrlWithPath, absolutePath))
+        .toEqual(qualifiedUrlWithPath+absolutePath);
+    });
+
+    it('appends relative path correctly to qualified url with path', function() {
+        expect(joinUrls(qualifiedUrlWithPath, relativePath))
+        .toEqual(qualifiedUrlWithPath+absolutePath);
+    });
+
+    it('appendes relative path correctly to relative path', function() {
+        expect(joinUrls(relativePath, relativePath)).toEqual(expectedRelativePath);
+    });
+
+    it('appendes absolute path correctly to relative path', function() {
+        expect(joinUrls(relativePath, absolutePath)).toEqual(expectedRelativePath);
+    });
+
+    it('appendes relative path correctly to absolute path', function() {
+        expect(joinUrls(absolutePath, relativePath)).toEqual(expectedAbsolutePath);
+    });
+
+    it('appendes absolute path correctly to absolute path', function() {
+        expect(joinUrls(absolutePath, absolutePath)).toEqual(expectedAbsolutePath);
+    });
+
+    it('appendes qualfied url correctly to qualified url', function() {
+        expect(joinUrls(qualifiedUrl, qualifiedUrl)).toEqual(qualifiedUrl+"/");
+    });
+
+    it('appendes qualfied url correctly to qualified url with path', function() {
+        expect(joinUrls(qualifiedUrl, qualifiedUrlWithPath)).toEqual(expectedQualifiedUrl);
+    });
+
+    it('appendes qualfied url with path correctly to qualified url', function() {
+        expect(joinUrls(qualifiedUrl, qualifiedUrlWithPath)).toEqual(expectedQualifiedUrl);
+    });
+
+    it('appendes qualfied url with path correctly to qualified url with path', function() {
+        expect(joinUrls(qualifiedUrlWithPath, qualifiedUrlWithPath))
+        .toEqual(qualifiedUrlWithPath+absolutePath);
+    });
+
+    it('appends absolute path correctly to qualified url with query string', function() {
+        expect(joinUrls(qualifiedUrlWithQueryString, absolutePath))
+        .toEqual(expectedQualifiedUrlWithQueryString);
+    });
+
+    it('appends relative path correctly to qualified url with query string', function() {
+        expect(joinUrls(qualifiedUrlWithQueryString, relativePath)).
+        toEqual(expectedQualifiedUrlWithQueryString);
+    });
+
+    it('appends absolute path correctly to absolute path with query string', function() {
+        expect(joinUrls(absolutePathWithQueryString, absolutePath))
+        .toEqual(expectedAbsolutePathWithQueryString);
+    });
+
+    it('appends relative path correctly to absolute path with query string', function() {
+        expect(joinUrls(absolutePathWithQueryString, relativePath))
+        .toEqual(expectedAbsolutePathWithQueryString);
+    });
+
+    it('appends absolute path with query string correctly to absolute path with query string', function() {
+        expect(joinUrls(absolutePathWithQueryString, absolutePathWithQueryString))
+        .toEqual(expectedAbsolutePathWithQueryString + "&" + queryString);
+    });
+
+    it('accepts URIs', function() {
+        expect(joinUrls(qualifiedUri, pathUri))
+        .toEqual(expectedQualifiedUrl);
+    });
+
+    it('accepts URIs and strings', function() {
+        expect(joinUrls(qualifiedUri, absolutePath))
+        .toEqual(expectedQualifiedUrl);
+    });
 
 });
