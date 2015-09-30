@@ -355,27 +355,43 @@ define([
                 if (!defined(technique.parameters)) {
                     technique.parameters = {};
                 }
+                var parameters = technique.parameters;
+                for (var parameterName in parameters) {
+                    var parameter = parameters[parameterName];
+                    parameter.node = defaultValue(parameter.node, parameter.source);
+                    parameter.source = undefined;
+                }
 
                 var passes = technique.passes;
-                for (var passName in passes) {
+                if (defined(passes)) {
+                    var passName = defaultValue(technique.pass, 'defaultPass');
                     if (passes.hasOwnProperty(passName)) {
                         var pass = passes[passName];
                         var instanceProgram = pass.instanceProgram;
 
-                        if (!defined(instanceProgram.attributes)) {
-                            instanceProgram.attributes = {};
-                        }
+                        technique.attributes = defaultValue(technique.attributes, instanceProgram.attributes);
+                        technique.program = defaultValue(technique.program, instanceProgram.program);
+                        technique.uniforms = defaultValue(technique.uniforms, instanceProgram.uniforms);
 
-                        if (!defined(instanceProgram.uniforms)) {
-                            instanceProgram.uniforms = {};
-                        }
-
-                        if (!defined(pass.states)) {
-                            pass.states = {};
-                        }
-                        statesDefaults(pass.states);
+                        technique.states = defaultValue(technique.states, pass.states);
                     }
+
+                    technique.passes = undefined;
+                    technique.pass = undefined;
                 }
+
+                if (!defined(technique.attributes)) {
+                    technique.attributes = {};
+                }
+
+                if (!defined(technique.uniforms)) {
+                    technique.uniforms = {};
+                }
+
+                if (!defined(technique.states)) {
+                    technique.states = {};
+                }
+                statesDefaults(technique.states);
             }
         }
     }

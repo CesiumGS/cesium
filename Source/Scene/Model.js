@@ -1599,10 +1599,8 @@ define([
 
         var technique = techniques[materials[primitive.material].instanceTechnique.technique];
         var parameters = technique.parameters;
-        var pass = technique.passes[technique.pass];
-        var instanceProgram = pass.instanceProgram;
-        var attributes = instanceProgram.attributes;
-        var programAttributeLocations = model._rendererResources.programs[instanceProgram.program].vertexAttributes;
+        var attributes = technique.attributes;
+        var programAttributeLocations = model._rendererResources.programs[technique.program].vertexAttributes;
 
         // Note: WebGL shader compiler may have optimized and removed some attributes from programAttributeLocations
         for (var location in programAttributeLocations){
@@ -1886,8 +1884,7 @@ define([
             for (var name in techniques) {
                 if (techniques.hasOwnProperty(name)) {
                     var technique = techniques[name];
-                    var pass = technique.passes[technique.pass];
-                    var states = pass.states;
+                    var states = technique.states;
 
                     var booleanStates = getBooleanStates(states);
                     var statesFunctions = defaultValue(states.functions, defaultValue.EMPTY_OBJECT);
@@ -2188,15 +2185,13 @@ define([
                 var instanceParameters = instanceTechnique.values;
                 var technique = techniques[instanceTechnique.technique];
                 var parameters = technique.parameters;
-                var pass = technique.passes[technique.pass];
-                var instanceProgram = pass.instanceProgram;
-                var uniforms = instanceProgram.uniforms;
+                var uniforms = technique.uniforms;
 
                 var uniformMap = {};
                 var uniformValues = {};
                 var jointMatrixUniformName;
 
-                // Uniform parameters for this pass
+                // Uniform parameters
                 for (var name in uniforms) {
                     if (uniforms.hasOwnProperty(name)) {
                         var parameterName = uniforms[name];
@@ -2225,10 +2220,10 @@ define([
                             } else {
                                 jointMatrixUniformName = name;
                             }
-                        } else if (defined(parameter.source)) {
+                        } else if (defined(parameter.node)) {
                             // GLTF_SPEC: Use semantic to know which matrix to use from the node, e.g., model vs. model-view
                             // https://github.com/KhronosGroup/glTF/issues/93
-                            uniformMap[name] = getUniformFunctionFromSource(parameter.source, model);
+                            uniformMap[name] = getUniformFunctionFromSource(parameter.node, model);
                         } else if (defined(parameter.value)) {
                             // Technique value that isn't overridden by a material
                             var uv2 = gltfUniformFunctions[parameter.type](parameter.value, model);
@@ -2297,8 +2292,6 @@ define([
                 var ix = accessors[primitive.indices];
                 var instanceTechnique = materials[primitive.material].instanceTechnique;
                 var technique = techniques[instanceTechnique.technique];
-                var pass = technique.passes[technique.pass];
-                var instanceProgram = pass.instanceProgram;
 
                 var boundingSphere;
                 var positionAttribute = primitive.attributes.POSITION;
@@ -2337,7 +2330,7 @@ define([
                     vertexArray : vertexArray,
                     count : count,
                     offset : offset,
-                    shaderProgram : rendererPrograms[instanceProgram.program],
+                    shaderProgram : rendererPrograms[technique.program],
                     uniformMap : uniformMap,
                     renderState : rs,
                     owner : owner,
@@ -2362,7 +2355,7 @@ define([
                         vertexArray : vertexArray,
                         count : count,
                         offset : offset,
-                        shaderProgram : rendererPickPrograms[instanceProgram.program],
+                        shaderProgram : rendererPickPrograms[technique.program],
                         uniformMap : pickUniformMap,
                         renderState : rs,
                         owner : owner,
@@ -2485,14 +2478,14 @@ define([
 
         if (!model._loadRendererResourcesFromCache) {
             createVertexArrays(model, context); // using glTF meshes
-            createRenderStates(model, context); // using glTF materials/techniques/passes/states
+            createRenderStates(model, context); // using glTF materials/techniques/states
 
             // Long-term, we might not cache render states if they could change
             // due to an animation, e.g., a uniform going from opaque to transparent.
             // Could use copy-on-write if it is worth it.  Probably overkill.
         }
 
-        createUniformMaps(model, context);  // using glTF materials/techniques/passes/instanceProgram
+        createUniformMaps(model, context);  // using glTF materials/techniques
         createRuntimeNodes(model, context); // using glTF scene
     }
 
