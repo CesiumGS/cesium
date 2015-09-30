@@ -1391,8 +1391,7 @@ define([
         if (defined(precreatedAttributes)) {
             for (var attrName in precreatedAttributes) {
                 if (precreatedAttributes.hasOwnProperty(attrName)) {
-                    attributeLocations[attrName] = attributesLength;
-                    attributesLength++;
+                    attributeLocations[attrName] = attributesLength++;
                 }
             }
         }
