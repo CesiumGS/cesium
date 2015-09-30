@@ -1500,6 +1500,12 @@ define([
         }
         this._pickIds = undefined;
 
+        this._instanceIds = undefined;
+        this._perInstanceAttributeCache = undefined;
+        this._perInstanceAttributeLocations = undefined;
+        this._attributeLocations = undefined;
+        this._dirtyAttributes = undefined;
+
         return destroyObject(this);
     };
 
