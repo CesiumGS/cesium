@@ -2375,15 +2375,13 @@ define([
                     var pickId = context.createPickId(owner);
                     pickIds.push(pickId);
 
-                    var pickUniformMap;
-
-                    pickUniformMap = combine(uniformMap, {
+                    var pickUniformMap = combine(uniformMap, {
                         czm_pickColor : createPickColorFunction(pickId.color)
                     });
 
                     // Allow callback to modify the uniformMap
                     if (defined(model._pickUniformMapLoaded)) {
-                        uniformMap = model._pickUniformMapLoaded(uniformMap);
+                        pickUniformMap = model._pickUniformMapLoaded(uniformMap);
                     }
 
                     pickCommand = new DrawCommand({
