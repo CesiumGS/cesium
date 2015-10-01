@@ -257,6 +257,9 @@ define([
             if (url.indexOf('?') === -1) {
                 url += '?';
             }
+            if (url[url.length - 1] !== '?'){
+                url += '&';
+            }
             url += 'token=' + token;
         }
 

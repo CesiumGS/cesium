@@ -309,14 +309,16 @@ defineSuite([
 
     it('supports non-tiled servers with various constructor parameters', function() {
         var baseUrl = '//tiledArcGisMapServer.invalid';
+        var token = '5e(u|2!7Y';
 
         stubJSONPCall(baseUrl, {
             "currentVersion" : 10.01,
             "copyrightText" : "Test copyright text"
-        });
+        }, undefined, token);
 
         var provider = new ArcGisMapServerImageryProvider({
             url : baseUrl,
+            token: token,
             tileWidth: 128,
             tileHeight: 512,
             tilingScheme: new WebMercatorTilingScheme(),
@@ -357,6 +359,7 @@ defineSuite([
                 expect(params.transparent).toEqual('true');
                 expect(params.size).toEqual('128,512');
                 expect(params.layers).toEqual('show:foo,bar');
+                expect(params.token).toEqual(token);
 
                 // Just return any old image.
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
