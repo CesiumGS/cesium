@@ -93,16 +93,16 @@ define([
         var i;
 
         if (this.createPrimitive) {
-            if (defined(primitive)) {
-                if (!defined(this.oldPrimitive)) {
-                    this.oldPrimitive = primitive;
-                } else {
-                    primitives.remove(primitive);
-                }
-            }
-
             var geometriesLength = geometries.length;
             if (geometriesLength > 0) {
+                if (defined(primitive)) {
+                    if (!defined(this.oldPrimitive)) {
+                        this.oldPrimitive = primitive;
+                    } else {
+                        primitives.remove(primitive);
+                    }
+                }
+
                 for (i = 0; i < geometriesLength; i++) {
                     var geometry = geometries[i];
                     var originalAttributes = geometry.attributes;
@@ -131,6 +131,16 @@ define([
 
                 primitives.add(primitive);
                 isUpdated = false;
+            } else {
+                if (defined(primitive)) {
+                    primitives.remove(primitive);
+                    primitive = undefined;
+                }
+                var oldPrimitive = this.oldPrimitive;
+                if (defined(oldPrimitive)) {
+                    primitives.remove(oldPrimitive);
+                    this.oldPrimitive = undefined;
+                }
             }
 
             this.attributes.removeAll();
