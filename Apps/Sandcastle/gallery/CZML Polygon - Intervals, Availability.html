@@ -34,7 +34,8 @@ function startup(Cesium) {
       "name" : "CZML Polygon - Intervals and Availability",
       "version" : "1.0"
     }, {
-      "id": "Dynamic Polygon with Intervals",
+      "id" : "dynamicPolygon",
+      "name": "Dynamic Polygon with Intervals",
       "availability":"2012-08-04T16:00:00Z/2012-08-04T17:00:00Z",
       "polygon": {
         "positions": [
@@ -50,7 +51,7 @@ function startup(Cesium) {
           {
             "interval" : "2012-08-04T16:20:00Z/2012-08-04T16:40:00Z",
             "cartographicDegrees": [
-              -35, 50, 5000000,
+              -35, 50, 500000,
               -35, 10, 30,
               -45, 30, 4000
             ]
@@ -58,10 +59,10 @@ function startup(Cesium) {
           {
             "interval" : "2012-08-04T16:40:00Z/2012-08-04T17:00:00Z",
             "cartographicDegrees" : [
-              -70, 10, 0,
-              -80, 10, 0,
-              -80, 20, 0,
-              -70, 20, 0
+              -35, 50, 0,
+              -40, 50, 0,
+              -40, 20, 0,
+              -35, 20, 0
             ]
           }
         ],
@@ -82,7 +83,8 @@ function startup(Cesium) {
         }
       }
     }, {
-      "id" : "static california with set availability",
+      "id" : "california",
+      "name" : "static california with set availability",
       "availability":"2012-08-04T16:10:00Z/2012-08-04T16:30:00Z",
       "polygon" : {
         "positions" : {
@@ -113,7 +115,8 @@ function startup(Cesium) {
       }
     },
     {
-      "id" : "static pennsylvania with set availability",
+      "id" : "pennsylvania",
+      "name" : "static pennsylvania with set availability",
       "availability":"2012-08-04T16:20:00Z/2012-08-04T16:40:00Z",
       "polygon" : {
         "positions" : {
