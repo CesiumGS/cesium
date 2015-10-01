@@ -1015,6 +1015,7 @@ define([
         processPacketData(Cartesian3, billboard, 'alignedAxis', billboardData.alignedAxis, interval, sourceUri, entityCollection);
         processPacketData(Boolean, billboard, 'show', billboardData.show, interval, sourceUri, entityCollection);
         processPacketData(VerticalOrigin, billboard, 'verticalOrigin', billboardData.verticalOrigin, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, billboard, 'sizeInMeters', billboardData.sizeInMeters, interval, sourceUri, entityCollection);
     }
 
     function processDocument(packet, dataSource) {

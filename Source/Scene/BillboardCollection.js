@@ -84,7 +84,7 @@ define([
         positionLowAndRotation : 1,
         compressedAttribute0 : 2,        // pixel offset, translate, horizontal origin, vertical origin, show, texture coordinates, direction
         compressedAttribute1 : 3,        // aligned axis, translucency by distance, image width
-        compressedAttribute2 : 4,        // image height, color, pick color, 2 bytes free
+        compressedAttribute2 : 4,        // image height, color, pick color, 15 bits free
         eyeOffset : 5,
         scaleByDistance : 6,
         pixelOffsetScaleByDistance : 7
@@ -183,6 +183,7 @@ define([
         this._maxPixelOffset = 0.0;
         this._allHorizontalCenter = true;
         this._allVerticalCenter = true;
+        this._allSizedInMeters = true;
 
         this._baseVolume = new BoundingSphere();
         this._baseVolumeWC = new BoundingSphere();
@@ -832,6 +833,9 @@ define([
 
         var color = billboard.color;
         var pickColor = billboard.getPickId(context).color;
+        var sizeInMeters = billboard.sizeInMeters ? 1.0 : 0.0;
+
+        billboardCollection._allSizedInMeters = billboardCollection._allSizedInMeters && sizeInMeters === 1.0;
 
         var height = 0;
         var index = billboard._imageIndex;
@@ -861,7 +865,7 @@ define([
         blue = Color.floatToByte(pickColor.blue);
         var compressed1 = red * LEFT_SHIFT16 + green * LEFT_SHIFT8 + blue;
 
-        var compressed2 = Color.floatToByte(color.alpha) * LEFT_SHIFT8 + Color.floatToByte(pickColor.alpha);
+        var compressed2 = Color.floatToByte(color.alpha) * LEFT_SHIFT16 + Color.floatToByte(pickColor.alpha) * LEFT_SHIFT8 + sizeInMeters;
 
         var writer = vafWriters[attributeLocations.compressedAttribute2];
         writer(i + 0, compressed0, compressed1, compressed2, imageHeight);
@@ -1008,13 +1012,16 @@ define([
     var scratchPixelSize = new Cartesian2();
 
     function updateBoundingVolume(collection, context, frameState, boundingVolume) {
-        var camera = frameState.camera;
-        var distance = camera.distanceToBoundingSphere(boundingVolume);
+        var pixelScale = 1.0;
+        if (!collection._allSizedInMeters || collection._maxPixelOffset !== 0.0) {
+            var camera = frameState.camera;
+            var distance = camera.distanceToBoundingSphere(boundingVolume);
 
-        scratchDrawingBufferDimensions.x = context.drawingBufferWidth;
-        scratchDrawingBufferDimensions.y = context.drawingBufferHeight;
-        var pixelSize = camera.frustum.getPixelSize(scratchDrawingBufferDimensions, distance, scratchPixelSize);
-        var pixelScale = Math.max(pixelSize.x, pixelSize.y);
+            scratchDrawingBufferDimensions.x = context.drawingBufferWidth;
+            scratchDrawingBufferDimensions.y = context.drawingBufferHeight;
+            var pixelSize = camera.frustum.getPixelSize(scratchDrawingBufferDimensions, distance, scratchPixelSize);
+            pixelScale = Math.max(pixelSize.x, pixelSize.y);
+        }
 
         var size = pixelScale * collection._maxScale * collection._maxSize * 2.0;
         if (collection._allHorizontalCenter && collection._allVerticalCenter ) {

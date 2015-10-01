@@ -1088,6 +1088,21 @@ define([
         }),
 
         /**
+         * The distances to the frustum planes. The top, bottom, left and right distances are
+         * the x, y, z, and w components, respectively.
+         *
+         * @alias czm_frustumPlanes
+         * @glslUniform
+         */
+        czm_frustumPlanes : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC4,
+            getValue : function(uniformState) {
+                return uniformState.frustumPlanes;
+            }
+        }),
+
+        /**
          * An automatic GLSL uniform representing the sun position in world coordinates.
          *
          * @alias czm_sunPositionWC
