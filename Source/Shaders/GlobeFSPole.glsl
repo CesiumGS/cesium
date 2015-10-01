@@ -14,12 +14,12 @@ void main()
     {
         vec3 positionEC = czm_pointAlongRay(ray, intersection.start);
         vec3 positionMC = (czm_inverseModelView * vec4(positionEC, 1.0)).xyz;
-	    
-	    vec3 normalMC = normalize(czm_geodeticSurfaceNormal(positionMC, vec3(0.0), vec3(1.0)));
-	    vec3 normalEC = normalize(czm_normal * normalMC);
-	    
+        
+        vec3 normalMC = normalize(czm_geodeticSurfaceNormal(positionMC, vec3(0.0), vec3(1.0)));
+        vec3 normalEC = normalize(czm_normal * normalMC);
+        
         vec3 startDayColor = u_color;
-		
+        
         gl_FragColor = vec4(startDayColor, 1.0);
     }
     else

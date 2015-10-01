@@ -6,8 +6,10 @@ defineSuite([
         'Core/loadImage',
         'Core/loadWithXhr',
         'Core/Rectangle',
+        'Renderer/ComputeEngine',
         'Scene/ArcGisMapServerImageryProvider',
         'Scene/BingMapsImageryProvider',
+        'Scene/Globe',
         'Scene/GlobeSurfaceTile',
         'Scene/Imagery',
         'Scene/ImageryLayerCollection',
@@ -26,8 +28,10 @@ defineSuite([
         loadImage,
         loadWithXhr,
         Rectangle,
+        ComputeEngine,
         ArcGisMapServerImageryProvider,
         BingMapsImageryProvider,
+        Globe,
         GlobeSurfaceTile,
         Imagery,
         ImageryLayerCollection,
@@ -43,13 +47,16 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var context;
+    var computeEngine;
 
     beforeAll(function() {
         context = createContext();
+        computeEngine = new ComputeEngine(context);
     });
 
     afterAll(function() {
         context.destroyForSpecs();
+        computeEngine.destroy();
     });
 
     afterEach(function() {
@@ -165,7 +172,9 @@ defineSuite([
                     return imagery.state === ImageryState.TEXTURE_LOADED;
                 }).then(function() {
                     var textureBeforeReprojection = imagery.texture;
-                    layer._reprojectTexture(context, imagery);
+                    var commandList = [];
+                    layer._reprojectTexture(context, commandList, imagery);
+                    commandList[0].execute(computeEngine);
 
                     return pollToPromise(function() {
                         return imagery.state === ImageryState.READY;

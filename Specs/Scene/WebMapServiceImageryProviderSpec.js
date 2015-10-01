@@ -127,6 +127,32 @@ defineSuite([
         });
     });
 
+    it('supports subdomains string in URL', function() {
+        var provider = new WebMapServiceImageryProvider({
+            url : '{s}',
+            subdomains: '123',
+            layers : ''
+        });
+
+        var loadImageSpy = spyOn(ImageryProvider, 'loadImage');
+        provider.requestImage(0, 0, 0);
+        var url = ImageryProvider.loadImage.calls.mostRecent().args[1];
+        expect('123'.indexOf(url.substring(0, 1))).toBeGreaterThanOrEqualTo(0);
+    });
+
+    it('supports subdomains array in URL', function() {
+        var provider = new WebMapServiceImageryProvider({
+            url : '{s}',
+            subdomains: ['foo', 'bar'],
+            layers : ''
+        });
+
+        var loadImageSpy = spyOn(ImageryProvider, 'loadImage');
+        provider.requestImage(0, 0, 0);
+        var url = ImageryProvider.loadImage.calls.mostRecent().args[1];
+        expect(['foo', 'bar'].indexOf(url.substring(0, 3))).toBeGreaterThanOrEqualTo(0);
+    });
+
     it('supports a question mark at the end of the URL', function() {
         var provider = new WebMapServiceImageryProvider({
             url : 'made/up/wms/server?',

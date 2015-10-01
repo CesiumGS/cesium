@@ -38,6 +38,7 @@ define([
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         '../Renderer/VertexArray',
+        '../Renderer/WebGLConstants',
         '../ThirdParty/gltfDefaults',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
@@ -88,6 +89,7 @@ define([
         TextureMinificationFilter,
         TextureWrap,
         VertexArray,
+        WebGLConstants,
         gltfDefaults,
         Uri,
         when,
@@ -1054,7 +1056,7 @@ define([
         var bufferViews = model.gltf.bufferViews;
         for (var name in bufferViews) {
             if (bufferViews.hasOwnProperty(name)) {
-                if (bufferViews[name].target === WebGLRenderingContext.ARRAY_BUFFER) {
+                if (bufferViews[name].target === WebGLConstants.ARRAY_BUFFER) {
                     model._loadResources.buffersToCreate.enqueue(name);
                 }
             }
@@ -1313,7 +1315,7 @@ define([
                 var accessor = accessors[name];
                 bufferView = bufferViews[accessor.bufferView];
 
-                if ((bufferView.target === WebGLRenderingContext.ELEMENT_ARRAY_BUFFER) && !defined(rendererBuffers[accessor.bufferView])) {
+                if ((bufferView.target === WebGLConstants.ELEMENT_ARRAY_BUFFER) && !defined(rendererBuffers[accessor.bufferView])) {
                     var indexBuffer = Buffer.createIndexBuffer({
                         context : context,
                         typedArray : loadResources.getBuffer(bufferView),
@@ -1504,7 +1506,7 @@ define([
 
         var tx;
 
-        if (texture.target === WebGLRenderingContext.TEXTURE_2D) {
+        if (texture.target === WebGLConstants.TEXTURE_2D) {
             tx = new Texture({
                 context : context,
                 source : source,
@@ -1814,11 +1816,11 @@ define([
     function getBooleanStates(states) {
         // GLTF_SPEC: SAMPLE_ALPHA_TO_COVERAGE not used by Cesium
         var booleanStates = {};
-        booleanStates[WebGLRenderingContext.BLEND] = false;
-        booleanStates[WebGLRenderingContext.CULL_FACE] = false;
-        booleanStates[WebGLRenderingContext.DEPTH_TEST] = false;
-        booleanStates[WebGLRenderingContext.POLYGON_OFFSET_FILL] = false;
-        booleanStates[WebGLRenderingContext.SCISSOR_TEST] = false;
+        booleanStates[WebGLConstants.BLEND] = false;
+        booleanStates[WebGLConstants.CULL_FACE] = false;
+        booleanStates[WebGLConstants.DEPTH_TEST] = false;
+        booleanStates[WebGLConstants.POLYGON_OFFSET_FILL] = false;
+        booleanStates[WebGLConstants.SCISSOR_TEST] = false;
 
         var enable = states.enable;
         var length = enable.length;
@@ -1847,32 +1849,32 @@ define([
                     var statesFunctions = defaultValue(states.functions, defaultValue.EMPTY_OBJECT);
                     var blendColor = defaultValue(statesFunctions.blendColor, [0.0, 0.0, 0.0, 0.0]);
                     var blendEquationSeparate = defaultValue(statesFunctions.blendEquationSeparate, [
-                        WebGLRenderingContext.FUNC_ADD,
-                        WebGLRenderingContext.FUNC_ADD]);
+                        WebGLConstants.FUNC_ADD,
+                        WebGLConstants.FUNC_ADD]);
                     var blendFuncSeparate = defaultValue(statesFunctions.blendFuncSeparate, [
-                        WebGLRenderingContext.ONE,
-                        WebGLRenderingContext.ONE,
-                        WebGLRenderingContext.ZERO,
-                        WebGLRenderingContext.ZERO]);
+                        WebGLConstants.ONE,
+                        WebGLConstants.ONE,
+                        WebGLConstants.ZERO,
+                        WebGLConstants.ZERO]);
                     var colorMask = defaultValue(statesFunctions.colorMask, [true, true, true, true]);
                     var depthRange = defaultValue(statesFunctions.depthRange, [0.0, 1.0]);
                     var polygonOffset = defaultValue(statesFunctions.polygonOffset, [0.0, 0.0]);
                     var scissor = defaultValue(statesFunctions.scissor, [0.0, 0.0, 0.0, 0.0]);
 
                     rendererRenderStates[name] = RenderState.fromCache({
-                        frontFace : defined(statesFunctions.frontFace) ? statesFunctions.frontFace[0] : WebGLRenderingContext.CCW,
+                        frontFace : defined(statesFunctions.frontFace) ? statesFunctions.frontFace[0] : WebGLConstants.CCW,
                         cull : {
-                            enabled : booleanStates[WebGLRenderingContext.CULL_FACE],
-                            face : defined(statesFunctions.cullFace) ? statesFunctions.cullFace[0] : WebGLRenderingContext.BACK
+                            enabled : booleanStates[WebGLConstants.CULL_FACE],
+                            face : defined(statesFunctions.cullFace) ? statesFunctions.cullFace[0] : WebGLConstants.BACK
                         },
                         lineWidth : defined(statesFunctions.lineWidth) ? statesFunctions.lineWidth[0] : 1.0,
                         polygonOffset : {
-                            enabled : booleanStates[WebGLRenderingContext.POLYGON_OFFSET_FILL],
+                            enabled : booleanStates[WebGLConstants.POLYGON_OFFSET_FILL],
                             factor : polygonOffset[0],
                             units : polygonOffset[1]
                         },
                         scissorTest : {
-                            enabled : booleanStates[WebGLRenderingContext.SCISSOR_TEST],
+                            enabled : booleanStates[WebGLConstants.SCISSOR_TEST],
                             rectangle : {
                                 x : scissor[0],
                                 y : scissor[1],
@@ -1885,8 +1887,8 @@ define([
                             far : depthRange[1]
                         },
                         depthTest : {
-                            enabled : booleanStates[WebGLRenderingContext.DEPTH_TEST],
-                            func : defined(statesFunctions.depthFunc) ? statesFunctions.depthFunc[0] : WebGLRenderingContext.LESS
+                            enabled : booleanStates[WebGLConstants.DEPTH_TEST],
+                            func : defined(statesFunctions.depthFunc) ? statesFunctions.depthFunc[0] : WebGLConstants.LESS
                         },
                         colorMask : {
                             red : colorMask[0],
@@ -1896,7 +1898,7 @@ define([
                         },
                         depthMask : defined(statesFunctions.depthMask) ? statesFunctions.depthMask[0] : true,
                         blending : {
-                            enabled : booleanStates[WebGLRenderingContext.BLEND],
+                            enabled : booleanStates[WebGLConstants.BLEND],
                             color : {
                                 red : blendColor[0],
                                 green : blendColor[1],
@@ -2091,22 +2093,22 @@ define([
 
     // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
     if (typeof WebGLRenderingContext !== 'undefined') {
-        gltfUniformFunctions[WebGLRenderingContext.FLOAT] = getScalarUniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.FLOAT_VEC2] = getVec2UniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.FLOAT_VEC3] = getVec3UniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.FLOAT_VEC4] = getVec4UniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.INT] = getScalarUniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.INT_VEC2] = getVec2UniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.INT_VEC3] = getVec3UniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.INT_VEC4] = getVec4UniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.BOOL] = getScalarUniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.BOOL_VEC2] = getVec2UniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.BOOL_VEC3] = getVec3UniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.BOOL_VEC4] = getVec4UniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.FLOAT_MAT2] = getMat2UniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.FLOAT_MAT3] = getMat3UniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.FLOAT_MAT4] = getMat4UniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.SAMPLER_2D] = getTextureUniformFunction;
+        gltfUniformFunctions[WebGLConstants.FLOAT] = getScalarUniformFunction;
+        gltfUniformFunctions[WebGLConstants.FLOAT_VEC2] = getVec2UniformFunction;
+        gltfUniformFunctions[WebGLConstants.FLOAT_VEC3] = getVec3UniformFunction;
+        gltfUniformFunctions[WebGLConstants.FLOAT_VEC4] = getVec4UniformFunction;
+        gltfUniformFunctions[WebGLConstants.INT] = getScalarUniformFunction;
+        gltfUniformFunctions[WebGLConstants.INT_VEC2] = getVec2UniformFunction;
+        gltfUniformFunctions[WebGLConstants.INT_VEC3] = getVec3UniformFunction;
+        gltfUniformFunctions[WebGLConstants.INT_VEC4] = getVec4UniformFunction;
+        gltfUniformFunctions[WebGLConstants.BOOL] = getScalarUniformFunction;
+        gltfUniformFunctions[WebGLConstants.BOOL_VEC2] = getVec2UniformFunction;
+        gltfUniformFunctions[WebGLConstants.BOOL_VEC3] = getVec3UniformFunction;
+        gltfUniformFunctions[WebGLConstants.BOOL_VEC4] = getVec4UniformFunction;
+        gltfUniformFunctions[WebGLConstants.FLOAT_MAT2] = getMat2UniformFunction;
+        gltfUniformFunctions[WebGLConstants.FLOAT_MAT3] = getMat3UniformFunction;
+        gltfUniformFunctions[WebGLConstants.FLOAT_MAT4] = getMat4UniformFunction;
+        gltfUniformFunctions[WebGLConstants.SAMPLER_2D] = getTextureUniformFunction;
         // GLTF_SPEC: Support SAMPLER_CUBE. https://github.com/KhronosGroup/glTF/issues/40
     }
 
