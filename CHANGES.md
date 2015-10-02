@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.15 - 2015-11-02
+
+* Fixed token issue in ArcGisMapServerImageryProvider
+
 ### 1.14 - 2015-10-01
 
 * Breaking changes
