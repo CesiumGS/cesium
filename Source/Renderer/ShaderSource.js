@@ -285,6 +285,11 @@ define([
         });
     };
 
+    ShaderSource.replaceMain = function(source, renamedMain) {
+        renamedMain = 'void ' + renamedMain + '()';
+        return source.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, renamedMain);
+    };
+
     /**
      * Create a single string containing the full, combined vertex shader with all dependencies and defines.
      *
