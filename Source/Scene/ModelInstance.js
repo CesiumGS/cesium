@@ -5,6 +5,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/DeveloperError',
         '../Core/Matrix4'
     ], function(
         clone,
@@ -12,6 +13,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        DeveloperError,
         Matrix4) {
     "use strict";
     
@@ -45,7 +47,7 @@ define([
 
         modelMatrix : {
             get : function() {
-                return this._modelMatrix
+                return this._modelMatrix;
             },
             set : function(value) {
                 if (Matrix4.equals(this._modelMatrix, value)) {
@@ -90,7 +92,7 @@ define([
         }
     });
 
-    ModelInstance.prototype.getPickId = function(context, model) {
+    ModelInstance.prototype.getPickId = function(context) {
         if (!defined(this._pickId)) {
             // TODO : change this later
             this._pickId = context.createPickId({

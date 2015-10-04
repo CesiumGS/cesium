@@ -1361,24 +1361,23 @@ define([
         return attributeLocations;
     }
 
-    function getShaderSource(model, shader, programName, callback) {
-        var source;
-
+    function getShaderSource(model, shader) {
         if (defined(shader.source)) {
-            source = shader.source;
-        } else {
-            var loadResources = model._loadResources;
-            var gltf = model.gltf;
-            var bufferView = gltf.bufferViews[shader.bufferView];
-            source = getStringFromTypedArray(loadResources.getBuffer(bufferView));
+            return shader.source;
         }
 
-        // Allow callback to modify the shader source
+        var loadResources = model._loadResources;
+        var gltf = model.gltf;
+        var bufferView = gltf.bufferViews[shader.bufferView];
+
+        return getStringFromTypedArray(loadResources.getBuffer(bufferView));
+    }
+
+    function modifyShader(shader, programName, callback) {
         if (defined(callback)) {
-            source = callback(source, programName);
+            shader = callback(shader, programName);
         }
-
-        return source;
+        return shader;
     }
 
     function createProgram(name, model, context) {
@@ -1387,8 +1386,11 @@ define([
         var program = programs[name];
 
         var attributeLocations = createAttributeLocations(program.attributes);
-        var vs = getShaderSource(model, shaders[program.vertexShader], name, model._vertexShaderLoaded);
-        var fs = getShaderSource(model, shaders[program.fragmentShader], name, model._fragmentShaderLoaded);
+        var vs = getShaderSource(model, shaders[program.vertexShader]);
+        var fs = getShaderSource(model, shaders[program.fragmentShader]);
+
+        var drawVS = modifyShader(vs, name, model._vertexShaderLoaded);
+        var drawFS = modifyShader(fs, name, model._fragmentShaderLoaded);
 
         // Add pre-created attributes to attributeLocations
         var attributesLength = program.attributes.length;
@@ -1403,22 +1405,17 @@ define([
 
         model._rendererResources.programs[name] = ShaderProgram.fromCache({
             context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs,
+            vertexShaderSource : drawVS,
+            fragmentShaderSource : drawFS,
             attributeLocations : attributeLocations
         });
 
         if (model.allowPicking) {
             // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
-            var pickVS;
-            var pickFS;
+            var pickVS = modifyShader(vs, name, model._pickVertexShaderLoaded);
+            var pickFS = modifyShader(fs, name, model._pickFragmentShaderLoaded);
 
-            if (defined(model._pickFragmentShaderLoaded)) {
-                // If a pick fragment shader callback is defined, it overrides model picking
-                pickVS = getShaderSource(model, shaders[program.vertexShader], name, model._pickVertexShaderLoaded);
-                pickFS = getShaderSource(model, shaders[program.fragmentShader], name, model._pickFragmentShaderLoaded);
-            } else {
-                pickVS = vs;
+            if (!model._pickFragmentShaderLoaded) {
                 pickFS = ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
             }
 

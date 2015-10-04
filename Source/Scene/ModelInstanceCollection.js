@@ -95,7 +95,7 @@ define([
 
         var instances = defaultValue(options.instances, []);
         var length = instances.length;
-        for (var i = 0; i < length; i++) {
+        for (var i = 0; i < length; ++i) {
             this.add(instances[i]);
         }
 
@@ -368,11 +368,11 @@ define([
         };
     }
 
-    function getFragmentShaderCallback() {
+    function getFragmentShaderCallback(qualifier) {
         return function(fs) {
             var renamedSource = ShaderSource.replaceMain(fs, 'gltf_main');
             var newMain =
-                'varying vec4 czm_color;\n' +
+                qualifier + ' vec4 czm_color;\n' +
                 'void main()\n' +
                 '{\n' +
                 '    gltf_main();\n' +
@@ -380,7 +380,7 @@ define([
                 '}';
 
             return renamedSource + '\n' + newMain;
-        }
+        };
     }
 
     function getPickVertexShaderCallback() {
@@ -524,7 +524,7 @@ define([
     function updateBoundingSphere(collection) {
         var points = [];
         var instancesLength = collection.length;
-        for (var i = 0; i < instancesLength; i++) {
+        for (var i = 0; i < instancesLength; ++i) {
             var translation = new Cartesian3();
             Matrix4.getTranslation(collection._instances[i].modelMatrix, translation);
             points.push(translation);
@@ -589,13 +589,15 @@ define([
 
             modelOptions.precreatedAttributes = instancedAttributes;
             modelOptions.vertexShaderLoaded = getVertexShaderCallback(collection);
-            modelOptions.fragmentShaderLoaded = getFragmentShaderCallback();
+            modelOptions.fragmentShaderLoaded = getFragmentShaderCallback('varying');
             modelOptions.uniformMapLoaded = getUniformMapCallback(collection, context);
             modelOptions.pickVertexShaderLoaded = getPickVertexShaderCallback();
             modelOptions.pickFragmentShaderLoaded = getPickFragmentShaderCallback();
             modelOptions.pickUniformMapLoaded = getPickUniformMapCallback();
             modelOptions.cacheKey = cacheKey;
             modelOptions.ignoreCommands = true;
+        } else {
+            modelOptions.fragmentShaderLoaded = getFragmentShaderCallback('uniform');
         }
 
         if (defined(collection._url)) {
@@ -605,7 +607,19 @@ define([
         }
     }
 
-    function createCommands(collection, drawCommands, pickCommands) {
+    function createColorFunction(instance) {
+        return function() {
+            return instance.color;
+        };
+    }
+
+    function createPickColorFunction(instance, context) {
+        return function() {
+            return instance.getPickId(context).color;
+        };
+    }
+
+    function createCommands(collection, drawCommands, pickCommands, context) {
         collection._modelCommands = drawCommands;
 
         var i;
@@ -643,13 +657,16 @@ define([
                     command = clone(drawCommands[i]);
                     command.modelMatrix = new Matrix4();
                     command.boundingVolume = new BoundingSphere();
-                    //command.show = instances[j].show; TODO : show isn't part of DrawCommand, instead prevent it from being added
+                    command.uniformMap = clone(command.uniformMap);
+                    command.uniformMap.czm_color = createColorFunction(instances[j]);
                     collection._drawCommands.push(command);
 
                     if (allowPicking) {
                         command = clone(pickCommands[i]);
                         command.modelMatrix = new Matrix4();
                         command.boundingVolume = new BoundingSphere();
+                        command.uniformMap = clone(command.uniformMap);
+                        command.uniformMap.czm_pickColor = createPickColorFunction(instances[j], context);
                         collection._pickCommands.push(command);
                     }
                 }
@@ -666,7 +683,7 @@ define([
             var primitiveType = collection.debugWireframe ? PrimitiveType.LINES : PrimitiveType.TRIANGLES;
             var commands = collection._drawCommands;
             var length = commands.length;
-            for (var i = 0; i < length; i++) {
+            for (var i = 0; i < length; ++i) {
                 commands[i].primitiveType = primitiveType;
             }
         }
@@ -677,7 +694,7 @@ define([
 
             var commands = collection._drawCommands;
             var length = commands.length;
-            for (var i = 0; i < length; i++) {
+            for (var i = 0; i < length; ++i) {
                 commands[i].debugShowBoundingVolume = collection.debugShowBoundingVolume;
             }
         }
@@ -768,7 +785,7 @@ define([
             this._ready = true;
 
             var modelCommands = getModelCommands(model);
-            createCommands(this, modelCommands.draw, modelCommands.pick);
+            createCommands(this, modelCommands.draw, modelCommands.pick, context);
 
             this.readyPromise.resolve(this);
             return;
@@ -792,21 +809,23 @@ define([
         updateShowBoundingVolume(this);
 
         var passes = frameState.passes;
-        var commands;
-        var commandsLength;
+        var commands = passes.render ? this._drawCommands : this._pickCommands;
+        var commandsLength = commands.length;
         var i;
-
-        if (passes.render) {
-            commands = this._drawCommands;
-            commandsLength = commands.length;
-            for (i = 0; i < commandsLength; i++) {
+        
+        if (this._instancingSupported) {
+            for (i = 0; i < commandsLength; ++i) {
                 commandList.push(commands[i]);
             }
-        } else if (passes.pick) {
-            commands = this._pickCommands;
-            commandsLength = commands.length;
-            for (i = 0; i < commandsLength; i++) {
-                commandList.push(commands[i]);
+        } else {
+            // Don't push commands if the instance's show is false
+            var instances = this._instances;
+            var instancesLength = this.length;
+            for (i = 0; i < commandsLength; ++i) {
+                var instance = instances[i%instancesLength];
+                if (instance.show) {
+                    commandList.push(commands[i]);
+                }
             }
         }
     };
