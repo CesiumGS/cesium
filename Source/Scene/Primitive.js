@@ -94,7 +94,7 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances - or a single geometry instance - to render.
+     * @param {GeometryInstance[]|GeometryInstance} [options.geometryInstances] The geometry instances - or a single geometry instance - to render.
      * @param {Appearance} [options.appearance] The appearance used to render the primitive.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the primitive (all geometry instances) from model to world coordinates.
@@ -187,7 +187,7 @@ define([
          * Changing this property after the primitive is rendered has no effect.
          * </p>
          *
-         * @type Array
+         * @type GeometryInstance[]|GeometryInstance
          *
          * @default undefined
          */
@@ -1552,6 +1552,15 @@ define([
             pickIds[i].destroy();
         }
         this._pickIds = undefined;
+
+        //These objects may be fairly large and reference other large objects (like Entities)
+        //We explicitly set them to undefined here so that the memory can be freed
+        //even if a reference to the destroyed Primitive has been kept around.
+        this._instanceIds = undefined;
+        this._perInstanceAttributeCache = undefined;
+        this._perInstanceAttributeLocations = undefined;
+        this._attributeLocations = undefined;
+        this._dirtyAttributes = undefined;
 
         return destroyObject(this);
     };

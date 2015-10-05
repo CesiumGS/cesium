@@ -139,7 +139,7 @@ define([
      *     stencil : false,
      *     antialias : true,
      *     premultipliedAlpha : true,
-     *     preserveDrawingBuffer : false
+     *     preserveDrawingBuffer : false,
      *     failIfMajorPerformanceCaveat : true
      *   },
      *   allowTextureFilterAnisotropic : true
