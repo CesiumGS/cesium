@@ -1,9 +1,11 @@
 /*global define*/
 define([
         './Batched3DModel3DTileContentProvider',
+        './Instanced3DModel3DTileContentProvider',
         './Points3DTileContentProvider'
     ], function(
         Batched3DModel3DTileContentProvider,
+        Instanced3DModel3DTileContentProvider,
         Points3DTileContentProvider) {
     "use strict";
 
@@ -16,6 +18,9 @@ define([
         },
         pnts : function(tileset, url, contentHeader) {
             return new Points3DTileContentProvider(tileset, url, contentHeader);
+        },
+        i3dm : function(tileset, url, contentHeader) {
+            return new Instanced3DModel3DTileContentProvider(tileset, url, contentHeader);
         }
     };
 

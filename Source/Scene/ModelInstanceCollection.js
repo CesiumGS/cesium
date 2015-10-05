@@ -19,7 +19,7 @@ define([
         '../Renderer/DrawCommand',
         '../Renderer/ShaderSource',
         '../ThirdParty/when',
-        './CollectionContent',
+        './Cesium3DTileBatchData',
         './Model',
         './ModelInstance',
         './SceneMode'
@@ -43,7 +43,7 @@ define([
         DrawCommand,
         ShaderSource,
         when,
-        CollectionContent,
+        Cesium3DTileBatchData,
         Model,
         ModelInstance,
         SceneMode) {
@@ -97,21 +97,27 @@ define([
         this._dynamic = defaultValue(options.dynamic, false);
         this._show = defaultValue(options.show, true);
         this._allowPicking = defaultValue(options.allowPicking, true);
+        this._cull = defaultValue(options.cull, true);
         this._ready = false;
         this._readyPromise = when.defer();
         this._state = LoadState.NEEDS_LOAD;
 
         var instances = defaultValue(options.instances, []);
         var length = instances.length;
-        this._content = defined(options.content) ? options.content : new CollectionContent(length);
-        this._instances = new Array(length);
+        var batchData = options.batchData;
+        if (!defined(batchData)) {
+            batchData = new Cesium3DTileBatchData(this, length);
+        }
+        this._batchData = batchData;
 
+        this._instances = new Array(length);
         for (var i = 0; i < length; ++i) {
-            this._instances[i] = new ModelInstance(instances[i], this, i, i);
+            this._instances[i] = new ModelInstance(instances[i], this, i, this._pickPrimitive);
         }
 
         this._model = undefined;
-        this._instanceBufferData = undefined;
+        this._pickPrimitive = options.pickPrimitive;
+        this._vertexBufferValues = undefined;
         this._vertexBuffer = undefined;
         this._createVertexBuffer = true;
         this._vertexBufferDirty = false;
@@ -121,9 +127,9 @@ define([
         this._pickCommands = [];
         this._modelCommands = undefined;
 
-        this._boundingSphere = new BoundingSphere();
-        this._boundingSphereModel = new Matrix4();
-        this._boundingSphereModelView = new Matrix4();
+        this._boundingVolume = options.boundingVolume;
+        this._boundingVolumeModel = new Matrix4();
+        this._boundingVolumeModelView = new Matrix4();
 
         // Passed on to Model
         this._url = options.url;
@@ -167,11 +173,6 @@ define([
                 return this._show;
             }
         },
-        boundingSphere : {
-            get : function() {
-                return this._boundingSphere;
-            }
-        },
         allowPicking : {
             get : function() {
                 return this._allowPicking;
@@ -194,13 +195,23 @@ define([
         }
     });
 
+    ModelInstanceCollection.prototype.getModel = function(index) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(index) || (index < 0) || (index >= this.length)) {
+            throw new DeveloperError('index is required and between zero and length - 1 (' + (this.length - 1) + ').');
+        }
+        //>>includeEnd('debug');
+
+        return this._instances[index];
+    };
+
     ModelInstanceCollection.prototype._updateInstance = function(instance) {
         // TODO : update the whole buffer for now, but later do sub-commits based on the instance's index
         this._vertexBufferDirty = true;
     };
 
     ModelInstanceCollection.prototype.add = function(instance) {
-        var i = new ModelInstance(instance, this, this.length, this.length);
+        var i = new ModelInstance(instance, this, this.length, this._pickPrimitive);
         this._instances.push(i);
         this._vertexBufferDirty = true;
         this._createVertexBuffer = true;
@@ -326,13 +337,13 @@ define([
                 '}';
 
             vertexShaderCached = newMain;
-            return collection._content.modifyVertexShader(newMain);
+            return collection._batchData.getVertexShaderCallback()(newMain);
         };
     }
 
     function getFragmentShaderCallback(collection) {
         return function(fs) {
-            return collection._content.modifyFragmentShader(fs);
+            return collection._batchData.getFragmentShaderCallback()(fs);
         };
     }
 
@@ -354,19 +365,19 @@ define([
     function getPickVertexShaderCallback(collection) {
         return function (vs) {
             // Use the vertex shader that was generated earlier
-            return collection._content.modifyPickVertexShader(vertexShaderCached);
+            return collection._batchData.getPickVertexShaderCallback()(vertexShaderCached);
         };
     }
 
     function getPickFragmentShaderCallback(collection) {
         return function(fs) {
-            return collection._content.modifyPickFragmentShader(fs);
+            return collection._batchData.getPickFragmentShaderCallback()(fs);
         };
     }
 
     function createBoundsModelViewFunction(collection, context) {
         return function() {
-            return Matrix4.multiplyTransformation(context.uniformState.view, collection._boundingSphereModel, collection._boundingSphereModelView);
+            return Matrix4.multiplyTransformation(context.uniformState.view, collection._boundingVolumeModel, collection._boundingVolumeModelView);
         };
     }
 
@@ -391,13 +402,13 @@ define([
                 }
             }
 
-            return collection._content.modifyUniformMap(uniformMap);
+            return collection._batchData.getUniformMapCallback()(uniformMap);
         };
     }
 
     function getPickUniformMapCallback(collection) {
         return function(uniformMap) {
-            return collection._content.modifyPickUniformMap(uniformMap);
+            return collection._batchData.getPickUniformMapCallback()(uniformMap);
         };
     }
 
@@ -408,14 +419,14 @@ define([
             return;
         }
 
-        var instanceBufferData = collection._instanceBufferData;
+        var instanceBufferData = collection._vertexBufferValues;
         var vertexBuffer = collection._vertexBuffer;
         var createVertexBuffer = collection._createVertexBuffer;
 
         var instancesLength = collection.length;
         var dynamic = collection._dynamic;
         var viewMatrix = context.uniformState.view;
-        var center = dynamic ? Cartesian3.ZERO : collection._boundingSphere.center;
+        var center = dynamic ? Cartesian3.ZERO : collection._boundingVolume.center;
 
         if (createVertexBuffer) {
             instanceBufferData = new Float32Array(instancesLength * 13);
@@ -456,25 +467,29 @@ define([
                 usage : dynamic ? BufferUsage.STREAM_DRAW : BufferUsage.STATIC_DRAW
             });
             collection._vertexBuffer = vertexBuffer;
-            collection._instanceBufferData = instanceBufferData;
+            collection._vertexBufferValues = instanceBufferData;
             collection._createVertexBuffer = false;
         } else {
             vertexBuffer.copyFromArrayView(instanceBufferData);
         }
     }
 
-    function updateBoundingSphere(collection) {
-        var points = [];
-        var instancesLength = collection.length;
-        for (var i = 0; i < instancesLength; ++i) {
-            var translation = new Cartesian3();
-            Matrix4.getTranslation(collection._instances[i].modelMatrix, translation);
-            points.push(translation);
+    function createBoundingVolume(collection) {
+        if (!defined(collection._boundingVolume)) {
+            var points = [];
+            var instancesLength = collection.length;
+            for (var i = 0; i < instancesLength; ++i) {
+                var translation = new Cartesian3();
+                Matrix4.getTranslation(collection._instances[i].modelMatrix, translation);
+                points.push(translation);
+            }
+
+            var boundingSphere = new BoundingSphere();
+            BoundingSphere.fromPoints(points, boundingSphere);
+            collection._boundingVolume = boundingSphere;
         }
 
-        var boundingSphere = collection._boundingSphere;
-        BoundingSphere.fromPoints(points, boundingSphere);
-        Matrix4.fromTranslation(boundingSphere.center, collection._boundingSphereModel);
+        Matrix4.fromTranslation(collection._boundingVolume.center, collection._boundingVolumeModel);
     }
 
     function createModel(collection, context) {
@@ -497,7 +512,7 @@ define([
             ignoreCommands : false
         };
 
-        updateBoundingSphere(collection);
+        createBoundingVolume(collection);
 
         if (instancingSupported) {
             updateVertexBuffer(collection, context);
@@ -598,23 +613,24 @@ define([
         var instancesLength = collection.length;
         var allowPicking = collection.allowPicking;
 
-        var boundingSphere = collection._boundingSphere;
-        var boundingSphereModel = collection._boundingSphereModel;
-        boundingSphere.radius += collection._model.boundingSphere.radius;
+        var boundingVolume = collection._boundingVolume;
+        var boundingVolumeModel = collection._boundingVolumeModel;
 
         if (collection._instancingSupported) {
             for (i = 0; i < commandsLength; ++i) {
                 command = clone(drawCommands[i]);
                 command.instanceCount = instancesLength;
-                command.modelMatrix = boundingSphereModel;
-                command.boundingVolume = boundingSphere;
+                command.modelMatrix = boundingVolumeModel;
+                command.boundingVolume = boundingVolume;
+                command.cull = collection._cull;
                 collection._drawCommands.push(command);
 
                 if (allowPicking) {
                     command = clone(pickCommands[i]);
                     command.instanceCount = instancesLength;
-                    command.modelMatrix = boundingSphereModel;
-                    command.boundingVolume = boundingSphere;
+                    command.modelMatrix = boundingVolumeModel;
+                    command.boundingVolume = boundingVolume;
+                    command.cull = collection._cull;
                     collection._pickCommands.push(command);
                 }
             }
@@ -626,6 +642,7 @@ define([
                     command = clone(drawCommands[i]);
                     command.modelMatrix = new Matrix4();
                     command.boundingVolume = new BoundingSphere();
+                    command.cull = collection._cull;
                     command.uniformMap = clone(command.uniformMap);
                     command.uniformMap.czm_color = createColorFunction(instances[j]);
                     collection._drawCommands.push(command);
@@ -634,6 +651,7 @@ define([
                         command = clone(pickCommands[i]);
                         command.modelMatrix = new Matrix4();
                         command.boundingVolume = new BoundingSphere();
+                        command.cull = collection._cull;
                         command.uniformMap = clone(command.uniformMap);
                         command.uniformMap.czm_pickColor = createPickColorFunction(instances[j], context);
                         collection._pickCommands.push(command);
@@ -748,7 +766,7 @@ define([
         }
 
         if (instancingSupported) {
-            this._content.update(context, frameState);
+            this._batchData.update(context, frameState);
         }
 
         var model = this._model;
@@ -806,39 +824,18 @@ define([
     };
 
     /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
-     *
-     * @see ModelInstanceCollection#destroy
+     * DOC_TBA
      */
     ModelInstanceCollection.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @returns {undefined}
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see ModelInstanceCollection#isDestroyed
-     *
-     * @example
-     * instanceCollection = instanceCollection && instanceCollection.destroy();
+     * DOC_TBA
      */
     ModelInstanceCollection.prototype.destroy = function() {
-        this._model.destroy();
-        this._content.destroy();
+        this._model = this._model && this._model.destroy();
+        this._batchData = this._batchData && this._batchData.destroy();
 
         return destroyObject(this);
     };
