@@ -315,12 +315,6 @@ define([
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
      * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
      * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
-     * @param {DOC_TBA} [options.vertexShaderLoaded] DOC_TBA.
-     * @param {DOC_TBA} [options.fragmentShaderLoaded] DOC_TBA.
-     * @param {DOC_TBA} [options.uniformMapLoaded] DOC_TBA.
-     * @param {DOC_TBA} [options.pickVertexShaderLoaded] DOC_TBA.
-     * @param {DOC_TBA} [options.pickFragmentShaderLoaded] DOC_TBA.
-     * @param {DOC_TBA} [options.pickUniformMapLoaded] DOC_TBA.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {DOC_TBA} [options.incrementallyLoadTextures=true] DOC_TBA.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
@@ -342,6 +336,16 @@ define([
         this._cachedGltf = undefined;
         this._releaseGltfJson = defaultValue(options.releaseGltfJson, false);
         this._animationIds = undefined;
+
+        // Undocumented options
+        this._precreatedAttributes = options.precreatedAttributes;
+        this._vertexShaderLoaded = options.vertexShaderLoaded;
+        this._fragmentShaderLoaded = options.fragmentShaderLoaded;
+        this._uniformMapLoaded = options.uniformMapLoaded;
+        this._pickVertexShaderLoaded = options.pickVertexShaderLoaded;
+        this._pickFragmentShaderLoaded = options.pickFragmentShaderLoaded;
+        this._pickUniformMapLoaded = options.pickUniformMapLoaded;
+        this._ignoreCommands = defaultValue(options.ignoreCommands, false);
 
         var cachedGltf;
         if (defined(cacheKey) && defined(gltfCache[cacheKey]) && gltfCache[cacheKey].ready) {
@@ -460,38 +464,6 @@ define([
         this._id = options.id;
 
         /**
-         * DOC_TBA
-         */
-        this.vertexShaderLoaded = options.vertexShaderLoaded;
-
-        /**
-         * DOC_TBA
-         */
-        this.fragmentShaderLoaded = options.fragmentShaderLoaded;
-
-        /**
-         * DOC_TBA
-         */
-// TODO: what all do we pass to this?
-        this.uniformMapLoaded = options.uniformMapLoaded;
-
-        /**
-         * DOC_TBA
-         */
-        this.pickVertexShaderLoaded = options.pickVertexShaderLoaded;
-
-        /**
-         * DOC_TBA
-         */
-        this.pickFragmentShaderLoaded = options.pickFragmentShaderLoaded;
-
-        /**
-         * DOC_TBA
-         */
-// TODO: what all do we pass to this?
-        this.pickUniformMapLoaded = options.pickUniformMapLoaded;
-
-        /**
          * Used for picking primitives that wrap a model.
          *
          * @private
@@ -577,7 +549,6 @@ define([
             programs : {},
             pickPrograms : {},
             textures : {},
-
             samplers : {},
             renderStates : {}
         };
@@ -871,6 +842,15 @@ define([
     }
 
     /**
+     * Get the default cache key from the provided url
+     *
+     * @private
+     */
+    Model._getDefaultCacheKey = function(url) {
+        return getAbsoluteURL(url);
+    };
+
+    /**
      * <p>
      * Creates a model from a glTF asset.  When the model is ready to render, i.e., when the external binary, image,
      * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyPromise} is resolved.
@@ -895,12 +875,6 @@ define([
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
      * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
      * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
-     * @param {DOC_TBA} [options.vertexShaderLoaded] DOC_TBA.
-     * @param {DOC_TBA} [options.fragmentShaderLoaded] DOC_TBA.
-     * @param {DOC_TBA} [options.uniformMapLoaded] DOC_TBA.
-     * @param {DOC_TBA} [options.pickVertexShaderLoaded] DOC_TBA.
-     * @param {DOC_TBA} [options.pickFragmentShaderLoaded] DOC_TBA.
-     * @param {DOC_TBA} [options.pickUniformMapLoaded] DOC_TBA.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {DOC_TBA} [options.incrementallyLoadTextures=true] DOC_TBA.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
@@ -948,7 +922,7 @@ define([
         var url = options.url;
         // If no cache key is provided, use the absolute URL, since two URLs with
         // different relative paths could point to the same model.
-        var cacheKey = defaultValue(options.cacheKey, getAbsoluteURL(url));
+        var cacheKey = defaultValue(options.cacheKey, Model._getDefaultCacheKey(url));
 
         options = clone(options);
         options.basePath = getBasePath(url);
@@ -1648,27 +1622,24 @@ define([
         return attributeLocations;
     }
 
-    function getShaderSource(model, shader, callback) {
-        var source;
-
+    function getShaderSource(model, shader) {
         if (defined(shader.source)) {
-            source = shader.source;
-        } else {
-            var loadResources = model._loadResources;
-            var gltf = model.gltf;
-            var bufferView = gltf.bufferViews[shader.bufferView];
-            source = getStringFromTypedArray(loadResources.getBuffer(bufferView));
+            return shader.source;
         }
 
-        // Allow callback to modify the shader source
-        if (defined(callback)) {
-            source = callback(source);
-        }
+        var loadResources = model._loadResources;
+        var gltf = model.gltf;
+        var bufferView = gltf.bufferViews[shader.bufferView];
 
-        return source;
+        return getStringFromTypedArray(loadResources.getBuffer(bufferView));
     }
 
-    ///////////////////////////////////////////////////////////////////////////
+    function modifyShader(shader, programName, callback) {
+        if (defined(callback)) {
+            shader = callback(shader, programName);
+        }
+        return shader;
+    }
 
     var CreateProgramJob = function() {
         this.id = undefined;
@@ -1694,31 +1665,37 @@ define([
         var program = programs[id];
 
         var attributeLocations = createAttributeLocations(program.attributes);
-        var vs = getShaderSource(model, shaders[program.vertexShader], model.vertexShaderLoaded);
-        var fs = getShaderSource(model, shaders[program.fragmentShader], model.fragmentShaderLoaded);
+        var vs = getShaderSource(model, shaders[program.vertexShader]);
+        var fs = getShaderSource(model, shaders[program.fragmentShader]);
+
+        var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
+        var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);
+
+        // Add pre-created attributes to attributeLocations
+        var attributesLength = program.attributes.length;
+        var precreatedAttributes = model._precreatedAttributes;
+        if (defined(precreatedAttributes)) {
+            for (var attrName in precreatedAttributes) {
+                if (precreatedAttributes.hasOwnProperty(attrName)) {
+                    attributeLocations[attrName] = attributesLength++;
+                }
+            }
+        }
 
         model._rendererResources.programs[id] = ShaderProgram.fromCache({
             context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs,
+            vertexShaderSource : drawVS,
+            fragmentShaderSource : drawFS,
             attributeLocations : attributeLocations
         });
 
         if (model.allowPicking) {
-            // PERFORMANCE_IDEA: Can optimize the fragment shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
-            var pickVS;
-            var pickFS;
+            // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
+            var pickVS = modifyShader(vs, id, model._pickVertexShaderLoaded);
+            var pickFS = modifyShader(fs, id, model._pickFragmentShaderLoaded);
 
-            if (defined(model.pickFragmentShaderLoaded)) {
-                // If a pick fragment shader callback is defined, it overrides model picking
-                pickVS = getShaderSource(model, shaders[program.vertexShader], model.pickVertexShaderLoaded);
-                pickFS = getShaderSource(model, shaders[program.fragmentShader], model.pickFragmentShaderLoaded);
-            } else {
-                pickVS = vs;
-                pickFS = new ShaderSource({
-                    sources : [fs],
-                    pickColorQualifier : 'uniform'
-                });
+            if (!model._pickFragmentShaderLoaded) {
+                pickFS = ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
             }
 
             model._rendererResources.pickPrograms[id] = ShaderProgram.fromCache({
@@ -1932,8 +1909,15 @@ define([
         // Note: WebGL shader compiler may have optimized and removed some attributes from programAttributeLocations
         for (var location in programAttributeLocations){
             if (programAttributeLocations.hasOwnProperty(location)) {
-                var parameter = parameters[attributes[location]];
-                attributeLocations[parameter.semantic] = programAttributeLocations[location].index;
+                var attribute = attributes[location];
+                var index = programAttributeLocations[location].index;
+                if (defined(attribute)) {
+                    var parameter = parameters[attribute];
+                    attributeLocations[parameter.semantic] = index;
+                } else {
+                    // Pre-created attributes
+                    attributeLocations[location] = index;
+                }
             }
         }
 
@@ -2039,12 +2023,11 @@ define([
 
     function getChannelEvaluator(model, runtimeNode, targetPath, spline) {
         return function(localAnimationTime) {
-//  Workaround for https://github.com/KhronosGroup/glTF/issues/219
-/*
-            if (targetPath === 'translation') {
-                return;
-            }
-*/
+            //  Workaround for https://github.com/KhronosGroup/glTF/issues/219
+
+            //if (targetPath === 'translation') {
+            //    return;
+            //}
             runtimeNode[targetPath] = spline.evaluate(localAnimationTime, runtimeNode[targetPath]);
             runtimeNode.dirtyNumber = model._maxDirtyNumber;
         };
@@ -2147,21 +2130,24 @@ define([
                     // https://github.com/KhronosGroup/glTF/issues/258
 
                     var attributeLocations = getAttributeLocations(model, primitive);
-                    var attrs = [];
+                    var attributeName;
+                    var attributeLocation;
+                    var attribute;
+                    var attributes = [];
                     var primitiveAttributes = primitive.attributes;
-                    for (var attrName in primitiveAttributes) {
-                        if (primitiveAttributes.hasOwnProperty(attrName)) {
-                            var attributeLocation = attributeLocations[attrName];
+                    for (attributeName in primitiveAttributes) {
+                        if (primitiveAttributes.hasOwnProperty(attributeName)) {
+                            attributeLocation = attributeLocations[attributeName];
                             // Skip if the attribute is not used by the material, e.g., because the asset was exported
                             // with an attribute that wasn't used and the asset wasn't optimized.
                             if (defined(attributeLocation)) {
-                                var a = accessors[primitiveAttributes[attrName]];
+                                var a = accessors[primitiveAttributes[attributeName]];
 
                                 var componentType = a.componentType;
                                 // XXX: if uint32, pretend it's really uint16.
                                 componentType = componentType === 5125 ? 5123 : componentType;
 
-                                attrs.push({
+                                attributes.push({
                                     index                  : attributeLocation,
                                     vertexBuffer           : rendererBuffers[a.bufferView],
                                     componentsPerAttribute : getModelAccessor(a).componentsPerAttribute,
@@ -2174,11 +2160,27 @@ define([
                         }
                     }
 
+                    // Add pre-created attributes
+                    var precreatedAttributes = model._precreatedAttributes;
+                    if (defined(precreatedAttributes)) {
+                        for (attributeName in precreatedAttributes) {
+                            if (precreatedAttributes.hasOwnProperty(attributeName)) {
+                                attributeLocation = attributeLocations[attributeName];
+                                if (defined(attributeLocation)) {
+                                    attribute = precreatedAttributes[attributeName];
+                                    attribute.index = attributeLocation;
+                                    attributes.push(attribute);
+                                }
+                            }
+                        }
+                    }
+
                     var accessor = accessors[primitive.indices];
                     var indexBuffer = rendererBuffers[accessor.bufferView];
+
                     rendererVertexArrays[meshId + '.primitive.' + i] = new VertexArray({
                         context : context,
-                        attributes : attrs,
+                        attributes : attributes,
                         indexBuffer : indexBuffer
                     });
                 }
@@ -2369,7 +2371,7 @@ define([
                 return uniformState.viewportCartesian4;
             };
         }
-        // JOINTMATRIX created in createCommands()
+        // JOINTMATRIX created in createCommand()
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -2601,11 +2603,6 @@ define([
                     }
                 }
 
-                // Allow callback to add new uniforms
-                if (defined(model.uniformMapLoaded)) {
-                    uniformMap = model.uniformMapLoaded(uniformMap);
-                }
-
                 var u = uniformMaps[materialId];
                 u.uniformMap = uniformMap;                          // uniform name -> function for the renderer
                 u.values = uniformValues;                           // material parameter name -> ModelMaterial for modifying the parameter at runtime
@@ -2688,6 +2685,11 @@ define([
                     uniformMap = combine(uniformMap, jointUniformMap);
                 }
 
+                // Allow callback to modify the uniformMap
+                if (defined(model._uniformMapLoaded)) {
+                    uniformMap = model._uniformMapLoaded(uniformMap, instanceProgram.program, runtimeNode);
+                }
+
                 var rs = rendererRenderStates[instanceTechnique.technique];
                 // GLTF_SPEC: Offical means to determine translucency. https://github.com/KhronosGroup/glTF/issues/105
                 var isTranslucent = rs.blending.enabled;
@@ -2719,9 +2721,9 @@ define([
                     var pickUniformMap;
 
                     // Callback to override default model picking
-                    if (defined(model.pickFragmentShaderLoaded)) {
-                        if (defined(model.pickUniformMapLoaded)) {
-                            pickUniformMap = model.pickUniformMapLoaded(uniformMap);
+                    if (defined(model._pickFragmentShaderLoaded)) {
+                        if (defined(model._pickUniformMapLoaded)) {
+                            pickUniformMap = model._pickUniformMapLoaded(uniformMap);
                         } else {
                             // This is unlikely, but could happen if the override shader does not
                             // need new uniforms since, for example, its pick ids are coming from
@@ -2922,15 +2924,16 @@ define([
                 var commands = n.commands;
 
                 if ((n.dirtyNumber === maxDirtyNumber) || modelTransformChanged || justLoaded) {
+                    var nodeMatrix = Matrix4.multiplyTransformation(computedModelMatrix, transformToRoot, n.computedMatrix);
                     var commandsLength = commands.length;
                     if (commandsLength > 0) {
                         // Node has meshes, which has primitives.  Update their commands.
                         for (var j = 0 ; j < commandsLength; ++j) {
                             var primitiveCommand = commands[j];
                             var command = primitiveCommand.command;
-                            Matrix4.multiplyTransformation(computedModelMatrix, transformToRoot, command.modelMatrix);
+                            Matrix4.clone(nodeMatrix, command.modelMatrix);
 
-                            // PERFORMANCE_IDEA: Can use transformWithoutScale if no node up to the root has scale (inclug animation)
+                            // PERFORMANCE_IDEA: Can use transformWithoutScale if no node up to the root has scale (including animation)
                             BoundingSphere.transform(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
 
                             if (defined(model._rtcCenter)) {
@@ -2943,9 +2946,6 @@ define([
                                 BoundingSphere.clone(command.boundingVolume, pickCommand.boundingVolume);
                             }
                         }
-                    } else {
-                        // Node has a light or camera
-                        n.computedMatrix = Matrix4.multiplyTransformation(computedModelMatrix, transformToRoot, n.computedMatrix);
                     }
                 }
 
@@ -3371,7 +3371,7 @@ define([
         // We don't check show at the top of the function since we
         // want to be able to progressively load models when they are not shown,
         // and then have them visible immediately when show is set to true.
-        if (show) {
+        if (show && !this._ignoreCommands) {
 // PERFORMANCE_IDEA: This is terrible
             var passes = frameState.passes;
             var nodeCommands = this._nodeCommands;
@@ -3388,7 +3388,7 @@ define([
                 }
             }
 
-            if (passes.pick) {
+            if (passes.pick && this.allowPicking) {
                 for (i = 0; i < length; ++i) {
                     nc = nodeCommands[i];
                     if (nc.show) {
