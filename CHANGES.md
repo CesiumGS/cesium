@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+### 1.15 - 2015-11-02
+
+* Breaking changes
+  * ...
+* Deprecated
+  * ...
+* Decreased GPU memory usage in `BillboardCollection` and `LabelCollection` by using the WebGL ANGLE_instanced_arrays extension.
+
 ### 1.14 - 2015-10-01
 
 * Fixed issues causing the terrain and sky to disappear when the camera is near the surface. [#2415](https://github.com/AnalyticalGraphicsInc/cesium/issues/2415) and [#2271](https://github.com/AnalyticalGraphicsInc/cesium/issues/2271)
