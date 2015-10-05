@@ -708,6 +708,7 @@ define([
             for (i = 0; i < maxAttributes; ++i) {
                 if (divisors[i] > 0) {
                     instancedArraysExtension.vertexAttribDivisorANGLE(i, 0);
+                    divisors[i] = 0;
                 }
             }
         }
