@@ -19,6 +19,7 @@ define([
         '../Renderer/DrawCommand',
         '../Renderer/ShaderSource',
         '../ThirdParty/when',
+        './CollectionContent',
         './Model',
         './ModelInstance',
         './SceneMode'
@@ -42,6 +43,7 @@ define([
         DrawCommand,
         ShaderSource,
         when,
+        CollectionContent,
         Model,
         ModelInstance,
         SceneMode) {
@@ -91,14 +93,6 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._instances = [];
-
-        var instances = defaultValue(options.instances, []);
-        var length = instances.length;
-        for (var i = 0; i < length; ++i) {
-            this.add(instances[i]);
-        }
-
         this._instancingSupported = false;
         this._dynamic = defaultValue(options.dynamic, false);
         this._show = defaultValue(options.show, true);
@@ -106,6 +100,15 @@ define([
         this._ready = false;
         this._readyPromise = when.defer();
         this._state = LoadState.NEEDS_LOAD;
+
+        var instances = defaultValue(options.instances, []);
+        var length = instances.length;
+        this._content = defined(options.content) ? options.content : new CollectionContent(length);
+        this._instances = new Array(length);
+
+        for (var i = 0; i < length; ++i) {
+            this._instances[i] = new ModelInstance(instances[i], this, i, i);
+        }
 
         this._model = undefined;
         this._instanceBufferData = undefined;
@@ -192,22 +195,16 @@ define([
     });
 
     ModelInstanceCollection.prototype._updateInstance = function(instance) {
-        // TODO : update the whole buffer for now, but later do sub-commits
+        // TODO : update the whole buffer for now, but later do sub-commits based on the instance's index
         this._vertexBufferDirty = true;
     };
 
     ModelInstanceCollection.prototype.add = function(instance) {
-        var instance = new ModelInstance(instance, this);
-        instance._index = this.length;
-        this._instances.push(instance);
+        var i = new ModelInstance(instance, this, this.length, this.length);
+        this._instances.push(i);
         this._vertexBufferDirty = true;
         this._createVertexBuffer = true;
-
-        return instance;
-    };
-
-    ModelInstanceCollection.prototype.remove = function(instance) {
-        // TODO : finish later
+        return i;
     };
 
     function getInstancedUniforms(collection, programName) {
@@ -270,7 +267,7 @@ define([
             var dynamic = collection._dynamic;
             var regex;
 
-            var renamedSource = ShaderSource.replaceMain(vs, 'gltf_main');
+            var renamedSource = ShaderSource.replaceMain(vs, 'czm_old_main');
 
             // TODO : can I add all these global vars and just let the shader compiler optimize them out
             var globalVarsHeader = '';
@@ -301,50 +298,15 @@ define([
                 }
             }
 
-            var dataFromAttr =
-                'const float SHIFT_LEFT8 = 256.0;\n' +
-                'const float SHIFT_RIGHT8 = 1.0 / 256.0;\n' +
-                '#ifdef RENDER_FOR_PICK\n' +
-                'varying vec4 czm_pickColor;\n' +
-                '#else\n' +
-                'varying vec4 czm_color;\n' +
-                '#endif\n' +
-                'attribute vec4 czm_instanceData;\n' +
-                'void czm_setColorShow() {\n' +
-                '   #ifdef RENDER_FOR_PICK\n' +
-                '   float temp = czm_instanceData.y;\n' +
-                '   #else\n' +
-                '   float temp = czm_instanceData.x;\n' +
-                '   #endif\n' +
-                '   vec4 color;\n' +
-                '   temp = temp * SHIFT_RIGHT8;\n' +
-                '   color.b = (temp - floor(temp)) * SHIFT_LEFT8;\n' +
-                '   temp = floor(temp) * SHIFT_RIGHT8;\n' +
-                '   color.g = (temp - floor(temp)) * SHIFT_LEFT8;\n' +
-                '   color.r = floor(temp);\n' +
-                '   temp = czm_instanceData.z * SHIFT_RIGHT8;\n' +
-                '   #ifdef RENDER_FOR_PICK\n' +
-                '   color.a = (temp - floor(temp)) * SHIFT_LEFT8;\n' +
-                '   color /= 255.0;\n' +
-                '   czm_pickColor = color;\n' +
-                '   #else\n' +
-                '   color.a = floor(temp);\n' +
-                '   color /= 255.0;\n' +
-                '   czm_color = color;\n' +
-                '   #endif\n' +
-                '   float show = czm_instanceData.w;\n' +
-                '   gl_Position *= show;\n' +
-                '}\n';
-
             var dynamicDefine = dynamic ? '#define DYNAMIC\n' : '';
 
-            var newVS =
-                dataFromAttr +
+            var newMain =
                 dynamicDefine +
                 globalVarsHeader +
                 'attribute vec4 czm_modelMatrixRow0;\n' +
                 'attribute vec4 czm_modelMatrixRow1;\n' +
                 'attribute vec4 czm_modelMatrixRow2;\n' +
+                'attribute float a_batchId;\n' + // TODO : what if the gltf has this attribute already?
                 'uniform mat4 czm_instanced_nodeLocal;\n' +
                 'mat4 czm_instanced_modelView;\n' +
                 '#ifndef DYNAMIC\n' +
@@ -360,39 +322,45 @@ define([
                 '    czm_instanced_modelView = czm_instanced_collectionModelView * czm_instanced_model * czm_instanced_nodeLocal;\n' +
                 '    #endif\n' +
                      globalVarsMain +
-                '    gltf_main();\n' +
-                '    czm_setColorShow();\n' +
+                '    czm_old_main();\n' +
                 '}';
-            vertexShaderCached = newVS;
-            return newVS;
+
+            vertexShaderCached = newMain;
+            return collection._content.modifyVertexShader(newMain);
         };
     }
 
-    function getFragmentShaderCallback(qualifier) {
+    function getFragmentShaderCallback(collection) {
         return function(fs) {
-            var renamedSource = ShaderSource.replaceMain(fs, 'gltf_main');
+            return collection._content.modifyFragmentShader(fs);
+        };
+    }
+
+    function getFragmentShaderNonInstancedCallback() {
+        return function(fs) {
+            var renamedSource = ShaderSource.replaceMain(fs, 'czm_old_main');
             var newMain =
-                qualifier + ' vec4 czm_color;\n' +
+                'uniform vec4 czm_color;\n' +
                 'void main()\n' +
                 '{\n' +
-                '    gltf_main();\n' +
+                '    czm_old_main();\n' +
                 '    gl_FragColor.rgb *= czm_color.rgb;\n' +
                 '}';
 
             return renamedSource + '\n' + newMain;
         };
     }
-
-    function getPickVertexShaderCallback() {
+    
+    function getPickVertexShaderCallback(collection) {
         return function (vs) {
             // Use the vertex shader that was generated earlier
-            return '#define RENDER_FOR_PICK\n' + vertexShaderCached;
+            return collection._content.modifyPickVertexShader(vertexShaderCached);
         };
     }
 
-    function getPickFragmentShaderCallback() {
+    function getPickFragmentShaderCallback(collection) {
         return function(fs) {
-            return ShaderSource.createPickFragmentShaderSource(fs, 'varying');
+            return collection._content.modifyPickFragmentShader(fs);
         };
     }
 
@@ -423,20 +391,18 @@ define([
                 }
             }
 
-            return uniformMap;
+            return collection._content.modifyUniformMap(uniformMap);
         };
     }
 
-    function getPickUniformMapCallback() {
+    function getPickUniformMapCallback(collection) {
         return function(uniformMap) {
             uniformMap.czm_pickColor = undefined;
-            return uniformMap;
+            return collection._content.modifyPickUniformMap(uniformMap);
         };
     }
 
     var instanceMatrix = new Matrix4();
-    var LEFT_SHIFT16 = 65536.0; // 2^16
-    var LEFT_SHIFT8 = 256.0;    // 2^8
 
     function updateVertexBuffer(collection, context) {
         if (!collection._instancingSupported) {
@@ -453,7 +419,7 @@ define([
         var center = dynamic ? Cartesian3.ZERO : collection._boundingSphere.center;
 
         if (createVertexBuffer) {
-            instanceBufferData = new Float32Array(instancesLength * 16);
+            instanceBufferData = new Float32Array(instancesLength * 13);
         }
 
         for (var i = 0; i < instancesLength; ++i) {
@@ -466,25 +432,7 @@ define([
                 instanceMatrix = modelMatrix;
             }
 
-            // TODO : check if has color/pickColor first
-            var color = instance.color;
-            var pickColor = instance.getPickId(context).color;
-            var show = instance.show ? 1.0 : 0.0;
-
-            var red = Color.floatToByte(color.red);
-            var green = Color.floatToByte(color.green);
-            var blue = Color.floatToByte(color.blue);
-            var compressed0 = red * LEFT_SHIFT16 + green * LEFT_SHIFT8 + blue;
-
-            red = Color.floatToByte(pickColor.red);
-            green = Color.floatToByte(pickColor.green);
-            blue = Color.floatToByte(pickColor.blue);
-            var compressed1 = red * LEFT_SHIFT16 + green * LEFT_SHIFT8 + blue;
-
-            var compressed2 = Color.floatToByte(color.alpha) * LEFT_SHIFT8 + Color.floatToByte(pickColor.alpha);
-            var compressed3 = show ? 1.0 : 0.0;
-
-            var offset = i * 16;
+            var offset = i * 13;
 
             // First three rows of the model matrix
             instanceBufferData[offset + 0]  = instanceMatrix[0];
@@ -499,12 +447,7 @@ define([
             instanceBufferData[offset + 9]  = instanceMatrix[6];
             instanceBufferData[offset + 10] = instanceMatrix[10];
             instanceBufferData[offset + 11] = instanceMatrix[14] - center.z;
-
-            // Other instance data: color, pickColor, show
-            instanceBufferData[offset + 12] = compressed0;
-            instanceBufferData[offset + 13] = compressed1;
-            instanceBufferData[offset + 14] = compressed2;
-            instanceBufferData[offset + 15] = compressed3;
+            instanceBufferData[offset + 12] = instance._batchId;
         }
 
         if (createVertexBuffer) {
@@ -560,22 +503,49 @@ define([
         if (instancingSupported) {
             updateVertexBuffer(collection, context);
 
-            var attributeNames = ['czm_modelMatrixRow0', 'czm_modelMatrixRow1', 'czm_modelMatrixRow2', 'czm_instanceData'];
             var componentSizeInBytes = ComponentDatatype.getSizeInBytes(ComponentDatatype.FLOAT);
-            var instancedAttributes = {};
-
-            for (var i = 0; i < 4; ++i) {
-                instancedAttributes[attributeNames[i]] = {
+            var instancedAttributes = {
+                czm_modelMatrixRow0 : {
                     index                  : 0, // updated in Model
                     vertexBuffer           : collection._vertexBuffer,
                     componentsPerAttribute : 4,
                     componentDatatype      : ComponentDatatype.FLOAT,
                     normalize              : false,
-                    offsetInBytes          : componentSizeInBytes * 4 * i,
-                    strideInBytes          : componentSizeInBytes * 16,
+                    offsetInBytes          : 0,
+                    strideInBytes          : componentSizeInBytes * 13,
                     instanceDivisor        : 1
-                };
-            }
+                },
+                czm_modelMatrixRow1 : {
+                    index                  : 0, // updated in Model
+                    vertexBuffer           : collection._vertexBuffer,
+                    componentsPerAttribute : 4,
+                    componentDatatype      : ComponentDatatype.FLOAT,
+                    normalize              : false,
+                    offsetInBytes          : componentSizeInBytes * 4,
+                    strideInBytes          : componentSizeInBytes * 13,
+                    instanceDivisor        : 1
+                },
+                czm_modelMatrixRow2 : {
+                    index                  : 0, // updated in Model
+                    vertexBuffer           : collection._vertexBuffer,
+                    componentsPerAttribute : 4,
+                    componentDatatype      : ComponentDatatype.FLOAT,
+                    normalize              : false,
+                    offsetInBytes          : componentSizeInBytes * 8,
+                    strideInBytes          : componentSizeInBytes * 13,
+                    instanceDivisor        : 1
+                },
+                a_batchId : {
+                    index                  : 0, // updated in Model
+                    vertexBuffer           : collection._vertexBuffer,
+                    componentsPerAttribute : 1,
+                    componentDatatype      : ComponentDatatype.FLOAT,
+                    normalize              : false,
+                    offsetInBytes          : componentSizeInBytes * 12,
+                    strideInBytes          : componentSizeInBytes * 13,
+                    instanceDivisor        : 1
+                }
+            };
 
             // Instanced models will create different renderer resources, so change the cache key.
             var cacheKey = collection._cacheKey;
@@ -589,15 +559,15 @@ define([
 
             modelOptions.precreatedAttributes = instancedAttributes;
             modelOptions.vertexShaderLoaded = getVertexShaderCallback(collection);
-            modelOptions.fragmentShaderLoaded = getFragmentShaderCallback('varying');
+            modelOptions.fragmentShaderLoaded = getFragmentShaderCallback(collection);
             modelOptions.uniformMapLoaded = getUniformMapCallback(collection, context);
-            modelOptions.pickVertexShaderLoaded = getPickVertexShaderCallback();
-            modelOptions.pickFragmentShaderLoaded = getPickFragmentShaderCallback();
-            modelOptions.pickUniformMapLoaded = getPickUniformMapCallback();
+            modelOptions.pickVertexShaderLoaded = getPickVertexShaderCallback(collection);
+            modelOptions.pickFragmentShaderLoaded = getPickFragmentShaderCallback(collection);
+            modelOptions.pickUniformMapLoaded = getPickUniformMapCallback(collection);
             modelOptions.cacheKey = cacheKey;
             modelOptions.ignoreCommands = true;
         } else {
-            modelOptions.fragmentShaderLoaded = getFragmentShaderCallback('uniform');
+            modelOptions.fragmentShaderLoaded = getFragmentShaderNonInstancedCallback();
         }
 
         if (defined(collection._url)) {
@@ -770,11 +740,16 @@ define([
             return;
         }
 
-        this._instancingSupported = context.instancedArrays;
+        var instancingSupported = context.instancedArrays;
+        this._instancingSupported = instancingSupported;
 
         if (this._state === LoadState.NEEDS_LOAD) {
             this._state = LoadState.LOADING;
             createModel(this, context);
+        }
+
+        if (instancingSupported) {
+            this._content.update(context, frameState);
         }
 
         var model = this._model;
@@ -803,6 +778,7 @@ define([
 
         if (this._dynamic || this._vertexBufferDirty) {
             updateVertexBuffer(this, context);
+            this._vertexBufferDirty = false;
         }
 
         updateWireframe(this);
@@ -813,7 +789,7 @@ define([
         var commandsLength = commands.length;
         var i;
         
-        if (this._instancingSupported) {
+        if (instancingSupported) {
             for (i = 0; i < commandsLength; ++i) {
                 commandList.push(commands[i]);
             }
@@ -863,6 +839,7 @@ define([
      */
     ModelInstanceCollection.prototype.destroy = function() {
         this._model.destroy();
+        this._content.destroy();
 
         return destroyObject(this);
     };

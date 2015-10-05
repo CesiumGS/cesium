@@ -1,19 +1,15 @@
 /*global define*/
 define([
-        '../Core/clone',
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/DeveloperError',
         '../Core/Matrix4'
     ], function(
-        clone,
         Color,
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         Matrix4) {
     "use strict";
     
@@ -22,29 +18,20 @@ define([
      * 
      * @private
      */
-    var ModelInstance = function(options, collection) {
+    var ModelInstance = function(options, collection, index, batchId) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         this._collection = collection;
-        this._index = -1;
+        this._content = collection._content;
+        this._index = index;
+        this._batchId = batchId;
         this._modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
-        this._color = options.color;
-        this._show = defaultValue(options.show, true);
-        this._pickId = undefined;
-        this._dirty = false;
+        this._color = undefined; // for calling getColor
+
+        this.show = defaultValue(options.show, true);
+        this.color = defaultValue(options.color, Color.WHITE);
     };
 
-    function makeDirty(instance) {
-        instance._collection._updateInstance(instance);
-        instance._dirty = true;
-    }
-
     defineProperties(ModelInstance.prototype, {
-        index : {
-            get : function() {
-                return this._index;
-            }
-        },
-
         modelMatrix : {
             get : function() {
                 return this._modelMatrix;
@@ -52,27 +39,17 @@ define([
             set : function(value) {
                 if (Matrix4.equals(this._modelMatrix, value)) {
                     this._modelMatrix = Matrix4.clone(value);
-                    makeDirty(this);
+                    this._collection._updateInstance(this);
                 }
             }
-
         },
 
         show : {
             get : function() {
-                return this._show;
+                return this._content.getShow(this._batchId);
             },
             set : function(value) {
-                //>>includeStart('debug', pragmas.debug);
-                if (!defined(value)) {
-                    throw new DeveloperError('value is required.');
-                }
-                //>>includeEnd('debug');
-
-                if (this._show !== value) {
-                    this._show = value;
-                    makeDirty(this);
-                }
+                this._content.setShow(this._batchId, value);
             }
         },
         
@@ -81,26 +58,20 @@ define([
                 if (!defined(this._color)) {
                     this._color = new Color();
                 }
-                return this._color;
+                return this._content.getColor(this._batchId, this._color);
             },
             set : function(value) {
-                if (!Color.equals(this._color, value)) {
-                    Color.clone(value, this._color);
-                    makeDirty(this);
-                }
+                this._content.setColor(this._batchId, value);
             }
         }
     });
 
-    ModelInstance.prototype.getPickId = function(context) {
-        if (!defined(this._pickId)) {
-            // TODO : change this later
-            this._pickId = context.createPickId({
-                id : 10
-            });
-        }
+    ModelInstance.prototype.getProperty = function(name) {
+        return this._content.getProperty(this._batchId, name);
+    };
 
-        return this._pickId;
+    ModelInstance.prototype.setProperty = function(name, value) {
+        this._content.setProperty(this._batchId, name, value);
     };
 
     return ModelInstance;
