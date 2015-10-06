@@ -28,30 +28,28 @@
     function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var czml = [
-            {
-                "id" : "document",
-                "name" : "CZML Wall",
-                "version" : "1.0"
-            }, {
-                "id" : "wall",
-                "wall" : {
-                    "positions": {
-                        "cartographicDegrees" : [
-                            90, 30, 1500000,
-                            90, 180, 1500000
-                        ]
-                    },
-                    "show": true,
-                    "material" : {
-                        "solidColor": {
-                            "color": {
-                                "rgba": [255, 0, 0, 150]
-                            }
-                        }
-                    }
+        var czml = [ {
+           "id" : "document",
+           "name" : "CZML Wall",
+           "version" : "1.0"
+         }, {
+           "id" : "wall",
+           "wall" : {
+           "positions": {
+            "cartographicDegrees" : [
+              90, 30, 1500000,
+              90, 180, 1500000
+            ]},
+            "show": true,
+            "material" : {
+              "solidColor": {
+                "color": {
+                  "rgba": [255, 0, 0, 150]
+                  }
                 }
+              }
             }
+          }
         ];
 
         var viewer = new Cesium.Viewer('cesiumContainer');
