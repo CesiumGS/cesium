@@ -4,6 +4,7 @@ Change Log
 ### 1.15 - 2015-11-02
 
 * Breaking changes
+  * Deleted old `<subfolder>/package.json` and `*.profile.js` files, not used since we moved away from a Dojo-based build years ago.  This should allow future compatibility with newer systems like Browserify and Webpack.
   * ...
 * Deprecated
   * ...
