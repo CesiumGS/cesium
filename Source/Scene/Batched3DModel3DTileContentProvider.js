@@ -7,7 +7,7 @@ define([
         '../Core/DeveloperError',
         '../Core/getStringFromTypedArray',
         '../Core/loadArrayBuffer',
-        './Cesium3DTileBatchData',
+        './Cesium3DTileBatchTable',
         './Cesium3DTileContentState',
         './Model',
         './BatchedModel',
@@ -20,7 +20,7 @@ define([
         DeveloperError,
         getStringFromTypedArray,
         loadArrayBuffer,
-        Cesium3DTileBatchData,
+        Cesium3DTileBatchTable,
         Cesium3DTileContentState,
         Model,
         BatchedModel,
@@ -30,7 +30,7 @@ define([
     /**
      * DOC_TBA
      */
-    var Batched3DModel3DTileContentProvider = function(tileset, url, contentHeader) {
+    var Batched3DModel3DTileContentProvider = function(tileset, tile, url, contentHeader) {
         this._model = undefined;
         this._url = url;
         this._tileset = tileset;
@@ -52,7 +52,7 @@ define([
 
         var batchSize = defaultValue(contentHeader.batchSize, 0);
         this._batchSize = batchSize;
-        this._batchData = new Cesium3DTileBatchData(this, batchSize);
+        this._batchTable = new Cesium3DTileBatchTable(this, batchSize);
         this._models = undefined;
     };
 
@@ -78,7 +78,7 @@ define([
         if (!defined(content._models) && (batchSize > 0)) {
             var models = new Array(batchSize);
             for (var i = 0; i < batchSize; ++i) {
-                models[i] = new BatchedModel(tileset, content._batchData, i);
+                models[i] = new BatchedModel(tileset, content._batchTable, i);
             }
             content._models = models;
         }
@@ -113,7 +113,7 @@ define([
      */
     Batched3DModel3DTileContentProvider.prototype.request = function() {
         var that = this;
-        var batchData = this._batchData;
+        var batchTable = this._batchTable;
 
         this.state = Cesium3DTileContentState.LOADING;
 
@@ -153,7 +153,7 @@ define([
                 //
                 // We could also make another request for it, but that would make the property set/get
                 // API async, and would double the number of numbers in some cases.
-                batchData._batchTable = JSON.parse(batchTableString);
+                batchTable._batchTable = JSON.parse(batchTableString);
             }
 
             var gltfView = new Uint8Array(arrayBuffer, byteOffset, arrayBuffer.byteLength - byteOffset);
@@ -164,12 +164,12 @@ define([
                 gltf : gltfView,
                 cull : false,           // The model is already culled by the 3D tiles
                 releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
-                vertexShaderLoaded : batchData.getVertexShaderCallback(),
-                fragmentShaderLoaded : batchData.getFragmentShaderCallback(),
-                uniformMapLoaded : batchData.getUniformMapCallback(),
-                pickVertexShaderLoaded : batchData.getPickVertexShaderCallback(),
-                pickFragmentShaderLoaded : batchData.getPickFragmentShaderCallback(),
-                pickUniformMapLoaded : batchData.getPickUniformMapCallback(),
+                vertexShaderLoaded : batchTable.getVertexShaderCallback(),
+                fragmentShaderLoaded : batchTable.getFragmentShaderCallback(),
+                uniformMapLoaded : batchTable.getUniformMapCallback(),
+                pickVertexShaderLoaded : batchTable.getPickVertexShaderCallback(),
+                pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),
+                pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
                 basePath : that._url
             });
 
@@ -194,7 +194,7 @@ define([
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
 
-        this._batchData.update(context, frameState);
+        this._batchTable.update(context, frameState);
         this._model.update(context, frameState, commandList);
    };
 
@@ -210,7 +210,7 @@ define([
      */
     Batched3DModel3DTileContentProvider.prototype.destroy = function() {
         this._model = this._model && this._model.destroy();
-        this._batchData = this._batchData && this._batchData.destroy();
+        this._batchTable = this._batchTable && this._batchTable.destroy();
 
         return destroyObject(this);
     };

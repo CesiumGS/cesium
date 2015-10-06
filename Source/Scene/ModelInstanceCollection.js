@@ -11,6 +11,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/Math',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
         '../Core/RuntimeError',
@@ -19,7 +20,7 @@ define([
         '../Renderer/DrawCommand',
         '../Renderer/ShaderSource',
         '../ThirdParty/when',
-        './Cesium3DTileBatchData',
+        './Cesium3DTileBatchTable',
         './Model',
         './ModelInstance',
         './SceneMode'
@@ -35,6 +36,7 @@ define([
         defineProperties,
         DeveloperError,
         destroyObject,
+        CesiumMath,
         Matrix4,
         PrimitiveType,
         RuntimeError,
@@ -43,7 +45,7 @@ define([
         DrawCommand,
         ShaderSource,
         when,
-        Cesium3DTileBatchData,
+        Cesium3DTileBatchTable,
         Model,
         ModelInstance,
         SceneMode) {
@@ -104,11 +106,12 @@ define([
 
         var instances = defaultValue(options.instances, []);
         var length = instances.length;
-        var batchData = options.batchData;
-        if (!defined(batchData)) {
-            batchData = new Cesium3DTileBatchData(this, length);
+        var batchTable = options.batchTable;
+        if (!defined(batchTable)) {
+            batchTable = new Cesium3DTileBatchTable(this, length);
         }
-        this._batchData = batchData;
+        this._batchTable = batchTable;
+        this._pickPrimitive = options.pickPrimitive;
 
         this._instances = new Array(length);
         for (var i = 0; i < length; ++i) {
@@ -116,12 +119,14 @@ define([
         }
 
         this._model = undefined;
-        this._pickPrimitive = options.pickPrimitive;
         this._vertexBufferValues = undefined;
         this._vertexBuffer = undefined;
         this._createVertexBuffer = true;
         this._vertexBufferDirty = false;
         this._instancedUniformsByProgram = undefined;
+
+        // Set to true if nodes in the model have off-center transforms. When false, the vertex shader can be optimized.
+        this._offCenter = undefined;
 
         this._drawCommands = [];
         this._pickCommands = [];
@@ -139,30 +144,9 @@ define([
         this._cacheKey = options.cacheKey;
         this._asynchronous = options.asynchronous;
 
-        /**
-         * This property is for debugging only; it is not for production use nor is it optimized.
-         * <p>
-         * Draws the bounding sphere for each draw command in the model.  A glTF primitive corresponds
-         * to one draw command.  A glTF mesh has an array of primitives, often of length one.
-         * </p>
-         *
-         * @type {Boolean}
-         *
-         * @default false
-         */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
         this._debugShowBoundingVolume = false;
 
-        /**
-         * This property is for debugging only; it is not for production use nor is it optimized.
-         * <p>
-         * Draws the model in wireframe.
-         * </p>
-         *
-         * @type {Boolean}
-         *
-         * @default false
-         */
         this.debugWireframe = defaultValue(options.debugWireframe, false);
         this._debugWireframe = false;
     };
@@ -181,6 +165,11 @@ define([
         length : {
             get : function() {
                 return this._instances.length;
+            }
+        },
+        activeAnimations : {
+            get : function() {
+                return this._model.activeAnimations;
             }
         },
         ready : {
@@ -206,7 +195,7 @@ define([
     };
 
     ModelInstanceCollection.prototype._updateInstance = function(instance) {
-        // TODO : update the whole buffer for now, but later do sub-commits based on the instance's index
+        // PERFORMANCE_IDEA: do sub-commits based on the instance's index instead of updating the whole buffer
         this._vertexBufferDirty = true;
     };
 
@@ -217,6 +206,25 @@ define([
         this._createVertexBuffer = true;
         return i;
     };
+
+    // TODO : maybe this whole step should be a pre-process as part of the 3d tile toolchain
+    function isOffCenter(collection) {
+        if (defined(collection._offCenter)) {
+            return collection._offCenter;
+        }
+
+        var nodes = collection._model._runtime.nodes;
+        for (var name in nodes) {
+            if (nodes.hasOwnProperty(name)) {
+                if(!Matrix4.equalsEpsilon(nodes[name].publicNode._matrix, Matrix4.IDENTITY, CesiumMath.EPSILON2)) {
+                    collection._offCenter = true;
+                    return true;
+                }
+            }
+        }
+        collection._offCenter = false;
+        return false;
+    }
 
     function getInstancedUniforms(collection, programName) {
         if (defined(collection._instancedUniformsByProgram)) {
@@ -276,11 +284,11 @@ define([
         return function(vs, programName) {
             var instancedUniforms = getInstancedUniforms(collection, programName);
             var dynamic = collection._dynamic;
+            var offCenter = isOffCenter(collection);
             var regex;
 
             var renamedSource = ShaderSource.replaceMain(vs, 'czm_old_main');
 
-            // TODO : can I add all these global vars and just let the shader compiler optimize them out
             var globalVarsHeader = '';
             var globalVarsMain = '';
             for (var uniform in instancedUniforms) {
@@ -309,41 +317,53 @@ define([
                 }
             }
 
-            var dynamicDefine = dynamic ? '#define DYNAMIC\n' : '';
+            var uniforms = '';
+            if (!dynamic) {
+                uniforms += 'uniform mat4 czm_instanced_collectionModelView;\n';
+            }
+            if (offCenter) {
+                uniforms += 'uniform mat4 czm_instanced_nodeTransform;\n';
+            }
+
+            // When dynamic, czm_instanced_model is the modelView matrix.
+            // Otherwise, czm_instanced_model is the model's local offset from the bounding volume.
+            // czm_instanced_nodeTransform is the local offset of the node within the model
+            var modelView = '';
+            if (dynamic && offCenter) {
+                modelView = 'czm_instanced_modelView = czm_instanced_model * czm_instanced_nodeTransform;\n';
+            } else if (dynamic && !offCenter) {
+                modelView = 'czm_instanced_modelView = czm_instanced_model;\n';
+            } else if (!dynamic && offCenter) {
+                modelView = 'czm_instanced_modelView = czm_instanced_collectionModelView * czm_instanced_model * czm_instanced_nodeTransform;\n';
+            } else if (!dynamic && !offCenter) {
+                modelView = 'czm_instanced_modelView = czm_instanced_collectionModelView * czm_instanced_model;\n';
+            }
 
             var newMain =
-                dynamicDefine +
+                uniforms +
                 globalVarsHeader +
+                'mat4 czm_instanced_modelView;\n' +
                 'attribute vec4 czm_modelMatrixRow0;\n' +
                 'attribute vec4 czm_modelMatrixRow1;\n' +
                 'attribute vec4 czm_modelMatrixRow2;\n' +
-                'attribute float a_batchId;\n' + // TODO : what if the gltf has this attribute already?
-                'uniform mat4 czm_instanced_nodeLocal;\n' +
-                'mat4 czm_instanced_modelView;\n' +
-                '#ifndef DYNAMIC\n' +
-                'uniform mat4 czm_instanced_collectionModelView;\n' +
-                '#endif\n' +
+                'attribute float a_batchId;\n' +
                 renamedSource +
                 'void main()\n' +
                 '{\n' +
                 '    mat4 czm_instanced_model = mat4(czm_modelMatrixRow0.x, czm_modelMatrixRow1.x, czm_modelMatrixRow2.x, 0.0, czm_modelMatrixRow0.y, czm_modelMatrixRow1.y, czm_modelMatrixRow2.y, 0.0, czm_modelMatrixRow0.z, czm_modelMatrixRow1.z, czm_modelMatrixRow2.z, 0.0, czm_modelMatrixRow0.w, czm_modelMatrixRow1.w, czm_modelMatrixRow2.w, 1.0);\n' +
-                '    #ifdef DYNAMIC\n' + // czm_instanced_model is the modelView matrix
-                '    czm_instanced_modelView = czm_instanced_model * czm_instanced_nodeLocal;\n' +
-                '    #else\n' + // czm_instanced_model is the model's local offset from the bounding volume
-                '    czm_instanced_modelView = czm_instanced_collectionModelView * czm_instanced_model * czm_instanced_nodeLocal;\n' +
-                '    #endif\n' +
+                     modelView +
                      globalVarsMain +
                 '    czm_old_main();\n' +
                 '}';
 
             vertexShaderCached = newMain;
-            return collection._batchData.getVertexShaderCallback()(newMain);
+            return collection._batchTable.getVertexShaderCallback()(newMain);
         };
     }
 
     function getFragmentShaderCallback(collection) {
         return function(fs) {
-            return collection._batchData.getFragmentShaderCallback()(fs);
+            return collection._batchTable.getFragmentShaderCallback()(fs);
         };
     }
 
@@ -365,13 +385,13 @@ define([
     function getPickVertexShaderCallback(collection) {
         return function (vs) {
             // Use the vertex shader that was generated earlier
-            return collection._batchData.getPickVertexShaderCallback()(vertexShaderCached);
+            return collection._batchTable.getPickVertexShaderCallback()(vertexShaderCached);
         };
     }
 
     function getPickFragmentShaderCallback(collection) {
         return function(fs) {
-            return collection._batchData.getPickFragmentShaderCallback()(fs);
+            return collection._batchTable.getPickFragmentShaderCallback()(fs);
         };
     }
 
@@ -381,7 +401,7 @@ define([
         };
     }
 
-    function createNodeLocalFunction(node) {
+    function createNodeTransformFunction(node) {
         return function() {
             return node.computedMatrix;
         };
@@ -389,26 +409,31 @@ define([
 
     function getUniformMapCallback(collection, context) {
         return function(uniformMap, programName, node) {
-            uniformMap = combine(uniformMap, {
-                czm_instanced_collectionModelView : (collection._dynamic ? undefined : createBoundsModelViewFunction(collection, context)),
-                czm_instanced_nodeLocal : createNodeLocalFunction(node)
-            });
+            uniformMap = clone(uniformMap);
+
+            if (!collection._dynamic) {
+                uniformMap.czm_instanced_collectionModelView = createBoundsModelViewFunction(collection, context);
+            }
+
+            if (isOffCenter(collection)) {
+                uniformMap.czm_instanced_nodeTransform = createNodeTransformFunction(node);
+            }
 
             // Remove instanced uniforms from the uniform map
             var instancedUniforms = getInstancedUniforms(collection, programName);
             for (var uniform in instancedUniforms) {
                 if (instancedUniforms.hasOwnProperty(uniform)) {
-                    uniformMap[uniform] = undefined;
+                    delete uniformMap[uniform];
                 }
             }
 
-            return collection._batchData.getUniformMapCallback()(uniformMap);
+            return collection._batchTable.getUniformMapCallback()(uniformMap);
         };
     }
 
     function getPickUniformMapCallback(collection) {
         return function(uniformMap) {
-            return collection._batchData.getPickUniformMapCallback()(uniformMap);
+            return collection._batchTable.getPickUniformMapCallback()(uniformMap);
         };
     }
 
@@ -476,12 +501,12 @@ define([
 
     function createBoundingVolume(collection) {
         if (!defined(collection._boundingVolume)) {
-            var points = [];
             var instancesLength = collection.length;
+            var points = new Array(instancesLength);
             for (var i = 0; i < instancesLength; ++i) {
                 var translation = new Cartesian3();
                 Matrix4.getTranslation(collection._instances[i].modelMatrix, translation);
-                points.push(translation);
+                points[i] = translation;
             }
 
             var boundingSphere = new BoundingSphere();
@@ -566,8 +591,6 @@ define([
             var url = collection._url;
             if (defined(url)) {
                 cacheKey = defaultValue(cacheKey, Model._getDefaultCacheKey(url));
-            }
-            if (defined(cacheKey)) {
                 cacheKey += '#instanced';
             }
 
@@ -766,7 +789,7 @@ define([
         }
 
         if (instancingSupported) {
-            this._batchData.update(context, frameState);
+            this._batchTable.update(context, frameState);
         }
 
         var model = this._model;
@@ -823,19 +846,13 @@ define([
         }
     };
 
-    /**
-     * DOC_TBA
-     */
     ModelInstanceCollection.prototype.isDestroyed = function() {
         return false;
     };
 
-    /**
-     * DOC_TBA
-     */
     ModelInstanceCollection.prototype.destroy = function() {
         this._model = this._model && this._model.destroy();
-        this._batchData = this._batchData && this._batchData.destroy();
+        this._batchTable = this._batchTable && this._batchTable.destroy();
 
         return destroyObject(this);
     };

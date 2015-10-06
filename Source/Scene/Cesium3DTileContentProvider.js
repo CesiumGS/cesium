@@ -10,7 +10,7 @@ define([
      *
      * DOC_TBA
      */
-    var Cesium3DTileContentProvider = function(url, contentHeader) {
+    var Cesium3DTileContentProvider = function(tileset, tile, url, contentHeader) {
         /**
          * @type {Cesium3DTileContentState}
          * @readonly

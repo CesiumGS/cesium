@@ -63,6 +63,7 @@ define([
         var baseUrl = appendForwardSlash(url);
 
         this._url = url;
+        this._baseUrl = baseUrl;
         this._root = undefined;
         this._properties = undefined; // // Metadata for per-model/point/etc properties
         this._geometricError = undefined; // Geometric error when the tree is not rendered at all

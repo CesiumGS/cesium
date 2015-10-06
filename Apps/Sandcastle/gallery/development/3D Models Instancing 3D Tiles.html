@@ -28,7 +28,7 @@ function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
 
-var globeVisible = false;
+var globeVisible = true;
 
 var viewer = new Cesium.Viewer('cesiumContainer', {
     globe : globeVisible ? undefined : false,
@@ -42,35 +42,23 @@ function orientCamera(center, radius) {
     var controller = scene.screenSpaceCameraController;
     var r = Math.max(radius, camera.frustum.near);
     controller.minimumZoomDistance = r * 0.5;
-
     var heading = Cesium.Math.toRadians(230.0);
     var pitch = Cesium.Math.toRadians(-20.0);
     camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, r * 2.0));
 }
 
 function loadInstanced3DTile() {
-    // TODO : create real tileset later
-    var tileset;
-    var contentHeader = {};
-    var url = 'http://localhost:8002/tilesets/Instances/instance3DTileTest.i3dm';
-    var content = new Cesium.Instanced3DModel3DTileContentProvider(tileset, url, contentHeader);
-    content.request();
-    content.processingPromise.then(function(content) {
-        var collection = content._modelInstanceCollection;
-        scene.primitives.add(collection);
-        collection.readyPromise.then(function(collection) {
-            // Play and loop all animations at half-speed
-            collection._model.activeAnimations.addAll({
-                speedup : 0.5,
-                loop : Cesium.ModelAnimationLoop.REPEAT
-            });
-            orientCamera(collection._boundingVolume.center, collection._boundingVolume.radius);
-        }).otherwise(function(error) {
-            window.alert(error);
-        });
+    var city = scene.primitives.add(new Cesium.Cesium3DTileset({
+        url : 'http://localhost:8002/tilesets/trees'
+    }));
+
+    city.readyPromise.then(function() {
+        city.debugShowBox = true;
     }).otherwise(function(error) {
         window.alert(error);
     });
+
+    orientCamera(Cesium.Cartesian3.fromRadians(-1.2911323805815227, 0.7097150757974291), 10.0);
 }
 
 loadInstanced3DTile();

@@ -32,7 +32,7 @@ define([
     /**
      * @private
      */
-    var Points3DTileContentProvider = function(tileset, url, contentHeader) {
+    var Points3DTileContentProvider = function(tileset, tile, url, contentHeader) {
         this._primitive = undefined;
         this._url = url;
 

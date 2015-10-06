@@ -74,7 +74,7 @@ function createCollection(instances) {
 
     collection.readyPromise.then(function(collection) {
         // Play and loop all animations at half-speed
-        collection._model.activeAnimations.addAll({
+        collection.activeAnimations.addAll({
             speedup : 0.5,
             loop : Cesium.ModelAnimationLoop.REPEAT
         });
@@ -96,14 +96,12 @@ function createModels(instances) {
         Cesium.Matrix4.getTranslation(modelMatrix, translation);
         points.push(translation);
 
-        model = Cesium.Model.fromGltf({
+        model = scene.primitives.add(Cesium.Model.fromGltf({
             url : url,
             modelMatrix : modelMatrix,
             debugShowBoundingVolume : debugShowBoundingVolume,
             debugWireframe : debugWireframe
-        });
-
-        scene.primitives.add(model);
+        }));
 
         model.readyPromise.then(function(model) {
             // Play and loop all animations at half-speed
