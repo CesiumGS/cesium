@@ -1860,9 +1860,14 @@ function startup(Cesium) {
     }
   ];
 
-  var viewer = new Cesium.Viewer('cesiumContainer');
-  viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
-
+  var terrainSources = Cesium.createDefaultTerrainProviderViewModels();
+  var viewer = new Cesium.Viewer('cesiumContainer', {
+      terrainProviderViewModels : terrainSources,
+      selectedTerrainProviderViewModel : terrainSources[1]
+  });
+  viewer.dataSources.add(Cesium.CzmlDataSource.load(czml)).then(function(ds) {
+      viewer.trackedEntity = ds.entities.getById('path');
+  });
 
   //Sandcastle_End
   Sandcastle.finishedLoading();
