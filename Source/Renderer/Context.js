@@ -31,7 +31,8 @@ define([
         './ShaderProgram',
         './Texture',
         './UniformState',
-        './VertexArray'
+        './VertexArray',
+        './WebGLConstants'
     ], function(
         clone,
         Color,
@@ -64,7 +65,8 @@ define([
         ShaderProgram,
         Texture,
         UniformState,
-        VertexArray) {
+        VertexArray,
+        WebGLConstants) {
     "use strict";
     /*global WebGLRenderingContext*/
 
@@ -708,7 +710,7 @@ define([
     var scratchBackBufferArray;
     // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
     if (typeof WebGLRenderingContext !== 'undefined') {
-        scratchBackBufferArray = [WebGLRenderingContext.BACK];
+        scratchBackBufferArray = [WebGLConstants.BACK];
     }
 
     function bindFramebuffer(context, framebuffer) {
