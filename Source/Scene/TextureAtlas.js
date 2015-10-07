@@ -12,6 +12,7 @@ define([
         '../Core/PixelFormat',
         '../Core/RuntimeError',
         '../Renderer/Framebuffer',
+        '../Renderer/RenderState',
         '../Renderer/Texture',
         '../ThirdParty/when'
     ], function(
@@ -27,6 +28,7 @@ define([
         PixelFormat,
         RuntimeError,
         Framebuffer,
+        RenderState,
         Texture,
         when) {
     "use strict";
@@ -95,6 +97,26 @@ define([
             pixelFormat : this._pixelFormat
         });
         this._root = new TextureAtlasNode(new Cartesian2(), new Cartesian2(initialSize.x, initialSize.y));
+
+        var that = this;
+        var uniformMap = {
+            u_texture : function() {
+                return that._texture;
+            }
+        };
+
+        var fs =
+            'uniform sampler2D u_texture;\n' +
+            'varying vec2 v_textureCoordinates;\n' +
+            'void main()\n' +
+            '{\n' +
+            '    gl_FragColor = texture2D(u_texture, v_textureCoordinates);\n' +
+            '}\n';
+
+
+        this._copyCommand = this._context.createViewportQuadCommand(fs, {
+            uniformMap : uniformMap
+        });
     };
 
     defineProperties(TextureAtlas.prototype, {
@@ -201,16 +223,28 @@ define([
                 pixelFormat : textureAtlas._pixelFormat
             });
 
-            // Copy old texture into new using an fbo.
             var framebuffer = new Framebuffer({
                 context : context,
-                colorTextures : [textureAtlas._texture]
+                colorTextures : [newTexture],
+                destroyAttachments : false
             });
+
+            var command = textureAtlas._copyCommand;
+            var renderState = {
+                viewport : new BoundingRectangle(0, 0, oldAtlasWidth, oldAtlasHeight)
+            };
+            command.renderState = RenderState.fromCache(renderState);
+
+            // Copy by rendering a viewport quad, instead of using Texture.copyFromFramebuffer,
+            // to workaround a Chrome 45 issue, https://github.com/AnalyticalGraphicsInc/cesium/issues/2997
             framebuffer._bind();
-            newTexture.copyFromFramebuffer(0, 0, 0, 0, oldAtlasWidth, oldAtlasHeight);
+            command.execute(textureAtlas._context);
             framebuffer._unBind();
             framebuffer.destroy();
             textureAtlas._texture = newTexture;
+
+            RenderState.removeFromCache(renderState);
+            command.renderState = undefined;
         } else {
             // First image exceeds initialSize
             var initialWidth = scalingFactor * (image.width + textureAtlas._borderWidthInPixels);
