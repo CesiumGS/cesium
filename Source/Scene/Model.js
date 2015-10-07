@@ -981,6 +981,7 @@ define([
     var aMaxScratch = new Cartesian3();
 
     function computeBoundingSphere(gltf) {
+        var version = gltf.asset.version;
         var gltfNodes = gltf.nodes;
         var gltfMeshes = gltf.meshes;
         var gltfAccessors = gltf.accessors;
@@ -994,7 +995,7 @@ define([
 
         for (var i = 0; i < rootNodesLength; ++i) {
             var n = gltfNodes[rootNodes[i]];
-            n._transformToRoot = getTransform(n);
+            n._transformToRoot = getTransform(n, version);
             nodeStack.push(n);
 
             while (nodeStack.length > 0) {
@@ -1028,7 +1029,7 @@ define([
                 var childrenLength = children.length;
                 for (var k = 0; k < childrenLength; ++k) {
                     var child = gltfNodes[children[k]];
-                    child._transformToRoot = getTransform(child);
+                    child._transformToRoot = getTransform(child, version);
                     Matrix4.multiplyTransformation(transformToRoot, child._transformToRoot, child._transformToRoot);
                     nodeStack.push(child);
                 }
@@ -1192,16 +1193,23 @@ define([
     var nodeQuaternionScratch = new Quaternion();
     var nodeScaleScratch = new Cartesian3();
 
-    function getTransform(node) {
+    function getTransform(node, version) {
         if (defined(node.matrix)) {
             return Matrix4.fromArray(node.matrix);
         }
 
-        var axis = Cartesian3.fromArray(node.rotation, 0, nodeAxisScratch);
+        var rotation = node.rotation;
+        if (version < 1.0) {
+            var axis = Cartesian3.fromArray(rotation, 0, nodeAxisScratch);
+            Quaternion.fromAxisAngle(axis, rotation[3], nodeQuaternionScratch);
+        }
+        else {
+            nodeQuaternionScratch = new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3]);
+        }
 
         return Matrix4.fromTranslationQuaternionRotationScale(
             Cartesian3.fromArray(node.translation, 0, nodeTranslationScratch),
-            Quaternion.fromAxisAngle(axis, node.rotation[3], nodeQuaternionScratch),
+            nodeQuaternionScratch,
             Cartesian3.fromArray(node.scale, 0 , nodeScaleScratch));
     }
 
@@ -1211,7 +1219,9 @@ define([
         var skinnedNodes = [];
 
         var skinnedNodesNames = model._loadResources.skinnedNodesNames;
-        var nodes = model.gltf.nodes;
+        var gltf = model.gltf;
+        var version = gltf.asset.version;
+        var nodes = gltf.nodes;
 
         for (var name in nodes) {
             if (nodes.hasOwnProperty(name)) {
@@ -1251,7 +1261,7 @@ define([
                     // Publicly-accessible ModelNode instance to modify animation targets
                     publicNode : undefined
                 };
-                runtimeNode.publicNode = new ModelNode(model, node, runtimeNode, name, getTransform(node));
+                runtimeNode.publicNode = new ModelNode(model, node, runtimeNode, name, getTransform(node, version));
 
                 runtimeNodes[name] = runtimeNode;
                 runtimeNodesByName[node.name] = runtimeNode;
@@ -2391,6 +2401,7 @@ define([
         var runtimeNodes = model._runtime.nodes;
 
         var gltf = model.gltf;
+        var version = gltf.asset.version;
         var nodes = gltf.nodes;
 
         var scene = gltf.scenes[gltf.scene];
@@ -2419,9 +2430,15 @@ define([
                         runtimeNode.matrix = Matrix4.fromColumnMajorArray(gltfNode.matrix);
                     } else {
                         // TRS converted to Cesium types
-                        axis = Cartesian3.fromArray(gltfNode.rotation, 0, axis);
+                        var rotation = gltfNode.rotation;
                         runtimeNode.translation = Cartesian3.fromArray(gltfNode.translation);
-                        runtimeNode.rotation = Quaternion.fromAxisAngle(axis, gltfNode.rotation[3]);
+                        if (version < 1.0) {
+                            axis = Cartesian3.fromArray(rotation, 0, axis);
+                            runtimeNode.rotation = Quaternion.fromAxisAngle(axis, rotation[3]);
+                        }
+                        else {
+                            runtimeNode.rotation = new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3]);
+                        }
                         runtimeNode.scale = Cartesian3.fromArray(gltfNode.scale);
                     }
                 }

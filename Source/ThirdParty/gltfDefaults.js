@@ -69,10 +69,14 @@ define([
         }
         var profile = asset.profile;
 
-        asset.premultipliedAlpha = defaultValue(gltf.asset.premultipliedAlpha, false);
+        asset.premultipliedAlpha = defaultValue(asset.premultipliedAlpha, false);
         profile.api = defaultValue(profile.api, 'WebGL');
         profile.version = defaultValue(profile.version, '1.0.2');
-        asset.version = defaultValue(gltf.version, '0.9');
+
+        if (defined(gltf.version)) {
+            asset.version = defaultValue(asset.version, gltf.version);
+            delete gltf.version;
+        }
     }
 
     function bufferDefaults(gltf) {
