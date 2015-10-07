@@ -127,6 +127,19 @@ define([
             get : function() {
                 return this._batchSize;
             }
+        },
+        /**
+         * returns the batchTable
+         *
+         * @memberof Batched3DModel3DTileContentProvider.prototype
+         *
+         * @type {Object|undefined}
+         * @readonly
+         */
+        batchTable : {
+            get : function() {
+                return this._batchTable;
+            }
         }
     });
 
