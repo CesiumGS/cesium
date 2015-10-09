@@ -257,6 +257,14 @@ define([
                         }
                     }
                 }
+
+                var instanceSkin = node.instanceSkin;
+                if (defined(instanceSkin)) {
+                    node.skeletons = instanceSkin.skeletons;
+                    node.skin = instanceSkin.skin;
+                    node.meshes = instanceSkin.meshes;
+                    delete node.instanceSkin;
+                }
             }
         }
     }

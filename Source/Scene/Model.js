@@ -1002,7 +1002,7 @@ define([
                 n = nodeStack.pop();
                 var transformToRoot = n._transformToRoot;
 
-                var meshes = defaultValue(n.meshes, defined(n.instanceSkin) ? n.instanceSkin.meshes : undefined);
+                var meshes = n.meshes;
                 if (defined(meshes)) {
                     var meshesLength = meshes.length;
                     for (var j = 0; j < meshesLength; ++j) {
@@ -1266,7 +1266,7 @@ define([
                 runtimeNodes[name] = runtimeNode;
                 runtimeNodesByName[node.name] = runtimeNode;
 
-                if (defined(node.instanceSkin)) {
+                if (defined(node.skin)) {
                     skinnedNodesNames.push(name);
                     skinnedNodes.push(runtimeNode);
                 }
@@ -1658,23 +1658,23 @@ define([
         for (var j = 0; j < length; ++j) {
             var name = skinnedNodesNames[j];
             var skinnedNode = runtimeNodes[name];
-            var instanceSkin = nodes[name].instanceSkin;
+            var node = nodes[name];
 
-            var runtimeSkin = runtimeSkins[instanceSkin.skin];
+            var runtimeSkin = runtimeSkins[node.skin];
             skinnedNode.inverseBindMatrices = runtimeSkin.inverseBindMatrices;
             skinnedNode.bindShapeMatrix = runtimeSkin.bindShapeMatrix;
 
-            // 1. Find nodes with the names in instanceSkin.skeletons (the node's skeletons)
+            // 1. Find nodes with the names in node.skeletons (the node's skeletons)
             // 2. These nodes form the root nodes of the forest to search for each joint in skin.jointNames.  This search uses jointName, not the node's name.
 
             var forest = [];
-            var gltfSkeletons = instanceSkin.skeletons;
+            var gltfSkeletons = node.skeletons;
             var skeletonsLength = gltfSkeletons.length;
             for (var k = 0; k < skeletonsLength; ++k) {
                 forest.push(runtimeNodes[gltfSkeletons[k]]);
             }
 
-            var gltfJointNames = skins[instanceSkin.skin].jointNames;
+            var gltfJointNames = skins[node.skin].jointNames;
             var jointNamesLength = gltfJointNames.length;
             for (var i = 0; i < jointNamesLength; ++i) {
                 var jointName = gltfJointNames[i];
@@ -2284,7 +2284,7 @@ define([
         var techniques = gltf.techniques;
         var materials = gltf.materials;
 
-        var meshes = defined(gltfNode.meshes) ? gltfNode.meshes : gltfNode.instanceSkin.meshes;
+        var meshes = gltfNode.meshes;
         var meshesLength = meshes.length;
 
         for (var j = 0; j < meshesLength; ++j) {
@@ -2450,7 +2450,7 @@ define([
                     rootNodes.push(runtimeNode);
                 }
 
-                if (defined(gltfNode.meshes) || defined(gltfNode.instanceSkin)) {
+                if (defined(gltfNode.meshes)) {
                     createCommand(model, gltfNode, runtimeNode, context);
                 }
 
