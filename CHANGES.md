@@ -3,21 +3,19 @@ Change Log
 
 ### 1.14 - 2015-10-01
 
-* Breaking changes
-  * ...
-* Deprecated
-  * ...
+* Fixed issues causing the terrain and sky to disappear when the camera is near the surface. [#2415](https://github.com/AnalyticalGraphicsInc/cesium/issues/2415) and [#2271](https://github.com/AnalyticalGraphicsInc/cesium/issues/2271)
+* Changed the `ScreenSpaceCameraController.minimumZoomDistance` default from `20.0` to `1.0`.
+* Added `Billboard.sizeInMeters`. `true` sets the billboard size to be measured in meters; otherwise, the size of the billboard is measured in pixels. Also added support for billboard `sizeInMeters` to entities and CZML.
+* Fixed a bug in `AssociativeArray` that would cause unbounded memory growth when adding and removing lots of items.
+* Provided a workaround for Safari 9 where WebGL constants can't be accessed through `WebGLRenderingContext`. Now constants are hard-coded in `WebGLConstants`. [#2989](https://github.com/AnalyticalGraphicsInc/cesium/issues/2989)
+* Added a workaround for Chrome 45, where the first character in a label with a small font size would not appear. [#3011](https://github.com/AnalyticalGraphicsInc/cesium/pull/3011)
 * Added `subdomains` option to the `WebMapTileServiceImageryProvider` constructor.
 * Added `subdomains` option to the `WebMapServiceImageryProvider` constructor.
 * Fix zooming in 2D when tracking an object. The zoom was based on location rather than the tracked object. [#2991](https://github.com/AnalyticalGraphicsInc/cesium/issues/2991)
 * Added `options.credit` parameter to `MapboxImageryProvider`.
-* Provided a workaround for Safari 9 where WebGL constants can't be accessed through `WebGLRenderingContext`. Now constants are hard-coded in `WebGLConstants`. [#2989](https://github.com/AnalyticalGraphicsInc/cesium/issues/2989)
 * Fixed an issue with drill picking at low frame rates that would cause a crash. [#3010](https://github.com/AnalyticalGraphicsInc/cesium/pull/3010)
 * Fixed a bug that prevented `setView` from working across all scene modes.
 * Fixed a bug that caused `camera.positionWC` to occasionally return the incorrect value.
-* Added a workaround for Chrome 45, where the first character in a label with a small font size would not appear. [#3011](https://github.com/AnalyticalGraphicsInc/cesium/pull/3011)
-* Fixed issues causing the terrain and sky to disappear when the camera is near the surface. [#2415](https://github.com/AnalyticalGraphicsInc/cesium/issues/2415) and [#2271](https://github.com/AnalyticalGraphicsInc/cesium/issues/2271)
-* Changed the `ScreenSpaceCameraController.minimumZoomDistance` default from `20.0` to `1.0`.
 * Used all the template urls defined in the CesiumTerrain provider.[#3038](https://github.com/AnalyticalGraphicsInc/cesium/pull/3038)
 
 ### 1.13 - 2015-09-01
