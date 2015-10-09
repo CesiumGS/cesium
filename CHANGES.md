@@ -9,6 +9,7 @@ Change Log
 * Deprecated
   * ...
 * Decreased GPU memory usage in `BillboardCollection` and `LabelCollection` by using the WebGL ANGLE_instanced_arrays extension.
+* Added CZML examples to Sandcastle.  See the new CZML tab.
 
 ### 1.14 - 2015-10-01
 
