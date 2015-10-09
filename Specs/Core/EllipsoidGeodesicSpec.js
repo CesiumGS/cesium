@@ -26,13 +26,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws without unique position', function() {
-        expect(function() {
-            var elGeo = new EllipsoidGeodesic(new Cartographic(Math.PI, Math.PI), new Cartographic(0, Math.PI));
-            return elGeo.interpolateUsingSurfaceDistance(0);
-        }).toThrowDeveloperError();
-    });
-
     it('setEndPoints throws without start', function() {
         expect(function() {
             var elGeo = new EllipsoidGeodesic();
@@ -139,6 +132,23 @@ defineSuite([
         var geodesic = new EllipsoidGeodesic(start, end, ellipsoid);
         var sixtyDegrees = Math.PI / 3;
         expect(sixtyDegrees * 6).toEqualEpsilon(geodesic.surfaceDistance, CesiumMath.EPSILON11);
+    });
+
+    it('computes distance between antipodal points', function() {
+        var geodesic = new EllipsoidGeodesic(new Cartographic(0, -0.5),
+                                             new Cartographic(Math.PI, 0.5));
+        /* result for WGS84 ellipsoid, a = 6378137 m, f = 1/298.257223563. */
+        expect(20003931.458625).toEqualEpsilon(geodesic.surfaceDistance, CesiumMath.EPSILON6);
+    });
+
+    it('computes distance between nearly antipodal points', function() {
+        var d = CesiumMath.RADIANS_PER_DEGREE;
+        var geodesic = new EllipsoidGeodesic(new Cartographic(0, -30*d),
+                                             new Cartographic(179.5*d, 29.5*d));
+        /* result for WGS84 ellipsoid, a = 6378137 m, f = 1/298.257223563. */
+        expect(19937782.280350).toEqualEpsilon(geodesic.surfaceDistance, CesiumMath.EPSILON6);
+        expect(154.37818274278).toEqualEpsilon(geodesic.startHeading/d, CesiumMath.EPSILON11);
+        expect(25.48587026077).toEqualEpsilon(geodesic.endHeading/d, CesiumMath.EPSILON11);
     });
 
     it('interpolates start and end points', function() {
