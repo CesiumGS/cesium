@@ -1607,7 +1607,7 @@ define([
         // Retrieve the compiled shader program to assign index values to attributes
         var attributeLocations = {};
 
-        var technique = techniques[materials[primitive.material].instanceTechnique.technique];
+        var technique = techniques[materials[primitive.material].technique];
         var parameters = technique.parameters;
         var attributes = technique.attributes;
         var programAttributeLocations = model._rendererResources.programs[technique.program].vertexAttributes;
@@ -2191,9 +2191,8 @@ define([
         for (var materialName in materials) {
             if (materials.hasOwnProperty(materialName)) {
                 var material = materials[materialName];
-                var instanceTechnique = material.instanceTechnique;
-                var instanceParameters = instanceTechnique.values;
-                var technique = techniques[instanceTechnique.technique];
+                var instanceParameters = material.values;
+                var technique = techniques[material.technique];
                 var parameters = technique.parameters;
                 var uniforms = technique.uniforms;
 
@@ -2300,8 +2299,8 @@ define([
             for (var i = 0; i < length; ++i) {
                 var primitive = primitives[i];
                 var ix = accessors[primitive.indices];
-                var instanceTechnique = materials[primitive.material].instanceTechnique;
-                var technique = techniques[instanceTechnique.technique];
+                var material = materials[primitive.material];
+                var technique = techniques[material.technique];
 
                 var boundingSphere;
                 var positionAttribute = primitive.attributes.POSITION;
@@ -2323,7 +2322,7 @@ define([
                     uniformMap = combine(uniformMap, jointUniformMap);
                 }
 
-                var rs = rendererRenderStates[instanceTechnique.technique];
+                var rs = rendererRenderStates[material.technique];
                 // GLTF_SPEC: Offical means to determine translucency. https://github.com/KhronosGroup/glTF/issues/105
                 var isTranslucent = rs.blending.enabled;
                 var owner = {

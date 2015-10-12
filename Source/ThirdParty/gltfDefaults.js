@@ -179,9 +179,17 @@ define([
 
         for (var name in materials) {
             if (materials.hasOwnProperty(name)) {
-                var instanceTechnique = materials[name].instanceTechnique;
-                if (!defined(instanceTechnique.values)) {
-                    instanceTechnique.values = {};
+                var material = materials[name];
+                var instanceTechnique = material.instanceTechnique;
+                if (defined(instanceTechnique)) {
+                    material.technique = instanceTechnique.technique;
+                    material.values = instanceTechnique.values;
+
+                    delete material.instanceTechnique;
+                }
+
+                if (!defined(material.values)) {
+                    material.values = {};
                 }
             }
         }
