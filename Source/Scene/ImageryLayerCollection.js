@@ -393,6 +393,7 @@ define([
         var imageryTiles = pickedTile.data.imagery;
 
         var promises = [];
+        var imageryLayers = [];
         for (var i = imageryTiles.length - 1; i >= 0; --i) {
             var terrainImagery = imageryTiles[i];
             var imagery = terrainImagery.readyImagery;
@@ -427,6 +428,7 @@ define([
             }
 
             promises.push(promise);
+            imageryLayers.push(imagery.imageryLayer);
         }
 
         if (promises.length === 0) {
@@ -438,10 +440,12 @@ define([
 
             for (var resultIndex = 0; resultIndex < results.length; ++resultIndex) {
                 var result = results[resultIndex];
+                var image = imageryLayers[resultIndex];
 
                 if (defined(result) && result.length > 0) {
                     for (var featureIndex = 0; featureIndex < result.length; ++featureIndex) {
                         var feature = result[featureIndex];
+                        feature.imageryLayer = image;
 
                         // For features without a position, use the picked location.
                         if (!defined(feature.position)) {
