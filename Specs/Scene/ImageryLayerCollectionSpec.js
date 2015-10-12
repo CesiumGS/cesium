@@ -417,7 +417,6 @@ defineSuite([
                 }
             };
 
-            globe.imageryLayers.addImageryProvider(provider);
             var currentLayer = globe.imageryLayers.addImageryProvider(provider);
 
             return updateUntilDone(globe).then(function() {
@@ -467,7 +466,6 @@ defineSuite([
                 }
             };
 
-            globe.imageryLayers.addImageryProvider(provider1);
             var currentLayer1 = globe.imageryLayers.addImageryProvider(provider1);
 
             var provider2 = {
@@ -497,7 +495,6 @@ defineSuite([
                 }
             };
 
-            globe.imageryLayers.addImageryProvider(provider2);
             var currentLayer2 = globe.imageryLayers.addImageryProvider(provider2);
 
             return updateUntilDone(globe).then(function() {
