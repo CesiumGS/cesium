@@ -10,7 +10,8 @@ Change Log
   * ...
 * Decreased GPU memory usage in `BillboardCollection` and `LabelCollection` by using the WebGL ANGLE_instanced_arrays extension.
 * Added CZML examples to Sandcastle.  See the new CZML tab.
-* Fixed token issue in ArcGisMapServerImageryProvider
+* Fixed token issue in ArcGisMapServerImageryProvider.
+* `ImageryLayerFeatureInfo` now has an `imageryLayer` property, indicating the layer that contains the feature.
 
 ### 1.14 - 2015-10-01
 
