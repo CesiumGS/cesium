@@ -28,7 +28,7 @@
 function startup(Cesium) {
   "use strict";
   //Sandcastle_Begin
-  var czml = [ {
+var czml = [ {
     "id" : "document",
     "name" : "CZML Wall",
     "version" : "1.0"
@@ -40,7 +40,6 @@ function startup(Cesium) {
           90, 30, 1500000,
           90, 180, 1500000
         ]},
-        "show" : true,
         "material" : {
           "solidColor" : {
             "color" : {
@@ -50,13 +49,14 @@ function startup(Cesium) {
         }
       }
     }
-  ];
+];
 
-  var viewer = new Cesium.Viewer('cesiumContainer');
-  viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
+var viewer = new Cesium.Viewer('cesiumContainer');
+var dataSource = Cesium.CzmlDataSource.load(czml);
+viewer.dataSources.add(dataSource);
 
-  //Sandcastle_End
-  Sandcastle.finishedLoading();
+//Sandcastle_End
+Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {
   startup(Cesium);

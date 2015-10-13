@@ -28,7 +28,7 @@
 function startup(Cesium) {
   "use strict";
   //Sandcastle_Begin
-  var czml = [
+var czml = [
     {
       "id" : "document",
       "name" : "CZML Point",
@@ -53,14 +53,16 @@ function startup(Cesium) {
         "show": true
       }
     }
-  ];
+];
 
 
-  var viewer = new Cesium.Viewer('cesiumContainer');
-  viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
+var viewer = new Cesium.Viewer('cesiumContainer');
+var dataSource = Cesium.CzmlDataSource.load(czml);
+viewer.dataSources.add(dataSource);
+viewer.zoomTo(dataSource);
 
-  //Sandcastle_End
-  Sandcastle.finishedLoading();
+//Sandcastle_End
+Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {
   startup(Cesium);
