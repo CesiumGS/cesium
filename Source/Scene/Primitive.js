@@ -1500,6 +1500,15 @@ define([
         }
         this._pickIds = undefined;
 
+        //These objects may be fairly large and reference other large objects (like Entities)
+        //We explicitly set them to undefined here so that the memory can be freed
+        //even if a reference to the destroyed Primitive has been kept around.
+        this._instanceIds = undefined;
+        this._perInstanceAttributeCache = undefined;
+        this._perInstanceAttributeLocations = undefined;
+        this._attributeLocations = undefined;
+        this._dirtyAttributes = undefined;
+
         return destroyObject(this);
     };
 

@@ -77,6 +77,20 @@ function changeBillboardProperties() {
     billboard.color = Cesium.Color.WHITE.withAlpha(0.25);
 }
 
+function sizeBillboardInMeters() {
+    Sandcastle.declare(sizeBillboardInMeters);
+    
+    var entity = viewer.entities.add({
+        position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+        billboard : {
+            image : '../images/Cesium_Logo_overlay.png',
+            sizeInMeters : true
+        }
+    });
+    
+    viewer.zoomTo(entity);
+}
+
 function addMultipleBillboards() {
     Sandcastle.declare(addMultipleBillboards);
 
@@ -224,6 +238,12 @@ Sandcastle.addToolbarMenu([{
     onselect : function() {
         changeBillboardProperties();
         Sandcastle.highlight(changeBillboardProperties);
+    }
+}, {
+    text : 'Size billboard in meters',
+    onselect : function() {
+        sizeBillboardInMeters();
+        Sandcastle.highlight(sizeBillboardInMeters);
     }
 }, {
     text : 'Add multiple billboards',

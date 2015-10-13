@@ -185,7 +185,8 @@ define([
      *     context : context,
      *     sizeInBytes : 12,
      *     usage : BufferUsage.STATIC_DRAW
-     * });     * var attributes = [
+     * });
+     * var attributes = [
      *     {
      *         index                  : 0,
      *         vertexBuffer           : positionBuffer,

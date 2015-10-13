@@ -25,6 +25,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Francesco Linsalata](https://github.com/flinsalata) 
    * [Kai Ninomiya](https://github.com/kainino0x)
    * [Sean Lilley](https://github.com/lilleyse)
+   * [Katherina Lim](https://github.com/klim705)
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
    * [Kevin Ring](https://github.com/kring)
@@ -63,5 +64,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Ilia Choly](https://github.com/icholy)
 * [Farouk Abdou](https://github.com/kaktus40)
 * [Stéphane Lozier](https://github.com/slozier)
+* [Adam Cole](https://github.com/adamdavidcole)
+* [Tiffany Lu](https://github.com/tiffanylu)
+* [Olivier Terral](https://github.com/oterral)
 
 Also see [our contributors page](http://cesiumjs.org/contributors.html) for more information.

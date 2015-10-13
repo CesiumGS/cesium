@@ -1,7 +1,9 @@
 /*global define*/
 define([
+        '../Renderer/WebGLConstants',
         './freezeObject'
     ], function(
+        WebGLConstants,
         freezeObject) {
     "use strict";
 
@@ -13,60 +15,60 @@ define([
      */
     var PixelFormat = {
         /**
-         * 0x1902.  A pixel format containing a depth value.
+         * A pixel format containing a depth value.
          *
          * @type {Number}
          * @constant
          */
-        DEPTH_COMPONENT : 0x1902,
+        DEPTH_COMPONENT : WebGLConstants.DEPTH_COMPONENT,
 
         /**
-         * 0x84F9.  A pixel format containing a depth and stencil value, most often used with {@link PixelDatatype.UNSIGNED_INT_24_8_WEBGL}.
+         * A pixel format containing a depth and stencil value, most often used with {@link PixelDatatype.UNSIGNED_INT_24_8_WEBGL}.
          *
          * @type {Number}
          * @constant
          */
-        DEPTH_STENCIL : 0x84F9,
+        DEPTH_STENCIL : WebGLConstants.DEPTH_STENCIL,
 
         /**
-         * 0x1906.  A pixel format containing an alpha channel.
+         * A pixel format containing an alpha channel.
          *
          * @type {Number}
          * @constant
          */
-        ALPHA : 0x1906,
+        ALPHA : WebGLConstants.ALPHA,
 
         /**
-         * 0x1907.  A pixel format containing red, green, and blue channels.
+         * A pixel format containing red, green, and blue channels.
          *
          * @type {Number}
          * @constant
          */
-        RGB : 0x1907,
+        RGB : WebGLConstants.RGB,
 
         /**
-         * 0x1908.  A pixel format containing red, green, blue, and alpha channels.
+         * A pixel format containing red, green, blue, and alpha channels.
          *
          * @type {Number}
          * @constant
          */
-        RGBA : 0x1908,
+        RGBA : WebGLConstants.RGBA,
 
         /**
-         * 0x1909.  A pixel format containing a luminance (intensity) channel.
+         * A pixel format containing a luminance (intensity) channel.
          *
          * @type {Number}
          * @constant
          */
-        LUMINANCE : 0x1909,
+        LUMINANCE : WebGLConstants.LUMINANCE,
 
         /**
-         * 0x190A.  A pixel format containing luminance (intensity) and alpha channels.
+         * A pixel format containing luminance (intensity) and alpha channels.
          *
          * @type {Number}
          * @constant
          */
-        LUMINANCE_ALPHA : 0x190A,
+        LUMINANCE_ALPHA : WebGLConstants.LUMINANCE_ALPHA,
 
         /**
          * @private
