@@ -113,6 +113,7 @@ define([
          * Gets the perspective projection matrix computed from the view frustum.
          * @memberof PerspectiveFrustum.prototype
          * @type {Matrix4}
+         * @readonly
          *
          * @see PerspectiveFrustum#infiniteProjectionMatrix
          */
@@ -127,6 +128,7 @@ define([
          * The perspective projection matrix computed from the view frustum with an infinite far plane.
          * @memberof PerspectiveFrustum.prototype
          * @type {Matrix4}
+         * @readonly
          *
          * @see PerspectiveFrustum#projectionMatrix
          */
@@ -141,6 +143,7 @@ define([
          * Gets the angle of the vertical field of view, in radians.
          * @memberof PerspectiveFrustum.prototype
          * @type {Number}
+         * @readonly
          * @default undefined
          */
         fovy : {
