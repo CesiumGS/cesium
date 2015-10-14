@@ -122,15 +122,12 @@ define([
         //>>includeEnd('debug');
 
         var corner = Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3());
-        var min = Cartesian3.negate(corner, new Cartesian3());
-        var max = corner;
 
-        var newOptions = {
-            minimum : min,
-            maximum : max,
+        return new BoxGeometry({
+            minimum : Cartesian3.negate(corner, new Cartesian3()),
+            maximum : corner,
             vertexFormat : options.vertexFormat
-        };
-        return new BoxGeometry(newOptions);
+        });
     };
 
     /**
@@ -159,11 +156,11 @@ define([
         if (!defined(boundingBox)) {
             throw new DeveloperError('boundingBox is required.');
         }
-        var newOptions = {
+
+        return new BoxGeometry({
             minimum: boundingBox.minimum,
             maximum: boundingBox.maximum
-        };
-        return new BoxGeometry(newOptions);
+        });
     };
 
     /**
@@ -192,11 +189,11 @@ define([
         if (!defined(boundingBox)) {
             throw new DeveloperError('boundingBox is required.');
         }
-        var newOptions = {
+
+        return new BoxGeometry({
             minimum : boundingBox.minimum,
             maximum : boundingBox.maximum
-        };
-        return new BoxGeometry(newOptions);
+        });
     };
 
     /**
