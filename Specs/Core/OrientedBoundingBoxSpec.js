@@ -1,8 +1,8 @@
 /*global defineSuite*/
 defineSuite([
         'Core/OrientedBoundingBox',
-        'Core/BoundingSphere',
         'Core/BoundingRectangle',
+        'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/Ellipsoid',
@@ -16,8 +16,8 @@ defineSuite([
         'Core/Rectangle'
     ], function(
         OrientedBoundingBox,
-        BoundingSphere,
         BoundingRectangle,
+        BoundingSphere,
         Cartesian3,
         Cartesian4,
         Ellipsoid,
