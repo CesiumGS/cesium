@@ -615,7 +615,7 @@ define([
         var indexBuffer;
         var indices = geometry.indices;
         if (defined(indices)) {
-            if ((Geometry.computeNumberOfVertices(geometry) > CesiumMath.SIXTY_FOUR_KILOBYTES) && context.elementIndexUint) {
+            if ((Geometry.computeNumberOfVertices(geometry) >= CesiumMath.SIXTY_FOUR_KILOBYTES) && context.elementIndexUint) {
                 indexBuffer = Buffer.createIndexBuffer({
                     context : context,
                     typedArray : new Uint32Array(indices),

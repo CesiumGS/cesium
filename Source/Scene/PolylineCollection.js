@@ -787,14 +787,14 @@ define([
 
                     vbo += vertexBufferOffset[k];
 
-                    var positionHighOffset = 6 * (k * (positionSizeInBytes * CesiumMath.SIXTY_FOUR_KILOBYTES) - vbo * positionSizeInBytes);//componentsPerAttribute(3) * componentDatatype(4)
+                    var positionHighOffset = 6 * (k * (positionSizeInBytes * (CesiumMath.SIXTY_FOUR_KILOBYTES - 1)) - vbo * positionSizeInBytes);//componentsPerAttribute(3) * componentDatatype(4)
                     var positionLowOffset = positionSizeInBytes + positionHighOffset;
                     var prevPositionHighOffset =  positionSizeInBytes + positionLowOffset;
                     var prevPositionLowOffset = positionSizeInBytes + prevPositionHighOffset;
                     var nextPositionHighOffset = positionSizeInBytes + prevPositionLowOffset;
                     var nextPositionLowOffset = positionSizeInBytes + nextPositionHighOffset;
-                    var vertexPickColorBufferOffset = k * (pickColorSizeInBytes * CesiumMath.SIXTY_FOUR_KILOBYTES) - vbo * pickColorSizeInBytes;
-                    var vertexTexCoordExpandWidthAndShowBufferOffset = k * (texCoordExpandWidthAndShowSizeInBytes * CesiumMath.SIXTY_FOUR_KILOBYTES) - vbo * texCoordExpandWidthAndShowSizeInBytes;
+                    var vertexPickColorBufferOffset = k * (pickColorSizeInBytes * (CesiumMath.SIXTY_FOUR_KILOBYTES - 1)) - vbo * pickColorSizeInBytes;
+                    var vertexTexCoordExpandWidthAndShowBufferOffset = k * (texCoordExpandWidthAndShowSizeInBytes * (CesiumMath.SIXTY_FOUR_KILOBYTES - 1)) - vbo * texCoordExpandWidthAndShowSizeInBytes;
 
                     var attributes = [{
                         index : attributeLocations.position3DHigh,
@@ -1323,7 +1323,7 @@ define([
                 for ( var j = 0; j < numberOfSegments; ++j) {
                     var segmentLength = segments[j] - 1.0;
                     for ( var k = 0; k < segmentLength; ++k) {
-                        if (indicesCount + 4 >= CesiumMath.SIXTY_FOUR_KILOBYTES - 1) {
+                        if (indicesCount + 4 >= CesiumMath.SIXTY_FOUR_KILOBYTES - 2) {
                             polyline._locatorBuckets.push({
                                 locator : bucketLocator,
                                 count : segmentIndexCount
@@ -1355,7 +1355,7 @@ define([
                     count : segmentIndexCount
                 });
 
-                if (indicesCount + 4 >= CesiumMath.SIXTY_FOUR_KILOBYTES - 1) {
+                if (indicesCount + 4 >= CesiumMath.SIXTY_FOUR_KILOBYTES - 2) {
                     vertexBufferOffset.push(0);
                     indices = [];
                     totalIndices.push(indices);

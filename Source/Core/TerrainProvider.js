@@ -104,8 +104,8 @@ define([
      */
     TerrainProvider.getRegularGridIndices = function(width, height) {
         //>>includeStart('debug', pragmas.debug);
-        if (width * height > 64 * 1024) {
-            throw new DeveloperError('The total number of vertices (width * height) must be less than or equal to 65536.');
+        if (width * height >= 64 * 1024) {
+            throw new DeveloperError('The total number of vertices (width * height) must be less than 65536.');
         }
         //>>includeEnd('debug');
 
