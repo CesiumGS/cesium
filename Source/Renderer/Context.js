@@ -501,7 +501,7 @@ define([
          */
         standardDerivatives : {
             get : function() {
-                return !!this._standardDerivatives || this._webgl2;
+                return !!this._standardDerivatives;
             }
         },
 
@@ -528,7 +528,7 @@ define([
          */
         depthTexture : {
             get : function() {
-                return !!this._depthTexture || this._webgl2;
+                return !!this._depthTexture;
             }
         },
 
@@ -541,7 +541,7 @@ define([
          */
         floatingPointTexture : {
             get : function() {
-                return !!this._textureFloat || this._webgl2;
+                return !!this._textureFloat;
             }
         },
 
@@ -615,7 +615,7 @@ define([
          */
         fragmentDepth : {
             get : function() {
-                return !!this._fragDepth || this._webgl2;
+                return !!this._fragDepth;
             }
         },
 
