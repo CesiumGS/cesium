@@ -2676,9 +2676,7 @@ define([
         var proj = Cartesian3.multiplyByScalar(camera.directionWC, Cartesian3.dot(toCenter, camera.directionWC), scratchProj);
         var distance = Math.max(frustum.near, Cartesian3.magnitude(proj) - radius);
 
-        scratchDrawingBufferDimensions.x = context.drawingBufferWidth;
-        scratchDrawingBufferDimensions.y = context.drawingBufferHeight;
-        var pixelSize = frustum.getPixelSize(scratchDrawingBufferDimensions, distance);
+        var pixelSize = frustum.getPixelDimensions(context.drawingBufferWidth, context.drawingBufferHeight, distance, new Cartesian2());
         var pixelScale = Math.max(pixelSize.x, pixelSize.y);
 
         return pixelScale;
