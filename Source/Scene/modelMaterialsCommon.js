@@ -324,11 +324,17 @@ define([
         // TODO: Generate shader strings
         shaders[vertexShaderId] = {
             type: WebGLConstants.VERTEX_SHADER,
-            uri: ''
+            uri: '',
+            extras: {
+                source: vertexShader
+            }
         };
         shaders[fragmentShaderId] = {
             type: WebGLConstants.FRAGMENT_SHADER,
-            uri: ''
+            uri: '',
+            extras: {
+                source: fragmentShader
+            }
         };
 
         // Add program

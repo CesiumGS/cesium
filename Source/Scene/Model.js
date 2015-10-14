@@ -1112,7 +1112,13 @@ define([
                 var shader = shaders[name];
 
                 // Shader references either uri (external or base64-encoded) or bufferView
-                if (defined(shader.extensions) &&
+                if (defined(shader.extras) && defined(shader.extras.source)) {
+                    model._loadResources.shaders[name] = {
+                        source : shader.extras.source,
+                        bufferView : undefined
+                    };
+                }
+                else if (defined(shader.extensions) &&
                     (defined(shader.extensions.CESIUM_binary_glTF) || defined(shader.extensions.KHR_binary_glTF))) {
                     var binary;
                     if (defined(shader.extensions.CESIUM_binary_glTF)) {
