@@ -269,7 +269,6 @@ define([
     };
 
     /**
-     * @Deprecated
      * Returns the pixel's width and height in meters.
      *
      * @param {Cartesian2} drawingBufferDimensions A {@link Cartesian2} with width and height in the x and y properties, respectively.
@@ -284,6 +283,8 @@ define([
      * // Example 1
      * // Get the width and height of a pixel.
      * var pixelSize = camera.frustum.getPixelSize(new Cesium.Cartesian2(canvas.clientWidth, canvas.clientHeight));
+     *
+     * @deprecated
      */
     OrthographicFrustum.prototype.getPixelSize = function(drawingBufferDimensions, distance, result) {
         update(this);
