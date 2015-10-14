@@ -23,9 +23,9 @@ define([
         '../Renderer/VertexArrayFacade',
         '../Shaders/PointPrimitiveCollectionFS',
         '../Shaders/PointPrimitiveCollectionVS',
-        './PointPrimitive',
         './BlendingState',
         './Pass',
+        './PointPrimitive',
         './SceneMode'
     ], function(
         BoundingSphere,
@@ -51,9 +51,9 @@ define([
         VertexArrayFacade,
         PointPrimitiveCollectionFS,
         PointPrimitiveCollectionVS,
-        PointPrimitive,
         BlendingState,
         Pass,
+        PointPrimitive,
         SceneMode) {
     "use strict";
 
