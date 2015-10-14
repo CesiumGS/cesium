@@ -242,7 +242,7 @@ define([
                     lowerCase = name.toLowerCase();
                     techniqueParameters[lowerCase] = {
                         type: typeValue
-                    }
+                    };
                 }
             }
         }
@@ -279,7 +279,7 @@ define([
                 techniqueParameters[lowerCase] = {
                     semantic: attribute,
                     type: typeValue
-                }
+                };
             }
         }
 
