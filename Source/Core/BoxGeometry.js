@@ -1,30 +1,29 @@
 /*global define*/
 define([
-        './BoundingSphere',
-        './Cartesian3',
-        './ComponentDatatype',
-        './defaultValue',
-        './defined',
-        './deprecationWarning',
-        './DeveloperError',
-        './Geometry',
-        './GeometryAttribute',
-        './GeometryAttributes',
-        './PrimitiveType',
-        './VertexFormat'
-    ], function(
-        BoundingSphere,
-        Cartesian3,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        deprecationWarning,
-        DeveloperError,
-        Geometry,
-        GeometryAttribute,
-        GeometryAttributes,
-        PrimitiveType,
-        VertexFormat) {
+    './BoundingSphere',
+    './Cartesian3',
+    './ComponentDatatype',
+    './defaultValue',
+    './defined',
+    './deprecationWarning',
+    './DeveloperError',
+    './Geometry',
+    './GeometryAttribute',
+    './GeometryAttributes',
+    './PrimitiveType',
+    './VertexFormat'
+], function (BoundingSphere,
+             Cartesian3,
+             ComponentDatatype,
+             defaultValue,
+             defined,
+             deprecationWarning,
+             DeveloperError,
+             Geometry,
+             GeometryAttribute,
+             GeometryAttributes,
+             PrimitiveType,
+             VertexFormat) {
     "use strict";
 
     var diffScratch = new Cartesian3();
@@ -38,8 +37,6 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {Cartesian3} options.minimum The minimum x, y, and z coordinates of the box.
      * @param {Cartesian3} options.maximum The maximum x, y, and z coordinates of the box.
-     * @param {Cartesian3} options.minimumCorner The minimum x, y, and z coordinates of the box.
-     * @param {Cartesian3} options.maximumCorner The maximum x, y, and z coordinates of the box.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
      * @see BoxGeometry.fromDimensions
@@ -56,7 +53,7 @@ define([
      * });
      * var geometry = Cesium.BoxGeometry.createGeometry(box);
      */
-    var BoxGeometry = function(options) {
+    var BoxGeometry = function (options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var min = options.minimum;
@@ -110,7 +107,7 @@ define([
      * });
      * var geometry = Cesium.BoxGeometry.createGeometry(box);
      */
-    BoxGeometry.fromDimensions = function(options) {
+    BoxGeometry.fromDimensions = function (options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var dimensions = options.dimensions;
 
@@ -128,9 +125,9 @@ define([
         var max = corner;
 
         var newOptions = {
-            minimum : min,
-            maximum : max,
-            vertexFormat : options.vertexFormat
+            minimum: min,
+            maximum: max,
+            vertexFormat: options.vertexFormat
         };
         return new BoxGeometry(newOptions);
     };
@@ -157,7 +154,7 @@ define([
      *      boundingBox: aabb
      * });
      */
-    BoxGeometry.fromAxisAlignedBoundingBox = function(boundingBox) {
+    BoxGeometry.fromAxisAlignedBoundingBox = function (boundingBox) {
         if (!defined(boundingBox)) {
             throw new DeveloperError('boundingBox is required.');
         }
@@ -166,8 +163,8 @@ define([
         var max = boundingBox.maximum;
 
         var newOptions = {
-            minimum : min,
-            maximum : max
+            minimum: min,
+            maximum: max
         };
         return new BoxGeometry(newOptions);
     };
@@ -186,7 +183,7 @@ define([
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
-    BoxGeometry.pack = function(value, array, startingIndex) {
+    BoxGeometry.pack = function (value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required');
@@ -207,9 +204,9 @@ define([
     var scratchMax = new Cartesian3();
     var scratchVertexFormat = new VertexFormat();
     var scratchOptions = {
-        minimum : scratchMin,
-        maximum : scratchMax,
-        vertexFormat : scratchVertexFormat
+        minimum: scratchMin,
+        maximum: scratchMax,
+        vertexFormat: scratchVertexFormat
     };
 
     /**
@@ -220,7 +217,7 @@ define([
      * @param {BoxGeometry} [result] The object into which to store the result.
      * @returns {BoxGeometry} The modified result parameter or a new BoxGeometry instance if one was not provided.
      */
-    BoxGeometry.unpack = function(array, startingIndex, result) {
+    BoxGeometry.unpack = function (array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(array)) {
             throw new DeveloperError('array is required');
@@ -250,7 +247,7 @@ define([
      * @param {BoxGeometry} boxGeometry A description of the box.
      * @returns {Geometry} The computed vertices and indices.
      */
-    BoxGeometry.createGeometry = function(boxGeometry) {
+    BoxGeometry.createGeometry = function (boxGeometry) {
         var min = boxGeometry._minimum;
         var max = boxGeometry._maximum;
         var vertexFormat = boxGeometry._vertexFormat;
@@ -260,22 +257,22 @@ define([
         var positions;
 
         if (vertexFormat.position &&
-                (vertexFormat.st || vertexFormat.normal || vertexFormat.binormal || vertexFormat.tangent)) {
+            (vertexFormat.st || vertexFormat.normal || vertexFormat.binormal || vertexFormat.tangent)) {
             if (vertexFormat.position) {
                 // 8 corner points.  Duplicated 3 times each for each incident edge/face.
                 positions = new Float64Array(6 * 4 * 3);
 
                 // +z face
-                positions[0]  = min.x;
-                positions[1]  = min.y;
-                positions[2]  = max.z;
-                positions[3]  = max.x;
-                positions[4]  = min.y;
-                positions[5]  = max.z;
-                positions[6]  = max.x;
-                positions[7]  = max.y;
-                positions[8]  = max.z;
-                positions[9]  = min.x;
+                positions[0] = min.x;
+                positions[1] = min.y;
+                positions[2] = max.z;
+                positions[3] = max.x;
+                positions[4] = min.y;
+                positions[5] = max.z;
+                positions[6] = max.x;
+                positions[7] = max.y;
+                positions[8] = max.z;
+                positions[9] = min.x;
                 positions[10] = max.y;
                 positions[11] = max.z;
 
@@ -350,9 +347,9 @@ define([
                 positions[71] = max.z;
 
                 attributes.position = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : positions
+                    componentDatatype: ComponentDatatype.DOUBLE,
+                    componentsPerAttribute: 3,
+                    values: positions
                 });
             }
 
@@ -360,16 +357,16 @@ define([
                 var normals = new Float32Array(6 * 4 * 3);
 
                 // +z face
-                normals[0]  = 0.0;
-                normals[1]  = 0.0;
-                normals[2]  = 1.0;
-                normals[3]  = 0.0;
-                normals[4]  = 0.0;
-                normals[5]  = 1.0;
-                normals[6]  = 0.0;
-                normals[7]  = 0.0;
-                normals[8]  = 1.0;
-                normals[9]  = 0.0;
+                normals[0] = 0.0;
+                normals[1] = 0.0;
+                normals[2] = 1.0;
+                normals[3] = 0.0;
+                normals[4] = 0.0;
+                normals[5] = 1.0;
+                normals[6] = 0.0;
+                normals[7] = 0.0;
+                normals[8] = 1.0;
+                normals[9] = 0.0;
                 normals[10] = 0.0;
                 normals[11] = 1.0;
 
@@ -444,9 +441,9 @@ define([
                 normals[71] = 0.0;
 
                 attributes.normal = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    values : normals
+                    componentDatatype: ComponentDatatype.FLOAT,
+                    componentsPerAttribute: 3,
+                    values: normals
                 });
             }
 
@@ -454,18 +451,18 @@ define([
                 var texCoords = new Float32Array(6 * 4 * 2);
 
                 // +z face
-                texCoords[0]  = 0.0;
-                texCoords[1]  = 0.0;
-                texCoords[2]  = 1.0;
-                texCoords[3]  = 0.0;
-                texCoords[4]  = 1.0;
-                texCoords[5]  = 1.0;
-                texCoords[6]  = 0.0;
-                texCoords[7]  = 1.0;
+                texCoords[0] = 0.0;
+                texCoords[1] = 0.0;
+                texCoords[2] = 1.0;
+                texCoords[3] = 0.0;
+                texCoords[4] = 1.0;
+                texCoords[5] = 1.0;
+                texCoords[6] = 0.0;
+                texCoords[7] = 1.0;
 
                 // -z face
-                texCoords[8]  = 1.0;
-                texCoords[9]  = 0.0;
+                texCoords[8] = 1.0;
+                texCoords[9] = 0.0;
                 texCoords[10] = 0.0;
                 texCoords[11] = 0.0;
                 texCoords[12] = 0.0;
@@ -514,9 +511,9 @@ define([
                 texCoords[47] = 1.0;
 
                 attributes.st = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 2,
-                    values : texCoords
+                    componentDatatype: ComponentDatatype.FLOAT,
+                    componentsPerAttribute: 2,
+                    values: texCoords
                 });
             }
 
@@ -524,16 +521,16 @@ define([
                 var tangents = new Float32Array(6 * 4 * 3);
 
                 // +z face
-                tangents[0]  = 1.0;
-                tangents[1]  = 0.0;
-                tangents[2]  = 0.0;
-                tangents[3]  = 1.0;
-                tangents[4]  = 0.0;
-                tangents[5]  = 0.0;
-                tangents[6]  = 1.0;
-                tangents[7]  = 0.0;
-                tangents[8]  = 0.0;
-                tangents[9]  = 1.0;
+                tangents[0] = 1.0;
+                tangents[1] = 0.0;
+                tangents[2] = 0.0;
+                tangents[3] = 1.0;
+                tangents[4] = 0.0;
+                tangents[5] = 0.0;
+                tangents[6] = 1.0;
+                tangents[7] = 0.0;
+                tangents[8] = 0.0;
+                tangents[9] = 1.0;
                 tangents[10] = 0.0;
                 tangents[11] = 0.0;
 
@@ -608,9 +605,9 @@ define([
                 tangents[71] = 0.0;
 
                 attributes.tangent = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    values : tangents
+                    componentDatatype: ComponentDatatype.FLOAT,
+                    componentsPerAttribute: 3,
+                    values: tangents
                 });
             }
 
@@ -702,9 +699,9 @@ define([
                 binormals[71] = 1.0;
 
                 attributes.binormal = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    values : binormals
+                    componentDatatype: ComponentDatatype.FLOAT,
+                    componentsPerAttribute: 3,
+                    values: binormals
                 });
             }
 
@@ -788,9 +785,9 @@ define([
             positions[23] = max.z;
 
             attributes.position = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.DOUBLE,
-                componentsPerAttribute : 3,
-                values : positions
+                componentDatatype: ComponentDatatype.DOUBLE,
+                componentsPerAttribute: 3,
+                values: positions
             });
 
             // 12 triangles:  6 faces, 2 triangles each.
@@ -849,10 +846,10 @@ define([
         var radius = Cartesian3.magnitude(diff) * 0.5;
 
         return new Geometry({
-            attributes : attributes,
-            indices : indices,
-            primitiveType : PrimitiveType.TRIANGLES,
-            boundingSphere : new BoundingSphere(Cartesian3.ZERO, radius)
+            attributes: attributes,
+            indices: indices,
+            primitiveType: PrimitiveType.TRIANGLES,
+            boundingSphere: new BoundingSphere(Cartesian3.ZERO, radius)
         });
     };
 

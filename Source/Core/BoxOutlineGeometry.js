@@ -36,8 +36,6 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {Cartesian3} options.minimum The minimum x, y, and z coordinates of the box.
      * @param {Cartesian3} options.maximum The maximum x, y, and z coordinates of the box.
-     * @param {Cartesian3} options.minimumCorner The minimum x, y, and z coordinates of the box.
-     * @param {Cartesian3} options.maximumCorner The maximum x, y, and z coordinates of the box.
      *
      * @see BoxOutlineGeometry.fromDimensions
      * @see BoxOutlineGeometry.createGeometry
