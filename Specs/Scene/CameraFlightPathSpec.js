@@ -119,7 +119,7 @@ defineSuite([
     });
 
     it('creates an animation in Columbus view', function() {
-        scene.mode = SceneMode.COLUMBUS_VIEW;
+        scene._mode = SceneMode.COLUMBUS_VIEW;
         var camera = scene.camera;
 
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
@@ -147,7 +147,7 @@ defineSuite([
     });
 
     it('creates an animation in 2D', function() {
-        scene.mode = SceneMode.SCENE2D;
+        scene._mode = SceneMode.SCENE2D;
         var camera = scene.camera;
 
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
@@ -246,7 +246,7 @@ defineSuite([
     });
 
     it('duration is 0 when destination is the same as camera position in 2D', function() {
-        scene.mode = SceneMode.SCENE2D;
+        scene._mode = SceneMode.SCENE2D;
         var camera = scene.camera;
 
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
@@ -269,7 +269,7 @@ defineSuite([
     });
 
     it('duration is 0 when destination is the same as camera position in 3D', function() {
-        scene.mode = SceneMode.SCENE3D;
+        scene._mode = SceneMode.SCENE3D;
         var camera = scene.camera;
 
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
@@ -286,7 +286,7 @@ defineSuite([
     });
 
     it('duration is 0 when destination is the same as camera position in CV', function() {
-        scene.mode = SceneMode.COLUMBUS_VIEW;
+        scene._mode = SceneMode.COLUMBUS_VIEW;
         var camera = scene.camera;
 
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
@@ -305,7 +305,7 @@ defineSuite([
     });
 
     it('creates an animation in 2D 0 duration', function() {
-        scene.mode = SceneMode.SCENE2D;
+        scene._mode = SceneMode.SCENE2D;
         var camera = scene.camera;
 
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
@@ -336,7 +336,7 @@ defineSuite([
     });
 
     it('creates an animation in Columbus view 0 duration', function() {
-        scene.mode = SceneMode.COLUMBUS_VIEW;
+        scene._mode = SceneMode.COLUMBUS_VIEW;
         var camera = scene.camera;
 
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
