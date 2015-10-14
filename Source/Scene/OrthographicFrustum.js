@@ -280,8 +280,6 @@ define([
      * @exception {DeveloperError} drawingBufferDimensions.y must be greater than zero.
      *
      * @example
-     * // Example 1
-     * // Get the width and height of a pixel.
      * var pixelSize = camera.frustum.getPixelSize(new Cesium.Cartesian2(canvas.clientWidth, canvas.clientHeight));
      *
      * @deprecated
