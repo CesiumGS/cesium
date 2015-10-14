@@ -140,18 +140,23 @@ defineSuite([
     });
 
     it('gets the standard derivatives extension', function() {
-        var fs =
-            '#ifdef GL_OES_standard_derivatives\n' +
-            '  #extension GL_OES_standard_derivatives : enable\n' +
-            '#endif\n' +
+        var fs = '';
+
+        if (context.standardDerivatives && !context._webgl2) {
+            fs += '#extension GL_OES_standard_derivatives : enable\n';
+        }
+
+        fs +=
             'void main()\n' +
-            '{\n' +
-            '#ifdef GL_OES_standard_derivatives\n' +
-            '  gl_FragColor = vec4(dFdx(1.0), dFdy(1.0), 1.0, 1.0);\n' +
-            '#else\n' +
-            '  gl_FragColor = vec4(1.0);\n' +
-            '#endif\n' +
-            '}';
+            '{\n';
+         
+        if (context.standardDerivatives) {
+            fs += '  gl_FragColor = vec4(dFdx(1.0), dFdy(1.0), 1.0, 1.0);\n';
+        } else {
+            fs += '  gl_FragColor = vec4(1.0);\n';
+        }
+         
+         fs += '}';
 
         var pixel = renderFragment(context, fs);
 
@@ -218,19 +223,28 @@ defineSuite([
         var pixel = renderFragment(context, fs, 0.5, true);
         expect(pixel).toEqual([255, 0, 0, 255]);
 
-        var fsDragDepth =
-            '#ifdef GL_EXT_frag_depth\n' +
-            '  #extension GL_EXT_frag_depth : enable\n' +
-            '#endif\n' +
+        var fsFragDepth = '';
+        
+        if (context.fragmentDepth && !context._webgl2) {
+            fsFragDepth += '#extension GL_EXT_frag_depth : enable\n';
+        }
+        
+        fsFragDepth += 
             'void main()\n' +
-            '{\n' +
-            '  gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);\n' +
-            '#ifdef GL_EXT_frag_depth\n' +
-            '  gl_FragDepthEXT = 0.0;\n' +
-            '#endif\n' +
-            '}';
+            '{\n';
+            '    gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);\n';
+        
+        if (context.fragmentDepth) {
+            fsFragDepth += '    gl_FragDepth';
+            if (!context._webgl2) {
+                fsFragDepth += 'EXT';
+            }
+            fsFragDepth += ' = 0.0;\n';
+        }
+        
+        fsFragDepth += '}\n';
 
-        pixel = renderFragment(context, fsDragDepth, 1.0, false);
+        pixel = renderFragment(context, fsFragDepth, 1.0, false);
 
         if (context.fragmentDepth) {
             expect(pixel).toEqual([0, 255, 0, 255]);
