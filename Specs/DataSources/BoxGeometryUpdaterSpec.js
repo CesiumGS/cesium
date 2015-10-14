@@ -163,7 +163,7 @@ defineSuite([
         if (options.fill) {
             instance = updater.createFillGeometryInstance(time);
             geometry = instance.geometry;
-            expect(geometry._maximumCorner).toEqual(Cartesian3.multiplyByScalar(options.dimensions, 0.5, new Cartesian3()));
+            expect(geometry._maximum).toEqual(Cartesian3.multiplyByScalar(options.dimensions, 0.5, new Cartesian3()));
 
             attributes = instance.attributes;
             if (options.material instanceof ColorMaterialProperty) {
