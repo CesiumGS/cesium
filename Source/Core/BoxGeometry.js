@@ -139,7 +139,6 @@ define([
      * Creates a cube from the dimensions of an AxisAlignedBoundingBox.
      *
      * @param {AxisAlignedBoundingBox} boundingBox A description of the AxisAlignedBoundingBox.
-     * @deprecated @param
      * @returns {BoxGeometry}
      *
      * @exception {DeveloperError} AxisAlignedBoundingBox must be defined.
