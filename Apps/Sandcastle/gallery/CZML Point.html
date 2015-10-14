@@ -28,39 +28,40 @@
 function startup(Cesium) {
   "use strict";
   //Sandcastle_Begin
-  var czml = [
-    {
-      "id" : "document",
-      "name" : "CZML Point",
-      "version" : "1.0"
+var czml = [
+  {
+    "id" : "document",
+    "name" : "CZML Point",
+    "version" : "1.0"
+  },
+  {
+    "id" : "point 1",
+    "name": "point",
+    "position" : {
+      "cartographicDegrees" : [-111.0, 40.0, 150000.0]
     },
-    {
-      "id" : "point 1",
-      "name": "point",
-      "position" : {
-        "cartographicDegrees" : [-111.0, 40.0, 150000.0]
+    "point": {
+      "color": {
+        "rgba": [100,0, 200, 255]
       },
-      "point": {
-        "color": {
-          "rgba": [100,0, 200, 255]
-        },
-        "outlineColor": {
-          "rgba": [200,0, 200, 255]
-        },
-        "pixelSize": {
-          "number": 10
-        },
-        "show": true
+      "outlineColor": {
+        "rgba": [200,0, 200, 255]
+      },
+      "pixelSize": {
+        "number": 10
       }
     }
-  ];
+  }
+];
 
 
-  var viewer = new Cesium.Viewer('cesiumContainer');
-  viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
+var viewer = new Cesium.Viewer('cesiumContainer');
+var dataSource = Cesium.CzmlDataSource.load(czml);
+viewer.dataSources.add(dataSource);
+viewer.zoomTo(dataSource);
 
-  //Sandcastle_End
-  Sandcastle.finishedLoading();
+//Sandcastle_End
+Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {
   startup(Cesium);

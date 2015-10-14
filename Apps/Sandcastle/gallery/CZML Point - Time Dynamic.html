@@ -29,41 +29,40 @@
 function startup(Cesium) {
   "use strict";
   //Sandcastle_Begin
-  var czml = [
-    {
-      "id" : "document",
-      "name" : "CZML Point - Time Dynamic",
-      "version" : "1.0"
-    }, {
-      "id" : "point",
-      "availability" :"2012-08-04T16:00:00Z/2012-08-04T16:05:00Z",
-      "position" : {
-        "epoch" : "2012-08-04T16:00:00Z",
-        "cartographicDegrees" : [
-          0,   -70, 20, 150000,
-          100, -80, 44, 150000,
-          200, -90, 18, 150000,
-          300, -98, 52, 150000
-        ]
+var czml = [
+  {
+    "id" : "document",
+    "name" : "CZML Point - Time Dynamic",
+    "version" : "1.0"
+  }, {
+    "id" : "point",
+    "availability" :"2012-08-04T16:00:00Z/2012-08-04T16:05:00Z",
+    "position" : {
+      "epoch" : "2012-08-04T16:00:00Z",
+      "cartographicDegrees" : [
+        0,   -70, 20, 150000,
+        100, -80, 44, 150000,
+        200, -90, 18, 150000,
+        300, -98, 52, 150000
+      ]
+    },
+    "point" : {
+      "color" : {
+        "rgba" : [50, 0, 200, 255]
       },
-      "point" : {
-        "color" : {
-          "rgba" : [50, 0, 200, 255]
-        },
-        "outlineColor" : {
-          "rgba" : [200, 0, 20, 20]
-        },
-        "pixelSize" : 15,
-        "show" : true
-      }
+      "outlineColor" : {
+        "rgba" : [200, 0, 20, 20]
+      },
+      "pixelSize" : 15
     }
-  ];
+  }
+];
 
-  var viewer = new Cesium.Viewer('cesiumContainer');
-  viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
+var viewer = new Cesium.Viewer('cesiumContainer');
+viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
 
-  //Sandcastle_End
-  Sandcastle.finishedLoading();
+//Sandcastle_End
+Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {
   startup(Cesium);
