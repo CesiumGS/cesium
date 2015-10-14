@@ -11,7 +11,7 @@ Change Log
   * Depreciated `BoxOutlineGeometry.minimumCorner` and `BoxOutlineGeometry.maximumCorner`, use `BoxOutlineGeometry.minimum` and `BoxOutlineGeometry.maximum` instead. These will be removed in 1.17.
 * Decreased GPU memory usage in `BillboardCollection` and `LabelCollection` by using the WebGL ANGLE_instanced_arrays extension.
 * Added CZML examples to Sandcastle.  See the new CZML tab.
-* Fixed token issue in ArcGisMapServerImageryProvider.
+* Fixed token issue in `ArcGisMapServerImageryProvider`.
 * `ImageryLayerFeatureInfo` now has an `imageryLayer` property, indicating the layer that contains the feature.
 * Added `BoxOutlineGeometry.fromAxisAlignedBoundingBox` and `BoxGeometry.fromAxisAlignedBoundingBox` functions.
 

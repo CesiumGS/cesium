@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
   <meta name="description" content="CZML Polyline">
   <meta name="cesium-sandcastle-labels" content="CZML">
@@ -28,105 +28,104 @@
 function startup(Cesium) {
   "use strict";
   //Sandcastle_Begin
-  var czml = [
-    {
-      "id" : "document",
-      "name" : "CZML Geometries: Polyline",
-      "version" : "1.0"
-    },
-    {
-      "id" : "redLine",
-      "name" : "Red line on the surface",
-      "polyline" : {
-        "positions" : {
-          "cartographicDegrees" : [
-            -75, 35, 0,
-            -125, 35, 0
-          ]
-        },
-        "show" : true,
-        "material" : {
-          "solidColor" : {
-            "color" : {
-              "rgba" : [255, 0, 0, 255]
-            }
+var czml = [
+  {
+    "id" : "document",
+    "name" : "CZML Geometries: Polyline",
+    "version" : "1.0"
+  },
+  {
+    "id" : "redLine",
+    "name" : "Red line on the surface",
+    "polyline" : {
+      "positions" : {
+        "cartographicDegrees" : [
+          -75, 35, 0,
+          -125, 35, 0
+        ]
+      },
+      "material" : {
+        "solidColor" : {
+          "color" : {
+            "rgba" : [255, 0, 0, 255]
           }
-        },
-        "width" : 5
-      }
-    },
-    {
-      "id" : "blueLine",
-      "name" : "Glowing blue line on the surface",
-      "polyline" : {
-        "positions" : {
-          "cartographicDegrees" : [
-            -75, 37, 0,
-            -125, 37, 0
-          ]
-        },
-        "show" : true,
-        "material" : {
-          "polylineGlow" : {
-            "color" : {
-              "rgba" : [0, 0, 255, 255],
-              "glowPower" : 0.2
-            }
-          }
-        },
-        "width" : 10
-      }
-    },
-    {
-      "id" : "orangeLine",
-      "name" : "Orange line with black outline at height and following the surface",
-      "polyline" : {
-        "positions" : {
-          "cartographicDegrees" : [
-            -75, 39, 250000,
-            -125, 39, 250000
-          ]
-        },
-        "show" : true,
-        "material" : {
-          "polylineOutline" : {
-            "color" : {
-              "rgba" : [255, 165, 0, 255]
-            },
-            "outlineColor" : {
-              "rgba" : [0, 0, 0, 255]
-            },
-            "outlineWidth" : 2
-          }
-        },
-        "width" : 5
-      }
-    },
-    {
-      "id" : "purpleLine",
-      "name" : "Purple straight line at height",
-      "polyline" : {
-        "positions" : {
-          "cartographicDegrees" : [
-            -75, 43, 500000,
-            -125, 43, 500000
-          ]
-        },
-        "material" : {
-          "solidColor" : {
-            "color" : {
-              "rgba" : [148, 0, 211, 255]
-            }
-          }
-        },
-        "followSurface" : false,
-        "width" : 10
-      }
+        }
+      },
+      "width" : 5
     }
-  ];
+  },
+  {
+    "id" : "blueLine",
+    "name" : "Glowing blue line on the surface",
+    "polyline" : {
+      "positions" : {
+        "cartographicDegrees" : [
+          -75, 37, 0,
+          -125, 37, 0
+        ]
+      },
+      "material" : {
+        "polylineGlow" : {
+          "color" : {
+            "rgba" : [0, 0, 255, 255],
+            "glowPower" : 0.2
+          }
+        }
+      },
+      "width" : 10
+    }
+  },
+  {
+    "id" : "orangeLine",
+    "name" : "Orange line with black outline at height and following the surface",
+    "polyline" : {
+      "positions" : {
+        "cartographicDegrees" : [
+          -75, 39, 250000,
+          -125, 39, 250000
+        ]
+      },
+      "material" : {
+        "polylineOutline" : {
+          "color" : {
+            "rgba" : [255, 165, 0, 255]
+          },
+          "outlineColor" : {
+            "rgba" : [0, 0, 0, 255]
+          },
+          "outlineWidth" : 2
+        }
+      },
+      "width" : 5
+    }
+  },
+  {
+    "id" : "purpleLine",
+    "name" : "Purple straight line at height",
+    "polyline" : {
+      "positions" : {
+        "cartographicDegrees" : [
+          -75, 43, 500000,
+          -125, 43, 500000
+        ]
+      },
+      "material" : {
+        "solidColor" : {
+          "color" : {
+            "rgba" : [148, 0, 211, 255]
+          }
+        }
+      },
+      "followSurface" : false,
+      "width" : 10
+    }
+  }
+];
 
-  var viewer = new Cesium.Viewer('cesiumContainer');
-  viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
+var viewer = new Cesium.Viewer('cesiumContainer');
+var dataSource = Cesium.CzmlDataSource.load(czml);
+viewer.dataSources.add(dataSource);
+viewer.zoomTo(dataSource);
 
   //Sandcastle_End
   Sandcastle.finishedLoading();

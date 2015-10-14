@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
   <meta name="description" content="CZML Spheres and Ellipsoids">
   <meta name="cesium-sandcastle-labels" content="CZML">
@@ -28,82 +28,81 @@
 function startup(Cesium) {
   "use strict";
   //Sandcastle_Begin
-  var czml = [
-    {
-      "id" : "document",
-      "name" : "CZML Geometries: Spheres and Ellipsoids",
-      "version" : "1.0"
+var czml = [
+  {
+    "id" : "document",
+    "name" : "CZML Geometries: Spheres and Ellipsoids",
+    "version" : "1.0"
+  },
+  {
+    "id" : "blueEllipsoid",
+    "name" : "blue ellipsoid",
+    "position" : {
+      "cartographicDegrees" : [-114.0, 40.0, 300000.0]
     },
-    {
-      "id" : "blueEllipsoid",
-      "name" : "blue ellipsoid",
-      "position" : {
-        "cartographicDegrees" : [-114.0, 40.0, 300000.0]
+    "ellipsoid" : {
+      "radii" : {
+        "cartesian" : [200000.0, 200000.0, 300000.0]
       },
-      "ellipsoid" : {
-        "radii" : {
-          "cartesian" : [200000.0, 200000.0, 300000.0]
-        },
-        "fill" : true,
-        "material" : {
-          "solidColor" : {
-            "color" : {
-              "rgbaf" : [0, 0, 1, 1]
-            }
+      "fill" : true,
+      "material" : {
+        "solidColor" : {
+          "color" : {
+            "rgba" : [0, 0, 255, 255]
           }
-        },
-        "show" : true
-      }
-    },
-    {
-      "id" : "redSphere",
-      "name" : "Red sphere with black outline",
-      "position" : {
-        "cartographicDegrees" : [-107.0, 40.0, 300000.0]
-      },
-      "ellipsoid" : {
-        "radii" : {
-          "cartesian" : [300000.0, 300000.0, 300000.0]
-        },
-        "fill" : true,
-        "material" : {
-          "solidColor" : {
-            "color" : {
-              "rgbaf" : [1, 0, 0, 0.5]
-            }
-          }
-        },
-        "outline" : true,
-        "outlineColor" : {
-          "rgbaf" : [0, 0, 0, 1]
-        },
-        "show" : true
-      }
-    },
-    {
-      "id" : "yellowEllipsoid",
-      "name" : "ellipsoid with yellow outline",
-      "position" : {
-        "cartographicDegrees" : [-100.0, 40.0, 300000.0]
-      },
-      "ellipsoid" : {
-        "radii" : {
-          "cartesian" : [200000.0, 200000.0, 300000.0]
-        },
-        "fill" : false,
-        "outline" : true,
-        "outlineColor" : {
-          "rgbaf" : [1, 1, 0, 1]
-        },
-        "slicePartitions" : 24,
-        "stackPartitions" : 36,
-        "show" : true
+        }
       }
     }
-  ];
+  },
+  {
+    "id" : "redSphere",
+    "name" : "Red sphere with black outline",
+    "position" : {
+      "cartographicDegrees" : [-107.0, 40.0, 300000.0]
+    },
+    "ellipsoid" : {
+      "radii" : {
+        "cartesian" : [300000.0, 300000.0, 300000.0]
+      },
+      "fill" : true,
+      "material" : {
+        "solidColor" : {
+          "color" : {
+            "rgba" : [255, 0, 0, 100]
+          }
+        }
+      },
+      "outline" : true,
+      "outlineColor" : {
+        "rgbaf" : [0, 0, 0, 1]
+      }
+    }
+  },
+  {
+    "id" : "yellowEllipsoid",
+    "name" : "ellipsoid with yellow outline",
+    "position" : {
+      "cartographicDegrees" : [-100.0, 40.0, 300000.0]
+    },
+    "ellipsoid" : {
+      "radii" : {
+        "cartesian" : [200000.0, 200000.0, 300000.0]
+      },
+      "fill" : false,
+      "outline" : true,
+      "outlineColor" : {
+        "rgba" : [255, 255, 0, 255]
+      },
+      "slicePartitions" : 24,
+      "stackPartitions" : 36
+    }
+  }
+];
 
-  var viewer = new Cesium.Viewer('cesiumContainer');
-  viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
+var viewer = new Cesium.Viewer('cesiumContainer');
+var dataSource = Cesium.CzmlDataSource.load(czml);
+viewer.dataSources.add(dataSource);
+viewer.zoomTo(dataSource);
 
   //Sandcastle_End
   Sandcastle.finishedLoading();
