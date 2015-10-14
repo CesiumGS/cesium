@@ -190,7 +190,6 @@ define([
         } while(defined(programs[programId]));
 
         // Add techniques
-        // TODO: Handle lights
         // TODO: Handle skinning
         var techniqueAttributes = {};
         for (var i=0;i<attributesCount;++i) {
