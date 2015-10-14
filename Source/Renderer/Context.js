@@ -214,30 +214,40 @@ define([
         }
 
         // TODO : should make useWebGL2 a context flag instead?
-        var useWebGL2 = true;
+        var defaultToWebGL2 = true;
         var webGL2Supported = (typeof WebGL2RenderingContext !== 'undefined');
-        if (useWebGL2 && webGL2Supported) {
-            this._originalGLContext = canvas.getContext('webgl2', webglOptions) || canvas.getContext('experimental-webgl2', webglOptions) || undefined;
+        var webGL2 = false;
+        var glContext;
+
+        if (defaultToWebGL2 && webGL2Supported) {
+            glContext = canvas.getContext('webgl2', webglOptions) || canvas.getContext('experimental-webgl2', webglOptions) || undefined;
+            if (defined(glContext)) {
+                webGL2 = true;
+            }
         }
-        if (!defined(this._originalGLContext)) {
-            this._originalGLContext = canvas.getContext('webgl', webglOptions) || canvas.getContext('experimental-webgl', webglOptions) || undefined;
+        if (!defined(glContext)) {
+            glContext = canvas.getContext('webgl', webglOptions) || canvas.getContext('experimental-webgl', webglOptions) || undefined;
         }
-        if (!defined(this._originalGLContext)) {
+        if (!defined(glContext)) {
             throw new RuntimeError('The browser supports WebGL, but initialization failed.');
         }
 
+        this._originalGLContext = glContext;
+        this._webgl2 = webGL2;
         this._id = createGuid();
 
         // Validation and logging disabled by default for speed.
-        this.validateFramebuffer = false;
+        this.validateFramebuffer = true;
         this.validateShaderProgram = false;
         this.logShaderCompilation = false;
 
         this._throwOnWebGLError = false;
+        // TODO : fix this later
+        var gl = this._gl = wrapGL(this._originalGLContext, throwOnError);
 
         this._shaderCache = new ShaderCache(this);
 
-        var gl = this._gl = this._originalGLContext;
+        //var gl = this._gl = this._originalGLContext;
 
         this._redBits = gl.getParameter(gl.RED_BITS);
         this._greenBits = gl.getParameter(gl.GREEN_BITS);
@@ -291,8 +301,18 @@ define([
         this._instancedArrays = getExtension(gl, ['ANGLE_instanced_arrays']);
 
         this._drawBuffers = getExtension(gl, ['WEBGL_draw_buffers']);
-        ContextLimits._maximumDrawBuffers = defined(this._drawBuffers) ? gl.getParameter(this._drawBuffers.MAX_DRAW_BUFFERS_WEBGL) : 1;
-        ContextLimits._maximumColorAttachments = defined(this._drawBuffers) ? gl.getParameter(this._drawBuffers.MAX_COLOR_ATTACHMENTS_WEBGL) : 1; // min when supported: 4
+        if (this.drawBuffers) {
+            if (this._webgl2) {
+                ContextLimits._maximumDrawBuffers = gl.getParameter(WebGLConstants.MAX_DRAW_BUFFERS);
+                ContextLimits._maximumColorAttachments = gl.getParameter(WebGLConstants.MAX_COLOR_ATTACHMENTS);
+            } else {
+                ContextLimits._maximumDrawBuffers = gl.getParameter(this._drawBuffers.MAX_DRAW_BUFFERS_WEBGL);
+                ContextLimits._maximumColorAttachments = gl.getParameter(this._drawBuffers.MAX_COLOR_ATTACHMENTS_WEBGL); // min when supported: 4
+            }
+        } else {
+            ContextLimits._maximumDrawBuffers = 1;
+            ContextLimits._maximumColorAttachments = 1;
+        }
 
         this._debugShaders = getExtension(gl, ['WEBGL_debug_shaders']);
 
@@ -481,7 +501,7 @@ define([
          */
         standardDerivatives : {
             get : function() {
-                return !!this._standardDerivatives;
+                return !!this._standardDerivatives || this._webgl2;
             }
         },
 
@@ -495,7 +515,7 @@ define([
          */
         elementIndexUint : {
             get : function() {
-                return !!this._elementIndexUint;
+                return !!this._elementIndexUint || this._webgl2;
             }
         },
 
@@ -508,7 +528,7 @@ define([
          */
         depthTexture : {
             get : function() {
-                return !!this._depthTexture;
+                return !!this._depthTexture || this._webgl2;
             }
         },
 
@@ -521,7 +541,7 @@ define([
          */
         floatingPointTexture : {
             get : function() {
-                return !!this._textureFloat;
+                return !!this._textureFloat || this._webgl2;
             }
         },
 
@@ -541,7 +561,46 @@ define([
          */
         vertexArrayObject : {
             get : function() {
-                return !!this._vertexArrayObject;
+                return !!this._vertexArrayObject || this._webgl2;
+            }
+        },
+
+        createVertexArray : {
+            get : function() {
+                var that = this;
+                return function() {
+                    if (that._webgl2) {
+                        that._gl.createVertexArray();
+                    } else {
+                        that._vertexArrayObject.createVertexArrayOES();
+                    }
+                };
+            }
+        },
+
+        bindVertexArray : {
+            get : function() {
+                var that = this;
+                return function(vertexArray) {
+                    if (that._webgl2) {
+                        that._gl.bindVertexArray(vertexArray);
+                    } else {
+                        that._vertexArrayObject.bindVertexArrayOES(vertexArray);
+                    }
+                };
+            }
+        },
+
+        deleteVertexArray : {
+            get : function() {
+                var that = this;
+                return function(vertexArray) {
+                    if (that._webgl2) {
+                        that._gl.deleteVertexArray(vertexArray);
+                    } else {
+                        that._vertexArrayObject.deleteVertexArrayOES(vertexArray);
+                    }
+                };
             }
         },
 
@@ -556,7 +615,7 @@ define([
          */
         fragmentDepth : {
             get : function() {
-                return !!this._fragDepth;
+                return !!this._fragDepth || this._webgl2;
             }
         },
 
@@ -569,7 +628,46 @@ define([
          */
         instancedArrays : {
             get : function() {
-                return !!this._instancedArrays;
+                return !!this._instancedArrays || this._webgl2;
+            }
+        },
+
+        drawElementsInstanced : {
+            get : function() {
+                var that = this;
+                return function(mode, count, type, offset, instanceCount) {
+                    if (that._webgl2) {
+                        that._gl.drawElementsInstanced(mode, count, type, offset, instanceCount);
+                    } else {
+                        that._instancedArrays.drawElementsInstancedANGLE(mode, count, type, offset, instanceCount);
+                    }
+                };
+            }
+        },
+
+        drawArraysInstanced : {
+            get : function() {
+                var that = this;
+                return function(mode, first, count, instanceCount) {
+                    if (that._webgl2) {
+                        that._gl.drawArraysInstanced(mode, first, count, instanceCount);
+                    } else {
+                        that._instancedArrays.drawArraysInstancedANGLE(mode, first, count, instanceCount);
+                    }
+                };
+            }
+        },
+
+        vertexAttribDivisor : {
+            get : function() {
+                var that = this;
+                return function(index, divisor) {
+                    if (that._webgl2) {
+                        that._gl.vertexAttribDivisor(index, divisor);
+                    } else {
+                        that._instancedArrays.vertexAttribDivisorANGLE(index, divisor);
+                    }
+                };
             }
         },
 
@@ -585,7 +683,20 @@ define([
          */
         drawBuffers : {
             get : function() {
-                return !!this._drawBuffers;
+                return !!this._drawBuffers || this._webgl2;
+            }
+        },
+
+        drawBuffersGL : {
+            get : function() {
+                var that = this;
+                return function(buffers) {
+                    if (that._webgl2) {
+                        that._gl.drawBuffers(buffers);
+                    } else {
+                        that._drawBuffers.drawBuffersWEBGL(buffers);
+                    }
+                };
             }
         },
 
@@ -759,7 +870,7 @@ define([
             }
 
             if (context.drawBuffers) {
-                context._drawBuffers.drawBuffersWEBGL(buffers);
+                context.drawBuffersGL(buffers);
             }
         }
     }
@@ -877,14 +988,14 @@ define([
             if (instanceCount === 0) {
                 context._gl.drawElements(primitiveType, count, indexBuffer.indexDatatype, offset);
             } else {
-                context._instancedArrays.drawElementsInstancedANGLE(primitiveType, count, indexBuffer.indexDatatype, offset, instanceCount);
+                context.drawElementsInstanced(primitiveType, count, indexBuffer.indexDatatype, offset, instanceCount);
             }
         } else {
             count = defaultValue(count, va.numberOfVertices);
             if (instanceCount === 0) {
                 context._gl.drawArrays(primitiveType, offset, count);
             } else {
-                context._instancedArrays.drawArraysInstancedANGLE(primitiveType, offset, count, instanceCount);
+                context.drawArraysInstanced(primitiveType, offset, count, instanceCount);
             }
         }
 
@@ -919,7 +1030,7 @@ define([
 
         var buffers = scratchBackBufferArray;
         if (this.drawBuffers) {
-            this._drawBuffers.drawBuffersWEBGL(scratchBackBufferArray);
+            this.drawBuffersGL(buffers);
         }
 
         var length = this._maxFrameTextureUnitIndex;
