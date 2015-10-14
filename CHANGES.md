@@ -1,20 +1,38 @@
 Change Log
 ==========
 
-### 1.14 - 2015-10-01
+### 1.15 - 2015-11-02
 
 * Breaking changes
-  * ...
+  * Deleted old `<subfolder>/package.json` and `*.profile.js` files, not used since we moved away from a Dojo-based build years ago.  This should allow future compatibility with newer systems like Browserify and Webpack.
 * Deprecated
-  * ...
+  * Deprecated `BoxGeometry.minimumCorner` and `BoxGeometry.maximumCorner`, use `BoxGeometry.minimum` and `BoxGeometry.maximum` instead. These will be removed in 1.17.
+  * Deprecated `BoxOutlineGeometry.minimumCorner` and `BoxOutlineGeometry.maximumCorner`, use `BoxOutlineGeometry.minimum` and `BoxOutlineGeometry.maximum` instead. These will be removed in 1.17.
+  * Made `EllipsoidPrimitive` private, use `EllipsoidGeometry` or `Entity.ellipsoid` instead.
+  * Deprecated `RectanglePrimitive`, use `RectangleGeometry` or `Entity.rectangle` instead. It will be removed in 1.17.
+  * Deprecated `EllipsoidPrimitive`, use `EllipsoidGeometry` or `Entity.ellipsoid` instead. It will be removed in 1.17.
+* Decreased GPU memory usage in `BillboardCollection` and `LabelCollection` by using the WebGL ANGLE_instanced_arrays extension.
+* Added CZML examples to Sandcastle.  See the new CZML tab.
+* Fixed token issue in `ArcGisMapServerImageryProvider`.
+* `ImageryLayerFeatureInfo` now has an `imageryLayer` property, indicating the layer that contains the feature.
+* Added `BoxOutlineGeometry.fromAxisAlignedBoundingBox` and `BoxGeometry.fromAxisAlignedBoundingBox` functions.
+
+### 1.14 - 2015-10-01
+
+* Fixed issues causing the terrain and sky to disappear when the camera is near the surface. [#2415](https://github.com/AnalyticalGraphicsInc/cesium/issues/2415) and [#2271](https://github.com/AnalyticalGraphicsInc/cesium/issues/2271)
+* Changed the `ScreenSpaceCameraController.minimumZoomDistance` default from `20.0` to `1.0`.
+* Added `Billboard.sizeInMeters`. `true` sets the billboard size to be measured in meters; otherwise, the size of the billboard is measured in pixels. Also added support for billboard `sizeInMeters` to entities and CZML.
+* Fixed a bug in `AssociativeArray` that would cause unbounded memory growth when adding and removing lots of items.
+* Provided a workaround for Safari 9 where WebGL constants can't be accessed through `WebGLRenderingContext`. Now constants are hard-coded in `WebGLConstants`. [#2989](https://github.com/AnalyticalGraphicsInc/cesium/issues/2989)
+* Added a workaround for Chrome 45, where the first character in a label with a small font size would not appear. [#3011](https://github.com/AnalyticalGraphicsInc/cesium/pull/3011)
 * Added `subdomains` option to the `WebMapTileServiceImageryProvider` constructor.
 * Added `subdomains` option to the `WebMapServiceImageryProvider` constructor.
 * Fix zooming in 2D when tracking an object. The zoom was based on location rather than the tracked object. [#2991](https://github.com/AnalyticalGraphicsInc/cesium/issues/2991)
 * Added `options.credit` parameter to `MapboxImageryProvider`.
-* Provided a workaround for Safari 9 where WebGL constants can't be accessed through `WebGLRenderingContext`. Now constants are hard-coded in `WebGLConstants`. [#2989](https://github.com/AnalyticalGraphicsInc/cesium/issues/2989)
 * Fixed an issue with drill picking at low frame rates that would cause a crash. [#3010](https://github.com/AnalyticalGraphicsInc/cesium/pull/3010)
 * Fixed a bug that prevented `setView` from working across all scene modes.
 * Fixed a bug that caused `camera.positionWC` to occasionally return the incorrect value.
+* Used all the template urls defined in the CesiumTerrain provider.[#3038](https://github.com/AnalyticalGraphicsInc/cesium/pull/3038)
 
 ### 1.13 - 2015-09-01
 
@@ -27,7 +45,7 @@ Change Log
         // draws the ellipse on top of the rectangle
         var ellipse = scene.groundPrimitives.add(new Cesium.GroundPrimitive({...}));
         var rectangle = scene.groundPrimitives.add(new Cesium.GroundPrimitive({...}));
-    
+
         // move the rectangle to draw on top of the ellipse
         scene.groundPrimitives.raise(rectangle);
 
@@ -52,7 +70,7 @@ Change Log
 * The default `CTRL + Left Click Drag` mouse behavior is now duplicated for `CTRL + Right Click Drag` for better compatibility with Firefox on Mac OS [#2872](https://github.com/AnalyticalGraphicsInc/cesium/pull/2913).
 * Fixed incorrect texture coordinates for `WallGeometry` [#2872](https://github.com/AnalyticalGraphicsInc/cesium/issues/2872)
 * Fixed `WallGeometry` bug that caused walls covering a short distance not to render. [#2897](https://github.com/AnalyticalGraphicsInc/cesium/issues/2897)
-* Fixed `PolygonGeometry` clockwise winding order bug. 
+* Fixed `PolygonGeometry` clockwise winding order bug.
 * Fixed extruded `RectangleGeometry` bug for small heights. [#2823](https://github.com/AnalyticalGraphicsInc/cesium/issues/2823)
 * Fixed `BillboardCollection` bounding sphere for billboards with a non-center vertical origin. [#2894](https://github.com/AnalyticalGraphicsInc/cesium/issues/2894)
 * Fixed a bug that caused `Camera.positionCartographic` to be incorrect. [#2838](https://github.com/AnalyticalGraphicsInc/cesium/issues/2838)

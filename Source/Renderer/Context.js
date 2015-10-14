@@ -280,6 +280,7 @@ define([
 
         this._vertexArrayObject = getExtension(gl, ['OES_vertex_array_object']);
         this._fragDepth = getExtension(gl, ['EXT_frag_depth']);
+        this._instancedArrays = getExtension(gl, ['ANGLE_instanced_arrays']);
 
         this._drawBuffers = getExtension(gl, ['WEBGL_draw_buffers']);
         ContextLimits._maximumDrawBuffers = defined(this._drawBuffers) ? gl.getParameter(this._drawBuffers.MAX_DRAW_BUFFERS_WEBGL) : 1;
@@ -306,6 +307,13 @@ define([
         this._currentPassState = ps;
         this._currentFramebuffer = undefined;
         this._maxFrameTextureUnitIndex = 0;
+
+        // Vertex attribute divisor state cache. Workaround for ANGLE (also look at VertexArray.setVertexAttribDivisor)
+        this._vertexAttribDivisors = [];
+        this._previousDrawInstanced = false;
+        for (var i = 0; i < ContextLimits._maximumVertexAttributes; i++) {
+            this._vertexAttribDivisors.push(0);
+        }
 
         this._pickObjects = {};
         this._nextPickColor = new Uint32Array(1);
@@ -541,6 +549,19 @@ define([
         fragmentDepth : {
             get : function() {
                 return !!this._fragDepth;
+            }
+        },
+
+        /**
+         * <code>true</code> if the ANGLE_instanced_arrays extension is supported.  This
+         * extension provides access to instanced rendering.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/ANGLE_instanced_arrays}
+         */
+        instancedArrays : {
+            get : function() {
+                return !!this._instancedArrays;
             }
         },
 
@@ -807,6 +828,7 @@ define([
         var va = drawCommand.vertexArray;
         var offset = drawCommand.offset;
         var count = drawCommand.count;
+        var instanceCount = drawCommand.instanceCount;
 
         //>>includeStart('debug', pragmas.debug);
         if (!PrimitiveType.validate(primitiveType)) {
@@ -818,11 +840,19 @@ define([
         }
 
         if (offset < 0) {
-            throw new DeveloperError('drawCommand.offset must be omitted or greater than or equal to zero.');
+            throw new DeveloperError('drawCommand.offset must be greater than or equal to zero.');
         }
 
         if (count < 0) {
-            throw new DeveloperError('drawCommand.count must be omitted or greater than or equal to zero.');
+            throw new DeveloperError('drawCommand.count must be greater than or equal to zero.');
+        }
+
+        if (instanceCount < 0) {
+            throw new DeveloperError('drawCommand.instanceCount must be greater than or equal to zero.');
+        }
+
+        if (instanceCount > 0 && !context.instancedArrays) {
+            throw new DeveloperError('Instanced arrays extension is not supported');
         }
         //>>includeEnd('debug');
 
@@ -836,10 +866,18 @@ define([
         if (defined(indexBuffer)) {
             offset = offset * indexBuffer.bytesPerIndex; // offset in vertices to offset in bytes
             count = defaultValue(count, indexBuffer.numberOfIndices);
-            context._gl.drawElements(primitiveType, count, indexBuffer.indexDatatype, offset);
+            if (instanceCount === 0) {
+                context._gl.drawElements(primitiveType, count, indexBuffer.indexDatatype, offset);
+            } else {
+                context._instancedArrays.drawElementsInstancedANGLE(primitiveType, count, indexBuffer.indexDatatype, offset, instanceCount);
+            }
         } else {
             count = defaultValue(count, va.numberOfVertices);
-            context._gl.drawArrays(primitiveType, offset, count);
+            if (instanceCount === 0) {
+                context._gl.drawArrays(primitiveType, offset, count);
+            } else {
+                context._instancedArrays.drawArraysInstancedANGLE(primitiveType, offset, count, instanceCount);
+            }
         }
 
         va._unBind();

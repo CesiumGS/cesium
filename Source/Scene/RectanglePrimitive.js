@@ -3,6 +3,7 @@ define([
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
@@ -17,6 +18,7 @@ define([
         Color,
         defaultValue,
         defined,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         Ellipsoid,
@@ -53,8 +55,13 @@ define([
      *   rectangle : Cesium.Rectangle.fromDegrees(0.0, 20.0, 10.0, 30.0)
      * });
      * primitives.add(rectanglePrimitive);
+     *
+     * @deprecated
+     * @private
      */
     var RectanglePrimitive = function(options) {
+        deprecationWarning('RectanglePrimitive', 'RectanglePrimitive has been deprecated.  Use RectangleGeometry or Entity.rectangle instead.');
+
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**

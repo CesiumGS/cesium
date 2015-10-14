@@ -132,6 +132,7 @@ define([
          * Gets the orthographic projection matrix computed from the view frustum.
          * @memberof OrthographicFrustum.prototype
          * @type {Matrix4}
+         * @readonly
          */
         projectionMatrix : {
             get : function() {
