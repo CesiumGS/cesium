@@ -14,7 +14,7 @@ Interested in contributing?  See the [wiki](https://github.com/AnalyticalGraphic
 
 ### Mission ###
 
-Our mission is to create the leading web-based globe and map for visualizing dynamic data.  We strive for the best possible performance, precision, visual quality, ease of use, platform support, and content.
+Our mission is to create the leading 3D globe and map for static and time-dynamic content, with the best possible performance, precision, visual quality, platform support, community, and ease of use.
 
 ### License ###
 

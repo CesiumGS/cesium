@@ -4,6 +4,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
@@ -18,6 +19,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         Ellipsoid,
@@ -77,8 +79,13 @@ define([
      *     10.0, 0.0,
      *     0.0, 10.0
      * ]);
+     *
+     * @deprecated
+     * @private
      */
     var Polygon = function(options) {
+        deprecationWarning('Polygon', 'Polygon has been deprecated.  Use PolygonGeometry or Entity.polygon instead.');
+
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
