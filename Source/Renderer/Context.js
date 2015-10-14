@@ -213,7 +213,7 @@ define([
             }
         }
 
-        var defaultToWebgl2 = true;
+        var defaultToWebgl2 = false;
         var webgl2Supported = (typeof WebGL2RenderingContext !== 'undefined');
         var webgl2 = false;
         var glContext;
