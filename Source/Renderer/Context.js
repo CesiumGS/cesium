@@ -69,6 +69,7 @@ define([
         WebGLConstants) {
     "use strict";
     /*global WebGLRenderingContext*/
+    /*global WebGL2RenderingContext*/
 
     function errorToString(gl, error) {
         var message = 'WebGL Error:  ';
@@ -212,8 +213,15 @@ define([
             }
         }
 
-        this._originalGLContext = canvas.getContext('webgl', webglOptions) || canvas.getContext('experimental-webgl', webglOptions) || undefined;
-
+        // TODO : should make useWebGL2 a context flag instead?
+        var useWebGL2 = true;
+        var webGL2Supported = (typeof WebGL2RenderingContext !== 'undefined');
+        if (useWebGL2 && webGL2Supported) {
+            this._originalGLContext = canvas.getContext('webgl2', webglOptions) || canvas.getContext('experimental-webgl2', webglOptions) || undefined;
+        }
+        if (!defined(this._originalGLContext)) {
+            this._originalGLContext = canvas.getContext('webgl', webglOptions) || canvas.getContext('experimental-webgl', webglOptions) || undefined;
+        }
         if (!defined(this._originalGLContext)) {
             throw new RuntimeError('The browser supports WebGL, but initialization failed.');
         }
