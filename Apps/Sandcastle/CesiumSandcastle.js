@@ -20,6 +20,7 @@ require({
         location : '../ThirdParty/codemirror-4.6'
     }]
 }, [
+        'CodeMirror/lib/codemirror',
         'dijit/layout/ContentPane',
         'dijit/popup',
         'dijit/registry',
@@ -36,7 +37,6 @@ require({
         'dojo/query',
         'Sandcastle/LinkButton',
         'Source/Cesium',
-        'CodeMirror/lib/codemirror',
         'CodeMirror/addon/hint/show-hint',
         'CodeMirror/addon/hint/javascript-hint',
         'CodeMirror/mode/javascript/javascript',
@@ -59,6 +59,7 @@ require({
         'dijit/ToolbarSeparator',
         'dojo/domReady!'
     ], function(
+        CodeMirror,
         ContentPane,
         popup,
         registry,
@@ -74,8 +75,7 @@ require({
         parser,
         query,
         LinkButton,
-        Cesium,
-        CodeMirror) {
+        Cesium) {
     "use strict";
 
     //In order for CodeMirror auto-complete to work, Cesium needs to be defined as a global.
