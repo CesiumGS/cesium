@@ -5,6 +5,7 @@ define([
         './ComponentDatatype',
         './defaultValue',
         './defined',
+        './deprecationWarning',
         './DeveloperError',
         './Geometry',
         './GeometryAttribute',
@@ -17,6 +18,7 @@ define([
         ComponentDatatype,
         defaultValue,
         defined,
+        deprecationWarning,
         DeveloperError,
         Geometry,
         GeometryAttribute,
@@ -36,6 +38,8 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {Cartesian3} options.minimum The minimum x, y, and z coordinates of the box.
      * @param {Cartesian3} options.maximum The maximum x, y, and z coordinates of the box.
+     * @param {Cartesian3} options.minimumCorner The minimum x, y, and z coordinates of the box.
+     * @param {Cartesian3} options.maximumCorner The maximum x, y, and z coordinates of the box.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
      * @see BoxGeometry.fromDimensions
@@ -54,15 +58,28 @@ define([
      */
     var BoxGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         var min = options.minimum;
         var max = options.maximum;
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(min)) {
-            throw new DeveloperError('options.minimum is required.');
+            if (defined(options.minimumCorner)) {
+                min = options.minimumCorner;
+                deprecationWarning('boxGeometry', 'options.minimumCorner is deprecated. Use options.minimum instead');
+            }
+            else {
+                throw new DeveloperError('options.minimum is required.');
+            }
         }
         if (!defined(max)) {
-            throw new DeveloperError('options.maximum is required');
+            if (defined(options.maximumCorner)) {
+                max = options.maximumCorner;
+                deprecationWarning('boxGeometry', 'options.maximumCorner is deprecated. Use options.maximum instead');
+            }
+            else {
+                throw new DeveloperError('options.maximum is required');
+            }
         }
         //>>includeEnd('debug');
 
@@ -121,8 +138,8 @@ define([
     /**
      * Creates a cube from the dimensions of an AxisAlignedBoundingBox.
      *
-     * @param {Object} options Object with the following properties:
-     * @param {AxisAlignedBoundingBox} options.boundingBox A description of the AxisAlignedBoundingBox.
+     * @param {AxisAlignedBoundingBox} boundingBox A description of the AxisAlignedBoundingBox.
+     * @deprecated @param
      * @returns {BoxGeometry}
      *
      * @exception {DeveloperError} AxisAlignedBoundingBox must be defined.

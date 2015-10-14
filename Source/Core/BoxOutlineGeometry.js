@@ -5,6 +5,7 @@ define([
         './ComponentDatatype',
         './defaultValue',
         './defined',
+        './deprecationWarning',
         './DeveloperError',
         './Geometry',
         './GeometryAttribute',
@@ -16,6 +17,7 @@ define([
         ComponentDatatype,
         defaultValue,
         defined,
+        deprecationWarning,
         DeveloperError,
         Geometry,
         GeometryAttribute,
@@ -34,6 +36,8 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {Cartesian3} options.minimum The minimum x, y, and z coordinates of the box.
      * @param {Cartesian3} options.maximum The maximum x, y, and z coordinates of the box.
+     * @param {Cartesian3} options.minimumCorner The minimum x, y, and z coordinates of the box.
+     * @param {Cartesian3} options.maximumCorner The maximum x, y, and z coordinates of the box.
      *
      * @see BoxOutlineGeometry.fromDimensions
      * @see BoxOutlineGeometry.createGeometry
@@ -56,10 +60,22 @@ define([
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(min)) {
-            throw new DeveloperError('options.minimum is required.');
+            if (defined(options.minimumCorner)) {
+                min = options.minimumCorner;
+                deprecationWarning('boxOutlineGeometry', 'options.minimumCorner is deprecated. Use options.minimum instead');
+            }
+            else {
+                throw new DeveloperError('options.minimum is required.');
+            }
         }
         if (!defined(max)) {
-            throw new DeveloperError('options.maximum is required');
+            if (defined(options.maximumCorner)) {
+                max = options.maximumCorner;
+                deprecationWarning('boxOutlineGeometry', 'options.maximumCorner is deprecated. Use options.maximum instead');
+            }
+            else {
+                throw new DeveloperError('options.maximum is required');
+            }
         }
         //>>includeEnd('debug');
 
@@ -112,8 +128,7 @@ define([
     /**
      * Creates an outline of a cube from the dimensions of an AxisAlignedBoundingBox.
      *
-     * @param {Object} options Object with the following properties:
-     * @param {AxisAlignedBoundingBox} options.boundingBox A description of the AxisAlignedBoundingBox.
+     * @param {AxisAlignedBoundingBox} boundingBox A description of the AxisAlignedBoundingBox.
      * @returns {BoxOutlineGeometry}
      *
      * @exception {DeveloperError} AxisAlignedBoundingBox must be defined.
