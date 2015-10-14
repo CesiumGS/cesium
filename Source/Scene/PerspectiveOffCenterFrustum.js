@@ -338,10 +338,11 @@ define([
      * @deprecated
      */
     PerspectiveOffCenterFrustum.prototype.getPixelSize = function(drawingBufferDimensions, distance, result) {
+        deprecationWarning('PerspectiveOffCenterFrustum', 'getPixelSize is deprecated. Use getPixelDimensions instead.');
+
         update(this);
 
         //>>includeStart('debug', pragmas.debug);
-        deprecationWarning('PerspectiveOffCenterFrustum', 'getPixelSize is deprecated. Use getPixelDimensions instead.');
         if (!defined(drawingBufferDimensions)) {
             throw new DeveloperError('drawingBufferDimensions is required.');
         }
@@ -382,8 +383,8 @@ define([
      *
      * @param {Number} drawingBufferWidth The width of the drawing buffer.
      * @param {Number} drawingBufferHeight The height of the drawing buffer.
+     * @param {Number} distance The distance to the near plane in meters.
      * @param {Cartesian2} result The object onto which to store the result.
-     * @param {Number} [distance=near plane distance] The distance to the near plane in meters.
      * @returns {Cartesian2} The modified result parameter or a new instance of {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
      *
      * @exception {DeveloperError} drawingBufferWidth must be greater than zero.
@@ -392,7 +393,7 @@ define([
      * @example
      * // Example 1
      * // Get the width and height of a pixel.
-     * var pixelSize = camera.frustum.getPixelDimensions(canvas.clientWidth, canvas.clientHeight, new Cartesian2());
+     * var pixelSize = camera.frustum.getPixelDimensions(canvas.clientWidth, canvas.clientHeight, 1.0, new Cartesian2());
      *
      * @example
      * // Example 2
@@ -403,9 +404,9 @@ define([
      * var toCenter = Cesium.Cartesian3.subtract(primitive.boundingVolume.center, position, new Cesium.Cartesian3());      // vector from camera to a primitive
      * var toCenterProj = Cesium.Cartesian3.multiplyByScalar(direction, Cesium.Cartesian3.dot(direction, toCenter), new Cesium.Cartesian3()); // project vector onto camera direction vector
      * var distance = Cesium.Cartesian3.magnitude(toCenterProj);
-     * var pixelSize = camera.frustum.getPixelDimensions(canvas.clientWidth, canvas.clientHeight, new Cartesian2(), distance);
+     * var pixelSize = camera.frustum.getPixelDimensions(canvas.clientWidth, canvas.clientHeight, distance, new Cartesian2());
      */
-    PerspectiveOffCenterFrustum.prototype.getPixelDimensions = function(drawingBufferWidth, drawingBufferHeight, result, distance) {
+    PerspectiveOffCenterFrustum.prototype.getPixelDimensions = function(drawingBufferWidth, drawingBufferHeight, distance, result) {
         update(this);
 
         //>>includeStart('debug', pragmas.debug);
@@ -418,12 +419,13 @@ define([
         if (drawingBufferHeight <= 0) {
             throw new DeveloperError('drawingBufferHeight must be greater than zero.');
         }
+        if (!defined(distance)) {
+            throw new DeveloperError('distance is required.');
+        }
         if (!defined(result)) {
             throw new DeveloperError('A result object is required.');
         }
         //>>includeEnd('debug');
-
-        distance = defaultValue(distance, this.near);
 
         var inverseNear = 1.0 / this.near;
         var tanTheta = this.top * inverseNear;

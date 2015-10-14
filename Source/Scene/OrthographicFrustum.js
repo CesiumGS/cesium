@@ -287,11 +287,11 @@ define([
      * @deprecated
      */
     OrthographicFrustum.prototype.getPixelSize = function(drawingBufferDimensions, distance, result) {
+        deprecationWarning('OrthographicFrustum', 'getPixelSize is deprecated. Use getPixelDimensions instead.');
+
         update(this);
 
         //>>includeStart('debug', pragmas.debug);
-        deprecationWarning('OrthographicFrustum', 'getPixelSize is deprecated. Use getPixelDimensions instead.');
-
         if (!defined(drawingBufferDimensions)) {
             throw new DeveloperError('drawingBufferDimensions is required.');
         }
@@ -322,8 +322,8 @@ define([
      *
      * @param {Number} drawingBufferWidth The width of the drawing buffer.
      * @param {Number} drawingBufferHeight The height of the drawing buffer.
+     * @param {Number} distance The distance to the near plane in meters.
      * @param {Cartesian2} result The object onto which to store the result.
-     * @param {Number} [distance=near plane distance] The distance to the near plane in meters.
      * @returns {Cartesian2} The modified result parameter or a new instance of {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
      *
      * @exception {DeveloperError} drawingBufferWidth must be greater than zero.
@@ -332,9 +332,9 @@ define([
      * @example
      * // Example 1
      * // Get the width and height of a pixel.
-     * var pixelSize = camera.frustum.getPixelDimensions(canvas.clientWidth, canvas.clientHeight, new Cartesian2());
+     * var pixelSize = camera.frustum.getPixelDimensions(canvas.clientWidth, canvas.clientHeight, 1.0, new Cartesian2());
      */
-    OrthographicFrustum.prototype.getPixelDimensions = function(drawingBufferWidth, drawingBufferHeight, result, distance) {
+    OrthographicFrustum.prototype.getPixelDimensions = function(drawingBufferWidth, drawingBufferHeight, distance, result) {
         update(this);
 
         //>>includeStart('debug', pragmas.debug);
@@ -346,6 +346,9 @@ define([
         }
         if (drawingBufferHeight <= 0) {
             throw new DeveloperError('drawingBufferHeight must be greater than zero.');
+        }
+        if (!defined(distance)) {
+            throw new DeveloperError('distance is required.');
         }
         if (!defined(result)) {
             throw new DeveloperError('A result object is required.');
