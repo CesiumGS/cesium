@@ -901,7 +901,7 @@ define([
                     this.morphToColumbusView(0);
                     //>>includeStart('debug', pragmas.debug);
                 } else {
-                    throw new DeveloperError('value must be a valid SceneMode enumeration.')
+                    throw new DeveloperError('value must be a valid SceneMode enumeration.');
                     //>>includeEnd('debug');
                 }
                 this._mode = value;
