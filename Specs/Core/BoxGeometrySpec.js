@@ -1,13 +1,13 @@
 /*global defineSuite*/
 defineSuite([
-        'Core/AxisAlignedBoundingBox',
         'Core/BoxGeometry',
+        'Core/AxisAlignedBoundingBox',
         'Core/Cartesian3',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
-        AxisAlignedBoundingBox,
         BoxGeometry,
+        AxisAlignedBoundingBox,
         Cartesian3,
         VertexFormat,
         createPackableSpecs) {
@@ -95,11 +95,9 @@ defineSuite([
     it('fromAxisAlignedBoundingBox', function() {
         var min = new Cartesian3(-1, -2, -3);
         var max = new Cartesian3(1, 2, 3);
-        var m = BoxGeometry.createGeometry(BoxGeometry.fromAxisAlignedBoundingBox(
-            new AxisAlignedBoundingBox(min, max)
-        ));
-        expect(m.attributes.position.values.length).toEqual(8 * 3);
-        expect(m.indices.length).toEqual(12 * 2);
+        var m = BoxGeometry.fromAxisAlignedBoundingBox(new AxisAlignedBoundingBox(min, max));
+        expect(m._minimum).toEqual(min);
+        expect(m._maximum).toEqual(max);
     });
 
     createPackableSpecs(BoxGeometry, new BoxGeometry({
