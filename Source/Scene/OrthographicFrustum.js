@@ -272,7 +272,7 @@ define([
      * Returns the pixel's width and height in meters.
      *
      * @param {Cartesian2} drawingBufferDimensions A {@link Cartesian2} with width and height in the x and y properties, respectively.
-     * @param {Number} [distance=near plane distance] The distance to the near plane in meters.
+     * @param {Number} distance Ignored for orthographic frustum.
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new instance of {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
      *
@@ -280,8 +280,6 @@ define([
      * @exception {DeveloperError} drawingBufferDimensions.y must be greater than zero.
      *
      * @example
-     * // Example 1
-     * // Get the width and height of a pixel.
      * var pixelSize = camera.frustum.getPixelSize(new Cesium.Cartesian2(canvas.clientWidth, canvas.clientHeight));
      *
      * @deprecated
@@ -332,7 +330,7 @@ define([
      * @example
      * // Example 1
      * // Get the width and height of a pixel.
-     * var pixelSize = camera.frustum.getPixelDimensions(canvas.clientWidth, canvas.clientHeight, 1.0, new Cartesian2());
+     * var pixelSize = camera.frustum.getPixelDimensions(canvas.clientWidth, canvas.clientHeight, 0.0, new Cartesian2());
      */
     OrthographicFrustum.prototype.getPixelDimensions = function(drawingBufferWidth, drawingBufferHeight, distance, result) {
         update(this);
