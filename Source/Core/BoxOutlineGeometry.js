@@ -129,12 +129,8 @@ define([
      *      -68.0, 40.0
      * ]));
      * var box = Cesium.BoxOutlineGeometry.fromAxisAlignedBoundingBox(aabb);
-     * var geometry = Cesium.BoxOutlineGeometry.createGeometry(box);
      */
-    BoxOutlineGeometry.fromAxisAlignedBoundingBox = function(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var boundingBox = options.boundingBox;
-
+    BoxOutlineGeometry.fromAxisAlignedBoundingBox = function(boundingBox) {
         if (!defined(boundingBox)) {
             throw new DeveloperError('boundingBox is required.');
         }

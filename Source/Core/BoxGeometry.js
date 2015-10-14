@@ -140,12 +140,8 @@ define([
      * var box = Cesium.BoxGeometry.fromAxisAlignedBoundingBox({
      *      boundingBox: aabb
      * });
-     * var geometry = Cesium.BoxGeometry.createGeometry(box);
      */
-    BoxGeometry.fromAxisAlignedBoundingBox = function(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var boundingBox = options.boundingBox;
-
+    BoxGeometry.fromAxisAlignedBoundingBox = function(boundingBox) {
         if (!defined(boundingBox)) {
             throw new DeveloperError('boundingBox is required.');
         }
@@ -155,8 +151,7 @@ define([
 
         var newOptions = {
             minimum : min,
-            maximum : max,
-            vertexFormat : options.vertexFormat
+            maximum : max
         };
         return new BoxGeometry(newOptions);
     };
