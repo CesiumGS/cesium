@@ -272,7 +272,7 @@ define([
      * Returns the pixel's width and height in meters.
      *
      * @param {Cartesian2} drawingBufferDimensions A {@link Cartesian2} with width and height in the x and y properties, respectively.
-     * @param {Number} [distance=near plane distance] The distance to the near plane in meters.
+     * @param {Number} distance Ignored for orthographic frustum.
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new instance of {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
      *
