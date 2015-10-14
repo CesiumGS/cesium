@@ -417,6 +417,37 @@ define([
         return this._models[batchId];
     };
 
+    /**
+     * returns an array of models for a given property and property-value
+     * @param {String} property
+     * @param {String|Number} value
+     * @param {Array} result The result array (optional)
+     * @return {Array}
+     */
+    Batched3DModel3DTileContentProvider.prototype.getModelsByProperty = function(property, value, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if(!this.hasProperty(property)){
+            throw new DeveloperError('property: ' + property + ' does not exist in this batchTable');
+        }
+        //>>includeEnd('debug');
+        if(!defined(result)){
+            result = [];
+        }
+        if (!defined(this._batchTable)) {
+            return result;
+        }
+        var propertyValues = this._batchTable[property];
+
+        if(defined(propertyValues)){
+            for(var i = 0; i < propertyValues.length; i++){
+                if(value === propertyValues[i]){
+                    result.push(this.getModel(i));
+                }
+            }
+        }
+        return result;
+    };
+
     ///////////////////////////////////////////////////////////////////////////
 
     function getGlslComputeSt(content) {
