@@ -23,3 +23,4 @@ Thumbs.db
 
 # WebStorm user-specific
 .idea/workspace.xml
+.idea/tasks.xml
