@@ -113,14 +113,11 @@ define([
         //>>includeEnd('debug');
 
         var corner = Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3());
-        var min = Cartesian3.negate(corner, new Cartesian3());
-        var max = corner;
 
-        var newOptions = {
-            minimum : min,
-            maximum : max
-        };
-        return new BoxOutlineGeometry(newOptions);
+        return new BoxOutlineGeometry({
+            minimum : Cartesian3.negate(corner, new Cartesian3()),
+            maximum : corner
+        });
     };
 
     /**
@@ -147,11 +144,11 @@ define([
         if (!defined(boundingBox)) {
             throw new DeveloperError('boundingBox is required.');
         }
-        var newOptions = {
+
+        return new BoxOutlineGeometry({
             minimum : boundingBox.minimum,
             maximum : boundingBox.maximum
-        };
-        return new BoxOutlineGeometry(newOptions);
+        });
     };
 
     /**
