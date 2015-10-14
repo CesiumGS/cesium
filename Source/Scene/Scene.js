@@ -889,13 +889,21 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (!defined(value)) {
-                    throw new DeveloperError('value is required.');
-                }
                 if (this.scene3DOnly && value !== SceneMode.SCENE3D) {
                     throw new DeveloperError('Only SceneMode.SCENE3D is valid when scene3DOnly is true.');
                 }
                 //>>includeEnd('debug');
+                if (value === SceneMode.SCENE2D) {
+                    this.morphTo2D(0);
+                } else if (value === SceneMode.SCENE3D) {
+                    this.morphTo3D(0);
+                } else if (value === SceneMode.COLUMBUS_VIEW) {
+                    this.morphToColumbusView(0);
+                    //>>includeStart('debug', pragmas.debug);
+                } else {
+                    throw new DeveloperError('value must be a valid SceneMode enumeration.')
+                    //>>includeEnd('debug');
+                }
                 this._mode = value;
             }
         },
