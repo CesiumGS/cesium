@@ -145,6 +145,26 @@ defineSuite([
         expect(pixelSize.y).toEqual(expected.y);
     });
 
+    it('get pixel dimensions throws without canvas width', function() {
+        expect(function() {
+            return frustum.getPixelDimensions(1.0, undefined, new Cartesian2());
+        }).toThrowDeveloperError();
+    });
+
+    it('get pixel dimensions throws without canvas height', function() {
+        expect(function() {
+            return frustum.getPixelDimensions(undefined, 1.0, new Cartesian2());
+        }).toThrowDeveloperError();
+    });
+
+    it('get pixel dimensions', function() {
+        var dimensions = new Cartesian2(1.0, 1.0);
+        var pixelSize = frustum.getPixelDimensions(dimensions.x, dimensions.y, new Cartesian2());
+        var expected = frustum._offCenterFrustum.getPixelDimensions(dimensions.x, dimensions.y, new Cartesian2());
+        expect(pixelSize.x).toEqual(expected.x);
+        expect(pixelSize.y).toEqual(expected.y);
+    });
+
     it('equals', function() {
         var frustum2 = new PerspectiveFrustum();
         frustum2.near = 1.0;

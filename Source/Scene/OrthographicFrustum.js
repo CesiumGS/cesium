@@ -5,6 +5,7 @@ define([
         '../Core/Cartesian4',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Matrix4',
         './CullingVolume'
@@ -14,6 +15,7 @@ define([
         Cartesian4,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Matrix4,
         CullingVolume) {
@@ -319,8 +321,8 @@ define([
      *
      * @param {Number} drawingBufferWidth The width of the drawing buffer.
      * @param {Number} drawingBufferHeight The height of the drawing buffer.
-     * @param {Number} [distance=near plane distance] The distance to the near plane in meters.
      * @param {Cartesian2} result The object onto which to store the result.
+     * @param {Number} [distance=near plane distance] The distance to the near plane in meters.
      * @returns {Cartesian2} The modified result parameter or a new instance of {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
      *
      * @exception {DeveloperError} drawingBufferWidth must be greater than zero.
@@ -331,7 +333,7 @@ define([
      * // Get the width and height of a pixel.
      * var pixelSize = camera.frustum.getPixelDimensions(canvas.clientWidth, canvas.clientHeight, new Cartesian2());
      */
-    OrthographicFrustum.prototype.getPixelDimensions = function(drawingBufferWidth, drawingBufferHeight, distance, result) {
+    OrthographicFrustum.prototype.getPixelDimensions = function(drawingBufferWidth, drawingBufferHeight, result, distance) {
         update(this);
 
         //>>includeStart('debug', pragmas.debug);
