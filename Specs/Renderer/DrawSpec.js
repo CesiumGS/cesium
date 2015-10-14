@@ -1271,42 +1271,38 @@ defineSuite([
     });
 
     it('throws when instanceCount is greater than one and the instanced arrays extension is not supported', function() {
-        // disable extension
-        var instancedArrays = context._instancedArrays;
-        context._instancedArrays = undefined;
+        if (!context.instancedArrays) {
+            var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+            var fs = 'void main() { gl_FragColor = vec4(1.0); }';
+            sp = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs
+            });
 
-        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
-        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs
-        });
+            va = new VertexArray({
+                context : context,
+                attributes : [{
+                    index : sp.vertexAttributes.position.index,
+                    vertexBuffer : Buffer.createVertexBuffer({
+                        context : context,
+                        typedArray : new Float32Array([0, 0, 0, 1]),
+                        usage : BufferUsage.STATIC_DRAW
+                    }),
+                    componentsPerAttribute : 4
+                }]
+            });
 
-        va = new VertexArray({
-            context : context,
-            attributes : [{
-                index : sp.vertexAttributes.position.index,
-                vertexBuffer : Buffer.createVertexBuffer({
-                    context : context,
-                    typedArray : new Float32Array([0, 0, 0, 1]),
-                    usage : BufferUsage.STATIC_DRAW
-                }),
-                componentsPerAttribute : 4
-            }]
-        });
+            var command = new DrawCommand({
+                primitiveType : PrimitiveType.POINTS,
+                shaderProgram : sp,
+                vertexArray : va,
+                instanceCount : 2
+            });
 
-        var command = new DrawCommand({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va,
-            instanceCount : 2
-        });
-
-        expect(function() {
-            command.execute(context);
-        }).toThrowDeveloperError();
-
-        context._instancedArrays = instancedArrays;
+            expect(function() {
+                command.execute(context);
+            }).toThrowDeveloperError();
+        }
     });
 }, 'WebGL');
