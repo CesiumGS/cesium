@@ -64,7 +64,7 @@ define([
         if (!defined(min)) {
             if (defined(options.minimumCorner)) {
                 min = options.minimumCorner;
-                deprecationWarning('BoxGeometry', 'options.minimumCorner is deprecated. Use options.minimum instead');
+                deprecationWarning('BoxGeometry', 'options.minimumCorner is deprecated. Use options.minimum instead.');
             }
             else {
                 throw new DeveloperError('options.minimum is required.');
@@ -73,7 +73,7 @@ define([
         if (!defined(max)) {
             if (defined(options.maximumCorner)) {
                 max = options.maximumCorner;
-                deprecationWarning('BoxGeometry', 'options.maximumCorner is deprecated. Use options.maximum instead');
+                deprecationWarning('BoxGeometry', 'options.maximumCorner is deprecated. Use options.maximum instead.');
             }
             else {
                 throw new DeveloperError('options.maximum is required');
