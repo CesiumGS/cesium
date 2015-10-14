@@ -65,7 +65,7 @@ define([
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
     var sizeOfFloat64 = Float64Array.BYTES_PER_ELEMENT;
 
-    // Each vertex has a latitude, longitude, and batchId
+    // Each vertex has a longitude, latitude, and batchId
     // Coordinates are in double precision, batchId is a short
     var instanceSizeInBytes = sizeOfFloat64 * 2 + sizeOfUint16;
 
