@@ -267,6 +267,7 @@ define([
     };
 
     /**
+     * @Deprecated
      * Returns the pixel's width and height in meters.
      *
      * @param {Cartesian2} drawingBufferDimensions A {@link Cartesian2} with width and height in the x and y properties, respectively.
@@ -286,6 +287,8 @@ define([
         update(this);
 
         //>>includeStart('debug', pragmas.debug);
+        deprecationWarning('OrthographicFrustum', 'getPixelSize is deprecated. Use getPixelDimensions instead.');
+
         if (!defined(drawingBufferDimensions)) {
             throw new DeveloperError('drawingBufferDimensions is required.');
         }
@@ -305,6 +308,51 @@ define([
         if (!defined(result)) {
             return new Cartesian2(pixelWidth, pixelHeight);
         }
+
+        result.x = pixelWidth;
+        result.y = pixelHeight;
+        return result;
+    };
+
+    /**
+     * Returns the pixel's width and height in meters.
+     *
+     * @param {Number} drawingBufferWidth The width of the drawing buffer.
+     * @param {Number} drawingBufferHeight The height of the drawing buffer.
+     * @param {Number} [distance=near plane distance] The distance to the near plane in meters.
+     * @param {Cartesian2} result The object onto which to store the result.
+     * @returns {Cartesian2} The modified result parameter or a new instance of {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
+     *
+     * @exception {DeveloperError} drawingBufferWidth must be greater than zero.
+     * @exception {DeveloperError} drawingBufferHeight must be greater than zero.
+     *
+     * @example
+     * // Example 1
+     * // Get the width and height of a pixel.
+     * var pixelSize = camera.frustum.getPixelDimensions(canvas.clientWidth, canvas.clientHeight, new Cartesian2());
+     */
+    OrthographicFrustum.prototype.getPixelDimensions = function(drawingBufferWidth, drawingBufferHeight, distance, result) {
+        update(this);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(drawingBufferWidth) || !defined(drawingBufferHeight)) {
+            throw new DeveloperError('Both drawingBufferWidth and drawingBufferHeight are required.');
+        }
+        if (drawingBufferWidth <= 0) {
+            throw new DeveloperError('drawingBufferWidth must be greater than zero.');
+        }
+        if (drawingBufferHeight <= 0) {
+            throw new DeveloperError('drawingBufferHeight must be greater than zero.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('A result object is required.');
+        }
+        //>>includeEnd('debug');
+
+        var frustumWidth = this.right - this.left;
+        var frustumHeight = this.top - this.bottom;
+        var pixelWidth = frustumWidth / drawingBufferWidth;
+        var pixelHeight = frustumHeight / drawingBufferHeight;
 
         result.x = pixelWidth;
         result.y = pixelHeight;
