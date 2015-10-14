@@ -399,6 +399,11 @@ define([
                 return this._id;
             }
         },
+        webgl2 : {
+            get : function() {
+                return this._webgl2;
+            }
+        },
         canvas : {
             get : function() {
                 return this._canvas;

@@ -142,7 +142,7 @@ defineSuite([
     it('gets the standard derivatives extension', function() {
         var fs = '';
 
-        if (context.standardDerivatives && !context._webgl2) {
+        if (context.standardDerivatives && !context.webgl2) {
             fs += '#extension GL_OES_standard_derivatives : enable\n';
         }
 
@@ -225,7 +225,7 @@ defineSuite([
 
         var fsFragDepth = '';
         
-        if (context.fragmentDepth && !context._webgl2) {
+        if (context.fragmentDepth && !context.webgl2) {
             fsFragDepth += '#extension GL_EXT_frag_depth : enable\n';
         }
         
@@ -236,7 +236,7 @@ defineSuite([
         
         if (context.fragmentDepth) {
             fsFragDepth += '    gl_FragDepth';
-            if (!context._webgl2) {
+            if (!context.webgl2) {
                 fsFragDepth += 'EXT';
             }
             fsFragDepth += ' = 0.0;\n';

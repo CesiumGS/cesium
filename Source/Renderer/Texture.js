@@ -52,7 +52,7 @@ define([
         var pixelDatatype = defaultValue(options.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
         var internalFormat = pixelFormat;
 
-        if (context._webgl2) {
+        if (context.webgl2) {
             if (pixelFormat === PixelFormat.DEPTH_STENCIL) {
                 internalFormat = WebGLConstants.DEPTH24_STENCIL8;
             } else if (pixelFormat === PixelFormat.DEPTH_COMPONENT) {
