@@ -142,7 +142,7 @@ define([
      * });
      * var geometry = Cesium.BoxGeometry.createGeometry(box);
      */
-    BoxOutlineGeometry.fromAxisAlignedBoundingBox = function(options) {
+    BoxGeometry.fromAxisAlignedBoundingBox = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var boundingBox = options.boundingBox;
 
