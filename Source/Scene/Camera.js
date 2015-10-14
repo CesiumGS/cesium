@@ -2019,6 +2019,10 @@ define([
         //>>includeEnd('debug');
 
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+        if (this._mode !== SceneMode.SCENE3D && rectangle.west > rectangle.east) {
+            rectangle = Rectangle.MAX_VALUE;
+        }
+
         if (this._mode === SceneMode.SCENE3D) {
             rectangleCameraPosition3D(this, rectangle, ellipsoid, this.position);
         } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
