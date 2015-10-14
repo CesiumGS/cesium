@@ -1,0 +1,572 @@
+{
+    "accessors": {
+        "accessor_16": {
+            "bufferView": "bufferView_25",
+            "byteOffset": 0,
+            "byteStride": 0,
+            "componentType": 5123,
+            "count": 132,
+            "type": "SCALAR"
+        },
+        "accessor_18": {
+            "bufferView": "bufferView_26",
+            "byteOffset": 0,
+            "byteStride": 12,
+            "componentType": 5126,
+            "count": 132,
+            "max": [
+                35,
+                35,
+                -35.5
+            ],
+            "min": [
+                -35,
+                -35,
+                -54
+            ],
+            "type": "VEC3"
+        },
+        "accessor_20": {
+            "bufferView": "bufferView_26",
+            "byteOffset": 1584,
+            "byteStride": 12,
+            "componentType": 5126,
+            "count": 132,
+            "max": [
+                0.965926,
+                0.965926,
+                1
+            ],
+            "min": [
+                -0.965926,
+                -0.965926,
+                -1
+            ],
+            "type": "VEC3"
+        }
+    },
+    "animations": {},
+    "asset": {
+        "generator": "collada2gltf@6ff48d2c348b257f3bc8648d40b034d88f3d36bf",
+        "premultipliedAlpha": true,
+        "profile": {
+            "api": "WebGL",
+            "version": "1.0.2"
+        },
+        "version": 1
+    },
+    "bufferViews": {
+        "bufferView_25": {
+            "buffer": "model",
+            "byteLength": 264,
+            "byteOffset": 0,
+            "target": 34963
+        },
+        "bufferView_26": {
+            "buffer": "model",
+            "byteLength": 3168,
+            "byteOffset": 264,
+            "target": 34962
+        }
+    },
+    "buffers": {
+        "model": {
+            "byteLength": 3432,
+            "type": "arraybuffer",
+            "uri": "model.bin"
+        }
+    },
+    "cameras": {
+        "AR_X_id": {
+            "name": "AR_X",
+            "perspective": {
+                "aspect_ratio": 1.33333,
+                "yfov": 0.7854,
+                "zfar": 1000,
+                "znear": 1
+            },
+            "type": "perspective"
+        },
+        "AR_Y_id": {
+            "name": "AR_Y",
+            "perspective": {
+                "aspect_ratio": 1.33333,
+                "yfov": 0.785398,
+                "zfar": 1000,
+                "znear": 1
+            },
+            "type": "perspective"
+        },
+        "O_AR_X_id": {
+            "name": "O_AR_X",
+            "orthographic": {
+                "xmag": 1,
+                "ymag": 10,
+                "zfar": 1000,
+                "znear": 0.1
+            },
+            "type": "orthographic"
+        },
+        "O_AR_Y_id": {
+            "name": "O_AR_Y",
+            "orthographic": {
+                "xmag": 1,
+                "ymag": 10,
+                "zfar": 1000,
+                "znear": 0.1
+            },
+            "type": "orthographic"
+        },
+        "O_X_Y_id": {
+            "name": "O_X_Y",
+            "orthographic": {
+                "xmag": 1,
+                "ymag": 10,
+                "zfar": 1000,
+                "znear": 0.1
+            },
+            "type": "orthographic"
+        },
+        "O_X_id": {
+            "name": "O_X",
+            "orthographic": {
+                "xmag": 1,
+                "ymag": 1,
+                "zfar": 1000,
+                "znear": 0.1
+            },
+            "type": "orthographic"
+        },
+        "O_Y_id": {
+            "name": "O_Y",
+            "orthographic": {
+                "xmag": 1,
+                "ymag": 10,
+                "zfar": 1000,
+                "znear": 0.1
+            },
+            "type": "orthographic"
+        },
+        "X_Y_id": {
+            "name": "X_Y",
+            "perspective": {
+                "aspect_ratio": 1.33333,
+                "yfov": 0.785398,
+                "zfar": 1000,
+                "znear": 1
+            },
+            "type": "perspective"
+        },
+        "X_id": {
+            "name": "X",
+            "perspective": {
+                "yfov": 1,
+                "zfar": 1000,
+                "znear": 1
+            },
+            "type": "perspective"
+        },
+        "Y_id": {
+            "name": "Y",
+            "perspective": {
+                "yfov": 0.785398,
+                "zfar": 1000,
+                "znear": 1
+            },
+            "type": "perspective"
+        }
+    },
+    "extensions": {
+        "KHR_materials_common": {
+            "lights": {
+                "spo_id": {
+                    "name": "spot",
+                    "spot": {
+                        "color": [
+                            0.1,
+                            0.1,
+                            0.5
+                        ],
+                        "constantAttenuation": 1,
+                        "fallOffAngle": 3.14159,
+                        "fallOffExponent": 0,
+                        "linearAttenuation": 0.3,
+                        "quadraticAttenuation": 0
+                    },
+                    "type": "spot"
+                }
+            }
+        }
+    },
+    "extensionsUsed": [
+        "KHR_materials_common"
+    ],
+    "images": {
+        "": {
+            "name": "stoneName",
+            "uri": "riverstones2.jpg"
+        },
+        "stoneId": {
+            "name": "stoneName",
+            "uri": "riverstones.jpg"
+        }
+    },
+    "materials": {
+        "blinn-effect": {
+            "extensions": {
+                "KHR_materials_common": {
+                    "technique": "BLINN",
+                    "values": {
+                        "ambient": [
+                            0.482353,
+                            0.278431,
+                            0.0823529,
+                            1
+                        ],
+                        "diffuse": [
+                            0.482353,
+                            0.278431,
+                            0.0823529,
+                            1
+                        ],
+                        "emission": [
+                            0,
+                            1,
+                            0,
+                            1
+                        ],
+                        "indexOfRefraction": 1,
+                        "reflective": [
+                            0,
+                            0,
+                            0,
+                            1
+                        ],
+                        "reflectivity": 0,
+                        "shininess": 0,
+                        "specular": [
+                            0,
+                            0,
+                            0,
+                            1
+                        ],
+                        "transparency": 0.8
+                    }
+                }
+            },
+            "name": "blinn-material"
+        },
+        "constant-effect": {
+            "extensions": {
+                "KHR_materials_common": {
+                    "technique": "CONSTANT",
+                    "values": {
+                        "emission": [
+                            0,
+                            0,
+                            0,
+                            1
+                        ],
+                        "indexOfRefraction": 1,
+                        "reflective": [
+                            1,
+                            0,
+                            0,
+                            1
+                        ],
+                        "reflectivity": 0,
+                        "transparency": 0.8
+                    }
+                }
+            },
+            "name": "constant-material"
+        },
+        "lambert-effect": {
+            "extensions": {
+                "KHR_materials_common": {
+                    "technique": "LAMBERT",
+                    "values": {
+                        "ambient": [
+                            0.482353,
+                            0.278431,
+                            0.0823529,
+                            1
+                        ],
+                        "diffuse": [
+                            0.482353,
+                            0.278431,
+                            0.0823529,
+                            1
+                        ],
+                        "emission": [
+                            0,
+                            0,
+                            1,
+                            1
+                        ],
+                        "indexOfRefraction": 1,
+                        "reflective": [
+                            0,
+                            0,
+                            0,
+                            1
+                        ],
+                        "reflectivity": 0,
+                        "transparency": 0.8
+                    }
+                }
+            },
+            "name": "lambert-material"
+        },
+        "phong-effect": {
+            "extensions": {
+                "KHR_materials_common": {
+                    "technique": "PHONG",
+                    "values": {
+                        "ambient": [
+                            0.482353,
+                            0.278431,
+                            0.0823529,
+                            1
+                        ],
+                        "diffuse": [
+                            0.482353,
+                            0.278431,
+                            0.0823529,
+                            1
+                        ],
+                        "emission": [
+                            1,
+                            0,
+                            0,
+                            1
+                        ],
+                        "indexOfRefraction": 1,
+                        "reflective": [
+                            0,
+                            0,
+                            0,
+                            1
+                        ],
+                        "reflectivity": 0,
+                        "shininess": 0,
+                        "specular": [
+                            0,
+                            0,
+                            0,
+                            1
+                        ],
+                        "transparency": 0.8
+                    }
+                }
+            },
+            "name": "phong-material"
+        }
+    },
+    "meshes": {
+        "geometry": {
+            "name": "geometry",
+            "primitives": [
+                {
+                    "attributes": {
+                        "NORMAL": "accessor_20",
+                        "POSITION": "accessor_18"
+                    },
+                    "indices": "accessor_16",
+                    "material": "phong-effect",
+                    "mode": 4
+                }
+            ]
+        }
+    },
+    "nodes": {
+        "blinn-node": {
+            "children": [],
+            "matrix": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+            ],
+            "meshes": [
+                "geometry"
+            ],
+            "name": "blinn-node"
+        },
+        "camera-node": {
+            "camera": "AR_Y_id",
+            "children": [],
+            "matrix": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+            ],
+            "name": "camera-node"
+        },
+        "constant-node": {
+            "children": [],
+            "matrix": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+            ],
+            "meshes": [
+                "geometry"
+            ],
+            "name": "constant-node"
+        },
+        "lambert-node": {
+            "children": [],
+            "matrix": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+            ],
+            "meshes": [
+                "geometry"
+            ],
+            "name": "lambert-node"
+        },
+        "light-node": {
+            "children": [],
+            "extensions": {
+                "KHR_materials_common": {
+                    "light": "spo_id"
+                }
+            },
+            "matrix": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+            ],
+            "name": "light-node"
+        },
+        "node_6": {
+            "children": [
+                "phong-node",
+                "blinn-node",
+                "lambert-node",
+                "constant-node",
+                "camera-node",
+                "light-node"
+            ],
+            "matrix": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                -1,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1
+            ],
+            "name": "Y_UP_Transform"
+        },
+        "phong-node": {
+            "children": [],
+            "matrix": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+            ],
+            "meshes": [
+                "geometry"
+            ],
+            "name": "phong-node"
+        }
+    },
+    "scene": "defaultScene",
+    "scenes": {
+        "defaultScene": {
+            "nodes": [
+                "node_6"
+            ]
+        }
+    },
+    "skins": {}
+}

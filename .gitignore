@@ -20,4 +20,7 @@ Thumbs.db
 /Specs/SpecList.js
 
 /node_modules
-/.idea
+
+# WebStorm user-specific
+.idea/workspace.xml
+.idea/tasks.xml
