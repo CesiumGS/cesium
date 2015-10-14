@@ -837,21 +837,18 @@ defineSuite([
         polylines.add({
             positions : positions
         });
-        positions = [];
-
-        positions.push({
-            x : 0,
-            y : -1,
-            z : 0
-        });
-        positions.push({
-            x : 0,
-            y : 1,
-            z : 0
-        });
         polylines.add({
-           positions:positions
+           positions : [{
+                x : 0,
+                y : -1,
+                z : 0
+            },{
+                x : 0,
+                y : 1,
+                z : 0
+            }]
         });
+        
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 

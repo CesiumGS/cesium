@@ -684,7 +684,7 @@ defineSuite([
             })],
             depthRenderbuffer : new Renderbuffer({
                 context : context,
-                format : RenderbufferFormat.DEPTH_COMPONENT16,
+                format : RenderbufferFormat.RGBA4,
                 width : 2,
                 height : 2
             })
