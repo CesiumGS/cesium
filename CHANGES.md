@@ -5,10 +5,12 @@ Change Log
 
 * Breaking changes
   * Deleted old `<subfolder>/package.json` and `*.profile.js` files, not used since we moved away from a Dojo-based build years ago.  This should allow future compatibility with newer systems like Browserify and Webpack.
-  * ...
 * Deprecated
   * Depreciated `BoxGeometry.minimumCorner` and `BoxGeometry.maximumCorner`, use `BoxGeometry.minimum` and `BoxGeometry.maximum` instead. These will be removed in 1.17.
   * Depreciated `BoxOutlineGeometry.minimumCorner` and `BoxOutlineGeometry.maximumCorner`, use `BoxOutlineGeometry.minimum` and `BoxOutlineGeometry.maximum` instead. These will be removed in 1.17.
+  * Made `EllipsoidPrimitive` private, use `EllipsoidGeometry` or `Entity.ellipsoid` instead.
+  * Deprecated `RectanglePrimitive`, use `RectangleGeometry` or `Entity.rectangle` instead. It will be removed in 1.17.
+  * Deprecated `EllipsoidPrimitive`, use `EllipsoidGeometry` or `Entity.ellipsoid` instead. It will be removed in 1.17.
 * Decreased GPU memory usage in `BillboardCollection` and `LabelCollection` by using the WebGL ANGLE_instanced_arrays extension.
 * Added CZML examples to Sandcastle.  See the new CZML tab.
 * Fixed token issue in `ArcGisMapServerImageryProvider`.
