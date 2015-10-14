@@ -45,6 +45,7 @@ define([
         './getModelAccessor',
         './ModelAnimationCache',
         './ModelAnimationCollection',
+        './modelMaterialsCommon',
         './ModelMaterial',
         './ModelMesh',
         './ModelNode',
@@ -96,6 +97,7 @@ define([
         getModelAccessor,
         ModelAnimationCache,
         ModelAnimationCollection,
+        modelMaterialsCommon,
         ModelMaterial,
         ModelMesh,
         ModelNode,
@@ -195,7 +197,7 @@ define([
     // Note that this is a global cache, compared to renderer resources, which
     // are cached per context.
     var CachedGltf = function(options) {
-        this._gltf = gltfDefaults(options.gltf);
+        this._gltf = modelMaterialsCommon(gltfDefaults(options.gltf));
         this._bgltf = options.bgltf;
         this.ready = options.ready;
         this.modelsToLoad = [];
@@ -205,7 +207,7 @@ define([
     defineProperties(CachedGltf.prototype, {
         gltf : {
             set : function(value) {
-                this._gltf = gltfDefaults(value);
+                this._gltf = modelMaterialsCommon(gltfDefaults(value));
             },
 
             get : function() {

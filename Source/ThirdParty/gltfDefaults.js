@@ -112,10 +112,24 @@ define([
     }
 
     function lightDefaults(gltf) {
-        if (!defined(gltf.lights)) {
-            gltf.lights = {};
+        if (!defined(gltf.extensions)) {
+            gltf.extensions = {};
         }
-        var lights = gltf.lights;
+        var extensions = gltf.extensions;
+
+        if (!defined(extensions.KHR_materials_common)) {
+            extensions.KHR_materials_common = {};
+        }
+        var khrMaterialsCommon = extensions.KHR_materials_common;
+
+        if (defined(gltf.lights)) {
+            khrMaterialsCommon.lights = gltf.lights;
+            delete gltf.lights;
+        }
+        else if (!defined(khrMaterialsCommon.lights)) {
+            khrMaterialsCommon.lights = {};
+        }
+        var lights = khrMaterialsCommon.lights;
 
         for (var name in lights) {
             if (lights.hasOwnProperty(name)) {
