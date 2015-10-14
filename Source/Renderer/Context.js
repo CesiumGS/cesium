@@ -213,16 +213,15 @@ define([
             }
         }
 
-        // TODO : should make useWebGL2 a context flag instead?
-        var defaultToWebGL2 = true;
-        var webGL2Supported = (typeof WebGL2RenderingContext !== 'undefined');
-        var webGL2 = false;
+        var defaultToWebgl2 = true;
+        var webgl2Supported = (typeof WebGL2RenderingContext !== 'undefined');
+        var webgl2 = false;
         var glContext;
 
-        if (defaultToWebGL2 && webGL2Supported) {
+        if (defaultToWebgl2 && webgl2Supported) {
             glContext = canvas.getContext('webgl2', webglOptions) || canvas.getContext('experimental-webgl2', webglOptions) || undefined;
             if (defined(glContext)) {
-                webGL2 = true;
+                webgl2 = true;
             }
         }
         if (!defined(glContext)) {
@@ -233,21 +232,19 @@ define([
         }
 
         this._originalGLContext = glContext;
-        this._webgl2 = webGL2;
+        this._webgl2 = webgl2;
         this._id = createGuid();
 
         // Validation and logging disabled by default for speed.
-        this.validateFramebuffer = true;
+        this.validateFramebuffer = false;
         this.validateShaderProgram = false;
         this.logShaderCompilation = false;
 
         this._throwOnWebGLError = false;
-        // TODO : fix this later
-        var gl = this._gl = wrapGL(this._originalGLContext, throwOnError);
 
         this._shaderCache = new ShaderCache(this);
 
-        //var gl = this._gl = this._originalGLContext;
+        var gl = this._gl = this._originalGLContext;
 
         this._redBits = gl.getParameter(gl.RED_BITS);
         this._greenBits = gl.getParameter(gl.GREEN_BITS);
@@ -296,23 +293,39 @@ define([
         this._textureFilterAnisotropic = textureFilterAnisotropic;
         ContextLimits._maximumTextureFilterAnisotropy = defined(textureFilterAnisotropic) ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1.0;
 
-        this._vertexArrayObject = getExtension(gl, ['OES_vertex_array_object']);
-        this._fragDepth = getExtension(gl, ['EXT_frag_depth']);
-        this._instancedArrays = getExtension(gl, ['ANGLE_instanced_arrays']);
+        var vertexArrayObject = getExtension(gl, ['OES_vertex_array_object']);
+        this._vertexArrayObject = vertexArrayObject;
+        this.glCreateVertexArray = function() {
+            webgl2 ? gl.createVertexArray() : vertexArrayObject.createVertexArrayOES();
+        };
+        this.glBindVertexArray = function(vertexArray) {
+            webgl2 ? gl.bindVertexArray(vertexArray) : vertexArrayObject.bindVertexArrayOES(vertexArray);
+        };
+        this.glDeleteVertexArray = function(vertexArray) {
+            webgl2 ? gl.deleteVertexArray(vertexArray) : vertexArrayObject.deleteVertexArrayOES(vertexArray);
+        };
 
-        this._drawBuffers = getExtension(gl, ['WEBGL_draw_buffers']);
-        if (this.drawBuffers) {
-            if (this._webgl2) {
-                ContextLimits._maximumDrawBuffers = gl.getParameter(WebGLConstants.MAX_DRAW_BUFFERS);
-                ContextLimits._maximumColorAttachments = gl.getParameter(WebGLConstants.MAX_COLOR_ATTACHMENTS);
-            } else {
-                ContextLimits._maximumDrawBuffers = gl.getParameter(this._drawBuffers.MAX_DRAW_BUFFERS_WEBGL);
-                ContextLimits._maximumColorAttachments = gl.getParameter(this._drawBuffers.MAX_COLOR_ATTACHMENTS_WEBGL); // min when supported: 4
-            }
-        } else {
-            ContextLimits._maximumDrawBuffers = 1;
-            ContextLimits._maximumColorAttachments = 1;
-        }
+        this._fragDepth = getExtension(gl, ['EXT_frag_depth']);
+
+        var instancedArrays = getExtension(gl, ['ANGLE_instanced_arrays']);
+        this._instancedArrays = instancedArrays;
+        this.glDrawElementsInstanced = function(mode, count, type, offset, instanceCount) {
+            webgl2 ? gl.drawElementsInstanced(mode, count, type, offset, instanceCount) : instancedArrays.drawElementsInstancedANGLE(mode, count, type, offset, instanceCount);
+        };
+        this.glDrawArraysInstanced = function(mode, first, count, instanceCount) {
+            webgl2 ? gl.drawArraysInstanced(mode, first, count, instanceCount) : instancedArrays.drawArraysInstancedANGLE(mode, first, count, instanceCount);
+        };
+        this.glVertexAttribDivisor = function(index, divisor) {
+            webgl2 ? gl.vertexAttribDivisor(index, divisor) : instancedArrays.vertexAttribDivisorANGLE(index, divisor);
+        };
+
+        var drawBuffers = getExtension(gl, ['WEBGL_draw_buffers']);
+        this._drawBuffers = drawBuffers;
+        this.glDrawBuffers = function(buffers) {
+            webgl2 ? gl.drawBuffers(buffers) : drawBuffers.drawBuffersWEBGL(buffers);
+        };
+        ContextLimits._maximumDrawBuffers = this.drawBuffers ? gl.getParameter(WebGLConstants.MAX_DRAW_BUFFERS) : 1;
+        ContextLimits._maximumColorAttachments = this.drawBuffers ? gl.getParameter(WebGLConstants.MAX_COLOR_ATTACHMENTS) : 1;
 
         this._debugShaders = getExtension(gl, ['WEBGL_debug_shaders']);
 
@@ -528,7 +541,8 @@ define([
          */
         depthTexture : {
             get : function() {
-                return !!this._depthTexture || this._webgl2;
+                return !!this._depthTexture;
+                //return !!this._depthTexture || this._webgl2; TODO : uncomment once depth-stencil works for webgl2
             }
         },
 
@@ -565,45 +579,6 @@ define([
             }
         },
 
-        createVertexArray : {
-            get : function() {
-                var that = this;
-                return function() {
-                    if (that._webgl2) {
-                        that._gl.createVertexArray();
-                    } else {
-                        that._vertexArrayObject.createVertexArrayOES();
-                    }
-                };
-            }
-        },
-
-        bindVertexArray : {
-            get : function() {
-                var that = this;
-                return function(vertexArray) {
-                    if (that._webgl2) {
-                        that._gl.bindVertexArray(vertexArray);
-                    } else {
-                        that._vertexArrayObject.bindVertexArrayOES(vertexArray);
-                    }
-                };
-            }
-        },
-
-        deleteVertexArray : {
-            get : function() {
-                var that = this;
-                return function(vertexArray) {
-                    if (that._webgl2) {
-                        that._gl.deleteVertexArray(vertexArray);
-                    } else {
-                        that._vertexArrayObject.deleteVertexArrayOES(vertexArray);
-                    }
-                };
-            }
-        },
-
         /**
          * <code>true</code> if the EXT_frag_depth extension is supported.  This
          * extension provides access to the <code>gl_FragDepthEXT</code> built-in output variable
@@ -632,45 +607,6 @@ define([
             }
         },
 
-        drawElementsInstanced : {
-            get : function() {
-                var that = this;
-                return function(mode, count, type, offset, instanceCount) {
-                    if (that._webgl2) {
-                        that._gl.drawElementsInstanced(mode, count, type, offset, instanceCount);
-                    } else {
-                        that._instancedArrays.drawElementsInstancedANGLE(mode, count, type, offset, instanceCount);
-                    }
-                };
-            }
-        },
-
-        drawArraysInstanced : {
-            get : function() {
-                var that = this;
-                return function(mode, first, count, instanceCount) {
-                    if (that._webgl2) {
-                        that._gl.drawArraysInstanced(mode, first, count, instanceCount);
-                    } else {
-                        that._instancedArrays.drawArraysInstancedANGLE(mode, first, count, instanceCount);
-                    }
-                };
-            }
-        },
-
-        vertexAttribDivisor : {
-            get : function() {
-                var that = this;
-                return function(index, divisor) {
-                    if (that._webgl2) {
-                        that._gl.vertexAttribDivisor(index, divisor);
-                    } else {
-                        that._instancedArrays.vertexAttribDivisorANGLE(index, divisor);
-                    }
-                };
-            }
-        },
-
         /**
          * <code>true</code> if the WEBGL_draw_buffers extension is supported. This
          * extensions provides support for multiple render targets. The framebuffer object can have mutiple
@@ -684,19 +620,6 @@ define([
         drawBuffers : {
             get : function() {
                 return !!this._drawBuffers || this._webgl2;
-            }
-        },
-
-        drawBuffersGL : {
-            get : function() {
-                var that = this;
-                return function(buffers) {
-                    if (that._webgl2) {
-                        that._gl.drawBuffers(buffers);
-                    } else {
-                        that._drawBuffers.drawBuffersWEBGL(buffers);
-                    }
-                };
             }
         },
 
@@ -870,7 +793,7 @@ define([
             }
 
             if (context.drawBuffers) {
-                context.drawBuffersGL(buffers);
+                context.glDrawBuffers(buffers);
             }
         }
     }
@@ -988,14 +911,14 @@ define([
             if (instanceCount === 0) {
                 context._gl.drawElements(primitiveType, count, indexBuffer.indexDatatype, offset);
             } else {
-                context.drawElementsInstanced(primitiveType, count, indexBuffer.indexDatatype, offset, instanceCount);
+                context.glDrawElementsInstanced(primitiveType, count, indexBuffer.indexDatatype, offset, instanceCount);
             }
         } else {
             count = defaultValue(count, va.numberOfVertices);
             if (instanceCount === 0) {
                 context._gl.drawArrays(primitiveType, offset, count);
             } else {
-                context.drawArraysInstanced(primitiveType, offset, count, instanceCount);
+                context.glDrawArraysInstanced(primitiveType, offset, count, instanceCount);
             }
         }
 
@@ -1030,7 +953,7 @@ define([
 
         var buffers = scratchBackBufferArray;
         if (this.drawBuffers) {
-            this.drawBuffersGL(buffers);
+            this.glDrawBuffers(buffers);
         }
 
         var length = this._maxFrameTextureUnitIndex;

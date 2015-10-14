@@ -94,14 +94,14 @@ define([
                 gl.vertexAttribPointer(index, this.componentsPerAttribute, this.componentDatatype, this.normalize, this.strideInBytes, this.offsetInBytes);
                 gl.enableVertexAttribArray(index);
                 if (this.instanceDivisor > 0) {
-                    context.vertexAttribDivisor(index, this.instanceDivisor);
+                    context.glVertexAttribDivisor(index, this.instanceDivisor);
                 }
             };
 
             attr.disableVertexAttribArray = function(gl) {
                 gl.disableVertexAttribArray(this.index);
                 if (this.instanceDivisor > 0) {
-                    context.vertexAttribDivisor(index, 0);
+                    context.glVertexAttribDivisor(index, 0);
                 }
             };
         } else {
@@ -323,10 +323,10 @@ define([
 
         // Setup VAO if supported
         if (context.vertexArrayObject) {
-            vao = context.createVertexArray();
-            context.bindVertexArray(vao);
+            vao = context.glCreateVertexArray();
+            context.glBindVertexArray(vao);
             bind(gl, vaAttributes, indexBuffer);
-            context.bindVertexArray(null);
+            context.glBindVertexArray(null);
         }
 
         this._numberOfVertices = numberOfVertices;
@@ -694,7 +694,7 @@ define([
                     var divisor = attribute.instanceDivisor;
                     var index = attribute.index;
                     if (divisor !== divisors[index]) {
-                        context.vertexAttribDivisor(index, divisor);
+                        context.glVertexAttribDivisor(index, divisor);
                         divisors[index] = divisor;
                     }
                 }
@@ -702,7 +702,7 @@ define([
         } else {
             for (i = 0; i < maxAttributes; ++i) {
                 if (divisors[i] > 0) {
-                    context.vertexAttribDivisor(i, 0);
+                    context.glVertexAttribDivisor(i, 0);
                     divisors[i] = 0;
                 }
             }
@@ -711,7 +711,7 @@ define([
 
     VertexArray.prototype._bind = function() {
         if (defined(this._vao)) {
-            this._context.bindVertexArray(this._vao);
+            this._context.glBindVertexArray(this._vao);
             if (this._context.instancedArrays) {
                 setVertexAttribDivisor(this);
             }
@@ -722,7 +722,7 @@ define([
 
     VertexArray.prototype._unBind = function() {
         if (defined(this._vao)) {
-            this._context.bindVertexArray(null);
+            this._context.glBindVertexArray(null);
         } else {
             var attributes = this._attributes;
             var gl = this._gl;
@@ -758,7 +758,7 @@ define([
         }
 
         if (defined(this._vao)) {
-            this._context.deleteVertexArray(this._vao);
+            this._context.glDeleteVertexArray(this._vao);
         }
 
         return destroyObject(this);
