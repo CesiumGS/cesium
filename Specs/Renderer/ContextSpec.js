@@ -231,7 +231,7 @@ defineSuite([
         
         fsFragDepth += 
             'void main()\n' +
-            '{\n';
+            '{\n' +
             '    gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);\n';
         
         if (context.fragmentDepth) {
