@@ -171,6 +171,9 @@ define([
         attributes = defaultValue(attributes, []);
         var attributesCount = attributes.length;
 
+        var vertexShader = 'precision highp float;\n';
+        var fragmentShader = 'precision highp float;\n';
+
         // Generate IDs for our new objects
         var techniqueId;
         do {
@@ -265,14 +268,37 @@ define([
         }
 
         // Add attributes with semantics
+        var vertexShaderMain = '';
         for (i=0;i<attributesCount;++i) {
             var attribute = attributes[i];
             typeValue = -1;
-            if (attribute === 'POSITION' || attribute === 'NORMAL') {
+            if (attribute === 'POSITION') {
                 typeValue = WebGLConstants.FLOAT_VEC3;
+                vertexShader += 'attribute vec3 a_position;\n';
+                vertexShader += 'uniform mat4 u_modelViewMatrix;\n';
+                vertexShader += 'uniform mat4 u_projectionMatrix;\n';
+                vertexShaderMain += '  vec4 pos = u_modelViewMatrix * vec4(a_position,1.0);\n';
+                vertexShaderMain += '  gl_Position = u_projectionMatrix * pos;\n';
+            }
+            else if (attribute === 'NORMAL') {
+                typeValue = WebGLConstants.FLOAT_VEC3;
+                vertexShader += 'attribute vec3 a_normal;\n';
+                vertexShader += 'varying vec3 v_normal;\n';
+                vertexShader += 'uniform mat3 u_normalMatrix;\n';
+                vertexShaderMain += '  v_normal = u_normalMatrix * a_normal;\n';
+
+                fragmentShader += 'varying vec3 v_normal;\n';
             }
             else if (attribute.indexOf('TEXCOORD') === 0) {
                 typeValue = WebGLConstants.FLOAT_VEC2;
+                lowerCase = attribute.toLowerCase();
+                var a_texcoord = 'a_' + lowerCase;
+                var v_texcoord = 'v_' + lowerCase;
+                vertexShader += 'attribute vec2 ' + a_texcoord + ';\n';
+                vertexShader += 'varying vec2 ' + v_texcoord + ';\n';
+                vertexShaderMain += '  ' + v_texcoord + ' = ' + a_texcoord + ';\n';
+
+                fragmentShader += 'varying vec2 ' + v_texcoord + ';\n';
             }
             if (typeValue > 0) {
                 lowerCase = attribute.toLowerCase();
@@ -282,6 +308,9 @@ define([
                 };
             }
         }
+        vertexShader += 'void main(void) {\n';
+        vertexShader += vertexShaderMain;
+        vertexShader += '}\n';
 
         techniques[techniqueId] = {
             attributes: techniqueAttributes,
