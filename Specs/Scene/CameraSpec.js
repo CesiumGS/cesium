@@ -453,7 +453,9 @@ defineSuite([
 
         var newRoll = CesiumMath.PI_OVER_FOUR;
         camera.setView({
-            roll : newRoll
+            pitch: camera.pitch,
+            roll : newRoll,
+            heading: camera.heading
         });
 
         expect(camera.positionCartographic).toEqual(positionCartographic);
@@ -474,7 +476,9 @@ defineSuite([
 
         var newRoll = CesiumMath.PI_OVER_FOUR;
         camera.setView({
-            roll : newRoll
+            pitch: camera.pitch,
+            roll : newRoll,
+            heading: camera.heading
         });
 
         expect(camera.positionCartographic).toEqual(positionCartographic);
@@ -681,7 +685,11 @@ defineSuite([
 
         heading =  CesiumMath.toRadians(200.0);
 
-        camera.setView({heading : heading});
+        camera.setView({
+            pitch: camera.pitch,
+            roll : camera.roll,
+            heading : heading
+        });
 
         expect(camera.position).toEqualEpsilon(position, CesiumMath.EPSILON6);
         expect(camera.heading).toEqualEpsilon(heading, CesiumMath.EPSILON6);
@@ -709,7 +717,11 @@ defineSuite([
 
         pitch =  CesiumMath.toRadians(-50.0);
 
-        camera.setView({pitch : pitch});
+        camera.setView({
+            pitch : pitch,
+            roll : camera.roll,
+            heading: camera.heading
+        });
 
         expect(camera.position).toEqualEpsilon(position, CesiumMath.EPSILON6);
         expect(camera.heading).toEqualEpsilon(heading, CesiumMath.EPSILON6);
@@ -737,7 +749,11 @@ defineSuite([
 
         roll =  CesiumMath.toRadians(200.0);
 
-        camera.setView({roll : roll});
+        camera.setView({
+            roll : roll,
+            heading: camera.heading,
+            pitch: camera.pitch
+        });
 
         expect(camera.position).toEqualEpsilon(position, CesiumMath.EPSILON6);
         expect(camera.heading).toEqualEpsilon(heading, CesiumMath.EPSILON6);

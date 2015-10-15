@@ -884,7 +884,6 @@ define([
             var cartographic = projection.ellipsoid.cartesianToCartographic(position, scratchSetViewCartographic);
             position = projection.project(cartographic, scratchSetViewCartesian);
             Cartesian3.clone(position, camera.position);
-
         }
 
         var rotQuat = Quaternion.fromHeadingPitchRoll(heading - CesiumMath.PI_OVER_TWO, pitch, roll, scratchSetViewQuaternion);
@@ -978,16 +977,13 @@ define([
      *
      * @example
      * // 1. Set view with heading, pitch and roll
-     * camera.setView({
-     *     position : cartesianPosition,
-     *     heading : Cesium.Math.toRadians(90.0), // east, default value is 0.0 (north)
-     *     pitch : Cesium.Math.toRadians(-90),    // default value (looking down)
-     *     roll : 0.0                             // default value
-     * });
-     *
-     * // 2. Set default top-down view with a cartographic position
-     * camera.setView({
-     *     positionCartographic : cartographic
+     * `({
+     *     destination : cartesianPosition,
+     *     orientation: {
+     *         heading : Cesium.Math.toRadians(90.0), // east, default value is 0.0 (north)
+     *         pitch : Cesium.Math.toRadians(-90),    // default value (looking down)
+     *         roll : 0.0                             // default value
+     *     }
      * });
      *
      * // 3. Change heading, pitch and roll with the camera position remaining the same.
@@ -1002,12 +998,16 @@ define([
         var orientation = defaultValue(options.orientation, {});
         if (defined(options.heading) || defined(options.pitch) || defined(options.roll)){
             deprecationWarning('Camera.setView options', 'options.heading/pitch/roll has been moved to options.orientation.heading/pitch/roll.');
-            orientation.heading = options.heading;
-            orientation.pitch = options.pitch;
-            orientation.roll = options.roll;
+            orientation.heading = defaultValue(options.heading, this.heading);
+            orientation.pitch = defaultValue(options.pitch, this.pitch);
+            orientation.roll = defaultValue(options.roll, this.roll);
         }
         if (defined(options.positionCartographic)){
+            deprecationWarning('Camera.setView options', 'options.position has been renamed to options.destination.');
+        }
+        if (defined(options.position)){
             deprecationWarning('Camera.setView options', 'options.positionCartographic has been deprecated.  Convert to a Cartesian3 and use options.position instead.');
+            options.destination = options.position;
         }
 
         var mode = this._mode;
@@ -1016,47 +1016,38 @@ define([
         }
         var projection = this._projection;
         var ellipsoid = projection.ellipsoid;
-        var position = options.position;
-        if (!defined(position) && defined(options.positionCartographic)){
-            position = ellipsoid.cartographicToCartesian(options.positionCartographic);
+        var destination = options.destination;
+        var convert = true;
+        if (!defined(destination) && defined(options.positionCartographic)){
+            destination = ellipsoid.cartographicToCartesian(options.positionCartographic);
+
         }
 
         if (defined(options.endTransform)) {
             this._setTransform(options.endTransform);
         }
 
-        if (defined(position) && defined(position.west)) {
-            if (mode !== SceneMode.SCENE3D && position.west > position.east) {
-                position = Rectangle.MAX_VALUE;
-            }
-            if (mode === SceneMode.SCENE3D) {
-                rectangleCameraPosition3D(this, position, this.position);
-            } else if (mode === SceneMode.COLUMBUS_VIEW) {
-                rectangleCameraPositionColumbusView(this, position, this.position);
-            } else if (mode === SceneMode.SCENE2D) {
-                rectangleCameraPosition2D(this, position, this.position);
-            }
-            //TODO: apply orientation
-            return;
+        if (defined(destination) && defined(destination.west)) {
+            destination = this.viewRectangle(destination);
         }
 
         if (defined(orientation.direction)) {
-            position = defaultValue(position, Cartesian3.clone(this.positionWC, scratchSetViewCartesian));
-            orientation = directionUpToHeadingPitchRoll(this, position, orientation);
+            destination = defaultValue(destination, Cartesian3.clone(this.positionWC, scratchSetViewCartesian));
+            orientation = directionUpToHeadingPitchRoll(this, destination, orientation);
         }
 
-        var heading = defaultValue(orientation.heading, this.heading);
-        var pitch = defaultValue(orientation.pitch, this.pitch);
-        var roll = defaultValue(orientation.roll, this.roll);
+        var heading = defaultValue(orientation.heading, 0.0);
+        var pitch = mode !== SceneMode.SCENE2D ? defaultValue(orientation.pitch, -CesiumMath.PI_OVER_TWO) : -CesiumMath.PI_OVER_TWO;
+        var roll = defaultValue(orientation.roll, 0.0);
 
-        position = defaultValue(position, Cartesian3.clone(this.positionWC, scratchSetViewCartesian));
+        destination = defined(destination) ? destination : Cartesian3.clone(this.positionWC, scratchSetViewCartesian);
 
         if (mode === SceneMode.SCENE3D) {
-            setView3D(this, position, heading, pitch, roll);
+            setView3D(this, destination, heading, pitch, roll);
         } else if (mode === SceneMode.SCENE2D) {
-            setView2D(this, position, heading, pitch, roll);
+            setView2D(this, destination, heading, pitch, roll);
         } else {
-            setViewCV(this, position, heading, pitch, roll);
+            setViewCV(this, destination, heading, pitch, roll);
         }
     };
 
@@ -2070,16 +2061,14 @@ define([
      * View a rectangle on an ellipsoid or map.
      *
      * @param {Rectangle} rectangle The rectangle to view.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to view.
      */
-    Camera.prototype.viewRectangle = function(rectangle, ellipsoid) {
+    Camera.prototype.viewRectangle = function(rectangle) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(rectangle)) {
             throw new DeveloperError('rectangle is required.');
         }
         //>>includeEnd('debug');
 
-        ellipsoid = defaultValue(ellipsoid, this._projection.ellipsoid);
         if (this._mode === SceneMode.SCENE3D) {
             rectangleCameraPosition3D(this, rectangle, this.position);
         } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
@@ -2498,11 +2487,7 @@ define([
         if (defined(options.duration) && options.duration <= 0.0) {
             this.setView({
                 position: options.destination,
-                orientation: {
-                    heading: defaultValue(orientation.heading, 0.0),
-                    pitch:  mode !== SceneMode.SCENE2D ? defaultValue(orientation.pitch, -CesiumMath.PI_OVER_TWO) : -CesiumMath.PI_OVER_TWO,
-                    roll: defaultValue(orientation.roll, 0.0)
-                },
+                orientation: orientation,
                 endTransform: options.endTransform
             });
             if (typeof options.complete === 'function'){
