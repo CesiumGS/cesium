@@ -40,7 +40,7 @@ defineSuite([
                 isTest : 'true',
                 myNum : 8
             }
-        }
+        };
         spyOn(loadJsonp, 'loadAndExecuteScript').and.callFake(function(url, functionName, deferred) {
             expect(url).toContain('isTest=true&myNum=8');
         });
@@ -51,7 +51,7 @@ defineSuite([
         var testUrl = 'test';
         var options = {
             callbackParameterName : 'testCallback'
-        }
+        };
         spyOn(loadJsonp, 'loadAndExecuteScript').and.callFake(function(url, functionName, deferred) {
             expect(url).toContain('testCallback=loadJsonp');
         });
@@ -63,7 +63,7 @@ defineSuite([
         var testProxy = '/proxy/';
         var options = {
             proxy: new DefaultProxy(testProxy)
-        }
+        };
         spyOn(loadJsonp, 'loadAndExecuteScript').and.callFake(function(url, functionName, deferred) {
             expect(url).toStartWith(testProxy + '?' + testUrl);
         });
