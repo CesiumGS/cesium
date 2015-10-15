@@ -38,7 +38,7 @@ define([
 
     // This is broken out into a separate function so that it can be mocked for testing purposes.
     jsonp.loadAndExecuteScript = function(url, functionName, deferred) {
-        loadJsonp.loadAndExecuteScript(url, functionName, deffered);
+        loadJsonp.loadAndExecuteScript(url, functionName, deferred);
     };
 
     jsonp.defaultLoadAndExecuteScript = jsonp.loadAndExecuteScript;
