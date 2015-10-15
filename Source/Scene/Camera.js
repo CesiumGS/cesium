@@ -2018,13 +2018,13 @@ define([
 
         height = Math.max(2.0 * right, 2.0 * top);
 
-        if (positionOnly) {
-            result.x = (northEast.x - southWest.x) * 0.5 + southWest.x;
-            result.y = (northEast.y - southWest.y) * 0.5 + southWest.y;
+        result.x = (northEast.x - southWest.x) * 0.5 + southWest.x;
+        result.y = (northEast.y - southWest.y) * 0.5 + southWest.y;
 
+        if (positionOnly) {
             cart = projection.unproject(result, cart);
             cart.height = height;
-            return projection.project(cart, result);
+            result = projection.project(cart, result);
         } else {
             var frustum = camera.frustum;
             frustum.right = right;
@@ -2037,6 +2037,8 @@ define([
             Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
             Cartesian3.clone(Cartesian3.UNIT_Y, camera.up);
         }
+
+        return result;
     }
     /**
      * Get the camera position needed to view an rectangle on an ellipsoid or map
@@ -2069,11 +2071,8 @@ define([
      *
      * @param {Rectangle} rectangle The rectangle to view.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to view.
-     *
-     * @deprecated
      */
     Camera.prototype.viewRectangle = function(rectangle, ellipsoid) {
-        deprecationWarning('Camera.viewRectangle', 'Camera.viewRectangle has been deprecated.  Use Camera.setView (options.position = rectangle) instead.');
         //>>includeStart('debug', pragmas.debug);
         if (!defined(rectangle)) {
             throw new DeveloperError('rectangle is required.');
@@ -2509,6 +2508,7 @@ define([
             if (typeof options.complete === 'function'){
                 options.complete();
             }
+            return;
         }
 
         var isRectangle = defined(destination.west);
