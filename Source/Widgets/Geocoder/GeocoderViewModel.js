@@ -203,30 +203,16 @@ define([
         }
     });
 
-    var scratchPosition = new Cartesian3();
     function updateCamera(viewModel, destination) {
-        var scene = viewModel._scene;
-        if (viewModel._flightDuration === 0) {
-            var isRectangle = defined(destination.west);
-            if (isRectangle) {
-                if (scene.scene.mode !== SceneMode.SCENE3D && destination.west > destination.east) {
-                    destination = Rectangle.MAX_VALUE;
-                }
-                destination = scene.camera.getRectangleCameraCoordinates(destination, scratchPosition);
-            }
-            viewModel._scene.camera.setView({position: destination});
-            viewModel._complete.raiseEvent();
-        } else {
-            viewModel._scene.camera.flyTo({
-                destination : destination,
-                complete: function() {
-                    viewModel._complete.raiseEvent();
-                },
-                duration : viewModel._flightDuration,
-                endTransform : Matrix4.IDENTITY,
-                convert : false
-            });
-        }
+        viewModel._scene.camera.flyTo({
+            destination : destination,
+            complete: function() {
+                viewModel._complete.raiseEvent();
+            },
+            duration : viewModel._flightDuration,
+            endTransform : Matrix4.IDENTITY,
+            convert : false
+        });
     }
 
     function geocode(viewModel) {

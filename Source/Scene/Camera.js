@@ -5,6 +5,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/defaultValue',
+        '../Core/deprecationWarning',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
@@ -30,6 +31,7 @@ define([
         Cartesian4,
         Cartographic,
         defaultValue,
+        deprecationWarning,
         defined,
         defineProperties,
         DeveloperError,
@@ -941,15 +943,45 @@ define([
         camera._setTransform(currentTransform);
     }
 
+    function directionUpToHeadingPitchRoll(camera, position, orientation) {
+        var direction = Cartesian3.clone(orientation.direction, scratchFlyDirection);
+        var up = Cartesian3.clone(orientation.up, scratchFlyUp);
+
+        if (camera._scene.mode === SceneMode.SCENE3D) {
+            var ellipsoid = camera._projection.ellipsoid;
+            var transform = Transforms.eastNorthUpToFixedFrame(position, ellipsoid, scratchHPRMatrix1);
+            var invTransform = Matrix4.inverseTransformation(transform, scratchHPRMatrix2);
+
+            Matrix4.multiplyByPointAsVector(invTransform, direction, direction);
+            Matrix4.multiplyByPointAsVector(invTransform, up, up);
+        }
+
+        var right = Cartesian3.cross(direction, up, scratchFlyRight);
+
+        return {
+            heading: getHeading(direction, up),
+            pitch: getPitch(direction),
+            roll: getRoll(direction, up, right)
+        };
+    }
+
     /**
-     * Sets the camera position and orientation with heading, pitch and roll angles.
-     *
-     * The position can be given as either a cartesian or a cartographic. If both are given,
-     * then the cartesian will be used. If neither is given, then the current camera position
-     * will be used.
+     * Flies the camera from its current position to a new position.
      *
      * @param {Object} options Object with the following properties:
-     * @param {Cartesian3} [options.position] The cartesian position of the camera.
+     * @param {Cartesian3|Rectangle} options.destination The final position of the camera in WGS84 (world) coordinates or a rectangle that would be visible from a top-down view.
+     * @param {Object} [options.orientation] An object that contains either direction and up properties or heading, pith and roll properties. By default, the direction will point
+     * towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D. The up direction will point towards local north in 3D and in the positive
+     * y direction in Columbus view or 2D.
+     * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
+     *
+     * @exception {DeveloperError} If either direction or up is given, then both are required.
+     */
+    /**
+     * Sets the camera position, orientation and transform.
+     *
+     * @param {Object} options Object with the following properties:
+     * @param {Cartesian3|Rectangle} options.position The final position of the camera in WGS84 (world) coordinates or a rectangle that would be visible from a top-down view.
      * @param {Cartographic} [options.positionCartographic] The cartographic position of the camera.
      * @param {Number} [options.heading] The heading in radians or the current heading will be used if undefined.
      * @param {Number} [options.pitch] The pitch in radians or the current pitch will be used if undefined.
@@ -977,28 +1009,62 @@ define([
      * });
      */
     Camera.prototype.setView = function(options) {
-        if (this._mode === SceneMode.MORPHING) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var orientation = defaultValue(options.orientation, {});
+        if (defined(options.heading) || defined(options.pitch) || defined(options.roll)){
+            deprecationWarning('Camera.setView options', 'options.heading/pitch/roll has been moved to options.orientation.heading/pitch/roll.');
+            orientation.heading = options.heading;
+            orientation.pitch = options.pitch;
+            orientation.roll = options.roll;
+        }
+        if (defined(options.positionCartographic)){
+            deprecationWarning('Camera.setView options', 'options.positionCartographic has been deprecated.  Convert to a Cartesian3 and use options.position instead.');
+        }
+
+        var mode = this._mode;
+        if (mode === SceneMode.MORPHING) {
+            return;
+        }
+        var projection = this._projection;
+        var ellipsoid = projection.ellipsoid;
+        var position = options.position;
+        if (!defined(position) && defined(options.positionCartographic)){
+            position = ellipsoid.cartographicToCartesian(options.positionCartographic);
+        }
+
+        if (defined(options.endTransform)) {
+            this._setTransform(options.endTransform);
+        }
+
+        if (defined(position) && defined(position.west)) {
+            if (mode !== SceneMode.SCENE3D && position.west > position.east) {
+                position = Rectangle.MAX_VALUE;
+            }
+            if (mode === SceneMode.SCENE3D) {
+                rectangleCameraPosition3D(this, position, ellipsoid, this.position);
+            } else if (mode === SceneMode.COLUMBUS_VIEW) {
+                rectangleCameraPositionColumbusView(this, position, projection, this.position);
+            } else if (mode === SceneMode.SCENE2D) {
+                rectangleCameraPosition2D(this, position, projection, this.position);
+            }
+            //TODO: apply orientation
             return;
         }
 
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        if (defined(orientation.direction)) {
+            orientation = directionUpToHeadingPitchRoll(this, position, orientation);
+        }
 
-        var heading = defaultValue(options.heading, this.heading);
-        var pitch = defaultValue(options.pitch, this.pitch);
-        var roll = defaultValue(options.roll, this.roll);
+        var heading = defaultValue(orientation.heading, this.heading);
+        var pitch = defaultValue(orientation.pitch, this.pitch);
+        var roll = defaultValue(orientation.roll, this.roll);
 
-        var cartesian = options.position;
-        var cartographic = options.positionCartographic;
-
-        var projection = this._projection;
-        var ellipsoid = projection.ellipsoid;
-
-        if (this._mode === SceneMode.SCENE3D) {
-            setView3D(this, cartesian, cartographic, heading, pitch, roll, ellipsoid);
-        } else if (this._mode === SceneMode.SCENE2D) {
-            setView2D(this, cartesian, cartographic, heading, pitch, roll, ellipsoid, projection);
+        if (mode === SceneMode.SCENE3D) {
+            setView3D(this, position, undefined, heading, pitch, roll, ellipsoid);
+        } else if (mode === SceneMode.SCENE2D) {
+            setView2D(this, position, undefined, heading, pitch, roll, ellipsoid, projection);
         } else {
-            setViewCV(this, cartesian, cartographic, heading, pitch, roll, ellipsoid, projection);
+            setViewCV(this, position, undefined, heading, pitch, roll, ellipsoid, projection);
         }
     };
 
@@ -1882,6 +1948,9 @@ define([
     var viewRectangleCVNorthEast = new Cartesian3();
     var viewRectangleCVSouthWest = new Cartesian3();
     function rectangleCameraPositionColumbusView(camera, rectangle, projection, result, positionOnly) {
+        if (rectangle.west > rectangle.east) {
+            rectangle = Rectangle.MAX_VALUE;
+        }
         var north = rectangle.north;
         var south = rectangle.south;
         var east = rectangle.east;
@@ -1926,6 +1995,9 @@ define([
     var viewRectangle2DNorthEast = new Cartesian3();
     var viewRectangle2DSouthWest = new Cartesian3();
     function rectangleCameraPosition2D (camera, rectangle, projection, result, positionOnly) {
+        if (rectangle.west > rectangle.east) {
+            rectangle = Rectangle.MAX_VALUE;
+        }
         var north = rectangle.north;
         var south = rectangle.south;
         var east = rectangle.east;
@@ -1993,12 +2065,12 @@ define([
             throw new DeveloperError('rectangle is required');
         }
         //>>includeEnd('debug');
-
-        if (this._mode === SceneMode.SCENE3D) {
+        var mode = this._mode;
+        if (mode === SceneMode.SCENE3D) {
             return rectangleCameraPosition3D(this, rectangle, this._projection.ellipsoid, result, true);
-        } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
+        } else if (mode === SceneMode.COLUMBUS_VIEW) {
             return rectangleCameraPositionColumbusView(this, rectangle, this._projection, result, true);
-        } else if (this._mode === SceneMode.SCENE2D) {
+        } else if (mode === SceneMode.SCENE2D) {
             return rectangleCameraPosition2D(this, rectangle, this._projection, result, true);
         }
 
@@ -2010,19 +2082,18 @@ define([
      *
      * @param {Rectangle} rectangle The rectangle to view.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to view.
+     *
+     * @deprecated
      */
     Camera.prototype.viewRectangle = function(rectangle, ellipsoid) {
+        deprecationWarning('Camera.viewRectangle', 'Camera.viewRectangle has been deprecated.  Use Camera.setView (options.position = rectangle) instead.');
         //>>includeStart('debug', pragmas.debug);
         if (!defined(rectangle)) {
             throw new DeveloperError('rectangle is required.');
         }
         //>>includeEnd('debug');
 
-        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        if (this._mode !== SceneMode.SCENE3D && rectangle.west > rectangle.east) {
-            rectangle = Rectangle.MAX_VALUE;
-        }
-
+        ellipsoid = defaultValue(ellipsoid, this._projection.ellipsoid);
         if (this._mode === SceneMode.SCENE3D) {
             rectangleCameraPosition3D(this, rectangle, ellipsoid, this.position);
         } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
@@ -2423,57 +2494,45 @@ define([
      */
     Camera.prototype.flyTo = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
         var destination = options.destination;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(destination)) {
             throw new DeveloperError('destination is required.');
         }
         //>>includeEnd('debug');
+        var mode = this._mode;
+        if (mode === SceneMode.MORPHING) {
+            return;
+        }
+        var orientation = defaultValue(options.orientation, defaultValue.EMPTY_OBJECT);
+        if (defined(orientation.direction)) {
+            orientation = directionUpToHeadingPitchRoll(this, destination, orientation);
+        }
 
-        var scene = this._scene;
+        if (defined(options.duration) && options.duration <= 0.0) {
+            this.setView({
+                position: options.destination,
+                orientation: {
+                    heading: defaultValue(orientation.heading, 0.0),
+                    pitch:  mode !== SceneMode.SCENE2D ? defaultValue(orientation.pitch, -CesiumMath.PI_OVER_TWO) : -CesiumMath.PI_OVER_TWO,
+                    roll: defaultValue(orientation.roll, 0.0)
+                },
+                endTransform: options.endTransform
+            });
+            if (typeof options.complete === 'function'){
+                options.complete();
+            }
+        }
 
         var isRectangle = defined(destination.west);
         if (isRectangle) {
-            if (scene.mode !== SceneMode.SCENE3D && destination.west > destination.east) {
-                destination = Rectangle.MAX_VALUE;
-            }
-            destination = scene.camera.getRectangleCameraCoordinates(destination, scratchFlyToDestination);
-        }
-
-        var heading;
-        var pitch;
-        var roll;
-
-        var orientation = defaultValue(options.orientation, defaultValue.EMPTY_OBJECT);
-        if (defined(orientation.heading)) {
-            heading = orientation.heading;
-            pitch = orientation.pitch;
-            roll = orientation.roll;
-        } else if (defined(orientation.direction)) {
-            var direction = Cartesian3.clone(orientation.direction, scratchFlyDirection);
-            var up = Cartesian3.clone(orientation.up, scratchFlyUp);
-
-            if (scene.mode === SceneMode.SCENE3D) {
-                var ellipsoid = this._projection.ellipsoid;
-                var transform = Transforms.eastNorthUpToFixedFrame(destination, ellipsoid, scratchHPRMatrix1);
-                var invTransform = Matrix4.inverseTransformation(transform, scratchHPRMatrix2);
-
-                Matrix4.multiplyByPointAsVector(invTransform, direction, direction);
-                Matrix4.multiplyByPointAsVector(invTransform, up, up);
-            }
-
-            var right = Cartesian3.cross(direction, up, scratchFlyRight);
-
-            heading = getHeading(direction, up);
-            pitch = getPitch(direction);
-            roll = getRoll(direction, up, right);
+            destination = this.getRectangleCameraCoordinates(destination, scratchFlyToDestination);
         }
 
         newOptions.destination = destination;
-        newOptions.heading = heading;
-        newOptions.pitch = pitch;
-        newOptions.roll = roll;
+        newOptions.heading = orientation.heading;
+        newOptions.pitch = orientation.pitch;
+        newOptions.roll = orientation.roll;
         newOptions.duration = options.duration;
         newOptions.complete = options.complete;
         newOptions.cancel = options.cancel;
@@ -2482,6 +2541,7 @@ define([
         newOptions.maximumHeight = options.maximumHeight;
         newOptions.easingFunction = options.easingFunction;
 
+        var scene = this._scene;
         scene.tweens.add(CameraFlightPath.createTween(scene, newOptions));
     };
 

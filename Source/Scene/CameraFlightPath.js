@@ -263,20 +263,19 @@ define([
             throw new DeveloperError('destination is required.');
         }
         //>>includeEnd('debug');
+        var mode = scene.mode;
 
-        var projection = scene.mapProjection;
-        var ellipsoid = projection.ellipsoid;
-
-        var maximumHeight = options.maximumHeight;
-        var easingFunction = options.easingFunction;
-
-        if (scene.mode === SceneMode.MORPHING) {
+        if (mode === SceneMode.MORPHING) {
             return emptyFlight();
         }
 
         var convert = defaultValue(options.convert, true);
+        var projection = scene.mapProjection;
+        var ellipsoid = projection.ellipsoid;
+        var maximumHeight = options.maximumHeight;
+        var easingFunction = options.easingFunction;
 
-        if (convert && scene.mode !== SceneMode.SCENE3D) {
+        if (convert && mode !== SceneMode.SCENE3D) {
             ellipsoid.cartesianToCartographic(destination, scratchCartographic);
             destination = projection.project(scratchCartographic, scratchDestination);
         }
@@ -293,7 +292,6 @@ define([
             duration = Math.min(duration, 3.0);
         }
 
-        var mode = scene.mode;
         var heading = defaultValue(options.heading, 0.0);
         var pitch = scene.mode !== SceneMode.SCENE2D ? defaultValue(options.pitch, -CesiumMath.PI_OVER_TWO) : -CesiumMath.PI_OVER_TWO;
         var roll = defaultValue(options.roll, 0.0);
