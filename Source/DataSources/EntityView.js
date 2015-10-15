@@ -13,7 +13,7 @@ define([
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Transforms',
-        '../Scene/HeadingPitchRange',
+        '../Core/HeadingPitchRange',
         '../Scene/SceneMode'
     ], function(
         BoundingSphere,

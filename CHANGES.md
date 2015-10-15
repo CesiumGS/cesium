@@ -14,6 +14,7 @@ Change Log
   * Deprecated `OrthographicFrustum.getPixelSize`, use `OrthographicFrustum.getPixelDimensions` instead. It will be removed in 1.17.
   * Deprecated `PerspectiveFrustum.getPixelSize`, use `PerspectiveFrustum.getPixelDimensions` instead. It will be removed in 1.17.
   * Deprecated `PerspectiveOffCenterFrustum.getPixelSize`, use `PerspectiveOffCenterFrustum.getPixelDimensions` instead. It will be removed in 1.17.
+  * Deprecated `Scene\HeadingPitchRange`, use `Core\HeadingPitchRange` instead. It will be removed in 1.17.
 * Decreased GPU memory usage in `BillboardCollection` and `LabelCollection` by using the WebGL ANGLE_instanced_arrays extension.
 * Added CZML examples to Sandcastle.  See the new CZML tab.
 * Fixed token issue in `ArcGisMapServerImageryProvider`.
