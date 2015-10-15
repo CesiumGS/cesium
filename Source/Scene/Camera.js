@@ -887,12 +887,6 @@ define([
 
         }
 
-   /*     if (convert) {
-            ellipsoid.cartesianToCartographic(destination, scratchCartographic);
-            destination = projection.project(scratchCartographic, scratchDestination);
-        }
-*/
-
         var rotQuat = Quaternion.fromHeadingPitchRoll(heading - CesiumMath.PI_OVER_TWO, pitch, roll, scratchSetViewQuaternion);
         var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
 
@@ -1811,10 +1805,12 @@ define([
     var defaultRF = {direction: new Cartesian3(), right: new Cartesian3(), up: new Cartesian3()};
     var viewRectangle3DEllipsoidGeodesic;
 
+    function computeD(direction, upOrRight, corner, tanThetaOrPhi) {
+        var opposite = Math.abs(Cartesian3.dot(upOrRight, corner));
+        return opposite / tanThetaOrPhi - Cartesian3.dot(direction, corner);
+    }
+
     function rectangleCameraPosition3D (camera, rectangle, result, positionOnly) {
-        if (!defined(result)) {
-            result = new Cartesian3();
-        }
         var ellipsoid = camera._projection.ellipsoid;
         var cameraRF = camera;
         if (positionOnly) {
@@ -1902,11 +1898,6 @@ define([
 
         var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
         var tanTheta = camera.frustum.aspectRatio * tanPhi;
-
-        function computeD(direction, upOrRight, corner, tanThetaOrPhi) {
-            var opposite = Math.abs(Cartesian3.dot(upOrRight, corner));
-            return opposite / tanThetaOrPhi - Cartesian3.dot(direction, corner);
-        }
 
         var d = Math.max(
             computeD(direction, up, northWest, tanPhi),
@@ -2027,16 +2018,13 @@ define([
 
         height = Math.max(2.0 * right, 2.0 * top);
 
-        if (!defined(result)) {
-            result = new Cartesian3();
-        }
-        result.x = (northEast.x - southWest.x) * 0.5 + southWest.x;
-        result.y = (northEast.y - southWest.y) * 0.5 + southWest.y;
-
         if (positionOnly) {
+            result.x = (northEast.x - southWest.x) * 0.5 + southWest.x;
+            result.y = (northEast.y - southWest.y) * 0.5 + southWest.y;
+
             cart = projection.unproject(result, cart);
             cart.height = height;
-            result = projection.project(cart, result);
+            return projection.project(cart, result);
         } else {
             var frustum = camera.frustum;
             frustum.right = right;
@@ -2049,8 +2037,6 @@ define([
             Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
             Cartesian3.clone(Cartesian3.UNIT_Y, camera.up);
         }
-
-        return result;
     }
     /**
      * Get the camera position needed to view an rectangle on an ellipsoid or map
@@ -2066,6 +2052,7 @@ define([
         }
         //>>includeEnd('debug');
         var mode = this._mode;
+        result = defaultValue(result, new Cartesian3());
         if (mode === SceneMode.SCENE3D) {
             return rectangleCameraPosition3D(this, rectangle, result, true);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
