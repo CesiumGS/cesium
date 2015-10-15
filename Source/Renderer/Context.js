@@ -1003,11 +1003,11 @@ define([
     Context.prototype.readPixels = function(readState) {
         var gl = this._gl;
 
-        readState = readState || {};
-        var x = Math.max(readState.x || 0, 0);
-        var y = Math.max(readState.y || 0, 0);
-        var width = readState.width || gl.drawingBufferWidth;
-        var height = readState.height || gl.drawingBufferHeight;
+        readState = defaultValue(readState, defaultValue.EMPTY_OBJECT);
+        var x = Math.max(defaultValue(readState.x, 0), 0);
+        var y = Math.max(defaultValue(readState.y, 0), 0);
+        var width = defaultValue(readState.width, gl.drawingBufferWidth);
+        var height = defaultValue(readState.height, gl.drawingBufferHeight);
         var framebuffer = readState.framebuffer;
 
         //>>includeStart('debug', pragmas.debug);
@@ -1027,6 +1027,112 @@ define([
         gl.readPixels(x, y, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
 
         return pixels;
+    };
+    
+    function getFramebufferSize(fbo, rect) {
+        var buffer;
+            
+        if (fbo.numberOfColorAttachments > 0) {
+            var length = fbo.numberOfColorAttachments;
+            for (var i = 0; i < length; ++i) {
+                var texture = fbo.getColorTexture(i);
+                if (defined(texture)) {
+                    buffer = texture;
+                    break;
+                }
+            }
+        } else if (defined(fbo.depthTexture)) {
+            buffer = fbo.depthTexture;
+        } else if (defined(fbo.depthRenderbuffer)) {
+            buffer = fbo.depthRenderbuffer;
+        } else if (defined(fbo.depthStencilTexture)) {
+            buffer = fbo.depthStencilTexture;
+        } else if (defined(fbo.depthStencilRenderbuffer)) {
+            buffer = fbo.depthStencilRenderbuffer;
+        } else if (defined(fbo.stencilTexture)) {
+            buffer = fbo.stencilTexture;
+        } else if (defined(fbo.stencilRenderbuffer)) {
+            buffer = fbo.stencilRenderbuffer;
+        }
+        
+        rect.x = 0.0;
+        rect.y = 0.0;
+        rect.width = buffer.width;
+        rect.height = buffer.height;
+        
+        return rect;
+    }
+    
+    var scratchBlitSrcRect = new BoundingRectangle();
+    var scratchBlitDstRect = new BoundingRectangle();
+    
+    Context.prototype.blitFramebuffer = function(options) {
+        var gl = this._gl;
+        
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        
+        var source = defaultValue(options.source, defaultValue.EMPTY_OBJECT);
+        var srcFBO = source.framebuffer;
+        var srcRectangle = source.rectangle;
+        
+        var dest = defaultValue(options.destination, defaultValue.EMPTY_OBJECT);
+        var dstFBO = dest.framebuffer;
+        var dstRectangle = dest.rectangle;
+        
+        var maskOptions = defaultValue(options.mask, defaultValue.EMPTY_OBJECT);
+        var colorBit = defaultValue(maskOptions.color, true);
+        var depthBit = defaultValue(maskOptions.depth, false);
+        var stencilBit = defaultValue(maskOptions.stencil, false);
+        
+        var linear = defaultValue(options.linearFilter, false);
+        
+        //>>includeStart('debug', pragmas.debug);
+        if (this.webgl2) {
+            throw new DeveloperError('WebGL 2.0 support is required.');
+        }
+        if (!defined(srcFBO)) {
+            throw new DeveloperError('sourceRectangle is required');
+        }
+        if (!defined(dstFBO)) {
+            throw new DeveloperError('destinationFramebuffer is required.');
+        }
+        //>>includeEnd('debug');
+        
+        if (!defined(srcRectangle)) {
+            srcRectangle = getFramebufferSize(srcFBO, scratchBlitSrcRect);
+        }
+        
+        var srcX0 = srcRectangle.x;
+        var srcY0 = srcRectangle.y;
+        var srcX1 = srcX0 + srcRectangle.width;
+        var srcY1 = srcY0 + srcRectangle.height;
+        
+        if (!defined(dstRectangle)) {
+            dstRectangle = getFramebufferSize(dstFBO, scratchBlitDstRect);
+        }
+        
+        var dstX0 = dstRectangle.x;
+        var dstY0 = dstRectangle.y;
+        var dstX1 = dstX0 + dstRectangle.width;
+        var dstY1 = dstY0 + dstRectangle.height;
+        
+        var mask = 0;
+        if (colorBit) {
+            mask |= gl.COLOR_BUFFER_BIT;
+        }
+        if (depthBit) {
+            mask |= gl.DEPTH_BUFFER_BIT;
+        }
+        if (stencilBit) {
+            mask |= gl.STENCIL_BUFFER_BIT;
+        }
+        
+        var filter = linearFilter ? gl.LINEAR : gl.NEAREST;
+        
+        gl.bindFramebuffer(gl.READ_FRAMEBUFFER, srcFBO._framebuffer);
+        gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, dstFBO._framebuffer);
+        
+        gl.blitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
     };
 
     var viewportQuadAttributeLocations = {
