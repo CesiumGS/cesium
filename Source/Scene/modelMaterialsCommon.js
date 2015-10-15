@@ -196,6 +196,9 @@ define([
             lights = gltf.extensions.KHR_materials_common.lights;
         }
         var hasSkinning = (jointCount > 0);
+        var values = khrMaterialsCommon.values;
+        var isDoubleSided = values.doubleSided;
+        delete values.doubleSided;
 
         var vertexShader = 'precision highp float;\n';
         var fragmentShader = 'precision highp float;\n';
@@ -256,7 +259,6 @@ define([
         // Add material parameters
         var hasAlpha = false;
         var typeValue;
-        var values = khrMaterialsCommon.values;
         for(var name in values) {
             if (values.hasOwnProperty(name)) {
                 var value = values[name];
@@ -477,6 +479,12 @@ define([
         var colorCreationBlock = '  vec3 color = vec3(0.0, 0.0, 0.0);\n';
         if (hasNormals) {
             fragmentShader += '  vec3 normal = normalize(v_normal);\n';
+            if (isDoubleSided) {
+                fragmentShader += '  if (gl_FrontFacing == false)\n';
+                fragmentShader += '  {\n';
+                fragmentShader += '    normal = -normal;\n';
+                fragmentShader += '  }\n';
+            }
         }
 
         var finalColorComputation;
