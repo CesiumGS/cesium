@@ -229,7 +229,7 @@ defineSuite([
             fsFragDepth += '#extension GL_EXT_frag_depth : enable\n';
         }
         
-        fsFragDepth += 
+        fsFragDepth +=
             'void main()\n' +
             '{\n' +
             '    gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);\n';
