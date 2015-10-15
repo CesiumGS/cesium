@@ -11,6 +11,11 @@ Change Log
   * Made `EllipsoidPrimitive` private, use `EllipsoidGeometry` or `Entity.ellipsoid` instead.
   * Deprecated `RectanglePrimitive`, use `RectangleGeometry` or `Entity.rectangle` instead. It will be removed in 1.17.
   * Deprecated `EllipsoidPrimitive`, use `EllipsoidGeometry` or `Entity.ellipsoid` instead. It will be removed in 1.17.
+  * Deprecated `Camera.setView`, use `EllipsoidGeometry` or `Entity.ellipsoid` instead. It will be removed in 1.17.
+  * The following options to `Camera.setView` have been deprecated and will be removed in 1.17:
+    * `position`: use `destination` instead.
+    * `positionCartographic`: convert to a `Cartesian3` and use `destination` instead.
+    * `heading`, `pitch` and `roll`: use `orientation.heading/pitch/roll` instead.
 * Decreased GPU memory usage in `BillboardCollection` and `LabelCollection` by using the WebGL ANGLE_instanced_arrays extension.
 * Added CZML examples to Sandcastle.  See the new CZML tab.
 * Fixed token issue in `ArcGisMapServerImageryProvider`.

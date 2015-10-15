@@ -212,7 +212,7 @@ define([
         this._max2Dfrustum = undefined;
 
         // set default view
-        this.viewRectangle(Camera.DEFAULT_VIEW_RECTANGLE, scene.mapProjection.ellipsoid);
+        this.viewRectangle(Camera.DEFAULT_VIEW_RECTANGLE);
 
         var mag = Cartesian3.magnitude(this.position);
         mag += mag * Camera.DEFAULT_VIEW_FACTOR;
@@ -954,8 +954,9 @@ define([
     }
 
     /**
-     * Flies the camera from its current position to a new position.
+     * Sets the camera position, orientation and transform.
      *
+     * @param {Object} options Object with the following properties:
      * @param {Object} options Object with the following properties:
      * @param {Cartesian3|Rectangle} options.destination The final position of the camera in WGS84 (world) coordinates or a rectangle that would be visible from a top-down view.
      * @param {Object} [options.orientation] An object that contains either direction and up properties or heading, pith and roll properties. By default, the direction will point
@@ -963,20 +964,13 @@ define([
      * y direction in Columbus view or 2D.
      * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
      *
-     * @exception {DeveloperError} If either direction or up is given, then both are required.
-     */
-    /**
-     * Sets the camera position, orientation and transform.
-     *
-     * @param {Object} options Object with the following properties:
-     * @param {Cartesian3|Rectangle} options.position The final position of the camera in WGS84 (world) coordinates or a rectangle that would be visible from a top-down view.
-     * @param {Cartographic} [options.positionCartographic] The cartographic position of the camera.
-     * @param {Number} [options.heading] The heading in radians or the current heading will be used if undefined.
-     * @param {Number} [options.pitch] The pitch in radians or the current pitch will be used if undefined.
-     * @param {Number} [options.roll] The roll in radians or the current roll will be used if undefined.
-     *
      * @example
-     * // 1. Set view with heading, pitch and roll
+     * // 1. Set position with a top-down view
+     * viewer.camera.setView({
+     *     destination : Cesium.Cartesian3.fromDegrees(-117.16, 32.71, 15000.0)
+     * });
+     *
+     * // 2 Set view with heading, pitch and roll
      * `({
      *     destination : cartesianPosition,
      *     orientation: {
@@ -988,9 +982,26 @@ define([
      *
      * // 3. Change heading, pitch and roll with the camera position remaining the same.
      * camera.setView({
-     *     heading : Cesium.Math.toRadians(90.0), // east, default value is 0.0 (north)
-     *     pitch : Cesium.Math.toRadians(-90),    // default value (looking down)
-     *     roll : 0.0                             // default value
+     *     orientation: {
+     *         heading : Cesium.Math.toRadians(90.0), // east, default value is 0.0 (north)
+     *         pitch : Cesium.Math.toRadians(-90),    // default value (looking down)
+     *         roll : 0.0                             // default value
+     *     }
+     * });
+     *
+     *
+     * // 4. View rectangle with a top-down view
+     * viewer.camera.setView({
+     *     destination : Cesium.Rectangle.fromDegrees(west, south, east, north)
+     * });
+     *
+     * // 5. Setposition with an orientation using unit vectors.
+     * viewer.camera.setView({
+     *     destination : Cesium.Cartesian3.fromDegrees(-122.19, 46.25, 5000.0),
+     *     orientation : {
+     *         direction : new Cesium.Cartesian3(-0.04231243104240401, -0.20123236049443421, -0.97862924300734),
+     *         up : new Cesium.Cartesian3(-0.47934589305293746, -0.8553216253114552, 0.1966022179118339)
+     *     }
      * });
      */
     Camera.prototype.setView = function(options) {
@@ -2031,6 +2042,7 @@ define([
 
         return result;
     }
+
     /**
      * Get the camera position needed to view an rectangle on an ellipsoid or map
      *
@@ -2069,11 +2081,12 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (this._mode === SceneMode.SCENE3D) {
+        var mode = this._mode;
+        if (mode === SceneMode.SCENE3D) {
             rectangleCameraPosition3D(this, rectangle, this.position);
-        } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
+        } else if (mode === SceneMode.COLUMBUS_VIEW) {
             rectangleCameraPositionColumbusView(this, rectangle, this.position);
-        } else if (this._mode === SceneMode.SCENE2D) {
+        } else if (mode === SceneMode.SCENE2D) {
             rectangleCameraPosition2D(this, rectangle, this.position);
         }
     };
