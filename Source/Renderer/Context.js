@@ -1041,6 +1041,14 @@ define([
                     break;
                 }
             }
+            
+            for (var j = 0; j < length; ++j) {
+                var renderbuffer = fbo.getColorRenderbuffer(j);
+                if (defined(renderbuffer)) {
+                    buffer = renderbuffer;
+                    break;
+                }
+            }
         } else if (defined(fbo.depthTexture)) {
             buffer = fbo.depthTexture;
         } else if (defined(fbo.depthRenderbuffer)) {
@@ -1074,10 +1082,12 @@ define([
         var source = defaultValue(options.source, defaultValue.EMPTY_OBJECT);
         var srcFBO = source.framebuffer;
         var srcRectangle = source.rectangle;
+        var readBuffer = defaultValue(source.attachment, 0);
         
         var dest = defaultValue(options.destination, defaultValue.EMPTY_OBJECT);
         var dstFBO = dest.framebuffer;
         var dstRectangle = dest.rectangle;
+        var drawBuffer = defaultValue(dest.attachment, 0);
         
         var maskOptions = defaultValue(options.mask, defaultValue.EMPTY_OBJECT);
         var colorBit = defaultValue(maskOptions.color, true);
@@ -1095,6 +1105,25 @@ define([
         }
         if (!defined(dstFBO)) {
             throw new DeveloperError('destinationFramebuffer is required.');
+        }
+        if (colorBit) {
+            var sourceTexture = srcFBO.getColorTexture(readBuffer);
+            if (!defined(sourceTexture) && !defined(srcFBO.getColorRenderbuffer(readBuffer))) {
+                throw new DeveloperError('The source framebuffer must have a color attachment when the color mask is set.');
+            }
+            
+            var destTexture = dstFBO.getColorTexture(drawBuffer);
+            if (!defined(destTexture) && !defined(dstFBO.getColorRenderbuffer(drawBuffer))) {
+                throw new DeveloperError('The destination framebuffer must have a color attachment when the color mask is set.');
+            }
+            
+            var srcIsFloat = defined(sourceTexture) && sourceTexture.pixelDatatype === PixelDatatype.FLOAT;
+            var dstIsFloat = defined(destTexture) && destTexture.pixelDatatype === PixelDatatype.FLOAT;
+            if ((srcIsFloat && !dstIsFloat) || (!srcIsFloat && dstIsFloat)) {
+                throw new DeveloperError('The color attachment datatype of both framebuffers must match when one is floating-point.');
+            }
+            // Otherwise, both textures are float or an unsigned integer format. When signed integer or fixed point formats are supported,
+            // additional checks that both are signed integer, both are unsigned integer or both are fixed point need to be added.
         }
         //>>includeEnd('debug');
         
@@ -1133,6 +1162,8 @@ define([
         gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, dstFBO._framebuffer);
         
         gl.blitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
+        
+        this._currentFramebuffer = dstFBO;
     };
 
     var viewportQuadAttributeLocations = {
