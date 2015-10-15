@@ -389,7 +389,7 @@ define([
                     if (lightType === 'spot') {
                         fragmentLightingBlock += '    vec4 spotPosition = u_' + lightBaseName + 'InverseTransform * vec4(v_position, 1.);\n';
                         fragmentLightingBlock += '    float cosAngle = dot(vec3(0.0,0.0,-1.0), normalize(spotPosition.xyz));\n';
-                        fragmentLightingBlock += '    if (cosAngle > cos(radians(u_' + lightBaseName + 'FallOffAngle * 0.5)))\n;'
+                        fragmentLightingBlock += '    if (cosAngle > cos(radians(u_' + lightBaseName + 'FallOffAngle * 0.5)))\n;';
                         fragmentLightingBlock += '    {\n';
                         fragmentLightingBlock += '        attenuation *= max(0.0, pow(cosAngle, u_' + lightBaseName + 'FallOffExponent));\n';
                     }
@@ -412,11 +412,18 @@ define([
 
         if (!hasAmbientLights) {
             // Add an ambient light if we don't have one
-            fragmentLightingBlock += '    ambientLight += vec3(0.1, 0.1, 0.1);\n';
+            fragmentLightingBlock += '  ambientLight += vec3(0.1, 0.1, 0.1);\n';
         }
 
         if (!hasNonAmbientLights) {
-            // TODO: Add AGI lights
+            fragmentLightingBlock += '  vec3 l = normalize(czm_sunDirectionEC);\n';
+            fragmentLightingBlock += '  diffuseLight += vec3(1.0, 1.0, 1.0) * max(dot(normal,l), 0.);\n';
+
+            if (hasSpecular) {
+                fragmentLightingBlock += '  vec3 h = normalize(l + vec3(0., 0., 1.));\n';
+                fragmentLightingBlock += '  float specularIntensity = max(0., pow(max(dot(normal, h), 0.), u_shininess));\n';
+                fragmentLightingBlock += '  specularLight += vec3(1.0, 1.0, 1.0) * specularIntensity;\n';
+            }
         }
 
         vertexShader += 'void main(void) {\n';
@@ -500,16 +507,16 @@ define([
         fragmentShader += finalColorComputation;
         fragmentShader += '}\n';
 
+        // TODO: Handle transparency
         techniques[techniqueId] = {
             attributes: techniqueAttributes,
             parameters: techniqueParameters,
             program: programId,
-            states: {enable: []},
+            states: {enable: [WebGLConstants.CULL_FACE, WebGLConstants.DEPTH_TEST]},
             uniforms: techniqueUniforms
         };
 
         // Add shaders
-        // TODO: Generate shader strings
         shaders[vertexShaderId] = {
             type: WebGLConstants.VERTEX_SHADER,
             uri: '',
