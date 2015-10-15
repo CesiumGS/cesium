@@ -1125,6 +1125,53 @@ define([
             // Otherwise, both textures are float or an unsigned integer format. When signed integer or fixed point formats are supported,
             // additional checks that both are signed integer, both are unsigned integer or both are fixed point need to be added.
         }
+        if (depthBit && !stencilBit) {
+            if ((defined(srcFBO.depthRenderbuffer) && !defined(dstFBO.depthRenderbuffer)) ||
+                (!defined(srcFBO.depthRenderbuffer) && defined(dstFBO.depthRenderbuffer))) {
+                throw new DeveloperError('When the depth mask is set, both depth buffers need to have the same format.');
+            }
+            if ((defined(srcFBO.depthTexture) && !defined(dstFBO.depthTexture)) ||
+                (!defined(srcFBO.depthTexture) && defined(dstFBO.depthTexture)) {
+                throw new DeveloperError('When the depth mask is set, both depth buffers need to have the same format.');
+            }
+            if (!defined(srcFBO.depthRenderbuffer) && !defined(srcFBO.depthTexture) &&
+                !defined(dstFBO.depthRenderbuffer) && !defined(dstFBO.depthTexture)) {
+                throw new DeveloperError('Both source and destination framebuffers require a depth attachment when the depth mask is set.');
+            }
+        }
+        if (stencilBit && !depthBit) {
+            if ((defined(srcFBO.stencilRenderbuffer) && !defined(dstFBO.stencilRenderbuffer)) ||
+                (!defined(srcFBO.stencilRenderbuffer) && defined(dstFBO.stencilRenderbuffer))) {
+                throw new DeveloperError('When the stencil mask is set, both stencil buffers need to have the same format.');
+            }
+            if ((defined(srcFBO.stencilTexture) && !defined(dstFBO.stencilTexture)) ||
+                (!defined(srcFBO.stencilTexture) && defined(dstFBO.stencilTexture)) {
+                throw new DeveloperError('When the stencil mask is set, both stencil buffers need to have the same format.');
+            }
+            if (!defined(srcFBO.stencilRenderbuffer) && !defined(srcFBO.stencilTexture) &&
+                !defined(dstFBO.stencilRenderbuffer) && !defined(dstFBO.stencilTexture)) {
+                throw new DeveloperError('Both source and destination framebuffers require a stencil attachment when the stencil mask is set.');
+            }
+        }
+        if (stencilBit && depthBit) {
+            if ((defined(srcFBO.depthStencilRenderbuffer) && !defined(dstFBO.depthStencilRenderbuffer)) ||
+                (!defined(srcFBO.depthStencilRenderbuffer) && defined(dstFBO.depthStencilRenderbuffer))) {
+                throw new DeveloperError('When the depth and stencil masks are set, both depth-stencil buffers need to have the same format.');
+            }
+            if ((defined(srcFBO.depthStencilTexture) && !defined(dstFBO.depthStencilTexture)) ||
+                (!defined(srcFBO.depthStencilTexture) && defined(dstFBO.depthStencilTexture)) {
+                throw new DeveloperError('When the depth and stencil masks are set, both depth-stencil buffers need to have the same format.');
+            }
+            if (!defined(srcFBO.depthStencilRenderbuffer) && !defined(srcFBO.depthStencilTexture) &&
+                !defined(dstFBO.depthStencilRenderbuffer) && !defined(dstFBO.depthStencilTexture)) {
+                throw new DeveloperError('Both source and destination framebuffers require a stencil attachment when the stencil mask is set.');
+            }
+        }
+        if ((depthBit || stencilBit) && linear) {
+            throw new DeveloperError('A linear filter cannot be used with a depth or stencil buffer.');
+        }
+        // More error checking is required when multiple samples are supported.
+        // See https://www.khronos.org/opengles/sdk/docs/man3/html/glBlitFramebuffer.xhtml
         //>>includeEnd('debug');
         
         if (!defined(srcRectangle)) {
