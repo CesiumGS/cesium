@@ -1073,6 +1073,7 @@ define([
     
     var scratchBlitSrcRect = new BoundingRectangle();
     var scratchBlitDstRect = new BoundingRectangle();
+    var scratchBlitDrawBuffers = [0];
     
     Context.prototype.blitFramebuffer = function(options) {
         var gl = this._gl;
@@ -1205,8 +1206,14 @@ define([
         
         var filter = linearFilter ? gl.LINEAR : gl.NEAREST;
         
+        var drawBuffers = scratchBlitDrawBuffers;
+        drawBuffers[0] = drawBuffer;
+        
         gl.bindFramebuffer(gl.READ_FRAMEBUFFER, srcFBO._framebuffer);
         gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, dstFBO._framebuffer);
+        
+        gl.readBuffer(readBuffer);
+        gl.drawBuffers(drawBuffers);
         
         gl.blitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
         
