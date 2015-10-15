@@ -254,6 +254,7 @@ define([
         }
 
         // Add material parameters
+        var hasAlpha = false;
         var typeValue;
         var values = khrMaterialsCommon.values;
         for(var name in values) {
@@ -267,11 +268,17 @@ define([
                         break;
                     case 'number':
                         typeValue = WebGLConstants.FLOAT;
+                        if (!hasAlpha && name === 'transparency') {
+                            hasAlpha = (value !== 1.0);
+                        }
                         break;
                     default:
                         if (Array.isArray(value)) {
                             // 35664 (vec2), 35665 (vec3), 35666 (vec4)
                             typeValue = 35662 + value.length;
+                            if (!hasAlpha && typeValue === WebGLConstants.FLOAT_VEC4 && name === 'diffuse') {
+                                hasAlpha = (value[3] !== 1.0);
+                            }
                         }
                         break;
                 }
@@ -543,12 +550,42 @@ define([
         fragmentShader += finalColorComputation;
         fragmentShader += '}\n';
 
-        // TODO: Handle transparency
+        // TODO: Handle texture transparency
+        var techniqueStates;
+        if (hasAlpha) {
+            techniqueStates = {
+                enable: [
+                    WebGLConstants.DEPTH_TEST,
+                    WebGLConstants.BLEND
+                ],
+                depthMask: false,
+                functions: {
+                    "blendEquationSeparate": [
+                        WebGLConstants.FUNC_ADD,
+                        WebGLConstants.FUNC_ADD
+                    ],
+                    "blendFuncSeparate": [
+                        WebGLConstants.ONE,
+                        WebGLConstants.ONE_MINUS_SRC_ALPHA,
+                        WebGLConstants.ONE,
+                        WebGLConstants.ONE_MINUS_SRC_ALPHA
+                    ]
+                }
+            };
+        }
+        else {
+            techniqueStates = {
+                enable: [
+                    WebGLConstants.CULL_FACE,
+                    WebGLConstants.DEPTH_TEST
+                ]
+            };
+        }
         techniques[techniqueId] = {
             attributes: techniqueAttributes,
             parameters: techniqueParameters,
             program: programId,
-            states: {enable: [WebGLConstants.CULL_FACE, WebGLConstants.DEPTH_TEST]},
+            states: techniqueStates,
             uniforms: techniqueUniforms
         };
 
