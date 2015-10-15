@@ -968,39 +968,10 @@ defineSuite([
                         },
                         mask : {
                             color : true,
-                            depth : true
-                        }
-                    });
-                }).toThrowDeveloperError();
-                
-                expect(function() {
-                    context.blitFramebuffer({
-                        source : {
-                            framebuffer : fbo1
-                        },
-                        destination : {
-                            framebuffer : fbo2
-                        },
-                        mask : {
-                            color : true,
-                            stencil : true
-                        }
-                    });
-                }).toThrowDeveloperError();
-                
-                expect(function() {
-                    context.blitFramebuffer({
-                        source : {
-                            framebuffer : fbo1
-                        },
-                        destination : {
-                            framebuffer : fbo2
-                        },
-                        mask : {
-                            color : true,
                             depth : true,
                             stencil : true
-                        }
+                        },
+                        linearFilter : true
                     });
                 }).toThrowDeveloperError();
                 

@@ -1109,7 +1109,7 @@ define([
         if (!defined(dstFBO)) {
             throw new DeveloperError('destination.framebuffer is required.');
         }
-        if (srcFBO && dstFBO) {
+        if (srcFBO === dstFBO) {
             throw new DeveloperError('source.framebuffer and destination.framebuffer must be different.');
         }
         if (colorBit) {
