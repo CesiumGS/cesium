@@ -125,9 +125,11 @@ define([
             var time = value.time / duration;
 
             camera.setView({
-                heading : CesiumMath.lerp(startHeading, heading, time),
-                pitch : CesiumMath.lerp(startPitch, pitch, time),
-                roll : CesiumMath.lerp(startRoll, roll, time)
+                orientation: {
+                    heading : CesiumMath.lerp(startHeading, heading, time),
+                    pitch : CesiumMath.lerp(startPitch, pitch, time),
+                    roll : CesiumMath.lerp(startRoll, roll, time)
+                }
             });
 
             Cartesian2.lerp(start, destination, time, camera.position);
@@ -139,7 +141,7 @@ define([
 
     var scratchStartCart = new Cartographic();
     var scratchEndCart = new Cartographic();
-    var scratchCurrentPositionCart = new Cartographic();
+    var scratchCurrentPositionCart = new Cartesian3();
 
     function createUpdate3D(scene, duration, destination, heading, pitch, roll, optionAltitude) {
         var camera = scene.camera;
@@ -171,16 +173,19 @@ define([
         var update = function(value) {
             var time = value.time / duration;
 
-            var position = scratchCurrentPositionCart;
-            position.longitude = CesiumMath.lerp(startCart.longitude, destCart.longitude, time);
-            position.latitude = CesiumMath.lerp(startCart.latitude, destCart.latitude, time);
-            position.height = heightFunction(time);
+            var position = Cartesian3.fromRadians(
+                CesiumMath.lerp(startCart.longitude, destCart.longitude, time),
+                CesiumMath.lerp(startCart.latitude, destCart.latitude, time),
+                heightFunction(time)
+            );
 
             camera.setView({
-                positionCartographic : position,
-                heading : CesiumMath.lerp(startHeading, heading, time),
-                pitch : CesiumMath.lerp(startPitch, pitch, time),
-                roll : CesiumMath.lerp(startRoll, roll, time)
+                destination : position,
+                orientation: {
+                    heading : CesiumMath.lerp(startHeading, heading, time),
+                    pitch : CesiumMath.lerp(startPitch, pitch, time),
+                    roll : CesiumMath.lerp(startRoll, roll, time)
+                }
             });
         };
 
@@ -202,9 +207,11 @@ define([
             var time = value.time / duration;
 
             camera.setView({
-                heading : CesiumMath.lerp(startHeading, heading, time),
-                pitch : CesiumMath.lerp(startPitch, pitch, time),
-                roll : CesiumMath.lerp(startRoll, roll, time)
+                orientation: {
+                    heading : CesiumMath.lerp(startHeading, heading, time),
+                    pitch : CesiumMath.lerp(startPitch, pitch, time),
+                    roll : CesiumMath.lerp(startRoll, roll, time)
+                }
             });
 
             Cartesian2.lerp(start, destination, time, camera.position);
@@ -308,7 +315,11 @@ define([
         empty = empty && Cartesian2.equalsEpsilon(camera.position, destination, CesiumMath.EPSILON6);
         empty = empty && CesiumMath.equalsEpsilon(Math.max(frustum.right - frustum.left, frustum.top - frustum.bottom), destination.z, CesiumMath.EPSILON6);
 
-        empty = empty || (scene.mode !== SceneMode.SCENE2D && Cartesian3.equalsEpsilon(destination, camera.position, CesiumMath.EPSILON6));
+        empty = empty || (scene.mode !== SceneMode.SCENE2D &&
+                Cartesian3.equalsEpsilon(destination, camera.position, CesiumMath.EPSILON10) &&
+                CesiumMath.equalsEpsilon(heading, camera.heading, CesiumMath.EPSILON10) &&
+                CesiumMath.equalsEpsilon(pitch, camera.pitch, CesiumMath.EPSILON10) &&
+                CesiumMath.equalsEpsilon(roll, camera.roll, CesiumMath.EPSILON10));
 
         if (empty) {
             return emptyFlight(complete, cancel);
