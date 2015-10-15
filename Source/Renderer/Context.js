@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/BoundingRectangle',
         '../Core/clone',
         '../Core/Color',
         '../Core/ComponentDatatype',
@@ -34,6 +35,7 @@ define([
         './VertexArray',
         './WebGLConstants'
     ], function(
+        BoundingRectangle,
         clone,
         Color,
         ComponentDatatype,
@@ -213,7 +215,7 @@ define([
             }
         }
 
-        var defaultToWebgl2 = false;
+        var defaultToWebgl2 = true;
         var webgl2Supported = (typeof WebGL2RenderingContext !== 'undefined');
         var webgl2 = false;
         var glContext;
@@ -1095,10 +1097,10 @@ define([
         var depthBit = defaultValue(maskOptions.depth, false);
         var stencilBit = defaultValue(maskOptions.stencil, false);
         
-        var linear = defaultValue(options.linearFilter, false);
+        var linearFilter = defaultValue(options.linearFilter, false);
         
         //>>includeStart('debug', pragmas.debug);
-        if (this.webgl2) {
+        if (!this.webgl2) {
             throw new DeveloperError('WebGL 2.0 support is required.');
         }
         if (!defined(srcFBO)) {
@@ -1108,13 +1110,13 @@ define([
             throw new DeveloperError('destinationFramebuffer is required.');
         }
         if (colorBit) {
-            var sourceTexture = srcFBO.getColorTexture(readBuffer);
-            if (!defined(sourceTexture) && !defined(srcFBO.getColorRenderbuffer(readBuffer))) {
+            var sourceTexture = srcFBO.numberOfColorTextureAttachments > 0 ? srcFBO.getColorTexture(readBuffer) : undefined;
+            if (!defined(sourceTexture) && srcFBO.numberOfColorRenderbufferAttachments === 0) {
                 throw new DeveloperError('The source framebuffer must have a color attachment when the color mask is set.');
             }
             
-            var destTexture = dstFBO.getColorTexture(drawBuffer);
-            if (!defined(destTexture) && !defined(dstFBO.getColorRenderbuffer(drawBuffer))) {
+            var destTexture = dstFBO.numberOfColorTextureAttachments > 0 ? dstFBO.getColorTexture(drawBuffer) : undefined;
+            if (!defined(destTexture) && dstFBO.numberOfColorRenderbufferAttachments === 0) {
                 throw new DeveloperError('The destination framebuffer must have a color attachment when the color mask is set.');
             }
             
@@ -1132,7 +1134,7 @@ define([
                 throw new DeveloperError('When the depth mask is set, both depth buffers need to have the same format.');
             }
             if ((defined(srcFBO.depthTexture) && !defined(dstFBO.depthTexture)) ||
-                (!defined(srcFBO.depthTexture) && defined(dstFBO.depthTexture)) {
+                (!defined(srcFBO.depthTexture) && defined(dstFBO.depthTexture))) {
                 throw new DeveloperError('When the depth mask is set, both depth buffers need to have the same format.');
             }
             if (!defined(srcFBO.depthRenderbuffer) && !defined(srcFBO.depthTexture) &&
@@ -1146,7 +1148,7 @@ define([
                 throw new DeveloperError('When the stencil mask is set, both stencil buffers need to have the same format.');
             }
             if ((defined(srcFBO.stencilTexture) && !defined(dstFBO.stencilTexture)) ||
-                (!defined(srcFBO.stencilTexture) && defined(dstFBO.stencilTexture)) {
+                (!defined(srcFBO.stencilTexture) && defined(dstFBO.stencilTexture))) {
                 throw new DeveloperError('When the stencil mask is set, both stencil buffers need to have the same format.');
             }
             if (!defined(srcFBO.stencilRenderbuffer) && !defined(srcFBO.stencilTexture) &&
@@ -1160,7 +1162,7 @@ define([
                 throw new DeveloperError('When the depth and stencil masks are set, both depth-stencil buffers need to have the same format.');
             }
             if ((defined(srcFBO.depthStencilTexture) && !defined(dstFBO.depthStencilTexture)) ||
-                (!defined(srcFBO.depthStencilTexture) && defined(dstFBO.depthStencilTexture)) {
+                (!defined(srcFBO.depthStencilTexture) && defined(dstFBO.depthStencilTexture))) {
                 throw new DeveloperError('When the depth and stencil masks are set, both depth-stencil buffers need to have the same format.');
             }
             if (!defined(srcFBO.depthStencilRenderbuffer) && !defined(srcFBO.depthStencilTexture) &&
@@ -1168,7 +1170,7 @@ define([
                 throw new DeveloperError('Both source and destination framebuffers require a stencil attachment when the stencil mask is set.');
             }
         }
-        if ((depthBit || stencilBit) && linear) {
+        if ((depthBit || stencilBit) && linearFilter) {
             throw new DeveloperError('A linear filter cannot be used with a depth or stencil buffer.');
         }
         // More error checking is required when multiple samples are supported.

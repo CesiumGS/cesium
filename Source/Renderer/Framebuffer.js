@@ -258,6 +258,16 @@ define([
                 return this._activeColorAttachments.length;
             }
         },
+        numberOfColorTextureAttachments : {
+            get : function() {
+                return this._colorTextures.length;
+            }
+        },
+        numberOfColorRenderbufferAttachments : {
+            get : function() {
+                return this._colorRenderbuffers.length;
+            }
+        },
         depthTexture: {
             get : function() {
                 return this._depthTexture;
