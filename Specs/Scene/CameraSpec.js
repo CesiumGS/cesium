@@ -16,7 +16,7 @@ defineSuite([
         'Core/Transforms',
         'Core/WebMercatorProjection',
         'Scene/CameraFlightPath',
-        'Scene/HeadingPitchRange',
+        'Core/HeadingPitchRange',
         'Scene/OrthographicFrustum',
         'Scene/PerspectiveFrustum',
         'Scene/SceneMode',

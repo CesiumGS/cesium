@@ -736,34 +736,30 @@ defineSuite([
     });
 
     it('throws when instanceDivisor is greater than zero and the instanced arrays extension is not supported.', function() {
-        // disable extension
-        var instancedArrays = context._instancedArrays;
-        context._instancedArrays = undefined;
-
-        var buffer = Buffer.createVertexBuffer({
-            context : context,
-            sizeInBytes : 3,
-            usage : BufferUsage.STATIC_DRAW
-        });
-
-        var attributes = [{
-            index : 0,
-            vertexBuffer : buffer,
-            componentsPerAttribute : 3
-        }, {
-            index : 1,
-            vertexBuffer : buffer,
-            componentsPerAttribute : 3,
-            instanceDivisor : 1
-        }];
-
-        expect(function() {
-            return new VertexArray({
+        if (!context.instancedArrays) {
+            var buffer = Buffer.createVertexBuffer({
                 context : context,
-                attributes : attributes
+                sizeInBytes : 3,
+                usage : BufferUsage.STATIC_DRAW
             });
-        }).toThrowDeveloperError();
 
-        context._instancedArrays = instancedArrays;
+            var attributes = [{
+                index : 0,
+                vertexBuffer : buffer,
+                componentsPerAttribute : 3
+            }, {
+                index : 1,
+                vertexBuffer : buffer,
+                componentsPerAttribute : 3,
+                instanceDivisor : 1
+            }];
+
+            expect(function() {
+                return new VertexArray({
+                    context : context,
+                    attributes : attributes
+                });
+            }).toThrowDeveloperError();
+        }
     });
 }, 'WebGL');

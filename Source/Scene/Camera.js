@@ -22,7 +22,7 @@ define([
         '../Core/Rectangle',
         '../Core/Transforms',
         './CameraFlightPath',
-        './HeadingPitchRange',
+        '../Core/HeadingPitchRange',
         './PerspectiveFrustum',
         './SceneMode'
     ], function(

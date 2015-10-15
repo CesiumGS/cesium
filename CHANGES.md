@@ -11,6 +11,10 @@ Change Log
   * Made `EllipsoidPrimitive` private, use `EllipsoidGeometry` or `Entity.ellipsoid` instead.
   * Deprecated `RectanglePrimitive`, use `RectangleGeometry` or `Entity.rectangle` instead. It will be removed in 1.17.
   * Deprecated `EllipsoidPrimitive`, use `EllipsoidGeometry` or `Entity.ellipsoid` instead. It will be removed in 1.17.
+  * Deprecated `OrthographicFrustum.getPixelSize`, use `OrthographicFrustum.getPixelDimensions` instead. It will be removed in 1.17.
+  * Deprecated `PerspectiveFrustum.getPixelSize`, use `PerspectiveFrustum.getPixelDimensions` instead. It will be removed in 1.17.
+  * Deprecated `PerspectiveOffCenterFrustum.getPixelSize`, use `PerspectiveOffCenterFrustum.getPixelDimensions` instead. It will be removed in 1.17.
+  * Deprecated `Scene\HeadingPitchRange`, use `Core\HeadingPitchRange` instead. It will be removed in 1.17.
   * Deprecated `Camera.setView`, use `EllipsoidGeometry` or `Entity.ellipsoid` instead. It will be removed in 1.17.
   * The following options to `Camera.setView` have been deprecated and will be removed in 1.17:
     * `position`: use `destination` instead.

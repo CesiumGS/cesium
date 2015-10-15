@@ -1244,7 +1244,7 @@ defineSuite([
         var vectorProjection = Cartesian3.multiplyByScalar(camera.direction, Cartesian3.dot(diff, camera.direction), new Cartesian3());
         var distance = Math.max(0.0, Cartesian3.magnitude(vectorProjection) - bs.radius);
 
-        var pixelSize = camera.frustum.getPixelSize(dimensions, distance);
+        var pixelSize = camera.frustum.getPixelDimensions(dimensions.x, dimensions.y, distance, new Cartesian2());
         bs.radius += pixelSize.y * 0.25 * Math.max(greenImage.width, greenImage.height) + pixelSize.y * one.pixelOffset.y;
 
         expect(actual.center).toEqual(bs.center);
