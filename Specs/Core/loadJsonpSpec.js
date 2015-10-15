@@ -65,7 +65,7 @@ defineSuite([
             proxy: new DefaultProxy(testProxy)
         };
         spyOn(loadJsonp, 'loadAndExecuteScript').and.callFake(function(url, functionName, deferred) {
-            expect(url).toStartWith(testProxy + '?' + testUrl);
+            expect(url).toStartWith(options.proxy.getURL(testUrl));
         });
         loadJsonp(testUrl, options);
     });
