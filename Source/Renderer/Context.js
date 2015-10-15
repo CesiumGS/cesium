@@ -284,50 +284,55 @@ define([
         this._antialias = gl.getContextAttributes().antialias;
 
         // Query and initialize extensions
-        this._standardDerivatives = getExtension(gl, ['OES_standard_derivatives']);
-        this._elementIndexUint = getExtension(gl, ['OES_element_index_uint']);
-        this._depthTexture = getExtension(gl, ['WEBGL_depth_texture', 'WEBKIT_WEBGL_depth_texture']);
-        this._textureFloat = getExtension(gl, ['OES_texture_float']);
+        this._standardDerivatives = !!getExtension(gl, ['OES_standard_derivatives']);
+        this._elementIndexUint = !!getExtension(gl, ['OES_element_index_uint']);
+        this._depthTexture = !!getExtension(gl, ['WEBGL_depth_texture', 'WEBKIT_WEBGL_depth_texture']);
+        this._textureFloat = !!getExtension(gl, ['OES_texture_float']);
+        this._fragDepth = !!getExtension(gl, ['EXT_frag_depth']);
+        this._debugShaders = getExtension(gl, ['WEBGL_debug_shaders']);
 
         var textureFilterAnisotropic = options.allowTextureFilterAnisotropic ? getExtension(gl, ['EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic']) : undefined;
-        this._textureFilterAnisotropic = textureFilterAnisotropic;
+        this._textureFilterAnisotropic = !!textureFilterAnisotropic;
         ContextLimits._maximumTextureFilterAnisotropy = defined(textureFilterAnisotropic) ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1.0;
+        
+        if (webgl2) {
+            var that = this;
+            
+            this.glCreateVertexArray = function () { return that._gl.createVertexArray(); };
+            this.glBindVertexArray = function(vao) { that._gl.bindVertexArray(vao); };
+            this.glDeleteVertexArray = function(vao) { that._gl.deleteVertexArray(vao); };
+            
+            this.glDrawElementsInstanced = function(mode, count, type, offset, instanceCount) { gl.drawElementsInstanced(mode, count, type, offset, instanceCount); };
+            this.glDrawArraysInstanced = function(mode, first, count, instanceCount) { gl.drawArraysInstanced(mode, first, count, instanceCount); };
+            this.glVertexAttribDivisor = function(index, divisor) { gl.vertexAttribDivisor(index, divisor); };
+            
+            this.glDrawBuffers = function(buffers) { gl.drawBuffers(buffers); };
+        } else {
+            var vertexArrayObject = getExtension(gl, ['OES_vertex_array_object']);
+            this._vertexArrayObject = !!vertexArrayObject;
+            if (this._vertexArrayObject) {
+                this.glCreateVertexArray = function() { return vertexArrayObject.createVertexArrayOES(); };
+                this.glBindVertexArray = function(vertexArray) { vertexArrayObject.bindVertexArrayOES(vertexArray); };
+                this.glDeleteVertexArray = function(vertexArray) { vertexArrayObject.deleteVertexArrayOES(vertexArray); };
+            }
+            
+            var instancedArrays = getExtension(gl, ['ANGLE_instanced_arrays']);
+            this._instancedArrays = !!instancedArrays;
+            if (this._instancedArrays) {
+                this.glDrawElementsInstanced = function(mode, count, type, offset, instanceCount) { instancedArrays.drawElementsInstancedANGLE(mode, count, type, offset, instanceCount); };
+                this.glDrawArraysInstanced = function(mode, first, count, instanceCount) { instancedArrays.drawArraysInstancedANGLE(mode, first, count, instanceCount); };
+                this.glVertexAttribDivisor = function(index, divisor) { instancedArrays.vertexAttribDivisorANGLE(index, divisor); };
+            }
+            
+            var drawBuffers = getExtension(gl, ['WEBGL_draw_buffers']);
+            this._drawBuffers = !!drawBuffers;
+            if (this._drawBuffers) {
+                this.glDrawBuffers = function(buffers) { drawBuffers.drawBuffersWEBGL(buffers); };
+            }
+        }
 
-        var vertexArrayObject = getExtension(gl, ['OES_vertex_array_object']);
-        this._vertexArrayObject = vertexArrayObject;
-        this.glCreateVertexArray = function() {
-            webgl2 ? gl.createVertexArray() : vertexArrayObject.createVertexArrayOES();
-        };
-        this.glBindVertexArray = function(vertexArray) {
-            webgl2 ? gl.bindVertexArray(vertexArray) : vertexArrayObject.bindVertexArrayOES(vertexArray);
-        };
-        this.glDeleteVertexArray = function(vertexArray) {
-            webgl2 ? gl.deleteVertexArray(vertexArray) : vertexArrayObject.deleteVertexArrayOES(vertexArray);
-        };
-
-        this._fragDepth = getExtension(gl, ['EXT_frag_depth']);
-
-        var instancedArrays = getExtension(gl, ['ANGLE_instanced_arrays']);
-        this._instancedArrays = instancedArrays;
-        this.glDrawElementsInstanced = function(mode, count, type, offset, instanceCount) {
-            webgl2 ? gl.drawElementsInstanced(mode, count, type, offset, instanceCount) : instancedArrays.drawElementsInstancedANGLE(mode, count, type, offset, instanceCount);
-        };
-        this.glDrawArraysInstanced = function(mode, first, count, instanceCount) {
-            webgl2 ? gl.drawArraysInstanced(mode, first, count, instanceCount) : instancedArrays.drawArraysInstancedANGLE(mode, first, count, instanceCount);
-        };
-        this.glVertexAttribDivisor = function(index, divisor) {
-            webgl2 ? gl.vertexAttribDivisor(index, divisor) : instancedArrays.vertexAttribDivisorANGLE(index, divisor);
-        };
-
-        var drawBuffers = getExtension(gl, ['WEBGL_draw_buffers']);
-        this._drawBuffers = drawBuffers;
-        this.glDrawBuffers = function(buffers) {
-            webgl2 ? gl.drawBuffers(buffers) : drawBuffers.drawBuffersWEBGL(buffers);
-        };
         ContextLimits._maximumDrawBuffers = this.drawBuffers ? gl.getParameter(WebGLConstants.MAX_DRAW_BUFFERS) : 1;
         ContextLimits._maximumColorAttachments = this.drawBuffers ? gl.getParameter(WebGLConstants.MAX_COLOR_ATTACHMENTS) : 1;
-
-        this._debugShaders = getExtension(gl, ['WEBGL_debug_shaders']);
 
         var cc = gl.getParameter(gl.COLOR_CLEAR_VALUE);
         this._clearColor = new Color(cc[0], cc[1], cc[2], cc[3]);
@@ -519,7 +524,7 @@ define([
          */
         standardDerivatives : {
             get : function() {
-                return !!this._standardDerivatives;
+                return this._standardDerivatives;
             }
         },
 
@@ -533,7 +538,7 @@ define([
          */
         elementIndexUint : {
             get : function() {
-                return !!this._elementIndexUint || this._webgl2;
+                return this._elementIndexUint || this._webgl2;
             }
         },
 
@@ -546,7 +551,7 @@ define([
          */
         depthTexture : {
             get : function() {
-                return !!this._depthTexture;
+                return this._depthTexture;
             }
         },
 
@@ -559,13 +564,13 @@ define([
          */
         floatingPointTexture : {
             get : function() {
-                return !!this._textureFloat;
+                return this._textureFloat;
             }
         },
 
         textureFilterAnisotropic : {
             get : function() {
-                return !!this._textureFilterAnisotropic;
+                return this._textureFilterAnisotropic;
             }
         },
 
@@ -579,7 +584,7 @@ define([
          */
         vertexArrayObject : {
             get : function() {
-                return !!this._vertexArrayObject || this._webgl2;
+                return this._vertexArrayObject || this._webgl2;
             }
         },
 
@@ -594,7 +599,7 @@ define([
          */
         fragmentDepth : {
             get : function() {
-                return !!this._fragDepth;
+                return this._fragDepth;
             }
         },
 
@@ -607,7 +612,7 @@ define([
          */
         instancedArrays : {
             get : function() {
-                return !!this._instancedArrays || this._webgl2;
+                return this._instancedArrays || this._webgl2;
             }
         },
 
@@ -623,7 +628,7 @@ define([
          */
         drawBuffers : {
             get : function() {
-                return !!this._drawBuffers || this._webgl2;
+                return this._drawBuffers || this._webgl2;
             }
         },
 
