@@ -60,6 +60,7 @@ define([
                 if (lights.hasOwnProperty(lightName)) {
                     var light = lights[lightName];
                     var lightBaseName = 'light' + lightCount.toString();
+                    light.baseName = lightBaseName;
                     switch(light.type) {
                         case "ambient":
                         {
@@ -175,8 +176,6 @@ define([
                     ++lightCount;
                 }
             }
-
-            delete gltf.extensions.KHR_materials_common;
         }
 
         return result;
@@ -191,6 +190,11 @@ define([
         var programs = gltf.programs;
         attributes = defaultValue(attributes, []);
         var attributesCount = attributes.length;
+        var lightingModel = khrMaterialsCommon.technique.toUpperCase();
+        var lights;
+        if (defined(gltf.extensions) && defined(gltf.extensions.KHR_materials_common)) {
+            lights = gltf.extensions.KHR_materials_common.lights;
+        }
 
         var vertexShader = 'precision highp float;\n';
         var fragmentShader = 'precision highp float;\n';
@@ -228,18 +232,15 @@ define([
             // Add matrices
             modelViewMatrix: {
                 semantic: 'MODELVIEW',
-                type: WebGLConstants.FLOAT_MAT4,
-                vsOnly: true
+                type: WebGLConstants.FLOAT_MAT4
             },
             normalMatrix: {
                 semantic: 'MODELVIEWINVERSETRANSPOSE',
-                type: WebGLConstants.FLOAT_MAT3,
-                vsOnly: true
+                type: WebGLConstants.FLOAT_MAT3
             },
             projectionMatrix: {
                 semantic: 'PROJECTION',
-                type: WebGLConstants.FLOAT_MAT4,
-                vsOnly: true
+                type: WebGLConstants.FLOAT_MAT4
             }
         };
 
@@ -289,23 +290,25 @@ define([
             if (techniqueParameters.hasOwnProperty(paramName)) {
                 var param = techniqueParameters[paramName];
                 techniqueUniforms['u_' + paramName] = paramName;
-                if (!param.vsOnly) {
+                if (param.type !== WebGLConstants.FLOAT_MAT3 && param.type !== WebGLConstants.FLOAT_MAT4) {
                     fragmentShader += 'uniform ' + webGLConstantToGlslType(param.type) + ' u_' + paramName + ';\n';
                 }
-                delete param.vsOnly;
+                else {
+                    vertexShader += 'uniform ' + webGLConstantToGlslType(param.type) + ' u_' + paramName + ';\n';
+                }
             }
         }
 
         // Add attributes with semantics
         var vertexShaderMain = '';
+        // TODO: Handle multiple texture coordinates for now we just use 1
+        var v_texcoord;
         for (i=0;i<attributesCount;++i) {
             var attribute = attributes[i];
             typeValue = -1;
             if (attribute === 'POSITION') {
                 typeValue = WebGLConstants.FLOAT_VEC3;
                 vertexShader += 'attribute vec3 a_position;\n';
-                vertexShader += 'uniform mat4 u_modelViewMatrix;\n';
-                vertexShader += 'uniform mat4 u_projectionMatrix;\n';
                 vertexShaderMain += '  vec4 pos = u_modelViewMatrix * vec4(a_position,1.0);\n';
                 vertexShaderMain += '  gl_Position = u_projectionMatrix * pos;\n';
             }
@@ -313,7 +316,6 @@ define([
                 typeValue = WebGLConstants.FLOAT_VEC3;
                 vertexShader += 'attribute vec3 a_normal;\n';
                 vertexShader += 'varying vec3 v_normal;\n';
-                vertexShader += 'uniform mat3 u_normalMatrix;\n';
                 vertexShaderMain += '  v_normal = u_normalMatrix * a_normal;\n';
 
                 fragmentShader += 'varying vec3 v_normal;\n';
@@ -322,7 +324,7 @@ define([
                 typeValue = WebGLConstants.FLOAT_VEC2;
                 lowerCase = attribute.toLowerCase();
                 var a_texcoord = 'a_' + lowerCase;
-                var v_texcoord = 'v_' + lowerCase;
+                v_texcoord = 'v_' + lowerCase;
                 vertexShader += 'attribute vec2 ' + a_texcoord + ';\n';
                 vertexShader += 'varying vec2 ' + v_texcoord + ';\n';
                 vertexShaderMain += '  ' + v_texcoord + ' = ' + a_texcoord + ';\n';
@@ -337,12 +339,148 @@ define([
                 };
             }
         }
+
+        var hasNormals = defined(techniqueParameters.normal);
+        var hasSpecular = hasNormals && (lightingModel === 'BLINN' || lightingModel === 'PHONG') &&
+                          defined(techniqueParameters.specular) && defined(techniqueParameters.shininess);
+
+        // Generate lighting code blocks
+        var hasNonAmbientLights = false;
+        var hasAmbientLights = false;
+        var fragmentLightingBlock = '';
+        for (var lightName in lights) {
+            if (lights.hasOwnProperty(lightName)) {
+                var light = lights[lightName];
+                var lightType = light.type.toLowerCase();
+                var lightBaseName = light.baseName;
+                fragmentLightingBlock += '  {\n';
+                var lightColorName = 'u_' + lightBaseName + 'Color';
+                var varyingName;
+                switch(lightType) {
+                    case 'ambient':
+                        hasAmbientLights = true;
+                        fragmentLightingBlock += '    ambientLight += ' + lightColorName + ';\n';
+                        break;
+                    case 'directional':
+                        hasNonAmbientLights = true;
+                        if (hasNormals) {
+                            varyingName = 'v_' + lightBaseName + 'Direction';
+                            vertexShader += 'varying vec3 ' + varyingName + ';\n';
+                            vertexShaderMain += varyingName + ' = mat3(u_' + lightBaseName + 'Transform) * vec3(0.,0.,1.);\n';
+
+                            fragmentShader += 'varying vec3 ' + varyingName + ';\n';
+
+                            fragmentLightingBlock += '    float attenuation = 1.0;\n';
+                            fragmentLightingBlock += '    vec3 l = normalize(' + varyingName + ');\n';
+                            fragmentLightingBlock += '    diffuseLight += ' + lightColorName + '* max(dot(normal,l), 0.) * attenuation;\n';
+
+                            if (hasSpecular) {
+                                fragmentLightingBlock += '    vec3 h = normalize(l + vec3(0., 0., 1.));\n';
+                                fragmentLightingBlock += '    float specularIntensity = max(0., pow(max(dot(normal, h), 0.), u_shininess)) * attenuation;\n';
+                                fragmentLightingBlock += '    specularLight += ' + lightColorName + ' * specularIntensity;\n';
+                            }
+                        }
+                        break;
+                    case 'point':
+                        hasNonAmbientLights = true;
+                        if (hasNormals) {
+                            varyingName = 'v_' + lightBaseName + 'Direction';
+                            vertexShader += 'varying vec3 ' + varyingName + ';\n';
+                            vertexShaderMain += varyingName + ' = u_' + lightBaseName + 'Transform[3].xyz - pos.xyz;\n';
+
+                            fragmentShader += 'varying vec3 ' + varyingName + ';\n';
+                        }
+                        break;
+                    case 'spot':
+                        hasNonAmbientLights = true;
+                        if (hasNormals) {
+
+                        }
+                        break;
+                }
+                fragmentLightingBlock += '  }\n';
+            }
+        }
+
+        if (!hasAmbientLights) {
+            // Add an ambient light if we don't have one
+            fragmentLightingBlock += '    ambientLight += vec3(0.1, 0.1, 0.1);\n';
+        }
+
+        if (!hasNonAmbientLights) {
+            // TODO: Add AGI lights
+        }
+
         vertexShader += 'void main(void) {\n';
         vertexShader += vertexShaderMain;
         vertexShader += '}\n';
 
         fragmentShader += 'void main(void) {\n';
-        // TODO: Generate body
+        var colorCreationBlock = '  vec3 color = vec3(0.0, 0.0, 0.0);\n';
+        if (hasNormals) {
+            fragmentShader += '  vec3 normal = normalize(v_normal);\n';
+            hasNormals = true;
+        }
+        if (defined(techniqueParameters.emission)) {
+            if (techniqueParameters.emission.type = WebGLConstants.SAMPLER_2D) {
+                fragmentShader += '  vec3 emission = texture2D(u_emission, ' + v_texcoord + ');\n';
+            }
+            else {
+                fragmentShader += '  vec3 emission = u_emission.rgb;\n';
+            }
+            colorCreationBlock += '  color += emission;\n';
+        }
+        if (defined(techniqueParameters.ambient)) {
+            if (techniqueParameters.ambient.type = WebGLConstants.SAMPLER_2D) {
+                fragmentShader += '  vec3 ambient = texture2D(u_ambient, ' + v_texcoord + ');\n';
+            }
+            else {
+                fragmentShader += '  vec3 ambient = u_ambient.rgb;\n';
+            }
+            fragmentShader += '  vec3 ambientLight = vec3(0.0, 0.0, 0.0);\n';
+            colorCreationBlock += '  color += ambient * ambientLight;\n';
+        }
+        if (lightingModel !== 'CONSTANT') {
+            if (defined(techniqueParameters.diffuse)) {
+                if (techniqueParameters.diffuse.type = WebGLConstants.SAMPLER_2D) {
+                    fragmentShader += '  vec3 diffuse = texture2D(u_diffuse, ' + v_texcoord + ');\n';
+                }
+                else {
+                    fragmentShader += '  vec4 diffuse = u_diffuse;\n';
+                }
+                fragmentShader += '  vec3 diffuseLight = vec3(0.0, 0.0, 0.0);\n';
+                colorCreationBlock += '  color += diffuse.rgb * diffuseLight;\n';
+            }
+            if (hasSpecular) {
+                if (techniqueParameters.specular.type = WebGLConstants.SAMPLER_2D) {
+                    fragmentShader += '  vec3 specular = texture2D(u_specular, ' + v_texcoord + ');\n';
+                }
+                else {
+                    fragmentShader += '  vec3 specular = u_specular;\n';
+                }
+                fragmentShader += '  vec3 specularLight = vec3(0.0, 0.0, 0.0);\n';
+                colorCreationBlock += '  color += specular * specularLight;\n';
+            }
+            if (defined(techniqueParameters.transparency)) {
+                colorCreationBlock += '  gl_FragColor = vec4(color * diffuse.a, diffuse.a * u_transparency);\n';
+            }
+            else {
+                colorCreationBlock += '  gl_FragColor = vec4(color * diffuse.a, diffuse.a);\n';
+            }
+
+            // Add in light computations
+            fragmentShader += lightingBlock;
+        }
+        else {
+            if (defined(techniqueParameters.transparency)) {
+                colorCreationBlock += '  gl_FragColor = vec4(color, u_transparency);\n';
+            }
+            else {
+                colorCreationBlock += '  gl_FragColor = vec4(color, 1.0);\n';
+            }
+        }
+
+        fragmentShader += colorCreationBlock;
         fragmentShader += '}\n';
 
         techniques[techniqueId] = {
@@ -491,6 +629,10 @@ define([
                         delete material.extensions.KHR_materials_common;
                     }
                 }
+            }
+
+            if (defined(gltf.extensions)) {
+                delete gltf.extensions.KHR_materials_common;
             }
         }
 
