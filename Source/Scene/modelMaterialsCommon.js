@@ -360,52 +360,50 @@ define([
                     hasAmbientLights = true;
                     fragmentLightingBlock += '    ambientLight += ' + lightColorName + ';\n';
                 }
-                else {
+                else if (hasNormals && lightingModel !== 'CONSTANT') {
                     hasNonAmbientLights = true;
-                    if (hasNormals) {
-                        varyingName = 'v_' + lightBaseName + 'Direction';
-                        vertexShader += 'varying vec3 ' + varyingName + ';\n';
-                        fragmentShader += 'varying vec3 ' + varyingName + ';\n';
+                    varyingName = 'v_' + lightBaseName + 'Direction';
+                    vertexShader += 'varying vec3 ' + varyingName + ';\n';
+                    fragmentShader += 'varying vec3 ' + varyingName + ';\n';
 
-                        if (lightType === 'spot') {
-                            vertexShader += 'varying vec3 v_position;\n';
-                            vertexShaderMain += 'v_position = pos.xyz;\n';
-                            fragmentShader += 'varying vec3 v_position;\n';
-                        }
+                    if (lightType === 'spot') {
+                        vertexShader += 'varying vec3 v_position;\n';
+                        vertexShaderMain += 'v_position = pos.xyz;\n';
+                        fragmentShader += 'varying vec3 v_position;\n';
+                    }
 
-                        if (lightType === 'directional') {
-                            vertexShaderMain += '  ' + varyingName + ' = mat3(u_' + lightBaseName + 'Transform) * vec3(0.,0.,1.);\n';
-                            fragmentLightingBlock += '    float attenuation = 1.0;\n';
-                        }
-                        else {
-                            vertexShaderMain += '  ' + varyingName + ' = u_' + lightBaseName + 'Transform[3].xyz - pos.xyz;\n';
-                            fragmentLightingBlock += '    float range = length(v_light0Direction);\n';
-                            fragmentLightingBlock += '    float attenuation = 1.0 / (u_' + lightBaseName + 'ConstantAttenuation + ';
-                            fragmentLightingBlock += '(u_' + lightBaseName + 'LinearAttenuation * range) + ';
-                            fragmentLightingBlock += '(u_' + lightBaseName + 'QuadraticAttenuation * range * range));\n';
-                        }
+                    if (lightType === 'directional') {
+                        vertexShaderMain += '  ' + varyingName + ' = mat3(u_' + lightBaseName + 'Transform) * vec3(0.,0.,1.);\n';
+                        fragmentLightingBlock += '    float attenuation = 1.0;\n';
+                    }
+                    else {
+                        vertexShaderMain += '  ' + varyingName + ' = u_' + lightBaseName + 'Transform[3].xyz - pos.xyz;\n';
+                        fragmentLightingBlock += '    float range = length(v_light0Direction);\n';
+                        fragmentLightingBlock += '    float attenuation = 1.0 / (u_' + lightBaseName + 'ConstantAttenuation + ';
+                        fragmentLightingBlock += '(u_' + lightBaseName + 'LinearAttenuation * range) + ';
+                        fragmentLightingBlock += '(u_' + lightBaseName + 'QuadraticAttenuation * range * range));\n';
+                    }
 
-                        fragmentLightingBlock += '    vec3 l = normalize(' + varyingName + ');\n';
+                    fragmentLightingBlock += '    vec3 l = normalize(' + varyingName + ');\n';
 
-                        if (lightType === 'spot') {
-                            fragmentLightingBlock += '    vec4 spotPosition = u_' + lightBaseName + 'InverseTransform * vec4(v_position, 1.);\n';
-                            fragmentLightingBlock += '    float cosAngle = dot(vec3(0.0,0.0,-1.0), normalize(spotPosition.xyz));\n';
-                            fragmentLightingBlock += '    if (cosAngle > cos(radians(u_' + lightBaseName + 'FallOffAngle * 0.5)))\n;'
-                            fragmentLightingBlock += '    {\n';
-                            fragmentLightingBlock += '        attenuation *= max(0.0, pow(cosAngle, u_' + lightBaseName + 'FallOffExponent));\n';
-                        }
+                    if (lightType === 'spot') {
+                        fragmentLightingBlock += '    vec4 spotPosition = u_' + lightBaseName + 'InverseTransform * vec4(v_position, 1.);\n';
+                        fragmentLightingBlock += '    float cosAngle = dot(vec3(0.0,0.0,-1.0), normalize(spotPosition.xyz));\n';
+                        fragmentLightingBlock += '    if (cosAngle > cos(radians(u_' + lightBaseName + 'FallOffAngle * 0.5)))\n;'
+                        fragmentLightingBlock += '    {\n';
+                        fragmentLightingBlock += '        attenuation *= max(0.0, pow(cosAngle, u_' + lightBaseName + 'FallOffExponent));\n';
+                    }
 
-                        fragmentLightingBlock += '    diffuseLight += ' + lightColorName + '* max(dot(normal,l), 0.) * attenuation;\n';
+                    fragmentLightingBlock += '    diffuseLight += ' + lightColorName + '* max(dot(normal,l), 0.) * attenuation;\n';
 
-                        if (hasSpecular) {
-                            fragmentLightingBlock += '    vec3 h = normalize(l + vec3(0., 0., 1.));\n';
-                            fragmentLightingBlock += '    float specularIntensity = max(0., pow(max(dot(normal, h), 0.), u_shininess)) * attenuation;\n';
-                            fragmentLightingBlock += '    specularLight += ' + lightColorName + ' * specularIntensity;\n';
-                        }
+                    if (hasSpecular) {
+                        fragmentLightingBlock += '    vec3 h = normalize(l + vec3(0., 0., 1.));\n';
+                        fragmentLightingBlock += '    float specularIntensity = max(0., pow(max(dot(normal, h), 0.), u_shininess)) * attenuation;\n';
+                        fragmentLightingBlock += '    specularLight += ' + lightColorName + ' * specularIntensity;\n';
+                    }
 
-                        if (lightType === 'spot') {
-                            fragmentLightingBlock += '    }\n';
-                        }
+                    if (lightType === 'spot') {
+                        fragmentLightingBlock += '    }\n';
                     }
                 }
                 fragmentLightingBlock += '  }\n';
@@ -430,29 +428,12 @@ define([
         if (hasNormals) {
             fragmentShader += '  vec3 normal = normalize(v_normal);\n';
         }
-        if (defined(techniqueParameters.emission)) {
-            if (techniqueParameters.emission.type = WebGLConstants.SAMPLER_2D) {
-                fragmentShader += '  vec3 emission = texture2D(u_emission, ' + v_texcoord + ');\n';
-            }
-            else {
-                fragmentShader += '  vec3 emission = u_emission.rgb;\n';
-            }
-            colorCreationBlock += '  color += emission;\n';
-        }
-        if (defined(techniqueParameters.ambient)) {
-            if (techniqueParameters.ambient.type = WebGLConstants.SAMPLER_2D) {
-                fragmentShader += '  vec3 ambient = texture2D(u_ambient, ' + v_texcoord + ');\n';
-            }
-            else {
-                fragmentShader += '  vec3 ambient = u_ambient.rgb;\n';
-            }
-            fragmentShader += '  vec3 ambientLight = vec3(0.0, 0.0, 0.0);\n';
-            colorCreationBlock += '  color += ambient * ambientLight;\n';
-        }
+
+        var finalColorComputation;
         if (lightingModel !== 'CONSTANT') {
             if (defined(techniqueParameters.diffuse)) {
-                if (techniqueParameters.diffuse.type = WebGLConstants.SAMPLER_2D) {
-                    fragmentShader += '  vec3 diffuse = texture2D(u_diffuse, ' + v_texcoord + ');\n';
+                if (techniqueParameters.diffuse.type === WebGLConstants.SAMPLER_2D) {
+                    fragmentShader += '  vec4 diffuse = texture2D(u_diffuse, ' + v_texcoord + ');\n';
                 }
                 else {
                     fragmentShader += '  vec4 diffuse = u_diffuse;\n';
@@ -460,36 +441,63 @@ define([
                 fragmentShader += '  vec3 diffuseLight = vec3(0.0, 0.0, 0.0);\n';
                 colorCreationBlock += '  color += diffuse.rgb * diffuseLight;\n';
             }
+
             if (hasSpecular) {
-                if (techniqueParameters.specular.type = WebGLConstants.SAMPLER_2D) {
+                if (techniqueParameters.specular.type === WebGLConstants.SAMPLER_2D) {
                     fragmentShader += '  vec3 specular = texture2D(u_specular, ' + v_texcoord + ');\n';
                 }
                 else {
-                    fragmentShader += '  vec3 specular = u_specular;\n';
+                    fragmentShader += '  vec3 specular = u_specular.rgb;\n';
                 }
                 fragmentShader += '  vec3 specularLight = vec3(0.0, 0.0, 0.0);\n';
                 colorCreationBlock += '  color += specular * specularLight;\n';
             }
+
             if (defined(techniqueParameters.transparency)) {
-                colorCreationBlock += '  gl_FragColor = vec4(color * diffuse.a, diffuse.a * u_transparency);\n';
+                finalColorComputation = '  gl_FragColor = vec4(color * diffuse.a, diffuse.a * u_transparency);\n';
             }
             else {
-                colorCreationBlock += '  gl_FragColor = vec4(color * diffuse.a, diffuse.a);\n';
+                finalColorComputation = '  gl_FragColor = vec4(color * diffuse.a, diffuse.a);\n';
             }
-
-            // Add in light computations
-            fragmentShader += fragmentLightingBlock;
         }
         else {
             if (defined(techniqueParameters.transparency)) {
-                colorCreationBlock += '  gl_FragColor = vec4(color, u_transparency);\n';
+                finalColorComputation = '  gl_FragColor = vec4(color, u_transparency);\n';
             }
             else {
-                colorCreationBlock += '  gl_FragColor = vec4(color, 1.0);\n';
+                finalColorComputation = '  gl_FragColor = vec4(color, 1.0);\n';
             }
         }
 
+        if (defined(techniqueParameters.emission)) {
+            if (techniqueParameters.emission.type === WebGLConstants.SAMPLER_2D) {
+                fragmentShader += '  vec3 emission = texture2D(u_emission, ' + v_texcoord + ');\n';
+            }
+            else {
+                fragmentShader += '  vec3 emission = u_emission.rgb;\n';
+            }
+            colorCreationBlock += '  color += emission;\n';
+        }
+
+        if (defined(techniqueParameters.ambient)) {
+            if (techniqueParameters.ambient.type === WebGLConstants.SAMPLER_2D) {
+                fragmentShader += '  vec3 ambient = texture2D(u_ambient, ' + v_texcoord + ');\n';
+            }
+            else {
+                fragmentShader += '  vec3 ambient = u_ambient.rgb;\n';
+            }
+        }
+        else {
+            fragmentShader += '  vec3 ambient = diffuse.rgb;\n';
+        }
+        fragmentShader += '  vec3 ambientLight = vec3(0.0, 0.0, 0.0);\n';
+        colorCreationBlock += '  color += ambient * ambientLight;\n';
+
+        // Add in light computations
+        fragmentShader += fragmentLightingBlock;
+
         fragmentShader += colorCreationBlock;
+        fragmentShader += finalColorComputation;
         fragmentShader += '}\n';
 
         techniques[techniqueId] = {
@@ -645,12 +653,12 @@ define([
             }
         }
 
-        var json = JSON.stringify(gltf, null, 4);
-        var a = document.createElement('a');
-        a.setAttribute('href', 'data:text;base64,' + btoa(json));
-        a.setAttribute('target', '_blank');
-        a.setAttribute('download', 'model.json');
-        a.click();
+        //var json = JSON.stringify(gltf, null, 4);
+        //var a = document.createElement('a');
+        //a.setAttribute('href', 'data:text;base64,' + btoa(json));
+        //a.setAttribute('target', '_blank');
+        //a.setAttribute('download', 'model.json');
+        //a.click();
 
         return gltf;
     };
