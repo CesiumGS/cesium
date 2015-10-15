@@ -322,22 +322,22 @@ define([
             
             glDrawBuffers = function(buffers) { gl.drawBuffers(buffers); };
         } else {
-            var vertexArrayObject = getExtension(gl, ['OES_vertex_array_object']);
-            if (this._vertexArrayObject) {
+            vertexArrayObject = getExtension(gl, ['OES_vertex_array_object']);
+            if (defined(vertexArrayObject)) {
                 glCreateVertexArray = function() { return vertexArrayObject.createVertexArrayOES(); };
                 glBindVertexArray = function(vertexArray) { vertexArrayObject.bindVertexArrayOES(vertexArray); };
                 glDeleteVertexArray = function(vertexArray) { vertexArrayObject.deleteVertexArrayOES(vertexArray); };
             }
             
-            var instancedArrays = getExtension(gl, ['ANGLE_instanced_arrays']);
-            if (this._instancedArrays) {
+            instancedArrays = getExtension(gl, ['ANGLE_instanced_arrays']);
+            if (defined(instancedArrays)) {
                 glDrawElementsInstanced = function(mode, count, type, offset, instanceCount) { instancedArrays.drawElementsInstancedANGLE(mode, count, type, offset, instanceCount); };
                 glDrawArraysInstanced = function(mode, first, count, instanceCount) { instancedArrays.drawArraysInstancedANGLE(mode, first, count, instanceCount); };
                 glVertexAttribDivisor = function(index, divisor) { instancedArrays.vertexAttribDivisorANGLE(index, divisor); };
             }
             
-            var drawBuffers = getExtension(gl, ['WEBGL_draw_buffers']);
-            if (this._drawBuffers) {
+            drawBuffers = getExtension(gl, ['WEBGL_draw_buffers']);
+            if (defined(drawBuffers)) {
                 glDrawBuffers = function(buffers) { drawBuffers.drawBuffersWEBGL(buffers); };
             }
         }
