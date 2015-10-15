@@ -184,7 +184,7 @@ define([
     var techniqueCount = 0;
     var shaderCount = 0;
     var programCount = 0;
-    function generateTechnique(gltf, khrMaterialsCommon, attributes, lightParameters) {
+    function generateTechnique(gltf, khrMaterialsCommon, attributes, lightParameters, jointCount) {
         var techniques = gltf.techniques;
         var shaders = gltf.shaders;
         var programs = gltf.programs;
@@ -195,6 +195,7 @@ define([
         if (defined(gltf.extensions) && defined(gltf.extensions.KHR_materials_common)) {
             lights = gltf.extensions.KHR_materials_common.lights;
         }
+        var hasSkinning = (jointCount > 0);
 
         var vertexShader = 'precision highp float;\n';
         var fragmentShader = 'precision highp float;\n';
@@ -244,6 +245,14 @@ define([
             }
         };
 
+        if (hasSkinning) {
+            techniqueParameters.jointMatrix = {
+                count: jointCount,
+                semantic: 'JOINTMATRIX',
+                type: WebGLConstants.FLOAT_MAT4
+            };
+        }
+
         // Add material parameters
         var typeValue;
         var values = khrMaterialsCommon.values;
@@ -290,17 +299,25 @@ define([
             if (techniqueParameters.hasOwnProperty(paramName)) {
                 var param = techniqueParameters[paramName];
                 techniqueUniforms['u_' + paramName] = paramName;
+                var arraySize = defined(param.count) ? '['+param.count+']' : '';
                 if (param.type !== WebGLConstants.FLOAT_MAT3 && param.type !== WebGLConstants.FLOAT_MAT4) {
-                    fragmentShader += 'uniform ' + webGLConstantToGlslType(param.type) + ' u_' + paramName + ';\n';
+                    fragmentShader += 'uniform ' + webGLConstantToGlslType(param.type) + ' u_' + paramName + arraySize + ';\n';
                 }
                 else {
-                    vertexShader += 'uniform ' + webGLConstantToGlslType(param.type) + ' u_' + paramName + ';\n';
+                    vertexShader += 'uniform ' + webGLConstantToGlslType(param.type) + ' u_' + paramName + arraySize + ';\n';
                 }
             }
         }
 
         // Add attributes with semantics
         var vertexShaderMain = '';
+        if (hasSkinning) {
+            vertexShaderMain += '  mat4 skinMat = a_weight.x * u_jointMatrix[int(a_joint.x)];\n';
+            vertexShaderMain += '  skinMat += a_weight.y * u_jointMatrix[int(a_joint.y)];\n';
+            vertexShaderMain += '  skinMat += a_weight.z * u_jointMatrix[int(a_joint.z)];\n';
+            vertexShaderMain += '  skinMat += a_weight.w * u_jointMatrix[int(a_joint.w)];\n';
+        }
+
         // TODO: Handle multiple texture coordinates for now we just use 1
         var v_texcoord;
         for (i=0;i<attributesCount;++i) {
@@ -309,14 +326,24 @@ define([
             if (attribute === 'POSITION') {
                 typeValue = WebGLConstants.FLOAT_VEC3;
                 vertexShader += 'attribute vec3 a_position;\n';
-                vertexShaderMain += '  vec4 pos = u_modelViewMatrix * vec4(a_position,1.0);\n';
+                if (hasSkinning) {
+                    vertexShaderMain += '  vec4 pos = u_modelViewMatrix * skinMat * vec4(a_position,1.0);\n';
+                }
+                else {
+                    vertexShaderMain += '  vec4 pos = u_modelViewMatrix * vec4(a_position,1.0);\n';
+                }
                 vertexShaderMain += '  gl_Position = u_projectionMatrix * pos;\n';
             }
             else if (attribute === 'NORMAL') {
                 typeValue = WebGLConstants.FLOAT_VEC3;
                 vertexShader += 'attribute vec3 a_normal;\n';
                 vertexShader += 'varying vec3 v_normal;\n';
-                vertexShaderMain += '  v_normal = u_normalMatrix * a_normal;\n';
+                if (hasSkinning) {
+                    vertexShaderMain += '  v_normal = u_normalMatrix * mat3(skinMat) * a_normal;\n';
+                }
+                else {
+                    vertexShaderMain += '  v_normal = u_normalMatrix * a_normal;\n';
+                }
 
                 fragmentShader += 'varying vec3 v_normal;\n';
             }
@@ -331,6 +358,15 @@ define([
 
                 fragmentShader += 'varying vec2 ' + v_texcoord + ';\n';
             }
+            else if (attribute === 'JOINT') {
+                typeValue = WebGLConstants.FLOAT_VEC4;
+                vertexShader += 'attribute vec4 a_joint;\n';
+            }
+            else if (attribute === 'WEIGHT') {
+                typeValue = WebGLConstants.FLOAT_VEC4;
+                vertexShader += 'attribute vec4 a_weight;\n';
+            }
+
             if (typeValue > 0) {
                 lowerCase = attribute.toLowerCase();
                 techniqueParameters[lowerCase] = {
@@ -578,7 +614,8 @@ define([
         }
     }
 
-    function getAttributes(materialId, meshes) {
+    function getPrimitiveInfo(materialId, gltf) {
+        var meshes = gltf.meshes;
         for (var name in meshes) {
             if (meshes.hasOwnProperty(name)) {
                 var mesh = meshes[name];
@@ -587,7 +624,25 @@ define([
                 for (var i=0;i<primitivesCount;++i) {
                     var primitive = primitives[i];
                     if (primitive.material === materialId) {
-                        return Object.keys(primitive.attributes);
+                        var jointCount = 0;
+                        if (defined(primitive.attributes.JOINT)) {
+                            var nodes = gltf.nodes;
+                            for (var nodeName in nodes) {
+                                if (nodes.hasOwnProperty(nodeName)) {
+                                    var node = nodes[nodeName];
+                                    // We have skinning for this node and it contains this mesh
+                                    if (defined(node.skeletons) && defined(node.meshes) &&
+                                            node.meshes.indexOf(name) !== -1) {
+                                        jointCount = node.skeletons.length;
+                                    }
+                                }
+                            }
+                        }
+
+                        return {
+                            attributes : Object.keys(primitive.attributes),
+                            jointCount : jointCount
+                        };
                     }
                 }
             }
@@ -636,13 +691,14 @@ define([
             for (var name in materials) {
                 if (materials.hasOwnProperty(name)) {
                     var material = materials[name];
-                    var attributes = getAttributes(name, meshes);
+                    var primitiveInfo = getPrimitiveInfo(name, gltf);
                     if (defined(material.extensions) && defined(material.extensions.KHR_materials_common)) {
                         var khrMaterialsCommon = material.extensions.KHR_materials_common;
                         var key = getKey(khrMaterialsCommon);
                         var technique = techniques[key];
                         if (!defined(technique)) {
-                            technique = generateTechnique(gltf, khrMaterialsCommon, attributes, lightParameters);
+                            technique = generateTechnique(gltf, khrMaterialsCommon, primitiveInfo.attributes,
+                                                          lightParameters, primitiveInfo.jointCount);
                         }
 
                         // Take advantage of the fact that we generate techniques that use the
@@ -658,14 +714,14 @@ define([
             if (defined(gltf.extensions)) {
                 delete gltf.extensions.KHR_materials_common;
             }
-        }
 
-        //var json = JSON.stringify(gltf, null, 4);
-        //var a = document.createElement('a');
-        //a.setAttribute('href', 'data:text;base64,' + btoa(json));
-        //a.setAttribute('target', '_blank');
-        //a.setAttribute('download', 'model.json');
-        //a.click();
+            //var json = JSON.stringify(gltf, null, 4);
+            //var a = document.createElement('a');
+            //a.setAttribute('href', 'data:text;base64,' + btoa(json));
+            //a.setAttribute('target', '_blank');
+            //a.setAttribute('download', 'model.json');
+            //a.click();
+        }
 
         return gltf;
     };
