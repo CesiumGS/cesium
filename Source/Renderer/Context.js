@@ -295,41 +295,66 @@ define([
         this._textureFilterAnisotropic = !!textureFilterAnisotropic;
         ContextLimits._maximumTextureFilterAnisotropy = defined(textureFilterAnisotropic) ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1.0;
         
+        var glCreateVertexArray;
+        var glBindVertexArray;
+        var glDeleteVertexArray;
+        
+        var glDrawElementsInstanced;
+        var glDrawArraysInstanced;
+        var glVertexAttribDivisor;
+        
+        var glDrawBuffers;
+        
+        var vertexArrayObject;
+        var instancedArrays;
+        var drawBuffers;
+        
         if (webgl2) {
             var that = this;
             
-            this.glCreateVertexArray = function () { return that._gl.createVertexArray(); };
-            this.glBindVertexArray = function(vao) { that._gl.bindVertexArray(vao); };
-            this.glDeleteVertexArray = function(vao) { that._gl.deleteVertexArray(vao); };
+            glCreateVertexArray = function () { return that._gl.createVertexArray(); };
+            glBindVertexArray = function(vao) { that._gl.bindVertexArray(vao); };
+            glDeleteVertexArray = function(vao) { that._gl.deleteVertexArray(vao); };
             
-            this.glDrawElementsInstanced = function(mode, count, type, offset, instanceCount) { gl.drawElementsInstanced(mode, count, type, offset, instanceCount); };
-            this.glDrawArraysInstanced = function(mode, first, count, instanceCount) { gl.drawArraysInstanced(mode, first, count, instanceCount); };
-            this.glVertexAttribDivisor = function(index, divisor) { gl.vertexAttribDivisor(index, divisor); };
+            glDrawElementsInstanced = function(mode, count, type, offset, instanceCount) { gl.drawElementsInstanced(mode, count, type, offset, instanceCount); };
+            glDrawArraysInstanced = function(mode, first, count, instanceCount) { gl.drawArraysInstanced(mode, first, count, instanceCount); };
+            glVertexAttribDivisor = function(index, divisor) { gl.vertexAttribDivisor(index, divisor); };
             
-            this.glDrawBuffers = function(buffers) { gl.drawBuffers(buffers); };
+            glDrawBuffers = function(buffers) { gl.drawBuffers(buffers); };
         } else {
             var vertexArrayObject = getExtension(gl, ['OES_vertex_array_object']);
-            this._vertexArrayObject = !!vertexArrayObject;
             if (this._vertexArrayObject) {
-                this.glCreateVertexArray = function() { return vertexArrayObject.createVertexArrayOES(); };
-                this.glBindVertexArray = function(vertexArray) { vertexArrayObject.bindVertexArrayOES(vertexArray); };
-                this.glDeleteVertexArray = function(vertexArray) { vertexArrayObject.deleteVertexArrayOES(vertexArray); };
+                glCreateVertexArray = function() { return vertexArrayObject.createVertexArrayOES(); };
+                glBindVertexArray = function(vertexArray) { vertexArrayObject.bindVertexArrayOES(vertexArray); };
+                glDeleteVertexArray = function(vertexArray) { vertexArrayObject.deleteVertexArrayOES(vertexArray); };
             }
             
             var instancedArrays = getExtension(gl, ['ANGLE_instanced_arrays']);
-            this._instancedArrays = !!instancedArrays;
             if (this._instancedArrays) {
-                this.glDrawElementsInstanced = function(mode, count, type, offset, instanceCount) { instancedArrays.drawElementsInstancedANGLE(mode, count, type, offset, instanceCount); };
-                this.glDrawArraysInstanced = function(mode, first, count, instanceCount) { instancedArrays.drawArraysInstancedANGLE(mode, first, count, instanceCount); };
-                this.glVertexAttribDivisor = function(index, divisor) { instancedArrays.vertexAttribDivisorANGLE(index, divisor); };
+                glDrawElementsInstanced = function(mode, count, type, offset, instanceCount) { instancedArrays.drawElementsInstancedANGLE(mode, count, type, offset, instanceCount); };
+                glDrawArraysInstanced = function(mode, first, count, instanceCount) { instancedArrays.drawArraysInstancedANGLE(mode, first, count, instanceCount); };
+                glVertexAttribDivisor = function(index, divisor) { instancedArrays.vertexAttribDivisorANGLE(index, divisor); };
             }
             
             var drawBuffers = getExtension(gl, ['WEBGL_draw_buffers']);
-            this._drawBuffers = !!drawBuffers;
             if (this._drawBuffers) {
-                this.glDrawBuffers = function(buffers) { drawBuffers.drawBuffersWEBGL(buffers); };
+                glDrawBuffers = function(buffers) { drawBuffers.drawBuffersWEBGL(buffers); };
             }
         }
+        
+        this.glCreateVertexArray = glCreateVertexArray;
+        this.glBindVertexArray = glBindVertexArray;
+        this.glDeleteVertexArray = glDeleteVertexArray;
+        
+        this.glDrawElementsInstanced = glDrawElementsInstanced;
+        this.glDrawArraysInstanced = glDrawArraysInstanced;
+        this.glVertexAttribDivisor = glVertexAttribDivisor;
+        
+        this.glDrawBuffers = glDrawBuffers;
+        
+        this._vertexArrayObject = !!vertexArrayObject;
+        this._instancedArrays = !!instancedArrays;
+        this._drawBuffers = !!drawBuffers;
 
         ContextLimits._maximumDrawBuffers = this.drawBuffers ? gl.getParameter(WebGLConstants.MAX_DRAW_BUFFERS) : 1;
         ContextLimits._maximumColorAttachments = this.drawBuffers ? gl.getParameter(WebGLConstants.MAX_COLOR_ATTACHMENTS) : 1;
