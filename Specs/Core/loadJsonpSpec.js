@@ -69,6 +69,4 @@ defineSuite([
         });
         loadJsonp(testUrl, options);
     });
-
-
 });
