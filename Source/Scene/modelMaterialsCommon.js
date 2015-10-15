@@ -9,6 +9,27 @@ define([
     WebGLConstants) {
     "use strict";
 
+    function webGLConstantToGlslType(webGLValue) {
+        switch(webGLValue) {
+            case WebGLConstants.FLOAT:
+                return 'float';
+            case WebGLConstants.FLOAT_VEC2:
+                return 'vec2';
+            case WebGLConstants.FLOAT_VEC3:
+                return 'vec3';
+            case WebGLConstants.FLOAT_VEC4:
+                return 'vec4';
+            case WebGLConstants.FLOAT_MAT2:
+                return 'mat2';
+            case WebGLConstants.FLOAT_MAT3:
+                return 'mat3';
+            case WebGLConstants.FLOAT_MAT4:
+                return 'mat4';
+            case WebGLConstants.SAMPLER_2D:
+                return 'sampler2D';
+        }
+    }
+
     function generateLightParameters(gltf) {
         var result = {};
 
@@ -207,15 +228,18 @@ define([
             // Add matrices
             modelViewMatrix: {
                 semantic: 'MODELVIEW',
-                type: WebGLConstants.FLOAT_MAT4
+                type: WebGLConstants.FLOAT_MAT4,
+                vsOnly: true
             },
             normalMatrix: {
                 semantic: 'MODELVIEWINVERSETRANSPOSE',
-                type: WebGLConstants.FLOAT_MAT3
+                type: WebGLConstants.FLOAT_MAT3,
+                vsOnly: true
             },
             projectionMatrix: {
                 semantic: 'PROJECTION',
-                type: WebGLConstants.FLOAT_MAT4
+                type: WebGLConstants.FLOAT_MAT4,
+                vsOnly: true
             }
         };
 
@@ -263,7 +287,12 @@ define([
         var techniqueUniforms = {};
         for (var paramName in techniqueParameters) {
             if (techniqueParameters.hasOwnProperty(paramName)) {
+                var param = techniqueParameters[paramName];
                 techniqueUniforms['u_' + paramName] = paramName;
+                if (!param.vsOnly) {
+                    fragmentShader += 'uniform ' + webGLConstantToGlslType(param.type) + ' u_' + paramName + ';\n';
+                }
+                delete param.vsOnly;
             }
         }
 
