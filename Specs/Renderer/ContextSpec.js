@@ -404,6 +404,32 @@ defineSuite([
             }
         });
         
+        it('throws with the same source and destination framebuffers', function() {
+            if (context.webgl2) {
+                var fbo = new Framebuffer({
+                    context : context,
+                    colorTextures : [new Texture({
+                        context : context,
+                        width : 1,
+                        height : 1
+                    })]
+                });
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo
+                        },
+                        destination : {
+                            framebuffer : fbo
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                fbo.destroy();
+            }
+        });
+        
         it('throws when missing a color attachment and the color bit is true', function() {
             if (context.webgl2) {
                 var fbo1 = new Framebuffer({
@@ -891,6 +917,87 @@ defineSuite([
                         },
                         mask : {
                             color : false,
+                            depth : true,
+                            stencil : true
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                fbo1.destroy();
+                fbo2.destroy();
+            }
+        });
+        
+        it('throws when the filter is linear and either the depth or stencil bits are set.', function() {
+            if (context.webgl2) {
+                var fbo1 = new Framebuffer({
+                    context : context,colorTextures : [new Texture({
+                        context : context,
+                        width : 1,
+                        height : 1
+                    })],
+                    depthStencilRenderbuffer : new Renderbuffer({
+                        context : context,
+                        width : 1,
+                        height : 1,
+                        format : RenderbufferFormat.DEPTH_STENCIL
+                    })
+                });
+                var fbo2 = new Framebuffer({
+                    context : context,
+                    colorTextures : [new Texture({
+                        context : context,
+                        width : 1,
+                        height : 1
+                    })],
+                    depthStencilRenderbuffer : new Renderbuffer({
+                        context : context,
+                        width : 1,
+                        height : 1,
+                        format : RenderbufferFormat.DEPTH_STENCIL
+                    })
+                });
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo1
+                        },
+                        destination : {
+                            framebuffer : fbo2
+                        },
+                        mask : {
+                            color : true,
+                            depth : true
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo1
+                        },
+                        destination : {
+                            framebuffer : fbo2
+                        },
+                        mask : {
+                            color : true,
+                            stencil : true
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo1
+                        },
+                        destination : {
+                            framebuffer : fbo2
+                        },
+                        mask : {
+                            color : true,
                             depth : true,
                             stencil : true
                         }

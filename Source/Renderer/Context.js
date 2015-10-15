@@ -1104,10 +1104,13 @@ define([
             throw new DeveloperError('WebGL 2.0 support is required.');
         }
         if (!defined(srcFBO)) {
-            throw new DeveloperError('sourceRectangle is required');
+            throw new DeveloperError('source.framebuffer is required');
         }
         if (!defined(dstFBO)) {
-            throw new DeveloperError('destinationFramebuffer is required.');
+            throw new DeveloperError('destination.framebuffer is required.');
+        }
+        if (srcFBO && dstFBO) {
+            throw new DeveloperError('source.framebuffer and destination.framebuffer must be different.');
         }
         if (colorBit) {
             var sourceTexture = srcFBO.numberOfColorTextureAttachments > 0 ? srcFBO.getColorTexture(readBuffer) : undefined;
