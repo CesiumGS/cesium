@@ -22,7 +22,7 @@ define([
     /**
      * Requests a resource using JSONP.
      *
-     * @exports jsonp
+     * @exports loadJsonp
      *
      * @param {String} url The URL to request.
      * @param {Object} [options] Object with the following properties:
