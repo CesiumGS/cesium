@@ -1147,12 +1147,7 @@ define([
                 (!defined(srcFBO.stencilRenderbuffer) && defined(dstFBO.stencilRenderbuffer))) {
                 throw new DeveloperError('When the stencil mask is set, both stencil buffers need to have the same format.');
             }
-            if ((defined(srcFBO.stencilTexture) && !defined(dstFBO.stencilTexture)) ||
-                (!defined(srcFBO.stencilTexture) && defined(dstFBO.stencilTexture))) {
-                throw new DeveloperError('When the stencil mask is set, both stencil buffers need to have the same format.');
-            }
-            if (!defined(srcFBO.stencilRenderbuffer) && !defined(srcFBO.stencilTexture) &&
-                !defined(dstFBO.stencilRenderbuffer) && !defined(dstFBO.stencilTexture)) {
+            if (!defined(srcFBO.stencilRenderbuffer) && !defined(dstFBO.stencilRenderbuffer)) {
                 throw new DeveloperError('Both source and destination framebuffers require a stencil attachment when the stencil mask is set.');
             }
         }

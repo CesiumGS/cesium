@@ -622,5 +622,284 @@ defineSuite([
                 fbo2.destroy();
             }
         });
+        
+        it('throws when missing a stencil attachment and the stencil bit is true', function() {
+            var fbo1 = new Framebuffer({
+                context : context,
+                stencilRenderbuffer : new Renderbuffer({
+                    context : context,
+                    width : 1,
+                    height : 1,
+                    format : RenderbufferFormat.STENCIL_INDEX8
+                })
+            });
+            var fbo2 = new Framebuffer({
+                context : context,
+                colorTextures : [new Texture({
+                    context : context,
+                    width : 1,
+                    height : 1
+                })]
+            });
+            
+            expect(function() {
+                context.blitFramebuffer({
+                    source : {
+                        framebuffer : fbo1
+                    },
+                    destination : {
+                        framebuffer : fbo2
+                    },
+                    mask : {
+                        color : false,
+                        stencil : true
+                    }
+                });
+            }).toThrowDeveloperError();
+            
+            expect(function() {
+                context.blitFramebuffer({
+                    source : {
+                        framebuffer : fbo2
+                    },
+                    destination : {
+                        framebuffer : fbo1
+                    },
+                    mask : {
+                        color : false,
+                        stencil : true
+                    }
+                });
+            }).toThrowDeveloperError();
+            
+            fbo1.destroy();
+            fbo2.destroy();
+        });
+        
+        it('throws when missing all stencil attachments and the stencil bit is true', function() {
+            if (context.webgl2) {
+                var fbo1 = new Framebuffer({
+                    context : context,
+                    colorTextures : [new Texture({
+                        context : context,
+                        width : 1,
+                        height : 1
+                    })]
+                });
+                var fbo2 = new Framebuffer({
+                    context : context,
+                    colorTextures : [new Texture({
+                        context : context,
+                        width : 1,
+                        height : 1
+                    })]
+                });
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo1
+                        },
+                        destination : {
+                            framebuffer : fbo2
+                        },
+                        mask : {
+                            color : false,
+                            stencil : true
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo2
+                        },
+                        destination : {
+                            framebuffer : fbo1
+                        },
+                        mask : {
+                            color : false,
+                            stencil : true
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                fbo1.destroy();
+                fbo2.destroy();
+            }
+        });
+        
+        it('throws when missing a depth-stencil renderbuffer attachment and the depth and stencil bits are true', function() {
+            if (context.webgl2) {
+                var fbo1 = new Framebuffer({
+                    context : context,
+                    depthStencilRenderbuffer : new Renderbuffer({
+                        context : context,
+                        width : 1,
+                        height : 1,
+                        format : RenderbufferFormat.DEPTH_STENCIL
+                    })
+                });
+                var fbo2 = new Framebuffer({
+                    context : context,
+                    colorTextures : [new Texture({
+                        context : context,
+                        width : 1,
+                        height : 1
+                    })]
+                });
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo1
+                        },
+                        destination : {
+                            framebuffer : fbo2
+                        },
+                        mask : {
+                            color : false,
+                            depth : true,
+                            stencil : true
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo2
+                        },
+                        destination : {
+                            framebuffer : fbo1
+                        },
+                        mask : {
+                            color : false,
+                            depth : true,
+                            stencil : true
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                fbo1.destroy();
+                fbo2.destroy();
+            }
+        });
+        
+        it('throws when missing a depth-stencil texture attachment and the depth and stencil bits are true', function() {
+            // TODO: This check can be removed when the depth texture issue with Webgl 2.0 is resolved.
+            if (context.webgl2 && context.depthTexture) {
+                var fbo1 = new Framebuffer({
+                    context : context,
+                    depthStencilTexture : new Texture({
+                        context : context,
+                        width : 1,
+                        height : 1,
+                        pixelFormat : PixelFormat.DEPTH_STENCIL,
+                        pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8
+                    })
+                });
+                var fbo2 = new Framebuffer({
+                    context : context,
+                    colorTextures : [new Texture({
+                        context : context,
+                        width : 1,
+                        height : 1
+                    })]
+                });
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo1
+                        },
+                        destination : {
+                            framebuffer : fbo2
+                        },
+                        mask : {
+                            color : false,
+                            depth : true,
+                            stencil : true
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo2
+                        },
+                        destination : {
+                            framebuffer : fbo1
+                        },
+                        mask : {
+                            color : false,
+                            depth : true,
+                            stencil : true
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                fbo1.destroy();
+                fbo2.destroy();
+            }
+        });
+        
+        it('throws when missing all depth-stencil attachments and the depth and stencil bits are true', function() {
+            if (context.webgl2) {
+                var fbo1 = new Framebuffer({
+                    context : context,
+                    colorTextures : [new Texture({
+                        context : context,
+                        width : 1,
+                        height : 1
+                    })]
+                });
+                var fbo2 = new Framebuffer({
+                    context : context,
+                    colorTextures : [new Texture({
+                        context : context,
+                        width : 1,
+                        height : 1
+                    })]
+                });
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo1
+                        },
+                        destination : {
+                            framebuffer : fbo2
+                        },
+                        mask : {
+                            color : false,
+                            depth : true,
+                            stencil : true
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo2
+                        },
+                        destination : {
+                            framebuffer : fbo1
+                        },
+                        mask : {
+                            color : false,
+                            depth : true,
+                            stencil : true
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                fbo1.destroy();
+                fbo2.destroy();
+            }
+        });
     });
 }, 'WebGL');
