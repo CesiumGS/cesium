@@ -552,7 +552,9 @@ define([
             return indexBuffer;
         }
 
-        var length = sixteenK * 6;
+        // Subtract 6 because the last index is reserverd for primitive restart.
+        // https://www.khronos.org/registry/webgl/specs/latest/2.0/#5.18
+        var length = sixteenK * 6 - 6;
         var indices = new Uint16Array(length);
         for (var i = 0, j = 0; i < length; i += 6, j += 4) {
             indices[i] = j;

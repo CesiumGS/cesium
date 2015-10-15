@@ -315,12 +315,12 @@ define([
             destroyVA(this);
             var va = this.va = [];
 
-            var numberOfVertexArrays = defined(indexBuffer) ? Math.ceil(this._size / CesiumMath.SIXTY_FOUR_KILOBYTES) : 1;
+            var numberOfVertexArrays = defined(indexBuffer) ? Math.ceil(this._size / (CesiumMath.SIXTY_FOUR_KILOBYTES - 1)) : 1;
             for ( var k = 0; k < numberOfVertexArrays; ++k) {
                 var attributes = [];
                 for (i = 0, length = allBuffers.length; i < length; ++i) {
                     buffer = allBuffers[i];
-                    var offset = k * (buffer.vertexSizeInBytes * CesiumMath.SIXTY_FOUR_KILOBYTES);
+                    var offset = k * (buffer.vertexSizeInBytes * (CesiumMath.SIXTY_FOUR_KILOBYTES - 1));
                     VertexArrayFacade._appendAttributes(attributes, buffer, offset, this._instanced);
                 }
 
@@ -332,7 +332,7 @@ define([
                         attributes : attributes,
                         indexBuffer : indexBuffer
                     }),
-                    indicesCount : 1.5 * ((k !== (numberOfVertexArrays - 1)) ? CesiumMath.SIXTY_FOUR_KILOBYTES : (this._size % CesiumMath.SIXTY_FOUR_KILOBYTES))
+                    indicesCount : 1.5 * ((k !== (numberOfVertexArrays - 1)) ? (CesiumMath.SIXTY_FOUR_KILOBYTES - 1) : (this._size % (CesiumMath.SIXTY_FOUR_KILOBYTES - 1)))
                 // TODO: not hardcode 1.5, this assumes 6 indices per 4 vertices (as for Billboard quads).
                 });
             }

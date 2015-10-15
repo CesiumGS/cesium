@@ -82,9 +82,9 @@ vec4 sampleAndBlend(
     vec2 translation = textureCoordinateTranslationAndScale.xy;
     vec2 scale = textureCoordinateTranslationAndScale.zw;
     vec2 textureCoordinates = tileTextureCoordinates * scale + translation;
-    vec4 sample = texture2D(texture, textureCoordinates);
-    vec3 color = sample.rgb;
-    float alpha = sample.a;
+    vec4 value = texture2D(texture, textureCoordinates);
+    vec3 color = value.rgb;
+    float alpha = value.a;
     
 #ifdef APPLY_BRIGHTNESS
     color = mix(vec3(0.0), color, textureBrightness);
