@@ -858,17 +858,9 @@ define([
     var scratchSetViewMatrix3 = new Matrix3();
     var scratchSetViewCartographic = new Cartographic();
 
-    function setView3D(camera, cartesian, cartographic, heading, pitch, roll, ellipsoid) {
-        if (!defined(cartesian)) {
-            if (defined(cartographic)) {
-                cartesian = ellipsoid.cartographicToCartesian(cartographic, scratchSetViewCartesian);
-            } else {
-                cartesian = Cartesian3.clone(camera.positionWC, scratchSetViewCartesian);
-            }
-        }
-
+    function setView3D(camera, position, heading, pitch, roll) {
         var currentTransform = Matrix4.clone(camera.transform, scratchSetViewTransform1);
-        var localTransform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, scratchSetViewTransform2);
+        var localTransform = Transforms.eastNorthUpToFixedFrame(position, camera._projection.ellipsoid, scratchSetViewTransform2);
         camera._setTransform(localTransform);
 
         Cartesian3.clone(Cartesian3.ZERO, camera.position);
@@ -883,18 +875,23 @@ define([
         camera._setTransform(currentTransform);
     }
 
-    function setViewCV(camera, cartesian, cartographic, heading, pitch, roll, ellipsoid, projection) {
+    function setViewCV(camera, position, heading, pitch, roll) {
         var currentTransform = Matrix4.clone(camera.transform, scratchSetViewTransform1);
         camera._setTransform(Matrix4.IDENTITY);
 
-        if (defined(cartesian) && !Cartesian3.equals(cartesian, camera.positionWC)) {
-            cartographic = ellipsoid.cartesianToCartographic(cartesian);
+        if (!Cartesian3.equals(position, camera.positionWC)) {
+            var projection = camera._projection;
+            var cartographic = projection.ellipsoid.cartesianToCartographic(position, scratchSetViewCartographic);
+            position = projection.project(cartographic, scratchSetViewCartesian);
+            Cartesian3.clone(position, camera.position);
+
         }
 
-        if (defined(cartographic)) {
-            cartesian = projection.project(cartographic, scratchSetViewCartesian);
-            Cartesian3.clone(cartesian, camera.position);
+   /*     if (convert) {
+            ellipsoid.cartesianToCartographic(destination, scratchCartographic);
+            destination = projection.project(scratchCartographic, scratchDestination);
         }
+*/
 
         var rotQuat = Quaternion.fromHeadingPitchRoll(heading - CesiumMath.PI_OVER_TWO, pitch, roll, scratchSetViewQuaternion);
         var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
@@ -906,20 +903,18 @@ define([
         camera._setTransform(currentTransform);
     }
 
-    function setView2D(camera, cartesian, cartographic, heading, pitch, roll, ellipsoid, projection) {
+    function setView2D(camera, position, heading, pitch, roll) {
         pitch = -CesiumMath.PI_OVER_TWO;
         roll = 0.0;
 
         var currentTransform = Matrix4.clone(camera.transform, scratchSetViewTransform1);
         camera._setTransform(Matrix4.IDENTITY);
 
-        if (defined(cartesian) && !Cartesian3.equals(cartesian, camera.positionWC)) {
-            cartographic = ellipsoid.cartesianToCartographic(cartesian);
-        }
-
-        if (defined(cartographic)) {
-            cartesian = projection.project(cartographic, scratchSetViewCartesian);
-            Cartesian2.clone(cartesian, camera.position);
+        if (!Cartesian3.equals(position, camera.positionWC)) {
+            var projection = camera._projection;
+            var cartographic = projection.ellipsoid.cartesianToCartographic(position, scratchSetViewCartographic);
+            position = projection.project(cartographic, scratchSetViewCartesian);
+            Cartesian2.clone(position, camera.position);
 
             var newLeft = -cartographic.height * 0.5;
             var newRight = -newLeft;
@@ -1041,17 +1036,18 @@ define([
                 position = Rectangle.MAX_VALUE;
             }
             if (mode === SceneMode.SCENE3D) {
-                rectangleCameraPosition3D(this, position, ellipsoid, this.position);
+                rectangleCameraPosition3D(this, position, this.position);
             } else if (mode === SceneMode.COLUMBUS_VIEW) {
-                rectangleCameraPositionColumbusView(this, position, projection, this.position);
+                rectangleCameraPositionColumbusView(this, position, this.position);
             } else if (mode === SceneMode.SCENE2D) {
-                rectangleCameraPosition2D(this, position, projection, this.position);
+                rectangleCameraPosition2D(this, position, this.position);
             }
             //TODO: apply orientation
             return;
         }
 
         if (defined(orientation.direction)) {
+            position = defaultValue(position, Cartesian3.clone(this.positionWC, scratchSetViewCartesian));
             orientation = directionUpToHeadingPitchRoll(this, position, orientation);
         }
 
@@ -1059,12 +1055,14 @@ define([
         var pitch = defaultValue(orientation.pitch, this.pitch);
         var roll = defaultValue(orientation.roll, this.roll);
 
+        position = defaultValue(position, Cartesian3.clone(this.positionWC, scratchSetViewCartesian));
+
         if (mode === SceneMode.SCENE3D) {
-            setView3D(this, position, undefined, heading, pitch, roll, ellipsoid);
+            setView3D(this, position, heading, pitch, roll);
         } else if (mode === SceneMode.SCENE2D) {
-            setView2D(this, position, undefined, heading, pitch, roll, ellipsoid, projection);
+            setView2D(this, position, heading, pitch, roll);
         } else {
-            setViewCV(this, position, undefined, heading, pitch, roll, ellipsoid, projection);
+            setViewCV(this, position, heading, pitch, roll);
         }
     };
 
@@ -1813,11 +1811,11 @@ define([
     var defaultRF = {direction: new Cartesian3(), right: new Cartesian3(), up: new Cartesian3()};
     var viewRectangle3DEllipsoidGeodesic;
 
-    function rectangleCameraPosition3D (camera, rectangle, ellipsoid, result, positionOnly) {
+    function rectangleCameraPosition3D (camera, rectangle, result, positionOnly) {
         if (!defined(result)) {
             result = new Cartesian3();
         }
-
+        var ellipsoid = camera._projection.ellipsoid;
         var cameraRF = camera;
         if (positionOnly) {
             cameraRF = defaultRF;
@@ -1947,7 +1945,8 @@ define([
     var viewRectangleCVCartographic = new Cartographic();
     var viewRectangleCVNorthEast = new Cartesian3();
     var viewRectangleCVSouthWest = new Cartesian3();
-    function rectangleCameraPositionColumbusView(camera, rectangle, projection, result, positionOnly) {
+    function rectangleCameraPositionColumbusView(camera, rectangle, result, positionOnly) {
+        var projection = camera._projection;
         if (rectangle.west > rectangle.east) {
             rectangle = Rectangle.MAX_VALUE;
         }
@@ -1994,7 +1993,8 @@ define([
     var viewRectangle2DCartographic = new Cartographic();
     var viewRectangle2DNorthEast = new Cartesian3();
     var viewRectangle2DSouthWest = new Cartesian3();
-    function rectangleCameraPosition2D (camera, rectangle, projection, result, positionOnly) {
+    function rectangleCameraPosition2D (camera, rectangle, result, positionOnly) {
+        var projection = camera._projection;
         if (rectangle.west > rectangle.east) {
             rectangle = Rectangle.MAX_VALUE;
         }
@@ -2067,11 +2067,11 @@ define([
         //>>includeEnd('debug');
         var mode = this._mode;
         if (mode === SceneMode.SCENE3D) {
-            return rectangleCameraPosition3D(this, rectangle, this._projection.ellipsoid, result, true);
+            return rectangleCameraPosition3D(this, rectangle, result, true);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
-            return rectangleCameraPositionColumbusView(this, rectangle, this._projection, result, true);
+            return rectangleCameraPositionColumbusView(this, rectangle, result, true);
         } else if (mode === SceneMode.SCENE2D) {
-            return rectangleCameraPosition2D(this, rectangle, this._projection, result, true);
+            return rectangleCameraPosition2D(this, rectangle, result, true);
         }
 
         return undefined;
@@ -2095,11 +2095,11 @@ define([
 
         ellipsoid = defaultValue(ellipsoid, this._projection.ellipsoid);
         if (this._mode === SceneMode.SCENE3D) {
-            rectangleCameraPosition3D(this, rectangle, ellipsoid, this.position);
+            rectangleCameraPosition3D(this, rectangle, this.position);
         } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
-            rectangleCameraPositionColumbusView(this, rectangle, this._projection, this.position);
+            rectangleCameraPositionColumbusView(this, rectangle, this.position);
         } else if (this._mode === SceneMode.SCENE2D) {
-            rectangleCameraPosition2D(this, rectangle, this._projection, this.position);
+            rectangleCameraPosition2D(this, rectangle, this.position);
         }
     };
 
