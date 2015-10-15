@@ -14,7 +14,7 @@ defineSuite([
         'Core/Transforms',
         'Renderer/RenderState',
         'Renderer/WebGLConstants',
-        'Scene/HeadingPitchRange',
+        'Core/HeadingPitchRange',
         'Scene/ModelAnimationLoop',
         'Specs/createScene',
         'Specs/pollToPromise',
