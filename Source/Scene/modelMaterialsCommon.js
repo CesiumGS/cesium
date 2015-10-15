@@ -341,6 +341,10 @@ define([
         vertexShader += vertexShaderMain;
         vertexShader += '}\n';
 
+        fragmentShader += 'void main(void) {\n';
+        // TODO: Generate body
+        fragmentShader += '}\n';
+
         techniques[techniqueId] = {
             attributes: techniqueAttributes,
             parameters: techniqueParameters,
