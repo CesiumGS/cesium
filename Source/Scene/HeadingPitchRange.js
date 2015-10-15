@@ -19,7 +19,7 @@ define([
      * @param {Number} [pitch=0.0] The pitch angle in radians.
      * @param {Number} [range=0.0] The distance from the center in meters.
      *
-     * @depricated
+     * @deprecated
      */
     var HeadingPitchRange = function(heading, pitch, range) {
         deprecationWarning('HeadingPitchRange', 'Scene/HeadingPitchRange is deprecated. Use Core/HeadingPitchRange instead.');
