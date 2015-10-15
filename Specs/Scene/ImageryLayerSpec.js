@@ -2,7 +2,7 @@
 defineSuite([
         'Scene/ImageryLayer',
         'Core/EllipsoidTerrainProvider',
-        'Core/jsonp',
+        'Core/loadJsonp',
         'Core/loadImage',
         'Core/loadWithXhr',
         'Core/Rectangle',
@@ -24,7 +24,7 @@ defineSuite([
     ], function(
         ImageryLayer,
         EllipsoidTerrainProvider,
-        jsonp,
+        loadJsonp,
         loadImage,
         loadWithXhr,
         Rectangle,
@@ -60,7 +60,7 @@ defineSuite([
     });
 
     afterEach(function() {
-        jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
+        loadJsonp.loadAndExecuteScript = loadJsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
         loadWithXhr.load = loadWithXhr.defaultLoad;
     });
@@ -115,7 +115,7 @@ defineSuite([
     });
 
     it('reprojects web mercator images', function() {
-        jsonp.loadAndExecuteScript = function(url, functionName) {
+        loadJsonp.loadAndExecuteScript = function(url, functionName) {
             window[functionName]({
                 "authenticationResultCode" : "ValidCredentials",
                 "brandLogoUri" : "http:\/\/dev.virtualearth.net\/Branding\/logo_powered_by.png",
