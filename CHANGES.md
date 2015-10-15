@@ -19,6 +19,7 @@ Change Log
 * Fixed token issue in `ArcGisMapServerImageryProvider`.
 * `ImageryLayerFeatureInfo` now has an `imageryLayer` property, indicating the layer that contains the feature.
 * Added `BoxOutlineGeometry.fromAxisAlignedBoundingBox` and `BoxGeometry.fromAxisAlignedBoundingBox` functions.
+* Removed a workaround for Chrome 25-28
 
 ### 1.14 - 2015-10-01
 
