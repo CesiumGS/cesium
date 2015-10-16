@@ -760,8 +760,8 @@ define([
             u_southAndNorthLatitude : function() {
                 return this.southAndNorthLatitude;
             },
-            u_southMercatorYLowAndHighAndOneOverHeight : function() {
-                return this.southMercatorYLowAndHighAndOneOverHeight;
+            u_southMercatorYAndOneOverHeight : function() {
+                return this.southMercatorYAndOneOverHeight;
             },
             u_waterMask : function() {
                 return this.waterMask;
@@ -791,7 +791,7 @@ define([
             dayIntensity : 0.0,
 
             southAndNorthLatitude : new Cartesian2(),
-            southMercatorYLowAndHighAndOneOverHeight : new Cartesian3(),
+            southMercatorYAndOneOverHeight : new Cartesian2(),
 
             waterMask : undefined,
             waterMaskTranslationAndScale : new Cartesian4()
@@ -958,8 +958,7 @@ define([
         // Only used for Mercator projections.
         var southLatitude = 0.0;
         var northLatitude = 0.0;
-        var southMercatorYHigh = 0.0;
-        var southMercatorYLow = 0.0;
+        var southMercatorY = 0.0;
         var oneOverMercatorHeight = 0.0;
 
         var useWebMercatorProjection = false;
@@ -990,14 +989,9 @@ define([
                 southLatitude = tile.rectangle.south;
                 northLatitude = tile.rectangle.north;
 
-                var southMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(southLatitude);
-                var northMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(northLatitude);
+                southMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(southLatitude);
 
-                float32ArrayScratch[0] = southMercatorY;
-                southMercatorYHigh = float32ArrayScratch[0];
-                southMercatorYLow = southMercatorY - float32ArrayScratch[0];
-
-                oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
+                oneOverMercatorHeight = 1.0 / (WebMercatorProjection.geodeticLatitudeToMercatorAngle(northLatitude) - southMercatorY);
 
                 useWebMercatorProjection = true;
             }
@@ -1068,9 +1062,8 @@ define([
             Cartesian4.clone(tileRectangle, uniformMap.tileRectangle);
             uniformMap.southAndNorthLatitude.x = southLatitude;
             uniformMap.southAndNorthLatitude.y = northLatitude;
-            uniformMap.southMercatorYLowAndHighAndOneOverHeight.x = southMercatorYLow;
-            uniformMap.southMercatorYLowAndHighAndOneOverHeight.y = southMercatorYHigh;
-            uniformMap.southMercatorYLowAndHighAndOneOverHeight.z = oneOverMercatorHeight;
+            uniformMap.southMercatorYAndOneOverHeight.x = southMercatorY;
+            uniformMap.southMercatorYAndOneOverHeight.y = oneOverMercatorHeight;
             Matrix4.clone(modifiedModelViewScratch, uniformMap.modifiedModelView);
 
             var applyBrightness = false;
