@@ -300,7 +300,7 @@ define([
         }
 
         var heading = defaultValue(options.heading, 0.0);
-        var pitch = scene.mode !== SceneMode.SCENE2D ? defaultValue(options.pitch, -CesiumMath.PI_OVER_TWO) : -CesiumMath.PI_OVER_TWO;
+        var pitch = defaultValue(options.pitch, -CesiumMath.PI_OVER_TWO);
         var roll = defaultValue(options.roll, 0.0);
 
         var controller = scene.screenSpaceCameraController;

@@ -613,10 +613,10 @@ defineSuite([
 
         expect(camera.position.x).toEqual(0);
         expect(camera.position.y).toEqual(0);
-        expect(frustum.right - expected <= CesiumMath.EPSILON14).toEqual(true);
-        expect(frustum.left + expected <= CesiumMath.EPSILON14).toEqual(true);
-        expect(frustum.top - expected <= CesiumMath.EPSILON14).toEqual(true);
-        expect(frustum.bottom + expected <= CesiumMath.EPSILON14).toEqual(true);
+        expect(frustum.right).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+        expect(frustum.left).toEqualEpsilon(-expected, CesiumMath.EPSILON14);
+        expect(frustum.top).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+        expect(frustum.bottom).toEqualEpsilon(-expected, CesiumMath.EPSILON14);
     });
 
     it('setView with rectangle in Columbus View', function() {

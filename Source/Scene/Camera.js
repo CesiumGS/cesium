@@ -883,14 +883,16 @@ define([
         camera._setTransform(currentTransform);
     }
 
-    function setViewCV(camera, position, heading, pitch, roll) {
+    function setViewCV(camera, position, heading, pitch, roll, convert) {
         var currentTransform = Matrix4.clone(camera.transform, scratchSetViewTransform1);
         camera._setTransform(Matrix4.IDENTITY);
 
         if (!Cartesian3.equals(position, camera.positionWC)) {
-            var projection = camera._projection;
-            var cartographic = projection.ellipsoid.cartesianToCartographic(position, scratchSetViewCartographic);
-            position = projection.project(cartographic, scratchSetViewCartesian);
+            if (convert) {
+                var projection = camera._projection;
+                var cartographic = projection.ellipsoid.cartesianToCartographic(position, scratchSetViewCartographic);
+                position = projection.project(cartographic, scratchSetViewCartesian);
+            }
             Cartesian3.clone(position, camera.position);
         }
 
@@ -904,7 +906,7 @@ define([
         camera._setTransform(currentTransform);
     }
 
-    function setView2D(camera, position, heading, pitch, roll) {
+    function setView2D(camera, position, heading, pitch, roll, convert) {
         pitch = -CesiumMath.PI_OVER_TWO;
         roll = 0.0;
 
@@ -912,12 +914,15 @@ define([
         camera._setTransform(Matrix4.IDENTITY);
 
         if (!Cartesian3.equals(position, camera.positionWC)) {
-            var projection = camera._projection;
-            var cartographic = projection.ellipsoid.cartesianToCartographic(position, scratchSetViewCartographic);
-            position = projection.project(cartographic, scratchSetViewCartesian);
+            if (convert) {
+                var projection = camera._projection;
+                var cartographic = projection.ellipsoid.cartesianToCartographic(position, scratchSetViewCartographic);
+                position = projection.project(cartographic, scratchSetViewCartesian);
+            }
+
             Cartesian2.clone(position, camera.position);
 
-            var newLeft = -cartographic.height * 0.5;
+            var newLeft = -position.z * 0.5;
             var newRight = -newLeft;
 
             var frustum = camera.frustum;
@@ -1036,7 +1041,6 @@ define([
         var projection = this._projection;
         var ellipsoid = projection.ellipsoid;
         var destination = options.destination;
-        var convert = true;
         if (!defined(destination) && defined(options.positionCartographic)){
             destination = ellipsoid.cartographicToCartesian(options.positionCartographic);
 
@@ -1046,16 +1050,11 @@ define([
             this._setTransform(options.endTransform);
         }
 
+        var convert = true;
         destination = defaultValue(destination, Cartesian3.clone(this.positionWC, scratchSetViewCartesian));
         if (defined(destination) && defined(destination.west)) {
-            if (mode === SceneMode.SCENE3D) {
-                rectangleCameraPosition3D(this, destination, this.position);
-            } else if (mode === SceneMode.COLUMBUS_VIEW) {
-                rectangleCameraPositionColumbusView(this, destination, this.position);
-            } else if (mode === SceneMode.SCENE2D) {
-                rectangleCameraPosition2D(this, destination, this.position);
-            }
-            destination = Cartesian3.clone(this.positionWC, scratchSetViewCartesian);
+            destination = this.getRectangleCameraCoordinates(destination, new Cartesian3());
+            convert = false;
         }
 
         if (defined(orientation.direction)) {
@@ -1063,15 +1062,15 @@ define([
         }
 
         var heading = defaultValue(orientation.heading, 0.0);
-        var pitch = mode !== SceneMode.SCENE2D ? defaultValue(orientation.pitch, -CesiumMath.PI_OVER_TWO) : -CesiumMath.PI_OVER_TWO;
+        var pitch = defaultValue(orientation.pitch, -CesiumMath.PI_OVER_TWO);
         var roll = defaultValue(orientation.roll, 0.0);
 
         if (mode === SceneMode.SCENE3D) {
             setView3D(this, destination, heading, pitch, roll);
         } else if (mode === SceneMode.SCENE2D) {
-            setView2D(this, destination, heading, pitch, roll);
+            setView2D(this, destination, heading, pitch, roll, convert);
         } else {
-            setViewCV(this, destination, heading, pitch, roll);
+            setViewCV(this, destination, heading, pitch, roll, convert);
         }
     };
 
