@@ -1196,7 +1196,6 @@ define([
         }
     }
 
-    var nodeAxisScratch = new Cartesian3();
     var nodeTranslationScratch = new Cartesian3();
     var nodeQuaternionScratch = new Quaternion();
     var nodeScaleScratch = new Cartesian3();
@@ -1206,18 +1205,9 @@ define([
             return Matrix4.fromArray(node.matrix);
         }
 
-        var rotation = node.rotation;
-        if (version < 1.0) {
-            var axis = Cartesian3.fromArray(rotation, 0, nodeAxisScratch);
-            Quaternion.fromAxisAngle(axis, rotation[3], nodeQuaternionScratch);
-        }
-        else {
-            nodeQuaternionScratch = new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3]);
-        }
-
         return Matrix4.fromTranslationQuaternionRotationScale(
             Cartesian3.fromArray(node.translation, 0, nodeTranslationScratch),
-            nodeQuaternionScratch,
+            Quaternion.unpack(node.rotation, 0, nodeQuaternionScratch),
             Cartesian3.fromArray(node.scale, 0 , nodeScaleScratch));
     }
 

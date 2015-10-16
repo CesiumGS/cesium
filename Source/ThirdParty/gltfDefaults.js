@@ -1,11 +1,15 @@
 /*global define*/
 define([
+        '../Core/Cartesian3',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/Quaternion',
         '../Renderer/WebGLConstants'
     ], function(
+        Cartesian3,
         defaultValue,
         defined,
+        Quaternion,
         WebGLConstants) {
     "use strict";
 
@@ -247,6 +251,8 @@ define([
         }
         var nodes = gltf.nodes;
 
+        var axis = new Cartesian3();
+        var quat = new Quaternion();
         for (var name in nodes) {
             if (nodes.hasOwnProperty(name)) {
                 var node = nodes[name];
@@ -255,9 +261,16 @@ define([
                     node.children = [];
                 }
 
+                if (gltf.asset.version < 1.0 && defined(node.rotation)) {
+                    var rotation = node.rotation;
+                    Cartesian3.fromArray(rotation, 0, axis);
+                    Quaternion.fromAxisAngle(axis, rotation[3], quat);
+                    node.rotation = [quat.x, quat.y, quat.z, quat.w];
+                }
+
                 if (!defined(node.matrix)) {
                     // Add default identity matrix if there is no matrix property and no TRS properties
-                    if (!(defined(node.translation) && defined(node.rotation) && defined(node.scale))) {
+                    if (!defined(node.translation) && !defined(node.rotation) && !defined(node.scale)) {
                         node.matrix = [
                             1.0, 0.0, 0.0, 0.0,
                             0.0, 1.0, 0.0, 0.0,
@@ -270,8 +283,7 @@ define([
                         }
 
                         if (!defined(node.rotation)) {
-                            // GLTF_SPEC: What is the default?  https://github.com/KhronosGroup/glTF/issues/197
-                            node.rotation = [1.0, 0.0, 0.0, 0.0];
+                            node.rotation = [0.0, 0.0, 0.0, 1.0];
                         }
 
                         if (!defined(node.scale)) {
