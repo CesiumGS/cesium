@@ -335,13 +335,16 @@ define([
             if (attribute === 'POSITION') {
                 typeValue = WebGLConstants.FLOAT_VEC3;
                 vertexShader += 'attribute vec3 a_position;\n';
+                vertexShader += 'varying vec3 v_positionEC;\n';
                 if (hasSkinning) {
                     vertexShaderMain += '  vec4 pos = u_modelViewMatrix * skinMat * vec4(a_position,1.0);\n';
                 }
                 else {
                     vertexShaderMain += '  vec4 pos = u_modelViewMatrix * vec4(a_position,1.0);\n';
                 }
+                vertexShaderMain += '  v_positionEC = pos.xyz;\n';
                 vertexShaderMain += '  gl_Position = u_projectionMatrix * pos;\n';
+                fragmentShader += 'varying vec3 v_positionEC;\n';
             }
             else if (attribute === 'NORMAL') {
                 typeValue = WebGLConstants.FLOAT_VEC3;
@@ -442,8 +445,14 @@ define([
                     fragmentLightingBlock += '    diffuseLight += ' + lightColorName + '* max(dot(normal,l), 0.) * attenuation;\n';
 
                     if (hasSpecular) {
-                        fragmentLightingBlock += '    vec3 h = normalize(l + vec3(0., 0., 1.));\n';
-                        fragmentLightingBlock += '    float specularIntensity = max(0., pow(max(dot(normal, h), 0.), u_shininess)) * attenuation;\n';
+                        if (lightingModel === 'BLINN') {
+                            fragmentLightingBlock += '    vec3 h = normalize(l + viewDir);\n';
+                            fragmentLightingBlock += '    float specularIntensity = max(0., pow(max(dot(normal, h), 0.), u_shininess)) * attenuation;\n';
+                        }
+                        else { // PHONG
+                            fragmentLightingBlock += '    vec3 reflectDir = reflect(-l, normal);\n';
+                            fragmentLightingBlock += '    float specularIntensity = max(0., pow(max(dot(reflectDir, viewDir), 0.), u_shininess)) * attenuation;\n';
+                        }
                         fragmentLightingBlock += '    specularLight += ' + lightColorName + ' * specularIntensity;\n';
                     }
 
@@ -465,8 +474,15 @@ define([
             fragmentLightingBlock += '  diffuseLight += vec3(1.0, 1.0, 1.0) * max(dot(normal,l), 0.);\n';
 
             if (hasSpecular) {
-                fragmentLightingBlock += '  vec3 h = normalize(l + vec3(0., 0., 1.));\n';
-                fragmentLightingBlock += '  float specularIntensity = max(0., pow(max(dot(normal, h), 0.), u_shininess));\n';
+                if (lightingModel === 'BLINN') {
+                    fragmentLightingBlock += '  vec3 h = normalize(l + viewDir);\n';
+                    fragmentLightingBlock += '  float specularIntensity = max(0., pow(max(dot(normal, h), 0.), u_shininess));\n';
+                }
+                else { // PHONG
+                    fragmentLightingBlock += '  vec3 reflectDir = reflect(-l, normal);\n';
+                    fragmentLightingBlock += '  float specularIntensity = max(0., pow(max(dot(reflectDir, viewDir), 0.), u_shininess));\n';
+                }
+
                 fragmentLightingBlock += '  specularLight += vec3(1.0, 1.0, 1.0) * specularIntensity;\n';
             }
         }
@@ -548,6 +564,7 @@ define([
         else {
             fragmentShader += '  vec3 ambient = diffuse.rgb;\n';
         }
+        fragmentShader += '  vec3 viewDir = -normalize(v_positionEC);\n';
         fragmentShader += '  vec3 ambientLight = vec3(0.0, 0.0, 0.0);\n';
         colorCreationBlock += '  color += ambient * ambientLight;\n';
 
