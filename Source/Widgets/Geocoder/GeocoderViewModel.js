@@ -7,7 +7,7 @@ define([
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/Event',
-        '../../Core/jsonp',
+        '../../Core/loadJsonp',
         '../../Core/Matrix4',
         '../../Core/Rectangle',
         '../../Scene/SceneMode',
@@ -22,7 +22,7 @@ define([
         defineProperties,
         DeveloperError,
         Event,
-        jsonp,
+        loadJsonp,
         Matrix4,
         Rectangle,
         SceneMode,
@@ -238,7 +238,7 @@ define([
         }
         viewModel._isSearchInProgress = true;
 
-        var promise = jsonp(viewModel._url + 'REST/v1/Locations', {
+        var promise = loadJsonp(viewModel._url + 'REST/v1/Locations', {
             parameters : {
                 query : query,
                 key : viewModel._key
