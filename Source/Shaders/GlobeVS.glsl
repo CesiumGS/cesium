@@ -7,7 +7,7 @@ uniform vec4 u_tileRectangle;
 
 // Uniforms for 2D Mercator projection
 uniform vec2 u_southAndNorthLatitude;
-uniform vec3 u_southMercatorYLowAndHighAndOneOverHeight;
+uniform vec2 u_southMercatorYAndOneOverHeight;
 
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
@@ -38,8 +38,8 @@ float get2DMercatorYPositionFraction()
     float northLatitude = u_southAndNorthLatitude.y;
     if (northLatitude - southLatitude > maxTileWidth)
     {
-        float southMercatorY = u_southMercatorYLowAndHighAndOneOverHeight.y;
-        float oneOverMercatorHeight = u_southMercatorYLowAndHighAndOneOverHeight.z;
+        float southMercatorY = u_southMercatorYAndOneOverHeight.x;
+        float oneOverMercatorHeight = u_southMercatorYAndOneOverHeight.y;
 
         float currentLatitude = mix(southLatitude, northLatitude, textureCoordAndEncodedNormals.y);
         currentLatitude = clamp(currentLatitude, -czm_webMercatorMaxLatitude, czm_webMercatorMaxLatitude);
