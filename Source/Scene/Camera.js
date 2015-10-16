@@ -212,15 +212,7 @@ define([
         this._max2Dfrustum = undefined;
 
         // set default view
-        var rectangle = Camera.DEFAULT_VIEW_RECTANGLE;
-        var mode = this._mode;
-        if (mode === SceneMode.SCENE3D) {
-            rectangleCameraPosition3D(this, rectangle, this.position);
-        } else if (mode === SceneMode.COLUMBUS_VIEW) {
-            rectangleCameraPositionColumbusView(this, rectangle, this.position);
-        } else if (mode === SceneMode.SCENE2D) {
-            rectangleCameraPosition2D(this, rectangle, this.position);
-        }
+        rectangleCameraPosition3D(this, Camera.DEFAULT_VIEW_RECTANGLE, this.position, true);
 
         var mag = Cartesian3.magnitude(this.position);
         mag += mag * Camera.DEFAULT_VIEW_FACTOR;
@@ -906,9 +898,9 @@ define([
         camera._setTransform(currentTransform);
     }
 
-    function setView2D(camera, position, heading, pitch, roll, convert) {
-        pitch = -CesiumMath.PI_OVER_TWO;
-        roll = 0.0;
+    function setView2D(camera, position, heading, convert) {
+        var pitch = -CesiumMath.PI_OVER_TWO;
+        var roll = 0.0;
 
         var currentTransform = Matrix4.clone(camera.transform, scratchSetViewTransform1);
         camera._setTransform(Matrix4.IDENTITY);
@@ -1068,7 +1060,7 @@ define([
         if (mode === SceneMode.SCENE3D) {
             setView3D(this, destination, heading, pitch, roll);
         } else if (mode === SceneMode.SCENE2D) {
-            setView2D(this, destination, heading, pitch, roll, convert);
+            setView2D(this, destination, heading, convert);
         } else {
             setViewCV(this, destination, heading, pitch, roll, convert);
         }
@@ -1824,12 +1816,9 @@ define([
         return opposite / tanThetaOrPhi - Cartesian3.dot(direction, corner);
     }
 
-    function rectangleCameraPosition3D (camera, rectangle, result, positionOnly) {
+    function rectangleCameraPosition3D (camera, rectangle, result, updateCamera) {
         var ellipsoid = camera._projection.ellipsoid;
-        var cameraRF = camera;
-        if (positionOnly) {
-            cameraRF = defaultRF;
-        }
+        var cameraRF = updateCamera ? camera : defaultRF;
 
         var north = rectangle.north;
         var south = rectangle.south;
@@ -1950,47 +1939,33 @@ define([
     var viewRectangleCVCartographic = new Cartographic();
     var viewRectangleCVNorthEast = new Cartesian3();
     var viewRectangleCVSouthWest = new Cartesian3();
-    function rectangleCameraPositionColumbusView(camera, rectangle, result, positionOnly) {
+    function rectangleCameraPositionColumbusView(camera, rectangle, result) {
         var projection = camera._projection;
         if (rectangle.west > rectangle.east) {
             rectangle = Rectangle.MAX_VALUE;
         }
-        var north = rectangle.north;
-        var south = rectangle.south;
-        var east = rectangle.east;
-        var west = rectangle.west;
         var transform = camera._actualTransform;
         var invTransform = camera._actualInvTransform;
 
         var cart = viewRectangleCVCartographic;
-        cart.longitude = east;
-        cart.latitude = north;
+        cart.longitude = rectangle.east;
+        cart.latitude = rectangle.north;
         var northEast = projection.project(cart, viewRectangleCVNorthEast);
         Matrix4.multiplyByPoint(transform, northEast, northEast);
         Matrix4.multiplyByPoint(invTransform, northEast, northEast);
 
-        cart.longitude = west;
-        cart.latitude = south;
+        cart.longitude = rectangle.west;
+        cart.latitude = rectangle.south;
         var southWest = projection.project(cart, viewRectangleCVSouthWest);
         Matrix4.multiplyByPoint(transform, southWest, southWest);
         Matrix4.multiplyByPoint(invTransform, southWest, southWest);
 
         var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
         var tanTheta = camera.frustum.aspectRatio * tanPhi;
-        if (!defined(result)) {
-            result = new Cartesian3();
-        }
 
         result.x = (northEast.x - southWest.x) * 0.5 + southWest.x;
         result.y = (northEast.y - southWest.y) * 0.5 + southWest.y;
         result.z = Math.max((northEast.x - southWest.x) / tanTheta, (northEast.y - southWest.y) / tanPhi) * 0.5;
-
-        if (!positionOnly) {
-            var direction = Cartesian3.clone(Cartesian3.UNIT_Z, camera.direction);
-            Cartesian3.negate(direction, direction);
-            Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
-            Cartesian3.clone(Cartesian3.UNIT_Y, camera.up);
-        }
 
         return result;
     }
@@ -1998,22 +1973,18 @@ define([
     var viewRectangle2DCartographic = new Cartographic();
     var viewRectangle2DNorthEast = new Cartesian3();
     var viewRectangle2DSouthWest = new Cartesian3();
-    function rectangleCameraPosition2D (camera, rectangle, result, positionOnly) {
+    function rectangleCameraPosition2D (camera, rectangle, result) {
         var projection = camera._projection;
         if (rectangle.west > rectangle.east) {
             rectangle = Rectangle.MAX_VALUE;
         }
-        var north = rectangle.north;
-        var south = rectangle.south;
-        var east = rectangle.east;
-        var west = rectangle.west;
 
         var cart = viewRectangle2DCartographic;
-        cart.longitude = east;
-        cart.latitude = north;
+        cart.longitude = rectangle.east;
+        cart.latitude = rectangle.north;
         var northEast = projection.project(cart, viewRectangle2DNorthEast);
-        cart.longitude = west;
-        cart.latitude = south;
+        cart.longitude = rectangle.west;
+        cart.latitude = rectangle.south;
         var southWest = projection.project(cart, viewRectangle2DSouthWest);
 
         var width = Math.abs(northEast.x - southWest.x) * 0.5;
@@ -2035,22 +2006,9 @@ define([
         result.x = (northEast.x - southWest.x) * 0.5 + southWest.x;
         result.y = (northEast.y - southWest.y) * 0.5 + southWest.y;
 
-        if (positionOnly) {
-            cart = projection.unproject(result, cart);
-            cart.height = height;
-            result = projection.project(cart, result);
-        } else {
-            var frustum = camera.frustum;
-            frustum.right = right;
-            frustum.left = -right;
-            frustum.top = top;
-            frustum.bottom = -top;
-
-            var direction = Cartesian3.clone(Cartesian3.UNIT_Z, camera.direction);
-            Cartesian3.negate(direction, direction);
-            Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
-            Cartesian3.clone(Cartesian3.UNIT_Y, camera.up);
-        }
+        cart = projection.unproject(result, cart);
+        cart.height = height;
+        result = projection.project(cart, result);
 
         return result;
     }
@@ -2071,11 +2029,11 @@ define([
         var mode = this._mode;
         result = defaultValue(result, new Cartesian3());
         if (mode === SceneMode.SCENE3D) {
-            return rectangleCameraPosition3D(this, rectangle, result, true);
+            return rectangleCameraPosition3D(this, rectangle, result);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
-            return rectangleCameraPositionColumbusView(this, rectangle, result, true);
+            return rectangleCameraPositionColumbusView(this, rectangle, result);
         } else if (mode === SceneMode.SCENE2D) {
-            return rectangleCameraPosition2D(this, rectangle, result, true);
+            return rectangleCameraPosition2D(this, rectangle, result);
         }
 
         return undefined;

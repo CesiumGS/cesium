@@ -196,9 +196,7 @@ define([
         var camera = scene.camera;
 
         var start = Cartesian3.clone(camera.position, scratchStart);
-        var startPitch = camera.pitch;
         var startHeading = adjustAngleForLERP(camera.heading, heading);
-        var startRoll = adjustAngleForLERP(camera.roll, roll);
 
         var startHeight = camera.frustum.right - camera.frustum.left;
         var heightFunction = createHeightFunction(camera, destination, startHeight, destination.z, optionAltitude);
@@ -208,9 +206,7 @@ define([
 
             camera.setView({
                 orientation: {
-                    heading : CesiumMath.lerp(startHeading, heading, time),
-                    pitch : CesiumMath.lerp(startPitch, pitch, time),
-                    roll : CesiumMath.lerp(startRoll, roll, time)
+                    heading : CesiumMath.lerp(startHeading, heading, time)
                 }
             });
 
