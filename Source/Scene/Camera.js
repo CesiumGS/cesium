@@ -1046,6 +1046,7 @@ define([
             this._setTransform(options.endTransform);
         }
 
+        destination = defaultValue(destination, Cartesian3.clone(this.positionWC, scratchSetViewCartesian));
         if (defined(destination) && defined(destination.west)) {
             if (mode === SceneMode.SCENE3D) {
                 rectangleCameraPosition3D(this, destination, this.position);
@@ -1054,19 +1055,16 @@ define([
             } else if (mode === SceneMode.SCENE2D) {
                 rectangleCameraPosition2D(this, destination, this.position);
             }
-            destination = undefined;
+            destination = Cartesian3.clone(this.positionWC, scratchSetViewCartesian);
         }
 
         if (defined(orientation.direction)) {
-            destination = defaultValue(destination, Cartesian3.clone(this.positionWC, scratchSetViewCartesian));
             orientation = directionUpToHeadingPitchRoll(this, destination, orientation);
         }
 
         var heading = defaultValue(orientation.heading, 0.0);
         var pitch = mode !== SceneMode.SCENE2D ? defaultValue(orientation.pitch, -CesiumMath.PI_OVER_TWO) : -CesiumMath.PI_OVER_TWO;
         var roll = defaultValue(orientation.roll, 0.0);
-
-        destination = defined(destination) ? destination : Cartesian3.clone(this.positionWC, scratchSetViewCartesian);
 
         if (mode === SceneMode.SCENE3D) {
             setView3D(this, destination, heading, pitch, roll);
