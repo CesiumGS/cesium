@@ -38,13 +38,12 @@ float get2DMercatorYPositionFraction()
     float northLatitude = u_southAndNorthLatitude.y;
     if (northLatitude - southLatitude > maxTileWidth)
     {
-        float southMercatorYLow = u_southMercatorYLowAndHighAndOneOverHeight.x;
-        float southMercatorYHigh = u_southMercatorYLowAndHighAndOneOverHeight.y;
+        float southMercatorY = u_southMercatorYLowAndHighAndOneOverHeight.y;
         float oneOverMercatorHeight = u_southMercatorYLowAndHighAndOneOverHeight.z;
 
         float currentLatitude = mix(southLatitude, northLatitude, textureCoordAndEncodedNormals.y);
         currentLatitude = clamp(currentLatitude, -czm_webMercatorMaxLatitude, czm_webMercatorMaxLatitude);
-        positionFraction = czm_latitudeToWebMercatorFraction(currentLatitude, southMercatorYLow, southMercatorYHigh, oneOverMercatorHeight);
+        positionFraction = czm_latitudeToWebMercatorFraction(currentLatitude, southMercatorY, oneOverMercatorHeight);
     }    
     return positionFraction;
 }
