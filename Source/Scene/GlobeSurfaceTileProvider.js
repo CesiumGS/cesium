@@ -990,9 +990,8 @@ define([
                 northLatitude = tile.rectangle.north;
 
                 southMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(southLatitude);
-                var northMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(northLatitude);
 
-                oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
+                oneOverMercatorHeight = 1.0 / (WebMercatorProjection.geodeticLatitudeToMercatorAngle(northLatitude) - southMercatorY);
 
                 useWebMercatorProjection = true;
             }
