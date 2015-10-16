@@ -212,7 +212,15 @@ define([
         this._max2Dfrustum = undefined;
 
         // set default view
-        this.viewRectangle(Camera.DEFAULT_VIEW_RECTANGLE);
+        var rectangle = Camera.DEFAULT_VIEW_RECTANGLE;
+        var mode = this._mode;
+        if (mode === SceneMode.SCENE3D) {
+            rectangleCameraPosition3D(this, rectangle, this.position);
+        } else if (mode === SceneMode.COLUMBUS_VIEW) {
+            rectangleCameraPositionColumbusView(this, rectangle, this.position);
+        } else if (mode === SceneMode.SCENE2D) {
+            rectangleCameraPosition2D(this, rectangle, this.position);
+        }
 
         var mag = Cartesian3.magnitude(this.position);
         mag += mag * Camera.DEFAULT_VIEW_FACTOR;
@@ -1039,7 +1047,14 @@ define([
         }
 
         if (defined(destination) && defined(destination.west)) {
-            destination = this.viewRectangle(destination);
+            if (mode === SceneMode.SCENE3D) {
+                rectangleCameraPosition3D(this, destination, this.position);
+            } else if (mode === SceneMode.COLUMBUS_VIEW) {
+                rectangleCameraPositionColumbusView(this, destination, this.position);
+            } else if (mode === SceneMode.SCENE2D) {
+                rectangleCameraPosition2D(this, destination, this.position);
+            }
+            destination = undefined;
         }
 
         if (defined(orientation.direction)) {
@@ -2073,22 +2088,21 @@ define([
      * View a rectangle on an ellipsoid or map.
      *
      * @param {Rectangle} rectangle The rectangle to view.
+     *
+     * @deprecated
      */
     Camera.prototype.viewRectangle = function(rectangle) {
+        deprecationWarning('Camera.viewRectangle', 'Camera.viewRectangle has been deprecated.  Use Camera.setView({ destination:rectangle }) instead');
+
         //>>includeStart('debug', pragmas.debug);
         if (!defined(rectangle)) {
             throw new DeveloperError('rectangle is required.');
         }
         //>>includeEnd('debug');
 
-        var mode = this._mode;
-        if (mode === SceneMode.SCENE3D) {
-            rectangleCameraPosition3D(this, rectangle, this.position);
-        } else if (mode === SceneMode.COLUMBUS_VIEW) {
-            rectangleCameraPositionColumbusView(this, rectangle, this.position);
-        } else if (mode === SceneMode.SCENE2D) {
-            rectangleCameraPosition2D(this, rectangle, this.position);
-        }
+        this.setView({
+            destination: rectangle
+        });
     };
 
     var pickEllipsoid3DRay = new Ray();

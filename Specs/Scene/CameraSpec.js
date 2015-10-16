@@ -1514,61 +1514,55 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('viewRectangle throws without rectangle', function() {
-        expect(function () {
-            camera.viewRectangle();
-        }).toThrowDeveloperError();
-    });
-
-    it('views rectangle in 3D (1)', function() {
+    it('setView rectangle in 3D (1)', function() {
         var rectangle = new Rectangle(
             -Math.PI,
             -CesiumMath.PI_OVER_TWO,
             Math.PI,
             CesiumMath.PI_OVER_TWO);
-        camera.viewRectangle(rectangle);
+        camera.setView({destination: rectangle});
         expect(camera.position).toEqualEpsilon(new Cartesian3(14680290.639204923, 0.0, 0.0), CesiumMath.EPSILON6);
         expect(camera.direction).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()), CesiumMath.EPSILON10);
         expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON10);
         expect(camera.right).toEqualEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON10);
     });
 
-    it('views rectangle in 3D (2)', function() {
+    it('setView rectangle in 3D (2)', function() {
         var rectangle = new Rectangle(
             CesiumMath.toRadians(21.25),
             CesiumMath.toRadians(41.23),
             CesiumMath.toRadians(21.51),
             CesiumMath.toRadians(41.38));
-        camera.viewRectangle(rectangle, Ellipsoid.WGS84);
+        camera.setView({destination: rectangle});
         expect(camera.position).toEqualEpsilon(new Cartesian3(4481555.454147325, 1754498.0086281248, 4200627.581953675), CesiumMath.EPSILON6);
-        expect(camera.direction).toEqualEpsilon(new Cartesian3(-0.6995108433013301, -0.27385366401082994, -0.6600672320390594), CesiumMath.EPSILON10);
-        expect(camera.up).toEqualEpsilon(new Cartesian3(-0.6146434679470263, -0.24062867269250837, 0.75120652898407), CesiumMath.EPSILON10);
+        expect(camera.direction).toEqualEpsilon(new Cartesian3(-0.6995046749050446, -0.27385124912628594, -0.6600747708691498), CesiumMath.EPSILON10);
+        expect(camera.up).toEqualEpsilon(new Cartesian3(-0.6146504879783901, -0.2406314209863035, 0.7511999047271233), CesiumMath.EPSILON10);
         expect(camera.right).toEqualEpsilon(new Cartesian3(-0.36455176232452213, 0.9311831251617939, 0), CesiumMath.EPSILON10);
     });
 
-    it('views rectangle in 3D (3)', function() {
+    it('setView rectangle in 3D (3)', function() {
         var rectangle = new Rectangle(
             CesiumMath.toRadians(90.0),
             CesiumMath.toRadians(-50.0),
             CesiumMath.toRadians(157.0),
             CesiumMath.toRadians(0.0));
-        camera.viewRectangle(rectangle);
+        camera.setView({destination: rectangle});
         expect(camera.position).toEqualEpsilon(new Cartesian3(-6017603.25625715, 9091606.78076493, -5075070.862292178), CesiumMath.EPSILON6);
-        expect(camera.direction).toEqualEpsilon(new Cartesian3(0.5000640869795608, -0.7555144216716235, 0.4232420909591703), CesiumMath.EPSILON10);
-        expect(camera.up).toEqualEpsilon(new Cartesian3(-0.23360296374117637, 0.35293557895291494, 0.9060166292295686), CesiumMath.EPSILON10);
+        expect(camera.direction).toEqualEpsilon(new Cartesian3(0.49978034145251155, -0.7550857289433265, 0.42434084442077485), CesiumMath.EPSILON10);
+        expect(camera.up).toEqualEpsilon(new Cartesian3(-0.2342094064143758, 0.35385181388649406, 0.905502538790623), CesiumMath.EPSILON10);
         expect(camera.right).toEqualEpsilon(new Cartesian3(-0.8338858220671682, -0.5519369853120581, 0), CesiumMath.EPSILON10);
     });
 
-    it('views rectangle in 3D (4)', function() {
+    it('setView rectangle in 3D (4)', function() {
         var rectangle = new Rectangle(
             CesiumMath.toRadians(90.0),
             CesiumMath.toRadians(-62.0),
             CesiumMath.toRadians(174.0),
             CesiumMath.toRadians(-4.0));
-        camera.viewRectangle(rectangle);
+        camera.setView({destination: rectangle});
         expect(camera.position).toEqualEpsilon(new Cartesian3(-7307919.685704952, 8116267.060310548, -7085995.891547672), CesiumMath.EPSILON6);
-        expect(camera.direction).toEqualEpsilon(new Cartesian3(0.5607858365117034, -0.622815768168856, 0.5455453826109309), CesiumMath.EPSILON10);
-        expect(camera.up).toEqualEpsilon(new Cartesian3(-0.3650411126627274, 0.4054192281503986, 0.8380812821629494), CesiumMath.EPSILON10);
+        expect(camera.direction).toEqualEpsilon(new Cartesian3(0.5602119862713765, -0.6221784429103113, 0.5468605998017956), CesiumMath.EPSILON10);
+        expect(camera.up).toEqualEpsilon(new Cartesian3(-0.3659211647391443, 0.40639662500016843, 0.8372236764356468), CesiumMath.EPSILON10);
         expect(camera.right).toEqualEpsilon(new Cartesian3(-0.7431448254773944, -0.6691306063588581, 0), CesiumMath.EPSILON10);
     });
 
@@ -1578,14 +1572,14 @@ defineSuite([
             -CesiumMath.PI_OVER_TWO,
             -0.1,
             CesiumMath.PI_OVER_TWO);
-        camera.viewRectangle(rectangle);
+        camera.setView({destination: rectangle});
         expect(camera.position).toEqualEpsilon(new Cartesian3(-14680290.639204923, 0.0, 0.0), CesiumMath.EPSILON6);
         expect(camera.direction).toEqualEpsilon(Cartesian3.UNIT_X, CesiumMath.EPSILON10);
         expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON10);
         expect(camera.right).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Y, new Cartesian3()), CesiumMath.EPSILON10);
     });
 
-    it('views rectangle in 2D with larger longitude', function() {
+    it('setView rectangle in 2D with larger longitude', function() {
         var frustum = new OrthographicFrustum();
         frustum.left = -10.0;
         frustum.right = 10.0;
@@ -1606,7 +1600,7 @@ defineSuite([
 
         camera._mode = SceneMode.SCENE2D;
         camera._projection = projection;
-        camera.viewRectangle(rectangle);
+        camera.setView({destination: rectangle});
 
         expect(camera.position.x).toEqual(0);
         expect(camera.position.y).toEqual(0);
@@ -1616,7 +1610,7 @@ defineSuite([
         expect(frustum.bottom + expected <= CesiumMath.EPSILON14).toEqual(true);
     });
 
-    it('views rectangle in 2D with larger latitude', function() {
+    it('setView rectangle in 2D with larger latitude', function() {
         var frustum = new OrthographicFrustum();
         frustum.left = -10.0;
         frustum.right = 10.0;
@@ -1637,7 +1631,7 @@ defineSuite([
 
         camera._mode = SceneMode.SCENE2D;
         camera._projection = projection;
-        camera.viewRectangle(rectangle);
+        camera.setView({destination: rectangle});
 
         expect(camera.position.x).toEqual(0);
         expect(camera.position.y).toEqual(0);
@@ -1647,7 +1641,7 @@ defineSuite([
         expect(frustum.bottom + expected <= CesiumMath.EPSILON14).toEqual(true);
     });
 
-    it('views rectangle in Columbus View', function() {
+    it('setView rectangle in Columbus View', function() {
         var rectangle = new Rectangle(
             -CesiumMath.PI_OVER_TWO,
             -CesiumMath.PI_OVER_TWO,
@@ -1656,7 +1650,7 @@ defineSuite([
         var projection = new GeographicProjection();
         camera._mode = SceneMode.COLUMBUS_VIEW;
         camera._projection = projection;
-        camera.viewRectangle(rectangle);
+        camera.setView({destination: rectangle});
         expect(camera.position).toEqualEpsilon(new Cartesian3(0.0, 0.0, 23137321.67119748), CesiumMath.EPSILON8);
         expect(camera.direction).toEqualEpsilon(new Cartesian3(0.0, 0.0, -1.0), CesiumMath.EPSILON2);
         expect(camera.up).toEqualEpsilon(new Cartesian3(0.0, 1.0, 0.0), CesiumMath.EPSILON2);
