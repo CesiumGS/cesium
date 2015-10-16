@@ -728,7 +728,7 @@ define([
                         }
 
                         // Take advantage of the fact that we generate techniques that use the
-                        // same names as the extension values.
+                        // same parameter names as the extension values.
                         material.values = khrMaterialsCommon.values;
                         material.technique = technique;
 
