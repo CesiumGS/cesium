@@ -11,7 +11,7 @@ define([
         '../Core/Event',
         '../Core/GeographicProjection',
         '../Core/GeographicTilingScheme',
-        '../Core/jsonp',
+        '../Core/loadJsonp',
         '../Core/loadJson',
         '../Core/Math',
         '../Core/Rectangle',
@@ -34,7 +34,7 @@ define([
         Event,
         GeographicProjection,
         GeographicTilingScheme,
-        jsonp,
+        loadJsonp,
         loadJson,
         CesiumMath,
         Rectangle,
@@ -215,7 +215,7 @@ define([
                 parameters.token = that._token;
             }
 
-            var metadata = jsonp(that._url, {
+            var metadata = loadJsonp(that._url, {
                 parameters : parameters,
                 proxy : that._proxy
             });
