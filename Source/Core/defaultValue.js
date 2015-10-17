@@ -19,7 +19,7 @@ define([
      * param = Cesium.defaultValue(param, 'default');
      */
     var defaultValue = function(a, b) {
-        if (a !== undefined) {
+        if (typeof a !== 'undefined') {
             return a;
         }
         return b;
