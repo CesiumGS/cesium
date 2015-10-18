@@ -76,6 +76,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {Matrix2} [result] The object into which to store the result.
+     * @returns {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
      */
     Matrix2.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -164,7 +165,7 @@ define([
      *
      * @param {Number[]} values The column-major order array.
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
+     * @returns {Matrix2} The modified result parameter, or a new Matrix2 instance if one was not provided.
      */
     Matrix2.fromColumnMajorArray = function(values, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -182,7 +183,7 @@ define([
      *
      * @param {Number[]} values The row-major order array.
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
+     * @returns {Matrix2} The modified result parameter, or a new Matrix2 instance if one was not provided.
      */
     Matrix2.fromRowMajorArray = function(values, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -207,7 +208,7 @@ define([
      *
      * @param {Cartesian2} scale The x and y scale factors.
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
+     * @returns {Matrix2} The modified result parameter, or a new Matrix2 instance if one was not provided.
      *
      * @example
      * // Creates
@@ -240,7 +241,7 @@ define([
      *
      * @param {Number} scale The uniform scale factor.
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
+     * @returns {Matrix2} The modified result parameter, or a new Matrix2 instance if one was not provided.
      *
      * @example
      * // Creates
@@ -273,7 +274,7 @@ define([
      *
      * @param {Number} angle The angle, in radians, of the rotation.  Positive angles are counterclockwise.
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
+     * @returns {Matrix2} The modified result parameter, or a new Matrix2 instance if one was not provided.
      *
      * @example
      * // Rotate a point 45 degrees counterclockwise.

@@ -5,6 +5,7 @@ define([
         './ComponentDatatype',
         './defaultValue',
         './defined',
+        './deprecationWarning',
         './DeveloperError',
         './Geometry',
         './GeometryAttribute',
@@ -16,6 +17,7 @@ define([
         ComponentDatatype,
         defaultValue,
         defined,
+        deprecationWarning,
         DeveloperError,
         Geometry,
         GeometryAttribute,
@@ -31,8 +33,9 @@ define([
      * @alias BoxOutlineGeometry
      * @constructor
      *
-     * @param {Cartesian3} options.minimumCorner The minimum x, y, and z coordinates of the box.
-     * @param {Cartesian3} options.maximumCorner The maximum x, y, and z coordinates of the box.
+     * @param {Object} options Object with the following properties:
+     * @param {Cartesian3} options.minimum The minimum x, y, and z coordinates of the box.
+     * @param {Cartesian3} options.maximum The maximum x, y, and z coordinates of the box.
      *
      * @see BoxOutlineGeometry.fromDimensions
      * @see BoxOutlineGeometry.createGeometry
@@ -42,23 +45,35 @@ define([
      *
      * @example
      * var box = new Cesium.BoxOutlineGeometry({
-     *   maximumCorner : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0),
-     *   minimumCorner : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0)
+     *   maximum : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0),
+     *   minimum : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0)
      * });
      * var geometry = Cesium.BoxOutlineGeometry.createGeometry(box);
      */
     var BoxOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        var min = options.minimumCorner;
-        var max = options.maximumCorner;
+        var min = options.minimum;
+        var max = options.maximum;
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(min)) {
-            throw new DeveloperError('options.minimumCorner is required.');
+            if (defined(options.minimumCorner)) {
+                min = options.minimumCorner;
+                deprecationWarning('BoxOutlineGeometry', 'options.minimumCorner is deprecated. Use options.minimum instead.');
+            }
+            else {
+                throw new DeveloperError('options.minimum is required.');
+            }
         }
         if (!defined(max)) {
-            throw new DeveloperError('options.maximumCorner is required');
+            if (defined(options.maximumCorner)) {
+                max = options.maximumCorner;
+                deprecationWarning('BoxOutlineGeometry', 'options.maximumCorner is deprecated. Use options.maximum instead.');
+            }
+            else {
+                throw new DeveloperError('options.maximum is required');
+            }
         }
         //>>includeEnd('debug');
 
@@ -70,7 +85,9 @@ define([
     /**
      * Creates an outline of a cube centered at the origin given its dimensions.
      *
+     * @param {Object} options Object with the following properties:
      * @param {Cartesian3} options.dimensions The width, depth, and height of the box stored in the x, y, and z coordinates of the <code>Cartesian3</code>, respectively.
+     * @returns {BoxOutlineGeometry}
      *
      * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
      *
@@ -96,14 +113,42 @@ define([
         //>>includeEnd('debug');
 
         var corner = Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3());
-        var min = Cartesian3.negate(corner, new Cartesian3());
-        var max = corner;
 
-        var newOptions = {
-            minimumCorner : min,
-            maximumCorner : max
-        };
-        return new BoxOutlineGeometry(newOptions);
+        return new BoxOutlineGeometry({
+            minimum : Cartesian3.negate(corner, new Cartesian3()),
+            maximum : corner
+        });
+    };
+
+    /**
+     * Creates an outline of a cube from the dimensions of an AxisAlignedBoundingBox.
+     *
+     * @param {AxisAlignedBoundingBox} boundingBox A description of the AxisAlignedBoundingBox.
+     * @returns {BoxOutlineGeometry}
+     *
+     * @exception {DeveloperError} AxisAlignedBoundingBox must be defined.
+     *
+     * @see BoxOutlineGeometry.createGeometry
+     *
+     * @example
+     * var aabb = Cesium.AxisAlignedBoundingBox.fromPoints(Cesium.Cartesian3.fromDegreesArray([
+     *      -72.0, 40.0,
+     *      -70.0, 35.0,
+     *      -75.0, 30.0,
+     *      -70.0, 30.0,
+     *      -68.0, 40.0
+     * ]));
+     * var box = Cesium.BoxOutlineGeometry.fromAxisAlignedBoundingBox(aabb);
+     */
+    BoxOutlineGeometry.fromAxisAlignedBoundingBox = function(boundingBox) {
+        if (!defined(boundingBox)) {
+            throw new DeveloperError('boundingBox is required.');
+        }
+
+        return new BoxOutlineGeometry({
+            minimum : boundingBox.minimum,
+            maximum : boundingBox.maximum
+        });
     };
 
     /**
@@ -116,7 +161,7 @@ define([
      * Stores the provided instance into the provided array.
      * @function
      *
-     * @param {Object} value The value to pack.
+     * @param {BoxOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
@@ -139,8 +184,8 @@ define([
     var scratchMin = new Cartesian3();
     var scratchMax = new Cartesian3();
     var scratchOptions = {
-        minimumCorner : scratchMin,
-        maximumCorner : scratchMax
+        minimum : scratchMin,
+        maximum : scratchMax
     };
 
     /**
@@ -149,6 +194,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {BoxOutlineGeometry} [result] The object into which to store the result.
+     * @returns {BoxOutlineGeometry} The modified result parameter or a new BoxOutlineGeometry instance if one was not provided.
      */
     BoxOutlineGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);

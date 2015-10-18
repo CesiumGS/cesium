@@ -409,7 +409,11 @@ define([
 
     function queryBooleanValue(node, tagName, namespace) {
         var result = queryFirstNode(node, tagName, namespace);
-        return defined(result) ? result.textContent === '1' : undefined;
+        if (defined(result)) {
+            var value = result.textContent.trim();
+            return value === '1' || /^true$/i.test(value);
+        }
+        return undefined;
     }
 
     function resolveHref(href, proxy, sourceUri, uriResolver) {
@@ -1540,7 +1544,14 @@ define([
         return when.all(processStyles(dataSource, kml, styleCollection, sourceUri, false, uriResolver), function() {
             var element = kml.documentElement;
             if (element.localName === 'kml') {
-                element = element.firstElementChild;
+                var childNodes = element.childNodes;
+                for (var i = 0; i < childNodes.length; i++) {
+                    var tmp = childNodes[i];
+                    if (defined(featureTypes[tmp.localName])) {
+                        element = tmp;
+                        break;
+                    }
+                }
             }
             processFeatureNode(dataSource, element, undefined, entityCollection, styleCollection, sourceUri, uriResolver);
 

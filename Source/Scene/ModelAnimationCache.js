@@ -7,6 +7,7 @@ define([
         '../Core/Matrix4',
         '../Core/Quaternion',
         '../Core/QuaternionSpline',
+        '../Renderer/WebGLConstants',
         './getModelAccessor'
     ], function(
         Cartesian3,
@@ -16,9 +17,9 @@ define([
         Matrix4,
         Quaternion,
         QuaternionSpline,
+        WebGLConstants,
         getModelAccessor) {
     "use strict";
-    /*global WebGLRenderingContext*/
 
     /**
      * @private
@@ -67,15 +68,15 @@ define([
             var typedArray = getModelAccessor(accessor).createArrayBufferView(buffer.buffer, buffer.byteOffset + accessor.byteOffset, count);
             var i;
 
-            if ((componentType === WebGLRenderingContext.FLOAT) && (type === 'SCALAR')) {
+            if ((componentType === WebGLConstants.FLOAT) && (type === 'SCALAR')) {
                 values = typedArray;
             }
-            else if ((componentType === WebGLRenderingContext.FLOAT) && (type === 'VEC3')) {
+            else if ((componentType === WebGLConstants.FLOAT) && (type === 'VEC3')) {
                 values = new Array(count);
                 for (i = 0; i < count; ++i) {
                     values[i] = Cartesian3.fromArray(typedArray, 3 * i);
                 }
-            } else if ((componentType === WebGLRenderingContext.FLOAT) && (type === 'VEC4')) {
+            } else if ((componentType === WebGLConstants.FLOAT) && (type === 'VEC4')) {
                 values = new Array(count);
                 for (i = 0; i < count; ++i) {
                     var byteOffset = 4 * i;
@@ -128,12 +129,12 @@ define([
                 var type = accessor.type;
 
                 if (sampler.interpolation === 'LINEAR') {
-                    if ((componentType === WebGLRenderingContext.FLOAT) && (type === 'VEC3')) {
+                    if ((componentType === WebGLConstants.FLOAT) && (type === 'VEC3')) {
                         spline = new LinearSpline({
                             times : times,
                             points : controlPoints
                         });
-                    } else if ((componentType === WebGLRenderingContext.FLOAT) && (type === 'VEC4')) {
+                    } else if ((componentType === WebGLConstants.FLOAT) && (type === 'VEC4')) {
                         spline = new QuaternionSpline({
                             times : times,
                             points : controlPoints
@@ -176,7 +177,7 @@ define([
             var typedArray = getModelAccessor(accessor).createArrayBufferView(buffer.buffer, buffer.byteOffset + accessor.byteOffset, count);
             matrices =  new Array(count);
 
-            if ((componentType === WebGLRenderingContext.FLOAT) && (type === 'MAT4')) {
+            if ((componentType === WebGLConstants.FLOAT) && (type === 'MAT4')) {
                 for (var i = 0; i < count; ++i) {
                     matrices[i] = Matrix4.fromArray(typedArray, 16 * i);
                 }

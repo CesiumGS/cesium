@@ -15,14 +15,17 @@ define([
         '../Core/Matrix4',
         '../Core/PrimitiveType',
         '../Renderer/BufferUsage',
+        '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArrayFacade',
         '../Shaders/PointPrimitiveCollectionFS',
         '../Shaders/PointPrimitiveCollectionVS',
-        './PointPrimitive',
         './BlendingState',
         './Pass',
+        './PointPrimitive',
         './SceneMode'
     ], function(
         BoundingSphere,
@@ -40,14 +43,17 @@ define([
         Matrix4,
         PrimitiveType,
         BufferUsage,
+        ContextLimits,
         DrawCommand,
+        RenderState,
+        ShaderProgram,
         ShaderSource,
         VertexArrayFacade,
         PointPrimitiveCollectionFS,
         PointPrimitiveCollectionVS,
-        PointPrimitive,
         BlendingState,
         Pass,
+        PointPrimitive,
         SceneMode) {
     "use strict";
 
@@ -651,7 +657,7 @@ define([
         }
     }
 
-    var scratchDrawingBufferDimensions = new Cartesian2();
+    var scratchPixelSize = new Cartesian2();
     var scratchToCenter = new Cartesian3();
     var scratchProj = new Cartesian3();
     function updateBoundingVolume(collection, context, frameState, boundingVolume) {
@@ -662,9 +668,7 @@ define([
         var proj = Cartesian3.multiplyByScalar(camera.directionWC, Cartesian3.dot(toCenter, camera.directionWC), scratchProj);
         var distance = Math.max(0.0, Cartesian3.magnitude(proj) - boundingVolume.radius);
 
-        scratchDrawingBufferDimensions.x = context.drawingBufferWidth;
-        scratchDrawingBufferDimensions.y = context.drawingBufferHeight;
-        var pixelSize = frustum.getPixelSize(scratchDrawingBufferDimensions, distance);
+        var pixelSize = frustum.getPixelDimensions(context.drawingBufferWidth, context.drawingBufferHeight, distance, scratchPixelSize);
         var pixelScale = Math.max(pixelSize.x, pixelSize.y);
 
         var size = pixelScale * collection._maxPixelSize;
@@ -679,7 +683,7 @@ define([
     PointPrimitiveCollection.prototype.update = function(context, frameState, commandList) {
         removePointPrimitives(this);
 
-        this._maxTotalPointSize = context.maximumAliasedPointSize;
+        this._maxTotalPointSize = ContextLimits.maximumAliasedPointSize;
 
         updateMode(this, frameState);
 
@@ -816,7 +820,7 @@ define([
             var colorList = this._colorCommands;
 
             if (!defined(this._rs)) {
-                this._rs = context.createRenderState({
+                this._rs = RenderState.fromCache({
                     depthTest : {
                         enabled : true
                     },
@@ -838,7 +842,14 @@ define([
                     vs.defines.push('EYE_DISTANCE_TRANSLUCENCY');
                 }
 
-                this._sp = context.replaceShaderProgram(this._sp, vs, PointPrimitiveCollectionFS, attributeLocations);
+                this._sp = ShaderProgram.replaceCache({
+                    context : context,
+                    shaderProgram : this._sp,
+                    vertexShaderSource : vs,
+                    fragmentShaderSource : PointPrimitiveCollectionFS,
+                    attributeLocations : attributeLocations
+                });
+
                 this._compiledShaderScaleByDistance = this._shaderScaleByDistance;
                 this._compiledShaderTranslucencyByDistance = this._shaderTranslucencyByDistance;
             }
@@ -893,7 +904,14 @@ define([
                     sources : [PointPrimitiveCollectionFS]
                 });
 
-                this._spPick = context.replaceShaderProgram(this._spPick, vs, fs, attributeLocations);
+                this._spPick = ShaderProgram.replaceCache({
+                    context : context,
+                    shaderProgram : this._spPick,
+                    vertexShaderSource : vs,
+                    fragmentShaderSource : fs,
+                    attributeLocations : attributeLocations
+                });
+
                 this._compiledShaderScaleByDistancePick = this._shaderScaleByDistance;
                 this._compiledShaderTranslucencyByDistancePick = this._shaderTranslucencyByDistance;
             }

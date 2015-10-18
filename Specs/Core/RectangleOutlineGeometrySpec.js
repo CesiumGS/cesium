@@ -143,7 +143,7 @@ defineSuite([
         var m = RectangleOutlineGeometry.createGeometry(new RectangleOutlineGeometry({
             rectangle : rectangle,
             granularity : 1.0,
-            extrudedHeight : 0.1
+            extrudedHeight : CesiumMath.EPSILON14
         }));
         var positions = m.attributes.position.values;
 

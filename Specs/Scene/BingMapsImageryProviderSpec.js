@@ -3,7 +3,7 @@ defineSuite([
         'Scene/BingMapsImageryProvider',
         'Core/DefaultProxy',
         'Core/defined',
-        'Core/jsonp',
+        'Core/loadJsonp',
         'Core/loadImage',
         'Core/loadWithXhr',
         'Core/WebMercatorTilingScheme',
@@ -18,7 +18,7 @@ defineSuite([
         BingMapsImageryProvider,
         DefaultProxy,
         defined,
-        jsonp,
+        loadJsonp,
         loadImage,
         loadWithXhr,
         WebMercatorTilingScheme,
@@ -33,7 +33,7 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     afterEach(function() {
-        jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
+        loadJsonp.loadAndExecuteScript = loadJsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
         loadWithXhr.load = loadWithXhr.defaultLoad;
     });
@@ -148,7 +148,7 @@ defineSuite([
             expectedUrl = proxy.getURL(expectedUrl);
         }
 
-        jsonp.loadAndExecuteScript = function(url, functionName) {
+        loadJsonp.loadAndExecuteScript = function(url, functionName) {
             expect(url).toStartWith(expectedUrl);
 
             setTimeout(function() {

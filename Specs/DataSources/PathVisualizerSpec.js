@@ -3,8 +3,8 @@ defineSuite([
         'DataSources/PathVisualizer',
         'Core/Cartesian3',
         'Core/Color',
-        'Core/Matrix4',
         'Core/JulianDate',
+        'Core/Matrix4',
         'Core/ReferenceFrame',
         'Core/TimeInterval',
         'DataSources/CompositePositionProperty',
@@ -24,8 +24,8 @@ defineSuite([
         PathVisualizer,
         Cartesian3,
         Color,
-        Matrix4,
         JulianDate,
+        Matrix4,
         ReferenceFrame,
         TimeInterval,
         CompositePositionProperty,
@@ -297,7 +297,7 @@ defineSuite([
         var inertialLine = inertialPolylineCollection.get(0);
         expect(inertialLine.show).toEqual(true);
 
-        scene.mode = SceneMode.Scene2D;
+        scene.mode = SceneMode.SCENE2D;
         visualizer.update(time);
 
         //They'll be one inertial polyline collection (with no visible lines)

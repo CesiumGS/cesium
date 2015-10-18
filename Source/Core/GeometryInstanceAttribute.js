@@ -28,19 +28,19 @@ define([
      *
      * @example
      * var instance = new Cesium.GeometryInstance({
-     *   geometry : new Cesium.BoxGeometry({
+     *   geometry : Cesium.BoxGeometry.fromDimensions({
      *     dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0)
      *   }),
      *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-     *     Cesium.Cartesian3.fromDegrees(0.0, 0.0)), new Cesium.Cartesian3(0.0, 0.0, 1000000.0), new Cesium.Matrxi4()),
+     *     Cesium.Cartesian3.fromDegrees(0.0, 0.0)), new Cesium.Cartesian3(0.0, 0.0, 1000000.0), new Cesium.Matrix4()),
      *   id : 'box',
      *   attributes : {
      *     color : new Cesium.GeometryInstanceAttribute({
      *       componentDatatype : Cesium.ComponentDatatype.UNSIGNED_BYTE,
      *       componentsPerAttribute : 4,
      *       normalize : true,
-     *       value : [255, 255, 0 255]
-     *     }
+     *       value : [255, 255, 0, 255]
+     *     })
      *   }
      * });
      */
@@ -86,8 +86,8 @@ define([
          *   componentDatatype : Cesium.ComponentDatatype.UNSIGNED_BYTE,
          *   componentsPerAttribute : 1,
          *   normalize : true,
-         *   value : 1.0
-         * }
+         *   value : [1.0]
+         * })
          */
         this.componentsPerAttribute = options.componentsPerAttribute;
 
@@ -104,13 +104,13 @@ define([
          * @default false
          *
          * @example
-         * attribute.componentDatatype : Cesium.ComponentDatatype.UNSIGNED_BYTE,
-         * attribute.componentsPerAttribute : 4,
+         * attribute.componentDatatype = Cesium.ComponentDatatype.UNSIGNED_BYTE;
+         * attribute.componentsPerAttribute = 4;
          * attribute.normalize = true;
          * attribute.value = [
-         *   Cesium.Color.floatToByte(color.red)
-         *   Cesium.Color.floatToByte(color.green)
-         *   Cesium.Color.floatToByte(color.blue)
+         *   Cesium.Color.floatToByte(color.red),
+         *   Cesium.Color.floatToByte(color.green),
+         *   Cesium.Color.floatToByte(color.blue),
          *   Cesium.Color.floatToByte(color.alpha)
          * ];
          */
@@ -121,6 +121,8 @@ define([
          * every three elements in <code>values</code> defines one attributes since
          * <code>componentsPerAttribute</code> is 3.
          *
+         * @type {Number[]}
+         *
          * @default undefined
          *
          * @example
@@ -129,7 +131,7 @@ define([
          *   componentsPerAttribute : 1,
          *   normalize : true,
          *   value : [1.0]
-         * }
+         * })
          */
         this.value = options.value;
     };

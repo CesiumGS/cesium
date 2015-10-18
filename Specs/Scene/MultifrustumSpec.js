@@ -14,8 +14,12 @@ defineSuite([
         'Core/Matrix4',
         'Renderer/BufferUsage',
         'Renderer/DrawCommand',
+        'Renderer/RenderState',
+        'Renderer/Sampler',
+        'Renderer/ShaderProgram',
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
+        'Renderer/VertexArray',
         'Scene/BillboardCollection',
         'Scene/BlendingState',
         'Scene/Pass',
@@ -37,8 +41,12 @@ defineSuite([
         Matrix4,
         BufferUsage,
         DrawCommand,
+        RenderState,
+        Sampler,
+        ShaderProgram,
         TextureMagnificationFilter,
         TextureMinificationFilter,
+        VertexArray,
         BillboardCollection,
         BlendingState,
         Pass,
@@ -104,7 +112,7 @@ defineSuite([
         });
 
         // ANGLE Workaround
-        atlas.texture.sampler = context.createSampler({
+        atlas.texture.sampler = new Sampler({
             minificationFilter : TextureMinificationFilter.NEAREST,
             magnificationFilter : TextureMagnificationFilter.NEAREST
         });
@@ -248,14 +256,21 @@ defineSuite([
                     maximumCorner: maximumCorner
                 }));
                 var attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
-                this._va = context.createVertexArrayFromGeometry({
-                    geometry: geometry,
-                    attributeLocations: attributeLocations,
-                    bufferUsage: BufferUsage.STATIC_DRAW
+                this._va = VertexArray.fromGeometry({
+                    context : context,
+                    geometry : geometry,
+                    attributeLocations : attributeLocations,
+                    bufferUsage : BufferUsage.STATIC_DRAW
                 });
 
-                this._sp = context.createShaderProgram(vs, fs, attributeLocations);
-                this._rs = context.createRenderState({
+                this._sp = ShaderProgram.fromCache({
+                    context : context,
+                    vertexShaderSource : vs,
+                    fragmentShaderSource : fs,
+                    attributeLocations : attributeLocations
+                });
+
+                this._rs = RenderState.fromCache({
                     blending : BlendingState.ALPHA_BLEND
                 });
             }

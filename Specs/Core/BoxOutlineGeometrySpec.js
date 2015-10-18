@@ -1,10 +1,12 @@
 /*global defineSuite*/
 defineSuite([
         'Core/BoxOutlineGeometry',
+        'Core/AxisAlignedBoundingBox',
         'Core/Cartesian3',
         'Specs/createPackableSpecs'
     ], function(
         BoxOutlineGeometry,
+        AxisAlignedBoundingBox,
         Cartesian3,
         createPackableSpecs) {
     "use strict";
@@ -57,6 +59,20 @@ defineSuite([
 
         expect(m.attributes.position.values.length).toEqual(8 * 3);
         expect(m.indices.length).toEqual(12 * 2);
+    });
+
+    it('fromAxisAlignedBoundingBox throws with no boundingBox', function() {
+       expect(function() {
+           return BoxOutlineGeometry.fromAxisAlignedBoundingBox(undefined);
+       }).toThrowDeveloperError();
+    });
+
+    it('fromAxisAlignedBoundingBox', function() {
+        var min = new Cartesian3(-1, -2, -3);
+        var max = new Cartesian3(1, 2, 3);
+        var m = BoxOutlineGeometry.fromAxisAlignedBoundingBox(new AxisAlignedBoundingBox(min, max));
+        expect(m._min).toEqual(min);
+        expect(m._max).toEqual(max);
     });
 
     createPackableSpecs(BoxOutlineGeometry, new BoxOutlineGeometry({

@@ -6,6 +6,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Matrix4',
         './CullingVolume'
@@ -16,6 +17,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Matrix4,
         CullingVolume) {
@@ -137,6 +139,7 @@ define([
          * Gets the perspective projection matrix computed from the view frustum.
          * @memberof PerspectiveOffCenterFrustum.prototype
          * @type {Matrix4}
+         * @readonly
          *
          * @see PerspectiveOffCenterFrustum#infiniteProjectionMatrix
          */
@@ -151,6 +154,7 @@ define([
          * Gets the perspective projection matrix computed from the view frustum with an infinite far plane.
          * @memberof PerspectiveOffCenterFrustum.prototype
          * @type {Matrix4}
+         * @readonly
          *
          * @see PerspectiveOffCenterFrustum#projectionMatrix
          */
@@ -330,8 +334,12 @@ define([
      * var toCenterProj = Cesium.Cartesian3.multiplyByScalar(direction, Cesium.Cartesian3.dot(direction, toCenter), new Cesium.Cartesian3()); // project vector onto camera direction vector
      * var distance = Cesium.Cartesian3.magnitude(toCenterProj);
      * var pixelSize = camera.frustum.getPixelSize(new Cesium.Cartesian2(canvas.clientWidth, canvas.clientHeight), distance);
+     *
+     * @deprecated
      */
     PerspectiveOffCenterFrustum.prototype.getPixelSize = function(drawingBufferDimensions, distance, result) {
+        deprecationWarning('PerspectiveOffCenterFrustum', 'getPixelSize is deprecated. Use getPixelDimensions instead.');
+
         update(this);
 
         //>>includeStart('debug', pragmas.debug);
@@ -364,6 +372,66 @@ define([
         if (!defined(result)) {
             return new Cartesian2(pixelWidth, pixelHeight);
         }
+
+        result.x = pixelWidth;
+        result.y = pixelHeight;
+        return result;
+    };
+
+    /**
+     * Returns the pixel's width and height in meters.
+     *
+     * @param {Number} drawingBufferWidth The width of the drawing buffer.
+     * @param {Number} drawingBufferHeight The height of the drawing buffer.
+     * @param {Number} distance The distance to the near plane in meters.
+     * @param {Cartesian2} result The object onto which to store the result.
+     * @returns {Cartesian2} The modified result parameter or a new instance of {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
+     *
+     * @exception {DeveloperError} drawingBufferWidth must be greater than zero.
+     * @exception {DeveloperError} drawingBufferHeight must be greater than zero.
+     *
+     * @example
+     * // Example 1
+     * // Get the width and height of a pixel.
+     * var pixelSize = camera.frustum.getPixelDimensions(canvas.clientWidth, canvas.clientHeight, 1.0, new Cartesian2());
+     *
+     * @example
+     * // Example 2
+     * // Get the width and height of a pixel if the near plane was set to 'distance'.
+     * // For example, get the size of a pixel of an image on a billboard.
+     * var position = camera.position;
+     * var direction = camera.direction;
+     * var toCenter = Cesium.Cartesian3.subtract(primitive.boundingVolume.center, position, new Cesium.Cartesian3());      // vector from camera to a primitive
+     * var toCenterProj = Cesium.Cartesian3.multiplyByScalar(direction, Cesium.Cartesian3.dot(direction, toCenter), new Cesium.Cartesian3()); // project vector onto camera direction vector
+     * var distance = Cesium.Cartesian3.magnitude(toCenterProj);
+     * var pixelSize = camera.frustum.getPixelDimensions(canvas.clientWidth, canvas.clientHeight, distance, new Cartesian2());
+     */
+    PerspectiveOffCenterFrustum.prototype.getPixelDimensions = function(drawingBufferWidth, drawingBufferHeight, distance, result) {
+        update(this);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(drawingBufferWidth) || !defined(drawingBufferHeight)) {
+            throw new DeveloperError('Both drawingBufferWidth and drawingBufferHeight are required.');
+        }
+        if (drawingBufferWidth <= 0) {
+            throw new DeveloperError('drawingBufferWidth must be greater than zero.');
+        }
+        if (drawingBufferHeight <= 0) {
+            throw new DeveloperError('drawingBufferHeight must be greater than zero.');
+        }
+        if (!defined(distance)) {
+            throw new DeveloperError('distance is required.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('A result object is required.');
+        }
+        //>>includeEnd('debug');
+
+        var inverseNear = 1.0 / this.near;
+        var tanTheta = this.top * inverseNear;
+        var pixelHeight = 2.0 * distance * tanTheta / drawingBufferHeight;
+        tanTheta = this.right * inverseNear;
+        var pixelWidth = 2.0 * distance * tanTheta / drawingBufferWidth;
 
         result.x = pixelWidth;
         result.y = pixelHeight;

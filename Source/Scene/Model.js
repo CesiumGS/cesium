@@ -27,11 +27,18 @@ define([
         '../Core/Quaternion',
         '../Core/Queue',
         '../Core/RuntimeError',
+        '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
+        '../Renderer/Sampler',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
+        '../Renderer/Texture',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
+        '../Renderer/VertexArray',
+        '../Renderer/WebGLConstants',
         '../ThirdParty/gltfDefaults',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
@@ -71,11 +78,18 @@ define([
         Quaternion,
         Queue,
         RuntimeError,
+        Buffer,
         BufferUsage,
         DrawCommand,
+        RenderState,
+        Sampler,
+        ShaderProgram,
         ShaderSource,
+        Texture,
         TextureMinificationFilter,
         TextureWrap,
+        VertexArray,
+        WebGLConstants,
         gltfDefaults,
         Uri,
         when,
@@ -431,7 +445,7 @@ define([
          * @default false
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
-        this._debugShowBoudingVolume = false;
+        this._debugShowBoundingVolume = false;
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -800,7 +814,7 @@ define([
      * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
      * var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
      *
-     * var model = scene.primitives.add(Model.fromGltf({
+     * var model = scene.primitives.add(Cesium.Model.fromGltf({
      *   url : './duck/duck.gltf',
      *   show : true,                     // default
      *   modelMatrix : modelMatrix,
@@ -903,7 +917,7 @@ define([
      * @example
      * // Apply non-uniform scale to node LOD3sp
      * var node = model.getNode('LOD3sp');
-     * node.matrix =Cesium. Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
+     * node.matrix = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
      */
     Model.prototype.getNode = function(name) {
         var node = getRuntime(this, 'nodesByName', name);
@@ -1042,7 +1056,7 @@ define([
         var bufferViews = model.gltf.bufferViews;
         for (var name in bufferViews) {
             if (bufferViews.hasOwnProperty(name)) {
-                if (bufferViews[name].target === WebGLRenderingContext.ARRAY_BUFFER) {
+                if (bufferViews[name].target === WebGLConstants.ARRAY_BUFFER) {
                     model._loadResources.buffersToCreate.enqueue(name);
                 }
             }
@@ -1283,7 +1297,11 @@ define([
             bufferView = bufferViews[bufferViewName];
 
             // Only ARRAY_BUFFER here.  ELEMENT_ARRAY_BUFFER created below.
-            var vertexBuffer = context.createVertexBuffer(loadResources.getBuffer(bufferView), BufferUsage.STATIC_DRAW);
+            var vertexBuffer = Buffer.createVertexBuffer({
+                context : context,
+                typedArray : loadResources.getBuffer(bufferView),
+                usage : BufferUsage.STATIC_DRAW
+            });
             vertexBuffer.vertexArrayDestroyable = false;
             rendererBuffers[bufferViewName] = vertexBuffer;
         }
@@ -1297,8 +1315,13 @@ define([
                 var accessor = accessors[name];
                 bufferView = bufferViews[accessor.bufferView];
 
-                if ((bufferView.target === WebGLRenderingContext.ELEMENT_ARRAY_BUFFER) && !defined(rendererBuffers[accessor.bufferView])) {
-                    var indexBuffer = context.createIndexBuffer(loadResources.getBuffer(bufferView), BufferUsage.STATIC_DRAW, accessor.componentType);
+                if ((bufferView.target === WebGLConstants.ELEMENT_ARRAY_BUFFER) && !defined(rendererBuffers[accessor.bufferView])) {
+                    var indexBuffer = Buffer.createIndexBuffer({
+                        context : context,
+                        typedArray : loadResources.getBuffer(bufferView),
+                        usage : BufferUsage.STATIC_DRAW,
+                        indexDatatype : accessor.componentType
+                    });
                     indexBuffer.vertexArrayDestroyable = false;
                     rendererBuffers[accessor.bufferView] = indexBuffer;
                     // In theory, several glTF accessors with different componentTypes could
@@ -1341,7 +1364,12 @@ define([
         var vs = getShaderSource(model, shaders[program.vertexShader]);
         var fs = getShaderSource(model, shaders[program.fragmentShader]);
 
-        model._rendererResources.programs[name] = context.createShaderProgram(vs, fs, attributeLocations);
+        model._rendererResources.programs[name] = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
 
         if (model.allowPicking) {
             // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
@@ -1349,7 +1377,13 @@ define([
                 sources : [fs],
                 pickColorQualifier : 'uniform'
             });
-            model._rendererResources.pickPrograms[name] = context.createShaderProgram(vs, pickFS, attributeLocations);
+
+            model._rendererResources.pickPrograms[name] = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : pickFS,
+                attributeLocations : attributeLocations
+            });
         }
     }
 
@@ -1428,7 +1462,7 @@ define([
                 if (samplers.hasOwnProperty(name)) {
                     var sampler = samplers[name];
 
-                    rendererSamplers[name] = context.createSampler({
+                    rendererSamplers[name] = new Sampler({
                         wrapS : sampler.wrapS,
                         wrapT : sampler.wrapT,
                         minificationFilter : sampler.minFilter,
@@ -1472,8 +1506,9 @@ define([
 
         var tx;
 
-        if (texture.target === WebGLRenderingContext.TEXTURE_2D) {
-            tx = context.createTexture2D({
+        if (texture.target === WebGLConstants.TEXTURE_2D) {
+            tx = new Texture({
+                context : context,
                 source : source,
                 pixelFormat : texture.internalFormat,
                 pixelDatatype : texture.type,
@@ -1768,7 +1803,11 @@ define([
 
                     var accessor = accessors[primitive.indices];
                     var indexBuffer = rendererBuffers[accessor.bufferView];
-                    rendererVertexArrays[meshName + '.primitive.' + i] = context.createVertexArray(attrs, indexBuffer);
+                    rendererVertexArrays[meshName + '.primitive.' + i] = new VertexArray({
+                        context : context,
+                        attributes : attrs,
+                        indexBuffer : indexBuffer
+                    });
                 }
             }
         }
@@ -1777,11 +1816,11 @@ define([
     function getBooleanStates(states) {
         // GLTF_SPEC: SAMPLE_ALPHA_TO_COVERAGE not used by Cesium
         var booleanStates = {};
-        booleanStates[WebGLRenderingContext.BLEND] = false;
-        booleanStates[WebGLRenderingContext.CULL_FACE] = false;
-        booleanStates[WebGLRenderingContext.DEPTH_TEST] = false;
-        booleanStates[WebGLRenderingContext.POLYGON_OFFSET_FILL] = false;
-        booleanStates[WebGLRenderingContext.SCISSOR_TEST] = false;
+        booleanStates[WebGLConstants.BLEND] = false;
+        booleanStates[WebGLConstants.CULL_FACE] = false;
+        booleanStates[WebGLConstants.DEPTH_TEST] = false;
+        booleanStates[WebGLConstants.POLYGON_OFFSET_FILL] = false;
+        booleanStates[WebGLConstants.SCISSOR_TEST] = false;
 
         var enable = states.enable;
         var length = enable.length;
@@ -1810,32 +1849,32 @@ define([
                     var statesFunctions = defaultValue(states.functions, defaultValue.EMPTY_OBJECT);
                     var blendColor = defaultValue(statesFunctions.blendColor, [0.0, 0.0, 0.0, 0.0]);
                     var blendEquationSeparate = defaultValue(statesFunctions.blendEquationSeparate, [
-                        WebGLRenderingContext.FUNC_ADD,
-                        WebGLRenderingContext.FUNC_ADD]);
+                        WebGLConstants.FUNC_ADD,
+                        WebGLConstants.FUNC_ADD]);
                     var blendFuncSeparate = defaultValue(statesFunctions.blendFuncSeparate, [
-                        WebGLRenderingContext.ONE,
-                        WebGLRenderingContext.ONE,
-                        WebGLRenderingContext.ZERO,
-                        WebGLRenderingContext.ZERO]);
+                        WebGLConstants.ONE,
+                        WebGLConstants.ONE,
+                        WebGLConstants.ZERO,
+                        WebGLConstants.ZERO]);
                     var colorMask = defaultValue(statesFunctions.colorMask, [true, true, true, true]);
                     var depthRange = defaultValue(statesFunctions.depthRange, [0.0, 1.0]);
                     var polygonOffset = defaultValue(statesFunctions.polygonOffset, [0.0, 0.0]);
                     var scissor = defaultValue(statesFunctions.scissor, [0.0, 0.0, 0.0, 0.0]);
 
-                    rendererRenderStates[name] = context.createRenderState({
-                        frontFace : defined(statesFunctions.frontFace) ? statesFunctions.frontFace[0] : WebGLRenderingContext.CCW,
+                    rendererRenderStates[name] = RenderState.fromCache({
+                        frontFace : defined(statesFunctions.frontFace) ? statesFunctions.frontFace[0] : WebGLConstants.CCW,
                         cull : {
-                            enabled : booleanStates[WebGLRenderingContext.CULL_FACE],
-                            face : defined(statesFunctions.cullFace) ? statesFunctions.cullFace[0] : WebGLRenderingContext.BACK
+                            enabled : booleanStates[WebGLConstants.CULL_FACE],
+                            face : defined(statesFunctions.cullFace) ? statesFunctions.cullFace[0] : WebGLConstants.BACK
                         },
                         lineWidth : defined(statesFunctions.lineWidth) ? statesFunctions.lineWidth[0] : 1.0,
                         polygonOffset : {
-                            enabled : booleanStates[WebGLRenderingContext.POLYGON_OFFSET_FILL],
+                            enabled : booleanStates[WebGLConstants.POLYGON_OFFSET_FILL],
                             factor : polygonOffset[0],
                             units : polygonOffset[1]
                         },
                         scissorTest : {
-                            enabled : booleanStates[WebGLRenderingContext.SCISSOR_TEST],
+                            enabled : booleanStates[WebGLConstants.SCISSOR_TEST],
                             rectangle : {
                                 x : scissor[0],
                                 y : scissor[1],
@@ -1848,8 +1887,8 @@ define([
                             far : depthRange[1]
                         },
                         depthTest : {
-                            enabled : booleanStates[WebGLRenderingContext.DEPTH_TEST],
-                            func : defined(statesFunctions.depthFunc) ? statesFunctions.depthFunc[0] : WebGLRenderingContext.LESS
+                            enabled : booleanStates[WebGLConstants.DEPTH_TEST],
+                            func : defined(statesFunctions.depthFunc) ? statesFunctions.depthFunc[0] : WebGLConstants.LESS
                         },
                         colorMask : {
                             red : colorMask[0],
@@ -1859,7 +1898,7 @@ define([
                         },
                         depthMask : defined(statesFunctions.depthMask) ? statesFunctions.depthMask[0] : true,
                         blending : {
-                            enabled : booleanStates[WebGLRenderingContext.BLEND],
+                            enabled : booleanStates[WebGLConstants.BLEND],
                             color : {
                                 red : blendColor[0],
                                 green : blendColor[1],
@@ -2054,22 +2093,22 @@ define([
 
     // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
     if (typeof WebGLRenderingContext !== 'undefined') {
-        gltfUniformFunctions[WebGLRenderingContext.FLOAT] = getScalarUniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.FLOAT_VEC2] = getVec2UniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.FLOAT_VEC3] = getVec3UniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.FLOAT_VEC4] = getVec4UniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.INT] = getScalarUniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.INT_VEC2] = getVec2UniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.INT_VEC3] = getVec3UniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.INT_VEC4] = getVec4UniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.BOOL] = getScalarUniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.BOOL_VEC2] = getVec2UniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.BOOL_VEC3] = getVec3UniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.BOOL_VEC4] = getVec4UniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.FLOAT_MAT2] = getMat2UniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.FLOAT_MAT3] = getMat3UniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.FLOAT_MAT4] = getMat4UniformFunction;
-        gltfUniformFunctions[WebGLRenderingContext.SAMPLER_2D] = getTextureUniformFunction;
+        gltfUniformFunctions[WebGLConstants.FLOAT] = getScalarUniformFunction;
+        gltfUniformFunctions[WebGLConstants.FLOAT_VEC2] = getVec2UniformFunction;
+        gltfUniformFunctions[WebGLConstants.FLOAT_VEC3] = getVec3UniformFunction;
+        gltfUniformFunctions[WebGLConstants.FLOAT_VEC4] = getVec4UniformFunction;
+        gltfUniformFunctions[WebGLConstants.INT] = getScalarUniformFunction;
+        gltfUniformFunctions[WebGLConstants.INT_VEC2] = getVec2UniformFunction;
+        gltfUniformFunctions[WebGLConstants.INT_VEC3] = getVec3UniformFunction;
+        gltfUniformFunctions[WebGLConstants.INT_VEC4] = getVec4UniformFunction;
+        gltfUniformFunctions[WebGLConstants.BOOL] = getScalarUniformFunction;
+        gltfUniformFunctions[WebGLConstants.BOOL_VEC2] = getVec2UniformFunction;
+        gltfUniformFunctions[WebGLConstants.BOOL_VEC3] = getVec3UniformFunction;
+        gltfUniformFunctions[WebGLConstants.BOOL_VEC4] = getVec4UniformFunction;
+        gltfUniformFunctions[WebGLConstants.FLOAT_MAT2] = getMat2UniformFunction;
+        gltfUniformFunctions[WebGLConstants.FLOAT_MAT3] = getMat3UniformFunction;
+        gltfUniformFunctions[WebGLConstants.FLOAT_MAT4] = getMat4UniformFunction;
+        gltfUniformFunctions[WebGLConstants.SAMPLER_2D] = getTextureUniformFunction;
         // GLTF_SPEC: Support SAMPLER_CUBE. https://github.com/KhronosGroup/glTF/issues/40
     }
 
@@ -2625,7 +2664,7 @@ define([
         }
     }
 
-    var scratchDrawingBufferDimensions = new Cartesian2();
+    var scratchPixelSize = new Cartesian2();
     var scratchToCenter = new Cartesian3();
     var scratchProj = new Cartesian3();
 
@@ -2637,9 +2676,7 @@ define([
         var proj = Cartesian3.multiplyByScalar(camera.directionWC, Cartesian3.dot(toCenter, camera.directionWC), scratchProj);
         var distance = Math.max(frustum.near, Cartesian3.magnitude(proj) - radius);
 
-        scratchDrawingBufferDimensions.x = context.drawingBufferWidth;
-        scratchDrawingBufferDimensions.y = context.drawingBufferHeight;
-        var pixelSize = frustum.getPixelSize(scratchDrawingBufferDimensions, distance);
+        var pixelSize = frustum.getPixelDimensions(context.drawingBufferWidth, context.drawingBufferHeight, distance, scratchPixelSize);
         var pixelScale = Math.max(pixelSize.x, pixelSize.y);
 
         return pixelScale;

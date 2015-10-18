@@ -2,6 +2,7 @@
 defineSuite([
         'Widgets/CesiumWidget/CesiumWidget',
         'Core/Clock',
+        'Core/defaultValue',
         'Core/EllipsoidTerrainProvider',
         'Core/ScreenSpaceEventHandler',
         'Core/WebMercatorProjection',
@@ -16,6 +17,7 @@ defineSuite([
     ], function(
         CesiumWidget,
         Clock,
+        defaultValue,
         EllipsoidTerrainProvider,
         ScreenSpaceEventHandler,
         WebMercatorProjection,
@@ -49,8 +51,17 @@ defineSuite([
         document.body.removeChild(container);
     });
 
+    function createCesiumWidget(container, options) {
+        options = defaultValue(options, {});
+        options.contextOptions = defaultValue(options.contextOptions, {});
+        options.contextOptions.webgl = defaultValue(options.contextOptions.webgl, {});
+        options.contextOptions.webgl.failIfMajorPerformanceCaveat = false;
+
+        return new CesiumWidget(container, options);
+    }
+
     it('can create, render, and destroy', function() {
-        widget = new CesiumWidget(container);
+        widget = createCesiumWidget(container);
         expect(widget.isDestroyed()).toEqual(false);
         expect(widget.container).toBeInstanceOf(HTMLElement);
         expect(widget.canvas).toBeInstanceOf(HTMLElement);
@@ -67,19 +78,19 @@ defineSuite([
     });
 
     it('can pass id string for container', function() {
-        widget = new CesiumWidget('container');
+        widget = createCesiumWidget('container');
     });
 
     it('sets expected options clock', function() {
         var options = {
             clock : new Clock()
         };
-        widget = new CesiumWidget(container, options);
+        widget = createCesiumWidget(container, options);
         expect(widget.clock).toBe(options.clock);
     });
 
     it('can set scene mode 2D', function() {
-        widget = new CesiumWidget(container, {
+        widget = createCesiumWidget(container, {
             sceneMode : SceneMode.SCENE2D
         });
         widget.scene.completeMorph();
@@ -89,14 +100,14 @@ defineSuite([
     it('can set map projection', function() {
         var mapProjection = new WebMercatorProjection();
 
-        widget = new CesiumWidget(container, {
+        widget = createCesiumWidget(container, {
             mapProjection : mapProjection
         });
         expect(widget.scene.mapProjection).toEqual(mapProjection);
     });
 
     it('can set scene mode Columbus', function() {
-        widget = new CesiumWidget(container, {
+        widget = createCesiumWidget(container, {
             sceneMode : SceneMode.COLUMBUS_VIEW
         });
         widget.scene.completeMorph();
@@ -104,14 +115,14 @@ defineSuite([
     });
 
     it('can disable render loop', function() {
-        widget = new CesiumWidget(container, {
+        widget = createCesiumWidget(container, {
             useDefaultRenderLoop : false
         });
         expect(widget.useDefaultRenderLoop).toBe(false);
     });
 
     it('can set target frame rate', function() {
-        widget = new CesiumWidget(container, {
+        widget = createCesiumWidget(container, {
             targetFrameRate : 23
         });
         expect(widget.targetFrameRate).toBe(23);
@@ -121,14 +132,14 @@ defineSuite([
         var options = {
             imageryProvider : new TileCoordinatesImageryProvider()
         };
-        widget = new CesiumWidget(container, options);
+        widget = createCesiumWidget(container, options);
         var imageryLayers = widget.scene.imageryLayers;
         expect(imageryLayers.length).toEqual(1);
         expect(imageryLayers.get(0).imageryProvider).toBe(options.imageryProvider);
     });
 
     it('does not create an ImageryProvider if option is false', function() {
-        widget = new CesiumWidget(container, {
+        widget = createCesiumWidget(container, {
             imageryProvider : false
         });
         var imageryLayers = widget.scene.imageryLayers;
@@ -139,7 +150,7 @@ defineSuite([
         var options = {
             terrainProvider : new EllipsoidTerrainProvider()
         };
-        widget = new CesiumWidget(container, options);
+        widget = createCesiumWidget(container, options);
         expect(widget.terrainProvider).toBe(options.terrainProvider);
 
         var anotherProvider = new EllipsoidTerrainProvider();
@@ -148,21 +159,21 @@ defineSuite([
     });
 
     it('does not create a globe if option is false', function() {
-        widget = new CesiumWidget(container, {
+        widget = createCesiumWidget(container, {
             globe : false
         });
         expect(widget.scene.globe).not.toBeDefined();
     });
 
     it('does not create a skyBox if option is false', function() {
-        widget = new CesiumWidget(container, {
+        widget = createCesiumWidget(container, {
             skyBox : false
         });
         expect(widget.scene.skyBox).not.toBeDefined();
     });
 
     it('does not create a skyAtmosphere if option is false', function() {
-        widget = new CesiumWidget(container, {
+        widget = createCesiumWidget(container, {
             skyAtmosphere : false
         });
         expect(widget.scene.skyAtmosphere).not.toBeDefined();
@@ -181,7 +192,7 @@ defineSuite([
                 }
             })
         };
-        widget = new CesiumWidget(container, options);
+        widget = createCesiumWidget(container, options);
         expect(widget.scene.skyBox).toBe(options.skyBox);
     });
 
@@ -199,7 +210,7 @@ defineSuite([
             webgl : webglOptions
         };
 
-        widget = new CesiumWidget(container, {
+        widget = createCesiumWidget(container, {
             contextOptions : contextOptions
         });
 
@@ -216,7 +227,7 @@ defineSuite([
     });
 
     it('can disable Order Independent Translucency', function() {
-        widget = new CesiumWidget(container, {
+        widget = createCesiumWidget(container, {
             orderIndependentTranslucency : false
         });
         expect(widget.scene.orderIndependentTranslucency).toBe(false);
@@ -224,25 +235,25 @@ defineSuite([
 
     it('throws if no container provided', function() {
         expect(function() {
-            return new CesiumWidget(undefined);
+            return createCesiumWidget(undefined);
         }).toThrowDeveloperError();
     });
 
     it('throws if targetFrameRate less than 0', function() {
-        widget = new CesiumWidget(container);
+        widget = createCesiumWidget(container);
         expect(function() {
             widget.targetFrameRate = -1;
         }).toThrowDeveloperError();
     });
 
     it('can set resolutionScale', function() {
-        widget = new CesiumWidget(container);
+        widget = createCesiumWidget(container);
         widget.resolutionScale = 0.5;
         expect(widget.resolutionScale).toBe(0.5);
     });
 
     it('throws if resolutionScale is less than 0', function() {
-        widget = new CesiumWidget(container);
+        widget = createCesiumWidget(container);
         expect(function() {
             widget.resolutionScale = -1;
         }).toThrowDeveloperError();
@@ -250,12 +261,12 @@ defineSuite([
 
     it('throws if no container id does not exist', function() {
         expect(function() {
-            return new CesiumWidget('doesnotexist');
+            return createCesiumWidget('doesnotexist');
         }).toThrowDeveloperError();
     });
 
     it('stops the render loop when render throws', function() {
-        widget = new CesiumWidget(container);
+        widget = createCesiumWidget(container);
         expect(widget.useDefaultRenderLoop).toEqual(true);
 
         var error = 'foo';
@@ -269,7 +280,7 @@ defineSuite([
     });
 
     it('shows the error panel when render throws', function() {
-        widget = new CesiumWidget(container);
+        widget = createCesiumWidget(container);
 
         var error = 'foo';
         widget.scene.primitives.update = function() {
@@ -300,7 +311,7 @@ defineSuite([
     });
 
     it('does not show the error panel if disabled', function() {
-        widget = new CesiumWidget(container, {
+        widget = createCesiumWidget(container, {
             showRenderLoopErrors : false
         });
 

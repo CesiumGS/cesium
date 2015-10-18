@@ -4,6 +4,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/defaultValue',
         'Core/Matrix4',
+        'Renderer/Texture',
         'Scene/OrthographicFrustum',
         'Scene/SceneMode',
         'Specs/createCamera',
@@ -14,6 +15,7 @@ defineSuite([
         Cartesian3,
         defaultValue,
         Matrix4,
+        Texture,
         OrthographicFrustum,
         SceneMode,
         createCamera,
@@ -39,6 +41,10 @@ defineSuite([
             frustum : {
                 near : 1.0,
                 far : 1000.0,
+                top : 2.0,
+                bottom : -2.0,
+                left : -1.0,
+                right : 1.0,
                 projectionMatrix : defaultValue(projection, Matrix4.clone(Matrix4.IDENTITY)),
                 infiniteProjectionMatrix : defaultValue(infiniteProjection, Matrix4.clone(Matrix4.IDENTITY)),
                 computeCullingVolume : function() {
@@ -97,7 +103,8 @@ defineSuite([
     });
 
     it('has czm_globeDepthTexture', function() {
-        context.uniformState.globeDepthTexture = context.createTexture2D({
+        context.uniformState.globeDepthTexture = new Texture({
+            context : context,
             source : {
                 width : 1,
                 height : 1,
@@ -758,6 +765,14 @@ defineSuite([
         us.update(context, createFrameState(createMockCamera()));
 
         var fs = 'void main() { gl_FragColor = vec4((czm_entireFrustum.x == 1.0) && (czm_entireFrustum.y == 1000.0)); }';
+        context.verifyDrawForSpecs(fs);
+    });
+
+    it('has czm_frustumPlanes', function() {
+        var us = context.uniformState;
+        us.update(context, createFrameState(createMockCamera()));
+
+        var fs = 'void main() { gl_FragColor = vec4(equal(czm_frustumPlanes, vec4(2.0, -2.0, -1.0, 1.0))); }';
         context.verifyDrawForSpecs(fs);
     });
 

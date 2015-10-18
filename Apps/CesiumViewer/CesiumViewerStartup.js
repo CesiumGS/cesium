@@ -5,5 +5,7 @@ require({
         domReady : '../../ThirdParty/requirejs-2.1.9/domReady',
         Cesium : '../../Source'
     }
-}, ['CesiumViewer'], function() {
+}, [
+        'CesiumViewer'
+    ], function() {
 });

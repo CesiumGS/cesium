@@ -492,11 +492,11 @@ defineSuite([
 
         expect(geometries.length).toEqual(2);
 
-        expect(geometries[0].attributes.position.values.length).toEqual(positions.length - 6); // Two vertices are not copied (0, 1)
-        expect(geometries[0].indices.length).toEqual(indices.length - 2); // One line is not copied (0, 1)
+        expect(geometries[0].attributes.position.values.length).toEqual(positions.length - 12); // Four vertices are not copied
+        expect(geometries[0].indices.length).toEqual(indices.length - 4); // Two lines are not copied
 
-        expect(geometries[1].attributes.position.values.length).toEqual(6);
-        expect(geometries[1].indices.length).toEqual(2);
+        expect(geometries[1].attributes.position.values.length).toEqual(9);
+        expect(geometries[1].indices.length).toEqual(4);
     });
 
     it('fitToUnsignedShortIndices creates two point geometries', function() {
@@ -525,11 +525,11 @@ defineSuite([
 
         expect(geometries.length).toEqual(2);
 
-        expect(geometries[0].attributes.position.values.length).toEqual(positions.length - 3); // One vertex is not copied
-        expect(geometries[0].indices.length).toEqual(indices.length - 1); // One point is not copied
+        expect(geometries[0].attributes.position.values.length).toEqual(positions.length - 6); // Two vertices are not copied
+        expect(geometries[0].indices.length).toEqual(indices.length - 2); // Two points are not copied
 
-        expect(geometries[1].attributes.position.values.length).toEqual(3);
-        expect(geometries[1].indices.length).toEqual(1);
+        expect(geometries[1].attributes.position.values.length).toEqual(6);
+        expect(geometries[1].indices.length).toEqual(2);
     });
 
     it('fitToUnsignedShortIndices throws without a geometry', function() {

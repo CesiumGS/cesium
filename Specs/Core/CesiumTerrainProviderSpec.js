@@ -354,6 +354,29 @@ defineSuite([
     });
 
     describe('requestTileGeometry', function() {
+
+        it('uses multiple urls specified in layer.json', function() {
+            returnTileJson('Data/CesiumTerrainTileJson/MultipleUrls.tile.json');
+
+            var provider = new CesiumTerrainProvider({
+                url : 'made/up/url'
+            });
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                spyOn(loadWithXhr, 'load');
+                provider.requestTileGeometry(0, 0, 0);
+                expect(loadWithXhr.load.calls.mostRecent().args[0]).toContain('foo0.com');
+                provider.requestTileGeometry(1, 0, 0);
+                expect(loadWithXhr.load.calls.mostRecent().args[0]).toContain('foo1.com');
+                provider.requestTileGeometry(1, -1, 0);
+                expect(loadWithXhr.load.calls.mostRecent().args[0]).toContain('foo2.com');
+                provider.requestTileGeometry(1, 0, 1);
+                expect(loadWithXhr.load.calls.mostRecent().args[0]).toContain('foo3.com');
+            });
+        });
+
         it('uses the proxy if one is supplied', function() {
             var baseUrl = 'made/up/url';
 

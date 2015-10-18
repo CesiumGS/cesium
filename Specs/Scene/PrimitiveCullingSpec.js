@@ -5,18 +5,22 @@ defineSuite([
         'Core/Cartesian3',
         'Core/defaultValue',
         'Core/Ellipsoid',
+        'Core/GeometryInstance',
         'Core/loadImage',
         'Core/Math',
         'Core/Occluder',
+        'Core/PolygonGeometry',
+        'Renderer/Sampler',
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
         'Scene/BillboardCollection',
+        'Scene/EllipsoidSurfaceAppearance',
         'Scene/HorizontalOrigin',
         'Scene/LabelCollection',
         'Scene/Material',
         'Scene/OrthographicFrustum',
-        'Scene/Polygon',
         'Scene/PolylineCollection',
+        'Scene/Primitive',
         'Scene/PrimitiveCollection',
         'Scene/SceneMode',
         'Scene/TextureAtlas',
@@ -31,18 +35,22 @@ defineSuite([
         Cartesian3,
         defaultValue,
         Ellipsoid,
+        GeometryInstance,
         loadImage,
         CesiumMath,
         Occluder,
+        PolygonGeometry,
+        Sampler,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         BillboardCollection,
+        EllipsoidSurfaceAppearance,
         HorizontalOrigin,
         LabelCollection,
         Material,
         OrthographicFrustum,
-        Polygon,
         PolylineCollection,
+        Primitive,
         PrimitiveCollection,
         SceneMode,
         TextureAtlas,
@@ -274,18 +282,27 @@ defineSuite([
 
     function createPolygon(degree, ellipsoid) {
         degree = defaultValue(degree, 50.0);
-        ellipsoid = defaultValue(ellipsoid, Ellipsoid.UNIT_SPHERE);
-        var polygon = new Polygon();
-        polygon.ellipsoid = ellipsoid;
-        polygon.granularity = CesiumMath.toRadians(20.0);
-        polygon.positions = Cartesian3.fromDegreesArray([
-            -degree, -degree,
-            degree, -degree,
-            degree,  degree,
-            -degree,  degree
-        ]);
-        polygon.asynchronous = false;
-        polygon.material.translucent = false;
+        var polygon = new Primitive({
+            geometryInstances: new GeometryInstance({
+                geometry: PolygonGeometry.fromPositions({
+                    positions: Cartesian3.fromDegreesArray([
+                        -degree, -degree,
+                        degree, -degree,
+                        degree, degree,
+                        -degree, degree
+                    ]),
+                    vertexFormat: EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+                    ellipsoid: ellipsoid,
+                    granularity: CesiumMath.toRadians(20.0)
+                })
+            }),
+            appearance: new EllipsoidSurfaceAppearance({
+                aboveGround: false
+            }),
+            asynchronous: false
+        });
+        polygon.appearance.material.translucent = false;
+
         return polygon;
     }
 
@@ -360,7 +377,7 @@ defineSuite([
         });
 
         // ANGLE Workaround
-        atlas.texture.sampler = context.createSampler({
+        atlas.texture.sampler = new Sampler({
             minificationFilter : TextureMinificationFilter.NEAREST,
             magnificationFilter : TextureMagnificationFilter.NEAREST
         });

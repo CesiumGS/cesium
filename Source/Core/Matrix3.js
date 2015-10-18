@@ -96,6 +96,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {Matrix3} [result] The object into which to store the result.
+     * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
      */
     Matrix3.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -249,6 +250,7 @@ define([
      * Computes a 3x3 rotation matrix from the provided quaternion.
      *
      * @param {Quaternion} quaternion the quaternion to use.
+     * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns {Matrix3} The 3x3 rotation matrix from this quaternion.
      */
     Matrix3.fromQuaternion = function(quaternion, result) {

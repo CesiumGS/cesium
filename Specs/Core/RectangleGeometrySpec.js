@@ -228,7 +228,7 @@ defineSuite([
             vertexFormat : VertexFormat.POSITION_ONLY,
             rectangle : rectangle,
             granularity : 1.0,
-            extrudedHeight : 0.1
+            extrudedHeight : CesiumMath.EPSILON14
         }));
         var positions = m.attributes.position.values;
 
