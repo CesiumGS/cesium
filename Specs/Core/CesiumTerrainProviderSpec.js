@@ -600,5 +600,20 @@ defineSuite([
                 expect(terrainProvider.getTileDataAvailable(1, 0, 2)).toBe(false);
             });
         });
+
+        it('supports a query string in the base URL', function() {
+            var baseUrl = 'made/up/url?a=some&b=query';
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                // Just return any old file, as long as its big enough
+                loadWithXhr.defaultLoad('Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json', responseType, method, data, headers, deferred);
+            };
+
+            returnHeightmapTileJson();
+
+            return waitForTile(0, 0, 0, false, false, function(loadedData) {
+                expect(loadedData).toBeInstanceOf(HeightmapTerrainData);
+            });
+        });
     });
 });
