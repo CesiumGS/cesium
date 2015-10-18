@@ -458,7 +458,7 @@ function combineCesium(debug, optimizer, combineOutput) {
         },
         baseUrl : 'Source',
         skipModuleInsertion : true,
-        //name : path.join('..', 'ThirdParty', 'almond-0.2.6', 'almond.js'),
+        name : path.join('..', 'ThirdParty', 'almond-0.2.6', 'almond'),
         include : 'main',
         out : path.join(combineOutput, 'Cesium.js')
     });
