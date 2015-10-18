@@ -93,26 +93,41 @@ gulp.task('clean', function(done) {
     async.forEach(filesToClean, rimraf, done);
 });
 
-gulp.task('cloc', ['build'], function(done) {
+gulp.task('cloc', ['build'], function() {
     var glsl = globby.sync(['Source/Shaders/*.glsl', 'Source/Shaders/**/*.glsl', 'Source/main.js']);
     glsl = glsl.join(' ');
 
     var clockPath = path.join('Tools', 'cloc-1.60', 'cloc-1.60.pl');
     var cloc_definitions = path.join('Tools', 'cloc-1.60', 'cloc_definitions');
 
-    console.log('Source:');
-    child_process.execSync('perl ' + clockPath + ' --quiet --progress-rate=0 --read-lang-def=' + cloc_definitions +
-                           ' Source/Core/ Source/DataSources/ Source/Renderer/ Source/Scene/ Source/Widgets/ Source/Workers/ ' +
-                           glsl, {
-        stdio : [process.stdin, process.stdout, process.stderr]
-    });
+    var cmdLine;
+    return Promise.join(
+        new Promise(function(resolve, reject) {
+            cmdLine = 'perl ' + clockPath + ' --quiet --progress-rate=0 --read-lang-def=' + cloc_definitions +
+                      ' Source/Core/ Source/DataSources/ Source/Renderer/ Source/Scene/ Source/Widgets/ Source/Workers/ ' + glsl;
+            child_process.exec(cmdLine, function(error, stdout, stderr) {
+                if (error) {
+                    console.log(stderr);
+                    return reject(error);
+                }
+                console.log('Source:');
+                console.log(stdout);
+                return resolve();
+            });
+        }),
 
-    console.log('Specs:');
-    child_process.execSync('perl ' + clockPath + ' --quiet --progress-rate=0 --read-lang-def=' + cloc_definitions + ' Specs/', {
-        stdio : [process.stdin, process.stdout, process.stderr]
-    });
-
-    done();
+        new Promise(function(resolve, reject) {
+            cmdLine = 'perl ' + clockPath + ' --quiet --progress-rate=0 --read-lang-def=' + cloc_definitions + ' Specs/';
+            child_process.exec(cmdLine, function(error, stdout, stderr) {
+                if (error) {
+                    console.log(stderr);
+                    return reject(error);
+                }
+                console.log('Specs:');
+                console.log(stdout);
+                return resolve();
+            });
+        }));
 });
 
 gulp.task('combine', ['generateStubs'], function() {
@@ -147,15 +162,23 @@ gulp.task('combineRelease', ['generateStubs'], function() {
 gulp.task('generateDocumentation', function() {
     var envPathSeperator = os.platform() === 'win32' ? ';' : ':';
 
-    child_process.execSync('jsdoc --configure Tools/jsdoc/conf.json', {
-        stdio : [process.stdin, process.stdout, process.stderr],
-        env : {
-            PATH : process.env.PATH + envPathSeperator + 'node_modules/.bin',
-            CESIUM_VERSION : packageJson.version
-        }
+    return new Promise(function(resolve, reject) {
+        child_process.exec('jsdoc --configure Tools/jsdoc/conf.json', {
+            stdio : [process.stdin, process.stdout, process.stderr],
+            env : {
+                PATH : process.env.PATH + envPathSeperator + 'node_modules/.bin',
+                CESIUM_VERSION : packageJson.version
+            }
+        }, function(error, stdout, stderr) {
+            if (error) {
+                console.log(stderr);
+                return reject(error);
+            }
+            console.log(stdout);
+            var stream = gulp.src('Documentation/Images/**').pipe(gulp.dest('Build/Documentation/Images'));
+            return streamToPromise(stream).then(resolve);
+        });
     });
-
-    return gulp.src('Documentation/Images/**').pipe(gulp.dest('Build/Documentation/Images'));
 });
 
 gulp.task('instrumentForCoverage', ['build'], function(done) {
@@ -180,14 +203,13 @@ gulp.task('jsHint-watch', function() {
     });
 });
 
-gulp.task('makeZipFile', ['release'], function() {
+gulp.task('makeZipFile', /*['release'],*/ function() {
     var builtSrc = gulp.src([
         'Build/Apps/**',
         'Build/Cesium/**',
         'Build/CesiumUnminified/**',
         'Build/Documentation/**'
     ], {
-        root : 'Build',
         base : '.'
     });
 

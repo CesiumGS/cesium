@@ -1,6 +1,6 @@
 language: node_js
 node_js:
-  - "0.12"
+  - "0.10"
 sudo: false
 script:
   - npm run jsHint && npm run release
