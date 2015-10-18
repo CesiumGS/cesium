@@ -28,6 +28,11 @@ var packageJson = require('./package.json');
 var noDevelopmentGallery = process.argv[2] === 'release' || process.argv[2] === 'makeZipFile';
 var copyUnminified = process.argv[2] === 'combine' || process.argv[2] === 'default' || process.argv[2] === undefined;
 
+var version = packageJson.version;
+if (/\.0$/.test(version)) {
+    version = version.substring(0, version.length - 2);
+}
+
 var sourceFiles = ['Source/**/*.js',
                    '!Source/*.js',
                    '!Source/Workers/**',
@@ -167,7 +172,7 @@ gulp.task('generateDocumentation', function() {
             stdio : [process.stdin, process.stdout, process.stderr],
             env : {
                 PATH : process.env.PATH + envPathSeperator + 'node_modules/.bin',
-                CESIUM_VERSION : packageJson.version
+                CESIUM_VERSION : version
             }
         }, function(error, stdout, stderr) {
             if (error) {
@@ -203,7 +208,7 @@ gulp.task('jsHint-watch', function() {
     });
 });
 
-gulp.task('makeZipFile', /*['release'],*/ function() {
+gulp.task('makeZipFile', ['release'], function() {
     var builtSrc = gulp.src([
         'Build/Apps/**',
         'Build/Cesium/**',
@@ -215,7 +220,7 @@ gulp.task('makeZipFile', /*['release'],*/ function() {
 
     var staticSrc = gulp.src([
         'Apps/**',
-        '!Apps/Sandcastle/gallery/development',
+        '!Apps/Sandcastle/gallery/development/**',
         'Source/**',
         'Specs/**',
         'ThirdParty/**',
@@ -229,15 +234,11 @@ gulp.task('makeZipFile', /*['release'],*/ function() {
         'README.md',
         'web.config'
     ], {
-        base : '.'
+        base : '.',
+        nodir : true
     });
 
     var indexSrc = gulp.src('index.release.html').pipe(gulpRename("index.html"));
-
-    var version = packageJson.version;
-    if (/\.0$/.test(version)) {
-        version = version.substring(0, version.length - 2);
-    }
 
     return eventStream.merge(builtSrc, staticSrc, indexSrc)
         .pipe(gulpZip('Cesium-' + version + '.zip'))
@@ -687,15 +688,13 @@ function createCesiumJs() {
         assignments.push('Cesium' + assignmentName + ' = ' + parameterName + ';');
     });
 
-    var version = packageJson.version;
-
     var contents = '\
 /*global define*/\n\
 define([' + moduleIds.join(', ') + '], function(' + parameters.join(', ') + ') {\n\
   "use strict";\n\
   /*jshint sub:true*/\n\
   var Cesium = {\n\
-    VERSION : "' + version + '",\n\
+    VERSION : "' + packageJson.version + '",\n\
     _shaders : {}\n\
   };\n\
   ' + assignments.join('\n  ') + '\n\
