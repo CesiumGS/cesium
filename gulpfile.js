@@ -39,6 +39,10 @@ var sourceFiles = ['Source/**/*.js',
                    '!Source/ThirdParty/Workers/**',
                    'Source/Workers/createTaskProcessorWorker.js'];
 
+var buildFiles = ['Specs/**/*.js',
+                  '!Specs/SpecList.js',
+                  'Source/Shaders/**/*.glsl'];
+
 var jsHintFiles = ['Source/**/*.js',
                    '!Source/Shaders/**',
                    '!Source/ThirdParty/**',
@@ -88,6 +92,10 @@ gulp.task('build', function(done) {
     createGalleryList();
     createSandcastleJsHintOptions();
     done();
+});
+
+gulp.task('build-watch', function() {
+    gulp.watch(buildFiles, ['build']);
 });
 
 gulp.task('buildApps', ['combine', 'minifyRelease'], function() {
@@ -169,7 +177,6 @@ gulp.task('generateDocumentation', function() {
 
     return new Promise(function(resolve, reject) {
         child_process.exec('jsdoc --configure Tools/jsdoc/conf.json', {
-            stdio : [process.stdin, process.stdout, process.stderr],
             env : {
                 PATH : process.env.PATH + envPathSeperator + 'node_modules/.bin',
                 CESIUM_VERSION : version
@@ -189,10 +196,17 @@ gulp.task('generateDocumentation', function() {
 gulp.task('instrumentForCoverage', ['build'], function(done) {
     var jscoveragePath = path.join('Tools', 'jscoverage-0.5.1', 'jscoverage.exe');
     var cmdLine = jscoveragePath + ' Source Instrumented --no-instrument=./ThirdParty';
-    child_process.exec(cmdLine, {stdio : [process.stdin, process.stdout, process.stderr]}, done);
+    child_process.exec(cmdLine, function(error, stdout, stderr) {
+        if (error) {
+            console.log(stderr);
+            return done(error);
+        }
+        console.log(stdout);
+        done();
+    });
 });
 
-gulp.task('jsHint', ['build'], function() {
+gulp.task('jsHint', function() {
     return gulp.src(jsHintFiles)
         .pipe(jshint.extract('auto'))
         .pipe(jshint())
@@ -752,12 +766,12 @@ function createSandcastleJsHintOptions() {
     jsHintOptions.predef = ['JSON', 'require', 'console', 'Sandcastle', 'Cesium'];
 
     var contents = JSON.stringify(jsHintOptions, null, 2);
-    fs.writeFile(path.join('Apps', 'Sandcastle', '.jshintrc'), contents);
+    fs.writeFileSync(path.join('Apps', 'Sandcastle', '.jshintrc'), contents);
 
     contents = '\
 // This file is automatically rebuilt by the Cesium build process.\n\
 var sandcastleJsHintOptions = ' + contents + ';';
-    fs.writeFile(path.join('Apps', 'Sandcastle', 'jsHintOptions.js'), contents);
+    fs.writeFileSync(path.join('Apps', 'Sandcastle', 'jsHintOptions.js'), contents);
 }
 
 function buildCesiumViewer() {

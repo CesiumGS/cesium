@@ -33,6 +33,7 @@
   "scripts": {
     "start": "node server.js",
     "build": "gulp build",
+    "build-watch": "gulp build-watch",
     "buildApps": "gulp buildApps",
     "clean": "gulp clean",
     "cloc": "gulp cloc",
