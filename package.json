@@ -10,6 +10,7 @@
   },
   "devDependencies": {
     "async": "^1.4.2",
+    "bluebird": "^2.10.2",
     "compression": "1.6.0",
     "event-stream": "^3.3.2",
     "express": "4.13.3",
@@ -24,6 +25,7 @@
     "jshint-stylish": "^2.0.1",
     "mkdirp": "^0.5.1",
     "request": "2.65.0",
+    "requirejs": "^2.1.20",
     "rimraf": "^2.4.3",
     "strip-comments": "^0.3.2",
     "yargs": "3.27.0"
@@ -38,8 +40,8 @@
     "combineRelease": "gulp combineRelease",
     "generateDocumentation": "gulp generateDocumentation",
     "instrumentForCoverage": "gulp instrumentForCoverage",
-    "jsHint": "gulp jsHint --silent",
-    "jsHint-watch": "gulp jsHint-watch  --silent",
+    "jsHint": "gulp jsHint",
+    "jsHint-watch": "gulp jsHint-watch",
     "makeZipFile": "gulp makeZipFile",
     "minify": "gulp minify",
     "minifyRelease": "gulp minifyRelease",

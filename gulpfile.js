@@ -18,12 +18,15 @@ var gulpInsert = require('gulp-insert');
 var gulpZip = require('gulp-zip');
 var gulpRename = require('gulp-rename');
 var gulpReplace = require('gulp-replace');
+var Promise = require('bluebird');
+var requirejs = require('requirejs');
 
 var packageJson = require('./package.json');
 
 //Gulp doesn't seem to have a way to get the currently running tasks for setting
 //per-task variables.  We use the command line argument here to detect which task is being run.
 var noDevelopmentGallery = process.argv[2] === 'release' || process.argv[2] === 'makeZipFile';
+var copyUnminified = process.argv[2] === 'combine' || process.argv[2] === 'default' || process.argv[2] === undefined;
 
 var sourceFiles = ['Source/**/*.js',
                    '!Source/*.js',
@@ -39,7 +42,8 @@ var jsHintFiles = ['Source/**/*.js',
                    'Apps/Sandcastle/gallery/*.html',
                    '!Apps/Sandcastle/ThirdParty/**',
                    'Specs/**/*.js',
-                   'Tools/buildTasks/**/*.js'];
+                   'Tools/buildTasks/**/*.js',
+                   'gulpfile.js'];
 
 var filesToClean = ['Source/Cesium.js',
                     'Build',
@@ -112,18 +116,30 @@ gulp.task('cloc', ['build'], function(done) {
 });
 
 gulp.task('combine', ['generateStubs'], function() {
+    var outputDirectory = path.join('Build', 'CesiumUnminified');
     return combineJavaScript({
         removePragmas : false,
-        minify : false,
-        outputDirectory : path.join('Build', 'CesiumUnminified')
+        optimizer : 'none',
+        outputDirectory : outputDirectory
+    }).then(function() {
+        if (!copyUnminified) {
+            return;
+        }
+        return streamToPromise(gulp.src(outputDirectory + '/**').pipe(gulp.dest(path.join('Build', 'Cesium'))));
     });
 });
 
 gulp.task('combineRelease', ['generateStubs'], function() {
+    var outputDirectory = path.join('Build', 'CesiumUnminified');
     return combineJavaScript({
         removePragmas : true,
-        minify : false,
-        outputDirectory : path.join('Build', 'CesiumUnminified')
+        optimizer : 'none',
+        outputDirectory : outputDirectory
+    }).then(function() {
+        if (!copyUnminified) {
+            return;
+        }
+        return streamToPromise(gulp.src(outputDirectory + '/**').pipe(gulp.dest(path.join('Build', 'Cesium'))));
     });
 });
 
@@ -143,14 +159,11 @@ gulp.task('generateDocumentation', function() {
 });
 
 gulp.task('instrumentForCoverage', ['build'], function(done) {
-    var exe = path.join('Tools', 'jscoverage-0.5.1', 'jscoverage.exe');
-    child_process.execSync(exe + ' Source Instrumented --no-instrument=./ThirdParty', {
-        stdio : [process.stdin, process.stdout, process.stderr]
-    });
-    done();
+    var jscoveragePath = path.join('Tools', 'jscoverage-0.5.1', 'jscoverage.exe');
+    var cmdLine = jscoveragePath + ' Source Instrumented --no-instrument=./ThirdParty';
+    child_process.exec(cmdLine, {stdio : [process.stdin, process.stdout, process.stderr]}, done);
 });
 
-//Runs jsHint
 gulp.task('jsHint', ['build'], function() {
     return gulp.src(jsHintFiles)
         .pipe(jshint.extract('auto'))
@@ -158,7 +171,6 @@ gulp.task('jsHint', ['build'], function() {
         .pipe(jshint.reporter('jshint-stylish'));
 });
 
-//Runs jsHint automatically on file change.
 gulp.task('jsHint-watch', function() {
     gulp.watch(jsHintFiles).on('change', function(event) {
         gulp.src(event.path)
@@ -181,7 +193,7 @@ gulp.task('makeZipFile', ['release'], function() {
 
     var staticSrc = gulp.src([
         'Apps/**',
-        '!Apps/Sandcastle/gallery/development/**',
+        '!Apps/Sandcastle/gallery/development',
         'Source/**',
         'Specs/**',
         'ThirdParty/**',
@@ -213,7 +225,7 @@ gulp.task('makeZipFile', ['release'], function() {
 gulp.task('minify', ['generateStubs'], function() {
     return combineJavaScript({
         removePragmas : false,
-        minify : true,
+        optimizer : 'uglify2',
         outputDirectory : path.join('Build', 'Cesium')
     });
 });
@@ -221,14 +233,14 @@ gulp.task('minify', ['generateStubs'], function() {
 gulp.task('minifyRelease', ['generateStubs'], function() {
     return combineJavaScript({
         removePragmas : true,
-        minify : true,
+        optimizer : 'uglify2',
         outputDirectory : path.join('Build', 'Cesium')
     });
 });
 
 gulp.task('release', ['buildApps', 'generateDocumentation']);
 
-gulp.task('generateStubs', ['build'], function() {
+gulp.task('generateStubs', ['build'], function(done) {
     mkdirp.sync(path.join('Build', 'Stubs'));
 
     var contents = '\
@@ -267,9 +279,9 @@ define(function() {\n\
 
     fs.writeFileSync(path.join('Build', 'Stubs', 'Cesium.js'), contents);
     fs.writeFileSync(path.join('Build', 'Stubs', 'paths.js'), paths);
+    done();
 });
 
-//Alphabetizes and formats require statement at top of each file.
 gulp.task('sortRequires', function(done) {
     var noModulesRegex = /[\s\S]*?define\(function\(\)/;
     var requiresRegex = /([\s\S]*?(define|defineSuite|require)\((?:{[\s\S]*}, )?\[)([\S\s]*?)]([\s\S]*?function\s*)\(([\S\s]*?)\) {([\s\S]*)/;
@@ -398,111 +410,120 @@ gulp.task('sortRequires', function(done) {
     }, done);
 });
 
-function combineJavaScriptCombineCesium(debug, minify, combineOutput) {
-    var rjsPath = path.join('..', 'ThirdParty', 'requirejs-2.1.9', 'r.js');
-    var rjsOptions = path.join('..', 'Tools', 'build.js');
-    var relativeAlmondPath = path.join('..', 'ThirdParty', 'almond-0.2.6', 'almond.js');
-    var relativeCombineOutputDirectory = path.join('..', combineOutput);
-    debug = debug ? 'true' : 'false';
-    child_process.execSync('node ' + rjsPath + ' -o ' + rjsOptions + ' pragmas.debug=' + debug +
-                           ' optimize=' + minify + ' baseUrl=. skipModuleInsertion=true name=' + relativeAlmondPath +
-                           ' include=main out=' + relativeCombineOutputDirectory + '/Cesium.js', {
-        stdio : [process.stdin, process.stdout, process.stderr],
-        cwd : 'Source'
+function combineCesium(debug, optimizer, combineOutput) {
+    return requirejsOptimize({
+        wrap : true,
+        useStrict : true,
+        optimize : optimizer,
+        optimizeCss : 'standard',
+        pragmas : {
+            debug : debug
+        },
+        baseUrl : 'Source',
+        skipModuleInsertion : true,
+        //name : path.join('..', 'ThirdParty', 'almond-0.2.6', 'almond.js'),
+        include : 'main',
+        out : path.join(combineOutput, 'Cesium.js')
     });
 }
 
-function combineJavaScriptCombineCesiumWorkers(debug, minify, combineOutput) {
-    var rjsPath = path.join('ThirdParty', 'requirejs-2.1.9', 'r.js');
-    var rjsOptions = path.join('Tools', 'build.js');
-    debug = debug ? 'true' : 'false';
-
-    var files = globby.sync(['Source/Workers/cesiumWorkerBootstrapper.js',
-                             'Source/Workers/transferTypedArrayTest.js',
-                             'Source/ThirdParty/Workers/*.js']);
-
-    files.forEach(function(file) {
-        var cmdLine = 'node ' + rjsPath + ' -o ' + rjsOptions + ' pragmas.debug=' + debug +
-                      ' optimize=' + minify + ' baseUrl=. skipModuleInsertion=true wrap=false' +
-                      ' include=' + file.slice(0, -3) + ' out=' + path.join(combineOutput, path.relative('Source', file));
-        child_process.execSync(cmdLine, {
-            stdio : [process.stdin, process.stdout, process.stderr]
-        });
-    });
-
-    files = globby.sync(['Source/Workers/*.js',
-                         '!Source/Workers/cesiumWorkerBootstrapper.js',
-                         '!Source/Workers/transferTypedArrayTest.js',
-                         '!Source/ThirdParty/Workers/*.js']);
-
-    files.forEach(function(file) {
-        var cmdLine = 'node ' + rjsPath + ' -o ' + rjsOptions + ' pragmas.debug=' + debug +
-                      ' optimize=' + minify + ' baseUrl=.' +
-                      ' include=' + file.slice(0, -3) + ' out=' + path.join(combineOutput, path.relative('Source', file));
-        child_process.execSync(cmdLine, {
-            stdio : [process.stdin, process.stdout, process.stderr]
-        });
-    });
+function combineWorkers(debug, optimizer, combineOutput) {
+    return Promise.join(
+        globby(['Source/Workers/cesiumWorkerBootstrapper.js',
+                'Source/Workers/transferTypedArrayTest.js',
+                'Source/ThirdParty/Workers/*.js']).then(function(files) {
+            return Promise.all(files.map(function(file) {
+                return requirejsOptimize({
+                    wrap : false,
+                    useStrict : true,
+                    optimize : optimizer,
+                    optimizeCss : 'standard',
+                    pragmas : {
+                        debug : debug
+                    },
+                    baseUrl : '.',
+                    skipModuleInsertion : true,
+                    include : file.slice(0, -3),
+                    out : path.join(combineOutput, path.relative('Source', file))
+                });
+            }));
+        }),
+        globby(['Source/Workers/*.js',
+                '!Source/Workers/cesiumWorkerBootstrapper.js',
+                '!Source/Workers/transferTypedArrayTest.js',
+                '!Source/ThirdParty/Workers/*.js']).then(function(files) {
+            return Promise.all(files.map(function(file) {
+                return requirejsOptimize({
+                    wrap : true,
+                    useStrict : true,
+                    optimize : optimizer,
+                    optimizeCss : 'standard',
+                    pragmas : {
+                        debug : debug
+                    },
+                    baseUrl : '.',
+                    include : file.slice(0, -3),
+                    out : path.join(combineOutput, path.relative('Source', file))
+                });
+            }));
+        })
+    );
 }
 
 function minifyCSS(outputDirectory) {
-    var rjsPath = path.join('ThirdParty', 'requirejs-2.1.9', 'r.js');
-    var rjsOptions = path.join('Tools', 'build.js');
-
-    return gulp.src('Source/**/*.css',
-        {
-            base : 'Source',
-            noDir : true
-        })
-        .pipe(gulp.dest(outputDirectory))
-        .on('finish', function(err) {
-                if (err) {
-                    throw err;
-                }
-
-                var files = globby.sync(outputDirectory + '/**/*.css');
-                files.forEach(function(file) {
-                    var cmdLine = 'node ' + rjsPath + ' -o ' + rjsOptions + ' cssIn=' + file + ' out=' + file;
-                    child_process.execSync(cmdLine, {
-                        stdio : [process.stdin, process.stdout, process.stderr]
-                    });
-                });
+    return globby('Source/**/*.css').then(function(files) {
+        return Promise.all(files.map(function(file) {
+            return requirejsOptimize({
+                wrap : true,
+                useStrict : true,
+                optimizeCss : 'standard',
+                pragmas : {
+                    debug : true
+                },
+                cssIn : file,
+                out : path.join(outputDirectory, path.relative('Source', file))
             });
+        }));
+    });
 }
 
 function combineJavaScript(options) {
-    var optimizer = options.minify ? 'uglify2' : 'none';
+    var optimizer = options.optimizer;
     var outputDirectory = options.outputDirectory;
     var removePragmas = options.removePragmas;
 
     var combineOutput = path.join('Build', 'combineOutput', optimizer);
     var copyrightHeader = fs.readFileSync(path.join('Source', 'copyrightHeader.js'));
-    combineJavaScriptCombineCesium(!removePragmas, optimizer, combineOutput);
-    combineJavaScriptCombineCesiumWorkers(!removePragmas, optimizer, combineOutput);
 
-    var streams = [];
+    var promise = Promise.join(
+        combineCesium(!removePragmas, optimizer, combineOutput),
+        combineWorkers(!removePragmas, optimizer, combineOutput)
+    );
 
-    //copy to build folder with copyright header added at the top
-    streams.push(gulp.src([combineOutput + '/**'])
-                     .pipe(gulpInsert.prepend(copyrightHeader))
-                     .pipe(gulp.dest(outputDirectory))
-                     .on('finish', function(err) {
-                             if (err) {
-                                 throw err;
-                             }
-                             rimraf.sync(combineOutput);
-                         }));
+    return promise.then(function() {
+        var promises = [];
 
-    var everythingElse = ['Source/**', '!**/*.js', '!**/*.glsl'];
-    if (options.minify) {
-        streams.push(minifyCSS(path.join('Build', 'Cesium')));
-        everythingElse.push('!**/*.css');
-    }
+        //copy to build folder with copyright header added at the top
+        var stream = gulp.src([combineOutput + '/**'])
+            .pipe(gulpInsert.prepend(copyrightHeader))
+            .pipe(gulp.dest(outputDirectory));
 
-    streams.push(gulp.src(everythingElse, {nodir : true})
-                     .pipe(gulp.dest(outputDirectory)));
+        promises.push(streamToPromise(stream));
 
-    return eventStream.merge(streams);
+        var everythingElse = ['Source/**', '!**/*.js', '!**/*.glsl'];
+
+        if (optimizer === 'uglify2') {
+            promises.push(minifyCSS(outputDirectory));
+            everythingElse.push('!**/*.css');
+        }
+
+        stream = gulp.src(everythingElse, {nodir : true}).pipe(gulp.dest(outputDirectory));
+        promises.push(streamToPromise(stream));
+
+        return Promise.all(promises).then(function() {
+            rimraf.sync(combineOutput);
+        });
+    });
 }
 
 function glslToJavaScript(minify, minifyStateFilePath) {
@@ -721,68 +742,89 @@ var sandcastleJsHintOptions = ' + contents + ';';
 function buildCesiumViewer() {
     var cesiumViewerOutputDirectory = 'Build/Apps/CesiumViewer';
     var cesiumViewerStartup = path.join(cesiumViewerOutputDirectory, 'CesiumViewerStartup.js');
+    var cesiumViewerCss = path.join(cesiumViewerOutputDirectory, 'CesiumViewer.css');
     mkdirp.sync(cesiumViewerOutputDirectory);
 
-    var rjsPath = path.join('ThirdParty', 'requirejs-2.1.9', 'r.js');
-    var rjsOptions = path.join('Tools', 'build.js');
-
-    //mainConfigFile must be relative to the build.js file
-    var cmdLine = 'node ' + rjsPath + ' -o ' + rjsOptions + ' pragmas.debug=false' +
-                  ' optimize=uglify2 mainConfigFile=../Apps/CesiumViewer/CesiumViewerStartup.js' +
-                  ' name=CesiumViewerStartup out=' + cesiumViewerStartup;
-    child_process.execSync(cmdLine, {
-        stdio : [process.stdin, process.stdout, process.stderr]
-    });
-
-    var cesiumViewerCss = path.join(cesiumViewerOutputDirectory, 'CesiumViewer.css');
-    cmdLine = 'node ' + rjsPath + ' -o ' + rjsOptions + ' cssIn=Apps/CesiumViewer/CesiumViewer.css out=' + cesiumViewerCss;
-    child_process.execSync(cmdLine, {
-        stdio : [process.stdin, process.stdout, process.stderr]
-    });
-
-    //add copyright header
-    var copyrightHeader = fs.readFileSync(path.join('Source', 'copyrightHeader.js'));
-
-    return eventStream.merge(
-        gulp.src(cesiumViewerStartup)
-            .pipe(gulpInsert.prepend(copyrightHeader))
-            .pipe(gulpReplace('../../Source', '.'))
-            .pipe(gulpReplace('../../ThirdParty/requirejs-2.1.9', '.'))
-            .pipe(gulp.dest(cesiumViewerOutputDirectory)),
-
-        gulp.src(['Apps/CesiumViewer/**',
-                  '!Apps/CesiumViewer/**/*.js',
-                  '!Apps/CesiumViewer/**/*.css'])
-            .pipe(gulpReplace('../../Source', '.'))
-            .pipe(gulpReplace('../../ThirdParty/requirejs-2.1.9', '.'))
-            .pipe(gulp.dest(cesiumViewerOutputDirectory)),
-
-        gulp.src(['ThirdParty/requirejs-2.1.9/require.min.js'])
-            .pipe(gulpRename('require.js'))
-            .pipe(gulp.dest(cesiumViewerOutputDirectory)),
-
-        gulp.src(['Build/Cesium/Assets/**',
-                  'Build/Cesium/Workers/**',
-                  'Build/Cesium/ThirdParty/Workers/**',
-                  'Build/Cesium/Widgets/**',
-                  '!Build/Cesium/Widgets/**/*.css'],
-            {
-                base : 'Build/Cesium',
-                nodir : true
-            })
-            .pipe(gulpReplace('../../Source', '.'))
-            .pipe(gulpReplace('../../ThirdParty/requirejs-2.1.9', '.'))
-            .pipe(gulp.dest(cesiumViewerOutputDirectory)),
-
-        gulp.src(['Build/Cesium/Widgets/InfoBox/InfoBoxDescription.css'],
-            {
-                base : 'Build/Cesium'
-            })
-            .pipe(gulpReplace('../../Source', '.'))
-            .pipe(gulpReplace('../../ThirdParty/requirejs-2.1.9', '.'))
-            .pipe(gulp.dest(cesiumViewerOutputDirectory)),
-
-        gulp.src(['web.config'])
-            .pipe(gulp.dest(cesiumViewerOutputDirectory))
+    var promise = Promise.join(
+        requirejsOptimize({
+            wrap : true,
+            useStrict : true,
+            optimizeCss : 'standard',
+            pragmas : {
+                debug : false
+            },
+            optimize : 'uglify2',
+            mainConfigFile : 'Apps/CesiumViewer/CesiumViewerStartup.js',
+            name : 'CesiumViewerStartup',
+            out : cesiumViewerStartup
+        }),
+        requirejsOptimize({
+            wrap : true,
+            useStrict : true,
+            optimizeCss : 'standard',
+            pragmas : {
+                debug : false
+            },
+            cssIn : 'Apps/CesiumViewer/CesiumViewer.css',
+            out : cesiumViewerCss
+        })
     );
+
+    promise = promise.then(function() {
+        var copyrightHeader = fs.readFileSync(path.join('Source', 'copyrightHeader.js'));
+
+        var stream = eventStream.merge(
+            gulp.src(cesiumViewerStartup)
+                .pipe(gulpInsert.prepend(copyrightHeader))
+                .pipe(gulpReplace('../../Source', '.'))
+                .pipe(gulpReplace('../../ThirdParty/requirejs-2.1.9', '.')),
+
+            gulp.src(cesiumViewerCss)
+                .pipe(gulpReplace('../../Source', '.')),
+
+            gulp.src(['Apps/CesiumViewer/index.html'])
+                .pipe(gulpReplace('../../ThirdParty/requirejs-2.1.9', '.')),
+
+            gulp.src(['Apps/CesiumViewer/**',
+                      '!Apps/CesiumViewer/index.html',
+                      '!Apps/CesiumViewer/**/*.js',
+                      '!Apps/CesiumViewer/**/*.css']),
+
+            gulp.src(['ThirdParty/requirejs-2.1.9/require.min.js'])
+                .pipe(gulpRename('require.js')),
+
+            gulp.src(['Build/Cesium/Assets/**',
+                      'Build/Cesium/Workers/**',
+                      'Build/Cesium/ThirdParty/Workers/**',
+                      'Build/Cesium/Widgets/**',
+                      '!Build/Cesium/Widgets/**/*.css'],
+                {
+                    base : 'Build/Cesium',
+                    nodir : true
+                }),
+
+            gulp.src(['Build/Cesium/Widgets/InfoBox/InfoBoxDescription.css'], {
+                base : 'Build/Cesium'
+            }),
+
+            gulp.src(['web.config'])
+        );
+
+        return streamToPromise(stream.pipe(gulp.dest(cesiumViewerOutputDirectory)));
+    });
+
+    return promise;
+}
+
+function requirejsOptimize(config) {
+    return new Promise(function(resolve, reject) {
+        requirejs.optimize(config, resolve, reject);
+    });
+}
+
+function streamToPromise(stream) {
+    return new Promise(function(resolve, reject) {
+        stream.on('finish', resolve);
+        stream.on('end', reject);
+    });
 }
