@@ -136,7 +136,7 @@ define([
      *     antialias : true,
      *     premultipliedAlpha : true,
      *     preserveDrawingBuffer : false,
-     *     failIfMajorPerformanceCaveat : true
+     *     failIfMajorPerformanceCaveat : false
      *   },
      *   allowTextureFilterAnisotropic : true
      * }
@@ -150,11 +150,6 @@ define([
      * <code>webgl.alpha</code> defaults to false, which can improve performance compared to the standard WebGL default
      * of true.  If an application needs to composite Cesium above other HTML elements using alpha-blending, set
      * <code>webgl.alpha</code> to true.
-     * </p>
-     * <p>
-     * <code>webgl.failIfMajorPerformanceCaveat</code> defaults to true, which ensures a context is not successfully created
-     * if the system has a major performance issue such as only supporting software rendering.  The standard WebGL default is false,
-     * which is not appropriate for almost any Cesium app.
      * </p>
      * <p>
      * The other <code>webgl</code> properties match the WebGL defaults for {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}.

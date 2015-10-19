@@ -201,17 +201,6 @@ define([
 
         // Override select WebGL defaults
         webglOptions.alpha = defaultValue(webglOptions.alpha, false); // WebGL default is true
-        webglOptions.failIfMajorPerformanceCaveat = defaultValue(webglOptions.failIfMajorPerformanceCaveat, true); // WebGL default is false
-
-        // Firefox 35 with ANGLE has a regression that causes alpha : false to affect all framebuffers
-        // Since we can't detect for ANGLE without a context, we just detect for Windows.
-        // https://github.com/AnalyticalGraphicsInc/cesium/issues/2431
-        if (FeatureDetection.isFirefox() && FeatureDetection.isWindows()) {
-            var firefoxVersion = FeatureDetection.firefoxVersion();
-            if (firefoxVersion[0] === 35) {
-                webglOptions.alpha = true;
-            }
-        }
 
         var defaultToWebgl2 = false;
         var webgl2Supported = (typeof WebGL2RenderingContext !== 'undefined');
@@ -294,32 +283,32 @@ define([
         var textureFilterAnisotropic = options.allowTextureFilterAnisotropic ? getExtension(gl, ['EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic']) : undefined;
         this._textureFilterAnisotropic = !!textureFilterAnisotropic;
         ContextLimits._maximumTextureFilterAnisotropy = defined(textureFilterAnisotropic) ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1.0;
-        
+
         var glCreateVertexArray;
         var glBindVertexArray;
         var glDeleteVertexArray;
-        
+
         var glDrawElementsInstanced;
         var glDrawArraysInstanced;
         var glVertexAttribDivisor;
-        
+
         var glDrawBuffers;
-        
+
         var vertexArrayObject;
         var instancedArrays;
         var drawBuffers;
-        
+
         if (webgl2) {
             var that = this;
-            
+
             glCreateVertexArray = function () { return that._gl.createVertexArray(); };
             glBindVertexArray = function(vao) { that._gl.bindVertexArray(vao); };
             glDeleteVertexArray = function(vao) { that._gl.deleteVertexArray(vao); };
-            
+
             glDrawElementsInstanced = function(mode, count, type, offset, instanceCount) { gl.drawElementsInstanced(mode, count, type, offset, instanceCount); };
             glDrawArraysInstanced = function(mode, first, count, instanceCount) { gl.drawArraysInstanced(mode, first, count, instanceCount); };
             glVertexAttribDivisor = function(index, divisor) { gl.vertexAttribDivisor(index, divisor); };
-            
+
             glDrawBuffers = function(buffers) { gl.drawBuffers(buffers); };
         } else {
             vertexArrayObject = getExtension(gl, ['OES_vertex_array_object']);
@@ -328,30 +317,30 @@ define([
                 glBindVertexArray = function(vertexArray) { vertexArrayObject.bindVertexArrayOES(vertexArray); };
                 glDeleteVertexArray = function(vertexArray) { vertexArrayObject.deleteVertexArrayOES(vertexArray); };
             }
-            
+
             instancedArrays = getExtension(gl, ['ANGLE_instanced_arrays']);
             if (defined(instancedArrays)) {
                 glDrawElementsInstanced = function(mode, count, type, offset, instanceCount) { instancedArrays.drawElementsInstancedANGLE(mode, count, type, offset, instanceCount); };
                 glDrawArraysInstanced = function(mode, first, count, instanceCount) { instancedArrays.drawArraysInstancedANGLE(mode, first, count, instanceCount); };
                 glVertexAttribDivisor = function(index, divisor) { instancedArrays.vertexAttribDivisorANGLE(index, divisor); };
             }
-            
+
             drawBuffers = getExtension(gl, ['WEBGL_draw_buffers']);
             if (defined(drawBuffers)) {
                 glDrawBuffers = function(buffers) { drawBuffers.drawBuffersWEBGL(buffers); };
             }
         }
-        
+
         this.glCreateVertexArray = glCreateVertexArray;
         this.glBindVertexArray = glBindVertexArray;
         this.glDeleteVertexArray = glDeleteVertexArray;
-        
+
         this.glDrawElementsInstanced = glDrawElementsInstanced;
         this.glDrawArraysInstanced = glDrawArraysInstanced;
         this.glVertexAttribDivisor = glVertexAttribDivisor;
-        
+
         this.glDrawBuffers = glDrawBuffers;
-        
+
         this._vertexArrayObject = !!vertexArrayObject;
         this._instancedArrays = !!instancedArrays;
         this._drawBuffers = !!drawBuffers;
