@@ -8,8 +8,9 @@ define([
         '../Core/Event',
         '../Core/Rectangle',
         '../Core/WebMercatorTilingScheme',
-        './ImageryProvider'
-    ], function(
+        './ImageryProvider',
+        './UrlTemplateImageryProvider'
+], function(
         Credit,
         defaultValue,
         defined,
@@ -18,7 +19,9 @@ define([
         Event,
         Rectangle,
         WebMercatorTilingScheme,
-        ImageryProvider) {
+        ImageryProvider,
+        UrlTemplateImageryProvider
+        ) {
     "use strict";
 
     var trailingSlashRegex = /\/$/;
@@ -71,25 +74,25 @@ define([
         }
 
         this._url = url;
-        this._fileExtension = defaultValue(options.fileExtension, 'png');
-        this._proxy = options.proxy;
+        var fileExtension = defaultValue(options.fileExtension, 'png');
+        //this._proxy = options.proxy;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
 
-        this._tilingScheme = new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid });
+        var tilingScheme = new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid });
 
-        this._tileWidth = 256;
-        this._tileHeight = 256;
+        var tileWidth = 256;
+        var tileHeight = 256;
 
-        this._minimumLevel = defaultValue(options.minimumLevel, 0);
-        this._maximumLevel = options.maximumLevel;
+        var minimumLevel = defaultValue(options.minimumLevel, 0);
+        var maximumLevel = options.maximumLevel;
 
-        this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
+        var rectangle = defaultValue(options.rectangle, tilingScheme.rectangle);
 
         // Check the number of tiles at the minimum level.  If it's more than four,
         // throw an exception, because starting at the higher minimum
         // level will cause too many tiles to be downloaded and rendered.
-        var swTile = this._tilingScheme.positionToTileXY(Rectangle.southwest(this._rectangle), this._minimumLevel);
-        var neTile = this._tilingScheme.positionToTileXY(Rectangle.northeast(this._rectangle), this._minimumLevel);
+        var swTile = tilingScheme.positionToTileXY(Rectangle.southwest(rectangle), minimumLevel);
+        var neTile = tilingScheme.positionToTileXY(Rectangle.northeast(rectangle), minimumLevel);
         var tileCount = (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
         if (tileCount > 4) {
             throw new DeveloperError('The imagery provider\'s rectangle and minimumLevel indicate that there are ' + tileCount + ' tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.');
@@ -103,7 +106,21 @@ define([
         if (typeof credit === 'string') {
             credit = new Credit(credit);
         }
-        this._credit = credit;
+
+        var templateUrl = url;
+        templateUrl += "/{z}/{x}/{y}." + fileExtension;
+
+        this._imageryProvider = new UrlTemplateImageryProvider({
+            url: templateUrl,
+            proxy: options.proxy,
+            credit: credit,
+            tilingScheme: tilingScheme,
+            tileWidth: tileWidth,
+            tileHeight: tileHeight,
+            minimumLevel: minimumLevel,
+            maximumLevel: maximumLevel,
+            rectangle: rectangle
+        });
     };
 
     function buildImageUrl(imageryProvider, x, y, level) {
@@ -138,7 +155,7 @@ define([
          */
         proxy : {
             get : function() {
-                return this._proxy;
+                return this._imageryProvider._proxy;
             }
         },
 
@@ -157,7 +174,7 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                return this._tileWidth;
+                return this._imageryProvider._tileWidth;
             }
         },
 
@@ -176,7 +193,7 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                return this._tileHeight;
+                return this._imageryProvider._tileHeight;
             }
         },
 
@@ -195,7 +212,7 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                return this._maximumLevel;
+                return this._imageryProvider._maximumLevel;
             }
         },
 
@@ -214,7 +231,7 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                return this._minimumLevel;
+                return this._imageryProvider._minimumLevel;
             }
         },
 
@@ -233,7 +250,7 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                return this._tilingScheme;
+                return this._imageryProvider._tilingScheme;
             }
         },
 
@@ -252,7 +269,7 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                return this._rectangle;
+                return this._imageryProvider._rectangle;
             }
         },
 
@@ -287,7 +304,7 @@ define([
          */
         errorEvent : {
             get : function() {
-                return this._errorEvent;
+                return this._imageryProvider._errorEvent;
             }
         },
 
@@ -299,7 +316,7 @@ define([
          */
         ready : {
             get : function() {
-                return this._ready;
+                return this._imageryProvider._ready;
             }
         },
 
@@ -312,7 +329,7 @@ define([
          */
         credit : {
             get : function() {
-                return this._credit;
+                return this._imageryProvider._credit;
             }
         },
 
@@ -363,13 +380,15 @@ define([
      */
     OpenStreetMapImageryProvider.prototype.requestImage = function(x, y, level) {
         //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
+        if (!this._imageryProvider._ready) {
             throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
         }
         //>>includeEnd('debug');
 
-        var url = buildImageUrl(this, x, y, level);
-        return ImageryProvider.loadImage(this, url);
+        //var url = buildImageUrl(this, x, y, level);
+        //return ImageryProvider.loadImage(this, url);
+        console.log("hello");
+        return this._imageryProvider.requestImage(x, y, level);
     };
 
     /**
