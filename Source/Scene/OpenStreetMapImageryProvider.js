@@ -107,8 +107,7 @@ define([
             credit = new Credit(credit);
         }
 
-        var templateUrl = url;
-        templateUrl += "/{z}/{x}/{y}." + fileExtension;
+        var templateUrl = url + "{z}/{x}/{y}." + fileExtension;
 
         this._imageryProvider = new UrlTemplateImageryProvider({
             url: templateUrl,
@@ -316,7 +315,7 @@ define([
          */
         ready : {
             get : function() {
-                return this._imageryProvider._ready;
+                return this._imageryProvider.ready;
             }
         },
 
@@ -380,14 +379,13 @@ define([
      */
     OpenStreetMapImageryProvider.prototype.requestImage = function(x, y, level) {
         //>>includeStart('debug', pragmas.debug);
-        if (!this._imageryProvider._ready) {
+        if (!this._imageryProvider.ready) {
             throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
         }
         //>>includeEnd('debug');
 
         //var url = buildImageUrl(this, x, y, level);
         //return ImageryProvider.loadImage(this, url);
-        console.log("hello");
         return this._imageryProvider.requestImage(x, y, level);
     };
 
