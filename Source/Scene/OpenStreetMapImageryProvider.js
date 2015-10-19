@@ -74,9 +74,9 @@ define([
         }
 
         this._url = url;
-        var fileExtension = defaultValue(options.fileExtension, 'png');
-        //this._proxy = options.proxy;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
+
+        var fileExtension = defaultValue(options.fileExtension, 'png');
 
         var tilingScheme = new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid });
 
@@ -98,10 +98,6 @@ define([
             throw new DeveloperError('The imagery provider\'s rectangle and minimumLevel indicate that there are ' + tileCount + ' tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.');
         }
 
-        this._errorEvent = new Event();
-
-        this._ready = true;
-
         var credit = defaultValue(options.credit, defaultCredit);
         if (typeof credit === 'string') {
             credit = new Credit(credit);
@@ -120,18 +116,10 @@ define([
             maximumLevel: maximumLevel,
             rectangle: rectangle
         });
+
+        this._errorEvent = new Event();
+        this._ready = true;
     };
-
-    function buildImageUrl(imageryProvider, x, y, level) {
-        var url = imageryProvider._url + level + '/' + x + '/' + y + '.' + imageryProvider._fileExtension;
-
-        var proxy = imageryProvider._proxy;
-        if (defined(proxy)) {
-            url = proxy.getURL(url);
-        }
-
-        return url;
-    }
 
     defineProperties(OpenStreetMapImageryProvider.prototype, {
         /**
