@@ -289,7 +289,7 @@ gulp.task('generateStubs', ['build'], function(done) {
 
     globby.sync(sourceFiles).forEach(function(file) {
         file = path.relative('Source', file);
-        var moduleId = file.replace(/\\/, '/');
+        var moduleId = file.replace(/\\/g, '/');
         moduleId = moduleId.substring(0, moduleId.lastIndexOf('.'));
 
         var baseName = path.basename(file);
@@ -586,13 +586,14 @@ function glslToJavaScript(minify, minifyStateFilePath) {
         var jsFile = path.join(path.dirname(glslFile), baseName) + '.js';
 
         // identify built in functions, structs, and constants
-        if (glslFile.indexOf(path.normalize(path.join('Source', 'Shaders', 'Builtin', 'Functions'))) === 0) {
+        var baseDir = path.join('Source', 'Shaders', 'Builtin');
+        if (glslFile.indexOf(path.normalize(path.join(baseDir, 'Functions'))) === 0) {
             builtinFunctions.push(baseName);
         }
-        else if (glslFile.indexOf(path.normalize(path.join('Source', 'Shaders', 'Builtin', 'Constants'))) === 0) {
+        else if (glslFile.indexOf(path.normalize(path.join(baseDir, 'Constants'))) === 0) {
             builtinConstants.push(baseName);
         }
-        else if (glslFile.indexOf(path.normalize(path.join('Source', 'Shaders', 'Builtin', 'Structs'))) === 0) {
+        else if (glslFile.indexOf(path.normalize(path.join(baseDir, 'Structs'))) === 0) {
             builtinStructs.push(baseName);
         }
 
