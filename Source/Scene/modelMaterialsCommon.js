@@ -373,37 +373,52 @@ define([
                 var lightBaseName = light.baseName;
                 fragmentLightingBlock += '  {\n';
                 var lightColorName = 'u_' + lightBaseName + 'Color';
-                var varyingName;
+                var varyingDirectionName;
+                var varyingPositionName;
                 if(lightType === 'ambient') {
                     hasAmbientLights = true;
                     fragmentLightingBlock += '    ambientLight += ' + lightColorName + ';\n';
                 }
                 else if (hasNormals && (lightingModel !== 'CONSTANT')) {
                     hasNonAmbientLights = true;
-                    varyingName = 'v_' + lightBaseName + 'Direction';
-                    vertexShader += 'varying vec3 ' + varyingName + ';\n';
-                    fragmentShader += 'varying vec3 ' + varyingName + ';\n';
+                    varyingDirectionName = 'v_' + lightBaseName + 'Direction';
+                    varyingPositionName = 'v_' + lightBaseName + 'Position';
 
-                    if (lightType === 'directional') {
-                        vertexShaderMain += '  ' + varyingName + ' = mat3(u_' + lightBaseName + 'Transform) * vec3(0.,0.,1.);\n';
-                        fragmentLightingBlock += '    float attenuation = 1.0;\n';
+                    if (lightType !== 'point') {
+                        vertexShader += 'varying vec3 ' + varyingDirectionName + ';\n';
+                        fragmentShader += 'varying vec3 ' + varyingDirectionName + ';\n';
+
+                        vertexShaderMain += '  ' + varyingDirectionName + ' = mat3(u_' + lightBaseName + 'Transform) * vec3(0.,0.,1.);\n';
+                        fragmentLightingBlock += '    vec3 l = normalize(' + varyingDirectionName + ');\n';
                     }
                     else {
-                        vertexShaderMain += '  ' + varyingName + ' = u_' + lightBaseName + 'Transform[3].xyz - pos.xyz;\n';
-                        fragmentLightingBlock += '    float range = length(' + varyingName + ');\n';
+                        fragmentLightingBlock += '    vec3 ' + varyingDirectionName + ' = ' + varyingPositionName + ' - v_positionEC;\n';
+                        fragmentLightingBlock += '    vec3 l = normalize(' + varyingDirectionName + ');\n';
+                    }
+
+                    if (lightType !== 'directional') {
+                        vertexShader += 'varying vec3 ' + varyingPositionName + ';\n';
+                        fragmentShader += 'varying vec3 ' + varyingPositionName + ';\n';
+
+                        vertexShaderMain += '  ' + varyingPositionName + ' = u_' + lightBaseName + 'Transform[3].xyz;\n';
+                        fragmentLightingBlock += '    float range = length(' + varyingDirectionName + ');\n';
                         fragmentLightingBlock += '    float attenuation = 1.0 / (u_' + lightBaseName + 'Attenuation.x + ';
                         fragmentLightingBlock += '(u_' + lightBaseName + 'Attenuation.y * range) + ';
                         fragmentLightingBlock += '(u_' + lightBaseName + 'Attenuation.z * range * range));\n';
                     }
-
-                    fragmentLightingBlock += '    vec3 l = normalize(' + varyingName + ');\n';
+                    else {
+                        fragmentLightingBlock += '    float attenuation = 1.0;\n';
+                    }
 
                     if (lightType === 'spot') {
-                        fragmentLightingBlock += '    vec4 spotPosition = u_' + lightBaseName + 'InverseTransform * vec4(v_positionEC, 1.0);\n';
-                        fragmentLightingBlock += '    float cosAngle = dot(vec3(0.0,0.0,-1.0), normalize(spotPosition.xyz));\n';
-                        fragmentLightingBlock += '    if (cosAngle < cos(u_' + lightBaseName + 'FallOff.x * 0.5))\n';
+                        fragmentLightingBlock += '    float spotDot = dot(-l, normalize(' + varyingDirectionName + '));\n';
+                        fragmentLightingBlock += '    if (spotDot < cos(u_' + lightBaseName + 'FallOff.x * 0.5))\n';
                         fragmentLightingBlock += '    {\n';
-                        fragmentLightingBlock += '        attenuation *= max(0.0, pow(cosAngle, u_' + lightBaseName + 'FallOff.y));\n';
+                        fragmentLightingBlock += '      attenuation = 0.0;\n';
+                        fragmentLightingBlock += '    }\n';
+                        fragmentLightingBlock += '    else\n';
+                        fragmentLightingBlock += '    {\n';
+                        fragmentLightingBlock += '        attenuation *= max(0.0, pow(spotDot, u_' + lightBaseName + 'FallOff.y));\n';
                     }
 
                     fragmentLightingBlock += '    diffuseLight += ' + lightColorName + '* max(dot(normal,l), 0.) * attenuation;\n';
