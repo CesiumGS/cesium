@@ -2161,11 +2161,106 @@ define([
         // GLTF_SPEC: Support SAMPLER_CUBE. https://github.com/KhronosGroup/glTF/issues/40
     }
 
-    function getUniformFunctionFromSource(source, model) {
+    var gltfUniformsFromNode = {
+        MODEL : function(uniformState, model, runtimeNode) {
+            return function() {
+                return runtimeNode.computedMatrix;
+            };
+        },
+        VIEW : function(uniformState, model, runtimeNode) {
+            return function() {
+                return uniformState.view;
+            };
+        },
+        PROJECTION : function(uniformState, model, runtimeNode) {
+            return function() {
+                return uniformState.projection;
+            };
+        },
+        MODELVIEW : function(uniformState, model, runtimeNode) {
+            var mv = new Matrix4();
+            return function() {
+                return Matrix4.multiplyTransformation(uniformState.view, runtimeNode.computedMatrix, mv);
+            };
+        },
+        CESIUM_RTC_MODELVIEW : function(uniformState, model, runtimeNode) {
+            // CESIUM_RTC extension
+            var mvRtc = new Matrix4();
+            return function() {
+                Matrix4.multiplyTransformation(uniformState.view, runtimeNode.computedMatrix, mvRtc);
+                return Matrix4.setTranslation(mvRtc, model._rtcCenterEye, mvRtc);
+            };
+        },
+        MODELVIEWPROJECTION : function(uniformState, model, runtimeNode) {
+            var mvp = new Matrix4();
+            return function() {
+                Matrix4.multiplyTransformation(uniformState.view, runtimeNode.computedMatrix, mvp);
+                return Matrix4.multiply(uniformState._projection, mvp, mvp);
+            };
+        },
+        MODELINVERSE : function(uniformState, model, runtimeNode) {
+            var mInverse = new Matrix4();
+            return function() {
+                return Matrix4.inverse(runtimeNode.computedMatrix, mInverse);
+            };
+        },
+        VIEWINVERSE : function(uniformState, model) {
+            return function() {
+                return uniformState.inverseView;
+            };
+        },
+        PROJECTIONINVERSE : function(uniformState, model, runtimeNode) {
+            return function() {
+                return uniformState.inverseProjection;
+            };
+        },
+        MODELVIEWINVERSE : function(uniformState, model, runtimeNode) {
+            var mv = new Matrix4();
+            var mvInverse = new Matrix4();
+            return function() {
+                Matrix4.multiplyTransformation(uniformState.view, runtimeNode.computedMatrix, mv);
+                return Matrix4.inverse(mv, mvInverse);
+            };
+        },
+        MODELVIEWPROJECTIONINVERSE : function(uniformState, model, runtimeNode) {
+            var mvp = new Matrix4();
+            var mvpInverse = new Matrix4();
+            return function() {
+                Matrix4.multiplyTransformation(uniformState.view, runtimeNode.computedMatrix, mvp);
+                Matrix4.multiply(uniformState._projection, mvp, mvp);
+                return Matrix4.inverse(mvp, mvpInverse);
+            };
+        },
+        MODELINVERSETRANSPOSE : function(uniformState, model, runtimeNode) {
+            var mInverse = new Matrix4();
+            var mInverseTranspose = new Matrix3();
+            return function() {
+                return Matrix4.inverse(runtimeNode.computedMatrix, mInverse);
+                Matrix4.getRotation(mInverse, mInverseTranspose);
+                return Matrix3.transpose(mInverseTranspose, mInverseTranspose);
+            };
+        },
+        MODELVIEWINVERSETRANSPOSE : function(uniformState, model, runtimeNode) {
+            var mv = new Matrix4();
+            var mvInverse = new Matrix4();
+            var mvInverseTranspose = new Matrix3();
+            return function() {
+                Matrix4.multiplyTransformation(uniformState.view, runtimeNode.computedMatrix, mv);
+                Matrix4.inverse(mv, mvInverse);
+                Matrix4.getRotation(mvInverse, mvInverseTranspose);
+                return Matrix3.transpose(mvInverseTranspose, mvInverseTranspose);
+            };
+        },
+        VIEWPORT : function(uniformState, model, runtimeNode) {
+            return function() {
+                return uniformState.viewportCartesian4;
+            };
+        }
+    };
+
+    function getUniformFunctionFromSource(source, model, semantic, uniformState) {
         var runtimeNode = model._runtime.nodes[source];
-        return function() {
-            return runtimeNode.computedMatrix;
-        };
+        return gltfUniformsFromNode[semantic](uniformState, model, runtimeNode);
     }
 
     function createUniformMaps(model, context) {
@@ -2220,6 +2315,10 @@ define([
                             var uv = gltfUniformFunctions[parameter.type](instanceParameters[parameterName], model);
                             uniformMap[name] = uv.func;
                             uniformValues[parameterName] = uv;
+                        } else if (defined(parameter.node)) {
+                            // GLTF_SPEC: Use semantic to know which matrix to use from the node, e.g., model vs. model-view
+                            // https://github.com/KhronosGroup/glTF/issues/93
+                            uniformMap[name] = getUniformFunctionFromSource(parameter.node, model, parameter.semantic, context.uniformState);
                         } else if (defined(parameter.semantic)) {
                             if (parameter.semantic !== 'JOINTMATRIX') {
                                 // Map glTF semantic to Cesium automatic uniform
@@ -2227,10 +2326,6 @@ define([
                             } else {
                                 jointMatrixUniformName = name;
                             }
-                        } else if (defined(parameter.node)) {
-                            // GLTF_SPEC: Use semantic to know which matrix to use from the node, e.g., model vs. model-view
-                            // https://github.com/KhronosGroup/glTF/issues/93
-                            uniformMap[name] = getUniformFunctionFromSource(parameter.node, model);
                         } else if (defined(parameter.value)) {
                             // Technique value that isn't overridden by a material
                             var uv2 = gltfUniformFunctions[parameter.type](parameter.value, model);
