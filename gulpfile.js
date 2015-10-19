@@ -206,7 +206,7 @@ gulp.task('instrumentForCoverage', ['build'], function(done) {
     });
 });
 
-gulp.task('jsHint', function() {
+gulp.task('jsHint', ['build'], function() {
     return gulp.src(jsHintFiles)
         .pipe(jshint.extract('auto'))
         .pipe(jshint())
