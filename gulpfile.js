@@ -488,6 +488,7 @@ function combineWorkers(debug, optimizer, combineOutput) {
         globby(['Source/Workers/*.js',
                 '!Source/Workers/cesiumWorkerBootstrapper.js',
                 '!Source/Workers/transferTypedArrayTest.js',
+                '!Source/Workers/createTaskProcessorWorker.js',
                 '!Source/ThirdParty/Workers/*.js']).then(function(files) {
             return Promise.all(files.map(function(file) {
                 return requirejsOptimize({
