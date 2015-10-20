@@ -281,7 +281,7 @@ define([
         this._debugShaders = getExtension(gl, ['WEBGL_debug_shaders']);
 
         var textureFilterAnisotropic = options.allowTextureFilterAnisotropic ? getExtension(gl, ['EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic']) : undefined;
-        this._textureFilterAnisotropic = !!textureFilterAnisotropic;
+        this._textureFilterAnisotropic = textureFilterAnisotropic;
         ContextLimits._maximumTextureFilterAnisotropy = defined(textureFilterAnisotropic) ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1.0;
 
         var glCreateVertexArray;
@@ -584,7 +584,7 @@ define([
 
         textureFilterAnisotropic : {
             get : function() {
-                return this._textureFilterAnisotropic;
+                return !!this._textureFilterAnisotropic;
             }
         },
 
