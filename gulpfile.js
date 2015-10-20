@@ -289,8 +289,7 @@ gulp.task('generateStubs', ['build'], function(done) {
 
     globby.sync(sourceFiles).forEach(function(file) {
         file = path.relative('Source', file);
-        var moduleId = file.replace(/\\/g, '/');
-        moduleId = moduleId.substring(0, moduleId.lastIndexOf('.'));
+        var moduleId = filePathToModuleId(file);
 
         var baseName = path.basename(file);
         var propertyName = baseName.substring(0, baseName.lastIndexOf('.'));
@@ -478,9 +477,9 @@ function combineWorkers(debug, optimizer, combineOutput) {
                     pragmas : {
                         debug : debug
                     },
-                    baseUrl : '.',
+                    baseUrl : 'Source',
                     skipModuleInsertion : true,
-                    include : file.slice(0, -3),
+                    include : filePathToModuleId(path.relative('Source', file)),
                     out : path.join(combineOutput, path.relative('Source', file))
                 });
             }));
@@ -499,8 +498,8 @@ function combineWorkers(debug, optimizer, combineOutput) {
                     pragmas : {
                         debug : debug
                     },
-                    baseUrl : '.',
-                    include : file.slice(0, -3),
+                    baseUrl : 'Source',
+                    include : filePathToModuleId(path.relative('Source', file)),
                     out : path.join(combineOutput, path.relative('Source', file))
                 });
             }));
@@ -687,19 +686,19 @@ function createCesiumJs() {
 
     globby.sync(sourceFiles).forEach(function(file) {
         file = path.relative('Source', file);
-        var moduleId = path.normalize(file);
-        moduleId = moduleId.substring(0, moduleId.lastIndexOf('.'));
+        var moduleId = file;
+        moduleId = filePathToModuleId(moduleId);
 
         var baseName = path.basename(file);
         var assignmentName = baseName.substring(0, baseName.lastIndexOf('.'));
         assignmentName = "['" + assignmentName + "']";
-        if (moduleId.indexOf(path.normalize('Source\\Shaders\\')) === 0) {
+        if (moduleId.indexOf('Source/Shaders/') === 0) {
             assignmentName = '._shaders' + assignmentName;
         }
 
         var parameterName = moduleId.replace(nonIdentifierRegexp, '_');
 
-        moduleIds.push("'./" + moduleId.replace(/\\/g, '/') + "'");
+        moduleIds.push("'./" + moduleId + "'");
         parameters.push(parameterName);
         assignments.push('Cesium' + assignmentName + ' = ' + parameterName + ';');
     });
@@ -851,6 +850,10 @@ function buildCesiumViewer() {
     });
 
     return promise;
+}
+
+function filePathToModuleId(moduleId) {
+    return moduleId.substring(0, moduleId.lastIndexOf('.')).replace(/\\/g, '/');
 }
 
 function requirejsOptimize(config) {
