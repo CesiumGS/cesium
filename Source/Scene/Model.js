@@ -842,15 +842,6 @@ define([
     }
 
     /**
-     * Get the default cache key from the provided url
-     *
-     * @private
-     */
-    Model._getDefaultCacheKey = function(url) {
-        return getAbsoluteURL(url);
-    };
-
-    /**
      * <p>
      * Creates a model from a glTF asset.  When the model is ready to render, i.e., when the external binary, image,
      * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyPromise} is resolved.
@@ -922,7 +913,7 @@ define([
         var url = options.url;
         // If no cache key is provided, use the absolute URL, since two URLs with
         // different relative paths could point to the same model.
-        var cacheKey = defaultValue(options.cacheKey, Model._getDefaultCacheKey(url));
+        var cacheKey = defaultValue(options.cacheKey, getAbsoluteURL(url));
 
         options = clone(options);
         options.basePath = getBasePath(url);

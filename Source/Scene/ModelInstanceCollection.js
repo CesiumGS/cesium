@@ -141,7 +141,6 @@ define([
         this._headers = options.headers;
         this._gltf = options.gltf;
         this._basePath = options.basePath;
-        this._cacheKey = options.cacheKey;
         this._asynchronous = options.asynchronous;
 
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
@@ -524,9 +523,10 @@ define([
             headers : collection._headers,
             gltf : collection._gltf,
             basePath : collection._basePath,
-            cacheKey : collection._cacheKey,
+            cacheKey : undefined,
             asynchronous : collection._asynchronous,
             allowPicking : collection._allowPicking,
+            releaseGltfJson : false,
             precreatedAttributes : undefined,
             vertexShaderLoaded : undefined,
             fragmentShaderLoaded : undefined,
@@ -586,14 +586,6 @@ define([
                 }
             };
 
-            // Instanced models will create different renderer resources, so change the cache key.
-            var cacheKey = collection._cacheKey;
-            var url = collection._url;
-            if (defined(url)) {
-                cacheKey = defaultValue(cacheKey, Model._getDefaultCacheKey(url));
-                cacheKey += '#instanced';
-            }
-
             modelOptions.precreatedAttributes = instancedAttributes;
             modelOptions.vertexShaderLoaded = getVertexShaderCallback(collection);
             modelOptions.fragmentShaderLoaded = getFragmentShaderCallback(collection);
@@ -601,8 +593,11 @@ define([
             modelOptions.pickVertexShaderLoaded = getPickVertexShaderCallback(collection);
             modelOptions.pickFragmentShaderLoaded = getPickFragmentShaderCallback(collection);
             modelOptions.pickUniformMapLoaded = getPickUniformMapCallback(collection);
-            modelOptions.cacheKey = cacheKey;
             modelOptions.ignoreCommands = true;
+            modelOptions.releaseGltfJson = true;
+
+            // Collections cannot share the same models, so create a unique cache key
+            modelOptions.cacheKey = 'ModelInstanceCollection' + Math.random();
         } else {
             modelOptions.fragmentShaderLoaded = getFragmentShaderNonInstancedCallback();
         }
@@ -637,13 +632,11 @@ define([
         var allowPicking = collection.allowPicking;
 
         var boundingVolume = collection._boundingVolume;
-        var boundingVolumeModel = collection._boundingVolumeModel;
 
         if (collection._instancingSupported) {
             for (i = 0; i < commandsLength; ++i) {
                 command = clone(drawCommands[i]);
                 command.instanceCount = instancesLength;
-                command.modelMatrix = boundingVolumeModel;
                 command.boundingVolume = boundingVolume;
                 command.cull = collection._cull;
                 collection._drawCommands.push(command);
@@ -651,7 +644,6 @@ define([
                 if (allowPicking) {
                     command = clone(pickCommands[i]);
                     command.instanceCount = instancesLength;
-                    command.modelMatrix = boundingVolumeModel;
                     command.boundingVolume = boundingVolume;
                     command.cull = collection._cull;
                     collection._pickCommands.push(command);

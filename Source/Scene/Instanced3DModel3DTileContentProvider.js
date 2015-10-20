@@ -162,7 +162,6 @@ define([
             } else {
                 collectionOptions.gltf = gltfView;
                 collectionOptions.basePath = that._url;
-                collectionOptions.cacheKey = that._url;
             }
 
             var ellipsoid = Ellipsoid.WGS84;
