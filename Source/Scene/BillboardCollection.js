@@ -1256,6 +1256,9 @@ define([
 
                 if (properties[IMAGE_INDEX_INDEX] || properties[PIXEL_OFFSET_INDEX] || properties[HORIZONTAL_ORIGIN_INDEX] || properties[VERTICAL_ORIGIN_INDEX] || properties[SHOW_INDEX]) {
                     writers.push(writeCompressedAttrib0);
+                    if (this._instanced) {
+                        writers.push(writeEyeOffset);
+                    }
                 }
 
                 if (properties[IMAGE_INDEX_INDEX] || properties[ALIGNED_AXIS_INDEX] || properties[TRANSLUCENCY_BY_DISTANCE_INDEX]) {
