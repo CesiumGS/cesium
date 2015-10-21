@@ -2848,6 +2848,11 @@ define([
             resources.textures = cachedResources.textures;
             resources.samplers = cachedResources.samplers;
             resources.renderStates = cachedResources.renderStates;
+
+            // Vertex arrays are unique to this model, create instead of using the cache.
+            if (defined(model._precreatedAttributes)) {
+                createVertexArrays(model, context);
+            }
         } else {
             createDecompressedViews(model, context);
             createBuffers(model, context, frameState); // using glTF bufferViews
@@ -3302,6 +3307,11 @@ define([
                 cachedResources.renderStates = resources.renderStates;
                 cachedResources.ready = true;
 
+                // Vertex arrays are unique to this model, do not store in cache.
+                if (defined(this._precreatedAttributes)) {
+                    cachedResources.vertexArrays = {};
+                }
+
                 if (this.releaseGltfJson) {
                     releaseCachedGltf(this);
                 }
@@ -3422,6 +3432,11 @@ define([
      * model = model && model.destroy();
      */
     Model.prototype.destroy = function() {
+        // Vertex arrays are unique to this model, destroy here.
+        if (defined(this._precreatedAttributes)) {
+            destroy(this._rendererResources.vertexArrays);
+        }
+
         this._rendererResources = undefined;
         this._cachedRendererResources = this._cachedRendererResources && this._cachedRendererResources.release();
 

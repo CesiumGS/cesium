@@ -526,7 +526,6 @@ define([
             cacheKey : undefined,
             asynchronous : collection._asynchronous,
             allowPicking : collection._allowPicking,
-            releaseGltfJson : false,
             precreatedAttributes : undefined,
             vertexShaderLoaded : undefined,
             fragmentShaderLoaded : undefined,
@@ -594,10 +593,10 @@ define([
             modelOptions.pickFragmentShaderLoaded = getPickFragmentShaderCallback(collection);
             modelOptions.pickUniformMapLoaded = getPickUniformMapCallback(collection);
             modelOptions.ignoreCommands = true;
-            modelOptions.releaseGltfJson = true;
 
-            // Collections cannot share the same models, so create a unique cache key
-            modelOptions.cacheKey = 'ModelInstanceCollection' + Math.random();
+            if (defined(collection._url)) {
+                modelOptions.cacheKey = collection._url + '#instanced';
+            }
         } else {
             modelOptions.fragmentShaderLoaded = getFragmentShaderNonInstancedCallback();
         }
