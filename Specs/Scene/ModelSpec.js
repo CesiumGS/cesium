@@ -43,6 +43,7 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var boxUrl = './Data/Models/Box/CesiumBoxTest.gltf';
+    var box0_8Url = './Data/Models/Box/CesiumBoxTest-0_8.gltf';
     var texturedBoxUrl = './Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf';
     var texturedBoxSeparateUrl = './Data/Models/Box-Textured-Separate/CesiumTexturedBoxTest.gltf';
     var texturedBoxCustomUrl = './Data/Models/Box-Textured-Custom/CesiumTexturedBoxTest.gltf';
@@ -451,6 +452,13 @@ defineSuite([
     });
 
     ///////////////////////////////////////////////////////////////////////////
+
+    it('loads a glTF v0.8 model', function() {
+        return loadModel(box0_8Url).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
 
     it('renders texturedBoxCustom (all uniform semantics)', function() {
         return loadModel(texturedBoxCustomUrl).then(function(m) {
