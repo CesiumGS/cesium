@@ -936,9 +936,13 @@ define([
         camera._setTransform(currentTransform);
     }
 
-    function directionUpToHeadingPitchRoll(camera, position, orientation) {
-        var direction = Cartesian3.clone(orientation.direction, scratchFlyDirection);
-        var up = Cartesian3.clone(orientation.up, scratchFlyUp);
+    var scratchToHPRDirection = new Cartesian3();
+    var scratchToHPRUp = new Cartesian3();
+    var scratchToHPRRight = new Cartesian3();
+
+    function directionUpToHeadingPitchRoll(camera, position, orientation, result) {
+        var direction = Cartesian3.clone(orientation.direction, scratchToHPRDirection);
+        var up = Cartesian3.clone(orientation.up, scratchToHPRUp);
 
         if (camera._scene.mode === SceneMode.SCENE3D) {
             var ellipsoid = camera._projection.ellipsoid;
@@ -949,25 +953,36 @@ define([
             Matrix4.multiplyByPointAsVector(invTransform, up, up);
         }
 
-        var right = Cartesian3.cross(direction, up, scratchFlyRight);
+        var right = Cartesian3.cross(direction, up, scratchToHPRRight);
 
-        return {
-            heading: getHeading(direction, up),
-            pitch: getPitch(direction),
-            roll: getRoll(direction, up, right)
-        };
+        result.heading = getHeading(direction, up);
+        result.pitch = getPitch(direction);
+        result.roll = getRoll(direction, up, right);
+
+        return result;
     }
+
+    var scratchSetViewOptions = {
+        destination : undefined,
+        orientation : {
+            direction : undefined,
+            up : undefined,
+            heading : undefined,
+            pitch : undefined,
+            roll : undefined
+        },
+        endTransform : undefined
+    };
 
     /**
      * Sets the camera position, orientation and transform.
      *
      * @param {Object} options Object with the following properties:
-     * @param {Object} options Object with the following properties:
      * @param {Cartesian3|Rectangle} options.destination The final position of the camera in WGS84 (world) coordinates or a rectangle that would be visible from a top-down view.
      * @param {Object} [options.orientation] An object that contains either direction and up properties or heading, pith and roll properties. By default, the direction will point
      * towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D. The up direction will point towards local north in 3D and in the positive
      * y direction in Columbus view or 2D.
-     * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
+     * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame of the camera.
      *
      * @example
      * // 1. Set position with a top-down view
@@ -976,7 +991,7 @@ define([
      * });
      *
      * // 2 Set view with heading, pitch and roll
-     * `({
+     * viewer.camera.setView({
      *     destination : cartesianPosition,
      *     orientation: {
      *         heading : Cesium.Math.toRadians(90.0), // east, default value is 0.0 (north)
@@ -986,7 +1001,7 @@ define([
      * });
      *
      * // 3. Change heading, pitch and roll with the camera position remaining the same.
-     * camera.setView({
+     * viewer.camera.setView({
      *     orientation: {
      *         heading : Cesium.Math.toRadians(90.0), // east, default value is 0.0 (north)
      *         pitch : Cesium.Math.toRadians(-90),    // default value (looking down)
@@ -1011,31 +1026,44 @@ define([
      */
     Camera.prototype.setView = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var orientation = defaultValue(options.orientation, {});
-        if (defined(options.heading) || defined(options.pitch) || defined(options.roll)){
+        var orientation = defaultValue(options.orientation, defaultValue.EMPTY_OBJECT);
+
+        var newOptions = scratchSetViewOptions;
+        var newOrientation = newOptions.orientation;
+
+        if (defined(options.heading) || defined(options.pitch) || defined(options.roll)) {
             deprecationWarning('Camera.setView options', 'options.heading/pitch/roll has been moved to options.orientation.heading/pitch/roll.');
-            orientation.heading = defaultValue(options.heading, this.heading);
-            orientation.pitch = defaultValue(options.pitch, this.pitch);
-            orientation.roll = defaultValue(options.roll, this.roll);
+            newOrientation.heading = defaultValue(options.heading, this.heading);
+            newOrientation.pitch = defaultValue(options.pitch, this.pitch);
+            newOrientation.roll = defaultValue(options.roll, this.roll);
+        } else {
+            newOrientation.heading = orientation.heading;
+            newOrientation.pitch = orientation.pitch;
+            newOrientation.roll = orientation.roll;
+            newOrientation.direction = orientation.direction;
+            newOrientation.up = orientation.up;
         }
-        if (defined(options.positionCartographic)){
+
+        if (defined(options.position)) {
             deprecationWarning('Camera.setView options', 'options.position has been renamed to options.destination.');
-        }
-        if (defined(options.position)){
-            deprecationWarning('Camera.setView options', 'options.positionCartographic has been deprecated.  Convert to a Cartesian3 and use options.position instead.');
             options.destination = options.position;
+        } else if (defined(options.positionCartographic)) {
+            deprecationWarning('Camera.setView options', 'options.positionCartographic has been deprecated.  Convert to a Cartesian3 and use options.position instead.');
+            var projection = this._projection;
+            var ellipsoid = projection.ellipsoid;
+            options.destination = ellipsoid.cartographicToCartesian(options.positionCartographic, scratchSetViewCartesian);
+        } else {
+            newOptions.destination = options.destination;
         }
+
+        newOptions.endTransform = options.endTransform;
+
+        options = newOptions;
+        orientation = newOrientation;
 
         var mode = this._mode;
         if (mode === SceneMode.MORPHING) {
             return;
-        }
-        var projection = this._projection;
-        var ellipsoid = projection.ellipsoid;
-        var destination = options.destination;
-        if (!defined(destination) && defined(options.positionCartographic)){
-            destination = ellipsoid.cartographicToCartesian(options.positionCartographic);
-
         }
 
         if (defined(options.endTransform)) {
@@ -1043,14 +1071,14 @@ define([
         }
 
         var convert = true;
-        destination = defaultValue(destination, Cartesian3.clone(this.positionWC, scratchSetViewCartesian));
+        var destination = defaultValue(options.destination, Cartesian3.clone(this.positionWC, scratchSetViewCartesian));
         if (defined(destination) && defined(destination.west)) {
-            destination = this.getRectangleCameraCoordinates(destination, new Cartesian3());
+            destination = this.getRectangleCameraCoordinates(destination, scratchSetViewCartesian);
             convert = false;
         }
 
         if (defined(orientation.direction)) {
-            orientation = directionUpToHeadingPitchRoll(this, destination, orientation);
+            orientation = directionUpToHeadingPitchRoll(this, destination, orientation, scratchSetViewOptions.orientation);
         }
 
         var heading = defaultValue(orientation.heading, 0.0);
@@ -2027,7 +2055,11 @@ define([
         }
         //>>includeEnd('debug');
         var mode = this._mode;
-        result = defaultValue(result, new Cartesian3());
+
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+
         if (mode === SceneMode.SCENE3D) {
             return rectangleCameraPosition3D(this, rectangle, result);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
@@ -2396,10 +2428,6 @@ define([
         easingFunction : undefined
     };
 
-    var scratchFlyDirection = new Cartesian3();
-    var scratchFlyUp = new Cartesian3();
-    var scratchFlyRight = new Cartesian3();
-
     /**
      * Flies the camera from its current position to a new position.
      *
@@ -2457,21 +2485,25 @@ define([
             throw new DeveloperError('destination is required.');
         }
         //>>includeEnd('debug');
+
         var mode = this._mode;
         if (mode === SceneMode.MORPHING) {
             return;
         }
+
         var orientation = defaultValue(options.orientation, defaultValue.EMPTY_OBJECT);
         if (defined(orientation.direction)) {
-            orientation = directionUpToHeadingPitchRoll(this, destination, orientation);
+            orientation = directionUpToHeadingPitchRoll(this, destination, orientation, scratchSetViewOptions.orientation);
         }
 
         if (defined(options.duration) && options.duration <= 0.0) {
-            this.setView({
-                position: options.destination,
-                orientation: orientation,
-                endTransform: options.endTransform
-            });
+            var setViewOptions = scratchSetViewOptions;
+            setViewOptions.destination = options.destination;
+            setViewOptions.orientation.heading = orientation.heading;
+            setViewOptions.orientation.pitch = orientation.pitch;
+            setViewOptions.orientation.roll = orientation.roll;
+            setViewOptions.endTransform = options.endTransform;
+            this.setView(setViewOptions);
             if (typeof options.complete === 'function'){
                 options.complete();
             }

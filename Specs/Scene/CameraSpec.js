@@ -494,7 +494,7 @@ defineSuite([
         camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
 
         var roll = camera.roll;
-        var positionCartographic = camera.positionCartographic;
+        var positionCartographic = Cartographic.clone(camera.positionCartographic);
 
         var newRoll = CesiumMath.PI_OVER_FOUR;
         camera.setView({
