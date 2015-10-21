@@ -448,7 +448,7 @@ define([
             fragmentLightingBlock += '  ambientLight += vec3(0.1, 0.1, 0.1);\n';
         }
 
-        if (!hasNonAmbientLights) {
+        if (!hasNonAmbientLights && (lightingModel !== 'CONSTANT')) {
             fragmentLightingBlock += '  vec3 l = normalize(czm_sunDirectionEC);\n';
             fragmentLightingBlock += '  diffuseLight += vec3(1.0, 1.0, 1.0) * max(dot(normal,l), 0.);\n';
 
@@ -497,7 +497,7 @@ define([
 
             if (hasSpecular) {
                 if (techniqueParameters.specular.type === WebGLConstants.SAMPLER_2D) {
-                    fragmentShader += '  vec3 specular = texture2D(u_specular, ' + v_texcoord + ');\n';
+                    fragmentShader += '  vec3 specular = texture2D(u_specular, ' + v_texcoord + ').rgb;\n';
                 }
                 else {
                     fragmentShader += '  vec3 specular = u_specular.rgb;\n';
@@ -524,7 +524,7 @@ define([
 
         if (defined(techniqueParameters.emission)) {
             if (techniqueParameters.emission.type === WebGLConstants.SAMPLER_2D) {
-                fragmentShader += '  vec3 emission = texture2D(u_emission, ' + v_texcoord + ');\n';
+                fragmentShader += '  vec3 emission = texture2D(u_emission, ' + v_texcoord + ').rgb;\n';
             }
             else {
                 fragmentShader += '  vec3 emission = u_emission.rgb;\n';
@@ -534,7 +534,7 @@ define([
 
         if (defined(techniqueParameters.ambient)) {
             if (techniqueParameters.ambient.type === WebGLConstants.SAMPLER_2D) {
-                fragmentShader += '  vec3 ambient = texture2D(u_ambient, ' + v_texcoord + ');\n';
+                fragmentShader += '  vec3 ambient = texture2D(u_ambient, ' + v_texcoord + ').rgb;\n';
             }
             else {
                 fragmentShader += '  vec3 ambient = u_ambient.rgb;\n';

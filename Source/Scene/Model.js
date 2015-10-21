@@ -2235,7 +2235,7 @@ define([
             var mInverse = new Matrix4();
             var mInverseTranspose = new Matrix3();
             return function() {
-                return Matrix4.inverse(runtimeNode.computedMatrix, mInverse);
+                Matrix4.inverse(runtimeNode.computedMatrix, mInverse);
                 Matrix4.getRotation(mInverse, mInverseTranspose);
                 return Matrix3.transpose(mInverseTranspose, mInverseTranspose);
             };
