@@ -280,7 +280,7 @@ define([
      * @exception {DeveloperError} drawingBufferDimensions.y must be greater than zero.
      *
      * @example
-     * var pixelSize = camera.frustum.getPixelSize(new Cesium.Cartesian2(canvas.clientWidth, canvas.clientHeight));
+     * var pixelSize = camera.frustum.getPixelSize(new Cesium.Cartesian2(scene.drawingBufferWidth, scene.drawingBufferHeight));
      *
      * @deprecated
      */
@@ -330,7 +330,7 @@ define([
      * @example
      * // Example 1
      * // Get the width and height of a pixel.
-     * var pixelSize = camera.frustum.getPixelDimensions(canvas.clientWidth, canvas.clientHeight, 0.0, new Cartesian2());
+     * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 0.0, new Cartesian2());
      */
     OrthographicFrustum.prototype.getPixelDimensions = function(drawingBufferWidth, drawingBufferHeight, distance, result) {
         update(this);
