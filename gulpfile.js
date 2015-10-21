@@ -296,7 +296,7 @@ gulp.task('generateStubs', ['build'], function(done) {
 
         var baseName = path.basename(file);
         var propertyName = baseName.substring(0, baseName.lastIndexOf('.'));
-        propertyName = "['" + String(propertyName) + "']";
+        propertyName = "['" + propertyName + "']";
 
         contents += '\
 define(\'' + moduleId + '\', function() {\n\
@@ -747,7 +747,7 @@ function createGalleryList() {
     globby.sync(fileList).forEach(function(file) {
         var demo = file.substring(24, file.lastIndexOf('.')).replace('\\', '/');
         var demoObject = {
-            name : String(demo),
+            name : demo,
             date : fs.statSync(file).mtime.getTime()
         };
 
