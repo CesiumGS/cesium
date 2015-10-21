@@ -16,12 +16,18 @@ Change Log
   * Deprecated `PerspectiveOffCenterFrustum.getPixelSize`, use `PerspectiveOffCenterFrustum.getPixelDimensions` instead. It will be removed in 1.17.
   * Deprecated `Scene\HeadingPitchRange`, use `Core\HeadingPitchRange` instead. It will be removed in 1.17.
   * Deprecated `jsonp` use `loadJsonp` instead. It will be removed in 1.17.
+  * Deprecated `Camera.viewRectangle`, use `Camera.setView({destination: rectangle})` instead. It will be removed in 1.17.
+  * The following options to `Camera.setView` have been deprecated and will be removed in 1.17:
+    * `position`: use `destination` instead.
+    * `positionCartographic`: convert to a `Cartesian3` and use `destination` instead.
+    * `heading`, `pitch` and `roll`: use `orientation.heading/pitch/roll` instead.  
 * Decreased GPU memory usage in `BillboardCollection` and `LabelCollection` by using the WebGL ANGLE_instanced_arrays extension.
 * Added CZML examples to Sandcastle.  See the new CZML tab.
 * Fixed token issue in `ArcGisMapServerImageryProvider`.
 * `ImageryLayerFeatureInfo` now has an `imageryLayer` property, indicating the layer that contains the feature.
 * Added `BoxOutlineGeometry.fromAxisAlignedBoundingBox` and `BoxGeometry.fromAxisAlignedBoundingBox` functions.
 * The WebGL setting of `failIfMajorPerformanceCaveat` now defaults to `false`, which is the official WebGL default. This improves compatibility with out-of-date drivers and remote desktop sessions. Cesium will run slower in these cases instead of simply failing to load. 
+* Changed `Camera.setView` to take the same parameter options as `Camera.flyTo`.  `options.destination` takes a rectangle, `options.orientation` works with heading/pitch/roll or direction/up, and `options.endTransform` was added.
 
 ### 1.14 - 2015-10-01
 
