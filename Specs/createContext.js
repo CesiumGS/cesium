@@ -40,7 +40,6 @@ define([
         options.webgl = clone(defaultValue(options.webgl, {}));
         options.webgl.alpha = defaultValue(options.webgl.alpha, true);
         options.webgl.antialias = defaultValue(options.webgl.antialias, false);
-        options.webgl.failIfMajorPerformanceCaveat = false;
 
 
         var canvas = createCanvas(canvasWidth, canvasHeight);
