@@ -93,16 +93,10 @@ define([
                 gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer._getBuffer());
                 gl.vertexAttribPointer(index, this.componentsPerAttribute, this.componentDatatype, this.normalize, this.strideInBytes, this.offsetInBytes);
                 gl.enableVertexAttribArray(index);
-                if (this.instanceDivisor > 0) {
-                    context.glVertexAttribDivisor(index, this.instanceDivisor);
-                }
             };
 
             attr.disableVertexAttribArray = function(gl) {
                 gl.disableVertexAttribArray(this.index);
-                if (this.instanceDivisor > 0) {
-                    context.glVertexAttribDivisor(index, 0);
-                }
             };
         } else {
             // Less common case: value array for the same data for each vertex
@@ -717,6 +711,7 @@ define([
             }
         } else {
             bind(this._gl, this._attributes, this._indexBuffer);
+            setVertexAttribDivisor(this);
         }
     };
 
