@@ -296,8 +296,7 @@ gulp.task('generateStubs', ['build'], function(done) {
         file = path.relative('Source', file);
         var moduleId = filePathToModuleId(file);
 
-        var baseName = path.basename(file);
-        var propertyName = baseName.substring(0, baseName.lastIndexOf('.'));
+        var propertyName = path.basename(file, path.extname(file));
         propertyName = "['" + propertyName + "']";
 
         contents += '\
@@ -694,8 +693,7 @@ function createCesiumJs() {
         var moduleId = file;
         moduleId = filePathToModuleId(moduleId);
 
-        var baseName = path.basename(file);
-        var assignmentName = baseName.substring(0, baseName.lastIndexOf('.'));
+        var assignmentName = path.basename(file, path.extname(file));
         assignmentName = "['" + assignmentName + "']";
         if (moduleId.indexOf('Source/Shaders/') === 0) {
             assignmentName = '._shaders' + assignmentName;
@@ -729,8 +727,7 @@ function createSpecList() {
     var specs = [];
 
     specFiles.forEach(function(file) {
-        var spec = file.substring(0, file.lastIndexOf('.')).replace('\\', '/');
-        specs.push("'" + spec + "'");
+        specs.push("'" + filePathToModuleId(file) + "'");
     });
 
     var contents = 'var specs = [' + specs.join(',') + '];';
@@ -747,7 +744,7 @@ function createGalleryList() {
     }
 
     globby.sync(fileList).forEach(function(file) {
-        var demo = file.substring(24, file.lastIndexOf('.')).replace('\\', '/');
+        var demo = filePathToModuleId(path.relative('Apps/Sandcastle/gallery', file));
         var demoObject = {
             name : demo,
             date : fs.statSync(file).mtime.getTime()
