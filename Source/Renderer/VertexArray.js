@@ -666,7 +666,8 @@ define([
 
     // Workaround for ANGLE, where the attribute divisor seems to be part of the global state instead
     // of the VAO state. This function is called when the vao is bound, and should be removed
-    // once the ANGLE issue is resolved.
+    // once the ANGLE issue is resolved. Setting the divisor should normally happen in vertexAttrib and
+    // disableVertexAttribArray.
     function setVertexAttribDivisor(vertexArray) {
         var context = vertexArray._context;
         var hasInstancedAttributes = vertexArray._hasInstancedAttributes;
@@ -706,11 +707,11 @@ define([
     VertexArray.prototype._bind = function() {
         if (defined(this._vao)) {
             this._context.glBindVertexArray(this._vao);
-            if (this._context.instancedArrays) {
-                setVertexAttribDivisor(this);
-            }
         } else {
             bind(this._gl, this._attributes, this._indexBuffer);
+        }
+
+        if (this._context.instancedArrays) {
             setVertexAttribDivisor(this);
         }
     };
