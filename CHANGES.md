@@ -30,6 +30,8 @@ Change Log
 * The WebGL setting of `failIfMajorPerformanceCaveat` now defaults to `false`, which is the official WebGL default. This improves compatibility with out-of-date drivers and remote desktop sessions. Cesium will run slower in these cases instead of simply failing to load. 
 * Changed `Camera.setView` to take the same parameter options as `Camera.flyTo`.  `options.destination` takes a rectangle, `options.orientation` works with heading/pitch/roll or direction/up, and `options.endTransform` was added.
 * Fixed the issue where the camera inertia takes too long to finish causing the camera move events to fire after it appears to. [2839](https://github.com/AnalyticalGraphicsInc/cesium/issues/2839)
+* Updated `requirejs` from 2.1.9 to 2.1.20.
+* Updated `almond` from 0.2.6 to 0.3.1.
 
 ### 1.14 - 2015-10-01
 
