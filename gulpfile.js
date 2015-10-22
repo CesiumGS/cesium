@@ -28,7 +28,7 @@ var packageJson = require('./package.json');
 var taskName = process.argv[2];
 var noDevelopmentGallery = taskName === 'release' || taskName === 'makeZipFile';
 var copyUnminified = taskName === 'combine' || taskName === 'default' || taskName === undefined;
-var minifyShaders = taskName === 'minify' || taskName === 'minifyRelease' || taskName === 'release' || taskName === 'makeZipFile';
+var minifyShaders = taskName === 'minify' || taskName === 'minifyRelease' || taskName === 'release' || taskName === 'makeZipFile' || taskName === 'buildApps';
 
 var version = packageJson.version;
 if (/\.0$/.test(version)) {
