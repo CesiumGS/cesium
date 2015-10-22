@@ -40,6 +40,11 @@ define([
          */
         this.globeDepthTexture = undefined;
 
+        this.fogEnabled = undefined;
+        this.fogType = undefined;
+        this.fogColor = undefined;
+        this.fogDensity = undefined;
+
         this._viewport = new BoundingRectangle();
         this._viewportCartesian4 = new Cartesian4();
         this._viewportDirty = false;

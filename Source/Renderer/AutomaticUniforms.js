@@ -1396,6 +1396,38 @@ define([
             getValue : function(uniformState) {
                 return uniformState.resolutionScale;
             }
+        }),
+
+        czm_fogEnabled : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.BOOL,
+            getValue : function(uniformState) {
+                return uniformState.fogEnabled;
+            }
+        }),
+
+        czm_fogType : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.INT,
+            getValue : function(uniformState) {
+                return uniformState.fogType;
+            }
+        }),
+
+        czm_fogColor : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC3,
+            getValue : function(uniformState) {
+                return uniformState.fogColor;
+            }
+        }),
+
+        czm_fogDensity : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.fogDensity;
+            }
         })
     };
 

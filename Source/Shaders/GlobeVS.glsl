@@ -16,6 +16,8 @@ varying vec2 v_textureCoordinates;
 varying vec3 v_normalMC;
 varying vec3 v_normalEC;
 
+varying float v_distance;
+
 // These functions are generated at runtime.
 vec4 getPosition(vec3 position3DWC);
 float get2DYPositionFraction();
@@ -97,5 +99,7 @@ void main()
     v_positionMC = position3DWC;                                 // position in model coordinates
 #endif
 
+    v_distance = length((czm_modelView3D * vec4(position3DWC, 1.0)).xyz);
+    
     v_textureCoordinates = textureCoordAndEncodedNormals.xy;
 }

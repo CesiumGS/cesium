@@ -379,7 +379,7 @@ define([
          * @type {Number}
          * @default 1000.0
          */
-        this.farToNearRatio = 1000.0;
+        this.farToNearRatio = 5e9;//1000.0;
 
         /**
          * This property is for debugging only; it is not for production use.
@@ -503,6 +503,11 @@ define([
          * @private
          */
         this.copyGlobeDepth = false;
+
+        this.fogEnabled = true;
+        this.fogType = 1;
+        this.fogColor = new Color(0.88, 0.92, 0.999);
+        this.fogDensity = 0.000009;
 
         this._performanceDisplay = undefined;
         this._debugVolume = undefined;
@@ -1717,6 +1722,12 @@ define([
 
         var context = scene.context;
         us.update(context, frameState);
+
+        // TODO
+        us.fogEnabled = scene.fogEnabled;
+        us.fogType = scene.fogType;
+        us.fogColor = scene.fogColor;
+        us.fogDensity = scene.fogDensity;
 
         scene._computeCommandList.length = 0;
         scene._commandList.length = 0;

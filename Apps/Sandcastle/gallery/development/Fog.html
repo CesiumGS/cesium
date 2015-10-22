@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Control fog parameters.">
+    <meta name="cesium-sandcastle-labels" content="Development">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+<table><tbody>
+    <tr>
+        <td>enabled</td>
+        <td><input type="checkbox" data-bind="checked: enabled"/></td>
+    </tr>
+    <tr>
+        <td>red</td>
+        <td><input type="text" size="5" data-bind="value: red"></td>
+    </tr>
+    <tr>
+        <td>green</td>
+        <td><input type="text" size="5" data-bind="value: green"></td>
+    </tr>
+    <tr>
+        <td>blue</td>
+        <td><input type="text" size="5" data-bind="value: blue"></td>
+    </tr>
+    <tr>
+        <td>type</td>
+        <td><input type="text" size="5" data-bind="value: type"></td>
+    </tr>
+    <tr>
+        <td>density</td>
+        <td><input type="text" size="5" data-bind="value: density"></td>
+    </tr>
+</tbody></table>
+<div id="zoomButtons"></div>
+</div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    "use strict";
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer');
+viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
+    url : '//assets.agi.com/stk-terrain/world',
+    requestWaterMask : true,
+    requestVertexNormals : true
+});
+
+/*
+viewer.imageryLayers.removeAll();
+viewer.imageryLayers.addImageryProvider(new Cesium.TileMapServiceImageryProvider({
+    url : require.toUrl('Assets/Textures/NaturalEarthII')
+}));
+*/
+
+//viewer.scene.globe.enableLighting = true;
+
+//The viewModel tracks the state of our mini application.
+var viewModel = {
+    enabled : true,
+    red : 0,
+    green : 0,
+    blue : 0,
+    type : 0,
+    density : 0
+};
+// Convert the viewModel members into knockout observables.
+Cesium.knockout.track(viewModel);
+
+// Bind the viewModel to the DOM elements of the UI that call for it.
+var toolbar = document.getElementById('toolbar');
+Cesium.knockout.applyBindings(viewModel, toolbar);
+
+Cesium.knockout.getObservable(viewModel, 'enabled').subscribe(
+    function(newValue) {
+        viewer.scene.fogEnabled = newValue;
+    }
+);
+    
+Cesium.knockout.getObservable(viewModel, 'red').subscribe(
+    function(newValue) {
+        viewer.scene.fogColor.red = newValue;
+    }
+);
+
+Cesium.knockout.getObservable(viewModel, 'green').subscribe(
+    function(newValue) {
+        viewer.scene.fogColor.green = newValue;
+    }
+);
+
+Cesium.knockout.getObservable(viewModel, 'blue').subscribe(
+    function(newValue) {
+        viewer.scene.fogColor.blue = newValue;
+    }
+);
+
+Cesium.knockout.getObservable(viewModel, 'type').subscribe(
+    function(newValue) {
+        viewer.scene.fogType = newValue;
+    }
+);
+    
+Cesium.knockout.getObservable(viewModel, 'density').subscribe(
+    function(newValue) {
+        viewer.scene.fogDensity = newValue;
+    }
+);
+
+viewModel.enabled = viewer.scene.fogEnabled;
+viewModel.red = viewer.scene.fogColor.red;
+viewModel.green = viewer.scene.fogColor.green;
+viewModel.blue = viewer.scene.fogColor.blue;
+viewModel.type = viewer.scene.fogType;
+viewModel.density = viewer.scene.fogDensity;
+
+/*
+Sandcastle.addToolbarMenu([{
+    text : 'Half Dome',
+    onselect : function() {
+        var target = new Cesium.Cartesian3(-2489625.0836225147, -4393941.44443024, 3882535.9454173897);
+        var offset = new Cesium.Cartesian3(-6857.40902037546, 412.3284835694358, 2147.5545426812023);
+        viewer.camera.lookAt(target, offset);
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    }
+}, {
+    text : 'Mount Everest',
+    onselect : function() {
+        var target = new Cesium.Cartesian3(300770.50872389384, 5634912.131394585, 2978152.2865545116);
+        var offset = new Cesium.Cartesian3(6344.974098678562, -793.3419798081741, 2499.9508860763162);
+        viewer.camera.lookAt(target, offset);
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    }
+}, {
+    text : 'San Francisco Bay',
+    onselect : function() {
+        var target = new Cesium.Cartesian3(-2708814.85583248, -4254159.450845907, 3891403.9457429945);
+        var offset = new Cesium.Cartesian3(70642.66030209465, -31661.517948317807, 35505.179997143336);
+        viewer.camera.lookAt(target, offset);
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    }
+}], 'zoomButtons');
+*/
+
+var scene = viewer.scene;
+var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+handler.setInputAction(function(movement) {
+    var ray = scene.camera.getPickRay(movement.position);
+    var pickedPosition = scene.globe.pick(ray, scene);
+    if (Cesium.defined(pickedPosition)) {
+        console.log(Cesium.Cartesian3.distance(pickedPosition, scene.camera.position));
+    }
+}, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+
+scene.camera.setView({
+    destination : new Cesium.Cartesian3(-2467070.494299382, -4414079.174382873, 3880669.8976452565),
+    orientation : {
+        heading : 1.7833456822869636,
+        pitch : -0.1764684555868994
+    }
+});
+
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>
