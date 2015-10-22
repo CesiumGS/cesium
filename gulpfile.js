@@ -22,6 +22,10 @@ var Promise = require('bluebird');
 var requirejs = require('requirejs');
 
 var packageJson = require('./package.json');
+var version = packageJson.version;
+if (/\.0$/.test(version)) {
+    version = version.substring(0, version.length - 2);
+}
 
 //Gulp doesn't seem to have a way to get the currently running tasks for setting
 //per-task variables.  We use the command line argument here to detect which task is being run.
@@ -29,11 +33,6 @@ var taskName = process.argv[2];
 var noDevelopmentGallery = taskName === 'release' || taskName === 'makeZipFile';
 var copyUnminified = taskName === 'combine' || taskName === 'default' || taskName === undefined;
 var minifyShaders = taskName === 'minify' || taskName === 'minifyRelease' || taskName === 'release' || taskName === 'makeZipFile' || taskName === 'buildApps';
-
-var version = packageJson.version;
-if (/\.0$/.test(version)) {
-    version = version.substring(0, version.length - 2);
-}
 
 var sourceFiles = ['Source/**/*.js',
                    '!Source/*.js',
@@ -695,7 +694,7 @@ function createCesiumJs() {
 
         var assignmentName = path.basename(file, path.extname(file));
         assignmentName = "['" + assignmentName + "']";
-        if (moduleId.indexOf('Source/Shaders/') === 0) {
+        if (moduleId.indexOf('Shaders/') === 0) {
             assignmentName = '._shaders' + assignmentName;
         }
 
@@ -712,7 +711,7 @@ define([' + moduleIds.join(', ') + '], function(' + parameters.join(', ') + ') {
   "use strict";\n\
   /*jshint sub:true*/\n\
   var Cesium = {\n\
-    VERSION : "' + packageJson.version + '",\n\
+    VERSION : "' + version + '",\n\
     _shaders : {}\n\
   };\n\
   ' + assignments.join('\n  ') + '\n\
