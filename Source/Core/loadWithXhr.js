@@ -134,7 +134,7 @@ define([
         if (defined(overrideMimeType) && defined(xhr.overrideMimeType)) {
             xhr.overrideMimeType(overrideMimeType);
         }
-
+        xhr.withCredentials = true;
         xhr.open(method, url, true);
 
         if (defined(headers)) {
