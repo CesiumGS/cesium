@@ -190,7 +190,7 @@ define([
                 return;
             }
 
-            var baseUri = new Uri(metadataUrl);
+            var baseUri = new Uri(that._url);
 
             that._tileUrlTemplates = data.tiles;
             for (var i = 0; i < that._tileUrlTemplates.length; ++i) {
