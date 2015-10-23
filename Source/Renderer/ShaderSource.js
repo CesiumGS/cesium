@@ -330,7 +330,7 @@ define([
     }
 
     ShaderSource.createPickVertexShaderSource = function(vertexShaderSource) {
-        var renamedVS = vertexShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_old_main()');
+        var renamedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_old_main');
         var pickMain = 'attribute vec4 pickColor; \n' +
             'varying vec4 czm_pickColor; \n' +
             'void main() \n' +
@@ -343,7 +343,7 @@ define([
     };
 
     ShaderSource.createPickFragmentShaderSource = function(fragmentShaderSource, pickColorQualifier) {
-        var renamedFS = fragmentShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_old_main()');
+        var renamedFS = ShaderSource.replaceMain(fragmentShaderSource, 'czm_old_main');
         var pickMain = pickColorQualifier + ' vec4 czm_pickColor; \n' +
             'void main() \n' +
             '{ \n' +
