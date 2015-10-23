@@ -85,8 +85,8 @@ void main (void)
     
     // Extra normalize added for Android
     float fCos = dot(czm_sunDirectionWC, normalize(v_toCamera)) / length(v_toCamera);
-    float fRayleighPhase = 0.75 * (1.0 + fCos*fCos);
-    float fMiePhase = 1.5 * ((1.0 - g2) / (2.0 + g2)) * (1.0 + fCos*fCos) / pow(1.0 + g2 - 2.0*g*fCos, 1.5);
+    float fRayleighPhase = 0.75 * (1.0 + fCos * fCos);
+    float fMiePhase = 1.5 * ((1.0 - g2) / (2.0 + g2)) * (1.0 + fCos * fCos) / pow(1.0 + g2 - 2.0 * g * fCos, 1.5);
     
     const float fExposure = 2.0;
     

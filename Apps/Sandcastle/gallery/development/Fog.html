@@ -62,6 +62,8 @@ viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
     requestVertexNormals : true
 });
 
+viewer.extend(Cesium.viewerCesiumInspectorMixin);
+
 /*
 viewer.imageryLayers.removeAll();
 viewer.imageryLayers.addImageryProvider(new Cesium.TileMapServiceImageryProvider({
