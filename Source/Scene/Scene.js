@@ -505,8 +505,6 @@ define([
         this.copyGlobeDepth = false;
 
         this.fogEnabled = true;
-        this.fogType = 1;
-        this.fogColor = new Color(0.88, 0.92, 0.999);
         this.fogDensity = 0.000009;
 
         this._performanceDisplay = undefined;
@@ -1725,8 +1723,6 @@ define([
 
         // TODO
         us.fogEnabled = scene.fogEnabled;
-        us.fogType = scene.fogType;
-        us.fogColor = scene.fogColor;
         us.fogDensity = scene.fogDensity;
 
         scene._computeCommandList.length = 0;
