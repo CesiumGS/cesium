@@ -198,7 +198,7 @@ void main()
 
 
     if (czm_fogEnabled) {
-        vec3 fogColor = czm_fogColor;
+        vec3 fogColor = vec3(0.88, 0.92, 0.999);
         //vec3 fogColor = getAtmosphereColor();
         //vec3 fogColor = v_rayleighColor;
         //vec3 fogColor = v_mieColor;
@@ -208,17 +208,11 @@ void main()
 	    float fog = 0.0;
 	    
 	    float maxDistance = 10000.0;
-	    if (czm_fogType == 1 && d > maxDistance) {
+	    if (d > maxDistance) {
 	       float scalar = (d - 2.0 * maxDistance) * czm_fogDensity;
            fog = 1.0 - exp(-(scalar * scalar));
-	    } else if (czm_fogType == 2) {
-	       fog = 1.0 - exp(-d * czm_fogDensity);
-	    } else {
-	       float scalar = d * czm_fogDensity;
-	       fog = 1.0 - exp(-(scalar * scalar));
 	    }
 	    
-	    fog = clamp(fog, 0.0, 1.0);
 	    gl_FragColor = vec4(mix(finalColor.rgb, fogColor, fog), finalColor.a);
     } else {
         gl_FragColor = finalColor;

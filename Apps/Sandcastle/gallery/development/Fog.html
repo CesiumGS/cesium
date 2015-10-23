@@ -29,22 +29,6 @@
         <td><input type="checkbox" data-bind="checked: enabled"/></td>
     </tr>
     <tr>
-        <td>red</td>
-        <td><input type="text" size="5" data-bind="value: red"></td>
-    </tr>
-    <tr>
-        <td>green</td>
-        <td><input type="text" size="5" data-bind="value: green"></td>
-    </tr>
-    <tr>
-        <td>blue</td>
-        <td><input type="text" size="5" data-bind="value: blue"></td>
-    </tr>
-    <tr>
-        <td>type</td>
-        <td><input type="text" size="5" data-bind="value: type"></td>
-    </tr>
-    <tr>
         <td>density</td>
         <td><input type="text" size="5" data-bind="value: density"></td>
     </tr>
@@ -76,10 +60,6 @@ viewer.imageryLayers.addImageryProvider(new Cesium.TileMapServiceImageryProvider
 //The viewModel tracks the state of our mini application.
 var viewModel = {
     enabled : true,
-    red : 0,
-    green : 0,
-    blue : 0,
-    type : 0,
     density : 0
 };
 // Convert the viewModel members into knockout observables.
@@ -95,30 +75,6 @@ Cesium.knockout.getObservable(viewModel, 'enabled').subscribe(
     }
 );
     
-Cesium.knockout.getObservable(viewModel, 'red').subscribe(
-    function(newValue) {
-        viewer.scene.fogColor.red = newValue;
-    }
-);
-
-Cesium.knockout.getObservable(viewModel, 'green').subscribe(
-    function(newValue) {
-        viewer.scene.fogColor.green = newValue;
-    }
-);
-
-Cesium.knockout.getObservable(viewModel, 'blue').subscribe(
-    function(newValue) {
-        viewer.scene.fogColor.blue = newValue;
-    }
-);
-
-Cesium.knockout.getObservable(viewModel, 'type').subscribe(
-    function(newValue) {
-        viewer.scene.fogType = newValue;
-    }
-);
-    
 Cesium.knockout.getObservable(viewModel, 'density').subscribe(
     function(newValue) {
         viewer.scene.fogDensity = newValue;
@@ -126,10 +82,6 @@ Cesium.knockout.getObservable(viewModel, 'density').subscribe(
 );
 
 viewModel.enabled = viewer.scene.fogEnabled;
-viewModel.red = viewer.scene.fogColor.red;
-viewModel.green = viewer.scene.fogColor.green;
-viewModel.blue = viewer.scene.fogColor.blue;
-viewModel.type = viewer.scene.fogType;
 viewModel.density = viewer.scene.fogDensity;
 
 /*
