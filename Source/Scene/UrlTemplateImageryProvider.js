@@ -54,7 +54,7 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {String} [options.url]  The URL template to use to request tiles.  It has the following keywords:
+     * @param {String} options.url  The URL template to use to request tiles.  It has the following keywords:
      * <ul>
      *     <li><code>{z}</code>: The level of the tile in the tiling scheme.  Level zero is the root of the quadtree pyramid.</li>
      *     <li><code>{x}</code>: The tile X coordinate in the tiling scheme, where 0 is the Westernmost tile.</li>
@@ -115,6 +115,10 @@ define([
      * @param {GetFeatureInfoFormat[]} [options.getFeatureInfoFormats] The formats in which to get feature information at a
      *                                 specific location when {@see UrlTemplateImageryProvider#pickFeatures} is invoked.  If this
      *                                 parameter is not specified, feature picking is disabled.
+     * @param {Boolean} [options.deferReadiness=false] True to defer full construction of this instance until a later call to {@see UrlTemplateImageryProvider#reinitialize}.
+     *                                                 Until that method is called, {@see UrlTemplateImageryProvider#ready} will be false.  When this property is true,
+     *                                                 even `options.url` is optional.  This mechanism is useful when implementing other imagery providers in terms
+     *                                                 of this one.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
@@ -150,48 +154,8 @@ define([
      * });
      */
     var UrlTemplateImageryProvider = function UrlTemplateImageryProvider(options) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(options) || !defined(options.url)) {
-            throw new DeveloperError('options.url is required.');
-        }
-        //>>includeEnd('debug');
-
-        this._url = options.url;
-        this._pickFeaturesUrl = options.pickFeaturesUrl;
-        this._proxy = options.proxy;
-        this._tileDiscardPolicy = options.tileDiscardPolicy;
-        this._getFeatureInfoFormats = options.getFeatureInfoFormats;
-
         this._errorEvent = new Event();
-
-        this._subdomains = options.subdomains;
-        if (Array.isArray(this._subdomains)) {
-            this._subdomains = this._subdomains.slice();
-        } else if (defined(this._subdomains) && this._subdomains.length > 0) {
-            this._subdomains = this._subdomains.split('');
-        } else {
-            this._subdomains = ['a', 'b', 'c'];
-        }
-
-        this._tileWidth = defaultValue(options.tileWidth, 256);
-        this._tileHeight = defaultValue(options.tileHeight, 256);
-        this._minimumLevel = defaultValue(options.minimumLevel, 0);
-        this._maximumLevel = options.maximumLevel;
-        this._tilingScheme = defaultValue(options.tilingScheme, new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid }));
-        this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
-        this._rectangle = Rectangle.intersection(this._rectangle, this._tilingScheme.rectangle);
-        this._hasAlphaChannel = defaultValue(options.hasAlphaChannel, true);
-
-        var credit = options.credit;
-        if (typeof credit === 'string') {
-            credit = new Credit(credit);
-        }
-        this._credit = credit;
-
-        this._urlParts = urlTemplateToParts(this._url, tags);
-        this._pickFeaturesUrlParts = urlTemplateToParts(this._pickFeaturesUrl, pickFeaturesTags);
-
-        this._readyPromise = when.resolve(true);
+        this.reinitialize(options);
     };
 
     defineProperties(UrlTemplateImageryProvider.prototype, {
@@ -274,6 +238,11 @@ define([
          */
         tileWidth : {
             get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this.ready) {
+                    throw new DeveloperError('tileWidth must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
                 return this._tileWidth;
             }
         },
@@ -288,6 +257,11 @@ define([
          */
         tileHeight: {
             get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this.ready) {
+                    throw new DeveloperError('tileHeight must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
                 return this._tileHeight;
             }
         },
@@ -302,6 +276,11 @@ define([
          */
         maximumLevel : {
             get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this.ready) {
+                    throw new DeveloperError('maximumLevel must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
                 return this._maximumLevel;
             }
         },
@@ -316,6 +295,11 @@ define([
          */
         minimumLevel : {
             get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this.ready) {
+                    throw new DeveloperError('minimumLevel must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
                 return this._minimumLevel;
             }
         },
@@ -330,6 +314,11 @@ define([
          */
         tilingScheme : {
             get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this.ready) {
+                    throw new DeveloperError('tilingScheme must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
                 return this._tilingScheme;
             }
         },
@@ -344,6 +333,11 @@ define([
          */
         rectangle : {
             get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this.ready) {
+                    throw new DeveloperError('rectangle must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
                 return this._rectangle;
             }
         },
@@ -360,6 +354,11 @@ define([
          */
         tileDiscardPolicy : {
             get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this.ready) {
+                    throw new DeveloperError('tileDiscardPolicy must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
                 return this._tileDiscardPolicy;
             }
         },
@@ -386,7 +385,7 @@ define([
          */
         ready : {
             get : function() {
-                return true;
+                return defined(this._urlParts);
             }
         },
 
@@ -412,6 +411,11 @@ define([
          */
         credit : {
             get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this.ready) {
+                    throw new DeveloperError('credit must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
                 return this._credit;
             }
         },
@@ -421,7 +425,8 @@ define([
          * include an alpha channel.  If this property is false, an alpha channel, if present, will
          * be ignored.  If this property is true, any images without an alpha channel will be treated
          * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
-         * and texture upload time are reduced.
+         * and texture upload time are reduced.  This function should
+         * not be called before {@link ImageryProvider#ready} returns true.
          * @memberof UrlTemplateImageryProvider.prototype
          * @type {Boolean}
          * @readonly
@@ -429,10 +434,66 @@ define([
          */
         hasAlphaChannel : {
             get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this.ready) {
+                    throw new DeveloperError('hasAlphaChannel must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
                 return this._hasAlphaChannel;
             }
         }
     });
+
+    /**
+     * Reinitializes this instance.  This method is primarily intended for use
+     * with the `deferReadiness` flag to the constructor.  Reinitializing an instance already in use is supported, but it is not
+     * recommended because existing tiles provided by the imagery provider will not be updated.
+     * @param {Object} options Any of the options that may be passed to the {@see UrlTemplateImageryProvider} constructor.
+     */
+    UrlTemplateImageryProvider.prototype.reinitialize = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        this._url = options.url;
+        this._pickFeaturesUrl = options.pickFeaturesUrl;
+        this._proxy = options.proxy;
+        this._tileDiscardPolicy = options.tileDiscardPolicy;
+        this._getFeatureInfoFormats = options.getFeatureInfoFormats;
+
+        this._subdomains = options.subdomains;
+        if (Array.isArray(this._subdomains)) {
+            this._subdomains = this._subdomains.slice();
+        } else if (defined(this._subdomains) && this._subdomains.length > 0) {
+            this._subdomains = this._subdomains.split('');
+        } else {
+            this._subdomains = ['a', 'b', 'c'];
+        }
+
+        this._tileWidth = defaultValue(options.tileWidth, 256);
+        this._tileHeight = defaultValue(options.tileHeight, 256);
+        this._minimumLevel = defaultValue(options.minimumLevel, 0);
+        this._maximumLevel = options.maximumLevel;
+        this._tilingScheme = defaultValue(options.tilingScheme, new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid }));
+        this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
+        this._rectangle = Rectangle.intersection(this._rectangle, this._tilingScheme.rectangle);
+        this._hasAlphaChannel = defaultValue(options.hasAlphaChannel, true);
+
+        var credit = options.credit;
+        if (typeof credit === 'string') {
+            credit = new Credit(credit);
+        }
+        this._credit = credit;
+
+        if (!options.deferReadiness) {
+            //>>includeStart('debug', pragmas.debug);
+            if (!defined(options.url)) {
+                throw new DeveloperError('options.url is required.');
+            }
+            //>>includeEnd('debug');
+            this._urlParts = urlTemplateToParts(this._url, tags);
+            this._pickFeaturesUrlParts = urlTemplateToParts(this._pickFeaturesUrl, pickFeaturesTags);
+            this._readyPromise = when.resolve(true);
+        }
+    };
 
     /**
      * Gets the credits to be displayed when a given tile is displayed.
@@ -445,6 +506,11 @@ define([
      * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
      */
     UrlTemplateImageryProvider.prototype.getTileCredits = function(x, y, level) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!this.ready) {
+            throw new DeveloperError('getTileCredits must not be called before the imagery provider is ready.');
+        }
+        //>>includeEnd('debug');
         return undefined;
     };
 
@@ -461,6 +527,11 @@ define([
      *          Image or a Canvas DOM object.
      */
     UrlTemplateImageryProvider.prototype.requestImage = function(x, y, level) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!this.ready) {
+            throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
+        }
+        //>>includeEnd('debug');
         var url = buildImageUrl(this, x, y, level);
         return ImageryProvider.loadImage(this, url);
     };
@@ -480,6 +551,12 @@ define([
      *                   It may also be undefined if picking is not supported.
      */
     UrlTemplateImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!this.ready) {
+            throw new DeveloperError('pickFeatures must not be called before the imagery provider is ready.');
+        }
+        //>>includeEnd('debug');
+
         if (!defined(this._pickFeaturesUrl) || this._getFeatureInfoFormats.length === 0) {
             return undefined;
         }
