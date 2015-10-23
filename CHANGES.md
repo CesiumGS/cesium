@@ -26,8 +26,10 @@ Change Log
 * Fixed token issue in `ArcGisMapServerImageryProvider`.
 * `ImageryLayerFeatureInfo` now has an `imageryLayer` property, indicating the layer that contains the feature.
 * Added `BoxOutlineGeometry.fromAxisAlignedBoundingBox` and `BoxGeometry.fromAxisAlignedBoundingBox` functions.
+* Switched to [gulp](http://gulpjs.com/) for all build tasks. `Java` and `ant` are no longer required to develop Cesium. [#3106](https://github.com/AnalyticalGraphicsInc/cesium/pull/3106)
 * The WebGL setting of `failIfMajorPerformanceCaveat` now defaults to `false`, which is the official WebGL default. This improves compatibility with out-of-date drivers and remote desktop sessions. Cesium will run slower in these cases instead of simply failing to load. 
 * Changed `Camera.setView` to take the same parameter options as `Camera.flyTo`.  `options.destination` takes a rectangle, `options.orientation` works with heading/pitch/roll or direction/up, and `options.endTransform` was added.
+* Fixed the issue where the camera inertia takes too long to finish causing the camera move events to fire after it appears to. [2839](https://github.com/AnalyticalGraphicsInc/cesium/issues/2839)
 
 ### 1.14 - 2015-10-01
 
