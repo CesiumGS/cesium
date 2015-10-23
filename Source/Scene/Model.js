@@ -2780,10 +2780,12 @@ define([
      *
      * @exception {RuntimeError} Failed to load external reference.
      */
-    Model.prototype.update = function(context, frameState, commandList) {
+    Model.prototype.update = function(frameState) {
         if (frameState.mode !== SceneMode.SCENE3D) {
             return;
         }
+
+        var context = frameState.context;
 
         if ((this._state === ModelState.NEEDS_LOAD) && defined(this.gltf)) {
             // Use renderer resources from cache instead of loading/creating them?
@@ -2927,6 +2929,7 @@ define([
         // and then have them visible immediately when show is set to true.
         if (show) {
 // PERFORMANCE_IDEA: This is terrible
+            var commandList = frameState.commandList;
             var passes = frameState.passes;
             var nodeCommands = this._nodeCommands;
             var length = nodeCommands.length;

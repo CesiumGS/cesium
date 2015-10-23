@@ -34,7 +34,7 @@ defineSuite([
 
     beforeAll(function() {
         context = createContext();
-        frameState = createFrameState();
+        frameState = createFrameState(context);
 
         var rectangle = Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0);
         primitive = new Primitive({
@@ -52,7 +52,7 @@ defineSuite([
 
         frameState.camera.viewRectangle(rectangle);
         var us = context.uniformState;
-        us.update(context, frameState);
+        us.update(frameState);
     });
 
     afterAll(function() {

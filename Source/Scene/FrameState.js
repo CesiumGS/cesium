@@ -16,7 +16,10 @@ define([
      *
      * @private
      */
-    var FrameState = function(creditDisplay) {
+    var FrameState = function(context, creditDisplay) {
+        this.context = context;
+        this.commandList = [];
+
         /**
          * The current mode of the scene.
          * @type {SceneMode}

@@ -210,7 +210,7 @@ define([
         }
 
         this._id = createGuid();
-        this._frameState = new FrameState(new CreditDisplay(creditContainer));
+        this._frameState = new FrameState(context, new CreditDisplay(creditContainer));
         this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
 
         this._passState = new PassState(context);
@@ -1392,13 +1392,13 @@ define([
 
         // Manage celestial and terrestrial environment effects.
         var renderPass = frameState.passes.render;
-        var skyBoxCommand = (renderPass && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
-        var skyAtmosphereCommand = (renderPass && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
+        var skyBoxCommand = (renderPass && defined(scene.skyBox)) ? scene.skyBox.update(frameState) : undefined;
+        var skyAtmosphereCommand = (renderPass && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(frameState) : undefined;
         var sunCommands = (renderPass && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
         var sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
         var sunComputeCommand = defined(sunCommands) ? sunCommands.computeCommand : undefined;
         var sunVisible = isVisible(sunDrawCommand, frameState);
-        var moonCommand = (renderPass && defined(scene.moon)) ? scene.moon.update(context, frameState) : undefined;
+        var moonCommand = (renderPass && defined(scene.moon)) ? scene.moon.update(frameState) : undefined;
         var moonVisible = isVisible(moonCommand, frameState);
 
         // Preserve the reference to the original framebuffer.
@@ -1443,7 +1443,7 @@ define([
             // Update the depth plane that is rendered in 3D when the primitives are
             // not depth tested against terrain so primitives on the backface
             // of the globe are not picked.
-            scene._depthPlane.update(context, frameState);
+            scene._depthPlane.update(frameState);
         }
 
         // If supported, configure OIT to use the globe depth framebuffer and clear the OIT framebuffer.
@@ -1652,16 +1652,14 @@ define([
     }
 
     function updatePrimitives(scene) {
-        var context = scene.context;
         var frameState = scene._frameState;
-        var commandList = scene._commandList;
 
         if (scene._globe) {
-            scene._globe.update(context, frameState, commandList);
+            scene._globe.update(frameState);
         }
 
-        scene._groundPrimitives.update(context, frameState, commandList);
-        scene._primitives.update(context, frameState, commandList);
+        scene._groundPrimitives.update(frameState);
+        scene._primitives.update(frameState);
     }
 
     function callAfterRenderFunctions(frameState) {
@@ -1709,7 +1707,8 @@ define([
 
         scene._preRender.raiseEvent(scene, time);
 
-        var us = scene.context.uniformState;
+        var context = scene.context;
+        var us = context.uniformState;
         var frameState = scene._frameState;
 
         var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
@@ -1717,8 +1716,7 @@ define([
         frameState.passes.render = true;
         frameState.creditDisplay.beginFrame();
 
-        var context = scene.context;
-        us.update(context, frameState);
+        us.update(frameState);
 
         scene._computeCommandList.length = 0;
         scene._commandList.length = 0;
@@ -1910,7 +1908,7 @@ define([
         frameState.cullingVolume = getPickCullingVolume(this, drawingBufferPosition, rectangleWidth, rectangleHeight);
         frameState.passes.pick = true;
 
-        us.update(context, frameState);
+        us.update(frameState);
 
         this._commandList.length = 0;
         updatePrimitives(this);

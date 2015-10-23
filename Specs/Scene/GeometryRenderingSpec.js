@@ -131,15 +131,15 @@ defineSuite([
             asynchronous : false
         });
 
-        var frameState = createFrameState();
-        primitive.update(context, frameState, []);
+        var frameState = createFrameState(context);
+        primitive.update(frameState);
         viewSphere3D(frameState.camera, primitive._boundingSphereWC[0], primitive.modelMatrix);
 
         if (typeof afterView === 'function') {
             afterView(frameState, primitive);
         }
 
-        context.uniformState.update(context, frameState);
+        context.uniformState.update( frameState);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -177,8 +177,8 @@ defineSuite([
             asynchronous : false
         });
 
-        var frameState = createFrameState();
-        primitive.update(context, frameState, []);
+        var frameState = createFrameState(context);
+        primitive.update(frameState);
 
         frameState.mode = SceneMode.COLUMBUS_VIEW;
         frameState.morphTime = SceneMode.getMorphTime(frameState.mode);
@@ -190,7 +190,7 @@ defineSuite([
             afterView(frameState, primitive);
         }
 
-        context.uniformState.update(context, frameState);
+        context.uniformState.update(frameState);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -234,8 +234,8 @@ defineSuite([
             asynchronous : false
         });
 
-        var frameState = createFrameState();
-        primitive.update(context, frameState, []);
+        var frameState = createFrameState(context);
+        primitive.update(frameState);
 
         frameState.mode = SceneMode.SCENE2D;
         frameState.morphTime = SceneMode.getMorphTime(frameState.mode);
@@ -249,7 +249,7 @@ defineSuite([
         frameState.camera.update(frameState.mode);
 
         viewSphere2D(frameState.camera, primitive._boundingSphere2D[0], primitive.modelMatrix);
-        context.uniformState.update(context, frameState);
+        context.uniformState.update(frameState);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -273,8 +273,8 @@ defineSuite([
             asynchronous : false
         });
 
-        var frameState = createFrameState();
-        primitive.update(context, frameState, []);
+        var frameState = createFrameState(context);
+        primitive.update(frameState);
 
         viewSphere3D(frameState.camera, primitive._boundingSphereWC[0], primitive.modelMatrix);
 
@@ -282,7 +282,7 @@ defineSuite([
             afterView(frameState, primitive);
         }
 
-        context.uniformState.update(context, frameState);
+        context.uniformState.update(frameState);
 
         var pickObject = pick(context, frameState, primitive);
         expect(pickObject.primitive).toEqual(primitive);
@@ -303,10 +303,10 @@ defineSuite([
             appearance : appearance
         });
 
-        var frameState = createFrameState();
+        var frameState = createFrameState(context);
 
         return pollToPromise(function() {
-            return render(context, frameState, primitive) > 0;
+            return render(frameState, primitive) > 0;
         }).then(function() {
             viewSphere3D(frameState.camera, primitive._boundingSphereWC[0], primitive.modelMatrix);
 
@@ -314,12 +314,12 @@ defineSuite([
                 afterView(frameState, primitive);
             }
 
-            context.uniformState.update(context, frameState);
+            context.uniformState.update(frameState);
 
             ClearCommand.ALL.execute(context);
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-            render(context, frameState, primitive);
+            render(frameState, primitive);
             expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
             primitive = primitive && primitive.destroy();
