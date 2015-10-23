@@ -34,6 +34,7 @@ define([
         '../Renderer/ContextLimits',
         '../Renderer/PassState',
         '../Renderer/ShaderProgram',
+        '../Renderer/ShaderSource',
         './Camera',
         './CreditDisplay',
         './CullingVolume',
@@ -93,6 +94,7 @@ define([
         ContextLimits,
         PassState,
         ShaderProgram,
+        ShaderSource,
         Camera,
         CreditDisplay,
         CullingVolume,
@@ -1155,7 +1157,7 @@ define([
         var fs = sp.fragmentShaderSource.clone();
 
         fs.sources = fs.sources.map(function(source) {
-            source = source.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_Debug_main()');
+            source = ShaderSource.replaceMain(source, 'czm_Debug_main');
             return source;
         });
 
