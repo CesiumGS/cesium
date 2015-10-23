@@ -156,7 +156,7 @@ define([
 
             if (gltfFormat === 0) {
                 var gltfUrl = getStringFromTypedArray(gltfView);
-                var url = (new Uri(gltfUrl).isAbsolute()) ? gltfUrl : that._tileset._baseUrl + gltfUrl;
+                var url = (new Uri(gltfUrl).isAbsolute()) ? gltfUrl : that._tileset.url + gltfUrl;
                 collectionOptions.url = url;
                 // TODO : how to get the correct headers
             } else {
