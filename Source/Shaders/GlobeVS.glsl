@@ -117,7 +117,7 @@ float scale(float fCos)
 
 void setAtmosphereVaryings(vec3 position)
 {
-    float fCameraHeight = length(czm_viewerPositionWC) - 6356752.3142451793;
+    float fCameraHeight = length(czm_viewerPositionWC);
     float fCameraHeight2 = fCameraHeight * fCameraHeight;
     
     // Get the ray from the camera to the vertex and its length (which is the far point of the ray passing through the atmosphere)
@@ -126,11 +126,28 @@ void setAtmosphereVaryings(vec3 position)
     float fFar = length(v3Ray);
     v3Ray /= fFar;
 
-    vec3 v3Start = czm_viewerPositionWC;
-    float fHeight = length(v3Start);
-    float fDepth = exp(fScaleOverScaleDepth * (fInnerRadius - fCameraHeight));
-    float fStartAngle = dot(v3Ray, v3Start) / fHeight;
-    float fStartOffset = fDepth*scale(fStartAngle);
+    vec3 v3Start;
+    float fStartOffset;
+    
+    if (fCameraHeight > fOuterRadius) {
+	    float B = 2.0 * dot(czm_viewerPositionWC, v3Ray);
+	    float C = fCameraHeight2 - fOuterRadius2;
+	    float fDet = max(0.0, B*B - 4.0 * C);
+	    float fNear = 0.5 * (-B - sqrt(fDet));
+
+	    // Calculate the ray's starting position, then calculate its scattering offset
+	    v3Start = czm_viewerPositionWC + v3Ray * fNear;
+	    fFar -= fNear;
+	    float fStartAngle = dot(v3Ray, v3Start) / fOuterRadius;
+	    float fStartDepth = exp(-1.0 / fScaleDepth);
+	    fStartOffset = fStartDepth*scale(fStartAngle);
+    } else {
+        v3Start = czm_viewerPositionWC;
+	    float fHeight = length(v3Start);
+	    float fDepth = exp(fScaleOverScaleDepth * (fInnerRadius - fCameraHeight));
+	    float fStartAngle = dot(v3Ray, v3Start) / fHeight;
+	    fStartOffset = fDepth*scale(fStartAngle);
+    }
 
     // Initialize the scattering loop variables
     float fSampleLength = fFar / fSamples;

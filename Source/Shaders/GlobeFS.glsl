@@ -198,8 +198,8 @@ void main()
 
 
     if (czm_fogEnabled) {
-        vec3 fogColor = vec3(0.88, 0.92, 0.999);
-        //vec3 fogColor = getAtmosphereColor();
+        //vec3 fogColor = vec3(0.88, 0.92, 0.999);
+        vec3 fogColor = getAtmosphereColor();
         //vec3 fogColor = v_rayleighColor;
         //vec3 fogColor = v_mieColor;
 	    
