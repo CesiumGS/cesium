@@ -533,7 +533,7 @@ define([
             pickVertexShaderLoaded : undefined,
             pickFragmentShaderLoaded : undefined,
             pickUniformMapLoaded : undefined,
-            ignoreCommands : false
+            ignoreCommands : true
         };
 
         createBoundingVolume(collection);
@@ -592,7 +592,6 @@ define([
             modelOptions.pickVertexShaderLoaded = getPickVertexShaderCallback(collection);
             modelOptions.pickFragmentShaderLoaded = getPickFragmentShaderCallback(collection);
             modelOptions.pickUniformMapLoaded = getPickUniformMapCallback(collection);
-            modelOptions.ignoreCommands = true;
 
             if (defined(collection._url)) {
                 modelOptions.cacheKey = collection._url + '#instanced';
