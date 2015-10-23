@@ -44,7 +44,7 @@ define([
      *
      * @private
      */
-    var Cesium3DTileBatchTable = function(contentProvider, size) {
+    var Cesium3DTileBatchTableResources = function(contentProvider, size) {
         this._batchSize = defaultValue(size, 0);
         this._batchValues = undefined;  // Per-model show/color
         this._batchValuesDirty = false;
@@ -80,11 +80,11 @@ define([
         this._textureStep = textureStep;
     };
 
-    defineProperties(Cesium3DTileBatchTable.prototype, {
+    defineProperties(Cesium3DTileBatchTableResources.prototype, {
         /**
          * DOC_TBA
          *
-         * @memberof Cesium3DTileBatchTable.prototype
+         * @memberof Cesium3DTileBatchTableResources.prototype
          *
          * @type {Number}
          * @readonly
@@ -93,30 +93,46 @@ define([
             get : function() {
                 return this._batchSize;
             }
+        },
+
+        /**
+         * DOC_TBA
+         *
+         * @memberof Cesium3DTileBatchTableResources.prototype
+         *
+         * @type {Object}
+         */
+        batchTable : {
+            get : function() {
+                return this._batchTable;
+            },
+            set : function(batchTable) {
+                this._batchTable = batchTable;
+            }
         }
     });
 
-    function getByteLength(batchTable) {
-        var dimensions = batchTable._textureDimensions;
+    function getByteLength(batchTableResources) {
+        var dimensions = batchTableResources._textureDimensions;
         return (dimensions.x * dimensions.y) * 4;
     }
 
-    function getBatchValues(batchTable) {
-        if (!defined(batchTable._batchValues)) {
+    function getBatchValues(batchTableResources) {
+        if (!defined(batchTableResources._batchValues)) {
             // Default batch texture to RGBA = 255: white highlight (RGB) and show = true (A).
-            var byteLength = getByteLength(batchTable);
+            var byteLength = getByteLength(batchTableResources);
             var bytes = new Uint8Array(byteLength);
             for (var i = 0; i < byteLength; ++i) {
                 bytes[i] = 255;
             }
 
-            batchTable._batchValues = bytes;
+            batchTableResources._batchValues = bytes;
         }
 
-        return batchTable._batchValues;
+        return batchTableResources._batchValues;
     }
 
-    Cesium3DTileBatchTable.prototype.setShow = function(batchId, value) {
+    Cesium3DTileBatchTableResources.prototype.setShow = function(batchId, value) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(batchId) || (batchId < 0) || (batchId > batchSize)) {
@@ -143,7 +159,7 @@ define([
         }
     };
 
-    Cesium3DTileBatchTable.prototype.getShow = function(batchId) {
+    Cesium3DTileBatchTableResources.prototype.getShow = function(batchId) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(batchId) || (batchId < 0) || (batchId > batchSize)) {
@@ -162,7 +178,7 @@ define([
 
     var scratchColor = new Array(4);
 
-    Cesium3DTileBatchTable.prototype.setColor = function(batchId, value) {
+    Cesium3DTileBatchTableResources.prototype.setColor = function(batchId, value) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(batchId) || (batchId < 0) || (batchId > batchSize)) {
@@ -193,7 +209,7 @@ define([
         }
     };
 
-    Cesium3DTileBatchTable.prototype.setAllColor = function(value) {
+    Cesium3DTileBatchTableResources.prototype.setAllColor = function(value) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
@@ -207,7 +223,7 @@ define([
         }
     };
 
-    Cesium3DTileBatchTable.prototype.getColor = function(batchId, color) {
+    Cesium3DTileBatchTableResources.prototype.getColor = function(batchId, color) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(batchId) || (batchId < 0) || (batchId > batchSize)) {
@@ -229,7 +245,7 @@ define([
         return Color.fromBytes(batchValues[offset], batchValues[offset + 1], batchValues[offset + 2], 255, color);
     };
 
-    Cesium3DTileBatchTable.prototype.hasProperty = function(name) {
+    Cesium3DTileBatchTableResources.prototype.hasProperty = function(name) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(name)) {
             throw new DeveloperError('name is required.');
@@ -240,7 +256,7 @@ define([
         return defined(batchTable) && defined(batchTable[name]);
     };
 
-    Cesium3DTileBatchTable.prototype.getPropertyNames = function() {
+    Cesium3DTileBatchTableResources.prototype.getPropertyNames = function() {
         var names = [];
         var batchTable = this._batchTable;
 
@@ -257,7 +273,7 @@ define([
         return names;
     };
 
-    Cesium3DTileBatchTable.prototype.getProperty = function(batchId, name) {
+    Cesium3DTileBatchTableResources.prototype.getProperty = function(batchId, name) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(batchId) || (batchId < 0) || (batchId > batchSize)) {
@@ -282,7 +298,7 @@ define([
         return clone(propertyValues[batchId], true);
     };
 
-    Cesium3DTileBatchTable.prototype.setProperty = function(batchId, name, value) {
+    Cesium3DTileBatchTableResources.prototype.setProperty = function(batchId, name, value) {
         var batchSize = this._batchSize;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(batchId) || (batchId < 0) || (batchId > batchSize)) {
@@ -310,9 +326,9 @@ define([
         propertyValues[batchId] = clone(value, true);
     };
 
-    function getGlslComputeSt(batchTable) {
+    function getGlslComputeSt(batchTableResources) {
         // GLSL batchId is zero-based: [0, batchSize - 1]
-        if (batchTable._textureDimensions.y === 1) {
+        if (batchTableResources._textureDimensions.y === 1) {
             return 'uniform vec4 tiles3d_textureStep; \n' +
                 'vec2 computeSt(float batchId) \n' +
                 '{ \n' +
@@ -336,7 +352,7 @@ define([
             '} \n';
     }
 
-    Cesium3DTileBatchTable.prototype.getVertexShaderCallback = function() {
+    Cesium3DTileBatchTableResources.prototype.getVertexShaderCallback = function() {
         if (this._batchSize === 0) {
             // Do not change vertex shader source; the model was not batched
             return undefined;
@@ -375,7 +391,7 @@ define([
         };
     };
 
-    Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function() {
+    Cesium3DTileBatchTableResources.prototype.getFragmentShaderCallback = function() {
         if (this._batchSize === 0) {
             // Do not change fragment shader source; the model was not batched
             return undefined;
@@ -440,7 +456,7 @@ define([
         };
     };
 
-    Cesium3DTileBatchTable.prototype.getUniformMapCallback = function() {
+    Cesium3DTileBatchTableResources.prototype.getUniformMapCallback = function() {
         if (this._batchSize === 0) {
             // Do not change the uniform map; the model was not batched
             return undefined;
@@ -465,7 +481,7 @@ define([
         };
     };
 
-    Cesium3DTileBatchTable.prototype.getPickVertexShaderCallback = function() {
+    Cesium3DTileBatchTableResources.prototype.getPickVertexShaderCallback = function() {
         if (this._batchSize === 0) {
             // Do not change vertex shader source; the model was not batched
             return undefined;
@@ -504,7 +520,7 @@ define([
         };
     };
 
-    Cesium3DTileBatchTable.prototype.getPickFragmentShaderCallback = function() {
+    Cesium3DTileBatchTableResources.prototype.getPickFragmentShaderCallback = function() {
         if (this._batchSize === 0) {
             // Do not change fragment shader source; the model was not batched
             return undefined;
@@ -551,7 +567,7 @@ define([
         };
     };
 
-    Cesium3DTileBatchTable.prototype.getPickUniformMapCallback = function() {
+    Cesium3DTileBatchTableResources.prototype.getPickUniformMapCallback = function() {
         if (this._batchSize === 0) {
             // Do not change the uniform map; the model was not batched
             return undefined;
@@ -578,8 +594,8 @@ define([
         };
     };
 
-    function createTexture(batchTable, context, bytes) {
-        var dimensions = batchTable._textureDimensions;
+    function createTexture(batchTableResources, context, bytes) {
+        var dimensions = batchTableResources._textureDimensions;
         return new Texture({
             context : context,
             pixelFormat : PixelFormat.RGBA,
@@ -596,13 +612,13 @@ define([
         });
     }
 
-    function createPickTexture(batchTable, context) {
-        var batchSize = batchTable._batchSize;
-        if (!defined(batchTable._pickTexture) && (batchSize > 0)) {
-            var pickIds = batchTable._pickIds;
-            var byteLength = getByteLength(batchTable);
+    function createPickTexture(batchTableResources, context) {
+        var batchSize = batchTableResources._batchSize;
+        if (!defined(batchTableResources._pickTexture) && (batchSize > 0)) {
+            var pickIds = batchTableResources._pickIds;
+            var byteLength = getByteLength(batchTableResources);
             var bytes = new Uint8Array(byteLength);
-            var contentProvider = batchTable._contentProvider;
+            var contentProvider = batchTableResources._contentProvider;
 
             // PERFORMANCE_IDEA: we could skip the pick texture completely by allocating
             // a continuous range of pickIds and then converting the base pickId + batchId
@@ -620,32 +636,32 @@ define([
                 bytes[offset + 3] = Color.floatToByte(pickColor.alpha);
             }
 
-            batchTable._pickTexture = createTexture(batchTable, context, bytes);
+            batchTableResources._pickTexture = createTexture(batchTableResources, context, bytes);
         }
     }
 
-    function createBatchTexture(batchTable, context) {
-        if (!defined(batchTable._batchTexture)) {
-            batchTable._batchTexture = createTexture(batchTable, context, batchTable._batchValues);
-            batchTable._batchValuesDirty = false;
+    function createBatchTexture(batchTableResources, context) {
+        if (!defined(batchTableResources._batchTexture)) {
+            batchTableResources._batchTexture = createTexture(batchTableResources, context, batchTableResources._batchValues);
+            batchTableResources._batchValuesDirty = false;
         }
     }
 
-    function updateBatchTexture(batchTable) {
-        if (batchTable._batchValuesDirty) {
-            var dimensions = batchTable._textureDimensions;
+    function updateBatchTexture(batchTableResources) {
+        if (batchTableResources._batchValuesDirty) {
+            var dimensions = batchTableResources._textureDimensions;
             // PERFORMANCE_IDEA: Instead of rewriting the entire texture, use fine-grained
             // texture updates when less than, for example, 10%, of the values changed.  Or
             // even just optimize the common case when one model show/color changed.
-            batchTable._batchTexture.copyFrom({
+            batchTableResources._batchTexture.copyFrom({
                 width : dimensions.x,
                 height : dimensions.y,
-                arrayBufferView : batchTable._batchValues
+                arrayBufferView : batchTableResources._batchValues
             });
         }
     }
 
-    Cesium3DTileBatchTable.prototype.update = function(context, frameState) {
+    Cesium3DTileBatchTableResources.prototype.update = function(context, frameState) {
         this._defaultTexture = context.defaultTexture;
 
         if (frameState.passes.pick) {
@@ -662,11 +678,11 @@ define([
         }
     };
 
-    Cesium3DTileBatchTable.prototype.isDestroyed = function() {
+    Cesium3DTileBatchTableResources.prototype.isDestroyed = function() {
         return false;
     };
 
-    Cesium3DTileBatchTable.prototype.destroy = function() {
+    Cesium3DTileBatchTableResources.prototype.destroy = function() {
         this._batchTexture = this._batchTexture && this._batchTexture.destroy();
         this._pickTexture = this._pickTexture && this._pickTexture.destroy();
 
@@ -679,5 +695,5 @@ define([
         return destroyObject(this);
     };
 
-    return Cesium3DTileBatchTable;
+    return Cesium3DTileBatchTableResources;
 });

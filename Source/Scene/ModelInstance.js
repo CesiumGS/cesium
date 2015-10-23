@@ -25,7 +25,7 @@ define([
         this._modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._color = undefined; // for calling getColor
 
-        this._batchTable = collection._batchTable;
+        this._batchTableResources = collection._batchTableResources;
         this._batchId = defaultValue(options.batchId, index);
 
         this.show = defaultValue(options.show, true);
@@ -49,10 +49,10 @@ define([
 
         show : {
             get : function() {
-                return this._batchTable.getShow(this._batchId);
+                return this._batchTableResources.getShow(this._batchId);
             },
             set : function(value) {
-                this._batchTable.setShow(this._batchId, value);
+                this._batchTableResources.setShow(this._batchId, value);
             }
         },
         
@@ -61,20 +61,20 @@ define([
                 if (!defined(this._color)) {
                     this._color = new Color();
                 }
-                return this._batchTable.getColor(this._batchId, this._color);
+                return this._batchTableResources.getColor(this._batchId, this._color);
             },
             set : function(value) {
-                this._batchTable.setColor(this._batchId, value);
+                this._batchTableResources.setColor(this._batchId, value);
             }
         }
     });
 
     ModelInstance.prototype.getProperty = function(name) {
-        return this._batchTable.getProperty(this._batchId, name);
+        return this._batchTableResources.getProperty(this._batchId, name);
     };
 
     ModelInstance.prototype.setProperty = function(name, value) {
-        this._batchTable.setProperty(this._batchId, name, value);
+        this._batchTableResources.setProperty(this._batchId, name, value);
     };
 
     return ModelInstance;

@@ -9,7 +9,7 @@ define([
         '../Core/loadArrayBuffer',
         '../Core/Matrix4',
         '../Core/Transforms',
-        './Cesium3DTileBatchTable',
+        './Cesium3DTileBatchTableResources',
         './Cesium3DTileContentState',
         './ModelInstanceCollection',
         '../ThirdParty/Uri',
@@ -24,7 +24,7 @@ define([
         loadArrayBuffer,
         Matrix4,
         Transforms,
-        Cesium3DTileBatchTable,
+        Cesium3DTileBatchTableResources,
         Cesium3DTileContentState,
         ModelInstanceCollection,
         Uri,
@@ -38,7 +38,7 @@ define([
         this._modelInstanceCollection = undefined;
         this._url = url;
         this._tileset = tileset;
-        this._batchTable = undefined;
+        this._batchTableResources = undefined;
         this._boundingVolume = defaultValue(tile._contentsOrientedBoundingBox, tile._orientedBoundingBox);
 
         /**
@@ -120,11 +120,11 @@ define([
             var instancesLength = view.getUint32(byteOffset, true);
             byteOffset += sizeOfUint32;
 
-            var batchTable = new Cesium3DTileBatchTable(that, instancesLength);
-            that._batchTable = batchTable;
+            var batchTableResources = new Cesium3DTileBatchTableResources(that, instancesLength);
+            that._batchTableResources = batchTableResources;
             if (batchTableLength > 0) {
                 var batchTableString = getStringFromTypedArray(getSubarray(uint8Array, byteOffset, batchTableLength));
-                batchTable._batchTable = JSON.parse(batchTableString);
+                batchTableResources.batchTable = JSON.parse(batchTableString);
                 byteOffset += batchTableLength;
             }
 
@@ -138,7 +138,7 @@ define([
             // Create model instance collection
             var collectionOptions = {
                 instances : new Array(instancesLength),
-                batchTable : batchTable,
+                batchTableResources : batchTableResources,
                 boundingVolume : that._boundingVolume,
                 pickPrimitive : that._tileset,
                 cull : false,

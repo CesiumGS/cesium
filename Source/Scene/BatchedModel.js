@@ -10,8 +10,8 @@ define([
     /**
      * DOC_TBA
      */
-    var BatchedModel = function(tileset, batchTable, batchId) {
-        this._batchTable = batchTable;
+    var BatchedModel = function(tileset, batchTableResources, batchId) {
+        this._batchTableResources = batchTableResources;
         this._batchId = batchId;
         this._color = undefined;  // for calling getColor
 
@@ -29,10 +29,10 @@ define([
          */
         show : {
             get : function() {
-                return this._batchTable.getShow(this._batchId);
+                return this._batchTableResources.getShow(this._batchId);
             },
             set : function(value) {
-                this._batchTable.setShow(this._batchId, value);
+                this._batchTableResources.setShow(this._batchId, value);
             }
         },
 
@@ -44,10 +44,10 @@ define([
                 if (!this._color) {
                     this._color = new Color();
                 }
-                return this._batchTable.getColor(this._batchId, this._color);
+                return this._batchTableResources.getColor(this._batchId, this._color);
             },
             set : function(value) {
-                this._batchTable.setColor(this._batchId, value);
+                this._batchTableResources.setColor(this._batchId, value);
             }
         }
     });
@@ -56,14 +56,14 @@ define([
      * DOC_TBA
      */
     BatchedModel.prototype.getProperty = function(name) {
-        return this._batchTable.getProperty(this._batchId, name);
+        return this._batchTableResources.getProperty(this._batchId, name);
     };
 
     /**
      * DOC_TBA
      */
     BatchedModel.prototype.setProperty = function(name, value) {
-        this._batchTable.setProperty(this._batchId, name, value);
+        this._batchTableResources.setProperty(this._batchId, name, value);
     };
 
     return BatchedModel;

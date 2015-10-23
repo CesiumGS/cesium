@@ -20,7 +20,7 @@ define([
         '../Renderer/DrawCommand',
         '../Renderer/ShaderSource',
         '../ThirdParty/when',
-        './Cesium3DTileBatchTable',
+        './Cesium3DTileBatchTableResources',
         './Model',
         './ModelInstance',
         './SceneMode'
@@ -45,7 +45,7 @@ define([
         DrawCommand,
         ShaderSource,
         when,
-        Cesium3DTileBatchTable,
+        Cesium3DTileBatchTableResources,
         Model,
         ModelInstance,
         SceneMode) {
@@ -106,11 +106,11 @@ define([
 
         var instances = defaultValue(options.instances, []);
         var length = instances.length;
-        var batchTable = options.batchTable;
-        if (!defined(batchTable)) {
-            batchTable = new Cesium3DTileBatchTable(this, length);
+        var batchTableResources = options.batchTableResources;
+        if (!defined(batchTableResources)) {
+            batchTableResources = new Cesium3DTileBatchTableResources(this, length);
         }
-        this._batchTable = batchTable;
+        this._batchTableResources = batchTableResources;
         this._pickPrimitive = options.pickPrimitive;
 
         this._instances = new Array(length);
@@ -356,13 +356,13 @@ define([
                 '}';
 
             vertexShaderCached = newMain;
-            return collection._batchTable.getVertexShaderCallback()(newMain);
+            return collection._batchTableResources.getVertexShaderCallback()(newMain);
         };
     }
 
     function getFragmentShaderCallback(collection) {
         return function(fs) {
-            return collection._batchTable.getFragmentShaderCallback()(fs);
+            return collection._batchTableResources.getFragmentShaderCallback()(fs);
         };
     }
 
@@ -384,13 +384,13 @@ define([
     function getPickVertexShaderCallback(collection) {
         return function (vs) {
             // Use the vertex shader that was generated earlier
-            return collection._batchTable.getPickVertexShaderCallback()(vertexShaderCached);
+            return collection._batchTableResources.getPickVertexShaderCallback()(vertexShaderCached);
         };
     }
 
     function getPickFragmentShaderCallback(collection) {
         return function(fs) {
-            return collection._batchTable.getPickFragmentShaderCallback()(fs);
+            return collection._batchTableResources.getPickFragmentShaderCallback()(fs);
         };
     }
 
@@ -426,13 +426,13 @@ define([
                 }
             }
 
-            return collection._batchTable.getUniformMapCallback()(uniformMap);
+            return collection._batchTableResources.getUniformMapCallback()(uniformMap);
         };
     }
 
     function getPickUniformMapCallback(collection) {
         return function(uniformMap) {
-            return collection._batchTable.getPickUniformMapCallback()(uniformMap);
+            return collection._batchTableResources.getPickUniformMapCallback()(uniformMap);
         };
     }
 
@@ -779,7 +779,7 @@ define([
         }
 
         if (instancingSupported) {
-            this._batchTable.update(context, frameState);
+            this._batchTableResources.update(context, frameState);
         }
 
         var model = this._model;
@@ -842,7 +842,7 @@ define([
 
     ModelInstanceCollection.prototype.destroy = function() {
         this._model = this._model && this._model.destroy();
-        this._batchTable = this._batchTable && this._batchTable.destroy();
+        this._batchTableResources = this._batchTableResources && this._batchTableResources.destroy();
 
         return destroyObject(this);
     };

@@ -7,7 +7,7 @@ define([
         '../Core/DeveloperError',
         '../Core/getStringFromTypedArray',
         '../Core/loadArrayBuffer',
-        './Cesium3DTileBatchTable',
+        './Cesium3DTileBatchTableResources',
         './Cesium3DTileContentState',
         './Model',
         './BatchedModel',
@@ -20,7 +20,7 @@ define([
         DeveloperError,
         getStringFromTypedArray,
         loadArrayBuffer,
-        Cesium3DTileBatchTable,
+        Cesium3DTileBatchTableResources,
         Cesium3DTileContentState,
         Model,
         BatchedModel,
@@ -52,7 +52,7 @@ define([
 
         var batchSize = defaultValue(contentHeader.batchSize, 0);
         this._batchSize = batchSize;
-        this._batchTable = new Cesium3DTileBatchTable(this, batchSize);
+        this._batchTableResources = new Cesium3DTileBatchTableResources(this, batchSize);
         this._models = undefined;
     };
 
@@ -78,7 +78,7 @@ define([
         if (!defined(content._models) && (batchSize > 0)) {
             var models = new Array(batchSize);
             for (var i = 0; i < batchSize; ++i) {
-                models[i] = new BatchedModel(tileset, content._batchTable, i);
+                models[i] = new BatchedModel(tileset, content._batchTableResources, i);
             }
             content._models = models;
         }
@@ -113,7 +113,7 @@ define([
      */
     Batched3DModel3DTileContentProvider.prototype.request = function() {
         var that = this;
-        var batchTable = this._batchTable;
+        var batchTableResources = this._batchTableResources;
 
         this.state = Cesium3DTileContentState.LOADING;
 
@@ -153,7 +153,7 @@ define([
                 //
                 // We could also make another request for it, but that would make the property set/get
                 // API async, and would double the number of numbers in some cases.
-                batchTable._batchTable = JSON.parse(batchTableString);
+                batchTableResources.batchTable = JSON.parse(batchTableString);
             }
 
             var gltfView = new Uint8Array(arrayBuffer, byteOffset, arrayBuffer.byteLength - byteOffset);
@@ -164,12 +164,12 @@ define([
                 gltf : gltfView,
                 cull : false,           // The model is already culled by the 3D tiles
                 releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
-                vertexShaderLoaded : batchTable.getVertexShaderCallback(),
-                fragmentShaderLoaded : batchTable.getFragmentShaderCallback(),
-                uniformMapLoaded : batchTable.getUniformMapCallback(),
-                pickVertexShaderLoaded : batchTable.getPickVertexShaderCallback(),
-                pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),
-                pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
+                vertexShaderLoaded : batchTableResources.getVertexShaderCallback(),
+                fragmentShaderLoaded : batchTableResources.getFragmentShaderCallback(),
+                uniformMapLoaded : batchTableResources.getUniformMapCallback(),
+                pickVertexShaderLoaded : batchTableResources.getPickVertexShaderCallback(),
+                pickFragmentShaderLoaded : batchTableResources.getPickFragmentShaderCallback(),
+                pickUniformMapLoaded : batchTableResources.getPickUniformMapCallback(),
                 basePath : that._url
             });
 
@@ -194,7 +194,7 @@ define([
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
 
-        this._batchTable.update(context, frameState);
+        this._batchTableResources.update(context, frameState);
         this._model.update(context, frameState, commandList);
    };
 
@@ -210,7 +210,7 @@ define([
      */
     Batched3DModel3DTileContentProvider.prototype.destroy = function() {
         this._model = this._model && this._model.destroy();
-        this._batchTable = this._batchTable && this._batchTable.destroy();
+        this._batchTableResources = this._batchTableResources && this._batchTableResources.destroy();
 
         return destroyObject(this);
     };
