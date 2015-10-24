@@ -60,7 +60,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var baseUrl = appendForwardSlash(url);
+        url = appendForwardSlash(url);
 
         this._url = url;
         this._root = undefined;
@@ -146,10 +146,10 @@ define([
 
         var that = this;
 
-        loadJson(baseUrl + 'tiles.json').then(function(tree) {
+        loadJson(url + 'tiles.json').then(function(tree) {
             that._properties = tree.properties;
             that._geometricError = tree.geometricError;
-            that._root = new Cesium3DTile(that, baseUrl, tree.root, undefined);
+            that._root = new Cesium3DTile(that, url, tree.root, undefined);
 
             var stack = [];
             stack.push({
@@ -165,7 +165,7 @@ define([
                     var length = children.length;
                     for (var k = 0; k < length; ++k) {
                         var childHeader = children[k];
-                        var childTile = new Cesium3DTile(that, baseUrl, childHeader, t.cesium3DTile);
+                        var childTile = new Cesium3DTile(that, url, childHeader, t.cesium3DTile);
                         t.cesium3DTile.children.push(childTile);
 
                         stack.push({

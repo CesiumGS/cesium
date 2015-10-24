@@ -588,20 +588,6 @@ define([
         return [forwardDecl, attributes, vertexShaderSource, computeFunctions].join('\n');
     };
 
-    Primitive._createPickVertexShaderSource = function(vertexShaderSource) {
-        var renamedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_pick_main');
-        var pickMain =
-            'attribute vec4 pickColor; \n' +
-            'varying vec4 czm_pickColor; \n' +
-            'void main() \n' +
-            '{ \n' +
-            '    czm_pick_main(); \n' +
-            '    czm_pickColor = pickColor; \n' +
-            '}';
-
-        return renamedVS + '\n' + pickMain;
-    };
-
     Primitive._appendShowToShader = function(primitive, vertexShaderSource) {
         if (!defined(primitive._attributeLocations.show)) {
             return vertexShaderSource;
@@ -1099,7 +1085,7 @@ define([
             primitive._pickSP = ShaderProgram.replaceCache({
                 context : context,
                 shaderProgram : primitive._pickSP,
-                vertexShaderSource : Primitive._createPickVertexShaderSource(vs),
+                vertexShaderSource : ShaderSource.createPickVertexShaderSource(vs),
                 fragmentShaderSource : pickFS,
                 attributeLocations : attributeLocations
             });
