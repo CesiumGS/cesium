@@ -64,11 +64,11 @@ defineSuite([
         var sun = new Sun();
         sun.show = false;
 
+        var context = scene.context;
         var frameState = createFrameState(context, createCamera({
             near : 1.0,
             far : 1.0e10
         }));
-        var context = scene.context;
         var us = context.uniformState;
         us.update(frameState);
         viewSun(frameState.camera, us);
@@ -84,12 +84,12 @@ defineSuite([
     it('does not render in 2D', function() {
         var sun = new Sun();
 
+        var context = scene.context;
         var frameState = createFrameState(context, createCamera({
             near : 1.0,
             far : 1.0e10
         }));
         frameState.mode = SceneMode.SCENE2D;
-        var context = scene.context;
         var us = context.uniformState;
         us.update(frameState);
         viewSun(frameState.camera, us);
@@ -104,12 +104,12 @@ defineSuite([
     it('does not render without a render pass', function() {
         var sun = new Sun();
 
+        var context = scene.context;
         var frameState = createFrameState(context, createCamera({
             near : 1.0,
             far : 1.0e10
         }));
         frameState.passes.render = false;
-        var context = scene.context;
         var us = context.uniformState;
         us.update(frameState);
         viewSun(frameState.camera, us);

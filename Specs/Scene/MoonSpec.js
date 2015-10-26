@@ -74,11 +74,11 @@ defineSuite([
         var moon = new Moon();
         moon.show = false;
 
+        var context = scene.context;
         var frameState = createFrameState(context, createCamera({
             near : 1.0,
             far : 1.0e10
         }));
-        var context = scene.context;
         var us = context.uniformState;
         us.update(frameState);
 
