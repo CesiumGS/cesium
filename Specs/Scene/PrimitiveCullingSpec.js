@@ -71,7 +71,6 @@ defineSuite([
 
     beforeAll(function() {
         context = createContext();
-        frameState = createFrameState();
 
         return loadImage('./Data/Images/Green.png').then(function(image) {
             greenImage = image;
@@ -87,8 +86,9 @@ defineSuite([
 
         camera = createCamera();
 
+        frameState = createFrameState(context, camera);
         us = context.uniformState;
-        us.update(context, createFrameState(camera));
+        us.update(frameState);
     });
 
     afterEach(function() {
@@ -106,8 +106,8 @@ defineSuite([
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         // get bounding volume for primitive and reposition camera so its in the the frustum.
-        var commandList = [];
-        primitive.update(context, frameState, commandList);
+        primitive.update(frameState);
+        var commandList = frameState.commandList;
         var bv = commandList[0].boundingVolume;
         camera.position = Cartesian3.clone(bv.center);
         camera.position = Cartesian3.multiplyByScalar(Cartesian3.normalize(camera.position, new Cartesian3()), Cartesian3.magnitude(camera.position) + 1.0, new Cartesian3());
@@ -116,14 +116,14 @@ defineSuite([
         camera.up = Cartesian3.cross(camera.right, camera.direction, new Cartesian3());
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
-        var numRendered = render(context, frameState, primitives);
+        var numRendered = render(frameState, primitives);
         expect(numRendered).toBeGreaterThan(0);
 
         // reposition camera so bounding volume is outside frustum.
         Cartesian3.add(camera.position, Cartesian3.multiplyByScalar(camera.right, 8000000000.0, new Cartesian3()), camera.position);
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
-        numRendered = render(context, frameState, primitives);
+        numRendered = render(frameState, primitives);
         expect(numRendered).toEqual(0);
 
         frameState.camera = savedCamera;
@@ -142,8 +142,8 @@ defineSuite([
         frameState.mode = SceneMode.COLUMBUS_VIEW;
 
         // get bounding volume for primitive and reposition camera so its in the the frustum.
-        var commandList = [];
-        primitive.update(context, frameState, commandList);
+        primitive.update(frameState);
+        var commandList = frameState.commandList;
         var bv = commandList[0].boundingVolume;
         camera.position = Cartesian3.clone(bv.center);
         camera.position.z += 1.0;
@@ -152,14 +152,14 @@ defineSuite([
         camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
-        var numRendered = render(context, frameState, primitives);
+        var numRendered = render(frameState, primitives);
         expect(numRendered).toBeGreaterThan(0);
 
         // reposition camera so bounding volume is outside frustum.
         Cartesian3.add(camera.position, Cartesian3.multiplyByScalar(camera.right, 8000000000.0, new Cartesian3()), camera.position);
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
-        numRendered = render(context, frameState, primitives);
+        numRendered = render(frameState, primitives);
         expect(numRendered).toEqual(0);
 
         frameState.mode = savedMode;
@@ -187,8 +187,8 @@ defineSuite([
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         // get bounding volume for primitive and reposition camera so its in the the frustum.
-        var commandList = [];
-        primitive.update(context, frameState, commandList);
+        primitive.update(frameState);
+        var commandList = frameState.commandList;
         var bv = commandList[0].boundingVolume;
         camera.position = Cartesian3.clone(bv.center);
         camera.position.z += 1.0;
@@ -197,14 +197,14 @@ defineSuite([
         camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
-        var numRendered = render(context, frameState, primitives);
+        var numRendered = render(frameState, primitives);
         expect(numRendered).toBeGreaterThan(0);
 
         // reposition camera so bounding volume is outside frustum.
         Cartesian3.add(camera.position, Cartesian3.multiplyByScalar(camera.right, 8000000000.0, new Cartesian3()), camera.position);
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
-        numRendered = render(context, frameState, primitives);
+        numRendered = render(frameState, primitives);
         expect(numRendered).toEqual(0);
 
         frameState.mode = mode;
@@ -219,8 +219,8 @@ defineSuite([
         frameState.camera = camera;
 
         // get bounding volume for primitive and reposition camera so its in the the frustum.
-        var commandList = [];
-        primitive.update(context, frameState, commandList);
+        primitive.update(frameState);
+        var commandList = frameState.commandList;
         var bv = commandList[0].boundingVolume;
         camera.position = Cartesian3.clone(bv.center);
         camera.position = Cartesian3.multiplyByScalar(Cartesian3.normalize(camera.position, new Cartesian3()), Cartesian3.magnitude(camera.position) + 1.0, new Cartesian3());
@@ -231,7 +231,7 @@ defineSuite([
         var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, bv.radius * 2.0), camera.position);
         frameState.occluder = occluder;
 
-        var numRendered = render(context, frameState, primitives);
+        var numRendered = render(frameState, primitives);
         expect(numRendered).toBeGreaterThan(0);
 
         // reposition camera so bounding volume on the other side of the ellipsoid.
@@ -242,7 +242,7 @@ defineSuite([
 
         occluder.cameraPosition = camera.position;
 
-        numRendered = render(context, frameState, primitives);
+        numRendered = render(frameState, primitives);
         expect(numRendered).toEqual(0);
 
         frameState.camera = savedCamera;
@@ -264,7 +264,7 @@ defineSuite([
         var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, Ellipsoid.WGS84.minimumRadius), camera.position);
         frameState.occluder = occluder;
 
-        var numRendered = render(context, frameState, primitives);
+        var numRendered = render(frameState, primitives);
         expect(numRendered).toEqual(1);
 
         camera.position  = Cartesian3.negate(camera.position, new Cartesian3());
@@ -273,7 +273,7 @@ defineSuite([
         occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, 536560539.60104907), camera.position);
         frameState.occluder = occluder;
 
-        numRendered = render(context, frameState, primitives);
+        numRendered = render(frameState, primitives);
         expect(numRendered).toEqual(0);
 
         frameState.camera = savedCamera;

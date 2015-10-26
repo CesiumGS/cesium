@@ -177,7 +177,7 @@ defineSuite([
         ellipsoid.radii = new Cartesian3(1.0, 1.0, 1.0);
         ellipsoid.id = 'id';
 
-        var pickedObject = pick(context, frameState, ellipsoid, 0, 0);
+        var pickedObject = pick(frameState, ellipsoid, 0, 0);
         expect(pickedObject.primitive).toEqual(ellipsoid);
         expect(pickedObject.id).toEqual('id');
     });
@@ -186,7 +186,7 @@ defineSuite([
         ellipsoid.radii = new Cartesian3(1.0, 1.0, 1.0);
         ellipsoid.show = false;
 
-        var pickedObject = pick(context, frameState, ellipsoid, 0, 0);
+        var pickedObject = pick(frameState, ellipsoid, 0, 0);
         expect(pickedObject).not.toBeDefined();
     });
 
@@ -194,7 +194,7 @@ defineSuite([
         ellipsoid.radii = new Cartesian3(1.0, 1.0, 1.0);
         ellipsoid.material.uniforms.color.alpha = 0.0;
 
-        var pickedObject = pick(context, frameState, ellipsoid, 0, 0);
+        var pickedObject = pick(frameState, ellipsoid, 0, 0);
         expect(pickedObject).not.toBeDefined();
     });
 

@@ -472,7 +472,7 @@ defineSuite([
         s.renderForSpecs();
 
         return pollToPromise(function() {
-            render(s._context, s.frameState, s.globe);
+            render(s.frameState, s.globe);
             return !jasmine.matchersUtil.equals(s._context.readPixels(), [0, 0, 0, 0]);
         });
     });

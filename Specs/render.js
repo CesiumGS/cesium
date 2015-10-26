@@ -40,6 +40,7 @@ define([
     }
 
     function render(frameState, primitive) {
+        frameState.commandList.length = 0;
         primitive.update(frameState);
 
         var i;

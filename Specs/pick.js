@@ -25,6 +25,8 @@ define([
     }
 
     function pick(frameState, primitives, x, y) {
+        frameState.commandList.length = 0;
+
         var context = frameState.context;
 
         var rectangle = new BoundingRectangle(x, y, 1, 1);
