@@ -228,7 +228,6 @@ define([
         this._sunPostProcess = undefined;
 
         this._computeCommandList = [];
-        this._commandList = [];
         this._frustumCommandsList = [];
         this._overlayCommandList = [];
 
@@ -965,6 +964,7 @@ define([
         var camera = scene._camera;
 
         var frameState = scene._frameState;
+        frameState.commandList.length = 0;
         frameState.mode = scene._mode;
         frameState.morphTime = scene.morphTime;
         frameState.mapProjection = scene.mapProjection;
@@ -1039,8 +1039,9 @@ define([
 
     function createPotentiallyVisibleSet(scene) {
         var computeList = scene._computeCommandList;
-        var commandList = scene._commandList;
         var overlayList = scene._overlayCommandList;
+
+        var commandList = scene._frameState.commandList;
 
         var cullingVolume = scene._frameState.cullingVolume;
         var camera = scene._camera;
@@ -1289,8 +1290,9 @@ define([
                 });
             }
 
-            var commandList = [];
-            scene._debugVolume.update(context, frameState, commandList);
+            var savedCommandList = frameState.commandList;
+            var commandList = frameState.commandList = [];
+            scene._debugVolume.update(frameState);
 
             var framebuffer;
             if (defined(debugFramebuffer)) {
@@ -1303,6 +1305,8 @@ define([
             if (defined(framebuffer)) {
                 passState.framebuffer = framebuffer;
             }
+
+            frameState.commandList = savedCommandList;
         }
     }
 
@@ -1719,7 +1723,6 @@ define([
         us.update(frameState);
 
         scene._computeCommandList.length = 0;
-        scene._commandList.length = 0;
         scene._overlayCommandList.length = 0;
 
         updatePrimitives(scene);
@@ -1910,7 +1913,6 @@ define([
 
         us.update(frameState);
 
-        this._commandList.length = 0;
         updatePrimitives(this);
         createPotentiallyVisibleSet(this);
 
