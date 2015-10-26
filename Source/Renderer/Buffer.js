@@ -6,7 +6,8 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/IndexDatatype',
-        './BufferUsage'
+        './BufferUsage',
+        './WebGLConstants'
     ], function(
         defaultValue,
         defined,
@@ -14,7 +15,8 @@ define([
         destroyObject,
         DeveloperError,
         IndexDatatype,
-        BufferUsage) {
+        BufferUsage,
+        WebGLConstants) {
     "use strict";
 
     /**
@@ -123,7 +125,7 @@ define([
 
         return new Buffer({
             context: options.context,
-            bufferTarget: options.context._gl.ARRAY_BUFFER,
+            bufferTarget: WebGLConstants.ARRAY_BUFFER,
             typedArray: options.typedArray,
             sizeInBytes: options.sizeInBytes,
             usage: options.usage
@@ -195,7 +197,7 @@ define([
         var bytesPerIndex = IndexDatatype.getSizeInBytes(indexDatatype);
         var buffer = new Buffer({
             context : context,
-            bufferTarget : context._gl.ELEMENT_ARRAY_BUFFER,
+            bufferTarget : WebGLConstants.ELEMENT_ARRAY_BUFFER,
             typedArray : options.typedArray,
             sizeInBytes : options.sizeInBytes,
             usage : options.usage

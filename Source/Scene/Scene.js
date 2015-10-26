@@ -34,6 +34,7 @@ define([
         '../Renderer/ContextLimits',
         '../Renderer/PassState',
         '../Renderer/ShaderProgram',
+        '../Renderer/ShaderSource',
         './Camera',
         './CreditDisplay',
         './CullingVolume',
@@ -93,6 +94,7 @@ define([
         ContextLimits,
         PassState,
         ShaderProgram,
+        ShaderSource,
         Camera,
         CreditDisplay,
         CullingVolume,
@@ -136,7 +138,7 @@ define([
      *     antialias : true,
      *     premultipliedAlpha : true,
      *     preserveDrawingBuffer : false,
-     *     failIfMajorPerformanceCaveat : true
+     *     failIfMajorPerformanceCaveat : false
      *   },
      *   allowTextureFilterAnisotropic : true
      * }
@@ -150,11 +152,6 @@ define([
      * <code>webgl.alpha</code> defaults to false, which can improve performance compared to the standard WebGL default
      * of true.  If an application needs to composite Cesium above other HTML elements using alpha-blending, set
      * <code>webgl.alpha</code> to true.
-     * </p>
-     * <p>
-     * <code>webgl.failIfMajorPerformanceCaveat</code> defaults to true, which ensures a context is not successfully created
-     * if the system has a major performance issue such as only supporting software rendering.  The standard WebGL default is false,
-     * which is not appropriate for almost any Cesium app.
      * </p>
      * <p>
      * The other <code>webgl</code> properties match the WebGL defaults for {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}.
@@ -1160,7 +1157,7 @@ define([
         var fs = sp.fragmentShaderSource.clone();
 
         fs.sources = fs.sources.map(function(source) {
-            source = source.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_Debug_main()');
+            source = ShaderSource.replaceMain(source, 'czm_Debug_main');
             return source;
         });
 

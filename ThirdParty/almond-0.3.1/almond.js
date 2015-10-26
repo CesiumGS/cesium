@@ -1,5 +1,5 @@
 /**
- * almond 0.2.6 Copyright (c) 2011-2012, The Dojo Foundation All Rights Reserved.
+ * @license almond 0.3.1 Copyright (c) 2011-2014, The Dojo Foundation All Rights Reserved.
  * Available via the MIT or new BSD license.
  * see: http://github.com/jrburke/almond for details
  */
@@ -16,7 +16,8 @@ var requirejs, require, define;
         config = {},
         defining = {},
         hasOwn = Object.prototype.hasOwnProperty,
-        aps = [].slice;
+        aps = [].slice,
+        jsSuffixRegExp = /\.js$/;
 
     function hasProp(obj, prop) {
         return hasOwn.call(obj, prop);
@@ -31,7 +32,7 @@ var requirejs, require, define;
      * @returns {String} normalized name
      */
     function normalize(name, baseName) {
-        var nameParts, nameSegment, mapValue, foundMap,
+        var nameParts, nameSegment, mapValue, foundMap, lastIndex,
             foundI, foundStarMap, starI, i, j, part,
             baseParts = baseName && baseName.split("/"),
             map = config.map,
@@ -43,14 +44,19 @@ var requirejs, require, define;
             //otherwise, assume it is a top-level require that will
             //be relative to baseUrl in the end.
             if (baseName) {
-                //Convert baseName to array, and lop off the last part,
-                //so that . matches that "directory" and not name of the baseName's
-                //module. For instance, baseName of "one/two/three", maps to
-                //"one/two/three.js", but we want the directory, "one/two" for
-                //this normalization.
-                baseParts = baseParts.slice(0, baseParts.length - 1);
+                name = name.split('/');
+                lastIndex = name.length - 1;
 
-                name = baseParts.concat(name.split("/"));
+                // Node .js allowance:
+                if (config.nodeIdCompat && jsSuffixRegExp.test(name[lastIndex])) {
+                    name[lastIndex] = name[lastIndex].replace(jsSuffixRegExp, '');
+                }
+
+                //Lop off the last part of baseParts, so that . matches the
+                //"directory" and not name of the baseName's module. For instance,
+                //baseName of "one/two/three", maps to "one/two/three.js", but we
+                //want the directory, "one/two" for this normalization.
+                name = baseParts.slice(0, baseParts.length - 1).concat(name);
 
                 //start trimDots
                 for (i = 0; i < name.length; i += 1) {
@@ -142,7 +148,15 @@ var requirejs, require, define;
             //A version of a require function that passes a moduleName
             //value for items that may need to
             //look up paths relative to the moduleName
-            return req.apply(undef, aps.call(arguments, 0).concat([relName, forceSync]));
+            var args = aps.call(arguments, 0);
+
+            //If first arg is not require('string'), and there is only
+            //one arg, it is the array form without a callback. Insert
+            //a null so that the following concat is correct.
+            if (typeof args[0] !== 'string' && args.length === 1) {
+                args.push(null);
+            }
+            return req.apply(undef, args.concat([relName, forceSync]));
         };
     }
 
@@ -259,14 +273,14 @@ var requirejs, require, define;
     main = function (name, deps, callback, relName) {
         var cjsModule, depName, ret, map, i,
             args = [],
+            callbackType = typeof callback,
             usingExports;
 
         //Use name if no relName
         relName = relName || name;
 
         //Call the callback to define the module, if necessary.
-        if (typeof callback === 'function') {
-
+        if (callbackType === 'undefined' || callbackType === 'function') {
             //Pull out the defined dependencies and pass the ordered
             //values to the callback.
             //Default to [require, exports, module] if no deps
@@ -297,7 +311,7 @@ var requirejs, require, define;
                 }
             }
 
-            ret = callback.apply(defined[name], args);
+            ret = callback ? callback.apply(defined[name], args) : undefined;
 
             if (name) {
                 //If setting exports via "module" is in play,
@@ -332,6 +346,13 @@ var requirejs, require, define;
         } else if (!deps.splice) {
             //deps is a config object, not an array.
             config = deps;
+            if (config.deps) {
+                req(config.deps, config.callback);
+            }
+            if (!callback) {
+                return;
+            }
+
             if (callback.splice) {
                 //callback is an array, which means it is a dependency list.
                 //Adjust args if there are dependencies
@@ -376,11 +397,7 @@ var requirejs, require, define;
      * the config return value is used.
      */
     req.config = function (cfg) {
-        config = cfg;
-        if (config.deps) {
-            req(config.deps, config.callback);
-        }
-        return req;
+        return req(cfg);
     };
 
     /**
@@ -389,6 +406,9 @@ var requirejs, require, define;
     requirejs._defined = defined;
 
     define = function (name, deps, callback) {
+        if (typeof name !== 'string') {
+            throw new Error('See almond README: incorrect module build, no module name');
+        }
 
         //This module may not have dependencies
         if (!deps.splice) {
