@@ -190,14 +190,15 @@ define([
                 return;
             }
 
-            var baseUri = new Uri(that._url);
-
             that._tileUrlTemplates = data.tiles;
             for (var i = 0; i < that._tileUrlTemplates.length; ++i) {
                 var template = new Uri(that._tileUrlTemplates[i]);
-                if (baseUri.query && template.query) {template.query += '&' + baseUri.query;}
-                else if (baseUri.query) {template.query = baseUri.query;}
-                that._tileUrlTemplates[i] = template.resolve(baseUri).toString().replace('{version}', data.version);
+                var baseUri = new Uri(that._url);
+                if (template.authority && !baseUri.authority) {
+                    baseUri.authority = template.authority;
+                    baseUri.scheme = template.scheme;
+                }
+                that._tileUrlTemplates[i] = joinUrls(baseUri, template).toString().replace('{version}', data.version);
             }
 
             that._availableTiles = data.available;

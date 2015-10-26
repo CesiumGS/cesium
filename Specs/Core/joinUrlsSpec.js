@@ -55,35 +55,35 @@ defineSuite([
         .toEqual(qualifiedUrlWithPath+absolutePath);
     });
 
-    it('appendes relative path correctly to relative path', function() {
+    it('appends relative path correctly to relative path', function() {
         expect(joinUrls(relativePath, relativePath)).toEqual(expectedRelativePath);
     });
 
-    it('appendes absolute path correctly to relative path', function() {
+    it('appends absolute path correctly to relative path', function() {
         expect(joinUrls(relativePath, absolutePath)).toEqual(expectedRelativePath);
     });
 
-    it('appendes relative path correctly to absolute path', function() {
+    it('appends relative path correctly to absolute path', function() {
         expect(joinUrls(absolutePath, relativePath)).toEqual(expectedAbsolutePath);
     });
 
-    it('appendes absolute path correctly to absolute path', function() {
+    it('appends absolute path correctly to absolute path', function() {
         expect(joinUrls(absolutePath, absolutePath)).toEqual(expectedAbsolutePath);
     });
 
-    it('appendes qualfied url correctly to qualified url', function() {
+    it('appends qualfied url correctly to qualified url', function() {
         expect(joinUrls(qualifiedUrl, qualifiedUrl)).toEqual(qualifiedUrl+"/");
     });
 
-    it('appendes qualfied url correctly to qualified url with path', function() {
+    it('appends qualfied url correctly to qualified url with path', function() {
         expect(joinUrls(qualifiedUrl, qualifiedUrlWithPath)).toEqual(expectedQualifiedUrl);
     });
 
-    it('appendes qualfied url with path correctly to qualified url', function() {
+    it('appends qualfied url with path correctly to qualified url', function() {
         expect(joinUrls(qualifiedUrl, qualifiedUrlWithPath)).toEqual(expectedQualifiedUrl);
     });
 
-    it('appendes qualfied url with path correctly to qualified url with path', function() {
+    it('appends qualfied url with path correctly to qualified url with path', function() {
         expect(joinUrls(qualifiedUrlWithPath, qualifiedUrlWithPath))
         .toEqual(qualifiedUrlWithPath+absolutePath);
     });

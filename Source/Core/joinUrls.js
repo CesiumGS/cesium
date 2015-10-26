@@ -25,7 +25,14 @@ define(['../ThirdParty/Uri'],
 
         var url = '';
         if (first.scheme) {url += first.scheme + ':';}
-        if (first.authority) {url += '//' + first.authority;}
+        if (first.authority) {
+            url += '//' + first.authority;
+
+            if (first.path !== "") {
+                 url = url.replace(/\/?$/, '/');
+                first.path = first.path.replace(/^\/?/g, '');
+            }
+        }
 
         if (appendSlash) {
             url += first.path.replace(/\/?$/, '/') + second.path.replace(/^\/?/g, '');
