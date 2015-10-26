@@ -1,10 +1,10 @@
 /*global define*/
 define([
-        '../Core/HeadingPitchRange',
-        '../Core/deprecationWarning'
+        '../Core/deprecationWarning',
+        '../Core/HeadingPitchRange'
     ], function(
-        CoreHeadingPitchRange,
-        deprecationWarning) {
+        deprecationWarning,
+        CoreHeadingPitchRange) {
     "use strict";
 
     /**

@@ -464,7 +464,7 @@ function combineCesium(debug, optimizer, combineOutput) {
         },
         baseUrl : 'Source',
         skipModuleInsertion : true,
-        name : path.join('..', 'ThirdParty', 'almond-0.2.6', 'almond'),
+        name : path.join('..', 'ThirdParty', 'almond-0.3.1', 'almond'),
         include : 'main',
         out : path.join(combineOutput, 'Cesium.js')
     });
@@ -818,20 +818,20 @@ function buildCesiumViewer() {
             gulp.src(cesiumViewerStartup)
                 .pipe(gulpInsert.prepend(copyrightHeader))
                 .pipe(gulpReplace('../../Source', '.'))
-                .pipe(gulpReplace('../../ThirdParty/requirejs-2.1.9', '.')),
+                .pipe(gulpReplace('../../ThirdParty/requirejs-2.1.20', '.')),
 
             gulp.src(cesiumViewerCss)
                 .pipe(gulpReplace('../../Source', '.')),
 
             gulp.src(['Apps/CesiumViewer/index.html'])
-                .pipe(gulpReplace('../../ThirdParty/requirejs-2.1.9', '.')),
+                .pipe(gulpReplace('../../ThirdParty/requirejs-2.1.20', '.')),
 
             gulp.src(['Apps/CesiumViewer/**',
                       '!Apps/CesiumViewer/index.html',
                       '!Apps/CesiumViewer/**/*.js',
                       '!Apps/CesiumViewer/**/*.css']),
 
-            gulp.src(['ThirdParty/requirejs-2.1.9/require.min.js'])
+            gulp.src(['ThirdParty/requirejs-2.1.20/require.min.js'])
                 .pipe(gulpRename('require.js')),
 
             gulp.src(['Build/Cesium/Assets/**',

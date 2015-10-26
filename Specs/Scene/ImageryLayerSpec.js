@@ -2,8 +2,8 @@
 defineSuite([
         'Scene/ImageryLayer',
         'Core/EllipsoidTerrainProvider',
-        'Core/loadJsonp',
         'Core/loadImage',
+        'Core/loadJsonp',
         'Core/loadWithXhr',
         'Core/Rectangle',
         'Renderer/ComputeEngine',
@@ -24,8 +24,8 @@ defineSuite([
     ], function(
         ImageryLayer,
         EllipsoidTerrainProvider,
-        loadJsonp,
         loadImage,
+        loadJsonp,
         loadWithXhr,
         Rectangle,
         ComputeEngine,
