@@ -1,22 +1,22 @@
 /*global define*/
 define([
-    '../ThirdParty/Uri',
-    '../ThirdParty/when',
-    './combine',
-    './defaultValue',
-    './defined',
-    './DeveloperError',
-    './objectToQuery',
-    './queryToObject'
-], function(
-    Uri,
-    when,
-    combine,
-    defaultValue,
-    defined,
-    DeveloperError,
-    objectToQuery,
-    queryToObject) {
+        '../ThirdParty/Uri',
+        '../ThirdParty/when',
+        './combine',
+        './defaultValue',
+        './defined',
+        './DeveloperError',
+        './objectToQuery',
+        './queryToObject'
+    ], function(
+        Uri,
+        when,
+        combine,
+        defaultValue,
+        defined,
+        DeveloperError,
+        objectToQuery,
+        queryToObject) {
     "use strict";
 
     /**

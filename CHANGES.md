@@ -20,18 +20,19 @@ Change Log
   * The following options to `Camera.setView` have been deprecated and will be removed in 1.17:
     * `position`: use `destination` instead.
     * `positionCartographic`: convert to a `Cartesian3` and use `destination` instead.
-    * `heading`, `pitch` and `roll`: use `orientation.heading/pitch/roll` instead.  
+    * `heading`, `pitch` and `roll`: use `orientation.heading/pitch/roll` instead.
 * Decreased GPU memory usage in `BillboardCollection` and `LabelCollection` by using the WebGL ANGLE_instanced_arrays extension.
 * Added CZML examples to Sandcastle.  See the new CZML tab.
 * Fixed token issue in `ArcGisMapServerImageryProvider`.
 * `ImageryLayerFeatureInfo` now has an `imageryLayer` property, indicating the layer that contains the feature.
 * Added `BoxOutlineGeometry.fromAxisAlignedBoundingBox` and `BoxGeometry.fromAxisAlignedBoundingBox` functions.
 * Switched to [gulp](http://gulpjs.com/) for all build tasks. `Java` and `ant` are no longer required to develop Cesium. [#3106](https://github.com/AnalyticalGraphicsInc/cesium/pull/3106)
-* The WebGL setting of `failIfMajorPerformanceCaveat` now defaults to `false`, which is the official WebGL default. This improves compatibility with out-of-date drivers and remote desktop sessions. Cesium will run slower in these cases instead of simply failing to load. 
-* Changed `Camera.setView` to take the same parameter options as `Camera.flyTo`.  `options.destination` takes a rectangle, `options.orientation` works with heading/pitch/roll or direction/up, and `options.endTransform` was added.
-* Fixed the issue where the camera inertia takes too long to finish causing the camera move events to fire after it appears to. [2839](https://github.com/AnalyticalGraphicsInc/cesium/issues/2839)
-* Updated `requirejs` from 2.1.9 to 2.1.20.
-* Updated `almond` from 0.2.6 to 0.3.1.
+* The WebGL setting of `failIfMajorPerformanceCaveat` now defaults to `false`, which is the official WebGL default. This improves compatibility with out-of-date drivers and remote desktop sessions. Cesium will run slower in these cases instead of simply failing to load. [#3108](https://github.com/AnalyticalGraphicsInc/cesium/pull/3108)
+* Changed `Camera.setView` to take the same parameter options as `Camera.flyTo`.  `options.destination` takes a rectangle, `options.orientation` works with heading/pitch/roll or direction/up, and `options.endTransform` was added. [#3100](https://github.com/AnalyticalGraphicsInc/cesium/pull/3100)
+* Fixed the issue where the camera inertia takes too long to finish causing the camera move events to fire after it appears to. [#2839](https://github.com/AnalyticalGraphicsInc/cesium/issues/2839)
+* Make KML invalid coordinate processing match Google Earth behavior. (#3124)[https://github.com/AnalyticalGraphicsInc/cesium/pull/3124]
+* Updated `requirejs` from 2.1.9 to 2.1.20. [#3107](https://github.com/AnalyticalGraphicsInc/cesium/pull/3107)
+* Updated `almond` from 0.2.6 to 0.3.1. [#3107](https://github.com/AnalyticalGraphicsInc/cesium/pull/3107)
 
 ### 1.14 - 2015-10-01
 

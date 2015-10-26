@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-    'Core/loadJsonp',
-    'Core/DefaultProxy',
-    'Core/RequestErrorEvent'
-], function(
-    loadJsonp,
-    DefaultProxy,
-    RequestErrorEvent) {
+        'Core/loadJsonp',
+        'Core/DefaultProxy',
+        'Core/RequestErrorEvent'
+    ], function(
+        loadJsonp,
+        DefaultProxy,
+        RequestErrorEvent) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
