@@ -10,10 +10,35 @@ Change Log
 ### 1.15 - 2015-11-02
 
 * Breaking changes
-  * ...
+  * Deleted old `<subfolder>/package.json` and `*.profile.js` files, not used since we moved away from a Dojo-based build years ago.  This should allow future compatibility with newer systems like Browserify and Webpack.
 * Deprecated
-  * ...
+  * Deprecated `BoxGeometry.minimumCorner` and `BoxGeometry.maximumCorner`, use `BoxGeometry.minimum` and `BoxGeometry.maximum` instead. These will be removed in 1.17.
+  * Deprecated `BoxOutlineGeometry.minimumCorner` and `BoxOutlineGeometry.maximumCorner`, use `BoxOutlineGeometry.minimum` and `BoxOutlineGeometry.maximum` instead. These will be removed in 1.17.
+  * Made `EllipsoidPrimitive` private, use `EllipsoidGeometry` or `Entity.ellipsoid` instead.
+  * Deprecated `RectanglePrimitive`, use `RectangleGeometry` or `Entity.rectangle` instead. It will be removed in 1.17.
+  * Deprecated `EllipsoidPrimitive`, use `EllipsoidGeometry` or `Entity.ellipsoid` instead. It will be removed in 1.17.
+  * Deprecated `OrthographicFrustum.getPixelSize`, use `OrthographicFrustum.getPixelDimensions` instead. It will be removed in 1.17.
+  * Deprecated `PerspectiveFrustum.getPixelSize`, use `PerspectiveFrustum.getPixelDimensions` instead. It will be removed in 1.17.
+  * Deprecated `PerspectiveOffCenterFrustum.getPixelSize`, use `PerspectiveOffCenterFrustum.getPixelDimensions` instead. It will be removed in 1.17.
+  * Deprecated `Scene\HeadingPitchRange`, use `Core\HeadingPitchRange` instead. It will be removed in 1.17.
+  * Deprecated `jsonp` use `loadJsonp` instead. It will be removed in 1.17.
+  * Deprecated `Camera.viewRectangle`, use `Camera.setView({destination: rectangle})` instead. It will be removed in 1.17.
+  * The following options to `Camera.setView` have been deprecated and will be removed in 1.17:
+    * `position`: use `destination` instead.
+    * `positionCartographic`: convert to a `Cartesian3` and use `destination` instead.
+    * `heading`, `pitch` and `roll`: use `orientation.heading/pitch/roll` instead.
 * Decreased GPU memory usage in `BillboardCollection` and `LabelCollection` by using the WebGL ANGLE_instanced_arrays extension.
+* Added CZML examples to Sandcastle.  See the new CZML tab.
+* Fixed token issue in `ArcGisMapServerImageryProvider`.
+* `ImageryLayerFeatureInfo` now has an `imageryLayer` property, indicating the layer that contains the feature.
+* Added `BoxOutlineGeometry.fromAxisAlignedBoundingBox` and `BoxGeometry.fromAxisAlignedBoundingBox` functions.
+* Switched to [gulp](http://gulpjs.com/) for all build tasks. `Java` and `ant` are no longer required to develop Cesium. [#3106](https://github.com/AnalyticalGraphicsInc/cesium/pull/3106)
+* The WebGL setting of `failIfMajorPerformanceCaveat` now defaults to `false`, which is the official WebGL default. This improves compatibility with out-of-date drivers and remote desktop sessions. Cesium will run slower in these cases instead of simply failing to load. [#3108](https://github.com/AnalyticalGraphicsInc/cesium/pull/3108)
+* Changed `Camera.setView` to take the same parameter options as `Camera.flyTo`.  `options.destination` takes a rectangle, `options.orientation` works with heading/pitch/roll or direction/up, and `options.endTransform` was added. [#3100](https://github.com/AnalyticalGraphicsInc/cesium/pull/3100)
+* Fixed the issue where the camera inertia takes too long to finish causing the camera move events to fire after it appears to. [#2839](https://github.com/AnalyticalGraphicsInc/cesium/issues/2839)
+* Make KML invalid coordinate processing match Google Earth behavior. (#3124)[https://github.com/AnalyticalGraphicsInc/cesium/pull/3124]
+* Updated `requirejs` from 2.1.9 to 2.1.20. [#3107](https://github.com/AnalyticalGraphicsInc/cesium/pull/3107)
+* Updated `almond` from 0.2.6 to 0.3.1. [#3107](https://github.com/AnalyticalGraphicsInc/cesium/pull/3107)
 
 ### 1.14 - 2015-10-01
 
@@ -43,7 +68,7 @@ Change Log
         // draws the ellipse on top of the rectangle
         var ellipse = scene.groundPrimitives.add(new Cesium.GroundPrimitive({...}));
         var rectangle = scene.groundPrimitives.add(new Cesium.GroundPrimitive({...}));
-    
+
         // move the rectangle to draw on top of the ellipse
         scene.groundPrimitives.raise(rectangle);
 
@@ -73,7 +98,7 @@ Change Log
 * The default `CTRL + Left Click Drag` mouse behavior is now duplicated for `CTRL + Right Click Drag` for better compatibility with Firefox on Mac OS [#2872](https://github.com/AnalyticalGraphicsInc/cesium/pull/2913).
 * Fixed incorrect texture coordinates for `WallGeometry` [#2872](https://github.com/AnalyticalGraphicsInc/cesium/issues/2872)
 * Fixed `WallGeometry` bug that caused walls covering a short distance not to render. [#2897](https://github.com/AnalyticalGraphicsInc/cesium/issues/2897)
-* Fixed `PolygonGeometry` clockwise winding order bug. 
+* Fixed `PolygonGeometry` clockwise winding order bug.
 * Fixed extruded `RectangleGeometry` bug for small heights. [#2823](https://github.com/AnalyticalGraphicsInc/cesium/issues/2823)
 * Fixed `BillboardCollection` bounding sphere for billboards with a non-center vertical origin. [#2894](https://github.com/AnalyticalGraphicsInc/cesium/issues/2894)
 * Fixed a bug that caused `Camera.positionCartographic` to be incorrect. [#2838](https://github.com/AnalyticalGraphicsInc/cesium/issues/2838)

@@ -730,7 +730,7 @@ define([
     var createGeometryTaskProcessors;
     var combineGeometryTaskProcessor = new TaskProcessor('combineGeometry', Number.POSITIVE_INFINITY);
 
-    function loadAsynchronous(primitive, context, frameState) {
+    function loadAsynchronous(primitive, frameState) {
         var instances;
         var geometry;
         var i;
@@ -823,10 +823,10 @@ define([
             var promise = combineGeometryTaskProcessor.scheduleTask(PrimitivePipeline.packCombineGeometryParameters({
                 createGeometryResults : primitive._createGeometryResults,
                 instances : instances,
-                pickIds : allowPicking ? createPickIds(context, primitive, instances) : undefined,
+                pickIds : allowPicking ? createPickIds(frameState.context, primitive, instances) : undefined,
                 ellipsoid : projection.ellipsoid,
                 projection : projection,
-                elementIndexUintSupported : context.elementIndexUint,
+                elementIndexUintSupported : frameState.context.elementIndexUint,
                 scene3DOnly : scene3DOnly,
                 allowPicking : allowPicking,
                 vertexCacheOptimize : primitive.vertexCacheOptimize,
@@ -874,7 +874,7 @@ define([
         }
     }
 
-    function loadSynchronous(primitive, context, frameState) {
+    function loadSynchronous(primitive, frameState) {
         var instances = (isArray(primitive.geometryInstances)) ? primitive.geometryInstances : [primitive.geometryInstances];
         var length = primitive._numberOfInstances = instances.length;
 
@@ -918,10 +918,10 @@ define([
         var result = PrimitivePipeline.combineGeometry({
             instances : clonedInstances,
             invalidInstances : invalidInstances,
-            pickIds : allowPicking ? createPickIds(context, primitive, clonedInstances) : undefined,
+            pickIds : allowPicking ? createPickIds(frameState.context, primitive, clonedInstances) : undefined,
             ellipsoid : projection.ellipsoid,
             projection : projection,
-            elementIndexUintSupported : context.elementIndexUint,
+            elementIndexUintSupported : frameState.context.elementIndexUint,
             scene3DOnly : scene3DOnly,
             allowPicking : allowPicking,
             vertexCacheOptimize : primitive.vertexCacheOptimize,
@@ -948,11 +948,12 @@ define([
         }
     }
 
-    function createVertexArray(primitive, context, frameState) {
+    function createVertexArray(primitive, frameState) {
         var attributeLocations = primitive._attributeLocations;
         var geometries = primitive._geometries;
         var vaAttributes = primitive._vaAttributes;
         var scene3DOnly = frameState.scene3DOnly;
+        var context = frameState.context;
 
         var va = [];
         var length = geometries.length;
@@ -1061,7 +1062,9 @@ define([
         }
     }
 
-    function createShaderProgram(primitive, context, frameState, appearance) {
+    function createShaderProgram(primitive, frameState, appearance) {
+        var context = frameState.context;
+
         var vs = Primitive._modifyShaderPosition(primitive, appearance.vertexShaderSource, frameState.scene3DOnly);
         vs = Primitive._appendShowToShader(primitive, vs);
         vs = modifyForEncodedNormals(primitive, vs);
@@ -1223,7 +1226,7 @@ define([
 
     var rtcScratch = new Cartesian3();
 
-    function updateAndQueueCommands(primitive, frameState, commandList, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
+    function updateAndQueueCommands(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
         //>>includeStart('debug', pragmas.debug);
         if (frameState.mode !== SceneMode.SCENE3D && !Matrix4.equals(modelMatrix, Matrix4.IDENTITY)) {
             throw new DeveloperError('Primitive.modelMatrix is only supported in 3D mode.');
@@ -1264,6 +1267,7 @@ define([
             boundingSpheres = primitive._boundingSphereMorph;
         }
 
+        var commandList = frameState.commandList;
         var passes = frameState.passes;
         if (passes.render) {
             var colorLength = colorCommands.length;
@@ -1302,7 +1306,7 @@ define([
      * @exception {DeveloperError} Appearance and material have a uniform with the same name.
      * @exception {DeveloperError} Primitive.modelMatrix is only supported in 3D mode.
      */
-    Primitive.prototype.update = function(context, frameState, commandList) {
+    Primitive.prototype.update = function(frameState) {
         if (((!defined(this.geometryInstances)) && (this._va.length === 0)) ||
             (defined(this.geometryInstances) && isArray(this.geometryInstances) && this.geometryInstances.length === 0) ||
             (!defined(this.appearance)) ||
@@ -1325,14 +1329,14 @@ define([
 
         if (this._state !== PrimitiveState.COMPLETE && this._state !== PrimitiveState.COMBINED) {
             if (this.asynchronous) {
-                loadAsynchronous(this, context, frameState);
+                loadAsynchronous(this, frameState);
             } else {
-                loadSynchronous(this, context, frameState);
+                loadSynchronous(this, frameState);
             }
         }
 
         if (this._state === PrimitiveState.COMBINED) {
-            createVertexArray(this, context, frameState);
+            createVertexArray(this, frameState);
         }
 
         if (!this.show || this._state !== PrimitiveState.COMPLETE) {
@@ -1361,6 +1365,7 @@ define([
             createRS = true;
         }
 
+        var context = frameState.context;
         if (defined(this._material)) {
             this._material.update(context);
         }
@@ -1374,7 +1379,7 @@ define([
 
         if (createSP) {
             var spFunc = defaultValue(this._createShaderProgramFunction, createShaderProgram);
-            spFunc(this, context, frameState, appearance);
+            spFunc(this, frameState, appearance);
         }
 
         if (createRS || createSP) {
@@ -1385,7 +1390,7 @@ define([
         updatePerInstanceAttributes(this);
 
         var updateAndQueueCommandsFunc = defaultValue(this._updateAndQueueCommandsFunction, updateAndQueueCommands);
-        updateAndQueueCommandsFunc(this, frameState, commandList, this._colorCommands, this._pickCommands, this.modelMatrix, this.cull, this.debugShowBoundingVolume, twoPasses);
+        updateAndQueueCommandsFunc(this, frameState, this._colorCommands, this._pickCommands, this.modelMatrix, this.cull, this.debugShowBoundingVolume, twoPasses);
     };
 
     function createGetFunction(name, perInstanceAttributes) {

@@ -3088,7 +3088,6 @@ define([
         }
     }
 
-    var scratchDrawingBufferDimensions = new Cartesian2();
     var scratchPixelSize = new Cartesian2();
     var scratchBoundingSphere = new BoundingSphere();
 
@@ -3098,9 +3097,7 @@ define([
         var camera = frameState.camera;
         var distance = camera.distanceToBoundingSphere(scratchBoundingSphere);
 
-        scratchDrawingBufferDimensions.x = context.drawingBufferWidth;
-        scratchDrawingBufferDimensions.y = context.drawingBufferHeight;
-        var pixelSize = camera.frustum.getPixelSize(scratchDrawingBufferDimensions, distance, scratchPixelSize);
+        var pixelSize = frustum.getPixelDimensions(context.drawingBufferWidth, context.drawingBufferHeight, distance, scratchPixelSize);
         var pixelScale = Math.max(pixelSize.x, pixelSize.y);
 
         return pixelScale;
@@ -3204,7 +3201,7 @@ define([
      *
      * @exception {RuntimeError} Failed to load external reference.
      */
-    Model.prototype.update = function(context, frameState, commandList) {
+    Model.prototype.update = function(frameState) {
         if (frameState.mode !== SceneMode.SCENE3D) {
             return;
         }
@@ -3215,6 +3212,7 @@ define([
             return;
         }
 
+        var context = frameState.context;
         this._defaultTexture = context.defaultTexture;
 
         if ((this._state === ModelState.NEEDS_LOAD) && defined(this.gltf)) {
@@ -3374,6 +3372,7 @@ define([
         // and then have them visible immediately when show is set to true.
         if (show && !this._ignoreCommands) {
 // PERFORMANCE_IDEA: This is terrible
+            var commandList = frameState.commandList;
             var passes = frameState.passes;
             var nodeCommands = this._nodeCommands;
             var length = nodeCommands.length;

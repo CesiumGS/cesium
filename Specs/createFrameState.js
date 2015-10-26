@@ -17,9 +17,9 @@ define([
         JobScheduler) {
     "use strict";
 
-    var createFrameState = function(camera, frameNumber, time) {
+    var createFrameState = function(context, camera, frameNumber, time) {
         // Mock frame-state for testing.
-        var frameState = new FrameState(new CreditDisplay(document.createElement('div')), new JobScheduler());
+        var frameState = new FrameState(context, new CreditDisplay(document.createElement('div')), new JobScheduler());
 
         var projection = new GeographicProjection();
         frameState.mapProjection = projection;
