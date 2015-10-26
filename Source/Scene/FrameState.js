@@ -17,7 +17,16 @@ define([
      * @private
      */
     var FrameState = function(context, creditDisplay) {
+        /**
+         * The rendering context.
+         * @type {Context}
+         */
         this.context = context;
+
+        /**
+         * An array of rendering commands.
+         * @type {DrawCommand[]}
+         */
         this.commandList = [];
 
         /**
