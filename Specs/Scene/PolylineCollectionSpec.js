@@ -1479,7 +1479,7 @@ defineSuite([
 
         p.id = 'id2';
 
-        pickedObject = pick(context, frameState, polylines, 0, 0);
+        pickedObject = pick(frameState, polylines, 0, 0);
         expect(pickedObject.primitive).toEqual(p);
         expect(pickedObject.id).toEqual('id2');
     });
@@ -1498,7 +1498,7 @@ defineSuite([
             show : false
         });
 
-        var pickedObject = pick(context, frameState, polylines, 0, 0);
+        var pickedObject = pick(frameState, polylines, 0, 0);
         expect(pickedObject).toBeUndefined();
     });
 
@@ -1516,7 +1516,7 @@ defineSuite([
         });
         p.material.uniforms.color.alpha = 0.0;
 
-        var pickedObject = pick(polylines, 0, 0);
+        var pickedObject = pick(frameState, polylines, 0, 0);
         expect(pickedObject).toBeUndefined();
     });
 
@@ -1566,9 +1566,8 @@ defineSuite([
             }]
         });
 
-        var commandList = [];
-        polylines.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].boundingVolume;
+        polylines.update(frameState);
+        var boundingVolume = frameState.commandList[0].boundingVolume;
 
         expect(one._boundingVolume).toEqual(BoundingSphere.fromPoints(one.positions));
         expect(two._boundingVolume).toEqual(BoundingSphere.fromPoints(two.positions));
@@ -1595,9 +1594,8 @@ defineSuite([
 
         var mode = frameState.mode;
         frameState.mode = testMode;
-        var commandList = [];
-        polylines.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].boundingVolume;
+        polylines.update(frameState);
+        var boundingVolume = frameState.commandList[0].boundingVolume;
         frameState.mode = mode;
 
         var positions = one.positions;
@@ -1661,11 +1659,10 @@ defineSuite([
         });
         two.material.uniforms.color = new Color(0.0, 1.0, 0.0, 1.0);
 
-        var commandList = [];
-        polylines.update(context, frameState, commandList);
+        polylines.update(frameState);
 
-        expect(commandList[0].boundingVolume).toEqual(one._boundingVolume);
-        expect(commandList[1].boundingVolume).toEqual(two._boundingVolume);
+        expect(frameState.commandList[0].boundingVolume).toEqual(one._boundingVolume);
+        expect(frameState.commandList[1].boundingVolume).toEqual(two._boundingVolume);
     });
 
     it('isDestroyed', function() {

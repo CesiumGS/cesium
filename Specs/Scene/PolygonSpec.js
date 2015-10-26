@@ -337,9 +337,8 @@ defineSuite([
 
     it('test 3D bounding sphere from positions', function() {
         polygon = createPolygon();
-        var commandList = [];
-        polygon.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].boundingVolume;
+        polygon.update(frameState);
+        var boundingVolume = frameState.commandList[0].boundingVolume;
         var sphere = BoundingSphere.fromPoints(polygon.positions);
         expect(boundingVolume.center).toEqualEpsilon(sphere.center, CesiumMath.EPSILON1);
         expect(boundingVolume.radius).toEqualEpsilon(sphere.radius, CesiumMath.EPSILON2);
@@ -364,9 +363,8 @@ defineSuite([
 
         var mode = frameState.mode;
         frameState.mode = testMode;
-        var commandList = [];
-        polygon.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].boundingVolume;
+        polygon.update(frameState);
+        var boundingVolume = frameState.commandList[0].boundingVolume;
         frameState.mode = mode;
 
         var projectedPositions = [];

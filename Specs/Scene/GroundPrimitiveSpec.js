@@ -90,9 +90,10 @@ defineSuite([
         this._primitive = primitive;
     };
 
-    MockGlobePrimitive.prototype.update = function(context, frameState, commandList) {
+    MockGlobePrimitive.prototype.update = function(frameState) {
+        var commandList = frameState.commandList;
         var startLength = commandList.length;
-        this._primitive.update(context, frameState, commandList);
+        this._primitive.update(frameState);
 
         for (var i = startLength; i < commandList.length; ++i) {
             var command = commandList[i];
@@ -278,12 +279,16 @@ defineSuite([
 
         var frameState = createFrameState(context);
 
+        frameState.commandList.length = 0;
         primitive.update(frameState);
         expect(frameState.afterRender.length).toEqual(1);
+
         frameState.afterRender[0]();
+        frameState.commandList.length = 0;
         primitive.update(frameState);
         expect(frameState.commandList.length).toBeGreaterThan(0);
 
+        frameState.commandList.length = 0;
         primitive.show = false;
         primitive.update(frameState);
         expect(frameState.commandList.length).toEqual(0);
