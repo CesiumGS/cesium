@@ -242,21 +242,21 @@ define([
      * @param {DrawCommand[]} commandList The list of draw commands.  The primitive will usually add
      *        commands to this array during the update call.
      */
-    QuadtreePrimitive.prototype.update = function(context, frameState, commandList) {
+    QuadtreePrimitive.prototype.update = function(frameState) {
         var passes = frameState.passes;
 
         if (passes.render) {
-            this._tileProvider.beginUpdate(context, frameState, commandList);
+            this._tileProvider.beginUpdate(frameState);
 
-            selectTilesForRendering(this, context, frameState);
-            processTileLoadQueue(this, context, frameState, commandList);
-            createRenderCommandsForSelectedTiles(this, context, frameState, commandList);
+            selectTilesForRendering(this, frameState);
+            processTileLoadQueue(this, frameState);
+            createRenderCommandsForSelectedTiles(this, frameState);
 
-            this._tileProvider.endUpdate(context, frameState, commandList);
+            this._tileProvider.endUpdate(frameState);
         }
 
         if (passes.pick && this._tilesToRender.length > 0) {
-            this._tileProvider.endUpdate(context, frameState, commandList);
+            this._tileProvider.endUpdate(frameState);
         }
     };
 
@@ -299,7 +299,7 @@ define([
         this._tileProvider = this._tileProvider && this._tileProvider.destroy();
     };
 
-    function selectTilesForRendering(primitive, context, frameState) {
+    function selectTilesForRendering(primitive, frameState) {
         var debug = primitive._debug;
 
         if (debug.suspendLodUpdate) {
@@ -394,7 +394,7 @@ define([
             // This one doesn't load children unless we refine to them.
             // We may want to revisit this in the future.
 
-            if (screenSpaceError(primitive, context, frameState, tile) < primitive.maximumScreenSpaceError) {
+            if (screenSpaceError(primitive, frameState, tile) < primitive.maximumScreenSpaceError) {
                 // This tile meets SSE requirements, so render it.
                 addTileToRenderList(primitive, tile);
             } else if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(primitive, tile)) {
@@ -433,9 +433,9 @@ define([
         }
     }
 
-    function screenSpaceError(primitive, context, frameState, tile) {
+    function screenSpaceError(primitive, frameState, tile) {
         if (frameState.mode === SceneMode.SCENE2D) {
-            return screenSpaceError2D(primitive, context, frameState, tile);
+            return screenSpaceError2D(primitive, frameState, tile);
         }
 
         var maxGeometricError = primitive._tileProvider.getLevelMaximumGeometricError(tile.level);
@@ -443,7 +443,7 @@ define([
         var distance = primitive._tileProvider.computeDistanceToTile(tile, frameState);
         tile._distance = distance;
 
-        var height = context.drawingBufferHeight;
+        var height = frameState.context.drawingBufferHeight;
 
         var camera = frameState.camera;
         var frustum = camera.frustum;
@@ -453,9 +453,11 @@ define([
         return (maxGeometricError * height) / (2 * distance * Math.tan(0.5 * fovy));
     }
 
-    function screenSpaceError2D(primitive, context, frameState, tile) {
+    function screenSpaceError2D(primitive, frameState, tile) {
         var camera = frameState.camera;
         var frustum = camera.frustum;
+
+        var context = frameState.context;
         var width = context.drawingBufferWidth;
         var height = context.drawingBufferHeight;
 
@@ -499,7 +501,7 @@ define([
         primitive._tileLoadQueue.push(tile);
     }
 
-    function processTileLoadQueue(primitive, context, frameState, commandList) {
+    function processTileLoadQueue(primitive, frameState) {
         var tileLoadQueue = primitive._tileLoadQueue;
         var tileProvider = primitive._tileProvider;
 
@@ -518,7 +520,7 @@ define([
         for (var len = tileLoadQueue.length - 1, i = len; i >= 0; --i) {
             var tile = tileLoadQueue[i];
             primitive._tileReplacementQueue.markTileRendered(tile);
-            tileProvider.loadTile(context, frameState, commandList, tile);
+            tileProvider.loadTile(frameState, tile);
             if (getTimestamp() >= endTime) {
                 break;
             }
@@ -619,7 +621,7 @@ define([
         return a._distance - b._distance;
     }
 
-    function createRenderCommandsForSelectedTiles(primitive, context, frameState, commandList) {
+    function createRenderCommandsForSelectedTiles(primitive, frameState) {
         var tileProvider = primitive._tileProvider;
         var tilesToRender = primitive._tilesToRender;
         var tilesToUpdateHeights = primitive._tileToUpdateHeights;
@@ -628,7 +630,7 @@ define([
 
         for (var i = 0, len = tilesToRender.length; i < len; ++i) {
             var tile = tilesToRender[i];
-            tileProvider.showTileThisFrame(tile, context, frameState, commandList);
+            tileProvider.showTileThisFrame(tile, frameState);
 
             if (tile._frameRendered !== frameState.frameNumber - 1) {
                 tilesToUpdateHeights.push(tile);

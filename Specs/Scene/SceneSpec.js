@@ -173,7 +173,7 @@ defineSuite([
         var spyListener = jasmine.createSpy('listener');
 
         var primitive = {
-            update : function(context, frameState, commandList) {
+            update : function(frameState) {
                 frameState.afterRender.push(spyListener);
             },
             destroy : function() {
@@ -186,8 +186,8 @@ defineSuite([
     });
 
     function CommandMockPrimitive(command) {
-        this.update = function(context, frameState, commandList) {
-            commandList.push(command);
+        this.update = function(frameState) {
+            frameState.commandList.push(command);
         };
         this.destroy = function() {
         };
@@ -472,7 +472,7 @@ defineSuite([
         s.renderForSpecs();
 
         return pollToPromise(function() {
-            render(s._context, s.frameState, s.globe);
+            render(s.frameState, s.globe);
             return !jasmine.matchersUtil.equals(s._context.readPixels(), [0, 0, 0, 0]);
         });
     });
