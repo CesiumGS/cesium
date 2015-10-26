@@ -624,7 +624,7 @@ define([
         }
     }
 
-    function updateAndQueueCommands(primitive, frameState, commandList, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
+    function updateAndQueueCommands(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
         var boundingVolumes;
         if (frameState.mode === SceneMode.SCENE3D) {
             boundingVolumes = primitive._boundingVolumes;
@@ -632,6 +632,7 @@ define([
             boundingVolumes = primitive._boundingVolumes2D;
         }
 
+        var commandList = frameState.commandList;
         var passes = frameState.passes;
         if (passes.render) {
             var colorLength = colorCommands.length;
