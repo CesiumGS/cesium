@@ -387,6 +387,23 @@ defineSuite([
         });
     });
 
+    it('Has entity collection with link to data source', function() {
+        var dataSource = new GeoJsonDataSource();
+        return dataSource.load(featureWithId).then(function() {
+            var entityCollection = dataSource.entities;
+            expect(entityCollection.dataSource).toEqual(dataSource);
+        });
+    });
+
+    it('Has entity with link to entity collection', function() {
+        var dataSource = new GeoJsonDataSource();
+        return dataSource.load(featureWithId).then(function() {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.entityCollection).toEqual(entityCollection);
+        });
+    });
+
     it('Works with point geometry', function() {
         var dataSource = new GeoJsonDataSource();
         return dataSource.load(point).then(function() {

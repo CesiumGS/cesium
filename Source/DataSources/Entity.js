@@ -174,6 +174,7 @@ define([
         this._children = [];
 
         this.parent = options.parent;
+        this.entityCollection = undefined;
         this.merge(options);
     };
 

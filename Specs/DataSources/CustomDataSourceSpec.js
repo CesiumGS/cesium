@@ -63,4 +63,11 @@ defineSuite([
         expect(spy.calls.count()).toEqual(2);
         expect(spy).toHaveBeenCalledWith(dataSource, false);
     });
+
+    it('has entity collection with link to data source', function() {
+        var dataSource = new CustomDataSource();
+        var entityCollection = dataSource.entities;
+        expect(entityCollection.dataSource).toEqual(dataSource);
+    });
+
 });

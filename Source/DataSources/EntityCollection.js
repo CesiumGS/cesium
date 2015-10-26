@@ -47,8 +47,11 @@ define([
      * An observable collection of {@link Entity} instances where each entity has a unique id.
      * @alias EntityCollection
      * @constructor
+     *
+     * @param {DataSource|CompositeEntityCollection} dataSource The data source which created this collection.
      */
-    var EntityCollection = function() {
+    var EntityCollection = function(dataSource) {
+        this.dataSource = dataSource;
         this._entities = new AssociativeArray();
         this._addedEntities = new AssociativeArray();
         this._removedEntities = new AssociativeArray();
@@ -202,6 +205,7 @@ define([
             throw new RuntimeError('An entity with id ' + id + ' already exists in this collection.');
         }
 
+        entity.entityCollection = this;
         entities.set(id, entity);
 
         var removedEntities = this._removedEntities;
@@ -332,7 +336,7 @@ define([
         if (!defined(entity)) {
             entityOptionsScratch.id = id;
             entity = new Entity(entityOptionsScratch);
-            this.add(entity);
+            this.add(entity, this);
         }
         return entity;
     };

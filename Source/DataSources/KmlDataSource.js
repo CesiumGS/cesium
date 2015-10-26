@@ -1539,7 +1539,7 @@ define([
             name = getFilenameFromUri(sourceUri);
         }
 
-        var styleCollection = new EntityCollection();
+        var styleCollection = new EntityCollection(dataSource);
         return when.all(processStyles(dataSource, kml, styleCollection, sourceUri, false, uriResolver), function() {
             var element = kml.documentElement;
             if (element.localName === 'kml') {
@@ -1681,7 +1681,7 @@ define([
         this._error = new Event();
         this._loading = new Event();
         this._clock = undefined;
-        this._entityCollection = new EntityCollection();
+        this._entityCollection = new EntityCollection(this);
         this._name = undefined;
         this._isLoading = false;
         this._proxy = proxy;

@@ -2887,4 +2887,26 @@ defineSuite([
             expect(entity.label.text.getValue()).toBe('bob');
         });
     });
+
+    it('Has entity collection with link to data source', function() {
+        var dataSource = new KmlDataSource();
+        var entityCollection = dataSource.entities;
+        expect(entityCollection.dataSource).toEqual(dataSource);
+    });
+
+    it('Has entity with link to entity collection', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Polygon>\
+              <altitudeMode>relativeToGround</altitudeMode>\
+              <extrude>1</extrude>\
+            </Polygon>\
+          </Placemark>';
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.entityCollection).toEqual(entityCollection);
+        });
+    });
+
 });
