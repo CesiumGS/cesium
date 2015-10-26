@@ -230,6 +230,7 @@ defineSuite([
 
         var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, bv.radius * 2.0), camera.position);
         frameState.occluder = occluder;
+        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         var numRendered = render(frameState, primitives);
         expect(numRendered).toBeGreaterThan(0);
@@ -241,6 +242,7 @@ defineSuite([
         camera.up = Cartesian3.cross(camera.right, camera.direction, new Cartesian3());
 
         occluder.cameraPosition = camera.position;
+        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         numRendered = render(frameState, primitives);
         expect(numRendered).toEqual(0);
