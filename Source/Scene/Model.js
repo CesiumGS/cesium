@@ -3091,13 +3091,14 @@ define([
     var scratchPixelSize = new Cartesian2();
     var scratchBoundingSphere = new BoundingSphere();
 
-    function scaleInPixels(positionWC, radius, context, frameState) {
+    function scaleInPixels(positionWC, radius, frameState) {
         scratchBoundingSphere.center = positionWC;
         scratchBoundingSphere.radius = radius;
         var camera = frameState.camera;
         var distance = camera.distanceToBoundingSphere(scratchBoundingSphere);
 
-        var pixelSize = frustum.getPixelDimensions(context.drawingBufferWidth, context.drawingBufferHeight, distance, scratchPixelSize);
+        var context = frameState.context;
+        var pixelSize = camera.frustum.getPixelDimensions(context.drawingBufferWidth, context.drawingBufferHeight, distance, scratchPixelSize);
         var pixelScale = Math.max(pixelSize.x, pixelSize.y);
 
         return pixelScale;
@@ -3105,11 +3106,12 @@ define([
 
     var scratchPosition = new Cartesian3();
 
-    function getScale(model, context, frameState) {
+    function getScale(model, frameState) {
         var scale = model.scale;
 
         if (model.minimumPixelSize !== 0.0) {
             // Compute size of bounding sphere in pixels
+            var context = frameState.context;
             var maxPixelSize = Math.max(context.drawingBufferWidth, context.drawingBufferHeight);
             var m = model.modelMatrix;
             scratchPosition.x = m[12];
@@ -3121,7 +3123,7 @@ define([
             }
 
             var radius = model.boundingSphere.radius;
-            var metersPerPixel = scaleInPixels(scratchPosition, radius, context, frameState);
+            var metersPerPixel = scaleInPixels(scratchPosition, radius, frameState);
 
             // metersPerPixel is always > 0.0
             var pixelsPerMeter = 1.0 / metersPerPixel;
@@ -3332,7 +3334,7 @@ define([
                 this._scale = this.scale;
                 this._minimumPixelSize = this.minimumPixelSize;
 
-                var scale = getScale(this, context, frameState);
+                var scale = getScale(this, frameState);
                 var computedModelMatrix = this._computedModelMatrix;
                 Matrix4.multiplyByUniformScale(this.modelMatrix, scale, computedModelMatrix);
                 Matrix4.multiplyTransformation(computedModelMatrix, yUpToZUp, computedModelMatrix);
