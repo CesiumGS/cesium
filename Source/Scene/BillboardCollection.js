@@ -1144,7 +1144,7 @@ define([
             var distance = camera.distanceToBoundingSphere(boundingVolume);
 
             var context = frameState.context;
-            var pixelSize = frustum.getPixelDimensions(context.drawingBufferWidth, context.drawingBufferHeight, distance, scratchPixelSize);
+            var pixelSize = frameState.camera.frustum.getPixelDimensions(context.drawingBufferWidth, context.drawingBufferHeight, distance, scratchPixelSize);
             pixelScale = Math.max(pixelSize.x, pixelSize.y);
         }
 

@@ -443,7 +443,7 @@ define([
         var distance = primitive._tileProvider.computeDistanceToTile(tile, frameState);
         tile._distance = distance;
 
-        var height = context.drawingBufferHeight;
+        var height = frameState.context.drawingBufferHeight;
         var sseDenominator = frameState.camera.frustum.sseDenominator;
 
         return (maxGeometricError * height) / (distance * sseDenominator);
