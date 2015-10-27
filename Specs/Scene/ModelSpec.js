@@ -9,6 +9,7 @@ defineSuite([
         'Core/HeadingPitchRange',
         'Core/JulianDate',
         'Core/loadArrayBuffer',
+        'Core/loadJson',
         'Core/Math',
         'Core/Matrix4',
         'Core/PrimitiveType',
@@ -29,6 +30,7 @@ defineSuite([
         HeadingPitchRange,
         JulianDate,
         loadArrayBuffer,
+        loadJson,
         CesiumMath,
         Matrix4,
         PrimitiveType,
@@ -452,6 +454,20 @@ defineSuite([
     });
 
     ///////////////////////////////////////////////////////////////////////////
+
+    it('Throws because of invalid extension', function() {
+        return loadJson(boxUrl).then(function(gltf) {
+            gltf.extensionsUsed = ['NOT_supported_extension'];
+            var model = primitives.add(new Model({
+                gltf : gltf
+            }));
+
+            expect(function() {
+                scene.renderForSpecs();
+            }).toThrowRuntimeError();
+            primitives.remove(model);
+        });
+    });
 
     it('loads a glTF v0.8 model', function() {
         return loadModel(box0_8Url).then(function(m) {

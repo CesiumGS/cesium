@@ -2968,14 +2968,30 @@ define([
             this._boundingSphere = computeBoundingSphere(this.gltf);
             this._initialRadius = this._boundingSphere.radius;
 
-            var extensions = this.gltf.extensions;
-            if (defined(extensions) && defined(extensions.CESIUM_RTC)) {
-                this._rtcCenter = Cartesian3.fromArray(extensions.CESIUM_RTC.center);
-                this._rtcCenterEye = new Cartesian3();
+            var extensionsUsed = this.gltf.extensionsUsed;
+            if (defined(extensionsUsed)) {
+                var extensionsUsedCount = extensionsUsed.length;
+                for (var index=0;index<extensionsUsedCount;++index) {
+                    var extension = extensionsUsed[index];
+
+                    if (extension !== 'CESIUM_RTC' && extension !== 'CESIUM_binary_glTF' &&
+                        extension !== 'KHR_binary_glTF' && extension !== 'KHR_materials_common') {
+                        this._loadError = new RuntimeError('Unsupported glTF Extension: ' + extension);
+                        this._state = ModelState.FAILED;
+                    }
+                }
             }
 
-            this._loadResources = new LoadResources();
-            parse(this);
+            if (this._state !== ModelState.FAILED) {
+                var extensions = this.gltf.extensions;
+                if (defined(extensions) && defined(extensions.CESIUM_RTC)) {
+                    this._rtcCenter = Cartesian3.fromArray(extensions.CESIUM_RTC.center);
+                    this._rtcCenterEye = new Cartesian3();
+                }
+
+                this._loadResources = new LoadResources();
+                parse(this);
+            }
         }
 
         var justLoaded = false;
