@@ -539,13 +539,14 @@ define([
             else {
                 fragmentShader += '  vec3 ambient = u_ambient.rgb;\n';
             }
+            colorCreationBlock += '  color += ambient * ambientLight;\n';
         }
-        else {
+        else if (lightingModel !== 'CONSTANT') {
             fragmentShader += '  vec3 ambient = diffuse.rgb;\n';
+            colorCreationBlock += '  color += ambient * ambientLight;\n';
         }
         fragmentShader += '  vec3 viewDir = -normalize(v_positionEC);\n';
         fragmentShader += '  vec3 ambientLight = vec3(0.0, 0.0, 0.0);\n';
-        colorCreationBlock += '  color += ambient * ambientLight;\n';
 
         // Add in light computations
         fragmentShader += fragmentLightingBlock;
@@ -756,12 +757,12 @@ define([
                 delete gltf.extensions.KHR_materials_common;
             }
 
-            //var json = JSON.stringify(gltf, null, 4);
-            //var a = document.createElement('a');
-            //a.setAttribute('href', 'data:text;base64,' + btoa(json));
-            //a.setAttribute('target', '_blank');
-            //a.setAttribute('download', 'model.json');
-            //a.click();
+            var json = JSON.stringify(gltf, null, 4);
+            var a = document.createElement('a');
+            a.setAttribute('href', 'data:text;base64,' + btoa(json));
+            a.setAttribute('target', '_blank');
+            a.setAttribute('download', 'model.json');
+            a.click();
         }
 
         return gltf;
