@@ -1,5 +1,6 @@
 /*global defineSuite*/
 defineSuite([
+        'Widgets/Viewer/Viewer',
         'Core/Cartesian3',
         'Core/ClockRange',
         'Core/ClockStep',
@@ -33,6 +34,7 @@ defineSuite([
         'Widgets/SelectionIndicator/SelectionIndicator',
         'Widgets/Timeline/Timeline'
     ], function(
+        Viewer,
         Cartesian3,
         ClockRange,
         ClockStep,

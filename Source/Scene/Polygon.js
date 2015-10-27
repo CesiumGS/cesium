@@ -312,7 +312,7 @@ define([
      * @exception {DeveloperError} this.material must be defined.
      * @exception {DeveloperError} this.granularity must be defined.
      */
-    Polygon.prototype.update = function(context, frameState, commandList) {
+    Polygon.prototype.update = function(frameState) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(this.ellipsoid)) {
             throw new DeveloperError('this.ellipsoid must be defined.');
@@ -395,7 +395,7 @@ define([
         var primitive = this._primitive;
         primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
         primitive.appearance.material = this.material;
-        primitive.update(context, frameState, commandList);
+        primitive.update(frameState);
     };
 
     /**

@@ -2810,7 +2810,7 @@ define([
         }
     }
 
-    var scratchDrawingBufferDimensions = new Cartesian2();
+    var scratchPixelSize = new Cartesian2();
     var scratchToCenter = new Cartesian3();
     var scratchProj = new Cartesian3();
 
@@ -2822,9 +2822,7 @@ define([
         var proj = Cartesian3.multiplyByScalar(camera.directionWC, Cartesian3.dot(toCenter, camera.directionWC), scratchProj);
         var distance = Math.max(frustum.near, Cartesian3.magnitude(proj) - radius);
 
-        scratchDrawingBufferDimensions.x = context.drawingBufferWidth;
-        scratchDrawingBufferDimensions.y = context.drawingBufferHeight;
-        var pixelSize = frustum.getPixelSize(scratchDrawingBufferDimensions, distance);
+        var pixelSize = frustum.getPixelDimensions(context.drawingBufferWidth, context.drawingBufferHeight, distance, scratchPixelSize);
         var pixelScale = Math.max(pixelSize.x, pixelSize.y);
 
         return pixelScale;
@@ -2928,10 +2926,12 @@ define([
      *
      * @exception {RuntimeError} Failed to load external reference.
      */
-    Model.prototype.update = function(context, frameState, commandList) {
+    Model.prototype.update = function(frameState) {
         if (frameState.mode !== SceneMode.SCENE3D) {
             return;
         }
+
+        var context = frameState.context;
 
         if ((this._state === ModelState.NEEDS_LOAD) && defined(this.gltf)) {
             // Use renderer resources from cache instead of loading/creating them?
@@ -3075,6 +3075,7 @@ define([
         // and then have them visible immediately when show is set to true.
         if (show) {
 // PERFORMANCE_IDEA: This is terrible
+            var commandList = frameState.commandList;
             var passes = frameState.passes;
             var nodeCommands = this._nodeCommands;
             var length = nodeCommands.length;

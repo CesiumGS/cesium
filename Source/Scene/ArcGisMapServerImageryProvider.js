@@ -11,8 +11,8 @@ define([
         '../Core/Event',
         '../Core/GeographicProjection',
         '../Core/GeographicTilingScheme',
-        '../Core/jsonp',
         '../Core/loadJson',
+        '../Core/loadJsonp',
         '../Core/Math',
         '../Core/Rectangle',
         '../Core/TileProviderError',
@@ -34,8 +34,8 @@ define([
         Event,
         GeographicProjection,
         GeographicTilingScheme,
-        jsonp,
         loadJson,
+        loadJsonp,
         CesiumMath,
         Rectangle,
         TileProviderError,
@@ -215,7 +215,7 @@ define([
                 parameters.token = that._token;
             }
 
-            var metadata = jsonp(that._url, {
+            var metadata = loadJsonp(that._url, {
                 parameters : parameters,
                 proxy : that._proxy
             });

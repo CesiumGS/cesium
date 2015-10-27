@@ -43,8 +43,8 @@ defineSuite([
     });
 
     function CommandMockPrimitive(command) {
-        this.update = function(context, frameState, commandList) {
-            commandList.push(command);
+        this.update = function(frameState) {
+            frameState.commandList.push(command);
         };
         this.destroy = function() {
         };
