@@ -660,7 +660,7 @@ define([
     var scratchPixelSize = new Cartesian2();
     var scratchToCenter = new Cartesian3();
     var scratchProj = new Cartesian3();
-    function updateBoundingVolume(collection, context, frameState, boundingVolume) {
+    function updateBoundingVolume(collection, frameState, boundingVolume) {
         var camera = frameState.camera;
         var frustum = camera.frustum;
 
@@ -668,6 +668,7 @@ define([
         var proj = Cartesian3.multiplyByScalar(camera.directionWC, Cartesian3.dot(toCenter, camera.directionWC), scratchProj);
         var distance = Math.max(0.0, Cartesian3.magnitude(proj) - boundingVolume.radius);
 
+        var context = frameState.context;
         var pixelSize = frustum.getPixelDimensions(context.drawingBufferWidth, context.drawingBufferHeight, distance, scratchPixelSize);
         var pixelScale = Math.max(pixelSize.x, pixelSize.y);
 
@@ -680,7 +681,7 @@ define([
     /**
      * @private
      */
-    PointPrimitiveCollection.prototype.update = function(context, frameState, commandList) {
+    PointPrimitiveCollection.prototype.update = function(frameState) {
         removePointPrimitives(this);
 
         this._maxTotalPointSize = ContextLimits.maximumAliasedPointSize;
@@ -697,6 +698,7 @@ define([
         var createVertexArray = this._createVertexArray;
 
         var vafWriters;
+        var context = frameState.context;
         var pass = frameState.passes;
         var picking = pass.pick;
 
@@ -807,7 +809,7 @@ define([
         } else {
             boundingVolume = BoundingSphere.clone(this._baseVolume2D, this._boundingVolume);
         }
-        updateBoundingVolume(this, context, frameState, boundingVolume);
+        updateBoundingVolume(this, frameState, boundingVolume);
 
         var va;
         var vaLength;
@@ -815,6 +817,8 @@ define([
         var j;
         var vs;
         var fs;
+
+        var commandList = frameState.commandList;
 
         if (pass.render) {
             var colorList = this._colorCommands;

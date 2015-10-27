@@ -875,11 +875,11 @@ define([
      *
      * @param {FrameState} frameState The frameState to synchronize with.
      */
-    UniformState.prototype.update = function(context, frameState) {
+    UniformState.prototype.update = function(frameState) {
         this._mode = frameState.mode;
         this._mapProjection = frameState.mapProjection;
 
-        var canvas = context._canvas;
+        var canvas = frameState.context._canvas;
         this._resolutionScale = canvas.width / canvas.clientWidth;
 
         var camera = frameState.camera;

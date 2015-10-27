@@ -370,7 +370,7 @@ define([
     /**
      * @private
      */
-    PolylineCollection.prototype.update = function(context, frameState, commandList) {
+    PolylineCollection.prototype.update = function(frameState, commandList) {
         removePolylines(this);
 
         if (this._polylines.length === 0) {
@@ -379,6 +379,7 @@ define([
 
         updateMode(this, frameState);
 
+        var context = frameState.context;
         var projection = frameState.mapProjection;
         var polyline;
         var properties = this._propertiesChanged;
@@ -460,19 +461,22 @@ define([
 
         if (pass.render) {
             var colorList = this._colorCommands;
-            createCommandLists(this, context, frameState, colorList, commandList, modelMatrix, true);
+            createCommandLists(this, frameState, colorList, modelMatrix, true);
         }
 
         if (pass.pick) {
             var pickList = this._pickCommands;
-            createCommandLists(this, context, frameState, pickList, commandList, modelMatrix, false);
+            createCommandLists(this, frameState, pickList, modelMatrix, false);
         }
     };
 
     var boundingSphereScratch = new BoundingSphere();
     var boundingSphereScratch2 = new BoundingSphere();
 
-    function createCommandLists(polylineCollection, context, frameState, commands, commandList, modelMatrix, renderPass) {
+    function createCommandLists(polylineCollection, frameState, commands, modelMatrix, renderPass) {
+        var context = frameState.context;
+        var commandList = frameState.commandList;
+
         var commandsLength = commands.length;
         var commandIndex = 0;
         var cloneBoundingSphere = true;
