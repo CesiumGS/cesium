@@ -36,7 +36,7 @@ define([
     Empty3DTileContentProvider.prototype.request = function() {
     };
 
-    Empty3DTileContentProvider.prototype.update = function(owner, context, frameState, commandList) {
+    Empty3DTileContentProvider.prototype.update = function(owner, frameState) {
     };
 
     Empty3DTileContentProvider.prototype.isDestroyed = function() {

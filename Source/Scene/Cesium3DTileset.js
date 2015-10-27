@@ -248,7 +248,7 @@ define([
         }
     });
 
-    function getScreenSpaceError(geometricError, tile, context, frameState) {
+    function getScreenSpaceError(geometricError, tile, frameState) {
         // TODO: screenSpaceError2D like QuadtreePrimitive.js
         if (geometricError === 0.0) {
             // Leaf nodes do not have any error so save the computation
@@ -257,7 +257,7 @@ define([
 
         // Avoid divide by zero when viewer is inside the tile
         var distance = Math.max(tile.distanceToCamera, CesiumMath.EPSILON7);
-        var height = context.drawingBufferHeight;
+        var height = frameState.context.drawingBufferHeight;
         var sseDenominator = frameState.camera.frustum.sseDenominator;
 
         return (geometricError * height) / (distance * sseDenominator);
@@ -320,7 +320,7 @@ define([
 
     var scratchStack = [];
 
-    function selectTiles(tiles3D, context, frameState, commandList, outOfCore) {
+    function selectTiles(tiles3D, frameState, outOfCore) {
         if (tiles3D.debugFreezeFrame) {
             return;
         }
@@ -335,7 +335,7 @@ define([
         root.distanceToCamera = root.distanceToTile(frameState);
         root.parentPlaneMask = CullingVolume.MASK_INDETERMINATE;
 
-        if (getScreenSpaceError(tiles3D._geometricError, root, context, frameState) <= maximumScreenSpaceError) {
+        if (getScreenSpaceError(tiles3D._geometricError, root, frameState) <= maximumScreenSpaceError) {
             // The SSE of not rendering the tree is small enough that the tree does not need to be rendered
             return;
         }
@@ -365,7 +365,7 @@ define([
             var fullyVisible = (planeMask === CullingVolume.MASK_INSIDE);
 
             // Tile is inside/intersects the view frustum.  How many pixels is its geometric error?
-            var sse = getScreenSpaceError(t.geometricError, t, context, frameState);
+            var sse = getScreenSpaceError(t.geometricError, t, frameState);
 // TODO: refine also based on (1) occlusion/VMSSE and/or (2) center of viewport
 
             var children = t.children;
@@ -402,7 +402,7 @@ define([
                             child.parentPlaneMask = planeMask;
 
                             // Use parent's geometric error with child's box to see if we already meet the SSE
-                            if (getScreenSpaceError(t.geometricError, child, context, frameState) > maximumScreenSpaceError) {
+                            if (getScreenSpaceError(t.geometricError, child, frameState) > maximumScreenSpaceError) {
                                 if (child.isContentUnloaded() && (child.visibility(cullingVolume) !== CullingVolume.MASK_OUTSIDE) && outOfCore) {
                                     requestContent(tiles3D, child);
                                 } else {
@@ -501,14 +501,14 @@ define([
         };
     }
 
-    function processTiles(tiles3D, context, frameState) {
+    function processTiles(tiles3D, frameState) {
         var tiles = tiles3D._processingQueue;
         var length = tiles.length;
 
         // Process tiles in the PROCESSING state so they will eventually move to the READY state.
         // Traverse backwards in case a tile is removed as a result of calling process()
         for (var i = length - 1; i >= 0; --i) {
-            tiles[i].process(tiles3D, context, frameState);
+            tiles[i].process(tiles3D, frameState);
         }
     }
 
@@ -555,7 +555,8 @@ define([
         }
     }
 
-    function updateTiles(tiles3D, context, frameState, commandList) {
+    function updateTiles(tiles3D, frameState) {
+        var commandList = frameState.commandList;
         var numberOfCommands = commandList.length;
         var selectedTiles = tiles3D._selectedTiles;
         var length = selectedTiles.length;
@@ -563,7 +564,7 @@ define([
         for (var i = 0; i < length; ++i) {
             var tile = selectedTiles[i];
             tileVisible.raiseEvent(tile);
-            tile.update(tiles3D, context, frameState, commandList);
+            tile.update(tiles3D, frameState);
         }
 
         tiles3D._statistics.numberOfCommands = (commandList.length - numberOfCommands);
@@ -604,7 +605,7 @@ define([
     /**
      * DOC_TBA
      */
-    Cesium3DTileset.prototype.update = function(context, frameState, commandList) {
+    Cesium3DTileset.prototype.update = function(frameState) {
         // TODO: Support 2D and CV
         if (!this.show || !defined(this._root) || (frameState.mode !== SceneMode.SCENE3D)) {
             return;
@@ -619,10 +620,10 @@ define([
         clearStats(this);
 
         if (outOfCore) {
-            processTiles(this, context, frameState);
+            processTiles(this, frameState);
         }
-        selectTiles(this, context, frameState, commandList, outOfCore);
-        updateTiles(this, context, frameState, commandList);
+        selectTiles(this, frameState, outOfCore);
+        updateTiles(this, frameState);
 
         // Events are raised (added to the afterRender queue) here since promises
         // may resolve outside of the update loop that then raise events, e.g.,

@@ -53,7 +53,7 @@ define([
 
         this._pickTexture = undefined;
         this._pickIds = [];
-        
+
         this._batchTable = undefined;
         this._contentProvider = contentProvider;
 
@@ -661,7 +661,8 @@ define([
         }
     }
 
-    Cesium3DTileBatchTableResources.prototype.update = function(context, frameState) {
+    Cesium3DTileBatchTableResources.prototype.update = function(frameState) {
+        var context = frameState.context;
         this._defaultTexture = context.defaultTexture;
 
         if (frameState.passes.pick) {

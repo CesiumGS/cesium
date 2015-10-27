@@ -189,13 +189,13 @@ define([
      *
      * Use Cesium3DTile#update
      */
-    Batched3DModel3DTileContentProvider.prototype.update = function(owner, context, frameState, commandList) {
+    Batched3DModel3DTileContentProvider.prototype.update = function(owner, frameState) {
         // In the PROCESSING state we may be calling update() to move forward
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
 
-        this._batchTableResources.update(context, frameState);
-        this._model.update(context, frameState, commandList);
+        this._batchTableResources.update(frameState);
+        this._model.update(frameState);
    };
 
    /**
