@@ -10,6 +10,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/GeographicTilingScheme',
+        '../Core/joinUrls',
         '../Core/loadXML',
         '../Core/Rectangle',
         '../Core/TileProviderError',
@@ -27,6 +28,7 @@ define([
         DeveloperError,
         Event,
         GeographicTilingScheme,
+        joinUrls,
         loadXML,
         Rectangle,
         TileProviderError,
@@ -95,7 +97,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var url = appendForwardSlash(options.url);
+        var url = options.url;
 
         this._url = url;
         this._ready = false;
@@ -175,7 +177,7 @@ define([
                 } else if (tilingSchemeName === 'mercator' || tilingSchemeName === 'global-mercator') {
                     that._tilingScheme = new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid });
                 } else {
-                    var message = url + 'tilemapresource.xml specifies an unsupported profile attribute, ' + tilingSchemeName + '.';
+                    var message = joinUrls(url, 'tilemapresource.xml') + 'specifies an unsupported profile attribute, ' + tilingSchemeName + '.';
                     metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
                     return;
                 }
@@ -256,7 +258,7 @@ define([
         }
 
         function requestMetadata() {
-            var resourceUrl = url + 'tilemapresource.xml';
+            var resourceUrl = joinUrls(url, 'tilemapresource.xml');
             var proxy = that._proxy;
             if (defined(proxy)) {
                 resourceUrl = proxy.getURL(resourceUrl);
@@ -270,7 +272,7 @@ define([
 
     function buildImageUrl(imageryProvider, x, y, level) {
         var yTiles = imageryProvider._tilingScheme.getNumberOfYTilesAtLevel(level);
-        var url = imageryProvider._url + level + '/' + x + '/' + (yTiles - y - 1) + '.' + imageryProvider._fileExtension;
+        var url = joinUrls(imageryProvider._url, level + '/' + x + '/' + (yTiles - y - 1) + '.' + imageryProvider._fileExtension);
 
         var proxy = imageryProvider._proxy;
         if (defined(proxy)) {
