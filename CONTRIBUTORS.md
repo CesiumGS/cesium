@@ -71,5 +71,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Olivier Terral](https://github.com/oterral)
 * [Piero Toffanin](https://github.com/pierotofy)
 * [Cole Murphy](https://github.com/fantasticole)
+* [Keat Tang](https://github.com/keattang)
 
 Also see [our contributors page](http://cesiumjs.org/contributors.html) for more information.
