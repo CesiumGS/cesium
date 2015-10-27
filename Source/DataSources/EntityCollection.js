@@ -336,7 +336,7 @@ define([
         if (!defined(entity)) {
             entityOptionsScratch.id = id;
             entity = new Entity(entityOptionsScratch);
-            this.add(entity, this);
+            this.add(entity);
         }
         return entity;
     };
