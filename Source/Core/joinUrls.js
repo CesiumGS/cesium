@@ -1,6 +1,16 @@
 /*global define*/
-define(['../ThirdParty/Uri'],
-    function(URI) {
+define([
+        '../ThirdParty/Uri',
+        './defaultValue',
+        './defined',
+        './definedNotNull',
+        './DeveloperError'
+    ], function(
+        URI,
+        defaultValue,
+        defined,
+        definedNotNull,
+        DeveloperError) {
     "use strict";
 
     /**
@@ -12,8 +22,16 @@ define(['../ThirdParty/Uri'],
      * @param {Boolean} [appendSlash=true] The boolean determining whether there should be a forward slash between first and second.
      */
     var joinUrls = function(first, second, appendSlash) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(first)) {
+            throw new DeveloperError('first is required');
+        }
+        if (!defined(second)) {
+            throw new DeveloperError('second is required');
+        }
+        //>>includeEnd('debug');
 
-        appendSlash = typeof appendSlash !== 'undefined' ? appendSlash : true;
+        appendSlash = defaultValue(appendSlash, true);
 
         if (!(first instanceof URI)) {
             first = new URI(first);
@@ -24,12 +42,14 @@ define(['../ThirdParty/Uri'],
         }
 
         var url = '';
-        if (first.scheme) {url += first.scheme + ':';}
-        if (first.authority) {
+        if (definedNotNull(first.scheme)) {
+            url += first.scheme + ':';
+        }
+        if (definedNotNull(first.authority)) {
             url += '//' + first.authority;
 
             if (first.path !== "") {
-                 url = url.replace(/\/?$/, '/');
+                url = url.replace(/\/?$/, '/');
                 first.path = first.path.replace(/^\/?/g, '');
             }
         }
@@ -40,17 +60,20 @@ define(['../ThirdParty/Uri'],
             url += first.path + second.path;
         }
 
-        if (first.query && second.query) {
+        var hasFirstQuery = definedNotNull(first.query);
+        var hasSecondQuery = definedNotNull(second.query)
+        if (hasFirstQuery && hasSecondQuery) {
             url += '?' + first.query + '&' + second.query;
-        } else if (first.query && !second.query) {
+        } else if (hasFirstQuery && !hasSecondQuery) {
             url += '?' + first.query;
-        } else if (!first.query && second.query) {
+        } else if (!hasFirstQuery && hasSecondQuery) {
             url += '?' + second.query;
         }
 
-        if (first.fragment && !second.fragment) {
+        var hasSecondFragment = definedNotNull(second.fragment);
+        if (definedNotNull(first.fragment) && !hasSecondFragment) {
             url += '#' + first.fragment;
-        } else if (second.fragment) {
+        } else if (hasSecondFragment) {
             url += '#' + second.fragment;
         }
 
