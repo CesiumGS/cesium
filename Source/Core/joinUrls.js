@@ -6,7 +6,7 @@ define([
         './definedNotNull',
         './DeveloperError'
     ], function(
-        URI,
+        Uri,
         defaultValue,
         defined,
         definedNotNull,
@@ -17,9 +17,10 @@ define([
      * Function for joining URLs in a manner that is aware of query strings and fragments.
      * This is useful when the base URL has a query string that needs to be maintained
      * (e.g. a presigned base URL).
-     * @param {String|URI} first The base URL.
-     * @param {String|URI} second The URL path to join to the base URL.
+     * @param {String|Uri} first The base URL.
+     * @param {String|Uri} second The URL path to join to the base URL.
      * @param {Boolean} [appendSlash=true] The boolean determining whether there should be a forward slash between first and second.
+     * @private
      */
     var joinUrls = function(first, second, appendSlash) {
         //>>includeStart('debug', pragmas.debug);
@@ -33,12 +34,12 @@ define([
 
         appendSlash = defaultValue(appendSlash, true);
 
-        if (!(first instanceof URI)) {
-            first = new URI(first);
+        if (!(first instanceof Uri)) {
+            first = new Uri(first);
         }
 
-        if (!(second instanceof URI)) {
-            second = new URI(second);
+        if (!(second instanceof Uri)) {
+            second = new Uri(second);
         }
 
         var url = '';
@@ -61,7 +62,7 @@ define([
         }
 
         var hasFirstQuery = definedNotNull(first.query);
-        var hasSecondQuery = definedNotNull(second.query)
+        var hasSecondQuery = definedNotNull(second.query);
         if (hasFirstQuery && hasSecondQuery) {
             url += '?' + first.query + '&' + second.query;
         } else if (hasFirstQuery && !hasSecondQuery) {

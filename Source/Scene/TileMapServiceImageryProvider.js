@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../Core/appendForwardSlash',
         '../Core/Cartesian2',
         '../Core/Cartographic',
         '../Core/Credit',
@@ -18,7 +17,6 @@ define([
         '../ThirdParty/when',
         './ImageryProvider'
     ], function(
-        appendForwardSlash,
         Cartesian2,
         Cartographic,
         Credit,

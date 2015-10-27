@@ -2,7 +2,6 @@
 define([
         '../ThirdParty/Uri',
         '../ThirdParty/when',
-        './appendForwardSlash',
         './BoundingSphere',
         './Cartesian3',
         './Credit',
@@ -28,7 +27,6 @@ define([
     ], function(
         Uri,
         when,
-        appendForwardSlash,
         BoundingSphere,
         Cartesian3,
         Credit,
