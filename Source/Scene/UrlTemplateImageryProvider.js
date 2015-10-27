@@ -178,6 +178,7 @@ define([
         this._minimumLevel = defaultValue(options.minimumLevel, 0);
         this._maximumLevel = options.maximumLevel;
         this._minimumRetrievingLevel = defaultValue(options.minimumRetrievingLevel, 0);
+        this._maximumRetrievingLevel = defaultValue(options.maximumRetrievingLevel, Infinity);
         this._tilingScheme = defaultValue(options.tilingScheme, new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid }));
         this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
         this._rectangle = Rectangle.intersection(this._rectangle, this._tilingScheme.rectangle);
@@ -458,8 +459,8 @@ define([
      *          Image or a Canvas DOM object.
      */
     UrlTemplateImageryProvider.prototype.requestImage = function(x, y, level) {
-        if (level < this._minimumRetrievingLevel) {
-          return UrlTemplateImageryProvider.transparentCanvas;
+        if (level < this._minimumRetrievingLevel || level > this._maximumRetrievingLevel)) {
+            return UrlTemplateImageryProvider.transparentCanvas;
         }
         var url = buildImageUrl(this, x, y, level);
         return ImageryProvider.loadImage(this, url);
