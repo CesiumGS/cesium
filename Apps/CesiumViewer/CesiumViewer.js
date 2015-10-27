@@ -156,10 +156,12 @@ define([
             var roll = ((splitQuery.length > 5) && (!isNaN(+splitQuery[5]))) ? CesiumMath.toRadians(+splitQuery[5]) : undefined;
 
             viewer.camera.setView({
-                position: Cartesian3.fromDegrees(longitude, latitude, height),
-                heading: heading,
-                pitch: pitch,
-                roll: roll
+                destination: Cartesian3.fromDegrees(longitude, latitude, height),
+                orientation: {
+                    heading: heading,
+                    pitch: pitch,
+                    roll: roll
+                }
             });
         }
     }

@@ -15,9 +15,9 @@ define([
         FrameState) {
     "use strict";
 
-    var createFrameState = function(camera, frameNumber, time) {
+    var createFrameState = function(context, camera, frameNumber, time) {
         // Mock frame-state for testing.
-        var frameState = new FrameState(new CreditDisplay(document.createElement('div')));
+        var frameState = new FrameState(context, new CreditDisplay(document.createElement('div')));
 
         var projection = new GeographicProjection();
         frameState.mapProjection = projection;

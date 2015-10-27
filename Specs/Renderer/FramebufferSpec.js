@@ -131,7 +131,7 @@ defineSuite([
                     width : 1,
                     height : 1,
                     pixelFormat : PixelFormat.DEPTH_STENCIL,
-                    pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8_WEBGL
+                    pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8
                 })
             });
             expect(framebuffer.depthStencilTexture).toBeDefined();
@@ -466,7 +466,7 @@ defineSuite([
                     width : 1,
                     height : 1,
                     pixelFormat : PixelFormat.DEPTH_STENCIL,
-                    pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8_WEBGL
+                    pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8
                 })
             });
 
@@ -684,7 +684,7 @@ defineSuite([
             })],
             depthRenderbuffer : new Renderbuffer({
                 context : context,
-                format : RenderbufferFormat.DEPTH_COMPONENT16,
+                format : RenderbufferFormat.RGBA4,
                 width : 2,
                 height : 2
             })

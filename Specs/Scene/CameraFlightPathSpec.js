@@ -202,26 +202,26 @@ defineSuite([
     it('does not create a path to the same point', function() {
         var camera = scene.camera;
         camera.position = new Cartesian3(7000000.0, 0.0, 0.0);
-        camera.direction = Cartesian3.negate(Cartesian3.normalize(camera.position, new Cartesian3()), new Cartesian3());
-        camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
-        camera.right = Cartesian3.normalize(Cartesian3.cross(camera.direction, camera.up, new Cartesian3()), new Cartesian3());
 
         var startPosition = Cartesian3.clone(camera.position);
-        var startDirection = Cartesian3.clone(camera.direction);
-        var startUp = Cartesian3.clone(camera.up);
+        var startHeading= camera.heading;
+        var startPitch = camera.pitch;
+        var startRoll = camera.roll;
 
         var duration = 3.0;
         var flight = CameraFlightPath.createTween(scene, {
             destination : startPosition,
-            direction : startDirection,
-            up : startUp,
+            heading : startHeading,
+            pitch : startPitch,
+            roll: startRoll,
             duration : duration
         });
 
         expect(flight.duration).toEqual(0);
         expect(camera.position).toEqual(startPosition);
-        expect(camera.direction).toEqual(startDirection);
-        expect(camera.up).toEqual(startUp);
+        expect(camera.heading).toEqual(startHeading);
+        expect(camera.pitch).toEqual(startPitch);
+        expect(camera.roll).toEqual(startRoll);
     });
 
     it('creates an animation with 0 duration', function() {
@@ -273,9 +273,13 @@ defineSuite([
         var camera = scene.camera;
 
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
-        camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
-        camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
-        camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
+        camera.setView({
+            orientation: {
+                heading: 0,
+                pitch: -CesiumMath.PI_OVER_TWO,
+                roll: 0
+            }
+        });
         camera.frustum = createOrthographicFrustum();
 
         var flight = CameraFlightPath.createTween(scene, {
@@ -290,9 +294,13 @@ defineSuite([
         var camera = scene.camera;
 
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
-        camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
-        camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
-        camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
+        camera.setView({
+            orientation: {
+                heading: 0,
+                pitch: -CesiumMath.PI_OVER_TWO,
+                roll: 0
+            }
+        });
 
         var projection = scene.mapProjection;
         var endPosition = projection.ellipsoid.cartographicToCartesian(projection.unproject(camera.position));
