@@ -757,12 +757,12 @@ define([
                 delete gltf.extensions.KHR_materials_common;
             }
 
-            var json = JSON.stringify(gltf, null, 4);
-            var a = document.createElement('a');
-            a.setAttribute('href', 'data:text;base64,' + btoa(json));
-            a.setAttribute('target', '_blank');
-            a.setAttribute('download', 'model.json');
-            a.click();
+            //var json = JSON.stringify(gltf, null, 4);
+            //var a = document.createElement('a');
+            //a.setAttribute('href', 'data:text;base64,' + btoa(json));
+            //a.setAttribute('target', '_blank');
+            //a.setAttribute('download', 'model.json');
+            //a.click();
         }
 
         return gltf;

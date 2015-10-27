@@ -206,8 +206,34 @@ define([
                     delete material.instanceTechnique;
                 }
 
-                if (!defined(material.values)) {
-                    material.values = {};
+                if (!defined(material.extensions)) {
+                    if (!defined(material.technique)) {
+                        delete material.values;
+                        material.extensions = {
+                            KHR_materials_common : {
+                                technique : "CONSTANT",
+                                values : {
+                                    emission : [
+                                        0.5,
+                                        0.5,
+                                        0.5,
+                                        1
+                                    ]
+                                }
+                            }
+                        };
+
+                        if (!defined(gltf.extensionsUsed)) {
+                            gltf.extensionsUsed = [];
+                        }
+                        var extensionsUsed = gltf.extensionsUsed;
+                        if (extensionsUsed.indexOf('KHR_materials_common') === -1) {
+                            extensionsUsed.push('KHR_materials_common');
+                        }
+                    }
+                    else if (!defined(material.values)) {
+                        material.values = {};
+                    }
                 }
             }
         }

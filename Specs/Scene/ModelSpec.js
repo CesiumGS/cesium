@@ -45,6 +45,7 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var boxUrl = './Data/Models/Box/CesiumBoxTest.gltf';
+    var boxNoTechniqueUrl = './Data/Models/Box/CesiumBoxTest-NoTechnique.gltf';
     var box0_8Url = './Data/Models/Box/CesiumBoxTest-0_8.gltf';
     var texturedBoxUrl = './Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf';
     var texturedBoxSeparateUrl = './Data/Models/Box-Textured-Separate/CesiumTexturedBoxTest.gltf';
@@ -471,6 +472,13 @@ defineSuite([
 
     it('loads a glTF v0.8 model', function() {
         return loadModel(box0_8Url).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF model that doesn\'t have a technique', function() {
+        return loadModel(boxNoTechniqueUrl).then(function(m) {
             verifyRender(m);
             primitives.remove(m);
         });
