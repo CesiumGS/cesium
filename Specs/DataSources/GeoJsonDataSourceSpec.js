@@ -310,8 +310,10 @@ defineSuite([
         function testDescribe(properties) {
             var desc = '';
             for (var key in properties) {
-                var value = properties[key];
-                desc +=  key + ' = ' + value + '. ';
+                if (properties.hasOwnProperty(key)) {
+                    var value = properties[key];
+                    desc +=  key + ' = ' + value + '. ';
+                }
             }
             return desc;
         }
