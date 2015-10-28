@@ -270,7 +270,7 @@ defineSuite([
         });
     });
 
-    it('Creates description from properties', function() {
+    it('Creates default description from properties', function() {
         var featureWithProperties = {
             type : 'Feature',
             geometry : point,
@@ -293,6 +293,41 @@ defineSuite([
             expect(description).toContain('dog');
             expect(description).toContain('cat');
             expect(description).toContain('liger');
+        });
+    });
+
+    it('Creates custom description from properties', function() {
+        var featureWithProperties = {
+            type : 'Feature',
+            geometry : point,
+            properties : {
+                prop1 : 'dog',
+                prop2 : 'cat',
+                prop3 : 'liger'
+            }
+        };
+
+        function testDescribe(properties) {
+            var desc = '';
+            for (var key in properties) {
+                var value = properties[key];
+                desc +=  key + ' = ' + value + '. ';
+            }
+            return desc;
+        }
+
+        var dataSource = new GeoJsonDataSource();
+        var options = {
+            describe: testDescribe
+        };
+        return dataSource.load(featureWithProperties, options).then(function() {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.description).toBeDefined();
+            var description = entity.description.getValue(time);
+            expect(description).toContain('prop1 = dog');
+            expect(description).toContain('prop2 = cat');
+            expect(description).toContain('prop3 = liger');
         });
     });
 
