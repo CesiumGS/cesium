@@ -72,5 +72,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Piero Toffanin](https://github.com/pierotofy)
 * [Cole Murphy](https://github.com/fantasticole)
 * [Keat Tang](https://github.com/keattang)
+* [Denver Pierce](https://github.com/denverpierce)
 
 Also see [our contributors page](http://cesiumjs.org/contributors.html) for more information.
