@@ -69,6 +69,15 @@ define([
             get : function() {
                 return this._batchSize;
             }
+        },
+
+        /**
+         * DOC_TBA
+         */
+        batchTableResources : {
+            get : function() {
+                return this._batchTableResources;
+            }
         }
     });
 
