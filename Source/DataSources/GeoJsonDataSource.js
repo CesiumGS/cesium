@@ -732,8 +732,8 @@ define([
      * @param {String|Object} data A url, GeoJSON object, or TopoJSON object to be loaded.
      * @param {Object} [options] An object with the following properties:
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
-     * @param {Function} [options.describe=defaultDescribe] A custom function used to convert the properties into an html description.
-     *                                                      It takes two arguments: the properties and a nameProperty.
+     * @param {Function} [options.describe=GeoJsonDataSource.defaultDescribe] A custom function used to convert the properties into an html description.
+     *                                                                        It takes two arguments: the properties and a nameProperty.
      * @param {Number} [options.markerSize=GeoJsonDataSource.markerSize] The default size of the map pin created for each point, in pixels.
      * @param {String} [options.markerSymbol=GeoJsonDataSource.markerSymbol] The default symbol of the map pin created for each point.
      * @param {Color} [options.markerColor=GeoJsonDataSource.markerColor] The default color of the map pin created for each point.
