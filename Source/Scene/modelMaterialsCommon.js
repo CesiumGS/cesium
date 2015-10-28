@@ -180,8 +180,6 @@ define([
         }
         var hasSkinning = (jointCount > 0);
         var values = khrMaterialsCommon.values;
-        var isDoubleSided = values.doubleSided;
-        delete values.doubleSided;
 
         var vertexShader = 'precision highp float;\n';
         var fragmentShader = 'precision highp float;\n';
@@ -225,39 +223,13 @@ define([
         }
 
         // Add material parameters
-        var hasAlpha = false;
-        var typeValue;
         for(var name in values) {
             if (values.hasOwnProperty(name)) {
                 var value = values[name];
-                var type = typeof value;
-                typeValue = -1;
-                switch (type) {
-                    case 'string':
-                        typeValue = WebGLConstants.SAMPLER_2D;
-                        break;
-                    case 'number':
-                        typeValue = WebGLConstants.FLOAT;
-                        if (!hasAlpha && (name === 'transparency')) {
-                            hasAlpha = (value !== 1.0);
-                        }
-                        break;
-                    default:
-                        if (Array.isArray(value)) {
-                            // 35664 (vec2), 35665 (vec3), 35666 (vec4)
-                            typeValue = 35662 + value.length;
-                            if (!hasAlpha && (typeValue === WebGLConstants.FLOAT_VEC4) && (name === 'diffuse')) {
-                                hasAlpha = (value[3] !== 1.0);
-                            }
-                        }
-                        break;
-                }
-                if (typeValue > 0) {
-                    lowerCase = name.toLowerCase();
-                    techniqueParameters[lowerCase] = {
-                        type: typeValue
-                    };
-                }
+                lowerCase = name.toLowerCase();
+                techniqueParameters[lowerCase] = {
+                    type: value.type
+                };
             }
         }
 
@@ -301,7 +273,7 @@ define([
         var v_texcoord;
         for (i=0;i<attributesCount;++i) {
             var attribute = attributes[i];
-            typeValue = -1;
+            var typeValue = -1;
             if (attribute === 'POSITION') {
                 typeValue = WebGLConstants.FLOAT_VEC3;
                 vertexShader += 'attribute vec3 a_position;\n';
@@ -316,7 +288,7 @@ define([
                 vertexShaderMain += '  gl_Position = u_projectionMatrix * pos;\n';
                 fragmentShader += 'varying vec3 v_positionEC;\n';
             }
-            else if (attribute === 'NORMAL') {
+            else if ((attribute === 'NORMAL') && (lightingModel !== 'CONSTANT')) {
                 typeValue = WebGLConstants.FLOAT_VEC3;
                 vertexShader += 'attribute vec3 a_normal;\n';
                 vertexShader += 'varying vec3 v_normal;\n';
@@ -379,7 +351,7 @@ define([
                     hasAmbientLights = true;
                     fragmentLightingBlock += '    ambientLight += ' + lightColorName + ';\n';
                 }
-                else if (hasNormals && (lightingModel !== 'CONSTANT')) {
+                else if (hasNormals) {
                     hasNonAmbientLights = true;
                     varyingDirectionName = 'v_' + lightBaseName + 'Direction';
                     varyingPositionName = 'v_' + lightBaseName + 'Position';
@@ -474,7 +446,7 @@ define([
         var colorCreationBlock = '  vec3 color = vec3(0.0, 0.0, 0.0);\n';
         if (hasNormals) {
             fragmentShader += '  vec3 normal = normalize(v_normal);\n';
-            if (isDoubleSided) {
+            if (khrMaterialsCommon.doubleSided) {
                 fragmentShader += '  if (gl_FrontFacing == false)\n';
                 fragmentShader += '  {\n';
                 fragmentShader += '    normal = -normal;\n';
@@ -532,17 +504,18 @@ define([
             colorCreationBlock += '  color += emission;\n';
         }
 
-        if (defined(techniqueParameters.ambient)) {
-            if (techniqueParameters.ambient.type === WebGLConstants.SAMPLER_2D) {
-                fragmentShader += '  vec3 ambient = texture2D(u_ambient, ' + v_texcoord + ').rgb;\n';
+        if (defined(techniqueParameters.ambient) || (lightingModel !== 'CONSTANT')) {
+            if (defined(techniqueParameters.ambient)) {
+                if (techniqueParameters.ambient.type === WebGLConstants.SAMPLER_2D) {
+                    fragmentShader += '  vec3 ambient = texture2D(u_ambient, ' + v_texcoord + ').rgb;\n';
+                }
+                else {
+                    fragmentShader += '  vec3 ambient = u_ambient.rgb;\n';
+                }
             }
             else {
-                fragmentShader += '  vec3 ambient = u_ambient.rgb;\n';
+                fragmentShader += '  vec3 ambient = diffuse.rgb;\n';
             }
-            colorCreationBlock += '  color += ambient * ambientLight;\n';
-        }
-        else if (lightingModel !== 'CONSTANT') {
-            fragmentShader += '  vec3 ambient = diffuse.rgb;\n';
             colorCreationBlock += '  color += ambient * ambientLight;\n';
         }
         fragmentShader += '  vec3 viewDir = -normalize(v_positionEC);\n';
@@ -555,9 +528,8 @@ define([
         fragmentShader += finalColorComputation;
         fragmentShader += '}\n';
 
-        // TODO: Handle texture transparency
         var techniqueStates;
-        if (hasAlpha) {
+        if (khrMaterialsCommon.transparent) {
             techniqueStates = {
                 enable: [
                     WebGLConstants.DEPTH_TEST,
@@ -636,22 +608,8 @@ define([
             var name = keys[i];
             if (values.hasOwnProperty(name)) {
                 var value = values[name];
-                 techniqueKey += name + ':';
-                var type = typeof value;
-                switch (type) {
-                    case 'string':
-                         techniqueKey += 'texture';
-                        break;
-                    case 'number':
-                         techniqueKey += 'float';
-                        break;
-                    default:
-                        if (Array.isArray(value)) {
-                             techniqueKey += 'vec' + value.length.toString();
-                        }
-                        break;
-                }
-                 techniqueKey += ';';
+                techniqueKey += name + ':' + value.type.toString();
+                techniqueKey += ';';
             }
         }
     }
@@ -729,7 +687,6 @@ define([
 
             var techniques = {};
             var materials = gltf.materials;
-            var meshes = gltf.meshes;
             for (var name in materials) {
                 if (materials.hasOwnProperty(name)) {
                     var material = materials[name];
@@ -745,7 +702,15 @@ define([
 
                         // Take advantage of the fact that we generate techniques that use the
                         // same parameter names as the extension values.
-                        material.values = khrMaterialsCommon.values;
+                        material.values = {};
+                        var values = khrMaterialsCommon.values;
+                        for (var valueName in values) {
+                            if (values.hasOwnProperty(valueName)) {
+                                var value = values[valueName];
+                                material.values[valueName] = value.value;
+                            }
+                        }
+
                         material.technique = technique;
 
                         delete material.extensions.KHR_materials_common;
