@@ -47,6 +47,7 @@ defineSuite([
     var boxUrl = './Data/Models/Box/CesiumBoxTest.gltf';
     var boxNoTechniqueUrl = './Data/Models/Box/CesiumBoxTest-NoTechnique.gltf';
     var box0_8Url = './Data/Models/Box/CesiumBoxTest-0_8.gltf';
+    var boxMaterialsCommonUrl = './Data/Models/Box/MaterialsCommonBox.gltf';
     var boxNoIndicesUrl = './Data/Models/Box-NoIndices/box-noindices.gltf';
     var texturedBoxUrl = './Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf';
     var texturedBoxSeparateUrl = './Data/Models/Box-Textured-Separate/CesiumTexturedBoxTest.gltf';
@@ -478,8 +479,17 @@ defineSuite([
         });
     });
 
+
+
     it('loads a glTF model that doesn\'t have a technique', function() {
         return loadModel(boxNoTechniqueUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF model that uses KHR_materials_common extension', function() {
+        return loadModel(boxMaterialsCommonUrl).then(function(m) {
             verifyRender(m);
             primitives.remove(m);
         });
