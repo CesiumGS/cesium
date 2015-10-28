@@ -133,7 +133,7 @@ define([
     /**
      * @private
      */
-    SkyAtmosphere.prototype.update = function(context, frameState) {
+    SkyAtmosphere.prototype.update = function(frameState) {
         if (!this.show) {
             return undefined;
         }
@@ -151,6 +151,8 @@ define([
         var command = this._command;
 
         if (!defined(command.vertexArray)) {
+            var context = frameState.context;
+
             var geometry = EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
                 radii : Cartesian3.multiplyByScalar(this._ellipsoid.radii, 1.025, new Cartesian3()),
                 slicePartitions : 256,
