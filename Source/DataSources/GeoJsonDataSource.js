@@ -213,7 +213,7 @@ define([
 
         if (feature.geometry === null) {
             //Null geometry is allowed, so just create an empty entity instance for it.
-            createObject(feature, dataSource._entityCollection, dataSource._describe);
+            createObject(feature, dataSource._entityCollection, options.describe);
         } else {
             var geometryType = feature.geometry.type;
             var geometryHandler = geometryTypes[geometryType];
@@ -284,7 +284,7 @@ define([
             billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
             billboard.image = new ConstantProperty(dataUrl);
 
-            var entity = createObject(geoJson, dataSource._entityCollection, dataSource._describe);
+            var entity = createObject(geoJson, dataSource._entityCollection, options.describe);
             entity.billboard = billboard;
             entity.position = new ConstantPositionProperty(crsFunction(coordinates));
         }));
@@ -334,7 +334,7 @@ define([
         polyline.width = widthProperty;
         polyline.positions = new ConstantProperty(coordinatesArrayToCartesianArray(coordinates, crsFunction));
 
-        var entity = createObject(geoJson, dataSource._entityCollection, dataSource._describe);
+        var entity = createObject(geoJson, dataSource._entityCollection, options.describe);
         entity.polyline = polyline;
     }
 
@@ -417,7 +417,7 @@ define([
             polygon.perPositionHeight = new ConstantProperty(true);
         }
 
-        var entity = createObject(geoJson, dataSource._entityCollection, dataSource._describe);
+        var entity = createObject(geoJson, dataSource._entityCollection, options.describe);
         entity.polygon = polygon;
     }
 
@@ -477,8 +477,6 @@ define([
      *
      * @param {String} [name] The name of this data source.  If undefined, a name will be taken from
      *                        the name of the GeoJSON file.
-     * @param {Function} [describe] A custom function used to convert the properties into an html description.
-     *                              It takes two arguments: the properties and a nameProperty.
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=GeoJSON%20and%20TopoJSON.html|Cesium Sandcastle GeoJSON and TopoJSON Demo}
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=GeoJSON%20simplestyle.html|Cesium Sandcastle GeoJSON simplestyle Demo}
@@ -492,7 +490,7 @@ define([
      *   markerSymbol: '?'
      * }));
      */
-    var GeoJsonDataSource = function(name, describe) {
+    var GeoJsonDataSource = function(name) {
         this._name = name;
         this._changed = new Event();
         this._error = new Event();
@@ -501,7 +499,6 @@ define([
         this._entityCollection = new EntityCollection();
         this._promises = [];
         this._pinBuilder = new PinBuilder();
-        this._describe = defaultValue(describe, defaultDescribe);
     };
 
     /**
@@ -726,19 +723,6 @@ define([
             get : function() {
                 return this._loading;
             }
-        },
-        /**
-         * Gets or sets the function used to convert the properties into an html description.
-         * @memberof GeoJsonDataSource.prototype
-         * @type {Function}
-         */
-        describe : {
-            get : function() {
-                return this._describe;
-            },
-            set : function(value) {
-                this._describe = value;
-            }
         }
     });
 
@@ -748,6 +732,8 @@ define([
      * @param {String|Object} data A url, GeoJSON object, or TopoJSON object to be loaded.
      * @param {Object} [options] An object with the following properties:
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
+     * @param {Function} [options.describe=defaultDescribe] A custom function used to convert the properties into an html description.
+     *                                                      It takes two arguments: the properties and a nameProperty.
      * @param {Number} [options.markerSize=GeoJsonDataSource.markerSize] The default size of the map pin created for each point, in pixels.
      * @param {String} [options.markerSymbol=GeoJsonDataSource.markerSymbol] The default symbol of the map pin created for each point.
      * @param {Color} [options.markerColor=GeoJsonDataSource.markerColor] The default color of the map pin created for each point.
@@ -777,6 +763,7 @@ define([
         }
 
         options = {
+            describe: defaultValue(options.describe, defaultDescribe),
             markerSize : defaultValue(options.markerSize, defaultMarkerSize),
             markerSymbol : defaultValue(options.markerSymbol, defaultMarkerSymbol),
             markerColor : defaultValue(options.markerColor, defaultMarkerColor),
