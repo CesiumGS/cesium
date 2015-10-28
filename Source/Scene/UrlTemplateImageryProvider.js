@@ -459,7 +459,7 @@ define([
      *          Image or a Canvas DOM object.
      */
     UrlTemplateImageryProvider.prototype.requestImage = function(x, y, level) {
-        if (level < this._minimumRetrievingLevel || level > this._maximumRetrievingLevel)) {
+        if (level < this._minimumRetrievingLevel || level > this._maximumRetrievingLevel) {
             return UrlTemplateImageryProvider.transparentCanvas;
         }
         var url = buildImageUrl(this, x, y, level);
