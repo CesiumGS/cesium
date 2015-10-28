@@ -212,13 +212,17 @@ define([
                         material.extensions = {
                             KHR_materials_common : {
                                 technique : "CONSTANT",
+                                transparent: false,
                                 values : {
-                                    emission : [
-                                        0.5,
-                                        0.5,
-                                        0.5,
-                                        1
-                                    ]
+                                    emission : {
+                                        type: WebGLConstants.FLOAT_VEC4,
+                                        value: [
+                                            0.5,
+                                            0.5,
+                                            0.5,
+                                            1
+                                        ]
+                                    }
                                 }
                             }
                         };

@@ -6,6 +6,7 @@ define([
         '../Core/Cartesian4',
         '../Core/clone',
         '../Core/combine',
+        '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -58,6 +59,7 @@ define([
         Cartesian4,
         clone,
         combine,
+        ComponentDatatype,
         defaultValue,
         defined,
         defineProperties,
@@ -1851,8 +1853,11 @@ define([
                         }
                     }
 
-                    var accessor = accessors[primitive.indices];
-                    var indexBuffer = rendererBuffers[accessor.bufferView];
+                    var indexBuffer;
+                    if (defined(primitive.indices)) {
+                        var accessor = accessors[primitive.indices];
+                        indexBuffer = rendererBuffers[accessor.bufferView];
+                    }
                     rendererVertexArrays[meshName + '.primitive.' + i] = new VertexArray({
                         context : context,
                         attributes : attrs,
@@ -2403,8 +2408,18 @@ define([
                 }
 
                 var vertexArray = rendererVertexArrays[name + '.primitive.' + i];
-                var count = ix.count;
-                var offset = (ix.byteOffset / IndexDatatype.getSizeInBytes(ix.componentType));  // glTF has offset in bytes.  Cesium has offsets in indices
+                var offset;
+                var count;
+                if (defined(ix)) {
+                    count = ix.count;
+                    offset = (ix.byteOffset / IndexDatatype.getSizeInBytes(ix.componentType));  // glTF has offset in bytes.  Cesium has offsets in indices
+                }
+                else {
+                    var positions = accessors[primitive.attributes.POSITION];
+                    count = positions.count;
+                    var accessorInfo = getModelAccessor(positions);
+                    offset = (positions.byteOffset / (accessorInfo.componentsPerAttribute*ComponentDatatype.getSizeInBytes(positions.componentType)));
+                }
 
                 var um = uniformMaps[primitive.material];
                 var uniformMap = um.uniformMap;
