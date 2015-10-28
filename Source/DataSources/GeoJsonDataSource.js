@@ -89,7 +89,7 @@ define([
 
     var stringifyScratch = new Array(4);
 
-    function describe(properties, nameProperty) {
+    function defaultDescribe(properties, nameProperty) {
         var html = '';
         for ( var key in properties) {
             if (properties.hasOwnProperty(key)) {
@@ -99,7 +99,7 @@ define([
                 var value = properties[key];
                 if (definedNotNull(value)) {
                     if (typeof value === 'object') {
-                        html += '<tr><th>' + key + '</th><td>' + describe(value) + '</td></tr>';
+                        html += '<tr><th>' + key + '</th><td>' + defaultDescribe(value) + '</td></tr>';
                     } else {
                         html += '<tr><th>' + key + '</th><td>' + value + '</td></tr>';
                     }
@@ -114,7 +114,7 @@ define([
         return html;
     }
 
-    function createDescriptionCallback(properties, nameProperty) {
+    function createDescriptionCallback(describe, properties, nameProperty) {
         var description;
         return function(time, result) {
             if (!defined(description)) {
@@ -127,7 +127,7 @@ define([
     //GeoJSON specifies only the Feature object has a usable id property
     //But since "multi" geometries create multiple entity,
     //we can't use it for them either.
-    function createObject(geoJson, entityCollection) {
+    function createObject(geoJson, entityCollection, describe) {
         var id = geoJson.id;
         if (!definedNotNull(id) || geoJson.type !== 'Feature') {
             id = createGuid();
@@ -189,7 +189,7 @@ define([
 
             var description = properties.description;
             if (!defined(description)) {
-                entity.description = new CallbackProperty(createDescriptionCallback(properties, nameProperty), true);
+                entity.description = new CallbackProperty(createDescriptionCallback(describe, properties, nameProperty), true);
             } else if (description !== null) {
                 entity.description = new ConstantProperty(description);
             }
@@ -213,7 +213,7 @@ define([
 
         if (feature.geometry === null) {
             //Null geometry is allowed, so just create an empty entity instance for it.
-            createObject(feature, dataSource._entityCollection);
+            createObject(feature, dataSource._entityCollection, dataSource._describe);
         } else {
             var geometryType = feature.geometry.type;
             var geometryHandler = geometryTypes[geometryType];
@@ -284,7 +284,7 @@ define([
             billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
             billboard.image = new ConstantProperty(dataUrl);
 
-            var entity = createObject(geoJson, dataSource._entityCollection);
+            var entity = createObject(geoJson, dataSource._entityCollection, dataSource._describe);
             entity.billboard = billboard;
             entity.position = new ConstantPositionProperty(crsFunction(coordinates));
         }));
@@ -334,7 +334,7 @@ define([
         polyline.width = widthProperty;
         polyline.positions = new ConstantProperty(coordinatesArrayToCartesianArray(coordinates, crsFunction));
 
-        var entity = createObject(geoJson, dataSource._entityCollection);
+        var entity = createObject(geoJson, dataSource._entityCollection, dataSource._describe);
         entity.polyline = polyline;
     }
 
@@ -417,7 +417,7 @@ define([
             polygon.perPositionHeight = new ConstantProperty(true);
         }
 
-        var entity = createObject(geoJson, dataSource._entityCollection);
+        var entity = createObject(geoJson, dataSource._entityCollection, dataSource._describe);
         entity.polygon = polygon;
     }
 
@@ -477,6 +477,8 @@ define([
      *
      * @param {String} [name] The name of this data source.  If undefined, a name will be taken from
      *                        the name of the GeoJSON file.
+     * @param {Function} [describe] A custom function used to convert the properties into an html description.
+     *                              It takes two arguments: the properties and a nameProperty.
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=GeoJSON%20and%20TopoJSON.html|Cesium Sandcastle GeoJSON and TopoJSON Demo}
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=GeoJSON%20simplestyle.html|Cesium Sandcastle GeoJSON simplestyle Demo}
@@ -490,7 +492,7 @@ define([
      *   markerSymbol: '?'
      * }));
      */
-    var GeoJsonDataSource = function(name) {
+    var GeoJsonDataSource = function(name, describe) {
         this._name = name;
         this._changed = new Event();
         this._error = new Event();
@@ -499,6 +501,7 @@ define([
         this._entityCollection = new EntityCollection();
         this._promises = [];
         this._pinBuilder = new PinBuilder();
+        this._describe = defaultValue(describe, defaultDescribe);
     };
 
     /**
@@ -722,6 +725,19 @@ define([
         loadingEvent : {
             get : function() {
                 return this._loading;
+            }
+        },
+        /**
+         * Gets or sets the function used to convert the properties into an html description.
+         * @memberof GeoJsonDataSource.prototype
+         * @type {Function}
+         */
+        describe : {
+            get : function() {
+                return this._describe;
+            },
+            set : function(value) {
+                this._describe = value;
             }
         }
     });
