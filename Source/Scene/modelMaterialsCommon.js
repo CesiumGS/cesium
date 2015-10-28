@@ -550,7 +550,14 @@ define([
                 }
             };
         }
-        else {
+        else if (khrMaterialsCommon.doubleSided) {
+            techniqueStates = {
+                enable: [
+                    WebGLConstants.DEPTH_TEST
+                ]
+            };
+        }
+        else { // Not transparent or double sided
             techniqueStates = {
                 enable: [
                     WebGLConstants.CULL_FACE,
