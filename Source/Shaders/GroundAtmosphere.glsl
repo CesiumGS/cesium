@@ -35,21 +35,6 @@
  //   Code:  http://sponeil.net/
  //   GPU Gems 2 Article:  http://http.developer.nvidia.com/GPUGems2/gpugems2_chapter16.html
 
-/*
-uniform vec3 v3InvWavelength;   // 1 / pow(wavelength, 4) for the red, green, and blue channels
-uniform float fCameraHeight;    // The camera's current height
-uniform float fInnerRadius;     // The inner (planetary) radius
-uniform float fKrESun;          // Kr * ESun
-uniform float fKmESun;          // Km * ESun
-uniform float fKr4PI;           // Kr * 4 * PI
-uniform float fKm4PI;           // Km * 4 * PI
-uniform float fScale;           // 1 / (fOuterRadius - fInnerRadius)
-uniform float fScaleDepth;      // The scale depth (i.e. the altitude at which the atmosphere's average density is found)
-uniform float fScaleOverScaleDepth; // fScale / fScaleDepth
-uniform float fMinGroundFromAtmosphereHeight;
-uniform float fStartFadeGroundFromAtmosphere;
-*/
-
 const vec3 v3InvWavelength = vec3(1.0 / pow(0.650, 4.0), 1.0 / pow(0.570, 4.0), 1.0 / pow(0.475, 4.0));
 const float fInnerRadius = 6378137.0;
 const float fOuterRadius = 6378137.0 * 1.025;
@@ -93,9 +78,6 @@ AtmosphereColor computeGroundAtmosphereFromSpace(vec3 v3Pos)
     float fCameraHeight = length(czm_viewerPositionWC);
     float fCameraHeight2 = fCameraHeight * fCameraHeight;
 
-#define SHOW_GROUND_ATMOSPHERE_FROM_SPACE 1
-
-#ifdef SHOW_GROUND_ATMOSPHERE_FROM_SPACE
     // This next line is an ANGLE workaround. It is equivalent to B = 2.0 * dot(czm_viewerPositionWC, v3Ray), 
     // which is what it should be, but there are problems at the poles.
     float B = 2.0 * length(czm_viewerPositionWC) * dot(normalize(czm_viewerPositionWC), v3Ray);
@@ -107,11 +89,6 @@ AtmosphereColor computeGroundAtmosphereFromSpace(vec3 v3Pos)
     vec3 v3Start = czm_viewerPositionWC + v3Ray * fNear;
     fFar -= fNear;
     float fDepth = exp((fInnerRadius - fOuterRadius) / fScaleDepth);
-#else
-    // Calculate the ray's starting position, then calculate its scattering offset
-    vec3 v3Start = czm_viewerPositionWC;
-    float fDepth = exp((fInnerRadius - fCameraHeight) / fScaleDepth);
-#endif
     
     float fCameraAngle = dot(-v3Ray, v3Pos) / length(v3Pos);
     float fLightAngle = dot(czm_sunDirectionWC, v3Pos) / length(v3Pos);

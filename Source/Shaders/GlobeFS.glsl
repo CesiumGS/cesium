@@ -53,6 +53,11 @@ varying vec2 v_textureCoordinates;
 varying vec3 v_normalMC;
 varying vec3 v_normalEC;
 
+varying float v_distance;
+
+varying vec3 v_rayleighColor;
+varying vec3 v_mieColor;
+
 vec4 sampleAndBlend(
     vec4 previousColor,
     sampler2D texture,
@@ -115,11 +120,6 @@ vec4 sampleAndBlend(
 vec4 computeDayColor(vec4 initialColor, vec2 textureCoordinates);
 vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat3 enuToEye, vec4 imageryColor, float specularMapValue);
 
-varying float v_distance;
-
-varying vec3 v_rayleighColor;
-varying vec3 v_mieColor;
-
 void main()
 {
     // The clamp below works around an apparent bug in Chrome Canary v23.0.1241.0
@@ -163,7 +163,6 @@ void main()
 
 #ifdef ENABLE_VERTEX_LIGHTING
     float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalize(v_normalEC)) * 0.9 + 0.3, 0.0, 1.0);
-    //gl_FragColor = vec4(color.rgb * diffuseIntensity, color.a);
     vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
 #elif defined(ENABLE_DAYNIGHT_SHADING)
     float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * 5.0 + 0.3, 0.0, 1.0);
@@ -172,10 +171,8 @@ void main()
     float fadeInDist = u_lightingFadeDistance.y;
     float t = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.0, 1.0);
     diffuseIntensity = mix(1.0, diffuseIntensity, t);
-    //gl_FragColor = vec4(color.rgb * diffuseIntensity, color.a);
     vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
 #else
-    //gl_FragColor = color;
     vec4 finalColor = color;
 #endif
 
@@ -185,11 +182,10 @@ void main()
         vec3 fogColor = v_mieColor + finalColor.rgb * v_rayleighColor;
         fogColor = vec3(1.0) - exp(-fExposure * fogColor);
 	    
+	    float fog = 0.0;
+	    float maxDistance = 10000.0;
 	    float d = v_distance;
 	    
-	    float fog = 0.0;
-	    
-	    float maxDistance = 10000.0;
 	    if (d > maxDistance) {
 	       float scalar = (d - 2.0 * maxDistance) * czm_fogDensity;
            fog = 1.0 - exp(-(scalar * scalar));

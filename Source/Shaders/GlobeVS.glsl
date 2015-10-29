@@ -18,6 +18,9 @@ varying vec3 v_normalEC;
 
 varying float v_distance;
 
+varying vec3 v_mieColor;
+varying vec3 v_rayleighColor;
+
 // These functions are generated at runtime.
 vec4 getPosition(vec3 position3DWC);
 float get2DYPositionFraction();
@@ -81,9 +84,6 @@ vec4 getPositionMorphingMode(vec3 position3DWC)
     vec4 morphPosition = czm_columbusViewMorph(position2DWC, vec4(position3DWC, 1.0), czm_morphTime);
     return czm_modelViewProjection * morphPosition;
 }
-
-varying vec3 v_mieColor;
-varying vec3 v_rayleighColor;
     
 void main() 
 {
@@ -101,10 +101,10 @@ void main()
     v_positionEC = (czm_modelView3D * vec4(position3DWC, 1.0)).xyz;
     v_positionMC = position3DWC;                                 // position in model coordinates
 #endif
-
-    v_distance = length((czm_modelView3D * vec4(position3DWC, 1.0)).xyz);
     
     v_textureCoordinates = textureCoordAndEncodedNormals.xy;
+    
+    v_distance = length((czm_modelView3D * vec4(position3DWC, 1.0)).xyz);
     
     AtmosphereColor atmosColor = computeGroundAtmosphereFromSpace(position3DWC);
     v_mieColor = atmosColor.mie;

@@ -41,7 +41,6 @@ define([
         this.globeDepthTexture = undefined;
 
         this.fogEnabled = undefined;
-        this.fogColor = undefined;
         this.fogDensity = undefined;
 
         this._viewport = new BoundingRectangle();
