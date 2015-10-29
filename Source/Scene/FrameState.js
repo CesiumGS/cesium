@@ -135,6 +135,9 @@ define([
          * @default false
          */
         this.scene3DOnly = false;
+
+        this.fogEnabled = true;
+        this.fogDensity = undefined;
     };
 
     /**

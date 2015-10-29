@@ -40,9 +40,6 @@ define([
          */
         this.globeDepthTexture = undefined;
 
-        this.fogEnabled = undefined;
-        this.fogDensity = undefined;
-
         this._viewport = new BoundingRectangle();
         this._viewportCartesian4 = new Cartesian4();
         this._viewportDirty = false;
@@ -149,6 +146,9 @@ define([
         this._frustum2DWidth = 0.0;
         this._eyeHeight2D = new Cartesian2();
         this._resolutionScale = 1.0;
+
+        this._fogEnabled = undefined;
+        this._fogDensity = undefined;
     };
 
     defineProperties(UniformState.prototype, {
@@ -767,6 +767,17 @@ define([
             get : function() {
                 return this._resolutionScale;
             }
+        },
+
+        fogEnabled : {
+            get : function() {
+                return this._fogEnabled;
+            }
+        },
+        fogDensity : {
+            get : function() {
+                return this._fogDensity;
+            }
         }
     });
 
@@ -906,6 +917,9 @@ define([
         this._entireFrustum.x = camera.frustum.near;
         this._entireFrustum.y = camera.frustum.far;
         this.updateFrustum(camera.frustum);
+
+        this._fogEnabled = frameState.fogEnabled;
+        this._fogDensity = frameState.fogDensity;
 
         this._frameState = frameState;
         this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, this._temeToPseudoFixed);

@@ -438,10 +438,22 @@ define([
      * @returns {Visibility} The visibility of the tile.
      */
     GlobeSurfaceTileProvider.prototype.computeTileVisibility = function(tile, frameState, occluders) {
+        if (frameState.fogEnabled) {
+            var distance = this.computeDistanceToTile(tile, frameState);
+            var maxDistance = 10000.0;
+
+            if (distance > maxDistance) {
+               var scalar = (distance - 2.0 * maxDistance) * frameState.fogDensity;
+               var fog = 1.0 - Math.exp(-(scalar * scalar));
+
+               if (fog >= 1.0) {
+                   return Visibility.NONE;
+               }
+            }
+        }
+
         var surfaceTile = tile.data;
-
         var cullingVolume = frameState.cullingVolume;
-
         var boundingVolume = defaultValue(surfaceTile.orientedBoundingBox, surfaceTile.boundingSphere3D);
 
         if (frameState.mode !== SceneMode.SCENE3D) {

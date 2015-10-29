@@ -976,6 +976,8 @@ define([
         frameState.camera = camera;
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(scene);
+        frameState.fogEnabled = scene.fogEnabled;
+        frameState.fogDensity = scene.fogDensity;
 
         clearPasses(frameState.passes);
     }
@@ -1724,10 +1726,6 @@ define([
         frameState.creditDisplay.beginFrame();
 
         us.update(frameState);
-
-        // TODO
-        us.fogEnabled = scene.fogEnabled;
-        us.fogDensity = scene.fogDensity;
 
         scene._computeCommandList.length = 0;
         scene._overlayCommandList.length = 0;
