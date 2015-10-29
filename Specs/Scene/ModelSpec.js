@@ -66,6 +66,8 @@ defineSuite([
     var boxAmbientLightUrl = './Data/Models/MaterialsCommon/BoxAmbientLight.gltf';
     var boxDirectionalLightUrl = './Data/Models/MaterialsCommon/BoxDirectionalLight.gltf';
     var boxPointLightUrl = './Data/Models/MaterialsCommon/BoxPointLight.gltf';
+    var boxSpotLightUrl = './Data/Models/MaterialsCommon/BoxSpotLight.gltf';
+    var boxTransparentUrl = './Data/Models/MaterialsCommon/BoxTransparent.gltf';
     var CesiumManUrl = './Data/Models/MaterialsCommon/Cesium_Man.gltf';
 
     var texturedBoxModel;
@@ -1495,8 +1497,22 @@ defineSuite([
         });
     });
 
+    it('loads a glTF with KHR_materials_common using a spot light', function() {
+        return loadModel(boxSpotLightUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
     it('loads a glTF with KHR_materials_common that has skinning', function() {
         return loadModel(CesiumManUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF with KHR_materials_common that has transparency', function() {
+        return loadModel(boxTransparentUrl).then(function(m) {
             verifyRender(m);
             primitives.remove(m);
         });

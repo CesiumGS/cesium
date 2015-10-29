@@ -373,11 +373,9 @@ define([
                         fragmentShader += 'varying vec3 ' + varyingDirectionName + ';\n';
 
                         vertexShaderMain += '  ' + varyingDirectionName + ' = mat3(u_' + lightBaseName + 'Transform) * vec3(0.,0.,1.);\n';
-                        fragmentLightingBlock += '    vec3 l = normalize(' + varyingDirectionName + ');\n';
-                    }
-                    else {
-                        fragmentLightingBlock += '    vec3 ' + varyingDirectionName + ' = ' + varyingPositionName + ' - v_positionEC;\n';
-                        fragmentLightingBlock += '    vec3 l = normalize(' + varyingDirectionName + ');\n';
+                        if (lightType === 'directional') {
+                            fragmentLightingBlock += '    vec3 l = normalize(' + varyingDirectionName + ');\n';
+                        }
                     }
 
                     if (lightType !== 'directional') {
@@ -385,7 +383,9 @@ define([
                         fragmentShader += 'varying vec3 ' + varyingPositionName + ';\n';
 
                         vertexShaderMain += '  ' + varyingPositionName + ' = u_' + lightBaseName + 'Transform[3].xyz;\n';
-                        fragmentLightingBlock += '    float range = length(' + varyingDirectionName + ');\n';
+                        fragmentLightingBlock += '    vec3 VP = ' + varyingPositionName + ' - v_positionEC;\n';
+                        fragmentLightingBlock += '    vec3 l = normalize(VP);\n';
+                        fragmentLightingBlock += '    float range = length(VP);\n';
                         fragmentLightingBlock += '    float attenuation = 1.0 / (u_' + lightBaseName + 'Attenuation.x + ';
                         fragmentLightingBlock += '(u_' + lightBaseName + 'Attenuation.y * range) + ';
                         fragmentLightingBlock += '(u_' + lightBaseName + 'Attenuation.z * range * range));\n';
@@ -395,7 +395,7 @@ define([
                     }
 
                     if (lightType === 'spot') {
-                        fragmentLightingBlock += '    float spotDot = dot(-l, normalize(' + varyingDirectionName + '));\n';
+                        fragmentLightingBlock += '    float spotDot = dot(l, normalize(' + varyingDirectionName + '));\n';
                         fragmentLightingBlock += '    if (spotDot < cos(u_' + lightBaseName + 'FallOff.x * 0.5))\n';
                         fragmentLightingBlock += '    {\n';
                         fragmentLightingBlock += '      attenuation = 0.0;\n';
@@ -403,6 +403,7 @@ define([
                         fragmentLightingBlock += '    else\n';
                         fragmentLightingBlock += '    {\n';
                         fragmentLightingBlock += '        attenuation *= max(0.0, pow(spotDot, u_' + lightBaseName + 'FallOff.y));\n';
+                        fragmentLightingBlock += '    }\n';
                     }
 
                     fragmentLightingBlock += '    diffuseLight += ' + lightColorName + '* max(dot(normal,l), 0.) * attenuation;\n';
@@ -417,10 +418,6 @@ define([
                             fragmentLightingBlock += '    float specularIntensity = max(0., pow(max(dot(reflectDir, viewDir), 0.), u_shininess)) * attenuation;\n';
                         }
                         fragmentLightingBlock += '    specularLight += ' + lightColorName + ' * specularIntensity;\n';
-                    }
-
-                    if (lightType === 'spot') {
-                        fragmentLightingBlock += '    }\n';
                     }
                 }
                 fragmentLightingBlock += '  }\n';
@@ -709,13 +706,6 @@ define([
             if (defined(gltf.extensions)) {
                 delete gltf.extensions.KHR_materials_common;
             }
-
-            //var json = JSON.stringify(gltf, null, 4);
-            //var a = document.createElement('a');
-            //a.setAttribute('href', 'data:text;base64,' + btoa(json));
-            //a.setAttribute('target', '_blank');
-            //a.setAttribute('download', 'model.json');
-            //a.click();
         }
 
         return gltf;

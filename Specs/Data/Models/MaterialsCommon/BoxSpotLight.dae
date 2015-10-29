@@ -32,6 +32,7 @@
             <technique_common>
                 <spot>
                     <color>1 1 1</color>
+                    <falloff_angle>20</falloff_angle>
                 </spot>
             </technique_common>
         </light>
@@ -131,7 +132,8 @@
                 </instance_geometry>
             </node>
             <node>
-                <translate>0 0 3</translate>
+                <rotate>1 0 0 90</rotate>
+                <translate>0 0 2</translate>
                 <instance_light url="#spot_light"/>
             </node>
             <node>
