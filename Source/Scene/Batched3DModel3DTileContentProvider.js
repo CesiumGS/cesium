@@ -203,7 +203,7 @@ define([
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
 
-        this._batchTableResources.update(context, frameState);
+        this._batchTableResources.update(owner, context, frameState);
         this._model.update(context, frameState, commandList);
    };
 
