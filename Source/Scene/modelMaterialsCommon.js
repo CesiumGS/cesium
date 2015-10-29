@@ -167,19 +167,18 @@ define([
     var vertexShaderCount = 0;
     var fragmentShaderCount = 0;
     var programCount = 0;
-    function generateTechnique(gltf, khrMaterialsCommon, attributes, lightParameters, jointCount) {
+    function generateTechnique(gltf, khrMaterialsCommon, lightParameters) {
         var techniques = gltf.techniques;
         var shaders = gltf.shaders;
         var programs = gltf.programs;
-        attributes = defaultValue(attributes, []);
-        var attributesCount = attributes.length;
         var lightingModel = khrMaterialsCommon.technique.toUpperCase();
         var lights;
         if (defined(gltf.extensions) && defined(gltf.extensions.KHR_materials_common)) {
             lights = gltf.extensions.KHR_materials_common.lights;
         }
+        var jointCount = defaultValue(khrMaterialsCommon.jointCount, 0);
         var hasSkinning = (jointCount > 0);
-        var values = khrMaterialsCommon.values;
+        var parameterValues = khrMaterialsCommon.values;
 
         var vertexShader = 'precision highp float;\n';
         var fragmentShader = 'precision highp float;\n';
@@ -190,29 +189,27 @@ define([
         var fragmentShaderId = getNextId(shaders, 'fragmentShader', fragmentShaderCount);
         var programId = getNextId(programs, 'program', programCount);
 
-        // Add techniques
-        var lowerCase;
-        var techniqueAttributes = {};
-        for (var i=0;i<attributesCount;++i) {
-            lowerCase = attributes[i].toLowerCase();
-            techniqueAttributes['a_' + lowerCase] = lowerCase;
-        }
+        var hasNormals = (lightingModel !== 'CONSTANT');
 
+        // Add techniques
         var techniqueParameters = {
             // Add matrices
             modelViewMatrix: {
                 semantic: 'MODELVIEW',
                 type: WebGLConstants.FLOAT_MAT4
             },
-            normalMatrix: {
-                semantic: 'MODELVIEWINVERSETRANSPOSE',
-                type: WebGLConstants.FLOAT_MAT3
-            },
             projectionMatrix: {
                 semantic: 'PROJECTION',
                 type: WebGLConstants.FLOAT_MAT4
             }
         };
+
+        if (hasNormals) {
+            techniqueParameters.normalMatrix = {
+                semantic: 'MODELVIEWINVERSETRANSPOSE',
+                type: WebGLConstants.FLOAT_MAT3
+            };
+        }
 
         if (hasSkinning) {
             techniqueParameters.jointMatrix = {
@@ -223,10 +220,15 @@ define([
         }
 
         // Add material parameters
-        for(var name in values) {
-            if (values.hasOwnProperty(name)) {
-                var value = values[name];
+        var lowerCase;
+        var hasTexCoords = false;
+        for(var name in parameterValues) {
+            if (parameterValues.hasOwnProperty(name)) {
+                var value = parameterValues[name];
                 lowerCase = name.toLowerCase();
+                if (!hasTexCoords && (value.type === WebGLConstants.SAMPLER_2D)) {
+                    hasTexCoords = true;
+                }
                 techniqueParameters[lowerCase] = {
                     type: value.type
                 };
@@ -269,68 +271,78 @@ define([
             vertexShaderMain += '  skinMat += a_weight.w * u_jointMatrix[int(a_joint.w)];\n';
         }
 
-        // TODO: Handle multiple texture coordinates for now we just use 1
-        var v_texcoord;
-        for (i=0;i<attributesCount;++i) {
-            var attribute = attributes[i];
-            var typeValue = -1;
-            if (attribute === 'POSITION') {
-                typeValue = WebGLConstants.FLOAT_VEC3;
-                vertexShader += 'attribute vec3 a_position;\n';
-                vertexShader += 'varying vec3 v_positionEC;\n';
-                if (hasSkinning) {
-                    vertexShaderMain += '  vec4 pos = u_modelViewMatrix * skinMat * vec4(a_position,1.0);\n';
-                }
-                else {
-                    vertexShaderMain += '  vec4 pos = u_modelViewMatrix * vec4(a_position,1.0);\n';
-                }
-                vertexShaderMain += '  v_positionEC = pos.xyz;\n';
-                vertexShaderMain += '  gl_Position = u_projectionMatrix * pos;\n';
-                fragmentShader += 'varying vec3 v_positionEC;\n';
-            }
-            else if ((attribute === 'NORMAL')) {
-                typeValue = WebGLConstants.FLOAT_VEC3;
-                vertexShader += 'attribute vec3 a_normal;\n';
-                vertexShader += 'varying vec3 v_normal;\n';
-                if (hasSkinning) {
-                    vertexShaderMain += '  v_normal = u_normalMatrix * mat3(skinMat) * a_normal;\n';
-                }
-                else {
-                    vertexShaderMain += '  v_normal = u_normalMatrix * a_normal;\n';
-                }
+        // Add position always
+        var techniqueAttributes = {
+            a_position: 'position'
+        };
+        techniqueParameters.position = {
+            semantic: 'POSITION',
+            type: WebGLConstants.FLOAT_VEC3
+        };
+        vertexShader += 'attribute vec3 a_position;\n';
+        vertexShader += 'varying vec3 v_positionEC;\n';
+        if (hasSkinning) {
+            vertexShaderMain += '  vec4 pos = u_modelViewMatrix * skinMat * vec4(a_position,1.0);\n';
+        }
+        else {
+            vertexShaderMain += '  vec4 pos = u_modelViewMatrix * vec4(a_position,1.0);\n';
+        }
+        vertexShaderMain += '  v_positionEC = pos.xyz;\n';
+        vertexShaderMain += '  gl_Position = u_projectionMatrix * pos;\n';
+        fragmentShader += 'varying vec3 v_positionEC;\n';
 
-                fragmentShader += 'varying vec3 v_normal;\n';
+        // Add normal if we don't have constant lighting
+        if (hasNormals) {
+            techniqueAttributes.a_normal = 'normal';
+            techniqueParameters.normal = {
+                semantic: 'NORMAL',
+                type: WebGLConstants.FLOAT_VEC3
+            };
+            vertexShader += 'attribute vec3 a_normal;\n';
+            vertexShader += 'varying vec3 v_normal;\n';
+            if (hasSkinning) {
+                vertexShaderMain += '  v_normal = u_normalMatrix * mat3(skinMat) * a_normal;\n';
             }
-            else if (attribute.indexOf('TEXCOORD') === 0) {
-                typeValue = WebGLConstants.FLOAT_VEC2;
-                lowerCase = attribute.toLowerCase();
-                var a_texcoord = 'a_' + lowerCase;
-                v_texcoord = 'v_' + lowerCase;
-                vertexShader += 'attribute vec2 ' + a_texcoord + ';\n';
-                vertexShader += 'varying vec2 ' + v_texcoord + ';\n';
-                vertexShaderMain += '  ' + v_texcoord + ' = ' + a_texcoord + ';\n';
-
-                fragmentShader += 'varying vec2 ' + v_texcoord + ';\n';
-            }
-            else if (attribute === 'JOINT') {
-                typeValue = WebGLConstants.FLOAT_VEC4;
-                vertexShader += 'attribute vec4 a_joint;\n';
-            }
-            else if (attribute === 'WEIGHT') {
-                typeValue = WebGLConstants.FLOAT_VEC4;
-                vertexShader += 'attribute vec4 a_weight;\n';
+            else {
+                vertexShaderMain += '  v_normal = u_normalMatrix * a_normal;\n';
             }
 
-            if (typeValue > 0) {
-                lowerCase = attribute.toLowerCase();
-                techniqueParameters[lowerCase] = {
-                    semantic: attribute,
-                    type: typeValue
-                };
-            }
+            fragmentShader += 'varying vec3 v_normal;\n';
         }
 
-        var hasNormals = defined(techniqueParameters.normal);
+        // Add texture coordinates if the material uses them
+        var v_texcoord;
+        if (hasTexCoords) {
+            techniqueAttributes.a_texcoord_0 = 'texcoord_0';
+            techniqueParameters.texcoord_0 = {
+                semantic: 'TEXCOORD_0',
+                type: WebGLConstants.FLOAT_VEC2
+            };
+
+            v_texcoord = 'v_texcoord_0';
+            vertexShader += 'attribute vec2 a_texcoord_0;\n';
+            vertexShader += 'varying vec2 ' + v_texcoord + ';\n';
+            vertexShaderMain += '  ' + v_texcoord + ' = a_texcoord_0;\n';
+
+            fragmentShader += 'varying vec2 ' + v_texcoord + ';\n';
+        }
+
+        if (hasSkinning) {
+            techniqueAttributes.a_joint = 'joint';
+            techniqueParameters.joint = {
+                semantic: 'JOINT',
+                type: WebGLConstants.FLOAT_VEC4
+            };
+            techniqueAttributes.a_weight = 'weight';
+            techniqueParameters.weight = {
+                semantic: 'WEIGHT',
+                type: WebGLConstants.FLOAT_VEC4
+            };
+
+            vertexShader += 'attribute vec4 a_joint;\n';
+            vertexShader += 'attribute vec4 a_weight;\n';
+        }
+
         var hasSpecular = hasNormals && ((lightingModel === 'BLINN') || (lightingModel === 'PHONG')) &&
                           defined(techniqueParameters.specular) && defined(techniqueParameters.shininess);
 
@@ -537,11 +549,11 @@ define([
                 ],
                 depthMask: false,
                 functions: {
-                    "blendEquationSeparate": [
+                    blendEquationSeparate: [
                         WebGLConstants.FUNC_ADD,
                         WebGLConstants.FUNC_ADD
                     ],
-                    "blendFuncSeparate": [
+                    blendFuncSeparate: [
                         WebGLConstants.ONE,
                         WebGLConstants.ONE_MINUS_SRC_ALPHA,
                         WebGLConstants.ONE,
@@ -590,11 +602,7 @@ define([
         };
 
         // Add program
-        var programAttributes = [];
-        for (i=0;i<attributesCount;++i) {
-            programAttributes.push('a_' + attributes[i].toLowerCase());
-        }
-
+        var programAttributes = Object.keys(techniqueAttributes);
         programs[programId] = {
             attributes: programAttributes,
             fragmentShader: fragmentShaderId,
@@ -619,41 +627,15 @@ define([
                 techniqueKey += ';';
             }
         }
-    }
 
-    function getPrimitiveInfo(materialId, gltf) {
-        var meshes = gltf.meshes;
-        for (var name in meshes) {
-            if (meshes.hasOwnProperty(name)) {
-                var mesh = meshes[name];
-                var primitives = mesh.primitives;
-                var primitivesCount = primitives.length;
-                for (var i=0;i<primitivesCount;++i) {
-                    var primitive = primitives[i];
-                    if (primitive.material === materialId) {
-                        var jointCount = 0;
-                        if (defined(primitive.attributes.JOINT)) {
-                            var nodes = gltf.nodes;
-                            for (var nodeName in nodes) {
-                                if (nodes.hasOwnProperty(nodeName)) {
-                                    var node = nodes[nodeName];
-                                    // We have skinning for this node and it contains this mesh
-                                    if (defined(node.skeletons) && defined(node.meshes) &&
-                                        (node.meshes.indexOf(name) !== -1)) {
-                                        jointCount = node.skeletons.length;
-                                    }
-                                }
-                            }
-                        }
+        var doubleSided = defaultValue(khrMaterialsCommon.doubleSided, false);
+        techniqueKey += doubleSided.toString() + ';';
+        var transparent = defaultValue(khrMaterialsCommon.transparent, false);
+        techniqueKey += transparent.toString() + ';';
+        var jointCount = defaultValue(khrMaterialsCommon.jointCount, 0);
+        techniqueKey += jointCount.toString() + ';';
 
-                        return {
-                            attributes : Object.keys(primitive.attributes),
-                            jointCount : jointCount
-                        };
-                    }
-                }
-            }
-        }
+        return techniqueKey;
     }
 
     /**
@@ -702,9 +684,8 @@ define([
                         var techniqueKey = getTechniqueKey(khrMaterialsCommon);
                         var technique = techniques[techniqueKey];
                         if (!defined(technique)) {
-                            var primitiveInfo = getPrimitiveInfo(name, gltf);
-                            technique = generateTechnique(gltf, khrMaterialsCommon, primitiveInfo.attributes,
-                                                          lightParameters, primitiveInfo.jointCount);
+                            technique = generateTechnique(gltf, khrMaterialsCommon, lightParameters);
+                            techniques[techniqueKey] = technique;
                         }
 
                         // Take advantage of the fact that we generate techniques that use the
@@ -728,6 +709,13 @@ define([
             if (defined(gltf.extensions)) {
                 delete gltf.extensions.KHR_materials_common;
             }
+
+            //var json = JSON.stringify(gltf, null, 4);
+            //var a = document.createElement('a');
+            //a.setAttribute('href', 'data:text;base64,' + btoa(json));
+            //a.setAttribute('target', '_blank');
+            //a.setAttribute('download', 'model.json');
+            //a.click();
         }
 
         return gltf;
