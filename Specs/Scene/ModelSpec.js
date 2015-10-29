@@ -47,7 +47,6 @@ defineSuite([
     var boxUrl = './Data/Models/Box/CesiumBoxTest.gltf';
     var boxNoTechniqueUrl = './Data/Models/Box/CesiumBoxTest-NoTechnique.gltf';
     var box0_8Url = './Data/Models/Box/CesiumBoxTest-0_8.gltf';
-    var boxMaterialsCommonUrl = './Data/Models/Box/MaterialsCommonBox.gltf';
     var boxNoIndicesUrl = './Data/Models/Box-NoIndices/box-noindices.gltf';
     var texturedBoxUrl = './Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf';
     var texturedBoxSeparateUrl = './Data/Models/Box-Textured-Separate/CesiumTexturedBoxTest.gltf';
@@ -58,6 +57,16 @@ defineSuite([
     var cesiumAirUrl = './Data/Models/CesiumAir/Cesium_Air.gltf';
     var animBoxesUrl = './Data/Models/anim-test-1-boxes/anim-test-1-boxes.gltf';
     var riggedFigureUrl = './Data/Models/rigged-figure-test/rigged-figure-test.gltf';
+
+    var boxConstantUrl = './Data/Models/MaterialsCommon/BoxConstant.gltf';
+    var boxLambertUrl = './Data/Models/MaterialsCommon/BoxLambert.gltf';
+    var boxBlinnUrl = './Data/Models/MaterialsCommon/BoxBlinn.gltf';
+    var boxPhongUrl = './Data/Models/MaterialsCommon/BoxPhong.gltf';
+    var boxNoLightUrl = './Data/Models/MaterialsCommon/BoxNoLight.gltf';
+    var boxAmbientLightUrl = './Data/Models/MaterialsCommon/BoxAmbientLight.gltf';
+    var boxDirectionalLightUrl = './Data/Models/MaterialsCommon/BoxDirectionalLight.gltf';
+    var boxPointLightUrl = './Data/Models/MaterialsCommon/BoxPointLight.gltf';
+    var CesiumManUrl = './Data/Models/MaterialsCommon/Cesium_Man.gltf';
 
     var texturedBoxModel;
     var cesiumAirModel;
@@ -479,17 +488,8 @@ defineSuite([
         });
     });
 
-
-
     it('loads a glTF model that doesn\'t have a technique', function() {
         return loadModel(boxNoTechniqueUrl).then(function(m) {
-            verifyRender(m);
-            primitives.remove(m);
-        });
-    });
-
-    it('loads a glTF model that uses KHR_materials_common extension', function() {
-        return loadModel(boxMaterialsCommonUrl).then(function(m) {
             verifyRender(m);
             primitives.remove(m);
         });
@@ -1429,6 +1429,76 @@ defineSuite([
             primitives.remove(m3);
             expect(gltfCache[key3]).not.toBeDefined();
             expect(modelRendererResourceCache[key3]).not.toBeDefined();
+        });
+    });
+
+    it('loads a glTF with KHR_materials_common using the constant lighting model', function() {
+        return loadModel(boxConstantUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF with KHR_materials_common using the lambert lighting model', function() {
+        return loadModel(boxLambertUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF with KHR_materials_common using the blinn lighting model', function() {
+        return loadModel(boxBlinnUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF with KHR_materials_common using the phong lighting model', function() {
+        return loadModel(boxPhongUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF with KHR_materials_common using a black ambient/directional light', function() {
+        return loadModel(boxNoLightUrl).then(function(m) {
+            // Verify that we render a black model because lighting is completely off
+            expect(m.ready).toBe(true);
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+            m.show = true;
+            m.zoomTo();
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+            m.show = false;
+
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF with KHR_materials_common using an ambient light', function() {
+        return loadModel(boxAmbientLightUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF with KHR_materials_common using a directional light', function() {
+        return loadModel(boxDirectionalLightUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF with KHR_materials_common using a point light', function() {
+        return loadModel(boxPointLightUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF with KHR_materials_common that has skinning', function() {
+        return loadModel(CesiumManUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
         });
     });
 
