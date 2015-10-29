@@ -36,6 +36,8 @@ Change Log
 * Updated `almond` from 0.2.6 to 0.3.1. [#3107](https://github.com/AnalyticalGraphicsInc/cesium/pull/3107)
 * Added support for [glTF v1.0](https://github.com/KhronosGroup/glTF/blob/master/specification/README.md) Draft Specification.
 * Added support for the glTF extensions [KHR_binary_glTF](https://github.com/KhronosGroup/glTF/tree/master/extensions/Khronos/KHR_binary_glTF) & [KHR_materials_common](https://github.com/KhronosGroup/glTF/tree/KHR_materials_common/extensions/Khronos/KHR_materials_common)
+* Made `TileMapServiceImageryProvider` and `CesiumTerrainProvider` work properly when the provided base url contains query parameters and fragments.
+>>>>>>> master
 
 ### 1.14 - 2015-10-01
 

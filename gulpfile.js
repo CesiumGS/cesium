@@ -214,7 +214,8 @@ gulp.task('jsHint', ['build'], function() {
     return gulp.src(jsHintFiles)
         .pipe(jshint.extract('auto'))
         .pipe(jshint())
-        .pipe(jshint.reporter('jshint-stylish'));
+        .pipe(jshint.reporter('jshint-stylish'))
+        .pipe(jshint.reporter('fail'));
 });
 
 gulp.task('jsHint-watch', function() {
