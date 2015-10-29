@@ -2,16 +2,24 @@
 define([
         '../Core/Credit',
         '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/Event',
         '../Core/Rectangle',
         '../Core/WebMercatorTilingScheme',
+        './ImageryProvider',
         './UrlTemplateImageryProvider'
 ], function(
         Credit,
         defaultValue,
+        defined,
+        defineProperties,
         DeveloperError,
+        Event,
         Rectangle,
         WebMercatorTilingScheme,
+        ImageryProvider,
         UrlTemplateImageryProvider
         ) {
     "use strict";
@@ -56,7 +64,7 @@ define([
      *     url : '//a.tile.openstreetmap.org/'
      * });
      */
-    return function OpenStreetMapImageryProvider(options) {
+    var OpenStreetMapImageryProvider = function OpenStreetMapImageryProvider(options) {
         options = defaultValue(options, {});
 
         var url = defaultValue(options.url, '//a.tile.openstreetmap.org/');
@@ -95,7 +103,6 @@ define([
             credit = new Credit(credit);
         }
 
-        // template url scheme for OpenStreetMap imagery
         var templateUrl = url + "{z}/{x}/{y}." + fileExtension;
 
         return new UrlTemplateImageryProvider({
@@ -110,4 +117,64 @@ define([
             rectangle: rectangle
         });
     };
+
+    /**
+     * Gets the credits to be displayed when a given tile is displayed.
+     *
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level;
+     * @returns {Credit[]} The credits to be displayed when the tile is displayed.
+     *
+     * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
+     */
+    OpenStreetMapImageryProvider.prototype.getTileCredits = function(x, y, level) {
+        return undefined;
+    };
+
+    /**
+     * Requests the image for a given tile.  This function should
+     * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
+     *
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level.
+     * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
+     *          undefined if there are too many active requests to the server, and the request
+     *          should be retried later.  The resolved image may be either an
+     *          Image or a Canvas DOM object.
+     *
+     * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
+     */
+    OpenStreetMapImageryProvider.prototype.requestImage = function(x, y, level) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!this._imageryProvider.ready) {
+            throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
+        }
+        //>>includeEnd('debug');
+
+        //var url = buildImageUrl(this, x, y, level);
+        //return ImageryProvider.loadImage(this, url);
+        return this._imageryProvider.requestImage(x, y, level);
+    };
+
+    /**
+     * Picking features is not currently supported by this imagery provider, so this function simply returns
+     * undefined.
+     *
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level.
+     * @param {Number} longitude The longitude at which to pick features.
+     * @param {Number} latitude  The latitude at which to pick features.
+     * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
+     *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
+     *                   instances.  The array may be empty if no features are found at the given location.
+     *                   It may also be undefined if picking is not supported.
+     */
+    OpenStreetMapImageryProvider.prototype.pickFeatures = function() {
+        return undefined;
+    };
+
+    return OpenStreetMapImageryProvider;
 });
