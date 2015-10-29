@@ -133,6 +133,7 @@ define([
      * {@link FrameRateMonitor} constructor.
      *
      * @memberof FrameRateMonitor
+     * @type {Object}
      */
     FrameRateMonitor.defaultSettings = {
         samplingWindow : 5.0,

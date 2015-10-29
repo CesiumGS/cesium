@@ -31,11 +31,11 @@ define([
      *
      * @example
      * var instance = new Cesium.GeometryInstance({
-     *   geometry : new Cesium.BoxGeometry({
+     *   geometry : Cesium.BoxGeometry.fromDimensions({
      *     dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0)
      *   }),
      *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-     *     Cesium.Cartesian3.fromDegrees(0.0, 0.0), new Cesium.Cartesian3(0.0, 0.0, 1000000.0), new Cesium.Matrix4()),
+     *     Cesium.Cartesian3.fromDegrees(0.0, 0.0)), new Cesium.Cartesian3(0.0, 0.0, 1000000.0), new Cesium.Matrix4()),
      *   id : 'box',
      *   attributes : {
      *     color : new Cesium.ColorGeometryInstanceAttribute(red, green, blue, alpha)
@@ -124,7 +124,7 @@ define([
      *
      * @example
      * var instance = new Cesium.GeometryInstance({
-     *   geometry : // ...
+     *   geometry : geometry,
      *   attributes : {
      *     color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.CORNFLOWERBLUE),
      *   }

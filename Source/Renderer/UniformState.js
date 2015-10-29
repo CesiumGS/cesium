@@ -53,6 +53,7 @@ define([
         this._infiniteProjection = Matrix4.clone(Matrix4.IDENTITY);
         this._entireFrustum = new Cartesian2();
         this._currentFrustum = new Cartesian2();
+        this._frustumPlanes = new Cartesian4();
 
         this._frameState = undefined;
         this._temeToPseudoFixed = Matrix3.clone(Matrix4.IDENTITY);
@@ -633,6 +634,18 @@ define([
         },
 
         /**
+         * The distances to the frustum planes. The top, bottom, left and right distances are
+         * the x, y, z, and w components, respectively.
+         * @memberof UniformState.prototype
+         * @type {Cartesian4}
+         */
+        frustumPlanes : {
+            get : function() {
+                return this._frustumPlanes;
+            }
+        },
+
+        /**
          * The the height (<code>x</code>) and the height squared (<code>y</code>)
          * in meters of the camera above the 2D world plane. This uniform is only valid
          * when the {@link SceneMode} equal to <code>SCENE2D</code>.
@@ -844,6 +857,15 @@ define([
         }
         this._currentFrustum.x = frustum.near;
         this._currentFrustum.y = frustum.far;
+
+        if (!defined(frustum.top)) {
+            frustum = frustum._offCenterFrustum;
+        }
+
+        this._frustumPlanes.x = frustum.top;
+        this._frustumPlanes.y = frustum.bottom;
+        this._frustumPlanes.z = frustum.left;
+        this._frustumPlanes.w = frustum.right;
     };
 
     /**
@@ -853,11 +875,11 @@ define([
      *
      * @param {FrameState} frameState The frameState to synchronize with.
      */
-    UniformState.prototype.update = function(context, frameState) {
+    UniformState.prototype.update = function(frameState) {
         this._mode = frameState.mode;
         this._mapProjection = frameState.mapProjection;
 
-        var canvas = context._canvas;
+        var canvas = frameState.context._canvas;
         this._resolutionScale = canvas.width / canvas.clientWidth;
 
         var camera = frameState.camera;

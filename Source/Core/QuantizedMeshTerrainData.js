@@ -91,7 +91,7 @@ define([
      *     indices : new Uint16Array([0, 3, 1,
      *                                0, 2, 3]),
      *     boundingSphere : new Cesium.BoundingSphere(new Cesium.Cartesian3(1.0, 2.0, 3.0), 10000),
-     *     orientedBoundingBox : new Cesium.OrientedBoundingBox(new Cesium.Cartesian3(1.0, 2.0, 3.0), Matrix3.fromRotationX(Cesium.Math.PI, new Matrix3())),
+     *     orientedBoundingBox : new Cesium.OrientedBoundingBox(new Cesium.Cartesian3(1.0, 2.0, 3.0), Cesium.Matrix3.fromRotationX(Cesium.Math.PI, new Cesium.Matrix3())),
      *     horizonOcclusionPoint : new Cesium.Cartesian3(3.0, 2.0, 1.0),
      *     westIndices : [0, 1],
      *     southIndices : [0, 1],

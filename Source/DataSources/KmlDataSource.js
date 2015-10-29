@@ -9,6 +9,7 @@ define([
         '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/definedNotNull',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
@@ -61,6 +62,7 @@ define([
         createGuid,
         defaultValue,
         defined,
+        definedNotNull,
         defineProperties,
         DeveloperError,
         Ellipsoid,
@@ -278,14 +280,14 @@ define([
     }
 
     function readCoordinate(value) {
+        //Google Earth treats empty or missing coordinates as 0.
         if (!defined(value)) {
-            return undefined;
+            return Cartesian3.fromDegrees(0, 0, 0);
         }
 
         var digits = value.match(/[^\s,\n]+/g);
-        if (digits.length !== 2 && digits.length !== 3) {
-            window.console.log('KML - Invalid coordinates: ' + value);
-            return undefined;
+        if (!definedNotNull(digits)) {
+            return Cartesian3.fromDegrees(0, 0, 0);
         }
 
         var longitude = parseFloat(digits[0]);
@@ -305,6 +307,10 @@ define([
         }
 
         var tuples = element.textContent.match(/[^\s\n]+/g);
+        if (!definedNotNull(tuples)) {
+            return undefined;
+        }
+
         var length = tuples.length;
         var result = new Array(length);
         var resultIndex = 0;
@@ -411,7 +417,11 @@ define([
 
     function queryBooleanValue(node, tagName, namespace) {
         var result = queryFirstNode(node, tagName, namespace);
-        return defined(result) ? result.textContent === '1' : undefined;
+        if (defined(result)) {
+            var value = result.textContent.trim();
+            return value === '1' || /^true$/i.test(value);
+        }
+        return undefined;
     }
 
     function resolveHref(href, proxy, sourceUri, uriResolver) {
@@ -436,12 +446,13 @@ define([
     }
 
     var colorOptions = {};
+
     function parseColorString(value, isRandom) {
         if (!defined(value)) {
             return undefined;
         }
 
-        if(value[0] === '#'){
+        if (value[0] === '#') {
             value = value.substring(1);
         }
 
@@ -875,7 +886,7 @@ define([
         }
 
         if ((defined(altitudeMode) && altitudeMode !== 'clampToGround') || //
-           (defined(gxAltitudeMode) && gxAltitudeMode !== 'clampToSeaFloor')) {
+            (defined(gxAltitudeMode) && gxAltitudeMode !== 'clampToSeaFloor')) {
             window.console.log('KML - Unknown altitudeMode: ' + defaultValue(altitudeMode, gxAltitudeMode));
         }
 
@@ -964,9 +975,6 @@ define([
         var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
 
         var position = readCoordinate(coordinatesString);
-        if (!defined(position)) {
-            return;
-        }
 
         entity.position = position;
         processPositionGraphics(dataSource, entity, styleEntity, heightReferenceFromAltitudeMode(altitudeMode, gxAltitudeMode));
@@ -1065,12 +1073,9 @@ define([
         var coordinates = [];
         var times = [];
         for (var i = 0; i < length; i++) {
-            //An empty position is OK according to the spec
             var position = readCoordinate(coordNodes[i].textContent);
-            if (defined(position)) {
-                coordinates.push(position);
-                times.push(JulianDate.fromIso8601(timeNodes[i].textContent));
-            }
+            coordinates.push(position);
+            times.push(JulianDate.fromIso8601(timeNodes[i].textContent));
         }
         var property = new SampledPositionProperty();
         property.addSamples(times, coordinates);
@@ -1151,12 +1156,9 @@ define([
             var positions = [];
             times = [];
             for (var x = 0; x < length; x++) {
-                //An empty position is OK according to the spec
                 var position = readCoordinate(coordNodes[x].textContent);
-                if (defined(position)) {
-                    positions.push(position);
-                    times.push(JulianDate.fromIso8601(timeNodes[x].textContent));
-                }
+                positions.push(position);
+                times.push(JulianDate.fromIso8601(timeNodes[x].textContent));
             }
 
             if (interpolate) {
@@ -1228,6 +1230,7 @@ define([
     }
 
     var scratchDiv = document.createElement('div');
+
     function processDescription(node, entity, styleEntity, uriResolver) {
         var i;
         var key;
@@ -1581,7 +1584,14 @@ define([
         return when.all(processStyles(dataSource, kml, styleCollection, sourceUri, false, uriResolver), function() {
             var element = kml.documentElement;
             if (element.localName === 'kml') {
-                element = element.firstElementChild;
+                var childNodes = element.childNodes;
+                for (var i = 0; i < childNodes.length; i++) {
+                    var tmp = childNodes[i];
+                    if (defined(featureTypes[tmp.localName])) {
+                        element = tmp;
+                        break;
+                    }
+                }
             }
             processFeatureNode(dataSource, element, undefined, entityCollection, styleCollection, sourceUri, uriResolver);
 

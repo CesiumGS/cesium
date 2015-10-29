@@ -155,7 +155,7 @@ define([
          * @type {Number}
          * @default 20.0
          */
-        this.minimumZoomDistance = 20.0;
+        this.minimumZoomDistance = 1.0;
         /**
          * The maximum magnitude, in meters, of the camera position when zooming. Defaults to positive infinity.
          * @type {Number}
@@ -206,10 +206,16 @@ define([
          * @default [{@link CameraEventType.MIDDLE_DRAG}, {@link CameraEventType.PINCH}, {
          *     eventType : {@link CameraEventType.LEFT_DRAG},
          *     modifier : {@link KeyboardEventModifier.CTRL}
+         * }, {
+         *     eventType : {@link CameraEventType.RIGHT_DRAG},
+         *     modifier : {@link KeyboardEventModifier.CTRL}
          * }]
          */
         this.tiltEventTypes = [CameraEventType.MIDDLE_DRAG, CameraEventType.PINCH, {
             eventType : CameraEventType.LEFT_DRAG,
+            modifier : KeyboardEventModifier.CTRL
+        }, {
+            eventType : CameraEventType.RIGHT_DRAG,
             modifier : KeyboardEventModifier.CTRL
         }];
         /**
@@ -363,7 +369,7 @@ define([
 
             // If value from the decreasing exponential function is close to zero,
             // the end coordinates may be NaN.
-            if (isNaN(movementState.endPosition.x) || isNaN(movementState.endPosition.y) || sameMousePosition(movementState)) {
+            if (isNaN(movementState.endPosition.x) || isNaN(movementState.endPosition.y) || Cartesian2.distance(movementState.startPosition, movementState.endPosition) < 0.5) {
                 movementState.active = false;
                 return;
             }
@@ -459,7 +465,11 @@ define([
         var camera = scene.camera;
         var mode = scene.mode;
 
-        var pickedPosition = mode !== SceneMode.SCENE2D ? pickGlobe(object, startPosition, scratchPickCartesian) : camera.getPickRay(startPosition, scratchZoomPickRay).origin;
+        var pickedPosition;
+        if (defined(object._globe)) {
+            pickedPosition = mode !== SceneMode.SCENE2D ? pickGlobe(object, startPosition, scratchPickCartesian) : camera.getPickRay(startPosition, scratchZoomPickRay).origin;
+        }
+
         if (!defined(pickedPosition)) {
             camera.zoomIn(distance);
             return;

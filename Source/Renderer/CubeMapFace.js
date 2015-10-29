@@ -59,7 +59,8 @@ define([
      *
      * @example
      * // Create a cubemap with 1x1 faces, and make the +x face red.
-     * var cubeMap = context.createCubeMap({
+     * var cubeMap = new CubeMap({
+     *   context : context
      *   width : 1,
      *   height : 1
      * });

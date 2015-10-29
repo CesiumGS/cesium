@@ -735,7 +735,7 @@ defineSuite([
         });
 
         scene.renderForSpecs();
-        var actual = scene._commandList[0].boundingVolume;
+        var actual = scene.frameState.commandList[0].boundingVolume;
 
         var positions = [one.position, two.position];
         var expected = BoundingSphere.fromPoints(positions);
@@ -757,7 +757,7 @@ defineSuite([
         // Update scene state
         scene.morphToColumbusView(0);
         scene.renderForSpecs();
-        var actual = scene._commandList[0].boundingVolume;
+        var actual = scene.frameState.commandList[0].boundingVolume;
 
         var projectedPositions = [
             projection.project(ellipsoid.cartesianToCartographic(one.position)),
@@ -798,7 +798,7 @@ defineSuite([
         camera.frustum = orthoFrustum;
 
         scene.renderForSpecs();
-        var actual = scene._commandList[0].boundingVolume;
+        var actual = scene.frameState.commandList[0].boundingVolume;
 
         var projectedPositions = [
             projection.project(ellipsoid.cartesianToCartographic(one.position)),
