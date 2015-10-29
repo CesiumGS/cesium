@@ -85,7 +85,7 @@ define([
                         values[i] = Quaternion.fromAxisAngle(Cartesian3.fromArray(typedArray, byteOffset, axisScratch), typedArray[byteOffset + 3]);
                     }
                     else {
-                        values[i] = new Quaternion(typedArray[byteOffset], typedArray[byteOffset + 1], typedArray[byteOffset + 2], typedArray[byteOffset + 3]);
+                        values[i] = Quaternion.unpack(typedArray, byteOffset);
                     }
                 }
             }

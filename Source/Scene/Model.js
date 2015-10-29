@@ -2321,8 +2321,6 @@ define([
                             uniformMap[name] = uv.func;
                             uniformValues[parameterName] = uv;
                         } else if (defined(parameter.node)) {
-                            // GLTF_SPEC: Use semantic to know which matrix to use from the node, e.g., model vs. model-view
-                            // https://github.com/KhronosGroup/glTF/issues/93
                             uniformMap[name] = getUniformFunctionFromSource(parameter.node, model, parameter.semantic, context.uniformState);
                         } else if (defined(parameter.semantic)) {
                             if (parameter.semantic !== 'JOINTMATRIX') {
@@ -2544,7 +2542,7 @@ define([
                             runtimeNode.rotation = Quaternion.fromAxisAngle(axis, rotation[3]);
                         }
                         else {
-                            runtimeNode.rotation = new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3]);
+                            runtimeNode.rotation = Quaternion.unpack(rotation);
                         }
                         runtimeNode.scale = Cartesian3.fromArray(gltfNode.scale);
                     }

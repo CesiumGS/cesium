@@ -211,7 +211,7 @@ define([
                         delete material.values;
                         material.extensions = {
                             KHR_materials_common : {
-                                technique : "CONSTANT",
+                                technique : 'CONSTANT',
                                 transparent: false,
                                 values : {
                                     emission : {
