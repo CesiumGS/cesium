@@ -69,6 +69,15 @@ define([
             get : function() {
                 return this._batchSize;
             }
+        },
+
+        /**
+         * DOC_TBA
+         */
+        batchTableResources : {
+            get : function() {
+                return this._batchTableResources;
+            }
         }
     });
 
@@ -194,7 +203,7 @@ define([
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
 
-        this._batchTableResources.update(context, frameState);
+        this._batchTableResources.update(owner, context, frameState);
         this._model.update(context, frameState, commandList);
    };
 

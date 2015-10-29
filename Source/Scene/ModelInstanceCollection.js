@@ -779,7 +779,7 @@ define([
         }
 
         if (instancingSupported) {
-            this._batchTableResources.update(context, frameState);
+            this._batchTableResources.update(this, context, frameState);
         }
 
         var model = this._model;
