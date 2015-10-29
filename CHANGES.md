@@ -12,31 +12,31 @@ Change Log
     * `positionCartographic`. Convert to a `Cartesian3` and use `destination` instead.
     * `heading`, `pitch` and `roll`. Use `orientation.heading/pitch/roll` instead.
   * Deprecated `CESIUM_binary_glTF` extension support for glTF models. [KHR_binary_glTF](https://github.com/KhronosGroup/glTF/tree/master/extensions/Khronos/KHR_binary_glTF) should be used instead. It will be removed in 1.18.  Reconvert models using the online [model converter](http://cesiumjs.org/convertmodel.html).
-  * Deprecated `BoxGeometry.minimumCorner` and `BoxGeometry.maximumCorner`. These will be removed in 1.17. Use `BoxGeometry.minimum` and `BoxGeometry.maximum` instead.
-  * Deprecated `BoxOutlineGeometry.minimumCorner` and `BoxOutlineGeometry.maximumCorner`. These will be removed in 1.17. Use `BoxOutlineGeometry.minimum` and `BoxOutlineGeometry.maximum` instead.
-  * Made `EllipsoidPrimitive` private, use `EllipsoidGeometry` or `Entity.ellipsoid` instead.
   * Deprecated `RectanglePrimitive`. It will be removed in 1.17. Use `RectangleGeometry` or `Entity.rectangle` instead.
   * Deprecated `EllipsoidPrimitive`. It will be removed in 1.17. Use `EllipsoidGeometry` or `Entity.ellipsoid` instead.
+  * Made `EllipsoidPrimitive` private, use `EllipsoidGeometry` or `Entity.ellipsoid` instead.
+  * Deprecated `BoxGeometry.minimumCorner` and `BoxGeometry.maximumCorner`. These will be removed in 1.17. Use `BoxGeometry.minimum` and `BoxGeometry.maximum` instead.
+  * Deprecated `BoxOutlineGeometry.minimumCorner` and `BoxOutlineGeometry.maximumCorner`. These will be removed in 1.17. Use `BoxOutlineGeometry.minimum` and `BoxOutlineGeometry.maximum` instead.
   * Deprecated `OrthographicFrustum.getPixelSize`. It will be removed in 1.17. Use `OrthographicFrustum.getPixelDimensions` instead
   * Deprecated `PerspectiveFrustum.getPixelSize`. It will be removed in 1.17. Use `PerspectiveFrustum.getPixelDimensions` instead.
   * Deprecated `PerspectiveOffCenterFrustum.getPixelSize`. It will be removed in 1.17. Use `PerspectiveOffCenterFrustum.getPixelDimensions` instead.
   * Deprecated `Scene\HeadingPitchRange`. It will be removed in 1.17. Use `Core\HeadingPitchRange` instead.
   * Deprecated `jsonp`. It will be removed in 1.17. Use `loadJsonp` instead
-* Decreased GPU memory usage in `BillboardCollection` and `LabelCollection` by using the WebGL ANGLE_instanced_arrays extension.
-* Added CZML examples to Sandcastle.  See the new CZML tab.
-* Fixed token issue in `ArcGisMapServerImageryProvider`.
-* `ImageryLayerFeatureInfo` now has an `imageryLayer` property, indicating the layer that contains the feature.
-* Added `BoxOutlineGeometry.fromAxisAlignedBoundingBox` and `BoxGeometry.fromAxisAlignedBoundingBox` functions.
-* Switched to [gulp](http://gulpjs.com/) for all build tasks. `Java` and `ant` are no longer required to develop Cesium. [#3106](https://github.com/AnalyticalGraphicsInc/cesium/pull/3106)
-* The WebGL setting of `failIfMajorPerformanceCaveat` now defaults to `false`, which is the official WebGL default. This improves compatibility with out-of-date drivers and remote desktop sessions. Cesium will run slower in these cases instead of simply failing to load. [#3108](https://github.com/AnalyticalGraphicsInc/cesium/pull/3108)
-* Changed `Camera.setView` to take the same parameter options as `Camera.flyTo`.  `options.destination` takes a rectangle, `options.orientation` works with heading/pitch/roll or direction/up, and `options.endTransform` was added. [#3100](https://github.com/AnalyticalGraphicsInc/cesium/pull/3100)
-* Fixed the issue where the camera inertia takes too long to finish causing the camera move events to fire after it appears to. [#2839](https://github.com/AnalyticalGraphicsInc/cesium/issues/2839)
-* Make KML invalid coordinate processing match Google Earth behavior. (#3124)[https://github.com/AnalyticalGraphicsInc/cesium/pull/3124]
-* Updated `requirejs` from 2.1.9 to 2.1.20. [#3107](https://github.com/AnalyticalGraphicsInc/cesium/pull/3107)
-* Updated `almond` from 0.2.6 to 0.3.1. [#3107](https://github.com/AnalyticalGraphicsInc/cesium/pull/3107)
 * Added support for [glTF 1.0](https://github.com/KhronosGroup/glTF/blob/master/specification/README.md) Draft Specification.
 * Added support for the glTF extensions [KHR_binary_glTF](https://github.com/KhronosGroup/glTF/tree/master/extensions/Khronos/KHR_binary_glTF) & [KHR_materials_common](https://github.com/KhronosGroup/glTF/tree/KHR_materials_common/extensions/Khronos/KHR_materials_common)
+* Decreased GPU memory usage in `BillboardCollection` and `LabelCollection` by using the WebGL ANGLE_instanced_arrays extension.
+* Added CZML examples to Sandcastle.  See the new CZML tab.
+* Changed `Camera.setView` to take the same parameter options as `Camera.flyTo`.  `options.destination` takes a rectangle, `options.orientation` works with heading/pitch/roll or direction/up, and `options.endTransform` was added. [#3100](https://github.com/AnalyticalGraphicsInc/cesium/pull/3100)
+* Fixed token issue in `ArcGisMapServerImageryProvider`.
+* `ImageryLayerFeatureInfo` now has an `imageryLayer` property, indicating the layer that contains the feature.
 * Made `TileMapServiceImageryProvider` and `CesiumTerrainProvider` work properly when the provided base url contains query parameters and fragments.
+* The WebGL setting of `failIfMajorPerformanceCaveat` now defaults to `false`, which is the WebGL default. This improves compatibility with out-of-date drivers and remote desktop sessions. Cesium will run slower in these cases instead of simply failing to load. [#3108](https://github.com/AnalyticalGraphicsInc/cesium/pull/3108)
+* Fixed the issue where the camera inertia takes too long to finish causing the camera move events to fire after it appears to. [#2839](https://github.com/AnalyticalGraphicsInc/cesium/issues/2839)
+* Make KML invalid coordinate processing match Google Earth behavior. (#3124)[https://github.com/AnalyticalGraphicsInc/cesium/pull/3124]
+* Added `BoxOutlineGeometry.fromAxisAlignedBoundingBox` and `BoxGeometry.fromAxisAlignedBoundingBox` functions.
+* Switched to [gulp](http://gulpjs.com/) for all build tasks. `Java` and `ant` are no longer required to develop Cesium. [#3106](https://github.com/AnalyticalGraphicsInc/cesium/pull/3106)
+* Updated `requirejs` from 2.1.9 to 2.1.20. [#3107](https://github.com/AnalyticalGraphicsInc/cesium/pull/3107)
+* Updated `almond` from 0.2.6 to 0.3.1. [#3107](https://github.com/AnalyticalGraphicsInc/cesium/pull/3107)
 
 ### 1.14 - 2015-10-01
 
