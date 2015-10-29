@@ -429,7 +429,7 @@ define([
 
         if (!hasAmbientLights) {
             // Add an ambient light if we don't have one
-            fragmentLightingBlock += '  ambientLight += vec3(0.1, 0.1, 0.1);\n';
+            fragmentLightingBlock += '  ambientLight += vec3(0.2, 0.2, 0.2);\n';
         }
 
         if (!hasNonAmbientLights && (lightingModel !== 'CONSTANT')) {
