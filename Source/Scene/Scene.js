@@ -506,7 +506,7 @@ define([
         this.copyGlobeDepth = false;
 
         this.fogEnabled = true;
-        this.fogDensity = 0.000009;
+        this.fogDensity = 0.0001;
 
         this._performanceDisplay = undefined;
         this._debugVolume = undefined;
