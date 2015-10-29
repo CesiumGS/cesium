@@ -21,6 +21,7 @@ Change Log
     * `position`: use `destination` instead.
     * `positionCartographic`: convert to a `Cartesian3` and use `destination` instead.
     * `heading`, `pitch` and `roll`: use `orientation.heading/pitch/roll` instead.
+  * Deprecated `CESIUM_binary_glTF` extension support for glTF models. [KHR_binary_glTF](https://github.com/KhronosGroup/glTF/tree/master/extensions/Khronos/KHR_binary_glTF) should be used instead. It will be removed in 1.18.
 * Decreased GPU memory usage in `BillboardCollection` and `LabelCollection` by using the WebGL ANGLE_instanced_arrays extension.
 * Added CZML examples to Sandcastle.  See the new CZML tab.
 * Fixed token issue in `ArcGisMapServerImageryProvider`.
@@ -33,6 +34,8 @@ Change Log
 * Make KML invalid coordinate processing match Google Earth behavior. (#3124)[https://github.com/AnalyticalGraphicsInc/cesium/pull/3124]
 * Updated `requirejs` from 2.1.9 to 2.1.20. [#3107](https://github.com/AnalyticalGraphicsInc/cesium/pull/3107)
 * Updated `almond` from 0.2.6 to 0.3.1. [#3107](https://github.com/AnalyticalGraphicsInc/cesium/pull/3107)
+* Added support for [glTF v1.0](https://github.com/KhronosGroup/glTF/blob/master/specification/README.md) Draft Specification.
+* Added support for the glTF extensions [KHR_binary_glTF](https://github.com/KhronosGroup/glTF/tree/master/extensions/Khronos/KHR_binary_glTF) & [KHR_materials_common](https://github.com/KhronosGroup/glTF/tree/KHR_materials_common/extensions/Khronos/KHR_materials_common)
 
 ### 1.14 - 2015-10-01
 
