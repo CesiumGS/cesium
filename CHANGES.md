@@ -4,24 +4,24 @@ Change Log
 ### 1.15 - 2015-11-02
 
 * Breaking changes
-  * Deleted old `<subfolder>/package.json` and `*.profile.js` files, not used since we moved away from a Dojo-based build years ago.  This should allow future compatibility with newer systems like Browserify and Webpack.
+  * Deleted old `<subfolder>/package.json` and `*.profile.js` files, not used since Cesium moved away from a Dojo-based build years ago.  This will allow future compatibility with newer systems like Browserify and Webpack.
 * Deprecated
-  * Deprecated `BoxGeometry.minimumCorner` and `BoxGeometry.maximumCorner`, use `BoxGeometry.minimum` and `BoxGeometry.maximum` instead. These will be removed in 1.17.
-  * Deprecated `BoxOutlineGeometry.minimumCorner` and `BoxOutlineGeometry.maximumCorner`, use `BoxOutlineGeometry.minimum` and `BoxOutlineGeometry.maximum` instead. These will be removed in 1.17.
-  * Made `EllipsoidPrimitive` private, use `EllipsoidGeometry` or `Entity.ellipsoid` instead.
-  * Deprecated `RectanglePrimitive`, use `RectangleGeometry` or `Entity.rectangle` instead. It will be removed in 1.17.
-  * Deprecated `EllipsoidPrimitive`, use `EllipsoidGeometry` or `Entity.ellipsoid` instead. It will be removed in 1.17.
-  * Deprecated `OrthographicFrustum.getPixelSize`, use `OrthographicFrustum.getPixelDimensions` instead. It will be removed in 1.17.
-  * Deprecated `PerspectiveFrustum.getPixelSize`, use `PerspectiveFrustum.getPixelDimensions` instead. It will be removed in 1.17.
-  * Deprecated `PerspectiveOffCenterFrustum.getPixelSize`, use `PerspectiveOffCenterFrustum.getPixelDimensions` instead. It will be removed in 1.17.
-  * Deprecated `Scene\HeadingPitchRange`, use `Core\HeadingPitchRange` instead. It will be removed in 1.17.
-  * Deprecated `jsonp` use `loadJsonp` instead. It will be removed in 1.17.
-  * Deprecated `Camera.viewRectangle`, use `Camera.setView({destination: rectangle})` instead. It will be removed in 1.17.
+  * Deprecated `Camera.viewRectangle`. It will be removed in 1.17. Use `Camera.setView({destination: rectangle})` instead.
   * The following options to `Camera.setView` have been deprecated and will be removed in 1.17:
-    * `position`: use `destination` instead.
-    * `positionCartographic`: convert to a `Cartesian3` and use `destination` instead.
-    * `heading`, `pitch` and `roll`: use `orientation.heading/pitch/roll` instead.
+    * `position`. Use `destination` instead.
+    * `positionCartographic`. Convert to a `Cartesian3` and use `destination` instead.
+    * `heading`, `pitch` and `roll`. Use `orientation.heading/pitch/roll` instead.
   * Deprecated `CESIUM_binary_glTF` extension support for glTF models. [KHR_binary_glTF](https://github.com/KhronosGroup/glTF/tree/master/extensions/Khronos/KHR_binary_glTF) should be used instead. It will be removed in 1.18.  Reconvert models using the online [model converter](http://cesiumjs.org/convertmodel.html).
+  * Deprecated `BoxGeometry.minimumCorner` and `BoxGeometry.maximumCorner`. These will be removed in 1.17. Use `BoxGeometry.minimum` and `BoxGeometry.maximum` instead.
+  * Deprecated `BoxOutlineGeometry.minimumCorner` and `BoxOutlineGeometry.maximumCorner`. These will be removed in 1.17. Use `BoxOutlineGeometry.minimum` and `BoxOutlineGeometry.maximum` instead.
+  * Made `EllipsoidPrimitive` private, use `EllipsoidGeometry` or `Entity.ellipsoid` instead.
+  * Deprecated `RectanglePrimitive`. It will be removed in 1.17. Use `RectangleGeometry` or `Entity.rectangle` instead.
+  * Deprecated `EllipsoidPrimitive`. It will be removed in 1.17. Use `EllipsoidGeometry` or `Entity.ellipsoid` instead.
+  * Deprecated `OrthographicFrustum.getPixelSize`. It will be removed in 1.17. Use `OrthographicFrustum.getPixelDimensions` instead
+  * Deprecated `PerspectiveFrustum.getPixelSize`. It will be removed in 1.17. Use `PerspectiveFrustum.getPixelDimensions` instead.
+  * Deprecated `PerspectiveOffCenterFrustum.getPixelSize`. It will be removed in 1.17. Use `PerspectiveOffCenterFrustum.getPixelDimensions` instead.
+  * Deprecated `Scene\HeadingPitchRange`. It will be removed in 1.17. Use `Core\HeadingPitchRange` instead.
+  * Deprecated `jsonp`. It will be removed in 1.17. Use `loadJsonp` instead
 * Decreased GPU memory usage in `BillboardCollection` and `LabelCollection` by using the WebGL ANGLE_instanced_arrays extension.
 * Added CZML examples to Sandcastle.  See the new CZML tab.
 * Fixed token issue in `ArcGisMapServerImageryProvider`.
