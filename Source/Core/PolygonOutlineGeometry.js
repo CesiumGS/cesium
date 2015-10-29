@@ -276,9 +276,9 @@ define([
      *       -75.0, 30.0,
      *       -70.0, 30.0,
      *       -68.0, 40.0
-     *     ]),
-     *     extrudedHeight: 300000
-     *   }
+     *     ])
+     *   },
+     *   extrudedHeight: 300000
      * });
      * var geometry = Cesium.PolygonOutlineGeometry.createGeometry(extrudedPolygon);
      */

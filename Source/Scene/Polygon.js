@@ -4,6 +4,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
@@ -18,6 +19,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         Ellipsoid,
@@ -77,8 +79,13 @@ define([
      *     10.0, 0.0,
      *     0.0, 10.0
      * ]);
+     *
+     * @deprecated
+     * @private
      */
     var Polygon = function(options) {
+        deprecationWarning('Polygon', 'Polygon has been deprecated.  Use PolygonGeometry or Entity.polygon instead.');
+
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
@@ -305,7 +312,7 @@ define([
      * @exception {DeveloperError} this.material must be defined.
      * @exception {DeveloperError} this.granularity must be defined.
      */
-    Polygon.prototype.update = function(context, frameState, commandList) {
+    Polygon.prototype.update = function(frameState) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(this.ellipsoid)) {
             throw new DeveloperError('this.ellipsoid must be defined.');
@@ -388,7 +395,7 @@ define([
         var primitive = this._primitive;
         primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
         primitive.appearance.material = this.material;
-        primitive.update(context, frameState, commandList);
+        primitive.update(frameState);
     };
 
     /**

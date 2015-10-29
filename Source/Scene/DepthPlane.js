@@ -103,12 +103,13 @@ define([
         return depthQuadScratch;
     }
 
-    DepthPlane.prototype.update = function(context, frameState) {
+    DepthPlane.prototype.update = function(frameState) {
         this._mode = frameState.mode;
         if (frameState.mode !== SceneMode.SCENE3D) {
             return;
         }
 
+        var context = frameState.context;
         var ellipsoid = frameState.mapProjection.ellipsoid;
 
         if (!defined(this._command)) {

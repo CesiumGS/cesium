@@ -69,6 +69,7 @@ define([
         WebGLConstants) {
     "use strict";
     /*global WebGLRenderingContext*/
+    /*global WebGL2RenderingContext*/
 
     function errorToString(gl, error) {
         var message = 'WebGL Error:  ';
@@ -200,24 +201,27 @@ define([
 
         // Override select WebGL defaults
         webglOptions.alpha = defaultValue(webglOptions.alpha, false); // WebGL default is true
-        webglOptions.failIfMajorPerformanceCaveat = defaultValue(webglOptions.failIfMajorPerformanceCaveat, true); // WebGL default is false
 
-        // Firefox 35 with ANGLE has a regression that causes alpha : false to affect all framebuffers
-        // Since we can't detect for ANGLE without a context, we just detect for Windows.
-        // https://github.com/AnalyticalGraphicsInc/cesium/issues/2431
-        if (FeatureDetection.isFirefox() && FeatureDetection.isWindows()) {
-            var firefoxVersion = FeatureDetection.firefoxVersion();
-            if (firefoxVersion[0] === 35) {
-                webglOptions.alpha = true;
+        var defaultToWebgl2 = false;
+        var webgl2Supported = (typeof WebGL2RenderingContext !== 'undefined');
+        var webgl2 = false;
+        var glContext;
+
+        if (defaultToWebgl2 && webgl2Supported) {
+            glContext = canvas.getContext('webgl2', webglOptions) || canvas.getContext('experimental-webgl2', webglOptions) || undefined;
+            if (defined(glContext)) {
+                webgl2 = true;
             }
         }
-
-        this._originalGLContext = canvas.getContext('webgl', webglOptions) || canvas.getContext('experimental-webgl', webglOptions) || undefined;
-
-        if (!defined(this._originalGLContext)) {
+        if (!defined(glContext)) {
+            glContext = canvas.getContext('webgl', webglOptions) || canvas.getContext('experimental-webgl', webglOptions) || undefined;
+        }
+        if (!defined(glContext)) {
             throw new RuntimeError('The browser supports WebGL, but initialization failed.');
         }
 
+        this._originalGLContext = glContext;
+        this._webgl2 = webgl2;
         this._id = createGuid();
 
         // Validation and logging disabled by default for speed.
@@ -269,23 +273,80 @@ define([
         this._antialias = gl.getContextAttributes().antialias;
 
         // Query and initialize extensions
-        this._standardDerivatives = getExtension(gl, ['OES_standard_derivatives']);
-        this._elementIndexUint = getExtension(gl, ['OES_element_index_uint']);
-        this._depthTexture = getExtension(gl, ['WEBGL_depth_texture', 'WEBKIT_WEBGL_depth_texture']);
-        this._textureFloat = getExtension(gl, ['OES_texture_float']);
+        this._standardDerivatives = !!getExtension(gl, ['OES_standard_derivatives']);
+        this._elementIndexUint = !!getExtension(gl, ['OES_element_index_uint']);
+        this._depthTexture = !!getExtension(gl, ['WEBGL_depth_texture', 'WEBKIT_WEBGL_depth_texture']);
+        this._textureFloat = !!getExtension(gl, ['OES_texture_float']);
+        this._fragDepth = !!getExtension(gl, ['EXT_frag_depth']);
+        this._debugShaders = getExtension(gl, ['WEBGL_debug_shaders']);
 
         var textureFilterAnisotropic = options.allowTextureFilterAnisotropic ? getExtension(gl, ['EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic']) : undefined;
         this._textureFilterAnisotropic = textureFilterAnisotropic;
         ContextLimits._maximumTextureFilterAnisotropy = defined(textureFilterAnisotropic) ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1.0;
 
-        this._vertexArrayObject = getExtension(gl, ['OES_vertex_array_object']);
-        this._fragDepth = getExtension(gl, ['EXT_frag_depth']);
+        var glCreateVertexArray;
+        var glBindVertexArray;
+        var glDeleteVertexArray;
 
-        this._drawBuffers = getExtension(gl, ['WEBGL_draw_buffers']);
-        ContextLimits._maximumDrawBuffers = defined(this._drawBuffers) ? gl.getParameter(this._drawBuffers.MAX_DRAW_BUFFERS_WEBGL) : 1;
-        ContextLimits._maximumColorAttachments = defined(this._drawBuffers) ? gl.getParameter(this._drawBuffers.MAX_COLOR_ATTACHMENTS_WEBGL) : 1; // min when supported: 4
+        var glDrawElementsInstanced;
+        var glDrawArraysInstanced;
+        var glVertexAttribDivisor;
 
-        this._debugShaders = getExtension(gl, ['WEBGL_debug_shaders']);
+        var glDrawBuffers;
+
+        var vertexArrayObject;
+        var instancedArrays;
+        var drawBuffers;
+
+        if (webgl2) {
+            var that = this;
+
+            glCreateVertexArray = function () { return that._gl.createVertexArray(); };
+            glBindVertexArray = function(vao) { that._gl.bindVertexArray(vao); };
+            glDeleteVertexArray = function(vao) { that._gl.deleteVertexArray(vao); };
+
+            glDrawElementsInstanced = function(mode, count, type, offset, instanceCount) { gl.drawElementsInstanced(mode, count, type, offset, instanceCount); };
+            glDrawArraysInstanced = function(mode, first, count, instanceCount) { gl.drawArraysInstanced(mode, first, count, instanceCount); };
+            glVertexAttribDivisor = function(index, divisor) { gl.vertexAttribDivisor(index, divisor); };
+
+            glDrawBuffers = function(buffers) { gl.drawBuffers(buffers); };
+        } else {
+            vertexArrayObject = getExtension(gl, ['OES_vertex_array_object']);
+            if (defined(vertexArrayObject)) {
+                glCreateVertexArray = function() { return vertexArrayObject.createVertexArrayOES(); };
+                glBindVertexArray = function(vertexArray) { vertexArrayObject.bindVertexArrayOES(vertexArray); };
+                glDeleteVertexArray = function(vertexArray) { vertexArrayObject.deleteVertexArrayOES(vertexArray); };
+            }
+
+            instancedArrays = getExtension(gl, ['ANGLE_instanced_arrays']);
+            if (defined(instancedArrays)) {
+                glDrawElementsInstanced = function(mode, count, type, offset, instanceCount) { instancedArrays.drawElementsInstancedANGLE(mode, count, type, offset, instanceCount); };
+                glDrawArraysInstanced = function(mode, first, count, instanceCount) { instancedArrays.drawArraysInstancedANGLE(mode, first, count, instanceCount); };
+                glVertexAttribDivisor = function(index, divisor) { instancedArrays.vertexAttribDivisorANGLE(index, divisor); };
+            }
+
+            drawBuffers = getExtension(gl, ['WEBGL_draw_buffers']);
+            if (defined(drawBuffers)) {
+                glDrawBuffers = function(buffers) { drawBuffers.drawBuffersWEBGL(buffers); };
+            }
+        }
+
+        this.glCreateVertexArray = glCreateVertexArray;
+        this.glBindVertexArray = glBindVertexArray;
+        this.glDeleteVertexArray = glDeleteVertexArray;
+
+        this.glDrawElementsInstanced = glDrawElementsInstanced;
+        this.glDrawArraysInstanced = glDrawArraysInstanced;
+        this.glVertexAttribDivisor = glVertexAttribDivisor;
+
+        this.glDrawBuffers = glDrawBuffers;
+
+        this._vertexArrayObject = !!vertexArrayObject;
+        this._instancedArrays = !!instancedArrays;
+        this._drawBuffers = !!drawBuffers;
+
+        ContextLimits._maximumDrawBuffers = this.drawBuffers ? gl.getParameter(WebGLConstants.MAX_DRAW_BUFFERS) : 1;
+        ContextLimits._maximumColorAttachments = this.drawBuffers ? gl.getParameter(WebGLConstants.MAX_COLOR_ATTACHMENTS) : 1;
 
         var cc = gl.getParameter(gl.COLOR_CLEAR_VALUE);
         this._clearColor = new Color(cc[0], cc[1], cc[2], cc[3]);
@@ -306,6 +367,13 @@ define([
         this._currentPassState = ps;
         this._currentFramebuffer = undefined;
         this._maxFrameTextureUnitIndex = 0;
+
+        // Vertex attribute divisor state cache. Workaround for ANGLE (also look at VertexArray.setVertexAttribDivisor)
+        this._vertexAttribDivisors = [];
+        this._previousDrawInstanced = false;
+        for (var i = 0; i < ContextLimits._maximumVertexAttributes; i++) {
+            this._vertexAttribDivisors.push(0);
+        }
 
         this._pickObjects = {};
         this._nextPickColor = new Uint32Array(1);
@@ -348,6 +416,11 @@ define([
         id : {
             get : function() {
                 return this._id;
+            }
+        },
+        webgl2 : {
+            get : function() {
+                return this._webgl2;
             }
         },
         canvas : {
@@ -465,7 +538,7 @@ define([
          */
         standardDerivatives : {
             get : function() {
-                return !!this._standardDerivatives;
+                return this._standardDerivatives;
             }
         },
 
@@ -479,7 +552,7 @@ define([
          */
         elementIndexUint : {
             get : function() {
-                return !!this._elementIndexUint;
+                return this._elementIndexUint || this._webgl2;
             }
         },
 
@@ -492,7 +565,7 @@ define([
          */
         depthTexture : {
             get : function() {
-                return !!this._depthTexture;
+                return this._depthTexture;
             }
         },
 
@@ -505,7 +578,7 @@ define([
          */
         floatingPointTexture : {
             get : function() {
-                return !!this._textureFloat;
+                return this._textureFloat;
             }
         },
 
@@ -525,7 +598,7 @@ define([
          */
         vertexArrayObject : {
             get : function() {
-                return !!this._vertexArrayObject;
+                return this._vertexArrayObject || this._webgl2;
             }
         },
 
@@ -540,7 +613,20 @@ define([
          */
         fragmentDepth : {
             get : function() {
-                return !!this._fragDepth;
+                return this._fragDepth;
+            }
+        },
+
+        /**
+         * <code>true</code> if the ANGLE_instanced_arrays extension is supported.  This
+         * extension provides access to instanced rendering.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/ANGLE_instanced_arrays}
+         */
+        instancedArrays : {
+            get : function() {
+                return this._instancedArrays || this._webgl2;
             }
         },
 
@@ -556,7 +642,7 @@ define([
          */
         drawBuffers : {
             get : function() {
-                return !!this._drawBuffers;
+                return this._drawBuffers || this._webgl2;
             }
         },
 
@@ -730,7 +816,7 @@ define([
             }
 
             if (context.drawBuffers) {
-                context._drawBuffers.drawBuffersWEBGL(buffers);
+                context.glDrawBuffers(buffers);
             }
         }
     }
@@ -807,6 +893,7 @@ define([
         var va = drawCommand.vertexArray;
         var offset = drawCommand.offset;
         var count = drawCommand.count;
+        var instanceCount = drawCommand.instanceCount;
 
         //>>includeStart('debug', pragmas.debug);
         if (!PrimitiveType.validate(primitiveType)) {
@@ -818,11 +905,19 @@ define([
         }
 
         if (offset < 0) {
-            throw new DeveloperError('drawCommand.offset must be omitted or greater than or equal to zero.');
+            throw new DeveloperError('drawCommand.offset must be greater than or equal to zero.');
         }
 
         if (count < 0) {
-            throw new DeveloperError('drawCommand.count must be omitted or greater than or equal to zero.');
+            throw new DeveloperError('drawCommand.count must be greater than or equal to zero.');
+        }
+
+        if (instanceCount < 0) {
+            throw new DeveloperError('drawCommand.instanceCount must be greater than or equal to zero.');
+        }
+
+        if (instanceCount > 0 && !context.instancedArrays) {
+            throw new DeveloperError('Instanced arrays extension is not supported');
         }
         //>>includeEnd('debug');
 
@@ -836,10 +931,18 @@ define([
         if (defined(indexBuffer)) {
             offset = offset * indexBuffer.bytesPerIndex; // offset in vertices to offset in bytes
             count = defaultValue(count, indexBuffer.numberOfIndices);
-            context._gl.drawElements(primitiveType, count, indexBuffer.indexDatatype, offset);
+            if (instanceCount === 0) {
+                context._gl.drawElements(primitiveType, count, indexBuffer.indexDatatype, offset);
+            } else {
+                context.glDrawElementsInstanced(primitiveType, count, indexBuffer.indexDatatype, offset, instanceCount);
+            }
         } else {
             count = defaultValue(count, va.numberOfVertices);
-            context._gl.drawArrays(primitiveType, offset, count);
+            if (instanceCount === 0) {
+                context._gl.drawArrays(primitiveType, offset, count);
+            } else {
+                context.glDrawArraysInstanced(primitiveType, offset, count, instanceCount);
+            }
         }
 
         va._unBind();
@@ -873,7 +976,7 @@ define([
 
         var buffers = scratchBackBufferArray;
         if (this.drawBuffers) {
-            this._drawBuffers.drawBuffersWEBGL(scratchBackBufferArray);
+            this.glDrawBuffers(buffers);
         }
 
         var length = this._maxFrameTextureUnitIndex;

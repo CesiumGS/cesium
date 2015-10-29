@@ -369,7 +369,7 @@ define([
 
             // If value from the decreasing exponential function is close to zero,
             // the end coordinates may be NaN.
-            if (isNaN(movementState.endPosition.x) || isNaN(movementState.endPosition.y) || sameMousePosition(movementState)) {
+            if (isNaN(movementState.endPosition.x) || isNaN(movementState.endPosition.y) || Cartesian2.distance(movementState.startPosition, movementState.endPosition) < 0.5) {
                 movementState.active = false;
                 return;
             }
