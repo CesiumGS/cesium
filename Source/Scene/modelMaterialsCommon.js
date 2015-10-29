@@ -288,7 +288,7 @@ define([
                 vertexShaderMain += '  gl_Position = u_projectionMatrix * pos;\n';
                 fragmentShader += 'varying vec3 v_positionEC;\n';
             }
-            else if ((attribute === 'NORMAL') && (lightingModel !== 'CONSTANT')) {
+            else if ((attribute === 'NORMAL')) {
                 typeValue = WebGLConstants.FLOAT_VEC3;
                 vertexShader += 'attribute vec3 a_normal;\n';
                 vertexShader += 'varying vec3 v_normal;\n';
