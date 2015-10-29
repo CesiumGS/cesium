@@ -284,7 +284,7 @@ gulp.task('minifyRelease', ['generateStubs'], function() {
     });
 });
 
-gulp.task('release', ['buildApps', 'generateDocumentation']);
+gulp.task('release', ['combine', 'minifyRelease', 'generateDocumentation']);
 
 gulp.task('generateStubs', ['build'], function(done) {
     mkdirp.sync(path.join('Build', 'Stubs'));
