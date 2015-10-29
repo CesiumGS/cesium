@@ -10,6 +10,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
@@ -63,6 +64,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         Event,
@@ -282,7 +284,7 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Object|ArrayBuffer|Uint8Array} [options.gltf] The object for the glTF JSON or an arraybuffer of Binary glTF defined by the CESIUM_binary_glTF extension.
+     * @param {Object|ArrayBuffer|Uint8Array} [options.gltf] The object for the glTF JSON or an arraybuffer of Binary glTF defined by the KHR_binary_glTF extension.
      * @param {String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
@@ -805,7 +807,7 @@ define([
      * </p>
      * <p>
      * The model can be a traditional glTF asset with a .gltf extension or a Binary glTF using the
-     * CESIUM_binary_glTF extension with a .bgltf extension.
+     * KHR_binary_glTF extension with a .glb extension.
      * </p>
      * <p>
      * For high-precision rendering, Cesium supports the CESIUM_RTC extension, which introduces the
@@ -2892,6 +2894,9 @@ define([
                     extension !== 'KHR_binary_glTF' && extension !== 'KHR_materials_common') {
                     model._loadError = new RuntimeError('Unsupported glTF Extension: ' + extension);
                     model._state = ModelState.FAILED;
+                }
+                else if(extension === 'CESIUM_binary_glTF') {
+                    deprecationWarning('CESIUM_binary_glTF extension', 'Use of the CESIUM_binary_glTF extension has been deprecated. Use the KHR_binary_glTF extension instead.');
                 }
             }
         }
