@@ -82,100 +82,9 @@ vec4 getPositionMorphingMode(vec3 position3DWC)
     return czm_modelViewProjection * morphPosition;
 }
 
-const float fOuterRadius = 6378137.0 * 1.025;
-const float fOuterRadius2 = fOuterRadius * fOuterRadius;
-const float fInnerRadius = 6378137.0;
-const float fScale = 1.0 / (fOuterRadius - fInnerRadius);
-const float fScaleDepth = 0.25;
-const float fScaleOverScaleDepth = fScale / fScaleDepth;
-
-const float Kr = 0.0025;
-const float fKr4PI = Kr * 4.0 * czm_pi;
-const float Km = 0.0015;
-const float fKm4PI = Km * 4.0 * czm_pi;
-const float ESun = 15.0;
-const float fKmESun = Km * ESun;
-const float fKrESun = Kr * ESun;
-const vec3 v3InvWavelength = vec3(
-    5.60204474633241,  // Red = 1.0 / Math.pow(0.650, 4.0)
-    9.473284437923038, // Green = 1.0 / Math.pow(0.570, 4.0)
-    19.643802610477206); // Blue = 1.0 / Math.pow(0.475, 4.0)
-const float rayleighScaleDepth = 0.25;
-          
-const int nSamples = 2;
-const float fSamples = 2.0;
-
-varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
-varying vec3 v_toCamera;
-
-float scale(float fCos)
-{
-    float x = 1.0 - fCos;
-    return fScaleDepth * exp(-0.00287 + x*(0.459 + x*(3.83 + x*(-6.80 + x*5.25))));
-}
-
-void setAtmosphereVaryings(vec3 position)
-{
-    float fCameraHeight = length(czm_viewerPositionWC);
-    float fCameraHeight2 = fCameraHeight * fCameraHeight;
+varying vec3 v_rayleighColor;
     
-    // Get the ray from the camera to the vertex and its length (which is the far point of the ray passing through the atmosphere)
-    vec3 v3Pos = position.xyz;
-    vec3 v3Ray = v3Pos - czm_viewerPositionWC;
-    float fFar = length(v3Ray);
-    v3Ray /= fFar;
-
-    vec3 v3Start;
-    float fStartOffset;
-    
-    if (fCameraHeight > fOuterRadius) {
-	    float B = 2.0 * dot(czm_viewerPositionWC, v3Ray);
-	    float C = fCameraHeight2 - fOuterRadius2;
-	    float fDet = max(0.0, B*B - 4.0 * C);
-	    float fNear = 0.5 * (-B - sqrt(fDet));
-
-	    // Calculate the ray's starting position, then calculate its scattering offset
-	    v3Start = czm_viewerPositionWC + v3Ray * fNear;
-	    fFar -= fNear;
-	    float fStartAngle = dot(v3Ray, v3Start) / fOuterRadius;
-	    float fStartDepth = exp(-1.0 / fScaleDepth);
-	    fStartOffset = fStartDepth*scale(fStartAngle);
-    } else {
-        v3Start = czm_viewerPositionWC;
-	    float fHeight = length(v3Start);
-	    float fDepth = exp(fScaleOverScaleDepth * (fInnerRadius - fCameraHeight));
-	    float fStartAngle = dot(v3Ray, v3Start) / fHeight;
-	    fStartOffset = fDepth*scale(fStartAngle);
-    }
-
-    // Initialize the scattering loop variables
-    float fSampleLength = fFar / fSamples;
-    float fScaledLength = fSampleLength * fScale;
-    vec3 v3SampleRay = v3Ray * fSampleLength;
-    vec3 v3SamplePoint = v3Start + v3SampleRay * 0.5;
-
-    // Now loop through the sample rays
-    vec3 v3FrontColor = vec3(0.0, 0.0, 0.0);
-    for(int i=0; i<nSamples; i++)
-    {
-        float fHeight = length(v3SamplePoint);
-        float fDepth = exp(fScaleOverScaleDepth * (fInnerRadius - fHeight));
-        vec3 lightPosition = normalize(czm_viewerPositionWC); // czm_sunDirectionWC
-        float fLightAngle = dot(lightPosition, v3SamplePoint) / fHeight;
-        float fCameraAngle = dot(v3Ray, v3SamplePoint) / fHeight;
-        float fScatter = (fStartOffset + fDepth*(scale(fLightAngle) - scale(fCameraAngle)));
-        vec3 v3Attenuate = exp(-fScatter * (v3InvWavelength * fKr4PI + fKm4PI));
-        v3FrontColor += v3Attenuate * (fDepth * fScaledLength);
-        v3SamplePoint += v3SampleRay;
-    }
-
-    // Finally, scale the Mie and Rayleigh colors and set up the varying variables for the pixel shader
-    v_mieColor = v3FrontColor * fKmESun;
-    v_rayleighColor = v3FrontColor * (v3InvWavelength * fKrESun);
-    v_toCamera = czm_viewerPositionWC - v3Pos;
-}
-
 void main() 
 {
     vec3 position3DWC = position3DAndHeight.xyz + u_center3D;
@@ -197,5 +106,7 @@ void main()
     
     v_textureCoordinates = textureCoordAndEncodedNormals.xy;
     
-    setAtmosphereVaryings(position3DWC);
+    AtmosphereColor atmosColor = computeGroundAtmosphereFromSpace(position3DWC);
+    v_mieColor = atmosColor.mie;
+    v_rayleighColor = atmosColor.rayleigh;
 }

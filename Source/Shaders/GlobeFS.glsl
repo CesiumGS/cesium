@@ -117,25 +117,8 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
 
 varying float v_distance;
 
-const float g = -0.95;
-const float g2 = g * g;
-
 varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
-varying vec3 v_toCamera;
-
-vec3 getAtmosphereColor() {
-    // Extra normalize added for Android
-    float fCos = dot(czm_sunDirectionWC, normalize(v_toCamera)) / length(v_toCamera);
-    float fRayleighPhase = 0.75 * (1.0 + fCos*fCos);
-    float fMiePhase = 1.5 * ((1.0 - g2) / (2.0 + g2)) * (1.0 + fCos*fCos) / pow(1.0 + g2 - 2.0*g*fCos, 1.5);
-    
-    const float fExposure = 2.0;
-    
-    vec3 rgb = fRayleighPhase * v_rayleighColor + fMiePhase * v_mieColor;
-    rgb = vec3(1.0) - exp(-fExposure * rgb);
-    return rgb;
-}
 
 void main()
 {
@@ -198,10 +181,9 @@ void main()
 
 
     if (czm_fogEnabled) {
-        //vec3 fogColor = vec3(0.88, 0.92, 0.999);
-        vec3 fogColor = getAtmosphereColor();
-        //vec3 fogColor = v_rayleighColor;
-        //vec3 fogColor = v_mieColor;
+        const float fExposure = 2.0;
+        vec3 fogColor = v_mieColor + finalColor.rgb * v_rayleighColor;
+        fogColor = vec3(1.0) - exp(-fExposure * fogColor);
 	    
 	    float d = v_distance;
 	    
