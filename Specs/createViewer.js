@@ -11,7 +11,6 @@ define([
         options = defaultValue(options, {});
         options.contextOptions = defaultValue(options.contextOptions, {});
         options.contextOptions.webgl = defaultValue(options.contextOptions.webgl, {});
-        options.contextOptions.webgl.failIfMajorPerformanceCaveat = false;
 
         return new Viewer(container, options);
     }

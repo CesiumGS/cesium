@@ -591,7 +591,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws when creating if pixelFormat is DEPTH_STENCIL and pixelDatatype is not UNSIGNED_INT_24_8_WEBGL', function() {
+    it('throws when creating if pixelFormat is DEPTH_STENCIL and pixelDatatype is not UNSIGNED_INT_24_8', function() {
         expect(function() {
             texture = new Texture({
                 context : context,

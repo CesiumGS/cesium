@@ -289,7 +289,7 @@ define([
         return (rectangle[1] !== rectangle[3]) && (rectangle[0] !== rectangle[2]);
     }
 
-    function applyDebugSettings(tile, owner, context, frameState, commandList) {
+    function applyDebugSettings(tile, owner, frameState) {
         // Tiles do not have a content.box if it is the same as the tile's box.
         var hascontentBox = defined(tile._header.content) && defined(tile._header.content.box);
 
@@ -298,7 +298,7 @@ define([
             if (!defined(tile._debugBox)) {
                 tile._debugBox = createDebugBox(tile._header.box, hascontentBox ? Color.WHITE : Color.RED);
             }
-            tile._debugBox.update(context, frameState, commandList);
+            tile._debugBox.update(frameState);
         } else if (!showBox && defined(tile._debugBox)) {
             tile._debugBox = tile._debugBox.destroy();
         }
@@ -307,7 +307,7 @@ define([
             if (!defined(tile._debugcontentBox)) {
                 tile._debugcontentBox = createDebugBox(tile._header.content.box, Color.BLUE);
             }
-            tile._debugcontentBox.update(context, frameState, commandList);
+            tile._debugcontentBox.update(frameState);
         } else if (!owner.debugShowcontentBox && defined(tile._debugcontentBox)) {
             tile._debugcontentBox = tile._debugcontentBox.destroy();
         }
@@ -316,7 +316,7 @@ define([
             if (!defined(tile._debugOrientedBoundingBox)) {
                 tile._debugOrientedBoundingBox = createDebugOrientedBox(tile._orientedBoundingBox, hascontentBox ? Color.WHITE : Color.RED);
             }
-            tile._debugOrientedBoundingBox.update(context, frameState, commandList);
+            tile._debugOrientedBoundingBox.update(frameState);
         } else if (!owner.debugShowBoundingVolume && defined(tile._debugOrientedBoundingBox)) {
             tile._debugOrientedBoundingBox = tile._debugOrientedBoundingBox.destroy();
         }
@@ -325,7 +325,7 @@ define([
             if (!defined(tile._debugContentsOrientedBoundingBox)) {
                 tile._debugContentsOrientedBoundingBox = createDebugOrientedBox(tile._contentsOrientedBoundingBox, Color.BLUE);
             }
-            tile._debugContentsOrientedBoundingBox.update(context, frameState, commandList);
+            tile._debugContentsOrientedBoundingBox.update(frameState);
         } else if (!owner.debugShowContentsBoundingVolume && defined(tile._debugContentsOrientedBoundingBox)) {
             tile._debugContentsOrientedBoundingBox = tile._debugContentsOrientedBoundingBox.destroy();
         }
@@ -334,9 +334,9 @@ define([
     /**
      * DOC_TBA
      */
-    Cesium3DTile.prototype.update = function(owner, context, frameState, commandList) {
-        applyDebugSettings(this, owner, context, frameState, commandList);
-        this._content.update(owner, context, frameState, commandList);
+    Cesium3DTile.prototype.update = function(owner, frameState) {
+        applyDebugSettings(this, owner, frameState);
+        this._content.update(owner, frameState);
     };
 
     var scratchCommandList = [];
@@ -344,8 +344,14 @@ define([
     /**
      * DOC_TBA
      */
-    Cesium3DTile.prototype.process = function(owner, context, frameState) {
-        this._content.update(owner, context, frameState, scratchCommandList);
+    Cesium3DTile.prototype.process = function(owner, frameState) {
+        var savedCommandList = frameState.commandList;
+        frameState.commandList = scratchCommandList;
+
+        this._content.update(owner, frameState);
+
+        scratchCommandList.length = 0;
+        frameState.commandList = savedCommandList;
     };
 
     /**

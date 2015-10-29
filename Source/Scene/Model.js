@@ -1562,13 +1562,14 @@ define([
     var scratchVertexBufferJob = new CreateVertexBufferJob();
     var scratchIndexBufferJob = new CreateIndexBufferJob();
 
-    function createBuffers(model, context, frameState) {
+    function createBuffers(model, frameState) {
         var loadResources = model._loadResources;
 
         if (loadResources.pendingBufferLoads !== 0 || loadResources.decompressedViewsToCreate.length !== 0 || loadResources.decompressionInFlight) {
             return;
         }
 
+        var context = frameState.context;
         var vertexBuffersToCreate = loadResources.vertexBuffersToCreate;
         var indexBuffersToCreate = loadResources.indexBuffersToCreate;
         var i;
@@ -1700,7 +1701,7 @@ define([
 
     var scratchCreateProgramJob = new CreateProgramJob();
 
-    function createPrograms(model, context, frameState) {
+    function createPrograms(model, frameState) {
         var loadResources = model._loadResources;
         var programsToCreate = loadResources.programsToCreate;
         var id;
@@ -1714,6 +1715,8 @@ define([
         if (loadResources.pendingBufferLoads !== 0) {
             return;
         }
+
+        var context = frameState.context;
 
         if (model.asynchronous) {
             while (programsToCreate.length > 0) {
@@ -1862,7 +1865,8 @@ define([
 
     var scratchCreateTextureJob = new CreateTextureJob();
 
-    function createTextures(model, context, frameState) {
+    function createTextures(model, frameState) {
+        var context = frameState.context;
         var texturesToCreate = model._loadResources.texturesToCreate;
 
         if (model.asynchronous) {
@@ -2836,7 +2840,9 @@ define([
         model._runtime.nodes = runtimeNodes;
     }
 
-    function createResources(model, context, frameState) {
+    function createResources(model, frameState) {
+        var context = frameState.context;
+
         if (model._loadRendererResourcesFromCache) {
             var resources = model._rendererResources;
             var cachedResources = model._cachedRendererResources;
@@ -2855,11 +2861,11 @@ define([
             }
         } else {
             createDecompressedViews(model, context);
-            createBuffers(model, context, frameState); // using glTF bufferViews
-            createPrograms(model, context, frameState);
+            createBuffers(model, frameState); // using glTF bufferViews
+            createPrograms(model, frameState);
             createSamplers(model, context);
             loadTexturesFromBufferViews(model);
-            createTextures(model, context, frameState);
+            createTextures(model, frameState);
         }
 
         createSkins(model);
@@ -3088,19 +3094,17 @@ define([
         }
     }
 
-    var scratchDrawingBufferDimensions = new Cartesian2();
     var scratchPixelSize = new Cartesian2();
     var scratchBoundingSphere = new BoundingSphere();
 
-    function scaleInPixels(positionWC, radius, context, frameState) {
+    function scaleInPixels(positionWC, radius, frameState) {
         scratchBoundingSphere.center = positionWC;
         scratchBoundingSphere.radius = radius;
         var camera = frameState.camera;
         var distance = camera.distanceToBoundingSphere(scratchBoundingSphere);
 
-        scratchDrawingBufferDimensions.x = context.drawingBufferWidth;
-        scratchDrawingBufferDimensions.y = context.drawingBufferHeight;
-        var pixelSize = camera.frustum.getPixelSize(scratchDrawingBufferDimensions, distance, scratchPixelSize);
+        var context = frameState.context;
+        var pixelSize = camera.frustum.getPixelDimensions(context.drawingBufferWidth, context.drawingBufferHeight, distance, scratchPixelSize);
         var pixelScale = Math.max(pixelSize.x, pixelSize.y);
 
         return pixelScale;
@@ -3108,11 +3112,12 @@ define([
 
     var scratchPosition = new Cartesian3();
 
-    function getScale(model, context, frameState) {
+    function getScale(model, frameState) {
         var scale = model.scale;
 
         if (model.minimumPixelSize !== 0.0) {
             // Compute size of bounding sphere in pixels
+            var context = frameState.context;
             var maxPixelSize = Math.max(context.drawingBufferWidth, context.drawingBufferHeight);
             var m = model.modelMatrix;
             scratchPosition.x = m[12];
@@ -3124,7 +3129,7 @@ define([
             }
 
             var radius = model.boundingSphere.radius;
-            var metersPerPixel = scaleInPixels(scratchPosition, radius, context, frameState);
+            var metersPerPixel = scaleInPixels(scratchPosition, radius, frameState);
 
             // metersPerPixel is always > 0.0
             var pixelsPerMeter = 1.0 / metersPerPixel;
@@ -3204,7 +3209,7 @@ define([
      *
      * @exception {RuntimeError} Failed to load external reference.
      */
-    Model.prototype.update = function(context, frameState, commandList) {
+    Model.prototype.update = function(frameState) {
         if (frameState.mode !== SceneMode.SCENE3D) {
             return;
         }
@@ -3215,6 +3220,7 @@ define([
             return;
         }
 
+        var context = frameState.context;
         this._defaultTexture = context.defaultTexture;
 
         if ((this._state === ModelState.NEEDS_LOAD) && defined(this.gltf)) {
@@ -3274,7 +3280,7 @@ define([
                 return;
             }
             // Create WebGL resources as buffers/shaders/textures are downloaded
-            createResources(this, context, frameState);
+            createResources(this, frameState);
 
             // Transition from LOADING -> LOADED once resources are downloaded and created.
             // Textures may continue to stream in while in the LOADED state.
@@ -3289,7 +3295,7 @@ define([
         if (defined(loadResources) && (this._state === ModelState.LOADED)) {
             // Also check justLoaded so we don't process twice during the transition frame
             if (incrementallyLoadTextures && !justLoaded) {
-                createResources(this, context, frameState);
+                createResources(this, frameState);
             }
 
             if (loadResources.finished()) {
@@ -3334,7 +3340,7 @@ define([
                 this._scale = this.scale;
                 this._minimumPixelSize = this.minimumPixelSize;
 
-                var scale = getScale(this, context, frameState);
+                var scale = getScale(this, frameState);
                 var computedModelMatrix = this._computedModelMatrix;
                 Matrix4.multiplyByUniformScale(this.modelMatrix, scale, computedModelMatrix);
                 Matrix4.multiplyTransformation(computedModelMatrix, yUpToZUp, computedModelMatrix);
@@ -3374,6 +3380,7 @@ define([
         // and then have them visible immediately when show is set to true.
         if (show && !this._ignoreCommands) {
 // PERFORMANCE_IDEA: This is terrible
+            var commandList = frameState.commandList;
             var passes = frameState.passes;
             var nodeCommands = this._nodeCommands;
             var length = nodeCommands.length;

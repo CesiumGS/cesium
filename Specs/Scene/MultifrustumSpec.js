@@ -232,7 +232,7 @@ defineSuite([
             };
         };
 
-        Primitive.prototype.update = function(context, frameState, commandList) {
+        Primitive.prototype.update = function(frameState) {
             if (!defined(this._sp)) {
                 var vs = '';
                 vs += 'attribute vec4 position;';
@@ -257,14 +257,14 @@ defineSuite([
                 }));
                 var attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
                 this._va = VertexArray.fromGeometry({
-                    context : context,
+                    context : frameState.context,
                     geometry : geometry,
                     attributeLocations : attributeLocations,
                     bufferUsage : BufferUsage.STATIC_DRAW
                 });
 
                 this._sp = ShaderProgram.fromCache({
-                    context : context,
+                    context : frameState.context,
                     vertexShaderSource : vs,
                     fragmentShaderSource : fs,
                     attributeLocations : attributeLocations
@@ -275,7 +275,7 @@ defineSuite([
                 });
             }
 
-            commandList.push(new DrawCommand({
+            frameState.commandList.push(new DrawCommand({
                 renderState : this._rs,
                 shaderProgram : this._sp,
                 vertexArray : this._va,

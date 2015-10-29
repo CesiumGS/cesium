@@ -8,7 +8,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/jsonp',
+        '../Core/loadJsonp',
         '../Core/Math',
         '../Core/Rectangle',
         '../Core/TileProviderError',
@@ -26,7 +26,7 @@ define([
         defineProperties,
         DeveloperError,
         Event,
-        jsonp,
+        loadJsonp,
         CesiumMath,
         Rectangle,
         TileProviderError,
@@ -205,7 +205,7 @@ define([
         }
 
         function requestMetadata() {
-            var metadata = jsonp(metadataUrl, {
+            var metadata = loadJsonp(metadataUrl, {
                 callbackParameterName : 'jsonp',
                 proxy : that._proxy
             });
