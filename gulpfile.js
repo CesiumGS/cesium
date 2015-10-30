@@ -640,7 +640,9 @@ define(function() {\n\
     });
 
     // delete any left over JS files from old shaders
-    Object.keys(leftOverJsFiles).forEach(rimraf.sync);
+    Object.keys(leftOverJsFiles).forEach(function(filepath) {
+        rimraf.sync(filepath);
+    });
 
     var generateBuiltinContents = function(contents, builtins, path) {
         var amdPath = contents.amdPath;
