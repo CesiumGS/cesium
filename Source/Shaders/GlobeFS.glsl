@@ -182,14 +182,8 @@ void main()
         vec3 fogColor = v_mieColor + finalColor.rgb * v_rayleighColor;
         fogColor = vec3(1.0) - exp(-fExposure * fogColor);
 	    
-	    float fog = 0.0;
-	    float maxDistance = 10000.0;
-	    float d = v_distance;
-	    
-	    if (d > maxDistance) {
-	       float scalar = (d - 2.0 * maxDistance) * czm_fogDensity;
-           fog = 1.0 - exp(-(scalar * scalar));
-	    }
+        float scalar = v_distance * czm_fogDensity;
+        float fog = 1.0 - exp(-(scalar * scalar));
 	    
 	    gl_FragColor = vec4(mix(finalColor.rgb, fogColor, fog), finalColor.a);
     } else {

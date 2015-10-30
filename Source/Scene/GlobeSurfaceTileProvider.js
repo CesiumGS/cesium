@@ -440,15 +440,11 @@ define([
     GlobeSurfaceTileProvider.prototype.computeTileVisibility = function(tile, frameState, occluders) {
         if (frameState.fogEnabled) {
             var distance = this.computeDistanceToTile(tile, frameState);
-            var maxDistance = 10000.0;
+            var scalar = distance * frameState.fogDensity;
+            var fog = 1.0 - Math.exp(-(scalar * scalar));
 
-            if (distance > maxDistance) {
-               var scalar = (distance - 2.0 * maxDistance) * frameState.fogDensity;
-               var fog = 1.0 - Math.exp(-(scalar * scalar));
-
-               if (fog >= 1.0) {
-                   return Visibility.NONE;
-               }
+            if (fog >= 1.0) {
+                return Visibility.NONE;
             }
         }
 

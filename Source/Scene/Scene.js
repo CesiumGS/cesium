@@ -506,7 +506,10 @@ define([
         this.copyGlobeDepth = false;
 
         this.fogEnabled = true;
-        this.fogDensity = 0.0001;
+        this.fogStartDensity = 0.00002;
+        this.fogEndDensity = 9e-8;
+        this.fogStartHeight = 2000.0;
+        this.fogEndHeight = 100000.0;
 
         this._performanceDisplay = undefined;
         this._debugVolume = undefined;
@@ -958,6 +961,24 @@ define([
         return undefined;
     }
 
+    function updateFog(scene) {
+        var frameState = scene.frameState;
+        var enabled = frameState.fogEnabled = scene.fogEnabled;
+        if (enabled) {
+            var height = scene.camera.positionCartographic.height;
+
+            var startHeight = scene.fogStartHeight;
+            var endHeight = scene.fogEndHeight;
+
+            var startDensity = scene.fogStartDensity;
+            var endDensity = scene.fogEndDensity;
+
+            var t = CesiumMath.smoothstep(startHeight, endHeight, height);
+            t = CesiumMath.clamp(t, 0.0, 1.0);
+            frameState.fogDensity = CesiumMath.lerp(startDensity, endDensity, t);
+        }
+    }
+
     function clearPasses(passes) {
         passes.render = false;
         passes.pick = false;
@@ -976,10 +997,9 @@ define([
         frameState.camera = camera;
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(scene);
-        frameState.fogEnabled = scene.fogEnabled;
-        frameState.fogDensity = scene.fogDensity;
 
         clearPasses(frameState.passes);
+        updateFog(scene);
     }
 
     function updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList) {

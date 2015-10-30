@@ -29,8 +29,20 @@
         <td><input type="checkbox" data-bind="checked: enabled"/></td>
     </tr>
     <tr>
-        <td>density</td>
-        <td><input type="text" size="5" data-bind="value: density"></td>
+        <td>start height</td>
+        <td><input type="text" size="5" data-bind="value: startHeight"></td>
+    </tr>
+    <tr>
+        <td>start density</td>
+        <td><input type="text" size="5" data-bind="value: startDensity"></td>
+    </tr>
+    <tr>
+        <td>end height</td>
+        <td><input type="text" size="5" data-bind="value: endHeight"></td>
+    </tr>
+    <tr>
+        <td>end density</td>
+        <td><input type="text" size="5" data-bind="value: endDensity"></td>
     </tr>
 </tbody></table>
 <div id="zoomButtons"></div>
@@ -60,7 +72,10 @@ viewer.imageryLayers.addImageryProvider(new Cesium.TileMapServiceImageryProvider
 //The viewModel tracks the state of our mini application.
 var viewModel = {
     enabled : true,
-    density : 0
+    startDensity : 0,
+    endDensity : 0,
+    startHeight : 0,
+    endHeight : 0
 };
 // Convert the viewModel members into knockout observables.
 Cesium.knockout.track(viewModel);
@@ -75,14 +90,35 @@ Cesium.knockout.getObservable(viewModel, 'enabled').subscribe(
     }
 );
     
-Cesium.knockout.getObservable(viewModel, 'density').subscribe(
+Cesium.knockout.getObservable(viewModel, 'startDensity').subscribe(
     function(newValue) {
-        viewer.scene.fogDensity = newValue;
+        viewer.scene.fogStartDensity = newValue;
+    }
+);
+
+Cesium.knockout.getObservable(viewModel, 'endDensity').subscribe(
+    function(newValue) {
+        viewer.scene.fogEndDensity = newValue;
+    }
+);
+    
+Cesium.knockout.getObservable(viewModel, 'startHeight').subscribe(
+    function(newValue) {
+        viewer.scene.fogStartHeight = newValue;
+    }
+);
+
+Cesium.knockout.getObservable(viewModel, 'endHeight').subscribe(
+    function(newValue) {
+        viewer.scene.fogEndHeight = newValue;
     }
 );
 
 viewModel.enabled = viewer.scene.fogEnabled;
-viewModel.density = viewer.scene.fogDensity;
+viewModel.startDensity = viewer.scene.fogStartDensity;
+viewModel.endDensity = viewer.scene.fogEndDensity;
+viewModel.startHeight = viewer.scene.fogStartHeight;
+viewModel.endHeight = viewer.scene.fogEndHeight;
 
 /*
 Sandcastle.addToolbarMenu([{
