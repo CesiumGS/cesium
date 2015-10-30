@@ -53,10 +53,11 @@ varying vec2 v_textureCoordinates;
 varying vec3 v_normalMC;
 varying vec3 v_normalEC;
 
+#ifdef FOG
 varying float v_distance;
-
 varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
+#endif
 
 vec4 sampleAndBlend(
     vec4 previousColor,
@@ -177,18 +178,18 @@ void main()
 #endif
 
 
-    if (czm_fogEnabled) {
-        const float fExposure = 2.0;
-        vec3 fogColor = v_mieColor + finalColor.rgb * v_rayleighColor;
-        fogColor = vec3(1.0) - exp(-fExposure * fogColor);
-	    
-        float scalar = v_distance * czm_fogDensity;
-        float fog = 1.0 - exp(-(scalar * scalar));
-	    
-	    gl_FragColor = vec4(mix(finalColor.rgb, fogColor, fog), finalColor.a);
-    } else {
-        gl_FragColor = finalColor;
-    }
+#ifdef FOG
+    const float fExposure = 2.0;
+    vec3 fogColor = v_mieColor + finalColor.rgb * v_rayleighColor;
+    fogColor = vec3(1.0) - exp(-fExposure * fogColor);
+    
+    float scalar = v_distance * czm_fogDensity;
+    float fog = 1.0 - exp(-(scalar * scalar));
+    
+    gl_FragColor = vec4(mix(finalColor.rgb, fogColor, fog), finalColor.a);
+#else
+    gl_FragColor = finalColor;
+#endif
 }
 
 #ifdef SHOW_REFLECTIVE_OCEAN

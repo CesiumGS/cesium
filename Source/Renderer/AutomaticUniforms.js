@@ -1398,14 +1398,6 @@ define([
             }
         }),
 
-        czm_fogEnabled : new AutomaticUniform({
-            size : 1,
-            datatype : WebGLConstants.BOOL,
-            getValue : function(uniformState) {
-                return uniformState.fogEnabled;
-            }
-        }),
-
         czm_fogDensity : new AutomaticUniform({
             size : 1,
             datatype : WebGLConstants.FLOAT,

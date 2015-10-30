@@ -147,7 +147,6 @@ define([
         this._eyeHeight2D = new Cartesian2();
         this._resolutionScale = 1.0;
 
-        this._fogEnabled = undefined;
         this._fogDensity = undefined;
     };
 
@@ -769,11 +768,6 @@ define([
             }
         },
 
-        fogEnabled : {
-            get : function() {
-                return this._fogEnabled;
-            }
-        },
         fogDensity : {
             get : function() {
                 return this._fogDensity;
@@ -918,7 +912,6 @@ define([
         this._entireFrustum.y = camera.frustum.far;
         this.updateFrustum(camera.frustum);
 
-        this._fogEnabled = frameState.fogEnabled;
         this._fogDensity = frameState.fogDensity;
 
         this._frameState = frameState;
