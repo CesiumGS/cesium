@@ -45,7 +45,6 @@ defineSuite([
 
     beforeAll(function() {
         context = createContext();
-        frameState = createFrameState();
     });
 
     afterAll(function() {
@@ -53,10 +52,12 @@ defineSuite([
     });
 
     beforeEach(function() {
-        us = context.uniformState;
-        us.update(context, createFrameState(createCamera({
+        frameState = createFrameState(context, createCamera({
             offset : new Cartesian3(1.02, 0.0, 0.0)
-        })));
+        }));
+
+        us = context.uniformState;
+        us.update(frameState);
 
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
 
@@ -102,7 +103,7 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, frameState, polygon);
+        render(frameState, polygon);
         return context.readPixels();
     }
 
@@ -112,7 +113,7 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, frameState, polylines);
+        render(frameState, polylines);
         return context.readPixels();
     }
 

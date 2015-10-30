@@ -1138,7 +1138,7 @@ define([
     var scratchPixelSize = new Cartesian2();
     var scratchToCenter = new Cartesian3();
     var scratchProj = new Cartesian3();
-    function updateBoundingVolume(collection, context, frameState, boundingVolume) {
+    function updateBoundingVolume(collection, frameState, boundingVolume) {
         var pixelScale = 1.0;
         if (!collection._allSizedInMeters || collection._maxPixelOffset !== 0.0) {
             var camera = frameState.camera;
@@ -1148,6 +1148,7 @@ define([
             var proj = Cartesian3.multiplyByScalar(camera.directionWC, Cartesian3.dot(toCenter, camera.directionWC), scratchProj);
             var distance = Math.max(0.0, Cartesian3.magnitude(proj) - boundingVolume.radius);
 
+            var context = frameState.context;
             var pixelSize = frustum.getPixelDimensions(context.drawingBufferWidth, context.drawingBufferHeight, distance, scratchPixelSize);
             pixelScale = Math.max(pixelSize.x, pixelSize.y);
         }
@@ -1173,11 +1174,12 @@ define([
      *
      * @exception {RuntimeError} image with id must be in the atlas.
      */
-    BillboardCollection.prototype.update = function(context, frameState, commandList) {
+    BillboardCollection.prototype.update = function(frameState) {
         removeBillboards(this);
         var billboards = this._billboards;
         var billboardsLength = billboards.length;
 
+        var context = frameState.context;
         this._instanced = context.instancedArrays;
         attributeLocations = this._instanced ? attributeLocationsInstanced : attributeLocationsBatched;
         getIndexBuffer = this._instanced ? getIndexBufferInstanced : getIndexBufferBatched;
@@ -1344,7 +1346,7 @@ define([
         } else {
             boundingVolume = BoundingSphere.clone(this._baseVolume2D, this._boundingVolume);
         }
-        updateBoundingVolume(this, context, frameState, boundingVolume);
+        updateBoundingVolume(this, frameState, boundingVolume);
 
         var va;
         var vaLength;
@@ -1352,6 +1354,8 @@ define([
         var vs;
         var fs;
         var j;
+
+        var commandList = frameState.commandList;
 
         if (pass.render) {
             var colorList = this._colorCommands;

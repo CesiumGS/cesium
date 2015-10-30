@@ -9,6 +9,7 @@
     "url": "https://github.com/AnalyticalGraphicsInc/cesium.git"
   },
   "devDependencies": {
+    "almond": "0.3.1",
     "async": "^1.4.2",
     "bluebird": "^2.10.2",
     "compression": "1.6.0",
@@ -25,7 +26,7 @@
     "jshint-stylish": "^2.0.1",
     "mkdirp": "^0.5.1",
     "request": "2.65.0",
-    "requirejs": "^2.1.20",
+    "requirejs": "2.1.20",
     "rimraf": "^2.4.3",
     "strip-comments": "^0.3.2",
     "yargs": "3.27.0"

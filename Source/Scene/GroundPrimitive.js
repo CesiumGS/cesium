@@ -504,17 +504,18 @@ define([
         primitive._rsPickPass = RenderState.fromCache(pickRenderState);
     }
 
-    function createShaderProgram(primitive, context, frameState, appearance) {
+    function createShaderProgram(primitive, frameState, appearance) {
         if (defined(primitive._sp)) {
             return;
         }
+
+        var context = frameState.context;
 
         var vs = Primitive._createColumbusViewShader(ShadowVolumeVS, frameState.scene3DOnly);
         vs = Primitive._appendShowToShader(primitive._primitive, vs);
 
         var fs = ShadowVolumeFS;
         var attributeLocations = primitive._primitive._attributeLocations;
-
 
         primitive._sp = ShaderProgram.replaceCache({
             context : context,
@@ -532,7 +533,7 @@ define([
             primitive._spPick = ShaderProgram.replaceCache({
                 context : context,
                 shaderProgram : primitive._spPick,
-                vertexShaderSource : Primitive._createPickVertexShaderSource(vs),
+                vertexShaderSource : ShaderSource.createPickVertexShaderSource(vs),
                 fragmentShaderSource : pickFS,
                 attributeLocations : attributeLocations
             });
@@ -623,7 +624,7 @@ define([
         }
     }
 
-    function updateAndQueueCommands(primitive, frameState, commandList, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
+    function updateAndQueueCommands(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
         var boundingVolumes;
         if (frameState.mode === SceneMode.SCENE3D) {
             boundingVolumes = primitive._boundingVolumes;
@@ -631,6 +632,7 @@ define([
             boundingVolumes = primitive._boundingVolumes2D;
         }
 
+        var commandList = frameState.commandList;
         var passes = frameState.passes;
         if (passes.render) {
             var colorLength = colorCommands.length;
@@ -667,7 +669,8 @@ define([
      * @exception {DeveloperError} All instance geometries must have the same primitiveType.
      * @exception {DeveloperError} Appearance and material have a uniform with the same name.
      */
-    GroundPrimitive.prototype.update = function(context, frameState, commandList) {
+    GroundPrimitive.prototype.update = function(frameState) {
+        var context = frameState.context;
         if (!context.fragmentDepth || !this.show || (!defined(this._primitive) && !defined(this.geometryInstance))) {
             return;
         }
@@ -697,14 +700,14 @@ define([
             this._primitiveOptions._createRenderStatesFunction = function(primitive, context, appearance, twoPasses) {
                 createRenderStates(that, context);
             };
-            this._primitiveOptions._createShaderProgramFunction = function(primitive, context, frameState, appearance) {
-                createShaderProgram(that, context, frameState);
+            this._primitiveOptions._createShaderProgramFunction = function(primitive, frameState, appearance) {
+                createShaderProgram(that, frameState);
             };
             this._primitiveOptions._createCommandsFunction = function(primitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands) {
                 createCommands(that, undefined, undefined, true, false, colorCommands, pickCommands);
             };
-            this._primitiveOptions._updateAndQueueCommandsFunction = function(primitive, frameState, commandList, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
-                updateAndQueueCommands(that, frameState, commandList, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses);
+            this._primitiveOptions._updateAndQueueCommandsFunction = function(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
+                updateAndQueueCommands(that, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses);
             };
 
             this._primitive = new Primitive(primitiveOptions);
@@ -725,7 +728,7 @@ define([
         }
 
         this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
-        this._primitive.update(context, frameState, commandList);
+        this._primitive.update(frameState);
     };
 
     /**

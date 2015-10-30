@@ -14,7 +14,7 @@
     <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../../Apps/Sandcastle/Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
     require.config({
         baseUrl : '../../../Source',
@@ -69,17 +69,17 @@ Object.defineProperties(DemoTileProvider.prototype, {
     }
 });
 
-DemoTileProvider.prototype.beginUpdate = function(context, frameState, commandList) {
+DemoTileProvider.prototype.beginUpdate = function(frameState) {
 };
 
-DemoTileProvider.prototype.endUpdate = function(context, frameState, commandList) {
+DemoTileProvider.prototype.endUpdate = function(frameState) {
 };
 
 DemoTileProvider.prototype.getLevelMaximumGeometricError = function(level) {
     return this._levelZeroMaximumError / (1 << level);
 };
 
-DemoTileProvider.prototype.loadTile = function(context, frameState, tile) {
+DemoTileProvider.prototype.loadTile = function(frameState, tile) {
     if (tile.state === Cesium.QuadtreeTileLoadState.START) {
         tile.data = {
             primitive : undefined,
@@ -114,7 +114,7 @@ DemoTileProvider.prototype.loadTile = function(context, frameState, tile) {
     }
 
     if (tile.state === Cesium.QuadtreeTileLoadState.LOADING) {
-        tile.data.primitive.update(context, frameState, []);
+        tile.data.primitive.update(frameState);
         if (tile.data.primitive.ready) {
             tile.state = Cesium.QuadtreeTileLoadState.DONE;
             tile.renderable = true;
@@ -133,8 +133,8 @@ DemoTileProvider.prototype.computeTileVisibility = function(tile, frameState, oc
     return frameState.cullingVolume.computeVisibility(boundingSphere);
 };
 
-DemoTileProvider.prototype.showTileThisFrame = function(tile, context, frameState, commandList) {
-    tile.data.primitive.update(context, frameState, commandList);
+DemoTileProvider.prototype.showTileThisFrame = function(tile, frameState) {
+    tile.data.primitive.update(frameState);
 };
 
 var subtractScratch = new Cesium.Cartesian3();

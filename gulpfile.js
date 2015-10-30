@@ -224,7 +224,8 @@ gulp.task('jsHint', ['build'], function() {
     return gulp.src(jsHintFiles)
         .pipe(jshint.extract('auto'))
         .pipe(jshint())
-        .pipe(jshint.reporter('jshint-stylish'));
+        .pipe(jshint.reporter('jshint-stylish'))
+        .pipe(jshint.reporter('fail'));
 });
 
 gulp.task('jsHint-watch', function() {
@@ -293,7 +294,7 @@ gulp.task('minifyRelease', ['generateStubs'], function() {
     });
 });
 
-gulp.task('release', ['buildApps', 'generateDocumentation']);
+gulp.task('release', ['combine', 'minifyRelease', 'generateDocumentation']);
 
 gulp.task('generateStubs', ['build'], function(done) {
     mkdirp.sync(path.join('Build', 'Stubs'));
@@ -309,12 +310,9 @@ gulp.task('generateStubs', ['build'], function(done) {
         file = path.relative('Source', file);
         var moduleId = filePathToModuleId(file);
 
-        var propertyName = path.basename(file, path.extname(file));
-        propertyName = "['" + propertyName + "']";
-
         contents += '\
 define(\'' + moduleId + '\', function() {\n\
-    return Cesium' + propertyName + ';\n\
+    return Cesium[\'' + path.basename(file, path.extname(file)) + '\'];\n\
 });\n\n';
 
         modulePathMappings.push('        \'' + moduleId + '\' : \'../Stubs/Cesium\'');
@@ -474,7 +472,7 @@ function combineCesium(debug, optimizer, combineOutput) {
         },
         baseUrl : 'Source',
         skipModuleInsertion : true,
-        name : path.join('..', 'ThirdParty', 'almond-0.2.6', 'almond'),
+        name : removeExtension(path.relative('Source', require.resolve('almond'))),
         include : 'main',
         out : path.join(combineOutput, 'Cesium.js')
     });
@@ -641,9 +639,9 @@ function glslToJavaScript(minify, minifyStateFilePath) {
 
         contents = contents.split('"').join('\\"').replace(/\n/gm, '\\n\\\n');
         contents = copyrightComments + '\
-    //This file is automatically rebuilt by the Cesium build process.\n\
-    /*global define*/\n\
-    define(function() {\n\
+//This file is automatically rebuilt by the Cesium build process.\n\
+/*global define*/\n\
+define(function() {\n\
     "use strict";\n\
     return "' + contents + '";\n\
 });';
@@ -652,7 +650,9 @@ function glslToJavaScript(minify, minifyStateFilePath) {
     });
 
     // delete any left over JS files from old shaders
-    Object.keys(leftOverJsFiles).forEach(rimraf.sync);
+    Object.keys(leftOverJsFiles).forEach(function(filepath) {
+        rimraf.sync(filepath);
+    });
 
     var generateBuiltinContents = function(contents, builtins, path) {
         var amdPath = contents.amdPath;
@@ -706,8 +706,7 @@ function createCesiumJs() {
         var moduleId = file;
         moduleId = filePathToModuleId(moduleId);
 
-        var assignmentName = path.basename(file, path.extname(file));
-        assignmentName = "['" + assignmentName + "']";
+        var assignmentName = "['" + path.basename(file, path.extname(file)) + "']";
         if (moduleId.indexOf('Shaders/') === 0) {
             assignmentName = '._shaders' + assignmentName;
         }
@@ -828,20 +827,20 @@ function buildCesiumViewer() {
             gulp.src(cesiumViewerStartup)
                 .pipe(gulpInsert.prepend(copyrightHeader))
                 .pipe(gulpReplace('../../Source', '.'))
-                .pipe(gulpReplace('../../ThirdParty/requirejs-2.1.9', '.')),
+                .pipe(gulpReplace('../../ThirdParty/requirejs-2.1.20', '.')),
 
             gulp.src(cesiumViewerCss)
                 .pipe(gulpReplace('../../Source', '.')),
 
             gulp.src(['Apps/CesiumViewer/index.html'])
-                .pipe(gulpReplace('../../ThirdParty/requirejs-2.1.9', '.')),
+                .pipe(gulpReplace('../../ThirdParty/requirejs-2.1.20', '.')),
 
             gulp.src(['Apps/CesiumViewer/**',
                       '!Apps/CesiumViewer/index.html',
                       '!Apps/CesiumViewer/**/*.js',
                       '!Apps/CesiumViewer/**/*.css']),
 
-            gulp.src(['ThirdParty/requirejs-2.1.9/require.min.js'])
+            gulp.src(['ThirdParty/requirejs-2.1.20/require.min.js'])
                 .pipe(gulpRename('require.js')),
 
             gulp.src(['Build/Cesium/Assets/**',
@@ -869,6 +868,10 @@ function buildCesiumViewer() {
 
 function filePathToModuleId(moduleId) {
     return moduleId.substring(0, moduleId.lastIndexOf('.')).replace(/\\/g, '/');
+}
+
+function removeExtension(p) {
+    return p.slice(0, -path.extname(p).length);
 }
 
 function requirejsOptimize(config) {

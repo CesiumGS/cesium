@@ -260,7 +260,7 @@ define([
      *
      * @exception {DeveloperError} this.material must be defined.
      */
-    EllipsoidPrimitive.prototype.update = function(context, frameState, commandList) {
+    EllipsoidPrimitive.prototype.update = function(frameState) {
         if (!this.show ||
             (frameState.mode !== SceneMode.SCENE3D) ||
             (!defined(this.center)) ||
@@ -274,6 +274,7 @@ define([
         }
         //>>includeEnd('debug');
 
+        var context = frameState.context;
         var translucent = this.material.isTranslucent();
         var translucencyChanged = this._translucent !== translucent;
 
@@ -372,6 +373,7 @@ define([
             colorCommand.executeInClosestFrustum = translucent;
         }
 
+        var commandList = frameState.commandList;
         var passes = frameState.passes;
 
         if (passes.render) {

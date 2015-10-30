@@ -54,7 +54,7 @@ define([
         }
 
         var us = context.uniformState;
-        us.update(context, createFrameState());
+        us.update(createFrameState(context));
 
         // Add function for test
         context.destroyForSpecs = function() {

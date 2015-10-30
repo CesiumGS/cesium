@@ -41,7 +41,7 @@
     mime.define({
         'application/json' : ['czml', 'json', 'geojson', 'topojson'],
         'model/vnd.gltf+json' : ['gltf'],
-        'model/vnd.gltf.binary' : ['bgltf'],
+        'model/vnd.gltf.binary' : ['bgltf', 'glb'],
         'text/plain' : ['glsl']
     });
 
