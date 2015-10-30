@@ -703,6 +703,12 @@ function createCesiumJs() {
 
         var parameterName = moduleId.replace(nonIdentifierRegexp, '_');
 
+        //Ignore the deprecated Scene version of HeadingPitchRange
+        //until it is removed with #3097
+        if (moduleId === 'Scene/HeadingPitchRange') {
+            return;
+        }
+
         moduleIds.push("'./" + moduleId + "'");
         parameters.push(parameterName);
         assignments.push('Cesium' + assignmentName + ' = ' + parameterName + ';');
