@@ -101,10 +101,13 @@ define([
         this._url = url;
         this._readyPromise = when.defer();
 
+<<<<<<< HEAD
         var imageryProvider = new UrlTemplateImageryProvider({
             deferReadiness: true
         });
 
+=======
+>>>>>>> construct UrlTemplateImageryProvider from local variables
         var that = this;
         var metadataError;
 
@@ -309,7 +312,7 @@ define([
             get : function() {
                 return this._readyPromise.promise;
             }
-        },
+        }
     });
 
     return TileMapServiceImageryProvider;
