@@ -114,28 +114,6 @@ defineSuite([
         });
     });
 
-    it('supports a query string at the end of the URL', function() {
-        var provider = new TileMapServiceImageryProvider({
-            url : 'made/up/tms/server/?a=some&b=query'
-        });
-
-        return pollToPromise(function() {
-            return provider.ready;
-        }).then(function() {
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url).not.toContain('//');
-
-                // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
-            });
-
-            return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
-            });
-        });
-    });
-
     it('requestImage returns a promise for an image and loads it for cross-origin use', function() {
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server/'
@@ -168,7 +146,11 @@ defineSuite([
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
-        expect(provider.credit).toBeUndefined();
+        return pollToPromise(function() {
+          return provider.ready;
+        }).then(function() {
+          expect(provider.credit).toBeUndefined();
+        });
     });
 
     it('turns the supplied credit into a logo', function() {
@@ -176,7 +158,11 @@ defineSuite([
             url : 'made/up/gms/server',
             credit : 'Thanks to our awesome made up source of this imagery!'
         });
-        expect(providerWithCredit.credit).toBeDefined();
+        return pollToPromise(function() {
+          return providerWithCredit.ready;
+        }).then(function() {
+          expect(providerWithCredit.credit).toBeDefined();
+        });
     });
 
     it('routes resource request through a proxy if one is specified', function() {
@@ -481,7 +467,7 @@ defineSuite([
 
             expect(provider.rectangle.west).toEqual(expectedSW.longitude);
             expect(provider.rectangle.south).toEqual(expectedSW.latitude);
-            expect(provider.rectangle.east).toEqual(expectedNE.longitude);
+            expect(provider.rectangle.east).toBeCloseTo(expectedNE.longitude, CesiumMath.EPSILON14);
             expect(provider.rectangle.north).toEqual(expectedNE.latitude);
         });
     });
@@ -520,9 +506,9 @@ defineSuite([
             var expectedSW = Cartographic.fromDegrees(-123.0, -10.0);
             var expectedNE = Cartographic.fromDegrees(-110.0, 11.0);
 
-            expect(provider.rectangle.west).toEqual(expectedSW.longitude);
+            expect(provider.rectangle.west).toBeCloseTo(expectedSW.longitude, CesiumMath.EPSILON14);
             expect(provider.rectangle.south).toEqual(expectedSW.latitude);
-            expect(provider.rectangle.east).toEqual(expectedNE.longitude);
+            expect(provider.rectangle.east).toBeCloseTo(expectedNE.longitude, CesiumMath.EPSILON14);
             expect(provider.rectangle.north).toEqual(expectedNE.latitude);
         });
     });
@@ -561,9 +547,9 @@ defineSuite([
             var expectedSW = Cartographic.fromDegrees(-123.0, -10.0);
             var expectedNE = Cartographic.fromDegrees(-110.0, 11.0);
 
-            expect(provider.rectangle.west).toEqual(expectedSW.longitude);
+            expect(provider.rectangle.west).toBeCloseTo(expectedSW.longitude, CesiumMath.EPSILON14);
             expect(provider.rectangle.south).toEqual(expectedSW.latitude);
-            expect(provider.rectangle.east).toEqual(expectedNE.longitude);
+            expect(provider.rectangle.east).toBeCloseTo(expectedNE.longitude, CesiumMath.EPSILON14);
             expect(provider.rectangle.north).toEqual(expectedNE.latitude);
         });
     });
@@ -602,9 +588,9 @@ defineSuite([
             var expectedSW = Cartographic.fromDegrees(-123.0, -10.0);
             var expectedNE = Cartographic.fromDegrees(-110.0, 11.0);
 
-            expect(provider.rectangle.west).toEqual(expectedSW.longitude);
+            expect(provider.rectangle.west).toBeCloseTo(expectedSW.longitude, CesiumMath.EPSILON14);
             expect(provider.rectangle.south).toEqual(expectedSW.latitude);
-            expect(provider.rectangle.east).toEqual(expectedNE.longitude);
+            expect(provider.rectangle.east).toBeCloseTo(expectedNE.longitude, CesiumMath.EPSILON14);
             expect(provider.rectangle.north).toEqual(expectedNE.latitude);
         });
     });
