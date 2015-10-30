@@ -114,6 +114,28 @@ defineSuite([
         });
     });
 
+    it('supports a query string at the end of the URL', function() {
+        var provider = new TileMapServiceImageryProvider({
+            url : 'made/up/tms/server/?a=some&b=query'
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+                expect(url).not.toContain('//');
+
+                // Just return any old image.
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            });
+
+            return provider.requestImage(0, 0, 0).then(function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(image).toBeInstanceOf(Image);
+            });
+        });
+    });
+
     it('requestImage returns a promise for an image and loads it for cross-origin use', function() {
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server/'
