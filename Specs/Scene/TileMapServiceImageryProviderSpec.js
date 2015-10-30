@@ -215,11 +215,7 @@ defineSuite([
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
-        return pollToPromise(function() {
-          return provider.ready;
-        }).then(function() {
-          expect(provider.credit).toBeUndefined();
-        });
+        expect(provider.credit).toBeUndefined();
     });
 
     it('turns the supplied credit into a logo', function() {
@@ -227,11 +223,7 @@ defineSuite([
             url : 'made/up/gms/server',
             credit : 'Thanks to our awesome made up source of this imagery!'
         });
-        return pollToPromise(function() {
-          return providerWithCredit.ready;
-        }).then(function() {
-          expect(providerWithCredit.credit).toBeDefined();
-        });
+        expect(providerWithCredit.credit).toBeDefined();
     });
 
     it('routes resource request through a proxy if one is specified', function() {
