@@ -94,7 +94,7 @@ defineSuite([
 
     it('appends qualfied url correctly to qualified url', function() {
         var result = joinUrls(qualifiedUrl, qualifiedUrl);
-        expect(result).toEqual(qualifiedUrl + "/");
+        expect(result).toEqual(qualifiedUrl);
     });
 
     it('appends qualfied url correctly to qualified url with path', function() {
@@ -109,7 +109,7 @@ defineSuite([
 
     it('appends qualfied url with path correctly to qualified url with path', function() {
         var result = joinUrls(qualifiedUrlWithPath, qualifiedUrlWithPath);
-        expect(result).toEqual(qualifiedUrlWithPath + absolutePath);
+        expect(result).toEqual(qualifiedUrlWithPath);
     });
 
     it('appends absolute path correctly to qualified url with query string', function() {
