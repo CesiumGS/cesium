@@ -101,13 +101,10 @@ define([
         this._url = url;
         this._readyPromise = when.defer();
 
-<<<<<<< HEAD
         var imageryProvider = new UrlTemplateImageryProvider({
             deferReadiness: true
         });
 
-=======
->>>>>>> construct UrlTemplateImageryProvider from local variables
         var that = this;
         var metadataError;
 
