@@ -11,7 +11,8 @@ define([
         '../Core/Math',
         '../Core/RuntimeError',
         './Buffer',
-        './BufferUsage'
+        './BufferUsage',
+        './ContextLimits'
     ], function(
         ComponentDatatype,
         defaultValue,
@@ -24,10 +25,11 @@ define([
         CesiumMath,
         RuntimeError,
         Buffer,
-        BufferUsage) {
+        BufferUsage,
+        ContextLimits) {
     "use strict";
 
-    function addAttribute(attributes, attribute, index) {
+    function addAttribute(attributes, attribute, index, context) {
         var hasVertexBuffer = defined(attribute.vertexBuffer);
         var hasValue = defined(attribute.value);
         var componentsPerAttribute = attribute.value ? attribute.value.length : attribute.componentsPerAttribute;
@@ -56,6 +58,18 @@ define([
             // WebGL limit.  Not in GL ES.
             throw new DeveloperError('attribute must have a strideInBytes less than or equal to 255 or not specify it.');
         }
+        if (defined(attribute.instanceDivisor) && (attribute.instanceDivisor > 0) && !context.instancedArrays) {
+            throw new DeveloperError('instanced arrays is not supported');
+        }
+        if (defined(attribute.instanceDivisor) && (attribute.instanceDivisor < 0)) {
+            throw new DeveloperError('attribute must have an instanceDivisor greater than or equal to zero');
+        }
+        if (defined(attribute.instanceDivisor) && hasValue) {
+            throw new DeveloperError('attribute cannot have have an instanceDivisor if it is not backed by a buffer');
+        }
+        if (defined(attribute.instanceDivisor) && (attribute.instanceDivisor > 0) && (attribute.index === 0)) {
+            throw new DeveloperError('attribute zero cannot have an instanceDivisor greater than 0');
+        }
         //>>includeEnd('debug');
 
         // Shallow copy the attribute; we do not want to copy the vertex buffer.
@@ -68,19 +82,29 @@ define([
             componentDatatype : defaultValue(attribute.componentDatatype, ComponentDatatype.FLOAT),
             normalize : defaultValue(attribute.normalize, false),
             offsetInBytes : defaultValue(attribute.offsetInBytes, 0),
-            strideInBytes : defaultValue(attribute.strideInBytes, 0)
+            strideInBytes : defaultValue(attribute.strideInBytes, 0),
+            instanceDivisor : defaultValue(attribute.instanceDivisor, 0)
         };
 
         if (hasVertexBuffer) {
             // Common case: vertex buffer for per-vertex data
             attr.vertexAttrib = function(gl) {
+                var index = this.index;
                 gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer._getBuffer());
-                gl.vertexAttribPointer(this.index, this.componentsPerAttribute, this.componentDatatype, this.normalize, this.strideInBytes, this.offsetInBytes);
-                gl.enableVertexAttribArray(this.index);
+                gl.vertexAttribPointer(index, this.componentsPerAttribute, this.componentDatatype, this.normalize, this.strideInBytes, this.offsetInBytes);
+                gl.enableVertexAttribArray(index);
+                if (this.instanceDivisor > 0) {
+                    context.glVertexAttribDivisor(index, this.instanceDivisor);
+                    context._vertexAttribDivisors[index] = this.instanceDivisor;
+                    context._previousDrawInstanced = true;
+                }
             };
 
             attr.disableVertexAttribArray = function(gl) {
                 gl.disableVertexAttribArray(this.index);
+                if (this.instanceDivisor > 0) {
+                    context.glVertexAttribDivisor(index, 0);
+                }
             };
         } else {
             // Less common case: value array for the same data for each vertex
@@ -166,6 +190,7 @@ define([
      *         normalize              : false,
      *         offsetInBytes          : 0,
      *         strideInBytes          : 0 // tightly packed
+     *         instanceDivisor        : 0 // not instanced
      *     }
      * ];
      * var va = new VertexArray({
@@ -252,22 +277,24 @@ define([
 
         var context = options.context;
         var gl = context._gl;
-        var vertexArrayObject = context._vertexArrayObject;
         var attributes = options.attributes;
         var indexBuffer = options.indexBuffer;
 
         var i;
         var vaAttributes = [];
         var numberOfVertices = 1;   // if every attribute is backed by a single value
+        var hasInstancedAttributes = false;
 
-        for (i = 0; i < attributes.length; ++i) {
-            addAttribute(vaAttributes, attributes[i], i);
+        var length = attributes.length;
+        for (i = 0; i < length; ++i) {
+            addAttribute(vaAttributes, attributes[i], i, context);
         }
 
-        for (i = 0; i < vaAttributes.length; ++i) {
+        length = vaAttributes.length;
+        for (i = 0; i < length; ++i) {
             var attribute = vaAttributes[i];
 
-            if (defined(attribute.vertexBuffer)) {
+            if (defined(attribute.vertexBuffer) && (attribute.instanceDivisor === 0)) {
                 // This assumes that each vertex buffer in the vertex array has the same number of vertices.
                 var bytes = attribute.strideInBytes || (attribute.componentsPerAttribute * ComponentDatatype.getSizeInBytes(attribute.componentDatatype));
                 numberOfVertices = attribute.vertexBuffer.sizeInBytes / bytes;
@@ -275,30 +302,39 @@ define([
             }
         }
 
+        for (i = 0; i < length; ++i) {
+            if (vaAttributes[i].instanceDivisor > 0) {
+                hasInstancedAttributes = true;
+                break;
+            }
+        }
+
+        //>>includeStart('debug', pragmas.debug);
         // Verify all attribute names are unique
         var uniqueIndices = {};
-        for ( var j = 0; j < vaAttributes.length; ++j) {
-            var index = vaAttributes[j].index;
+        for (i = 0; i < length; ++i) {
+            var index = vaAttributes[i].index;
             if (uniqueIndices[index]) {
                 throw new DeveloperError('Index ' + index + ' is used by more than one attribute.');
             }
-
             uniqueIndices[index] = true;
         }
+        //>>includeEnd('debug');
 
         var vao;
 
-        // Setup VAO if extension is supported
-        if (defined(vertexArrayObject)) {
-            vao = vertexArrayObject.createVertexArrayOES();
-            vertexArrayObject.bindVertexArrayOES(vao);
+        // Setup VAO if supported
+        if (context.vertexArrayObject) {
+            vao = context.glCreateVertexArray();
+            context.glBindVertexArray(vao);
             bind(gl, vaAttributes, indexBuffer);
-            vertexArrayObject.bindVertexArrayOES(null);
+            context.glBindVertexArray(null);
         }
 
         this._numberOfVertices = numberOfVertices;
+        this._hasInstancedAttributes = hasInstancedAttributes;
+        this._context = context;
         this._gl = gl;
-        this._vaoExtension = vertexArrayObject;
         this._vao = vao;
         this._attributes = vaAttributes;
         this._indexBuffer = indexBuffer;
@@ -581,7 +617,7 @@ define([
         var indexBuffer;
         var indices = geometry.indices;
         if (defined(indices)) {
-            if ((Geometry.computeNumberOfVertices(geometry) > CesiumMath.SIXTY_FOUR_KILOBYTES) && context.elementIndexUint) {
+            if ((Geometry.computeNumberOfVertices(geometry) >= CesiumMath.SIXTY_FOUR_KILOBYTES) && context.elementIndexUint) {
                 indexBuffer = Buffer.createIndexBuffer({
                     context : context,
                     typedArray : new Uint32Array(indices),
@@ -636,9 +672,52 @@ define([
         return this._attributes[index];
     };
 
+    // Workaround for ANGLE, where the attribute divisor seems to be part of the global state instead
+    // of the VAO state. This function is called when the vao is bound, and should be removed
+    // once the ANGLE issue is resolved. Setting the divisor should normally happen in vertexAttrib and
+    // disableVertexAttribArray.
+    function setVertexAttribDivisor(vertexArray) {
+        var context = vertexArray._context;
+        var hasInstancedAttributes = vertexArray._hasInstancedAttributes;
+        if (!hasInstancedAttributes && !context._previousDrawInstanced) {
+            return;
+        }
+        context._previousDrawInstanced = hasInstancedAttributes;
+
+        var divisors = context._vertexAttribDivisors;
+        var attributes = vertexArray._attributes;
+        var maxAttributes = ContextLimits.maximumVertexAttributes;
+        var i;
+
+        if (hasInstancedAttributes) {
+            var length = attributes.length;
+            for (i = 0; i < length; ++i) {
+                var attribute = attributes[i];
+                if (attribute.enabled) {
+                    var divisor = attribute.instanceDivisor;
+                    var index = attribute.index;
+                    if (divisor !== divisors[index]) {
+                        context.glVertexAttribDivisor(index, divisor);
+                        divisors[index] = divisor;
+                    }
+                }
+            }
+        } else {
+            for (i = 0; i < maxAttributes; ++i) {
+                if (divisors[i] > 0) {
+                    context.glVertexAttribDivisor(i, 0);
+                    divisors[i] = 0;
+                }
+            }
+        }
+    }
+
     VertexArray.prototype._bind = function() {
         if (defined(this._vao)) {
-            this._vaoExtension.bindVertexArrayOES(this._vao);
+            this._context.glBindVertexArray(this._vao);
+            if (this._context.instancedArrays) {
+                setVertexAttribDivisor(this);
+            }
         } else {
             bind(this._gl, this._attributes, this._indexBuffer);
         }
@@ -646,7 +725,7 @@ define([
 
     VertexArray.prototype._unBind = function() {
         if (defined(this._vao)) {
-            this._vaoExtension.bindVertexArrayOES(null);
+            this._context.glBindVertexArray(null);
         } else {
             var attributes = this._attributes;
             var gl = this._gl;
@@ -682,7 +761,7 @@ define([
         }
 
         if (defined(this._vao)) {
-            this._vaoExtension.deleteVertexArrayOES(this._vao);
+            this._context.glDeleteVertexArray(this._vao);
         }
 
         return destroyObject(this);

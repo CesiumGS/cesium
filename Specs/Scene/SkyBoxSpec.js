@@ -51,14 +51,14 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         var us = context.uniformState;
-        var frameState = createFrameState(createCamera({
+        var frameState = createFrameState(context, createCamera({
             offset : new Cartesian3(7000000.0, 0.0, 0.0),
             near : 1.0,
             far : 20000000.0
         }));
-        us.update(context, frameState);
+        us.update(frameState);
 
-        var command = s.update(context, frameState);
+        var command = s.update(frameState);
         command.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 255, 255]);
 
@@ -79,14 +79,14 @@ defineSuite([
         });
 
         var us = context.uniformState;
-        var frameState = createFrameState(createCamera({
+        var frameState = createFrameState(context, createCamera({
             offset : new Cartesian3(7000000.0, 0.0, 0.0),
             near : 1.0,
             far : 20000000.0
         }));
-        us.update(context, frameState);
+        us.update(frameState);
 
-        var command = s.update(context, frameState);
+        var command = s.update(frameState);
         expect(command).not.toBeDefined();
     });
 
@@ -103,15 +103,15 @@ defineSuite([
         });
 
         var us = context.uniformState;
-        var frameState = createFrameState(createCamera({
+        var frameState = createFrameState(context, createCamera({
             offset : new Cartesian3(7000000.0, 0.0, 0.0),
             near : 1.0,
             far : 20000000.0
         }));
         frameState.mode = SceneMode.SCENE2D;
-        us.update(context, frameState);
+        us.update(frameState);
 
-        var command = s.update(context, frameState);
+        var command = s.update(frameState);
         expect(command).not.toBeDefined();
     });
 
@@ -128,15 +128,15 @@ defineSuite([
         });
 
         var us = context.uniformState;
-        var frameState = createFrameState(createCamera({
+        var frameState = createFrameState(context, createCamera({
             offset : new Cartesian3(7000000.0, 0.0, 0.0),
             near : 1.0,
             far : 20000000.0
         }));
         frameState.passes.render = false;
-        us.update(context, frameState);
+        us.update(frameState);
 
-        var command = s.update(context, frameState);
+        var command = s.update(frameState);
         expect(command).not.toBeDefined();
     });
 
@@ -187,10 +187,10 @@ defineSuite([
                 negativeZ : './Data/Images/Blue.png'
             }
         });
-        var frameState = createFrameState();
+        var frameState = createFrameState(context);
 
         expect(function() {
-            return skyBox.update(context, frameState);
+            return skyBox.update(frameState);
         }).toThrowDeveloperError();
     });
 
@@ -204,10 +204,10 @@ defineSuite([
                 negativeZ : './Data/Images/Blue.png'
             }
         });
-        var frameState = createFrameState();
+        var frameState = createFrameState(context);
 
         expect(function() {
-            return skyBox.update(context, frameState);
+            return skyBox.update(frameState);
         }).toThrowDeveloperError();
     });
 
@@ -221,10 +221,10 @@ defineSuite([
                 negativeZ : './Data/Images/Blue.png'
             }
         });
-        var frameState = createFrameState();
+        var frameState = createFrameState(context);
 
         expect(function() {
-            return skyBox.update(context, frameState);
+            return skyBox.update(frameState);
         }).toThrowDeveloperError();
     });
 
@@ -238,10 +238,10 @@ defineSuite([
                 negativeZ : './Data/Images/Blue.png'
             }
         });
-        var frameState = createFrameState();
+        var frameState = createFrameState(context);
 
         expect(function() {
-            return skyBox.update(context, frameState);
+            return skyBox.update(frameState);
         }).toThrowDeveloperError();
     });
 
@@ -255,10 +255,10 @@ defineSuite([
                 negativeZ : './Data/Images/Blue.png'
             }
         });
-        var frameState = createFrameState();
+        var frameState = createFrameState(context);
 
         expect(function() {
-            return skyBox.update(context, frameState);
+            return skyBox.update(frameState);
         }).toThrowDeveloperError();
     });
 
@@ -272,10 +272,10 @@ defineSuite([
                 positiveZ : './Data/Images/Blue.png'
             }
         });
-        var frameState = createFrameState();
+        var frameState = createFrameState(context);
 
         expect(function() {
-            return skyBox.update(context, frameState);
+            return skyBox.update(frameState);
         }).toThrowDeveloperError();
     });
 
@@ -290,10 +290,10 @@ defineSuite([
                 negativeZ : './Data/Images/Blue.png'
             }
         });
-        var frameState = createFrameState();
+        var frameState = createFrameState(context);
 
         expect(function() {
-            return skyBox.update(context, frameState);
+            return skyBox.update(frameState);
         }).toThrowDeveloperError();
     });
 
@@ -308,10 +308,10 @@ defineSuite([
                 negativeZ : './Data/Images/Blue.png'
             }
         });
-        var frameState = createFrameState();
+        var frameState = createFrameState(context);
 
         expect(function() {
-            return skyBox.update(context, frameState);
+            return skyBox.update(frameState);
         }).toThrowDeveloperError();
     });
 
@@ -326,10 +326,10 @@ defineSuite([
                 negativeZ : './Data/Images/Blue.png'
             }
         });
-        var frameState = createFrameState();
+        var frameState = createFrameState(context);
 
         expect(function() {
-            return skyBox.update(context, frameState);
+            return skyBox.update(frameState);
         }).toThrowDeveloperError();
     });
 
@@ -344,10 +344,10 @@ defineSuite([
                 negativeZ : './Data/Images/Blue.png'
             }
         });
-        var frameState = createFrameState();
+        var frameState = createFrameState(context);
 
         expect(function() {
-            return skyBox.update(context, frameState);
+            return skyBox.update(frameState);
         }).toThrowDeveloperError();
     });
 
@@ -362,10 +362,10 @@ defineSuite([
                 negativeZ : './Data/Images/Blue.png'
             }
         });
-        var frameState = createFrameState();
+        var frameState = createFrameState(context);
 
         expect(function() {
-            return skyBox.update(context, frameState);
+            return skyBox.update(frameState);
         }).toThrowDeveloperError();
     });
 
@@ -380,10 +380,10 @@ defineSuite([
                 negativeZ : loadedImage
             }
         });
-        var frameState = createFrameState();
+        var frameState = createFrameState(context);
 
         expect(function() {
-            return skyBox.update(context, frameState);
+            return skyBox.update(frameState);
         }).toThrowDeveloperError();
     });
 }, 'WebGL');

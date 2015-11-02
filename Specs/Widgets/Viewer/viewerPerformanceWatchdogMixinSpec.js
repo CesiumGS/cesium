@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
         'Specs/createViewer',
-        'Widgets/Viewer/viewerPerformanceWatchdogMixin',
-        'Widgets/PerformanceWatchdog/PerformanceWatchdog'
+        'Widgets/PerformanceWatchdog/PerformanceWatchdog',
+        'Widgets/Viewer/viewerPerformanceWatchdogMixin'
     ], function(
         createViewer,
-        viewerPerformanceWatchdogMixin,
-        PerformanceWatchdog) {
+        PerformanceWatchdog,
+        viewerPerformanceWatchdogMixin) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
