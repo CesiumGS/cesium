@@ -316,7 +316,7 @@
             "api": "WebGL",
             "version": "1.0.2"
         },
-        "version": 1
+        "version": "1.0"
     },
     "bufferViews": {
         "bufferView_137": {
@@ -577,7 +577,7 @@
     "nodes": {
         "Geometry-mesh001Node": {
             "children": [
-                "node_5"
+                "node_7"
             ],
             "name": "Wheels",
             "rotation": [
@@ -599,7 +599,7 @@
         },
         "meshInst962Node": {
             "children": [
-                "node_7"
+                "node_5"
             ],
             "name": "Wheels__2_",
             "rotation": [
@@ -788,8 +788,8 @@
                 "node_1",
                 "node_2",
                 "node_3",
-                "Geometry-mesh001Node",
-                "meshInst962Node"
+                "meshInst962Node",
+                "Geometry-mesh001Node"
             ]
         }
     },
