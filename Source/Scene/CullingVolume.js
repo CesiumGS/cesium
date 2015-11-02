@@ -1,15 +1,15 @@
 /*global define*/
 define([
+        '../Core/Cartesian3',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/Cartesian3',
         '../Core/DeveloperError',
         '../Core/Intersect',
         '../Core/Plane'
     ], function(
+        Cartesian3,
         defaultValue,
         defined,
-        Cartesian3,
         DeveloperError,
         Intersect,
         Plane) {

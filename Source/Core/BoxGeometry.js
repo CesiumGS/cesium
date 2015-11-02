@@ -5,6 +5,7 @@ define([
         './ComponentDatatype',
         './defaultValue',
         './defined',
+        './deprecationWarning',
         './DeveloperError',
         './Geometry',
         './GeometryAttribute',
@@ -17,6 +18,7 @@ define([
         ComponentDatatype,
         defaultValue,
         defined,
+        deprecationWarning,
         DeveloperError,
         Geometry,
         GeometryAttribute,
@@ -34,8 +36,8 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {Cartesian3} options.minimumCorner The minimum x, y, and z coordinates of the box.
-     * @param {Cartesian3} options.maximumCorner The maximum x, y, and z coordinates of the box.
+     * @param {Cartesian3} options.minimum The minimum x, y, and z coordinates of the box.
+     * @param {Cartesian3} options.maximum The maximum x, y, and z coordinates of the box.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
      * @see BoxGeometry.fromDimensions
@@ -47,29 +49,39 @@ define([
      * @example
      * var box = new Cesium.BoxGeometry({
      *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
-     *   maximumCorner : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0),
-     *   minimumCorner : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0)
+     *   maximum : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0),
+     *   minimum : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0)
      * });
      * var geometry = Cesium.BoxGeometry.createGeometry(box);
      */
     var BoxGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var min = options.minimumCorner;
-        var max = options.maximumCorner;
+
+        var min = options.minimum;
+        var max = options.maximum;
+
+        if (!defined(min) && defined(options.minimumCorner)) {
+            min = options.minimumCorner;
+            deprecationWarning('BoxGeometry', 'options.minimumCorner is deprecated. Use options.minimum instead.');
+        }
+        if (!defined(max) && defined(options.maximumCorner)) {
+            max = options.maximumCorner;
+            deprecationWarning('BoxGeometry', 'options.maximumCorner is deprecated. Use options.maximum instead.');
+        }
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(min)) {
-            throw new DeveloperError('options.minimumCorner is required.');
+            throw new DeveloperError('options.minimum is required.');
         }
         if (!defined(max)) {
-            throw new DeveloperError('options.maximumCorner is required');
+            throw new DeveloperError('options.maximum is required');
         }
         //>>includeEnd('debug');
 
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
-        this._minimumCorner = Cartesian3.clone(min);
-        this._maximumCorner = Cartesian3.clone(max);
+        this._minimum = Cartesian3.clone(min);
+        this._maximum = Cartesian3.clone(max);
         this._vertexFormat = vertexFormat;
         this._workerName = 'createBoxGeometry';
     };
@@ -107,15 +119,78 @@ define([
         //>>includeEnd('debug');
 
         var corner = Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3());
-        var min = Cartesian3.negate(corner, new Cartesian3());
-        var max = corner;
 
-        var newOptions = {
-            minimumCorner : min,
-            maximumCorner : max,
+        return new BoxGeometry({
+            minimum : Cartesian3.negate(corner, new Cartesian3()),
+            maximum : corner,
             vertexFormat : options.vertexFormat
-        };
-        return new BoxGeometry(newOptions);
+        });
+    };
+
+    /**
+     * Creates a cube from the dimensions of an AxisAlignedBoundingBox.
+     *
+     * @param {AxisAlignedBoundingBox} boundingBox A description of the AxisAlignedBoundingBox.
+     * @returns {BoxGeometry}
+     *
+     * @exception {DeveloperError} AxisAlignedBoundingBox must be defined.
+     *
+     * @see BoxGeometry.createGeometry
+     *
+     * @example
+     * var aabb = Cesium.AxisAlignedBoundingBox.fromPoints(Cesium.Cartesian3.fromDegreesArray([
+     *      -72.0, 40.0,
+     *      -70.0, 35.0,
+     *      -75.0, 30.0,
+     *      -70.0, 30.0,
+     *      -68.0, 40.0
+     * ]));
+     * var box = Cesium.BoxGeometry.fromAxisAlignedBoundingBox({
+     *      boundingBox: aabb
+     * });
+     */
+    BoxGeometry.fromAxisAlignedBoundingBox = function (boundingBox) {
+        if (!defined(boundingBox)) {
+            throw new DeveloperError('boundingBox is required.');
+        }
+
+        return new BoxGeometry({
+            minimum: boundingBox.minimum,
+            maximum: boundingBox.maximum
+        });
+    };
+
+    /**
+     * Creates a cube from the dimensions of an AxisAlignedBoundingBox.
+     *
+     * @param {AxisAlignedBoundingBox} boundingBox A description of the AxisAlignedBoundingBox.
+     * @returns {BoxGeometry}
+     *
+     * @exception {DeveloperError} AxisAlignedBoundingBox must be defined.
+     *
+     * @see BoxGeometry.createGeometry
+     *
+     * @example
+     * var aabb = Cesium.AxisAlignedBoundingBox.fromPoints(Cesium.Cartesian3.fromDegreesArray([
+     *      -72.0, 40.0,
+     *      -70.0, 35.0,
+     *      -75.0, 30.0,
+     *      -70.0, 30.0,
+     *      -68.0, 40.0
+     * ]));
+     * var box = Cesium.BoxGeometry.fromAxisAlignedBoundingBox({
+     *      boundingBox: aabb
+     * });
+     */
+    BoxGeometry.fromAxisAlignedBoundingBox = function (boundingBox) {
+        if (!defined(boundingBox)) {
+            throw new DeveloperError('boundingBox is required.');
+        }
+
+        return new BoxGeometry({
+            minimum : boundingBox.minimum,
+            maximum : boundingBox.maximum
+        });
     };
 
     /**
@@ -144,8 +219,8 @@ define([
 
         startingIndex = defaultValue(startingIndex, 0);
 
-        Cartesian3.pack(value._minimumCorner, array, startingIndex);
-        Cartesian3.pack(value._maximumCorner, array, startingIndex + Cartesian3.packedLength);
+        Cartesian3.pack(value._minimum, array, startingIndex);
+        Cartesian3.pack(value._maximum, array, startingIndex + Cartesian3.packedLength);
         VertexFormat.pack(value._vertexFormat, array, startingIndex + 2 * Cartesian3.packedLength);
     };
 
@@ -153,9 +228,9 @@ define([
     var scratchMax = new Cartesian3();
     var scratchVertexFormat = new VertexFormat();
     var scratchOptions = {
-        minimumCorner : scratchMin,
-        maximumCorner : scratchMax,
-        vertexFormat : scratchVertexFormat
+        minimum: scratchMin,
+        maximum: scratchMax,
+        vertexFormat: scratchVertexFormat
     };
 
     /**
@@ -183,8 +258,8 @@ define([
             return new BoxGeometry(scratchOptions);
         }
 
-        result._minimumCorner = Cartesian3.clone(min, result._minimumCorner);
-        result._maximumCorner = Cartesian3.clone(max, result._maximumCorner);
+        result._minimum = Cartesian3.clone(min, result._minimum);
+        result._maximum = Cartesian3.clone(max, result._maximum);
         result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
 
         return result;
@@ -197,8 +272,8 @@ define([
      * @returns {Geometry} The computed vertices and indices.
      */
     BoxGeometry.createGeometry = function(boxGeometry) {
-        var min = boxGeometry._minimumCorner;
-        var max = boxGeometry._maximumCorner;
+        var min = boxGeometry._minimum;
+        var max = boxGeometry._maximum;
         var vertexFormat = boxGeometry._vertexFormat;
 
         var attributes = new GeometryAttributes();

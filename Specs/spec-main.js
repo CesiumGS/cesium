@@ -30,7 +30,8 @@
             baseUrl: getQueryParameter('baseUrl') || '../Build/Cesium',
             paths: {
                 'Stubs': '../Stubs',
-                'Specs': '../../Specs'
+                'Specs': '../../Specs',
+                'Source' : '../../Source'
             },
             shim: {
                 'Cesium': {
@@ -45,7 +46,8 @@
             waitSeconds: 30,
             baseUrl: getQueryParameter('baseUrl') || '../Source',
             paths: {
-                'Specs': '../Specs'
+                'Specs': '../Specs',
+                'Source' : '.'
             }
         });
     }

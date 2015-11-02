@@ -3,7 +3,6 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
-        '../Core/Math',
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
@@ -13,8 +12,9 @@ define([
         '../Core/Event',
         '../Core/GeographicProjection',
         '../Core/GeographicTilingScheme',
-        '../Core/jsonp',
         '../Core/loadJson',
+        '../Core/loadJsonp',
+        '../Core/Math',
         '../Core/Rectangle',
         '../Core/TileProviderError',
         '../Core/WebMercatorProjection',
@@ -27,7 +27,6 @@ define([
         Cartesian2,
         Cartesian3,
         Cartographic,
-        CesiumMath,
         Credit,
         defaultValue,
         defined,
@@ -37,8 +36,9 @@ define([
         Event,
         GeographicProjection,
         GeographicTilingScheme,
-        jsonp,
         loadJson,
+        loadJsonp,
+        CesiumMath,
         Rectangle,
         TileProviderError,
         WebMercatorProjection,
@@ -220,7 +220,7 @@ define([
                 parameters.token = that._token;
             }
 
-            var metadata = jsonp(that._url, {
+            var metadata = loadJsonp(that._url, {
                 parameters : parameters,
                 proxy : that._proxy
             });
@@ -263,6 +263,9 @@ define([
         if (defined(token)) {
             if (url.indexOf('?') === -1) {
                 url += '?';
+            }
+            if (url[url.length - 1] !== '?'){
+                url += '&';
             }
             url += 'token=' + token;
         }
