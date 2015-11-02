@@ -1,37 +1,3 @@
-// /*jshint node:true,unused:true*/
-// 'use strict';
-
-// /*global require*/
-
-// var fs = require('fs');
-// var gulp = require('gulp');
-// var exec = require('child_process').exec;
-// var sourcemaps = require('gulp-sourcemaps');
-// var buffer = require('vinyl-buffer');
-// var transform = require('vinyl-transform');
-// var source = require('vinyl-source-stream');
-
-// var workerGlob = [
-//     './Source/Workers/*.js',
-//     '!./Source/Workers/*.profile.js',
-//     '!./Source/Workers/cesiumWorkerBootstrapper.js',
-//     '!./Source/Workers/transferTypedArrayTest.js',
-//     '!./Source/Workers/createTaskProcessorWorker.js'
-// ];
-
-// function createExorcistTransform(name) {
-//     return transform(function () { return exorcist('wwwroot/build/Workers/' + name + '.map'); });
-// }
-
-// // Create the build directory, because browserify flips out if the directory that might
-// // contain an existing source map doesn't exist.
-// if (!fs.existsSync('wwwroot')) {
-//     fs.mkdirSync('wwwroot');
-// }
-// if (!fs.existsSync('wwwroot/build')) {
-//     fs.mkdirSync('wwwroot/build');
-// }
-
 /*jslint node: true, latedef: nofunc*/
 "use strict";
 
