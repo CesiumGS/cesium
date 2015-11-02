@@ -30,13 +30,13 @@ defineSuite([
 
     var context;
     var frameState;
+    var rectangle;
     var primitive;
 
     beforeAll(function() {
         context = createContext();
-        frameState = createFrameState();
 
-        var rectangle = Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0);
+        rectangle = Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0);
         primitive = new Primitive({
             geometryInstances : new GeometryInstance({
                 geometry : new RectangleGeometry({
@@ -49,10 +49,14 @@ defineSuite([
             }),
             asynchronous : false
         });
+    });
+
+    beforeEach(function() {
+        frameState = createFrameState(context);
 
         frameState.camera.viewRectangle(rectangle);
         var us = context.uniformState;
-        us.update(context, frameState);
+        us.update(frameState);
     });
 
     afterAll(function() {
@@ -82,7 +86,7 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, frameState, primitive);
+        render(frameState, primitive);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 

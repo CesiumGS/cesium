@@ -1557,7 +1557,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             }
         });
 
-        return zoomPromise;
+        return zoomPromise.promise;
     }
 
     function clearZoom(viewer) {

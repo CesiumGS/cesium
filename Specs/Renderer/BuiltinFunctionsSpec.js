@@ -68,7 +68,7 @@ defineSuite([
         var height = canvas.clientHeight;
         var vp = new BoundingRectangle(0.0, 0.0, width, height);
         context.uniformState.viewport = vp;
-        context.uniformState.update(context, createFrameState(camera));
+        context.uniformState.update(createFrameState(context, camera));
 
         var fs =
             'void main() { ' +
@@ -94,7 +94,7 @@ defineSuite([
         var height = canvas.clientHeight;
         var vp = new BoundingRectangle(0.0, 0.0, width, height);
         context.uniformState.viewport = vp;
-        context.uniformState.update(context, createFrameState(camera));
+        context.uniformState.update(createFrameState(context, camera));
 
         var fs =
             'void main() { ' +
@@ -128,7 +128,7 @@ defineSuite([
         var camera = createCamera({
             offset : new Cartesian3(1.0, 2.0, 3.0)
         });
-        context.uniformState.update(context, createFrameState(camera));
+        context.uniformState.update(createFrameState(context, camera));
 
         var p = new Cartesian3(6.0, 5.0, 4.0);
         var encoded = EncodedCartesian3.fromCartesian(p);

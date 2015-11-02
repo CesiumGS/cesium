@@ -111,7 +111,7 @@ define([
      * @exception {DeveloperError} this.sources is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.
      * @exception {DeveloperError} this.sources properties must all be the same type.
      */
-    SkyBox.prototype.update = function(context, frameState) {
+    SkyBox.prototype.update = function(frameState) {
         if (!this.show) {
             return undefined;
         }
@@ -125,6 +125,8 @@ define([
         if (!frameState.passes.render) {
             return undefined;
         }
+
+        var context = frameState.context;
 
         if (this._sources !== this.sources) {
             this._sources = this.sources;

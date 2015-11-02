@@ -8,8 +8,8 @@ defineSuite([
         'Core/defined',
         'Core/GeographicProjection',
         'Core/GeographicTilingScheme',
-        'Core/jsonp',
         'Core/loadImage',
+        'Core/loadJsonp',
         'Core/loadWithXhr',
         'Core/queryToObject',
         'Core/Rectangle',
@@ -32,8 +32,8 @@ defineSuite([
         defined,
         GeographicProjection,
         GeographicTilingScheme,
-        jsonp,
         loadImage,
+        loadJsonp,
         loadWithXhr,
         queryToObject,
         Rectangle,
@@ -51,7 +51,7 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
 
     afterEach(function() {
-        jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
+        loadJsonp.loadAndExecuteScript = loadJsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
         loadWithXhr.load = loadWithXhr.defaultLoad;
     });
@@ -81,7 +81,7 @@ defineSuite([
     }
 
     function stubJSONPCall(baseUrl, result, withProxy, token) {
-        jsonp.loadAndExecuteScript = function(url, functionName) {
+        loadJsonp.loadAndExecuteScript = function(url, functionName) {
             expectCorrectUrl(baseUrl, url, functionName, withProxy, token);
             setTimeout(function() {
                 window[functionName](result);
@@ -309,14 +309,16 @@ defineSuite([
 
     it('supports non-tiled servers with various constructor parameters', function() {
         var baseUrl = '//tiledArcGisMapServer.invalid';
+        var token = '5e(u|2!7Y';
 
         stubJSONPCall(baseUrl, {
             "currentVersion" : 10.01,
             "copyrightText" : "Test copyright text"
-        });
+        }, undefined, token);
 
         var provider = new ArcGisMapServerImageryProvider({
             url : baseUrl,
+            token: token,
             tileWidth: 128,
             tileHeight: 512,
             tilingScheme: new WebMercatorTilingScheme(),
@@ -357,6 +359,7 @@ defineSuite([
                 expect(params.transparent).toEqual('true');
                 expect(params.size).toEqual('128,512');
                 expect(params.layers).toEqual('show:foo,bar');
+                expect(params.token).toEqual(token);
 
                 // Just return any old image.
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);

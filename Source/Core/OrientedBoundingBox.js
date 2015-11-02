@@ -11,10 +11,10 @@ define([
         './EllipsoidTangentPlane',
         './Intersect',
         './Interval',
-        './Plane',
-        './Rectangle',
         './Math',
-        './Matrix3'
+        './Matrix3',
+        './Plane',
+        './Rectangle'
     ], function(
         BoundingSphere,
         Cartesian2,
@@ -27,10 +27,10 @@ define([
         EllipsoidTangentPlane,
         Intersect,
         Interval,
-        Plane,
-        Rectangle,
         CesiumMath,
-        Matrix3) {
+        Matrix3,
+        Plane,
+        Rectangle) {
     "use strict";
 
     /**

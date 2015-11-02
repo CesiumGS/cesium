@@ -14,7 +14,6 @@ defineSuite([
         'Scene/OrthographicFrustum',
         'Scene/PerspectiveFrustum',
         'Scene/Primitive',
-        'Scene/RectanglePrimitive',
         'Scene/SceneMode',
         'Specs/createScene'
     ], 'Scene/Pick', function(
@@ -32,7 +31,6 @@ defineSuite([
         OrthographicFrustum,
         PerspectiveFrustum,
         Primitive,
-        RectanglePrimitive,
         SceneMode,
         createScene) {
     "use strict";
@@ -76,11 +74,19 @@ defineSuite([
     function createRectangle() {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
 
-        var e = new RectanglePrimitive({
-            ellipsoid : ellipsoid,
-            granularity : CesiumMath.toRadians(20.0),
-            rectangle : Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
-            asynchronous : false
+        var e = new Primitive({
+            geometryInstances: new GeometryInstance({
+                geometry: new RectangleGeometry({
+                    rectangle: Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
+                    vertexFormat: EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+                    ellipsoid: ellipsoid,
+                    granularity: CesiumMath.toRadians(20.0)
+                })
+            }),
+            appearance: new EllipsoidSurfaceAppearance({
+                aboveGround: false
+            }),
+            asynchronous: false
         });
 
         primitives.add(e);
@@ -115,7 +121,7 @@ defineSuite([
 
     it('does not pick primitives when alpha is zero', function() {
         var rectangle = createRectangle();
-        rectangle.material.uniforms.color.alpha = 0.0;
+        rectangle.appearance.material.uniforms.color.alpha = 0.0;
 
         var pickedObject = scene.pick(new Cartesian2(0, 0));
         expect(pickedObject).not.toBeDefined();
@@ -162,7 +168,7 @@ defineSuite([
         var rectangle1 = createRectangle();
         var rectangle2 = createRectangle();
         rectangle2.height = 0.01;
-        rectangle2.material.uniforms.color.alpha = 0.0;
+        rectangle2.appearance.material.uniforms.color.alpha = 0.0;
 
         var pickedObjects = scene.drillPick(new Cartesian2(0, 0));
         expect(pickedObjects.length).toEqual(1);
