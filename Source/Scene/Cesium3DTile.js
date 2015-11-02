@@ -194,7 +194,6 @@ define([
         },
 
         /**
-         * // TODO : change name?
          * Get the tight oriented bounding box
          *
          * @type {Promise}

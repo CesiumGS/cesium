@@ -97,7 +97,7 @@ define([
         var tilesLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
-        var tilesReady = tilesLength;
+        var tilesToLoad = tilesLength;
 
         this.state = Cesium3DTileContentState.PROCESSING;
         this.processingPromise.resolve(this);
@@ -118,7 +118,7 @@ define([
                 this._contentProviders.push(content);
 
                 when(content.readyPromise).then(function(content) {
-                    if (--tilesReady === 0) {
+                    if (--tilesToLoad === 0) {
                         that.state = Cesium3DTileContentState.READY;
                         that.readyPromise.resolve(that);
                     }
