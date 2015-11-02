@@ -86,39 +86,39 @@ Cesium.knockout.applyBindings(viewModel, toolbar);
 
 Cesium.knockout.getObservable(viewModel, 'enabled').subscribe(
     function(newValue) {
-        viewer.scene.fogEnabled = newValue;
+        viewer.scene.fog.enabled = newValue;
     }
 );
     
 Cesium.knockout.getObservable(viewModel, 'startDensity').subscribe(
     function(newValue) {
-        viewer.scene.fogStartDensity = newValue;
+        viewer.scene.fog.startDensity = newValue;
     }
 );
 
 Cesium.knockout.getObservable(viewModel, 'endDensity').subscribe(
     function(newValue) {
-        viewer.scene.fogEndDensity = newValue;
+        viewer.scene.fog.endDensity = newValue;
     }
 );
     
 Cesium.knockout.getObservable(viewModel, 'startHeight').subscribe(
     function(newValue) {
-        viewer.scene.fogStartHeight = newValue;
+        viewer.scene.fog.startHeight = newValue;
     }
 );
 
 Cesium.knockout.getObservable(viewModel, 'endHeight').subscribe(
     function(newValue) {
-        viewer.scene.fogEndHeight = newValue;
+        viewer.scene.fog.endHeight = newValue;
     }
 );
 
-viewModel.enabled = viewer.scene.fogEnabled;
-viewModel.startDensity = viewer.scene.fogStartDensity;
-viewModel.endDensity = viewer.scene.fogEndDensity;
-viewModel.startHeight = viewer.scene.fogStartHeight;
-viewModel.endHeight = viewer.scene.fogEndHeight;
+viewModel.enabled = viewer.scene.fog.enabled;
+viewModel.startDensity = viewer.scene.fog.startDensity;
+viewModel.endDensity = viewer.scene.fog.endDensity;
+viewModel.startHeight = viewer.scene.fog.startHeight;
+viewModel.endHeight = viewer.scene.fog.endHeight;
 
 /*
 Sandcastle.addToolbarMenu([{

@@ -424,6 +424,11 @@ define([
         GlobeSurfaceTile.processStateMachine(tile, frameState.context, frameState.commandList, this._terrainProvider, this._imageryLayers);
     };
 
+    function computeFog(distanceToCamera, density) {
+        var scalar = distanceToCamera * density;
+        return 1.0 - Math.exp(-(scalar * scalar));
+    }
+
     var boundingSphereScratch = new BoundingSphere();
 
     /**
@@ -440,10 +445,7 @@ define([
     GlobeSurfaceTileProvider.prototype.computeTileVisibility = function(tile, frameState, occluders) {
         if (frameState.fogEnabled) {
             var distance = this.computeDistanceToTile(tile, frameState);
-            var scalar = distance * frameState.fogDensity;
-            var fog = 1.0 - Math.exp(-(scalar * scalar));
-
-            if (fog >= 1.0) {
+            if (computeFog(distance, frameState.fogDensity) >= 1.0) {
                 return Visibility.NONE;
             }
         }

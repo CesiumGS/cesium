@@ -505,11 +505,13 @@ define([
          */
         this.copyGlobeDepth = false;
 
-        this.fogEnabled = true;
-        this.fogStartDensity = 0.00002;
-        this.fogEndDensity = 9e-8;
-        this.fogStartHeight = 2000.0;
-        this.fogEndHeight = 100000.0;
+        this.fog = {
+            enabled : true,
+            startDensity : 0.00002,
+            endDensity : 9e-8,
+            startHeight : 2000.0,
+            endHeight : 100000.0
+        };
 
         this._performanceDisplay = undefined;
         this._debugVolume = undefined;
@@ -963,15 +965,16 @@ define([
 
     function updateFog(scene) {
         var frameState = scene.frameState;
-        var enabled = frameState.fogEnabled = scene.fogEnabled;
+        var fog = scene.fog;
+        var enabled = frameState.fogEnabled = fog.enabled;
         if (enabled) {
             var height = scene.camera.positionCartographic.height;
 
-            var startHeight = scene.fogStartHeight;
-            var endHeight = scene.fogEndHeight;
+            var startHeight = fog.startHeight;
+            var endHeight = fog.endHeight;
 
-            var startDensity = scene.fogStartDensity;
-            var endDensity = scene.fogEndDensity;
+            var startDensity = fog.startDensity;
+            var endDensity = fog.endDensity;
 
             var t = CesiumMath.smoothstep(startHeight, endHeight, height);
             t = CesiumMath.clamp(t, 0.0, 1.0);
