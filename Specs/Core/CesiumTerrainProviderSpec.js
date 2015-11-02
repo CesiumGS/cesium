@@ -11,6 +11,7 @@ defineSuite([
         'Core/QuantizedMeshTerrainData',
         'Core/TerrainProvider',
         'Specs/pollToPromise',
+        'ThirdParty/Uri',
         'ThirdParty/when'
     ], function(
         CesiumTerrainProvider,
@@ -24,6 +25,7 @@ defineSuite([
         QuantizedMeshTerrainData,
         TerrainProvider,
         pollToPromise,
+        Uri,
         when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
@@ -376,6 +378,33 @@ defineSuite([
                 expect(loadWithXhr.load.calls.mostRecent().args[0]).toContain('foo3.com');
             });
         });
+
+        it('supports scheme-less template URLs in layer.json resolved with absolute URL', function() {
+            returnTileJson('Data/CesiumTerrainTileJson/MultipleUrls.tile.json');
+
+            var baseUri = new Uri(document.location.href);
+            var relativeUri = new Uri('Data/CesiumTerrainTileJson');
+            var url = relativeUri.resolve(baseUri).toString();
+
+            var provider = new CesiumTerrainProvider({
+                url : url
+            });
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                spyOn(loadWithXhr, 'load');
+                provider.requestTileGeometry(0, 0, 0);
+                expect(loadWithXhr.load.calls.mostRecent().args[0]).toContain('foo0.com');
+                provider.requestTileGeometry(1, 0, 0);
+                expect(loadWithXhr.load.calls.mostRecent().args[0]).toContain('foo1.com');
+                provider.requestTileGeometry(1, -1, 0);
+                expect(loadWithXhr.load.calls.mostRecent().args[0]).toContain('foo2.com');
+                provider.requestTileGeometry(1, 0, 1);
+                expect(loadWithXhr.load.calls.mostRecent().args[0]).toContain('foo3.com');
+            });
+        });
+
 
         it('uses the proxy if one is supplied', function() {
             var baseUrl = 'made/up/url';
