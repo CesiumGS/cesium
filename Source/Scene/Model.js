@@ -1167,7 +1167,12 @@ define([
         var skinnedNodes = [];
 
         var skinnedNodesNames = model._loadResources.skinnedNodesNames;
+<<<<<<< Updated upstream
         var nodes = model.gltf.nodes;
+=======
+        var gltf = model.gltf;
+        var nodes = gltf.nodes;
+>>>>>>> Stashed changes
 
         for (var name in nodes) {
             if (nodes.hasOwnProperty(name)) {
@@ -2384,7 +2389,7 @@ define([
                         // TRS converted to Cesium types
                         axis = Cartesian3.fromArray(gltfNode.rotation, 0, axis);
                         runtimeNode.translation = Cartesian3.fromArray(gltfNode.translation);
-                        runtimeNode.rotation = Quaternion.fromAxisAngle(axis, gltfNode.rotation[3]);
+                        runtimeNode.rotation = Quaternion.unpack(rotation);
                         runtimeNode.scale = Cartesian3.fromArray(gltfNode.scale);
                     }
                 }

@@ -72,7 +72,15 @@ define([
         asset.premultipliedAlpha = defaultValue(gltf.asset.premultipliedAlpha, false);
         profile.api = defaultValue(profile.api, 'WebGL');
         profile.version = defaultValue(profile.version, '1.0.2');
-        asset.version = defaultValue(gltf.version, '0.9');
+
+        if (defined(gltf.version)) {
+            asset.version = defaultValue(asset.version, gltf.version);
+            delete gltf.version;
+        }
+
+        if (typeof asset.version === 'number') {
+            asset.version = asset.version.toFixed(1).toString();
+        }
     }
 
     function bufferDefaults(gltf) {
@@ -227,6 +235,14 @@ define([
 
                 if (!defined(node.children)) {
                     node.children = [];
+                }
+
+                var floatVersion = parseFloat(gltf.asset.version);
+                if (floatVersion < 1.0 && defined(node.rotation)) {
+                    var rotation = node.rotation;
+                    Cartesian3.fromArray(rotation, 0, axis);
+                    Quaternion.fromAxisAngle(axis, rotation[3], quat);
+                    node.rotation = [quat.x, quat.y, quat.z, quat.w];
                 }
 
                 if (!defined(node.matrix)) {

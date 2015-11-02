@@ -55,6 +55,7 @@ define([
             // Cache miss
             var loadResources = model._loadResources;
             var gltf = model.gltf;
+            var version = parseFloat(gltf.asset.version);
             var bufferViews = gltf.bufferViews;
 
             var bufferView = bufferViews[accessor.bufferView];
