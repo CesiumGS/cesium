@@ -970,6 +970,7 @@ define([
         if (enabled) {
             var height = scene.camera.positionCartographic.height;
 
+            /*
             var startHeight = fog.startHeight;
             var endHeight = fog.endHeight;
 
@@ -978,7 +979,15 @@ define([
 
             var t = CesiumMath.smoothstep(startHeight, endHeight, height);
             t = CesiumMath.clamp(t, 0.0, 1.0);
-            frameState.fogDensity = CesiumMath.lerp(startDensity, endDensity, t);
+            //frameState.fogDensity = CesiumMath.lerp(startDensity, endDensity, t);
+            frameState.fogDensity = startDensity;
+            */
+
+            height = height / 1000.0;
+            var density = 0.0328839881727 * Math.exp(-0.00449145318353 * height);
+            density = density / 1000.0;
+
+            frameState.fogDensity = density;
         }
     }
 

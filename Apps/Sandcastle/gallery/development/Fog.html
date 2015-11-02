@@ -60,13 +60,6 @@ viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
 
 viewer.extend(Cesium.viewerCesiumInspectorMixin);
 
-/*
-viewer.imageryLayers.removeAll();
-viewer.imageryLayers.addImageryProvider(new Cesium.TileMapServiceImageryProvider({
-    url : require.toUrl('Assets/Textures/NaturalEarthII')
-}));
-*/
-
 //viewer.scene.globe.enableLighting = true;
 
 //The viewModel tracks the state of our mini application.
@@ -120,33 +113,55 @@ viewModel.endDensity = viewer.scene.fog.endDensity;
 viewModel.startHeight = viewer.scene.fog.startHeight;
 viewModel.endHeight = viewer.scene.fog.endHeight;
 
-/*
 Sandcastle.addToolbarMenu([{
-    text : 'Half Dome',
+    text : 'Directly downward',
     onselect : function() {
-        var target = new Cesium.Cartesian3(-2489625.0836225147, -4393941.44443024, 3882535.9454173897);
-        var offset = new Cesium.Cartesian3(-6857.40902037546, 412.3284835694358, 2147.5545426812023);
-        viewer.camera.lookAt(target, offset);
-        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+        viewer.camera.setView({
+            destination: Cesium.Cartesian3.fromDegrees(120.34726232637308, 15.13895145210961, 10590.61761915982),
+            orientation: {
+                heading: 0.3309256924893429,
+                pitch: -1.5706938261986747,
+                roll: 0.0
+            }
+        });
     }
 }, {
-    text : 'Mount Everest',
+    text : 'Toward horizon, high altitude',
     onselect : function() {
-        var target = new Cesium.Cartesian3(300770.50872389384, 5634912.131394585, 2978152.2865545116);
-        var offset = new Cesium.Cartesian3(6344.974098678562, -793.3419798081741, 2499.9508860763162);
-        viewer.camera.lookAt(target, offset);
-        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+        viewer.camera.setView({
+            destination: Cesium.Cartesian3.fromDegrees(119.7954832286864, 14.625866129373039, 32421.396898127718),
+            orientation: {
+                heading: 0.8031608174408857,
+                pitch: -0.3681378861570981,
+                roll: 0.001262546036078227
+            }
+        });
     }
 }, {
-    text : 'San Francisco Bay',
+    text : 'Toward horizon, low altitude',
     onselect : function() {
-        var target = new Cesium.Cartesian3(-2708814.85583248, -4254159.450845907, 3891403.9457429945);
-        var offset = new Cesium.Cartesian3(70642.66030209465, -31661.517948317807, 35505.179997143336);
-        viewer.camera.lookAt(target, offset);
-        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+        viewer.camera.setView({
+            destination: Cesium.Cartesian3.fromDegrees(120.28867831296651, 15.087807528789323, 4406.192801985815),
+            orientation: {
+                heading: 0.8053562096038718,
+                pitch: -0.35655731769666343,
+                roll: 0.0012957738183763112
+            }
+        });
+    }
+}, {
+    text : 'Below horizon',
+    onselect : function() {
+        viewer.camera.setView({
+            destination: Cesium.Cartesian3.fromDegrees(-99.86107569851391, 47.97316693251584, 1160.1513943660475),
+            orientation: {
+                heading: 5.490507499335093,
+                pitch: -0.3662822102930292,
+                roll: 6.280633976081223
+            }
+        });
     }
 }], 'zoomButtons');
-*/
 
 var scene = viewer.scene;
 var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
