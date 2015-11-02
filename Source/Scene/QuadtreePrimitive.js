@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
+        '../Core/Cartesian2',
         '../Core/Cartographic',
         '../Core/defaultValue',
         '../Core/defined',
@@ -19,6 +20,7 @@ define([
         './TileReplacementQueue'
     ], function(
         Cartesian3,
+        Cartesian2,
         Cartographic,
         defaultValue,
         defined,
@@ -376,6 +378,24 @@ define([
             }
         }
 
+        // Compute camera height once
+        cameraHeight = frameState.camera.positionCartographic.height;
+
+        if (pickglobe) {
+          var scene = frameState.camera._scene;
+          var canvas = scene.canvas;
+          var pixelHeight = pickposition * canvas.clientHeight;
+          var pixel = new Cartesian2(canvas.clientWidth / 2, pixelHeight);
+          var ray = scene.camera.getPickRay(pixel);
+          var target = scene.globe.pick(ray, scene);
+          // Could also take bottom in the absence of result
+          // then take cameraHeight
+          if (target) {
+            var distance = Cartesian3.distance(frameState.camera.position, target);
+            cameraHeight = Math.max(cameraHeight, distance);
+          }
+        }
+
         // Traverse the tiles in breadth-first order.
         // This ordering allows us to load bigger, lower-detail tiles before smaller, higher-detail ones.
         // This maximizes the average detail across the scene and results in fewer sharp transitions
@@ -433,6 +453,30 @@ define([
         }
     }
 
+    var params = {};
+    location.search.substr(1).split("&").reduce(function(previous, current) {
+      var splitted = current.split("=");
+      if (splitted.length === 2) {
+        params[splitted[0]] = splitted[1];
+      } else {
+        params[splitted[0]] = true;
+      }
+    });
+
+    var mindist = parseInt(defaultValue(params['mindist'], '5000'), 10);
+    var maxdist = parseInt(defaultValue(params['maxdist'], '10000'), 10);
+    var mincamfactor = parseFloat(defaultValue(params['mincamfactor'], '0.9'));
+    var maxcamfactor = parseFloat(defaultValue(params['maxcamfactor'], '1.2'));
+    // Max height to apply optmization
+    var maxheight = parseInt(defaultValue(params['maxheight'], '0'), 10);
+    var allowtilelevels = parseInt(defaultValue(params['allowtilelevels'], '0'), 10);
+    var pickglobe = !params['nopickglobe'];
+    var pickposition = parseInt(defaultValue(params['pickposition'], '0.6666'), 10);
+    var shouldCut = !params['nocut'];
+    var noheight = !!params['noheight'];
+    var maxerrorfactor = parseFloat(defaultValue(params['maxerrorfactor'], '0.25'));
+    var cameraHeight;
+
     function screenSpaceError(primitive, frameState, tile) {
         if (frameState.mode === SceneMode.SCENE2D) {
             return screenSpaceError2D(primitive, frameState, tile);
@@ -450,7 +494,35 @@ define([
         var fovy = frustum.fovy;
 
         // PERFORMANCE_IDEA: factor out stuff that's constant across tiles.
-        return (maxGeometricError * height) / (2 * distance * Math.tan(0.5 * fovy));
+        var original = (maxGeometricError * height) / (2 * distance * Math.tan(0.5 * fovy));
+
+        if (!shouldCut || (maxheight && (cameraHeight > maxheight)) ||
+            (allowtilelevels && (tile._level <= allowtilelevels))) {
+          return original;
+        }
+
+        // TODO: should be optimized out
+        var min = mindist;
+        var max = maxdist;
+        if (!noheight) {
+          min = Math.min(mindist, mincamfactor * cameraHeight);
+          max = Math.max(maxdist, maxcamfactor * cameraHeight);
+        }
+
+        if (distance < max) {
+          if (distance < min || min === max) {
+            return original;
+          } else {
+            // 1 = a * min + b
+            // maxerrorfactor = a * max + b
+            var a = (1 - maxerrorfactor) / (min - max);
+            var b = 1 - a * min;
+            var linearFactor = a * distance + b;
+            return linearFactor * original;
+          }
+        } else {
+          return maxerrorfactor * original;
+        }
     }
 
     function screenSpaceError2D(primitive, frameState, tile) {

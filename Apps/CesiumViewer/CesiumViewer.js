@@ -7,6 +7,7 @@ define([
         'Cesium/Core/Math',
         'Cesium/Core/objectToQuery',
         'Cesium/Core/queryToObject',
+        'Cesium/Core/CesiumTerrainProvider',
         'Cesium/DataSources/CzmlDataSource',
         'Cesium/DataSources/GeoJsonDataSource',
         'Cesium/DataSources/KmlDataSource',
@@ -23,6 +24,7 @@ define([
         CesiumMath,
         objectToQuery,
         queryToObject,
+        CesiumTerrainProvider,
         CzmlDataSource,
         GeoJsonDataSource,
         KmlDataSource,
@@ -59,7 +61,13 @@ define([
         viewer = new Viewer('cesiumContainer', {
             imageryProvider : imageryProvider,
             baseLayerPicker : !defined(imageryProvider),
-            scene3DOnly : endUserOptions.scene3DOnly
+            scene3DOnly : endUserOptions.scene3DOnly,
+            baseLayerPicker : false,
+            terrainProvider : endUserOptions.terrain ?
+            new CesiumTerrainProvider({
+                  url : '//assets.agi.com/stk-terrain/world',
+                requestVertexNormals : false
+            }) : undefined
         });
     } catch (exception) {
         loadingIndicator.style.display = 'none';
@@ -71,6 +79,9 @@ define([
         return;
     }
 
+    window.viewer = viewer;
+    viewer.scene.globe._surface.debug = true;
+    viewer.scene.globe._surface._debug.enableDebugOutput = true;
     viewer.extend(viewerDragDropMixin);
     if (endUserOptions.inspector) {
         viewer.extend(viewerCesiumInspectorMixin);
