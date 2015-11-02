@@ -606,12 +606,45 @@ define([
         return result;
     };
 
+    /**
+     * Creates a bounding sphere that contains the oriented bounding box.
+     *
+     * @param {OrientedBoundingBox} box The bounding box.
+     * @param {BoundingSphere} [result] The bounding sphere onto which to store the result.
+     * @returns {BoundingSphere} The computed bounding sphere.
+     */
+    OrientedBoundingBox.toBoundingSphere = function(box, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(box)) {
+            throw new DeveloperError('box is required.');
+        }
+        //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            result = new BoundingSphere();
+        }
+
+        var halfAxes = box.halfAxes;
+        var u = Matrix3.getColumn(halfAxes, 0, scratchCartesianU);
+        var v = Matrix3.getColumn(halfAxes, 1, scratchCartesianV);
+        var w = Matrix3.getColumn(halfAxes, 2, scratchCartesianW);
+
+        var uHalf = Cartesian3.magnitude(u);
+        var vHalf = Cartesian3.magnitude(v);
+        var wHalf = Cartesian3.magnitude(w);
+
+        result.center = Cartesian3.clone(box.center, result.center);
+        result.radius = Math.max(uHalf, vHalf, wHalf);
+
+        return result;
+    };
+
     var scratchBoundingSphere = new BoundingSphere();
 
     /**
      * Determines whether or not a bounding box is hidden from view by the occluder.
      *
-     * @param {OrientedBoundingBox} sphere The bounding box surrounding the occludee object.
+     * @param {OrientedBoundingBox} box The bounding box surrounding the occludee object.
      * @param {Occluder} occluder The occluder.
      * @returns {Boolean} <code>true</code> if the sphere is not visible; otherwise <code>false</code>.
      */
@@ -625,18 +658,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var halfAxes = box.halfAxes;
-        var u = Matrix3.getColumn(halfAxes, 0, scratchCartesianU);
-        var v = Matrix3.getColumn(halfAxes, 1, scratchCartesianV);
-        var w = Matrix3.getColumn(halfAxes, 2, scratchCartesianW);
-
-        var uHalf = Cartesian3.magnitude(u);
-        var vHalf = Cartesian3.magnitude(v);
-        var wHalf = Cartesian3.magnitude(w);
-
-        var sphere = scratchBoundingSphere;
-        sphere.center = Cartesian3.clone(box.center, sphere.center);
-        sphere.radius = Math.max(uHalf, vHalf, wHalf);
+        var sphere = OrientedBoundingBox.toBoundingSphere(box, scratchBoundingSphere);
 
         return !occluder.isBoundingSphereVisible(sphere);
     };

@@ -34,12 +34,12 @@ define([
     /**
      * DOC_TBA
      */
-    var Instanced3DModel3DTileContentProvider = function(tileset, tile, url, contentHeader) {
+    var Instanced3DModel3DTileContentProvider = function(tileset, tile, url) {
         this._modelInstanceCollection = undefined;
         this._url = url;
         this._tileset = tileset;
         this._batchTableResources = undefined;
-        this._boundingVolume = defaultValue(tile._contentsOrientedBoundingBox, tile._orientedBoundingBox);
+        this._boundingVolume = tile.orientedBoundingBox;
 
         /**
          * @readonly
@@ -83,123 +83,136 @@ define([
 
         this.state = Cesium3DTileContentState.LOADING;
 
-        function failRequest(error) {
+        loadArrayBuffer(this._url).then(function(arrayBuffer) {
+            that.init(arrayBuffer);
+        }).otherwise(function(error) {
             that.state = Cesium3DTileContentState.FAILED;
             that.readyPromise.reject(error);
+        });
+    };
+
+    /**
+     * DOC_TBA
+     */
+    Instanced3DModel3DTileContentProvider.prototype.init = function(arrayBuffer, byteOffset) {
+        byteOffset = defaultValue(byteOffset, 0);
+
+        var uint8Array = new Uint8Array(arrayBuffer);
+        var magic = getStringFromTypedArray(getSubarray(uint8Array, byteOffset, Math.min(4, uint8Array.byteLength)));
+        if (magic !== 'i3dm') {
+            throw new DeveloperError('Invalid Instanced 3D Model. Expected magic=i3dm. Read magic=' + magic);
         }
 
-        loadArrayBuffer(this._url).then(function(arrayBuffer) {
-            var uint8Array = new Uint8Array(arrayBuffer);
-            var magic = getStringFromTypedArray(getSubarray(uint8Array, 0, Math.min(4, uint8Array.byteLength)));
-            if (magic !== 'i3dm') {
-                throw new DeveloperError('Invalid Instanced 3D Model. Expected magic=i3dm. Read magic=' + magic);
-            }
+        var view = new DataView(arrayBuffer);
+        byteOffset += sizeOfUint32;  // Skip magic number
 
-            var view = new DataView(arrayBuffer);
-            var byteOffset = 0;
+        //>>includeStart('debug', pragmas.debug);
+        var version = view.getUint32(byteOffset, true);
+        if (version !== 1) {
+            throw new DeveloperError('Only Instanced 3D Model version 1 is supported. Version ' + version + ' is not.');
+        }
+        //>>includeEnd('debug');
+        byteOffset += sizeOfUint32;
 
-            byteOffset += sizeOfUint32;  // Skip magic number
+        // Skip byteLength
+        byteOffset += sizeOfUint32;
 
-            //>>includeStart('debug', pragmas.debug);
-            var version = view.getUint32(byteOffset, true);
-            if (version !== 1) {
-                throw new DeveloperError('Only Instanced 3D Model version 1 is supported. Version ' + version + ' is not.');
-            }
-            //>>includeEnd('debug');
-            byteOffset += sizeOfUint32;
+        var batchTableLength = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUint32;
 
-            var batchTableLength = view.getUint32(byteOffset, true);
-            byteOffset += sizeOfUint32;
+        var gltfLength = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUint32;
 
-            var gltfLength = view.getUint32(byteOffset, true);
-            byteOffset += sizeOfUint32;
+        var gltfFormat = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUint32;
 
-            var gltfFormat = view.getUint32(byteOffset, true);
-            byteOffset += sizeOfUint32;
+        var instancesLength = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUint32;
 
-            var instancesLength = view.getUint32(byteOffset, true);
-            byteOffset += sizeOfUint32;
+        var batchTableResources = new Cesium3DTileBatchTableResources(this, instancesLength);
+        this._batchTableResources = batchTableResources;
+        if (batchTableLength > 0) {
+            var batchTableString = getStringFromTypedArray(getSubarray(uint8Array, byteOffset, batchTableLength));
+            batchTableResources.batchTable = JSON.parse(batchTableString);
+            byteOffset += batchTableLength;
+        }
 
-            var batchTableResources = new Cesium3DTileBatchTableResources(that, instancesLength);
-            that._batchTableResources = batchTableResources;
-            if (batchTableLength > 0) {
-                var batchTableString = getStringFromTypedArray(getSubarray(uint8Array, byteOffset, batchTableLength));
-                batchTableResources.batchTable = JSON.parse(batchTableString);
-                byteOffset += batchTableLength;
-            }
+        var gltfView = new Uint8Array(arrayBuffer, byteOffset, gltfLength);
+        byteOffset += gltfLength;
 
-            var gltfView = new Uint8Array(arrayBuffer, byteOffset, gltfLength);
-            byteOffset += gltfLength;
+        var instancesDataSizeInBytes = instancesLength * instanceSizeInBytes;
+        var instancesView = new DataView(arrayBuffer, byteOffset, instancesDataSizeInBytes);
+        byteOffset += instancesDataSizeInBytes;
 
-            var instancesDataSizeInBytes = instancesLength * instanceSizeInBytes;
-            var instancesView = new DataView(arrayBuffer, byteOffset, instancesDataSizeInBytes);
-            byteOffset += instancesDataSizeInBytes;
+        // Create model instance collection
+        var collectionOptions = {
+            instances : new Array(instancesLength),
+            batchTableResources : batchTableResources,
+            boundingVolume : this._boundingVolume,
+            pickPrimitive : this._tileset,
+            cull : false,
+            url : undefined,
+            headers : undefined,
+            gltf : undefined,
+            basePath : undefined
+        };
 
-            // Create model instance collection
-            var collectionOptions = {
-                instances : new Array(instancesLength),
-                batchTableResources : batchTableResources,
-                boundingVolume : that._boundingVolume,
-                pickPrimitive : that._tileset,
-                cull : false,
-                url : undefined,
-                headers : undefined,
-                gltf : undefined,
-                basePath : undefined
+        //>>includeStart('debug', pragmas.debug);
+        if((gltfFormat !== 0) && (gltfFormat !== 1)) {
+            throw new DeveloperError('Only glTF format 0 (url) or 1 (embedded) are supported. Format ' + gltfFormat + ' is not');
+        }
+        //>>includeEnd('debug');
+
+        if (gltfFormat === 0) {
+            var gltfUrl = getStringFromTypedArray(gltfView);
+            var url = (new Uri(gltfUrl).isAbsolute()) ? gltfUrl : this._tileset.url + gltfUrl;
+            collectionOptions.url = url;
+            // TODO : how to get the correct headers
+        } else {
+            collectionOptions.gltf = gltfView;
+            collectionOptions.basePath = this._url;
+        }
+
+        var ellipsoid = Ellipsoid.WGS84;
+        var position = new Cartesian3();
+        var instances = collectionOptions.instances;
+        byteOffset = 0;
+
+        for (var i = 0; i < instancesLength; ++i) {
+            // Get longitude and latitude
+            var longitude = instancesView.getFloat64(byteOffset, true);
+            byteOffset += sizeOfFloat64;
+            var latitude = instancesView.getFloat64(byteOffset, true);
+            byteOffset += sizeOfFloat64;
+            var height = 0.0;
+
+            // Get batchId
+            var batchId = instancesView.getUint16(byteOffset, true);
+            byteOffset += sizeOfUint16;
+
+            Cartesian3.fromRadians(longitude, latitude, height, ellipsoid, position);
+            var modelMatrix = Transforms.eastNorthUpToFixedFrame(position);
+
+            instances[i] = {
+                modelMatrix : modelMatrix,
+                batchId : batchId
             };
+        }
 
-            //>>includeStart('debug', pragmas.debug);
-            if((gltfFormat !== 0) && (gltfFormat !== 1)) {
-                throw new DeveloperError('Only glTF format 0 (url) or 1 (embedded) are supported. Format ' + gltfFormat + ' is not');
-            }
-            //>>includeEnd('debug');
+        var modelInstanceCollection = new ModelInstanceCollection(collectionOptions);
+        this._modelInstanceCollection = modelInstanceCollection;
+        this.state = Cesium3DTileContentState.PROCESSING;
+        this.processingPromise.resolve(this);
 
-            if (gltfFormat === 0) {
-                var gltfUrl = getStringFromTypedArray(gltfView);
-                var url = (new Uri(gltfUrl).isAbsolute()) ? gltfUrl : that._tileset.url + gltfUrl;
-                collectionOptions.url = url;
-                // TODO : how to get the correct headers
-            } else {
-                collectionOptions.gltf = gltfView;
-                collectionOptions.basePath = that._url;
-            }
+        var that = this;
 
-            var ellipsoid = Ellipsoid.WGS84;
-            var position = new Cartesian3();
-            var instances = collectionOptions.instances;
-            byteOffset = 0;
-
-            for (var i = 0; i < instancesLength; ++i) {
-                // Get longitude and latitude
-                var longitude = instancesView.getFloat64(byteOffset, true);
-                byteOffset += sizeOfFloat64;
-                var latitude = instancesView.getFloat64(byteOffset, true);
-                byteOffset += sizeOfFloat64;
-                var height = 0.0;
-
-                // Get batchId
-                var batchId = instancesView.getUint16(byteOffset, true);
-                byteOffset += sizeOfUint16;
-
-                Cartesian3.fromRadians(longitude, latitude, height, ellipsoid, position);
-                var modelMatrix = Transforms.eastNorthUpToFixedFrame(position);
-
-                instances[i] = {
-                    modelMatrix : modelMatrix,
-                    batchId : batchId
-                };
-            }
-
-            var modelInstanceCollection = new ModelInstanceCollection(collectionOptions);
-            that._modelInstanceCollection = modelInstanceCollection;
-            that.state = Cesium3DTileContentState.PROCESSING;
-            that.processingPromise.resolve(that);
-
-            when(modelInstanceCollection.readyPromise).then(function(modelInstanceCollection) {
-                that.state = Cesium3DTileContentState.READY;
-                that.readyPromise.resolve(that);
-            }).otherwise(failRequest);
-        }).otherwise(failRequest);
+        when(modelInstanceCollection.readyPromise).then(function(modelInstanceCollection) {
+            that.state = Cesium3DTileContentState.READY;
+            that.readyPromise.resolve(that);
+        }).otherwise(function(error) {
+            that.state = Cesium3DTileContentState.FAILED;
+            that.readyPromise.reject(error);
+        });
     };
 
     /**

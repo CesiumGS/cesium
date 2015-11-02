@@ -30,7 +30,7 @@ define([
     /**
      * DOC_TBA
      */
-    var Batched3DModel3DTileContentProvider = function(tileset, tile, url, contentHeader) {
+    var Batched3DModel3DTileContentProvider = function(tileset, tile, url) {
         this._model = undefined;
         this._url = url;
         this._tileset = tileset;
@@ -50,9 +50,8 @@ define([
          */
         this.readyPromise = when.defer();
 
-        var batchSize = defaultValue(contentHeader.batchSize, 0);
-        this._batchSize = batchSize;
-        this._batchTableResources = new Cesium3DTileBatchTableResources(this, batchSize);
+        this._batchSize = 0;
+        this._batchTableResources = undefined;
         this._models = undefined;
     };
 
@@ -113,75 +112,95 @@ define([
      */
     Batched3DModel3DTileContentProvider.prototype.request = function() {
         var that = this;
-        var batchTableResources = this._batchTableResources;
 
         this.state = Cesium3DTileContentState.LOADING;
 
-        function failRequest(error) {
+        loadArrayBuffer(this._url). then(function(arrayBuffer) {
+            that.init(arrayBuffer);
+        }).otherwise(function(error) {
             that.state = Cesium3DTileContentState.FAILED;
             that.readyPromise.reject(error);
+        });
+    };
+
+    /**
+     * DOC_TBA
+     */
+    Batched3DModel3DTileContentProvider.prototype.init = function(arrayBuffer, byteOffset) {
+        byteOffset = defaultValue(byteOffset, 0);
+
+        var uint8Array = new Uint8Array(arrayBuffer);
+        var magic = getStringFromTypedArray(getSubarray(uint8Array, byteOffset, Math.min(4, uint8Array.length)));
+        if (magic !== 'b3dm') {
+            throw new DeveloperError('Invalid Batched 3D Model.  Expected magic=b3dm.  Read magic=' + magic);
         }
 
-        loadArrayBuffer(this._url). then(function(arrayBuffer) {
-            var uint8Array = new Uint8Array(arrayBuffer);
-            var magic = getStringFromTypedArray(getSubarray(uint8Array, 0, Math.min(4, uint8Array.length)));
-            if (magic !== 'b3dm') {
-                throw new DeveloperError('Invalid Batched 3D Model.  Expected magic=b3dm.  Read magic=' + magic);
-            }
+        var view = new DataView(arrayBuffer);
+        byteOffset += sizeOfUint32;  // Skip magic number
 
-            var view = new DataView(arrayBuffer);
-            var byteOffset = 0;
+        //>>includeStart('debug', pragmas.debug);
+        var version = view.getUint32(byteOffset, true);
+        if (version !== 1) {
+            throw new DeveloperError('Only Batched 3D Model version 1 is supported.  Version ' + version + ' is not.');
+        }
+        //>>includeEnd('debug');
+        byteOffset += sizeOfUint32;
 
-            byteOffset += sizeOfUint32;  // Skip magic number
+        // Skip byteLength
+        byteOffset += sizeOfUint32;
 
-            //>>includeStart('debug', pragmas.debug);
-            var version = view.getUint32(byteOffset, true);
-            if (version !== 1) {
-                throw new DeveloperError('Only Batched 3D Model version 1 is supported.  Version ' + version + ' is not.');
-            }
-            //>>includeEnd('debug');
-            byteOffset += sizeOfUint32;
+        // TODO : rename to batchLength?
+        var batchSize = view.getUint32(byteOffset, true);
+        this._batchSize = batchSize;
+        byteOffset += sizeOfUint32;
 
-            var batchTableLength = view.getUint32(byteOffset, true);
-            byteOffset += sizeOfUint32;
-            if (batchTableLength > 0) {
-                var batchTableString = getStringFromTypedArray(getSubarray(uint8Array, byteOffset, batchTableLength));
-                byteOffset += batchTableLength;
+        var batchTableResources = new Cesium3DTileBatchTableResources(this, batchSize);
+        this._batchTableResources = batchTableResources;
 
-                // PERFORMANCE_IDEA: is it possible to allocate this on-demand?  Perhaps keep the
-                // arraybuffer/string compressed in memory and then decompress it when it is first accessed.
-                //
-                // We could also make another request for it, but that would make the property set/get
-                // API async, and would double the number of numbers in some cases.
-                batchTableResources.batchTable = JSON.parse(batchTableString);
-            }
+        var batchTableLength = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUint32;
+        if (batchTableLength > 0) {
+            var batchTableString = getStringFromTypedArray(getSubarray(uint8Array, byteOffset, batchTableLength));
+            byteOffset += batchTableLength;
 
-            var gltfView = new Uint8Array(arrayBuffer, byteOffset, arrayBuffer.byteLength - byteOffset);
+            // PERFORMANCE_IDEA: is it possible to allocate this on-demand?  Perhaps keep the
+            // arraybuffer/string compressed in memory and then decompress it when it is first accessed.
+            //
+            // We could also make another request for it, but that would make the property set/get
+            // API async, and would double the number of numbers in some cases.
+            batchTableResources.batchTable = JSON.parse(batchTableString);
+        }
 
-            // PERFORMANCE_IDEA: patch the shader on demand, e.g., the first time show/color changes.
-            // The pitch shader still needs to be patched.
-            var model = new Model({
-                gltf : gltfView,
-                cull : false,           // The model is already culled by the 3D tiles
-                releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
-                vertexShaderLoaded : batchTableResources.getVertexShaderCallback(),
-                fragmentShaderLoaded : batchTableResources.getFragmentShaderCallback(),
-                uniformMapLoaded : batchTableResources.getUniformMapCallback(),
-                pickVertexShaderLoaded : batchTableResources.getPickVertexShaderCallback(),
-                pickFragmentShaderLoaded : batchTableResources.getPickFragmentShaderCallback(),
-                pickUniformMapLoaded : batchTableResources.getPickUniformMapCallback(),
-                basePath : that._url
-            });
+        var gltfView = new Uint8Array(arrayBuffer, byteOffset, arrayBuffer.byteLength - byteOffset);
 
-            that._model = model;
-            that.state = Cesium3DTileContentState.PROCESSING;
-            that.processingPromise.resolve(that);
+        // PERFORMANCE_IDEA: patch the shader on demand, e.g., the first time show/color changes.
+        // The pitch shader still needs to be patched.
+        var model = new Model({
+            gltf : gltfView,
+            cull : false,           // The model is already culled by the 3D tiles
+            releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
+            vertexShaderLoaded : batchTableResources.getVertexShaderCallback(),
+            fragmentShaderLoaded : batchTableResources.getFragmentShaderCallback(),
+            uniformMapLoaded : batchTableResources.getUniformMapCallback(),
+            pickVertexShaderLoaded : batchTableResources.getPickVertexShaderCallback(),
+            pickFragmentShaderLoaded : batchTableResources.getPickFragmentShaderCallback(),
+            pickUniformMapLoaded : batchTableResources.getPickUniformMapCallback(),
+            basePath : this._url
+        });
 
-            when(model.readyPromise).then(function(model) {
-                that.state = Cesium3DTileContentState.READY;
-                that.readyPromise.resolve(that);
-            }).otherwise(failRequest);
-        }).otherwise(failRequest);
+        this._model = model;
+        this.state = Cesium3DTileContentState.PROCESSING;
+        this.processingPromise.resolve(this);
+
+        var that = this;
+
+        when(model.readyPromise).then(function(model) {
+            that.state = Cesium3DTileContentState.READY;
+            that.readyPromise.resolve(that);
+        }).otherwise(function(error) {
+            that.state = Cesium3DTileContentState.FAILED;
+            that.readyPromise.reject(error);
+        });
     };
 
     /**
@@ -193,7 +212,6 @@ define([
         // In the PROCESSING state we may be calling update() to move forward
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
-
         this._batchTableResources.update(context, frameState);
         this._model.update(context, frameState, commandList);
    };

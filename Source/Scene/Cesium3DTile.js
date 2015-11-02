@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
+        '../Core/defaultValue',
         '../Core/DeveloperError',
         '../Core/GeometryInstance',
         '../Core/BoxOutlineGeometry',
@@ -28,6 +29,7 @@ define([
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
+        defaultValue,
         DeveloperError,
         GeometryInstance,
         BoxOutlineGeometry,
@@ -131,12 +133,13 @@ define([
         if (defined(contentHeader)) {
             var contentUrl = contentHeader.url;
             var url = (new Uri(contentUrl).isAbsolute()) ? contentUrl : baseUrl + contentUrl;
-            var contentFactory = Cesium3DTileContentProviderFactory[contentHeader.type];
+            var type = url.substring(url.lastIndexOf('.') + 1);
+            var contentFactory = Cesium3DTileContentProviderFactory[type];
 
             if (defined(contentFactory)) {
-                content = contentFactory(tileset, this, url, contentHeader);
+                content = contentFactory(tileset, this, url);
             } else {
-                throw new DeveloperError('Unknown tile content type, ' + contentHeader.type + ', for ' + url);
+                throw new DeveloperError('Unknown tile content type, ' + type + ', for ' + url);
             }
         } else {
             content = new Empty3DTileContentProvider();
@@ -187,6 +190,19 @@ define([
         content : {
             get : function() {
                 return this._content;
+            }
+        },
+
+        /**
+         * // TODO : change name?
+         * Get the tight oriented bounding box
+         *
+         * @type {Promise}
+         * @readonly
+         */
+        orientedBoundingBox : {
+            get : function() {
+                return defaultValue(this._contentsOrientedBoundingBox, this._orientedBoundingBox);
             }
         },
 
