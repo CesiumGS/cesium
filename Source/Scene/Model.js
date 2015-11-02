@@ -686,7 +686,7 @@ define([
          */
         readyPromise : {
             get : function() {
-                return this._readyPromise;
+                return this._readyPromise.promise;
             }
         },
 
@@ -3103,7 +3103,7 @@ define([
             var model = this;
             frameState.afterRender.push(function() {
                 model._ready = true;
-                model.readyPromise.resolve(model);
+                model._readyPromise.resolve(model);
             });
             return;
         }
