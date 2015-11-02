@@ -380,7 +380,7 @@ define([
             return renamedSource + '\n' + newMain;
         };
     }
-    
+
     function getPickVertexShaderCallback(collection) {
         return function (vs) {
             // Use the vertex shader that was generated earlier
@@ -757,7 +757,7 @@ define([
 
     var emptyCommandList = [];
 
-    ModelInstanceCollection.prototype.update = function(context, frameState, commandList) {
+    ModelInstanceCollection.prototype.update = function(frameState) {
         if (frameState.mode !== SceneMode.SCENE3D) {
             return;
         }
@@ -770,6 +770,7 @@ define([
             return;
         }
 
+        var context = frameState.context;
         var instancingSupported = context.instancedArrays;
         this._instancingSupported = instancingSupported;
 
@@ -779,11 +780,17 @@ define([
         }
 
         if (instancingSupported) {
-            this._batchTableResources.update(context, frameState);
+            this._batchTableResources.update(this, frameState);
         }
 
         var model = this._model;
-        model.update(context, frameState, emptyCommandList);
+        var savedCommands = frameState.commandList;
+        frameState.commandList = emptyCommandList;
+
+        model.update(frameState);
+
+        frameState.commandList = savedCommands;
+        emptyCommandList.length = 0;
 
         if (model.ready && (this._state === LoadState.LOADING)) {
             this._state = LoadState.LOADED;
@@ -814,11 +821,12 @@ define([
         updateWireframe(this);
         updateShowBoundingVolume(this);
 
+        var commandList = frameState.commandList;
         var passes = frameState.passes;
         var commands = passes.render ? this._drawCommands : this._pickCommands;
         var commandsLength = commands.length;
         var i;
-        
+
         if (instancingSupported) {
             for (i = 0; i < commandsLength; ++i) {
                 commandList.push(commands[i]);

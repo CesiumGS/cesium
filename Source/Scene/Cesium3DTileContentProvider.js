@@ -36,7 +36,7 @@ define([
         DeveloperError.throwInstantiationError();
     };
 
-    Cesium3DTileContentProvider.prototype.update = function(owner, context, frameState, commandList) {
+    Cesium3DTileContentProvider.prototype.update = function(owner, frameState) {
         DeveloperError.throwInstantiationError();
     };
 

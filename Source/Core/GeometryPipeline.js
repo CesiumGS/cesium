@@ -510,7 +510,7 @@ define([
         // If there's an index list and more than 64K attributes, it is possible that
         // some indices are outside the range of unsigned short [0, 64K - 1]
         var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
-        if (defined(geometry.indices) && (numberOfVertices > CesiumMath.SIXTY_FOUR_KILOBYTES)) {
+        if (defined(geometry.indices) && (numberOfVertices >= CesiumMath.SIXTY_FOUR_KILOBYTES)) {
             var oldToNewIndex = [];
             var newIndices = [];
             var currentIndex = 0;
@@ -541,7 +541,7 @@ define([
                     newIndices.push(i);
                 }
 
-                if (currentIndex + indicesPerPrimitive > CesiumMath.SIXTY_FOUR_KILOBYTES) {
+                if (currentIndex + indicesPerPrimitive >= CesiumMath.SIXTY_FOUR_KILOBYTES) {
                     geometries.push(new Geometry({
                         attributes : newAttributes,
                         indices : newIndices,

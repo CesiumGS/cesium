@@ -145,6 +145,14 @@ defineSuite([
         expect(pixelSize.y).toEqual(expected.y);
     });
 
+    it('get pixel dimensions', function() {
+        var dimensions = new Cartesian2(1.0, 1.0);
+        var pixelSize = frustum.getPixelDimensions(dimensions.x, dimensions.y, 1.0, new Cartesian2());
+        var expected = frustum._offCenterFrustum.getPixelDimensions(dimensions.x, dimensions.y, 1.0, new Cartesian2());
+        expect(pixelSize.x).toEqual(expected.x);
+        expect(pixelSize.y).toEqual(expected.y);
+    });
+
     it('equals', function() {
         var frustum2 = new PerspectiveFrustum();
         frustum2.near = 1.0;

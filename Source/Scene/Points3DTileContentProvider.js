@@ -150,14 +150,14 @@ define([
         }
     }
 
-    Points3DTileContentProvider.prototype.update = function(owner, context, frameState, commandList) {
+    Points3DTileContentProvider.prototype.update = function(owner, frameState) {
         // In the PROCESSING state we may be calling update() to move forward
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
 
         applyDebugSettings(owner, this);
 
-        this._primitive.update(context, frameState, commandList);
+        this._primitive.update(frameState);
     };
 
     Points3DTileContentProvider.prototype.isDestroyed = function() {

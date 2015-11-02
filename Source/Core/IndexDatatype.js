@@ -110,7 +110,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (numberOfVertices > CesiumMath.SIXTY_FOUR_KILOBYTES) {
+        if (numberOfVertices >= CesiumMath.SIXTY_FOUR_KILOBYTES) {
             return new Uint32Array(indicesLengthOrArray);
         }
 
@@ -141,7 +141,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (numberOfVertices > CesiumMath.SIXTY_FOUR_KILOBYTES) {
+        if (numberOfVertices >= CesiumMath.SIXTY_FOUR_KILOBYTES) {
             return new Uint32Array(sourceArray, byteOffset, length);
         }
 

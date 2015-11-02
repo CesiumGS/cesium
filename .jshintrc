@@ -41,5 +41,6 @@
   "shadow": false,
   "sub": false,
   "supernew": false,
-  "browser": true
+  "browser": true,
+  "predef": [ "JSON" ]
 }

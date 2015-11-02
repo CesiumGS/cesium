@@ -552,7 +552,9 @@ define([
             return indexBuffer;
         }
 
-        var length = sixteenK * 6;
+        // Subtract 6 because the last index is reserverd for primitive restart.
+        // https://www.khronos.org/registry/webgl/specs/latest/2.0/#5.18
+        var length = sixteenK * 6 - 6;
         var indices = new Uint16Array(length);
         for (var i = 0, j = 0; i < length; i += 6, j += 4) {
             indices[i] = j;
@@ -1133,18 +1135,16 @@ define([
         }
     }
 
-    var scratchDrawingBufferDimensions = new Cartesian2();
     var scratchPixelSize = new Cartesian2();
 
-    function updateBoundingVolume(collection, context, frameState, boundingVolume) {
+    function updateBoundingVolume(collection, frameState, boundingVolume) {
         var pixelScale = 1.0;
         if (!collection._allSizedInMeters || collection._maxPixelOffset !== 0.0) {
             var camera = frameState.camera;
             var distance = camera.distanceToBoundingSphere(boundingVolume);
 
-            scratchDrawingBufferDimensions.x = context.drawingBufferWidth;
-            scratchDrawingBufferDimensions.y = context.drawingBufferHeight;
-            var pixelSize = camera.frustum.getPixelSize(scratchDrawingBufferDimensions, distance, scratchPixelSize);
+            var context = frameState.context;
+            var pixelSize = frameState.camera.frustum.getPixelDimensions(context.drawingBufferWidth, context.drawingBufferHeight, distance, scratchPixelSize);
             pixelScale = Math.max(pixelSize.x, pixelSize.y);
         }
 
@@ -1169,11 +1169,12 @@ define([
      *
      * @exception {RuntimeError} image with id must be in the atlas.
      */
-    BillboardCollection.prototype.update = function(context, frameState, commandList) {
+    BillboardCollection.prototype.update = function(frameState) {
         removeBillboards(this);
         var billboards = this._billboards;
         var billboardsLength = billboards.length;
 
+        var context = frameState.context;
         this._instanced = context.instancedArrays;
         attributeLocations = this._instanced ? attributeLocationsInstanced : attributeLocationsBatched;
         getIndexBuffer = this._instanced ? getIndexBufferInstanced : getIndexBufferBatched;
@@ -1252,6 +1253,9 @@ define([
 
                 if (properties[IMAGE_INDEX_INDEX] || properties[PIXEL_OFFSET_INDEX] || properties[HORIZONTAL_ORIGIN_INDEX] || properties[VERTICAL_ORIGIN_INDEX] || properties[SHOW_INDEX]) {
                     writers.push(writeCompressedAttrib0);
+                    if (this._instanced) {
+                        writers.push(writeEyeOffset);
+                    }
                 }
 
                 if (properties[IMAGE_INDEX_INDEX] || properties[ALIGNED_AXIS_INDEX] || properties[TRANSLUCENCY_BY_DISTANCE_INDEX]) {
@@ -1337,7 +1341,7 @@ define([
         } else {
             boundingVolume = BoundingSphere.clone(this._baseVolume2D, this._boundingVolume);
         }
-        updateBoundingVolume(this, context, frameState, boundingVolume);
+        updateBoundingVolume(this, frameState, boundingVolume);
 
         var va;
         var vaLength;
@@ -1345,6 +1349,8 @@ define([
         var vs;
         var fs;
         var j;
+
+        var commandList = frameState.commandList;
 
         if (pass.render) {
             var colorList = this._colorCommands;

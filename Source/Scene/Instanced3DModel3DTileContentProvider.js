@@ -220,8 +220,8 @@ define([
      *
      * Use Cesium3DTile#update
      */
-    Instanced3DModel3DTileContentProvider.prototype.update = function(owner, context, frameState, commandList) {
-        this._modelInstanceCollection.update(context, frameState, commandList);
+    Instanced3DModel3DTileContentProvider.prototype.update = function(owner, frameState) {
+        this._modelInstanceCollection.update(frameState);
     };
 
     /**
