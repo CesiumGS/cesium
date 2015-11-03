@@ -1020,11 +1020,17 @@ define([
 
     function updateFog(scene) {
         var frameState = scene.frameState;
+        var height = scene.camera.positionCartographic.height;
+        if (height > 2000000.0) {
+            frameState.fogEnabled = false;
+            return;
+        }
+
         var fog = scene.fog;
         var enabled = frameState.fogEnabled = fog.enabled;
         if (enabled) {
-            var height = scene.camera.positionCartographic.height;
-            var i = findInterval(height / 1000.0);
+            height = height / 1000.0;
+            var i = findInterval(height);
             var t = (height - heightsTable[i]) / (heightsTable[i + 1] - heightsTable[i]);
             var density = CesiumMath.lerp(densityTable[i], densityTable[i + 1], t) / 1000.0;
             frameState.fogDensity = density;
