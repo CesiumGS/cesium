@@ -309,16 +309,6 @@ define([
         return ((1.0 - time) * p) + (time * q);
     };
 
-    CesiumMath.smoothstep = function(edge0, edge1, x) {
-        x = CesiumMath.clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
-        return x * x * (3.0 - x * 1.0);
-    };
-
-    CesiumMath.smootherstep = function(edge0, edge1, x) {
-        x = CesiumMath.clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
-        return x * x * x * (10.0 + x * (-15.0 + x * 6.0));
-    };
-
     /**
      * pi
      *

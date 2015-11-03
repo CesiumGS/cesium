@@ -507,10 +507,7 @@ define([
 
         this.fog = {
             enabled : true,
-            startDensity : 0.00002,
-            endDensity : 9e-8,
-            startHeight : 2000.0,
-            endHeight : 100000.0
+            density : 0.001
         };
 
         this._performanceDisplay = undefined;

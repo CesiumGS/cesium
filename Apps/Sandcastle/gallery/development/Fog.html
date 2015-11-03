@@ -29,20 +29,8 @@
         <td><input type="checkbox" data-bind="checked: enabled"/></td>
     </tr>
     <tr>
-        <td>start height</td>
-        <td><input type="text" size="5" data-bind="value: startHeight"></td>
-    </tr>
-    <tr>
-        <td>start density</td>
-        <td><input type="text" size="5" data-bind="value: startDensity"></td>
-    </tr>
-    <tr>
-        <td>end height</td>
-        <td><input type="text" size="5" data-bind="value: endHeight"></td>
-    </tr>
-    <tr>
-        <td>end density</td>
-        <td><input type="text" size="5" data-bind="value: endDensity"></td>
+        <td>density</td>
+        <td><input type="text" size="5" data-bind="value: density"></td>
     </tr>
 </tbody></table>
 <div id="zoomButtons"></div>
@@ -65,10 +53,7 @@ viewer.extend(Cesium.viewerCesiumInspectorMixin);
 //The viewModel tracks the state of our mini application.
 var viewModel = {
     enabled : true,
-    startDensity : 0,
-    endDensity : 0,
-    startHeight : 0,
-    endHeight : 0
+    density : 0
 };
 // Convert the viewModel members into knockout observables.
 Cesium.knockout.track(viewModel);
@@ -83,35 +68,14 @@ Cesium.knockout.getObservable(viewModel, 'enabled').subscribe(
     }
 );
     
-Cesium.knockout.getObservable(viewModel, 'startDensity').subscribe(
+Cesium.knockout.getObservable(viewModel, 'density').subscribe(
     function(newValue) {
-        viewer.scene.fog.startDensity = newValue;
-    }
-);
-
-Cesium.knockout.getObservable(viewModel, 'endDensity').subscribe(
-    function(newValue) {
-        viewer.scene.fog.endDensity = newValue;
-    }
-);
-    
-Cesium.knockout.getObservable(viewModel, 'startHeight').subscribe(
-    function(newValue) {
-        viewer.scene.fog.startHeight = newValue;
-    }
-);
-
-Cesium.knockout.getObservable(viewModel, 'endHeight').subscribe(
-    function(newValue) {
-        viewer.scene.fog.endHeight = newValue;
+        viewer.scene.fog.density = newValue;
     }
 );
 
 viewModel.enabled = viewer.scene.fog.enabled;
-viewModel.startDensity = viewer.scene.fog.startDensity;
-viewModel.endDensity = viewer.scene.fog.endDensity;
-viewModel.startHeight = viewer.scene.fog.startHeight;
-viewModel.endHeight = viewer.scene.fog.endHeight;
+viewModel.density = viewer.scene.fog.density;
 
 Sandcastle.addToolbarMenu([{
     text : 'Directly downward',
@@ -163,25 +127,17 @@ Sandcastle.addToolbarMenu([{
     }
 }], 'zoomButtons');
 
-var scene = viewer.scene;
-var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-handler.setInputAction(function(movement) {
-    var ray = scene.camera.getPickRay(movement.position);
-    var pickedPosition = scene.globe.pick(ray, scene);
-    if (Cesium.defined(pickedPosition)) {
-        console.log(Cesium.Cartesian3.distance(pickedPosition, scene.camera.position));
-    }
-}, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
-
-scene.camera.setView({
+/*
+viewer.scene.camera.setView({
     destination : new Cesium.Cartesian3(-2467070.494299382, -4414079.174382873, 3880669.8976452565),
     orientation : {
         heading : 1.7833456822869636,
         pitch : -0.1764684555868994
     }
 });
+*/
 
-scene.globe._surface._debug.enableDebugOutput = true;
+viewer.scene.globe._surface._debug.enableDebugOutput = true;
 
 //Sandcastle_End
     Sandcastle.finishedLoading();
