@@ -963,30 +963,70 @@ define([
         return undefined;
     }
 
+    var heightsTable = [0.460796, 0.51748, 0.659246, 1.2756501, 2.1511192, 3.1417763, 4.7775198, 6.2812493, 12.364307, 15.900765, 49.8890549, 78.0268259, 99.2607344, 120.0363873, 151.0110158, 156.0911953, 203.8493112, 274.8669803, 319.9163149, 493.5520528, 628.7335874, 1027.505709];
+    var densityTable = [1.0, 0.5, 0.2, 0.1, 0.07, 0.05, 0.04, 0.03, 0.019, 0.01, 0.0085, 0.0062, 0.0058, 0.0053, 0.0052, 0.0051, 0.0042, 0.004, 0.0034, 0.0026, 0.0022, 0.0016];
+
+    // TODO: clean up, used from spline
+    // TODO: temporal coherence
+    function findInterval(height, startIndex) {
+        var heights = heightsTable;
+        var length = heights.length;
+
+        if (height < heights[0]) {
+            return 0;
+        } else if (height > heights[length - 1]) {
+            return length - 2;
+        }
+
+        // Take advantage of temporal coherence by checking current, next and previous intervals
+        // for containment of time.
+        startIndex = defaultValue(startIndex, 0);
+
+        if (height >= heights[startIndex]) {
+            if (startIndex + 1 < length && height < heights[startIndex + 1]) {
+                return startIndex;
+            } else if (startIndex + 2 < length && height < heights[startIndex + 2]) {
+                return startIndex + 1;
+            }
+        } else if (startIndex - 1 >= 0 && height >= heights[startIndex - 1]) {
+            return startIndex - 1;
+        }
+
+        // The above failed so do a linear search. For the use cases so far, the
+        // length of the list is less than 10. In the future, if there is a bottle neck,
+        // it might be here.
+
+        var i;
+        if (height > heights[startIndex]) {
+            for (i = startIndex; i < length - 1; ++i) {
+                if (height >= heights[i] && height < heights[i + 1]) {
+                    break;
+                }
+            }
+        } else {
+            for (i = startIndex - 1; i >= 0; --i) {
+                if (height >= heights[i] && height < heights[i + 1]) {
+                    break;
+                }
+            }
+        }
+
+        if (i === length - 1) {
+            i = length - 2;
+        }
+
+        return i;
+    }
+
     function updateFog(scene) {
         var frameState = scene.frameState;
         var fog = scene.fog;
         var enabled = frameState.fogEnabled = fog.enabled;
         if (enabled) {
             var height = scene.camera.positionCartographic.height;
-
-            /*
-            var startHeight = fog.startHeight;
-            var endHeight = fog.endHeight;
-
-            var startDensity = fog.startDensity;
-            var endDensity = fog.endDensity;
-
-            var t = CesiumMath.smoothstep(startHeight, endHeight, height);
-            t = CesiumMath.clamp(t, 0.0, 1.0);
-            //frameState.fogDensity = CesiumMath.lerp(startDensity, endDensity, t);
-            frameState.fogDensity = startDensity;
-            */
-
-            height = height / 1000.0;
-            var density = 0.0328839881727 * Math.exp(-0.00449145318353 * height);
-            density = density / 1000.0;
-
+            var i = findInterval(height / 1000.0);
+            var t = (height - heightsTable[i]) / (heightsTable[i + 1] - heightsTable[i]);
+            var density = CesiumMath.lerp(densityTable[i], densityTable[i + 1], t) / 1000.0;
             frameState.fogDensity = density;
         }
     }
