@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.16
+
+* Fixed glTF implementation to read the version as a string as per the specification and to correctly handle backwards compatibility for axis-angle rotations in v0.8 models.
+
 ### 1.15 - 2015-11-02
 
 * Breaking changes
