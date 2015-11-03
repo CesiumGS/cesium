@@ -88,6 +88,7 @@ defineSuite([
         }));
         modelPromises.push(loadModel(cesiumAirUrl, {
             minimumPixelSize : 1,
+            maximumScale : 200,
             asynchronous : false
         }).then(function(model) {
             cesiumAirModel = model;
@@ -126,6 +127,7 @@ defineSuite([
             show : false,
             scale : options.scale,
             minimumPixelSize : options.minimumPixelSize,
+            maximumScale : options.maximumScale,
             id : url,        // for picking tests
             asynchronous : options.asynchronous,
             releaseGltfJson : options.releaseGltfJson,
@@ -172,6 +174,7 @@ defineSuite([
        expect(texturedBoxModel.modelMatrix).toEqual(modelMatrix);
        expect(texturedBoxModel.scale).toEqual(1.0);
        expect(texturedBoxModel.minimumPixelSize).toEqual(0.0);
+       expect(texturedBoxModel.maximumScale).toBeUndefined();
        expect(texturedBoxModel.id).toEqual(texturedBoxUrl);
        expect(texturedBoxModel.allowPicking).toEqual(true);
        expect(texturedBoxModel.activeAnimations).toBeDefined();
@@ -672,6 +675,7 @@ defineSuite([
 
     it('loads cesiumAir', function() {
         expect(cesiumAirModel.minimumPixelSize).toEqual(1);
+        expect(cesiumAirModel.maximumScale).toEqual(200);
         expect(cesiumAirModel.asynchronous).toEqual(false);
     });
 
