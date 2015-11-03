@@ -32,6 +32,10 @@
         <td>density</td>
         <td><input type="text" size="5" data-bind="value: density"></td>
     </tr>
+    <tr>
+        <td>sse increase factor</td>
+        <td><input type="text" size="5" data-bind="value: sse"></td>
+    </tr>
 </tbody></table>
 <div id="zoomButtons"></div>
 </div>
@@ -53,7 +57,8 @@ viewer.extend(Cesium.viewerCesiumInspectorMixin);
 //The viewModel tracks the state of our mini application.
 var viewModel = {
     enabled : true,
-    density : 0
+    density : 0,
+    sse : 0
 };
 // Convert the viewModel members into knockout observables.
 Cesium.knockout.track(viewModel);
@@ -74,8 +79,15 @@ Cesium.knockout.getObservable(viewModel, 'density').subscribe(
     }
 );
 
+Cesium.knockout.getObservable(viewModel, 'sse').subscribe(
+    function(newValue) {
+        viewer.scene.fog.screenSpaceErrorFactor = newValue;
+    }
+);
+
 viewModel.enabled = viewer.scene.fog.enabled;
 viewModel.density = viewer.scene.fog.density;
+viewModel.sse = viewer.scene.fog.screenSpaceErrorFactor;
 
 Sandcastle.addToolbarMenu([{
     text : 'Directly downward',

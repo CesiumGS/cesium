@@ -8,6 +8,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/getTimestamp',
+        '../Core/Math',
         '../Core/Queue',
         '../Core/Ray',
         '../Core/Rectangle',
@@ -26,6 +27,7 @@ define([
         DeveloperError,
         Event,
         getTimestamp,
+        CesiumMath,
         Queue,
         Ray,
         Rectangle,
@@ -450,7 +452,13 @@ define([
         var fovy = frustum.fovy;
 
         // PERFORMANCE_IDEA: factor out stuff that's constant across tiles.
-        return (maxGeometricError * height) / (2 * distance * Math.tan(0.5 * fovy));
+        var error = (maxGeometricError * height) / (2 * distance * Math.tan(0.5 * fovy));
+
+        if (frameState.fogEnabled) {
+            error = error - CesiumMath.fog(distance, frameState.fogDensity) * frameState.fogSSE;
+        }
+
+        return error;
     }
 
     function screenSpaceError2D(primitive, frameState, tile) {

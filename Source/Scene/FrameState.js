@@ -138,6 +138,7 @@ define([
 
         this.fogEnabled = true;
         this.fogDensity = undefined;
+        this.fogSSE = undefined;
     };
 
     /**

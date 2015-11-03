@@ -507,7 +507,8 @@ define([
 
         this.fog = {
             enabled : true,
-            density : 0.001
+            density : 0.001,
+            screenSpaceErrorFactor : 2.0
         };
 
         this._performanceDisplay = undefined;
@@ -1031,6 +1032,7 @@ define([
             var t = (height - heightsTable[i]) / (heightsTable[i + 1] - heightsTable[i]);
             var density = CesiumMath.lerp(densityTable[i], densityTable[i + 1], t) / 1000.0;
             frameState.fogDensity = density;
+            frameState.fogSSE = fog.screenSpaceErrorFactor;
         }
     }
 

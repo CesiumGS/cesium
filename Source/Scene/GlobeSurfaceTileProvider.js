@@ -18,6 +18,7 @@ define([
         '../Core/GeometryPipeline',
         '../Core/IndexDatatype',
         '../Core/Intersect',
+        '../Core/Math',
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
         '../Core/PrimitiveType',
@@ -61,6 +62,7 @@ define([
         GeometryPipeline,
         IndexDatatype,
         Intersect,
+        CesiumMath,
         Matrix4,
         OrientedBoundingBox,
         PrimitiveType,
@@ -424,11 +426,6 @@ define([
         GlobeSurfaceTile.processStateMachine(tile, frameState.context, frameState.commandList, this._terrainProvider, this._imageryLayers);
     };
 
-    function computeFog(distanceToCamera, density) {
-        var scalar = distanceToCamera * density;
-        return 1.0 - Math.exp(-(scalar * scalar));
-    }
-
     var boundingSphereScratch = new BoundingSphere();
 
     /**
@@ -445,7 +442,7 @@ define([
     GlobeSurfaceTileProvider.prototype.computeTileVisibility = function(tile, frameState, occluders) {
         if (frameState.fogEnabled) {
             var distance = this.computeDistanceToTile(tile, frameState);
-            if (computeFog(distance, frameState.fogDensity) >= 1.0) {
+            if (CesiumMath.fog(distance, frameState.fogDensity) >= 1.0) {
                 return Visibility.NONE;
             }
         }
