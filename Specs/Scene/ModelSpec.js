@@ -46,7 +46,6 @@ defineSuite([
 
     var boxUrl = './Data/Models/Box/CesiumBoxTest.gltf';
     var boxNoTechniqueUrl = './Data/Models/Box/CesiumBoxTest-NoTechnique.gltf';
-    var box0_8Url = './Data/Models/Box/CesiumBoxTest-0_8.gltf';
     var boxNoIndicesUrl = './Data/Models/Box-NoIndices/box-noindices.gltf';
     var texturedBoxUrl = './Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf';
     var texturedBoxSeparateUrl = './Data/Models/Box-Textured-Separate/CesiumTexturedBoxTest.gltf';
@@ -55,6 +54,7 @@ defineSuite([
     var texturedBoxKhrBinaryUrl = './Data/Models/Box-Textured-Binary/CesiumTexturedBoxTest.glb';
     var boxRtcUrl = './Data/Models/Box-RTC/Box.gltf';
     var cesiumAirUrl = './Data/Models/CesiumAir/Cesium_Air.gltf';
+    var cesiumAir_0_8Url = './Data/Models/CesiumAir/Cesium_Air_0_8.gltf';
     var animBoxesUrl = './Data/Models/anim-test-1-boxes/anim-test-1-boxes.gltf';
     var riggedFigureUrl = './Data/Models/rigged-figure-test/rigged-figure-test.gltf';
 
@@ -484,7 +484,17 @@ defineSuite([
     });
 
     it('loads a glTF v0.8 model', function() {
-        return loadModel(box0_8Url).then(function(m) {
+        return loadModel(cesiumAir_0_8Url, {
+            minimumPixelSize : 1
+        }).then(function(m) {
+            // 0.8 models had a number version. Verify it is converted to a string.
+            expect(m.gltf.asset.version).toEqual('0.8');
+
+            // Verify that rotation is converted from
+            // Axis-Angle (1,0,0,0) to Quaternion (0,0,0,1)
+            var rotation = m.gltf.nodes['Geometry-mesh005Node'].rotation;
+            expect(rotation).toEqual([0.0, 0.0, 0.0, 1.0]);
+
             verifyRender(m);
             primitives.remove(m);
         });

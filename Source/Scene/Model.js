@@ -1002,7 +1002,7 @@ define([
 
         for (var i = 0; i < rootNodesLength; ++i) {
             var n = gltfNodes[rootNodes[i]];
-            n._transformToRoot = getTransform(n, version);
+            n._transformToRoot = getTransform(n);
             nodeStack.push(n);
 
             while (nodeStack.length > 0) {
@@ -1036,7 +1036,7 @@ define([
                 var childrenLength = children.length;
                 for (var k = 0; k < childrenLength; ++k) {
                     var child = gltfNodes[children[k]];
-                    child._transformToRoot = getTransform(child, version);
+                    child._transformToRoot = getTransform(child);
                     Matrix4.multiplyTransformation(transformToRoot, child._transformToRoot, child._transformToRoot);
                     nodeStack.push(child);
                 }
@@ -1222,9 +1222,7 @@ define([
         var skinnedNodes = [];
 
         var skinnedNodesNames = model._loadResources.skinnedNodesNames;
-        var gltf = model.gltf;
-        var version = gltf.asset.version;
-        var nodes = gltf.nodes;
+        var nodes = model.gltf.nodes;
 
         for (var name in nodes) {
             if (nodes.hasOwnProperty(name)) {
@@ -1264,7 +1262,7 @@ define([
                     // Publicly-accessible ModelNode instance to modify animation targets
                     publicNode : undefined
                 };
-                runtimeNode.publicNode = new ModelNode(model, node, runtimeNode, name, getTransform(node, version));
+                runtimeNode.publicNode = new ModelNode(model, node, runtimeNode, name, getTransform(node));
 
                 runtimeNodes[name] = runtimeNode;
                 runtimeNodesByName[node.name] = runtimeNode;
@@ -2540,13 +2538,7 @@ define([
                         // TRS converted to Cesium types
                         var rotation = gltfNode.rotation;
                         runtimeNode.translation = Cartesian3.fromArray(gltfNode.translation);
-                        if (version < 1.0) {
-                            axis = Cartesian3.fromArray(rotation, 0, axis);
-                            runtimeNode.rotation = Quaternion.fromAxisAngle(axis, rotation[3]);
-                        }
-                        else {
-                            runtimeNode.rotation = Quaternion.unpack(rotation);
-                        }
+                        runtimeNode.rotation = Quaternion.unpack(rotation);
                         runtimeNode.scale = Cartesian3.fromArray(gltfNode.scale);
                     }
                 }
