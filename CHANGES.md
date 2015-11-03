@@ -4,6 +4,7 @@ Change Log
 ### 1.16 - 2015-12-01
 
 * Fixed an issue where the sun texture is not generated correctly on some mobile devices. [#3141](https://github.com/AnalyticalGraphicsInc/cesium/issues/3141)
+* Fixed a bug in the deprecated `jsonp` that prevented it from returning a promise.  Its replacement, `loadJsonp`, was unaffected.
 
 ### 1.15 - 2015-11-02
 
