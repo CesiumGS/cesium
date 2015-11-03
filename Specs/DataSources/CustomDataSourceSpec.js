@@ -67,7 +67,7 @@ defineSuite([
     it('has entity collection with link to data source', function() {
         var dataSource = new CustomDataSource();
         var entityCollection = dataSource.entities;
-        expect(entityCollection.dataSource).toEqual(dataSource);
+        expect(entityCollection.owner).toEqual(dataSource);
     });
 
 });

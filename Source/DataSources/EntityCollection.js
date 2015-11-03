@@ -48,10 +48,10 @@ define([
      * @alias EntityCollection
      * @constructor
      *
-     * @param {DataSource|CompositeEntityCollection} dataSource The data source which created this collection.
+     * @param {DataSource|CompositeEntityCollection} [owner] The data source (or composite entity collection) which created this collection.
      */
-    var EntityCollection = function(dataSource) {
-        this.dataSource = dataSource;
+    var EntityCollection = function(owner) {
+        this._owner = owner;
         this._entities = new AssociativeArray();
         this._addedEntities = new AssociativeArray();
         this._removedEntities = new AssociativeArray();
@@ -138,6 +138,17 @@ define([
         values : {
             get : function() {
                 return this._entities.values;
+            }
+        },
+        /**
+         * Gets the owner of this entity collection, ie. the data source or composite entity collection which created it.
+         * @memberof EntityCollection.prototype
+         * @readonly
+         * @type {DataSource|CompositeEntityCollection}
+         */
+        owner : {
+            get : function() {
+                return this._owner;
             }
         }
     });
