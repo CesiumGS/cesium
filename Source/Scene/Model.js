@@ -291,6 +291,7 @@ define([
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
      * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
+     * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
      * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
@@ -414,6 +415,17 @@ define([
          */
         this.minimumPixelSize = defaultValue(options.minimumPixelSize, 0.0);
         this._minimumPixelSize = this.minimumPixelSize;
+
+        /**
+         * The maximum scale size for a model. This can be used to give 
+         * an upper limit to the minimumPixelSize, ensuring that the model
+         * is never an unreasonable scale.
+
+         * 
+         * @type {Number}
+         */
+        this.maximumScale = defaultValue(options.maximumScale, null);
+        this._maximumScale = this.maximumScale;
 
         /**
          * User-defined object returned when the model is picked.
@@ -823,6 +835,7 @@ define([
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
      * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
+     * @param {Number} [options.maxiumumScale] The maximum scale for the model.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
@@ -849,6 +862,7 @@ define([
      *   modelMatrix : modelMatrix,
      *   scale : 2.0,                     // double size
      *   minimumPixelSize : 128,          // never smaller than 128 pixels
+     *   maximumScale: 20000,             // never larger than 20000 * model size (overrides minimumPixelSize)
      *   allowPicking : false,            // not pickable
      *   debugShowBoundingVolume : false, // default
      *   debugWireframe : false
@@ -2866,7 +2880,7 @@ define([
             }
         }
 
-        return scale;
+        return (model.maximumScale && model.maximumScale < scale) ? model.maximumScale : scale;
     }
 
     function releaseCachedGltf(model) {
