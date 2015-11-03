@@ -1064,6 +1064,8 @@ define([
             uniformMap.southMercatorYAndOneOverHeight.y = oneOverMercatorHeight;
             Matrix4.clone(modifiedModelViewScratch, uniformMap.modifiedModelView);
 
+            var applyFog = enableFog && CesiumMath.fog(tile._distance, frameState.fogDensity) > CesiumMath.EPSILON3;
+
             var applyBrightness = false;
             var applyContrast = false;
             var applyHue = false;
@@ -1125,7 +1127,7 @@ define([
             uniformMap.waterMask = waterMaskTexture;
             Cartesian4.clone(surfaceTile.waterMaskTranslationAndScale, uniformMap.waterMaskTranslationAndScale);
 
-            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(context, frameState.mode, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog);
+            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(context, frameState.mode, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog);
             command.renderState = renderState;
             command.primitiveType = PrimitiveType.TRIANGLES;
             command.vertexArray = surfaceTile.vertexArray;
