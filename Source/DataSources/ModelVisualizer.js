@@ -7,9 +7,11 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Matrix4',
+        '../Core/RuntimeError',
         '../Scene/Model',
         '../Scene/ModelAnimationLoop',
         './BoundingSphereState',
+        './ModelTransformProperty',
         './Property'
     ], function(
         AssociativeArray,
@@ -19,9 +21,11 @@ define([
         destroyObject,
         DeveloperError,
         Matrix4,
+        RuntimeError,
         Model,
         ModelAnimationLoop,
         BoundingSphereState,
+        ModelTransformProperty,
         Property) {
     "use strict";
     /*global console*/
@@ -56,6 +60,8 @@ define([
         this._entitiesToVisualize = new AssociativeArray();
         this._modelMatrixScratch = new Matrix4();
         this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
+        this._originalNodeMatrixHash = {};
+        this._nodeMatrixScratch = new Matrix4();
     };
 
     /**
@@ -77,6 +83,7 @@ define([
         var modelHash = this._modelHash;
         var primitives = this._primitives;
         var scene = this._scene;
+        var originalNodeMatrixHash = this._originalNodeMatrixHash;
 
         for (var i = 0, len = entities.length; i < len; i++) {
             var entity = entities[i];
@@ -117,7 +124,8 @@ define([
 
                 modelData = {
                     modelPrimitive : model,
-                    uri : uri
+                    uri : uri,
+                    animationsRunning : false
                 };
                 modelHash[entity.id] = modelData;
             }
@@ -126,6 +134,47 @@ define([
             model.scale = Property.getValueOrDefault(modelGraphics._scale, time, defaultScale);
             model.minimumPixelSize = Property.getValueOrDefault(modelGraphics._minimumPixelSize, time, defaultMinimumPixelSize);
             model.modelMatrix = Matrix4.clone(modelMatrix, model.modelMatrix);
+
+            var runAnimations = Property.getValueOrDefault(modelGraphics._runAnimations, time, true);
+            if (model.ready && modelData.animationsRunning !== runAnimations) {
+                if (runAnimations === true) {
+                    model.activeAnimations.addAll({
+                        loop : ModelAnimationLoop.REPEAT
+                    });
+                    modelData.animationsRunning = true;
+                }
+                else {
+                    model.activeAnimations.removeAll();
+                    modelData.animationsRunning = false;
+                }
+            }
+
+            // Apply node transformations
+            var nodeTransformations = Property.getValueOrDefault(modelGraphics._nodeTransformations, time, undefined);
+            if (defined(nodeTransformations) && model.ready === true) {
+
+                var nodeNames = Object.keys(nodeTransformations);
+                var length = nodeNames.length;
+                for (var j = 0; j < length; j++) {
+                    var nodeName = nodeNames[j];
+                    var transformation = nodeTransformations[nodeName];
+
+                    var modelNode = model.getNode(nodeName);
+                    if (defined(modelNode)) {
+                        var transformResult = transformation.getValue(time);
+
+                        var originalNodeMatrix = originalNodeMatrixHash[nodeName];
+                        if (!defined(originalNodeMatrix)) {
+
+                            originalNodeMatrix = originalNodeMatrixHash[nodeName] = modelNode.matrix.clone();
+                        }
+
+                        var transformMtx = Matrix4.fromTranslationQuaternionRotationScale(transformResult.translate, transformResult.rotate, transformResult.scale, this._nodeMatrixScratch);
+                        modelNode.matrix = Matrix4.multiply(originalNodeMatrix, transformMtx, transformMtx);
+                    }
+                }
+            }
+
         }
         return true;
     };
@@ -235,9 +284,7 @@ define([
     }
 
     function onModelReady(model) {
-        model.activeAnimations.addAll({
-            loop : ModelAnimationLoop.REPEAT
-        });
+
     }
 
     function onModelError(error) {

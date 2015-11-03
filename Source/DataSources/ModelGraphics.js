@@ -5,14 +5,16 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createPropertyDescriptor'
+        './createPropertyDescriptor',
+        './createRawPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createPropertyDescriptor) {
+        createPropertyDescriptor,
+        createRawPropertyDescriptor) {
     "use strict";
 
     /**
@@ -31,6 +33,7 @@ define([
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the model.
      * @param {Property} [options.scale=1.0] A numeric Property specifying a uniform linear scale.
      * @param {Property} [options.minimumPixelSize=0.0] A numeric Property specifying the approximate minimum pixel size of the model regardless of zoom.
+     * @param {Property} [options.runAnimations=true] A boolean Property specifying if glTF animations specified in the model should be started.
      *
      * @see {@link http://cesiumjs.org/2014/03/03/Cesium-3D-Models-Tutorial/|3D Models Tutorial}
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
@@ -44,6 +47,10 @@ define([
         this._minimumPixelSizeSubscription = undefined;
         this._uri = undefined;
         this._uriSubscription = undefined;
+        this._runAnimations = undefined;
+        this._runAnimationsSubscription = undefined;
+        this._nodeTransformations = undefined;
+        this._nodeTransformationsSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -96,7 +103,22 @@ define([
          * @memberof ModelGraphics.prototype
          * @type {Property}
          */
-        uri : createPropertyDescriptor('uri')
+        uri : createPropertyDescriptor('uri'),
+
+        /**
+         * Gets or sets the boolean Property specifying if glTF animations should be run.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         * @default true
+         */
+        runAnimations : createPropertyDescriptor('runAnimations'),
+
+        /**
+         * Gets or sets the object Property specifying the 3D transformations to apply to glTF asset nodes.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         */
+        nodeTransformations : createPropertyDescriptor('nodeTransformations')
     });
 
     /**
@@ -113,6 +135,9 @@ define([
         result.scale = this.scale;
         result.minimumPixelSize = this.minimumPixelSize;
         result.uri = this.uri;
+        result.runAnimations = this.runAnimations;
+        result.nodeTransformations = this.nodeTransformations;
+
         return result;
     };
 
@@ -133,6 +158,8 @@ define([
         this.scale = defaultValue(this.scale, source.scale);
         this.minimumPixelSize = defaultValue(this.minimumPixelSize, source.minimumPixelSize);
         this.uri = defaultValue(this.uri, source.uri);
+        this.runAnimations = defaultValue(this.runAnimations, source.runAnimations);
+        this.nodeTransformations = defaultValue(this.nodeTransformations, source.nodeTransformations);
     };
 
     return ModelGraphics;

@@ -4,12 +4,15 @@ defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/JulianDate',
+        'Core/Matrix4',
+        'Core/Quaternion',
         'Core/Transforms',
         'DataSources/BoundingSphereState',
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
         'DataSources/EntityCollection',
         'DataSources/ModelGraphics',
+        'DataSources/ModelTransformProperty',
         'Scene/Globe',
         'Specs/createScene',
         'Specs/pollToPromise'
@@ -18,12 +21,15 @@ defineSuite([
         BoundingSphere,
         Cartesian3,
         JulianDate,
+        Matrix4,
+        Quaternion,
         Transforms,
         BoundingSphereState,
         ConstantPositionProperty,
         ConstantProperty,
         EntityCollection,
         ModelGraphics,
+        ModelTransformProperty,
         Globe,
         createScene,
         pollToPromise) {
@@ -112,6 +118,18 @@ defineSuite([
         model.minimumPixelSize = new ConstantProperty(24.0);
         model.uri = new ConstantProperty(boxUrl);
 
+        var scale = new Cartesian3(2.0, 2.0, 2.0);
+        var translate = new Cartesian3(1.0, 2.0, 3.0);
+        var rotate = new Quaternion(0.0, 0.707, 0.0, 0.707);
+        var nodeTransforms = {
+            Mesh : new ModelTransformProperty({
+                scale : new ConstantProperty(scale),
+                translate : new ConstantProperty(translate),
+                rotate : new ConstantProperty(rotate)
+            })
+        };
+        model.nodeTransformations = nodeTransforms;
+
         var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantPositionProperty(Cartesian3.fromDegrees(1, 2, 3));
         testObject.model = model;
@@ -126,6 +144,19 @@ defineSuite([
         expect(primitive.scale).toEqual(2);
         expect(primitive.minimumPixelSize).toEqual(24.0);
         expect(primitive.modelMatrix).toEqual(Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(1, 2, 3), scene.globe.ellipsoid));
+
+        // wait till the model is loaded before we can check node transformations
+        return pollToPromise(function() {
+            scene.render();
+            return primitive.ready !== false;
+        }).then(function() {
+            visualizer.update(time);
+            var node = primitive.getNode('Mesh');
+            expect(node).toBeDefined();
+
+            var transformMtx = Matrix4.fromTranslationQuaternionRotationScale(translate, rotate, scale);
+            expect(node.matrix).toEqual(transformMtx);
+        });
     });
 
     it('removing removes primitives.', function() {

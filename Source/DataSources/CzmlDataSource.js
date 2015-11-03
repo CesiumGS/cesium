@@ -51,6 +51,7 @@ define([
         './ImageMaterialProperty',
         './LabelGraphics',
         './ModelGraphics',
+        './ModelTransformProperty',
         './PathGraphics',
         './PointGraphics',
         './PolygonGraphics',
@@ -120,6 +121,7 @@ define([
         ImageMaterialProperty,
         LabelGraphics,
         ModelGraphics,
+        ModelTransformProperty,
         PathGraphics,
         PointGraphics,
         PolygonGraphics,
@@ -376,6 +378,8 @@ define([
             return unwrapUriInterval(czmlInterval, sourceUri);
         case VerticalOrigin:
             return VerticalOrigin[defaultValue(czmlInterval.verticalOrigin, czmlInterval)];
+        case ModelTransformProperty:
+            return unwrapModelNodeTransformations(czmlInterval);
         default:
             throw new RuntimeError(type);
         }
@@ -1178,6 +1182,38 @@ define([
         processPacketData(Number, model, 'scale', modelData.scale, interval, sourceUri, entityCollection);
         processPacketData(Number, model, 'minimumPixelSize', modelData.minimumPixelSize, interval, sourceUri, entityCollection);
         processPacketData(Uri, model, 'uri', modelData.gltf, interval, sourceUri, entityCollection);
+        processPacketData(ModelTransformProperty, model, 'nodeTransformations', modelData.nodeTransformations, interval, sourceUri, entityCollection);
+    }
+
+    function unwrapModelNodeTransformations(czmlInterval) {
+        var nodeTransformationsResult;
+
+        if (!defined(czmlInterval)) {
+            return nodeTransformationsResult;
+        }
+
+        var nodeNames = Object.keys(czmlInterval);
+
+        var length = nodeNames.length;
+        for (var i = 0; i < length; i++) {
+            var nodeName = nodeNames[i];
+            var node = czmlInterval[nodeName];
+
+            if (!defined(nodeTransformationsResult)) {
+                nodeTransformationsResult = {};
+            }
+
+            var nodeTransform = nodeTransformationsResult[nodeName];
+            if (!defined(nodeTransform)) {
+                nodeTransformationsResult[nodeName] = nodeTransform = new ModelTransformProperty();
+            }
+
+            processPacketData(Cartesian3, nodeTransform, 'scale', node.scale, undefined, undefined, undefined);
+            processPacketData(Cartesian3, nodeTransform, 'translate', node.translation, undefined, undefined, undefined);
+            processPacketData(Quaternion, nodeTransform, 'rotate', node.rotation, undefined, undefined, undefined);
+        }
+
+        return nodeTransformationsResult;
     }
 
     function processPath(entity, packet, entityCollection, sourceUri) {
@@ -1626,8 +1662,7 @@ define([
      * @memberof CzmlDataSource
      * @type Array
      */
-    CzmlDataSource.updaters = [
-    processBillboard, //
+    CzmlDataSource.updaters = [processBillboard, //
     processEllipse, //
     processEllipsoid, //
     processLabel, //
