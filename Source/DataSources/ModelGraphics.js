@@ -97,7 +97,9 @@ define([
         /**
          * Gets or sets the numeric Property specifying the maximum scale
          * size of a model. This property is used as an upper limit for 
-         * minimumPixelSize.
+         * {@link ModelGraphics#minimumPixelSize}.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
          */
         maximumScale : createPropertyDescriptor('maximumScale'),
 

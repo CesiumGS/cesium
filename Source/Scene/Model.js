@@ -418,13 +418,12 @@ define([
 
         /**
          * The maximum scale size for a model. This can be used to give 
-         * an upper limit to the minimumPixelSize, ensuring that the model
+         * an upper limit to the {@link Model#minimumPixelSize}, ensuring that the model
          * is never an unreasonable scale.
-
          * 
          * @type {Number}
          */
-        this.maximumScale = defaultValue(options.maximumScale, null);
+        this.maximumScale = options.maximumScale;
         this._maximumScale = this.maximumScale;
 
         /**
@@ -2880,7 +2879,7 @@ define([
             }
         }
 
-        return (model.maximumScale && model.maximumScale < scale) ? model.maximumScale : scale;
+        return defined(model.maximumScale) ? Math.min(model.maximumScale, scale) : scale;
     }
 
     function releaseCachedGltf(model) {
