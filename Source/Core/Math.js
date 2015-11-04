@@ -780,6 +780,9 @@ define([
         return 2.0 * radius * Math.sin(angle * 0.5);
     };
 
+    /**
+     * @private
+     */
     CesiumMath.fog = function(distanceToCamera, density) {
         var scalar = distanceToCamera * density;
         return 1.0 - Math.exp(-(scalar * scalar));
