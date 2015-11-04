@@ -136,9 +136,11 @@ define([
          */
         this.scene3DOnly = false;
 
-        this.fogEnabled = true;
-        this.fogDensity = undefined;
-        this.fogSSE = undefined;
+        this.fog = {
+            enabled : true,
+            density : undefined,
+            sse : undefined
+        };
     };
 
     /**

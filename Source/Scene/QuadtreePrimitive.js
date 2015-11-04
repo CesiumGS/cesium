@@ -442,9 +442,7 @@ define([
 
         var maxGeometricError = primitive._tileProvider.getLevelMaximumGeometricError(tile.level);
 
-        var distance = primitive._tileProvider.computeDistanceToTile(tile, frameState);
-        tile._distance = distance;
-
+        var distance = tile._distance;
         var height = frameState.context.drawingBufferHeight;
 
         var camera = frameState.camera;

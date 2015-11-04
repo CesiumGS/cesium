@@ -440,9 +440,11 @@ define([
      * @returns {Visibility} The visibility of the tile.
      */
     GlobeSurfaceTileProvider.prototype.computeTileVisibility = function(tile, frameState, occluders) {
-        if (frameState.fogEnabled) {
-            var distance = this.computeDistanceToTile(tile, frameState);
-            if (CesiumMath.fog(distance, frameState.fogDensity) >= 1.0) {
+        var distance = this.computeDistanceToTile(tile, frameState);
+        tile._distance = distance;
+
+        if (frameState.fog.enabled) {
+            if (CesiumMath.fog(distance, frameState.fog.density) >= 1.0) {
                 // Tile is completely in fog so return that it is not visible.
                 return Visibility.NONE;
             }
@@ -938,7 +940,7 @@ define([
         var oceanNormalMap = tileProvider.oceanNormalMap;
         var showOceanWaves = showReflectiveOcean && defined(oceanNormalMap);
         var hasVertexNormals = tileProvider.terrainProvider.ready && tileProvider.terrainProvider.hasVertexNormals;
-        var enableFog = frameState.fogEnabled;
+        var enableFog = frameState.fog.enabled;
 
         if (showReflectiveOcean) {
             --maxTextures;
