@@ -507,7 +507,7 @@ define([
 
         this.fog = {
             enabled : true,
-            density : 0.001,
+            density : 2.0e-4,
             screenSpaceErrorFactor : 2.0
         };
 
@@ -961,9 +961,8 @@ define([
         return undefined;
     }
 
-    var heightsTable = [0.659246, 1.2756501, 2.1511192, 3.1417763, 4.7775198, 6.2812493, 12.364307, 15.900765, 49.8890549, 78.0268259, 99.2607344, 120.0363873, 151.0110158, 156.0911953, 203.8493112, 274.8669803, 319.9163149, 493.5520528, 628.7335874, 1027.505709];
-    var densityTable = [0.2, 0.1, 0.07, 0.05, 0.04, 0.03, 0.019, 0.01, 0.0085, 0.0062, 0.0058, 0.0053, 0.0052, 0.0051, 0.0042, 0.004, 0.0034, 0.0026, 0.0022, 0.0016];
-
+    var heightsTable = [659.246, 1275.6501, 2151.1192, 3141.7763, 4777.5198, 6281.2493, 12364.307, 15900.765, 49889.0549, 78026.8259, 99260.7344, 120036.3873, 151011.0158, 156091.1953, 203849.3112, 274866.9803, 319916.3149, 493552.0528, 628733.5874, 1027505.709];
+    var densityTable = [2.0e-4, 1.0e-4, 7.0e-5, 5.0e-5, 4.0e-5, 3.0e-5, 1.9e-5, 1.0e-5, 8.5e-6, 6.2e-6, 5.8e-6, 5.3e-6, 5.2e-6, 5.1e-6, 4.2e-6, 4.0e-6, 3.4e-6, 2.6e-6, 2.2e-6, 1.6e-6];
 
     // TODO: clean up, used from spline
     // TODO: temporal coherence
@@ -1028,10 +1027,9 @@ define([
         var fog = scene.fog;
         var enabled = frameState.fogEnabled = fog.enabled;
         if (enabled) {
-            height = height / 1000.0;
             var i = findInterval(height);
             var t = (height - heightsTable[i]) / (heightsTable[i + 1] - heightsTable[i]);
-            var density = CesiumMath.lerp(densityTable[i], densityTable[i + 1], t) / 1000.0;
+            var density = CesiumMath.lerp(densityTable[i], densityTable[i + 1], t);
             frameState.fogDensity = density;
             frameState.fogSSE = fog.screenSpaceErrorFactor;
         }
