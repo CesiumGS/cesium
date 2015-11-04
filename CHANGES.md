@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.16 - 2015-12-01
+
+* Entities have a reference to their entity collection.
+* Entity collections have a reference to their owner (usually a data source, but can be a `CompositeEntityCollection`).
+
 ### 1.15 - 2015-11-02
 
 * Breaking changes
