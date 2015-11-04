@@ -179,6 +179,7 @@ define([
         this._maximumLevel = options.maximumLevel;
         this._minimumRetrievingLevel = defaultValue(options.minimumRetrievingLevel, 0);
         this._maximumRetrievingLevel = defaultValue(options.maximumRetrievingLevel, Infinity);
+        this._availableLevels = options.availableLevels;
         this._tilingScheme = defaultValue(options.tilingScheme, new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid }));
         this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
         this._rectangle = Rectangle.intersection(this._rectangle, this._tilingScheme.rectangle);
@@ -192,6 +193,43 @@ define([
 
         this._urlParts = urlTemplateToParts(this._url, tags);
         this._pickFeaturesUrlParts = urlTemplateToParts(this._pickFeaturesUrl, pickFeaturesTags);
+
+        // Load metadata
+        this._ready = !options.metadataUrl;
+        if (!this._ready) {
+            var metadataUrl = options.metadataUrl + 'layer.json';
+
+            if (defined(this._proxy)) {
+                metadataUrl = this._proxy.getURL(metadataUrl);
+            }
+
+            var that = this;
+            var metadataError;
+
+            var metadataSuccess = function(data) {
+                that._availableTiles = data.available;
+
+                for (var i = 0; i < that._availableTiles.length; i++) {
+                    if (that._availableLevels && that._availableLevels.indexOf(i) === -1) {
+                      that._availableTiles[i] = [];
+                    }
+                }
+                that._ready = true;
+            }
+
+            var metadataFailure = function(data) {
+                that._ready = true;
+                var message = 'An error occurred while accessing ' + metadataUrl + '.';
+                metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+            }
+
+            var requestMetadata = function() {
+                var metadata = loadJson(metadataUrl);
+                when(metadata, metadataSuccess, metadataFailure);
+            }
+
+            requestMetadata();
+       }
     };
 
     defineProperties(UrlTemplateImageryProvider.prototype, {
@@ -386,7 +424,7 @@ define([
          */
         ready : {
             get : function() {
-                return true;
+                return this._ready;
             }
         },
 
@@ -436,6 +474,32 @@ define([
         return undefined;
     };
 
+    /**
+     * Determines whether data for a tile is available to be loaded.
+     *
+     * @param {Number} x The X coordinate of the tile for which to request geometry.
+     * @param {Number} y The Y coordinate of the tile for which to request geometry.
+     * @param {Number} level The level of the tile for which to request geometry.
+     * @returns {Boolean} Undefined if not supported, otherwise true or false.
+     */
+    UrlTemplateImageryProvider.prototype.getTileDataAvailable = function(x, y, level) {
+        var available = this._availableTiles;
+        if (!available || available.length === 0) {
+            if (this._availableLevels && this._availableLevels.indexOf(level) === -1) {
+                return false;
+            }
+            return true;
+        } else {
+            if (level >= available.length) {
+                return false;
+            }
+            var levelAvailable = available[level];
+            var yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
+            var tmsY = (yTiles - y - 1);
+            return isTileInRange(levelAvailable, x, tmsY);
+        }
+    };
+
     UrlTemplateImageryProvider.transparentCanvas = (function() {
       var canvas = document.createElement('canvas');
       var ctx = canvas.getContext('2d');
@@ -459,9 +523,11 @@ define([
      *          Image or a Canvas DOM object.
      */
     UrlTemplateImageryProvider.prototype.requestImage = function(x, y, level) {
-        if (level < this._minimumRetrievingLevel || level > this._maximumRetrievingLevel) {
+        if (level < this._minimumRetrievingLevel || level > this._maximumRetrievingLevel ||
+                !this.getTileDataAvailable(x, y, level)) {
             return UrlTemplateImageryProvider.transparentCanvas;
         }
+
         var url = buildImageUrl(this, x, y, level);
         return ImageryProvider.loadImage(this, url);
     };
@@ -823,6 +889,19 @@ define([
         '{latitudeProjected}' : latitudeProjectedTag,
         '{format}' : formatTag
     });
+
+
+
+    function isTileInRange(levelAvailable, x, y) {
+        for (var i = 0, len = levelAvailable.length; i < len; ++i) {
+            var range = levelAvailable[i];
+            if (x >= range.startX && x <= range.endX && y >= range.startY && y <= range.endY) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     return UrlTemplateImageryProvider;
 });

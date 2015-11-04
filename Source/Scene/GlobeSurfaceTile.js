@@ -318,7 +318,7 @@ define([
 
         // If this tile's terrain and imagery are just upsampled from its parent, mark the tile as
         // upsampled only.  We won't refine a tile if its four children are upsampled only.
-        var isUpsampledOnly = defined(surfaceTile.terrainData) && surfaceTile.terrainData.wasCreatedByUpsampling();
+        var isUpsampledOnly = false;//defined(surfaceTile.terrainData) && surfaceTile.terrainData.wasCreatedByUpsampling();
 
         // Transition imagery states
         var tileImageryCollection = surfaceTile.imagery;
@@ -354,7 +354,6 @@ define([
             isUpsampledOnly = isUpsampledOnly && defined(tileImagery.loadingImagery) &&
                              (tileImagery.loadingImagery.state === ImageryState.FAILED || tileImagery.loadingImagery.state === ImageryState.INVALID);
         }
-
         tile.upsampledFromParent = isUpsampledOnly;
 
         // The tile becomes renderable when the terrain and all imagery data are loaded.

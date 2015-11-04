@@ -47,9 +47,13 @@ define([
     TileImagery.prototype.processStateMachine = function(tile, context, commandList) {
         var loadingImagery = this.loadingImagery;
         var imageryLayer = loadingImagery.imageryLayer;
-
-        loadingImagery.processStateMachine(context, commandList);
-
+        var imageryProvider = loadingImagery.imageryLayer.imageryProvider;
+        if (!defined(imageryProvider.getTileDataAvailable) ||
+                imageryProvider.getTileDataAvailable(tile.x, tile.y, tile.level)) {
+            loadingImagery.processStateMachine(context, commandList);
+        } else {
+            loadingImagery.state = ImageryState.INVALID;
+        }
         if (loadingImagery.state === ImageryState.READY) {
             if (defined(this.readyImagery)) {
                 this.readyImagery.releaseReference();
