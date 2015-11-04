@@ -38,7 +38,6 @@ Change Log
 * Updated `requirejs` from 2.1.9 to 2.1.20. [#3107](https://github.com/AnalyticalGraphicsInc/cesium/pull/3107)
 * Updated `almond` from 0.2.6 to 0.3.1. [#3107](https://github.com/AnalyticalGraphicsInc/cesium/pull/3107)
 * Made `TileMapServiceImageryProvider` and `CesiumTerrainProvider` work properly when the provided base url contains query parameters and fragments.
-* Allow custom geoJson description function.
 
 ### 1.14 - 2015-10-01
 
