@@ -993,22 +993,10 @@ define([
 
         // The above failed so do a linear search.
         var i;
-        if (height > heights[tableLastIndex]) {
-            for (i = tableLastIndex; i < length - 1; ++i) {
-                if (height >= heights[i] && height < heights[i + 1]) {
-                    break;
-                }
+        for (i = 0; i < length - 2; ++i) {
+            if (height >= heights[i] && height < heights[i + 1]) {
+                break;
             }
-        } else {
-            for (i = tableLastIndex - 1; i >= 0; --i) {
-                if (height >= heights[i] && height < heights[i + 1]) {
-                    break;
-                }
-            }
-        }
-
-        if (i === length - 1) {
-            i = length - 2;
         }
 
         tableLastIndex = i;
