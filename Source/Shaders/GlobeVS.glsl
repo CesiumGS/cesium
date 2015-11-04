@@ -85,7 +85,7 @@ vec4 getPositionMorphingMode(vec3 position3DWC)
     vec4 morphPosition = czm_columbusViewMorph(position2DWC, vec4(position3DWC, 1.0), czm_morphTime);
     return czm_modelViewProjection * morphPosition;
 }
-    
+
 void main() 
 {
     vec3 position3DWC = position3DAndHeight.xyz + u_center3D;
@@ -102,7 +102,7 @@ void main()
     v_positionEC = (czm_modelView3D * vec4(position3DWC, 1.0)).xyz;
     v_positionMC = position3DWC;                                 // position in model coordinates
 #endif
-    
+
     v_textureCoordinates = textureCoordAndEncodedNormals.xy;
     
 #ifdef FOG
