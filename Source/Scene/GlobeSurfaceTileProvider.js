@@ -443,6 +443,7 @@ define([
         if (frameState.fogEnabled) {
             var distance = this.computeDistanceToTile(tile, frameState);
             if (CesiumMath.fog(distance, frameState.fogDensity) >= 1.0) {
+                // Tile is completely in fog so return that it is not visible.
                 return Visibility.NONE;
             }
         }
