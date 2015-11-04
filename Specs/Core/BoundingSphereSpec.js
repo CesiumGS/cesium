@@ -10,6 +10,7 @@ defineSuite([
         'Core/Interval',
         'Core/Math',
         'Core/Matrix4',
+        'Core/OrientedBoundingBox',
         'Core/Plane',
         'Core/Rectangle',
         'Specs/createPackableSpecs'
@@ -24,6 +25,7 @@ defineSuite([
         Interval,
         CesiumMath,
         Matrix4,
+        OrientedBoundingBox,
         Plane,
         Rectangle,
         createPackableSpecs) {
@@ -383,6 +385,23 @@ defineSuite([
 
         var expected = new BoundingSphere(new Cartesian3(0.0, 1.5, 2.0), 3.5);
         var sphere = BoundingSphere.fromBoundingSpheres([one, two, three]);
+        expect(sphere).toEqual(expected);
+    });
+
+    it('fromOrientedBoundingBox', function() {
+        var positions = [
+            new Cartesian3(2.0, 0.0, 0.0),
+            new Cartesian3(0.0, 3.0, 0.0),
+            new Cartesian3(0.0, 0.0, 4.0),
+            new Cartesian3(-2.0, 0.0, 0.0),
+            new Cartesian3(0.0, -3.0, 0.0),
+            new Cartesian3(0.0, 0.0, -4.0)
+        ];
+
+        var box = OrientedBoundingBox.fromPoints(positions);
+
+        var expected = new BoundingSphere(new Cartesian3(0, 0, 0), 4.0);
+        var sphere = BoundingSphere.fromOrientedBoundingBox(box);
         expect(sphere).toEqual(expected);
     });
 
