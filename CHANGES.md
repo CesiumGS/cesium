@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.16 - 2015-12-01
+
+* `GeoJsonDataSource.load` now takes an optional `describeProperty` function for generating feature description properties. [#3140](https://github.com/AnalyticalGraphicsInc/cesium/pull/3140)
+
 ### 1.15 - 2015-11-02
 
 * Breaking changes
