@@ -78,7 +78,9 @@ function viewRectangle() {
     var north = 42.0;
 
     var rectangle = Cesium.Rectangle.fromDegrees(west, south, east, north);
-    viewer.camera.viewRectangle(rectangle);
+    viewer.camera.setView({
+        destination: rectangle
+    });
 
     // Show the rectangle.  Not required; just for show.
     viewer.entities.add({
