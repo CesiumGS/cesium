@@ -1065,6 +1065,7 @@ define([
             uniformMap.southMercatorYAndOneOverHeight.y = oneOverMercatorHeight;
             Matrix4.clone(modifiedModelViewScratch, uniformMap.modifiedModelView);
 
+            // For performance, use fog in the shader only when the tile is in fog.
             var applyFog = enableFog && CesiumMath.fog(tile._distance, frameState.fogDensity) > CesiumMath.EPSILON3;
 
             var applyBrightness = false;
