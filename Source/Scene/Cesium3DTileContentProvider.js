@@ -32,7 +32,7 @@ define([
         DeveloperError.throwInstantiationError();
     };
 
-    Cesium3DTileContentProvider.prototype.init = function(arrayBuffer, byteOffset) {
+    Cesium3DTileContentProvider.prototype.initialize = function(arrayBuffer, byteOffset) {
         DeveloperError.throwInstantiationError();
     };
 

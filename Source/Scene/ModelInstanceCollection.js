@@ -111,11 +111,11 @@ define([
             batchTableResources = new Cesium3DTileBatchTableResources(this, length);
         }
         this._batchTableResources = batchTableResources;
-        this._pickPrimitive = options.pickPrimitive;
+        this._tileset = options.tileset;
 
         this._instances = new Array(length);
         for (var i = 0; i < length; ++i) {
-            this._instances[i] = new ModelInstance(instances[i], this, i, this._pickPrimitive);
+            this._instances[i] = new ModelInstance(instances[i], this, i, this._tileset);
         }
 
         this._model = undefined;
@@ -199,7 +199,7 @@ define([
     };
 
     ModelInstanceCollection.prototype.add = function(instance) {
-        var i = new ModelInstance(instance, this, this.length, this._pickPrimitive);
+        var i = new ModelInstance(instance, this, this.length, this._tileset);
         this._instances.push(i);
         this._vertexBufferDirty = true;
         this._createVertexBuffer = true;
@@ -780,7 +780,8 @@ define([
         }
 
         if (instancingSupported) {
-            this._batchTableResources.update(this, frameState);
+            var owner = defaultValue(this._tileset, this);
+            this._batchTableResources.update(owner, frameState);
         }
 
         var model = this._model;

@@ -7,10 +7,11 @@ define([
         '../Core/DeveloperError',
         '../Core/getStringFromTypedArray',
         '../Core/loadArrayBuffer',
+        './BatchedModel',
         './Cesium3DTileBatchTableResources',
         './Cesium3DTileContentState',
+        './getMagic',
         './Model',
-        './BatchedModel',
         '../ThirdParty/when'
     ], function(
         defaultValue,
@@ -20,10 +21,11 @@ define([
         DeveloperError,
         getStringFromTypedArray,
         loadArrayBuffer,
+        BatchedModel,
         Cesium3DTileBatchTableResources,
         Cesium3DTileContentState,
+        getMagic,
         Model,
-        BatchedModel,
         when) {
     "use strict";
 
@@ -107,11 +109,6 @@ define([
         return this._models[batchId];
     };
 
-    // TODO: move this and the copy in Model.js to an overload for getStringFromTypedArray
-    function getSubarray(array, offset, length) {
-        return array.subarray(offset, offset + length);
-    }
-
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
     /**
@@ -125,7 +122,7 @@ define([
         this.state = Cesium3DTileContentState.LOADING;
 
         loadArrayBuffer(this._url). then(function(arrayBuffer) {
-            that.init(arrayBuffer);
+            that.initialize(arrayBuffer);
         }).otherwise(function(error) {
             that.state = Cesium3DTileContentState.FAILED;
             that.readyPromise.reject(error);
@@ -135,11 +132,11 @@ define([
     /**
      * DOC_TBA
      */
-    Batched3DModel3DTileContentProvider.prototype.init = function(arrayBuffer, byteOffset) {
+    Batched3DModel3DTileContentProvider.prototype.initialize = function(arrayBuffer, byteOffset) {
         byteOffset = defaultValue(byteOffset, 0);
 
         var uint8Array = new Uint8Array(arrayBuffer);
-        var magic = getStringFromTypedArray(getSubarray(uint8Array, byteOffset, Math.min(4, uint8Array.length)));
+        var magic = getMagic(uint8Array, byteOffset);
         if (magic !== 'b3dm') {
             throw new DeveloperError('Invalid Batched 3D Model.  Expected magic=b3dm.  Read magic=' + magic);
         }
@@ -169,7 +166,7 @@ define([
         var batchTableLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
         if (batchTableLength > 0) {
-            var batchTableString = getStringFromTypedArray(getSubarray(uint8Array, byteOffset, batchTableLength));
+            var batchTableString = getStringFromTypedArray(uint8Array, byteOffset, batchTableLength);
             byteOffset += batchTableLength;
 
             // PERFORMANCE_IDEA: is it possible to allocate this on-demand?  Perhaps keep the

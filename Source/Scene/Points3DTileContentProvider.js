@@ -69,17 +69,18 @@ define([
         this.state = Cesium3DTileContentState.LOADING;
 
         loadArrayBuffer(this._url).then(function(arrayBuffer) {
-            that.init(arrayBuffer);
+            that.initialize(arrayBuffer);
         }).otherwise(function(error) {
             that.state = Cesium3DTileContentState.FAILED;
             that.readyPromise.reject(error);
         });
     };
 
-    Points3DTileContentProvider.prototype.init = function(arrayBuffer, byteOffset) {
+    Points3DTileContentProvider.prototype.initialize = function(arrayBuffer, byteOffset) {
         byteOffset = defaultValue(byteOffset, 0);
 
-        var magic = getMagic(arrayBuffer, byteOffset);
+        var uint8Array = new Uint8Array(arrayBuffer);
+        var magic = getMagic(uint8Array, byteOffset);
         if (magic !== 'pnts') {
             throw new DeveloperError('Invalid Points tile.  Expected magic=pnts.  Read magic=' + magic);
         }

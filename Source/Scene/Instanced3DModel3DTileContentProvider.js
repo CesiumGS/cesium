@@ -11,6 +11,7 @@ define([
         '../Core/Transforms',
         './Cesium3DTileBatchTableResources',
         './Cesium3DTileContentState',
+        './getMagic',
         './ModelInstanceCollection',
         '../ThirdParty/Uri',
         '../ThirdParty/when'
@@ -26,6 +27,7 @@ define([
         Transforms,
         Cesium3DTileBatchTableResources,
         Cesium3DTileContentState,
+        getMagic,
         ModelInstanceCollection,
         Uri,
         when) {
@@ -69,10 +71,6 @@ define([
     // Coordinates are in double precision, batchId is a short
     var instanceSizeInBytes = sizeOfFloat64 * 2 + sizeOfUint16;
 
-    function getSubarray(array, offset, length) {
-        return array.subarray(offset, offset + length);
-    }
-
     /**
      * DOC_TBA
      *
@@ -84,7 +82,7 @@ define([
         this.state = Cesium3DTileContentState.LOADING;
 
         loadArrayBuffer(this._url).then(function(arrayBuffer) {
-            that.init(arrayBuffer);
+            that.initialize(arrayBuffer);
         }).otherwise(function(error) {
             that.state = Cesium3DTileContentState.FAILED;
             that.readyPromise.reject(error);
@@ -94,11 +92,11 @@ define([
     /**
      * DOC_TBA
      */
-    Instanced3DModel3DTileContentProvider.prototype.init = function(arrayBuffer, byteOffset) {
+    Instanced3DModel3DTileContentProvider.prototype.initialize = function(arrayBuffer, byteOffset) {
         byteOffset = defaultValue(byteOffset, 0);
 
         var uint8Array = new Uint8Array(arrayBuffer);
-        var magic = getStringFromTypedArray(getSubarray(uint8Array, byteOffset, Math.min(4, uint8Array.byteLength)));
+        var magic = getMagic(uint8Array, byteOffset);
         if (magic !== 'i3dm') {
             throw new DeveloperError('Invalid Instanced 3D Model. Expected magic=i3dm. Read magic=' + magic);
         }
@@ -132,7 +130,7 @@ define([
         var batchTableResources = new Cesium3DTileBatchTableResources(this, instancesLength);
         this._batchTableResources = batchTableResources;
         if (batchTableLength > 0) {
-            var batchTableString = getStringFromTypedArray(getSubarray(uint8Array, byteOffset, batchTableLength));
+            var batchTableString = getStringFromTypedArray(uint8Array, byteOffset, batchTableLength);
             batchTableResources.batchTable = JSON.parse(batchTableString);
             byteOffset += batchTableLength;
         }
@@ -149,7 +147,7 @@ define([
             instances : new Array(instancesLength),
             batchTableResources : batchTableResources,
             boundingVolume : this._boundingVolume,
-            pickPrimitive : this._tileset,
+            tileset : this._tileset,
             cull : false,
             url : undefined,
             headers : undefined,

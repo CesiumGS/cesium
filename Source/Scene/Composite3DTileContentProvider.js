@@ -2,18 +2,20 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/getStringFromTypedArray',
         '../Core/loadArrayBuffer',
         './Cesium3DTileContentState',
+        './getMagic',
         '../ThirdParty/when'
     ], function(
         defaultValue,
         defined,
+        destroyObject,
         DeveloperError,
-        getStringFromTypedArray,
         loadArrayBuffer,
         Cesium3DTileContentState,
+        getMagic,
         when) {
     "use strict";
 
@@ -45,10 +47,6 @@ define([
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
-    function getSubarray(array, offset, length) {
-        return array.subarray(offset, offset + length);
-    }
-
     /**
      * DOC_TBA
      *
@@ -60,7 +58,7 @@ define([
         this.state = Cesium3DTileContentState.LOADING;
 
         loadArrayBuffer(this._url).then(function(arrayBuffer) {
-            that.init(arrayBuffer);
+            that.initialize(arrayBuffer);
         }).otherwise(function(error) {
             that.state = Cesium3DTileContentState.FAILED;
             that.readyPromise.reject(error);
@@ -70,11 +68,11 @@ define([
     /**
      * DOC_TBA
      */
-    Composite3DTileContentProvider.prototype.init = function(arrayBuffer, byteOffset) {
+    Composite3DTileContentProvider.prototype.initialize = function(arrayBuffer, byteOffset) {
         byteOffset = defaultValue(byteOffset, 0);
 
         var uint8Array = new Uint8Array(arrayBuffer);
-        var magic = getStringFromTypedArray(getSubarray(uint8Array, byteOffset, Math.min(4, uint8Array.byteLength)));
+        var magic = getMagic(uint8Array, byteOffset);
         if (magic !== 'cmpt') {
             throw new DeveloperError('Invalid Composite Tile. Expected magic=cmpt. Read magic=' + magic);
         }
@@ -104,8 +102,20 @@ define([
 
         var that = this;
 
+        function tileLoaded(content) {
+            if (--tilesToLoad === 0) {
+                that.state = Cesium3DTileContentState.READY;
+                that.readyPromise.resolve(that);
+            }
+        }
+
+        function tileFailed(error) {
+            that.state = Cesium3DTileContentState.FAILED;
+            that.readyPromise.reject(error);
+        }
+
         for (var i = 0; i < tilesLength; ++i) {
-            var tileType = getStringFromTypedArray(getSubarray(uint8Array, byteOffset, 4));
+            var tileType = getMagic(uint8Array, byteOffset);
 
             // Tile byte length is stored after magic and version
             var tileByteLength = view.getUint32(byteOffset + sizeOfUint32 * 2, true);
@@ -114,18 +124,9 @@ define([
 
             if (defined(contentFactory)) {
                 var content = contentFactory(this._tileset, this._tile, this._url);
-                content.init(arrayBuffer, byteOffset);
+                content.initialize(arrayBuffer, byteOffset);
                 this._contentProviders.push(content);
-
-                when(content.readyPromise).then(function(content) {
-                    if (--tilesToLoad === 0) {
-                        that.state = Cesium3DTileContentState.READY;
-                        that.readyPromise.resolve(that);
-                    }
-                }).otherwise(function(error) {
-                    that.state = Cesium3DTileContentState.FAILED;
-                    that.readyPromise.reject(error);
-                });
+                when(content.readyPromise).then(tileLoaded).otherwise(tileFailed);
             } else {
                 throw new DeveloperError('Unknown tile content type, ' + tileType + ', inside Composite tile');
             }
