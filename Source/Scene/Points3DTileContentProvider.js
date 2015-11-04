@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Color',
         '../Core/defaultValue',
@@ -8,7 +9,6 @@ define([
         '../Core/DeveloperError',
         '../Core/GeometryInstance',
         '../Core/loadArrayBuffer',
-        '../Core/OrientedBoundingBox',
         '../Core/PointGeometry',
         './Cesium3DTileContentState',
         './getMagic',
@@ -16,6 +16,7 @@ define([
         './Primitive',
         '../ThirdParty/when'
     ], function(
+        BoundingSphere,
         Cartesian3,
         Color,
         defaultValue,
@@ -24,7 +25,6 @@ define([
         DeveloperError,
         GeometryInstance,
         loadArrayBuffer,
-        OrientedBoundingBox,
         PointGeometry,
         Cesium3DTileContentState,
         getMagic,
@@ -55,7 +55,7 @@ define([
          */
         this.readyPromise = when.defer();
 
-        this.boundingSphere = OrientedBoundingBox.toBoundingSphere(tile.orientedBoundingBox);
+        this.boundingSphere = BoundingSphere.fromOrientedBoundingBox(tile.orientedBoundingBox);
 
         this._debugColor = Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;
