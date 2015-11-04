@@ -88,6 +88,7 @@ defineSuite([
         }));
         modelPromises.push(loadModel(cesiumAirUrl, {
             minimumPixelSize : 1,
+            maximumScale : 200,
             asynchronous : false
         }).then(function(model) {
             cesiumAirModel = model;
@@ -126,6 +127,7 @@ defineSuite([
             show : false,
             scale : options.scale,
             minimumPixelSize : options.minimumPixelSize,
+            maximumScale : options.maximumScale,
             id : url,        // for picking tests
             asynchronous : options.asynchronous,
             releaseGltfJson : options.releaseGltfJson,
@@ -172,6 +174,7 @@ defineSuite([
        expect(texturedBoxModel.modelMatrix).toEqual(modelMatrix);
        expect(texturedBoxModel.scale).toEqual(1.0);
        expect(texturedBoxModel.minimumPixelSize).toEqual(0.0);
+       expect(texturedBoxModel.maximumScale).toBeUndefined();
        expect(texturedBoxModel.id).toEqual(texturedBoxUrl);
        expect(texturedBoxModel.allowPicking).toEqual(true);
        expect(texturedBoxModel.activeAnimations).toBeDefined();
@@ -448,6 +451,20 @@ defineSuite([
         texturedBoxModel.scale = originalScale;
     });
 
+    it('boundingSphere returns the bounding sphere when maximumScale is reached', function() {
+        var originalScale = texturedBoxModel.scale;
+        var originalMaximumScale = texturedBoxModel.maximumScale;
+        texturedBoxModel.scale = 20;
+        texturedBoxModel.maximumScale = 10;
+
+        var boundingSphere = texturedBoxModel.boundingSphere;
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.0, -2.5, 0.0), CesiumMath.EPSILON3);
+        expect(boundingSphere.radius).toEqualEpsilon(7.5, CesiumMath.EPSILON3);
+
+        texturedBoxModel.scale = originalScale;
+        texturedBoxModel.maximumScale = originalMaximumScale;
+    });
+
     it('boundingSphere returns the bounding sphere when modelMatrix has non-uniform scale', function() {
         var originalMatrix = Matrix4.clone(texturedBoxModel.modelMatrix);
         Matrix4.multiplyByScale(texturedBoxModel.modelMatrix, new Cartesian3(2, 5, 10), texturedBoxModel.modelMatrix);
@@ -672,6 +689,7 @@ defineSuite([
 
     it('loads cesiumAir', function() {
         expect(cesiumAirModel.minimumPixelSize).toEqual(1);
+        expect(cesiumAirModel.maximumScale).toEqual(200);
         expect(cesiumAirModel.asynchronous).toEqual(false);
     });
 
