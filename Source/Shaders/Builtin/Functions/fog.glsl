@@ -4,7 +4,7 @@
  * @name czm_fog
  * @glslFunction
  * 
- * @param {float} distanceToCamera The distance to the camera.
+ * @param {float} distanceToCamera The distance to the camera in meters.
  * @param {vec3} color The original color.
  * @param {vec3} fogColor The color of the fog.
  *
