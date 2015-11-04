@@ -963,46 +963,44 @@ define([
 
     var heightsTable = [659.246, 1275.6501, 2151.1192, 3141.7763, 4777.5198, 6281.2493, 12364.307, 15900.765, 49889.0549, 78026.8259, 99260.7344, 120036.3873, 151011.0158, 156091.1953, 203849.3112, 274866.9803, 319916.3149, 493552.0528, 628733.5874, 1027505.709];
     var densityTable = [2.0e-4, 1.0e-4, 7.0e-5, 5.0e-5, 4.0e-5, 3.0e-5, 1.9e-5, 1.0e-5, 8.5e-6, 6.2e-6, 5.8e-6, 5.3e-6, 5.2e-6, 5.1e-6, 4.2e-6, 4.0e-6, 3.4e-6, 2.6e-6, 2.2e-6, 1.6e-6];
+    var tableLastIndex = 0;
 
-    // TODO: clean up, used from spline
-    // TODO: temporal coherence
-    function findInterval(height, startIndex) {
+    function findInterval(height) {
         var heights = heightsTable;
         var length = heights.length;
 
         if (height < heights[0]) {
-            return 0;
+            tableLastIndex = 0;
+            return tableLastIndex;
         } else if (height > heights[length - 1]) {
-            return length - 2;
+            tableLastIndex = length - 2;
+            return tableLastIndex;
         }
 
         // Take advantage of temporal coherence by checking current, next and previous intervals
         // for containment of time.
-        startIndex = defaultValue(startIndex, 0);
-
-        if (height >= heights[startIndex]) {
-            if (startIndex + 1 < length && height < heights[startIndex + 1]) {
-                return startIndex;
-            } else if (startIndex + 2 < length && height < heights[startIndex + 2]) {
-                return startIndex + 1;
+        if (height >= heights[tableLastIndex]) {
+            if (tableLastIndex + 1 < length && height < heights[tableLastIndex + 1]) {
+                return tableLastIndex;
+            } else if (tableLastIndex + 2 < length && height < heights[tableLastIndex + 2]) {
+                ++tableLastIndex;
+                return tableLastIndex;
             }
-        } else if (startIndex - 1 >= 0 && height >= heights[startIndex - 1]) {
-            return startIndex - 1;
+        } else if (tableLastIndex - 1 >= 0 && height >= heights[tableLastIndex - 1]) {
+            --tableLastIndex;
+            return tableLastIndex;
         }
 
-        // The above failed so do a linear search. For the use cases so far, the
-        // length of the list is less than 10. In the future, if there is a bottle neck,
-        // it might be here.
-
+        // The above failed so do a linear search.
         var i;
-        if (height > heights[startIndex]) {
-            for (i = startIndex; i < length - 1; ++i) {
+        if (height > heights[tableLastIndex]) {
+            for (i = tableLastIndex; i < length - 1; ++i) {
                 if (height >= heights[i] && height < heights[i + 1]) {
                     break;
                 }
             }
         } else {
-            for (i = startIndex - 1; i >= 0; --i) {
+            for (i = tableLastIndex - 1; i >= 0; --i) {
                 if (height >= heights[i] && height < heights[i + 1]) {
                     break;
                 }
@@ -1013,7 +1011,8 @@ define([
             i = length - 2;
         }
 
-        return i;
+        tableLastIndex = i;
+        return tableLastIndex;
     }
 
     function updateFog(scene) {
