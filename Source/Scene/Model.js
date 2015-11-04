@@ -616,7 +616,7 @@ define([
 
         /**
          * The model's bounding sphere in its local coordinate system.  This does not take into
-         * account glTF animations and skins.
+         * account glTF animations and skins nor does it take into account {@link Model#minimumPixelSize}.
          *
          * @memberof Model.prototype
          *
@@ -640,7 +640,8 @@ define([
                 //>>includeEnd('debug');
 
                 var nonUniformScale = Matrix4.getScale(this.modelMatrix, boundingSphereCartesian3Scratch);
-                Cartesian3.multiplyByScalar(nonUniformScale, this.scale, nonUniformScale);
+                var scale = defined(this.maximumScale) ? Math.min(this.maximumScale, this.scale) : this.scale;
+                Cartesian3.multiplyByScalar(nonUniformScale, scale, nonUniformScale);
 
                 var scaledBoundingSphere = this._scaledBoundingSphere;
                 scaledBoundingSphere.center = Cartesian3.multiplyComponents(this._boundingSphere.center, nonUniformScale, scaledBoundingSphere.center);
@@ -3065,12 +3066,14 @@ define([
             // Model's model matrix needs to be updated
             var modelTransformChanged = !Matrix4.equals(this._modelMatrix, this.modelMatrix) ||
                 (this._scale !== this.scale) ||
-                (this._minimumPixelSize !== this.minimumPixelSize) || (this.minimumPixelSize !== 0.0); // Minimum pixel size changed or is enabled
+                (this._minimumPixelSize !== this.minimumPixelSize) || (this.minimumPixelSize !== 0.0) || // Minimum pixel size changed or is enabled
+                (this._maximumScale !== this.maximumScale);
 
             if (modelTransformChanged || justLoaded) {
                 Matrix4.clone(this.modelMatrix, this._modelMatrix);
                 this._scale = this.scale;
                 this._minimumPixelSize = this.minimumPixelSize;
+                this._maximumScale = this.maximumScale;
 
                 var scale = getScale(this, context, frameState);
                 var computedModelMatrix = this._computedModelMatrix;

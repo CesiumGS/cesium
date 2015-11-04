@@ -451,6 +451,20 @@ defineSuite([
         texturedBoxModel.scale = originalScale;
     });
 
+    it('boundingSphere returns the bounding sphere when maximumScale is reached', function() {
+        var originalScale = texturedBoxModel.scale;
+        var originalMaximumScale = texturedBoxModel.maximumScale;
+        texturedBoxModel.scale = 20;
+        texturedBoxModel.maximumScale = 10;
+
+        var boundingSphere = texturedBoxModel.boundingSphere;
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.0, -2.5, 0.0), CesiumMath.EPSILON3);
+        expect(boundingSphere.radius).toEqualEpsilon(7.5, CesiumMath.EPSILON3);
+
+        texturedBoxModel.scale = originalScale;
+        texturedBoxModel.maximumScale = originalMaximumScale;
+    });
+
     it('boundingSphere returns the bounding sphere when modelMatrix has non-uniform scale', function() {
         var originalMatrix = Matrix4.clone(texturedBoxModel.modelMatrix);
         Matrix4.multiplyByScale(texturedBoxModel.modelMatrix, new Cartesian3(2, 5, 10), texturedBoxModel.modelMatrix);
