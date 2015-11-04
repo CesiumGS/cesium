@@ -391,7 +391,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         return dataSource.load(featureWithId).then(function() {
             var entityCollection = dataSource.entities;
-            expect(entityCollection.dataSource).toEqual(dataSource);
+            expect(entityCollection.owner).toEqual(dataSource);
         });
     });
 

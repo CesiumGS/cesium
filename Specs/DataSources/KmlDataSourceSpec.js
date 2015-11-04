@@ -2891,7 +2891,7 @@ defineSuite([
     it('Has entity collection with link to data source', function() {
         var dataSource = new KmlDataSource();
         var entityCollection = dataSource.entities;
-        expect(entityCollection.dataSource).toEqual(dataSource);
+        expect(entityCollection.owner).toEqual(dataSource);
     });
 
     it('Has entity with link to entity collection', function() {

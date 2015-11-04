@@ -1798,7 +1798,7 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.load(nameCzml);
         var entityCollection = dataSource.entities;
-        expect(entityCollection.dataSource).toEqual(dataSource);
+        expect(entityCollection.owner).toEqual(dataSource);
     });
 
     it('Has entity with link to entity collection', function() {
