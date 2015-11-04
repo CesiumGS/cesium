@@ -124,10 +124,14 @@ define([
         };
     }
 
+    function defaultDescribeProperty(properties, nameProperty) {
+        return new CallbackProperty(createDescriptionCallback(defaultDescribe, properties, nameProperty), true);
+    }
+
     //GeoJSON specifies only the Feature object has a usable id property
     //But since "multi" geometries create multiple entity,
     //we can't use it for them either.
-    function createObject(geoJson, entityCollection, describe) {
+    function createObject(geoJson, entityCollection, describeProperty) {
         var id = geoJson.id;
         if (!definedNotNull(id) || geoJson.type !== 'Feature') {
             id = createGuid();
@@ -189,7 +193,7 @@ define([
 
             var description = properties.description;
             if (!defined(description)) {
-                entity.description = new CallbackProperty(createDescriptionCallback(describe, properties, nameProperty), true);
+                entity.description = options.describeProperty(properties, nameProperty);
             } else if (description !== null) {
                 entity.description = new ConstantProperty(description);
             }
@@ -213,7 +217,7 @@ define([
 
         if (feature.geometry === null) {
             //Null geometry is allowed, so just create an empty entity instance for it.
-            createObject(feature, dataSource._entityCollection, options.describe);
+            createObject(feature, dataSource._entityCollection, options.describeProperty);
         } else {
             var geometryType = feature.geometry.type;
             var geometryHandler = geometryTypes[geometryType];
@@ -284,7 +288,7 @@ define([
             billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
             billboard.image = new ConstantProperty(dataUrl);
 
-            var entity = createObject(geoJson, dataSource._entityCollection, options.describe);
+            var entity = createObject(geoJson, dataSource._entityCollection, options.describeProperty);
             entity.billboard = billboard;
             entity.position = new ConstantPositionProperty(crsFunction(coordinates));
         }));
@@ -334,7 +338,7 @@ define([
         polyline.width = widthProperty;
         polyline.positions = new ConstantProperty(coordinatesArrayToCartesianArray(coordinates, crsFunction));
 
-        var entity = createObject(geoJson, dataSource._entityCollection, options.describe);
+        var entity = createObject(geoJson, dataSource._entityCollection, options.describeProperty);
         entity.polyline = polyline;
     }
 
@@ -417,7 +421,7 @@ define([
             polygon.perPositionHeight = new ConstantProperty(true);
         }
 
-        var entity = createObject(geoJson, dataSource._entityCollection, options.describe);
+        var entity = createObject(geoJson, dataSource._entityCollection, options.describeProperty);
         entity.polygon = polygon;
     }
 
@@ -732,8 +736,9 @@ define([
      * @param {String|Object} data A url, GeoJSON object, or TopoJSON object to be loaded.
      * @param {Object} [options] An object with the following properties:
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
-     * @param {Function} [options.describe=GeoJsonDataSource.defaultDescribe] A custom function used to convert the properties into an html description.
-     *                                                                        It takes two arguments: the properties and a nameProperty.
+     * @param {Function} [options.describeProperty=GeoJsonDataSource.defaultDescribeProperty] A function which returns a Property object (or just a string),
+     *                                                                                        which converts the properties into an html description.
+     *                                                                                        The function takes two arguments: properties and nameProperty.
      * @param {Number} [options.markerSize=GeoJsonDataSource.markerSize] The default size of the map pin created for each point, in pixels.
      * @param {String} [options.markerSymbol=GeoJsonDataSource.markerSymbol] The default symbol of the map pin created for each point.
      * @param {Color} [options.markerColor=GeoJsonDataSource.markerColor] The default color of the map pin created for each point.
@@ -763,7 +768,7 @@ define([
         }
 
         options = {
-            describe: defaultValue(options.describe, defaultDescribe),
+            describeProperty: defaultValue(options.describeProperty, defaultDescribeProperty),
             markerSize : defaultValue(options.markerSize, defaultMarkerSize),
             markerSymbol : defaultValue(options.markerSymbol, defaultMarkerSymbol),
             markerColor : defaultValue(options.markerColor, defaultMarkerColor),
