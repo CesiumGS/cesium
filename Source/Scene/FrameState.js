@@ -137,7 +137,7 @@ define([
         this.scene3DOnly = false;
 
         this.fog = {
-            enabled : true,
+            enabled : false,
             density : undefined,
             sse : undefined
         };

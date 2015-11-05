@@ -1019,7 +1019,14 @@ define([
     var scratchPositionNormal = new Cartesian3();
 
     function updateFog(scene) {
+        var fog = scene.fog;
         var frameState = scene.frameState;
+
+        var enabled = frameState.fog.enabled = fog.enabled;
+        if (!enabled) {
+            return;
+        }
+
         var height = scene.camera.positionCartographic.height;
 
         // Turn off fog in space.
@@ -1028,25 +1035,21 @@ define([
             return;
         }
 
-        var fog = scene.fog;
-        var enabled = frameState.fog.enabled = fog.enabled;
-        if (enabled) {
-            var i = findInterval(height);
-            var t = (height - heightsTable[i]) / (heightsTable[i + 1] - heightsTable[i]);
-            var density = CesiumMath.lerp(densityTable[i], densityTable[i + 1], t);
+        var i = findInterval(height);
+        var t = (height - heightsTable[i]) / (heightsTable[i + 1] - heightsTable[i]);
+        var density = CesiumMath.lerp(densityTable[i], densityTable[i + 1], t);
 
-            // Again, scale value to be in the range of densityTable (prevents divide by zero) and change to new range.
-            var startDensity = fog.density * 1.0e6;
-            var endDensity = (startDensity / tableStartDensity) * tableEndDensity;
-            density = (density * (startDensity - endDensity)) * 1.0e-6;
+        // Again, scale value to be in the range of densityTable (prevents divide by zero) and change to new range.
+        var startDensity = fog.density * 1.0e6;
+        var endDensity = (startDensity / tableStartDensity) * tableEndDensity;
+        density = (density * (startDensity - endDensity)) * 1.0e-6;
 
-            // Fade fog in as the camera tilts toward the horizon.
-            var positionNormal = Cartesian3.normalize(scene.camera.positionWC, scratchPositionNormal);
-            density *= 1.0 - Math.abs(Cartesian3.dot(scene.camera.directionWC, positionNormal));
+        // Fade fog in as the camera tilts toward the horizon.
+        var positionNormal = Cartesian3.normalize(scene.camera.positionWC, scratchPositionNormal);
+        density *= 1.0 - Math.abs(Cartesian3.dot(scene.camera.directionWC, positionNormal));
 
-            frameState.fog.density = density;
-            frameState.fog.sse = fog.screenSpaceErrorFactor;
-        }
+        frameState.fog.density = density;
+        frameState.fog.sse = fog.screenSpaceErrorFactor;
     }
 
     function clearPasses(passes) {
