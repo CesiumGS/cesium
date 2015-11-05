@@ -768,6 +768,11 @@ define([
             }
         },
 
+        /**
+         * A scalar used to mix a color with the fog color based on the distance to the camera.
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
         fogDensity : {
             get : function() {
                 return this._fogDensity;

@@ -1398,6 +1398,14 @@ define([
             }
         }),
 
+        /**
+         * An automatic GLSL uniform scalar used to mix a color with the fog color based on the distance to the camera.
+         *
+         * @alias czm_fogDensity
+         * @glslUniform
+         *
+         * @see czm_fog
+         */
         czm_fogDensity : new AutomaticUniform({
             size : 1,
             datatype : WebGLConstants.FLOAT,

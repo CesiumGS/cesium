@@ -137,8 +137,23 @@ define([
         this.scene3DOnly = false;
 
         this.fog = {
+            /**
+             * <code>true</code> if fog is enabled, <code>false</code> otherwise.
+             * @type {Boolean}
+             * @default false
+             */
             enabled : false,
+            /**
+             * A positive number used to mix the color and fog color based on camera distance.
+             * @type {Number}
+             * @default undefined
+             */
             density : undefined,
+            /**
+             * A scalar used to modify the screen space error of geometry partially in fog.
+             * @type {Number}
+             * @default undefined
+             */
             sse : undefined
         };
     };
