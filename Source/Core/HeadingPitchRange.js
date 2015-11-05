@@ -8,7 +8,7 @@ define([
     "use strict";
 
     /**
-     * Defines a heading angle, pitch angle an range in a local frame.
+     * Defines a heading angle, pitch angle, and range in a local frame.
      * Heading is the rotation from the local north direction where a positive angle is increasing eastward.
      * Pitch is the rotation from the local xy-plane. Positive pitch angles are above the plane. Negative pitch
      * angles are below the plane. Range is the distance from the center of the frame.

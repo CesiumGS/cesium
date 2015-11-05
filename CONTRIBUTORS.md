@@ -71,5 +71,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Tiffany Lu](https://github.com/tiffanylu)
 * [Olivier Terral](https://github.com/oterral)
 * [Piero Toffanin](https://github.com/pierotofy)
+* [Cole Murphy](https://github.com/fantasticole)
+* [Keat Tang](https://github.com/keattang)
+* [Denver Pierce](https://github.com/denverpierce)
+* [Tucker Tibbetts](https://github.com/cttibbetts)
 
 Also see [our contributors page](http://cesiumjs.org/contributors.html) for more information.
