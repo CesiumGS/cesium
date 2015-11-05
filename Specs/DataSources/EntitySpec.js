@@ -462,4 +462,21 @@ defineSuite([
         expect(entity.show).toBe(true);
         expect(entity.isShowing).toBe(false);
     });
+
+    it('isShowing works when removing parent.', function() {
+        var entity = new Entity();
+        entity.parent = new Entity({
+            show : false
+        });
+        expect(entity.isShowing).toBe(false);
+
+        var listener = jasmine.createSpy('listener');
+        entity.definitionChanged.addEventListener(listener);
+
+        entity.parent = undefined;
+
+        expect(listener.calls.count()).toBe(2);
+        expect(listener.calls.argsFor(0)).toEqual([entity, 'isShowing', true, false]);
+        expect(entity.isShowing).toBe(true);
+    });
 });
