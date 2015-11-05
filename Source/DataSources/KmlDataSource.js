@@ -203,7 +203,7 @@ define([
             deferred.reject(reader.error);
         });
         reader.readAsArrayBuffer(magicBlob);
-        return deferred;
+        return deferred.promise;
     }
 
     function readBlobAsText(blob) {
@@ -216,7 +216,7 @@ define([
             deferred.reject(reader.error);
         });
         reader.readAsText(blob);
-        return deferred;
+        return deferred.promise;
     }
 
     function loadXmlFromZip(reader, entry, uriResolver, deferred) {
@@ -1644,7 +1644,7 @@ define([
             deferred.reject(e);
         });
 
-        return deferred;
+        return deferred.promise;
     }
 
     /**
