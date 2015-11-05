@@ -297,7 +297,9 @@ define([
                 }
 
                 this._parent = value;
-                value._children.push(this);
+                if (defined(value)) {
+                    value._children.push(this);
+                }
 
                 var isShowing = this.isShowing;
 
