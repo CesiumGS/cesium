@@ -95,24 +95,31 @@ define([
         var tilesLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
-        var tilesToLoad = tilesLength;
-
         this.state = Cesium3DTileContentState.PROCESSING;
         this.processingPromise.resolve(this);
 
+        var tilesToLoad = tilesLength;
+
         var that = this;
 
-        function tileLoaded(content) {
-            if (--tilesToLoad === 0) {
+        function checkDone() {
+            if (tilesToLoad === 0) {
                 that.state = Cesium3DTileContentState.READY;
                 that.readyPromise.resolve(that);
             }
+        }
+
+        function tileLoaded(content) {
+            tilesToLoad--;
+            checkDone();
         }
 
         function tileFailed(error) {
             that.state = Cesium3DTileContentState.FAILED;
             that.readyPromise.reject(error);
         }
+
+        checkDone();
 
         for (var i = 0; i < tilesLength; ++i) {
             var tileType = getMagic(uint8Array, byteOffset);
@@ -158,10 +165,12 @@ define([
      * DOC_TBA
      */
     Composite3DTileContentProvider.prototype.destroy = function() {
-        for (var i = 0; i < this._contentProviders; ++i) {
+        var length = this._contentProviders.length;
+        for (var i = 0; i < length; ++i) {
             this._contentProviders[i].destroy();
         }
         return destroyObject(this);
     };
+
     return Composite3DTileContentProvider;
 });
