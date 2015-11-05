@@ -452,8 +452,8 @@ define([
         // PERFORMANCE_IDEA: factor out stuff that's constant across tiles.
         var error = (maxGeometricError * height) / (2 * distance * Math.tan(0.5 * fovy));
 
-        if (frameState.fogEnabled) {
-            error = error - CesiumMath.fog(distance, frameState.fogDensity) * frameState.fogSSE;
+        if (frameState.fog.enabled) {
+            error = error - CesiumMath.fog(distance, frameState.fog.density) * frameState.fog.sse;
         }
 
         return error;
