@@ -1016,6 +1016,8 @@ define([
         return tableLastIndex;
     }
 
+    var scratchPositionNormal = new Cartesian3();
+
     function updateFog(scene) {
         var frameState = scene.frameState;
         var height = scene.camera.positionCartographic.height;
@@ -1037,6 +1039,10 @@ define([
             var startDensity = fog.density * 1.0e6;
             var endDensity = (startDensity / tableStartDensity) * tableEndDensity;
             density = (density * (startDensity - endDensity)) * 1.0e-6;
+
+            // Fade fog in as the camera tilts toward the horizon.
+            var positionNormal = Cartesian3.normalize(scene.camera.positionWC, scratchPositionNormal);
+            density *= 1.0 - Math.abs(Cartesian3.dot(scene.camera.directionWC, positionNormal));
 
             frameState.fog.density = density;
             frameState.fog.sse = fog.screenSpaceErrorFactor;
