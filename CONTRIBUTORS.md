@@ -32,6 +32,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Kevin Ring](https://github.com/kring)
    * [Keith Grochow](https://github.com/kgrochow)
    * [Chloe Chen](https://github.com/chloeleichen)
+   * [Arthur Street](https://github.com/RacingTadpole)
 * [EU Edge](http://euedge.com/)
    * [Ákos Maróy](https://github.com/akosmaroy)
 * [Raytheon Intelligence and Information Systems](http://www.raytheon.com/)
