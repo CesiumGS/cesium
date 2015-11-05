@@ -67,7 +67,8 @@ define([
         './StripeOrientation',
         './TimeIntervalCollectionPositionProperty',
         './TimeIntervalCollectionProperty',
-        './WallGraphics'
+        './WallGraphics',
+        './VideoMaterialProperty'
     ], function(
         Cartesian2,
         Cartesian3,
@@ -136,7 +137,8 @@ define([
         StripeOrientation,
         TimeIntervalCollectionPositionProperty,
         TimeIntervalCollectionProperty,
-        WallGraphics) {
+        WallGraphics,
+        VideoMaterialProperty) {
     "use strict";
 
     var currentId;
@@ -362,6 +364,8 @@ define([
             return LabelStyle[defaultValue(czmlInterval.labelStyle, czmlInterval)];
         case Rotation:
             return defaultValue(czmlInterval.number, czmlInterval);
+        case HTMLVideoElement:
+            return unwrapUriInterval(czmlInterval, sourceUri);
         case Number:
             return defaultValue(czmlInterval.number, czmlInterval);
         case String:
@@ -830,12 +834,22 @@ define([
             materialData = packetData.polylineGlow;
             processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, sourceUri, entityCollection);
             processPacketData(Number, existingMaterial, 'glowPower', materialData.glowPower, undefined, sourceUri, entityCollection);
-        }
+        } else if (defined(packetData.video)) {
+            if (!(existingMaterial instanceof VideoMaterialProperty)) {
+                existingMaterial = new VideoMaterialProperty();
 
-        if (defined(existingInterval)) {
-            existingInterval.data = existingMaterial;
-        } else {
-            object[propertyName] = existingMaterial;
+                if (defined(existingInterval)) {
+                    existingInterval.data = existingMaterial;
+                } else {
+                    object[propertyName] = existingMaterial;
+                }
+                materialData = packetData.video;
+                processPacketData(HTMLVideoElement, existingMaterial, 'video', materialData.uri, undefined, sourceUri);
+                processPacketData(JulianDate, existingMaterial, 'startTime', materialData.startTime, undefined, sourceUri);
+                processPacketData(Boolean, existingMaterial, 'loop', materialData.loop, undefined, sourceUri);
+                processPacketData(Number, existingMaterial, 'speed', materialData.speed, undefined, sourceUri);
+                processPacketData(Cartesian2, existingMaterial, 'repeat', materialData.repeat, undefined, sourceUri, entityCollection);
+            }
         }
     }
 

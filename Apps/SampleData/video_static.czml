@@ -1,0 +1,46 @@
+[
+  {
+    "id":"document",
+    "version":"1.0",
+    "clock":{
+      "interval":"2012-10-26T00:00:00Z/2012-10-27T00:00:00Z",
+      "currentTime":"2012-10-26T00:00:00Z",
+      "multiplier":1.0,
+      "range":"LOOP_STOP",
+      "step":"SYSTEM_CLOCK_MULTIPLIER"
+    }
+  },
+{
+  "id":"videoExample",
+  "availability":"2012-10-26T00:00:00Z/2012-10-27T00:00:00Z",
+  "position":{
+    "cartographicDegrees":[
+      -74.99,39.995,0.0
+    ]
+  },
+  "polygon":{
+    "positions":{
+      "cartographicDegrees":[
+        -75.0,40.0,0,
+        -75.0,39.99,0,
+        -74.98,39.99,0,
+        -74.98,40.0,0
+      ]
+    },
+    "material":{
+      "video":{
+        "loop":true,
+        "speed":1.0,
+        "startTime": "2012-10-26T00:00:00Z",
+        "repeat":{
+          "cartesian2":[
+            1,1
+          ]
+        },
+        "uri":"demo.webm"
+      }
+    }
+  }
+}
+
+]
