@@ -8,7 +8,7 @@
     <meta name="cesium-sandcastle-labels" content="Development">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
     require.config({
         baseUrl : '../../../Source',
@@ -90,38 +90,13 @@ viewModel.density = viewer.scene.fog.density;
 viewModel.sse = viewer.scene.fog.screenSpaceErrorFactor;
 
 Sandcastle.addToolbarMenu([{
-    text : 'Directly downward',
+    text : 'Toward horizon',
     onselect : function() {
         viewer.camera.setView({
-            destination: Cesium.Cartesian3.fromDegrees(120.34726232637308, 15.13895145210961, 10590.61761915982),
+            destination: new Cesium.Cartesian3.fromDegrees(-2467730.5740817646, -4390507.315824514, 3906155.113316938),
             orientation: {
-                heading: 0.3309256924893429,
-                pitch: -1.5706938261986747,
-                roll: 0.0
-            }
-        });
-    }
-}, {
-    text : 'Toward horizon, high altitude',
-    onselect : function() {
-        viewer.camera.setView({
-            destination: Cesium.Cartesian3.fromDegrees(119.7954832286864, 14.625866129373039, 32421.396898127718),
-            orientation: {
-                heading: 0.8031608174408857,
-                pitch: -0.3681378861570981,
-                roll: 0.001262546036078227
-            }
-        });
-    }
-}, {
-    text : 'Toward horizon, low altitude',
-    onselect : function() {
-        viewer.camera.setView({
-            destination: Cesium.Cartesian3.fromDegrees(120.28867831296651, 15.087807528789323, 4406.192801985815),
-            orientation: {
-                heading: 0.8053562096038718,
-                pitch: -0.35655731769666343,
-                roll: 0.0012957738183763112
+                heading: 4.492211521856625,
+                pitch: -0.2687139437696304
             }
         });
     }
@@ -129,17 +104,33 @@ Sandcastle.addToolbarMenu([{
     text : 'Below horizon',
     onselect : function() {
         viewer.camera.setView({
-            destination: Cesium.Cartesian3.fromDegrees(-99.86107569851391, 47.97316693251584, 1160.1513943660475),
-            orientation: {
-                heading: 5.490507499335093,
-                pitch: -0.3662822102930292,
-                roll: 6.280633976081223
+            destination : new Cesium.Cartesian3(-734001.9511656855, -4214090.596769834, 4715898.125886317),
+            orientation : {
+                heading : 5.634257362559497,
+                pitch : -0.019548505785381032
             }
         });
     }
 }], 'zoomButtons');
 
 viewer.scene.globe._surface._debug.enableDebugOutput = true;
+
+Sandcastle.addToolbarButton("Snap", function() {
+    var container = document.getElementById("cesiumContainer");
+    var tmpH = container.style.height;
+    var tmpW = container.style.width;
+
+    container.style.height = "600px";
+    container.style.width = "800px";
+
+    viewer.resize();
+    viewer.render();
+    window.open(viewer.canvas.toDataURL("image/png"));
+    container.style.height = tmpH;
+    container.style.width = tmpW;
+    viewer.resize();
+    viewer.render();
+});
 
 //Sandcastle_End
     Sandcastle.finishedLoading();
