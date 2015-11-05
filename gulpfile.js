@@ -6,6 +6,9 @@ var path = require('path');
 var os = require('os');
 var child_process = require('child_process');
 
+var browserify = require('browserify');
+var buffer = require('vinyl-buffer');
+var glob = require('glob-all');
 var globby = require('globby');
 var jshint = require('gulp-jshint');
 var async = require('async');
@@ -20,6 +23,11 @@ var gulpRename = require('gulp-rename');
 var gulpReplace = require('gulp-replace');
 var Promise = require('bluebird');
 var requirejs = require('requirejs');
+var source = require('vinyl-source-stream');
+var sourcemaps = require('gulp-sourcemaps');
+var transform = require('vinyl-transform');
+var uglify = require('gulp-uglify');
+var exorcist = require('exorcist');
 
 var packageJson = require('./package.json');
 var version = packageJson.version;
@@ -214,7 +222,8 @@ gulp.task('jsHint', ['build'], function() {
     return gulp.src(jsHintFiles)
         .pipe(jshint.extract('auto'))
         .pipe(jshint())
-        .pipe(jshint.reporter('jshint-stylish'));
+        .pipe(jshint.reporter('jshint-stylish'))
+        .pipe(jshint.reporter('fail'));
 });
 
 gulp.task('jsHint-watch', function() {
@@ -283,7 +292,7 @@ gulp.task('minifyRelease', ['generateStubs'], function() {
     });
 });
 
-gulp.task('release', ['buildApps', 'generateDocumentation']);
+gulp.task('release', ['combine', 'minifyRelease', 'generateDocumentation']);
 
 gulp.task('generateStubs', ['build'], function(done) {
     mkdirp.sync(path.join('Build', 'Stubs'));
@@ -639,7 +648,9 @@ define(function() {\n\
     });
 
     // delete any left over JS files from old shaders
-    Object.keys(leftOverJsFiles).forEach(rimraf.sync);
+    Object.keys(leftOverJsFiles).forEach(function(filepath) {
+        rimraf.sync(filepath);
+    });
 
     var generateBuiltinContents = function(contents, builtins, path) {
         var amdPath = contents.amdPath;
@@ -699,6 +710,12 @@ function createCesiumJs() {
         }
 
         var parameterName = moduleId.replace(nonIdentifierRegexp, '_');
+
+        //Ignore the deprecated Scene version of HeadingPitchRange
+        //until it is removed with #3097
+        if (moduleId === 'Scene/HeadingPitchRange') {
+            return;
+        }
 
         moduleIds.push("'./" + moduleId + "'");
         parameters.push(parameterName);
@@ -873,3 +890,83 @@ function streamToPromise(stream) {
         stream.on('end', reject);
     });
 }
+
+// TerriajS-specific tasks.
+var workerGlob = [
+    './Source/Workers/*.js',
+    '!./Source/Workers/*.profile.js',
+    '!./Source/Workers/cesiumWorkerBootstrapper.js',
+    '!./Source/Workers/transferTypedArrayTest.js',
+    '!./Source/Workers/createTaskProcessorWorker.js'
+];
+
+function createExorcistTransform(name) {
+    return transform(function () { return exorcist('wwwroot/build/Workers/' + name + '.map'); });
+}
+
+gulp.task('terria-prepare-cesium', ['build', 'terria-copy-cesium-assets', 'terria-copy-cesiumWorkerBootstrapper', 'terria-build-workers']);
+
+gulp.task('terria-copy-cesium-assets', function() {
+    return gulp.src([
+            'Source/Workers/transferTypedArrayTest.js',
+            'Source/ThirdParty/Workers/**',
+            'Source/Assets/**',
+            'Source/Widgets/**/*.css',
+            'Source/Widgets/Images/**'
+        ], { base: 'Source' })
+        .pipe(gulp.dest('wwwroot/build/'));
+});
+
+gulp.task('terria-copy-cesiumWorkerBootstrapper', function() {
+    return gulp.src('Source/Workers/cesiumWorkerBootstrapper.js')
+        .pipe(gulp.dest('wwwroot/build/Workers'));
+});
+
+gulp.task('terria-default', ['terria-prepare-cesium']);
+
+gulp.task('terria-build-workers', function() {
+    var b = browserify({
+        debug: true
+    });
+
+    var workers = glob.sync(workerGlob);
+    for (var i = 0; i < workers.length; ++i) {
+        var workerFilename = workers[i];
+
+        var lastSlashIndex = workerFilename.lastIndexOf('/');
+        if (lastSlashIndex < 0) {
+            continue;
+        }
+
+        var outName = workerFilename.substring(lastSlashIndex + 1);
+
+        var dotJSIndex = outName.lastIndexOf('.js');
+        var exposeName = 'Workers/' + outName.substring(0, dotJSIndex);
+
+        b.require(workerFilename, {
+            expose: exposeName
+        });
+    }
+
+    var stream = b.bundle()
+        .pipe(source('Cesium-WebWorkers.js'))
+        .pipe(buffer());
+
+    var minify = true;
+    if (minify) {
+        // Minify the combined source.
+        // sourcemaps.init/write maintains a working source map after minification.
+        // "preserveComments: 'some'" preserves JSDoc-style comments tagged with @license or @preserve.
+        stream = stream
+            .pipe(sourcemaps.init({ loadMaps: true }))
+            .pipe(uglify({preserveComments: 'some', mangle: true}))
+            .pipe(sourcemaps.write());
+    }
+
+    stream = stream
+        // Extract the embedded source map to a separate file.
+        .pipe(createExorcistTransform('Cesium-WebWorkers.js'))
+        .pipe(gulp.dest('wwwroot/build/Workers'));
+
+    return stream;
+});

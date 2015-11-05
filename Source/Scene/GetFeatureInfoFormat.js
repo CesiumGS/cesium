@@ -113,13 +113,13 @@ define([
 
     function xmlToFeatureInfo(xml) {
         var documentElement = xml.documentElement;
-        if (documentElement.localName === 'MultiFeatureCollection' && documentElement.namespaceURI === mapInfoMxpNamespace) {
+        if (documentElement.localName === 'MultiFeatureCollection') {
             // This looks like a MapInfo MXP response
             return mapInfoXmlToFeatureInfo(xml);
-        } else if (documentElement.localName === 'FeatureInfoResponse' && documentElement.namespaceURI === esriWmsNamespace) {
+        } else if (documentElement.localName === 'FeatureInfoResponse') {
             // This looks like an Esri WMS response
             return esriXmlToFeatureInfo(xml);
-        } else if (documentElement.localName === 'FeatureCollection' && documentElement.namespaceURI === wfsNamespace) {
+        } else if (documentElement.localName === 'FeatureCollection') {
             // This looks like a WFS/GML response.
             return gmlToFeatureInfo(xml);
         } else if (documentElement.localName === 'ServiceExceptionReport') {
@@ -168,7 +168,7 @@ define([
 
         var featureInfoResponse = xml.documentElement;
 
-        var features = featureInfoResponse.getElementsByTagNameNS(esriWmsNamespace, 'FIELDS');
+        var features = featureInfoResponse.getElementsByTagNameNS('*', 'FIELDS');
         for (var featureIndex = 0; featureIndex < features.length; ++featureIndex) {
             var feature = features[featureIndex];
 

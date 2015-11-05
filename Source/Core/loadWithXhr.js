@@ -30,6 +30,10 @@ define([
      * @param {String} [options.data] The data to send with the request, if any.
      * @param {Object} [options.headers] HTTP headers to send with the request, if any.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
+     *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
+     *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
+     *
      * @returns {Promise.<Object>} a promise that will resolve to the requested data when loaded.
      *
      * @see loadArrayBuffer
@@ -64,11 +68,13 @@ define([
         var data = options.data;
         var headers = options.headers;
         var overrideMimeType = options.overrideMimeType;
+        var preferText = options.preferText;
+        var timeout = options.timeout;
 
         return when(options.url, function(url) {
             var deferred = when.defer();
 
-            loadWithXhr.load(url, responseType, method, data, headers, deferred, overrideMimeType);
+            loadWithXhr.load(url, responseType, method, data, headers, deferred, overrideMimeType, preferText, timeout);
 
             return deferred.promise;
         });
@@ -122,7 +128,7 @@ define([
     }
 
     // This is broken out into a separate function so that it can be mocked for testing purposes.
-    loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+    loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType, preferText, timeout) {
         var dataUriRegexResult = dataUriRegex.exec(url);
         if (dataUriRegexResult !== null) {
             deferred.resolve(decodeDataUri(dataUriRegexResult, responseType));
@@ -131,8 +137,19 @@ define([
 
         var xhr = new XMLHttpRequest();
 
-        if (defined(overrideMimeType) && defined(xhr.overrideMimeType)) {
-            xhr.overrideMimeType(overrideMimeType);
+        var weWantXml = false;
+
+        if (defined(overrideMimeType)) {
+            if (defined(xhr.overrideMimeType)) {
+                xhr.overrideMimeType(overrideMimeType);
+            } else if (overrideMimeType === 'text/xml' && responseType === 'document') {
+                // This is an old browser without support for overrideMimeType, and we're asking for XML.
+                // Many XML documents are returned without the 'text/xml' MIME type, such as OGC servers,
+                // so our request will fail if we set the responseType without having a way to override the MIME
+                // type.  So request text instead and then parse out the XML from the text.
+                weWantXml = true;
+                responseType = 'text';
+            }
         }
 
         xhr.open(method, url, true);
@@ -149,18 +166,42 @@ define([
             xhr.responseType = responseType;
         }
 
+        if (defined(timeout)) {
+            xhr.timeout = timeout;
+        }
+
         xhr.onload = function() {
             if (xhr.status === 200) {
+                var parser;
+
                 if (defined(xhr.response)) {
-                    deferred.resolve(xhr.response);
+                    if (weWantXml) {
+                        try {
+                            parser = new DOMParser();
+                            deferred.resolve(parser.parseFromString(xhr.response, 'text/xml'));
+                        } catch (ex) {
+                            deferred.reject(ex);
+                        }
+                    } else {
+                        deferred.resolve(xhr.response);
+                    }
                 } else {
                     // busted old browsers.
-                    if (defined(xhr.responseXML) && xhr.responseXML.hasChildNodes()) {
-                        deferred.resolve(xhr.responseXML);
-                    } else if (defined(xhr.responseText)) {
-                        deferred.resolve(xhr.responseText);
+                    if (weWantXml) {
+                        try {
+                            parser = new DOMParser();
+                            deferred.resolve(parser.parseFromString(xhr.responseText, 'text/xml'));
+                        } catch (ex) {
+                            deferred.reject(ex);
+                        }
                     } else {
-                        deferred.reject(new RuntimeError('unknown XMLHttpRequest response type.'));
+                        if (!defaultValue(preferText, false) && defined(xhr.responseXML) && xhr.responseXML.hasChildNodes()) {
+                            deferred.resolve(xhr.responseXML);
+                        } else if (defined(xhr.responseText)) {
+                            deferred.resolve(xhr.responseText);
+                        } else {
+                            deferred.reject(new RuntimeError('unknown XMLHttpRequest response type.'));
+                        }
                     }
                 }
             } else {
@@ -170,6 +211,12 @@ define([
 
         xhr.onerror = function(e) {
             deferred.reject(new RequestErrorEvent());
+        };
+
+        xhr.ontimeout = function(e) {
+            var timeout = new RequestErrorEvent();
+            timeout.isTimeout = true;
+            deferred.reject(timeout);
         };
 
         xhr.send(data);

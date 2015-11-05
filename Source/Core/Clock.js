@@ -205,5 +205,31 @@ define([
         return currentTime;
     };
 
+    /**
+     * Makes a copy of this instance.
+     * @param {Clock} [result] The instance to which to copy this object.  If this is undefined, a new {@link Clock} is created.
+     * @return {Clock} The {@link Clock} to which this instance was copied.
+     */
+    Clock.clone = function(clock, result) {
+        if (!defined(clock)) {
+            return undefined;
+        }
+
+        if (!defined(result)) {
+            result = new Clock();
+        }
+
+        result.startTime = clock.startTime;
+        result.stopTime = clock.stopTime;
+        result.currentTime = clock.currentTime;
+        result.multiplier = clock.multiplier;
+        result.clockStep = clock.clockStep;
+        result.clockRange = clock.clockRange;
+        result.canAnimate = clock.canAnimate;
+        result.shouldAnimate = clock.shouldAnimate;
+
+        return result;
+    };
+
     return Clock;
 });

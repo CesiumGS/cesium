@@ -647,6 +647,15 @@ define([
     };
 
     /**
+     * This forces the widget to re-think its layout, including
+     * widget sizes and credit placement.
+     */
+    CesiumWidget.prototype.forceResize = function() {
+        this._lastWidth = 0;
+        this.resize();
+    };
+
+    /**
      * Renders the scene.  This function is called automatically
      * unless <code>useDefaultRenderLoop</code> is set to false;
      */

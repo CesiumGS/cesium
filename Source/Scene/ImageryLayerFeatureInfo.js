@@ -33,6 +33,12 @@ define([
         this.position = undefined;
 
         /**
+         * Gets or sets the properties of the feature.
+         * @type {Object}
+         */
+        this.properties = undefined;
+
+        /**
          * Gets or sets the raw data describing the feature.  The raw data may be in any
          * number of formats, such as GeoJSON, KML, etc.
          * @type {Object}
