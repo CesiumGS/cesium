@@ -4,6 +4,8 @@ Change Log
 ### 1.16 - 2015-12-01
 
 * `GeoJsonDataSource.load` now takes an optional `describeProperty` function for generating feature description properties. [#3140](https://github.com/AnalyticalGraphicsInc/cesium/pull/3140)
+* Entities have a reference to their entity collection.
+* Entity collections have a reference to their owner (usually a data source, but can be a `CompositeEntityCollection`).
 
 ### 1.15 - 2015-11-02
 
