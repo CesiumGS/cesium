@@ -79,6 +79,7 @@ defineSuite([
         expect(entity.rectangle).toBeUndefined();
         expect(entity.viewFrom).toBeUndefined();
         expect(entity.wall).toBeUndefined();
+        expect(entity.entityCollection).toBeUndefined();
 
         var options = {
             id : 'someId',
@@ -135,6 +136,8 @@ defineSuite([
         expect(entity.rectangle).toBeInstanceOf(RectangleGraphics);
         expect(entity.viewFrom).toBeInstanceOf(ConstantProperty);
         expect(entity.wall).toBeInstanceOf(WallGraphics);
+        
+        expect(entity.entityCollection).toBeUndefined();
     });
 
     it('isAvailable is always true if no availability defined.', function() {
