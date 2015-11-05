@@ -173,6 +173,12 @@ define([
         this._wallSubscription = undefined;
         this._children = [];
 
+        /**
+         * Gets or sets the entity collection that this entity belongs to.
+         * @type {EntityCollection}
+         */
+        this.entityCollection = undefined;
+
         this.parent = options.parent;
         this.merge(options);
     };
@@ -297,7 +303,9 @@ define([
                 }
 
                 this._parent = value;
-                value._children.push(this);
+                if (defined(value)) {
+                    value._children.push(this);
+                }
 
                 var isShowing = this.isShowing;
 

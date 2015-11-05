@@ -7,6 +7,11 @@ Change Log
 * Fixed a bug in the deprecated `jsonp` that prevented it from returning a promise.  Its replacement, `loadJsonp`, was unaffected.
 * Fixed glTF implementation to read the version as a string as per the specification and to correctly handle backwards compatibility for axis-angle rotations in glTF 0.8 models.
 * Added `BoundingSphere.fromOrientedBoundingBox` function.
+* Fixed a bug that caused setting `Entity.parent` to `undefined` to throw an exception. [#3169](https://github.com/AnalyticalGraphicsInc/cesium/issues/3169)
+* Added `Model.maximumScale` and `ModelGraphics.maximumScale` properties, giving an upper limit for minimumPixelSize.
+* Entities have a reference to their entity collection.
+* Entity collections have a reference to their owner (usually a data source, but can be a `CompositeEntityCollection`).
+* `GeoJsonDataSource.load` now takes an optional `describeProperty` function for generating feature description properties. [#3140](https://github.com/AnalyticalGraphicsInc/cesium/pull/3140)
 
 ### 1.15 - 2015-11-02
 
