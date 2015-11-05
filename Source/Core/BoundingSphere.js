@@ -10,6 +10,7 @@ define([
         './GeographicProjection',
         './Intersect',
         './Interval',
+        './Matrix3',
         './Matrix4',
         './Plane',
         './Rectangle'
@@ -24,6 +25,7 @@ define([
         GeographicProjection,
         Intersect,
         Interval,
+        Matrix3,
         Matrix4,
         Plane,
         Rectangle) {
@@ -586,6 +588,37 @@ define([
             radius = Math.max(radius, Cartesian3.distance(center, tmp.center, fromBoundingSpheresScratch) + tmp.radius);
         }
         result.radius = radius;
+
+        return result;
+    };
+
+    var fromOrientedBoundingBoxScratchU = new Cartesian3();
+    var fromOrientedBoundingBoxScratchV = new Cartesian3();
+    var fromOrientedBoundingBoxScratchW = new Cartesian3();
+
+    /**
+     * Computes a tight-fitting bounding sphere enclosing the provided oriented bounding box.
+     *
+     * @param {OrientedBoundingBox} orientedBoundingBox The oriented bounding box.
+     * @param {BoundingSphere} [result] The object onto which to store the result.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     */
+    BoundingSphere.fromOrientedBoundingBox = function(orientedBoundingBox, result) {
+        if (!defined(result)) {
+            result = new BoundingSphere();
+        }
+
+        var halfAxes = orientedBoundingBox.halfAxes;
+        var u = Matrix3.getColumn(halfAxes, 0, fromOrientedBoundingBoxScratchU);
+        var v = Matrix3.getColumn(halfAxes, 1, fromOrientedBoundingBoxScratchV);
+        var w = Matrix3.getColumn(halfAxes, 2, fromOrientedBoundingBoxScratchW);
+
+        var uHalf = Cartesian3.magnitude(u);
+        var vHalf = Cartesian3.magnitude(v);
+        var wHalf = Cartesian3.magnitude(w);
+
+        result.center = Cartesian3.clone(orientedBoundingBox.center, result.center);
+        result.radius = Math.max(uHalf, vHalf, wHalf);
 
         return result;
     };
