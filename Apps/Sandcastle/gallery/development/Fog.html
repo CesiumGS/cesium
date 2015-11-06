@@ -89,29 +89,25 @@ viewModel.enabled = viewer.scene.fog.enabled;
 viewModel.density = viewer.scene.fog.density;
 viewModel.sse = viewer.scene.fog.screenSpaceErrorFactor;
 
-Sandcastle.addToolbarMenu([{
-    text : 'Toward horizon',
-    onselect : function() {
-        viewer.camera.setView({
-            destination: new Cesium.Cartesian3.fromDegrees(-2467730.5740817646, -4390507.315824514, 3906155.113316938),
-            orientation: {
-                heading: 4.492211521856625,
-                pitch: -0.2687139437696304
-            }
-        });
-    }
-}, {
-    text : 'Below horizon',
-    onselect : function() {
-        viewer.camera.setView({
-            destination : new Cesium.Cartesian3(-734001.9511656855, -4214090.596769834, 4715898.125886317),
-            orientation : {
-                heading : 5.634257362559497,
-                pitch : -0.019548505785381032
-            }
-        });
-    }
-}], 'zoomButtons');
+Sandcastle.addToolbarButton("Horizon high altitude", function() {
+    viewer.camera.setView({
+        destination: new Cesium.Cartesian3(-2467730.5740817646, -4390507.315824514, 3906155.113316938),
+        orientation: {
+            heading: 4.492211521856625,
+            pitch: -0.2687139437696304
+        }
+    });
+});
+
+Sandcastle.addToolbarButton("Horizon low altitude", function() {
+    viewer.camera.setView({
+        destination : new Cesium.Cartesian3(-734001.9511656855, -4214090.596769834, 4715898.125886317),
+        orientation : {
+            heading : 5.634257362559497,
+            pitch : -0.019548505785381032
+        }
+    });
+});
 
 viewer.scene.globe._surface._debug.enableDebugOutput = true;
 
