@@ -36,7 +36,6 @@ define([
         contextOptions.webgl.antialias = defaultValue(contextOptions.webgl.antialias, false);
 
         var scene = new Scene(options);
-        scene.fog.enabled = false;
 
         var parameters = queryToObject(window.location.search.substring(1));
         if (defined(parameters.webglValidation)) {

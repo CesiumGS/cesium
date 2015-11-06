@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
+        '../Core/defined',
         '../Core/Math',
         './SceneMode'
     ], function(
         Cartesian3,
+        defined,
         CesiumMath,
         SceneMode) {
     "use strict";
@@ -109,14 +111,15 @@ define([
         }
 
         var camera = frameState.camera;
-        var height = camera.positionCartographic.height;
+        var positionCartographic = camera.positionCartographic;
 
         // Turn off fog in space.
-        if (height > 800000.0 || frameState.mode !== SceneMode.SCENE3D) {
+        if (!defined(positionCartographic) || positionCartographic.height > 800000.0 || frameState.mode !== SceneMode.SCENE3D) {
             frameState.fog.enabled = false;
             return;
         }
 
+        var height = positionCartographic.height;
         var i = findInterval(height);
         var t = CesiumMath.clamp((height - heightsTable[i]) / (heightsTable[i + 1] - heightsTable[i]), 0.0, 1.0);
         var density = CesiumMath.lerp(densityTable[i], densityTable[i + 1], t);
