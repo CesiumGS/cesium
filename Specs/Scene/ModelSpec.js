@@ -46,7 +46,6 @@ defineSuite([
 
     var boxUrl = './Data/Models/Box/CesiumBoxTest.gltf';
     var boxNoTechniqueUrl = './Data/Models/Box/CesiumBoxTest-NoTechnique.gltf';
-    var box0_8Url = './Data/Models/Box/CesiumBoxTest-0_8.gltf';
     var boxNoIndicesUrl = './Data/Models/Box-NoIndices/box-noindices.gltf';
     var texturedBoxUrl = './Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf';
     var texturedBoxSeparateUrl = './Data/Models/Box-Textured-Separate/CesiumTexturedBoxTest.gltf';
@@ -55,6 +54,7 @@ defineSuite([
     var texturedBoxKhrBinaryUrl = './Data/Models/Box-Textured-Binary/CesiumTexturedBoxTest.glb';
     var boxRtcUrl = './Data/Models/Box-RTC/Box.gltf';
     var cesiumAirUrl = './Data/Models/CesiumAir/Cesium_Air.gltf';
+    var cesiumAir_0_8Url = './Data/Models/CesiumAir/Cesium_Air_0_8.gltf';
     var animBoxesUrl = './Data/Models/anim-test-1-boxes/anim-test-1-boxes.gltf';
     var riggedFigureUrl = './Data/Models/rigged-figure-test/rigged-figure-test.gltf';
 
@@ -88,6 +88,7 @@ defineSuite([
         }));
         modelPromises.push(loadModel(cesiumAirUrl, {
             minimumPixelSize : 1,
+            maximumScale : 200,
             asynchronous : false
         }).then(function(model) {
             cesiumAirModel = model;
@@ -126,6 +127,7 @@ defineSuite([
             show : false,
             scale : options.scale,
             minimumPixelSize : options.minimumPixelSize,
+            maximumScale : options.maximumScale,
             id : url,        // for picking tests
             asynchronous : options.asynchronous,
             releaseGltfJson : options.releaseGltfJson,
@@ -172,6 +174,7 @@ defineSuite([
        expect(texturedBoxModel.modelMatrix).toEqual(modelMatrix);
        expect(texturedBoxModel.scale).toEqual(1.0);
        expect(texturedBoxModel.minimumPixelSize).toEqual(0.0);
+       expect(texturedBoxModel.maximumScale).toBeUndefined();
        expect(texturedBoxModel.id).toEqual(texturedBoxUrl);
        expect(texturedBoxModel.allowPicking).toEqual(true);
        expect(texturedBoxModel.activeAnimations).toBeDefined();
@@ -448,6 +451,20 @@ defineSuite([
         texturedBoxModel.scale = originalScale;
     });
 
+    it('boundingSphere returns the bounding sphere when maximumScale is reached', function() {
+        var originalScale = texturedBoxModel.scale;
+        var originalMaximumScale = texturedBoxModel.maximumScale;
+        texturedBoxModel.scale = 20;
+        texturedBoxModel.maximumScale = 10;
+
+        var boundingSphere = texturedBoxModel.boundingSphere;
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.0, -2.5, 0.0), CesiumMath.EPSILON3);
+        expect(boundingSphere.radius).toEqualEpsilon(7.5, CesiumMath.EPSILON3);
+
+        texturedBoxModel.scale = originalScale;
+        texturedBoxModel.maximumScale = originalMaximumScale;
+    });
+
     it('boundingSphere returns the bounding sphere when modelMatrix has non-uniform scale', function() {
         var originalMatrix = Matrix4.clone(texturedBoxModel.modelMatrix);
         Matrix4.multiplyByScale(texturedBoxModel.modelMatrix, new Cartesian3(2, 5, 10), texturedBoxModel.modelMatrix);
@@ -484,7 +501,17 @@ defineSuite([
     });
 
     it('loads a glTF v0.8 model', function() {
-        return loadModel(box0_8Url).then(function(m) {
+        return loadModel(cesiumAir_0_8Url, {
+            minimumPixelSize : 1
+        }).then(function(m) {
+            // 0.8 models had a number version. Verify it is converted to a string.
+            expect(m.gltf.asset.version).toEqual('0.8');
+
+            // Verify that rotation is converted from
+            // Axis-Angle (1,0,0,0) to Quaternion (0,0,0,1)
+            var rotation = m.gltf.nodes['Geometry-mesh005Node'].rotation;
+            expect(rotation).toEqual([0.0, 0.0, 0.0, 1.0]);
+
             verifyRender(m);
             primitives.remove(m);
         });
@@ -662,6 +689,7 @@ defineSuite([
 
     it('loads cesiumAir', function() {
         expect(cesiumAirModel.minimumPixelSize).toEqual(1);
+        expect(cesiumAirModel.maximumScale).toEqual(200);
         expect(cesiumAirModel.asynchronous).toEqual(false);
     });
 

@@ -1,6 +1,18 @@
 Change Log
 ==========
 
+### 1.16 - 2015-12-01
+
+* Fixed an issue where the sun texture is not generated correctly on some mobile devices. [#3141](https://github.com/AnalyticalGraphicsInc/cesium/issues/3141)
+* Fixed a bug in the deprecated `jsonp` that prevented it from returning a promise.  Its replacement, `loadJsonp`, was unaffected.
+* Fixed glTF implementation to read the version as a string as per the specification and to correctly handle backwards compatibility for axis-angle rotations in glTF 0.8 models.
+* Added `BoundingSphere.fromOrientedBoundingBox` function.
+* Fixed a bug that caused setting `Entity.parent` to `undefined` to throw an exception. [#3169](https://github.com/AnalyticalGraphicsInc/cesium/issues/3169)
+* Added `Model.maximumScale` and `ModelGraphics.maximumScale` properties, giving an upper limit for minimumPixelSize.
+* Entities have a reference to their entity collection.
+* Entity collections have a reference to their owner (usually a data source, but can be a `CompositeEntityCollection`).
+* `GeoJsonDataSource.load` now takes an optional `describeProperty` function for generating feature description properties. [#3140](https://github.com/AnalyticalGraphicsInc/cesium/pull/3140)
+
 ### 1.15 - 2015-11-02
 
 * Breaking changes
@@ -11,7 +23,7 @@ Change Log
     * `position`. Use `destination` instead.
     * `positionCartographic`. Convert to a `Cartesian3` and use `destination` instead.
     * `heading`, `pitch` and `roll`. Use `orientation.heading/pitch/roll` instead.
-  * Deprecated `CESIUM_binary_glTF` extension support for glTF models. [KHR_binary_glTF](https://github.com/KhronosGroup/glTF/tree/master/extensions/Khronos/KHR_binary_glTF) should be used instead. It will be removed in 1.18.  Reconvert models using the online [model converter](http://cesiumjs.org/convertmodel.html).
+  * Deprecated `CESIUM_binary_glTF` extension support for glTF models. [KHR_binary_glTF](https://github.com/KhronosGroup/glTF/tree/master/extensions/Khronos/KHR_binary_glTF) should be used instead. `CESIUM_binary_glTF` will be removed in 1.18.  Reconvert models using the online [model converter](http://cesiumjs.org/convertmodel.html).
   * Deprecated `RectanglePrimitive`. It will be removed in 1.17. Use `RectangleGeometry` or `Entity.rectangle` instead.
   * Deprecated `EllipsoidPrimitive`. It will be removed in 1.17. Use `EllipsoidGeometry` or `Entity.ellipsoid` instead.
   * Made `EllipsoidPrimitive` private, use `EllipsoidGeometry` or `Entity.ellipsoid` instead.
@@ -22,9 +34,9 @@ Change Log
   * Deprecated `PerspectiveOffCenterFrustum.getPixelSize`. It will be removed in 1.17. Use `PerspectiveOffCenterFrustum.getPixelDimensions` instead.
   * Deprecated `Scene\HeadingPitchRange`. It will be removed in 1.17. Use `Core\HeadingPitchRange` instead.
   * Deprecated `jsonp`. It will be removed in 1.17. Use `loadJsonp` instead.
-* Added support for [glTF 1.0](https://github.com/KhronosGroup/glTF/blob/master/specification/README.md) Draft Specification.
+* Added support for the [glTF 1.0](https://github.com/KhronosGroup/glTF/blob/master/specification/README.md) draft specification.
 * Added support for the glTF extensions [KHR_binary_glTF](https://github.com/KhronosGroup/glTF/tree/master/extensions/Khronos/KHR_binary_glTF) and [KHR_materials_common](https://github.com/KhronosGroup/glTF/tree/KHR_materials_common/extensions/Khronos/KHR_materials_common).
-* Decreased GPU memory usage in `BillboardCollection` and `LabelCollection` by using the WebGL ANGLE_instanced_arrays extension.
+* Decreased GPU memory usage in `BillboardCollection` and `LabelCollection` by using WebGL instancing.
 * Added CZML examples to Sandcastle.  See the new CZML tab.
 * Changed `Camera.setView` to take the same parameter options as `Camera.flyTo`.  `options.destination` takes a rectangle, `options.orientation` works with heading/pitch/roll or direction/up, and `options.endTransform` was added. [#3100](https://github.com/AnalyticalGraphicsInc/cesium/pull/3100)
 * Fixed token issue in `ArcGisMapServerImageryProvider`.
