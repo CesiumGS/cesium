@@ -140,6 +140,11 @@ define([
         this.surfaceShader = undefined;
     };
 
+    /**
+     * Force refining children tiles.
+     */
+    GlobeSurfaceTile.irregularZoomLevels = false;
+
     defineProperties(GlobeSurfaceTile.prototype, {
         /**
          * Gets a value indicating whether or not this tile is eligible to be unloaded.
@@ -318,7 +323,8 @@ define([
 
         // If this tile's terrain and imagery are just upsampled from its parent, mark the tile as
         // upsampled only.  We won't refine a tile if its four children are upsampled only.
-        var isUpsampledOnly = false;//defined(surfaceTile.terrainData) && surfaceTile.terrainData.wasCreatedByUpsampling();
+        var isUpsampledOnly = GlobeSurfaceTile.irregularZoomLevels ? false :
+          (defined(surfaceTile.terrainData) && surfaceTile.terrainData.wasCreatedByUpsampling());
 
         // Transition imagery states
         var tileImageryCollection = surfaceTile.imagery;

@@ -114,6 +114,7 @@ define([
         }
         //>>includeEnd('debug');
 
+        GlobeSurfaceTile.irregularZoomLevels |= !!options.terrainProvider._availableLevels;
         this.lightingFadeOutDistance = 6500000.0;
         this.lightingFadeInDistance = 9000000.0;
         this.hasWaterMask = false;
@@ -256,6 +257,7 @@ define([
                 //>>includeEnd('debug');
 
                 this._terrainProvider = terrainProvider;
+                GlobeSurfaceTile.irregularZoomLevels |= !!terrainProvider._availableLevels;
 
                 if (defined(this._quadtree)) {
                     this._quadtree.invalidateAllTiles();
@@ -319,6 +321,7 @@ define([
         var imageryLayers = this._imageryLayers;
         for (i = 0, len = imageryLayers.length; i < len; ++i) {
             var imageryProvider = imageryLayers.get(i).imageryProvider;
+            GlobeSurfaceTile.irregularZoomLevels |= !!imageryProvider._availableLevels;
             if (imageryProvider.ready && defined(imageryProvider.credit)) {
                 creditDisplay.addCredit(imageryProvider.credit);
             }
