@@ -1,6 +1,7 @@
 /*global define*/
 define([
         'Cesium/Core/Cartesian3',
+        'Cesium/Core/Cartesian2',
         'Cesium/Core/defined',
         'Cesium/Core/formatError',
         'Cesium/Core/getFilenameFromUri',
@@ -18,6 +19,7 @@ define([
         'domReady!'
     ], function(
         Cartesian3,
+        Cartesian2,
         defined,
         formatError,
         getFilenameFromUri,
@@ -55,6 +57,85 @@ define([
         });
     }
 
+
+    var SSECorrector = function() {
+      var params = {};
+      location.search.substr(1).split("&").reduce(function(previous, current) {
+        var splitted = current.split("=");
+        if (splitted.length === 2) {
+          params[splitted[0]] = splitted[1];
+        } else {
+          params[splitted[0]] = true;
+        }
+      });
+
+      this.mindist = parseInt(params['mindist'] || '5000', 10);
+      this.maxdist = parseInt(params['maxdist'] || '10000', 10);
+      this.mincamfactor = parseFloat(params['mincamfactor'] ||'0.9');
+      this.maxcamfactor = parseFloat(params['maxcamfactor'] || '1.2');
+      // Max height to apply optmization
+      this.maxheight = parseInt(params['maxheight'] || '0', 10);
+      this.allowtilelevels = parseInt(params['allowtilelevels'] || '0', 10);
+      this.pickglobe = !params['nopickglobe'];
+      this.pickposition = parseFloat(params['pickposition'] || '0.6666');
+      this.shouldCut = !params['nocut'];
+      this.noheight = !!params['noheight'];
+      this.maxerrorfactor = parseFloat(params['maxerrorfactor'] || '0.25');
+      this.cameraHeight;
+    };
+
+    SSECorrector.prototype.newFrameState = function(frameState) {
+        this.cameraHeight = frameState.camera.positionCartographic.height;
+
+        if (this.pickglobe) {
+          var scene = frameState.camera._scene;
+          var canvas = scene.canvas;
+          var pixelHeight = this.pickposition * canvas.clientHeight;
+          var pixel = new Cartesian2(canvas.clientWidth / 2, pixelHeight);
+          var ray = scene.camera.getPickRay(pixel);
+          var target = scene.globe.pick(ray, scene);
+          // Could also take bottom in the absence of result
+          // then take cameraHeight
+          this.cameraHeight = undefined;
+          if (target) {
+            var distance = Cartesian3.distance(frameState.camera.position, target);
+            this.cameraHeight = Math.max(this.cameraHeight, distance);
+          }
+        }
+
+        this.min = this.mindist;
+        this.max = this.maxdist;
+        if (!this.noheight && this.cameraHeight) {
+          this.min = Math.min(this.mindist, this.mincamfactor * this.cameraHeight);
+          this.max = Math.max(this.maxdist, this.maxcamfactor * this.cameraHeight);
+        }
+
+        // 1 = a * min + b
+        // maxerrorfactor = a * max + b
+        this.a = (1 - this.maxerrorfactor) / (this.min - this.max);
+        this.b = 1 - this.a * this.min;
+    };
+
+    SSECorrector.prototype.correct = function(frameState, tile, distance, original) {
+        if (!this.shouldCut ||
+            (this.maxheight && this.cameraHeight && (this.cameraHeight > this.maxheight)) ||
+            (this.allowtilelevels && (tile._level <= this.allowtilelevels))) {
+          return original;
+        }
+
+        if (distance < this.max) {
+          if (distance < this.min || this.min === this.max) {
+            return original;
+          } else {
+            var linearFactor = this.a * distance + this.b;
+            return linearFactor * original;
+          }
+        } else {
+          return this.maxerrorfactor * original;
+        }
+    };
+
+
     var loadingIndicator = document.getElementById('loadingIndicator');
     var viewer;
     try {
@@ -69,6 +150,7 @@ define([
                 requestVertexNormals : false
             }) : undefined
         });
+        viewer.scene.globe._surface.sseCorrector = new SSECorrector();
     } catch (exception) {
         loadingIndicator.style.display = 'none';
         var message = formatError(exception);
