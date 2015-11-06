@@ -1112,7 +1112,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        return this._pickObjects[pickColor.toRgba()];
+        return ((pickColor = this._pickObjects[pickColor.toRgba()]) && pickColor.id.selectable) ? pickColor : undefined;
     };
 
     function PickId(pickObjects, key, color) {
