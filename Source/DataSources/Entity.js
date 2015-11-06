@@ -282,11 +282,13 @@ define([
                 return this._selectable;
             },
             set: function(value) {
-                if (!defined(value))
+                if (!defined(value)) {
                     throw new DeveloperError('value is required');
+                }
                 
-                
-                if (value === this._selectable) return;
+                if (value === this._selectable) {
+                    return;
+                }
                 this._selectable = value;
             }
         },
