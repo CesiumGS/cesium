@@ -1,10 +1,12 @@
 /*global define*/
 define([
+        '../ThirdParty/when',
         './defined',
         './defineProperties',
         './DeveloperError',
         './Math'
     ], function(
+        when,
         defined,
         defineProperties,
         DeveloperError,
@@ -66,6 +68,16 @@ define([
          * @type {Boolean}
          */
         ready : {
+            get : DeveloperError.throwInstantiationError
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof TerrainProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
             get : DeveloperError.throwInstantiationError
         },
 

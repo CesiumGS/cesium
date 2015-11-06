@@ -110,6 +110,17 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('resolves readyPromise', function() {
+        var provider = new CesiumTerrainProvider({
+            url : 'made/up/url'
+        });
+
+        return provider.readyPromise.then(function (result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
     it('uses geographic tiling scheme by default', function() {
         returnHeightmapTileJson();
 
