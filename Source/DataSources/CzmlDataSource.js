@@ -857,8 +857,8 @@ define([
         entity.name = defaultValue(packet.name, entity.name);
     }
     
-    function processSelectble(entity, packet, entityCollection, sourceUri) {
-        entity.selectable = devaultValue(packet.selectable, true);    
+    function processSelectable(entity, packet, entityCollection, sourceUri) {
+        entity.selectable = defaultValue(packet.selectable, true);    
     }
 
     function processDescription(entity, packet, entityCollection, sourceUri) {

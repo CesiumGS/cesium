@@ -277,7 +277,19 @@ define([
          * @memberof Entity.prototype
          * @type {Boolean}
          */
-        selectable: createPropertyDescriptor('selectable'),
+        selectable: {
+            get: function() {
+                return this._selectable;
+            },
+            set: function(value) {
+                if (!defined(value))
+                    throw new DeveloperError('value is required');
+                
+                
+                if (value === this._selectable) return;
+                this._selectable = value;
+            }
+        },
         
         /**
          * Gets whether this entity is being displayed, taking into account
