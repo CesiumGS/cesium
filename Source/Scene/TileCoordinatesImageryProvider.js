@@ -5,14 +5,16 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
-        '../Core/GeographicTilingScheme'
+        '../Core/GeographicTilingScheme',
+        '../ThirdParty/when'
     ], function(
         Color,
         defaultValue,
         defined,
         defineProperties,
         Event,
-        GeographicTilingScheme) {
+        GeographicTilingScheme,
+        when) {
     "use strict";
 
     /**
@@ -171,6 +173,18 @@ define([
         ready : {
             get : function() {
                 return true;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof TileCoordinatesImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return when.resolve(true);
             }
         },
 

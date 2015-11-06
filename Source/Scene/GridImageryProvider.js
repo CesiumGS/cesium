@@ -5,14 +5,16 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
-        '../Core/GeographicTilingScheme'
+        '../Core/GeographicTilingScheme',
+        '../ThirdParty/when'
     ], function(
         Color,
         defaultValue,
         defined,
         defineProperties,
         Event,
-        GeographicTilingScheme) {
+        GeographicTilingScheme,
+        when) {
     "use strict";
 
     var defaultColor = new Color(1.0, 1.0, 1.0, 0.4);
@@ -191,6 +193,18 @@ define([
         ready : {
             get : function() {
                 return true;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof GridImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return when.resolve(true);
             }
         },
 

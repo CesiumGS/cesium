@@ -140,6 +140,7 @@ define([
         this._errorEvent = new Event();
 
         this._ready = false;
+        this._readyPromise = when.defer();
 
         var metadataUrl = this._url + '/REST/v1/Imagery/Metadata/' + this._mapStyle + '?incl=ImageryProviders&key=' + this._key;
         var that = this;
@@ -196,6 +197,7 @@ define([
             }
 
             that._ready = true;
+            that._readyPromise.resolve(true);
             TileProviderError.handleSuccess(metadataError);
         }
 
@@ -438,6 +440,18 @@ define([
         ready : {
             get : function() {
                 return this._ready;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof BingMapsImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise;
             }
         },
 

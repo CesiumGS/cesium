@@ -135,6 +135,7 @@ define([
         this._errorEvent = new Event();
 
         this._ready = false;
+        this._readyPromise = when.defer();
 
         // Grab the details of this MapServer.
         var that = this;
@@ -198,6 +199,7 @@ define([
             }
 
             that._ready = true;
+            that._readyPromise.resolve(true);
             TileProviderError.handleSuccess(metadataError);
         }
 
@@ -226,6 +228,7 @@ define([
             requestMetadata();
         } else {
             this._ready = true;
+            this._readyPromise.resolve(true);
         }
     };
 
@@ -466,6 +469,18 @@ define([
         ready : {
             get : function() {
                 return this._ready;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof ArcGisMapServerImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise;
             }
         },
 

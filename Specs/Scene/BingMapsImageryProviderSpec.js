@@ -181,6 +181,24 @@ defineSuite([
         };
     }
 
+    it('resolves readyPromise', function() {
+        var url = 'http://fake.fake.invalid';
+        var mapStyle = BingMapsStyle.ROAD;
+
+        installFakeMetadataRequest(url, mapStyle);
+        installFakeImageRequest();
+
+        var provider = new BingMapsImageryProvider({
+            url : url,
+            mapStyle : mapStyle
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
     it('returns valid value for hasAlphaChannel', function() {
         var url = 'http://fake.fake.invalid';
         var mapStyle = BingMapsStyle.AERIAL;

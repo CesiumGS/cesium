@@ -80,6 +80,7 @@ define([
         this._errorEvent = new Event();
 
         this._ready = false;
+        this._readyPromise = when.defer();
 
         var imageUrl = url;
         if (defined(proxy)) {
@@ -100,6 +101,7 @@ define([
             that._tileWidth = image.width;
             that._tileHeight = image.height;
             that._ready = true;
+            that._readyPromise.resolve(true);
             TileProviderError.handleSuccess(that._errorEvent);
         }
 
@@ -300,6 +302,18 @@ define([
         ready : {
             get : function() {
                 return this._ready;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof SingleTileImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise;
             }
         },
 

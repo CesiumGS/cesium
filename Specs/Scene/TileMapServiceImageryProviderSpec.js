@@ -51,6 +51,17 @@ defineSuite([
         expect(TileMapServiceImageryProvider).toConformToInterface(ImageryProvider);
     });
 
+    it('resolves readyPromise', function() {
+        var provider = new TileMapServiceImageryProvider({
+            url : 'made/up/tms/server/'
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
     it('requires the url to be specified', function() {
         function createWithoutUrl() {
             return new TileMapServiceImageryProvider({});

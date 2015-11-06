@@ -12,6 +12,7 @@ define([
         '../Core/queryToObject',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/Uri',
+        '../ThirdParty/when',
         './GetFeatureInfoFormat',
         './UrlTemplateImageryProvider'
     ], function(
@@ -27,6 +28,7 @@ define([
         queryToObject,
         WebMercatorTilingScheme,
         Uri,
+        when,
         GetFeatureInfoFormat,
         UrlTemplateImageryProvider) {
     "use strict";
@@ -337,6 +339,18 @@ define([
         ready : {
             get : function() {
                 return this._tileProvider.ready;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof WebMapServiceImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._tileProvider.readyPromise;
             }
         },
 

@@ -13,6 +13,7 @@ define([
         '../Core/Rectangle',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/Uri',
+        '../ThirdParty/when',
         './ImageryProvider'
     ], function(
         combine,
@@ -28,6 +29,7 @@ define([
         Rectangle,
         WebMercatorTilingScheme,
         Uri,
+        when,
         ImageryProvider) {
     "use strict";
 
@@ -356,6 +358,18 @@ define([
          */
         ready : {
             value: true
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof WebMapTileServiceImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return when.resolve(true);
+            }
         },
 
         /**

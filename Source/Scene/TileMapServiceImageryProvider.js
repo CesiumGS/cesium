@@ -99,6 +99,7 @@ define([
 
         this._url = url;
         this._ready = false;
+        this._readyPromise = when.defer();
         this._proxy = options.proxy;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._errorEvent = new Event();
@@ -241,6 +242,7 @@ define([
 
             that._tilingScheme = tilingScheme;
             that._ready = true;
+            that._readyPromise.resolve(true);
         }
 
         function metadataFailure(error) {
@@ -253,6 +255,7 @@ define([
             that._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid });
             that._rectangle = defaultValue(options.rectangle, that._tilingScheme.rectangle);
             that._ready = true;
+            that._readyPromise.resolve(true);
         }
 
         function requestMetadata() {
@@ -464,6 +467,18 @@ define([
         ready : {
             get : function() {
                 return this._ready;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof TileMapServiceImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise;
             }
         },
 

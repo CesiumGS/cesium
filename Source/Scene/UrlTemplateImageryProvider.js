@@ -161,9 +161,9 @@ define([
         this._proxy = options.proxy;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._getFeatureInfoFormats = options.getFeatureInfoFormats;
-        
+
         this._errorEvent = new Event();
-        
+
         this._subdomains = options.subdomains;
         if (Array.isArray(this._subdomains)) {
             this._subdomains = this._subdomains.slice();
@@ -385,6 +385,18 @@ define([
         ready : {
             get : function() {
                 return true;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof UrlTemplateImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return when.resolve(true);
             }
         },
 
