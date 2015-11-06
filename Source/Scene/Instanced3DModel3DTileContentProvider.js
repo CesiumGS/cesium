@@ -127,9 +127,23 @@ define([
         var instancesLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
+        //>>includeStart('debug', pragmas.debug);
+        if (gltfLength < 0) {
+            throw new DeveloperError('glTF byte length must be greater than or equal to zero. Value is ' + gltfLength + '.');
+        }
+        if ((gltfFormat !== 0) && (gltfFormat !== 1)) {
+            throw new DeveloperError('Only glTF format 0 (uri) or 1 (embedded) are supported. Format ' + gltfFormat + ' is not');
+        }
+        if (instancesLength < 0) {
+            throw new DeveloperError('Instances length must be greater than or equal to zero. Value is ' + instancesLength + '.');
+        }
+        //>>includeEnd('debug');
+
         var batchTableResources = new Cesium3DTileBatchTableResources(this, instancesLength);
         this._batchTableResources = batchTableResources;
+        var hasBatchTable = false;
         if (batchTableLength > 0) {
+            hasBatchTable = true;
             var batchTableString = getStringFromTypedArray(uint8Array, byteOffset, batchTableLength);
             batchTableResources.batchTable = JSON.parse(batchTableString);
             byteOffset += batchTableLength;
@@ -155,12 +169,6 @@ define([
             basePath : undefined
         };
 
-        //>>includeStart('debug', pragmas.debug);
-        if((gltfFormat !== 0) && (gltfFormat !== 1)) {
-            throw new DeveloperError('Only glTF format 0 (url) or 1 (embedded) are supported. Format ' + gltfFormat + ' is not');
-        }
-        //>>includeEnd('debug');
-
         if (gltfFormat === 0) {
             var gltfUrl = getStringFromTypedArray(gltfView);
             var url = (new Uri(gltfUrl).isAbsolute()) ? gltfUrl : this._tileset.url + gltfUrl;
@@ -184,9 +192,12 @@ define([
             byteOffset += sizeOfFloat64;
             var height = 0.0;
 
-            // Get batchId
-            var batchId = instancesView.getUint16(byteOffset, true);
-            byteOffset += sizeOfUint16;
+            // Get batch id. If there is no batch table, the batch id is the array index.
+            var batchId = i;
+            if (hasBatchTable) {
+                batchId = instancesView.getUint16(byteOffset, true);
+                byteOffset += sizeOfUint16;
+            }
 
             Cartesian3.fromRadians(longitude, latitude, height, ellipsoid, position);
             var modelMatrix = Transforms.eastNorthUpToFixedFrame(position);

@@ -31,7 +31,7 @@ define([
             return new Composite3DTileContentProvider(tileset, tile, url, Cesium3DTileContentProviderFactory);
         },
         json : function(tileset, tile, url) {
-            // Tile may specify a tiles.json file as it's content url. Return an Empty3DTileContentProvider.
+            // Tile may specify a tiles.json file as its content url. Return an Empty3DTileContentProvider.
             return new Empty3DTileContentProvider();
         }
     };
