@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
+        '../Core/Cartesian2',
         '../Core/Cartographic',
         '../Core/defaultValue',
         '../Core/defined',
@@ -19,6 +20,7 @@ define([
         './TileReplacementQueue'
     ], function(
         Cartesian3,
+        Cartesian2,
         Cartographic,
         defaultValue,
         defined,
@@ -68,6 +70,7 @@ define([
         }
         //>>includeEnd('debug');
 
+        this._sseCorrector = options.sseCorrector;
         this._tileProvider = options.tileProvider;
         this._tileProvider.quadtree = this;
 
@@ -376,6 +379,11 @@ define([
             }
         }
 
+        // Compute camera height once
+        if (defined(primitive.sseCorrector)) {
+          primitive.sseCorrector.newFrameState(frameState);
+        }
+
         // Traverse the tiles in breadth-first order.
         // This ordering allows us to load bigger, lower-detail tiles before smaller, higher-detail ones.
         // This maximizes the average detail across the scene and results in fewer sharp transitions
@@ -450,7 +458,11 @@ define([
         var fovy = frustum.fovy;
 
         // PERFORMANCE_IDEA: factor out stuff that's constant across tiles.
-        return (maxGeometricError * height) / (2 * distance * Math.tan(0.5 * fovy));
+        var error = (maxGeometricError * height) / (2 * distance * Math.tan(0.5 * fovy));
+        if (defined(primitive.sseCorrector)) {
+          error = primitive.sseCorrector.correct(frameState, tile, distance, error);
+        }
+        return error;
     }
 
     function screenSpaceError2D(primitive, frameState, tile) {
