@@ -1,12 +1,10 @@
 /*global define*/
 define([
-        '../ThirdParty/when',
         './defined',
         './defineProperties',
         './DeveloperError',
         './Math'
     ], function(
-        when,
         defined,
         defineProperties,
         DeveloperError,

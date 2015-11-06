@@ -190,6 +190,8 @@ define([
 
         this._urlParts = urlTemplateToParts(this._url, tags);
         this._pickFeaturesUrlParts = urlTemplateToParts(this._pickFeaturesUrl, pickFeaturesTags);
+
+        this._readyPromise = when.resolve(true);
     };
 
     defineProperties(UrlTemplateImageryProvider.prototype, {
@@ -396,7 +398,7 @@ define([
          */
         readyPromise : {
             get : function() {
-                return when.resolve(true);
+                return this._readyPromise;
             }
         },
 

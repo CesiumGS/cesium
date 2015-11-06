@@ -12,6 +12,7 @@ define([
         '../Core/joinUrls',
         '../Core/loadXML',
         '../Core/Rectangle',
+        '../Core/RuntimeError',
         '../Core/TileProviderError',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/when',
@@ -29,6 +30,7 @@ define([
         joinUrls,
         loadXML,
         Rectangle,
+        RuntimeError,
         TileProviderError,
         WebMercatorTilingScheme,
         when,
@@ -178,6 +180,7 @@ define([
                 } else {
                     var message = joinUrls(url, 'tilemapresource.xml') + 'specifies an unsupported profile attribute, ' + tilingSchemeName + '.';
                     metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+                    that._readyPromise.reject(new RuntimeError(message));
                     return;
                 }
             }
@@ -478,7 +481,7 @@ define([
          */
         readyPromise : {
             get : function() {
-                return this._readyPromise;
+                return this._readyPromise.promise;
             }
         },
 

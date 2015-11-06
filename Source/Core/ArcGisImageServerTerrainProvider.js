@@ -100,6 +100,7 @@ define([
             credit = new Credit(credit);
         }
         this._credit = credit;
+        this._readyPromise = when.resolve(true);
     };
 
     defineProperties(ArcGisImageServerTerrainProvider.prototype, {
@@ -159,7 +160,7 @@ define([
          */
         readyPromise : {
             get : function() {
-                return when.resolve(true);
+                return this._readyPromise;
             }
         },
 

@@ -130,6 +130,8 @@ define([
 
         this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
 
+        this._readyPromise = when.resolve(true);
+
         // Check the number of tiles at the minimum level.  If it's more than four,
         // throw an exception, because starting at the higher minimum
         // level will cause too many tiles to be downloaded and rendered.
@@ -368,7 +370,7 @@ define([
          */
         readyPromise : {
             get : function() {
-                return when.resolve(true);
+                return this._readyPromise;
             }
         },
 

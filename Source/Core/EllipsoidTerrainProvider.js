@@ -61,6 +61,7 @@ define([
         });
 
         this._errorEvent = new Event();
+        this._readyPromise = when.resolve(true);
     };
 
     defineProperties(EllipsoidTerrainProvider.prototype, {
@@ -120,7 +121,7 @@ define([
          */
         readyPromise : {
             get : function() {
-                return when.resolve(true);
+                return this._readyPromise;
             }
         },
 

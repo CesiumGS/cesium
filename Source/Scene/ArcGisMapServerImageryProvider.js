@@ -15,6 +15,7 @@ define([
         '../Core/loadJsonp',
         '../Core/Math',
         '../Core/Rectangle',
+        '../Core/RuntimeError',
         '../Core/TileProviderError',
         '../Core/WebMercatorProjection',
         '../Core/WebMercatorTilingScheme',
@@ -38,6 +39,7 @@ define([
         loadJsonp,
         CesiumMath,
         Rectangle,
+        RuntimeError,
         TileProviderError,
         WebMercatorProjection,
         WebMercatorTilingScheme,
@@ -206,6 +208,7 @@ define([
         function metadataFailure(e) {
             var message = 'An error occurred while accessing ' + that._url + '.';
             metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+            that._readyPromise.reject(new RuntimeError(message));
         }
 
         function requestMetadata() {
@@ -480,7 +483,7 @@ define([
          */
         readyPromise : {
             get : function() {
-                return this._readyPromise;
+                return this._readyPromise.promise;
             }
         },
 

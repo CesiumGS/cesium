@@ -9,6 +9,7 @@ define([
         '../Core/GeographicTilingScheme',
         '../Core/loadImage',
         '../Core/Rectangle',
+        '../Core/RuntimeError',
         '../Core/TileProviderError',
         '../ThirdParty/when'
     ], function(
@@ -21,6 +22,7 @@ define([
         GeographicTilingScheme,
         loadImage,
         Rectangle,
+        RuntimeError,
         TileProviderError,
         when) {
     "use strict";
@@ -115,6 +117,7 @@ define([
                     0, 0, 0,
                     doRequest,
                     e);
+            that._readyPromise.reject(new RuntimeError(message));
         }
 
         function doRequest() {
@@ -313,7 +316,7 @@ define([
          */
         readyPromise : {
             get : function() {
-                return this._readyPromise;
+                return this._readyPromise.promise;
             }
         },
 

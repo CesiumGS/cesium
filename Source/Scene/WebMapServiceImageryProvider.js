@@ -12,7 +12,6 @@ define([
         '../Core/queryToObject',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/Uri',
-        '../ThirdParty/when',
         './GetFeatureInfoFormat',
         './UrlTemplateImageryProvider'
     ], function(
@@ -28,7 +27,6 @@ define([
         queryToObject,
         WebMercatorTilingScheme,
         Uri,
-        when,
         GetFeatureInfoFormat,
         UrlTemplateImageryProvider) {
     "use strict";

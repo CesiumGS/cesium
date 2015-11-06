@@ -42,6 +42,7 @@ define([
         this._errorEvent = new Event();
         this._tileWidth = defaultValue(options.tileWidth, 256);
         this._tileHeight = defaultValue(options.tileHeight, 256);
+        this._readyPromise = when.resolve(true);
     };
 
     defineProperties(TileCoordinatesImageryProvider.prototype, {
@@ -184,7 +185,7 @@ define([
          */
         readyPromise : {
             get : function() {
-                return when.resolve(true);
+                return this._readyPromise;
             }
         },
 

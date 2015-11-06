@@ -62,6 +62,8 @@ define([
 
         // We only need a single canvas since all tiles will be the same
         this._canvas = this._createGridCanvas();
+
+        this._readyPromise = when.resolve(true);
     };
 
     defineProperties(GridImageryProvider.prototype, {
@@ -204,7 +206,7 @@ define([
          */
         readyPromise : {
             get : function() {
-                return when.resolve(true);
+                return this._readyPromise;
             }
         },
 
