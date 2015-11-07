@@ -12,7 +12,7 @@ Change Log
 * Entities have a reference to their entity collection.
 * Entity collections have a reference to their owner (usually a data source, but can be a `CompositeEntityCollection`).
 * `GeoJsonDataSource.load` now takes an optional `describeProperty` function for generating feature description properties. [#3140](https://github.com/AnalyticalGraphicsInc/cesium/pull/3140)
-* Added support for fog near the horizon. Improves performance by rendering less terrain tiles and reduces terrain tile requests. [#3154](https://github.com/AnalyticalGraphicsInc/cesium/pull/3154)
+* Added support for fog near the horizon, which improves performance by rendering less terrain tiles and reduces terrain tile requests.  This is enabled by default.  See `Scene.fog` for options.  [#3154](https://github.com/AnalyticalGraphicsInc/cesium/pull/3154)
 
 ### 1.15 - 2015-11-02
 
