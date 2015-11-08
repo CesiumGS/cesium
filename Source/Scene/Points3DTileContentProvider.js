@@ -108,7 +108,6 @@ define([
         var colorsOffsetInBytes = positionsOffsetInBytes + (pointsLength * (3 * Float32Array.BYTES_PER_ELEMENT));
         var colors = new Uint8Array(arrayBuffer, colorsOffsetInBytes, pointsLength * 3);
 
-        // TODO: use custom load pipeline, e.g., RTC, scene3DOnly?
         // TODO: performance test with 'interleave : true'
         var instance = new GeometryInstance({
             geometry : new PointGeometry({
