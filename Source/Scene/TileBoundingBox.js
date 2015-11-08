@@ -22,13 +22,13 @@ define([
 // TODO: replace code in GlobeSurfaceTile.js and GlobeSurfaceTileProvider.js
 
     /**
-     * @private
-     *
      * @param {Object} options Object with the following properties:
      * @param {Rectangle} options.rectangle
      * @param {Number} [options.minimumHeight=0.0]
      * @param {Number} [options.maximumHeight=0.0]
      * @param {Ellipsoid} [options.ellipsoid=Cesium.Ellipsoid.WGS84]
+     * 
+     * @private
      */
     var TileBoundingBox = function(options) {
         //>>includeStart('debug', pragmas.debug);
