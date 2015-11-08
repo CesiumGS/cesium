@@ -52,7 +52,7 @@ define([
          */
         this.readyPromise = when.defer();
 
-        this._batchSize = 0;
+        this._batchLength = 0;
         this._batchTableResources = undefined;
         this._models = undefined;
     };
@@ -66,9 +66,9 @@ define([
          * @type {Number}
          * @readonly
          */
-        batchSize : {
+        batchLength : {
             get : function() {
-                return this._batchSize;
+                return this._batchLength;
             }
         },
 
@@ -84,10 +84,10 @@ define([
 
     function createModels(content) {
         var tileset = content._tileset;
-        var batchSize = content._batchSize;
-        if (!defined(content._models) && (batchSize > 0)) {
-            var models = new Array(batchSize);
-            for (var i = 0; i < batchSize; ++i) {
+        var batchLength = content._batchLength;
+        if (!defined(content._models) && (batchLength > 0)) {
+            var models = new Array(batchLength);
+            for (var i = 0; i < batchLength; ++i) {
                 models[i] = new BatchedModel(tileset, content._batchTableResources, i);
             }
             content._models = models;
@@ -98,10 +98,10 @@ define([
      * DOC_TBA
      */
     Batched3DModel3DTileContentProvider.prototype.getModel = function(batchId) {
-        var batchSize = this._batchSize;
+        var batchLength = this._batchLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId) || (batchId < 0) || (batchId >= batchSize)) {
-            throw new DeveloperError('batchId is required and between zero and batchSize - 1 (' + (batchSize - 1) + ').');
+        if (!defined(batchId) || (batchId < 0) || (batchId >= batchLength)) {
+            throw new DeveloperError('batchId is required and between zero and batchLength - 1 (' + (batchLength - 1) + ').');
         }
         //>>includeEnd('debug');
 
@@ -155,19 +155,18 @@ define([
         // Skip byteLength
         byteOffset += sizeOfUint32;
 
-        // TODO : rename to batchLength?
-        var batchSize = view.getUint32(byteOffset, true);
-        this._batchSize = batchSize;
+        var batchLength = view.getUint32(byteOffset, true);
+        this._batchLength = batchLength;
         byteOffset += sizeOfUint32;
 
-        var batchTableResources = new Cesium3DTileBatchTableResources(this, batchSize);
+        var batchTableResources = new Cesium3DTileBatchTableResources(this, batchLength);
         this._batchTableResources = batchTableResources;
 
-        var batchTableLength = view.getUint32(byteOffset, true);
+        var batchTableByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
-        if (batchTableLength > 0) {
-            var batchTableString = getStringFromTypedArray(uint8Array, byteOffset, batchTableLength);
-            byteOffset += batchTableLength;
+        if (batchTableByteLength > 0) {
+            var batchTableString = getStringFromTypedArray(uint8Array, byteOffset, batchTableByteLength);
+            byteOffset += batchTableByteLength;
 
             // PERFORMANCE_IDEA: is it possible to allocate this on-demand?  Perhaps keep the
             // arraybuffer/string compressed in memory and then decompress it when it is first accessed.

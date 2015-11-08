@@ -115,10 +115,10 @@ define([
         // Skip byteLength
         byteOffset += sizeOfUint32;
 
-        var batchTableLength = view.getUint32(byteOffset, true);
+        var batchTableByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
-        var gltfLength = view.getUint32(byteOffset, true);
+        var gltfByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
         var gltfFormat = view.getUint32(byteOffset, true);
@@ -128,8 +128,8 @@ define([
         byteOffset += sizeOfUint32;
 
         //>>includeStart('debug', pragmas.debug);
-        if (gltfLength < 0) {
-            throw new DeveloperError('glTF byte length must be greater than or equal to zero. Value is ' + gltfLength + '.');
+        if (gltfByteLength < 0) {
+            throw new DeveloperError('glTF byte length must be greater than or equal to zero. Value is ' + gltfByteLength + '.');
         }
         if ((gltfFormat !== 0) && (gltfFormat !== 1)) {
             throw new DeveloperError('Only glTF format 0 (uri) or 1 (embedded) are supported. Format ' + gltfFormat + ' is not');
@@ -142,15 +142,15 @@ define([
         var batchTableResources = new Cesium3DTileBatchTableResources(this, instancesLength);
         this._batchTableResources = batchTableResources;
         var hasBatchTable = false;
-        if (batchTableLength > 0) {
+        if (batchTableByteLength > 0) {
             hasBatchTable = true;
-            var batchTableString = getStringFromTypedArray(uint8Array, byteOffset, batchTableLength);
+            var batchTableString = getStringFromTypedArray(uint8Array, byteOffset, batchTableByteLength);
             batchTableResources.batchTable = JSON.parse(batchTableString);
-            byteOffset += batchTableLength;
+            byteOffset += batchTableByteLength;
         }
 
-        var gltfView = new Uint8Array(arrayBuffer, byteOffset, gltfLength);
-        byteOffset += gltfLength;
+        var gltfView = new Uint8Array(arrayBuffer, byteOffset, gltfByteLength);
+        byteOffset += gltfByteLength;
 
         var instancesDataSizeInBytes = instancesLength * instanceSizeInBytes;
         var instancesView = new DataView(arrayBuffer, byteOffset, instancesDataSizeInBytes);

@@ -99,14 +99,14 @@ define([
         // Skip byteLength
         byteOffset += sizeOfUint32;
 
-        var numberOfPoints = view.getUint32(byteOffset, true);
+        var pointsLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
         var positionsOffsetInBytes = byteOffset;
-        var positions = new Float32Array(arrayBuffer, positionsOffsetInBytes, numberOfPoints * 3);
+        var positions = new Float32Array(arrayBuffer, positionsOffsetInBytes, pointsLength * 3);
 
-        var colorsOffsetInBytes = positionsOffsetInBytes + (numberOfPoints * (3 * Float32Array.BYTES_PER_ELEMENT));
-        var colors = new Uint8Array(arrayBuffer, colorsOffsetInBytes, numberOfPoints * 3);
+        var colorsOffsetInBytes = positionsOffsetInBytes + (pointsLength * (3 * Float32Array.BYTES_PER_ELEMENT));
+        var colors = new Uint8Array(arrayBuffer, colorsOffsetInBytes, pointsLength * 3);
 
         // TODO: use custom load pipeline, e.g., RTC, scene3DOnly?
         // TODO: performance test with 'interleave : true'
