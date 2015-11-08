@@ -1,8 +1,10 @@
 /*global define*/
 define([
+        './defaultValue',
         './defined',
         './DeveloperError'
     ], function(
+        defaultValue,
         defined,
         DeveloperError) {
     "use strict";
@@ -11,12 +13,26 @@ define([
     /**
      * @private
      */
-    var getStringFromTypedArray = function(uint8Array) {
+    var getStringFromTypedArray = function(uint8Array, byteOffset, byteLength) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(uint8Array)) {
             throw new DeveloperError('uint8Array is required.');
         }
+        if (byteOffset < 0) {
+            throw new DeveloperError('byteOffset cannot be negative.');
+        }
+        if (byteLength < 0) {
+            throw new DeveloperError('byteLength cannot be negative.');
+        }
+        if ((byteOffset + byteLength) > uint8Array.byteLength) {
+            throw new DeveloperError('sub-region exceeds array bounds.');
+        }
         //>>includeEnd('debug');
+
+        byteOffset = defaultValue(byteOffset, 0);
+        byteLength = defaultValue(byteLength, uint8Array.byteLength - byteOffset);
+
+        uint8Array = uint8Array.subarray(byteOffset, byteOffset + byteLength);
 
         return getStringFromTypedArray.decode(uint8Array);
     };

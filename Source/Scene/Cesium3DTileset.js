@@ -13,6 +13,7 @@ define([
         './Cesium3DTileRefine',
         './CullingVolume',
         './SceneMode',
+        '../ThirdParty/Uri',
         '../ThirdParty/when'
     ], function(
         appendForwardSlash,
@@ -28,6 +29,7 @@ define([
         Cesium3DTileRefine,
         CullingVolume,
         SceneMode,
+        Uri,
         when) {
     "use strict";
 
@@ -146,18 +148,46 @@ define([
 
         var that = this;
 
-        loadJson(url + 'tiles.json').then(function(tree) {
+        var tilesJson = url + 'tiles.json';
+        loadTilesJson(this, tilesJson, undefined, function(data) {
+            var tree = data.tree;
             that._properties = tree.properties;
             that._geometricError = tree.geometricError;
-            that._root = new Cesium3DTile(that, url, tree.root, undefined);
+            that._root = data.root;
+            that._readyPromise.resolve(that);
+        });
+    };
+
+    function loadTilesJson(tileset, tilesJson, parentTile, done) {
+        loadJson(tilesJson).then(function(tree) {
+            var baseUrl = tileset.url;
+            var tilesJsonToLoad = 0;
+            var rootTile = new Cesium3DTile(tileset, baseUrl, tree.root, parentTile);
+
+            if (defined(parentTile)) {
+                parentTile.children.push(rootTile);
+            }
+
+            function checkDone() {
+                if (tilesJsonToLoad === 0) {
+                    done({
+                        tree : tree,
+                        root : rootTile
+                    });
+                }
+            }
+
+            function tilesJsonLoaded() {
+                tilesJsonToLoad--;
+                checkDone();
+            }
 
             var stack = [];
             stack.push({
                 header : tree.root,
-                cesium3DTile : that._root
+                cesium3DTile : rootTile
             });
 
-// TODO: allow tree itself to be out-of-core?  Or have content-type that can be a tree?
             while (stack.length > 0) {
                 var t = stack.pop();
                 var children = t.header.children;
@@ -165,22 +195,33 @@ define([
                     var length = children.length;
                     for (var k = 0; k < length; ++k) {
                         var childHeader = children[k];
-                        var childTile = new Cesium3DTile(that, url, childHeader, t.cesium3DTile);
+                        var childTile = new Cesium3DTile(tileset, baseUrl, childHeader, t.cesium3DTile);
                         t.cesium3DTile.children.push(childTile);
 
                         stack.push({
                             header : childHeader,
                             cesium3DTile : childTile
                         });
+
+                        // Check if the tile's content url is a tiles.json file.
+                        if (defined(childHeader.content)) {
+                            var contentUrl = childHeader.content.url;
+                            var extension = contentUrl.substring(contentUrl.lastIndexOf('.') + 1);
+                            if (extension === 'json') {
+                                contentUrl = (new Uri(contentUrl).isAbsolute()) ? contentUrl : baseUrl + contentUrl;
+                                tilesJsonToLoad++;
+                                loadTilesJson(tileset, contentUrl, childTile, tilesJsonLoaded);
+                            }
+                        }
                     }
                 }
             }
 
-            that._readyPromise.resolve(that);
+            checkDone();
         }).otherwise(function(error) {
-            that._readyPromise.reject(error);
+            tileset._readyPromise.reject(error);
         });
-    };
+    }
 
     defineProperties(Cesium3DTileset.prototype, {
         /**

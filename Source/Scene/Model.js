@@ -44,6 +44,7 @@ define([
         '../ThirdParty/Uri',
         '../ThirdParty/when',
         './decompressOpen3DGC',
+        './getMagic',
         './getModelAccessor',
         './JobType',
         './ModelAnimationCache',
@@ -98,6 +99,7 @@ define([
         Uri,
         when,
         decompressOpen3DGC,
+        getMagic,
         getModelAccessor,
         JobType,
         ModelAnimationCache,
@@ -805,10 +807,8 @@ define([
     }
 
     function containsGltfMagic(uint8Array) {
-        if (uint8Array.byteLength < 4) {
-            return false;
-        }
-        return getStringFromTypedArray(uint8Array.subarray(0, 4)) === 'glTF';
+        var magic = getMagic(uint8Array);
+        return magic === 'glTF';
     }
 
     function parseBinaryGltfHeader(uint8Array) {
@@ -837,7 +837,7 @@ define([
         var jsonLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
-        var json = getStringFromTypedArray(getSubarray(uint8Array, jsonOffset, jsonLength));
+        var json = getStringFromTypedArray(uint8Array, jsonOffset, jsonLength);
         return JSON.parse(json);
     }
 
