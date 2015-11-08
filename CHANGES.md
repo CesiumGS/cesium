@@ -5,6 +5,7 @@ Change Log
 
 * Added `incrementallyLoadTextures` to `Model`.  This is `true` by default so a model's textures incrementally appear as they are loaded.
 * Added `vertexShaderLoaded`, `fragmentShaderLoaded`, `uniformMapLoaded`, `pickVertexShaderLoaded`, `pickFragmentShaderLoaded`, and `pickUniformMapLoaded` callbacks to the `Model` constructor and `Model.fromGltf`.
+* Added support for glTF compression using the `mesh_compression_open3dgc` glTF extension.
 * Added `Queue.peek`.
 
 ### 1.15 - 2015-11-02
@@ -76,16 +77,12 @@ Change Log
 * Added `reverseZ` tag to `UrlTemplateImageryProvider`. [#2961](https://github.com/AnalyticalGraphicsInc/cesium/pull/2961)
 * Added `BoundingSphere.isOccluded` and `OrientedBoundingBox.isOccluded` to determine if the volumes are occluded by an `Occluder`.
 * Added `distanceSquaredTo` and `computePlaneDistances` functions to `OrientedBoundingBox`.
-<<<<<<< HEAD
 * Added `reverseZ` tag to `UrlTemplateImageryProvider`.
-* Added support for glTF compression using the `mesh_compression_open3dgc` glTF extension.
-=======
 * Fixed a GLSL precision issue that enables Cesium to support Mali-400MP GPUs and other mobile GPUs where GLSL shaders did not previously compile. [#2984](https://github.com/AnalyticalGraphicsInc/cesium/pull/2984)
 * Fixed an issue where extruded `PolygonGeometry` was always extruding to the ellipsoid surface instead of specified height. [#2923](https://github.com/AnalyticalGraphicsInc/cesium/pull/2923)
 * Fixed an issue where non-feature nodes prevented KML documents from loading. [#2945](https://github.com/AnalyticalGraphicsInc/cesium/pull/2945)
 * Fixed an issue where `JulianDate` would not parse certain dates properly. [#405](https://github.com/AnalyticalGraphicsInc/cesium/issues/405)
 * Removed [es5-shim](https://github.com/kriskowal/es5-shim), which is no longer being used. [#2933](https://github.com/AnalyticalGraphicsInc/cesium/pull/2945)
->>>>>>> origin/master
 
 ### 1.12 - 2015-08-03
 
