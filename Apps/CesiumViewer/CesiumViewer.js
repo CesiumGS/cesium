@@ -13,6 +13,7 @@ define([
         'Cesium/DataSources/GeoJsonDataSource',
         'Cesium/DataSources/KmlDataSource',
         'Cesium/Scene/TileMapServiceImageryProvider',
+        'Cesium/Scene/BingMapsImageryProvider',
         'Cesium/Widgets/Viewer/Viewer',
         'Cesium/Widgets/Viewer/viewerCesiumInspectorMixin',
         'Cesium/Widgets/Viewer/viewerDragDropMixin',
@@ -31,6 +32,7 @@ define([
         GeoJsonDataSource,
         KmlDataSource,
         TileMapServiceImageryProvider,
+        BingMapsImageryProvider,
         Viewer,
         viewerCesiumInspectorMixin,
         viewerDragDropMixin) {
@@ -49,6 +51,7 @@ define([
      *    // [height,heading,pitch,roll] default is looking straight down, [300,0,-90,0]
      */
     var endUserOptions = queryToObject(window.location.search.substring(1));
+    var availableLevels = [0, 5, 10, 15];
 
     var imageryProvider;
     if (endUserOptions.tmsImageryUrl) {
@@ -56,6 +59,11 @@ define([
             url : endUserOptions.tmsImageryUrl
         });
     }
+              //availableLevels: availableLevels
+    imageryProvider = new BingMapsImageryProvider({
+      url : '//dev.virtualearth.net',
+      availableLevels: endUserOptions.limitImagery ? availableLevels : undefined
+    });
 
 
     var SSECorrector = function() {
@@ -141,14 +149,12 @@ define([
     try {
         viewer = new Viewer('cesiumContainer', {
             imageryProvider : imageryProvider,
-            baseLayerPicker : !defined(imageryProvider),
-            scene3DOnly : endUserOptions.scene3DOnly,
             baseLayerPicker : false,
-            terrainProvider : endUserOptions.terrain ?
-            new CesiumTerrainProvider({
-                  url : '//assets.agi.com/stk-terrain/world',
-                requestVertexNormals : false
-            }) : undefined
+            terrainProvider: new CesiumTerrainProvider({
+              url : '//assets.agi.com/stk-terrain/world',
+              availableLevels: endUserOptions.limitTerrain ? availableLevels : undefined
+            }),
+            scene3DOnly : endUserOptions.scene3DOnly
         });
         viewer.scene.globe._surface.sseCorrector = new SSECorrector();
     } catch (exception) {

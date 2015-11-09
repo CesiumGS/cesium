@@ -285,6 +285,18 @@ define([
     ImageryProvider.prototype.pickFeatures = DeveloperError.throwInstantiationError;
 
     /**
+     * Determines whether data for a tile is available to be loaded.
+     *
+     * @param {Number} x The X coordinate of the tile for which to request geometry.
+     * @param {Number} y The Y coordinate of the tile for which to request geometry.
+     * @param {Number} level The level of the tile for which to request geometry.
+     * @returns {Boolean} Undefined if not supported, otherwise true or false.
+
+     * @exception {DeveloperError} <code> </code> must not be called before the imagery provider is ready.
+     */
+    ImageryProvider.prototype.getTileDataAvailable = DeveloperError.throwInstantiationError;
+
+    /**
      * Loads an image from a given URL.  If the server referenced by the URL already has
      * too many requests pending, this function will instead return undefined, indicating
      * that the request should be retried later.

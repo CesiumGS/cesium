@@ -100,6 +100,7 @@ define([
         }
         //>>includeEnd('debug');
 
+        this._availableLevels = options.availableLevels;
         this._url = options.url;
         this._proxy = options.proxy;
 
@@ -200,6 +201,12 @@ define([
             }
 
             that._availableTiles = data.available;
+
+            for (var i = 0; i < that._availableTiles.length; i++) {
+                if (that._availableLevels && that._availableLevels.indexOf(i) === -1) {
+                  that._availableTiles[i] = [];
+                }
+            }
 
             if (!defined(that._credit) && defined(data.attribution) && data.attribution !== null) {
                 that._credit = new Credit(data.attribution);
