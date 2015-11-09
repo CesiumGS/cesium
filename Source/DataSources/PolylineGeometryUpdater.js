@@ -427,6 +427,13 @@ define([
     /**
      * @private
      */
+    var generateCartesianArcOptions = {
+        positions : undefined,
+        granularity : undefined,
+        height : undefined,
+        ellipsoid : undefined
+    };
+
     var DynamicGeometryUpdater = function(primitives, geometryUpdater) {
         var sceneId = geometryUpdater._scene.id;
 
@@ -446,12 +453,8 @@ define([
         this._primitives = primitives;
         this._geometryUpdater = geometryUpdater;
         this._positions = [];
-    };
 
-    var generateCartesianArcOptions = {
-        positions : undefined,
-        granularity : undefined,
-        height : undefined
+        generateCartesianArcOptions.ellipsoid = geometryUpdater._scene.globe.ellipsoid;
     };
 
     DynamicGeometryUpdater.prototype.update = function(time) {
