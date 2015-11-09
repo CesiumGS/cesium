@@ -9,6 +9,7 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/EllipsoidTerrainProvider',
         'Core/GeographicProjection',
+        'Core/Math',
         'Core/Rectangle',
         'Core/WebMercatorProjection',
         'Renderer/ContextLimits',
@@ -38,6 +39,7 @@ defineSuite([
         Ellipsoid,
         EllipsoidTerrainProvider,
         GeographicProjection,
+        CesiumMath,
         Rectangle,
         WebMercatorProjection,
         ContextLimits,
@@ -387,6 +389,62 @@ defineSuite([
 
         return updateUntilDone(globe).then(function() {
             expect(render(frameState, globe)).toBeGreaterThan(0);
+        });
+    });
+
+    describe('fog', function() {
+        it('culls tiles in full fog', function() {
+            var layerCollection = globe.imageryLayers;
+            layerCollection.removeAll();
+            layerCollection.addImageryProvider(new SingleTileImageryProvider({
+                url : 'Data/Images/Red16x16.png'
+            }));
+
+            frameState.camera.setView({
+                destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025),
+                orientation : {
+                    pitch : CesiumMath.toRadians(-20.0)
+                }
+            });
+
+            return updateUntilDone(globe).then(function() {
+                expect(render(frameState, globe)).toBeGreaterThan(0);
+                frameState.fog.enabled = true;
+                frameState.fog.density = 0.001;
+                frameState.fog.sse = 0.0;
+                globe.update(frameState);
+                expect(render(frameState, globe)).toEqual(0);
+            });
+        });
+
+        it('culls tiles because of increased SSE', function() {
+            var layerCollection = globe.imageryLayers;
+            layerCollection.removeAll();
+            layerCollection.addImageryProvider(new SingleTileImageryProvider({
+                url : 'Data/Images/Red16x16.png'
+            }));
+
+            frameState.camera.setView({
+                destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025),
+                orientation : {
+                    pitch : CesiumMath.toRadians(-20.0)
+                }
+            });
+
+            return updateUntilDone(globe).then(function() {
+                expect(render(frameState, globe)).toBeGreaterThan(0);
+
+                frameState.fog.enabled = true;
+                frameState.fog.density = 0.0002;
+                frameState.fog.sse = 0.0;
+                globe.update(frameState);
+                var renderCount = render(frameState, globe);
+                expect(renderCount).toBeGreaterThan(0);
+
+                frameState.fog.sse = 2.0;
+                globe.update(frameState);
+                expect(render(frameState, globe)).toBeLessThan(renderCount);
+            });
         });
     });
 

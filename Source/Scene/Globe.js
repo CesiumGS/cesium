@@ -40,6 +40,7 @@ define([
         '../Shaders/GlobeFSPole',
         '../Shaders/GlobeVS',
         '../Shaders/GlobeVSPole',
+        '../Shaders/GroundAtmosphere',
         '../ThirdParty/when',
         './GlobeSurfaceShaderSet',
         './GlobeSurfaceTileProvider',
@@ -89,6 +90,7 @@ define([
         GlobeFSPole,
         GlobeVS,
         GlobeVSPole,
+        GroundAtmosphere,
         when,
         GlobeSurfaceShaderSet,
         GlobeSurfaceTileProvider,
@@ -122,7 +124,7 @@ define([
         this._surfaceShaderSet = new GlobeSurfaceShaderSet();
 
         this._surfaceShaderSet.baseVertexShaderSource = new ShaderSource({
-            sources : [GlobeVS]
+            sources : [GroundAtmosphere, GlobeVS]
         });
 
         this._surfaceShaderSet.baseFragmentShaderSource = new ShaderSource({

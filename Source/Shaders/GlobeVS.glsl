@@ -18,6 +18,12 @@ varying vec2 v_textureCoordinates;
 varying vec3 v_normalMC;
 varying vec3 v_normalEC;
 
+#ifdef FOG
+varying float v_distance;
+varying vec3 v_mieColor;
+varying vec3 v_rayleighColor;
+#endif
+
 // These functions are generated at runtime.
 vec4 getPosition(vec3 position3DWC);
 float get2DYPositionFraction();
@@ -106,4 +112,11 @@ void main()
 #endif
 
     v_textureCoordinates = textureCoordAndEncodedNormals.xy;
+    
+#ifdef FOG
+    AtmosphereColor atmosColor = computeGroundAtmosphereFromSpace(position3DWC);
+    v_mieColor = atmosColor.mie;
+    v_rayleighColor = atmosColor.rayleigh;
+    v_distance = length((czm_modelView3D * vec4(position3DWC, 1.0)).xyz);
+#endif
 }
