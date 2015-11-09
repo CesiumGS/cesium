@@ -12,6 +12,7 @@ Change Log
 * Entities have a reference to their entity collection.
 * Entity collections have a reference to their owner (usually a data source, but can be a `CompositeEntityCollection`).
 * `GeoJsonDataSource.load` now takes an optional `describeProperty` function for generating feature description properties. [#3140](https://github.com/AnalyticalGraphicsInc/cesium/pull/3140)
+* Fixed a bug which caused `Entity` polyline graphics to be incorrect when a scene's ellipsoid was not WGS84. [#3174](https://github.com/AnalyticalGraphicsInc/cesium/pull/3174)
 
 ### 1.15 - 2015-11-02
 
