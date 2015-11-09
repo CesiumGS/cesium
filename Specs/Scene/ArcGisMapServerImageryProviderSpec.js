@@ -143,6 +143,21 @@ defineSuite([
         });
     });
 
+    it('rejects readyPromise on error', function() {
+        var baseUrl = '//tiledArcGisMapServer.invalid';
+
+        var provider = new ArcGisMapServerImageryProvider({
+            url : baseUrl
+        });
+
+        return provider.readyPromise.then(function () {
+            fail('should not resolve');
+        }).otherwise(function (e) {
+            expect(e.message).toContain(baseUrl);
+            expect(provider.ready).toBe(false);
+        });
+    });
+
     it('supports tiled servers in web mercator projection', function() {
         var baseUrl = '//tiledArcGisMapServer.invalid';
 

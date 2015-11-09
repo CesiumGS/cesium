@@ -26,7 +26,7 @@ defineSuite([
         pollToPromise,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -44,6 +44,19 @@ defineSuite([
         return provider.readyPromise.then(function(result) {
             expect(result).toBe(true);
             expect(provider.ready).toBe(true);
+        });
+    });
+
+    it('rejects readyPromise on error', function() {
+        var provider = new SingleTileImageryProvider({
+            url : 'invalid.image.url'
+        });
+
+        return provider.readyPromise.then(function() {
+            fail('should not resolve');
+        }).otherwise(function (e) {
+            expect(provider.ready).toBe(false);
+            expect(e.message).toContain(provider.url);
         });
     });
 
