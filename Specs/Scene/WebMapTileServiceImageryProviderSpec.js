@@ -199,6 +199,20 @@ defineSuite([
         expect(createWithoutTMS).toThrowDeveloperError();
     });
 
+    it('resolves readyPromise', function() {
+        var provider = new WebMapTileServiceImageryProvider({
+            layer : 'someLayer',
+            style : 'someStyle',
+            url : 'http://wmts.invalid',
+            tileMatrixSetID : 'someTMS'
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
     // default parameters values
     it('uses default values for undefined parameters', function() {
         var provider = new WebMapTileServiceImageryProvider({

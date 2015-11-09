@@ -341,6 +341,18 @@ define([
         },
 
         /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof WebMapServiceImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._tileProvider.readyPromise;
+            }
+        },
+
+        /**
          * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
          * the source of the imagery.  This function should not be called before {@link WebMapServiceImageryProvider#ready} returns true.
          * @memberof WebMapServiceImageryProvider.prototype

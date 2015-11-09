@@ -102,6 +102,16 @@ define([
         },
 
         /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof ImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : DeveloperError.throwInstantiationError
+        },
+
+        /**
          * Gets the rectangle, in radians, of the imagery provided by the instance.  This function should
          * not be called before {@link ImageryProvider#ready} returns true.
          * @memberof ImageryProvider.prototype
