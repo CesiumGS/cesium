@@ -8,10 +8,8 @@ defineSuite([
         'Core/Rectangle',
         'Renderer/ClearCommand',
         'Scene/SingleTileImageryProvider',
-        'Specs/createContext',
-        'Specs/createFrameState',
-        'Specs/pollToPromise',
-        'Specs/render'
+        'Specs/createScene',
+        'Specs/pollToPromise'
     ], function(
         Globe,
         CesiumTerrainProvider,
@@ -21,32 +19,29 @@ defineSuite([
         Rectangle,
         ClearCommand,
         SingleTileImageryProvider,
-        createContext,
-        createFrameState,
-        pollToPromise,
-        render) {
+        createScene,
+        pollToPromise) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
-    var context;
-    var frameState;
+    var scene;
     var globe;
 
     beforeAll(function() {
-        context = createContext();
+        scene = createScene();
     });
 
     afterAll(function() {
-        context.destroyForSpecs();
+        scene.destroyForSpecs();
     });
 
     beforeEach(function() {
-        frameState = createFrameState();
         globe = new Globe();
+        scene.globe = globe;
     });
 
     afterEach(function() {
-        globe.destroy();
+        scene.globe = undefined;
         loadWithXhr.load = loadWithXhr.defaultLoad;
     });
 
@@ -66,15 +61,14 @@ defineSuite([
     }
 
     /**
-     * Repeatedly calls update until the load queue is empty.  Returns a promise that resolves
+     * Repeatedly calls render until the load queue is empty. Returns a promise that resolves
      * when the load queue is empty.
      */
     function updateUntilDone(globe) {
         // update until the load queue is empty.
         return pollToPromise(function() {
             globe._surface._debug.enableDebugOutput = true;
-            var commandList = [];
-            globe.update(context, frameState, commandList);
+            scene.render();
             return globe._surface.tileProvider.ready && !defined(globe._surface._tileLoadQueue.head) && globe._surface._debug.tilesWaitingForChildren === 0;
         });
     }
@@ -86,14 +80,13 @@ defineSuite([
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        scene.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
         return updateUntilDone(globe).then(function() {
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-            render(context, frameState, globe);
-            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+            scene.globe.show = false;
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+            scene.globe.show = true;
+            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
         });
     });
 
@@ -104,14 +97,13 @@ defineSuite([
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        scene.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
         return updateUntilDone(globe).then(function() {
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-            render(context, frameState, globe);
-            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+            scene.globe.show = false;
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+            scene.globe.show = true;
+            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
         });
     });
 
@@ -138,14 +130,13 @@ defineSuite([
         return pollToPromise(function() {
             return terrainProvider.ready;
         }).then(function() {
-            frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+            scene.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
             return updateUntilDone(globe).then(function() {
-                ClearCommand.ALL.execute(context);
-                expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-                render(context, frameState, globe);
-                expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+                scene.globe.show = false;
+                expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+                scene.globe.show = true;
+                expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
             });
         });
     });

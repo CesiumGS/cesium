@@ -2,8 +2,10 @@
 require({
     baseUrl : '.',
     paths : {
-        domReady : '../../ThirdParty/requirejs-2.1.9/domReady',
+        domReady : '../../ThirdParty/requirejs-2.1.20/domReady',
         Cesium : '../../Source'
     }
-}, ['CesiumViewer'], function() {
+}, [
+        'CesiumViewer'
+    ], function() {
 });

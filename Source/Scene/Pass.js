@@ -11,14 +11,17 @@ define([
      * @private
      */
     var Pass = {
-        GLOBE : 0,
-        OPAQUE : 1,
         // Commands are executed in order by pass up to the translucent pass.
-        // Translucent geometry needs special handling (sorting/OIT). Overlays
-        // are also special (they're executed last, they're not sorted by frustum).
-        TRANSLUCENT : 2,
-        OVERLAY : 3,
-        NUMBER_OF_PASSES : 4
+        // Translucent geometry needs special handling (sorting/OIT). The compute pass
+        // is executed first and the overlay pass is executed last. Both are not sorted
+        // by frustum.
+        COMPUTE : 0,
+        GLOBE : 1,
+        GROUND : 2,
+        OPAQUE : 3,
+        TRANSLUCENT : 4,
+        OVERLAY : 5,
+        NUMBER_OF_PASSES : 6
     };
 
     return freezeObject(Pass);

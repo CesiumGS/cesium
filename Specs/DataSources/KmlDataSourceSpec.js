@@ -1704,21 +1704,21 @@ defineSuite([
             expect(label.eyeOffset).toBeUndefined();
             expect(label.pixelOffsetScaleByDistance).toBeUndefined();
 
-        expect(label.text).toBeUndefined();
-        expect(label.fillColor).toBeUndefined();
-        expect(label.outlineColor).toBeUndefined();
-        expect(label.outlineWidth).toBeUndefined();
-        expect(label.show).toBeUndefined();
-        expect(label.scale).toBeUndefined();
-        expect(label.verticalOrigin).toBeUndefined();
-        expect(label.eyeOffset).toBeUndefined();
-        expect(label.pixelOffsetScaleByDistance).toBeUndefined();
+            expect(label.text).toBeUndefined();
+            expect(label.fillColor).toBeUndefined();
+            expect(label.outlineColor).toBeUndefined();
+            expect(label.outlineWidth).toBeUndefined();
+            expect(label.show).toBeUndefined();
+            expect(label.scale).toBeUndefined();
+            expect(label.verticalOrigin).toBeUndefined();
+            expect(label.eyeOffset).toBeUndefined();
+            expect(label.pixelOffsetScaleByDistance).toBeUndefined();
 
-        expect(label.font.getValue()).toEqual('16px sans-serif');
-        expect(label.style.getValue()).toEqual(LabelStyle.FILL_AND_OUTLINE);
-        expect(label.horizontalOrigin.getValue()).toEqual(HorizontalOrigin.LEFT);
-        expect(label.pixelOffset.getValue()).toEqual(new Cartesian2(17, 0));
-        expect(label.translucencyByDistance.getValue()).toEqual(new NearFarScalar(3000000, 1.0, 5000000, 0.0));
+            expect(label.font.getValue()).toEqual('16px sans-serif');
+            expect(label.style.getValue()).toEqual(LabelStyle.FILL_AND_OUTLINE);
+            expect(label.horizontalOrigin.getValue()).toEqual(HorizontalOrigin.LEFT);
+            expect(label.pixelOffset.getValue()).toEqual(new Cartesian2(17, 0));
+            expect(label.translucencyByDistance.getValue()).toEqual(new NearFarScalar(3000000, 1.0, 5000000, 0.0));
         });
     });
 
@@ -1961,7 +1961,7 @@ defineSuite([
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
-            expect(entities[0].position).toBeUndefined();
+            expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(0, 0, 0));
             expect(entities[0].polyline).toBeUndefined();
         });
     });
@@ -1970,6 +1970,7 @@ defineSuite([
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <Placemark>\
             <Point>\
+            <altitudeMode>absolute</altitudeMode>\
             <coordinates>1,2,3,4</coordinates>\
             </Point>\
           </Placemark>';
@@ -1977,7 +1978,23 @@ defineSuite([
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
-            expect(entities[0].position).toBeUndefined();
+            expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1, 2, 3));
+            expect(entities[0].polyline).toBeUndefined();
+        });
+    });
+
+    it('Geometry Point: handles empty coordinates', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Point>\
+            <coordinates></coordinates>\
+            </Point>\
+          </Placemark>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entities = dataSource.entities.values;
+            expect(entities.length).toEqual(1);
+            expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(0, 0, 0));
             expect(entities[0].polyline).toBeUndefined();
         });
     });
@@ -2130,6 +2147,25 @@ defineSuite([
 
             var positions = entities[0].polyline.positions.getValue(Iso8601.MINIMUM_VALUE);
             expect(positions).toEqualEpsilon([Cartesian3.fromDegrees(1, 2, 3), Cartesian3.fromDegrees(1, 2, 0)], CesiumMath.EPSILON13);
+        });
+    });
+
+    it('Geometry Polygon: handles empty coordinates', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Polygon>\
+              <outerBoundaryIs>\
+                <LinearRing>\
+                  <coordinates>\
+                 </coordinates>\
+                </LinearRing>\
+              </outerBoundaryIs>\
+            </Polygon>\
+          </Placemark>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.polygon.hierarchy).toBeUndefined();
         });
     });
 
@@ -2833,4 +2869,44 @@ defineSuite([
             expect(entity.polygon.perPositionHeight.getValue()).toEqual(true);
         });
     });
+
+    it('Properly finds the root feature node when it is not the first child of the KML node', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <NetworkLinkControl>\
+            </NetworkLinkControl>\
+            <Placemark>\
+            <name>bob</name>\
+            </Placemark>\
+            </kml>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.name).toBe('bob');
+            expect(entity.label).toBeDefined();
+            expect(entity.label.text.getValue()).toBe('bob');
+        });
+    });
+
+    it('Has entity collection with link to data source', function() {
+        var dataSource = new KmlDataSource();
+        var entityCollection = dataSource.entities;
+        expect(entityCollection.owner).toEqual(dataSource);
+    });
+
+    it('Has entity with link to entity collection', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Polygon>\
+              <altitudeMode>relativeToGround</altitudeMode>\
+              <extrude>1</extrude>\
+            </Polygon>\
+          </Placemark>';
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.entityCollection).toEqual(entityCollection);
+        });
+    });
+
 });

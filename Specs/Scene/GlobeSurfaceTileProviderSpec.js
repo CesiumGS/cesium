@@ -11,6 +11,8 @@ defineSuite([
         'Core/GeographicProjection',
         'Core/Rectangle',
         'Core/WebMercatorProjection',
+        'Renderer/ContextLimits',
+        'Renderer/RenderState',
         'Scene/BlendingState',
         'Scene/Globe',
         'Scene/GlobeSurfaceShaderSet',
@@ -38,6 +40,8 @@ defineSuite([
         GeographicProjection,
         Rectangle,
         WebMercatorProjection,
+        ContextLimits,
+        RenderState,
         BlendingState,
         Globe,
         GlobeSurfaceShaderSet,
@@ -85,8 +89,7 @@ defineSuite([
     function updateUntilDone(globe) {
         // update until the load queue is empty.
         return pollToPromise(function() {
-            var commandList = [];
-            globe.update(context, frameState, commandList);
+            globe.update(frameState);
             return globe._surface.tileProvider.ready && !defined(globe._surface._tileLoadQueue.head) && globe._surface._debug.tilesWaitingForChildren === 0;
         });
     }
@@ -112,7 +115,7 @@ defineSuite([
     });
 
     beforeEach(function() {
-        frameState = createFrameState();
+        frameState = createFrameState(context);
         globe = new Globe();
         surface = globe._surface;
     });
@@ -318,7 +321,7 @@ defineSuite([
         frameState.mapProjection = new GeographicProjection(Ellipsoid.WGS84);
 
         return updateUntilDone(globe).then(function() {
-            expect(render(context, frameState, globe)).toBeGreaterThan(0);
+            expect(render(frameState, globe)).toBeGreaterThan(0);
         });
     });
 
@@ -333,7 +336,7 @@ defineSuite([
         frameState.mapProjection = new WebMercatorProjection(Ellipsoid.WGS84);
 
         return updateUntilDone(globe).then(function() {
-            expect(render(context, frameState, globe)).toBeGreaterThan(0);
+            expect(render(frameState, globe)).toBeGreaterThan(0);
         });
     });
 
@@ -351,7 +354,7 @@ defineSuite([
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
         return updateUntilDone(globe).then(function() {
-            expect(render(context, frameState, globe)).toBeGreaterThan(0);
+            expect(render(frameState, globe)).toBeGreaterThan(0);
         });
     });
 
@@ -369,7 +372,7 @@ defineSuite([
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
 
         return updateUntilDone(globe).then(function() {
-            expect(render(context, frameState, globe)).toBeGreaterThan(0);
+            expect(render(frameState, globe)).toBeGreaterThan(0);
         });
     });
 
@@ -383,7 +386,7 @@ defineSuite([
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
         return updateUntilDone(globe).then(function() {
-            expect(render(context, frameState, globe)).toBeGreaterThan(0);
+            expect(render(frameState, globe)).toBeGreaterThan(0);
         });
     });
 
@@ -394,7 +397,7 @@ defineSuite([
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
         return updateUntilDone(globe).then(function() {
-            expect(render(context, frameState, globe)).toBeGreaterThan(0);
+            expect(render(frameState, globe)).toBeGreaterThan(0);
             expect(context.readPixels()).toEqual([255, 0, 0, 255]);
         });
     });
@@ -409,7 +412,7 @@ defineSuite([
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
         return updateUntilDone(globe).then(function() {
-            expect(render(context, frameState, globe)).toBeGreaterThan(0);
+            expect(render(frameState, globe)).toBeGreaterThan(0);
 
             frameState.mode = SceneMode.COLUMBUS_VIEW;
             frameState.mapProjection = new GeographicProjection(Ellipsoid.WGS84);
@@ -418,7 +421,7 @@ defineSuite([
             frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
 
             return updateUntilDone(globe).then(function() {
-                expect(render(context, frameState, globe)).toBeGreaterThan(0);
+                expect(render(frameState, globe)).toBeGreaterThan(0);
             });
         });
     });
@@ -437,7 +440,7 @@ defineSuite([
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
         return updateUntilDone(globe).then(function() {
-            expect(render(context, frameState, globe)).toBeGreaterThan(0);
+            expect(render(frameState, globe)).toBeGreaterThan(0);
         });
     });
 
@@ -458,10 +461,10 @@ defineSuite([
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
         return updateUntilDone(globe).then(function() {
-            var commandList = [];
-            expect(render(context, frameState, globe, commandList)).toBeGreaterThan(0);
+            expect(render(frameState, globe)).toBeGreaterThan(0);
 
             var tileCommandCount = 0;
+            var commandList = frameState.commandList;
 
             for (var i = 0; i < commandList.length; ++i) {
                 var command = commandList[i];
@@ -497,10 +500,10 @@ defineSuite([
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
         return updateUntilDone(globe).then(function() {
-            var commandList = [];
-            expect(render(context, frameState, globe, commandList)).toBeGreaterThan(0);
+            expect(render(frameState, globe)).toBeGreaterThan(0);
 
             var tileCommandCount = 0;
+            var commandList = frameState.commandList;
 
             for (var i = 0; i < commandList.length; ++i) {
                 var command = commandList[i];
@@ -523,7 +526,7 @@ defineSuite([
         var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
 
-        for (var i = 0; i < context.maximumTextureImageUnits + 1; ++i) {
+        for (var i = 0; i < ContextLimits.maximumTextureImageUnits + 1; ++i) {
             layerCollection.addImageryProvider(new SingleTileImageryProvider({
                 url : 'Data/Images/Red16x16.png'
             }));
@@ -532,14 +535,14 @@ defineSuite([
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
         return updateUntilDone(globe).then(function() {
-            var commandList = [];
-            expect(render(context, frameState, globe, commandList)).toBeGreaterThan(0);
+            expect(render(frameState, globe)).toBeGreaterThan(0);
 
-            var renderStateWithAlphaBlending = context.createRenderState({
+            var renderStateWithAlphaBlending = RenderState.fromCache({
                 blending : BlendingState.ALPHA_BLEND
             });
 
             var drawCommandsPerTile = {};
+            var commandList = frameState.commandList;
 
             for (var i = 0; i < commandList.length; ++i) {
                 var command = commandList[i];

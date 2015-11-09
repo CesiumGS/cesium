@@ -499,7 +499,7 @@ define([
     }
 
     /**
-     * A description of a cartographic rectangle on an ellipsoid centered at the origin.
+     * A description of a cartographic rectangle on an ellipsoid centered at the origin. Rectangle geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
      *
      * @alias RectangleGeometry
      * @constructor
@@ -591,7 +591,7 @@ define([
     /**
      * Stores the provided instance into the provided array.
      *
-     * @param {BoundingSphere} value The value to pack.
+     * @param {RectangleGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
@@ -773,6 +773,31 @@ define([
             indices : geometry.indices,
             primitiveType : geometry.primitiveType,
             boundingSphere : boundingSphere
+        });
+    };
+
+    /**
+     * @private
+     */
+    RectangleGeometry.createShadowVolume = function(rectangleGeometry, minHeightFunc, maxHeightFunc) {
+        var granularity = rectangleGeometry._granularity;
+        var ellipsoid = rectangleGeometry._ellipsoid;
+
+        var minHeight = minHeightFunc(granularity, ellipsoid);
+        var maxHeight = maxHeightFunc(granularity, ellipsoid);
+
+        // TODO: stRotation
+        return new RectangleGeometry({
+            rectangle : rectangleGeometry._rectangle,
+            rotation : rectangleGeometry._rotation,
+            ellipsoid : ellipsoid,
+            stRotation : rectangleGeometry._stRotation,
+            granularity : granularity,
+            extrudedHeight : maxHeight,
+            height : minHeight,
+            closeTop : true,
+            closeBottom : true,
+            vertexFormat : VertexFormat.POSITION_ONLY
         });
     };
 
