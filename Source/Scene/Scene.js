@@ -1406,6 +1406,7 @@ define([
         // Manage celestial and terrestrial environment effects.
         var renderPass = frameState.passes.render;
         var skyBoxCommand = (renderPass && defined(scene.skyBox)) ? scene.skyBox.update(frameState) : undefined;
+        var skyAtmosphereVisible = defined(scene.globe) && scene.globe._surface._tilesToRender.length > 0;
         var skyAtmosphereCommand = (renderPass && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(frameState) : undefined;
         var sunCommands = (renderPass && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
         var sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
@@ -1496,7 +1497,7 @@ define([
             executeCommand(skyBoxCommand, scene, context, passState);
         }
 
-        if (defined(skyAtmosphereCommand)) {
+        if (defined(skyAtmosphereCommand) && skyAtmosphereVisible) {
             executeCommand(skyAtmosphereCommand, scene, context, passState);
         }
 
