@@ -22,6 +22,15 @@ defineSuite([
         expect(GridImageryProvider).toConformToInterface(ImageryProvider);
     });
 
+    it('resolves readyPromise', function() {
+        var provider = new GridImageryProvider();
+
+        return provider.readyPromise.then(function (result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
     it('returns valid value for hasAlphaChannel', function() {
         var provider = new GridImageryProvider();
 

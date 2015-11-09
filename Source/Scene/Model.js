@@ -417,10 +417,10 @@ define([
         this._minimumPixelSize = this.minimumPixelSize;
 
         /**
-         * The maximum scale size for a model. This can be used to give 
+         * The maximum scale size for a model. This can be used to give
          * an upper limit to the {@link Model#minimumPixelSize}, ensuring that the model
          * is never an unreasonable scale.
-         * 
+         *
          * @type {Number}
          */
         this.maximumScale = options.maximumScale;

@@ -122,6 +122,18 @@ define([
         },
 
         /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof MapboxImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._imageryProvider.readyPromise;
+            }
+        },
+
+        /**
          * Gets the rectangle, in radians, of the imagery provided by the instance.  This function should
          * not be called before {@link MapboxImageryProvider#ready} returns true.
          * @memberof MapboxImageryProvider.prototype
