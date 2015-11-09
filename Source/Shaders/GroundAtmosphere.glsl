@@ -35,7 +35,6 @@
  //   Code:  http://sponeil.net/
  //   GPU Gems 2 Article:  http://http.developer.nvidia.com/GPUGems2/gpugems2_chapter16.html
 
-const vec3 v3InvWavelength = vec3(1.0 / pow(0.650, 4.0), 1.0 / pow(0.570, 4.0), 1.0 / pow(0.475, 4.0));
 const float fInnerRadius = 6378137.0;
 const float fOuterRadius = 6378137.0 * 1.025;
 const float fOuterRadius2 = fOuterRadius * fOuterRadius;
@@ -70,6 +69,8 @@ float scale(float fCos)
 
 AtmosphereColor computeGroundAtmosphereFromSpace(vec3 v3Pos)
 {
+	vec3 v3InvWavelength = vec3(1.0 / pow(0.650, 4.0), 1.0 / pow(0.570, 4.0), 1.0 / pow(0.475, 4.0));
+
     // Get the ray from the camera to the vertex and its length (which is the far point of the ray passing through the atmosphere)
     vec3 v3Ray = v3Pos - czm_viewerPositionWC;
     float fFar = length(v3Ray);
