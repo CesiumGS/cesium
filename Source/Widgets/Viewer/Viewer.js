@@ -218,7 +218,8 @@ define([
      * @param {Boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
      * @param {Element|String} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added to the bottom of the widget itself.
      * @param {DataSourceCollection} [options.dataSources=new DataSourceCollection()] The collection of data sources visualized by the widget.  If this parameter is provided,
-                                     the instance is assumed to be owned by the caller and will not be destroyed when the viewer is destroyed.
+     *                               the instance is assumed to be owned by the caller and will not be destroyed when the viewer is destroyed.
+     * @param {Number} The scalar amount to exaggerate the terrain.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      * @exception {DeveloperError} options.imageryProvider is not available when using the BaseLayerPicker widget, specify options.selectedImageryProviderViewModel instead.
@@ -348,7 +349,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             targetFrameRate : options.targetFrameRate,
             showRenderLoopErrors : options.showRenderLoopErrors,
             creditContainer : defined(options.creditContainer) ? options.creditContainer : bottomContainer,
-            scene3DOnly : scene3DOnly
+            scene3DOnly : scene3DOnly,
+            terrainExaggeration : options.terrainExaggeration
         });
 
         var dataSourceCollection = options.dataSources;

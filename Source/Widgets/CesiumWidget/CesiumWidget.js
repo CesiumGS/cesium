@@ -153,6 +153,7 @@ define([
      * @param {Object} [options.contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
      * @param {Element|String} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added
      *        to the bottom of the widget itself.
+     * @param {Number} [terrainExaggeration] The scalar amount to exaggerate the terrain.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *
@@ -242,7 +243,8 @@ define([
                 creditContainer : creditContainer,
                 mapProjection : options.mapProjection,
                 orderIndependentTranslucency : options.orderIndependentTranslucency,
-                scene3DOnly : defaultValue(options.scene3DOnly, false)
+                scene3DOnly : defaultValue(options.scene3DOnly, false),
+                terrainExaggeration : options.terrainExaggeration
             });
             this._scene = scene;
 
