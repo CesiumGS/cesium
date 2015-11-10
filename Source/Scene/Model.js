@@ -14,7 +14,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
-        '../Core/getBasePath',
+        '../Core/getFilenameFromUri',
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
         '../Core/IndexDatatype',
@@ -72,7 +72,7 @@ define([
         destroyObject,
         DeveloperError,
         FeatureDetection,
-        getBasePath,
+        getFilenameFromUri,
         getMagic,
         getStringFromTypedArray,
         IndexDatatype,
@@ -959,7 +959,7 @@ define([
         var cacheKey = defaultValue(options.cacheKey, getAbsoluteURL(url));
 
         options = clone(options);
-        options.basePath = getBasePath(url);
+        options.basePath = getFilenameFromUri(url);
         options.cacheKey = cacheKey;
         var model = new Model(options);
 
