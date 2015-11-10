@@ -11,9 +11,7 @@ define([
      * @alias Queue
      * @constructor
      */
-    var Queue = function(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
+    var Queue = function() {
         this._array = [];
         this._offset = 0;
         this._length = 0;
