@@ -4,18 +4,18 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/getMagic',
         '../Core/loadArrayBuffer',
         './Cesium3DTileContentState',
-        './getMagic',
         '../ThirdParty/when'
     ], function(
         defaultValue,
         defined,
         destroyObject,
         DeveloperError,
+        getMagic,
         loadArrayBuffer,
         Cesium3DTileContentState,
-        getMagic,
         when) {
     "use strict";
 

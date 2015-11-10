@@ -5,12 +5,12 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/getMagic',
         '../Core/getStringFromTypedArray',
         '../Core/loadArrayBuffer',
         './BatchedModel',
         './Cesium3DTileBatchTableResources',
         './Cesium3DTileContentState',
-        './getMagic',
         './Model',
         '../ThirdParty/when'
     ], function(
@@ -19,12 +19,12 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        getMagic,
         getStringFromTypedArray,
         loadArrayBuffer,
         BatchedModel,
         Cesium3DTileBatchTableResources,
         Cesium3DTileContentState,
-        getMagic,
         Model,
         when) {
     "use strict";

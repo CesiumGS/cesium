@@ -8,10 +8,10 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/GeometryInstance',
+        '../Core/getMagic',
         '../Core/loadArrayBuffer',
         '../Core/PointGeometry',
         './Cesium3DTileContentState',
-        './getMagic',
         './PointAppearance',
         './Primitive',
         '../ThirdParty/when'
@@ -24,10 +24,10 @@ define([
         defined,
         DeveloperError,
         GeometryInstance,
+        getMagic,
         loadArrayBuffer,
         PointGeometry,
         Cesium3DTileContentState,
-        getMagic,
         PointAppearance,
         Primitive,
         when) {
