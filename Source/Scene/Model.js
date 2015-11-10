@@ -44,6 +44,7 @@ define([
         '../ThirdParty/gltfDefaults',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
+        './getMagic',
         './getModelAccessor',
         './ModelAnimationCache',
         './ModelAnimationCollection',
@@ -98,6 +99,7 @@ define([
         gltfDefaults,
         Uri,
         when,
+        getMagic,
         getModelAccessor,
         ModelAnimationCache,
         ModelAnimationCollection,
@@ -763,10 +765,8 @@ define([
     }
 
     function containsGltfMagic(uint8Array) {
-        if (uint8Array.byteLength < 4) {
-            return false;
-        }
-        return getStringFromTypedArray(uint8Array.subarray(0, 4)) === 'glTF';
+        var magic = getMagic(uint8Array);
+        return magic === 'glTF';
     }
 
     function parseBinaryGltfHeader(uint8Array) {
@@ -806,7 +806,7 @@ define([
             binOffset = 0;
         }
 
-        var json = getStringFromTypedArray(getSubarray(uint8Array, sceneOffset, sceneLength));
+        var json = getStringFromTypedArray(uint8Array, sceneOffset, sceneLength);
         return {
             glTF: JSON.parse(json),
             binaryOffset: binOffset
