@@ -15,6 +15,7 @@ define([
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
         '../Core/getBasePath',
+        '../Core/getMagic',
         '../Core/getStringFromTypedArray',
         '../Core/IndexDatatype',
         '../Core/loadArrayBuffer',
@@ -46,7 +47,6 @@ define([
         '../ThirdParty/Uri',
         '../ThirdParty/when',
         './decompressOpen3DGC',
-        './getMagic',
         './getModelAccessor',
         './JobType',
         './ModelAnimationCache',
@@ -73,6 +73,7 @@ define([
         DeveloperError,
         FeatureDetection,
         getBasePath,
+        getMagic,
         getStringFromTypedArray,
         IndexDatatype,
         loadArrayBuffer,
@@ -104,7 +105,6 @@ define([
         Uri,
         when,
         decompressOpen3DGC,
-        getMagic,
         getModelAccessor,
         JobType,
         ModelAnimationCache,
@@ -875,7 +875,7 @@ define([
             binOffset = 0;
         }
 
-        var json = getStringFromTypedArray(getSubarray(uint8Array, sceneOffset, sceneLength));
+        var json = getStringFromTypedArray(uint8Array, sceneOffset, sceneLength);
         return {
             glTF: JSON.parse(json),
             binaryOffset: binOffset
