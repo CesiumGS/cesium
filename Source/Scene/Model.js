@@ -15,6 +15,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/FeatureDetection',
+        '../Core/getBaseUri',
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
         '../Core/IndexDatatype',
@@ -70,6 +71,7 @@ define([
         DeveloperError,
         Event,
         FeatureDetection,
+        getBaseUri,
         getMagic,
         getStringFromTypedArray,
         IndexDatatype,
@@ -738,16 +740,6 @@ define([
         }
     });
 
-    function getBasePath(url) {
-        var basePath = '';
-        var i = url.lastIndexOf('/');
-        if (i !== -1) {
-            basePath = url.substring(0, i + 1);
-        }
-
-        return basePath;
-    }
-
     function getAbsoluteURL(url) {
         var docUri = new Uri(document.location.href);
         var modelUri = new Uri(url);
@@ -886,7 +878,7 @@ define([
         var cacheKey = defaultValue(options.cacheKey, getAbsoluteURL(url));
 
         options = clone(options);
-        options.basePath = getBasePath(url);
+        options.basePath = getBaseUri(url);
         options.cacheKey = cacheKey;
         var model = new Model(options);
 
