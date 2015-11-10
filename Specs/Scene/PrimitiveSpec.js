@@ -1,10 +1,12 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Primitive',
+        'Core/BoundingSphere',
         'Core/BoxGeometry',
         'Core/Cartesian3',
         'Core/ColorGeometryInstanceAttribute',
         'Core/ComponentDatatype',
+        'Core/defined',
         'Core/Ellipsoid',
         'Core/Geometry',
         'Core/GeometryAttribute',
@@ -18,6 +20,7 @@ defineSuite([
         'Core/RuntimeError',
         'Core/ShowGeometryInstanceAttribute',
         'Core/Transforms',
+        'Scene/Camera',
         'Scene/MaterialAppearance',
         'Scene/OrthographicFrustum',
         'Scene/PerInstanceColorAppearance',
@@ -28,10 +31,12 @@ defineSuite([
         'Specs/pollToPromise'
     ], function(
         Primitive,
+        BoundingSphere,
         BoxGeometry,
         Cartesian3,
         ColorGeometryInstanceAttribute,
         ComponentDatatype,
+        defined,
         Ellipsoid,
         Geometry,
         GeometryAttribute,
@@ -45,6 +50,7 @@ defineSuite([
         RuntimeError,
         ShowGeometryInstanceAttribute,
         Transforms,
+        Camera,
         MaterialAppearance,
         OrthographicFrustum,
         PerInstanceColorAppearance,
@@ -319,8 +325,9 @@ defineSuite([
 
     function verifyPrimitiveRender(primitive, rectangle) {
         scene.primitives.removeAll();
-        scene.camera.viewRectangle(rectangle);
-
+        if (defined(rectangle)){
+            scene.camera.viewRectangle(rectangle);
+        }
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
         scene.primitives.add(primitive);
@@ -350,6 +357,87 @@ defineSuite([
         scene.morphTo2D(0);
         verifyPrimitiveRender(primitive, rectangle1);
         verifyPrimitiveRender(primitive, rectangle2);
+    });
+
+    it('renders RTC', function() {
+        var dimensions = new Cartesian3(400.0, 300.0, 500.0);
+        var positionOnEllipsoid = Cartesian3.fromDegrees(-105.0, 45.0);
+        var boxModelMatrix = Matrix4.multiplyByTranslation(
+                Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
+                new Cartesian3(0.0, 0.0, dimensions.z * 0.5), new Matrix4());
+
+        var boxGeometry = BoxGeometry.createGeometry(BoxGeometry.fromDimensions({
+            vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+            dimensions : dimensions
+        }));
+
+        var positions = boxGeometry.attributes.position.values;
+        var newPositions = new Float32Array(positions.length);
+        for (var i = 0; i < positions.length; ++i) {
+            newPositions[i] = positions[i];
+        }
+        boxGeometry.attributes.position.values = newPositions;
+        boxGeometry.attributes.position.componentDatatype = ComponentDatatype.FLOAT;
+
+        BoundingSphere.transform(boxGeometry.boundingSphere, boxModelMatrix, boxGeometry.boundingSphere);
+
+        var boxGeometryInstance = new GeometryInstance({
+            geometry : boxGeometry,
+            attributes : {
+                color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 0.5)
+            }
+        });
+
+        var primitive = new Primitive({
+            geometryInstances : boxGeometryInstance,
+            appearance : new PerInstanceColorAppearance({
+                closed: true
+            }),
+            asynchronous : false,
+            allowPicking : false,
+            rtcCenter : boxGeometry.boundingSphere.center
+        });
+
+        // create test camera
+        var camera = scene.camera;
+        var testCamera = new Camera(scene);
+        testCamera.viewBoundingSphere(boxGeometry.boundingSphere);
+        scene._camera = testCamera;
+
+        scene.frameState.scene3DOnly = true;
+        verifyPrimitiveRender(primitive);
+
+        scene._camera = camera;
+    });
+
+    it('RTC throws with more than one instance', function() {
+        expect(function() {
+            var primitive = new Primitive({
+                geometryInstances : [rectangleInstance1, rectangleInstance2],
+                appearance : new PerInstanceColorAppearance({
+                    closed: true
+                }),
+                asynchronous : false,
+                allowPicking : false,
+                rtcCenter : Cartesian3.ZERO
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('RTC throws if the scene is not 3D only', function() {
+        var primitive = new Primitive({
+            geometryInstances : rectangleInstance1,
+            appearance : new PerInstanceColorAppearance({
+                closed: true
+            }),
+            asynchronous : false,
+            allowPicking : false,
+            rtcCenter : Cartesian3.ZERO
+        });
+
+        expect(function() {
+            verifyPrimitiveRender(primitive);
+        }).toThrowDeveloperError();
     });
 
     it('updates model matrix for one instance in 3D', function() {
