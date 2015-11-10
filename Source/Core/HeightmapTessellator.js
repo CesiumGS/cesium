@@ -179,6 +179,7 @@ define([
         }
 
         var relativeToCenter = defaultValue(options.relativeToCenter, Cartesian3.ZERO);
+        var exaggeration = defaultValue(options.exaggeration, 1.0);
 
         var structure = defaultValue(options.structure, HeightmapTessellator.DEFAULT_STRUCTURE);
         var heightScale = defaultValue(structure.heightScale, HeightmapTessellator.DEFAULT_STRUCTURE.heightScale);
@@ -273,7 +274,7 @@ define([
                     }
                 }
 
-                heightSample = heightSample * heightScale + heightOffset;
+                heightSample = (heightSample * heightScale + heightOffset) * exaggeration;
 
                 maximumHeight = Math.max(maximumHeight, heightSample);
                 minimumHeight = Math.min(minimumHeight, heightSample);

@@ -44,6 +44,7 @@ define([
         var minimumHeight = parameters.minimumHeight;
         var maximumHeight = parameters.maximumHeight;
         var center = parameters.relativeToCenter;
+        var exaggeration = parameters.exaggeration;
 
         var rectangle = parameters.rectangle;
         var west = rectangle.west;
@@ -72,7 +73,7 @@ define([
 
             cartographicScratch.longitude = CesiumMath.lerp(west, east, u);
             cartographicScratch.latitude = CesiumMath.lerp(south, north, v);
-            cartographicScratch.height = height;
+            cartographicScratch.height = height * exaggeration;
 
             ellipsoid.cartographicToCartesian(cartographicScratch, cartesian3Scratch);
 

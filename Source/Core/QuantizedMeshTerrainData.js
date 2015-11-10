@@ -235,11 +235,12 @@ define([
      * @param {Number} x The X coordinate of the tile for which to create the terrain data.
      * @param {Number} y The Y coordinate of the tile for which to create the terrain data.
      * @param {Number} level The level of the tile for which to create the terrain data.
+     * @param {Number} [exaggeration] The scale used to exaggerate the terrain.
      * @returns {Promise.<TerrainMesh>|undefined} A promise for the terrain mesh, or undefined if too many
      *          asynchronous mesh creations are already in progress and the operation should
      *          be retried later.
      */
-    QuantizedMeshTerrainData.prototype.createMesh = function(tilingScheme, x, y, level) {
+    QuantizedMeshTerrainData.prototype.createMesh = function(tilingScheme, x, y, level, exaggeration) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(tilingScheme)) {
             throw new DeveloperError('tilingScheme is required.');
@@ -257,6 +258,7 @@ define([
 
         var ellipsoid = tilingScheme.ellipsoid;
         var rectangle = tilingScheme.tileXYToRectangle(x, y, level);
+        exaggeration = defaultValue(exaggeration, 1.0);
 
         var verticesPromise = createMeshTaskProcessor.scheduleTask({
             minimumHeight : this._minimumHeight,
@@ -274,7 +276,8 @@ define([
             northSkirtHeight : this._northSkirtHeight,
             rectangle : rectangle,
             relativeToCenter : this._boundingSphere.center,
-            ellipsoid : ellipsoid
+            ellipsoid : ellipsoid,
+            exaggeration : exaggeration
         });
 
         if (!defined(verticesPromise)) {

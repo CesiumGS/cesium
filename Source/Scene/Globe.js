@@ -269,8 +269,6 @@ define([
          */
         this.depthTestAgainstTerrain = false;
 
-        this.terrainExaggeration = 1.0;
-
         this._oceanNormalMap = undefined;
         this._zoomedOutOceanSpecularIntensity = 0.5;
         this._lightingFadeDistance = new Cartesian2(this.lightingFadeOutDistance, this.lightingFadeInDistance);
@@ -822,7 +820,6 @@ define([
             tileProvider.hasWaterMask = hasWaterMask;
             tileProvider.oceanNormalMap = this._oceanNormalMap;
             tileProvider.enableLighting = this.enableLighting;
-            tileProvider.exaggeration = this.terrainExaggeration;
 
             surface.update(frameState);
         }

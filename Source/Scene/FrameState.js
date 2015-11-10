@@ -156,6 +156,8 @@ define([
              */
             sse : undefined
         };
+
+        this.terrainExaggeration = undefined;
     };
 
     /**
