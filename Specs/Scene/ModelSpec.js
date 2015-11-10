@@ -363,7 +363,7 @@ defineSuite([
         expect(texturedBoxModel.getMesh('name-of-mesh-that-does-not-exist')).not.toBeDefined();
     });
 
-    it('getMesh returns returns a mesh', function() {
+    it('getMesh returns a mesh', function() {
         var mesh = texturedBoxModel.getMesh('Mesh');
         expect(mesh).toBeDefined();
         expect(mesh.name).toEqual('Mesh');
@@ -388,7 +388,7 @@ defineSuite([
         expect(texturedBoxModel.getMaterial('name-of-material-that-does-not-exist')).not.toBeDefined();
     });
 
-    it('getMaterial returns returns a material', function() {
+    it('getMaterial returns a material', function() {
         var material = texturedBoxModel.getMaterial('Texture');
         expect(material).toBeDefined();
         expect(material.name).toEqual('Texture');
