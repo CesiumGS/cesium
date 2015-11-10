@@ -511,7 +511,7 @@ define([
 
         var context = frameState.context;
 
-        var vs = Primitive._createColumbusViewShader(ShadowVolumeVS, frameState.scene3DOnly);
+        var vs = Primitive._modifyShaderPosition(primitive, ShadowVolumeVS, frameState.scene3DOnly);
         vs = Primitive._appendShowToShader(primitive._primitive, vs);
 
         var fs = ShadowVolumeFS;
