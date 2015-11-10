@@ -241,15 +241,14 @@ define([
             if (techniques.hasOwnProperty(techniqueName)) {
                 var technique = techniques[techniqueName];
                 var parameters = technique.parameters;
-                var pass = technique.passes[technique.pass];
-                var instanceProgram = pass.instanceProgram;
-                var instanceProgramName = instanceProgram.program;
+                var uniforms = technique.uniforms;
+                var program = technique.program;
+
                 // Different techniques may share the same program, skip if already processed.
                 // This assumes techniques that share a program do not declare different semantics for the same uniforms.
-                if (!defined(instancedUniformsByProgram[instanceProgramName])) {
+                if (!defined(instancedUniformsByProgram[program])) {
                     var uniformMap = {};
-                    instancedUniformsByProgram[instanceProgramName] = uniformMap;
-                    var uniforms = instanceProgram.uniforms;
+                    instancedUniformsByProgram[program] = uniformMap;
                     for (var uniformName in uniforms) {
                         if (uniforms.hasOwnProperty(uniformName)) {
                             var parameterName = uniforms[uniformName];

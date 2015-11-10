@@ -388,19 +388,17 @@ defineSuite([
         expect(sphere).toEqual(expected);
     });
 
-    it('fromOrientedBoundingBox', function() {
-        var positions = [
-            new Cartesian3(2.0, 0.0, 0.0),
-            new Cartesian3(0.0, 3.0, 0.0),
-            new Cartesian3(0.0, 0.0, 4.0),
-            new Cartesian3(-2.0, 0.0, 0.0),
-            new Cartesian3(0.0, -3.0, 0.0),
-            new Cartesian3(0.0, 0.0, -4.0)
-        ];
+    it('fromOrientedBoundingBox works with a result', function() {
+        var box = OrientedBoundingBox.fromPoints(getPositions());
+        var expected = new BoundingSphere(positionsCenter, positionsRadius);
+        var sphere = new BoundingSphere();
+        BoundingSphere.fromOrientedBoundingBox(box, sphere);
+        expect(sphere).toEqual(expected);
+    });
 
-        var box = OrientedBoundingBox.fromPoints(positions);
-
-        var expected = new BoundingSphere(new Cartesian3(0, 0, 0), 4.0);
+    it('fromOrientedBoundingBox works without a result parameter', function() {
+        var box = OrientedBoundingBox.fromPoints(getPositions());
+        var expected = new BoundingSphere(positionsCenter, positionsRadius);
         var sphere = BoundingSphere.fromOrientedBoundingBox(box);
         expect(sphere).toEqual(expected);
     });

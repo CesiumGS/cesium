@@ -284,7 +284,7 @@ gulp.task('minifyRelease', ['generateStubs'], function() {
     });
 });
 
-gulp.task('release', ['buildApps', 'generateDocumentation']);
+gulp.task('release', ['combine', 'minifyRelease', 'generateDocumentation']);
 
 gulp.task('generateStubs', ['build'], function(done) {
     mkdirp.sync(path.join('Build', 'Stubs'));
@@ -640,7 +640,9 @@ define(function() {\n\
     });
 
     // delete any left over JS files from old shaders
-    Object.keys(leftOverJsFiles).forEach(rimraf.sync);
+    Object.keys(leftOverJsFiles).forEach(function(filepath) {
+        rimraf.sync(filepath);
+    });
 
     var generateBuiltinContents = function(contents, builtins, path) {
         var amdPath = contents.amdPath;
@@ -700,6 +702,12 @@ function createCesiumJs() {
         }
 
         var parameterName = moduleId.replace(nonIdentifierRegexp, '_');
+
+        //Ignore the deprecated Scene version of HeadingPitchRange
+        //until it is removed with #3097
+        if (moduleId === 'Scene/HeadingPitchRange') {
+            return;
+        }
 
         moduleIds.push("'./" + moduleId + "'");
         parameters.push(parameterName);
