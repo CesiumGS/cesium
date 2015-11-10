@@ -1,9 +1,7 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
         '../Core/defineProperties'
     ], function(
-        defaultValue,
         defineProperties) {
     "use strict";
 
@@ -15,11 +13,6 @@ define([
      */
     var Queue = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        /**
-         * DOC_TBA
-         */
-        this.compact = defaultValue(options.compact, true);
 
         this._array = [];
         this._offset = 0;
@@ -54,6 +47,8 @@ define([
 
     /**
      * Dequeues an item.  Returns undefined if the queue is empty.
+     *
+     * @returns {Object} The the dequeued item.
      */
     Queue.prototype.dequeue = function() {
         if (this._length === 0) {
@@ -66,7 +61,7 @@ define([
         array[offset] = undefined;
 
         offset++;
-        if (this.compact && offset > 10 && offset * 2 > array.length) {
+        if ((offset > 10) && (offset * 2 > array.length)) {
             //compact array
             this._array = array.slice(offset);
             offset = 0;
@@ -79,7 +74,9 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Returns the item at the front of the queue.  Returns undefined if the queue is empty.
+     *
+     * @returns {Object} The item at the front of the queue.
      */
     Queue.prototype.peek = function() {
         if (this._length === 0) {
@@ -92,7 +89,7 @@ define([
     /**
      * Check whether this queue contains the specified item.
      *
-     * @param {Object} item the item to search for.
+     * @param {Object} item The item to search for.
      */
     Queue.prototype.contains = function(item) {
         return this._array.indexOf(item) !== -1;
