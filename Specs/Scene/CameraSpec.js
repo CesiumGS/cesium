@@ -2247,4 +2247,20 @@ defineSuite([
         expect(distance).toBeLessThan(sphere.radius * 3.0);
     });
 
+    it('distanceToBoundingSphere', function() {
+        scene.mode = SceneMode.SCENE3D;
+
+        var sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
+        var distance = camera.distanceToBoundingSphere(sphere);
+        expect(distance).toEqual(0.5);
+    });
+
+    it('distanceToBoundingSphere throws when there is no bounding sphere', function() {
+        scene.mode = SceneMode.SCENE3D;
+
+        expect(function() {
+            camera.distanceToBoundingSphere();
+        }).toThrowDeveloperError();
+    });
+
 });

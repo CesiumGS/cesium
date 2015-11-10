@@ -2257,11 +2257,10 @@ define([
     var scratchProj = new Cartesian3();
 
     /**
-     * DOC_TBA.
-     *
-     * Distance from camera to front of the bounding sphere.  Clamped to the near plane.
+     * Return the distance from the camera to the front of the bounding sphere.
      *
      * @param {BoundingSphere} boundingSphere The bounding sphere in world coordinates.
+     * @returns {Number} The distance to the bounding sphere.
      */
     Camera.prototype.distanceToBoundingSphere = function(boundingSphere) {
         //>>includeStart('debug', pragmas.debug);
@@ -2272,7 +2271,7 @@ define([
 
         var toCenter = Cartesian3.subtract(this.positionWC, boundingSphere.center, scratchToCenter);
         var proj = Cartesian3.multiplyByScalar(this.directionWC, Cartesian3.dot(toCenter, this.directionWC), scratchProj);
-        return Math.max(this.frustum.near, Cartesian3.magnitude(proj) - boundingSphere.radius);
+        return Math.max(0.0, Cartesian3.magnitude(proj) - boundingSphere.radius);
     };
 
     function createAnimation2D(camera, duration) {
@@ -2409,8 +2408,6 @@ define([
      *
      * @param {Number} duration The duration, in seconds, of the animation.
      * @returns {Object} The animation or undefined if the scene mode is 3D or the map is already ion view.
-     *
-     * @exception {DeveloperException} duration is required.
      *
      * @private
      */
