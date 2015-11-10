@@ -1171,6 +1171,12 @@ defineSuite([
         });
     });
 
+    it('does not animate when there are no animations', function() {
+        var animations = animBoxesModel.activeAnimations;
+        expect(animations.length).toEqual(0);
+        expect(animations.update()).toEqual(false);
+    });
+
     ///////////////////////////////////////////////////////////////////////////
 
     it('renders riggedFigure without animation', function() {
