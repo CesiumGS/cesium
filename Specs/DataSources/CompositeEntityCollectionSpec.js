@@ -650,6 +650,19 @@ defineSuite([
         expect(composite2.getById(id).position).toBe(entity2.position);
     });
 
+    it('has entity with link to entity collection', function() {
+        var id = 'test';
+        var collection = new EntityCollection();
+        var entity = new Entity({
+            id : id
+        });
+        collection.add(entity);
+        var composite = new CompositeEntityCollection();
+        composite.addCollection(collection);
+        var compositeEntity = composite.getCollection(0).values[0];
+        expect(compositeEntity.entityCollection).toEqual(collection);
+    });
+
     it('suspend events suspends recompositing', function() {
         var id = 'test';
         var collection1 = new EntityCollection();

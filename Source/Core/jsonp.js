@@ -33,7 +33,7 @@ define([
      */
     var jsonp = function(url, options) {
         deprecationWarning('jsonp', 'jsonp is deprecated. Use loadJsonp instead.');
-        loadJsonp(url, options);
+        return loadJsonp(url, options);
     };
 
     // This is broken out into a separate function so that it can be mocked for testing purposes.

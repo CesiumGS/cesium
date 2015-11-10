@@ -45,7 +45,7 @@ scene.debugShowFramesPerSecond = true;
 var instancedArraysExtension = context._instancedArrays;
 var count = 1024;
 var spacing = 0.0002;
-var url = '../../SampleData/models/CesiumAir/Cesium_Air.bgltf';
+var url = '../../SampleData/models/CesiumAir/Cesium_Air.gltf';
 var dynamic = false;
 var useCollection = true;
 
@@ -188,28 +188,28 @@ Sandcastle.addToolbarMenu([ {
 Sandcastle.addToolbarMenu([ {
     text : 'Aircraft',
     onselect : function() {
-        url = '../../SampleData/models/CesiumAir/Cesium_Air.bgltf';
+        url = '../../SampleData/models/CesiumAir/Cesium_Air.gltf';
         spacing = 0.0002;
         reset();
     }
 }, {
     text : 'Ground vehicle',
     onselect : function() {
-        url = '../../SampleData/models/CesiumGround/Cesium_Ground.bgltf';
+        url = '../../SampleData/models/CesiumGround/Cesium_Ground.gltf';
         spacing = 0.00008;
         reset();
     }
 }, {
     text : 'Milk truck',
     onselect : function() {
-        url = '../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.bgltf';
+        url = '../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.gltf';
         spacing = 0.00008;
         reset();
     }
 }, {
     text : 'Skinned character',
     onselect : function() {
-        url = '../../SampleData/models/CesiumMan/Cesium_Man.bgltf';
+        url = '../../SampleData/models/CesiumMan/Cesium_Man.gltf';
         spacing = 0.00001;
         reset();
     }

@@ -40,7 +40,7 @@ defineSuite([
         pollToPromise,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -49,6 +49,53 @@ defineSuite([
 
     it('conforms to ImageryProvider interface', function() {
         expect(TileMapServiceImageryProvider).toConformToInterface(ImageryProvider);
+    });
+
+    it('resolves readyPromise', function() {
+        var provider = new TileMapServiceImageryProvider({
+            url : 'made/up/tms/server/'
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
+    it('rejects readyPromise on error', function() {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            // We can't resolve the promise immediately, because then the error would be raised
+            // before we could subscribe to it.  This a problem particular to tests.
+            setTimeout(function() {
+                var parser = new DOMParser();
+                var xmlString =
+                    '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
+                    '   <Title/>' +
+                    '   <Abstract/>' +
+                    '   <SRS>EPSG:4326</SRS>' +
+                    '   <BoundingBox minx="-10.0" miny="-123.0" maxx="11.0" maxy="-110.0"/>' +
+                    '   <Origin x="-90.0" y="-180.0"/>' +
+                    '   <TileFormat width="256" height="256" mime-type="image/png" extension="png"/>' +
+                    '   <TileSets profile="foobar">' +
+                    '       <TileSet href="2" units-per-pixel="39135.75848201024200" order="2"/>' +
+                    '       <TileSet href="3" units-per-pixel="19567.87924100512100" order="3"/>' +
+                    '   </TileSets>' +
+                    '</TileMap>';
+                var xml = parser.parseFromString(xmlString, "text/xml");
+                deferred.resolve(xml);
+            }, 1);
+        };
+
+        var provider = new TileMapServiceImageryProvider({
+            url : 'made/up/tms/server'
+        });
+
+        return provider.readyPromise.then(function() {
+            fail('should not resolve');
+        }).otherwise(function (e) {
+            expect(provider.ready).toBe(false);
+            expect(e.message).toContain('unsupported profile');
+        });
     });
 
     it('requires the url to be specified', function() {
@@ -168,7 +215,11 @@ defineSuite([
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
-        expect(provider.credit).toBeUndefined();
+        return pollToPromise(function() {
+          return provider.ready;
+        }).then(function() {
+          expect(provider.credit).toBeUndefined();
+        });
     });
 
     it('turns the supplied credit into a logo', function() {
@@ -176,7 +227,11 @@ defineSuite([
             url : 'made/up/gms/server',
             credit : 'Thanks to our awesome made up source of this imagery!'
         });
-        expect(providerWithCredit.credit).toBeDefined();
+        return pollToPromise(function() {
+          return providerWithCredit.ready;
+        }).then(function() {
+          expect(providerWithCredit.credit).toBeDefined();
+        });
     });
 
     it('routes resource request through a proxy if one is specified', function() {
@@ -481,7 +536,7 @@ defineSuite([
 
             expect(provider.rectangle.west).toEqual(expectedSW.longitude);
             expect(provider.rectangle.south).toEqual(expectedSW.latitude);
-            expect(provider.rectangle.east).toEqual(expectedNE.longitude);
+            expect(provider.rectangle.east).toBeCloseTo(expectedNE.longitude, CesiumMath.EPSILON14);
             expect(provider.rectangle.north).toEqual(expectedNE.latitude);
         });
     });
@@ -520,9 +575,9 @@ defineSuite([
             var expectedSW = Cartographic.fromDegrees(-123.0, -10.0);
             var expectedNE = Cartographic.fromDegrees(-110.0, 11.0);
 
-            expect(provider.rectangle.west).toEqual(expectedSW.longitude);
+            expect(provider.rectangle.west).toBeCloseTo(expectedSW.longitude, CesiumMath.EPSILON14);
             expect(provider.rectangle.south).toEqual(expectedSW.latitude);
-            expect(provider.rectangle.east).toEqual(expectedNE.longitude);
+            expect(provider.rectangle.east).toBeCloseTo(expectedNE.longitude, CesiumMath.EPSILON14);
             expect(provider.rectangle.north).toEqual(expectedNE.latitude);
         });
     });
@@ -561,9 +616,9 @@ defineSuite([
             var expectedSW = Cartographic.fromDegrees(-123.0, -10.0);
             var expectedNE = Cartographic.fromDegrees(-110.0, 11.0);
 
-            expect(provider.rectangle.west).toEqual(expectedSW.longitude);
+            expect(provider.rectangle.west).toBeCloseTo(expectedSW.longitude, CesiumMath.EPSILON14);
             expect(provider.rectangle.south).toEqual(expectedSW.latitude);
-            expect(provider.rectangle.east).toEqual(expectedNE.longitude);
+            expect(provider.rectangle.east).toBeCloseTo(expectedNE.longitude, CesiumMath.EPSILON14);
             expect(provider.rectangle.north).toEqual(expectedNE.latitude);
         });
     });
@@ -602,9 +657,9 @@ defineSuite([
             var expectedSW = Cartographic.fromDegrees(-123.0, -10.0);
             var expectedNE = Cartographic.fromDegrees(-110.0, 11.0);
 
-            expect(provider.rectangle.west).toEqual(expectedSW.longitude);
+            expect(provider.rectangle.west).toBeCloseTo(expectedSW.longitude, CesiumMath.EPSILON14);
             expect(provider.rectangle.south).toEqual(expectedSW.latitude);
-            expect(provider.rectangle.east).toEqual(expectedNE.longitude);
+            expect(provider.rectangle.east).toBeCloseTo(expectedNE.longitude, CesiumMath.EPSILON14);
             expect(provider.rectangle.north).toEqual(expectedNE.latitude);
         });
     });

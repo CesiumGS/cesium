@@ -613,7 +613,7 @@ define([
      *
      * @param {OrientedBoundingBox} box The bounding box surrounding the occludee object.
      * @param {Occluder} occluder The occluder.
-     * @returns {Boolean} <code>true</code> if the sphere is not visible; otherwise <code>false</code>.
+     * @returns {Boolean} <code>true</code> if the box is not visible; otherwise <code>false</code>.
      */
     OrientedBoundingBox.isOccluded = function(box, occluder) {
         //>>includeStart('debug', pragmas.debug);

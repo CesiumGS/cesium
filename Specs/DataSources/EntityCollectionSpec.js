@@ -54,6 +54,14 @@ defineSuite([
         expect(entityCollection.values.length).toEqual(0);
     });
 
+    it('add sets entityCollection on entity', function() {
+        var entity = new Entity();
+        var entityCollection = new EntityCollection();
+
+        entityCollection.add(entity);
+        expect(entity.entityCollection).toBe(entityCollection);
+    });
+
     it('add with template', function() {
         var entityCollection = new EntityCollection();
 
