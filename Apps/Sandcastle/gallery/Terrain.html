@@ -32,15 +32,6 @@
         <td>Enable fog</td>
         <td><input type="checkbox" data-bind="checked: fogEnabled"/></td>
     </tr>
-    <tr>
-        <td>Enable fog</td>
-        <td><input type="checkbox" data-bind="checked: fogEnabled"/></td>
-        <td>Exaggeration</td>
-        <td>
-            <input type="range" min="1" max="3" step="0.1" data-bind="value: exaggeration, valueUpdate: 'input'">
-            <input type="text" size="10" data-bind="value: exaggeration,">
-        </td>
-    </tr>
 </tbody></table>
 </div>
 <script id="cesium_sandcastle_script">
@@ -193,10 +184,7 @@ Sandcastle.addToolbarButton('Sample Everest Terrain', function() {
     Cesium.when(Cesium.sampleTerrain(viewer.terrainProvider, 9, terrainSamplePositions), sampleTerrainSuccess);
 }, 'sampleButtons');
 
-var viewModel = {
-    fogEnabled : true,
-    exaggeration : 0
-};
+var viewModel = { fogEnabled : true };
 Cesium.knockout.track(viewModel);
 
 var toolbar = document.getElementById('toolbar');
@@ -204,13 +192,7 @@ Cesium.knockout.applyBindings(viewModel, toolbar);
 Cesium.knockout.getObservable(viewModel, 'fogEnabled').subscribe(function(newValue) {
     viewer.scene.fog.enabled = newValue;
 });
-Cesium.knockout.getObservable(viewModel, 'exaggeration').subscribe(function(newValue) {
-    viewer.scene.globe.terrainExaggeration = Number(newValue);
-});
-
-viewModel.fogEnabled = viewer.scene.fog.enabled;
-viewModel.exaggeration = viewer.scene.globe.terrainExaggeration;
-
+viewModel.enabled = viewer.scene.fog.enabled;
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

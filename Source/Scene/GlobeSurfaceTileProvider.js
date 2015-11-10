@@ -122,7 +122,6 @@ define([
         this.oceanNormalMap = undefined;
         this.zoomedOutOceanSpecularIntensity = 0.5;
         this.enableLighting = false;
-        this.exaggeration = 0.0;
 
         this._quadtree = undefined;
         this._terrainProvider = options.terrainProvider;
@@ -720,12 +719,6 @@ define([
             u_center3D : function() {
                 return this.center3D;
             },
-            u_normal3D : function() {
-                return this.normal3D;
-            },
-            u_exaggeration : function() {
-                return this.exaggeration;
-            },
             u_tileRectangle : function() {
                 return this.tileRectangle;
             },
@@ -781,8 +774,6 @@ define([
             lightingFadeDistance : new Cartesian2(6500000.0, 9000000.0),
 
             center3D : undefined,
-            normal3D : undefined,
-            exaggeration : 0.0,
             modifiedModelView : new Matrix4(),
             tileRectangle : new Cartesian4(),
 
@@ -1068,8 +1059,6 @@ define([
             uniformMap.zoomedOutOceanSpecularIntensity = tileProvider.zoomedOutOceanSpecularIntensity;
 
             uniformMap.center3D = surfaceTile.center;
-            uniformMap.normal3D = frameState.mapProjection.ellipsoid.geodeticSurfaceNormal(surfaceTile.center);
-            uniformMap.exaggeration = tileProvider.exaggeration;
 
             Cartesian4.clone(tileRectangle, uniformMap.tileRectangle);
             uniformMap.southAndNorthLatitude.x = southLatitude;

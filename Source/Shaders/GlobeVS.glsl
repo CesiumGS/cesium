@@ -2,8 +2,6 @@ attribute vec4 position3DAndHeight;
 attribute vec3 textureCoordAndEncodedNormals;
 
 uniform vec3 u_center3D;
-uniform vec3 u_normal3D;
-uniform float u_exaggeration;
 uniform mat4 u_modifiedModelView;
 uniform vec4 u_tileRectangle;
 
@@ -30,12 +28,7 @@ float get2DYPositionFraction();
 
 vec4 getPosition3DMode(vec3 position3DWC)
 {
-    float height = position3DAndHeight.w;
-    float exaggeration = u_exaggeration * height - height;
-    
-    vec3 position = (u_modifiedModelView * vec4(position3DAndHeight.xyz, 1.0)).xyz;
-    position += (u_modifiedModelView * vec4(u_normal3D, 0.0)).xyz * exaggeration;
-    return czm_projection * vec4(position, 1.0);
+    return czm_projection * (u_modifiedModelView * vec4(position3DAndHeight.xyz, 1.0));
 }
 
 float get2DMercatorYPositionFraction()
@@ -80,8 +73,7 @@ vec4 getPosition2DMode(vec3 position3DWC)
 
 vec4 getPositionColumbusViewMode(vec3 position3DWC)
 {
-    float height = position3DAndHeight.w;
-    return getPositionPlanarEarth(position3DWC, u_exaggeration * height);
+    return getPositionPlanarEarth(position3DWC, position3DAndHeight.w);
 }
 
 vec4 getPositionMorphingMode(vec3 position3DWC)

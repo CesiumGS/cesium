@@ -269,7 +269,6 @@ define([
          */
         this.depthTestAgainstTerrain = false;
 
-        //this.terrainExaggeration = 0.0;
         this.terrainExaggeration = 1.0;
 
         this._oceanNormalMap = undefined;
