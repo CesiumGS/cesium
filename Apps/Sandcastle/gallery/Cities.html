@@ -175,7 +175,6 @@ handler.setInputAction(function(movement) {
 function annotate(movement) {
     if (Cesium.defined(current.building) && scene.pickPositionSupported) {
         var cartesian = scene.pickPosition(movement.position);
-// TODO: add Cartographic.fromCartesian to Cesium
         var cartographic = scene.globe.ellipsoid.cartesianToCartographic(cartesian);
         var height = cartographic.height.toFixed(2) + ' m';
 
