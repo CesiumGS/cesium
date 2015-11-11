@@ -18,6 +18,7 @@ define([
         '../Core/GeometryPipeline',
         '../Core/IndexDatatype',
         '../Core/Intersect',
+        '../Core/Math',
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
         '../Core/PrimitiveType',
@@ -61,6 +62,7 @@ define([
         GeometryPipeline,
         IndexDatatype,
         Intersect,
+        CesiumMath,
         Matrix4,
         OrientedBoundingBox,
         PrimitiveType,
@@ -282,12 +284,9 @@ define([
      * Called at the beginning of the update cycle for each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
      * or any other functions.
      *
-     * @param {Context} context The rendering context.
      * @param {FrameState} frameState The frame state.
-     * @param {DrawCommand[]} commandList An array of rendering commands.  This method may push
-     *        commands into this array.
      */
-    GlobeSurfaceTileProvider.prototype.beginUpdate = function(context, frameState, commandList) {
+    GlobeSurfaceTileProvider.prototype.beginUpdate = function(frameState) {
         this._imageryLayers._update();
 
         if (this._layerOrderChanged) {
@@ -332,12 +331,9 @@ define([
      * Called at the end of the update cycle for each render frame, after {@link QuadtreeTileProvider#showTileThisFrame}
      * and any other functions.
      *
-     * @param {Context} context The rendering context.
      * @param {FrameState} frameState The frame state.
-     * @param {DrawCommand[]} commandList An array of rendering commands.  This method may push
-     *        commands into this array.
      */
-    GlobeSurfaceTileProvider.prototype.endUpdate = function(context, frameState, commandList) {
+    GlobeSurfaceTileProvider.prototype.endUpdate = function(frameState) {
         if (!defined(this._renderState)) {
             this._renderState = RenderState.fromCache({ // Write color and depth
                 cull : {
@@ -370,7 +366,7 @@ define([
             }
 
             for (var tileIndex = 0, tileLength = tilesToRender.length; tileIndex < tileLength; ++tileIndex) {
-                addDrawCommandsForTile(this, tilesToRender[tileIndex], context, frameState, commandList);
+                addDrawCommandsForTile(this, tilesToRender[tileIndex], frameState);
             }
         }
     };
@@ -378,12 +374,9 @@ define([
     /**
      * Adds draw commands for tiles rendered in the previous frame for a pick pass.
      *
-     * @param {Context} context The rendering context.
      * @param {FrameState} frameState The frame state.
-     * @param {DrawCommand[]} commandList An array of rendering commands.  This method may push
-     *        commands into this array.
      */
-    GlobeSurfaceTileProvider.prototype.updateForPick = function(context, frameState, commandList) {
+    GlobeSurfaceTileProvider.prototype.updateForPick = function(frameState) {
         if (!defined(this._pickRenderState)) {
             this._pickRenderState = RenderState.fromCache({
                 colorMask : {
@@ -404,7 +397,7 @@ define([
         // Add the tile pick commands from the tiles drawn last frame.
         var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
         for (var i = 0, length = this._usedDrawCommands; i < length; ++i) {
-            addPickCommandsForTile(this, drawCommands[i], context, frameState, commandList);
+            addPickCommandsForTile(this, drawCommands[i], frameState);
         }
     };
 
@@ -424,14 +417,13 @@ define([
      * until {@link QuadtreeTile#state} is no longer {@link QuadtreeTileLoadState#LOADING}.  This function should
      * not be called before {@link GlobeSurfaceTileProvider#ready} returns true.
      *
-     * @param {Context} context The rendering context.
      * @param {FrameState} frameState The frame state.
      * @param {QuadtreeTile} tile The tile to load.
      *
      * @exception {DeveloperError} <code>loadTile</code> must not be called before the tile provider is ready.
      */
-    GlobeSurfaceTileProvider.prototype.loadTile = function(context, frameState, commandList, tile) {
-        GlobeSurfaceTile.processStateMachine(tile, context, commandList, this._terrainProvider, this._imageryLayers);
+    GlobeSurfaceTileProvider.prototype.loadTile = function(frameState, tile) {
+        GlobeSurfaceTile.processStateMachine(tile, frameState.context, frameState.commandList, this._terrainProvider, this._imageryLayers);
     };
 
     var boundingSphereScratch = new BoundingSphere();
@@ -448,10 +440,18 @@ define([
      * @returns {Visibility} The visibility of the tile.
      */
     GlobeSurfaceTileProvider.prototype.computeTileVisibility = function(tile, frameState, occluders) {
+        var distance = this.computeDistanceToTile(tile, frameState);
+        tile._distance = distance;
+
+        if (frameState.fog.enabled) {
+            if (CesiumMath.fog(distance, frameState.fog.density) >= 1.0) {
+                // Tile is completely in fog so return that it is not visible.
+                return Visibility.NONE;
+            }
+        }
+
         var surfaceTile = tile.data;
-
         var cullingVolume = frameState.cullingVolume;
-
         var boundingVolume = defaultValue(surfaceTile.orientedBoundingBox, surfaceTile.boundingSphere3D);
 
         if (frameState.mode !== SceneMode.SCENE3D) {
@@ -499,11 +499,9 @@ define([
      * expected to be visible next frame as well, unless this method is called next frame, too.
      *
      * @param {Object} tile The tile instance.
-     * @param {Context} context The rendering context.
      * @param {FrameState} frameState The state information of the current rendering frame.
-     * @param {DrawCommand[]} commandList The list of rendering commands.  This method may add additional commands to this list.
      */
-    GlobeSurfaceTileProvider.prototype.showTileThisFrame = function(tile, context, frameState, commandList) {
+    GlobeSurfaceTileProvider.prototype.showTileThisFrame = function(tile, frameState) {
         var readyTextureCount = 0;
         var tileImageryCollection = tile.data.imagery;
         for (var i = 0, len = tileImageryCollection.length; i < len; ++i) {
@@ -760,8 +758,8 @@ define([
             u_southAndNorthLatitude : function() {
                 return this.southAndNorthLatitude;
             },
-            u_southMercatorYLowAndHighAndOneOverHeight : function() {
-                return this.southMercatorYLowAndHighAndOneOverHeight;
+            u_southMercatorYAndOneOverHeight : function() {
+                return this.southMercatorYAndOneOverHeight;
             },
             u_waterMask : function() {
                 return this.waterMask;
@@ -791,7 +789,7 @@ define([
             dayIntensity : 0.0,
 
             southAndNorthLatitude : new Cartesian2(),
-            southMercatorYLowAndHighAndOneOverHeight : new Cartesian3(),
+            southMercatorYAndOneOverHeight : new Cartesian2(),
 
             waterMask : undefined,
             waterMaskTranslationAndScale : new Cartesian4()
@@ -930,7 +928,7 @@ define([
 
     var otherPassesInitialColor = new Cartesian4(0.0, 0.0, 0.0, 0.0);
 
-    function addDrawCommandsForTile(tileProvider, tile, context, frameState, commandList) {
+    function addDrawCommandsForTile(tileProvider, tile, frameState) {
         var surfaceTile = tile.data;
 
         var viewMatrix = frameState.camera.viewMatrix;
@@ -942,6 +940,7 @@ define([
         var oceanNormalMap = tileProvider.oceanNormalMap;
         var showOceanWaves = showReflectiveOcean && defined(oceanNormalMap);
         var hasVertexNormals = tileProvider.terrainProvider.ready && tileProvider.terrainProvider.hasVertexNormals;
+        var enableFog = frameState.fog.enabled;
 
         if (showReflectiveOcean) {
             --maxTextures;
@@ -958,8 +957,7 @@ define([
         // Only used for Mercator projections.
         var southLatitude = 0.0;
         var northLatitude = 0.0;
-        var southMercatorYHigh = 0.0;
-        var southMercatorYLow = 0.0;
+        var southMercatorY = 0.0;
         var oneOverMercatorHeight = 0.0;
 
         var useWebMercatorProjection = false;
@@ -990,14 +988,9 @@ define([
                 southLatitude = tile.rectangle.south;
                 northLatitude = tile.rectangle.north;
 
-                var southMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(southLatitude);
-                var northMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(northLatitude);
+                southMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(southLatitude);
 
-                float32ArrayScratch[0] = southMercatorY;
-                southMercatorYHigh = float32ArrayScratch[0];
-                southMercatorYLow = southMercatorY - float32ArrayScratch[0];
-
-                oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
+                oneOverMercatorHeight = 1.0 / (WebMercatorProjection.geodeticLatitudeToMercatorAngle(northLatitude) - southMercatorY);
 
                 useWebMercatorProjection = true;
             }
@@ -1015,6 +1008,8 @@ define([
         var renderState = firstPassRenderState;
 
         var initialColor = tileProvider._firstPassInitialColor;
+
+        var context = frameState.context;
 
         if (!defined(tileProvider._debug.boundingSphereTile)) {
             debugDestroyPrimitive();
@@ -1051,9 +1046,9 @@ define([
                 // re-created, to avoid allocation every frame. If it were possible
                 // to have more than one selected tile, this would have to change.
                 if (defined(surfaceTile.orientedBoundingBox)) {
-                    getDebugOrientedBoundingBox(surfaceTile.orientedBoundingBox, Color.RED).update(context, frameState, commandList);
+                    getDebugOrientedBoundingBox(surfaceTile.orientedBoundingBox, Color.RED).update(frameState);
                 } else if (defined(surfaceTile.boundingSphere3D)) {
-                    getDebugBoundingSphere(surfaceTile.boundingSphere3D, Color.RED).update(context, frameState, commandList);
+                    getDebugBoundingSphere(surfaceTile.boundingSphere3D, Color.RED).update(frameState);
                 }
             }
 
@@ -1068,10 +1063,12 @@ define([
             Cartesian4.clone(tileRectangle, uniformMap.tileRectangle);
             uniformMap.southAndNorthLatitude.x = southLatitude;
             uniformMap.southAndNorthLatitude.y = northLatitude;
-            uniformMap.southMercatorYLowAndHighAndOneOverHeight.x = southMercatorYLow;
-            uniformMap.southMercatorYLowAndHighAndOneOverHeight.y = southMercatorYHigh;
-            uniformMap.southMercatorYLowAndHighAndOneOverHeight.z = oneOverMercatorHeight;
+            uniformMap.southMercatorYAndOneOverHeight.x = southMercatorY;
+            uniformMap.southMercatorYAndOneOverHeight.y = oneOverMercatorHeight;
             Matrix4.clone(modifiedModelViewScratch, uniformMap.modifiedModelView);
+
+            // For performance, use fog in the shader only when the tile is in fog.
+            var applyFog = enableFog && CesiumMath.fog(tile._distance, frameState.fog.density) > CesiumMath.EPSILON3;
 
             var applyBrightness = false;
             var applyContrast = false;
@@ -1134,7 +1131,7 @@ define([
             uniformMap.waterMask = waterMaskTexture;
             Cartesian4.clone(surfaceTile.waterMaskTranslationAndScale, uniformMap.waterMaskTranslationAndScale);
 
-            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(context, frameState.mode, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection);
+            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(context, frameState.mode, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog);
             command.renderState = renderState;
             command.primitiveType = PrimitiveType.TRIANGLES;
             command.vertexArray = surfaceTile.vertexArray;
@@ -1164,14 +1161,14 @@ define([
                 command.orientedBoundingBox = OrientedBoundingBox.clone(surfaceTile.orientedBoundingBox, orientedBoundingBox);
             }
 
-            commandList.push(command);
+            frameState.commandList.push(command);
 
             renderState = otherPassesRenderState;
             initialColor = otherPassesInitialColor;
         } while (imageryIndex < imageryLen);
     }
 
-    function addPickCommandsForTile(tileProvider, drawCommand, context, frameState, commandList) {
+    function addPickCommandsForTile(tileProvider, drawCommand, frameState) {
         var pickCommand;
         if (tileProvider._pickCommands.length <= tileProvider._usedPickCommands) {
             pickCommand = new DrawCommand();
@@ -1186,7 +1183,7 @@ define([
 
         var useWebMercatorProjection = frameState.projection instanceof WebMercatorProjection;
 
-        pickCommand.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(context, frameState.mode, useWebMercatorProjection);
+        pickCommand.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState.context, frameState.mode, useWebMercatorProjection);
         pickCommand.renderState = tileProvider._pickRenderState;
 
         pickCommand.owner = drawCommand.owner;
@@ -1197,7 +1194,7 @@ define([
         pickCommand.orientedBoundingBox = pickCommand.orientedBoundingBox;
         pickCommand.pass = drawCommand.pass;
 
-        commandList.push(pickCommand);
+        frameState.commandList.push(pickCommand);
     }
 
     return GlobeSurfaceTileProvider;

@@ -8,8 +8,8 @@ defineSuite([
         'Core/defined',
         'Core/GeographicProjection',
         'Core/GeographicTilingScheme',
-        'Core/jsonp',
         'Core/loadImage',
+        'Core/loadJsonp',
         'Core/loadWithXhr',
         'Core/queryToObject',
         'Core/Rectangle',
@@ -32,8 +32,8 @@ defineSuite([
         defined,
         GeographicProjection,
         GeographicTilingScheme,
-        jsonp,
         loadImage,
+        loadJsonp,
         loadWithXhr,
         queryToObject,
         Rectangle,
@@ -51,7 +51,7 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
 
     afterEach(function() {
-        jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
+        loadJsonp.loadAndExecuteScript = loadJsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
         loadWithXhr.load = loadWithXhr.defaultLoad;
     });
@@ -81,7 +81,7 @@ defineSuite([
     }
 
     function stubJSONPCall(baseUrl, result, withProxy, token) {
-        jsonp.loadAndExecuteScript = function(url, functionName) {
+        loadJsonp.loadAndExecuteScript = function(url, functionName) {
             expectCorrectUrl(baseUrl, url, functionName, withProxy, token);
             setTimeout(function() {
                 window[functionName](result);
@@ -127,6 +127,36 @@ defineSuite([
             }]
         }
     };
+
+    it('resolves readyPromise', function() {
+        var baseUrl = '//tiledArcGisMapServer.invalid';
+
+        stubJSONPCall(baseUrl, webMercatorResult);
+
+        var provider = new ArcGisMapServerImageryProvider({
+            url : baseUrl
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
+    it('rejects readyPromise on error', function() {
+        var baseUrl = '//tiledArcGisMapServer.invalid';
+
+        var provider = new ArcGisMapServerImageryProvider({
+            url : baseUrl
+        });
+
+        return provider.readyPromise.then(function () {
+            fail('should not resolve');
+        }).otherwise(function (e) {
+            expect(e.message).toContain(baseUrl);
+            expect(provider.ready).toBe(false);
+        });
+    });
 
     it('supports tiled servers in web mercator projection', function() {
         var baseUrl = '//tiledArcGisMapServer.invalid';

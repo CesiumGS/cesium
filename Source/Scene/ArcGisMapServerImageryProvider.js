@@ -3,7 +3,6 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
-        '../Core/Math',
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
@@ -12,9 +11,11 @@ define([
         '../Core/Event',
         '../Core/GeographicProjection',
         '../Core/GeographicTilingScheme',
-        '../Core/jsonp',
         '../Core/loadJson',
+        '../Core/loadJsonp',
+        '../Core/Math',
         '../Core/Rectangle',
+        '../Core/RuntimeError',
         '../Core/TileProviderError',
         '../Core/WebMercatorProjection',
         '../Core/WebMercatorTilingScheme',
@@ -26,7 +27,6 @@ define([
         Cartesian2,
         Cartesian3,
         Cartographic,
-        CesiumMath,
         Credit,
         defaultValue,
         defined,
@@ -35,9 +35,11 @@ define([
         Event,
         GeographicProjection,
         GeographicTilingScheme,
-        jsonp,
         loadJson,
+        loadJsonp,
+        CesiumMath,
         Rectangle,
+        RuntimeError,
         TileProviderError,
         WebMercatorProjection,
         WebMercatorTilingScheme,
@@ -135,6 +137,7 @@ define([
         this._errorEvent = new Event();
 
         this._ready = false;
+        this._readyPromise = when.defer();
 
         // Grab the details of this MapServer.
         var that = this;
@@ -198,12 +201,14 @@ define([
             }
 
             that._ready = true;
+            that._readyPromise.resolve(true);
             TileProviderError.handleSuccess(metadataError);
         }
 
         function metadataFailure(e) {
             var message = 'An error occurred while accessing ' + that._url + '.';
             metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+            that._readyPromise.reject(new RuntimeError(message));
         }
 
         function requestMetadata() {
@@ -215,7 +220,7 @@ define([
                 parameters.token = that._token;
             }
 
-            var metadata = jsonp(that._url, {
+            var metadata = loadJsonp(that._url, {
                 parameters : parameters,
                 proxy : that._proxy
             });
@@ -226,6 +231,7 @@ define([
             requestMetadata();
         } else {
             this._ready = true;
+            this._readyPromise.resolve(true);
         }
     };
 
@@ -466,6 +472,18 @@ define([
         ready : {
             get : function() {
                 return this._ready;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof ArcGisMapServerImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise.promise;
             }
         },
 

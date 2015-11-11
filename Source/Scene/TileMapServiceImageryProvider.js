@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../Core/appendForwardSlash',
         '../Core/Cartesian2',
         '../Core/Cartographic',
         '../Core/Credit',
@@ -10,14 +9,15 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/GeographicTilingScheme',
+        '../Core/joinUrls',
         '../Core/loadXML',
         '../Core/Rectangle',
+        '../Core/RuntimeError',
         '../Core/TileProviderError',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/when',
         './ImageryProvider'
     ], function(
-        appendForwardSlash,
         Cartesian2,
         Cartographic,
         Credit,
@@ -27,8 +27,10 @@ define([
         DeveloperError,
         Event,
         GeographicTilingScheme,
+        joinUrls,
         loadXML,
         Rectangle,
+        RuntimeError,
         TileProviderError,
         WebMercatorTilingScheme,
         when,
@@ -95,10 +97,11 @@ define([
         }
         //>>includeEnd('debug');
 
-        var url = appendForwardSlash(options.url);
+        var url = options.url;
 
         this._url = url;
         this._ready = false;
+        this._readyPromise = when.defer();
         this._proxy = options.proxy;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._errorEvent = new Event();
@@ -175,8 +178,9 @@ define([
                 } else if (tilingSchemeName === 'mercator' || tilingSchemeName === 'global-mercator') {
                     that._tilingScheme = new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid });
                 } else {
-                    var message = url + 'tilemapresource.xml specifies an unsupported profile attribute, ' + tilingSchemeName + '.';
+                    var message = joinUrls(url, 'tilemapresource.xml') + 'specifies an unsupported profile attribute, ' + tilingSchemeName + '.';
                     metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+                    that._readyPromise.reject(new RuntimeError(message));
                     return;
                 }
             }
@@ -241,6 +245,7 @@ define([
 
             that._tilingScheme = tilingScheme;
             that._ready = true;
+            that._readyPromise.resolve(true);
         }
 
         function metadataFailure(error) {
@@ -253,10 +258,11 @@ define([
             that._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid });
             that._rectangle = defaultValue(options.rectangle, that._tilingScheme.rectangle);
             that._ready = true;
+            that._readyPromise.resolve(true);
         }
 
         function requestMetadata() {
-            var resourceUrl = url + 'tilemapresource.xml';
+            var resourceUrl = joinUrls(url, 'tilemapresource.xml');
             var proxy = that._proxy;
             if (defined(proxy)) {
                 resourceUrl = proxy.getURL(resourceUrl);
@@ -270,7 +276,7 @@ define([
 
     function buildImageUrl(imageryProvider, x, y, level) {
         var yTiles = imageryProvider._tilingScheme.getNumberOfYTilesAtLevel(level);
-        var url = imageryProvider._url + level + '/' + x + '/' + (yTiles - y - 1) + '.' + imageryProvider._fileExtension;
+        var url = joinUrls(imageryProvider._url, level + '/' + x + '/' + (yTiles - y - 1) + '.' + imageryProvider._fileExtension);
 
         var proxy = imageryProvider._proxy;
         if (defined(proxy)) {
@@ -464,6 +470,18 @@ define([
         ready : {
             get : function() {
                 return this._ready;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof TileMapServiceImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise.promise;
             }
         },
 

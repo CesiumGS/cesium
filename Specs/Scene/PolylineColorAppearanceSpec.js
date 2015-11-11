@@ -43,9 +43,9 @@ defineSuite([
     });
 
     beforeEach(function() {
-        frameState = createFrameState(createCamera());
+        frameState = createFrameState(context, createCamera());
         us = context.uniformState;
-        us.update(context, frameState);
+        us.update(frameState);
     });
 
     it('constructor', function() {
@@ -85,7 +85,7 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, frameState, primitive);
+        render(frameState, primitive);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 

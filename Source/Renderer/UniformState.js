@@ -146,6 +146,8 @@ define([
         this._frustum2DWidth = 0.0;
         this._eyeHeight2D = new Cartesian2();
         this._resolutionScale = 1.0;
+
+        this._fogDensity = undefined;
     };
 
     defineProperties(UniformState.prototype, {
@@ -764,6 +766,17 @@ define([
             get : function() {
                 return this._resolutionScale;
             }
+        },
+
+        /**
+         * A scalar used to mix a color with the fog color based on the distance to the camera.
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
+        fogDensity : {
+            get : function() {
+                return this._fogDensity;
+            }
         }
     });
 
@@ -875,11 +888,11 @@ define([
      *
      * @param {FrameState} frameState The frameState to synchronize with.
      */
-    UniformState.prototype.update = function(context, frameState) {
+    UniformState.prototype.update = function(frameState) {
         this._mode = frameState.mode;
         this._mapProjection = frameState.mapProjection;
 
-        var canvas = context._canvas;
+        var canvas = frameState.context._canvas;
         this._resolutionScale = canvas.width / canvas.clientWidth;
 
         var camera = frameState.camera;
@@ -903,6 +916,8 @@ define([
         this._entireFrustum.x = camera.frustum.near;
         this._entireFrustum.y = camera.frustum.far;
         this.updateFrustum(camera.frustum);
+
+        this._fogDensity = frameState.fog.density;
 
         this._frameState = frameState;
         this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, this._temeToPseudoFixed);

@@ -73,6 +73,18 @@ defineSuite([
         expect(createWithoutUrl).toThrowDeveloperError();
     });
 
+    it('resolves readyPromise', function() {
+        var provider = new WebMapServiceImageryProvider({
+            url : 'made/up/wms/server',
+            layers : 'someLayer'
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
     it('returns valid value for hasAlphaChannel', function() {
         var provider = new WebMapServiceImageryProvider({
             url : 'made/up/wms/server',

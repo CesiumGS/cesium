@@ -13,6 +13,7 @@ define([
         '../Core/Rectangle',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/Uri',
+        '../ThirdParty/when',
         './ImageryProvider'
     ], function(
         combine,
@@ -28,6 +29,7 @@ define([
         Rectangle,
         WebMercatorTilingScheme,
         Uri,
+        when,
         ImageryProvider) {
     "use strict";
 
@@ -127,6 +129,8 @@ define([
         this._maximumLevel = options.maximumLevel;
 
         this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
+
+        this._readyPromise = when.resolve(true);
 
         // Check the number of tiles at the minimum level.  If it's more than four,
         // throw an exception, because starting at the higher minimum
@@ -356,6 +360,18 @@ define([
          */
         ready : {
             value: true
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof WebMapTileServiceImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise;
+            }
         },
 
         /**

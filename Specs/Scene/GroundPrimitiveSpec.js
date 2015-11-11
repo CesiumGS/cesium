@@ -90,9 +90,10 @@ defineSuite([
         this._primitive = primitive;
     };
 
-    MockGlobePrimitive.prototype.update = function(context, frameState, commandList) {
+    MockGlobePrimitive.prototype.update = function(frameState) {
+        var commandList = frameState.commandList;
         var startLength = commandList.length;
-        this._primitive.update(context, frameState, commandList);
+        this._primitive.update(frameState);
 
         for (var i = startLength; i < commandList.length; ++i) {
             var command = commandList[i];
@@ -260,11 +261,10 @@ defineSuite([
             asynchronous : false
         });
 
-        var frameState = createFrameState();
+        var frameState = createFrameState(context);
 
-        var commands = [];
-        primitive.update(context, frameState, commands);
-        expect(commands.length).toEqual(0);
+        primitive.update(frameState);
+        expect(frameState.commandList.length).toEqual(0);
     });
 
     it('does not render when show is false', function() {
@@ -277,19 +277,21 @@ defineSuite([
             asynchronous : false
         });
 
-        var frameState = createFrameState();
+        var frameState = createFrameState(context);
 
-        var commands = [];
-        primitive.update(context, frameState, commands);
+        frameState.commandList.length = 0;
+        primitive.update(frameState);
         expect(frameState.afterRender.length).toEqual(1);
-        frameState.afterRender[0]();
-        primitive.update(context, frameState, commands);
-        expect(commands.length).toBeGreaterThan(0);
 
-        commands.length = 0;
+        frameState.afterRender[0]();
+        frameState.commandList.length = 0;
+        primitive.update(frameState);
+        expect(frameState.commandList.length).toBeGreaterThan(0);
+
+        frameState.commandList.length = 0;
         primitive.show = false;
-        primitive.update(context, frameState, commands);
-        expect(commands.length).toEqual(0);
+        primitive.update(frameState);
+        expect(frameState.commandList.length).toEqual(0);
     });
 
     it('does not render other than for the color or pick pass', function() {
@@ -302,13 +304,12 @@ defineSuite([
             asynchronous : false
         });
 
-        var frameState = createFrameState();
+        var frameState = createFrameState(context);
         frameState.passes.render = false;
         frameState.passes.pick = false;
 
-        var commands = [];
-        primitive.update(context, frameState, commands);
-        expect(commands.length).toEqual(0);
+        primitive.update(frameState);
+        expect(frameState.commandList.length).toEqual(0);
     });
 
     function verifyGroundPrimitiveRender(primitive, color) {
@@ -530,14 +531,14 @@ defineSuite([
             compressVertices : false
         });
 
-        var frameState = createFrameState();
+        var frameState = createFrameState(context);
 
         return pollToPromise(function() {
             if (frameState.afterRender.length > 0) {
                 frameState.afterRender[0]();
                 return true;
             }
-            primitive.update(context, frameState, []);
+            primitive.update(frameState);
             return false;
         }).then(function() {
             return primitive.readyPromise.then(function(arg) {
@@ -562,14 +563,14 @@ defineSuite([
             compressVertices : false
         });
 
-        var frameState = createFrameState();
+        var frameState = createFrameState(context);
 
         return pollToPromise(function() {
             if (frameState.afterRender.length > 0) {
                 frameState.afterRender[0]();
                 return true;
             }
-            primitive.update(context, frameState, []);
+            primitive.update(frameState);
             return false;
         }).then(function() {
             return primitive.readyPromise.then(function(arg) {
@@ -609,10 +610,10 @@ defineSuite([
             allowPicking : false
         });
 
-        var frameState = createFrameState();
+        var frameState = createFrameState(context);
 
         return pollToPromise(function() {
-            primitive.update(context, frameState, []);
+            primitive.update(frameState);
             if (frameState.afterRender.length > 0) {
                 frameState.afterRender[0]();
             }
@@ -684,10 +685,10 @@ defineSuite([
             geometryInstance : rectangleInstance
         });
 
-        var frameState = createFrameState();
+        var frameState = createFrameState(context);
 
         return pollToPromise(function() {
-            primitive.update(context, frameState, []);
+            primitive.update(frameState);
             if (frameState.afterRender.length > 0) {
                 frameState.afterRender[0]();
             }
@@ -702,8 +703,8 @@ defineSuite([
             geometryInstance : rectangleInstance
         });
 
-        var frameState = createFrameState();
-        primitive.update(context, frameState, []);
+        var frameState = createFrameState(context);
+        primitive.update(frameState);
 
         primitive.destroy();
         expect(primitive.isDestroyed()).toEqual(true);

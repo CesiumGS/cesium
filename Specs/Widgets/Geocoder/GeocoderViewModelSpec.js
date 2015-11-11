@@ -119,7 +119,7 @@ defineSuite([
 
         expect(spyListener.calls.count()).toBe(1);
 
-        viewModel.duration = 1.5;
+        viewModel.flightDuration = 1.5;
         viewModel.serachText = '2.0, 2.0';
         viewModel.search();
 

@@ -40,6 +40,7 @@ define([
         '../Shaders/GlobeFSPole',
         '../Shaders/GlobeVS',
         '../Shaders/GlobeVSPole',
+        '../Shaders/GroundAtmosphere',
         '../ThirdParty/when',
         './GlobeSurfaceShaderSet',
         './GlobeSurfaceTileProvider',
@@ -89,6 +90,7 @@ define([
         GlobeFSPole,
         GlobeVS,
         GlobeVSPole,
+        GroundAtmosphere,
         when,
         GlobeSurfaceShaderSet,
         GlobeSurfaceTileProvider,
@@ -122,7 +124,7 @@ define([
         this._surfaceShaderSet = new GlobeSurfaceShaderSet();
 
         this._surfaceShaderSet.baseVertexShaderSource = new ShaderSource({
-            sources : [GlobeVS]
+            sources : [GroundAtmosphere, GlobeVS]
         });
 
         this._surfaceShaderSet.baseFragmentShaderSource = new ShaderSource({
@@ -530,7 +532,7 @@ define([
     var vpTransformScratch = new Matrix4();
     var polePositionsScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(8) : [];
 
-    function fillPoles(globe, context, frameState) {
+    function fillPoles(globe, frameState) {
         var terrainProvider = globe.terrainProvider;
         if (frameState.mode !== SceneMode.SCENE3D) {
             return;
@@ -542,6 +544,7 @@ define([
 
         var terrainMaxRectangle = terrainProvider.tilingScheme.rectangle;
 
+        var context = frameState.context;
         var viewProjMatrix = context.uniformState.viewProjection;
         var viewport = viewportScratch;
         viewport.width = context.drawingBufferWidth;
@@ -682,11 +685,12 @@ define([
     /**
      * @private
      */
-    Globe.prototype.update = function(context, frameState, commandList) {
+    Globe.prototype.update = function(frameState) {
         if (!this.show) {
             return;
         }
 
+        var context = frameState.context;
         var width = context.drawingBufferWidth;
         var height = context.drawingBufferHeight;
 
@@ -782,9 +786,11 @@ define([
 
         this._occluder.cameraPosition = frameState.camera.positionWC;
 
-        fillPoles(this, context, frameState);
+        fillPoles(this, frameState);
 
+        var commandList = frameState.commandList;
         var pass = frameState.passes;
+
         if (pass.render) {
             // render quads to fill the poles
             if (mode === SceneMode.SCENE3D) {
@@ -815,11 +821,11 @@ define([
             tileProvider.oceanNormalMap = this._oceanNormalMap;
             tileProvider.enableLighting = this.enableLighting;
 
-            surface.update(context, frameState, commandList);
+            surface.update(frameState);
         }
 
         if (pass.pick) {
-            surface.update(context, frameState, commandList);
+            surface.update(frameState);
         }
     };
 

@@ -1020,7 +1020,7 @@ defineSuite([
         updateController();
 
         camera.setView({
-            position : Cartesian3.fromDegrees(-72.0, 40.0, 1.0)
+            destination : Cartesian3.fromDegrees(-72.0, 40.0, 1.0)
         });
 
         updateController();
@@ -1035,7 +1035,7 @@ defineSuite([
         updateController();
 
         camera.setView({
-            position : Cartesian3.fromDegrees(-72.0, 40.0, 1.0)
+            destination : Cartesian3.fromDegrees(-72.0, 40.0, 1.0)
         });
 
         updateController();
@@ -1051,7 +1051,7 @@ defineSuite([
         updateController();
 
         camera.setView({
-            position : Cartesian3.fromDegrees(-72.0, 40.0, -10.0)
+            destination : Cartesian3.fromDegrees(-72.0, 40.0, -10.0)
         });
 
         updateController();
@@ -1067,7 +1067,7 @@ defineSuite([
         updateController();
 
         camera.setView({
-            position : Cartesian3.fromDegrees(-72.0, 40.0, -10.0)
+            destination : Cartesian3.fromDegrees(-72.0, 40.0, -10.0)
         });
 
         updateController();
