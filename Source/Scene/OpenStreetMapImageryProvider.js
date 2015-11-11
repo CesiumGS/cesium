@@ -9,7 +9,7 @@ define([
         '../Core/Rectangle',
         '../Core/WebMercatorTilingScheme',
         './ImageryProvider',
-        './UrlTemplateImageryProvider'
+        '../Core/deprecationWarning'
 ], function(
         Credit,
         defaultValue,
@@ -20,14 +20,16 @@ define([
         Rectangle,
         WebMercatorTilingScheme,
         ImageryProvider,
-        UrlTemplateImageryProvider
-        ) {
+        deprecationWarning
+) {
     "use strict";
 
     var trailingSlashRegex = /\/$/;
     var defaultCredit = new Credit('MapQuest, Open Street Map and contributors, CC-BY-SA');
 
     /**
+     * @deprecated
+     *
      * Provides tiled imagery hosted by OpenStreetMap or another provider of Slippy tiles.  Please be aware
      * that a default-constructed instance of this class will connect to OpenStreetMap's volunteer-run
      * servers, so you must conform to their
@@ -65,6 +67,8 @@ define([
      * });
      */
     var OpenStreetMapImageryProvider = function OpenStreetMapImageryProvider(options) {
+        deprecationWarning('OpenStreetMapImageryProvider', 'Scene/OpenStreetMapImageryProvider is deprecated. ' +
+                                                           'Use Scene/OpenStreetMapImageryProviderGenerator instead.');
         options = defaultValue(options, {});
 
         var url = defaultValue(options.url, '//a.tile.openstreetmap.org/');
@@ -74,49 +78,267 @@ define([
         }
 
         this._url = url;
+        this._fileExtension = defaultValue(options.fileExtension, 'png');
+        this._proxy = options.proxy;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
 
-        var fileExtension = defaultValue(options.fileExtension, 'png');
+        this._tilingScheme = new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid });
 
-        var tilingScheme = new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid });
+        this._tileWidth = 256;
+        this._tileHeight = 256;
 
-        var tileWidth = 256;
-        var tileHeight = 256;
+        this._minimumLevel = defaultValue(options.minimumLevel, 0);
+        this._maximumLevel = options.maximumLevel;
 
-        var minimumLevel = defaultValue(options.minimumLevel, 0);
-        var maximumLevel = options.maximumLevel;
-
-        var rectangle = defaultValue(options.rectangle, tilingScheme.rectangle);
+        this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
 
         // Check the number of tiles at the minimum level.  If it's more than four,
         // throw an exception, because starting at the higher minimum
         // level will cause too many tiles to be downloaded and rendered.
-        var swTile = tilingScheme.positionToTileXY(Rectangle.southwest(rectangle), minimumLevel);
-        var neTile = tilingScheme.positionToTileXY(Rectangle.northeast(rectangle), minimumLevel);
+        var swTile = this._tilingScheme.positionToTileXY(Rectangle.southwest(this._rectangle), this._minimumLevel);
+        var neTile = this._tilingScheme.positionToTileXY(Rectangle.northeast(this._rectangle), this._minimumLevel);
         var tileCount = (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
         if (tileCount > 4) {
             throw new DeveloperError('The imagery provider\'s rectangle and minimumLevel indicate that there are ' + tileCount + ' tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.');
         }
 
+        this._errorEvent = new Event();
+
+        this._ready = true;
+
         var credit = defaultValue(options.credit, defaultCredit);
         if (typeof credit === 'string') {
             credit = new Credit(credit);
         }
-
-        var templateUrl = url + "{z}/{x}/{y}." + fileExtension;
-
-        return new UrlTemplateImageryProvider({
-            url: templateUrl,
-            proxy: options.proxy,
-            credit: credit,
-            tilingScheme: tilingScheme,
-            tileWidth: tileWidth,
-            tileHeight: tileHeight,
-            minimumLevel: minimumLevel,
-            maximumLevel: maximumLevel,
-            rectangle: rectangle
-        });
+        this._credit = credit;
     };
+
+    function buildImageUrl(imageryProvider, x, y, level) {
+        var url = imageryProvider._url + level + '/' + x + '/' + y + '.' + imageryProvider._fileExtension;
+
+        var proxy = imageryProvider._proxy;
+        if (defined(proxy)) {
+            url = proxy.getURL(url);
+        }
+
+        return url;
+    }
+
+    defineProperties(OpenStreetMapImageryProvider.prototype, {
+        /**
+         * Gets the URL of the service hosting the imagery.
+         * @memberof OpenStreetMapImageryProvider.prototype
+         * @type {String}
+         * @readonly
+         */
+        url : {
+            get : function() {
+                return this._url;
+            }
+        },
+
+        /**
+         * Gets the proxy used by this provider.
+         * @memberof OpenStreetMapImageryProvider.prototype
+         * @type {Proxy}
+         * @readonly
+         */
+        proxy : {
+            get : function() {
+                return this._proxy;
+            }
+        },
+
+        /**
+         * Gets the width of each tile, in pixels. This function should
+         * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
+         * @memberof OpenStreetMapImageryProvider.prototype
+         * @type {Number}
+         * @readonly
+         */
+        tileWidth : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('tileWidth must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return this._tileWidth;
+            }
+        },
+
+        /**
+         * Gets the height of each tile, in pixels.  This function should
+         * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
+         * @memberof OpenStreetMapImageryProvider.prototype
+         * @type {Number}
+         * @readonly
+         */
+        tileHeight: {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('tileHeight must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return this._tileHeight;
+            }
+        },
+
+        /**
+         * Gets the maximum level-of-detail that can be requested.  This function should
+         * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
+         * @memberof OpenStreetMapImageryProvider.prototype
+         * @type {Number}
+         * @readonly
+         */
+        maximumLevel : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('maximumLevel must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return this._maximumLevel;
+            }
+        },
+
+        /**
+         * Gets the minimum level-of-detail that can be requested.  This function should
+         * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
+         * @memberof OpenStreetMapImageryProvider.prototype
+         * @type {Number}
+         * @readonly
+         */
+        minimumLevel : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('minimumLevel must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return this._minimumLevel;
+            }
+        },
+
+        /**
+         * Gets the tiling scheme used by this provider.  This function should
+         * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
+         * @memberof OpenStreetMapImageryProvider.prototype
+         * @type {TilingScheme}
+         * @readonly
+         */
+        tilingScheme : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('tilingScheme must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return this._tilingScheme;
+            }
+        },
+
+        /**
+         * Gets the rectangle, in radians, of the imagery provided by this instance.  This function should
+         * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
+         * @memberof OpenStreetMapImageryProvider.prototype
+         * @type {Rectangle}
+         * @readonly
+         */
+        rectangle : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('rectangle must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return this._rectangle;
+            }
+        },
+
+        /**
+         * Gets the tile discard policy.  If not undefined, the discard policy is responsible
+         * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
+         * returns undefined, no tiles are filtered.  This function should
+         * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
+         * @memberof OpenStreetMapImageryProvider.prototype
+         * @type {TileDiscardPolicy}
+         * @readonly
+         */
+        tileDiscardPolicy : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('tileDiscardPolicy must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return this._tileDiscardPolicy;
+            }
+        },
+
+        /**
+         * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
+         * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+         * are passed an instance of {@link TileProviderError}.
+         * @memberof OpenStreetMapImageryProvider.prototype
+         * @type {Event}
+         * @readonly
+         */
+        errorEvent : {
+            get : function() {
+                return this._errorEvent;
+            }
+        },
+
+        /**
+         * Gets a value indicating whether or not the provider is ready for use.
+         * @memberof OpenStreetMapImageryProvider.prototype
+         * @type {Boolean}
+         * @readonly
+         */
+        ready : {
+            get : function() {
+                return this._ready;
+            }
+        },
+
+        /**
+         * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
+         * the source of the imagery.  This function should not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
+         * @memberof OpenStreetMapImageryProvider.prototype
+         * @type {Credit}
+         * @readonly
+         */
+        credit : {
+            get : function() {
+                return this._credit;
+            }
+        },
+
+        /**
+         * Gets a value indicating whether or not the images provided by this imagery provider
+         * include an alpha channel.  If this property is false, an alpha channel, if present, will
+         * be ignored.  If this property is true, any images without an alpha channel will be treated
+         * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
+         * and texture upload time are reduced.
+         * @memberof OpenStreetMapImageryProvider.prototype
+         * @type {Boolean}
+         * @readonly
+         */
+        hasAlphaChannel : {
+            get : function() {
+                return true;
+            }
+        }
+    });
 
     /**
      * Gets the credits to be displayed when a given tile is displayed.
@@ -148,14 +370,13 @@ define([
      */
     OpenStreetMapImageryProvider.prototype.requestImage = function(x, y, level) {
         //>>includeStart('debug', pragmas.debug);
-        if (!this._imageryProvider.ready) {
+        if (!this._ready) {
             throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
         }
         //>>includeEnd('debug');
 
-        //var url = buildImageUrl(this, x, y, level);
-        //return ImageryProvider.loadImage(this, url);
-        return this._imageryProvider.requestImage(x, y, level);
+        var url = buildImageUrl(this, x, y, level);
+        return ImageryProvider.loadImage(this, url);
     };
 
     /**
