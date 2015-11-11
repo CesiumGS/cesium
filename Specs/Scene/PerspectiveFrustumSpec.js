@@ -114,6 +114,10 @@ defineSuite([
         expect(farPlane).toEqual(expectedResult);
     });
 
+    it('get sseDenominator', function() {
+        expect(frustum.sseDenominator).toEqualEpsilon(1.1547, CesiumMath.EPSILON5);
+    });
+
     it('get perspective projection matrix', function() {
         var projectionMatrix = frustum.projectionMatrix;
         var expected = Matrix4.computePerspectiveFieldOfView(frustum.fovy, frustum.aspectRatio, frustum.near, frustum.far, new Matrix4());

@@ -39,6 +39,7 @@ define([
         './CreditDisplay',
         './CullingVolume',
         './DepthPlane',
+        './Fog',
         './FrameState',
         './FrustumCommands',
         './FXAA',
@@ -99,6 +100,7 @@ define([
         CreditDisplay,
         CullingVolume,
         DepthPlane,
+        Fog,
         FrameState,
         FrustumCommands,
         FXAA,
@@ -504,6 +506,13 @@ define([
          * @private
          */
         this.copyGlobeDepth = false;
+
+        /**
+         * Blends the atmosphere to geometry far from the camera for horizon views. Allows for additional
+         * performance improvements by rendering less geometry and dispatching less terrain requests.
+         * @type {Fog}
+         */
+        this.fog = new Fog();
 
         this._performanceDisplay = undefined;
         this._debugVolume = undefined;
@@ -1397,6 +1406,7 @@ define([
         // Manage celestial and terrestrial environment effects.
         var renderPass = frameState.passes.render;
         var skyBoxCommand = (renderPass && defined(scene.skyBox)) ? scene.skyBox.update(frameState) : undefined;
+        var skyAtmosphereVisible = defined(scene.globe) && scene.globe._surface._tilesToRender.length > 0;
         var skyAtmosphereCommand = (renderPass && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(frameState) : undefined;
         var sunCommands = (renderPass && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
         var sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
@@ -1487,7 +1497,7 @@ define([
             executeCommand(skyBoxCommand, scene, context, passState);
         }
 
-        if (defined(skyAtmosphereCommand)) {
+        if (defined(skyAtmosphereCommand) && skyAtmosphereVisible) {
             executeCommand(skyAtmosphereCommand, scene, context, passState);
         }
 
@@ -1719,6 +1729,8 @@ define([
         updateFrameState(scene, frameNumber, time);
         frameState.passes.render = true;
         frameState.creditDisplay.beginFrame();
+
+        scene.fog.update(frameState);
 
         us.update(frameState);
 

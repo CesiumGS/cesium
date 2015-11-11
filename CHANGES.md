@@ -1,6 +1,23 @@
 Change Log
 ==========
 
+### 1.16 - 2015-12-01
+
+* Fixed an issue where the sun texture is not generated correctly on some mobile devices. [#3141](https://github.com/AnalyticalGraphicsInc/cesium/issues/3141)
+* Fixed a bug in the deprecated `jsonp` that prevented it from returning a promise.  Its replacement, `loadJsonp`, was unaffected.
+* Fixed glTF implementation to read the version as a string as per the specification and to correctly handle backwards compatibility for axis-angle rotations in glTF 0.8 models.
+* Added `BoundingSphere.fromOrientedBoundingBox` function.
+* Fixed a bug that caused setting `Entity.parent` to `undefined` to throw an exception. [#3169](https://github.com/AnalyticalGraphicsInc/cesium/issues/3169)
+* Added `Model.maximumScale` and `ModelGraphics.maximumScale` properties, giving an upper limit for minimumPixelSize.
+* Entities have a reference to their entity collection.
+* Entity collections have a reference to their owner (usually a data source, but can be a `CompositeEntityCollection`).
+* `GeoJsonDataSource.load` now takes an optional `describeProperty` function for generating feature description properties. [#3140](https://github.com/AnalyticalGraphicsInc/cesium/pull/3140)
+* Fixed a bug which caused `Entity` polyline graphics to be incorrect when a scene's ellipsoid was not WGS84. [#3174](https://github.com/AnalyticalGraphicsInc/cesium/pull/3174)
+* Added `ImageryProvider.readyPromise` and `TerrainProvider.readyPromise` and implemented it in all terrain and imagery providers.  This is a promise which resolves when `ready` becomes true and rejected if there is an error during initialization. [#3175](https://github.com/AnalyticalGraphicsInc/cesium/pull/3175)
+* Added support for fog near the horizon, which improves performance by rendering less terrain tiles and reduces terrain tile requests.  This is enabled by default.  See `Scene.fog` for options.  [#3154](https://github.com/AnalyticalGraphicsInc/cesium/pull/3154)
+* Added `Queue.peek` to return the item at the front of a Queue.
+* Added `Camera.distanceToBoundingSphere` function.
+
 ### 1.15 - 2015-11-02
 
 * Breaking changes

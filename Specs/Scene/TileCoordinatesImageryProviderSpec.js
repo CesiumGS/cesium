@@ -24,6 +24,15 @@ defineSuite([
         expect(TileCoordinatesImageryProvider).toConformToInterface(ImageryProvider);
     });
 
+    it('resolves readyPromise', function() {
+        var provider = new TileCoordinatesImageryProvider();
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
     it('returns valid value for hasAlphaChannel', function() {
         var provider = new TileCoordinatesImageryProvider();
 

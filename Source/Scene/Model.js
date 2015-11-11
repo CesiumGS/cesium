@@ -15,6 +15,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/FeatureDetection',
+        '../Core/getMagic',
         '../Core/getStringFromTypedArray',
         '../Core/IndexDatatype',
         '../Core/loadArrayBuffer',
@@ -69,6 +70,7 @@ define([
         DeveloperError,
         Event,
         FeatureDetection,
+        getMagic,
         getStringFromTypedArray,
         IndexDatatype,
         loadArrayBuffer,
@@ -291,6 +293,7 @@ define([
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
      * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
+     * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
      * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
@@ -414,6 +417,16 @@ define([
          */
         this.minimumPixelSize = defaultValue(options.minimumPixelSize, 0.0);
         this._minimumPixelSize = this.minimumPixelSize;
+
+        /**
+         * The maximum scale size for a model. This can be used to give
+         * an upper limit to the {@link Model#minimumPixelSize}, ensuring that the model
+         * is never an unreasonable scale.
+         *
+         * @type {Number}
+         */
+        this.maximumScale = options.maximumScale;
+        this._maximumScale = this.maximumScale;
 
         /**
          * User-defined object returned when the model is picked.
@@ -605,7 +618,7 @@ define([
 
         /**
          * The model's bounding sphere in its local coordinate system.  This does not take into
-         * account glTF animations and skins.
+         * account glTF animations and skins nor does it take into account {@link Model#minimumPixelSize}.
          *
          * @memberof Model.prototype
          *
@@ -629,7 +642,8 @@ define([
                 //>>includeEnd('debug');
 
                 var nonUniformScale = Matrix4.getScale(this.modelMatrix, boundingSphereCartesian3Scratch);
-                Cartesian3.multiplyByScalar(nonUniformScale, this.scale, nonUniformScale);
+                var scale = defined(this.maximumScale) ? Math.min(this.maximumScale, this.scale) : this.scale;
+                Cartesian3.multiplyByScalar(nonUniformScale, scale, nonUniformScale);
 
                 var scaledBoundingSphere = this._scaledBoundingSphere;
                 scaledBoundingSphere.center = Cartesian3.multiplyComponents(this._boundingSphere.center, nonUniformScale, scaledBoundingSphere.center);
@@ -751,10 +765,8 @@ define([
     }
 
     function containsGltfMagic(uint8Array) {
-        if (uint8Array.byteLength < 4) {
-            return false;
-        }
-        return getStringFromTypedArray(uint8Array.subarray(0, 4)) === 'glTF';
+        var magic = getMagic(uint8Array);
+        return magic === 'glTF';
     }
 
     function parseBinaryGltfHeader(uint8Array) {
@@ -794,7 +806,7 @@ define([
             binOffset = 0;
         }
 
-        var json = getStringFromTypedArray(getSubarray(uint8Array, sceneOffset, sceneLength));
+        var json = getStringFromTypedArray(uint8Array, sceneOffset, sceneLength);
         return {
             glTF: JSON.parse(json),
             binaryOffset: binOffset
@@ -823,6 +835,7 @@ define([
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
      * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
+     * @param {Number} [options.maxiumumScale] The maximum scale for the model.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
@@ -849,6 +862,7 @@ define([
      *   modelMatrix : modelMatrix,
      *   scale : 2.0,                     // double size
      *   minimumPixelSize : 128,          // never smaller than 128 pixels
+     *   maximumScale: 20000,             // never larger than 20000 * model size (overrides minimumPixelSize)
      *   allowPicking : false,            // not pickable
      *   debugShowBoundingVolume : false, // default
      *   debugWireframe : false
@@ -1002,7 +1016,7 @@ define([
 
         for (var i = 0; i < rootNodesLength; ++i) {
             var n = gltfNodes[rootNodes[i]];
-            n._transformToRoot = getTransform(n, version);
+            n._transformToRoot = getTransform(n);
             nodeStack.push(n);
 
             while (nodeStack.length > 0) {
@@ -1036,7 +1050,7 @@ define([
                 var childrenLength = children.length;
                 for (var k = 0; k < childrenLength; ++k) {
                     var child = gltfNodes[children[k]];
-                    child._transformToRoot = getTransform(child, version);
+                    child._transformToRoot = getTransform(child);
                     Matrix4.multiplyTransformation(transformToRoot, child._transformToRoot, child._transformToRoot);
                     nodeStack.push(child);
                 }
@@ -1222,9 +1236,7 @@ define([
         var skinnedNodes = [];
 
         var skinnedNodesNames = model._loadResources.skinnedNodesNames;
-        var gltf = model.gltf;
-        var version = gltf.asset.version;
-        var nodes = gltf.nodes;
+        var nodes = model.gltf.nodes;
 
         for (var name in nodes) {
             if (nodes.hasOwnProperty(name)) {
@@ -1264,7 +1276,7 @@ define([
                     // Publicly-accessible ModelNode instance to modify animation targets
                     publicNode : undefined
                 };
-                runtimeNode.publicNode = new ModelNode(model, node, runtimeNode, name, getTransform(node, version));
+                runtimeNode.publicNode = new ModelNode(model, node, runtimeNode, name, getTransform(node));
 
                 runtimeNodes[name] = runtimeNode;
                 runtimeNodesByName[node.name] = runtimeNode;
@@ -2540,13 +2552,7 @@ define([
                         // TRS converted to Cesium types
                         var rotation = gltfNode.rotation;
                         runtimeNode.translation = Cartesian3.fromArray(gltfNode.translation);
-                        if (version < 1.0) {
-                            axis = Cartesian3.fromArray(rotation, 0, axis);
-                            runtimeNode.rotation = Quaternion.fromAxisAngle(axis, rotation[3]);
-                        }
-                        else {
-                            runtimeNode.rotation = Quaternion.unpack(rotation);
-                        }
+                        runtimeNode.rotation = Quaternion.unpack(rotation);
                         runtimeNode.scale = Cartesian3.fromArray(gltfNode.scale);
                     }
                 }
@@ -2827,18 +2833,16 @@ define([
     }
 
     var scratchPixelSize = new Cartesian2();
-    var scratchToCenter = new Cartesian3();
-    var scratchProj = new Cartesian3();
+    var scratchBoundingSphere = new BoundingSphere();
 
-    function scaleInPixels(positionWC, radius, context, frameState) {
+    function scaleInPixels(positionWC, radius, frameState) {
+        scratchBoundingSphere.center = positionWC;
+        scratchBoundingSphere.radius = radius;
         var camera = frameState.camera;
-        var frustum = camera.frustum;
+        var distance = camera.distanceToBoundingSphere(scratchBoundingSphere);
 
-        var toCenter = Cartesian3.subtract(camera.positionWC, positionWC, scratchToCenter);
-        var proj = Cartesian3.multiplyByScalar(camera.directionWC, Cartesian3.dot(toCenter, camera.directionWC), scratchProj);
-        var distance = Math.max(frustum.near, Cartesian3.magnitude(proj) - radius);
-
-        var pixelSize = frustum.getPixelDimensions(context.drawingBufferWidth, context.drawingBufferHeight, distance, scratchPixelSize);
+        var context = frameState.context;
+        var pixelSize = camera.frustum.getPixelDimensions(context.drawingBufferWidth, context.drawingBufferHeight, distance, scratchPixelSize);
         var pixelScale = Math.max(pixelSize.x, pixelSize.y);
 
         return pixelScale;
@@ -2846,11 +2850,12 @@ define([
 
     var scratchPosition = new Cartesian3();
 
-    function getScale(model, context, frameState) {
+    function getScale(model, frameState) {
         var scale = model.scale;
 
         if (model.minimumPixelSize !== 0.0) {
             // Compute size of bounding sphere in pixels
+            var context = frameState.context;
             var maxPixelSize = Math.max(context.drawingBufferWidth, context.drawingBufferHeight);
             var m = model.modelMatrix;
             scratchPosition.x = m[12];
@@ -2862,7 +2867,7 @@ define([
             }
 
             var radius = model.boundingSphere.radius;
-            var metersPerPixel = scaleInPixels(scratchPosition, radius, context, frameState);
+            var metersPerPixel = scaleInPixels(scratchPosition, radius, frameState);
 
             // metersPerPixel is always > 0.0
             var pixelsPerMeter = 1.0 / metersPerPixel;
@@ -2874,7 +2879,7 @@ define([
             }
         }
 
-        return scale;
+        return defined(model.maximumScale) ? Math.min(model.maximumScale, scale) : scale;
     }
 
     function releaseCachedGltf(model) {
@@ -3060,14 +3065,16 @@ define([
             // Model's model matrix needs to be updated
             var modelTransformChanged = !Matrix4.equals(this._modelMatrix, this.modelMatrix) ||
                 (this._scale !== this.scale) ||
-                (this._minimumPixelSize !== this.minimumPixelSize) || (this.minimumPixelSize !== 0.0); // Minimum pixel size changed or is enabled
+                (this._minimumPixelSize !== this.minimumPixelSize) || (this.minimumPixelSize !== 0.0) || // Minimum pixel size changed or is enabled
+                (this._maximumScale !== this.maximumScale);
 
             if (modelTransformChanged || justLoaded) {
                 Matrix4.clone(this.modelMatrix, this._modelMatrix);
                 this._scale = this.scale;
                 this._minimumPixelSize = this.minimumPixelSize;
+                this._maximumScale = this.maximumScale;
 
-                var scale = getScale(this, context, frameState);
+                var scale = getScale(this, frameState);
                 var computedModelMatrix = this._computedModelMatrix;
                 Matrix4.multiplyByUniformScale(this.modelMatrix, scale, computedModelMatrix);
                 Matrix4.multiplyTransformation(computedModelMatrix, yUpToZUp, computedModelMatrix);

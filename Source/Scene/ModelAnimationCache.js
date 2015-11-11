@@ -55,7 +55,8 @@ define([
             // Cache miss
             var loadResources = model._loadResources;
             var gltf = model.gltf;
-            var version = gltf.asset.version;
+            var hasAxisAngle = (parseFloat(gltf.asset.version) < 1.0);
+
             var bufferViews = gltf.bufferViews;
 
             var bufferView = bufferViews[accessor.bufferView];
@@ -81,7 +82,7 @@ define([
                 values = new Array(count);
                 for (i = 0; i < count; ++i) {
                     var byteOffset = 4 * i;
-                    if (version < 1.0) {
+                    if (hasAxisAngle) {
                         values[i] = Quaternion.fromAxisAngle(Cartesian3.fromArray(typedArray, byteOffset, axisScratch), typedArray[byteOffset + 3]);
                     }
                     else {

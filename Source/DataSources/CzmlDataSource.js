@@ -1531,7 +1531,7 @@ define([
         this._clock = undefined;
         this._documentPacket = new DocumentPacket();
         this._version = undefined;
-        this._entityCollection = new EntityCollection();
+        this._entityCollection = new EntityCollection(this);
     };
 
     /**

@@ -177,6 +177,7 @@ define([
             skyBox: false
         });
         viewer.scene.globe._surface.sseCorrector = new SSECorrector();
+        viewer.scene.fog.enabled = !!endUserOptions.nofog;
     } catch (exception) {
         loadingIndicator.style.display = 'none';
         var message = formatError(exception);

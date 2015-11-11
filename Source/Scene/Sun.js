@@ -201,6 +201,7 @@ define([
             this._commands.computeCommand = new ComputeCommand({
                 fragmentShaderSource : SunTextureFS,
                 outputTexture  : this._texture,
+                uniformMap : uniformMap,
                 persists : false,
                 owner : this,
                 postExecute : function() {
