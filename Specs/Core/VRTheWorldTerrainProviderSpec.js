@@ -76,6 +76,17 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('resolves readyPromise', function() {
+        var provider = new VRTheWorldTerrainProvider({
+            url : 'made/up/url'
+        });
+
+        return provider.readyPromise.then(function (result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
     it('has error event', function() {
         var provider = new VRTheWorldTerrainProvider({
             url : 'made/up/url'

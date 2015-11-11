@@ -8,6 +8,7 @@ define([
         '../Core/Event',
         '../Core/Rectangle',
         '../Core/WebMercatorTilingScheme',
+        '../ThirdParty/when',
         './ImageryProvider'
     ], function(
         Credit,
@@ -18,6 +19,7 @@ define([
         Event,
         Rectangle,
         WebMercatorTilingScheme,
+        when,
         ImageryProvider) {
     "use strict";
 
@@ -98,6 +100,7 @@ define([
         this._errorEvent = new Event();
 
         this._ready = true;
+        this._readyPromise = when.resolve(true);
 
         var credit = defaultValue(options.credit, defaultCredit);
         if (typeof credit === 'string') {
@@ -300,6 +303,18 @@ define([
         ready : {
             get : function() {
                 return this._ready;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof OpenStreetMapImageryProvider.prototype
+         * @type {Boolean}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise;
             }
         },
 

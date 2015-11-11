@@ -40,6 +40,18 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('resolves readyPromise', function() {
+        var provider = new MapboxImageryProvider({
+            url : 'made/up/mapbox/server/',
+            mapId: 'test-id'
+        });
+
+        return provider.readyPromise.then(function (result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
     it('returns valid value for hasAlphaChannel', function() {
         var provider = new MapboxImageryProvider({
             url : 'made/up/mapbox/server/',

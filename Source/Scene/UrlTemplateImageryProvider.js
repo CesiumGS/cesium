@@ -161,9 +161,9 @@ define([
         this._proxy = options.proxy;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._getFeatureInfoFormats = options.getFeatureInfoFormats;
-        
+
         this._errorEvent = new Event();
-        
+
         this._subdomains = options.subdomains;
         if (Array.isArray(this._subdomains)) {
             this._subdomains = this._subdomains.slice();
@@ -196,6 +196,8 @@ define([
 
         // Load metadata
         this._ready = !options.metadataUrl;
+        this._readyPromise = when.defer();
+
         if (!this._ready) {
             var metadataUrl = options.metadataUrl + 'layer.json';
 
@@ -215,6 +217,7 @@ define([
                     }
                 }
                 that._ready = true;
+                that._readyPromise.resolve(true);
             }
 
             var metadataFailure = function(data) {
@@ -425,6 +428,18 @@ define([
         ready : {
             get : function() {
                 return this._ready;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof UrlTemplateImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise;
             }
         },
 

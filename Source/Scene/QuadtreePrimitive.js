@@ -9,6 +9,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/getTimestamp',
+        '../Core/Math',
         '../Core/Queue',
         '../Core/Ray',
         '../Core/Rectangle',
@@ -28,6 +29,7 @@ define([
         DeveloperError,
         Event,
         getTimestamp,
+        CesiumMath,
         Queue,
         Ray,
         Rectangle,
@@ -455,17 +457,16 @@ define([
 
         var maxGeometricError = primitive._tileProvider.getLevelMaximumGeometricError(tile.level);
 
-        var distance = primitive._tileProvider.computeDistanceToTile(tile, frameState);
-        tile._distance = distance;
-
+        var distance = tile._distance;
         var height = frameState.context.drawingBufferHeight;
+        var sseDenominator = frameState.camera.frustum.sseDenominator;
 
-        var camera = frameState.camera;
-        var frustum = camera.frustum;
-        var fovy = frustum.fovy;
+        var error = (maxGeometricError * height) / (distance * sseDenominator);
 
-        // PERFORMANCE_IDEA: factor out stuff that's constant across tiles.
-        var error = (maxGeometricError * height) / (2 * distance * Math.tan(0.5 * fovy));
+        if (frameState.fog.enabled) {
+            error = error - CesiumMath.fog(distance, frameState.fog.density) * frameState.fog.sse;
+        }
+
         if (defined(primitive.sseCorrector)) {
           error = primitive.sseCorrector.correct(frameState, tile, distance, error);
         }
@@ -536,7 +537,7 @@ define([
         var timeSlice = primitive._loadQueueTimeSlice;
         var endTime = startTime + timeSlice;
 
-        for (var len = tileLoadQueue.length - 1, i = len; i >= 0; --i) {
+        for (var i = tileLoadQueue.length - 1; i >= 0; --i) {
             var tile = tileLoadQueue[i];
             primitive._tileReplacementQueue.markTileRendered(tile);
             tileProvider.loadTile(frameState, tile);

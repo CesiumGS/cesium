@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/BoundingSphere',
+        '../Core/Cartesian3',
         '../Core/clone',
         '../Core/combine',
         '../Core/ComponentDatatype',
@@ -34,6 +35,7 @@ define([
         './SceneMode'
     ], function(
         BoundingSphere,
+        Cartesian3,
         clone,
         combine,
         ComponentDatatype,
@@ -265,6 +267,18 @@ define([
          * @default false
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
+
+        /**
+         * @private
+         */
+        this.rtcCenter = options.rtcCenter;
+        this._modifiedModelView = new Matrix4();
+
+        //>>includeStart('debug', pragmas.debug);
+        if (defined(this.rtcCenter) && (!defined(this.geometryInstances) || (isArray(this.geometryInstances) && this.geometryInstances !== 1))) {
+            throw new DeveloperError('Relative-to-center rendering only supports one geometry instance.');
+        }
+        //>>includeEnd('debug');
 
         this._translucent = undefined;
 
@@ -499,7 +513,7 @@ define([
 
     var positionRegex = /attribute\s+vec(?:3|4)\s+(.*)3DHigh;/g;
 
-    Primitive._createColumbusViewShader = function(vertexShaderSource, scene3DOnly) {
+    Primitive._modifyShaderPosition = function(primitive, vertexShaderSource, scene3DOnly) {
         var match;
 
         var forwardDecl = '';
@@ -516,38 +530,58 @@ define([
                 forwardDecl += functionName + ';\n';
             }
 
-            if (!scene3DOnly) {
-                attributes +=
-                    'attribute vec3 ' + name + '2DHigh;\n' +
-                    'attribute vec3 ' + name + '2DLow;\n';
+            if (!defined(primitive.rtcCenter)) {
+                // Use GPU RTE
+                if (!scene3DOnly) {
+                    attributes +=
+                        'attribute vec3 ' + name + '2DHigh;\n' +
+                        'attribute vec3 ' + name + '2DLow;\n';
+
+                    computeFunctions +=
+                        functionName + '\n' +
+                        '{\n' +
+                        '    vec4 p;\n' +
+                        '    if (czm_morphTime == 1.0)\n' +
+                        '    {\n' +
+                        '        p = czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow);\n' +
+                        '    }\n' +
+                        '    else if (czm_morphTime == 0.0)\n' +
+                        '    {\n' +
+                        '        p = czm_translateRelativeToEye(' + name + '2DHigh.zxy, ' + name + '2DLow.zxy);\n' +
+                        '    }\n' +
+                        '    else\n' +
+                        '    {\n' +
+                        '        p = czm_columbusViewMorph(\n' +
+                        '                czm_translateRelativeToEye(' + name + '2DHigh.zxy, ' + name + '2DLow.zxy),\n' +
+                        '                czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow),\n' +
+                        '                czm_morphTime);\n' +
+                        '    }\n' +
+                        '    return p;\n' +
+                        '}\n\n';
+                } else {
+                    computeFunctions +=
+                        functionName + '\n' +
+                        '{\n' +
+                        '    return czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow);\n' +
+                        '}\n\n';
+                }
+            } else {
+                // Use RTC
+                vertexShaderSource = vertexShaderSource.replace(/attribute\s+vec(?:3|4)\s+position3DHigh;/g, '');
+                vertexShaderSource = vertexShaderSource.replace(/attribute\s+vec(?:3|4)\s+position3DLow;/g, '');
+
+                forwardDecl += 'uniform mat4 u_modifiedModelView;\n';
+                attributes += 'attribute vec4 position;\n';
 
                 computeFunctions +=
                     functionName + '\n' +
                     '{\n' +
-                    '    vec4 p;\n' +
-                    '    if (czm_morphTime == 1.0)\n' +
-                    '    {\n' +
-                    '        p = czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow);\n' +
-                    '    }\n' +
-                    '    else if (czm_morphTime == 0.0)\n' +
-                    '    {\n' +
-                    '        p = czm_translateRelativeToEye(' + name + '2DHigh.zxy, ' + name + '2DLow.zxy);\n' +
-                    '    }\n' +
-                    '    else\n' +
-                    '    {\n' +
-                    '        p = czm_columbusViewMorph(\n' +
-                    '                czm_translateRelativeToEye(' + name + '2DHigh.zxy, ' + name + '2DLow.zxy),\n' +
-                    '                czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow),\n' +
-                    '                czm_morphTime);\n' +
-                    '    }\n' +
-                    '    return p;\n' +
+                    '    return u_modifiedModelView * position;\n' +
                     '}\n\n';
-            } else {
-                computeFunctions +=
-                    functionName + '\n' +
-                    '{\n' +
-                    '    return czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow);\n' +
-                    '}\n\n';
+
+
+                vertexShaderSource = vertexShaderSource.replace(/czm_modelViewRelativeToEye\s+\*\s+/g, '');
+                vertexShaderSource = vertexShaderSource.replace(/czm_modelViewProjectionRelativeToEye/g, 'czm_projection');
             }
         }
 
@@ -1031,7 +1065,7 @@ define([
     function createShaderProgram(primitive, frameState, appearance) {
         var context = frameState.context;
 
-        var vs = Primitive._createColumbusViewShader(appearance.vertexShaderSource, frameState.scene3DOnly);
+        var vs = Primitive._modifyShaderPosition(primitive, appearance.vertexShaderSource, frameState.scene3DOnly);
         vs = Primitive._appendShowToShader(primitive, vs);
         vs = modifyForEncodedNormals(primitive, vs);
         var fs = appearance.getFragmentShaderSource();
@@ -1089,6 +1123,12 @@ define([
             }
         }
         var uniforms = combine(appearanceUniformMap, materialUniformMap);
+
+        if (defined(primitive.rtcCenter)) {
+            uniforms.u_modifiedModelView = function() {
+                return primitive._modifiedModelView;
+            };
+        }
 
         var pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
 
@@ -1184,6 +1224,8 @@ define([
         attributes.length = 0;
     }
 
+    var rtcScratch = new Cartesian3();
+
     function updateAndQueueCommands(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
         //>>includeStart('debug', pragmas.debug);
         if (frameState.mode !== SceneMode.SCENE3D && !Matrix4.equals(modelMatrix, Matrix4.IDENTITY)) {
@@ -1205,6 +1247,13 @@ define([
                     }
                 }
             }
+        }
+
+        if (defined(primitive.rtcCenter)) {
+            var viewMatrix = frameState.camera.viewMatrix;
+            Matrix4.multiply(viewMatrix, primitive._modelMatrix, primitive._modifiedModelView);
+            Matrix4.multiplyByPoint(primitive._modifiedModelView, primitive.rtcCenter, rtcScratch);
+            Matrix4.setTranslation(primitive._modifiedModelView, rtcScratch, primitive._modifiedModelView);
         }
 
         var boundingSpheres;
@@ -1268,6 +1317,10 @@ define([
 
         if (defined(this._error)) {
             throw this._error;
+        }
+
+        if (defined(this.rtcCenter) && !frameState.scene3DOnly) {
+            throw new DeveloperError('RTC rendering is only available for 3D only scenes.');
         }
 
         if (this._state === PrimitiveState.FAILED) {

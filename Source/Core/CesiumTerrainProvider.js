@@ -149,6 +149,7 @@ define([
         this._credit = credit;
 
         this._ready = false;
+        this._readyPromise = when.defer();
 
         var metadataUrl = joinUrls(this._url, 'layer.json');
         if (defined(this._proxy)) {
@@ -230,6 +231,7 @@ define([
             }
 
             that._ready = true;
+            that._readyPromise.resolve(true);
         }
 
         function metadataFailure(data) {
@@ -605,6 +607,18 @@ define([
         ready : {
             get : function() {
                 return this._ready;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof CesiumTerrainProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise.promise;
             }
         },
 

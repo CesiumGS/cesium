@@ -18,6 +18,7 @@ define([
         '../Core/GeometryPipeline',
         '../Core/IndexDatatype',
         '../Core/Intersect',
+        '../Core/Math',
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
         '../Core/PrimitiveType',
@@ -61,6 +62,7 @@ define([
         GeometryPipeline,
         IndexDatatype,
         Intersect,
+        CesiumMath,
         Matrix4,
         OrientedBoundingBox,
         PrimitiveType,
@@ -441,10 +443,18 @@ define([
      * @returns {Visibility} The visibility of the tile.
      */
     GlobeSurfaceTileProvider.prototype.computeTileVisibility = function(tile, frameState, occluders) {
+        var distance = this.computeDistanceToTile(tile, frameState);
+        tile._distance = distance;
+
+        if (frameState.fog.enabled) {
+            if (CesiumMath.fog(distance, frameState.fog.density) >= 1.0) {
+                // Tile is completely in fog so return that it is not visible.
+                return Visibility.NONE;
+            }
+        }
+
         var surfaceTile = tile.data;
-
         var cullingVolume = frameState.cullingVolume;
-
         var boundingVolume = defaultValue(surfaceTile.orientedBoundingBox, surfaceTile.boundingSphere3D);
 
         if (frameState.mode !== SceneMode.SCENE3D) {
@@ -933,6 +943,7 @@ define([
         var oceanNormalMap = tileProvider.oceanNormalMap;
         var showOceanWaves = showReflectiveOcean && defined(oceanNormalMap);
         var hasVertexNormals = tileProvider.terrainProvider.ready && tileProvider.terrainProvider.hasVertexNormals;
+        var enableFog = frameState.fog.enabled;
 
         if (showReflectiveOcean) {
             --maxTextures;
@@ -1059,6 +1070,9 @@ define([
             uniformMap.southMercatorYAndOneOverHeight.y = oneOverMercatorHeight;
             Matrix4.clone(modifiedModelViewScratch, uniformMap.modifiedModelView);
 
+            // For performance, use fog in the shader only when the tile is in fog.
+            var applyFog = enableFog && CesiumMath.fog(tile._distance, frameState.fog.density) > CesiumMath.EPSILON3;
+
             var applyBrightness = false;
             var applyContrast = false;
             var applyHue = false;
@@ -1120,7 +1134,7 @@ define([
             uniformMap.waterMask = waterMaskTexture;
             Cartesian4.clone(surfaceTile.waterMaskTranslationAndScale, uniformMap.waterMaskTranslationAndScale);
 
-            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(context, frameState.mode, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection);
+            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(context, frameState.mode, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog);
             command.renderState = renderState;
             command.primitiveType = PrimitiveType.TRIANGLES;
             command.vertexArray = surfaceTile.vertexArray;

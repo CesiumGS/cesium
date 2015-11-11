@@ -36,9 +36,6 @@
 const float g = -0.95;
 const float g2 = g * g;
 
-uniform float fCameraHeight;
-uniform float fInnerRadius;
-
 varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
 varying vec3 v_toCamera;
@@ -46,47 +43,10 @@ varying vec3 v_positionEC;
 
 void main (void)
 {
-    // TODO: make arbitrary ellipsoid
-    czm_ellipsoid ellipsoid = czm_getWgs84EllipsoidEC();
-    
-    vec3 direction = normalize(v_positionEC);
-    czm_ray ray = czm_ray(vec3(0.0), direction);
-    
-    if (fCameraHeight > fInnerRadius) {
-	    czm_raySegment intersection = czm_rayEllipsoidIntersectionInterval(ray, ellipsoid);
-	    if (!czm_isEmpty(intersection)) {
-	        discard;
-	    }
-	} else {
-	    // The ellipsoid test above will discard fragments when the ray origin is
-	    // inside the ellipsoid.
-	    vec3 radii = ellipsoid.radii;
-	    float maxRadius = max(radii.x, max(radii.y, radii.z));
-	    vec3 ellipsoidCenter = czm_modelView[3].xyz;
-	    
-	    float t1 = -1.0;
-	    float t2 = -1.0;
-	    
-	    float b = -2.0 * dot(direction, ellipsoidCenter);
-	    float c = dot(ellipsoidCenter, ellipsoidCenter) - maxRadius * maxRadius;
-	
-	    float discriminant = b * b - 4.0 * c;
-	    if (discriminant >= 0.0) {
-	        t1 = (-b - sqrt(discriminant)) * 0.5;
-	        t2 = (-b + sqrt(discriminant)) * 0.5;
-	    }
-	    
-	    if (t1 < 0.0 && t2 < 0.0) {
-	        // The ray through the fragment intersected the sphere approximating
-	        // the ellipsoid behind the ray origin.
-	        discard;
-	    }
-    }
-    
     // Extra normalize added for Android
     float fCos = dot(czm_sunDirectionWC, normalize(v_toCamera)) / length(v_toCamera);
-    float fRayleighPhase = 0.75 * (1.0 + fCos*fCos);
-    float fMiePhase = 1.5 * ((1.0 - g2) / (2.0 + g2)) * (1.0 + fCos*fCos) / pow(1.0 + g2 - 2.0*g*fCos, 1.5);
+    float fRayleighPhase = 0.75 * (1.0 + fCos * fCos);
+    float fMiePhase = 1.5 * ((1.0 - g2) / (2.0 + g2)) * (1.0 + fCos * fCos) / pow(1.0 + g2 - 2.0 * g * fCos, 1.5);
     
     const float fExposure = 2.0;
     
