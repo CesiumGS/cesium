@@ -219,7 +219,7 @@ defineSuite([
 
     it('renders from glTF', function() {
         // Simulate using procedural glTF as opposed to loading it from a file
-        loadModelJson(texturedBoxModel.gltf).then(function(model) {
+        return loadModelJson(texturedBoxModel.gltf).then(function(model) {
             verifyRender(model);
             primitives.remove(model);
         });
@@ -229,7 +229,7 @@ defineSuite([
         spyOn(RenderState, 'fromCache').and.callThrough();
 
         // Simulate using procedural glTF as opposed to loading it from a file
-        loadModelJson(texturedBoxModel.gltf).then(function(model) {
+        return loadModelJson(texturedBoxModel.gltf).then(function(model) {
             var rs = {
                 frontFace : WebGLConstants.CCW,
                 cull : {
@@ -1618,17 +1618,62 @@ defineSuite([
         });
     });
 
-    it('does not render when ignoreCommands is true', function() {
-        loadModel(texturedBoxUrl, {
+    it('does not issue draw commands when ignoreCommands is true', function() {
+        return loadModel(texturedBoxUrl, {
             ignoreCommands : true
         }).then(function(m) {
             expect(m.ready).toBe(true);
-            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
             m.show = true;
-            m.zoomTo();
-            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-            m.show = false;
 
+            m.zoomTo();
+            m.update(scene.frameState);
+            expect(scene.frameState.commandList.length).toEqual(0);
+
+            m.show = false;
+            primitives.remove(m);
+        });
+    });
+
+    it('does not issue draw commands when the model is out of view and cull is true', function() {
+        return loadModel(texturedBoxUrl, {
+            cull : true
+        }).then(function(m) {
+            expect(m.ready).toBe(true);
+            m.show = true;
+
+            // Look at the model
+            m.zoomTo();
+            scene.renderForSpecs();
+            expect(scene._frustumCommandsList.length).not.toEqual(0);
+
+            // Move the model out of view
+            m.modelMatrix = Matrix4.fromTranslation(new Cartesian3(10000000000.0, 0.0, 0.0));
+            scene.renderForSpecs();
+            expect(scene._frustumCommandsList.length).toEqual(0);
+
+            m.show = false;
+            primitives.remove(m);
+        });
+    });
+
+    it('issues draw commands when the model is out of view and cull is false', function() {
+        return loadModel(texturedBoxUrl, {
+            cull : false
+        }).then(function(m) {
+            expect(m.ready).toBe(true);
+            m.show = true;
+
+            // Look at the model
+            m.zoomTo();
+            scene.renderForSpecs();
+            expect(scene._frustumCommandsList.length).not.toEqual(0);
+
+            // Move the model out of view
+            m.modelMatrix = Matrix4.fromTranslation(new Cartesian3(10000000000.0, 0.0, 0.0));
+            scene.renderForSpecs();
+            expect(scene._frustumCommandsList.length).not.toEqual(0);
+
+            m.show = false;
             primitives.remove(m);
         });
     });
