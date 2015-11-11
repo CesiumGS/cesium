@@ -98,12 +98,19 @@ define([
         //>>includeEnd('debug');
 
         var url = appendForwardSlash(options.url);
+<<<<<<< HEAD
         this._url = url;
         this._readyPromise = when.defer();
 
         var imageryProvider = new UrlTemplateImageryProvider({
             deferReadiness: true
         });
+=======
+
+        this._url = url;
+        this._ready = false;
+        this._errorEvent = new Event();
+>>>>>>> 744972be145b075f3445d667631b76c2dbe05bfb
 
         var that = this;
         var metadataError;
