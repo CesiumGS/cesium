@@ -2,18 +2,22 @@
 define([
         'Cesium/Core/Cartesian3',
         'Cesium/Core/Cartesian2',
+        'Cesium/Core/Color',
         'Cesium/Core/defined',
         'Cesium/Core/formatError',
         'Cesium/Core/getFilenameFromUri',
         'Cesium/Core/Math',
+        'Cesium/Core/Rectangle',
         'Cesium/Core/objectToQuery',
         'Cesium/Core/queryToObject',
         'Cesium/Core/CesiumTerrainProvider',
+        'Cesium/Core/GeographicTilingScheme',
         'Cesium/DataSources/CzmlDataSource',
         'Cesium/DataSources/GeoJsonDataSource',
         'Cesium/DataSources/KmlDataSource',
         'Cesium/Scene/TileMapServiceImageryProvider',
         'Cesium/Scene/BingMapsImageryProvider',
+        'Cesium/Scene/UrlTemplateImageryProvider',
         'Cesium/Widgets/Viewer/Viewer',
         'Cesium/Widgets/Viewer/viewerCesiumInspectorMixin',
         'Cesium/Widgets/Viewer/viewerDragDropMixin',
@@ -21,18 +25,22 @@ define([
     ], function(
         Cartesian3,
         Cartesian2,
+        Color,
         defined,
         formatError,
         getFilenameFromUri,
         CesiumMath,
+        Rectangle,
         objectToQuery,
         queryToObject,
         CesiumTerrainProvider,
+        GeographicTilingScheme,
         CzmlDataSource,
         GeoJsonDataSource,
         KmlDataSource,
         TileMapServiceImageryProvider,
         BingMapsImageryProvider,
+        UrlTemplateImageryProvider,
         Viewer,
         viewerCesiumInspectorMixin,
         viewerDragDropMixin) {
@@ -51,7 +59,8 @@ define([
      *    // [height,heading,pitch,roll] default is looking straight down, [300,0,-90,0]
      */
     var endUserOptions = queryToObject(window.location.search.substring(1));
-    var availableLevels = [0, 5, 10, 15];
+    var availableLevelsTerrain = [8, 11, 13, 15, 17];
+    var availableLevelsImagery = [8, 11, 13, 15, 17, 18];
 
     var imageryProvider;
     if (endUserOptions.tmsImageryUrl) {
@@ -62,7 +71,7 @@ define([
               //availableLevels: availableLevels
     imageryProvider = new BingMapsImageryProvider({
       url : '//dev.virtualearth.net',
-      availableLevels: endUserOptions.limitImagery ? availableLevels : undefined
+      availableLevels: endUserOptions.limitImagery ? availableLevelsImagery : undefined
     });
 
 
@@ -148,13 +157,24 @@ define([
     var viewer;
     try {
         viewer = new Viewer('cesiumContainer', {
-            imageryProvider : imageryProvider,
             baseLayerPicker : false,
             terrainProvider: new CesiumTerrainProvider({
-              url : '//assets.agi.com/stk-terrain/world',
-              availableLevels: endUserOptions.limitTerrain ? availableLevels : undefined
+              url : '//3d.geo.admin.ch/1.0.0/ch.swisstopo.terrain.3d/default/20151231/4326/',
+              availableLevels: endUserOptions.limitTerrain ? availableLevelsTerrain : undefined,
+              rectangle: Rectangle.fromDegrees(5.013926957923385, 45.35600133779394, 11.477436312994008, 48.27502358353741)
             }),
-            scene3DOnly : endUserOptions.scene3DOnly
+            imageryProvider: new UrlTemplateImageryProvider({
+                url: "//wmts{s}.geo.admin.ch/1.0.0/ch.swisstopo.swissimage-product/default/20151231_50/4326/{z}/{y}/{x}.jpeg",
+                subdomains: '56789',
+                //url: "//wmts{s}.geo.admin.ch/1.0.0/ch.swisstopo.swisstlm3d-wanderwege/default/20150101/4326/{z}/{x}/{y}.png",
+                //subdomains: ['10', '11', '12', '13', '14'],
+                //metadataUrl: '//terrain3.geo.admin.ch/1.0.0/ch.swisstopo.swisstlm3d-wanderwege/default/20150101/4326/'
+                availableLevels: endUserOptions.limitImagery ? availableLevelsImagery : undefined,
+                tilingScheme: new GeographicTilingScheme()
+            }),
+            scene3DOnly : endUserOptions.scene3DOnly,
+            timeline: false,
+            skyBox: false
         });
         viewer.scene.globe._surface.sseCorrector = new SSECorrector();
     } catch (exception) {
@@ -168,6 +188,8 @@ define([
     }
 
     window.viewer = viewer;
+    viewer.scene.backgroundColor = Color.WHITE;
+    viewer.scene.globe.baseColor = Color.WHITE;
     viewer.scene.globe._surface.debug = true;
     viewer.scene.globe._surface._debug.enableDebugOutput = true;
     viewer.extend(viewerDragDropMixin);
