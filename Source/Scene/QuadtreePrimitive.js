@@ -446,12 +446,7 @@ define([
         var height = frameState.context.drawingBufferHeight;
         var sseDenominator = frameState.camera.frustum.sseDenominator;
 
-        var camera = frameState.camera;
-        var frustum = camera.frustum;
-        var fovy = frustum.fovy;
-
-        // PERFORMANCE_IDEA: factor out stuff that's constant across tiles.
-        var error = (maxGeometricError * height) / (2 * distance * Math.tan(0.5 * fovy));
+        var error = (maxGeometricError * height) / (distance * sseDenominator);
 
         if (frameState.fog.enabled) {
             error = error - CesiumMath.fog(distance, frameState.fog.density) * frameState.fog.sse;
