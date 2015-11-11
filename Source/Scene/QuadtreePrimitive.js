@@ -333,7 +333,14 @@ define([
         if (!defined(primitive._levelZeroTiles)) {
             if (primitive._tileProvider.ready) {
                 var tilingScheme = primitive._tileProvider.tilingScheme;
-                primitive._levelZeroTiles = QuadtreeTile.createLevelZeroTiles(tilingScheme);
+                var terrainProvider = primitive._tileProvider._terrainProvider;
+                if (terrainProvider && terrainProvider._availableLevels && terrainProvider._rectangle) {
+                    var level = terrainProvider._availableLevels[0];
+                    primitive._levelZeroTiles = QuadtreeTile.createMinimumLevelTiles(tilingScheme,
+                            level, terrainProvider._rectangle);
+                } else {
+                  primitive._levelZeroTiles = QuadtreeTile.createLevelZeroTiles(tilingScheme);
+                }
             } else {
                 // Nothing to do until the provider is ready.
                 return;

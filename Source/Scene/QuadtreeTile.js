@@ -2,12 +2,14 @@
 define([
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/Cartographic',
         '../Core/DeveloperError',
         '../Core/Rectangle',
         './QuadtreeTileLoadState'
     ], function(
         defined,
         defineProperties,
+        Cartographic,
         DeveloperError,
         Rectangle,
         QuadtreeTileLoadState) {
@@ -128,6 +130,50 @@ define([
                     x : x,
                     y : y,
                     level : 0
+                });
+            }
+        }
+
+        return result;
+    };
+
+    /**
+     * Creates a rectangular set of tiles for a specific level of detail of an area.
+     *
+     * @memberof QuadtreeTile
+     *
+     * @param {TilingScheme} tilingScheme The tiling scheme for which the tiles are to be created.
+     * @param {Number} level The minimum level to display.
+     * @param {Recatngle} rectangle  The area to display.
+     * @returns {QuadtreeTile[]} An array containing the tiles at minimum level of detail, starting with the
+     * tile in the northwest corner and followed by the tile (if any) to its east of the area.
+     */
+    QuadtreeTile.createMinimumLevelTiles = function(tilingScheme, level, rectangle) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(tilingScheme)) {
+            throw new DeveloperError('tilingScheme is required.');
+        }
+        if (!defined(level)) {
+            throw new DeveloperError('level is required.');
+        }
+        if (!defined(rectangle)) {
+            throw new DeveloperError('rectangle is required.');
+        }
+        //>>includeEnd('debug');
+        var westSouth = Cartographic.fromRadians(rectangle.west, rectangle.south);
+        var eastNorth = Cartographic.fromRadians(rectangle.east, rectangle.north);
+        var bottomLeft = tilingScheme.positionToTileXY(westSouth, level);
+        var topRight = tilingScheme.positionToTileXY(eastNorth, level);
+        var result = new Array((topRight.x - bottomLeft.x) * (bottomLeft.y - topRight.y));
+
+        var index = 0;
+        for (var y = topRight.y; y < bottomLeft.y; ++y) {
+            for (var x = bottomLeft.x; x < topRight.x; ++x) {
+                result[index++] = new QuadtreeTile({
+                    tilingScheme : tilingScheme,
+                    x : x,
+                    y : y,
+                    level : level
                 });
             }
         }
