@@ -17,6 +17,7 @@ Change Log
 * Added support for fog near the horizon, which improves performance by rendering less terrain tiles and reduces terrain tile requests.  This is enabled by default.  See `Scene.fog` for options.  [#3154](https://github.com/AnalyticalGraphicsInc/cesium/pull/3154)
 * Added `Queue.peek` to return the item at the front of a Queue.
 * Added `Camera.distanceToBoundingSphere` function.
+* Fixed an issue with tile selection when below the surface of the ellipsoid. [#3170](https://github.com/AnalyticalGraphicsInc/cesium/issues/3170)
 
 ### 1.15 - 2015-11-02
 
