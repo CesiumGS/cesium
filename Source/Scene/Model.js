@@ -110,7 +110,6 @@ define([
         Pass,
         SceneMode) {
     "use strict";
-    /*global WebGLRenderingContext*/
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
     // from failing, since we won't be able to create a WebGL context anyway.
@@ -124,7 +123,7 @@ define([
     var ModelState = {
         NEEDS_LOAD : 0,
         LOADING : 1,
-        LOADED : 2,
+        LOADED : 2,  // Renderable, but textures can still be pending when incrementallyLoadTextures is true.
         FAILED : 3
     };
 
@@ -161,18 +160,8 @@ define([
         return getSubarray(this.buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
     };
 
-    LoadResources.prototype.finishedPendingLoads = function() {
-        return ((this.pendingBufferLoads === 0) &&
-                (this.pendingShaderLoads === 0) &&
-                (this.pendingTextureLoads === 0));
-    };
-
-    LoadResources.prototype.finishedResourceCreation = function() {
-        return ((this.buffersToCreate.length === 0) &&
-                (this.programsToCreate.length === 0) &&
-                (this.texturesToCreate.length === 0) &&
-                (this.texturesToCreateFromBufferView.length === 0) &&
-                (this.pendingBufferViewToImage === 0));
+    LoadResources.prototype.finishedPendingBufferLoads = function() {
+        return (this.pendingBufferLoads === 0);
     };
 
     LoadResources.prototype.finishedBuffersCreation = function() {
@@ -184,10 +173,28 @@ define([
     };
 
     LoadResources.prototype.finishedTextureCreation = function() {
-        return ((this.pendingTextureLoads === 0) &&
-                (this.texturesToCreate.length === 0) &&
-                (this.texturesToCreateFromBufferView.length === 0) &&
-                (this.pendingBufferViewToImage === 0));
+        var finishedPendingLoads = (this.pendingTextureLoads === 0);
+        var finishedResourceCreation =
+            (this.texturesToCreate.length === 0) &&
+            (this.texturesToCreateFromBufferView.length === 0);
+
+        return finishedPendingLoads && finishedResourceCreation;
+    };
+
+    LoadResources.prototype.finishedEverythingButTextureCreation = function() {
+        var finishedPendingLoads =
+            (this.pendingBufferLoads === 0) &&
+            (this.pendingShaderLoads === 0);
+        var finishedResourceCreation =
+            (this.buffersToCreate.length === 0) &&
+            (this.programsToCreate.length === 0) &&
+            (this.pendingBufferViewToImage === 0);
+
+        return finishedPendingLoads && finishedResourceCreation;
+    };
+
+    LoadResources.prototype.finished = function() {
+        return this.finishedTextureCreation() && this.finishedEverythingButTextureCreation();
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -296,6 +303,7 @@ define([
      * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
      * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
+     * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
@@ -459,6 +467,8 @@ define([
          */
         this.activeAnimations = new ModelAnimationCollection(this);
 
+        this._defaultTexture = undefined;
+        this._incrementallyLoadTextures = defaultValue(options.incrementallyLoadTextures, true);
         this._asynchronous = defaultValue(options.asynchronous, true);
 
         /**
@@ -735,6 +745,22 @@ define([
             get : function() {
                 return this._allowPicking;
             }
+        },
+
+        /**
+         * Determine if textures may continue to stream in after the model is loaded.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default true
+         */
+        incrementallyLoadTextures : {
+            get : function() {
+                return this._incrementallyLoadTextures;
+            }
         }
     });
 
@@ -772,7 +798,7 @@ define([
         //>>includeStart('debug', pragmas.debug);
         var version = view.getUint32(byteOffset, true);
         if (version !== 1) {
-            throw new DeveloperError('Only glTF Binary version 1 is supported.  Version ' + version + ' is not.');
+            throw new DeveloperError('Only Binary glTF version 1 is supported.  Version ' + version + ' is not.');
         }
         //>>includeEnd('debug');
         byteOffset += sizeOfUint32;
@@ -826,7 +852,9 @@ define([
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
      * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
      * @param {Number} [options.maxiumumScale] The maximum scale for the model.
+     * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
+     * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
@@ -1085,8 +1113,6 @@ define([
                     var uri = new Uri(buffer.uri);
                     var bufferPath = uri.resolve(model._baseUri).toString();
                     loadArrayBuffer(bufferPath).then(bufferLoad(model, id)).otherwise(getFailedLoadFunction(model, 'buffer', bufferPath));
-                } else if (buffer.type === 'text') {
-                    // GLTF_SPEC: Load compressed .bin with loadText.  https://github.com/KhronosGroup/glTF/issues/230
                 }
             }
         }
@@ -1165,11 +1191,11 @@ define([
             var loadResources = model._loadResources;
             --loadResources.pendingTextureLoads;
             loadResources.texturesToCreate.enqueue({
-                 id : id,
-                 image : image,
-                 bufferView : undefined
-             });
-         };
+                id : id,
+                image : image,
+                bufferView : undefined
+            });
+        };
     }
 
     function parseTextures(model) {
@@ -1571,6 +1597,7 @@ define([
                 source : source,
                 pixelFormat : texture.internalFormat,
                 pixelDatatype : texture.type,
+                sampler : sampler,
                 flipY : false
             });
         }
@@ -1579,7 +1606,6 @@ define([
         if (mipmap) {
             tx.generateMipmap();
         }
-        tx.sampler = sampler;
 
         model._rendererResources.textures[gltfTexture.id] = tx;
     }
@@ -1740,7 +1766,7 @@ define([
     function createRuntimeAnimations(model) {
         var loadResources = model._loadResources;
 
-        if (!loadResources.finishedPendingLoads()) {
+        if (!loadResources.finishedPendingBufferLoads()) {
             return;
         }
 
@@ -1976,6 +2002,7 @@ define([
     }
 
     // This doesn't support LOCAL, which we could add if it is ever used.
+    var scratchTranslationRtc = new Cartesian3();
     var gltfSemanticUniforms = {
         MODEL : function(uniformState, model) {
             return function() {
@@ -2001,7 +2028,10 @@ define([
             // CESIUM_RTC extension
             var mvRtc = new Matrix4();
             return function() {
-                return Matrix4.setTranslation(uniformState.modelView, model._rtcCenterEye, mvRtc);
+                Matrix4.getTranslation(uniformState.model, scratchTranslationRtc);
+                Cartesian3.add(scratchTranslationRtc, model._rtcCenter, scratchTranslationRtc);
+                Matrix4.multiplyByPoint(uniformState.view, scratchTranslationRtc, scratchTranslationRtc);
+                return Matrix4.setTranslation(uniformState.modelView, scratchTranslationRtc, mvRtc);
             };
         },
         MODELVIEWPROJECTION : function(uniformState, model) {
@@ -2133,41 +2163,71 @@ define([
         return that;
     }
 
-    function getTextureUniformFunction(value, model) {
-        var that = {
-            value : model._rendererResources.textures[value],
-            clone : function(source, result) {
-                return source;
+    ///////////////////////////////////////////////////////////////////////////
+
+    var DelayLoadedTextureUniform = function(value, model) {
+        this._value = undefined;
+        this._textureId = value;
+        this._model = model;
+    };
+
+    defineProperties(DelayLoadedTextureUniform.prototype, {
+        value : {
+            get : function() {
+                // Use the default texture (1x1 white) until the model's texture is loaded
+                if (!defined(this._value)) {
+                    var texture = this._model._rendererResources.textures[this._textureId];
+                    if (defined(texture)) {
+                        this._value = texture;
+                    } else {
+                        return this._model._defaultTexture;
+                    }
+                }
+
+                return this._value;
             },
-            func : function() {
-                return that.value;
+            set : function(value) {
+                this._value = value;
             }
+        }
+    });
+
+    DelayLoadedTextureUniform.prototype.clone = function(source, result) {
+        return source;
+    };
+
+    DelayLoadedTextureUniform.prototype.func = undefined;
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    function getTextureUniformFunction(value, model) {
+        var uniform = new DelayLoadedTextureUniform(value, model);
+        // Define function here to access closure since 'this' can't be
+        // used when the Renderer sets uniforms.
+        uniform.func = function() {
+            return uniform.value;
         };
-        return that;
+        return uniform;
     }
 
     var gltfUniformFunctions = {};
-
-    // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
-    if (typeof WebGLRenderingContext !== 'undefined') {
-        gltfUniformFunctions[WebGLConstants.FLOAT] = getScalarUniformFunction;
-        gltfUniformFunctions[WebGLConstants.FLOAT_VEC2] = getVec2UniformFunction;
-        gltfUniformFunctions[WebGLConstants.FLOAT_VEC3] = getVec3UniformFunction;
-        gltfUniformFunctions[WebGLConstants.FLOAT_VEC4] = getVec4UniformFunction;
-        gltfUniformFunctions[WebGLConstants.INT] = getScalarUniformFunction;
-        gltfUniformFunctions[WebGLConstants.INT_VEC2] = getVec2UniformFunction;
-        gltfUniformFunctions[WebGLConstants.INT_VEC3] = getVec3UniformFunction;
-        gltfUniformFunctions[WebGLConstants.INT_VEC4] = getVec4UniformFunction;
-        gltfUniformFunctions[WebGLConstants.BOOL] = getScalarUniformFunction;
-        gltfUniformFunctions[WebGLConstants.BOOL_VEC2] = getVec2UniformFunction;
-        gltfUniformFunctions[WebGLConstants.BOOL_VEC3] = getVec3UniformFunction;
-        gltfUniformFunctions[WebGLConstants.BOOL_VEC4] = getVec4UniformFunction;
-        gltfUniformFunctions[WebGLConstants.FLOAT_MAT2] = getMat2UniformFunction;
-        gltfUniformFunctions[WebGLConstants.FLOAT_MAT3] = getMat3UniformFunction;
-        gltfUniformFunctions[WebGLConstants.FLOAT_MAT4] = getMat4UniformFunction;
-        gltfUniformFunctions[WebGLConstants.SAMPLER_2D] = getTextureUniformFunction;
-        // GLTF_SPEC: Support SAMPLER_CUBE. https://github.com/KhronosGroup/glTF/issues/40
-    }
+    gltfUniformFunctions[WebGLConstants.FLOAT] = getScalarUniformFunction;
+    gltfUniformFunctions[WebGLConstants.FLOAT_VEC2] = getVec2UniformFunction;
+    gltfUniformFunctions[WebGLConstants.FLOAT_VEC3] = getVec3UniformFunction;
+    gltfUniformFunctions[WebGLConstants.FLOAT_VEC4] = getVec4UniformFunction;
+    gltfUniformFunctions[WebGLConstants.INT] = getScalarUniformFunction;
+    gltfUniformFunctions[WebGLConstants.INT_VEC2] = getVec2UniformFunction;
+    gltfUniformFunctions[WebGLConstants.INT_VEC3] = getVec3UniformFunction;
+    gltfUniformFunctions[WebGLConstants.INT_VEC4] = getVec4UniformFunction;
+    gltfUniformFunctions[WebGLConstants.BOOL] = getScalarUniformFunction;
+    gltfUniformFunctions[WebGLConstants.BOOL_VEC2] = getVec2UniformFunction;
+    gltfUniformFunctions[WebGLConstants.BOOL_VEC3] = getVec3UniformFunction;
+    gltfUniformFunctions[WebGLConstants.BOOL_VEC4] = getVec4UniformFunction;
+    gltfUniformFunctions[WebGLConstants.FLOAT_MAT2] = getMat2UniformFunction;
+    gltfUniformFunctions[WebGLConstants.FLOAT_MAT3] = getMat3UniformFunction;
+    gltfUniformFunctions[WebGLConstants.FLOAT_MAT4] = getMat4UniformFunction;
+    gltfUniformFunctions[WebGLConstants.SAMPLER_2D] = getTextureUniformFunction;
+    // GLTF_SPEC: Support SAMPLER_CUBE. https://github.com/KhronosGroup/glTF/issues/40
 
     var gltfUniformsFromNode = {
         MODEL : function(uniformState, model, runtimeNode) {
@@ -2274,7 +2334,7 @@ define([
     function createUniformMaps(model, context) {
         var loadResources = model._loadResources;
 
-        if (!loadResources.finishedTextureCreation() || !loadResources.finishedProgramCreation()) {
+        if (!loadResources.finishedProgramCreation()) {
             return;
         }
 
@@ -2496,7 +2556,7 @@ define([
     function createRuntimeNodes(model, context) {
         var loadResources = model._loadResources;
 
-        if (!loadResources.finishedPendingLoads() || !loadResources.finishedResourceCreation()) {
+        if (!loadResources.finishedEverythingButTextureCreation()) {
             return;
         }
 
@@ -2587,7 +2647,7 @@ define([
             resources.samplers = cachedResources.samplers;
             resources.renderStates = cachedResources.renderStates;
         } else {
-            createBuffers(model, context);      // using glTF bufferViews
+            createBuffers(model, context); // using glTF bufferViews
             createPrograms(model, context);
             createSamplers(model, context);
             loadTexturesFromBufferViews(model);
@@ -2652,15 +2712,16 @@ define([
                 var commands = n.commands;
 
                 if ((n.dirtyNumber === maxDirtyNumber) || modelTransformChanged || justLoaded) {
+                    var nodeMatrix = Matrix4.multiplyTransformation(computedModelMatrix, transformToRoot, n.computedMatrix);
                     var commandsLength = commands.length;
                     if (commandsLength > 0) {
                         // Node has meshes, which has primitives.  Update their commands.
                         for (var j = 0 ; j < commandsLength; ++j) {
                             var primitiveCommand = commands[j];
                             var command = primitiveCommand.command;
-                            Matrix4.multiplyTransformation(computedModelMatrix, transformToRoot, command.modelMatrix);
+                            Matrix4.clone(nodeMatrix, command.modelMatrix);
 
-                            // PERFORMANCE_IDEA: Can use transformWithoutScale if no node up to the root has scale (inclug animation)
+                            // PERFORMANCE_IDEA: Can use transformWithoutScale if no node up to the root has scale (including animation)
                             BoundingSphere.transform(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
 
                             if (defined(model._rtcCenter)) {
@@ -2673,9 +2734,6 @@ define([
                                 BoundingSphere.clone(command.boundingVolume, pickCommand.boundingVolume);
                             }
                         }
-                    } else {
-                        // Node has a light or camera
-                        n.computedMatrix = Matrix4.multiplyTransformation(computedModelMatrix, transformToRoot, n.computedMatrix);
                     }
                 }
 
@@ -2962,6 +3020,7 @@ define([
         }
 
         var context = frameState.context;
+        this._defaultTexture = context.defaultTexture;
 
         if ((this._state === ModelState.NEEDS_LOAD) && defined(this.gltf)) {
             // Use renderer resources from cache instead of loading/creating them?
@@ -3011,19 +3070,35 @@ define([
             }
         }
 
-        var justLoaded = false;
-
         if (this._state === ModelState.FAILED) {
             throw this._loadError;
         }
 
+        var loadResources = this._loadResources;
+        var incrementallyLoadTextures = this._incrementallyLoadTextures;
+        var justLoaded = false;
+
         if (this._state === ModelState.LOADING) {
-            // Incrementally create WebGL resources as buffers/shaders/textures are downloaded
+            // Create WebGL resources as buffers/shaders/textures are downloaded
             createResources(this, frameState);
 
-            var loadResources = this._loadResources;
-            if (loadResources.finishedPendingLoads() && loadResources.finishedResourceCreation()) {
+            // Transition from LOADING -> LOADED once resources are downloaded and created.
+            // Textures may continue to stream in while in the LOADED state.
+            if (loadResources.finished() ||
+                    (incrementallyLoadTextures && loadResources.finishedEverythingButTextureCreation())) {
                 this._state = ModelState.LOADED;
+                justLoaded = true;
+            }
+        }
+
+        // Incrementally stream textures.
+        if (defined(loadResources) && (this._state === ModelState.LOADED)) {
+            // Also check justLoaded so we don't process twice during the transition frame
+            if (incrementallyLoadTextures && !justLoaded) {
+                createResources(this, frameState);
+            }
+
+            if (loadResources.finished()) {
                 this._loadResources = undefined;  // Clear CPU memory since WebGL resources were created.
 
                 var resources = this._rendererResources;
@@ -3041,8 +3116,6 @@ define([
                 if (this.releaseGltfJson) {
                     releaseCachedGltf(this);
                 }
-
-                justLoaded = true;
             }
         }
 
@@ -3087,12 +3160,6 @@ define([
             updatePickIds(this, context);
             updateWireframe(this);
             updateShowBoundingVolume(this);
-
-            if (defined(this._rtcCenter)) {
-                // The CESIUM_RTC extension is use.  Compute the center in eye coordinates so it
-                // can be used to compute the model-view RTC matrix uniforms.
-                Matrix4.multiplyByPoint(frameState.camera.viewMatrix, this._rtcCenter, this._rtcCenterEye);
-            }
         }
 
         if (justLoaded) {

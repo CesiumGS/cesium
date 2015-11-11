@@ -5,6 +5,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/defaultValue',
+        'Core/defined',
         'Core/FeatureDetection',
         'Core/HeadingPitchRange',
         'Core/JulianDate',
@@ -26,6 +27,7 @@ defineSuite([
         Cartesian3,
         Cartesian4,
         defaultValue,
+        defined,
         FeatureDetection,
         HeadingPitchRange,
         JulianDate,
@@ -129,9 +131,35 @@ defineSuite([
             minimumPixelSize : options.minimumPixelSize,
             maximumScale : options.maximumScale,
             id : url,        // for picking tests
+            incrementallyLoadTextures : options.incrementallyLoadTextures,
             asynchronous : options.asynchronous,
             releaseGltfJson : options.releaseGltfJson,
             cacheKey : options.cacheKey
+        }));
+        addZoomTo(model);
+
+        return pollToPromise(function() {
+            // Render scene to progressively load the model
+            scene.renderForSpecs();
+            return model.ready;
+        }, { timeout: 10000 }).then(function() {
+            return model;
+        });
+    }
+
+    function loadModelJson(gltf, options) {
+        options = defaultValue(options, {});
+
+        var model = primitives.add(new Model({
+            gltf : gltf,
+            modelMatrix : defaultValue(options.modelMatrix, Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0))),
+            show : false,
+            scale : options.scale,
+            minimumPixelSize : options.minimumPixelSize,
+            maximumScale : options.maximumScale,
+            incrementallyLoadTextures : options.incrementallyLoadTextures,
+            asynchronous : options.asynchronous,
+            releaseGltfJson : options.releaseGltfJson
         }));
         addZoomTo(model);
 
@@ -149,8 +177,10 @@ defineSuite([
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
         model.show = true;
         model.zoomTo();
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        var pixelColor = scene.renderForSpecs();
+        expect(pixelColor).not.toEqual([0, 0, 0, 255]);
         model.show = false;
+        return pixelColor;
     }
 
     it('fromGltf throws without options', function() {
@@ -198,36 +228,17 @@ defineSuite([
 
     it('renders from glTF', function() {
         // Simulate using procedural glTF as opposed to loading it from a file
-        var model = primitives.add(new Model({
-            gltf : texturedBoxModel.gltf,
-            modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
-            show : false
-        }));
-        addZoomTo(model);
-
-        return pollToPromise(function() {
-            // Render scene to progressively load the model
-            scene.renderForSpecs();
-            return model.ready;
-        }, { timeout: 10000 }).then(function() {
+        loadModelJson(texturedBoxModel.gltf).then(function(model) {
             verifyRender(model);
             primitives.remove(model);
         });
     });
 
     it('Applies the right render state', function() {
-        // Simulate using procedural glTF as opposed to loading it from a file
-        var model = primitives.add(new Model({
-            gltf : texturedBoxModel.gltf
-        }));
-
         spyOn(RenderState, 'fromCache').and.callThrough();
 
-        return pollToPromise(function() {
-            // Render scene to progressively load the model
-            scene.renderForSpecs();
-            return model.ready;
-        }, { timeout : 10000 }).then(function() {
+        // Simulate using procedural glTF as opposed to loading it from a file
+        loadModelJson(texturedBoxModel.gltf).then(function(model) {
             var rs = {
                 frontFace : WebGLConstants.CCW,
                 cull : {
@@ -547,20 +558,7 @@ defineSuite([
 
     it('loads a model with the CESIUM_binary_glTF extension as an ArrayBuffer using new Model', function() {
         return loadArrayBuffer(texturedBoxBinaryUrl).then(function(arrayBuffer) {
-            var model = primitives.add(new Model({
-                gltf : arrayBuffer,
-                modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
-                show : false
-            }));
-            addZoomTo(model);
-
-            return pollToPromise(function() {
-                // Render scene to progressively load the model
-                scene.renderForSpecs();
-                return model.ready;
-            }, {
-                timeout : 10000
-            }).then(function() {
+            loadModelJson(arrayBuffer).then(function(model) {
                 verifyRender(model);
                 primitives.remove(model);
             });
@@ -569,20 +567,7 @@ defineSuite([
 
     it('loads a model with the CESIUM_binary_glTF extension as an Uint8Array using new Model', function() {
         return loadArrayBuffer(texturedBoxBinaryUrl).then(function(arrayBuffer) {
-            var model = primitives.add(new Model({
-                gltf : new Uint8Array(arrayBuffer),
-                modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
-                show : false
-            }));
-            addZoomTo(model);
-
-            return pollToPromise(function() {
-                // Render scene to progressively load the model
-                scene.renderForSpecs();
-                return model.ready;
-            }, {
-                timeout : 10000
-            }).then(function() {
+            loadModelJson(new Uint8Array(arrayBuffer)).then(function(model) {
                 verifyRender(model);
                 primitives.remove(model);
             });
@@ -598,20 +583,7 @@ defineSuite([
 
     it('loads a model with the KHR_binary_glTF extension as an ArrayBuffer using new Model', function() {
         return loadArrayBuffer(texturedBoxKhrBinaryUrl).then(function(arrayBuffer) {
-            var model = primitives.add(new Model({
-                gltf : arrayBuffer,
-                modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
-                show : false
-            }));
-            addZoomTo(model);
-
-            return pollToPromise(function() {
-                // Render scene to progressively load the model
-                scene.renderForSpecs();
-                return model.ready;
-            }, {
-                timeout : 10000
-            }).then(function() {
+            loadModelJson(arrayBuffer).then(function(model) {
                 verifyRender(model);
                 primitives.remove(model);
             });
@@ -620,20 +592,7 @@ defineSuite([
 
     it('loads a model with the KHR_binary_glTF extension as an Uint8Array using new Model', function() {
         return loadArrayBuffer(texturedBoxKhrBinaryUrl).then(function(arrayBuffer) {
-            var model = primitives.add(new Model({
-                gltf : new Uint8Array(arrayBuffer),
-                modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
-                show : false
-            }));
-            addZoomTo(model);
-
-            return pollToPromise(function() {
-                // Render scene to progressively load the model
-                scene.renderForSpecs();
-                return model.ready;
-            }, {
-                timeout : 10000
-            }).then(function() {
+            loadModelJson(new Uint8Array(arrayBuffer)).then(function(model) {
                 verifyRender(model);
                 primitives.remove(model);
             });
@@ -1213,7 +1172,7 @@ defineSuite([
         });
     });
 
-    it('releaseGltfJson releases glTFJSON when constructed with fromGltf', function() {
+    it('releaseGltfJson releases glTF JSON when constructed with fromGltf', function() {
         return loadModel(boxUrl, {
             releaseGltfJson : true
         }).then(function(m) {
@@ -1226,20 +1185,11 @@ defineSuite([
     });
 
     it('releaseGltfJson releases glTF JSON when constructed with Model constructor function', function() {
-        var m = primitives.add(new Model({
-            gltf : texturedBoxModel.gltf,
-            modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
-            show : false,
+        loadModelJson(texturedBoxModel.gltf, {
             releaseGltfJson : true,
+            incrementallyLoadTextures : false,
             asynchronous : true
-        }));
-        addZoomTo(m);
-
-        return pollToPromise(function() {
-            // Render scene to progressively load the model
-            scene.renderForSpecs();
-            return m.ready;
-        }, { timeout : 10000 }).then(function() {
+        }).then(function(m) {
             expect(m.releaseGltfJson).toEqual(true);
             expect(m.gltf).not.toBeDefined();
 
@@ -1360,6 +1310,7 @@ defineSuite([
             modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
             show : false,
             cacheKey : key,
+            incrementallyLoadTextures : false,
             asynchronous : true
         }));
         addZoomTo(m);
@@ -1465,6 +1416,46 @@ defineSuite([
             primitives.remove(m3);
             expect(gltfCache[key3]).not.toBeDefined();
             expect(modelRendererResourceCache[key3]).not.toBeDefined();
+        });
+    });
+
+    it('Loads with incrementallyLoadTextures set to true', function() {
+        loadModelJson(texturedBoxModel.gltf, {
+            incrementallyLoadTextures : true
+        }).then(function(m) {
+            // Get the rendered color of the model before textures are loaded
+            var loadedColor = verifyRender(m);
+
+            pollToPromise(function() {
+                // Render scene to progressively load textures
+                scene.renderForSpecs();
+                // Textures have finished loading
+                return !defined(m._loadResources);
+            }, { timeout : 10000 }).then(function() {
+                var finishedColor = verifyRender(m);
+                expect(finishedColor).not.toEqual(loadedColor);
+                primitives.remove(m);
+            });
+        });
+    });
+
+    it('Loads with incrementallyLoadTextures set to false', function() {
+        loadModelJson(texturedBoxModel.gltf, {
+            incrementallyLoadTextures : false
+        }).then(function(m) {
+            // Get the rendered color of the model before textures are loaded
+            var loadedColor = verifyRender(m);
+
+            pollToPromise(function() {
+                // Render scene to progressively load textures (they should already be loaded)
+                scene.renderForSpecs();
+                // Textures have finished loading
+                return !defined(m._loadResources);
+            }, { timeout : 10000 }).then(function() {
+                var finishedColor = verifyRender(m);
+                expect(finishedColor).toEqual(loadedColor);
+                primitives.remove(m);
+            });
         });
     });
 
