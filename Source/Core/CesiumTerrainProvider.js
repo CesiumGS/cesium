@@ -103,6 +103,7 @@ define([
         this._availableLevels = options.availableLevels;
         this._url = options.url;
         this._proxy = options.proxy;
+        this._rectangle = options.rectangle;
 
         this._tilingScheme = new GeographicTilingScheme({
             numberOfLevelZeroTilesX : 2,
