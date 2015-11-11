@@ -4,6 +4,7 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
+        'Core/combine',
         'Core/defaultValue',
         'Core/defined',
         'Core/FeatureDetection',
@@ -16,6 +17,7 @@ defineSuite([
         'Core/PrimitiveType',
         'Core/Transforms',
         'Renderer/RenderState',
+        'Renderer/ShaderSource',
         'Renderer/WebGLConstants',
         'Scene/ModelAnimationLoop',
         'Specs/createScene',
@@ -26,6 +28,7 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        combine,
         defaultValue,
         defined,
         FeatureDetection,
@@ -38,6 +41,7 @@ defineSuite([
         PrimitiveType,
         Transforms,
         RenderState,
+        ShaderSource,
         WebGLConstants,
         ModelAnimationLoop,
         createScene,
@@ -121,21 +125,14 @@ defineSuite([
     }
 
     function loadModel(url, options) {
-        options = defaultValue(options, {});
-
-        var model = primitives.add(Model.fromGltf({
+        options = combine(options, {
+            modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
             url : url,
-            modelMatrix : defaultValue(options.modelMatrix, Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0))),
-            show : false,
-            scale : options.scale,
-            minimumPixelSize : options.minimumPixelSize,
-            maximumScale : options.maximumScale,
-            id : url,        // for picking tests
-            incrementallyLoadTextures : options.incrementallyLoadTextures,
-            asynchronous : options.asynchronous,
-            releaseGltfJson : options.releaseGltfJson,
-            cacheKey : options.cacheKey
-        }));
+            id : url,
+            show : false
+        });
+
+        var model = primitives.add(Model.fromGltf(options));
         addZoomTo(model);
 
         return pollToPromise(function() {
@@ -148,19 +145,13 @@ defineSuite([
     }
 
     function loadModelJson(gltf, options) {
-        options = defaultValue(options, {});
-
-        var model = primitives.add(new Model({
+        options = combine(options, {
+            modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
             gltf : gltf,
-            modelMatrix : defaultValue(options.modelMatrix, Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0))),
-            show : false,
-            scale : options.scale,
-            minimumPixelSize : options.minimumPixelSize,
-            maximumScale : options.maximumScale,
-            incrementallyLoadTextures : options.incrementallyLoadTextures,
-            asynchronous : options.asynchronous,
-            releaseGltfJson : options.releaseGltfJson
-        }));
+            show : false
+        });
+
+        var model = primitives.add(new Model(options));
         addZoomTo(model);
 
         return pollToPromise(function() {
@@ -558,7 +549,7 @@ defineSuite([
 
     it('loads a model with the CESIUM_binary_glTF extension as an ArrayBuffer using new Model', function() {
         return loadArrayBuffer(texturedBoxBinaryUrl).then(function(arrayBuffer) {
-            loadModelJson(arrayBuffer).then(function(model) {
+            return loadModelJson(arrayBuffer).then(function(model) {
                 verifyRender(model);
                 primitives.remove(model);
             });
@@ -567,7 +558,7 @@ defineSuite([
 
     it('loads a model with the CESIUM_binary_glTF extension as an Uint8Array using new Model', function() {
         return loadArrayBuffer(texturedBoxBinaryUrl).then(function(arrayBuffer) {
-            loadModelJson(new Uint8Array(arrayBuffer)).then(function(model) {
+            return loadModelJson(new Uint8Array(arrayBuffer)).then(function(model) {
                 verifyRender(model);
                 primitives.remove(model);
             });
@@ -583,7 +574,7 @@ defineSuite([
 
     it('loads a model with the KHR_binary_glTF extension as an ArrayBuffer using new Model', function() {
         return loadArrayBuffer(texturedBoxKhrBinaryUrl).then(function(arrayBuffer) {
-            loadModelJson(arrayBuffer).then(function(model) {
+            return loadModelJson(arrayBuffer).then(function(model) {
                 verifyRender(model);
                 primitives.remove(model);
             });
@@ -592,7 +583,7 @@ defineSuite([
 
     it('loads a model with the KHR_binary_glTF extension as an Uint8Array using new Model', function() {
         return loadArrayBuffer(texturedBoxKhrBinaryUrl).then(function(arrayBuffer) {
-            loadModelJson(new Uint8Array(arrayBuffer)).then(function(model) {
+            return loadModelJson(new Uint8Array(arrayBuffer)).then(function(model) {
                 verifyRender(model);
                 primitives.remove(model);
             });
@@ -1185,7 +1176,7 @@ defineSuite([
     });
 
     it('releaseGltfJson releases glTF JSON when constructed with Model constructor function', function() {
-        loadModelJson(texturedBoxModel.gltf, {
+        return loadModelJson(texturedBoxModel.gltf, {
             releaseGltfJson : true,
             incrementallyLoadTextures : false,
             asynchronous : true
@@ -1420,7 +1411,7 @@ defineSuite([
     });
 
     it('Loads with incrementallyLoadTextures set to true', function() {
-        loadModelJson(texturedBoxModel.gltf, {
+        return loadModelJson(texturedBoxModel.gltf, {
             incrementallyLoadTextures : true
         }).then(function(m) {
             // Get the rendered color of the model before textures are loaded
@@ -1440,7 +1431,7 @@ defineSuite([
     });
 
     it('Loads with incrementallyLoadTextures set to false', function() {
-        loadModelJson(texturedBoxModel.gltf, {
+        return loadModelJson(texturedBoxModel.gltf, {
             incrementallyLoadTextures : false
         }).then(function(m) {
             // Get the rendered color of the model before textures are loaded
@@ -1539,6 +1530,105 @@ defineSuite([
     it('loads a glTF with KHR_materials_common that has transparency', function() {
         return loadModel(boxTransparentUrl).then(function(m) {
             verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads with custom vertex attributes, vertexShader, fragmentShader, and uniform map', function() {
+        function vertexShaderLoaded(vs) {
+            var renamedSource = ShaderSource.replaceMain(vs, 'czm_old_main');
+            var newMain =
+                'attribute vec4 a_color;\n' +
+                'varying vec4 v_color;\n' +
+                'void main()\n' +
+                '{\n' +
+                '    czm_old_main();\n' +
+                '    v_color = a_color;\n' +
+                '}';
+            return renamedSource + '\n' + newMain;
+        }
+
+        function fragmentShaderLoaded(fs) {
+            fs = 'uniform float u_value;\n' +
+                 'varying vec4 v_color;\n' +
+                 'void main()\n' +
+                 '{\n' +
+                 '    gl_FragColor = u_value * v_color;\n' +
+                 '}';
+            return fs;
+        }
+
+        function uniformMapLoaded(uniformMap) {
+            return combine(uniformMap, {
+                u_value : function() {
+                    return 1.0;
+                }
+            });
+        }
+
+        var precreatedAttributes = {
+            a_color : {
+                index                  : 0, // updated in Model
+                componentsPerAttribute : 4,
+                value                  : [1.0, 1.0, 1.0, 1.0]
+            }
+        };
+
+        var options = {
+            precreatedAttributes : precreatedAttributes,
+            vertexShaderLoaded : vertexShaderLoaded,
+            fragmentShaderLoaded : fragmentShaderLoaded,
+            uniformMapLoaded : uniformMapLoaded
+        };
+
+        return loadModelJson(texturedBoxModel.gltf, options).then(function(model) {
+            var pixelColor = verifyRender(model);
+            expect(pixelColor).toEqual([255, 255, 255, 255]);
+            primitives.remove(model);
+        });
+    });
+
+    it('loads with custom pickFragmentShader and pickUniformMap', function() {
+        function pickFragmentShaderLoaded(fs) {
+            return ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
+        }
+
+        var pickId = scene.context.createPickId({
+            custom : 'custom'
+        });
+
+        function pickUniformMapLoaded(uniformMap) {
+            return combine(uniformMap, {
+                czm_pickColor : function() {
+                    return pickId.color;
+                }
+            });
+        }
+
+        var options = {
+            pickFragmentShaderLoaded : pickFragmentShaderLoaded,
+            pickUniformMapLoaded : pickUniformMapLoaded
+        };
+
+        return loadModelJson(texturedBoxModel.gltf, options).then(function(model) {
+            model.show = true;
+            var pick = scene.pick(new Cartesian2(0, 0));
+            expect(pick.custom).toEqual('custom');
+            primitives.remove(model);
+        });
+    });
+
+    it('does not render when ignoreCommands is true', function() {
+        loadModel(texturedBoxUrl, {
+            ignoreCommands : true
+        }).then(function(m) {
+            expect(m.ready).toBe(true);
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+            m.show = true;
+            m.zoomTo();
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+            m.show = false;
+
             primitives.remove(m);
         });
     });

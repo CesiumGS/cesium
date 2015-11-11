@@ -498,6 +498,16 @@ define([
         this.debugWireframe = defaultValue(options.debugWireframe, false);
         this._debugWireframe = false;
 
+        // Undocumented options
+        this._precreatedAttributes = options.precreatedAttributes;
+        this._vertexShaderLoaded = options.vertexShaderLoaded;
+        this._fragmentShaderLoaded = options.fragmentShaderLoaded;
+        this._uniformMapLoaded = options.uniformMapLoaded;
+        this._pickVertexShaderLoaded = options.pickVertexShaderLoaded;
+        this._pickFragmentShaderLoaded = options.pickFragmentShaderLoaded;
+        this._pickUniformMapLoaded = options.pickUniformMapLoaded;
+        this._ignoreCommands = defaultValue(options.ignoreCommands, false);
+
         this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
         this._initialRadius = undefined;           // Radius without model's scale property, model-matrix scale, animations, or skins
         this._boundingSphere = undefined;
@@ -1440,6 +1450,13 @@ define([
         return getStringFromTypedArray(loadResources.getBuffer(bufferView));
     }
 
+    function modifyShader(shader, programName, callback) {
+        if (defined(callback)) {
+            shader = callback(shader, programName);
+        }
+        return shader;
+    }
+
     function createProgram(id, model, context) {
         var programs = model.gltf.programs;
         var shaders = model._loadResources.shaders;
@@ -1449,23 +1466,39 @@ define([
         var vs = getShaderSource(model, shaders[program.vertexShader]);
         var fs = getShaderSource(model, shaders[program.fragmentShader]);
 
+        var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
+        var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);
+
+        // Add pre-created attributes to attributeLocations
+        var attributesLength = program.attributes.length;
+        var precreatedAttributes = model._precreatedAttributes;
+        if (defined(precreatedAttributes)) {
+            for (var attrName in precreatedAttributes) {
+                if (precreatedAttributes.hasOwnProperty(attrName)) {
+                    attributeLocations[attrName] = attributesLength++;
+                }
+            }
+        }
+
         model._rendererResources.programs[id] = ShaderProgram.fromCache({
             context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs,
+            vertexShaderSource : drawVS,
+            fragmentShaderSource : drawFS,
             attributeLocations : attributeLocations
         });
 
         if (model.allowPicking) {
             // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
-            var pickFS = new ShaderSource({
-                sources : [fs],
-                pickColorQualifier : 'uniform'
-            });
+            var pickVS = modifyShader(vs, id, model._pickVertexShaderLoaded);
+            var pickFS = modifyShader(fs, id, model._pickFragmentShaderLoaded);
+
+            if (!model._pickFragmentShaderLoaded) {
+                pickFS = ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
+            }
 
             model._rendererResources.pickPrograms[id] = ShaderProgram.fromCache({
                 context : context,
-                vertexShaderSource : vs,
+                vertexShaderSource : pickVS,
                 fragmentShaderSource : pickFS,
                 attributeLocations : attributeLocations
             });
@@ -1646,8 +1679,15 @@ define([
         // Note: WebGL shader compiler may have optimized and removed some attributes from programAttributeLocations
         for (var location in programAttributeLocations){
             if (programAttributeLocations.hasOwnProperty(location)) {
-                var parameter = parameters[attributes[location]];
-                attributeLocations[parameter.semantic] = programAttributeLocations[location].index;
+                var attribute = attributes[location];
+                var index = programAttributeLocations[location].index;
+                if (defined(attribute)) {
+                    var parameter = parameters[attribute];
+                    attributeLocations[parameter.semantic] = index;
+                } else {
+                    // Pre-created attributes
+                    attributeLocations[location] = index;
+                }
             }
         }
 
@@ -1860,16 +1900,19 @@ define([
                     // https://github.com/KhronosGroup/glTF/issues/258
 
                     var attributeLocations = getAttributeLocations(model, primitive);
-                    var attrs = [];
+                    var attributeName;
+                    var attributeLocation;
+                    var attribute;
+                    var attributes = [];
                     var primitiveAttributes = primitive.attributes;
-                    for (var attrName in primitiveAttributes) {
-                        if (primitiveAttributes.hasOwnProperty(attrName)) {
-                            var attributeLocation = attributeLocations[attrName];
+                    for (attributeName in primitiveAttributes) {
+                        if (primitiveAttributes.hasOwnProperty(attributeName)) {
+                            attributeLocation = attributeLocations[attributeName];
                             // Skip if the attribute is not used by the material, e.g., because the asset was exported
                             // with an attribute that wasn't used and the asset wasn't optimized.
                             if (defined(attributeLocation)) {
-                                var a = accessors[primitiveAttributes[attrName]];
-                                attrs.push({
+                                var a = accessors[primitiveAttributes[attributeName]];
+                                attributes.push({
                                     index                  : attributeLocation,
                                     vertexBuffer           : rendererBuffers[a.bufferView],
                                     componentsPerAttribute : getModelAccessor(a).componentsPerAttribute,
@@ -1882,6 +1925,21 @@ define([
                         }
                     }
 
+                    // Add pre-created attributes
+                    var precreatedAttributes = model._precreatedAttributes;
+                    if (defined(precreatedAttributes)) {
+                        for (attributeName in precreatedAttributes) {
+                            if (precreatedAttributes.hasOwnProperty(attributeName)) {
+                                attributeLocation = attributeLocations[attributeName];
+                                if (defined(attributeLocation)) {
+                                    attribute = precreatedAttributes[attributeName];
+                                    attribute.index = attributeLocation;
+                                    attributes.push(attribute);
+                                }
+                            }
+                        }
+                    }
+
                     var indexBuffer;
                     if (defined(primitive.indices)) {
                         var accessor = accessors[primitive.indices];
@@ -1889,7 +1947,7 @@ define([
                     }
                     rendererVertexArrays[meshId + '.primitive.' + i] = new VertexArray({
                         context : context,
-                        attributes : attrs,
+                        attributes : attributes,
                         indexBuffer : indexBuffer
                     });
                 }
@@ -2460,6 +2518,7 @@ define([
                 var ix = accessors[primitive.indices];
                 var material = materials[primitive.material];
                 var technique = techniques[material.technique];
+                var programId = technique.program;
 
                 var boundingSphere;
                 var positionAttribute = primitive.attributes.POSITION;
@@ -2491,7 +2550,13 @@ define([
                     uniformMap = combine(uniformMap, jointUniformMap);
                 }
 
+                // Allow callback to modify the uniformMap
+                if (defined(model._uniformMapLoaded)) {
+                    uniformMap = model._uniformMapLoaded(uniformMap, programId, runtimeNode);
+                }
+
                 var rs = rendererRenderStates[material.technique];
+
                 // GLTF_SPEC: Offical means to determine translucency. https://github.com/KhronosGroup/glTF/issues/105
                 var isTranslucent = rs.blending.enabled;
                 var owner = {
@@ -2518,13 +2583,26 @@ define([
                 var pickCommand;
 
                 if (allowPicking) {
-                    var pickId = context.createPickId(owner);
-                    pickIds.push(pickId);
+                    var pickUniformMap;
 
-                    var pickUniformMap = combine(
-                        uniformMap, {
+                    // Callback to override default model picking
+                    if (defined(model._pickFragmentShaderLoaded)) {
+                        if (defined(model._pickUniformMapLoaded)) {
+                            pickUniformMap = model._pickUniformMapLoaded(uniformMap);
+                        } else {
+                            // This is unlikely, but could happen if the override shader does not
+                            // need new uniforms since, for example, its pick ids are coming from
+                            // a vertex attribute or are baked into the shader source.
+                            pickUniformMap = combine(uniformMap);
+                        }
+                    } else {
+                        var pickId = context.createPickId(owner);
+                        pickIds.push(pickId);
+                        var pickUniforms = {
                             czm_pickColor : createPickColorFunction(pickId.color)
-                        });
+                        };
+                        pickUniformMap = combine(uniformMap, pickUniforms);
+                    }
 
                     pickCommand = new DrawCommand({
                         boundingVolume : new BoundingSphere(), // updated in update()
@@ -2646,6 +2724,11 @@ define([
             resources.textures = cachedResources.textures;
             resources.samplers = cachedResources.samplers;
             resources.renderStates = cachedResources.renderStates;
+
+            // Vertex arrays are unique to this model, create instead of using the cache.
+            if (defined(model._precreatedAttributes)) {
+                createVertexArrays(model, context);
+            }
         } else {
             createBuffers(model, context); // using glTF bufferViews
             createPrograms(model, context);
@@ -3113,6 +3196,11 @@ define([
                 cachedResources.renderStates = resources.renderStates;
                 cachedResources.ready = true;
 
+                // Vertex arrays are unique to this model, do not store in cache.
+                if (defined(this._precreatedAttributes)) {
+                    cachedResources.vertexArrays = {};
+                }
+
                 if (this.releaseGltfJson) {
                     releaseCachedGltf(this);
                 }
@@ -3175,8 +3263,8 @@ define([
         // We don't check show at the top of the function since we
         // want to be able to progressively load models when they are not shown,
         // and then have them visible immediately when show is set to true.
-        if (show) {
-// PERFORMANCE_IDEA: This is terrible
+        if (show && !this._ignoreCommands) {
+            // PERFORMANCE_IDEA: This is terrible
             var commandList = frameState.commandList;
             var passes = frameState.passes;
             var nodeCommands = this._nodeCommands;
@@ -3193,7 +3281,7 @@ define([
                 }
             }
 
-            if (passes.pick) {
+            if (passes.pick && this.allowPicking) {
                 for (i = 0; i < length; ++i) {
                     nc = nodeCommands[i];
                     if (nc.show) {
@@ -3236,6 +3324,11 @@ define([
      * model = model && model.destroy();
      */
     Model.prototype.destroy = function() {
+        // Vertex arrays are unique to this model, destroy here.
+        if (defined(this._precreatedAttributes)) {
+            destroy(this._rendererResources.vertexArrays);
+        }
+
         this._rendererResources = undefined;
         this._cachedRendererResources = this._cachedRendererResources && this._cachedRendererResources.release();
 
