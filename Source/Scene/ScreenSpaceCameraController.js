@@ -1243,7 +1243,7 @@ define([
         } else if (defined(camera.pickEllipsoid(movement.startPosition, controller._ellipsoid, spin3DPick))) {
             pan3D(controller, startPosition, movement, controller._ellipsoid);
             Cartesian3.clone(spin3DPick, controller._rotateStartPosition);
-        } else if (height > controller.minimumTrackBallHeigh * controller._scene.terrainExaggerationt) {
+        } else if (height > controller.minimumTrackBallHeight * controller._scene.terrainExaggeration) {
             controller._rotating = true;
             rotate3D(controller, startPosition, movement);
         } else {
