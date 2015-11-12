@@ -777,6 +777,20 @@ define([
             get : function() {
                 return this._incrementallyLoadTextures;
             }
+        },
+
+        /**
+         * Return the number of pending texture loads.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        pendingTextureLoads : {
+            get : function() {
+                return defined(this._loadResources) ? this._loadResources.pendingTextureLoads : 0;
+            }
         }
     });
 

@@ -1421,7 +1421,7 @@ defineSuite([
                 // Render scene to progressively load textures
                 scene.renderForSpecs();
                 // Textures have finished loading
-                return !defined(m._loadResources);
+                return (m.pendingTextureLoads === 0);
             }, { timeout : 10000 }).then(function() {
                 var finishedColor = verifyRender(m);
                 expect(finishedColor).not.toEqual(loadedColor);
