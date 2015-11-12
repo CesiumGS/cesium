@@ -153,7 +153,7 @@ define([
      * @param {Object} [options.contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
      * @param {Element|String} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added
      *        to the bottom of the widget itself.
-     * @param {Number} [terrainExaggeration] The scalar amount to exaggerate the terrain.
+     * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *
