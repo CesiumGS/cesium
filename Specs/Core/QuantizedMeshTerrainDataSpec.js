@@ -428,6 +428,17 @@ defineSuite([
              });
          });
 
+         it('exaggerates mesh', function() {
+             return data.createMesh(tilingScheme, 0, 0, 0, 2).then(function(mesh) {
+                 expect(mesh).toBeInstanceOf(TerrainMesh);
+                 expect(mesh.vertices.length).toBe(12 * 6); // 4 regular vertices, 8 skirt vertices.
+                 expect(mesh.indices.length).toBe(10 * 3); // 2 regular triangles, 8 skirt triangles.
+                 expect(mesh.minimumHeight).toBe(data._minimumHeight);
+                 expect(mesh.maximumHeight).toBeGreaterThan(data._maximumHeight);
+                 expect(mesh.boundingSphere3D.radius).toBeGreaterThan(data._boundingSphere.radius);
+             });
+         });
+
          it('requires 32bit indices for large meshes', function() {
              var tilingScheme = new GeographicTilingScheme();
              var quantizedVertices = [];
