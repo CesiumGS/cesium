@@ -2253,6 +2253,27 @@ define([
         return getPickRayOrthographic(this, windowPosition, result);
     };
 
+    var scratchToCenter = new Cartesian3();
+    var scratchProj = new Cartesian3();
+
+    /**
+     * Return the distance from the camera to the front of the bounding sphere.
+     *
+     * @param {BoundingSphere} boundingSphere The bounding sphere in world coordinates.
+     * @returns {Number} The distance to the bounding sphere.
+     */
+    Camera.prototype.distanceToBoundingSphere = function(boundingSphere) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(boundingSphere)) {
+            throw new DeveloperError('boundingSphere is required.');
+        }
+        //>>includeEnd('debug');
+
+        var toCenter = Cartesian3.subtract(this.positionWC, boundingSphere.center, scratchToCenter);
+        var proj = Cartesian3.multiplyByScalar(this.directionWC, Cartesian3.dot(toCenter, this.directionWC), scratchProj);
+        return Math.max(0.0, Cartesian3.magnitude(proj) - boundingSphere.radius);
+    };
+
     function createAnimation2D(camera, duration) {
         var position = camera.position;
         var translateX = position.x < -camera._maxCoord.x || position.x > camera._maxCoord.x;
@@ -2387,8 +2408,6 @@ define([
      *
      * @param {Number} duration The duration, in seconds, of the animation.
      * @returns {Object} The animation or undefined if the scene mode is 3D or the map is already ion view.
-     *
-     * @exception {DeveloperException} duration is required.
      *
      * @private
      */

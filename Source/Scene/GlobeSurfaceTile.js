@@ -706,11 +706,11 @@ define([
                     width : textureSize,
                     height : textureSize,
                     arrayBufferView : waterMask
-                }
+                },
+                sampler : waterMaskData.sampler
             });
 
             texture.referenceCount = 0;
-            texture.sampler = waterMaskData.sampler;
         }
 
         ++texture.referenceCount;

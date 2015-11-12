@@ -172,7 +172,7 @@ define([
         this._flipY = flipY;
         this._sampler = undefined;
 
-        this.sampler = new Sampler();
+        this.sampler = defined(options.sampler) ? options.sampler : new Sampler();
     };
 
     /**

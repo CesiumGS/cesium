@@ -15,6 +15,11 @@ Change Log
 * Fixed a bug which caused `Entity` polyline graphics to be incorrect when a scene's ellipsoid was not WGS84. [#3174](https://github.com/AnalyticalGraphicsInc/cesium/pull/3174)
 * Added `ImageryProvider.readyPromise` and `TerrainProvider.readyPromise` and implemented it in all terrain and imagery providers.  This is a promise which resolves when `ready` becomes true and rejected if there is an error during initialization. [#3175](https://github.com/AnalyticalGraphicsInc/cesium/pull/3175)
 * Added support for fog near the horizon, which improves performance by rendering less terrain tiles and reduces terrain tile requests.  This is enabled by default.  See `Scene.fog` for options.  [#3154](https://github.com/AnalyticalGraphicsInc/cesium/pull/3154)
+* Added `Queue.peek` to return the item at the front of a Queue.
+* Added `Camera.distanceToBoundingSphere` function.
+* Added utility function `getBaseUri`, which given a URI with or without query parameters, returns the base path of the URI.
+* Added support for incrementally loading textures after a Model is ready. This allows the Model to be visible as soon as possible while its textures are loaded in the background.
+* Added 'Cartographic.fromCartesian' function.
 
 ### 1.15 - 2015-11-02
 
