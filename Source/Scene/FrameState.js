@@ -10,13 +10,14 @@ define([
      * is provided to update functions.
      *
      * @param {CreditDisplay} creditDisplay Handles adding and removing credits from an HTML element
+     * @param {JobScheduler} jobScheduler DOC_TBA
      *
      * @alias FrameState
      * @constructor
      *
      * @private
      */
-    var FrameState = function(context, creditDisplay) {
+    var FrameState = function(context, creditDisplay, jobScheduler) {
         /**
          * The rendering context.
          * @type {Context}
@@ -59,6 +60,11 @@ define([
          * @default undefined
          */
         this.time = undefined;
+
+        /**
+         * DOC_TBA
+         */
+        this.jobScheduler = jobScheduler;
 
         /**
          * The map projection to use in 2D and Columbus View modes.

@@ -1231,6 +1231,7 @@ defineSuite([
             modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
             show : false,
             releaseGltfJson : true,
+            incrementallyLoadTextures : false,
             asynchronous : true
         }));
         addZoomTo(m);
@@ -1360,6 +1361,7 @@ defineSuite([
             modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
             show : false,
             cacheKey : key,
+            incrementallyLoadTextures : false,
             asynchronous : true
         }));
         addZoomTo(m);

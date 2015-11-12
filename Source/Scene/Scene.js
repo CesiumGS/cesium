@@ -44,6 +44,7 @@ define([
         './FrustumCommands',
         './FXAA',
         './GlobeDepth',
+        './JobScheduler',
         './OIT',
         './OrthographicFrustum',
         './Pass',
@@ -105,6 +106,7 @@ define([
         FrustumCommands,
         FXAA,
         GlobeDepth,
+        JobScheduler,
         OIT,
         OrthographicFrustum,
         Pass,
@@ -212,7 +214,8 @@ define([
         }
 
         this._id = createGuid();
-        this._frameState = new FrameState(context, new CreditDisplay(creditContainer));
+        this._jobScheduler = new JobScheduler();
+        this._frameState = new FrameState(context, new CreditDisplay(creditContainer), this._jobScheduler);
         this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
 
         this._passState = new PassState(context);
@@ -490,6 +493,14 @@ define([
          * @default true
          */
         this.fxaa = true;
+
+        /**
+         * When <code>true</code>, enables picking using the depth buffer.
+         *
+         * @type Boolean
+         * @default true
+         */
+        this.useDepthPicking = true;
 
         /**
          * The time in milliseconds to wait before checking if the camera has not moved and fire the cameraMoveEnd event.
@@ -1167,8 +1178,7 @@ define([
         var fs = sp.fragmentShaderSource.clone();
 
         fs.sources = fs.sources.map(function(source) {
-            source = ShaderSource.replaceMain(source, 'czm_Debug_main');
-            return source;
+            return ShaderSource.replaceMain(source, 'czm_Debug_main');
         });
 
         var newMain =
@@ -1264,7 +1274,7 @@ define([
                 scene._debugVolume = new Primitive({
                     geometryInstances : new GeometryInstance({
                         geometry : geometry,
-                        modelMatrix : Matrix4.multiplyByTranslation(Matrix4.IDENTITY, center, new Matrix4()),
+                        modelMatrix : Matrix4.fromTranslation(center),
                         attributes : {
                             color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
                         }
@@ -1609,7 +1619,7 @@ define([
             commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
             executeTranslucentCommands(scene, executeCommand, passState, commands);
 
-            if (defined(globeDepth) && useGlobeDepthFramebuffer) {
+            if (defined(globeDepth) && useGlobeDepthFramebuffer && scene.useDepthPicking ) {
                 // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
                 var pickDepth = getPickDepth(scene, index);
                 pickDepth.update(context, globeDepth.framebuffer.depthStencilTexture);
@@ -1720,6 +1730,7 @@ define([
         }
 
         scene._preRender.raiseEvent(scene, time);
+        scene._jobScheduler.resetBudgets();
 
         var context = scene.context;
         var us = context.uniformState;
@@ -1918,6 +1929,8 @@ define([
             this._pickFramebuffer = context.createPickFramebuffer();
         }
 
+        this._jobScheduler.disableThisFrame();
+
         // Update with previous frame's number and time, assuming that render is called before picking.
         updateFrameState(this, frameState.frameNumber, frameState.time);
         frameState.cullingVolume = getPickCullingVolume(this, drawingBufferPosition, rectangleWidth, rectangleHeight);
@@ -1954,6 +1967,10 @@ define([
      * @exception {DeveloperError} 2D is not supported. An orthographic projection matrix is not invertible.
      */
     Scene.prototype.pickPosition = function(windowPosition, result) {
+        if (!this.useDepthPicking) {
+            return undefined;
+        }
+
         //>>includeStart('debug', pragmas.debug);
         if(!defined(windowPosition)) {
             throw new DeveloperError('windowPosition is undefined.');

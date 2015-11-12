@@ -55,6 +55,11 @@ define([
      * }
      */
     var throttleRequestByServer = function(url, requestFunction) {
+
+// TODO: use below and account for maximumRequestsPerServer
+//
+//   return RequestsByServer.throttleRequest(url, requestFunction);
+
         var server = getServer(url);
 
         var activeRequestsForServer = defaultValue(activeRequests[server], 0);
