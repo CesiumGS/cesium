@@ -1135,17 +1135,10 @@ define([
         }
     }
 
-    var scratchPixelSize = new Cartesian2();
-
     function updateBoundingVolume(collection, frameState, boundingVolume) {
         var pixelScale = 1.0;
         if (!collection._allSizedInMeters || collection._maxPixelOffset !== 0.0) {
-            var camera = frameState.camera;
-            var distance = camera.distanceToBoundingSphere(boundingVolume);
-
-            var context = frameState.context;
-            var pixelSize = frameState.camera.frustum.getPixelDimensions(context.drawingBufferWidth, context.drawingBufferHeight, distance, scratchPixelSize);
-            pixelScale = Math.max(pixelSize.x, pixelSize.y);
+            pixelScale = frameState.camera.getPixelSize(boundingVolume, frameState.context);
         }
 
         var size = pixelScale * collection._maxScale * collection._maxSize * 2.0;

@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/BoundingSphere',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/clone',
         '../Core/combine',
@@ -35,6 +36,7 @@ define([
         './SceneMode'
     ], function(
         BoundingSphere,
+        Cartesian2,
         Cartesian3,
         clone,
         combine,
@@ -1224,6 +1226,22 @@ define([
         attributes.length = 0;
     }
 
+    function updateBoundingVolumes(primitive, frameState) {
+        // Update bounding volume when using PointAppearance and PointGeometry.
+        // The point size in meters will vary per frame, so update bounding volume accordingly.
+        var uniforms = primitive.appearance.uniforms;
+        if (defined(uniforms) && defined(uniforms.pointSize)) {
+            var length = primitive._boundingSpheres.length;
+            for (var i = 0; i < length; ++i) {
+                var boundingSphere = primitive._boundingSpheres[i];
+                var boundingSphereWC = primitive._boundingSphereWC[i];
+                var pixelSize = frameState.camera.getPixelSize(boundingSphere, frameState.context);
+                var size = pixelSize * uniforms.pointSize;
+                boundingSphereWC.radius = boundingSphere.radius + size;
+            }
+        }
+    }
+
     var rtcScratch = new Cartesian3();
 
     function updateAndQueueCommands(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
@@ -1232,6 +1250,8 @@ define([
             throw new DeveloperError('Primitive.modelMatrix is only supported in 3D mode.');
         }
         //>>includeEnd('debug');
+
+        updateBoundingVolumes(primitive, frameState);
 
         if (!Matrix4.equals(modelMatrix, primitive._modelMatrix)) {
             Matrix4.clone(modelMatrix, primitive._modelMatrix);

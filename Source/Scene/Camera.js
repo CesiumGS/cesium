@@ -2274,6 +2274,30 @@ define([
         return Math.max(0.0, Cartesian3.magnitude(proj) - boundingSphere.radius);
     };
 
+    var scratchPixelSize = new Cartesian2();
+
+    /**
+     * Return the pixel size in meters.
+     *
+     * @param {BoundingSphere} boundingSphere The bounding sphere in world coordinates.
+     * @param {Context} context The context.
+     * @returns {Number} The pixel size in meters.
+     */
+    Camera.prototype.getPixelSize = function(boundingSphere, context) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(boundingSphere)) {
+            throw new DeveloperError('boundingSphere is required.');
+        }
+        if (!defined(context)) {
+            throw new DeveloperError('context is required.');
+        }
+        //>>includeEnd('debug');
+
+        var distance = this.distanceToBoundingSphere(boundingSphere);
+        var pixelSize = this.frustum.getPixelDimensions(context.drawingBufferWidth, context.drawingBufferHeight, distance, scratchPixelSize);
+        return Math.max(pixelSize.x, pixelSize.y);
+    };
+
     function createAnimation2D(camera, duration) {
         var position = camera.position;
         var translateX = position.x < -camera._maxCoord.x || position.x > camera._maxCoord.x;

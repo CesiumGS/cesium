@@ -70,6 +70,10 @@ defineSuite([
         this.tweens = new TweenCollection();
         this.screenSpaceCameraController = {};
         this.camera = undefined;
+        this.context = {
+            drawingBufferWidth : 1024,
+            drawingBufferHeight : 768
+        };
     };
 
     beforeEach(function() {
@@ -2260,6 +2264,38 @@ defineSuite([
 
         expect(function() {
             camera.distanceToBoundingSphere();
+        }).toThrowDeveloperError();
+    });
+
+    it('getPixelSize', function() {
+        scene.mode = SceneMode.SCENE3D;
+
+        var sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
+        var context = scene.context;
+
+        // Compute expected pixel size
+        var distance = camera.distanceToBoundingSphere(sphere);
+        var pixelDimensions = camera.frustum.getPixelDimensions(context.drawingBufferWidth, context.drawingBufferHeight, distance, new Cartesian2());
+        var expectedPixelSize = Math.max(pixelDimensions.x, pixelDimensions.y);
+
+        var pixelSize = camera.getPixelSize(sphere, context);
+        expect(pixelSize).toEqual(expectedPixelSize);
+    });
+
+    it('getPixelSize throws when there is no bounding sphere', function() {
+        scene.mode = SceneMode.SCENE3D;
+
+        expect(function() {
+            camera.getPixelSize();
+        }).toThrowDeveloperError();
+    });
+
+    it('getPixelSize throws when there is no context', function() {
+        scene.mode = SceneMode.SCENE3D;
+        var sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
+
+        expect(function() {
+            camera.getPixelSize(sphere);
         }).toThrowDeveloperError();
     });
 
