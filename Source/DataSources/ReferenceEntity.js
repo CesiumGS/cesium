@@ -83,7 +83,7 @@ define([
         /**
          * Gets the position property of the entity being referenced.
          * @memberof ReferenceProperty.prototype
-         * @type {ReferenceFrame}
+         * @type {PositionProperty}
          * @readonly
          */
         position : {
@@ -95,7 +95,7 @@ define([
         /**
          * Gets the orientation property of the entity being referenced.
          * @memberof ReferenceProperty.prototype
-         * @type {ReferenceFrame}
+         * @type {Property}
          * @readonly
          */
         orientation : {
@@ -129,7 +129,7 @@ define([
         /**
          * Gets the resolved instance of the underlying referenced entity.
          * @memberof ReferenceEntity.prototype
-         * @type {Property}
+         * @type {Entity}
          * @readonly
          */
          resolvedEntity : {
