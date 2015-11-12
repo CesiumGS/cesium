@@ -101,15 +101,14 @@ defineSuite([
         expect(result).toBe(c);
     });
 
+    it('fromCartesian works without an ellipsoid', function() {
+        var c = Cartographic.fromCartesian(surfaceCartesian);
+        expect(c).toEqualEpsilon(surfaceCartographic, CesiumMath.EPSILON8);
+    });
+
     it('fromCartesian throws when there is no cartesian', function() {
         expect(function() {
             Cartographic.fromCartesian();
-        }).toThrowDeveloperError();
-    });
-
-    it('fromCartesian throws when there is no ellipsoid', function() {
-        expect(function() {
-            Cartographic.fromCartesian(surfaceCartesian);
         }).toThrowDeveloperError();
     });
 
