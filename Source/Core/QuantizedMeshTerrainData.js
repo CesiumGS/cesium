@@ -291,16 +291,25 @@ define([
             vertexCount += that._westIndices.length + that._southIndices.length + that._eastIndices.length + that._northIndices.length;
             var indicesTypedArray = IndexDatatype.createTypedArray(vertexCount, result.indices);
 
+            var vertices = new Float32Array(result.vertices);
+            var rtc = result.center;
+            var minimumHeight = result.minimumHeight;
+            var maximumHeight = result.maximumHeight;
+            var boundingSphere = defaultValue(result.boundingSphere, that._boundingSphere);
+            var obb = defaultValue(result.orientedBoundingBox, that._orientedBoundingBox);
+            var occlusionPoint = defaultValue(result.occludeePointInScaledSpace, that._horizonOcclusionPoint);
+            var stride = result.vertexStride;
+
             return new TerrainMesh(
-                    that._boundingSphere.center,
-                    new Float32Array(result.vertices),
+                    rtc,
+                    vertices,
                     indicesTypedArray,
-                    that._minimumHeight,
-                    that._maximumHeight,
-                    that._boundingSphere,
-                    that._horizonOcclusionPoint,
-                    defined(that._encodedNormals) ? 7 : 6,
-                    that._orientedBoundingBox);
+                    minimumHeight,
+                    maximumHeight,
+                    boundingSphere,
+                    occlusionPoint,
+                    stride,
+                    obb);
         });
     };
 

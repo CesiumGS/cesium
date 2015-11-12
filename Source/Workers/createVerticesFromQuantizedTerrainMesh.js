@@ -1,23 +1,29 @@
 /*global define*/
 define([
         '../Core/AttributeCompression',
+        '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/defined',
         '../Core/Ellipsoid',
+        '../Core/EllipsoidalOccluder',
         '../Core/IndexDatatype',
         '../Core/Math',
+        '../Core/OrientedBoundingBox',
         './createTaskProcessorWorker'
     ], function(
         AttributeCompression,
+        BoundingSphere,
         Cartesian2,
         Cartesian3,
         Cartographic,
         defined,
         Ellipsoid,
+        EllipsoidalOccluder,
         IndexDatatype,
         CesiumMath,
+        OrientedBoundingBox,
         createTaskProcessorWorker) {
     "use strict";
 
@@ -44,7 +50,10 @@ define([
         var minimumHeight = parameters.minimumHeight;
         var maximumHeight = parameters.maximumHeight;
         var center = parameters.relativeToCenter;
+
         var exaggeration = parameters.exaggeration;
+        minimumHeight *= exaggeration;
+        maximumHeight *= exaggeration;
 
         var rectangle = parameters.rectangle;
         var west = rectangle.west;
@@ -73,7 +82,7 @@ define([
 
             cartographicScratch.longitude = CesiumMath.lerp(west, east, u);
             cartographicScratch.latitude = CesiumMath.lerp(south, north, v);
-            cartographicScratch.height = height * exaggeration;
+            cartographicScratch.height = height;
 
             ellipsoid.cartographicToCartesian(cartographicScratch, cartesian3Scratch);
 
@@ -95,6 +104,18 @@ define([
         var indexBuffer = IndexDatatype.createTypedArray(quantizedVertexCount + edgeVertexCount, indexBufferLength);
         indexBuffer.set(parameters.indices, 0);
 
+        var occludeePointInScaledSpace;
+        var orientedBoundingBox;
+        var boundingSphere;
+
+        if (exaggeration > 1.0) {
+            boundingSphere = BoundingSphere.fromVertices(vertexBuffer, center, vertexStride);
+            orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, minimumHeight, maximumHeight, ellipsoid);
+
+            var occluder = new EllipsoidalOccluder(ellipsoid);
+            occludeePointInScaledSpace = occluder.computeHorizonCullingPointFromVertices(center, vertexBuffer, vertexStride);
+        }
+
         // Add skirts.
         var vertexBufferIndex = quantizedVertexCount * vertexStride;
         var indexBufferIndex = parameters.indices.length;
@@ -111,7 +132,14 @@ define([
 
         return {
             vertices : vertexBuffer.buffer,
-            indices : indexBuffer.buffer
+            indices : indexBuffer.buffer,
+            vertexStride : vertexStride,
+            center : center,
+            minimumHeight : minimumHeight,
+            maximumHeight : maximumHeight,
+            boundingSphere : boundingSphere,
+            orientedBoundingBox : orientedBoundingBox,
+            occludeePointInScaledSpace : occludeePointInScaledSpace
         };
     }
 
