@@ -2,6 +2,7 @@
 defineSuite([
         'Core/BoundingRectangle',
         'Core/Color',
+        'Core/ComponentDatatype',
         'Core/IndexDatatype',
         'Core/PrimitiveType',
         'Core/WindingOrder',
@@ -13,10 +14,13 @@ defineSuite([
         'Renderer/RenderState',
         'Renderer/ShaderProgram',
         'Renderer/VertexArray',
+        'Renderer/WebGLConstants',
+        'Scene/BlendingState',
         'Specs/createContext'
     ], 'Renderer/Draw', function(
         BoundingRectangle,
         Color,
+        ComponentDatatype,
         IndexDatatype,
         PrimitiveType,
         WindingOrder,
@@ -28,9 +32,11 @@ defineSuite([
         RenderState,
         ShaderProgram,
         VertexArray,
+        WebGLConstants,
+        BlendingState,
         createContext) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,WebGLRenderingContext*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var context;
     var sp;
@@ -393,12 +399,12 @@ defineSuite([
             renderState : RenderState.fromCache({
                 blending : {
                     enabled : true,
-                    equationRgb : WebGLRenderingContext.FUNC_ADD, // Optional, default
-                    equationAlpha : WebGLRenderingContext.FUNC_ADD, // Optional, default
-                    functionSourceRgb : WebGLRenderingContext.ONE, // Optional, default
-                    functionSourceAlpha : WebGLRenderingContext.ONE, // Optional, default
-                    functionDestinationRgb : WebGLRenderingContext.ONE,
-                    functionDestinationAlpha : WebGLRenderingContext.ONE
+                    equationRgb : WebGLConstants.FUNC_ADD, // Optional, default
+                    equationAlpha : WebGLConstants.FUNC_ADD, // Optional, default
+                    functionSourceRgb : WebGLConstants.ONE, // Optional, default
+                    functionSourceAlpha : WebGLConstants.ONE, // Optional, default
+                    functionDestinationRgb : WebGLConstants.ONE,
+                    functionDestinationAlpha : WebGLConstants.ONE
                 }
             })
         });
@@ -445,12 +451,12 @@ defineSuite([
             renderState : RenderState.fromCache({
                 blending : {
                     enabled : true,
-                    equationRgb : WebGLRenderingContext.FUNC_ADD,
-                    equationAlpha : WebGLRenderingContext.FUNC_SUBTRACT, // does not actually matter
-                    functionSourceRgb : WebGLRenderingContext.SRC_ALPHA,
-                    functionSourceAlpha : WebGLRenderingContext.ONE, // Don't blend alpha
-                    functionDestinationRgb : WebGLRenderingContext.ONE_MINUS_SRC_ALPHA,
-                    functionDestinationAlpha : WebGLRenderingContext.ZERO
+                    equationRgb : WebGLConstants.FUNC_ADD,
+                    equationAlpha : WebGLConstants.FUNC_SUBTRACT, // does not actually matter
+                    functionSourceRgb : WebGLConstants.SRC_ALPHA,
+                    functionSourceAlpha : WebGLConstants.ONE, // Don't blend alpha
+                    functionDestinationRgb : WebGLConstants.ONE_MINUS_SRC_ALPHA,
+                    functionDestinationAlpha : WebGLConstants.ZERO
                 }
             })
         });
@@ -502,12 +508,12 @@ defineSuite([
                         blue : 0.5,
                         alpha : 0.5
                     },
-                    equationRgb : WebGLRenderingContext.FUNC_SUBTRACT,
-                    equationAlpha : WebGLRenderingContext.FUNC_SUBTRACT,
-                    functionSourceRgb : WebGLRenderingContext.CONSTANT_COLOR,
-                    functionSourceAlpha : WebGLRenderingContext.ONE,
-                    functionDestinationRgb : WebGLRenderingContext.ZERO,
-                    functionDestinationAlpha : WebGLRenderingContext.ZERO
+                    equationRgb : WebGLConstants.FUNC_SUBTRACT,
+                    equationAlpha : WebGLConstants.FUNC_SUBTRACT,
+                    functionSourceRgb : WebGLConstants.CONSTANT_COLOR,
+                    functionSourceAlpha : WebGLConstants.ONE,
+                    functionDestinationRgb : WebGLConstants.ZERO,
+                    functionDestinationAlpha : WebGLConstants.ZERO
                 }
             })
         });
@@ -552,7 +558,7 @@ defineSuite([
             renderState : RenderState.fromCache({
                 cull : {
                     enabled : true,
-                    face : WebGLRenderingContext.FRONT
+                    face : WebGLConstants.FRONT
                 }
             })
         });
@@ -567,7 +573,7 @@ defineSuite([
             renderState : RenderState.fromCache({
                 cull : {
                     enabled : true,
-                    face : WebGLRenderingContext.BACK
+                    face : WebGLConstants.BACK
                 }
             })
         });
@@ -610,7 +616,7 @@ defineSuite([
                 frontFace : WindingOrder.CLOCKWISE,
                 cull : {
                     enabled : true,
-                    face : WebGLRenderingContext.BACK
+                    face : WebGLConstants.BACK
                 }
             })
         });
@@ -626,7 +632,7 @@ defineSuite([
                 frontFace : WindingOrder.COUNTER_CLOCKWISE,
                 cull : {
                     enabled : true,
-                    face : WebGLRenderingContext.BACK
+                    face : WebGLConstants.BACK
                 }
             })
         });
@@ -663,7 +669,7 @@ defineSuite([
             renderState : RenderState.fromCache({
                 depthTest : {
                     enabled : true,
-                    func : WebGLRenderingContext.LEQUAL
+                    func : WebGLConstants.LEQUAL
                 }
             })
         });
@@ -902,7 +908,7 @@ defineSuite([
         var rs = RenderState.fromCache({
             stencilTest : {
                 enabled : true,
-                frontFunction : WebGLRenderingContext.EQUAL,
+                frontFunction : WebGLConstants.EQUAL,
                 reference : 1,
                 mask : 1
             }
@@ -937,7 +943,7 @@ defineSuite([
                 stencilTest : {
                     enabled : true,
                     frontOperation : {
-                        zPass : WebGLRenderingContext.INCR
+                        zPass : WebGLConstants.INCR
                     }
                 }
             })
@@ -986,7 +992,7 @@ defineSuite([
             frontFace : WindingOrder.CLOCKWISE,
             stencilTest : {
                 enabled : true,
-                backFunction : WebGLRenderingContext.NOTEQUAL,
+                backFunction : WebGLConstants.NOTEQUAL,
                 reference : 0
             }
         });
@@ -1021,7 +1027,7 @@ defineSuite([
                 stencilTest : {
                     enabled : true,
                     backOperation : {
-                        zPass : WebGLRenderingContext.INVERT
+                        zPass : WebGLConstants.INVERT
                     }
                 }
             })
@@ -1085,6 +1091,65 @@ defineSuite([
         });
         command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+    });
+
+    it('draws two instances of a point with different per-instance colors', function() {
+        if (context.instancedArrays) {
+            var vs =
+                'attribute vec4 position;' +
+                'attribute vec4 color;' +
+                'varying vec4 v_color;' +
+                'void main() {' +
+                '  gl_PointSize = 1.0; ' +
+                '  gl_Position = position;' +
+                '  v_color = color;' +
+                '}';
+            var fs = 'varying vec4 v_color; void main() { gl_FragColor = v_color; }';
+            sp = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs
+            });
+
+            va = new VertexArray({
+                context : context,
+                attributes : [{
+                    index : sp.vertexAttributes.position.index,
+                    vertexBuffer : Buffer.createVertexBuffer({
+                        context : context,
+                        typedArray : new Float32Array([0, 0, 0, 1]),
+                        usage : BufferUsage.STATIC_DRAW
+                    }),
+                    componentsPerAttribute : 4
+                }, {
+                    index : sp.vertexAttributes.color.index,
+                    vertexBuffer : Buffer.createVertexBuffer({
+                        context : context,
+                        typedArray : new Uint8Array([255, 0, 0, 255, 0, 255, 0, 255]),
+                        usage : BufferUsage.STATIC_DRAW
+                    }),
+                    componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                    componentsPerAttribute : 4,
+                    normalize : true,
+                    instanceDivisor : 1
+                }]
+            });
+
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+            var command = new DrawCommand({
+                primitiveType : PrimitiveType.POINTS,
+                shaderProgram : sp,
+                vertexArray : va,
+                instanceCount : 2,
+                renderState : RenderState.fromCache({
+                    blending : BlendingState.ADDITIVE_BLEND
+                })
+            });
+            command.execute(context);
+            expect(context.readPixels()).toEqual([255, 255, 0, 255]);
+        }
     });
 
     it('fails to draw (missing command)', function() {
@@ -1171,5 +1236,75 @@ defineSuite([
                 count : 1
             });
         }).toThrowDeveloperError();
+    });
+
+    it('throws if instanceCount is less than one', function() {
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
+        });
+
+        va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
+                componentsPerAttribute : 4
+            }]
+        });
+
+        var command = new DrawCommand({
+            primitiveType : PrimitiveType.POINTS,
+            shaderProgram : sp,
+            vertexArray : va,
+            instanceCount : -1
+        });
+
+        expect(function() {
+            command.execute(context);
+        }).toThrowDeveloperError();
+    });
+
+    it('throws when instanceCount is greater than one and the instanced arrays extension is not supported', function() {
+        if (!context.instancedArrays) {
+            var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+            var fs = 'void main() { gl_FragColor = vec4(1.0); }';
+            sp = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs
+            });
+
+            va = new VertexArray({
+                context : context,
+                attributes : [{
+                    index : sp.vertexAttributes.position.index,
+                    vertexBuffer : Buffer.createVertexBuffer({
+                        context : context,
+                        typedArray : new Float32Array([0, 0, 0, 1]),
+                        usage : BufferUsage.STATIC_DRAW
+                    }),
+                    componentsPerAttribute : 4
+                }]
+            });
+
+            var command = new DrawCommand({
+                primitiveType : PrimitiveType.POINTS,
+                shaderProgram : sp,
+                vertexArray : va,
+                instanceCount : 2
+            });
+
+            expect(function() {
+                command.execute(context);
+            }).toThrowDeveloperError();
+        }
     });
 }, 'WebGL');

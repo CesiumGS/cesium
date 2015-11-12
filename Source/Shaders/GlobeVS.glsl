@@ -7,7 +7,7 @@ uniform vec4 u_tileRectangle;
 
 // Uniforms for 2D Mercator projection
 uniform vec2 u_southAndNorthLatitude;
-uniform vec3 u_southMercatorYLowAndHighAndOneOverHeight;
+uniform vec2 u_southMercatorYAndOneOverHeight;
 
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
@@ -15,6 +15,12 @@ varying vec3 v_positionEC;
 varying vec2 v_textureCoordinates;
 varying vec3 v_normalMC;
 varying vec3 v_normalEC;
+
+#ifdef FOG
+varying float v_distance;
+varying vec3 v_mieColor;
+varying vec3 v_rayleighColor;
+#endif
 
 // These functions are generated at runtime.
 vec4 getPosition(vec3 position3DWC);
@@ -38,13 +44,12 @@ float get2DMercatorYPositionFraction()
     float northLatitude = u_southAndNorthLatitude.y;
     if (northLatitude - southLatitude > maxTileWidth)
     {
-        float southMercatorYLow = u_southMercatorYLowAndHighAndOneOverHeight.x;
-        float southMercatorYHigh = u_southMercatorYLowAndHighAndOneOverHeight.y;
-        float oneOverMercatorHeight = u_southMercatorYLowAndHighAndOneOverHeight.z;
+        float southMercatorY = u_southMercatorYAndOneOverHeight.x;
+        float oneOverMercatorHeight = u_southMercatorYAndOneOverHeight.y;
 
         float currentLatitude = mix(southLatitude, northLatitude, textureCoordAndEncodedNormals.y);
         currentLatitude = clamp(currentLatitude, -czm_webMercatorMaxLatitude, czm_webMercatorMaxLatitude);
-        positionFraction = czm_latitudeToWebMercatorFraction(currentLatitude, southMercatorYLow, southMercatorYHigh, oneOverMercatorHeight);
+        positionFraction = czm_latitudeToWebMercatorFraction(currentLatitude, southMercatorY, oneOverMercatorHeight);
     }    
     return positionFraction;
 }
@@ -99,4 +104,11 @@ void main()
 #endif
 
     v_textureCoordinates = textureCoordAndEncodedNormals.xy;
+    
+#ifdef FOG
+    AtmosphereColor atmosColor = computeGroundAtmosphereFromSpace(position3DWC);
+    v_mieColor = atmosColor.mie;
+    v_rayleighColor = atmosColor.rayleigh;
+    v_distance = length((czm_modelView3D * vec4(position3DWC, 1.0)).xyz);
+#endif
 }

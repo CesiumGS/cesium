@@ -17,6 +17,7 @@ defineSuite([
         'Renderer/ShaderProgram',
         'Renderer/Texture',
         'Renderer/VertexArray',
+        'Renderer/WebGLConstants',
         'Specs/createContext'
     ], function(
         Framebuffer,
@@ -36,9 +37,10 @@ defineSuite([
         ShaderProgram,
         Texture,
         VertexArray,
+        WebGLConstants,
         createContext) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,WebGLRenderingContext*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var context;
     var sp;
@@ -129,7 +131,7 @@ defineSuite([
                     width : 1,
                     height : 1,
                     pixelFormat : PixelFormat.DEPTH_STENCIL,
-                    pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8_WEBGL
+                    pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8
                 })
             });
             expect(framebuffer.depthStencilTexture).toBeDefined();
@@ -238,9 +240,9 @@ defineSuite([
         // 2 of 4.  Clear framebuffer color attachment to green.
         framebuffer = new Framebuffer({
             context : context,
-            colorTextures : [cubeMap.positiveX]
+            colorTextures : [cubeMap.positiveX],
+            destroyAttachments : false
         });
-        framebuffer.destroyAttachments = false;
 
         var clearCommand = new ClearCommand({
             color : new Color (0.0, 1.0, 0.0, 1.0),
@@ -444,7 +446,7 @@ defineSuite([
                 })
             });
 
-            if (framebuffer.status === WebGLRenderingContext.FRAMEBUFFER_COMPLETE) {
+            if (framebuffer.status === WebGLConstants.FRAMEBUFFER_COMPLETE) {
                 expect(renderDepthAttachment(framebuffer, framebuffer.depthTexture)).toEqualEpsilon([128, 128, 128, 128], 1);
             }
         }
@@ -464,11 +466,11 @@ defineSuite([
                     width : 1,
                     height : 1,
                     pixelFormat : PixelFormat.DEPTH_STENCIL,
-                    pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8_WEBGL
+                    pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8
                 })
             });
 
-            if (framebuffer.status === WebGLRenderingContext.FRAMEBUFFER_COMPLETE) {
+            if (framebuffer.status === WebGLConstants.FRAMEBUFFER_COMPLETE) {
                 expect(renderDepthAttachment(framebuffer, framebuffer.depthStencilTexture)).toEqualEpsilon([128, 128, 128, 128], 1);
             }
         }
@@ -531,7 +533,7 @@ defineSuite([
             renderState : RenderState.fromCache({
                 depthTest : {
                     enabled : true,
-                    func : WebGLRenderingContext.NEVER
+                    func : WebGLConstants.NEVER
                 }
             })
         });
@@ -549,7 +551,7 @@ defineSuite([
             renderState : RenderState.fromCache({
                 depthTest : {
                     enabled : true,
-                    func : WebGLRenderingContext.ALWAYS
+                    func : WebGLConstants.ALWAYS
                 }
             })
         });
@@ -669,7 +671,7 @@ defineSuite([
                 height : 1
             })
         });
-        expect(framebuffer.status).toEqual(WebGLRenderingContext.FRAMEBUFFER_COMPLETE);
+        expect(framebuffer.status).toEqual(WebGLConstants.FRAMEBUFFER_COMPLETE);
     });
 
     it('gets the status of a incomplete framebuffer', function() {
@@ -682,12 +684,12 @@ defineSuite([
             })],
             depthRenderbuffer : new Renderbuffer({
                 context : context,
-                format : RenderbufferFormat.DEPTH_COMPONENT16,
+                format : RenderbufferFormat.RGBA4,
                 width : 2,
                 height : 2
             })
         });
-        expect(framebuffer.status).not.toEqual(WebGLRenderingContext.FRAMEBUFFER_COMPLETE);
+        expect(framebuffer.status).not.toEqual(WebGLConstants.FRAMEBUFFER_COMPLETE);
     });
 
 

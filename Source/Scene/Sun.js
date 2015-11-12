@@ -18,6 +18,7 @@ define([
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
+        '../Renderer/ComputeCommand',
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
         '../Renderer/RenderState',
@@ -49,6 +50,7 @@ define([
         Buffer,
         BufferUsage,
         ClearCommand,
+        ComputeCommand,
         DrawCommand,
         Framebuffer,
         RenderState,
@@ -84,11 +86,15 @@ define([
          */
         this.show = true;
 
-        this._command = new DrawCommand({
+        this._drawCommand = new DrawCommand({
             primitiveType : PrimitiveType.TRIANGLES,
             boundingVolume : new BoundingSphere(),
             owner : this
         });
+        this._commands = {
+            drawCommand : this._drawCommand,
+            computeCommand : undefined
+        };
         this._boundingVolume = new BoundingSphere();
         this._boundingVolume2D = new BoundingSphere();
 
@@ -179,21 +185,6 @@ define([
                 pixelFormat : PixelFormat.RGBA
             });
 
-            var fbo = new Framebuffer({
-                context : context,
-                colorTextures : [this._texture]
-            });
-            fbo.destroyAttachments = false;
-
-            var clearCommand = new ClearCommand({
-                color : new Color(0.0, 0.0, 0.0, 0.0),
-                framebuffer : fbo
-            });
-
-            var rs = RenderState.fromCache({
-                viewport : new BoundingRectangle(0.0, 0.0, size, size)
-            });
-
             this._glowLengthTS = this._glowFactor * 5.0;
             this._radiusTS = (1.0 / (1.0 + 2.0 * this._glowLengthTS)) * 0.5;
 
@@ -207,23 +198,21 @@ define([
                 }
             };
 
-            var drawCommand = context.createViewportQuadCommand(SunTextureFS, {
-                renderState : rs,
+            this._commands.computeCommand = new ComputeCommand({
+                fragmentShaderSource : SunTextureFS,
+                outputTexture  : this._texture,
                 uniformMap : uniformMap,
-                framebuffer : fbo,
-                owner : this
+                persists : false,
+                owner : this,
+                postExecute : function() {
+                    that._commands.computeCommand = undefined;
+                }
             });
-
-            clearCommand.execute(context);
-            drawCommand.execute(context);
-
-            drawCommand.shaderProgram.destroy();
-            fbo.destroy();
         }
 
-        var command = this._command;
+        var drawCommand = this._drawCommand;
 
-        if (!defined(command.vertexArray)) {
+        if (!defined(drawCommand.vertexArray)) {
             var attributeLocations = {
                 direction : 0
             };
@@ -260,23 +249,23 @@ define([
                 usage : BufferUsage.STATIC_DRAW,
                 indexDatatype : IndexDatatype.UNSIGNED_SHORT
             });
-            command.vertexArray = new VertexArray({
+            drawCommand.vertexArray = new VertexArray({
                 context : context,
                 attributes : attributes,
                 indexBuffer : indexBuffer
             });
 
-            command.shaderProgram = ShaderProgram.fromCache({
+            drawCommand.shaderProgram = ShaderProgram.fromCache({
                 context : context,
                 vertexShaderSource : SunVS,
                 fragmentShaderSource : SunFS,
                 attributeLocations : attributeLocations
             });
 
-            command.renderState = RenderState.fromCache({
+            drawCommand.renderState = RenderState.fromCache({
                 blending : BlendingState.ALPHA_BLEND
             });
-            command.uniformMap = this._uniformMap;
+            drawCommand.uniformMap = this._uniformMap;
         }
 
         var sunPosition = context.uniformState.sunPositionWC;
@@ -294,9 +283,9 @@ define([
         boundingVolume2D.radius = boundingVolume.radius;
 
         if (mode === SceneMode.SCENE3D) {
-            BoundingSphere.clone(boundingVolume, command.boundingVolume);
+            BoundingSphere.clone(boundingVolume, drawCommand.boundingVolume);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
-            BoundingSphere.clone(boundingVolume2D, command.boundingVolume);
+            BoundingSphere.clone(boundingVolume2D, drawCommand.boundingVolume);
         }
 
         var position = SceneTransforms.computeActualWgs84Position(frameState, sunPosition, scratchCartesian4);
@@ -320,7 +309,7 @@ define([
         this._size = Math.ceil(Cartesian2.magnitude(Cartesian2.subtract(limbWC, positionWC, scratchCartesian4)));
         this._size = 2.0 * this._size * (1.0 + 2.0 * this._glowLengthTS);
 
-        return command;
+        return this._commands;
     };
 
     /**
@@ -355,7 +344,7 @@ define([
      * sun = sun && sun.destroy();
      */
     Sun.prototype.destroy = function() {
-        var command = this._command;
+        var command = this._drawCommand;
         command.vertexArray = command.vertexArray && command.vertexArray.destroy();
         command.shaderProgram = command.shaderProgram && command.shaderProgram.destroy();
 

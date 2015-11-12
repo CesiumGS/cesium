@@ -35,7 +35,6 @@ define([
         '../Scene/VerticalOrigin',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
-        './Rotation',
         './BillboardGraphics',
         './ColorMaterialProperty',
         './CompositeMaterialProperty',
@@ -62,6 +61,7 @@ define([
         './RectangleGraphics',
         './ReferenceEntity',
         './ReferenceProperty',
+        './Rotation',
         './SampledPositionProperty',
         './SampledProperty',
         './StripeMaterialProperty',
@@ -105,7 +105,6 @@ define([
         VerticalOrigin,
         Uri,
         when,
-        Rotation,
         BillboardGraphics,
         ColorMaterialProperty,
         CompositeMaterialProperty,
@@ -132,6 +131,7 @@ define([
         RectangleGraphics,
         ReferenceEntity,
         ReferenceProperty,
+        Rotation,
         SampledPositionProperty,
         SampledProperty,
         StripeMaterialProperty,
@@ -1039,6 +1039,7 @@ define([
         processPacketData(Cartesian3, billboard, 'alignedAxis', billboardData.alignedAxis, interval, sourceUri, entityCollection);
         processPacketData(Boolean, billboard, 'show', billboardData.show, interval, sourceUri, entityCollection);
         processPacketData(VerticalOrigin, billboard, 'verticalOrigin', billboardData.verticalOrigin, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, billboard, 'sizeInMeters', billboardData.sizeInMeters, interval, sourceUri, entityCollection);
     }
 
     function processDocument(packet, dataSource) {
@@ -1554,7 +1555,7 @@ define([
         this._clock = undefined;
         this._documentPacket = new DocumentPacket();
         this._version = undefined;
-        this._entityCollection = new EntityCollection();
+        this._entityCollection = new EntityCollection(this);
     };
 
     /**

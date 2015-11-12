@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../ThirdParty/when',
         './defaultValue',
         './defined',
         './defineProperties',
@@ -9,6 +10,7 @@ define([
         './HeightmapTerrainData',
         './TerrainProvider'
     ], function(
+        when,
         defaultValue,
         defined,
         defineProperties,
@@ -59,6 +61,7 @@ define([
         });
 
         this._errorEvent = new Event();
+        this._readyPromise = when.resolve(true);
     };
 
     defineProperties(EllipsoidTerrainProvider.prototype, {
@@ -107,6 +110,18 @@ define([
         ready : {
             get : function() {
                 return true;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof EllipsoidTerrainProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise;
             }
         },
 

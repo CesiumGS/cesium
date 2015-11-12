@@ -151,8 +151,9 @@ define([
      *
      * @example
      * // Create a G<sup>1</sup> continuous Hermite spline
+     * var times = [ 0.0, 1.5, 3.0, 4.5, 6.0 ];
      * var spline = new Cesium.HermiteSpline({
-     *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
+     *     times : times,
      *     points : [
      *         new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
      *         new Cesium.Cartesian3(1372574.0, -5345182.0, 4606657.0),
@@ -174,8 +175,7 @@ define([
      *     ]
      * });
      *
-     * var p0 = spline.evaluate(times[i]);         // equal to positions[i]
-     * var p1 = spline.evaluate(times[i] + delta); // interpolated value when delta < times[i + 1] - times[i]
+     * var p0 = spline.evaluate(times[0]);
      */
     var HermiteSpline = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

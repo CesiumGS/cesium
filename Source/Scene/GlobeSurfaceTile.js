@@ -295,7 +295,7 @@ define([
         }
     };
 
-    GlobeSurfaceTile.processStateMachine = function(tile, context, terrainProvider, imageryLayerCollection) {
+    GlobeSurfaceTile.processStateMachine = function(tile, context, commandList, terrainProvider, imageryLayerCollection) {
         var surfaceTile = tile.data;
         if (!defined(surfaceTile)) {
             surfaceTile = tile.data = new GlobeSurfaceTile();
@@ -345,7 +345,7 @@ define([
                 }
             }
 
-            var thisTileDoneLoading = tileImagery.processStateMachine(tile, context);
+            var thisTileDoneLoading = tileImagery.processStateMachine(tile, context, commandList);
             isDoneLoading = isDoneLoading && thisTileDoneLoading;
 
             // The imagery is renderable as soon as we have any renderable imagery for this region.
@@ -706,11 +706,11 @@ define([
                     width : textureSize,
                     height : textureSize,
                     arrayBufferView : waterMask
-                }
+                },
+                sampler : waterMaskData.sampler
             });
 
             texture.referenceCount = 0;
-            texture.sampler = waterMaskData.sampler;
         }
 
         ++texture.referenceCount;

@@ -304,8 +304,7 @@ defineSuite([
             // update until the load queue is empty.
             return pollToPromise(function() {
                 globe._surface._debug.enableDebugOutput = true;
-                var commandList = [];
-                globe.update(scene.context, scene.frameState, commandList);
+                scene.render();
                 return globe._surface.tileProvider.ready && globe._surface._tileLoadQueue.length === 0 && globe._surface._debug.tilesWaitingForChildren === 0;
             });
         }
@@ -418,7 +417,7 @@ defineSuite([
                 }
             };
 
-            globe.imageryLayers.addImageryProvider(provider);
+            var currentLayer = globe.imageryLayers.addImageryProvider(provider);
 
             return updateUntilDone(globe).then(function() {
                 var ellipsoid = Ellipsoid.WGS84;
@@ -434,6 +433,7 @@ defineSuite([
                     expect(features.length).toBe(1);
                     expect(features[0].name).toEqual('Foo');
                     expect(features[0].description).toContain('Foo!');
+                    expect(features[0].imageryLayer).toBe(currentLayer);
                 });
             });
         });
@@ -466,7 +466,7 @@ defineSuite([
                 }
             };
 
-            globe.imageryLayers.addImageryProvider(provider1);
+            var currentLayer1 = globe.imageryLayers.addImageryProvider(provider1);
 
             var provider2 = {
                 ready : true,
@@ -495,7 +495,7 @@ defineSuite([
                 }
             };
 
-            globe.imageryLayers.addImageryProvider(provider2);
+            var currentLayer2 = globe.imageryLayers.addImageryProvider(provider2);
 
             return updateUntilDone(globe).then(function() {
                 var ellipsoid = Ellipsoid.WGS84;
@@ -511,8 +511,10 @@ defineSuite([
                     expect(features.length).toBe(2);
                     expect(features[0].name).toEqual('Bar');
                     expect(features[0].description).toContain('Bar!');
+                    expect(features[0].imageryLayer).toBe(currentLayer2);
                     expect(features[1].name).toEqual('Foo');
                     expect(features[1].description).toContain('Foo!');
+                    expect(features[1].imageryLayer).toBe(currentLayer1);
                 });
             });
         });
