@@ -174,7 +174,7 @@ Sandcastle.addToolbarButton('Pick position', function() {
             var cartesian = viewer.scene.pickPosition(movement.endPosition);
             
             if (Cesium.defined(cartesian)) {
-                var cartographic = ellipsoid.cartesianToCartographic(cartesian);
+                var cartographic = Cesium.Cartographic.fromCartesian(cartesian);
                 var longitudeString = Cesium.Math.toDegrees(cartographic.longitude).toFixed(2);
                 var latitudeString = Cesium.Math.toDegrees(cartographic.latitude).toFixed(2);
                 var heightString = cartographic.height.toFixed(2);
