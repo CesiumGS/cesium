@@ -749,7 +749,7 @@ define([
         var normal = Cartesian3.UNIT_X;
 
         var globePos;
-        if (camera.position.z < controller.minimumPickingTerrainHeight) {
+        if (camera.position.z < controller.minimumPickingTerrainHeight * controller._scene.terrainExaggeration) {
             globePos = pickGlobe(controller, startMouse, translateCVStartPos);
             if (defined(globePos)) {
                 origin.x = globePos.x;
@@ -825,7 +825,7 @@ define([
         var maxCoord = controller._maxCoord;
         var onMap = Math.abs(camera.position.x) - maxCoord.x < 0 && Math.abs(camera.position.y) - maxCoord.y < 0;
 
-        if (controller._tiltCVOffMap || !onMap || camera.position.z > controller.minimumPickingTerrainHeight) {
+        if (controller._tiltCVOffMap || !onMap || camera.position.z > controller.minimumPickingTerrainHeight * controller._scene.terrainExaggeration) {
             controller._tiltCVOffMap = true;
             rotateCVOnPlane(controller, startPosition, movement);
         } else {
@@ -904,7 +904,7 @@ define([
         if (Cartesian2.equals(startPosition, controller._tiltCenterMousePosition)) {
             center = Cartesian3.clone(controller._tiltCenter, rotateCVCenter);
         } else {
-            if (camera.position.z < controller.minimumPickingTerrainHeight) {
+            if (camera.position.z < controller.minimumPickingTerrainHeight * controller._scene.terrainExaggeration) {
                 center = pickGlobe(controller, startPosition, rotateCVCenter);
             }
 
@@ -1070,7 +1070,7 @@ define([
         var ray = camera.getPickRay(windowPosition, zoomCVWindowRay);
 
         var intersection;
-        if (camera.position.z < controller.minimumPickingTerrainHeight) {
+        if (camera.position.z < controller.minimumPickingTerrainHeight * controller._scene.terrainExaggeration) {
             intersection = pickGlobe(controller, windowPosition, zoomCVIntersection);
         }
 
@@ -1184,7 +1184,7 @@ define([
 
         var mousePos;
         var tangentPick = false;
-        if (defined(globe) && height < controller.minimumPickingTerrainHeight) {
+        if (defined(globe) && height < controller.minimumPickingTerrainHeight * controller._scene.terrainExaggeration) {
             mousePos = pickGlobe(controller, movement.startPosition, scratchMousePos);
             if (defined(mousePos)) {
                 var ray = camera.getPickRay(movement.startPosition, pickGlobeScratchRay);
@@ -1220,7 +1220,7 @@ define([
             controller._strafing = false;
         }
 
-        if (defined(globe) && height < controller.minimumPickingTerrainHeight) {
+        if (defined(globe) && height < controller.minimumPickingTerrainHeight * controller._scene.terrainExaggeration) {
             if (defined(mousePos)) {
                 if (Cartesian3.magnitude(camera.position) < Cartesian3.magnitude(mousePos)) {
                     Cartesian3.clone(mousePos, controller._strafeStartPosition);
@@ -1243,7 +1243,7 @@ define([
         } else if (defined(camera.pickEllipsoid(movement.startPosition, controller._ellipsoid, spin3DPick))) {
             pan3D(controller, startPosition, movement, controller._ellipsoid);
             Cartesian3.clone(spin3DPick, controller._rotateStartPosition);
-        } else if (height > controller.minimumTrackBallHeight) {
+        } else if (height > controller.minimumTrackBallHeigh * controller._scene.terrainExaggerationt) {
             controller._rotating = true;
             rotate3D(controller, startPosition, movement);
         } else {
@@ -1417,7 +1417,7 @@ define([
 
         var intersection;
         var height = ellipsoid.cartesianToCartographic(camera.position, zoom3DCartographic).height;
-        if (height < controller.minimumPickingTerrainHeight) {
+        if (height < controller.minimumPickingTerrainHeight * controller._scene.terrainExaggeration) {
             intersection = pickGlobe(controller, windowPosition, zoomCVIntersection);
         }
 
@@ -1471,7 +1471,7 @@ define([
         var ellipsoid = controller._ellipsoid;
         var cartographic = ellipsoid.cartesianToCartographic(camera.position, tilt3DCart);
 
-        if (controller._tiltOnEllipsoid || cartographic.height > controller.minimumCollisionTerrainHeight) {
+        if (controller._tiltOnEllipsoid || cartographic.height > controller.minimumCollisionTerrainHeight * controller._scene.terrainExaggeration) {
             controller._tiltOnEllipsoid = true;
             tilt3DOnEllipsoid(controller, startPosition, movement);
         } else {
@@ -1503,7 +1503,7 @@ define([
         var intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
         if (defined(intersection)) {
             center = Ray.getPoint(ray, intersection.start, tilt3DCenter);
-        } else if (height > controller.minimumTrackBallHeight) {
+        } else if (height > controller.minimumTrackBallHeight * controller._scene.terrainExaggeration) {
             var grazingAltitudeLocation = IntersectionTests.grazingAltitudeLocation(ray, ellipsoid);
             if (!defined(grazingAltitudeLocation)) {
                 return;
@@ -1561,7 +1561,7 @@ define([
                 intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
                 if (!defined(intersection)) {
                     var cartographic = ellipsoid.cartesianToCartographic(camera.position, tilt3DCart);
-                    if (cartographic.height <= controller.minimumTrackBallHeight) {
+                    if (cartographic.height <= controller.minimumTrackBallHeight * controller._scene.terrainExaggeration) {
                         controller._looking = true;
                         var up = controller._ellipsoid.geodeticSurfaceNormal(camera.position, tilt3DLookUp);
                         look3D(controller, startPosition, movement, up);
@@ -1804,7 +1804,7 @@ define([
         }
 
         var heightUpdated = false;
-        if (cartographic.height < controller.minimumCollisionTerrainHeight) {
+        if (cartographic.height < controller.minimumCollisionTerrainHeight * controller._scene.terrainExaggeration) {
             var height = globe.getHeight(cartographic);
             if (defined(height)) {
                 height += controller.minimumZoomDistance;
