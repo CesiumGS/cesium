@@ -309,7 +309,6 @@ define([
         }
 
         var i;
-        var j;
         var len;
 
         // Clear the render list.

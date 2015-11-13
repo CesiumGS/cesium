@@ -1,4 +1,4 @@
-/*global require,Blob,CodeMirror,JSHINT*/
+/*global require,Blob,JSHINT*/
 /*global gallery_demos*/// defined by gallery/gallery-index.js, created by build
 /*global sandcastleJsHintOptions*/// defined by jsHintOptions.js, created by build
 require({

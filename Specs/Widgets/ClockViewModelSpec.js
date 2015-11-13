@@ -12,7 +12,6 @@ defineSuite([
         ClockStep,
         JulianDate) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('default constructor creates a clock', function() {
         var clockViewModel = new ClockViewModel();

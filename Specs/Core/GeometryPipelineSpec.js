@@ -44,7 +44,6 @@ defineSuite([
         Tipsify,
         VertexFormat) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('converts triangles to wireframe in place', function() {
         var geometry = GeometryPipeline.toWireframe(new Geometry({
@@ -695,9 +694,6 @@ defineSuite([
     });
 
     it('projectTo2D throws when trying to project a point close to the origin', function() {
-        var p1 = new Cartesian3(100000, 200000, 300000);
-        var p2 = new Cartesian3(400000, 500000, 600000);
-
         var geometry = {};
         geometry.attributes = {};
         geometry.attributes.position = {

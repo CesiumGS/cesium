@@ -10,7 +10,6 @@ defineSuite([
         CesiumMath,
         Quaternion) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('default constructor creates values array with all zeros.', function() {
         var matrix = new Matrix3();

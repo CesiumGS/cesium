@@ -4,7 +4,6 @@ defineSuite([
     ], function(
         getFilenameFromUri) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('works as expected', function() {
         var result = getFilenameFromUri('http://www.mysite.com/awesome?makeitawesome=true');
