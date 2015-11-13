@@ -108,7 +108,8 @@ define([
         var orientedBoundingBox;
         var boundingSphere;
 
-        if (exaggeration > 1.0) {
+        if (exaggeration !== 1.0) {
+            // Bounding volumes and horizon culling point need to be recomputed since the tile payload assumes no exaggeration.
             boundingSphere = BoundingSphere.fromVertices(vertexBuffer, center, vertexStride);
             orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, minimumHeight, maximumHeight, ellipsoid);
 

@@ -345,7 +345,7 @@ define([
                 }
             }
 
-            var thisTileDoneLoading = tileImagery.processStateMachine(tile, frameState.context, frameState.commandList);
+            var thisTileDoneLoading = tileImagery.processStateMachine(tile, frameState);
             isDoneLoading = isDoneLoading && thisTileDoneLoading;
 
             // The imagery is renderable as soon as we have any renderable imagery for this region.

@@ -161,7 +161,7 @@ define([
         * A scalar used to exaggerate the terrain.
         * @type {Number}
         */
-        this.terrainExaggeration = undefined;
+        this.terrainExaggeration = 1.0;
     };
 
     /**
