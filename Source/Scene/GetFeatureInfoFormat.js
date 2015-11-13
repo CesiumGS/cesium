@@ -207,15 +207,6 @@ define([
         return result;
     }
 
-    function imageryLayerFeatureInfoFromDataAndProperties(data, properties) {
-        var featureInfo = new ImageryLayerFeatureInfo();
-        featureInfo.data = data;
-        featureInfo.properties = properties;
-        featureInfo.configureNameFromProperties(properties);
-        featureInfo.configureDescriptionFromProperties(properties);
-        return featureInfo;
-    }
-
     function gmlToFeatureInfo(xml) {
         var result = [];
 
@@ -226,15 +217,8 @@ define([
             var featureMember = featureMembers[featureIndex];
 
             var properties = {};
-
             getGmlPropertiesRecursively(featureMember, properties);
-
-            var featureInfo = new ImageryLayerFeatureInfo();
-            featureInfo.data = featureMember;
-            featureInfo.properties = properties;
-            featureInfo.configureNameFromProperties(properties);
-            featureInfo.configureDescriptionFromProperties(properties);
-            result.push(featureInfo);
+            result.push(imageryLayerFeatureInfoFromDataAndProperties(featureMember, properties));
         }
 
         return result;
@@ -253,15 +237,8 @@ define([
             var featureMember = featureMembers[featureIndex];
 
             var properties = {};
-
             getGmlPropertiesRecursively(featureMember, properties);
-
-            var featureInfo = new ImageryLayerFeatureInfo();
-            featureInfo.data = featureMember;
-            featureInfo.properties = properties;
-            featureInfo.configureNameFromProperties(properties);
-            featureInfo.configureDescriptionFromProperties(properties);
-            result.push(featureInfo);
+            result.push(imageryLayerFeatureInfoFromDataAndProperties(featureMember, properties));
         }
 
         return result;
@@ -287,6 +264,15 @@ define([
         }
 
         return isSingleValue;
+    }
+
+    function imageryLayerFeatureInfoFromDataAndProperties(data, properties) {
+        var featureInfo = new ImageryLayerFeatureInfo();
+        featureInfo.data = data;
+        featureInfo.properties = properties;
+        featureInfo.configureNameFromProperties(properties);
+        featureInfo.configureDescriptionFromProperties(properties);
+        return featureInfo;
     }
 
     function unknownXmlToFeatureInfo(xml) {
