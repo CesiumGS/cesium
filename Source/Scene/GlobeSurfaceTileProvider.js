@@ -395,7 +395,6 @@ define([
         var drawCommands = this._drawCommands;
 
         // Add the tile pick commands from the tiles drawn last frame.
-        var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
         for (var i = 0, length = this._usedDrawCommands; i < length; ++i) {
             addPickCommandsForTile(this, drawCommands[i], frameState);
         }
@@ -485,7 +484,6 @@ define([
         return intersection;
     };
 
-    var float32ArrayScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(1) : undefined;
     var modifiedModelViewScratch = new Matrix4();
     var tileRectangleScratch = new Cartesian4();
     var rtcScratch = new Cartesian3();

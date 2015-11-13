@@ -10,7 +10,6 @@ defineSuite([
         CesiumMath,
         Quaternion) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var points;
     var times;

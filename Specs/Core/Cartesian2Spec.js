@@ -8,7 +8,6 @@ defineSuite([
         CesiumMath,
         createPackableSpecs) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('construct with default values', function() {
         var cartesian = new Cartesian2();

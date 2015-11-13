@@ -1157,7 +1157,6 @@ define([
     }
 
     var spin3DPick = new Cartesian3();
-    var scratchStartRay = new Ray();
     var scratchCartographic = new Cartographic();
     var scratchMousePos = new Cartesian3();
     var scratchRadii = new Cartesian3();

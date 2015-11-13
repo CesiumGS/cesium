@@ -12,7 +12,6 @@ define([
         DeveloperError,
         PerformanceWatchdog) {
     "use strict";
-    /*global console*/
 
     /**
      * A mixin which adds the {@link PerformanceWatchdog} widget to the {@link Viewer} widget.

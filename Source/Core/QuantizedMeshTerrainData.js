@@ -175,7 +175,6 @@ define([
             return uValues[a] - uValues[b];
         }
 
-        var requires32BitIndices = vertexCount > 64 * 1024;
         this._westIndices = sortIndicesIfNecessary(options.westIndices, sortByV, vertexCount);
         this._southIndices = sortIndicesIfNecessary(options.southIndices, sortByU, vertexCount);
         this._eastIndices = sortIndicesIfNecessary(options.eastIndices, sortByV, vertexCount);
