@@ -235,7 +235,7 @@ define([
      * @param {Number} x The X coordinate of the tile for which to create the terrain data.
      * @param {Number} y The Y coordinate of the tile for which to create the terrain data.
      * @param {Number} level The level of the tile for which to create the terrain data.
-     * @param {Number} [exaggeration] The scale used to exaggerate the terrain.
+     * @param {Number} [exaggeration=1.0] The scale used to exaggerate the terrain.
      * @returns {Promise.<TerrainMesh>|undefined} A promise for the terrain mesh, or undefined if too many
      *          asynchronous mesh creations are already in progress and the operation should
      *          be retried later.
