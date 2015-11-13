@@ -1,11 +1,18 @@
+@font-face {
+  font-family: 'Source Sans Pro';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Source Sans Pro'), local('SourceSansPro-Regular'), url(../fonts/SourceSansPro.woff) format('woff');
+}
+
 body
 {
     font-size: 12px;
-    font-family: Arial, Geneva, sans serif;
+    font-family: "Source Sans Pro", "Segoe UI", Arial, Geneva, sans-serif;
     margin: 0;
     color: #000;
     height: 100%;
-    background-color:transparent;
+    background-color: white;
 }
 
 div.show-bkgd {
@@ -49,6 +56,8 @@ div.hr {
     color: #DADADA;
     background-color: #DADADA;
 }
+
+th { font-weight: normal; }
 
 a {
     color: #0053CF;
@@ -203,7 +212,7 @@ div.indexTitle
 {
     padding: 8px 0 0;
     font-size: 200%;
-    font-weight: bold;
+    font-weight: normal;
     position: absolute;
 }
 
@@ -301,7 +310,6 @@ nav
 }
 
 div.nav ul {
-    font-family: 'Lucida Grande', 'Lucida Sans Unicode', arial, sans-serif;
     font-size: 100%;
     line-height: 17px;
     padding:0;
@@ -353,7 +361,7 @@ footer {
 {
     text-align: center;
     font-size: 2em;
-    font-weight: bold;
+    font-weight: normal;
     letter-spacing: 2px;
     line-height: 1em;
     position: relative;
@@ -376,7 +384,7 @@ footer {
 h1
 {
     font-size: 200%;
-    font-weight: bold;
+    font-weight: normal;
     letter-spacing: -0.01em;
     margin: 6px 0 10px 10px;
 }
@@ -384,7 +392,7 @@ h1
 h2
 {
     font-size: 170%;
-    font-weight: bold;
+    font-weight: normal;
     letter-spacing: -0.01em;
     margin: 6px 0 3px 0;
 }
@@ -392,25 +400,27 @@ h2
 h3
 {
     font-size: 200%;
-    font-weight: bold;
+    font-weight: normal;
     letter-spacing: -0.01em;
     margin-top: 20px;
-    margin: 6px 0 3px 0;
+    margin: 25px 0 10px;
+    border-bottom: 1px solid #ccc;
 }
 
 h4
 {
     font-size: 140%;
-    font-weight: bold;
+    font-weight: normal;
     letter-spacing: -0.01em;
     margin: 18px 0;
-    color: #A35A00;
+    padding: 0 4px;
+    background-color: #eee;
 }
 
 h5, .container-overview .subsection-title, .details-header
 {
     font-size: 120%;
-    font-weight: bold;
+    font-weight: normal;
     letter-spacing: -0.01em;
     margin: 8px 0 3px 0px;
 }
@@ -432,7 +442,7 @@ h6
 
 .important
 {
-    font-weight: bold;
+    font-weight: normal;
     color: #950B02;
 }
 
@@ -441,15 +451,10 @@ h6
 }
 
 .type-signature {
-    color: #aaa;
-}
-
-.name, .signature {
-    font-family: Consolas, "Lucida Console", Monaco, monospace;
+    color: #888;
 }
 
 .nameContainer .signature {
-    font-size: 90%;
     font-weight: normal;
 }
 
@@ -458,7 +463,7 @@ h6
 #main ul { margin: 0; }
 #main ul { list-style-type: none; }
 
-dd { margin-left: 0.8em; }
+dd { margin-left: 10px; }
 
 .see-list li{
     margin: 0;
@@ -516,13 +521,13 @@ dd { margin-left: 0.8em; }
 .params thead tr, .props thead tr
 {
     background-color: #ddd;
-    font-weight: bold;
+    font-weight: normal;
 }
 
 .params .params thead tr, .props .props thead tr
 {
     background-color: #fff;
-    font-weight: bold;
+    font-weight: normal;
 }
 
 .params th, .props th { border-right: 1px solid #aaa; }
@@ -596,6 +601,9 @@ span.attribute-constant {
   font-size: 0.7em;
   padding: 2px 4px;
   margin-right: 8px;
+  margin-bottom: 1px;
+  position: relative;
+  top: -1px;
 }
 
 .description {
