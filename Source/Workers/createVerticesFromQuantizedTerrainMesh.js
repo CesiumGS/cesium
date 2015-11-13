@@ -10,7 +10,9 @@ define([
         '../Core/EllipsoidalOccluder',
         '../Core/IndexDatatype',
         '../Core/Math',
+        '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
+        '../Core/Transforms',
         './createTaskProcessorWorker'
     ], function(
         AttributeCompression,
@@ -23,7 +25,9 @@ define([
         EllipsoidalOccluder,
         IndexDatatype,
         CesiumMath,
+        Matrix4,
         OrientedBoundingBox,
+        Transforms,
         createTaskProcessorWorker) {
     "use strict";
 
@@ -95,6 +99,22 @@ define([
             if (hasVertexNormals) {
                 toPack.x = octEncodedNormals[n];
                 toPack.y = octEncodedNormals[n + 1];
+
+                if (exaggeration !== 1.0) {
+                    var normal = AttributeCompression.octDecode(toPack.x, toPack.y, new Cartesian3());
+                    var fromENU = Transforms.eastNorthUpToFixedFrame(cartesian3Scratch);
+                    var toENU = Matrix4.inverseTransformation(fromENU, new Matrix4());
+
+                    Matrix4.multiplyByPointAsVector(toENU, normal, normal);
+                    normal.z *= exaggeration;
+                    Cartesian3.normalize(normal, normal);
+
+                    Matrix4.multiplyByPointAsVector(fromENU, normal, normal);
+                    Cartesian3.normalize(normal, normal);
+
+                    AttributeCompression.octEncode(normal, toPack);
+                }
+
                 vertexBuffer[bufferIndex + nIndex] = AttributeCompression.octPackFloat(toPack);
             }
         }

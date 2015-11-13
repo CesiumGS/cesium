@@ -114,7 +114,7 @@ define([
         var positionCartographic = camera.positionCartographic;
 
         // Turn off fog in space.
-        if (!defined(positionCartographic) || positionCartographic.height > 800000.0 || frameState.mode !== SceneMode.SCENE3D || frameState.terrainExaggeration > 1.0) {
+        if (!defined(positionCartographic) || positionCartographic.height > 800000.0 || frameState.mode !== SceneMode.SCENE3D) {
             frameState.fog.enabled = false;
             return;
         }
