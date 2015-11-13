@@ -10,7 +10,6 @@ defineSuite([
         CesiumTerrainProvider,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var terrainProvider = new CesiumTerrainProvider({
         url : '//assets.agi.com/stk-terrain/world'

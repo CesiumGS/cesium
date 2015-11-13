@@ -656,7 +656,6 @@ define([
     function applyStyle(dataSource, styleNode, targetEntity, sourceUri, uriResolver) {
         for (var i = 0, len = styleNode.childNodes.length; i < len; i++) {
             var node = styleNode.childNodes.item(i);
-            var material;
             if (node.localName === 'IconStyle') {
                 processBillboardIcon(dataSource, node, targetEntity, sourceUri, uriResolver);
             } else if (node.localName === 'LabelStyle') {
@@ -1094,7 +1093,6 @@ define([
         var trackNodes = queryChildNodes(geometryNode, 'Track', namespaces.gx);
 
         var times;
-        var data;
         var lastStop;
         var lastStopPosition;
         var needDropLine = false;
@@ -1398,7 +1396,6 @@ define([
     function processGroundOverlay(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver) {
         var r = processFeature(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver);
         var entity = r.entity;
-        var styleEntity = r.stylEntity;
 
         var geometry;
         var isLatLonQuad = false;
@@ -1441,7 +1438,6 @@ define([
             }
         }
 
-        var material;
         var iconNode = queryFirstNode(groundOverlay, 'Icon', namespaces.kml);
         var href = queryStringValue(iconNode, 'href', namespaces.kml);
         if (defined(href)) {
@@ -1455,16 +1451,14 @@ define([
 
         var altitudeMode = queryStringValue(groundOverlay, 'altitudeMode', namespaces.kml);
 
-        var altitude;
         if (defined(altitudeMode)) {
             if (altitudeMode === 'absolute') {
                 //Use height above ellipsoid until we support MSL.
                 geometry.height = queryNumericValue(groundOverlay, 'altitude', namespaces.kml);
-            } else if (altitudeMode === 'clampToGround') {
-                //Just use the default of 0 until we support terrain
-            } else {
+            } else if (altitudeMode !== 'clampToGround'){
                 window.console.log('KML - Unknown altitudeMode: ' + altitudeMode);
             }
+            // else just use the default of 0 until we support 'clampToGround'
         } else {
             altitudeMode = queryStringValue(groundOverlay, 'altitudeMode', namespaces.gx);
             if (altitudeMode === 'relativeToSeaFloor') {

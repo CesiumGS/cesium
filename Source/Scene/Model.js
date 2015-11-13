@@ -48,8 +48,8 @@ define([
         './getModelAccessor',
         './ModelAnimationCache',
         './ModelAnimationCollection',
-        './modelMaterialsCommon',
         './ModelMaterial',
+        './modelMaterialsCommon',
         './ModelMesh',
         './ModelNode',
         './Pass',
@@ -103,8 +103,8 @@ define([
         getModelAccessor,
         ModelAnimationCache,
         ModelAnimationCollection,
-        modelMaterialsCommon,
         ModelMaterial,
+        modelMaterialsCommon,
         ModelMesh,
         ModelNode,
         Pass,
@@ -1050,7 +1050,6 @@ define([
     var aMaxScratch = new Cartesian3();
 
     function computeBoundingSphere(gltf) {
-        var version = gltf.asset.version;
         var gltfNodes = gltf.nodes;
         var gltfMeshes = gltf.meshes;
         var gltfAccessors = gltf.accessors;
@@ -1684,7 +1683,6 @@ define([
 
     function getAttributeLocations(model, primitive) {
         var gltf = model.gltf;
-        var programs = gltf.programs;
         var techniques = gltf.techniques;
         var materials = gltf.materials;
 
@@ -2424,7 +2422,6 @@ define([
         var gltf = model.gltf;
         var materials = gltf.materials;
         var techniques = gltf.techniques;
-        var programs = gltf.programs;
         var uniformMaps = model._uniformMaps;
 
         for (var materialId in materials) {
@@ -2504,8 +2501,6 @@ define([
         var pickIds = model._pickIds;
         var allowPicking = model.allowPicking;
         var runtimeMeshesByName = model._runtime.meshesByName;
-
-        var debugShowBoundingVolume = model.debugShowBoundingVolume;
 
         var resources = model._rendererResources;
         var rendererVertexArrays = resources.vertexArrays;
@@ -2669,7 +2664,6 @@ define([
         var runtimeNodes = model._runtime.nodes;
 
         var gltf = model.gltf;
-        var version = gltf.asset.version;
         var nodes = gltf.nodes;
 
         var scene = gltf.scenes[gltf.scene];
@@ -2677,7 +2671,6 @@ define([
         var length = sceneNodes.length;
 
         var stack = [];
-        var axis = new Cartesian3();
 
         for (var i = 0; i < length; ++i) {
             stack.push({

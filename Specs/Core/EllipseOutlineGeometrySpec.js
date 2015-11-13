@@ -10,7 +10,6 @@ defineSuite([
         Ellipsoid,
         createPackableSpecs) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('throws without a center', function() {
         expect(function() {

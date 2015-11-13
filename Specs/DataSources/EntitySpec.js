@@ -54,7 +54,6 @@ defineSuite([
         RectangleGraphics,
         WallGraphics) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('constructor sets expected properties.', function() {
         var entity = new Entity();
@@ -223,8 +222,6 @@ defineSuite([
         });
         source.addProperty(propertyName);
         source[propertyName] = value;
-
-        var listener = jasmine.createSpy('listener');
 
         var target = new Entity({
             id : 'target'

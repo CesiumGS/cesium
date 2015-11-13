@@ -38,7 +38,6 @@ defineSuite([
         TimeInterval,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var negativeX = new Cartesian4(-1, 0, 0, 0);
     var negativeZ = new Cartesian4(0, 0, -1, 0);
@@ -337,9 +336,6 @@ defineSuite([
 
     describe('computeIcrfToFixedMatrix', function() {
         function preloadTransformationData(start, stop, eopDescription) {
-            var ready = false;
-            var failed = false;
-
             Transforms.earthOrientationParameters = new EarthOrientationParameters(eopDescription);
             var preloadInterval = new TimeInterval({
                 start : start,

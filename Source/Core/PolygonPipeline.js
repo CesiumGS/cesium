@@ -547,7 +547,6 @@ define([
      *
      * @private
      */
-    var intersectionScratch = new Cartesian2();
     var aDirectionScratch = new Cartesian2();
     var bDirectionScratch = new Cartesian2();
 
