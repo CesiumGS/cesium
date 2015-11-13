@@ -3,10 +3,8 @@ Change Log
 
 ### TODO
 
-* Added `incrementallyLoadTextures` to `Model`.  This is `true` by default so a model's textures incrementally appear as they are loaded.
 * Added `vertexShaderLoaded`, `fragmentShaderLoaded`, `uniformMapLoaded`, `pickVertexShaderLoaded`, `pickFragmentShaderLoaded`, and `pickUniformMapLoaded` callbacks to the `Model` constructor and `Model.fromGltf`.
 * Added support for glTF compression using the `mesh_compression_open3dgc` glTF extension.
-* Added `Queue.peek`.
 
 ### 1.16 - 2015-12-01
 
@@ -24,6 +22,8 @@ Change Log
 * Added support for fog near the horizon, which improves performance by rendering less terrain tiles and reduces terrain tile requests.  This is enabled by default.  See `Scene.fog` for options.  [#3154](https://github.com/AnalyticalGraphicsInc/cesium/pull/3154)
 * Added `Queue.peek` to return the item at the front of a Queue.
 * Added `Camera.distanceToBoundingSphere` function.
+* Added utility function `getBaseUri`, which given a URI with or without query parameters, returns the base path of the URI.
+* Added support for incrementally loading textures after a Model is ready. This allows the Model to be visible as soon as possible while its textures are loaded in the background.
 * Added 'Cartographic.fromCartesian' function.
 
 ### 1.15 - 2015-11-02

@@ -14,7 +14,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
-        '../Core/getBasePath',
+        '../Core/getBaseUri',
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
         '../Core/IndexDatatype',
@@ -72,7 +72,7 @@ define([
         destroyObject,
         DeveloperError,
         FeatureDetection,
-        getBasePath,
+        getBaseUri,
         getMagic,
         getStringFromTypedArray,
         IndexDatatype,
@@ -326,7 +326,7 @@ define([
      * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
      * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
-     * @param {DOC_TBA} [options.incrementallyLoadTextures=true] DOC_TBA.
+     * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
@@ -346,16 +346,6 @@ define([
         this._cachedGltf = undefined;
         this._releaseGltfJson = defaultValue(options.releaseGltfJson, false);
         this._animationIds = undefined;
-
-        // Undocumented options
-        this._precreatedAttributes = options.precreatedAttributes;
-        this._vertexShaderLoaded = options.vertexShaderLoaded;
-        this._fragmentShaderLoaded = options.fragmentShaderLoaded;
-        this._uniformMapLoaded = options.uniformMapLoaded;
-        this._pickVertexShaderLoaded = options.pickVertexShaderLoaded;
-        this._pickFragmentShaderLoaded = options.pickFragmentShaderLoaded;
-        this._pickUniformMapLoaded = options.pickUniformMapLoaded;
-        this._ignoreCommands = defaultValue(options.ignoreCommands, false);
 
         var cachedGltf;
         if (defined(cacheKey) && defined(gltfCache[cacheKey]) && gltfCache[cacheKey].ready) {
@@ -512,7 +502,8 @@ define([
 
         this._defaultTexture = undefined;
         this._incrementallyLoadTextures = defaultValue(options.incrementallyLoadTextures, true);
-        this._asynchronous = true;//defaultValue(options.asynchronous, true); // TODO
+        //this._asynchronous = true;//defaultValue(options.asynchronous, true); // TODO
+        this._asynchronous = defaultValue(options.asynchronous, true);
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -540,6 +531,16 @@ define([
          */
         this.debugWireframe = defaultValue(options.debugWireframe, false);
         this._debugWireframe = false;
+
+        // Undocumented options
+        this._precreatedAttributes = options.precreatedAttributes;
+        this._vertexShaderLoaded = options.vertexShaderLoaded;
+        this._fragmentShaderLoaded = options.fragmentShaderLoaded;
+        this._uniformMapLoaded = options.uniformMapLoaded;
+        this._pickVertexShaderLoaded = options.pickVertexShaderLoaded;
+        this._pickFragmentShaderLoaded = options.pickFragmentShaderLoaded;
+        this._pickUniformMapLoaded = options.pickUniformMapLoaded;
+        this._ignoreCommands = defaultValue(options.ignoreCommands, false);
 
         /**
          * @private
@@ -795,7 +796,7 @@ define([
         },
 
         /**
-         * DOC_TBA
+         * Determine if textures may continue to stream in after the model is loaded.
          *
          * @memberof Model.prototype
          *
@@ -807,6 +808,20 @@ define([
         incrementallyLoadTextures : {
             get : function() {
                 return this._incrementallyLoadTextures;
+            }
+        },
+
+        /**
+         * Return the number of pending texture loads.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        pendingTextureLoads : {
+            get : function() {
+                return defined(this._loadResources) ? this._loadResources.pendingTextureLoads : 0;
             }
         }
     });
@@ -909,7 +924,7 @@ define([
      * @param {Number} [options.maxiumumScale] The maximum scale for the model.
      * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
-     * @param {DOC_TBA} [options.incrementallyLoadTextures=true] DOC_TBA.
+     * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
@@ -959,7 +974,7 @@ define([
         var cacheKey = defaultValue(options.cacheKey, getAbsoluteURL(url));
 
         options = clone(options);
-        options.basePath = getBasePath(url);
+        options.basePath = getBaseUri(url);
         options.cacheKey = cacheKey;
         var model = new Model(options);
 
@@ -1410,7 +1425,7 @@ define([
     }
 
     function parseMaterials(model) {
-        var runtimeMaterialsNyName = {};
+        var runtimeMaterialsByName = {};
         var runtimeMaterialsById = {};
         var materials = model.gltf.materials;
         var uniformMaps = model._uniformMaps;
@@ -1426,12 +1441,12 @@ define([
 
                 var material = materials[id];
                 var modelMaterial = new ModelMaterial(model, material, id);
-                runtimeMaterialsNyName[material.name] = modelMaterial;
+                runtimeMaterialsByName[material.name] = modelMaterial;
                 runtimeMaterialsById[id] = modelMaterial;
             }
         }
 
-        model._runtime.materialsByName = runtimeMaterialsNyName;
+        model._runtime.materialsByName = runtimeMaterialsByName;
         model._runtime.materialsById = runtimeMaterialsById;
     }
 
@@ -2779,7 +2794,7 @@ define([
         var nodeCommands = model._nodeCommands;
         var pickIds = model._pickIds;
         var allowPicking = model.allowPicking;
-        var runtimeMeshesNyName = model._runtime.meshesByName;
+        var runtimeMeshesByName = model._runtime.meshesByName;
 
         var debugShowBoundingVolume = model.debugShowBoundingVolume;
 
@@ -2859,7 +2874,7 @@ define([
                     primitive : defaultValue(model.pickPrimitive, model),
                     id : model.id,
                     node : runtimeNode.publicNode,
-                    mesh : runtimeMeshesNyName[mesh.name]
+                    mesh : runtimeMeshesByName[mesh.name]
                 };
 
                 var command = new DrawCommand({
@@ -3572,7 +3587,7 @@ define([
         // want to be able to progressively load models when they are not shown,
         // and then have them visible immediately when show is set to true.
         if (show && !this._ignoreCommands) {
-// PERFORMANCE_IDEA: This is terrible
+            // PERFORMANCE_IDEA: This is terrible
             var commandList = frameState.commandList;
             var passes = frameState.passes;
             var nodeCommands = this._nodeCommands;
