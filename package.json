@@ -28,7 +28,7 @@
     "request": "2.65.0",
     "requirejs": "2.1.20",
     "rimraf": "2.4.3",
-    "strip-comments": "0.4.1",
+    "strip-comments": "0.3.2",
     "yargs": "3.29.0"
   },
   "scripts": {
