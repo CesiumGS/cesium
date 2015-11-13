@@ -6,7 +6,6 @@ defineSuite([
         CylinderOutlineGeometry,
         createPackableSpecs) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('constructor throws with no length', function() {
         expect(function() {

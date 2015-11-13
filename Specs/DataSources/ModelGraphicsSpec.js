@@ -6,7 +6,6 @@ defineSuite([
         ModelGraphics,
         ConstantProperty) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {

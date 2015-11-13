@@ -48,7 +48,6 @@ defineSuite([
         pollToPromise,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var boxUrl = './Data/Models/Box/CesiumBoxTest.gltf';
     var boxNoTechniqueUrl = './Data/Models/Box/CesiumBoxTest-NoTechnique.gltf';
@@ -591,24 +590,24 @@ defineSuite([
     });
 
     it('Throws because of an invalid Binary glTF header - magic', function() {
+        var arrayBuffer = new ArrayBuffer(16);
         expect(function() {
-            var arrayBuffer = new ArrayBuffer(16);
-            var model = new Model({
+            return new Model({
                 gltf : arrayBuffer
             });
         }).toThrowDeveloperError();
     });
 
     it('Throws because of an invalid Binary glTF header - version', function() {
-        expect(function() {
-            var arrayBuffer = new ArrayBuffer(16);
-            var bytes = new Uint8Array(arrayBuffer);
-            bytes[0] = 'g'.charCodeAt(0);
-            bytes[1] = 'l'.charCodeAt(0);
-            bytes[2] = 'T'.charCodeAt(0);
-            bytes[3] = 'F'.charCodeAt(0);
+        var arrayBuffer = new ArrayBuffer(16);
+        var bytes = new Uint8Array(arrayBuffer);
+        bytes[0] = 'g'.charCodeAt(0);
+        bytes[1] = 'l'.charCodeAt(0);
+        bytes[2] = 'T'.charCodeAt(0);
+        bytes[3] = 'F'.charCodeAt(0);
 
-            var model = new Model({
+        expect(function() {
+            return new Model({
                 gltf : arrayBuffer
             });
         }).toThrowDeveloperError();
@@ -1254,7 +1253,6 @@ defineSuite([
         var promise = loadModel(boxUrl, {
             cacheKey : key
         });
-        var m2;
 
         expect(gltfCache[key]).toBeDefined();
         expect(gltfCache[key].count).toEqual(1);

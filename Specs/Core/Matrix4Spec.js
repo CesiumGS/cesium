@@ -14,7 +14,6 @@ defineSuite([
         Matrix3,
         Quaternion) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('default constructor creates values array with all zeros.', function() {
         var matrix = new Matrix4();
@@ -1681,14 +1680,13 @@ defineSuite([
 
     it('computeInfinitePerspectiveOffCenter throws without near', function() {
         expect(function() {
-            var left = 0, right = 0, bottom = 0, top = 0, far = 0;
+            var left = 0, right = 0, bottom = 0, top = 0;
             Matrix4.computeInfinitePerspectiveOffCenter (left, right, bottom, top, 0);
         }).toThrowDeveloperError();
     });
 
     it('computeViewportTransformation works', function() {
         expect(function() {
-            var left = 0, right = 0, bottom = 0, top = 0, far = 0;
             Matrix4.computeViewportTransformation ({
                 x : 0,
                 y : 0,

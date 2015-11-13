@@ -371,10 +371,6 @@ define([
         var expandAndWidthIndex = 0;
         var stIndex = 0;
         var colorIndex = 0;
-
-        var segmentLength;
-        var segmentIndex = 0;
-        var count = 0;
         var position;
 
         for (j = 0; j < positionsLength; ++j) {

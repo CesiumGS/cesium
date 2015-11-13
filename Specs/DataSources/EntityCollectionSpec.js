@@ -14,7 +14,6 @@ defineSuite([
         TimeIntervalCollection,
         Entity) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var CollectionListener = function() {
         this.timesCalled = 0;

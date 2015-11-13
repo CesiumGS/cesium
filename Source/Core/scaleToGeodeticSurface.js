@@ -1,14 +1,14 @@
 /*global define*/
 define([
         './Cartesian3',
-        './Math',
         './defined',
-        './DeveloperError'
+        './DeveloperError',
+        './Math'
     ], function(
         Cartesian3,
-        CesiumMath,
         defined,
-        DeveloperError) {
+        DeveloperError,
+        CesiumMath) {
     "use strict";
 
     var scaleToGeodeticSurfaceIntersection = new Cartesian3();

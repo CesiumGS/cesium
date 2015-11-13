@@ -44,7 +44,6 @@ defineSuite([
         SceneMode,
         TweenCollection) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
     var camera;
@@ -1810,7 +1809,6 @@ defineSuite([
 
     it('pick map in columbus view', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var projection = new GeographicProjection(ellipsoid);
         var maxRadii = ellipsoid.maximumRadius;
 
         camera.position = Cartesian3.multiplyByScalar(Cartesian3.normalize(new Cartesian3(0.0, -1.0, 1.0), new Cartesian3()), 5.0 * maxRadii, new Cartesian3());

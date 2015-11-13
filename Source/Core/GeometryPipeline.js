@@ -2079,7 +2079,6 @@ define([
         var westGeometry = copyGeometryForSplit(geometry);
 
         var i;
-        var index;
         var length = indices.length;
 
         var westGeometryIndexMap = [];
@@ -2181,7 +2180,6 @@ define([
     var cartesian3Scratch6 = new Cartesian3();
 
     var cartesian4Scratch0 = new Cartesian4();
-    var cartesian4Scratch1 = new Cartesian4();
 
     function splitLongitudePolyline(instance) {
         var geometry = instance.geometry;
@@ -2190,7 +2188,6 @@ define([
         var prevPositions = attributes.prevPosition.values;
         var nextPositions = attributes.nextPosition.values;
         var expandAndWidths = attributes.expandAndWidth.values;
-        var indices = geometry.indices;
 
         var texCoords = (defined(attributes.st)) ? attributes.st.values : undefined;
         var colors = (defined(attributes.color)) ? attributes.color.values : undefined;

@@ -374,7 +374,6 @@ define([
 
         // Find the terrain tile containing the picked location.
         var tilesToRender = scene.globe._surface._tilesToRender;
-        var length = tilesToRender.length;
         var pickedTile;
 
         for (var textureIndex = 0; !defined(pickedTile) && textureIndex < tilesToRender.length; ++textureIndex) {
@@ -389,7 +388,6 @@ define([
         }
 
         // Pick against all attached imagery tiles containing the pickedLocation.
-        var tileExtent = pickedTile.rectangle;
         var imageryTiles = pickedTile.data.imagery;
 
         var promises = [];
