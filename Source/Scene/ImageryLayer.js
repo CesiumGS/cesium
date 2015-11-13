@@ -735,7 +735,7 @@ define([
         // no noticeable difference in the georeferencing of the image.
         if (!(this._imageryProvider.tilingScheme instanceof GeographicTilingScheme) &&
             rectangle.width / texture.width > 1e-5) {
-                var that = this
+                var that = this;
                 var computeCommand = new ComputeCommand({
                     persists : true,
                     owner : this,
