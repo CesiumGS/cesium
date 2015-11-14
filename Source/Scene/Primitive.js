@@ -1227,17 +1227,17 @@ define([
     }
 
     function updateBoundingVolumes(primitive, frameState) {
-        // Update bounding volume when using PointAppearance and PointGeometry.
-        // The point size in meters will vary per frame, so update bounding volume accordingly.
-        var uniforms = primitive.appearance.uniforms;
-        if (defined(uniforms) && defined(uniforms.pointSize)) {
+        // Update bounding volumes for primitives that are sized in pixels.
+        // The pixel size in meters varies based on the distance from the camera.
+        var pixelSize = primitive.appearance.pixelSize;
+        if (defined(pixelSize)) {
             var length = primitive._boundingSpheres.length;
             for (var i = 0; i < length; ++i) {
                 var boundingSphere = primitive._boundingSpheres[i];
                 var boundingSphereWC = primitive._boundingSphereWC[i];
-                var pixelSize = frameState.camera.getPixelSize(boundingSphere, frameState.context.drawingBufferWidth, frameState.context.drawingBufferHeight);
-                var size = pixelSize * uniforms.pointSize;
-                boundingSphereWC.radius = boundingSphere.radius + size;
+                var pixelSizeInMeters = frameState.camera.getPixelSize(boundingSphere, frameState.context.drawingBufferWidth, frameState.context.drawingBufferHeight);
+                var sizeInMeters = pixelSizeInMeters * pixelSize;
+                boundingSphereWC.radius = boundingSphere.radius + sizeInMeters;
             }
         }
     }

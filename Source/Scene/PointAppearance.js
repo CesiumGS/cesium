@@ -35,6 +35,8 @@ define([
      * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
      * @param {RenderState} [options.renderState] Optional render state to override the default render state.
      * @param {Object} [options.uniforms] Additional uniforms that are used by the vertex and fragment shaders.
+     * @param {Number} [options.pointSize] Point size in pixels.
+     * @param {Color} [options.highlightColor] Color multiplier in the fragment shader. The alpha channel is used for alpha blending when translucency is enabled.
      *
      * @example
      * var primitive = new Cesium.Primitive({
@@ -58,6 +60,8 @@ define([
         this._vertexShaderSource = defaultValue(options.vertexShaderSource, PointAppearanceVS);
         this._fragmentShaderSource = defaultValue(options.fragmentShaderSource, PointAppearanceFS);
         this._renderState = Appearance.getDefaultRenderState(false, false, options.renderState);
+        this._pointSize = defaultValue(options.pointSize, 2.0);
+        this._highlightColor = defined(options.highlightColor) ? options.highlightColor : new Color();
 
         /**
          * This property is part of the {@link Appearance} interface, but is not
@@ -82,8 +86,8 @@ define([
          * @private
          */
         this.uniforms = {
-            highlightColor : new Color(),
-            pointSize : 2.0
+            highlightColor : this._highlightColor,
+            pointSize : this._pointSize
         };
 
         // Combine default uniforms and additional uniforms
@@ -167,6 +171,21 @@ define([
         vertexFormat : {
             get : function() {
                 return PointAppearance.VERTEX_FORMAT;
+            }
+        },
+
+        /**
+         * The size in pixels used when rendering the primitive. This helps calculate an accurate
+         * bounding volume for point rendering and other appearances that are defined in pixel sizes.
+         *
+         * @memberof PointAppearance.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        pixelSize : {
+            get : function() {
+                return this._pointSize;
             }
         }
     });
