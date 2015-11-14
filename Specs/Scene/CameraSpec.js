@@ -2270,13 +2270,15 @@ defineSuite([
 
         var sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
         var context = scene.context;
+        var drawingBufferWidth = context.drawingBufferWidth;
+        var drawingBufferHeight = context.drawingBufferHeight;
 
         // Compute expected pixel size
         var distance = camera.distanceToBoundingSphere(sphere);
-        var pixelDimensions = camera.frustum.getPixelDimensions(context.drawingBufferWidth, context.drawingBufferHeight, distance, new Cartesian2());
+        var pixelDimensions = camera.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, new Cartesian2());
         var expectedPixelSize = Math.max(pixelDimensions.x, pixelDimensions.y);
 
-        var pixelSize = camera.getPixelSize(sphere, context);
+        var pixelSize = camera.getPixelSize(sphere, drawingBufferWidth, drawingBufferHeight);
         expect(pixelSize).toEqual(expectedPixelSize);
     });
 
@@ -2288,12 +2290,21 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('getPixelSize throws when there is no context', function() {
+    it('getPixelSize throws when there is no drawing buffer width', function() {
         scene.mode = SceneMode.SCENE3D;
         var sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
 
         expect(function() {
             camera.getPixelSize(sphere);
+        }).toThrowDeveloperError();
+    });
+
+    it('getPixelSize throws when there is no drawing buffer height', function() {
+        scene.mode = SceneMode.SCENE3D;
+        var sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
+
+        expect(function() {
+            camera.getPixelSize(sphere, 10);
         }).toThrowDeveloperError();
     });
 
