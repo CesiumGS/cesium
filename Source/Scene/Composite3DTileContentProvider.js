@@ -6,8 +6,8 @@ define([
         '../Core/DeveloperError',
         '../Core/getMagic',
         '../Core/loadArrayBuffer',
-        './Cesium3DTileContentState',
-        '../ThirdParty/when'
+        '../ThirdParty/when',
+        './Cesium3DTileContentState'
     ], function(
         defaultValue,
         defined,
@@ -15,8 +15,8 @@ define([
         DeveloperError,
         getMagic,
         loadArrayBuffer,
-        Cesium3DTileContentState,
-        when) {
+        when,
+        Cesium3DTileContentState) {
     "use strict";
 
     /**

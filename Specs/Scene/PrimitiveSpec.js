@@ -60,7 +60,6 @@ defineSuite([
         createScene,
         pollToPromise) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
 
     var scene;
     var context;
@@ -412,7 +411,7 @@ defineSuite([
 
     it('RTC throws with more than one instance', function() {
         expect(function() {
-            var primitive = new Primitive({
+            return new Primitive({
                 geometryInstances : [rectangleInstance1, rectangleInstance2],
                 appearance : new PerInstanceColorAppearance({
                     closed: true

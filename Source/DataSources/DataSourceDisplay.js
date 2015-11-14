@@ -300,7 +300,6 @@ define([
         var tmp = getBoundingSphereBoundingSphereScratch;
 
         var count = 0;
-        var resultState;
         var state = BoundingSphereState.DONE;
         var visualizers = dataSource._visualizers;
         var visualizersLength = visualizers.length;

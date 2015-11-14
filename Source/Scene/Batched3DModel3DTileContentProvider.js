@@ -8,11 +8,11 @@ define([
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
         '../Core/loadArrayBuffer',
+        '../ThirdParty/when',
         './BatchedModel',
         './Cesium3DTileBatchTableResources',
         './Cesium3DTileContentState',
-        './Model',
-        '../ThirdParty/when'
+        './Model'
     ], function(
         defaultValue,
         defined,
@@ -22,11 +22,11 @@ define([
         getMagic,
         getStringFromTypedArray,
         loadArrayBuffer,
+        when,
         BatchedModel,
         Cesium3DTileBatchTableResources,
         Cesium3DTileContentState,
-        Model,
-        when) {
+        Model) {
     "use strict";
 
     /**

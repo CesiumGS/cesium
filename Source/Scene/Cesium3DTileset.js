@@ -9,12 +9,12 @@ define([
         '../Core/Event',
         '../Core/loadJson',
         '../Core/Math',
+        '../ThirdParty/Uri',
+        '../ThirdParty/when',
         './Cesium3DTile',
         './Cesium3DTileRefine',
         './CullingVolume',
-        './SceneMode',
-        '../ThirdParty/Uri',
-        '../ThirdParty/when'
+        './SceneMode'
     ], function(
         appendForwardSlash,
         defaultValue,
@@ -25,12 +25,12 @@ define([
         Event,
         loadJson,
         CesiumMath,
+        Uri,
+        when,
         Cesium3DTile,
         Cesium3DTileRefine,
         CullingVolume,
-        SceneMode,
-        Uri,
-        when) {
+        SceneMode) {
     "use strict";
 
     /**
@@ -305,7 +305,6 @@ define([
     }
 
     function computeDistanceToCamera(children, frameState) {
-        var camera = frameState.camera;
         var length = children.length;
         for (var i = 0; i < length; ++i) {
             var child = children[i];

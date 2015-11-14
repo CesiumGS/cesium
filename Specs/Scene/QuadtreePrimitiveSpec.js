@@ -20,7 +20,6 @@ defineSuite([
         createContext,
         createFrameState) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var context;
     var frameState;
@@ -42,11 +41,11 @@ defineSuite([
 
     it('must be constructed with a tileProvider', function() {
         expect(function() {
-            var primitive = new QuadtreePrimitive();
+            return new QuadtreePrimitive();
         }).toThrowDeveloperError();
 
         expect(function() {
-            var primitive = new QuadtreePrimitive({});
+            return new QuadtreePrimitive({});
         }).toThrowDeveloperError();
     });
 

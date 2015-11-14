@@ -236,8 +236,6 @@ define([
         var uniformState = context.uniformState;
 
         var viewport = uniformState.viewport;
-        var viewportTransformation = uniformState.viewportTransformation;
-
         var ndc = Cartesian4.clone(Cartesian4.UNIT_W, scratchNDC);
         ndc.x = (drawingBufferPosition.x - viewport.x) / viewport.width * 2.0 - 1.0;
         ndc.y = (drawingBufferPosition.y - viewport.y) / viewport.height * 2.0 - 1.0;

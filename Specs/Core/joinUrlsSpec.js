@@ -6,7 +6,6 @@ defineSuite([
         joinUrls,
         URI) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var queryString = "a=some&b=query";
     var fragment = "#iamaframent";

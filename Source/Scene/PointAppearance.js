@@ -1,67 +1,108 @@
 /*global define*/
 define([
-        '../Core/Color',
         '../Core/clone',
+        '../Core/Color',
+        '../Core/combine',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/VertexFormat',
-        './Appearance',
+        '../Shaders/Appearances/PointAppearanceFS',
         '../Shaders/Appearances/PointAppearanceVS',
-        '../Shaders/Appearances/PointAppearanceFS'
+        './Appearance'
     ], function(
-        Color,
         clone,
+        Color,
+        combine,
         defaultValue,
         defined,
         defineProperties,
         VertexFormat,
-        Appearance,
+        PointAppearanceFS,
         PointAppearanceVS,
-        PointAppearanceFS) {
+        Appearance) {
     "use strict";
 
     /**
-     * DOC_TBA
+     * An appearance for point geometry {@link PointGeometry}
+     *
+     * @alias PointAppearance
+     * @constructor
+     *
+     * @param {Object} [options] Object with the following properties:
+     * @param {Boolean} [options.translucent=false] When <code>true</code>, the geometry is expected to appear translucent so {@link PointAppearance#renderState} has alpha blending enabled.
+     * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
+     * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
+     * @param {RenderState} [options.renderState] Optional render state to override the default render state.
+     * @param {Object} [options.uniforms] Additional uniforms that are used by the vertex and fragment shaders.
+     * @param {Number} [options.pointSize] Point size in pixels.
+     * @param {Color} [options.highlightColor] Color multiplier in the fragment shader. The alpha channel is used for alpha blending when translucency is enabled.
+     *
+     * @example
+     * var primitive = new Cesium.Primitive({
+     *   geometryInstances : new Cesium.GeometryInstance({
+     *     geometry : new Cesium.PointGeometry({
+     *       positionsTypedArray : positions,
+     *       colorsTypedArray : colors,
+     *       boundingSphere : boundingSphere
+     *     })
+     *   }),
+     *   appearance : new Cesium.PointAppearance({
+     *     translucent : true
+     *   })
+     * });
+     *
+     * @private
      */
     var PointAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._vertexShaderSource = defaultValue(options.vertexShaderSource, PointAppearanceVS);
         this._fragmentShaderSource = defaultValue(options.fragmentShaderSource, PointAppearanceFS);
-        this._renderState = Appearance.getDefaultRenderState(true, false, options.renderState);
+        this._renderState = Appearance.getDefaultRenderState(false, false, options.renderState);
+        this._pointSize = defaultValue(options.pointSize, 2.0);
+        this._highlightColor = defined(options.highlightColor) ? options.highlightColor : new Color();
 
         /**
-         * DOC_TBA
+         * This property is part of the {@link Appearance} interface, but is not
+         * used by {@link PointAppearance} since a fully custom fragment shader is used.
+         *
+         * @type Material
+         *
+         * @default undefined
+         */
+        this.material = undefined;
+
+        /**
+         * When <code>true</code>, the geometry is expected to appear translucent.
+         *
+         * @type {Boolean}
+         *
+         * @default false
          */
         this.translucent = defaultValue(options.translucent, false);
 
-        // TODO: how do we want to expose uniforms?  Below is similar to materials but uses Cesium Cartesian, Matrix, and Color, not just JSON.  Expose like UBOs.
         /**
          * @private
          */
         this.uniforms = {
-            highlightColor : new Color(),
-            pointSize : 2.0
+            highlightColor : this._highlightColor,
+            pointSize : this._pointSize
         };
 
-        // TODO: make this an appearance helper function
-        // Override default uniform functions.
+        // Combine default uniforms and additional uniforms
         var optionsUniforms = options.uniforms;
-        if (defined(optionsUniforms)) {
-            for (var name in optionsUniforms) {
-                if (optionsUniforms.hasOwnProperty(name)) {
-                    this.uniforms[name] = clone(optionsUniforms[name]);
-                }
-            }
-        }
+        this.uniforms = combine(this.uniforms, optionsUniforms, true);
     };
-
-    PointAppearance.VERTEX_FORMAT = VertexFormat.POSITION_AND_COLOR;
 
     defineProperties(PointAppearance.prototype, {
         /**
-         * DOC_TBA
+         * The GLSL source code for the vertex shader.
+         *
+         * @memberof PointAppearance.prototype
+         *
+         * @type {String}
+         * @readonly
          */
         vertexShaderSource : {
             get : function() {
@@ -70,7 +111,14 @@ define([
         },
 
         /**
-         * DOC_TBA
+         * The GLSL source code for the fragment shader.  The full fragment shader
+         * source is built procedurally taking into account the {@link PointAppearance#material}.
+         * Use {@link PointAppearance#getFragmentShaderSource} to get the full source.
+         *
+         * @memberof PointAppearance.prototype
+         *
+         * @type {String}
+         * @readonly
          */
         fragmentShaderSource : {
             get : function() {
@@ -79,7 +127,12 @@ define([
         },
 
         /**
-         * DOC_TBA
+         * The WebGL fixed-function state to use when rendering the geometry.
+         *
+         * @memberof PointAppearance.prototype
+         *
+         * @type {Object}
+         * @readonly
          */
         renderState : {
             get : function() {
@@ -88,7 +141,14 @@ define([
         },
 
         /**
-         * DOC_TBA
+         * When <code>true</code>, the geometry is expected to be closed.
+         *
+         * @memberof PointAppearance.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default false
          */
         closed : {
             get : function() {
@@ -96,30 +156,78 @@ define([
             }
         },
 
-        // Non-derived members
-
         /**
-         * DOC_TBA
+         * The {@link VertexFormat} that this appearance instance is compatible with.
+         * A geometry can have more vertex attributes and still be compatible - at a
+         * potential performance cost - but it can't have less.
+         *
+         * @memberof PointAppearance.prototype
+         *
+         * @type VertexFormat
+         * @readonly
+         *
+         * @default {@link PointAppearance.VERTEX_FORMAT}
          */
         vertexFormat : {
             get : function() {
                 return PointAppearance.VERTEX_FORMAT;
             }
+        },
+
+        /**
+         * The size in pixels used when rendering the primitive. This helps calculate an accurate
+         * bounding volume for point rendering and other appearances that are defined in pixel sizes.
+         *
+         * @memberof PointAppearance.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        pixelSize : {
+            get : function() {
+                return this._pointSize;
+            }
         }
     });
 
     /**
-     * DOC_TBA
+     * The {@link VertexFormat} that all {@link PointAppearance} instances
+     * are compatible with, which requires only <code>position</code> and <code>color</code>
+     * attributes.  Other attributes are procedurally computed in the fragment shader.
+     *
+     * @type VertexFormat
+     *
+     * @constant
+     */
+    PointAppearance.VERTEX_FORMAT = VertexFormat.POSITION_AND_COLOR;
+
+    /**
+     * Returns the full GLSL fragment shader source, which for {@link PointAppearance} is just
+     * {@link PointAppearance#fragmentShaderSource}.
+     *
+     * @function
+     *
+     * @returns {String} The full GLSL fragment shader source.
      */
     PointAppearance.prototype.getFragmentShaderSource = Appearance.prototype.getFragmentShaderSource;
 
     /**
-     * DOC_TBA
+     * Determines if the geometry is translucent based on {@link PointAppearance#translucent}.
+     *
+     * @function
+     *
+     * @returns {Boolean} <code>true</code> if the appearance is translucent.
      */
     PointAppearance.prototype.isTranslucent = Appearance.prototype.isTranslucent;
 
     /**
-     * DOC_TBA
+     * Creates a render state.  This is not the final render state instance; instead,
+     * it can contain a subset of render state properties identical to the render state
+     * created in the context.
+     *
+     * @function
+     *
+     * @returns {Object} The render state.
      */
     PointAppearance.prototype.getRenderState = Appearance.prototype.getRenderState;
 

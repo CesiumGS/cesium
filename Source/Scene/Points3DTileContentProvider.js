@@ -11,10 +11,10 @@ define([
         '../Core/getMagic',
         '../Core/loadArrayBuffer',
         '../Core/PointGeometry',
+        '../ThirdParty/when',
         './Cesium3DTileContentState',
         './PointAppearance',
-        './Primitive',
-        '../ThirdParty/when'
+        './Primitive'
     ], function(
         BoundingSphere,
         Cartesian3,
@@ -27,10 +27,10 @@ define([
         getMagic,
         loadArrayBuffer,
         PointGeometry,
+        when,
         Cesium3DTileContentState,
         PointAppearance,
-        Primitive,
-        when) {
+        Primitive) {
     "use strict";
 
     /**

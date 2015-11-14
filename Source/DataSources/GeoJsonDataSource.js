@@ -87,8 +87,6 @@ define([
     'marker-size', 'marker-symbol', 'marker-color', 'stroke', //
     'stroke-opacity', 'stroke-width', 'fill', 'fill-opacity'];
 
-    var stringifyScratch = new Array(4);
-
     function defaultDescribe(properties, nameProperty) {
         var html = '';
         for ( var key in properties) {
@@ -266,11 +264,6 @@ define([
                 symbol = markerSymbol;
             }
         }
-
-        stringifyScratch[0] = symbol;
-        stringifyScratch[1] = color;
-        stringifyScratch[2] = size;
-        var id = JSON.stringify(stringifyScratch);
 
         var canvasOrPromise;
         if (defined(symbol)) {
