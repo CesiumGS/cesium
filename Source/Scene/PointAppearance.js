@@ -7,9 +7,9 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/VertexFormat',
-        './Appearance',
         '../Shaders/Appearances/PointAppearanceFS',
-        '../Shaders/Appearances/PointAppearanceVS'
+        '../Shaders/Appearances/PointAppearanceVS',
+        './Appearance'
     ], function(
         clone,
         Color,
@@ -18,9 +18,9 @@ define([
         defined,
         defineProperties,
         VertexFormat,
-        Appearance,
         PointAppearanceFS,
-        PointAppearanceVS) {
+        PointAppearanceVS,
+        Appearance) {
     "use strict";
 
     /**
