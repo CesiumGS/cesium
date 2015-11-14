@@ -2978,20 +2978,12 @@ define([
         }
     }
 
-    var scratchPixelSize = new Cartesian2();
     var scratchBoundingSphere = new BoundingSphere();
 
     function scaleInPixels(positionWC, radius, frameState) {
         scratchBoundingSphere.center = positionWC;
         scratchBoundingSphere.radius = radius;
-        var camera = frameState.camera;
-        var distance = camera.distanceToBoundingSphere(scratchBoundingSphere);
-
-        var context = frameState.context;
-        var pixelSize = camera.frustum.getPixelDimensions(context.drawingBufferWidth, context.drawingBufferHeight, distance, scratchPixelSize);
-        var pixelScale = Math.max(pixelSize.x, pixelSize.y);
-
-        return pixelScale;
+        return frameState.camera.getPixelSize(scratchBoundingSphere, frameState.context.drawingBufferWidth, frameState.context.drawingBufferHeight);
     }
 
     var scratchPosition = new Cartesian3();
