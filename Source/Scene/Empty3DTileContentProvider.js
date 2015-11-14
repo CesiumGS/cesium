@@ -1,12 +1,12 @@
 /*global define*/
 define([
         '../Core/destroyObject',
-        './Cesium3DTileContentState',
-        '../ThirdParty/when'
+        '../ThirdParty/when',
+        './Cesium3DTileContentState'
     ], function(
         destroyObject,
-        Cesium3DTileContentState,
-        when) {
+        when,
+        Cesium3DTileContentState) {
     "use strict";
 
     /**

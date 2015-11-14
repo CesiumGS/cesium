@@ -1,9 +1,3 @@
-<!--
-    To view this private Sandcastle example, navigate to:
-    http://localhost:8080/Apps/Sandcastle/?src=../../../Specs/Sandcastle/QuadtreePrimitive.html
-    -or-
-    http://localhost:8080/Specs/Sandcastle/QuadtreePrimitive.html
- -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,20 +5,20 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Demonstrates rendering massive quantities of geometry using quadtree level-of-detail and culling.  This is a low-level feature intended for advanced users.">
-    <meta name="cesium-sandcastle-labels" content="Showcases">
+    <meta name="cesium-sandcastle-labels" content="Development">
     <title>Cesium Demo</title>
-    <script type="text/javascript" src="../../Apps/Sandcastle/Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
     require.config({
         baseUrl : '../../../Source',
         waitSeconds : 60
-    });
+   });
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
-    @import url(../../../Apps/Sandcastle/templates/bucket.css);
+    @import url(../templates/bucket.css);
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>

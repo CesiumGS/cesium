@@ -16,9 +16,9 @@ define([
         '../Renderer/Sampler',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureMagnificationFilter'
-], function(
+        '../Renderer/TextureMagnificationFilter',
+        '../Renderer/TextureMinificationFilter'
+    ], function(
         Cartesian2,
         Cartesian4,
         clone,
@@ -35,8 +35,8 @@ define([
         Sampler,
         ShaderSource,
         Texture,
-        TextureMinificationFilter,
-        TextureMagnificationFilter) {
+        TextureMagnificationFilter,
+        TextureMinificationFilter) {
     "use strict";
 
     /**

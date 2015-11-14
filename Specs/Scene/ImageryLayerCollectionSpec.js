@@ -36,7 +36,6 @@ defineSuite([
         pollToPromise,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var fakeProvider = {
             isReady : function() { return false; }
@@ -556,8 +555,6 @@ defineSuite([
             camera.viewRectangle(Rectangle.fromDegrees(-180.0, 0, 0, 90));
 
             return updateUntilDone(globe).then(function() {
-                var ellipsoid = Ellipsoid.WGS84;
-
                 var ray = new Ray(camera.position, camera.direction);
                 var featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(ray, scene);
 

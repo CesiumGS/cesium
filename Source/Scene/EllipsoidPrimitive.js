@@ -343,7 +343,6 @@ define([
         this._onlySunLighting = this.onlySunLighting;
 
         var colorCommand = this._colorCommand;
-        var vs;
         var fs;
 
         // Recompile shader when material, lighting, or translucency changes

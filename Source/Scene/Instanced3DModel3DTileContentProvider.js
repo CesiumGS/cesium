@@ -10,11 +10,11 @@ define([
         '../Core/loadArrayBuffer',
         '../Core/Matrix4',
         '../Core/Transforms',
+        '../ThirdParty/Uri',
+        '../ThirdParty/when',
         './Cesium3DTileBatchTableResources',
         './Cesium3DTileContentState',
-        './ModelInstanceCollection',
-        '../ThirdParty/Uri',
-        '../ThirdParty/when'
+        './ModelInstanceCollection'
     ], function(
         Cartesian3,
         defaultValue,
@@ -26,11 +26,11 @@ define([
         loadArrayBuffer,
         Matrix4,
         Transforms,
+        Uri,
+        when,
         Cesium3DTileBatchTableResources,
         Cesium3DTileContentState,
-        ModelInstanceCollection,
-        Uri,
-        when) {
+        ModelInstanceCollection) {
     "use strict";
 
     /**

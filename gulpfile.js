@@ -59,6 +59,7 @@ var filesToClean = ['Source/Cesium.js',
                     'Build',
                     'Instrumented',
                     'Source/Shaders/**/*.js',
+                    'Specs/.jshintrc',
                     'Specs/SpecList.js',
                     'Apps/Sandcastle/.jshintrc',
                     'Apps/Sandcastle/jsHintOptions.js',
@@ -91,7 +92,7 @@ gulp.task('build', function(done) {
     createCesiumJs();
     createSpecList();
     createGalleryList();
-    createSandcastleJsHintOptions();
+    createJsHintOptions();
     done();
 });
 
@@ -738,7 +739,7 @@ function createSpecList() {
         specs.push("'" + filePathToModuleId(file) + "'");
     });
 
-    var contents = 'var specs = [' + specs.join(',') + '];';
+    var contents = '/*jshint unused: false*/\nvar specs = [' + specs.join(',') + '];';
     fs.writeFileSync(path.join('Specs', 'SpecList.js'), contents);
 }
 
@@ -772,11 +773,20 @@ var gallery_demos = [' + demos.join(', ') + '];';
     fs.writeFileSync(output, contents);
 }
 
-function createSandcastleJsHintOptions() {
-    var jsHintOptions = JSON.parse(fs.readFileSync('.jshintrc', 'utf8'));
-    jsHintOptions.predef = ['JSON', 'require', 'console', 'Sandcastle', 'Cesium'];
+function createJsHintOptions() {
+    var jshintString = fs.readFileSync('.jshintrc', 'utf8');
 
-    var contents = JSON.stringify(jsHintOptions, null, 2);
+    //First writ ethe Specs specific .jshintrc
+    var specOptions = JSON.parse(jshintString);
+    specOptions.jasmine = true;
+    fs.writeFileSync(path.join('Specs', '.jshintrc'), JSON.stringify(specOptions, null, 2));
+
+    //Second write the Sandcastle specific .jshintrc and jsHintOptions.js
+    var sandCastleOptions = JSON.parse(jshintString);
+    sandCastleOptions.unused = false;
+    sandCastleOptions.predef = ['JSON', 'require', 'console', 'Sandcastle', 'Cesium'];
+
+    var contents = JSON.stringify(sandCastleOptions, null, 2);
     fs.writeFileSync(path.join('Apps', 'Sandcastle', '.jshintrc'), contents);
 
     contents = '\
