@@ -305,6 +305,7 @@ footer {
     font-style: italic;
     font-size: 90%;
     text-align: center;
+    clear: both;
 }
 
 @media (max-width: 839px) {
@@ -359,6 +360,7 @@ h3
     margin-top: 20px;
     margin: 25px 0 10px;
     border-bottom: 1px solid #ccc;
+    clear: both;
 }
 
 h4
@@ -370,6 +372,7 @@ h4
     margin: 18px 0;
     padding: 2px 4px;
     background-color: #eee;
+    clear: both;
 }
 
 h5, .container-overview .subsection-title, .details-header
