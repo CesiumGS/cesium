@@ -363,6 +363,7 @@ h3
 
 h4
 {
+    position: relative;
     font-size: 140%;
     font-weight: normal;
     letter-spacing: -0.01em;
@@ -565,4 +566,21 @@ span.attribute-constant {
 .source-link {
     font-size: 10px;
     margin-top: 8px;
+    opacity: 0.9;
+}
+
+h4 .doc-link {
+    display: block;
+    width: 14px;
+    height: 14px;
+    position: absolute;
+    top: 6px;
+    left: -14px;
+    background: url(../icons/link.png);
+    opacity: 0;
+    transition: opacity 0.15s ease-in-out;
+}
+
+h4:hover .doc-link {
+    opacity: 0.7;
 }
