@@ -6,6 +6,7 @@ var self = this;
     <div class="nameContainer">
     <h4 class="name" id="<?js= id ?>">
         <?js= data.attribs + (kind === 'class' ? 'new ' : '') + (data.scope === 'static' ? longname : name) + (data.signature ? data.signature : '') ?>
+        <?js= this.partial('sourceLink.tmpl', data) ?>
     </h4>
 
     </div>
