@@ -142,16 +142,27 @@ div.menu
     padding: 15px;
 }
 
-.menuLogo {
-	width: 250px;
-	margin: 0 0 10px 0;
-	display: block;
+.cesiumLogo {
+    display: block;
+    float: left;
+    position: relative;
+    top: -7px;
+    left: -2px;
+	width: 187px;
+    height: 35px;
+	margin: 0;
 }
 
-.indexLogo {
-	display: block;
-	margin: 0 auto;
-	width: 250px;
+#mainIndex .cesiumLogo {
+    float: none;
+    position: static;
+}
+
+.titleCenterer {
+    display: block;
+    float: right;
+	width: 187px;
+    height: 35px;
 }
 
 div.nav 
@@ -175,7 +186,7 @@ div.nav
         top: 0;
         bottom: 0;
         left: 0;
-        width: 298px;
+        width: 300px;
         padding: 0 0 10px 0;
     }
 }
@@ -327,7 +338,7 @@ footer {
     line-height: 1em;
     position: relative;
     padding: 15px;
-    background-color: #f5f5f5;
+    background-color: #f4f4ff;
     margin: 0;
     border-bottom: 1px solid #ccc;
 }
@@ -338,6 +349,7 @@ footer {
 
 h1
 {
+    position: relative;
     font-size: 200%;
     font-weight: normal;
     letter-spacing: -0.01em;
@@ -362,6 +374,8 @@ h3
     border-bottom: 1px solid #ccc;
     clear: both;
 }
+
+#mainIndex h3 { display: none; }
 
 h4
 {

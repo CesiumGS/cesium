@@ -16,7 +16,11 @@
 
 <div id="main">
 
-    <h1 class="page-title"><?js= title ?></h1>
+    <h1 class="page-title">
+        <a href="index.html"><img src="images/CesiumLogo.png" class="cesiumLogo"></a>
+        <?js= title ?>
+        <div class="titleCenterer"></div>
+    </h1>
 
     <?js= content ?>
 
@@ -27,10 +31,7 @@
 
 <div class="nav">
     <div class="menu">
-        <a href="index.html"><img id="cesium-logo" src="images/CesiumLogo.jpg" class="menuLogo"></a>
-
         <input type="text" class="classFilter" id="ClassFilter" placeholder="Search">
-
         <?js= this.nav ?>
     </div>
 </div>
@@ -44,13 +45,6 @@ if (window.frameElement) {
     ele.target = '_blank';
     ele.href = window.location.href;
     ele.title = 'Pop out';
-    document.getElementById('main').appendChild(ele);
-
-    ele = document.createElement('a');
-    ele.className = 'back';
-    ele.href = 'index.html';
-    ele.title = 'Home';
-    ele.target = '_self';
     document.getElementById('main').appendChild(ele);
 }
 
