@@ -10,7 +10,6 @@ defineSuite([
         CesiumMath,
         createPackableSpecs) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('Constructing without arguments produces expected defaults', function() {
         var v = new Color();

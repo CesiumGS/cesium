@@ -30,7 +30,6 @@ defineSuite([
         Quaternion,
         Rectangle) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var positions = [
         new Cartesian3(2.0, 0.0, 0.0),
@@ -39,15 +38,6 @@ defineSuite([
         new Cartesian3(-2.0, 0.0, 0.0),
         new Cartesian3(0.0, -3.0, 0.0),
         new Cartesian3(0.0, 0.0, -4.0)
-    ];
-
-    var positions2 = [
-        new Cartesian3(4.0, 0.0, 0.0),
-        new Cartesian3(0.0, 3.0, 0.0),
-        new Cartesian3(0.0, 0.0, 2.0),
-        new Cartesian3(-4.0, 0.0, 0.0),
-        new Cartesian3(0.0, -3.0, 0.0),
-        new Cartesian3(0.0, 0.0, -2.0)
     ];
 
     function rotatePositions(positions, axis, angle) {
@@ -157,7 +147,6 @@ defineSuite([
 
         expect(box1.center).toEqualEpsilon(box2.center, CesiumMath.EPSILON15);
 
-        var rotScale = Matrix3.ZERO;
         expect(box1.halfAxes).toEqualEpsilon(box2.halfAxes, CesiumMath.EPSILON15);
     });
 
@@ -762,7 +751,6 @@ defineSuite([
 
     it('clone undefined OBB with a result parameter', function() {
         var box = new OrientedBoundingBox();
-        var box2 = new OrientedBoundingBox();
         expect(OrientedBoundingBox.clone(undefined, box)).toBe(undefined);
     });
 

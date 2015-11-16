@@ -4,7 +4,7 @@ defineSuite([
     ], function(
         deprecationWarning) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,console*/
+    /*global console*/
 
     it('logs a warning', function() {
         spyOn(console, 'log');

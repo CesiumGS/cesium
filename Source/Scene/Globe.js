@@ -699,11 +699,8 @@ define([
         }
 
         var mode = frameState.mode;
-        var projection = frameState.mapProjection;
-        var modeChanged = false;
 
         if (this._mode !== mode || !defined(this._rsColor)) {
-            modeChanged = true;
             if (mode === SceneMode.SCENE3D || mode === SceneMode.COLUMBUS_VIEW) {
                 this._rsColor = RenderState.fromCache({ // Write color and depth
                     cull : {

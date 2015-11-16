@@ -181,7 +181,7 @@ define([
         var velocity = Cartesian3.subtract(position2, position1, velocityScratch);
         Cartesian3.normalize(velocity, velocity);
 
-        var rotation = Transforms.rotationMatrixFromPositionVelocity(position1, velocity, this._ellipsoid, rotationScratch);
+        Transforms.rotationMatrixFromPositionVelocity(position1, velocity, this._ellipsoid, rotationScratch);
         return Quaternion.fromRotationMatrix(rotationScratch, result);
     };
 

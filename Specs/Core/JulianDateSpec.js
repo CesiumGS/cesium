@@ -10,7 +10,6 @@ defineSuite([
         TimeConstants,
         TimeStandard) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     // All exact Julian Dates found using NASA's Time Conversion Tool: http://ssd.jpl.nasa.gov/tc.cgi
     it('Construct a default date', function() {

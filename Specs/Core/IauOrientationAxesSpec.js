@@ -14,7 +14,6 @@ defineSuite([
         Matrix3,
         TimeStandard) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('compute ICRF to Moon Fixed', function() {
         var date = new JulianDate(2451545.0, -32.184, TimeStandard.TAI);

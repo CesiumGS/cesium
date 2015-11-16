@@ -4,7 +4,6 @@ defineSuite([
     ], function(
         PassState) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('creates a pass state', function() {
         var context = {};

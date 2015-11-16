@@ -17,6 +17,11 @@ Change Log
 * Added support for fog near the horizon, which improves performance by rendering less terrain tiles and reduces terrain tile requests.  This is enabled by default.  See `Scene.fog` for options.  [#3154](https://github.com/AnalyticalGraphicsInc/cesium/pull/3154)
 * Added `Queue.peek` to return the item at the front of a Queue.
 * Added `Camera.distanceToBoundingSphere` function.
+* Added utility function `getBaseUri`, which given a URI with or without query parameters, returns the base path of the URI.
+* Added support for incrementally loading textures after a Model is ready. This allows the Model to be visible as soon as possible while its textures are loaded in the background.
+* Added `Cartographic.fromCartesian` function.
+* Added `Camera.getPixelSize` function to get the size of a pixel in meters based on the current view.
+* Added `getOpenStreetMapImageryProvider` function to replace the `OpenStreetMapImageryProvider` class. This function returns a constructed `UrlTemplateImageryProvider`.
 * Deprecated `OpenStreetMapImageryProvider`. It will be removed in 1.18. Use `getOpenStreetMapImageryProvider` instead.
 
 

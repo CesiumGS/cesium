@@ -58,7 +58,6 @@ defineSuite([
         createScene,
         pollToPromise) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
 
     var scene;
     var context;
@@ -172,7 +171,6 @@ defineSuite([
 
     it('constructs with options', function() {
         var geometryInstance = {};
-        var appearance = {};
 
         primitive = new GroundPrimitive({
             geometryInstance : geometryInstance,

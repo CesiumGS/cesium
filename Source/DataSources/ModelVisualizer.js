@@ -72,11 +72,9 @@ define([
         }
         //>>includeEnd('debug');
 
-        var context = this._scene.context;
         var entities = this._entitiesToVisualize.values;
         var modelHash = this._modelHash;
         var primitives = this._primitives;
-        var scene = this._scene;
 
         for (var i = 0, len = entities.length; i < len; i++) {
             var entity = entities[i];

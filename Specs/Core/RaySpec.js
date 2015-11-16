@@ -6,7 +6,6 @@ defineSuite([
         Ray,
         Cartesian3) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('default constructor create zero valued Ray', function() {
         var ray = new Ray();

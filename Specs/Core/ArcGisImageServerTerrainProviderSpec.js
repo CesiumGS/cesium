@@ -24,7 +24,6 @@ defineSuite([
         Uri,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -187,7 +186,6 @@ defineSuite([
 
             spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var uri = new Uri(url);
-                var params = queryToObject(uri.query);
 
                 expect(uri.path).toEqual('/proxy/');
 

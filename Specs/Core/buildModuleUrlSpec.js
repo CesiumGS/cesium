@@ -1,4 +1,4 @@
-/*global defineSuite */
+/*global defineSuite*/
 defineSuite([
         'Core/buildModuleUrl',
         'Core/loadText',
@@ -8,7 +8,6 @@ defineSuite([
         loadText,
         Uri) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('produces an absolute URL for a module', function() {
         var url = buildModuleUrl('Workers/transferTypedArrayTest.js');

@@ -18,7 +18,6 @@ defineSuite([
         SampledProperty,
         TimeIntervalCollectionProperty) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('constructor provides the expected defaults', function() {
         var property = new GridMaterialProperty();

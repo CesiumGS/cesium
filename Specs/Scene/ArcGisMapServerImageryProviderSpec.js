@@ -48,7 +48,6 @@ defineSuite([
         pollToPromise,
         Uri) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
 
     afterEach(function() {
         loadJsonp.loadAndExecuteScript = loadJsonp.defaultLoadAndExecuteScript;
