@@ -346,6 +346,14 @@ define([
         when(tile.readyPromise).then(removeFunction).otherwise(removeFunction);
     }
 
+    function loadAndSelectSubTree(tiles3D, selectedTiles, tilesUrl, tile, stack, fullyVisible, frameState) {
+        loadTilesJson(tiles3D, tilesUrl, tile, function(tree) {
+            tile.tilesLoading = false;
+            stack.push(tree.root);
+            selectTile(selectedTiles, tree.root, fullyVisible, frameState);
+        });
+    }
+
     function selectTile(selectedTiles, tile, fullyVisible, frameState) {
         // Don't select empty tiles, such as in the case of tiles pointing to
         // another tiles.json
@@ -500,15 +508,12 @@ define([
 
                         // The tile has no child yet, meaning its content
                         // tiles.json has not yet been loaded. Loading has not
-                        // yet been started
+                        // yet been started, so initiate the loading.
                         if (childrenLength === 0.0 && !t.tilesLoading) {
                             t.tilesLoading = true;
                             var tilesUrl = tiles3D._url + contentUrl;
-                            loadTilesJson(tiles3D, tilesUrl, t, function(tree) {
-                                t.tilesLoading = false;
-                                stack.push(tree.root);
-                                selectTile(selectedTiles, tree.root, fullyVisible, frameState);
-                            });
+                            loadAndSelectSubTree(tiles3D, selectedTiles, tilesUrl, t, stack, fullyVisible, frameState);
+
                         // Tiles.json loading has finished
                         } else if (!t.tilesLoading) {
                             child = t.children[0];
