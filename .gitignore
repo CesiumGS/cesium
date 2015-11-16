@@ -8,7 +8,6 @@ Thumbs.db
 /Apps/CesiumViewer/Gallery/gallery-index.js
 
 /Apps/Sandcastle/jsHintOptions.js
-/Apps/Sandcastle/.jshintrc
 /Apps/Sandcastle/gallery/gallery-index.js
 
 /Source/Cesium.js
@@ -17,7 +16,6 @@ Thumbs.db
 /Source/Shaders/*/*.js
 /Source/Shaders/*/*/*.js
 
-/Specs/.jshintrc
 /Specs/SpecList.js
 
 /node_modules
