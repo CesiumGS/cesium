@@ -4,24 +4,24 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/Rectangle',
         '../Core/WebMercatorTilingScheme',
         './ImageryProvider',
-        '../Core/deprecationWarning',
         '../ThirdParty/when'
     ], function(
         Credit,
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
         Rectangle,
         WebMercatorTilingScheme,
         ImageryProvider,
-        deprecationWarning,
         when
 ) {
     "use strict";
@@ -30,8 +30,6 @@ define([
     var defaultCredit = new Credit('MapQuest, Open Street Map and contributors, CC-BY-SA');
 
     /**
-     * @deprecated
-     *
      * Provides tiled imagery hosted by OpenStreetMap or another provider of Slippy tiles.  Please be aware
      * that a default-constructed instance of this class will connect to OpenStreetMap's volunteer-run
      * servers, so you must conform to their
@@ -67,6 +65,8 @@ define([
      * var osm = new Cesium.OpenStreetMapImageryProvider({
      *     url : '//a.tile.openstreetmap.org/'
      * });
+     * 
+     * @deprecated
      */
     var OpenStreetMapImageryProvider = function OpenStreetMapImageryProvider(options) {
         deprecationWarning('OpenStreetMapImageryProvider', 'Scene/OpenStreetMapImageryProvider is deprecated. ' +
