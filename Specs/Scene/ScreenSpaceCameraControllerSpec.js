@@ -54,6 +54,7 @@ defineSuite([
         this.camera = camera;
         this.globe = undefined;
         this.mapProjection = new GeographicProjection(ellipsoid);
+        this.terrainExaggeration = 1.0;
     };
 
     var MockGlobe = function(ellipsoid) {
