@@ -3,6 +3,8 @@ Change Log
 
 ### 1.16 - 2015-12-01
 
+* Deprecated
+    * Deprecated `OpenStreetMapImageryProvider`. It will be removed in 1.18. Use `getOpenStreetMapImageryProvider` instead.
 * Fixed an issue where the sun texture is not generated correctly on some mobile devices. [#3141](https://github.com/AnalyticalGraphicsInc/cesium/issues/3141)
 * Fixed a bug in the deprecated `jsonp` that prevented it from returning a promise.  Its replacement, `loadJsonp`, was unaffected.
 * Fixed glTF implementation to read the version as a string as per the specification and to correctly handle backwards compatibility for axis-angle rotations in glTF 0.8 models.
@@ -22,8 +24,6 @@ Change Log
 * Added `Cartographic.fromCartesian` function.
 * Added `Camera.getPixelSize` function to get the size of a pixel in meters based on the current view.
 * Added `getOpenStreetMapImageryProvider` function to replace the `OpenStreetMapImageryProvider` class. This function returns a constructed `UrlTemplateImageryProvider`.
-* Deprecated `OpenStreetMapImageryProvider`. It will be removed in 1.18. Use `getOpenStreetMapImageryProvider` instead.
-
 
 ### 1.15 - 2015-11-02
 
