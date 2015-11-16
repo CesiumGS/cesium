@@ -60,11 +60,11 @@ define([
      *
      * @example
      * // OpenStreetMap tile provider
-     * var osm = new Cesium.OpenStreetMapImageryProvider({
+     * var osm = Cesium.getOpenStreetMapImageryProvider({
      *     url : '//a.tile.openstreetmap.org/'
      * });
      */
-    var OpenStreetMapImageryProviderGenerator = function OpenStreetMapImageryProvider(options) {
+    var getOpenStreetMapImageryProvider = function getOpenStreetMapImageryProvider(options) {
         options = defaultValue(options, {});
 
         var url = defaultValue(options.url, '//a.tile.openstreetmap.org/');
@@ -72,9 +72,6 @@ define([
         if (!trailingSlashRegex.test(url)) {
             url = url + '/';
         }
-
-        this._url = url;
-        this._tileDiscardPolicy = options.tileDiscardPolicy;
 
         var fileExtension = defaultValue(options.fileExtension, 'png');
 
@@ -118,5 +115,5 @@ define([
         });
     };
 
-    return OpenStreetMapImageryProviderGenerator;
+    return getOpenStreetMapImageryProvider;
 });

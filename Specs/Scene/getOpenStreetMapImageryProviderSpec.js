@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-    'Scene/OpenStreetMapImageryProviderGenerator',
+    'Scene/getOpenStreetMapImageryProvider',
     'Core/DefaultProxy',
     'Core/loadImage',
     'Core/Rectangle',
@@ -12,7 +12,7 @@ defineSuite([
     'Specs/pollToPromise',
     'Core/Math'
 ], function(
-    OpenStreetMapImageryProviderGenerator,
+    getOpenStreetMapImageryProvider,
     DefaultProxy,
     loadImage,
     Rectangle,
@@ -32,15 +32,15 @@ defineSuite([
     });
 
     it('conforms to ImageryProvider interface', function() {
-        expect(OpenStreetMapImageryProviderGenerator).toConformToInterface(ImageryProvider);
+        expect(getOpenStreetMapImageryProvider).toConformToInterface(ImageryProvider);
     });
 
     it('can be default constructed', function() {
-        return new OpenStreetMapImageryProviderGenerator();
+        return getOpenStreetMapImageryProvider();
     });
 
     it('returns valid value for hasAlphaChannel', function() {
-        var provider = new OpenStreetMapImageryProviderGenerator({
+        var provider = getOpenStreetMapImageryProvider({
             url : 'made/up/osm/server/'
         });
 
@@ -52,7 +52,7 @@ defineSuite([
     });
 
     it('supports a slash at the end of the URL', function() {
-        var provider = new OpenStreetMapImageryProviderGenerator({
+        var provider = getOpenStreetMapImageryProvider({
             url : 'made/up/osm/server/'
         });
 
@@ -74,7 +74,7 @@ defineSuite([
     });
 
     it('supports no slash at the endof the URL', function() {
-        var provider = new OpenStreetMapImageryProviderGenerator({
+        var provider = getOpenStreetMapImageryProvider({
             url : 'made/up/osm/server'
         });
 
@@ -96,7 +96,7 @@ defineSuite([
     });
 
     it('requestImage returns a promise for an image and loads it for cross-origin use', function() {
-        var provider = new OpenStreetMapImageryProviderGenerator({
+        var provider = getOpenStreetMapImageryProvider({
             url : 'made/up/osm/server/'
         });
 
@@ -124,14 +124,14 @@ defineSuite([
     });
 
     it('when no credit is supplied, a default one is used', function() {
-        var provider = new OpenStreetMapImageryProviderGenerator({
+        var provider = getOpenStreetMapImageryProvider({
             url : 'made/up/osm/server'
         });
         expect(provider.credit).toBeDefined();
     });
 
     it('turns the supplied credit into a logo', function() {
-        var providerWithCredit = new OpenStreetMapImageryProviderGenerator({
+        var providerWithCredit = getOpenStreetMapImageryProvider({
             url : 'made/up/osm/server',
             credit : 'Thanks to our awesome made up source of this imagery!'
         });
@@ -140,7 +140,7 @@ defineSuite([
 
     it('routes requests through a proxy if one is specified', function() {
         var proxy = new DefaultProxy('/proxy/');
-        var provider = new OpenStreetMapImageryProviderGenerator({
+        var provider = getOpenStreetMapImageryProvider({
             url : 'made/up/osm/server',
             proxy : proxy
         });
@@ -166,7 +166,7 @@ defineSuite([
 
     it('rectangle passed to constructor does not affect tile numbering', function() {
         var rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
-        var provider = new OpenStreetMapImageryProviderGenerator({
+        var provider = getOpenStreetMapImageryProvider({
             url : 'made/up/osm/server',
             rectangle : rectangle
         });
@@ -199,7 +199,7 @@ defineSuite([
     });
 
     it('uses maximumLevel passed to constructor', function() {
-        var provider = new OpenStreetMapImageryProviderGenerator({
+        var provider = getOpenStreetMapImageryProvider({
             url : 'made/up/osm/server',
             maximumLevel : 5
         });
@@ -207,7 +207,7 @@ defineSuite([
     });
 
     it('uses minimumLevel passed to constructor', function() {
-        var provider = new OpenStreetMapImageryProviderGenerator({
+        var provider = getOpenStreetMapImageryProvider({
             url : 'made/up/osm/server',
             minimumLevel : 1
         });
@@ -215,7 +215,7 @@ defineSuite([
     });
 
     it('raises error event when image cannot be loaded', function() {
-        var provider = new OpenStreetMapImageryProviderGenerator({
+        var provider = getOpenStreetMapImageryProvider({
             url : 'made/up/osm/server'
         });
 
