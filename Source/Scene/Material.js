@@ -657,13 +657,43 @@ define([
     };
 
     function createTexture2DUpdateFunction(uniformId) {
+        var oldUniformValue;
         return function(material, context) {
             var uniforms = material.uniforms;
             var uniformValue = uniforms[uniformId];
+            var uniformChanged = oldUniformValue !== uniformValue;
+            oldUniformValue = uniformValue;
             var texture = material._textures[uniformId];
 
             var uniformDimensionsName;
             var uniformDimensions;
+
+            if (uniformValue instanceof HTMLVideoElement) {
+                // HTMLVideoElement.readyState >=2 means we have enough data for the current frame.
+                // See: https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/readyState
+                if (uniformValue.readyState >= 2) {
+                    if (uniformChanged && defined(texture)) {
+                        if (texture !== context.defaultTexture) {
+                            texture.destroy();
+                        }
+                        texture = undefined;
+                    }
+
+                    if (!defined(texture) || texture === context.defaultTexture) {
+                        texture = new Texture({
+                            context : context,
+                            source : uniformValue
+                        });
+                        material._textures[uniformId] = texture;
+                        return;
+                    }
+
+                    texture.copyFrom(uniformValue);
+                } else if (!defined(texture)) {
+                    material._textures[uniformId] = context.defaultTexture;
+                }
+                return;
+            }
 
             if (uniformValue instanceof Texture && uniformValue !== texture) {
                 material._texturePaths[uniformId] = undefined;
