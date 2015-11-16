@@ -998,14 +998,17 @@ define([
             type : Material.ImageType,
             uniforms : {
                 image : Material.DefaultImageId,
-                repeat : new Cartesian2(1.0, 1.0)
+                repeat : new Cartesian2(1.0, 1.0),
+                alpha : 1.0
             },
             components : {
                 diffuse : 'texture2D(image, fract(repeat * materialInput.st)).rgb',
-                alpha : 'texture2D(image, fract(repeat * materialInput.st)).a'
+                alpha : 'texture2D(image, fract(repeat * materialInput.st)).a * alpha'
             }
         },
-        translucent : true
+        translucent : function(material) {
+            return material.uniforms.alpha < 1.0;
+        }
     });
 
     /**
