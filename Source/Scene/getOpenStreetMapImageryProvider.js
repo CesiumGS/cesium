@@ -2,24 +2,16 @@
 define([
     '../Core/Credit',
     '../Core/defaultValue',
-    '../Core/defined',
-    '../Core/defineProperties',
     '../Core/DeveloperError',
-    '../Core/Event',
     '../Core/Rectangle',
     '../Core/WebMercatorTilingScheme',
-    './ImageryProvider',
     './UrlTemplateImageryProvider'
 ], function(
     Credit,
     defaultValue,
-    defined,
-    defineProperties,
     DeveloperError,
-    Event,
     Rectangle,
     WebMercatorTilingScheme,
-    ImageryProvider,
     UrlTemplateImageryProvider
 ) {
     "use strict";
@@ -28,13 +20,12 @@ define([
     var defaultCredit = new Credit('MapQuest, Open Street Map and contributors, CC-BY-SA');
 
     /**
-     * Provides tiled imagery hosted by OpenStreetMap or another provider of Slippy tiles.  Please be aware
-     * that a default-constructed instance of this class will connect to OpenStreetMap's volunteer-run
+     * Creates a {@link UrlTemplateImageryProvider} instance that provides tiled imagery hosted by OpenStreetMap
+     * or another provider of Slippy tiles.  The default url connects to OpenStreetMap's volunteer-run
      * servers, so you must conform to their
      * {@link http://wiki.openstreetmap.org/wiki/Tile_usage_policy|Tile Usage Policy}.
      *
-     * @alias getOpenStreetMapImageryProvider
-     * @exports getTimestamp
+     * @exports getOpenStreetMapImageryProvider
      *
      * @param {Object} [options] Object with the following properties:
      * @param {String} [options.url='//a.tile.openstreetmap.org'] The OpenStreetMap server url.
@@ -45,6 +36,8 @@ define([
      * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {Credit|String} [options.credit='MapQuest, Open Street Map and contributors, CC-BY-SA'] A credit for the data source, which is displayed on the canvas.
+     *
+     * @exception {DeveloperError} The rectangle and minimumLevel indicate that there are more than four tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
@@ -59,7 +52,6 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
      * @example
-     * // OpenStreetMap tile provider
      * var osm = Cesium.getOpenStreetMapImageryProvider({
      *     url : '//a.tile.openstreetmap.org/'
      * });
@@ -92,7 +84,7 @@ define([
         var neTile = tilingScheme.positionToTileXY(Rectangle.northeast(rectangle), minimumLevel);
         var tileCount = (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
         if (tileCount > 4) {
-            throw new DeveloperError('The imagery provider\'s rectangle and minimumLevel indicate that there are ' + tileCount + ' tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.');
+            throw new DeveloperError('The rectangle and minimumLevel indicate that there are ' + tileCount + ' tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.');
         }
 
         var credit = defaultValue(options.credit, defaultCredit);
