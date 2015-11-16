@@ -22,8 +22,7 @@ define([
         Rectangle,
         WebMercatorTilingScheme,
         when,
-        ImageryProvider
-) {
+        ImageryProvider) {
     "use strict";
 
     var trailingSlashRegex = /\/$/;
