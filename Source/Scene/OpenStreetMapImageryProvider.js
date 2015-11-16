@@ -68,8 +68,7 @@ define([
      * @deprecated
      */
     var OpenStreetMapImageryProvider = function OpenStreetMapImageryProvider(options) {
-        deprecationWarning('OpenStreetMapImageryProvider', 'Scene/OpenStreetMapImageryProvider is deprecated. ' +
-                                                           'Use Scene/getOpenStreetMapImageryProvider instead.');
+        deprecationWarning('OpenStreetMapImageryProvider', 'OpenStreetMapImageryProvider is deprecated. It will be removed in Cesium 1.18. Use getOpenStreetMapImageryProvider instead.');
         options = defaultValue(options, {});
 
         var url = defaultValue(options.url, '//a.tile.openstreetmap.org/');
