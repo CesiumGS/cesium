@@ -10,7 +10,6 @@ defineSuite([
         Cartesian3,
         createPackableSpecs) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('constructor throws without minimum corner', function() {
         expect(function() {

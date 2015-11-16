@@ -10,7 +10,6 @@ defineSuite([
         DataSourceClock,
         EntityCollection) {
     "use strict";
-    /*global jasmine,it,expect*/
 
     it('constructor has expected defaults', function() {
         var dataSource = new CustomDataSource();

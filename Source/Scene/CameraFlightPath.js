@@ -141,7 +141,6 @@ define([
 
     var scratchStartCart = new Cartographic();
     var scratchEndCart = new Cartographic();
-    var scratchCurrentPositionCart = new Cartesian3();
 
     function createUpdate3D(scene, duration, destination, heading, pitch, roll, optionAltitude) {
         var camera = scene.camera;
@@ -227,9 +226,6 @@ define([
         return update;
     }
 
-    var dirScratch = new Cartesian3();
-    var rightScratch = new Cartesian3();
-    var upScratch = new Cartesian3();
     var scratchCartographic = new Cartographic();
     var scratchDestination = new Cartesian3();
 

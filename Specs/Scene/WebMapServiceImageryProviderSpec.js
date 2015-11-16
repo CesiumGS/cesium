@@ -44,7 +44,6 @@ defineSuite([
         Uri,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -146,7 +145,7 @@ defineSuite([
             layers : ''
         });
 
-        var loadImageSpy = spyOn(ImageryProvider, 'loadImage');
+        spyOn(ImageryProvider, 'loadImage');
         provider.requestImage(0, 0, 0);
         var url = ImageryProvider.loadImage.calls.mostRecent().args[1];
         expect('123'.indexOf(url.substring(0, 1))).toBeGreaterThanOrEqualTo(0);
@@ -159,7 +158,7 @@ defineSuite([
             layers : ''
         });
 
-        var loadImageSpy = spyOn(ImageryProvider, 'loadImage');
+        spyOn(ImageryProvider, 'loadImage');
         provider.requestImage(0, 0, 0);
         var url = ImageryProvider.loadImage.calls.mostRecent().args[1];
         expect(['foo', 'bar'].indexOf(url.substring(0, 3))).toBeGreaterThanOrEqualTo(0);
@@ -417,7 +416,6 @@ defineSuite([
     });
 
     it('uses tileWidth passed to constructor', function() {
-        var tilingScheme = new WebMercatorTilingScheme();
         var provider = new WebMapServiceImageryProvider({
             url : 'made/up/wms/server',
             layers : 'someLayer',
@@ -427,7 +425,6 @@ defineSuite([
     });
 
     it('uses tileHeight passed to constructor', function() {
-        var tilingScheme = new WebMercatorTilingScheme();
         var provider = new WebMapServiceImageryProvider({
             url : 'made/up/wms/server',
             layers : 'someLayer',

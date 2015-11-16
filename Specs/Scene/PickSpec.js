@@ -34,7 +34,6 @@ defineSuite([
         SceneMode,
         createScene) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
     var primitives;
@@ -306,7 +305,6 @@ defineSuite([
     });
 
     it('stops drill picking when the limit is reached.', function() {
-        var rectangle1 = createRectangle();
         var rectangle2 = createRectangle();
         var rectangle3 = createRectangle();
         var rectangle4 = createRectangle();
