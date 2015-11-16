@@ -59,9 +59,7 @@ var filesToClean = ['Source/Cesium.js',
                     'Build',
                     'Instrumented',
                     'Source/Shaders/**/*.js',
-                    'Specs/.jshintrc',
                     'Specs/SpecList.js',
-                    'Apps/Sandcastle/.jshintrc',
                     'Apps/Sandcastle/jsHintOptions.js',
                     'Apps/Sandcastle/gallery/gallery-index.js',
                     'Cesium-*.zip'];
@@ -774,21 +772,7 @@ var gallery_demos = [' + demos.join(', ') + '];';
 }
 
 function createJsHintOptions() {
-    var jshintString = fs.readFileSync('.jshintrc', 'utf8');
-
-    //First writ ethe Specs specific .jshintrc
-    var specOptions = JSON.parse(jshintString);
-    specOptions.jasmine = true;
-    fs.writeFileSync(path.join('Specs', '.jshintrc'), JSON.stringify(specOptions, null, 2));
-
-    //Second write the Sandcastle specific .jshintrc and jsHintOptions.js
-    var sandCastleOptions = JSON.parse(jshintString);
-    sandCastleOptions.unused = false;
-    sandCastleOptions.predef = ['JSON', 'require', 'console', 'Sandcastle', 'Cesium'];
-
-    var contents = JSON.stringify(sandCastleOptions, null, 2);
-    fs.writeFileSync(path.join('Apps', 'Sandcastle', '.jshintrc'), contents);
-
+    var contents = fs.readFileSync(path.join('Apps', 'Sandcastle', '.jshintrc'), 'utf8');
     contents = '\
 // This file is automatically rebuilt by the Cesium build process.\n\
 var sandcastleJsHintOptions = ' + contents + ';';
