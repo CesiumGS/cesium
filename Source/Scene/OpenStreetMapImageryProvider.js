@@ -9,8 +9,8 @@ define([
         '../Core/Event',
         '../Core/Rectangle',
         '../Core/WebMercatorTilingScheme',
-        './ImageryProvider',
-        '../ThirdParty/when'
+        '../ThirdParty/when',
+        './ImageryProvider'
     ], function(
         Credit,
         defaultValue,
@@ -21,8 +21,8 @@ define([
         Event,
         Rectangle,
         WebMercatorTilingScheme,
-        ImageryProvider,
-        when
+        when,
+        ImageryProvider
 ) {
     "use strict";
 
