@@ -21,6 +21,7 @@ Change Log
 * Added support for incrementally loading textures after a Model is ready. This allows the Model to be visible as soon as possible while its textures are loaded in the background.
 * Added `Cartographic.fromCartesian` function.
 * Added `Camera.getPixelSize` function to get the size of a pixel in meters based on the current view.
+* Added terrain exaggeration. Enabled on viewer creation with the exaggeration scalar as the `terrainExaggeration` option.
 
 ### 1.15 - 2015-11-02
 
