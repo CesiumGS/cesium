@@ -44,6 +44,9 @@ define([
     var cartesian3Scratch = new Cartesian3();
     var cartographicScratch = new Cartographic();
     var toPack = new Cartesian2();
+    var scratchNormal = new Cartesian3();
+    var scratchToENU = new Matrix4();
+    var scratchFromENU = new Matrix4();
 
     function createVerticesFromQuantizedTerrainMesh(parameters, transferableObjects) {
         var quantizedVertices = parameters.quantizedVertices;
@@ -101,9 +104,9 @@ define([
                 toPack.y = octEncodedNormals[n + 1];
 
                 if (exaggeration !== 1.0) {
-                    var normal = AttributeCompression.octDecode(toPack.x, toPack.y, new Cartesian3());
-                    var fromENU = Transforms.eastNorthUpToFixedFrame(cartesian3Scratch);
-                    var toENU = Matrix4.inverseTransformation(fromENU, new Matrix4());
+                    var normal = AttributeCompression.octDecode(toPack.x, toPack.y, scratchNormal);
+                    var fromENU = Transforms.eastNorthUpToFixedFrame(cartesian3Scratch, ellipsoid, scratchFromENU);
+                    var toENU = Matrix4.inverseTransformation(fromENU, scratchToENU);
 
                     Matrix4.multiplyByPointAsVector(toENU, normal, normal);
                     normal.z *= exaggeration;
