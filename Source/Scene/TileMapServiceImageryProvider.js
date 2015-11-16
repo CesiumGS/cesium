@@ -10,6 +10,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/GeographicTilingScheme',
+        '../Core/joinUrls',
         '../Core/loadXML',
         '../Core/Rectangle',
         '../Core/RuntimeError',
@@ -28,6 +29,7 @@ define([
         DeveloperError,
         Event,
         GeographicTilingScheme,
+        joinUrls,
         loadXML,
         Rectangle,
         RuntimeError,
@@ -105,7 +107,6 @@ define([
             hasReadyPromise: true
         });
 
-        var that = this;
         var metadataError;
 
         function metadataSuccess(xml) {
