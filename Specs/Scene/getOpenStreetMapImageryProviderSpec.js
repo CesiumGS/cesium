@@ -1,41 +1,39 @@
 /*global defineSuite*/
 defineSuite([
-    'Scene/getOpenStreetMapImageryProvider',
-    'Core/DefaultProxy',
-    'Core/loadImage',
-    'Core/Rectangle',
-    'Core/WebMercatorTilingScheme',
-    'Scene/Imagery',
-    'Scene/ImageryLayer',
-    'Scene/ImageryProvider',
-    'Scene/ImageryState',
-    'Specs/pollToPromise',
-    'Core/Math'
+        'Scene/getOpenStreetMapImageryProvider',
+        'Core/DefaultProxy',
+        'Core/loadImage',
+        'Core/Math',
+        'Core/Rectangle',
+        'Core/WebMercatorTilingScheme',
+        'Scene/Imagery',
+        'Scene/ImageryLayer',
+        'Scene/ImageryProvider',
+        'Scene/ImageryState',
+        'Specs/pollToPromise',
+        'Scene/UrlTemplateImageryProvider',
 ], function(
-    getOpenStreetMapImageryProvider,
-    DefaultProxy,
-    loadImage,
-    Rectangle,
-    WebMercatorTilingScheme,
-    Imagery,
-    ImageryLayer,
-    ImageryProvider,
-    ImageryState,
-    pollToPromise,
-    CesiumMath
-) {
+        getOpenStreetMapImageryProvider,
+        DefaultProxy,
+        loadImage,
+        CesiumMath,
+        Rectangle,
+        WebMercatorTilingScheme,
+        Imagery,
+        ImageryLayer,
+        ImageryProvider,
+        ImageryState,
+        pollToPromise,
+        UrlTemplateImageryProvider) {
     "use strict";
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
     });
 
-    it('conforms to ImageryProvider interface', function() {
-        expect(getOpenStreetMapImageryProvider).toConformToInterface(ImageryProvider);
-    });
-
-    it('can be default constructed', function() {
-        return getOpenStreetMapImageryProvider();
+    it('return a UrlTemplateImageryProvider', function() {
+        var provider = getOpenStreetMapImageryProvider();
+        expect(provider).toBeInstanceOf(UrlTemplateImageryProvider);
     });
 
     it('returns valid value for hasAlphaChannel', function() {
@@ -256,5 +254,16 @@ defineSuite([
                 imagery.releaseReference();
             });
         });
+    });
+
+    it('throws with more than four tiles at the minimum', function() {
+        var rectangle = new Rectangle(0.0, 0.0, CesiumMath.toRadians(1.0), CesiumMath.toRadians(1.0));
+
+        expect(function() {
+            return getOpenStreetMapImageryProvider({
+                minimumLevel : 9,
+                rectangle : rectangle
+            });
+        }).toThrowDeveloperError();
     });
 });
