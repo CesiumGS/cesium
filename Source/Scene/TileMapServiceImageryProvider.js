@@ -286,31 +286,5 @@ define([
         return imageryProvider;
     };
 
-    defineProperties(TileMapServiceImageryProvider.prototype, {
-        /**
-         * Gets the URL of the service hosting the imagery.
-         * @memberof TileMapServiceImageryProvider.prototype
-         * @type {String}
-         * @readonly
-         */
-        url : {
-            get : function() {
-                return this._url;
-            }
-        },
-
-        /**
-         * Gets a promise that resolves to true when the provider is ready for use.
-         * @memberof TileMapServiceImageryProvider.prototype
-         * @type {Promise.<Boolean>}
-         * @readonly
-         */
-        readyPromise : {
-            get : function() {
-                return this._readyPromise.promise;
-            }
-        }
-    });
-
     return TileMapServiceImageryProvider;
 });
