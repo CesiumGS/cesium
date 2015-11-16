@@ -27,6 +27,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Sean Lilley](https://github.com/lilleyse)
    * [Katherina Lim](https://github.com/klim705)
    * [Gabrielle Getz](https://github.com/ggetz)
+   * [Sarah Chow](https://github.com/slchow)
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
    * [Kevin Ring](https://github.com/kring)
