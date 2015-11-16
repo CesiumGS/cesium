@@ -17,6 +17,8 @@ Change Log
 * Added support for fog near the horizon, which improves performance by rendering less terrain tiles and reduces terrain tile requests.  This is enabled by default.  See `Scene.fog` for options.  [#3154](https://github.com/AnalyticalGraphicsInc/cesium/pull/3154)
 * Added `Queue.peek` to return the item at the front of a Queue.
 * Added `Camera.distanceToBoundingSphere` function.
+* Deprecated `OpenStreetMapImageryProvider`. It will be removed in 1.18. Use `getOpenStreetMapImageryProvider` instead.
+
 
 ### 1.15 - 2015-11-02
 

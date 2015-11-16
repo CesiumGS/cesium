@@ -63,7 +63,7 @@ define([
      *      tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable \
      * map of the world.\nhttp://www.openstreetmap.org',
      *      creationFunction : function() {
-     *          return new Cesium.OpenStreetMapImageryProvider({
+     *          return Cesium.getOpenStreetMapImageryProvider({
      *              url : '//a.tile.openstreetmap.org/'
      *          });
      *      }

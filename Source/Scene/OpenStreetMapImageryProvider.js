@@ -70,7 +70,7 @@ define([
      */
     var OpenStreetMapImageryProvider = function OpenStreetMapImageryProvider(options) {
         deprecationWarning('OpenStreetMapImageryProvider', 'Scene/OpenStreetMapImageryProvider is deprecated. ' +
-                                                           'Use Scene/OpenStreetMapImageryProviderGenerator instead.');
+                                                           'Use Scene/getOpenStreetMapImageryProvider instead.');
         options = defaultValue(options, {});
 
         var url = defaultValue(options.url, '//a.tile.openstreetmap.org/');

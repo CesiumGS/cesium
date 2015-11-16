@@ -33,8 +33,8 @@ define([
      * servers, so you must conform to their
      * {@link http://wiki.openstreetmap.org/wiki/Tile_usage_policy|Tile Usage Policy}.
      *
-     * @alias OpenStreetMapImageryProvider
-     * @constructor
+     * @alias getOpenStreetMapImageryProvider
+     * @exports getTimestamp
      *
      * @param {Object} [options] Object with the following properties:
      * @param {String} [options.url='//a.tile.openstreetmap.org'] The OpenStreetMap server url.
