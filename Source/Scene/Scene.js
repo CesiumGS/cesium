@@ -1793,14 +1793,12 @@ define([
      * @private
      */
     Scene.prototype.clampLineWidth = function(width) {
-        var context = this._context;
         return Math.max(ContextLimits.minimumAliasedLineWidth, Math.min(width, ContextLimits.maximumAliasedLineWidth));
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();
     var scratchOrigin = new Cartesian3();
     var scratchDirection = new Cartesian3();
-    var scratchBufferDimensions = new Cartesian2();
     var scratchPixelSize = new Cartesian2();
     var scratchPickVolumeMatrix4 = new Matrix4();
 
@@ -1938,8 +1936,6 @@ define([
         return object;
     };
 
-    var scratchPickDepthPosition = new Cartesian3();
-    var scratchMinDistPos = new Cartesian3();
     var scratchPackedDepth = new Cartesian4();
     var packedDepthScale = new Cartesian4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 160581375.0);
 

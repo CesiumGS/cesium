@@ -180,16 +180,6 @@ define([
         return rgbaf;
     }
 
-    function unwrapImageInterval(czmlInterval, sourceUri) {
-        var result = defaultValue(czmlInterval.image, czmlInterval);
-        if (defined(sourceUri)) {
-            var baseUri = new Uri(document.location.href);
-            sourceUri = new Uri(sourceUri);
-            result = new Uri(result).resolve(sourceUri.resolve(baseUri)).toString();
-        }
-        return result;
-    }
-
     function unwrapUriInterval(czmlInterval, sourceUri) {
         var result = defaultValue(czmlInterval.uri, czmlInterval);
         if (defined(sourceUri)) {

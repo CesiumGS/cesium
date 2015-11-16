@@ -694,7 +694,6 @@ define([
         heading : {
             get : function () {
                 if (this._mode !== SceneMode.MORPHING) {
-                    var origin = this.positionWC;
                     var ellipsoid = this._projection.ellipsoid;
 
                     var oldTransform = Matrix4.clone(this._transform, scratchHPRMatrix1);
@@ -722,7 +721,6 @@ define([
         pitch : {
             get : function() {
                 if (this._mode !== SceneMode.MORPHING) {
-                    var origin = this.positionWC;
                     var ellipsoid = this._projection.ellipsoid;
 
                     var oldTransform = Matrix4.clone(this._transform, scratchHPRMatrix1);
@@ -750,7 +748,6 @@ define([
         roll : {
             get : function() {
                 if (this._mode !== SceneMode.MORPHING) {
-                    var origin = this.positionWC;
                     var ellipsoid = this._projection.ellipsoid;
 
                     var oldTransform = Matrix4.clone(this._transform, scratchHPRMatrix1);
@@ -1663,7 +1660,6 @@ define([
     };
 
     var scratchLookAtMatrix4 = new Matrix4();
-    var scratchLookAtTransformMatrix4 = new Matrix4();
 
     /**
      * Sets the camera position and orientation using a target and offset. The target must be given in
@@ -2274,6 +2270,34 @@ define([
         return Math.max(0.0, Cartesian3.magnitude(proj) - boundingSphere.radius);
     };
 
+    var scratchPixelSize = new Cartesian2();
+
+    /**
+     * Return the pixel size in meters.
+     *
+     * @param {BoundingSphere} boundingSphere The bounding sphere in world coordinates.
+     * @param {Number} drawingBufferWidth The drawing buffer width.
+     * @param {Number} drawingBufferHeight The drawing buffer height.
+     * @returns {Number} The pixel size in meters.
+     */
+    Camera.prototype.getPixelSize = function(boundingSphere, drawingBufferWidth, drawingBufferHeight) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(boundingSphere)) {
+            throw new DeveloperError('boundingSphere is required.');
+        }
+        if (!defined(drawingBufferWidth)) {
+            throw new DeveloperError('drawingBufferWidth is required.');
+        }
+        if (!defined(drawingBufferHeight)) {
+            throw new DeveloperError('drawingBufferHeight is required.');
+        }
+        //>>includeEnd('debug');
+
+        var distance = this.distanceToBoundingSphere(boundingSphere);
+        var pixelSize = this.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, scratchPixelSize);
+        return Math.max(pixelSize.x, pixelSize.y);
+    };
+
     function createAnimation2D(camera, duration) {
         var position = camera.position;
         var translateX = position.x < -camera._maxCoord.x || position.x > camera._maxCoord.x;
@@ -2429,11 +2453,6 @@ define([
 
 
     var scratchFlyToDestination = new Cartesian3();
-    var scratchFlyToQuaternion = new Quaternion();
-    var scratchFlyToMatrix3 = new Matrix3();
-    var scratchFlyToDirection = new Cartesian3();
-    var scratchFlyToUp = new Cartesian3();
-    var scratchFlyToMatrix4 = new Matrix4();
     var newOptions = {
         destination : undefined,
         heading : undefined,

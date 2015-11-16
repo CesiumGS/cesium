@@ -8,7 +8,6 @@ defineSuite([
         Cartesian3,
         Cartesian4) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('constructs', function() {
         var normal = Cartesian3.UNIT_X;

@@ -4,7 +4,6 @@ defineSuite([
     ], function(
         binarySearch) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('can perform a binary search for 0', function() {
         var array = [0, 1, 2, 3, 4, 5, 6, 7];

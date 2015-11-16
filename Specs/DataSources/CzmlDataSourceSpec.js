@@ -54,7 +54,6 @@ defineSuite([
         pollToPromise,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
 
     function makePacket(packet) {
         return [{
@@ -548,7 +547,6 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(clockPacket);
-        var entity = dataSource.entities.values[0];
 
         expect(dataSource.clock).toBeDefined();
         expect(dataSource.clock.startTime).toEqual(interval.start);
@@ -1908,8 +1906,6 @@ defineSuite([
     });
 
     it('Can use interval reference properties for positions', function() {
-        var time = JulianDate.now();
-
         var packets = [{
             id : 'document',
             version : '1.0'
@@ -1998,7 +1994,6 @@ defineSuite([
     });
 
     it('Polyline glow.', function() {
-        var time = JulianDate.now();
         var packet = {
             id : 'polylineGlow',
             polyline : {

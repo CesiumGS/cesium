@@ -1,12 +1,12 @@
 /*global define*/
 define([
-    '../Core/defaultValue',
-    '../Core/defined',
-    '../Renderer/WebGLConstants'
-], function(
-    defaultValue,
-    defined,
-    WebGLConstants) {
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Renderer/WebGLConstants'
+    ], function(
+        defaultValue,
+        defined,
+        WebGLConstants) {
     "use strict";
 
     function webGLConstantToGlslType(webGLValue) {

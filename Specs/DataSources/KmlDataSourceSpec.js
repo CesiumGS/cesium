@@ -46,7 +46,6 @@ defineSuite([
         HorizontalOrigin,
         LabelStyle) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs*/
 
     var parser = new DOMParser();
 
@@ -89,7 +88,6 @@ defineSuite([
     var uberIconColor = Color.fromBytes(0xdd, 0xdd, 0xdd, 0xdd);
     var uberIconScale = 3;
     var uberIconHeading = CesiumMath.toRadians(-45);
-    var uberIcon = 'test.png';
     var uberIconHotspot = new Cartesian2(45, -46);
 
     var uberLabelColor = Color.fromBytes(0xee, 0xee, 0xee, 0xee);
@@ -458,9 +456,6 @@ defineSuite([
     });
 
     it('Feature: TimeSpan gracefully handles empty fields', function() {
-        var endDate = JulianDate.fromIso8601('1945-08-06');
-        var beginDate = JulianDate.fromIso8601('1941-12-07');
-
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
         <Placemark>\
             <TimeSpan>\
@@ -1899,7 +1894,6 @@ defineSuite([
     });
 
     it('PolyStyle: Sets fill', function() {
-        var color = Color.fromBytes(0xcc, 0xdd, 0xee, 0xff);
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <Placemark>\
             <Style>\
@@ -1917,7 +1911,6 @@ defineSuite([
     });
 
     it('PolyStyle: Sets outline', function() {
-        var color = Color.fromBytes(0xcc, 0xdd, 0xee, 0xff);
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <Placemark>\
             <Style>\
@@ -2661,7 +2654,6 @@ defineSuite([
     });
 
     it('Geometry gx:MultiTrack: sets position and availability without interpolate', function() {
-        var time = new JulianDate.fromIso8601('2010-05-28T02:02:09Z');
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <Placemark xmlns="http://www.opengis.net/kml/2.2"\
                      xmlns:gx="http://www.google.com/kml/ext/2.2">\
@@ -2702,7 +2694,6 @@ defineSuite([
     });
 
     it('Geometry gx:MultiTrack: sets position and availability with interpolate', function() {
-        var time = new JulianDate.fromIso8601('2010-05-28T02:02:09Z');
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <Placemark xmlns="http://www.opengis.net/kml/2.2"\
                      xmlns:gx="http://www.google.com/kml/ext/2.2">\
@@ -2742,7 +2733,6 @@ defineSuite([
     });
 
     it('Geometry gx:MultiTrack: sets position and availability altitudeMode absolute, extrude, with interpolate', function() {
-        var time = new JulianDate.fromIso8601('2010-05-28T02:02:09Z');
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <Placemark xmlns="http://www.opengis.net/kml/2.2"\
                      xmlns:gx="http://www.google.com/kml/ext/2.2">\

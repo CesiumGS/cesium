@@ -4,7 +4,6 @@ defineSuite([
     ], function(
         definedNotNull) {
     "use strict";
-    /*global jasmine,it,expect*/
 
     it('works', function() {
         expect(definedNotNull(0)).toEqual(true);
