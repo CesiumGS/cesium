@@ -276,7 +276,8 @@ define([
             rectangle : rectangle,
             relativeToCenter : this._boundingSphere.center,
             ellipsoid : ellipsoid,
-            exaggeration : exaggeration
+            exaggeration : exaggeration,
+            orientedBoundingBox : this._orientedBoundingBox
         });
 
         if (!defined(verticesPromise)) {
