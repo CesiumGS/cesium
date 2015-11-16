@@ -43,7 +43,7 @@
 function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer');
+var viewer = new Cesium.Viewer('cesiumContainer', {showRenderLoopErrors : false});
 
 var videoElement = document.getElementById('trailer');
 
@@ -106,6 +106,16 @@ Sandcastle.addToolbarButton('Toggle Video Overlay', function() {
     }
     videoElement.style.display = 'none';
 });
+
+// Older browsers do not support WebGL video textures,
+// put up a friendly error message indicating such.
+viewer.scene.renderError.addEventListener(function() {
+    if(!videoElement.paused){
+        videoElement.pause();
+    }
+    viewer.cesiumWidget.showErrorPanel('This browser does not support cross-origin WebGL video textures.', '', '');
+});
+
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
