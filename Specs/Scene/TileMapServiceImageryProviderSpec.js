@@ -40,7 +40,6 @@ defineSuite([
         pollToPromise,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -188,10 +187,11 @@ defineSuite([
             url : 'made/up/tms/server/'
         });
 
+        expect(provider.url).toEqual('made/up/tms/server/');
+
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            expect(provider.url).toEqual('made/up/tms/server/');
             expect(provider.tileWidth).toEqual(256);
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toBeUndefined();
@@ -214,7 +214,11 @@ defineSuite([
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
-        expect(provider.credit).toBeUndefined();
+        return pollToPromise(function() {
+          return provider.ready;
+        }).then(function() {
+          expect(provider.credit).toBeUndefined();
+        });
     });
 
     it('turns the supplied credit into a logo', function() {
@@ -222,10 +226,15 @@ defineSuite([
             url : 'made/up/gms/server',
             credit : 'Thanks to our awesome made up source of this imagery!'
         });
-        expect(providerWithCredit.credit).toBeDefined();
+        return pollToPromise(function() {
+          return providerWithCredit.ready;
+        }).then(function() {
+          expect(providerWithCredit.credit).toBeDefined();
+        });
     });
 
     it('routes resource request through a proxy if one is specified', function() {
+        /*jshint unused: false*/
         var proxy = new DefaultProxy('/proxy/');
         var requestMetadata = when.defer();
         spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
@@ -234,12 +243,12 @@ defineSuite([
         });
 
         var provider = new TileMapServiceImageryProvider({
-            url : 'made/up/tms/server',
+            url : 'server.invalid',
             proxy : proxy
         });
 
         return requestMetadata.promise.then(function(url) {
-            expect(url.indexOf(proxy.getURL('made/up/tms/server'))).toEqual(0);
+            expect(url.indexOf(proxy.getURL('server.invalid'))).toEqual(0);
         });
     });
 
@@ -562,7 +571,6 @@ defineSuite([
             expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
             expect(provider.tilingScheme.projection).toBeInstanceOf(GeographicProjection);
 
-            var projection = provider.tilingScheme.projection;
             var expectedSW = Cartographic.fromDegrees(-123.0, -10.0);
             var expectedNE = Cartographic.fromDegrees(-110.0, 11.0);
 
@@ -603,7 +611,6 @@ defineSuite([
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.tilingScheme.projection).toBeInstanceOf(WebMercatorProjection);
 
-            var projection = provider.tilingScheme.projection;
             var expectedSW = Cartographic.fromDegrees(-123.0, -10.0);
             var expectedNE = Cartographic.fromDegrees(-110.0, 11.0);
 
@@ -644,7 +651,6 @@ defineSuite([
             expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
             expect(provider.tilingScheme.projection).toBeInstanceOf(GeographicProjection);
 
-            var projection = provider.tilingScheme.projection;
             var expectedSW = Cartographic.fromDegrees(-123.0, -10.0);
             var expectedNE = Cartographic.fromDegrees(-110.0, 11.0);
 

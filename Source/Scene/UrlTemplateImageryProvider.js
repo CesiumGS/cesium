@@ -119,6 +119,7 @@ define([
      *                                                 Until that method is called, {@see UrlTemplateImageryProvider#ready} will be false.  When this property is true,
      *                                                 even `options.url` is optional.  This mechanism is useful when implementing other imagery providers in terms
      *                                                 of this one.
+     * @param {Promise} [options.readyPromise] A promise that resolves to true when the provider is ready for use.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
@@ -155,6 +156,9 @@ define([
      */
     var UrlTemplateImageryProvider = function UrlTemplateImageryProvider(options) {
         this._errorEvent = new Event();
+        if (options.hasReadyPromise) {
+          this._readyPromise = when.defer();
+        }
         this.reinitialize(options);
     };
 
@@ -491,7 +495,11 @@ define([
             //>>includeEnd('debug');
             this._urlParts = urlTemplateToParts(this._url, tags);
             this._pickFeaturesUrlParts = urlTemplateToParts(this._pickFeaturesUrl, pickFeaturesTags);
-            this._readyPromise = when.resolve(true);
+            if (defined(this._readyPromise)) {
+              this._readyPromise.resolve(true);
+            } else {
+              this._readyPromise = when.resolve(true);
+            }
         }
     };
 

@@ -98,19 +98,12 @@ define([
         //>>includeEnd('debug');
 
         var url = appendForwardSlash(options.url);
-<<<<<<< HEAD
         this._url = url;
-        this._readyPromise = when.defer();
 
         var imageryProvider = new UrlTemplateImageryProvider({
-            deferReadiness: true
+            deferReadiness: true,
+            hasReadyPromise: true
         });
-=======
-
-        this._url = url;
-        this._ready = false;
-        this._errorEvent = new Event();
->>>>>>> 744972be145b075f3445d667631b76c2dbe05bfb
 
         var that = this;
         var metadataError;
@@ -174,7 +167,7 @@ define([
                 } else {
                     var message = joinUrls(url, 'tilemapresource.xml') + 'specifies an unsupported profile attribute, ' + tilingSchemeName + '.';
                     metadataError = TileProviderError.handleError(metadataError, imageryProvider, imageryProvider.errorEvent, message, undefined, undefined, undefined, requestMetadata);
-                    that._readyPromise.reject(new RuntimeError(message));
+                    imageryProvider.readyPromise.reject(new RuntimeError(message));
                     return;
                 }
             }
@@ -238,8 +231,6 @@ define([
 
             var templateUrl = url + '{z}/{x}/{reverseY}.' + fileExtension;
 
-            that._readyPromise.resolve(true);
-
             imageryProvider.reinitialize({
                 url : templateUrl,
                 tilingScheme : tilingScheme,
@@ -265,6 +256,7 @@ define([
             var rectangle = defaultValue(options.rectangle, tilingScheme.rectangle);
 
             var templateUrl = url + '{z}/{x}/{reverseY}.' + fileExtension;
+
             imageryProvider.reinitialize({
                 url : templateUrl,
                 tilingScheme : tilingScheme,
