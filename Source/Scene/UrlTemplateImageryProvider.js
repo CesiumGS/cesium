@@ -119,8 +119,10 @@ define([
      *                                                 Until that method is called, {@see UrlTemplateImageryProvider#ready} will be false.  When this property is true,
      *                                                 even `options.url` is optional.  This mechanism is useful when implementing other imagery providers in terms
      *                                                 of this one.
-     * @param {Promise} [options.readyPromise] A promise that resolves to true when the provider is ready for use.
-     *
+     * @param {Boolean} [options.hasReadyPromise=false] True to create a deferred object whose promise resolves to true when the provider is ready for use.
+     *                                                  When this property is true, {@see UrlTemplateImageryProvider#readyPromise} will initialize to a deferred object
+     *                                                  that will be resolved upon a later call to {@see UrlTemplateImageryProvider#reinitialize}.
+     *                                                  This property is meant to be used in conjunction with deferReadiness.
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
