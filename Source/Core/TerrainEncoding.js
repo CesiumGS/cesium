@@ -1,5 +1,11 @@
 /*global define*/
-define(function() {
+define([
+        './ComponentDatatype',
+        './TextureCompression'
+    ], function(
+        ComponentDatatype,
+        TextureCompression
+    ) {
     "use strict";
 
     /**
@@ -17,7 +23,7 @@ define(function() {
      * @param {Number} maximumZ The maximum distance in the z direction.
      * @param {Matrix3} matrix The matrix used to decompress the vertices.
      */
-    var TerrainEncoding = function(compression, minimumX, maximumX, minimumY, maximumY, minimumZ, maximumZ, matrix) {
+    var TerrainEncoding = function(compression, minimumX, maximumX, minimumY, maximumY, minimumZ, maximumZ, matrix, hasVertexNormals) {
         /**
          * How the vertices of the mesh were compressed.
          * @type {TerrainCompression}
@@ -65,6 +71,95 @@ define(function() {
          * @type {Matrix3}
          */
         this.matrix = matrix;
+
+        /**
+         * The terrain mesh contains normals.
+         * @type {Boolean}
+         */
+        this.hasVertexNormals = hasVertexNormals;
+    };
+
+    var attributesNone = {
+        position3DAndHeight : 0,
+        textureCoordAndEncodedNormals : 1
+    };
+    var attributes16WithNormals = {
+        compressed : 0,
+        encodedNormal : 1
+    };
+    var attributes = {
+        compressed : 0
+    };
+
+    TerrainEncoding.prototype.getAttributes = function(buffer) {
+        var datatype = ComponentDatatype.FLOAT;
+        var sizeInBytes = ComponentDatatype.getSizeInBytes(datatype);
+        var stride;
+
+        if (this.compression === TerrainCompression.NONE) {
+            var position3DAndHeightLength = 4;
+            var numTexCoordComponents = this.hasVertexNormals ? 3 : 2;
+            stride = (this.hasVertexNormals ? 7 : 6) * sizeInBytes;
+            return[{
+                index : attributesNone.position3DAndHeight,
+                vertexBuffer : buffer,
+                componentDatatype : datatype,
+                componentsPerAttribute : position3DAndHeightLength,
+                offsetInBytes : 0,
+                strideInBytes : stride
+            }, {
+                index : attributesNone.textureCoordAndEncodedNormals,
+                vertexBuffer : buffer,
+                componentDatatype : datatype,
+                componentsPerAttribute : numTexCoordComponents,
+                offsetInBytes : position3DAndHeightLength * sizeInBytes,
+                strideInBytes : stride
+            }];
+        } else if (this.compression === TerrainCompression.BITS16 && this.hasVertexNormals) {
+            var compressedLength = 4;
+            stride = 5;
+            return[{
+                index : attributes16WithNormals.compressed,
+                vertexBuffer : buffer,
+                componentDatatype : datatype,
+                componentsPerAttribute : compressedLength,
+                offsetInBytes : 0,
+                strideInBytes : stride
+            }, {
+                index : attributes16WithNormals.encodedNormal,
+                vertexBuffer : buffer,
+                componentDatatype : datatype,
+                componentsPerAttribute : 1,
+                offsetInBytes : compressedLength * sizeInBytes,
+                strideInBytes : stride
+            }];
+        } else if (this.compression === TerrainCompression.BITS16) {
+            return[{
+                index : attributes.compressed,
+                vertexBuffer : buffer,
+                componentDatatype : datatype,
+                componentsPerAttribute : 4
+            }];
+        }
+
+        var numComponents = this.compression === TerrainCompression.BITS12 ? 3 : 2;
+        numComponents += this.hasVertexNormals ? 1 : 0;
+        return [{
+            index : attributes.compressed,
+            vertexBuffer : buffer,
+            componentDatatype : datatype,
+            componentsPerAttribute : numComponents
+        }];
+    };
+
+    TerrainEncoding.prototype.getAttributeLocations = function() {
+        if (this.compression === TerrainCompression.NONE) {
+            return attributesNone;
+        } else if (this.compression === TerrainCompression.BITS16 && this.hasVertexNormals) {
+            return attributes16WithNormals;
+        } else {
+            return attributes;
+        }
     };
 
     return TerrainEncoding;
