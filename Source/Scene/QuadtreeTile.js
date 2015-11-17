@@ -164,17 +164,16 @@ define([
         var eastNorth = Cartographic.fromRadians(rectangle.east, rectangle.north);
         var bottomLeft = tilingScheme.positionToTileXY(westSouth, level);
         var topRight = tilingScheme.positionToTileXY(eastNorth, level);
-        var result = new Array((topRight.x - bottomLeft.x) * (bottomLeft.y - topRight.y));
+        var result = new Array();
 
-        var index = 0;
-        for (var y = topRight.y; y < bottomLeft.y; ++y) {
-            for (var x = bottomLeft.x; x < topRight.x; ++x) {
-                result[index++] = new QuadtreeTile({
+        for (var y = topRight.y; y <= bottomLeft.y; y++) {
+            for (var x = bottomLeft.x; x <= topRight.x; x++) {
+                result.push(new QuadtreeTile({
                     tilingScheme : tilingScheme,
                     x : x,
                     y : y,
                     level : level
-                });
+                }));
             }
         }
 
