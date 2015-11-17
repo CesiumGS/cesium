@@ -354,6 +354,51 @@ define([
         });
     }
 
+    function handleTreeReferenceTile(tiles3D, selectedTiles, tile, stack, fullyVisible, frameState) {
+        // 1) If its children are not loaded, load the sub-tree it
+        // points to and then select its root child
+        // 2) If its children are already loaded,
+        // select its (root) child since the geometric error of it is
+        // same as this tile's
+        var childrenLength = tile.children.length;
+        var contentUrl = tile._header.content.url;
+        var child;
+        // If the sub-tree has already been added and child
+        // content requested, select the child and continue
+        if (childrenLength > 0 && tile.numberOfChildrenWithoutContent === 0) {
+            selectTile(selectedTiles, tile.children[0], fullyVisible, frameState);
+            return;
+        // Otherwise, select the parent tile,
+        // to avoid showing an empty space
+        // Note that t.parent must always be defined here --
+        // t should never be the root of the tileset AND
+        // contain another 3D tiles tree
+        } else {
+            selectTile(selectedTiles, tile.parent, fullyVisible, frameState);
+        }
+
+        // The tile has no child yet, meaning its content
+        // tiles.json has not yet been loaded. Loading has not
+        // yet been started, so initiate the loading.
+        if (childrenLength === 0.0 && !tile.tilesLoading) {
+            tile.tilesLoading = true;
+            var tilesUrl = tiles3D._url + contentUrl;
+            loadAndSelectSubTree(tiles3D, selectedTiles, tilesUrl, tile, stack, fullyVisible, frameState);
+
+        // Tiles.json loading has finished
+        } else if (!tile.tilesLoading) {
+            child = tile.children[0];
+            if (child.isContentUnloaded()) {
+                requestContent(tiles3D, child);
+            }
+            if (child.isReady()) {
+                stack.push(child);
+                selectTile(selectedTiles, child,
+                    fullyVisible, frameState);
+            }
+        }
+    }
+
     function selectTile(selectedTiles, tile, fullyVisible, frameState) {
         // Don't select empty tiles, such as in the case of tiles pointing to
         // another tiles.json
@@ -408,6 +453,8 @@ define([
             // Depth first.  We want the high detail tiles first.
             var t = stack.pop();
             ++stats.visited;
+            var contentUrl = t._header.content.url;
+            var extension = contentUrl.substring(contentUrl.lastIndexOf('.') + 1);
 
             var planeMask = t.visibility(cullingVolume);
             if (planeMask === CullingVolume.MASK_OUTSIDE) {
@@ -430,6 +477,19 @@ define([
                 // With additive refinement, the tile is rendered
                 // regardless of if its SSE is sufficient.
                 selectTile(selectedTiles, t, fullyVisible, frameState);
+
+                // Check if the tile contains another 3D tile tree.
+                // If so:
+                // 1) If its children are not loaded, load the sub-tree it
+                // points to and then select its root child
+                // 2) If its children are already loaded,
+                // select its (root) child since the geometric error of it is
+                // same as this tile's
+                if (sse <= maximumScreenSpaceError ||
+                    (childrenLength === 0.0 && extension === "json")) {
+                    handleTreeReferenceTile(tiles3D, selectedTiles, t,
+                        stack, fullyVisible, frameState);
+                }
 
 // TODO: experiment with prefetching children
                 if (sse > maximumScreenSpaceError) {
@@ -468,12 +528,10 @@ define([
             } else {
                 // t.refine === Cesium3DTileRefine.REPLACE
                 //
-                // With replacement refinement, the if the tile's SSE
+                // With replacement refinement, if the tile's SSE
                 // is not sufficient, its children (or ancestors) are
                 // rendered instead
 
-                var contentUrl = t._header.content.url;
-                var extension = contentUrl.substring(contentUrl.lastIndexOf('.') + 1);
                 if ((sse <= maximumScreenSpaceError) || (childrenLength === 0.0)) {
                     // This tile meets the SSE so add its commands, unless
                     // this tile is a tiles.json content tile.
@@ -488,44 +546,11 @@ define([
                     // 2) If its children are already loaded,
                     // select its (root) child since the geometric error of it is
                     // same as this tile's
-
                     if (extension !== "json") {
                         selectTile(selectedTiles, t, fullyVisible, frameState);
                     } else {
-                        // If the sub-tree has already been added and child
-                        // content requested, select the child and continue
-                        if (childrenLength > 0 && t.numberOfChildrenWithoutContent === 0) {
-                            selectTile(selectedTiles, t.children[0], fullyVisible, frameState);
-                            continue;
-                        // Otherwise, select the parent tile,
-                        // to avoid showing an empty space
-                        // Note that t.parent must always be defined here --
-                        // t should never be the root of the tileset AND
-                        // contain another 3D tiles tree
-                        } else {
-                            selectTile(selectedTiles, t.parent, fullyVisible, frameState);
-                        }
-
-                        // The tile has no child yet, meaning its content
-                        // tiles.json has not yet been loaded. Loading has not
-                        // yet been started, so initiate the loading.
-                        if (childrenLength === 0.0 && !t.tilesLoading) {
-                            t.tilesLoading = true;
-                            var tilesUrl = tiles3D._url + contentUrl;
-                            loadAndSelectSubTree(tiles3D, selectedTiles, tilesUrl, t, stack, fullyVisible, frameState);
-
-                        // Tiles.json loading has finished
-                        } else if (!t.tilesLoading) {
-                            child = t.children[0];
-                            if (child.isContentUnloaded()) {
-                                requestContent(tiles3D, child);
-                            }
-                            if (child.isReady()) {
-                                stack.push(child);
-                                selectTile(selectedTiles, child,
-                                    fullyVisible, frameState);
-                            }
-                        }
+                        handleTreeReferenceTile(tiles3D, selectedTiles, t,
+                            stack, fullyVisible, frameState);
                     }
                 } else {
                     // Tile does not meet SSE.
