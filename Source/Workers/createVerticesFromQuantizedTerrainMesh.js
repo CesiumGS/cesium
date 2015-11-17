@@ -14,6 +14,7 @@ define([
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
         '../Core/TerrainCompression',
+        '../Core/TerrainEncoding',
         '../Core/Transforms',
         './createTaskProcessorWorker'
     ], function(
@@ -31,6 +32,7 @@ define([
         Matrix4,
         OrientedBoundingBox,
         TerrainCompression,
+        TerrainEncoding,
         Transforms,
         createTaskProcessorWorker) {
     "use strict";
@@ -127,18 +129,18 @@ define([
         var encodeMode;
         var vertexStride;
 
-         if (maxDim < SHIFT_LEFT_16 - 1.0) {
-             encodeMode = TerrainCompression .BITS16;
-             vertexStride = 4;
-         } else if (maxDim < SHIFT_LEFT_12 - 1.0) {
-             encodeMode = TerrainCompression .BITS12;
-             vertexStride = 3;
-         } else if (maxDim < SHIFT_LEFT_8 - 1.0) {
-             encodeMode = TerrainCompression .BITS8;
-             vertexStride = 2;
-         } else {
-             encodeMode = TerrainCompression .NONE;
-             vertexStride = 6;
+        if (maxDim < SHIFT_LEFT_16 - 1.0) {
+            encodeMode = TerrainCompression .BITS16;
+            vertexStride = 4;
+        } else if (maxDim < SHIFT_LEFT_12 - 1.0) {
+            encodeMode = TerrainCompression .BITS12;
+            vertexStride = 3;
+        } else if (maxDim < SHIFT_LEFT_8 - 1.0) {
+            encodeMode = TerrainCompression .BITS8;
+            vertexStride = 2;
+        } else {
+            encodeMode = TerrainCompression .NONE;
+            vertexStride = 6;
         }
 
         if (hasVertexNormals) {
@@ -291,6 +293,10 @@ define([
 
         transferableObjects.push(vertexBuffer.buffer, indexBuffer.buffer);
 
+        // TODO: can undo scale and bias with matrix multiply
+        var matrix = Matrix4.getRotation(fromENU, new Matrix3());
+        var encoding = new TerrainEncoding(encodeMode, xMin, xMax, yMin, yMax, zMin, zMax, matrix);
+
         return {
             vertices : vertexBuffer.buffer,
             indices : indexBuffer.buffer,
@@ -300,7 +306,8 @@ define([
             maximumHeight : maximumHeight,
             boundingSphere : boundingSphere,
             orientedBoundingBox : orientedBoundingBox,
-            occludeePointInScaledSpace : occludeePointInScaledSpace
+            occludeePointInScaledSpace : occludeePointInScaledSpace,
+            encoding : encoding
         };
     }
 

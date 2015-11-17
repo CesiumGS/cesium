@@ -299,6 +299,7 @@ define([
             var obb = defaultValue(result.orientedBoundingBox, that._orientedBoundingBox);
             var occlusionPoint = defaultValue(result.occludeePointInScaledSpace, that._horizonOcclusionPoint);
             var stride = result.vertexStride;
+            var terrainEncoding = result.encoding;
 
             return new TerrainMesh(
                     rtc,
@@ -309,7 +310,8 @@ define([
                     boundingSphere,
                     occlusionPoint,
                     stride,
-                    obb);
+                    obb,
+                    terrainEncoding);
         });
     };
 
