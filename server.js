@@ -1,7 +1,6 @@
 (function() {
     "use strict";
-    /*global console,require,__dirname,process*/
-    /*jshint es3:false*/
+    /*jshint node:true*/
 
     var express = require('express');
     var compression = require('compression');

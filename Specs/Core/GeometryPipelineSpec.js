@@ -1639,8 +1639,8 @@ defineSuite([
                 normal : true,
                 st : true
             }),
-            maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
-            minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
+            maximum : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimum : new Cartesian3(-250000.0, -250000.0, -250000.0)
         }));
         geometry = GeometryPipeline.computeBinormalAndTangent(geometry);
         var actualTangents = geometry.attributes.tangent.values;
@@ -1648,8 +1648,8 @@ defineSuite([
 
         var expectedGeometry = BoxGeometry.createGeometry(new BoxGeometry({
             vertexFormat: VertexFormat.ALL,
-            maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
-            minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
+            maximum : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimum : new Cartesian3(-250000.0, -250000.0, -250000.0)
         }));
         var expectedTangents = expectedGeometry.attributes.tangent.values;
         var expectedBinormals = expectedGeometry.attributes.binormal.values;
@@ -1679,8 +1679,8 @@ defineSuite([
             vertexFormat : new VertexFormat({
                 position : true
             }),
-            maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
-            minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
+            maximum : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimum : new Cartesian3(-250000.0, -250000.0, -250000.0)
         }));
         expect(geometry.attributes.normal).not.toBeDefined();
         geometry = GeometryPipeline.compressVertices(geometry);
@@ -1693,8 +1693,8 @@ defineSuite([
                 position : true,
                 normal : true
             }),
-            maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
-            minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
+            maximum : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimum : new Cartesian3(-250000.0, -250000.0, -250000.0)
         }));
         expect(geometry.attributes.normal).toBeDefined();
         var originalNormals = Array.prototype.slice.call(geometry.attributes.normal.values);
@@ -1717,8 +1717,8 @@ defineSuite([
                 position : true,
                 st : true
             }),
-            maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
-            minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
+            maximum : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimum : new Cartesian3(-250000.0, -250000.0, -250000.0)
         }));
         expect(geometry.attributes.st).toBeDefined();
         var originalST = Array.prototype.slice.call(geometry.attributes.st.values);
@@ -1747,8 +1747,8 @@ defineSuite([
                 normal : true,
                 st : true
             }),
-            maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
-            minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
+            maximum : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimum : new Cartesian3(-250000.0, -250000.0, -250000.0)
         }));
         expect(geometry.attributes.normal).toBeDefined();
         expect(geometry.attributes.st).toBeDefined();
@@ -1778,8 +1778,8 @@ defineSuite([
                 tangent : true,
                 binormal : true
             }),
-            maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
-            minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
+            maximum : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimum : new Cartesian3(-250000.0, -250000.0, -250000.0)
         }));
         expect(geometry.attributes.normal).toBeDefined();
         expect(geometry.attributes.tangent).toBeDefined();

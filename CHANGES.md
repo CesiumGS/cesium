@@ -15,6 +15,7 @@ Change Log
 * Entity collections have a reference to their owner (usually a data source, but can be a `CompositeEntityCollection`).
 * `GeoJsonDataSource.load` now takes an optional `describeProperty` function for generating feature description properties. [#3140](https://github.com/AnalyticalGraphicsInc/cesium/pull/3140)
 * Fixed a bug which caused `Entity` polyline graphics to be incorrect when a scene's ellipsoid was not WGS84. [#3174](https://github.com/AnalyticalGraphicsInc/cesium/pull/3174)
+* Fixed `JulianDate.fromIso8601 ` so that it correctly parses the `YYYY-MM-DDThh:mmTZD` format.
 * Added `ImageryProvider.readyPromise` and `TerrainProvider.readyPromise` and implemented it in all terrain and imagery providers.  This is a promise which resolves when `ready` becomes true and rejected if there is an error during initialization. [#3175](https://github.com/AnalyticalGraphicsInc/cesium/pull/3175)
 * Added support for fog near the horizon, which improves performance by rendering less terrain tiles and reduces terrain tile requests.  This is enabled by default.  See `Scene.fog` for options.  [#3154](https://github.com/AnalyticalGraphicsInc/cesium/pull/3154)
 * Added `Queue.peek` to return the item at the front of a Queue.
@@ -23,6 +24,7 @@ Change Log
 * Added support for incrementally loading textures after a Model is ready. This allows the Model to be visible as soon as possible while its textures are loaded in the background.
 * Added `Cartographic.fromCartesian` function.
 * Added `Camera.getPixelSize` function to get the size of a pixel in meters based on the current view.
+* Added terrain exaggeration. Enabled on viewer creation with the exaggeration scalar as the `terrainExaggeration` option.
 * Added `getOpenStreetMapImageryProvider` function to replace the `OpenStreetMapImageryProvider` class. This function returns a constructed `UrlTemplateImageryProvider`.
 
 ### 1.15 - 2015-11-02
