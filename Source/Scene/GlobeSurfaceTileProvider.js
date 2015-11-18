@@ -1129,7 +1129,7 @@ define([
             uniformMap.waterMask = waterMaskTexture;
             Cartesian4.clone(surfaceTile.waterMaskTranslationAndScale, uniformMap.waterMaskTranslationAndScale);
 
-            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(context, frameState.mode, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog);
+            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog);
             command.renderState = renderState;
             command.primitiveType = PrimitiveType.TRIANGLES;
             command.vertexArray = surfaceTile.vertexArray;
@@ -1179,9 +1179,10 @@ define([
 
         ++tileProvider._usedPickCommands;
 
+        var surfaceTile = drawCommand.owner.data;
         var useWebMercatorProjection = frameState.projection instanceof WebMercatorProjection;
 
-        pickCommand.shaderProgram = tileProvider._surfaceShaderSet.getPickShaderProgram(frameState.context, frameState.mode, useWebMercatorProjection);
+        pickCommand.shaderProgram = tileProvider._surfaceShaderSet.getPickShaderProgram(frameState, surfaceTile, useWebMercatorProjection);
         pickCommand.renderState = tileProvider._pickRenderState;
 
         pickCommand.owner = drawCommand.owner;

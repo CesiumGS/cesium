@@ -3,14 +3,12 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Renderer/ShaderProgram',
-        '../Scene/SceneMode',
-        '../Scene/terrainAttributeLocations'
+        '../Scene/SceneMode'
     ], function(
         defined,
         destroyObject,
         ShaderProgram,
-        SceneMode,
-        terrainAttributeLocations) {
+        SceneMode) {
     "use strict";
 
     function GlobeSurfaceShader(numberOfDayTextures, flags, shaderProgram) {
@@ -28,7 +26,6 @@ define([
     function GlobeSurfaceShaderSet() {
         this.baseVertexShaderSource = undefined;
         this.baseFragmentShaderSource = undefined;
-        this._attributeLocations = terrainAttributeLocations;
 
         this._shadersByTexturesFlags = [];
         this._pickShaderPrograms = [];
@@ -66,7 +63,8 @@ define([
         return useWebMercatorProjection ? get2DYPositionFractionMercatorProjection : get2DYPositionFractionGeographicProjection;
     }
 
-    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(context, sceneMode, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog) {
+    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog) {
+        var sceneMode = frameState.mode;
         var flags = sceneMode |
                     (applyBrightness << 2) |
                     (applyContrast << 3) |
@@ -176,10 +174,10 @@ define([
             vs.sources.push(get2DYPositionFraction(useWebMercatorProjection));
 
             var shader = ShaderProgram.fromCache({
-                context : context,
+                context : frameState.context,
                 vertexShaderSource : vs,
                 fragmentShaderSource : fs,
-                attributeLocations : this._attributeLocations
+                attributeLocations : surfaceTile.encoding.getAttributeLocations()
             });
 
             surfaceShader = shadersByFlags[flags] = new GlobeSurfaceShader(numberOfDayTextures, flags, shader);
@@ -189,7 +187,8 @@ define([
         return surfaceShader.shaderProgram;
     };
 
-    GlobeSurfaceShaderSet.prototype.getPickShaderProgram = function(context, sceneMode, useWebMercatorProjection) {
+    GlobeSurfaceShaderSet.prototype.getPickShaderProgram = function(frameState, surfaceTile, useWebMercatorProjection) {
+        var sceneMode = frameState.mode;
         var flags = sceneMode | (useWebMercatorProjection << 2);
         var pickShader = this._pickShaderPrograms[flags];
 
@@ -206,10 +205,10 @@ define([
                 '}\n';
 
             pickShader = this._pickShaderPrograms[flags] = ShaderProgram.fromCache({
-                context : context,
+                context : frameState.context,
                 vertexShaderSource : vs,
                 fragmentShaderSource : fs,
-                attributeLocations : this._attributeLocations
+                attributeLocations : surfaceTile.encoding.getAttributeLocations()
             });
         }
 
