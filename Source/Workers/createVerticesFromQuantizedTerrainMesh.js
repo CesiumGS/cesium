@@ -311,6 +311,8 @@ define([
         };
     }
 
+    // TODO: add skirts
+    /*
     function addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, edgeVertices, center, ellipsoid, rectangle, skirtLength, isWestOrNorthEdge, hasVertexNormals) {
         var start, end, increment;
         var vertexStride = 6;
@@ -380,6 +382,7 @@ define([
 
         return indexBufferIndex;
     }
+    */
 
     return createTaskProcessorWorker(createVerticesFromQuantizedTerrainMesh);
 });

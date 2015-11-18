@@ -1,10 +1,10 @@
 /*global define*/
 define([
         './ComponentDatatype',
-        './TextureCompression'
+        './TerrainCompression'
     ], function(
         ComponentDatatype,
-        TextureCompression
+        TerrainCompression
     ) {
     "use strict";
 
