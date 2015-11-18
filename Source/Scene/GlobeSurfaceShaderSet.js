@@ -2,11 +2,13 @@
 define([
         '../Core/defined',
         '../Core/destroyObject',
+        '../Core/TerrainCompression',
         '../Renderer/ShaderProgram',
         '../Scene/SceneMode'
     ], function(
         defined,
         destroyObject,
+        TerrainCompression,
         ShaderProgram,
         SceneMode) {
     "use strict";
@@ -64,6 +66,25 @@ define([
     }
 
     GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog) {
+        var compression = 0;
+        var compressionDefine = '';
+
+        var terrainEncoding = surfaceTile.encoding;
+        var compressionMode = terrainEncoding.compression;
+        if (compressionMode === TerrainCompression.BITS16 && terrainEncoding.hasVertexNormals) {
+            compression = 1;
+            compressionDefine = 'COMPRESSION_BITS16_NORMAL';
+        } else if (compressionMode === TerrainCompression.BITS16) {
+            compression = 2;
+            compressionDefine = 'COMPRESSION_BITS16';
+        } else if (compressionMode === TerrainCompression.BITS12) {
+            compression = 3;
+            compressionDefine = 'COMPRESSION_BITS12';
+        } else if (compressionMode === TerrainCompression.BITS8) {
+            compression = 4;
+            compressionDefine = 'COMPRESSION_BITS8';
+        }
+
         var sceneMode = frameState.mode;
         var flags = sceneMode |
                     (applyBrightness << 2) |
@@ -77,7 +98,8 @@ define([
                     (enableLighting << 10) |
                     (hasVertexNormals << 11) |
                     (useWebMercatorProjection << 12) |
-                    (enableFog << 13);
+                    (enableFog << 13) |
+                    (compression << 16);
 
         var surfaceShader = surfaceTile.surfaceShader;
         if (defined(surfaceShader) &&
@@ -99,6 +121,7 @@ define([
             var vs = this.baseVertexShaderSource.clone();
             var fs = this.baseFragmentShaderSource.clone();
 
+            vs.defines.push(compressionDefine);
             fs.defines.push('TEXTURE_UNITS ' + numberOfDayTextures);
 
             if (applyBrightness) {
@@ -177,7 +200,7 @@ define([
                 context : frameState.context,
                 vertexShaderSource : vs,
                 fragmentShaderSource : fs,
-                attributeLocations : surfaceTile.encoding.getAttributeLocations()
+                attributeLocations : terrainEncoding.getAttributeLocations()
             });
 
             surfaceShader = shadersByFlags[flags] = new GlobeSurfaceShader(numberOfDayTextures, flags, shader);
@@ -188,6 +211,7 @@ define([
     };
 
     GlobeSurfaceShaderSet.prototype.getPickShaderProgram = function(frameState, surfaceTile, useWebMercatorProjection) {
+        // TODO: compression
         var sceneMode = frameState.mode;
         var flags = sceneMode | (useWebMercatorProjection << 2);
         var pickShader = this._pickShaderPrograms[flags];

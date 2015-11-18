@@ -80,7 +80,7 @@ vec4 getPosition2DMode(vec3 position, float height, vec2 textureCoordinates)
 
 vec4 getPositionColumbusViewMode(vec3 position, float height, vec2 textureCoordinates)
 {
-    return getPositionPlanarEarth(position, height, vec2 textureCoordinates);
+    return getPositionPlanarEarth(position, height, textureCoordinates);
 }
 
 vec4 getPositionMorphingMode(vec3 position, float height, vec2 textureCoordinates)
@@ -183,7 +183,7 @@ void main()
     height = height * (u_maximumHeight - u_minimumHeight) + u_minimumHeight;
 
     position = u_scaleAndBias * position;
-    
+
     vec3 position3DWC = position + u_center3D;
     gl_Position = getPosition(position, height, textureCoordinates);
 
