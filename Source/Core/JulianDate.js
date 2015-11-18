@@ -360,7 +360,7 @@ define([
                 tokens = time.match(matchHoursMinutes);
                 if (tokens !== null) {
                     dashCount = time.split(':').length - 1;
-                    if (dashCount > 0 && dashCount !== 1) {
+                    if (dashCount > 2) {
                         throw new DeveloperError(iso8601ErrorMessage);
                     }
 

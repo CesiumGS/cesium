@@ -434,6 +434,18 @@ defineSuite([
         expect(julianDate).toEqual(expectedDate);
     });
 
+    it('Construct from ISO8601 local calendar date and time with no seconds and UTC offset in basic format', function() {
+        var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 1, 12, 30, 0)));
+        var computedDate = JulianDate.fromIso8601('20090801T0730-0500');
+        expect(computedDate).toEqual(expectedDate);
+    });
+
+    it('Construct from ISO8601 local calendar date and time with no seconds and UTC offset in extended format', function() {
+        var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 1, 12, 30, 0)));
+        var computedDate = JulianDate.fromIso8601('2009-08-01T07:30-05:00');
+        expect(computedDate).toEqual(expectedDate);
+    });
+
     it('Fails to construct an ISO8601 ordinal date with day less than 1', function() {
         expect(function() {
             return JulianDate.fromIso8601('2009-000');

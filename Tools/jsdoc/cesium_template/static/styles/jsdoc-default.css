@@ -1,28 +1,18 @@
+@font-face {
+  font-family: 'Source Sans Pro';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Source Sans Pro'), local('SourceSansPro-Regular'), url(../fonts/SourceSansPro.woff) format('woff');
+}
+
 body
 {
     font-size: 12px;
-    font-family: Arial, Geneva, sans serif;
+    font-family: "Source Sans Pro", "Segoe UI", Arial, Geneva, sans-serif;
     margin: 0;
     color: #000;
     height: 100%;
-    background-color:transparent;
-}
-
-div.show-bkgd {
-    width: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    background-attachment: fixed !important;
-    background-repeat: no-repeat;
-    background-repeat: no-repeat;
-    background: #67addf; /* Old browsers */
-    background: -moz-linear-gradient(top,  #67addf 3%, #ffffff 50%, #5c8727 100%); /* FF3.6+ */
-    background: -webkit-gradient(linear, left top, left bottom, color-stop(3%,#67addf), color-stop(50%,#ffffff), color-stop(100%,#5c8727)); /* Chrome,Safari4+ */
-    background: -webkit-linear-gradient(top,  #67addf 3%,#ffffff 50%,#5c8727 100%); /* Chrome10+,Safari5.1+ */
-    background: -o-linear-gradient(top,  #67addf 3%,#ffffff 50%,#5c8727 100%); /* Opera 11.10+ */
-    background: -ms-linear-gradient(top,  #67addf 3%,#ffffff 50%,#5c8727 100%); /* IE10+ */
-    background: linear-gradient(to bottom,  #67addf 3%,#ffffff 50%,#5c8727 100%); /* W3C */
+    background-color: white;
 }
 
 .hide {
@@ -38,9 +28,8 @@ code {
 
 .description code {
     border-radius: 3px;
-    border: 1px solid #ddd;
     background-color: #f8f8f8;
-    padding: 0 2px;
+    padding: 1px 2px;
 }
 
 div.hr {
@@ -50,6 +39,10 @@ div.hr {
     background-color: #DADADA;
 }
 
+th { font-weight: normal; }
+
+img { border: none; }
+
 a {
     color: #0053CF;
 }
@@ -57,12 +50,13 @@ a:link,
 a:active,
 a:visited {
     color: #0053CF;
+    text-decoration: none;
 }
 
 a:hover,
 a:focus {
     color: ##004AB8;
-    text-decoration: none;
+    text-decoration: underline;
 }
 
 header
@@ -79,16 +73,20 @@ header
 }
 
 #main {
-    float: left;
-    width: 70%;
-    min-width: 300px;
-}
-
-.embedded #main {
-    width: 97%;
     position: relative;
     top: 0;
     left: 0;
+    padding-left: 0;
+}
+
+@media (min-width: 840px) {
+    #main {
+        padding-left: 300px;
+    }
+}
+
+.embedded #main {
+    padding-left: 0;
 }
 
 .popout {
@@ -122,20 +120,9 @@ header
 section
 {
     display: block;
-    border-bottom: 1px solid #ccc;
     position: relative;
-    left: 10px;
-    margin: 0 0 15px 10px;
-    -moz-border-radius: 15px;
-    -webkit-border-radius: 15px;
-    border-radius: 15px;
-    padding: 15px 15px 15px 15px;
-    background-color: #FFFFFF;
-    background-color: rgba(255, 255, 255, 1.0);
-    -moz-box-shadow: 0px 0px 10px #B2CCF0;
-    -webkit-box-shadow: 0px 0px 10px #B2CCF0;
-    box-shadow: 0px 0px 10px #B2CCF0;
-   /* margin-right: 240px; */
+    margin: 0 0 15px;
+    padding: 15px;
 }
 
 .variation {
@@ -152,47 +139,56 @@ section
 /* Start menu */
 div.menu
 {
-    margin: 0 15px 0 -15px;
-    -moz-border-radius-bottomright: 15px;
-    -webkit-border-bottom-right-radius: 15px;
-    -border-bottom-right-radius: 15px;
-    padding: 15px 15px 15px 30px;
-    -moz-box-shadow: 0px 0px 10px #B2CCF0;
-    -webkit-box-shadow: 0px 0px 10px #B2CCF0;
-    box-shadow: 0px 0px 10px #B2CCF0;
-    background-color: rgba(255, 255, 255, 1.0);
-}
-
-#mainIndex div.menu {
-    border-radius: 15px;
-    margin: 25px;
     padding: 15px;
 }
 
-.menuLogo {
-	width: 100%;
-	margin: 0 auto 10px auto;
-	display: block;
+.cesiumLogo {
+    display: block;
+    float: left;
+    position: relative;
+    top: -7px;
+    left: -2px;
+	width: 187px;
+    height: 35px;
+	margin: 0;
 }
 
-.indexLogo {
-	display: block;
-	margin: 0 auto;
-	width: 250px;
+#mainIndex .cesiumLogo {
+    float: none;
+    position: static;
+}
+
+.titleCenterer {
+    display: block;
+    float: right;
+	width: 187px;
+    height: 35px;
 }
 
 div.nav 
 {
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    float: left;
-    width: 30%;
-    min-width: 100px;
-    max-width: 300px;
-    padding: 0 0 10px 0;
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+@media (max-width: 839px) {
+    div.nav {
+        -webkit-columns: 250px;
+         -moz-columns: 250px;
+        columns: 250px;
+        padding-bottom: 90vh;
+    }
+}
+
+@media (min-width: 840px) {
+    div.nav  {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 300px;
+        padding: 0 0 10px 0;
+    }
 }
 
 .embedded div.nav {
@@ -203,7 +199,7 @@ div.indexTitle
 {
     padding: 8px 0 0;
     font-size: 200%;
-    font-weight: bold;
+    font-weight: normal;
     position: absolute;
 }
 
@@ -255,39 +251,17 @@ form
     padding-right: 4px;
 }
 
-div.navStatic
-{
-    position: static;
-    min-height: 1em;
-    background: transparent;
-}
-
 div.nav input.classFilter {
     margin: 5px 10px 5px 0px; /*top, right, bottom, left*/
     width: 90%;
-    border-width: 1px;
-    border-style: solid;
-    border-color: #CCCCCC #999999 #999999 #CCCCCC;
-    -moz-border-radius: 3px;
-    -webkit-border-radius: 3px;
-    -border-radius: 3px;
+    border: 1px solid #ccc;
+    padding: 5px 8px;
 }
 
 #mainIndex div.nav input.classFilter {
     max-width: 250px;
 }
 /* End menu */
-
-nav
-{
-    display: block;
-    float: left;
-    margin-left: -230px;
-    margin-top: 28px;
-    width: 220px;
-    border-left: 1px solid #ccc;
-    padding-left: 9px;
-}
 
 #mainIndex nav, #mainIndex div.nav {
     position: static;
@@ -301,7 +275,6 @@ nav
 }
 
 div.nav ul {
-    font-family: 'Lucida Grande', 'Lucida Sans Unicode', arial, sans-serif;
     font-size: 100%;
     line-height: 17px;
     padding:0;
@@ -343,6 +316,13 @@ footer {
     font-style: italic;
     font-size: 90%;
     text-align: center;
+    clear: both;
+}
+
+@media (max-width: 839px) {
+    footer {
+        padding-bottom: 25px;
+    }
 }
 
 #mainIndex footer {
@@ -353,20 +333,14 @@ footer {
 {
     text-align: center;
     font-size: 2em;
-    font-weight: bold;
-    letter-spacing: 2px;
+    font-weight: normal;
+    letter-spacing: 1px;
     line-height: 1em;
     position: relative;
-    left: 10px;
-    -moz-border-radius: 15px;
-    -webkit-border-radius: 15px;
-    border-radius: 15px;
     padding: 15px;
-    background-color: #FFFFFF;
-    background-color: rgba(255, 255, 255, 1.0);
-    -moz-box-shadow: 0px 0px 10px #B2CCF0;
-    -webkit-box-shadow: 0px 0px 10px #B2CCF0;
-    box-shadow: 0px 0px 10px #B2CCF0;
+    background-color: #f4f4ff;
+    margin: 0;
+    border-bottom: 1px solid #ccc;
 }
 
 #mainIndex .page-title {
@@ -375,8 +349,9 @@ footer {
 
 h1
 {
+    position: relative;
     font-size: 200%;
-    font-weight: bold;
+    font-weight: normal;
     letter-spacing: -0.01em;
     margin: 6px 0 10px 10px;
 }
@@ -384,7 +359,7 @@ h1
 h2
 {
     font-size: 170%;
-    font-weight: bold;
+    font-weight: normal;
     letter-spacing: -0.01em;
     margin: 6px 0 3px 0;
 }
@@ -392,25 +367,32 @@ h2
 h3
 {
     font-size: 200%;
-    font-weight: bold;
+    font-weight: normal;
     letter-spacing: -0.01em;
     margin-top: 20px;
-    margin: 6px 0 3px 0;
+    margin: 25px 0 10px;
+    border-bottom: 1px solid #ccc;
+    clear: both;
 }
+
+#mainIndex h3 { display: none; }
 
 h4
 {
+    position: relative;
     font-size: 140%;
-    font-weight: bold;
+    font-weight: normal;
     letter-spacing: -0.01em;
     margin: 18px 0;
-    color: #A35A00;
+    padding: 2px 4px;
+    background-color: #eee;
+    clear: both;
 }
 
 h5, .container-overview .subsection-title, .details-header
 {
     font-size: 120%;
-    font-weight: bold;
+    font-weight: normal;
     letter-spacing: -0.01em;
     margin: 8px 0 3px 0px;
 }
@@ -432,7 +414,7 @@ h6
 
 .important
 {
-    font-weight: bold;
+    font-weight: normal;
     color: #950B02;
 }
 
@@ -441,15 +423,10 @@ h6
 }
 
 .type-signature {
-    color: #aaa;
-}
-
-.name, .signature {
-    font-family: Consolas, "Lucida Console", Monaco, monospace;
+    color: #888;
 }
 
 .nameContainer .signature {
-    font-size: 90%;
     font-weight: normal;
 }
 
@@ -458,7 +435,7 @@ h6
 #main ul { margin: 0; }
 #main ul { list-style-type: none; }
 
-dd { margin-left: 0.8em; }
+dd { margin-left: 10px; }
 
 .see-list li{
     margin: 0;
@@ -516,13 +493,13 @@ dd { margin-left: 0.8em; }
 .params thead tr, .props thead tr
 {
     background-color: #ddd;
-    font-weight: bold;
+    font-weight: normal;
 }
 
 .params .params thead tr, .props .props thead tr
 {
     background-color: #fff;
-    font-weight: bold;
+    font-weight: normal;
 }
 
 .params th, .props th { border-right: 1px solid #aaa; }
@@ -530,8 +507,7 @@ dd { margin-left: 0.8em; }
 
 .params .optional {
   float: left;
-  border-radius: 3px;
-  background-color: #ddd!important;
+  background-color: #ddd !important;
   font-size: 0.7em;
   padding: 2px 4px;
   margin-right: 5px;
@@ -564,7 +540,6 @@ dd { margin-left: 0.8em; }
         display: block;
     }
     #main {
-        float: none;
         width: auto;
         margin-right: 25px;
     }
@@ -596,6 +571,9 @@ span.attribute-constant {
   font-size: 0.7em;
   padding: 2px 4px;
   margin-right: 8px;
+  margin-bottom: 1px;
+  position: relative;
+  top: -1px;
 }
 
 .description {
@@ -603,6 +581,23 @@ span.attribute-constant {
 }
 
 .source-link {
-    font-size: 85%;
+    font-size: 10px;
     margin-top: 8px;
+    opacity: 0.9;
+}
+
+h4 .doc-link {
+    display: block;
+    width: 14px;
+    height: 14px;
+    position: absolute;
+    top: 6px;
+    left: -14px;
+    background: url(../icons/link.png);
+    opacity: 0;
+    transition: opacity 0.15s ease-in-out;
+}
+
+h4:hover .doc-link {
+    opacity: 0.7;
 }
