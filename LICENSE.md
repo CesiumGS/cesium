@@ -368,6 +368,12 @@ https://www.mapbox.com/maki/
 
 https://github.com/mapbox/maki
 
+### Big Buck Bunny trailer
+
+Creative Commons Attribution 3.0
+(c) copyright 2008, Blender Foundation
+www.bigbuckbunny.org
+
 ### population909500.json ###
 
 https://github.com/dataarts/webgl-globe
