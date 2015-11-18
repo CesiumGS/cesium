@@ -25,6 +25,11 @@ Change Log
 * Added `Cartographic.fromCartesian` function.
 * Added `Camera.getPixelSize` function to get the size of a pixel in meters based on the current view.
 * Added terrain exaggeration. Enabled on viewer creation with the exaggeration scalar as the `terrainExaggeration` option.
+* Added `ImageMaterialProperty.alpha` and a `alpha` uniform to `Image` `Material` types to control overall image opacity. It defaults to 1.0, fully opaque.
+* `ImageMaterialProperty.image` now accepts an `HTMLVideoElement`. You can also assign a video element directly to an Entity `material` property.
+* `Material` image uniforms now accept and `HTMLVideoElement` anywhere it could previously take a `Canvas` element.
+* Added `VideoSynchronizer` helper object for keeping an `HTMLVideoElement` in sync with a scene's clock.
+* Added 'Video' Sandcastle showcase to demonstrate video materials.
 * Added `getOpenStreetMapImageryProvider` function to replace the `OpenStreetMapImageryProvider` class. This function returns a constructed `UrlTemplateImageryProvider`.
 
 ### 1.15 - 2015-11-02
