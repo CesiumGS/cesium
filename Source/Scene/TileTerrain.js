@@ -217,7 +217,7 @@ define([
             typedArray : typedArray,
             usage : BufferUsage.STATIC_DRAW
         });
-        var attributes = tileTerrain.mesh.getAttributes(buffer);
+        var attributes = tileTerrain.mesh.encoding.getAttributes(buffer);
 
         var indexBuffers = tileTerrain.mesh.indices.indexBuffers || {};
         var indexBuffer = indexBuffers[context.id];

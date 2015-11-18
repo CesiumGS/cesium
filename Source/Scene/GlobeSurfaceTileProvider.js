@@ -1171,15 +1171,17 @@ define([
             uniformMap.waterMask = waterMaskTexture;
             Cartesian4.clone(surfaceTile.waterMaskTranslationAndScale, uniformMap.waterMaskTranslationAndScale);
 
-            uniformMap.minimumX = surfaceTile.encoding.minimumX;
-            uniformMap.maximumX = surfaceTile.encoding.maximumX;
-            uniformMap.minimumY = surfaceTile.encoding.minimumY;
-            uniformMap.maximumY = surfaceTile.encoding.maximumY;
-            uniformMap.minimumZ = surfaceTile.encoding.minimumZ;
-            uniformMap.maximumZ = surfaceTile.encoding.maximumZ;
+            var encoding = surfaceTile.pickTerrain.mesh.encoding;
+            uniformMap.minimumX = encoding.minimumX;
+            uniformMap.maximumX = encoding.maximumX;
+            uniformMap.minimumY = encoding.minimumY;
+            uniformMap.maximumY = encoding.maximumY;
+            uniformMap.minimumZ = encoding.minimumZ;
+            uniformMap.maximumZ = encoding.maximumZ;
+            Matrix3.clone(encoding.matrix, uniformMap.scaleAndBias);
+
             uniformMap.minimumHeight = surfaceTile.minimumHeight;
             uniformMap.maximumHeight = surfaceTile.maximumHeight;
-            Matrix3.clone(surfaceTile.encoding.matrix, uniformMap.scaleAndBias);
 
             command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog);
             command.renderState = renderState;

@@ -1,9 +1,11 @@
 /*global define*/
 define([
         './ComponentDatatype',
+        './defined',
         './TerrainCompression'
     ], function(
         ComponentDatatype,
+        defined,
         TerrainCompression
     ) {
     "use strict";
@@ -160,6 +162,37 @@ define([
         } else {
             return attributes;
         }
+    };
+
+    /**
+     * @param {TerrainEncoding} encoding
+     * @param {TerrainEncoding} [result]
+     * @returns {TerrainEncoding}
+     */
+    TerrainEncoding.clone = function(encoding, result) {
+        if (!defined(result)) {
+            return new TerrainEncoding(
+                encoding.compression,
+                encoding.minimumX,
+                encoding.maximumX,
+                encoding.minimumY,
+                encoding.maximumY,
+                encoding.minimumZ,
+                encoding.maximumZ,
+                encoding.matrix,
+                encoding.hasVertexNormals);
+        }
+
+        result.compression = encoding.compression;
+        result.minimumX = encoding.minimumX;
+        result.maximumX = encoding.maximumX;
+        result.minimumY = encoding.minimumY;
+        result.maximumY = encoding.maximumY;
+        result.minimumZ = encoding.minimumZ;
+        result.maximumZ = encoding.maximumZ;
+        result.matrix = encoding.matrix;
+        result.hasVertexNormals = encoding.hasVertexNormals;
+        return result;
     };
 
     return TerrainEncoding;

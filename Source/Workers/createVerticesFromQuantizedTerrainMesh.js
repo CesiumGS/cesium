@@ -182,7 +182,7 @@ define([
             }
 
             if (encodeMode !== TerrainCompression .NONE) {
-                Matrix4.multiplyByPoint(toENU, positions[i], cartesian3Scratch);
+                Matrix4.multiplyByPoint(toENU, positions[j], cartesian3Scratch);
 
                 var x = (cartesian3Scratch.x - xMin) / xDim;
                 var y = (cartesian3Scratch.y - yMin) / yDim;
@@ -240,7 +240,7 @@ define([
                     vertexBuffer[bufferIndex++] = compressed1;
                 }
             } else {
-                Cartesian3.subtract(positions[i], center, cartesian3Scratch);
+                Cartesian3.subtract(positions[j], center, cartesian3Scratch);
 
                 vertexBuffer[bufferIndex++] = cartesian3Scratch.x;
                 vertexBuffer[bufferIndex++] = cartesian3Scratch.y;
@@ -291,7 +291,7 @@ define([
 
         // TODO: can undo scale and bias with matrix multiply
         var matrix = Matrix4.getRotation(fromENU, new Matrix3());
-        var encoding = new TerrainEncoding(encodeMode, xMin, xMax, yMin, yMax, zMin, zMax, matrix);
+        var encoding = new TerrainEncoding(encodeMode, xMin, xMax, yMin, yMax, zMin, zMax, matrix, hasVertexNormals);
 
         return {
             vertices : vertexBuffer.buffer,

@@ -75,7 +75,7 @@ vec4 getPositionPlanarEarth(vec3 position, float height, vec2 textureCoordinates
 
 vec4 getPosition2DMode(vec3 position, float height, vec2 textureCoordinates)
 {
-    return getPositionPlanarEarth(position, 0.0);
+    return getPositionPlanarEarth(position, 0.0, textureCoordinates);
 }
 
 vec4 getPositionColumbusViewMode(vec3 position, float height, vec2 textureCoordinates)
@@ -87,14 +87,14 @@ vec4 getPositionMorphingMode(vec3 position, float height, vec2 textureCoordinate
 {
     // We do not do RTC while morphing, so there is potential for jitter.
     // This is unlikely to be noticeable, though.
-    vec3 positionWC = position + u_center3D;
+    vec3 position3DWC = position + u_center3D;
     float yPositionFraction = get2DYPositionFraction(textureCoordinates);
     vec4 position2DWC = vec4(0.0, mix(u_tileRectangle.st, u_tileRectangle.pq, vec2(textureCoordinates.x, yPositionFraction)), 1.0);
     vec4 morphPosition = czm_columbusViewMorph(position2DWC, vec4(position3DWC, 1.0), czm_morphTime);
     return czm_modelViewProjection * morphPosition;
 }
 
-#ifdef defined(COMPRESSION_BITS16_NORMAL) || defined(COMPRESSION_BITS_16) || defined(COMPRESSION_BITS_12) || defined(COMPRESSION_BITS8)
+#if defined(COMPRESSION_BITS16_NORMAL) || defined(COMPRESSION_BITS_16) || defined(COMPRESSION_BITS_12) || defined(COMPRESSION_BITS8)
 // TODO: remove. only use matrix.
 uniform float u_minimumX;
 uniform float u_maximumX;
@@ -112,7 +112,7 @@ const float SHIFT_RIGHT_8 = 1.0 / 256.0;
 
 void main() 
 {
-#ifdef defined(COMPRESSION_BITS16_NORMAL) || defined(COMPRESSION_BITS_16)
+#if defined(COMPRESSION_BITS16_NORMAL) || defined(COMPRESSION_BITS_16)
     float compressed0 = compressed.x;
     float compressed1 = compressed.y;
     float compressed2 = compressed.z;
@@ -177,12 +177,14 @@ void main()
     float encodedNormal = textureCoordAndEncodedNormals.z;
 #endif
 
+#if defined(COMPRESSION_BITS16_NORMAL) || defined(COMPRESSION_BITS_16) || defined(COMPRESSION_BITS_12) || defined(COMPRESSION_BITS8)
     position.x = position.x * (u_maximumX - u_minimumX) + u_minimumX;
     position.y = position.y * (u_maximumY - u_minimumY) + u_minimumY;
     position.z = position.z * (u_maximumZ - u_minimumZ) + u_minimumZ;
     height = height * (u_maximumHeight - u_minimumHeight) + u_minimumHeight;
 
     position = u_scaleAndBias * position;
+#endif
 
     vec3 position3DWC = position + u_center3D;
     gl_Position = getPosition(position, height, textureCoordinates);

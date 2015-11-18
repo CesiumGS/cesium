@@ -69,7 +69,7 @@ define([
         var compression = 0;
         var compressionDefine = '';
 
-        var terrainEncoding = surfaceTile.encoding;
+        var terrainEncoding = surfaceTile.pickTerrain.mesh.encoding;
         var compressionMode = terrainEncoding.compression;
         if (compressionMode === TerrainCompression.BITS16 && terrainEncoding.hasVertexNormals) {
             compression = 1;
