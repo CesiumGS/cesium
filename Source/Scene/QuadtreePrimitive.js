@@ -258,7 +258,7 @@ define([
         }
 
         if (passes.pick && this._tilesToRender.length > 0) {
-            this._tileProvider.endUpdate(frameState);
+            this._tileProvider.updateForPick(frameState);
         }
     };
 
