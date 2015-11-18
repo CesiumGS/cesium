@@ -220,12 +220,8 @@ define([
                     vertexBuffer[bufferIndex++] = compressed2;
                     vertexBuffer[bufferIndex++] = compressed3;
                 } else if (encodeMode === TerrainCompression .BITS12) {
-                    compressed0 = Math.floor(x * SHIFT_LEFT_12) * SHIFT_LEFT_12;
-                    compressed0 += Math.floor(y * SHIFT_LEFT_12);
-
-                    compressed1 = Math.floor(z * SHIFT_LEFT_12) * SHIFT_LEFT_12;
-                    compressed1 += Math.floor(h * SHIFT_LEFT_12);
-
+                    compressed0 = AttributeCompression.compressTextureCoordinates(new Cartesian2(x, y));
+                    compressed1 = AttributeCompression.compressTextureCoordinates(new Cartesian2(z, h));
                     compressed2 = AttributeCompression.compressTextureCoordinates(new Cartesian2(u, v));
 
                     vertexBuffer[bufferIndex++] = compressed0;
