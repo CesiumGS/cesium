@@ -395,7 +395,6 @@ define([
         var drawCommands = this._drawCommands;
 
         // Add the tile pick commands from the tiles drawn last frame.
-        var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
         for (var i = 0, length = this._usedDrawCommands; i < length; ++i) {
             addPickCommandsForTile(this, drawCommands[i], frameState);
         }
@@ -423,7 +422,7 @@ define([
      * @exception {DeveloperError} <code>loadTile</code> must not be called before the tile provider is ready.
      */
     GlobeSurfaceTileProvider.prototype.loadTile = function(frameState, tile) {
-        GlobeSurfaceTile.processStateMachine(tile, frameState.context, frameState.commandList, this._terrainProvider, this._imageryLayers);
+        GlobeSurfaceTile.processStateMachine(tile, frameState, this._terrainProvider, this._imageryLayers);
     };
 
     var boundingSphereScratch = new BoundingSphere();
@@ -485,7 +484,6 @@ define([
         return intersection;
     };
 
-    var float32ArrayScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(1) : undefined;
     var modifiedModelViewScratch = new Matrix4();
     var tileRectangleScratch = new Cartesian4();
     var rtcScratch = new Cartesian3();
@@ -1183,7 +1181,7 @@ define([
 
         var useWebMercatorProjection = frameState.projection instanceof WebMercatorProjection;
 
-        pickCommand.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState.context, frameState.mode, useWebMercatorProjection);
+        pickCommand.shaderProgram = tileProvider._surfaceShaderSet.getPickShaderProgram(frameState.context, frameState.mode, useWebMercatorProjection);
         pickCommand.renderState = tileProvider._pickRenderState;
 
         pickCommand.owner = drawCommand.owner;

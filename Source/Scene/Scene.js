@@ -172,7 +172,9 @@ define([
      * @param {Element} [options.creditContainer] The HTML element in which the credits will be displayed.
      * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
      * @param {Boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
-     * @param {Boolean} [options.scene3DOnly=false] If true, optimizes memory use and performance for 3D mode but disables the ability to use 2D or Columbus View.     *
+     * @param {Boolean} [options.scene3DOnly=false] If true, optimizes memory use and performance for 3D mode but disables the ability to use 2D or Columbus View.
+     * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
+     *
      * @see CesiumWidget
      * @see {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}
      *
@@ -513,6 +515,8 @@ define([
          * @type {Fog}
          */
         this.fog = new Fog();
+
+        this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
 
         this._performanceDisplay = undefined;
         this._debugVolume = undefined;
@@ -924,6 +928,17 @@ define([
             get : function() {
                 return this._frustumCommandsList.length;
             }
+        },
+
+        /**
+         * Gets the scalar used to exaggerate the terrain.
+         * @memberof Scene.prototype
+         * @type {Number}
+         */
+        terrainExaggeration : {
+            get : function() {
+                return this._terrainExaggeration;
+            }
         }
     });
 
@@ -982,6 +997,7 @@ define([
         frameState.camera = camera;
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(scene);
+        frameState.terrainExaggeration = scene._terrainExaggeration;
 
         clearPasses(frameState.passes);
     }
@@ -1793,14 +1809,12 @@ define([
      * @private
      */
     Scene.prototype.clampLineWidth = function(width) {
-        var context = this._context;
         return Math.max(ContextLimits.minimumAliasedLineWidth, Math.min(width, ContextLimits.maximumAliasedLineWidth));
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();
     var scratchOrigin = new Cartesian3();
     var scratchDirection = new Cartesian3();
-    var scratchBufferDimensions = new Cartesian2();
     var scratchPixelSize = new Cartesian2();
     var scratchPickVolumeMatrix4 = new Matrix4();
 
@@ -1938,8 +1952,6 @@ define([
         return object;
     };
 
-    var scratchPickDepthPosition = new Cartesian3();
-    var scratchMinDistPos = new Cartesian3();
     var scratchPackedDepth = new Cartesian4();
     var packedDepthScale = new Cartesian4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 160581375.0);
 

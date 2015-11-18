@@ -8,7 +8,6 @@ defineSuite([
         DefaultProxy,
         RequestErrorEvent) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('throws with no url', function() {
         expect(function() {

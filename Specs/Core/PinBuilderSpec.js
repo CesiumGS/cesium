@@ -12,7 +12,6 @@ defineSuite([
         defined,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     function getPinColor(canvas) {
         var context2D = canvas.getContext("2d");

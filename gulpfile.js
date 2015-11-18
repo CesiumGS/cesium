@@ -60,7 +60,6 @@ var filesToClean = ['Source/Cesium.js',
                     'Instrumented',
                     'Source/Shaders/**/*.js',
                     'Specs/SpecList.js',
-                    'Apps/Sandcastle/.jshintrc',
                     'Apps/Sandcastle/jsHintOptions.js',
                     'Apps/Sandcastle/gallery/gallery-index.js',
                     'Cesium-*.zip'];
@@ -91,7 +90,7 @@ gulp.task('build', function(done) {
     createCesiumJs();
     createSpecList();
     createGalleryList();
-    createSandcastleJsHintOptions();
+    createJsHintOptions();
     done();
 });
 
@@ -738,7 +737,7 @@ function createSpecList() {
         specs.push("'" + filePathToModuleId(file) + "'");
     });
 
-    var contents = 'var specs = [' + specs.join(',') + '];';
+    var contents = '/*jshint unused: false*/\nvar specs = [' + specs.join(',') + '];';
     fs.writeFileSync(path.join('Specs', 'SpecList.js'), contents);
 }
 
@@ -772,13 +771,8 @@ var gallery_demos = [' + demos.join(', ') + '];';
     fs.writeFileSync(output, contents);
 }
 
-function createSandcastleJsHintOptions() {
-    var jsHintOptions = JSON.parse(fs.readFileSync('.jshintrc', 'utf8'));
-    jsHintOptions.predef = ['JSON', 'require', 'console', 'Sandcastle', 'Cesium'];
-
-    var contents = JSON.stringify(jsHintOptions, null, 2);
-    fs.writeFileSync(path.join('Apps', 'Sandcastle', '.jshintrc'), contents);
-
+function createJsHintOptions() {
+    var contents = fs.readFileSync(path.join('Apps', 'Sandcastle', '.jshintrc'), 'utf8');
     contents = '\
 // This file is automatically rebuilt by the Cesium build process.\n\
 var sandcastleJsHintOptions = ' + contents + ';';

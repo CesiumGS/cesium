@@ -470,7 +470,6 @@ define([
 
     var scratchCorner = new Cartesian3();
     var scratchToCenter = new Cartesian3();
-    var scratchProj = new Cartesian3();
 
     /**
      * The distances calculated by the vector from the center of the bounding box to position projected onto direction.

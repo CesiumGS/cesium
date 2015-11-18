@@ -4,7 +4,6 @@ defineSuite([
     ], function(
         BingMapsApi) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('getKey returns provided key if one is provided', function() {
         expect(BingMapsApi.getKey('foo')).toEqual('foo');
