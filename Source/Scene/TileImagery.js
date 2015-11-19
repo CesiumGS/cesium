@@ -49,7 +49,7 @@ define([
         var imageryLayer = loadingImagery.imageryLayer;
         var imageryProvider = loadingImagery.imageryLayer.imageryProvider;
         if (!defined(imageryProvider.getTileDataAvailable) ||
-                imageryProvider.getTileDataAvailable(tile.x, tile.y, tile.level)) {
+                imageryProvider.getTileDataAvailable(loadingImagery.x, loadingImagery.y, loadingImagery.level)) {
             loadingImagery.processStateMachine(context, commandList);
         } else {
             loadingImagery.state = ImageryState.INVALID;
