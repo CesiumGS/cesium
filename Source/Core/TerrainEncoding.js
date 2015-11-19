@@ -261,7 +261,7 @@ define([
             var position3DAndHeightLength = 4;
             var numTexCoordComponents = this.hasVertexNormals ? 3 : 2;
             stride = (this.hasVertexNormals ? 7 : 6) * sizeInBytes;
-            return[{
+            return [{
                 index : attributesNone.position3DAndHeight,
                 vertexBuffer : buffer,
                 componentDatatype : datatype,
@@ -279,7 +279,7 @@ define([
         } else if (this.compression === TerrainCompression.BITS16 && this.hasVertexNormals) {
             var compressedLength = 4;
             stride = 5;
-            return[{
+            return [{
                 index : attributes16WithNormals.compressed,
                 vertexBuffer : buffer,
                 componentDatatype : datatype,
@@ -295,7 +295,7 @@ define([
                 strideInBytes : stride
             }];
         } else if (this.compression === TerrainCompression.BITS16) {
-            return[{
+            return [{
                 index : attributes.compressed,
                 vertexBuffer : buffer,
                 componentDatatype : datatype,
