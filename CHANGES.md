@@ -31,6 +31,7 @@ Change Log
 * Added `VideoSynchronizer` helper object for keeping an `HTMLVideoElement` in sync with a scene's clock.
 * Added 'Video' Sandcastle showcase to demonstrate video materials.
 * Added `createOpenStreetMapImageryProvider` function to replace the `OpenStreetMapImageryProvider` class. This function returns a constructed `UrlTemplateImageryProvider`.
+* Fixed an issue with tile selection when below the surface of the ellipsoid. [#3170](https://github.com/AnalyticalGraphicsInc/cesium/issues/3170)
 
 ### 1.15 - 2015-11-02
 
