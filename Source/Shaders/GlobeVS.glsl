@@ -1,7 +1,7 @@
 #ifdef COMPRESSION_BITS16_NORMAL
 attribute vec4 compressed;
 attribute float encodedNormal;
-#elif defined(COMPRESSION_BITS_16) || defined(COMPRESSION_BITS_12) || defined(COMPRESSION_BITS8)
+#elif defined(COMPRESSION_BITS16) || defined(COMPRESSION_BITS12) || defined(COMPRESSION_BITS8)
 attribute vec4 compressed;
 #else
 attribute vec4 position3DAndHeight;
@@ -94,7 +94,7 @@ vec4 getPositionMorphingMode(vec3 position, float height, vec2 textureCoordinate
     return czm_modelViewProjection * morphPosition;
 }
 
-#if defined(COMPRESSION_BITS16_NORMAL) || defined(COMPRESSION_BITS_16) || defined(COMPRESSION_BITS_12) || defined(COMPRESSION_BITS8)
+#if defined(COMPRESSION_BITS16_NORMAL) || defined(COMPRESSION_BITS16) || defined(COMPRESSION_BITS12) || defined(COMPRESSION_BITS8)
 // TODO: remove. only use matrix.
 uniform float u_minimumX;
 uniform float u_maximumX;
@@ -112,7 +112,7 @@ const float SHIFT_RIGHT_8 = 1.0 / 256.0;
 
 void main() 
 {
-#if defined(COMPRESSION_BITS16_NORMAL) || defined(COMPRESSION_BITS_16)
+#if defined(COMPRESSION_BITS16_NORMAL) || defined(COMPRESSION_BITS16)
     float compressed0 = compressed.x;
     float compressed1 = compressed.y;
     float compressed2 = compressed.z;
@@ -140,7 +140,7 @@ void main()
 
     vec3 position = vec3(x, y, z);
     vec2 textureCoordinates = vec2(u, v);
-#elif defined(COMPRESSION_BITS_12)
+#elif defined(COMPRESSION_BITS12)
     vec2 xy = czm_decompressTextureCoordinates(compressed.x);
     vec2 zh = czm_decompressTextureCoordinates(compressed.y);
     vec3 position = vec3(xy, zh.x);
@@ -177,7 +177,7 @@ void main()
     float encodedNormal = textureCoordAndEncodedNormals.z;
 #endif
 
-#if defined(COMPRESSION_BITS16_NORMAL) || defined(COMPRESSION_BITS_16) || defined(COMPRESSION_BITS_12) || defined(COMPRESSION_BITS8)
+#if defined(COMPRESSION_BITS16_NORMAL) || defined(COMPRESSION_BITS16) || defined(COMPRESSION_BITS12) || defined(COMPRESSION_BITS8)
     position.x = position.x * (u_maximumX - u_minimumX) + u_minimumX;
     position.y = position.y * (u_maximumY - u_minimumY) + u_minimumY;
     position.z = position.z * (u_maximumZ - u_minimumZ) + u_minimumZ;
