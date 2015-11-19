@@ -195,18 +195,19 @@ define([
                 var compressed3;
 
                 if (encodeMode === TerrainCompression .BITS16) {
-                    compressed0 = Math.floor(x * SHIFT_LEFT_16);
-                    compressed1 = Math.floor(y * SHIFT_LEFT_16);
+                    compressed0 = x === 1.0 ? SHIFT_LEFT_16 - 1.0 : Math.floor(x * SHIFT_LEFT_16);
+                    compressed1 = y === 1.0 ? SHIFT_LEFT_16 - 1.0 : Math.floor(y * SHIFT_LEFT_16);
 
                     var temp = z * SHIFT_LEFT_8;
                     var upperZ = Math.floor(temp);
                     var lowerZ = Math.floor((temp - upperZ) * SHIFT_LEFT_8);
 
+
                     compressed0 += upperZ * SHIFT_LEFT_16;
                     compressed1 += lowerZ * SHIFT_LEFT_16;
 
-                    compressed2 = Math.floor(u * SHIFT_LEFT_16);
-                    compressed3 = Math.floor(v * SHIFT_LEFT_16);
+                    compressed2 = u === 1.0 ? SHIFT_LEFT_16 - 1.0 : Math.floor(u * SHIFT_LEFT_16);
+                    compressed3 = v === 1.0 ? SHIFT_LEFT_16 - 1.0 : Math.floor(v * SHIFT_LEFT_16);
 
                     temp = h * SHIFT_LEFT_8;
                     var upperH = Math.floor(temp);
