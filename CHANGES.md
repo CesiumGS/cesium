@@ -3,6 +3,8 @@ Change Log
 
 ### 1.16 - 2015-12-01
 
+* Deprecated
+    * Deprecated `OpenStreetMapImageryProvider`. It will be removed in 1.18. Use `createOpenStreetMapImageryProvider` instead.
 * Fixed an issue where the sun texture is not generated correctly on some mobile devices. [#3141](https://github.com/AnalyticalGraphicsInc/cesium/issues/3141)
 * Fixed a bug in the deprecated `jsonp` that prevented it from returning a promise.  Its replacement, `loadJsonp`, was unaffected.
 * Fixed glTF implementation to read the version as a string as per the specification and to correctly handle backwards compatibility for axis-angle rotations in glTF 0.8 models.
@@ -28,6 +30,7 @@ Change Log
 * `Material` image uniforms now accept and `HTMLVideoElement` anywhere it could previously take a `Canvas` element.
 * Added `VideoSynchronizer` helper object for keeping an `HTMLVideoElement` in sync with a scene's clock.
 * Added 'Video' Sandcastle showcase to demonstrate video materials.
+* Added `createOpenStreetMapImageryProvider` function to replace the `OpenStreetMapImageryProvider` class. This function returns a constructed `UrlTemplateImageryProvider`.
 * Fixed an issue with tile selection when below the surface of the ellipsoid. [#3170](https://github.com/AnalyticalGraphicsInc/cesium/issues/3170)
 
 ### 1.15 - 2015-11-02
