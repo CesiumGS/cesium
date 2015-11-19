@@ -155,7 +155,6 @@ define([
                 var upperZ = Math.floor(temp);
                 var lowerZ = Math.floor((temp - upperZ) * SHIFT_LEFT_8);
 
-
                 compressed0 += upperZ * SHIFT_LEFT_16;
                 compressed1 += lowerZ * SHIFT_LEFT_16;
 
