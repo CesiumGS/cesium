@@ -39,10 +39,6 @@ define([
 
     var maxShort = 32767;
 
-    var SHIFT_LEFT_16 = Math.pow(2.0, 16.0);
-    var SHIFT_LEFT_12 = Math.pow(2.0, 12.0);
-    var SHIFT_LEFT_8 = Math.pow(2.0, 8.0);
-
     var cartesian3Scratch = new Cartesian3();
     var cartographicScratch = new Cartographic();
     var toPack = new Cartesian2();
@@ -90,14 +86,10 @@ define([
         var yMax = Number.NEGATIVE_INFINITY;
         var zMax = Number.NEGATIVE_INFINITY;
 
-        var u;
-        var v;
-        var height;
-
         for (var i = 0; i < quantizedVertexCount; ++i) {
-            u = uBuffer[i] / maxShort;
-            v = vBuffer[i] / maxShort;
-            height = CesiumMath.lerp(minimumHeight, maximumHeight, heightBuffer[i] / maxShort);
+            var u = uBuffer[i] / maxShort;
+            var v = vBuffer[i] / maxShort;
+            var height = CesiumMath.lerp(minimumHeight, maximumHeight, heightBuffer[i] / maxShort);
 
             cartographicScratch.longitude = CesiumMath.lerp(west, east, u);
             cartographicScratch.latitude = CesiumMath.lerp(south, north, v);
@@ -120,34 +112,9 @@ define([
             zMax = Math.max(zMax, cartesian3Scratch.z);
         }
 
-        var xDim = xMax - xMin;
-        var yDim = yMax - yMin;
-        var zDim = zMax - zMin;
-        var hDim = maximumHeight - minimumHeight;
-        var maxDim = Math.max(xDim, yDim, zDim, hDim);
-
-        var encodeMode;
-        var vertexStride;
-
-        if (maxDim < SHIFT_LEFT_8 - 1.0) {
-            encodeMode = TerrainCompression .BITS8;
-            vertexStride = 2;
-        } else if (maxDim < SHIFT_LEFT_12 - 1.0) {
-            encodeMode = TerrainCompression .BITS12;
-            vertexStride = 3;
-        } else if (maxDim < SHIFT_LEFT_16 - 1.0) {
-            encodeMode = TerrainCompression .BITS16;
-            vertexStride = 4;
-        } else {
-            encodeMode = TerrainCompression .NONE;
-            vertexStride = 6;
-        }
-
-        if (hasVertexNormals) {
-            ++vertexStride;
-        }
-
-        // TODO: Add skirts
+        // TODO: can undo scale and bias with matrix multiply
+        var encoding = new TerrainEncoding(xMin, xMax, yMin, yMax, zMin, zMax, minimumHeight, maximumHeight, fromENU, hasVertexNormals);
+        var vertexStride = encoding.getStride();
         //var size = quantizedVertexCount * vertexStride + edgeVertexCount * vertexStride;
         var size = quantizedVertexCount * vertexStride;
         var vertexBuffer = new Float32Array(size);
@@ -156,11 +123,6 @@ define([
         var bufferIndex = 0;
 
         for (var j = 0; j < quantizedVertexCount; ++j) {
-            var uv = uvs[j];
-            u = uv.x;
-            v = uv.y;
-            height = heights[j];
-
             if (hasVertexNormals) {
                 toPack.x = octEncodedNormals[n++];
                 toPack.y = octEncodedNormals[n++];
@@ -181,79 +143,7 @@ define([
                 }
             }
 
-            if (encodeMode !== TerrainCompression .NONE) {
-                Matrix4.multiplyByPoint(toENU, positions[j], cartesian3Scratch);
-
-                var x = (cartesian3Scratch.x - xMin) / xDim;
-                var y = (cartesian3Scratch.y - yMin) / yDim;
-                var z = (cartesian3Scratch.z - zMin) / zDim;
-                var h = (height - minimumHeight) / hDim;
-
-                var compressed0;
-                var compressed1;
-                var compressed2;
-                var compressed3;
-
-                if (encodeMode === TerrainCompression .BITS16) {
-                    compressed0 = x === 1.0 ? SHIFT_LEFT_16 - 1.0 : Math.floor(x * SHIFT_LEFT_16);
-                    compressed1 = y === 1.0 ? SHIFT_LEFT_16 - 1.0 : Math.floor(y * SHIFT_LEFT_16);
-
-                    var temp = z * SHIFT_LEFT_8;
-                    var upperZ = Math.floor(temp);
-                    var lowerZ = Math.floor((temp - upperZ) * SHIFT_LEFT_8);
-
-
-                    compressed0 += upperZ * SHIFT_LEFT_16;
-                    compressed1 += lowerZ * SHIFT_LEFT_16;
-
-                    compressed2 = u === 1.0 ? SHIFT_LEFT_16 - 1.0 : Math.floor(u * SHIFT_LEFT_16);
-                    compressed3 = v === 1.0 ? SHIFT_LEFT_16 - 1.0 : Math.floor(v * SHIFT_LEFT_16);
-
-                    temp = h * SHIFT_LEFT_8;
-                    var upperH = Math.floor(temp);
-                    var lowerH = Math.floor((temp - upperH) * SHIFT_LEFT_8);
-
-                    compressed2 += upperH * SHIFT_LEFT_16;
-                    compressed3 += lowerH * SHIFT_LEFT_16;
-
-                    vertexBuffer[bufferIndex++] = compressed0;
-                    vertexBuffer[bufferIndex++] = compressed1;
-                    vertexBuffer[bufferIndex++] = compressed2;
-                    vertexBuffer[bufferIndex++] = compressed3;
-                } else if (encodeMode === TerrainCompression .BITS12) {
-                    compressed0 = AttributeCompression.compressTextureCoordinates(new Cartesian2(x, y));
-                    compressed1 = AttributeCompression.compressTextureCoordinates(new Cartesian2(z, h));
-                    compressed2 = AttributeCompression.compressTextureCoordinates(new Cartesian2(u, v));
-
-                    vertexBuffer[bufferIndex++] = compressed0;
-                    vertexBuffer[bufferIndex++] = compressed1;
-                    vertexBuffer[bufferIndex++] = compressed2;
-                } else {
-                    compressed0 = (x === 1.0 ? SHIFT_LEFT_8 - 1.0 : Math.floor(x * SHIFT_LEFT_8)) * SHIFT_LEFT_16;
-                    compressed0 += (y === 1.0 ? SHIFT_LEFT_8 - 1.0 : Math.floor(y * SHIFT_LEFT_8)) * SHIFT_LEFT_8;
-                    compressed0 += z === 1.0 ? SHIFT_LEFT_8 - 1.0 : Math.floor(z * SHIFT_LEFT_8);
-
-                    compressed1 = (h === 1.0 ? SHIFT_LEFT_8 - 1.0 : Math.floor(h * SHIFT_LEFT_8)) * SHIFT_LEFT_16;
-                    compressed1 += (u === 1.0 ? SHIFT_LEFT_8 - 1.0 : Math.floor(u * SHIFT_LEFT_8)) * SHIFT_LEFT_8;
-                    compressed1 += v === 1.0 ? SHIFT_LEFT_8 - 1.0 : Math.floor(v * SHIFT_LEFT_8);
-
-                    vertexBuffer[bufferIndex++] = compressed0;
-                    vertexBuffer[bufferIndex++] = compressed1;
-                }
-            } else {
-                Cartesian3.subtract(positions[j], center, cartesian3Scratch);
-
-                vertexBuffer[bufferIndex++] = cartesian3Scratch.x;
-                vertexBuffer[bufferIndex++] = cartesian3Scratch.y;
-                vertexBuffer[bufferIndex++] = cartesian3Scratch.z;
-                vertexBuffer[bufferIndex++] = height;
-                vertexBuffer[bufferIndex++] = u;
-                vertexBuffer[bufferIndex++] = v;
-            }
-
-            if (hasVertexNormals) {
-                vertexBuffer[bufferIndex++] = AttributeCompression.octPackFloat(toPack);
-            }
+            bufferIndex = encoding.encode(vertexBuffer, bufferIndex, positions[j], uvs[j], heights[j], toPack);
         }
 
         var occludeePointInScaledSpace;
@@ -274,8 +164,8 @@ define([
         var indexBuffer = IndexDatatype.createTypedArray(quantizedVertexCount + edgeVertexCount, indexBufferLength);
         indexBuffer.set(parameters.indices, 0);
 
+        // TODO: add skirts
         /*
-        // TODO: Add skirts
         // Add skirts.
         var vertexBufferIndex = quantizedVertexCount * vertexStride;
         var indexBufferIndex = parameters.indices.length;
@@ -289,10 +179,6 @@ define([
         */
 
         transferableObjects.push(vertexBuffer.buffer, indexBuffer.buffer);
-
-        // TODO: can undo scale and bias with matrix multiply
-        var matrix = Matrix4.getRotation(fromENU, new Matrix3());
-        var encoding = new TerrainEncoding(encodeMode, xMin, xMax, yMin, yMax, zMin, zMax, matrix, hasVertexNormals);
 
         return {
             vertices : vertexBuffer.buffer,
@@ -308,7 +194,6 @@ define([
         };
     }
 
-    // TODO: add skirts
     /*
     function addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, edgeVertices, center, ellipsoid, rectangle, skirtLength, isWestOrNorthEdge, hasVertexNormals) {
         var start, end, increment;
