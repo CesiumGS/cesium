@@ -126,17 +126,17 @@ void main()
     float lowerZ = floor(temp);
     float y = temp - lowerZ;
 
-    float z = upperZ * SHIFT_RIGHT8 + lowerZ * SHIFT_RIGHT_16;
+    float z = upperZ * SHIFT_RIGHT_8 + lowerZ * SHIFT_RIGHT_16;
 
-    temp = compressed2 * SHIFT_RIGHT16;
+    temp = compressed2 * SHIFT_RIGHT_16;
     float upperH = floor(temp);
     float u = temp - upperH;
 
-    temp = compressed3 * SHIFT_RIGHT16;
+    temp = compressed3 * SHIFT_RIGHT_16;
     float lowerH = floor(temp);
     float v = temp - lowerH;
 
-    float height = upperH * SHIFT_RIGHT_8 + lowerH * SHIFT_RIGHT16;
+    float height = upperH * SHIFT_RIGHT_8 + lowerH * SHIFT_RIGHT_16;
 
     vec3 position = vec3(x, y, z);
     vec2 textureCoordinates = vec2(u, v);
