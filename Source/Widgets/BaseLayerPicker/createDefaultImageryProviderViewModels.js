@@ -5,7 +5,7 @@ define([
         '../../Scene/BingMapsImageryProvider',
         '../../Scene/BingMapsStyle',
         '../../Scene/MapboxImageryProvider',
-        '../../Scene/OpenStreetMapImageryProvider',
+        '../../Scene/createOpenStreetMapImageryProvider',
         '../../Scene/TileMapServiceImageryProvider',
         '../BaseLayerPicker/ProviderViewModel'
     ], function(
@@ -14,7 +14,7 @@ define([
         BingMapsImageryProvider,
         BingMapsStyle,
         MapboxImageryProvider,
-        OpenStreetMapImageryProvider,
+        createOpenStreetMapImageryProvider,
         TileMapServiceImageryProvider,
         ProviderViewModel) {
     "use strict";
@@ -149,7 +149,7 @@ mapping applications.\nhttp://www.esri.com',
             tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable map \
 of the world.\nhttp://www.openstreetmap.org',
             creationFunction : function() {
-                return new OpenStreetMapImageryProvider({
+                return createOpenStreetMapImageryProvider({
                     url : '//a.tile.openstreetmap.org/'
                 });
             }
@@ -161,7 +161,7 @@ of the world.\nhttp://www.openstreetmap.org',
             tooltip : 'Reminiscent of hand drawn maps, Stamen watercolor maps apply raster effect \
 area washes and organic edges over a paper texture to add warm pop to any map.\nhttp://maps.stamen.com',
             creationFunction : function() {
-                return new OpenStreetMapImageryProvider({
+                return createOpenStreetMapImageryProvider({
                     url : '//stamen-tiles.a.ssl.fastly.net/watercolor/',
                     credit : 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
                 });
@@ -173,7 +173,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/stamenToner.png'),
             tooltip : 'A high contrast black and white map.\nhttp://maps.stamen.com',
             creationFunction : function() {
-                return new OpenStreetMapImageryProvider({
+                return createOpenStreetMapImageryProvider({
                     url : '//stamen-tiles.a.ssl.fastly.net/toner/',
                     credit : 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
                 });
@@ -186,7 +186,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
             tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable \
 map of the world.\nhttp://www.openstreetmap.org',
             creationFunction : function() {
-                return new OpenStreetMapImageryProvider({
+                return createOpenStreetMapImageryProvider({
                     url : '//otile1-s.mqcdn.com/tiles/1.0.0/osm/'
                 });
             }
