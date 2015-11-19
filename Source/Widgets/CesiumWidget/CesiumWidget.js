@@ -168,7 +168,7 @@ define([
      *
      * //Widget with OpenStreetMaps imagery provider and Cesium terrain provider hosted by AGI.
      * var widget = new Cesium.CesiumWidget('cesiumContainer', {
-     *     imageryProvider : Cesium.getOpenStreetMapImageryProvider(),
+     *     imageryProvider : Cesium.createOpenStreetMapImageryProvider(),
      *     terrainProvider : new Cesium.CesiumTerrainProvider({
      *         url : '//assets.agi.com/stk-terrain/world'
      *     }),

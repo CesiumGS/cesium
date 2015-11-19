@@ -25,7 +25,7 @@ define([
      * servers, so you must conform to their
      * {@link http://wiki.openstreetmap.org/wiki/Tile_usage_policy|Tile Usage Policy}.
      *
-     * @exports getOpenStreetMapImageryProvider
+     * @exports createOpenStreetMapImageryProvider
      *
      * @param {Object} [options] Object with the following properties:
      * @param {String} [options.url='//a.tile.openstreetmap.org'] The OpenStreetMap server url.
@@ -52,11 +52,11 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
      * @example
-     * var osm = Cesium.getOpenStreetMapImageryProvider({
+     * var osm = Cesium.createOpenStreetMapImageryProvider({
      *     url : '//a.tile.openstreetmap.org/'
      * });
      */
-    var getOpenStreetMapImageryProvider = function getOpenStreetMapImageryProvider(options) {
+    var createOpenStreetMapImageryProvider = function createOpenStreetMapImageryProvider(options) {
         options = defaultValue(options, {});
 
         var url = defaultValue(options.url, '//a.tile.openstreetmap.org/');
@@ -107,5 +107,5 @@ define([
         });
     };
 
-    return getOpenStreetMapImageryProvider;
+    return createOpenStreetMapImageryProvider;
 });
