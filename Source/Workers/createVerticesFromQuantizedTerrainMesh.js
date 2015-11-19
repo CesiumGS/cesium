@@ -129,15 +129,15 @@ define([
         var encodeMode;
         var vertexStride;
 
-        if (maxDim < SHIFT_LEFT_16 - 1.0) {
-            encodeMode = TerrainCompression .BITS16;
-            vertexStride = 4;
+        if (maxDim < SHIFT_LEFT_8 - 1.0) {
+            encodeMode = TerrainCompression .BITS8;
+            vertexStride = 2;
         } else if (maxDim < SHIFT_LEFT_12 - 1.0) {
             encodeMode = TerrainCompression .BITS12;
             vertexStride = 3;
-        } else if (maxDim < SHIFT_LEFT_8 - 1.0) {
-            encodeMode = TerrainCompression .BITS8;
-            vertexStride = 2;
+        } else if (maxDim < SHIFT_LEFT_16 - 1.0) {
+            encodeMode = TerrainCompression .BITS16;
+            vertexStride = 4;
         } else {
             encodeMode = TerrainCompression .NONE;
             vertexStride = 6;
@@ -229,13 +229,13 @@ define([
                     vertexBuffer[bufferIndex++] = compressed1;
                     vertexBuffer[bufferIndex++] = compressed2;
                 } else {
-                    compressed0 = Math.floor(x * SHIFT_LEFT_8) * SHIFT_LEFT_16;
-                    compressed0 += Math.floor(y * SHIFT_LEFT_8) * SHIFT_LEFT_8;
-                    compressed0 += Math.floor(z * SHIFT_LEFT_8);
+                    compressed0 = (x === 1.0 ? SHIFT_LEFT_8 - 1.0 : Math.floor(x * SHIFT_LEFT_8)) * SHIFT_LEFT_16;
+                    compressed0 += (y === 1.0 ? SHIFT_LEFT_8 - 1.0 : Math.floor(y * SHIFT_LEFT_8)) * SHIFT_LEFT_8;
+                    compressed0 += z === 1.0 ? SHIFT_LEFT_8 - 1.0 : Math.floor(z * SHIFT_LEFT_8);
 
-                    compressed1 = Math.floor(h * SHIFT_LEFT_8) * SHIFT_LEFT_16;
-                    compressed1 += Math.floor(u * SHIFT_LEFT_8) * SHIFT_LEFT_8;
-                    compressed1 += Math.floor(v * SHIFT_LEFT_8);
+                    compressed1 = (h === 1.0 ? SHIFT_LEFT_8 - 1.0 : Math.floor(h * SHIFT_LEFT_8)) * SHIFT_LEFT_16;
+                    compressed1 += (u === 1.0 ? SHIFT_LEFT_8 - 1.0 : Math.floor(u * SHIFT_LEFT_8)) * SHIFT_LEFT_8;
+                    compressed1 += v === 1.0 ? SHIFT_LEFT_8 - 1.0 : Math.floor(v * SHIFT_LEFT_8);
 
                     vertexBuffer[bufferIndex++] = compressed0;
                     vertexBuffer[bufferIndex++] = compressed1;
