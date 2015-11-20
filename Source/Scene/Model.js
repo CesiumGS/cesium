@@ -1756,7 +1756,7 @@ define([
 
             // 1. Find nodes with the names in node.skeletons (the node's skeletons)
             // 2. These nodes form the root nodes of the forest to search for each joint in skin.jointNames.  This search uses jointName, not the node's name.
-
+            // 3. Search for the joint name among the gltf node hierarchy instead of the runtime node hierarchy. Child links aren't set up yet for runtime nodes.
             var forest = [];
             var gltfSkeletons = node.skeletons;
             var skeletonsLength = gltfSkeletons.length;
