@@ -1645,7 +1645,7 @@ defineSuite([
             expect(scene._frustumCommandsList.length).not.toEqual(0);
 
             // Move the model out of view
-            m.modelMatrix = Matrix4.fromTranslation(new Cartesian3(10000000000.0, 0.0, 0.0));
+            m.modelMatrix = Matrix4.fromTranslation(new Cartesian3(100000.0, 0.0, 0.0));
             scene.renderForSpecs();
             expect(scene._frustumCommandsList.length).toEqual(0);
 
