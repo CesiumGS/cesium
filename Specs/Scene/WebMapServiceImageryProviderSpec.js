@@ -581,6 +581,31 @@ defineSuite([
             });
         });
 
+        it('works with msGMLOutput format', function() {
+            var provider = new WebMapServiceImageryProvider({
+                url : 'made/up/wms/server',
+                layers : 'someLayer'
+            });
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                expect(url).toContain('GetFeatureInfo');
+                loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-msGMLOutput.xml', responseType, method, data, headers, deferred, overrideMimeType);
+            };
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(pickResult) {
+                    expect(pickResult.length).toBe(1);
+
+                    var firstResult = pickResult[0];
+                    expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
+                    expect(firstResult.name).toBe('Hovercraft');
+                    expect(firstResult.description).toContain('Hovercraft');
+                });
+            });
+        });
+
 
         it('works with unknown XML responses', function() {
             var provider = new WebMapServiceImageryProvider({
