@@ -216,6 +216,60 @@ define([
         return bufferIndex;
     };
 
+    var SHIFT_RIGHT_16 = 1.0 / 65536.0;
+    var SHIFT_RIGHT_8 = 1.0 / 256.0;
+
+    TerrainEncoding.prototype.decodePosition = function(buffer, index, result) {
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+
+        index *= this.getStride();
+
+        if (this.compression !== TerrainCompression.NONE) {
+            var temp;
+            if (this.compression === TerrainCompression.BITS16) {
+                temp = buffer[index] * SHIFT_RIGHT_16;
+                var upperZ = Math.floor(temp);
+                result.x = temp - upperZ;
+
+                temp = buffer[index + 1] * SHIFT_RIGHT_16;
+                var lowerZ = Math.floor(temp);
+                result.y = temp - lowerZ;
+
+                result.z = upperZ * SHIFT_RIGHT_8 + lowerZ * SHIFT_RIGHT_16;
+            } else if (this.compression === TerrainCompression.BITS12) {
+                var xy = AttributeCompression.decompressTextureCoordinates(buffer[index], cartesian2Scratch);
+                result.x = xy.x;
+                result.y = xy.y;
+
+                var zh = AttributeCompression.decompressTextureCoordinates(buffer[index + 1], cartesian2Scratch);
+                result.z = zh.x;
+            } else {
+                temp = buffer[index] * SHIFT_RIGHT_8;
+                var x = Math.floor(temp);
+                result.z = temp - x;
+
+                temp = x * SHIFT_RIGHT_8;
+                x = Math.floor(temp);
+                result.y = temp - x;
+                result.x = x * SHIFT_RIGHT_8;
+            }
+
+            // TODO: remove
+            result.x = result.x * (this.maximumX - this.minimumX) + this.minimumX;
+            result.y = result.y * (this.maximumY - this.minimumY) + this.minimumY;
+            result.z = result.z * (this.maximumZ - this.minimumZ) + this.minimumZ;
+
+            return Matrix4.multiplyByPoint(this.fromENU, result, result);
+        }
+
+        result.x = buffer[index] + this.fromENU[Matrix4.getElementIndex(3, 0)];
+        result.y = buffer[index + 1] + this.fromENU[Matrix4.getElementIndex(3, 1)];
+        result.z = buffer[index + 2] + this.fromENU[Matrix4.getElementIndex(3, 2)];
+        return result;
+    };
+
     TerrainEncoding.prototype.getStride = function() {
         var vertexStride;
 
