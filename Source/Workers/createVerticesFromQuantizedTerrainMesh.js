@@ -112,20 +112,24 @@ define([
             zMax = Math.max(zMax, cartesian3Scratch.z);
         }
 
+        var hMin = minimumHeight;
+        hMin = Math.min(hMin, findMinSkirtHeight(parameters.westIndices, parameters.westSkirtHeight, heights));
+        hMin = Math.min(hMin, findMinSkirtHeight(parameters.southIndices, parameters.southSkirtHeight, heights));
+        hMin = Math.min(hMin, findMinSkirtHeight(parameters.eastIndices, parameters.eastSkirtHeight, heights));
+        hMin = Math.min(hMin, findMinSkirtHeight(parameters.northIndices, parameters.northSkirtHeight, heights));
+
         // TODO: can undo scale and bias with matrix multiply
-        var encoding = new TerrainEncoding(xMin, xMax, yMin, yMax, zMin, zMax, minimumHeight, maximumHeight, fromENU, hasVertexNormals);
+        var encoding = new TerrainEncoding(xMin, xMax, yMin, yMax, zMin, zMax, hMin, maximumHeight, fromENU, hasVertexNormals);
         var vertexStride = encoding.getStride();
-        //var size = quantizedVertexCount * vertexStride + edgeVertexCount * vertexStride;
-        var size = quantizedVertexCount * vertexStride;
+        var size = quantizedVertexCount * vertexStride + edgeVertexCount * vertexStride;
         var vertexBuffer = new Float32Array(size);
 
-        var n = 0;
         var bufferIndex = 0;
-
         for (var j = 0; j < quantizedVertexCount; ++j) {
             if (hasVertexNormals) {
-                toPack.x = octEncodedNormals[n++];
-                toPack.y = octEncodedNormals[n++];
+                var n = j * 2.0;
+                toPack.x = octEncodedNormals[n];
+                toPack.y = octEncodedNormals[n + 1];
 
                 if (exaggeration !== 1.0) {
                     var normal = AttributeCompression.octDecode(toPack.x, toPack.y, scratchNormal);
@@ -164,19 +168,16 @@ define([
         var indexBuffer = IndexDatatype.createTypedArray(quantizedVertexCount + edgeVertexCount, indexBufferLength);
         indexBuffer.set(parameters.indices, 0);
 
-        // TODO: add skirts
-        /*
         // Add skirts.
         var vertexBufferIndex = quantizedVertexCount * vertexStride;
         var indexBufferIndex = parameters.indices.length;
-        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.westIndices, center, ellipsoid, rectangle, parameters.westSkirtHeight, true, hasVertexNormals);
+        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.westIndices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.westSkirtHeight, true, exaggeration);
         vertexBufferIndex += parameters.westIndices.length * vertexStride;
-        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.southIndices, center, ellipsoid, rectangle, parameters.southSkirtHeight, false, hasVertexNormals);
+        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.southIndices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.southSkirtHeight, false, exaggeration);
         vertexBufferIndex += parameters.southIndices.length * vertexStride;
-        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.eastIndices, center, ellipsoid, rectangle, parameters.eastSkirtHeight, false, hasVertexNormals);
+        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.eastIndices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.eastSkirtHeight, false, exaggeration);
         vertexBufferIndex += parameters.eastIndices.length * vertexStride;
-        addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.northIndices, center, ellipsoid, rectangle, parameters.northSkirtHeight, true, hasVertexNormals);
-        */
+        addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.northIndices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.northSkirtHeight, true, exaggeration);
 
         transferableObjects.push(vertexBuffer.buffer, indexBuffer.buffer);
 
@@ -194,13 +195,17 @@ define([
         };
     }
 
-    /*
-    function addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, edgeVertices, center, ellipsoid, rectangle, skirtLength, isWestOrNorthEdge, hasVertexNormals) {
-        var start, end, increment;
-        var vertexStride = 6;
-        if (hasVertexNormals) {
-            vertexStride += 1;
+    function findMinSkirtHeight(edgeIndices, edgeHeight, heights) {
+        var hMin = Number.POSITIVE_INFINITY;
+        var length = edgeIndices.length;
+        for (var i = 0; i < length; ++i) {
+            hMin = Math.min(hMin, heights[edgeIndices[i]] - edgeHeight);
         }
+        return hMin;
+    }
+
+    function addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, edgeVertices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, skirtLength, isWestOrNorthEdge, exaggeration) {
+        var start, end, increment;
         if (isWestOrNorthEdge) {
             start = edgeVertices.length - 1;
             end = -1;
@@ -213,6 +218,8 @@ define([
 
         var previousIndex = -1;
 
+        var hasVertexNormals = defined(octEncodedNormals);
+        var vertexStride = encoding.getStride();
         var vertexIndex = vertexBufferIndex / vertexStride;
 
         var north = rectangle.north;
@@ -226,27 +233,37 @@ define([
 
         for (var i = start; i !== end; i += increment) {
             var index = edgeVertices[i];
-            var offset = index * vertexStride;
-            var h = vertexBuffer[offset + 3];
-            var u = vertexBuffer[offset + 4];
-            var v = vertexBuffer[offset + 5];
+            var h = heights[index];
+            var uv = uvs[index];
 
-            cartographicScratch.longitude = CesiumMath.lerp(west, east, u);
-            cartographicScratch.latitude = CesiumMath.lerp(south, north, v);
+            cartographicScratch.longitude = CesiumMath.lerp(west, east, uv.x);
+            cartographicScratch.latitude = CesiumMath.lerp(south, north, uv.y);
             cartographicScratch.height = h - skirtLength;
 
             var position = ellipsoid.cartographicToCartesian(cartographicScratch, cartesian3Scratch);
-            Cartesian3.subtract(position, center, position);
 
-            vertexBuffer[vertexBufferIndex++] = position.x;
-            vertexBuffer[vertexBufferIndex++] = position.y;
-            vertexBuffer[vertexBufferIndex++] = position.z;
-            vertexBuffer[vertexBufferIndex++] = cartographicScratch.height;
-            vertexBuffer[vertexBufferIndex++] = u;
-            vertexBuffer[vertexBufferIndex++] = v;
             if (hasVertexNormals) {
-                vertexBuffer[vertexBufferIndex++] = vertexBuffer[offset + 6];
+                var n = index * 2.0;
+                toPack.x = octEncodedNormals[n];
+                toPack.y = octEncodedNormals[n + 1];
+
+                if (exaggeration !== 1.0) {
+                    var normal = AttributeCompression.octDecode(toPack.x, toPack.y, scratchNormal);
+                    var fromENUNormal = Transforms.eastNorthUpToFixedFrame(cartesian3Scratch, ellipsoid, scratchFromENU);
+                    var toENUNormal = Matrix4.inverseTransformation(fromENUNormal, scratchToENU);
+
+                    Matrix4.multiplyByPointAsVector(toENUNormal, normal, normal);
+                    normal.z *= exaggeration;
+                    Cartesian3.normalize(normal, normal);
+
+                    Matrix4.multiplyByPointAsVector(fromENUNormal, normal, normal);
+                    Cartesian3.normalize(normal, normal);
+
+                    AttributeCompression.octEncode(normal, toPack);
+                }
             }
+
+            vertexBufferIndex = encoding.encode(vertexBuffer, vertexBufferIndex, position, uv, h, toPack);
 
             if (previousIndex !== -1) {
                 indexBuffer[indexBufferIndex++] = previousIndex;
@@ -264,7 +281,6 @@ define([
 
         return indexBufferIndex;
     }
-    */
 
     return createTaskProcessorWorker(createVerticesFromQuantizedTerrainMesh);
 });

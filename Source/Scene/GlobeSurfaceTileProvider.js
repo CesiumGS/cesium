@@ -1178,10 +1178,9 @@ define([
             uniformMap.maximumY = encoding.maximumY;
             uniformMap.minimumZ = encoding.minimumZ;
             uniformMap.maximumZ = encoding.maximumZ;
+            uniformMap.minimumHeight = encoding.minimumHeight;
+            uniformMap.maximumHeight = encoding.maximumHeight;
             Matrix3.clone(encoding.matrix, uniformMap.scaleAndBias);
-
-            uniformMap.minimumHeight = surfaceTile.minimumHeight;
-            uniformMap.maximumHeight = surfaceTile.maximumHeight;
 
             command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog);
             command.renderState = renderState;
