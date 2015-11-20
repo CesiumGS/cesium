@@ -170,7 +170,7 @@ define([
         var result = [];
         var properties;
 
-        var features = featureInfoResponse.getElementsByTagNameNS(esriWmsNamespace, 'FIELDS');
+        var features = featureInfoResponse.getElementsByTagNameNS('*', 'FIELDS');
         if (features.length > 0) {
             // Standard esri format
             for (var featureIndex = 0; featureIndex < features.length; ++featureIndex) {
