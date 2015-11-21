@@ -100,7 +100,6 @@ define([
         //>>includeEnd('debug');
 
         var url = appendForwardSlash(options.url);
-        this._url = url;
 
         var imageryProvider = new UrlTemplateImageryProvider({
             deferReadiness: true,
