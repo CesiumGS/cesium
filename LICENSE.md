@@ -47,11 +47,10 @@ http://hg.grauw.nl/grauw-lib
 
 https://github.com/cujojs/when
 
-> Open Source Initiative OSI - The MIT License
+>  Licensed under the MIT License at:
+>  http://www.opensource.org/licenses/mit-license.php
 >
-> http://www.opensource.org/licenses/mit-license.php
->
-> Copyright (c) 2011 Brian Cavalier
+>  MIT License (c) copyright B Cavalier &amp; J Hann
 >
 > Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 >
@@ -81,7 +80,7 @@ https://github.com/gregjacobs/Autolinker.js
 
 The MIT License (MIT)
 
-> Copyright (c) 2014 Gregory Jacobs (http://greg-jacobs.com)
+> Copyright (c) 2015 Gregory Jacobs (http://greg-jacobs.com)
 
 > Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 >
@@ -147,7 +146,7 @@ https://github.com/jrburke/almond
 
 https://github.com/jrburke/requirejs
 
-> Copyright (c) 2010-2011, The Dojo Foundation
+> Copyright (c) 2010-2015, The Dojo Foundation
 >
 > Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 >
@@ -254,7 +253,7 @@ The Cesium tests use the following third-party libraries and data.
 
 http://jasmine.github.io/
 
-Copyright (c) 2008-2015 Pivotal Labs
+Copyright (c) 2008-2014 Pivotal Labs
 
 > Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 >
@@ -284,7 +283,7 @@ The Cesium example applications include the following third-party libraries and 
 
 http://dojotoolkit.org/
 
-> Copyright (c) 2005-2011, The Dojo Foundation
+> Copyright (c) 2005-2013, The Dojo Foundation
 >
 > All rights reserved.
 >
@@ -300,7 +299,7 @@ http://dojotoolkit.org/
 
 http://codemirror.net/
 
-> Copyright (C) 2012 by Marijn Haverbeke <marijnh@gmail.com>
+> Copyright (C) 2014 by Marijn Haverbeke <marijnh@gmail.com> and others
 >
 > Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 >
