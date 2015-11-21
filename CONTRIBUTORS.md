@@ -28,6 +28,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Katherina Lim](https://github.com/klim705)
    * [Gabrielle Getz](https://github.com/ggetz)
    * [Sarah Chow](https://github.com/slchow)
+   * [Brendan Flood](https://github.com/bflood-agi)
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
    * [Kevin Ring](https://github.com/kring)

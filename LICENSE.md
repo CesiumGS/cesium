@@ -263,6 +263,18 @@ Copyright (c) 2008-2015 Pivotal Labs
 > THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
+Cesium Documentation
+====================
+
+The Cesium documentation files include the following third-party content.
+
+### Source Sans Pro (Font)
+
+Source® Sans Pro, Adobe's first open source typeface family, was designed by Paul D. Hunt. It is a sans serif typeface intended to work well in user interfaces.
+
+[SIL Open Font License, 1.1](http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=OFL) ([text](http://scripts.sil.org/cms/scripts/render_download.php?format=file&media_id=OFL_plaintext&filename=OFL.txt))
+
+
 Example Applications
 ====================
 
@@ -355,6 +367,12 @@ http://www.flaticon.com/authors/freepik
 https://www.mapbox.com/maki/
 
 https://github.com/mapbox/maki
+
+### Big Buck Bunny trailer
+
+Creative Commons Attribution 3.0
+(c) copyright 2008, Blender Foundation
+www.bigbuckbunny.org
 
 ### population909500.json ###
 

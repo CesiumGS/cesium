@@ -422,7 +422,7 @@ define([
      * @exception {DeveloperError} <code>loadTile</code> must not be called before the tile provider is ready.
      */
     GlobeSurfaceTileProvider.prototype.loadTile = function(frameState, tile) {
-        GlobeSurfaceTile.processStateMachine(tile, frameState.context, frameState.commandList, this._terrainProvider, this._imageryLayers);
+        GlobeSurfaceTile.processStateMachine(tile, frameState, this._terrainProvider, this._imageryLayers);
     };
 
     var boundingSphereScratch = new BoundingSphere();
@@ -1181,7 +1181,7 @@ define([
 
         var useWebMercatorProjection = frameState.projection instanceof WebMercatorProjection;
 
-        pickCommand.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState.context, frameState.mode, useWebMercatorProjection);
+        pickCommand.shaderProgram = tileProvider._surfaceShaderSet.getPickShaderProgram(frameState.context, frameState.mode, useWebMercatorProjection);
         pickCommand.renderState = tileProvider._pickRenderState;
 
         pickCommand.owner = drawCommand.owner;

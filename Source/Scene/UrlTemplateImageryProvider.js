@@ -126,7 +126,7 @@ define([
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
-     * @see OpenStreetMapImageryProvider
+     * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider

@@ -721,12 +721,13 @@ define([
      *
      * @private
      *
-     * @param {Context} context The rendered context to use.
+     * @param {FrameState} frameState The frameState.
      * @param {Imagery} imagery The imagery instance to reproject.
      */
-    ImageryLayer.prototype._reprojectTexture = function(context, commandList, imagery) {
+    ImageryLayer.prototype._reprojectTexture = function(frameState, imagery) {
         var texture = imagery.texture;
         var rectangle = imagery.rectangle;
+        var context = frameState.context;
 
         // Reproject this texture if it is not already in a geographic projection and
         // the pixels are more than 1e-5 radians apart.  The pixel spacing cutoff
@@ -749,7 +750,7 @@ define([
                         finalizeReprojectTexture(that, context, imagery, outputTexture);
                     }
                 });
-                commandList.push(computeCommand);
+                frameState.commandList.push(computeCommand);
         } else {
             finalizeReprojectTexture(this, context, imagery, texture);
         }
