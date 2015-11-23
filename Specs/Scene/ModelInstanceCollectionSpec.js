@@ -351,7 +351,8 @@ defineSuite([
     });
 
     it('renders with animations', function() {
-        // All instances should be animating. The moving box is at the center on frame 1 and off to the side by frame 5.
+        // Test that all instances are being animated.
+        // The moving box is in view on frame 1 and out of view by frame 5.
         return loadCollection({
             gltf : movingBoxGltf,
             instances : createInstances(4)

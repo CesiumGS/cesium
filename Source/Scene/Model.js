@@ -824,6 +824,22 @@ define([
             get : function() {
                 return defined(this._loadResources) ? this._loadResources.pendingTextureLoads : 0;
             }
+        },
+
+        /**
+         * Returns true if the model was transformed this frame
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @private
+         */
+        dirty : {
+            get : function() {
+                return this._dirty;
+            }
         }
     });
 

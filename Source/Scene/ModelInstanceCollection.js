@@ -793,7 +793,7 @@ define([
 
         // If any node changes due to an animation, update the commands. This could be inefficient if the model is
         // composed of many nodes and only one changes, however it is probably fine in the general use case.
-        if (model._dirty) {
+        if (model.dirty) {
             updateCommands(this);
         }
 
