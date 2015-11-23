@@ -3,8 +3,6 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/clone',
-        '../Core/Color',
-        '../Core/combine',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
@@ -14,22 +12,17 @@ define([
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
-        '../Core/RuntimeError',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/ShaderSource',
         '../ThirdParty/when',
-        './Cesium3DTileBatchTableResources',
         './Model',
-        './ModelInstance',
         './SceneMode'
     ], function(
         BoundingSphere,
         Cartesian3,
         clone,
-        Color,
-        combine,
         ComponentDatatype,
         defaultValue,
         defined,
@@ -39,15 +32,12 @@ define([
         CesiumMath,
         Matrix4,
         PrimitiveType,
-        RuntimeError,
         Buffer,
         BufferUsage,
         DrawCommand,
         ShaderSource,
         when,
-        Cesium3DTileBatchTableResources,
         Model,
-        ModelInstance,
         SceneMode) {
     "use strict";
 
@@ -105,19 +95,11 @@ define([
         this._readyPromise = when.defer();
         this._state = LoadState.NEEDS_LOAD;
 
-        var instances = defaultValue(options.instances, []);
-        var length = instances.length;
-        var batchTableResources = options.batchTableResources;
-        if (!defined(batchTableResources)) {
-            batchTableResources = new Cesium3DTileBatchTableResources(this, length);
-        }
-        this._batchTableResources = batchTableResources;
-        this._tileset = options.tileset;
+        this._instances = defaultValue(options.instances, []);
 
-        this._instances = new Array(length);
-        for (var i = 0; i < length; ++i) {
-            this._instances[i] = new ModelInstance(instances[i], this, i, this._tileset);
-        }
+        // When the model instance collection is backed by an instanced 3d-tile,
+        // use its batch table resources to modify the shaders, attributes, and uniform maps.
+        this._batchTableResources = options.batchTableResources;
 
         this._model = undefined;
         this._vertexBufferValues = undefined;
@@ -178,16 +160,6 @@ define([
             }
         }
     });
-
-    ModelInstanceCollection.prototype.getModel = function(index) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(index) || (index < 0) || (index >= this.length)) {
-            throw new DeveloperError('index is required and between zero and length - 1 (' + (this.length - 1) + ').');
-        }
-        //>>includeEnd('debug');
-
-        return this._instances[index];
-    };
 
     // TODO : maybe this whole step should be a pre-process as part of the 3d tile toolchain
     function isOffCenter(collection) {
@@ -320,14 +292,17 @@ define([
                 modelView = 'czm_instanced_modelView = czm_instanced_collectionModelView * czm_instanced_model;\n';
             }
 
-            var newMain =
+            var usesBatchTable = defined(collection._batchTableResources);
+            var batchIdAttribute = usesBatchTable ? 'attribute float a_batchId;\n' : '';
+
+            var instancedSource =
                 uniforms +
                 globalVarsHeader +
                 'mat4 czm_instanced_modelView;\n' +
                 'attribute vec4 czm_modelMatrixRow0;\n' +
                 'attribute vec4 czm_modelMatrixRow1;\n' +
                 'attribute vec4 czm_modelMatrixRow2;\n' +
-                'attribute float a_batchId;\n' +
+                batchIdAttribute +
                 renamedSource +
                 'void main()\n' +
                 '{\n' +
@@ -337,42 +312,42 @@ define([
                 '    czm_old_main();\n' +
                 '}';
 
-            vertexShaderCached = newMain;
-            return collection._batchTableResources.getVertexShaderCallback()(newMain);
+            vertexShaderCached = instancedSource;
+
+            if (usesBatchTable) {
+                instancedSource = collection._batchTableResources.getVertexShaderCallback()(instancedSource);
+            }
+
+            return instancedSource;
         };
     }
 
     function getFragmentShaderCallback(collection) {
         return function(fs) {
-            return collection._batchTableResources.getFragmentShaderCallback()(fs);
-        };
-    }
-
-    function getFragmentShaderNonInstancedCallback() {
-        return function(fs) {
-            var renamedSource = ShaderSource.replaceMain(fs, 'czm_old_main');
-            var newMain =
-                'uniform vec4 czm_color;\n' +
-                'void main()\n' +
-                '{\n' +
-                '    czm_old_main();\n' +
-                '    gl_FragColor.rgb *= czm_color.rgb;\n' +
-                '}';
-
-            return renamedSource + '\n' + newMain;
+            if (defined(collection._batchTableResources)) {
+                fs = collection._batchTableResources.getFragmentShaderCallback()(fs);
+            }
+            return fs;
         };
     }
 
     function getPickVertexShaderCallback(collection) {
         return function (vs) {
             // Use the vertex shader that was generated earlier
-            return collection._batchTableResources.getPickVertexShaderCallback()(vertexShaderCached);
+            vs = vertexShaderCached;
+            if (defined(collection._batchTableResources)) {
+                vs = collection._batchTableResources.getPickVertexShaderCallback()(vs);
+            }
+            return vs;
         };
     }
 
     function getPickFragmentShaderCallback(collection) {
         return function(fs) {
-            return collection._batchTableResources.getPickFragmentShaderCallback()(fs);
+            if (defined(collection._batchTableResources)) {
+                fs = collection._batchTableResources.getPickFragmentShaderCallback()(fs);
+            }
+            return fs;
         };
     }
 
@@ -408,13 +383,53 @@ define([
                 }
             }
 
-            return collection._batchTableResources.getUniformMapCallback()(uniformMap);
+            if (defined(collection._batchTableResources)) {
+                uniformMap = collection._batchTableResources.getUniformMapCallback()(uniformMap);
+            }
+
+            return uniformMap;
         };
     }
 
     function getPickUniformMapCallback(collection) {
         return function(uniformMap) {
-            return collection._batchTableResources.getPickUniformMapCallback()(uniformMap);
+            // Uses the uniform map generated from getUniformMapCallback
+            if (defined(collection._batchTableResources)) {
+                uniformMap = collection._batchTableResources.getPickUniformMapCallback()(uniformMap);
+            }
+            return uniformMap;
+        };
+    }
+
+    function getVertexShaderNonInstancedCallback(collection) {
+        return function(vs) {
+            if (defined(collection._batchTableResources)) {
+                vs = collection._batchTableResources.getVertexShaderCallback()(vs);
+                // Treat a_batchId as a uniform rather than a vertex attribute
+                vs = 'uniform float a_batchId\n;' + vs;
+            }
+            return vs;
+        };
+    }
+
+    function getPickVertexShaderNonInstancedCallback(collection) {
+        return function(vs) {
+            if (defined(collection._batchTableResources)) {
+                vs = collection._batchTableResources.getPickVertexShaderCallback()(vs);
+                // Treat a_batchId as a uniform rather than a vertex attribute
+                vs = 'uniform float a_batchId\n;' + vs;
+            }
+            return vs;
+        };
+    }
+
+    function getUniformMapNonInstancedCallback(collection) {
+        return function(uniformMap) {
+            if (defined(collection._batchTableResources)) {
+                uniformMap = collection._batchTableResources.getUniformMapCallback()(uniformMap);
+            }
+
+            return uniformMap;
         };
     }
 
@@ -434,8 +449,12 @@ define([
         var viewMatrix = context.uniformState.view;
         var center = dynamic ? Cartesian3.ZERO : collection._boundingVolume.center;
 
+        // When using a batch table, add a batch id attribute to each vertex
+        var usesBatchTable = defined(collection._batchTableResources);
+        var vertexSizeInFloats = usesBatchTable ? 13 : 12;
+
         if (createVertexBuffer) {
-            instanceBufferData = new Float32Array(instancesLength * 13);
+            instanceBufferData = new Float32Array(instancesLength * vertexSizeInFloats);
         }
 
         for (var i = 0; i < instancesLength; ++i) {
@@ -448,7 +467,7 @@ define([
                 instanceMatrix = modelMatrix;
             }
 
-            var offset = i * 13;
+            var offset = i * vertexSizeInFloats;
 
             // First three rows of the model matrix
             instanceBufferData[offset + 0]  = instanceMatrix[0];
@@ -463,7 +482,10 @@ define([
             instanceBufferData[offset + 9]  = instanceMatrix[6];
             instanceBufferData[offset + 10] = instanceMatrix[10];
             instanceBufferData[offset + 11] = instanceMatrix[14] - center.z;
-            instanceBufferData[offset + 12] = instance._batchId;
+
+            if (usesBatchTable) {
+                instanceBufferData[offset + 12] = instance.batchId;
+            }
         }
 
         if (createVertexBuffer) {
@@ -521,7 +543,10 @@ define([
         if (instancingSupported) {
             updateVertexBuffer(collection, context);
 
+            var usesBatchTable = defined(collection._batchTableResources);
+            var vertexSizeInFloats = usesBatchTable ? 13 : 12;
             var componentSizeInBytes = ComponentDatatype.getSizeInBytes(ComponentDatatype.FLOAT);
+
             var instancedAttributes = {
                 czm_modelMatrixRow0 : {
                     index                  : 0, // updated in Model
@@ -530,7 +555,7 @@ define([
                     componentDatatype      : ComponentDatatype.FLOAT,
                     normalize              : false,
                     offsetInBytes          : 0,
-                    strideInBytes          : componentSizeInBytes * 13,
+                    strideInBytes          : componentSizeInBytes * vertexSizeInFloats,
                     instanceDivisor        : 1
                 },
                 czm_modelMatrixRow1 : {
@@ -540,7 +565,7 @@ define([
                     componentDatatype      : ComponentDatatype.FLOAT,
                     normalize              : false,
                     offsetInBytes          : componentSizeInBytes * 4,
-                    strideInBytes          : componentSizeInBytes * 13,
+                    strideInBytes          : componentSizeInBytes * vertexSizeInFloats,
                     instanceDivisor        : 1
                 },
                 czm_modelMatrixRow2 : {
@@ -550,20 +575,24 @@ define([
                     componentDatatype      : ComponentDatatype.FLOAT,
                     normalize              : false,
                     offsetInBytes          : componentSizeInBytes * 8,
-                    strideInBytes          : componentSizeInBytes * 13,
-                    instanceDivisor        : 1
-                },
-                a_batchId : {
-                    index                  : 0, // updated in Model
-                    vertexBuffer           : collection._vertexBuffer,
-                    componentsPerAttribute : 1,
-                    componentDatatype      : ComponentDatatype.FLOAT,
-                    normalize              : false,
-                    offsetInBytes          : componentSizeInBytes * 12,
-                    strideInBytes          : componentSizeInBytes * 13,
+                    strideInBytes          : componentSizeInBytes * vertexSizeInFloats,
                     instanceDivisor        : 1
                 }
             };
+
+            // When using a batch table, add a batch id attribute
+            if (usesBatchTable) {
+                instancedAttributes.a_batchId = {
+                    index                   : 0, // updated in Model
+                    vertexBuffer            : collection._vertexBuffer,
+                    componentsPerAttribute  : 1,
+                    componentDatatype       : ComponentDatatype.FLOAT,
+                    normalize               : false,
+                    offsetInBytes           : componentSizeInBytes * 12,
+                    strideInBytes           : componentSizeInBytes * vertexSizeInFloats,
+                    instanceDivisor         : 1
+                };
+            }
 
             modelOptions.precreatedAttributes = instancedAttributes;
             modelOptions.vertexShaderLoaded = getVertexShaderCallback(collection);
@@ -577,7 +606,12 @@ define([
                 modelOptions.cacheKey = collection._url + '#instanced';
             }
         } else {
-            modelOptions.fragmentShaderLoaded = getFragmentShaderNonInstancedCallback();
+            modelOptions.vertexShaderLoaded = getVertexShaderNonInstancedCallback(collection);
+            modelOptions.fragmentShaderLoaded = getFragmentShaderCallback(collection);
+            modelOptions.uniformMapLoaded = getUniformMapNonInstancedCallback(collection, context);
+            modelOptions.pickVertexShaderLoaded = getPickVertexShaderNonInstancedCallback(collection);
+            modelOptions.pickFragmentShaderLoaded = getPickFragmentShaderCallback(collection);
+            modelOptions.pickUniformMapLoaded = getPickUniformMapCallback(collection);
         }
 
         if (defined(collection._url)) {
@@ -587,19 +621,13 @@ define([
         }
     }
 
-    function createColorFunction(instance) {
+    function createBatchIdFunction(batchId) {
         return function() {
-            return instance.color;
+            return batchId;
         };
     }
 
-    function createPickColorFunction(instance, context) {
-        return function() {
-            return instance.getPickId(context).color; // Fix this
-        };
-    }
-
-    function createCommands(collection, drawCommands, pickCommands, context) {
+    function createCommands(collection, drawCommands, pickCommands) {
         collection._modelCommands = drawCommands;
 
         var i;
@@ -608,6 +636,7 @@ define([
         var commandsLength = drawCommands.length;
         var instancesLength = collection.length;
         var allowPicking = collection.allowPicking;
+        var usesBatchTable = defined(collection._batchTableResources);
 
         var boundingVolume = collection._boundingVolume;
 
@@ -637,7 +666,9 @@ define([
                     command.boundingVolume = new BoundingSphere();
                     command.cull = collection._cull;
                     command.uniformMap = clone(command.uniformMap);
-                    command.uniformMap.czm_color = createColorFunction(instances[j]);
+                    if (usesBatchTable) {
+                        command.uniformMap.a_batchId = createBatchIdFunction(instances[j].batchId);
+                    }
                     collection._drawCommands.push(command);
 
                     if (allowPicking) {
@@ -646,7 +677,9 @@ define([
                         command.boundingVolume = new BoundingSphere();
                         command.cull = collection._cull;
                         command.uniformMap = clone(command.uniformMap);
-                        command.uniformMap.czm_pickColor = createPickColorFunction(instances[j], context);
+                        if (usesBatchTable) {
+                            command.uniformMap.a_batchId = createBatchIdFunction(instances[j].batchId);
+                        }
                         collection._pickCommands.push(command);
                     }
                 }
@@ -749,8 +782,7 @@ define([
         }
 
         var context = frameState.context;
-        var instancingSupported = context.instancedArrays;
-        this._instancingSupported = instancingSupported;
+        this._instancingSupported = context.instancedArrays;
 
         if (this._state === LoadState.NEEDS_LOAD) {
             this._state = LoadState.LOADING;
@@ -760,11 +792,6 @@ define([
                 that._state = LoadState.FAILED;
                 that.readyPromise.reject(error);
             });
-        }
-
-        if (instancingSupported) {
-            var owner = defaultValue(this._tileset, this);
-            this._batchTableResources.update(owner, frameState);
         }
 
         var model = this._model;
@@ -780,7 +807,7 @@ define([
             }
 
             var modelCommands = getModelCommands(model);
-            createCommands(this, modelCommands.draw, modelCommands.pick, context);
+            createCommands(this, modelCommands.draw, modelCommands.pick);
             updateCommands(this);
 
             this.readyPromise.resolve(this);
@@ -809,22 +836,9 @@ define([
         var passes = frameState.passes;
         var commands = passes.render ? this._drawCommands : this._pickCommands;
         var commandsLength = commands.length;
-        var i;
 
-        if (instancingSupported) {
-            for (i = 0; i < commandsLength; ++i) {
-                commandList.push(commands[i]);
-            }
-        } else {
-            // Don't push commands if the instance's show is false
-            var instances = this._instances;
-            var instancesLength = this.length;
-            for (i = 0; i < commandsLength; ++i) {
-                var instance = instances[i%instancesLength];
-                if (instance.show) {
-                    commandList.push(commands[i]);
-                }
-            }
+        for (var i = 0; i < commandsLength; ++i) {
+            commandList.push(commands[i]);
         }
     };
 
@@ -834,8 +848,6 @@ define([
 
     ModelInstanceCollection.prototype.destroy = function() {
         this._model = this._model && this._model.destroy();
-        this._batchTableResources = this._batchTableResources && this._batchTableResources.destroy();
-
         return destroyObject(this);
     };
 
