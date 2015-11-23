@@ -124,6 +124,20 @@ define([
         /**
          * DOC_TBA
          *
+         * @readonly
+         */
+        this.hasSubtree = false;
+
+        /**
+         * DOC_TBA
+         *
+         * @readonly
+         */
+        this.subtreeLoading = false;
+
+        /**
+         * DOC_TBA
+         *
          * @type {Promise}
          * @readonly
          */
@@ -136,7 +150,10 @@ define([
             var type = url.substring(url.lastIndexOf('.') + 1);
             var contentFactory = Cesium3DTileContentProviderFactory[type];
 
-            if (defined(contentFactory)) {
+            if (type === 'json') {
+                this.hasSubtree = true;
+                content = new Empty3DTileContentProvider();
+            } else if (defined(contentFactory)) {
                 content = contentFactory(tileset, this, url);
             } else {
                 throw new DeveloperError('Unknown tile content type, ' + type + ', for ' + url);
