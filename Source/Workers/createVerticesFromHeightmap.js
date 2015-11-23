@@ -60,7 +60,8 @@ define([
             gridHeight : arrayHeight,
             boundingSphere3D : boundingSphere3D,
             orientedBoundingBox : orientedBoundingBox,
-            occludeePointInScaledSpace : occludeePointInScaledSpace
+            occludeePointInScaledSpace : occludeePointInScaledSpace,
+            encoding : statistics.encoding
         };
     }
 

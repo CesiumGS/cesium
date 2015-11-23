@@ -47,9 +47,6 @@ define([
     var scratchFromENU = new Matrix4();
 
     function createVerticesFromQuantizedTerrainMesh(parameters, transferableObjects) {
-        if (parameters.level === 11 && parameters.x === 1076 && parameters.y === 673) {
-            debugger;
-        }
         var quantizedVertices = parameters.quantizedVertices;
         var quantizedVertexCount = quantizedVertices.length / 3;
         var octEncodedNormals = parameters.octEncodedNormals;

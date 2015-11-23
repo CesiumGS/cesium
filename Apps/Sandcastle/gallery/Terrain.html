@@ -46,6 +46,7 @@ var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
     requestVertexNormals : true
 });
 viewer.terrainProvider = cesiumTerrainProviderMeshes;
+viewer.extend(Cesium.viewerCesiumInspectorMixin);
 
 // setup alternative terrain providers
 var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();

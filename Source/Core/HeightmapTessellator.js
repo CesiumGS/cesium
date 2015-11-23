@@ -7,7 +7,8 @@ define([
         './Ellipsoid',
         './freezeObject',
         './Math',
-        './Rectangle'
+        './Rectangle',
+        './TerrainEncoding'
     ], function(
         Cartesian3,
         defaultValue,
@@ -16,7 +17,8 @@ define([
         Ellipsoid,
         freezeObject,
         CesiumMath,
-        Rectangle) {
+        Rectangle,
+        TerrainEncoding) {
     "use strict";
 
     /**
@@ -312,7 +314,8 @@ define([
 
         return {
             maximumHeight : maximumHeight,
-            minimumHeight : minimumHeight
+            minimumHeight : minimumHeight,
+            encoding : new TerrainEncoding()
         };
     };
 
