@@ -71,18 +71,9 @@ define([
 
         var terrainEncoding = surfaceTile.pickTerrain.mesh.encoding;
         var compressionMode = terrainEncoding.compression;
-        if (compressionMode === TerrainCompression.BITS16 && terrainEncoding.hasVertexNormals) {
+        if (compressionMode === TerrainCompression.BITS12) {
             compression = 1;
-            compressionDefine = 'COMPRESSION_BITS16_NORMAL';
-        } else if (compressionMode === TerrainCompression.BITS16) {
-            compression = 2;
-            compressionDefine = 'COMPRESSION_BITS16';
-        } else if (compressionMode === TerrainCompression.BITS12) {
-            compression = 3;
             compressionDefine = 'COMPRESSION_BITS12';
-        } else if (compressionMode === TerrainCompression.BITS8) {
-            compression = 4;
-            compressionDefine = 'COMPRESSION_BITS8';
         }
 
         var sceneMode = frameState.mode;
@@ -99,7 +90,7 @@ define([
                     (hasVertexNormals << 11) |
                     (useWebMercatorProjection << 12) |
                     (enableFog << 13) |
-                    (compression << 16);
+                    (compression << 14);
 
         var surfaceShader = surfaceTile.surfaceShader;
         if (defined(surfaceShader) &&
@@ -216,22 +207,13 @@ define([
 
         var terrainEncoding = surfaceTile.pickTerrain.mesh.encoding;
         var compressionMode = terrainEncoding.compression;
-        if (compressionMode === TerrainCompression.BITS16 && terrainEncoding.hasVertexNormals) {
+        if (compressionMode === TerrainCompression.BITS12) {
             compression = 1;
-            compressionDefine = 'COMPRESSION_BITS16_NORMAL';
-        } else if (compressionMode === TerrainCompression.BITS16) {
-            compression = 2;
-            compressionDefine = 'COMPRESSION_BITS16';
-        } else if (compressionMode === TerrainCompression.BITS12) {
-            compression = 3;
             compressionDefine = 'COMPRESSION_BITS12';
-        } else if (compressionMode === TerrainCompression.BITS8) {
-            compression = 4;
-            compressionDefine = 'COMPRESSION_BITS8';
         }
 
         var sceneMode = frameState.mode;
-        var flags = sceneMode | (useWebMercatorProjection << 2) | (compression << 5);
+        var flags = sceneMode | (useWebMercatorProjection << 2) | (compression << 3);
         var pickShader = this._pickShaderPrograms[flags];
 
         if (!defined(pickShader)) {

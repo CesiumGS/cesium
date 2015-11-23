@@ -10,6 +10,8 @@ define([
      *
      * @namespace
      * @alias TerrainCompression
+     *
+     * @private
      */
     var TerrainCompression = {
         /**
@@ -21,28 +23,12 @@ define([
         NONE : 0,
 
         /**
-         * The vertices are compressed to 16 bits.
-         *
-         * @type {Number}
-         * @constant
-         */
-        BITS16 : 1,
-
-        /**
          * The vertices are compressed to 12 bits.
          *
          * @type {Number}
          * @constant
          */
-        BITS12 : 2,
-
-        /**
-         * The vertices are compressed to 8 bits.
-         *
-         * @type {Number}
-         * @constant
-         */
-        BITS8 : 3
+        BITS12 : 1
     };
 
     return freezeObject(TerrainCompression);

@@ -1,7 +1,4 @@
-#ifdef COMPRESSION_BITS16_NORMAL
-attribute vec4 compressed;
-attribute float encodedNormal;
-#elif defined(COMPRESSION_BITS16) || defined(COMPRESSION_BITS12) || defined(COMPRESSION_BITS8)
+#ifdef COMPRESSION_BITS12
 attribute vec4 compressed;
 #else
 attribute vec4 position3DAndHeight;
@@ -94,7 +91,7 @@ vec4 getPositionMorphingMode(vec3 position, float height, vec2 textureCoordinate
     return czm_modelViewProjection * morphPosition;
 }
 
-#if defined(COMPRESSION_BITS16_NORMAL) || defined(COMPRESSION_BITS16) || defined(COMPRESSION_BITS12) || defined(COMPRESSION_BITS8)
+#ifdef COMPRESSION_BITS12
 // TODO: remove. only use matrix.
 uniform float u_minimumX;
 uniform float u_maximumX;
@@ -107,83 +104,27 @@ uniform float u_maximumHeight;
 uniform mat3 u_scaleAndBias;
 #endif
 
-const float SHIFT_RIGHT_16 = 1.0 / 65536.0;
-const float SHIFT_RIGHT_8 = 1.0 / 256.0;
-
 void main() 
 {
-#if defined(COMPRESSION_BITS16_NORMAL) || defined(COMPRESSION_BITS16)
-    float compressed0 = compressed.x;
-    float compressed1 = compressed.y;
-    float compressed2 = compressed.z;
-    float compressed3 = compressed.w;
-
-    float temp = compressed0 * SHIFT_RIGHT_16;
-    float upperZ = floor(temp);
-    float x = temp - upperZ;
-
-    temp = compressed1 * SHIFT_RIGHT_16;
-    float lowerZ = floor(temp);
-    float y = temp - lowerZ;
-
-    float z = upperZ * SHIFT_RIGHT_8 + lowerZ * SHIFT_RIGHT_16;
-
-    temp = compressed2 * SHIFT_RIGHT_16;
-    float upperH = floor(temp);
-    float u = temp - upperH;
-
-    temp = compressed3 * SHIFT_RIGHT_16;
-    float lowerH = floor(temp);
-    float v = temp - lowerH;
-
-    float height = upperH * SHIFT_RIGHT_8 + lowerH * SHIFT_RIGHT_16;
-
-    vec3 position = vec3(x, y, z);
-    vec2 textureCoordinates = vec2(u, v);
-#elif defined(COMPRESSION_BITS12)
+#ifdef COMPRESSION_BITS12
     vec2 xy = czm_decompressTextureCoordinates(compressed.x);
     vec2 zh = czm_decompressTextureCoordinates(compressed.y);
     vec3 position = vec3(xy, zh.x);
     float height = zh.y;
     vec2 textureCoordinates = czm_decompressTextureCoordinates(compressed.z);
     float encodedNormal = compressed.w;
-#elif defined(COMPRESSION_BITS8)
-    float temp = compressed.x * SHIFT_RIGHT_8;
-    float x = floor(temp);
-    float z = temp - x;
 
-    temp = x * SHIFT_RIGHT_8;
-    x = floor(temp);
-    float y = temp - x;
-    x *= SHIFT_RIGHT_8;
-
-    temp = compressed.y * SHIFT_RIGHT_8;
-    float h = floor(temp);
-    float v = temp - h;
-
-    temp = h * SHIFT_RIGHT_8;
-    h = floor(temp);
-    float u = temp - h;
-    h *= SHIFT_RIGHT_8;
-
-    vec3 position = vec3(x, y, z);
-    float height = h;
-    vec2 textureCoordinates = vec2(u, v);
-    float encodedNormal = compressed.z;
-#else
-    vec3 position = position3DAndHeight.xyz;
-    float height = position3DAndHeight.w;
-    vec2 textureCoordinates = textureCoordAndEncodedNormals.xy;
-    float encodedNormal = textureCoordAndEncodedNormals.z;
-#endif
-
-#if defined(COMPRESSION_BITS16_NORMAL) || defined(COMPRESSION_BITS16) || defined(COMPRESSION_BITS12) || defined(COMPRESSION_BITS8)
     position.x = position.x * (u_maximumX - u_minimumX) + u_minimumX;
     position.y = position.y * (u_maximumY - u_minimumY) + u_minimumY;
     position.z = position.z * (u_maximumZ - u_minimumZ) + u_minimumZ;
     height = height * (u_maximumHeight - u_minimumHeight) + u_minimumHeight;
 
     position = u_scaleAndBias * position;
+#else
+    vec3 position = position3DAndHeight.xyz;
+    float height = position3DAndHeight.w;
+    vec2 textureCoordinates = textureCoordAndEncodedNormals.xy;
+    float encodedNormal = textureCoordAndEncodedNormals.z;
 #endif
 
     vec3 position3DWC = position + u_center3D;

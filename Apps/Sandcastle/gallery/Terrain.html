@@ -43,7 +43,7 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
     url : '//assets.agi.com/stk-terrain/world',
     requestWaterMask : true,
-    requestVertexNormals : false //true
+    requestVertexNormals : true
 });
 viewer.terrainProvider = cesiumTerrainProviderMeshes;
 

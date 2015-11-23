@@ -20,9 +20,7 @@ define([
     ) {
     "use strict";
 
-    var SHIFT_LEFT_16 = Math.pow(2.0, 16.0);
     var SHIFT_LEFT_12 = Math.pow(2.0, 12.0);
-    var SHIFT_LEFT_8 = Math.pow(2.0, 8.0);
 
     /**
      * Data used to decompress the terrain mesh.
@@ -51,12 +49,8 @@ define([
         var maxDim = Math.max(xDim, yDim, zDim, hDim);
 
         var compression;
-        if (maxDim < SHIFT_LEFT_8 - 1.0) {
-            compression = TerrainCompression.BITS8;
-        } else if (maxDim < SHIFT_LEFT_12 - 1.0) {
+        if (maxDim < SHIFT_LEFT_12 - 1.0) {
             compression = TerrainCompression.BITS12;
-        } else if (maxDim < SHIFT_LEFT_16 - 1.0) {
-            compression = TerrainCompression.BITS16;
         } else {
             compression = TerrainCompression.NONE;
         }
@@ -92,7 +86,7 @@ define([
         this.maximumY = maximumY;
 
         /**
-         * The minimumdistance in the z direction.
+         * The minimum distance in the z direction.
          * @type {Number}
          */
         this.minimumZ = minimumZ;
@@ -129,7 +123,7 @@ define([
         var u = uv.x;
         var v = uv.y;
 
-        if (this.compression !== TerrainCompression.NONE) {
+        if (this.compression === TerrainCompression.BITS12) {
             var xDim = this.maximumX - this.minimumX;
             var yDim = this.maximumY - this.minimumY;
             var zDim = this.maximumZ - this.minimumZ;
@@ -142,61 +136,18 @@ define([
             var z = (cartesian3Scratch.z - this.minimumZ) / zDim;
             var h = (height - this.minimumHeight) / hDim;
 
-            var compressed0;
-            var compressed1;
-            var compressed2;
-            var compressed3;
+            Cartesian2.fromElements(x, y, cartesian2Scratch);
+            var compressed0 = AttributeCompression.compressTextureCoordinates(cartesian2Scratch);
 
-            if (this.compression === TerrainCompression.BITS16) {
-                compressed0 = x === 1.0 ? SHIFT_LEFT_16 - 1.0 : Math.floor(x * SHIFT_LEFT_16);
-                compressed1 = y === 1.0 ? SHIFT_LEFT_16 - 1.0 : Math.floor(y * SHIFT_LEFT_16);
+            Cartesian2.fromElements(z, h, cartesian2Scratch);
+            var compressed1 = AttributeCompression.compressTextureCoordinates(cartesian2Scratch);
 
-                var temp = z * SHIFT_LEFT_8;
-                var upperZ = Math.floor(temp);
-                var lowerZ = Math.floor((temp - upperZ) * SHIFT_LEFT_8);
+            Cartesian2.fromElements(u, v, cartesian2Scratch);
+            var compressed2 = AttributeCompression.compressTextureCoordinates(cartesian2Scratch);
 
-                compressed0 += upperZ * SHIFT_LEFT_16;
-                compressed1 += lowerZ * SHIFT_LEFT_16;
-
-                compressed2 = u === 1.0 ? SHIFT_LEFT_16 - 1.0 : Math.floor(u * SHIFT_LEFT_16);
-                compressed3 = v === 1.0 ? SHIFT_LEFT_16 - 1.0 : Math.floor(v * SHIFT_LEFT_16);
-
-                temp = h * SHIFT_LEFT_8;
-                var upperH = Math.floor(temp);
-                var lowerH = Math.floor((temp - upperH) * SHIFT_LEFT_8);
-
-                compressed2 += upperH * SHIFT_LEFT_16;
-                compressed3 += lowerH * SHIFT_LEFT_16;
-
-                vertexBuffer[bufferIndex++] = compressed0;
-                vertexBuffer[bufferIndex++] = compressed1;
-                vertexBuffer[bufferIndex++] = compressed2;
-                vertexBuffer[bufferIndex++] = compressed3;
-            } else if (this.compression === TerrainCompression.BITS12) {
-                Cartesian2.fromElements(x, y, cartesian2Scratch);
-                compressed0 = AttributeCompression.compressTextureCoordinates(cartesian2Scratch);
-
-                Cartesian2.fromElements(z, h, cartesian2Scratch);
-                compressed1 = AttributeCompression.compressTextureCoordinates(cartesian2Scratch);
-
-                Cartesian2.fromElements(u, v, cartesian2Scratch);
-                compressed2 = AttributeCompression.compressTextureCoordinates(cartesian2Scratch);
-
-                vertexBuffer[bufferIndex++] = compressed0;
-                vertexBuffer[bufferIndex++] = compressed1;
-                vertexBuffer[bufferIndex++] = compressed2;
-            } else {
-                compressed0 = (x === 1.0 ? SHIFT_LEFT_8 - 1.0 : Math.floor(x * SHIFT_LEFT_8)) * SHIFT_LEFT_16;
-                compressed0 += (y === 1.0 ? SHIFT_LEFT_8 - 1.0 : Math.floor(y * SHIFT_LEFT_8)) * SHIFT_LEFT_8;
-                compressed0 += z === 1.0 ? SHIFT_LEFT_8 - 1.0 : Math.floor(z * SHIFT_LEFT_8);
-
-                compressed1 = (h === 1.0 ? SHIFT_LEFT_8 - 1.0 : Math.floor(h * SHIFT_LEFT_8)) * SHIFT_LEFT_16;
-                compressed1 += (u === 1.0 ? SHIFT_LEFT_8 - 1.0 : Math.floor(u * SHIFT_LEFT_8)) * SHIFT_LEFT_8;
-                compressed1 += v === 1.0 ? SHIFT_LEFT_8 - 1.0 : Math.floor(v * SHIFT_LEFT_8);
-
-                vertexBuffer[bufferIndex++] = compressed0;
-                vertexBuffer[bufferIndex++] = compressed1;
-            }
+            vertexBuffer[bufferIndex++] = compressed0;
+            vertexBuffer[bufferIndex++] = compressed1;
+            vertexBuffer[bufferIndex++] = compressed2;
         } else {
             var center = Matrix4.getTranslation(this.fromENU, cartesian3Scratch);
             Cartesian3.subtract(position, center, cartesian3Scratch);
@@ -216,9 +167,6 @@ define([
         return bufferIndex;
     };
 
-    var SHIFT_RIGHT_16 = 1.0 / 65536.0;
-    var SHIFT_RIGHT_8 = 1.0 / 256.0;
-
     TerrainEncoding.prototype.decodePosition = function(buffer, index, result) {
         if (!defined(result)) {
             result = new Cartesian3();
@@ -226,35 +174,13 @@ define([
 
         index *= this.getStride();
 
-        if (this.compression !== TerrainCompression.NONE) {
-            var temp;
-            if (this.compression === TerrainCompression.BITS16) {
-                temp = buffer[index] * SHIFT_RIGHT_16;
-                var upperZ = Math.floor(temp);
-                result.x = temp - upperZ;
+        if (this.compression === TerrainCompression.BITS12) {
+            var xy = AttributeCompression.decompressTextureCoordinates(buffer[index], cartesian2Scratch);
+            result.x = xy.x;
+            result.y = xy.y;
 
-                temp = buffer[index + 1] * SHIFT_RIGHT_16;
-                var lowerZ = Math.floor(temp);
-                result.y = temp - lowerZ;
-
-                result.z = upperZ * SHIFT_RIGHT_8 + lowerZ * SHIFT_RIGHT_16;
-            } else if (this.compression === TerrainCompression.BITS12) {
-                var xy = AttributeCompression.decompressTextureCoordinates(buffer[index], cartesian2Scratch);
-                result.x = xy.x;
-                result.y = xy.y;
-
-                var zh = AttributeCompression.decompressTextureCoordinates(buffer[index + 1], cartesian2Scratch);
-                result.z = zh.x;
-            } else {
-                temp = buffer[index] * SHIFT_RIGHT_8;
-                var x = Math.floor(temp);
-                result.z = temp - x;
-
-                temp = x * SHIFT_RIGHT_8;
-                x = Math.floor(temp);
-                result.y = temp - x;
-                result.x = x * SHIFT_RIGHT_8;
-            }
+            var zh = AttributeCompression.decompressTextureCoordinates(buffer[index + 1], cartesian2Scratch);
+            result.z = zh.x;
 
             // TODO: remove
             result.x = result.x * (this.maximumX - this.minimumX) + this.minimumX;
@@ -274,14 +200,8 @@ define([
         var vertexStride;
 
         switch (this.compression) {
-            case TerrainCompression.BITS8:
-                vertexStride = 2;
-                break;
             case TerrainCompression.BITS12:
                 vertexStride = 3;
-                break;
-            case TerrainCompression.BITS16:
-                vertexStride = 4;
                 break;
             default:
                 vertexStride = 6;
@@ -297,10 +217,6 @@ define([
     var attributesNone = {
         position3DAndHeight : 0,
         textureCoordAndEncodedNormals : 1
-    };
-    var attributes16WithNormals = {
-        compressed : 0,
-        encodedNormal : 1
     };
     var attributes = {
         compressed : 0
@@ -330,34 +246,9 @@ define([
                 offsetInBytes : position3DAndHeightLength * sizeInBytes,
                 strideInBytes : stride
             }];
-        } else if (this.compression === TerrainCompression.BITS16 && this.hasVertexNormals) {
-            var compressedLength = 4;
-            stride = 5;
-            return [{
-                index : attributes16WithNormals.compressed,
-                vertexBuffer : buffer,
-                componentDatatype : datatype,
-                componentsPerAttribute : compressedLength,
-                offsetInBytes : 0,
-                strideInBytes : stride
-            }, {
-                index : attributes16WithNormals.encodedNormal,
-                vertexBuffer : buffer,
-                componentDatatype : datatype,
-                componentsPerAttribute : 1,
-                offsetInBytes : compressedLength * sizeInBytes,
-                strideInBytes : stride
-            }];
-        } else if (this.compression === TerrainCompression.BITS16) {
-            return [{
-                index : attributes.compressed,
-                vertexBuffer : buffer,
-                componentDatatype : datatype,
-                componentsPerAttribute : 4
-            }];
         }
 
-        var numComponents = this.compression === TerrainCompression.BITS12 ? 3 : 2;
+        var numComponents = 3;
         numComponents += this.hasVertexNormals ? 1 : 0;
         return [{
             index : attributes.compressed,
@@ -370,8 +261,6 @@ define([
     TerrainEncoding.prototype.getAttributeLocations = function() {
         if (this.compression === TerrainCompression.NONE) {
             return attributesNone;
-        } else if (this.compression === TerrainCompression.BITS16 && this.hasVertexNormals) {
-            return attributes16WithNormals;
         } else {
             return attributes;
         }
