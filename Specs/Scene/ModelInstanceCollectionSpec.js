@@ -2,9 +2,9 @@
 defineSuite([
         'Scene/ModelInstanceCollection',
         'Core/BoundingSphere',
+        'Core/Cartesian3',
         'Core/defaultValue',
         'Core/defined',
-        'Core/Cartesian3',
         'Core/HeadingPitchRange',
         'Core/JulianDate',
         'Core/Math',
@@ -20,9 +20,9 @@ defineSuite([
     ], function(
         ModelInstanceCollection,
         BoundingSphere,
+        Cartesian3,
         defaultValue,
         defined,
-        Cartesian3,
         HeadingPitchRange,
         JulianDate,
         CesiumMath,

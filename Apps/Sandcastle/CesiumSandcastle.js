@@ -35,8 +35,8 @@ require({
         'dojo/on',
         'dojo/parser',
         'dojo/promise/all',
-        'dojo/when',
         'dojo/query',
+        'dojo/when',
         'Sandcastle/LinkButton',
         'Source/Cesium',
         'CodeMirror/addon/hint/show-hint',
@@ -76,8 +76,8 @@ require({
         on,
         parser,
         all,
-        when,
         query,
+        when,
         LinkButton,
         Cesium) {
     "use strict";
