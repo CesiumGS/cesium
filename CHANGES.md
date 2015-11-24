@@ -5,7 +5,6 @@ Change Log
 
 * Deprecated
     * Deprecated `OpenStreetMapImageryProvider`. It will be removed in 1.18. Use `createOpenStreetMapImageryProvider` instead.
-* Added `Model.maximumScale` and `ModelGraphics.maximumScale` properties, giving an upper limit for minimumPixelSize.
 * Improved terrain performance by up to 35%. Added support for fog near the horizon, which improves performance by rendering less terrain tiles and reduces terrain tile requests.  This is enabled by default.  See `Scene.fog` for options.  [#3154](https://github.com/AnalyticalGraphicsInc/cesium/pull/3154)
 * Added terrain exaggeration. Enabled on viewer creation with the exaggeration scalar as the `terrainExaggeration` option.
 * Added support for incrementally loading textures after a Model is ready. This allows the Model to be visible as soon as possible while its textures are loaded in the background.
@@ -30,6 +29,7 @@ Change Log
 * Added utility function `getBaseUri`, which given a URI with or without query parameters, returns the base path of the URI.
 * Added `Queue.peek` to return the item at the front of a Queue.
 * Fixed `JulianDate.fromIso8601 ` so that it correctly parses the `YYYY-MM-DDThh:mmTZD` format.
+* Added `Model.maximumScale` and `ModelGraphics.maximumScale` properties, giving an upper limit for minimumPixelSize.
 * Fixed glTF implementation to read the version as a string as per the specification and to correctly handle backwards compatibility for axis-angle rotations in glTF 0.8 models.
 * Fixed a bug in the deprecated `jsonp` that prevented it from returning a promise.  Its replacement, `loadJsonp`, was unaffected.
 
