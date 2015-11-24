@@ -117,8 +117,7 @@ define([
         hMin = Math.min(hMin, findMinSkirtHeight(parameters.southIndices, parameters.southSkirtHeight, heights));
         hMin = Math.min(hMin, findMinSkirtHeight(parameters.eastIndices, parameters.eastSkirtHeight, heights));
         hMin = Math.min(hMin, findMinSkirtHeight(parameters.northIndices, parameters.northSkirtHeight, heights));
-
-        // TODO: can undo scale and bias with matrix multiply
+        
         var encoding = new TerrainEncoding(xMin, xMax, yMin, yMax, zMin, zMax, hMin, maximumHeight, fromENU, hasVertexNormals);
         var vertexStride = encoding.getStride();
         var size = quantizedVertexCount * vertexStride + edgeVertexCount * vertexStride;

@@ -19,7 +19,6 @@ define([
         '../Core/IndexDatatype',
         '../Core/Intersect',
         '../Core/Math',
-        '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
         '../Core/PrimitiveType',
@@ -64,7 +63,6 @@ define([
         IndexDatatype,
         Intersect,
         CesiumMath,
-        Matrix3,
         Matrix4,
         OrientedBoundingBox,
         PrimitiveType,
@@ -767,25 +765,6 @@ define([
             u_waterMaskTranslationAndScale : function() {
                 return this.waterMaskTranslationAndScale;
             },
-            // TODO: remove all functions below except scale and bias
-            u_minimumX : function() {
-                return this.minimumX;
-            },
-            u_maximumX : function() {
-                return this.maximumX;
-            },
-            u_minimumY : function() {
-                return this.minimumY;
-            },
-            u_maximumY : function() {
-                return this.maximumY;
-            },
-            u_minimumZ : function() {
-                return this.minimumZ;
-            },
-            u_maximumZ : function() {
-                return this.maximumZ;
-            },
             u_minimumHeight : function() {
                 return this.minimumHeight;
             },
@@ -823,16 +802,9 @@ define([
             waterMask : undefined,
             waterMaskTranslationAndScale : new Cartesian4(),
 
-            // TODO: remove all except scale and bias
-            minimumX : 0.0,
-            maximumX : 0.0,
-            minimumY : 0.0,
-            maximumY : 0.0,
-            minimumZ : 0.0,
-            maximumZ : 0.0,
             minimumHeight : 0.0,
             maximumHeight : 0.0,
-            scaleAndBias : new Matrix3()
+            scaleAndBias : new Matrix4()
         };
 
         return uniformMap;
@@ -1172,15 +1144,9 @@ define([
             Cartesian4.clone(surfaceTile.waterMaskTranslationAndScale, uniformMap.waterMaskTranslationAndScale);
 
             var encoding = surfaceTile.pickTerrain.mesh.encoding;
-            uniformMap.minimumX = encoding.minimumX;
-            uniformMap.maximumX = encoding.maximumX;
-            uniformMap.minimumY = encoding.minimumY;
-            uniformMap.maximumY = encoding.maximumY;
-            uniformMap.minimumZ = encoding.minimumZ;
-            uniformMap.maximumZ = encoding.maximumZ;
             uniformMap.minimumHeight = encoding.minimumHeight;
             uniformMap.maximumHeight = encoding.maximumHeight;
-            Matrix3.clone(encoding.matrix, uniformMap.scaleAndBias);
+            Matrix4.clone(encoding.matrix, uniformMap.scaleAndBias);
 
             command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog);
             command.renderState = renderState;

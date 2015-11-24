@@ -5,6 +5,7 @@ define([
         './Cartesian3',
         './ComponentDatatype',
         './defined',
+        './Math',
         './Matrix3',
         './Matrix4',
         './TerrainCompression'
@@ -14,12 +15,16 @@ define([
         Cartesian3,
         ComponentDatatype,
         defined,
+        CesiumMath,
         Matrix3,
         Matrix4,
         TerrainCompression
     ) {
     "use strict";
 
+    var cartesian3Scratch = new Cartesian3();
+    var cartesian2Scratch = new Cartesian2();
+    var matrix4Scratch = new Matrix4();
     var SHIFT_LEFT_12 = Math.pow(2.0, 12.0);
 
     /**
@@ -42,17 +47,58 @@ define([
      * @private
      */
     var TerrainEncoding = function(minimumX, maximumX, minimumY, maximumY, minimumZ, maximumZ, minimumHeight, maximumHeight, fromENU, hasVertexNormals) {
-        var xDim = maximumX - minimumX;
-        var yDim = maximumY - minimumY;
-        var zDim = maximumZ - minimumZ;
-        var hDim = maximumHeight - minimumHeight;
-        var maxDim = Math.max(xDim, yDim, zDim, hDim);
-
         var compression;
-        if (maxDim < SHIFT_LEFT_12 - 1.0) {
-            compression = TerrainCompression.BITS12;
-        } else {
-            compression = TerrainCompression.NONE;
+        var center;
+        var toENU;
+        var matrix;
+
+        if (defined(minimumX) && defined(maximumX) && defined(minimumY) && defined(maximumY) && defined(minimumZ) && defined(maximumZ) && defined(minimumHeight) && defined(maximumHeight) && defined(fromENU)) {
+            var xDim = maximumX - minimumX;
+            var yDim = maximumY - minimumY;
+            var zDim = maximumZ - minimumZ;
+            var hDim = maximumHeight - minimumHeight;
+            var maxDim = Math.max(xDim, yDim, zDim, hDim);
+
+            if (maxDim < SHIFT_LEFT_12 - 1.0) {
+                compression = TerrainCompression.BITS12;
+            } else {
+                compression = TerrainCompression.NONE;
+            }
+
+            center = Matrix4.getTranslation(fromENU, new Cartesian3());
+
+            toENU = Matrix4.inverseTransformation(fromENU, new Matrix4());
+
+            var translation = cartesian3Scratch;
+            translation.x = -minimumX;
+            translation.y = -minimumY;
+            translation.z = -minimumZ;
+            Matrix4.multiply(Matrix4.fromTranslation(translation, matrix4Scratch), toENU, toENU);
+
+            var scale = cartesian3Scratch;
+            scale.x = 1.0 / xDim;
+            scale.y = 1.0 / yDim;
+            scale.z = 1.0 / zDim;
+            Matrix4.multiply(Matrix4.fromScale(scale, matrix4Scratch), toENU, toENU);
+
+            matrix = Matrix4.clone(fromENU);
+            Matrix4.setTranslation(matrix, Cartesian3.ZERO, matrix);
+
+            fromENU = Matrix4.clone(fromENU, new Matrix4());
+
+            scale = new Cartesian3();
+            scale.x = xDim;
+            scale.y = yDim;
+            scale.z = zDim;
+            translation = new Cartesian3();
+            translation.x = minimumX;
+            translation.y = minimumY;
+            translation.z = minimumZ;
+
+            var st = Matrix4.multiply(Matrix4.fromTranslation(translation), Matrix4.fromScale(scale), new Matrix4());
+            Matrix4.multiply(fromENU, st, fromENU);
+
+            Matrix4.multiply(matrix, st, matrix);
         }
 
         /**
@@ -61,53 +107,19 @@ define([
          */
         this.compression = compression;
 
-        /**
-         * The minimum distance in the x direction.
-         * @type {Number}
-         */
-        this.minimumX = minimumX;
-
-        /**
-         * The maximum distance in the x direction.
-         * @type {Number}
-         */
-        this.maximumX = maximumX;
-
-        /**
-         * The minimum distance in the y direction.
-         * @type {Number}
-         */
-        this.minimumY = minimumY;
-
-        /**
-         * The maximum distance in the y direction.
-         * @type {Number}
-         */
-        this.maximumY = maximumY;
-
-        /**
-         * The minimum distance in the z direction.
-         * @type {Number}
-         */
-        this.minimumZ = minimumZ;
-
-        /**
-         * The maximum distance in the z direction.
-         * @type {Number}
-         */
-        this.maximumZ = maximumZ;
-
         this.minimumHeight = minimumHeight;
         this.maximumHeight = maximumHeight;
 
-        this.fromENU = Matrix4.clone(fromENU);
-        this.toENU = Matrix4.inverseTransformation(fromENU, new Matrix4());
+        this.center = center;
+
+        this.toScaledENU = toENU;
+        this.fromScaledENU = fromENU;
 
         /**
          * The matrix used to decompress the terrain vertices.
          * @type {Matrix3}
          */
-        this.matrix = Matrix4.getRotation(this.fromENU, new Matrix3());
+        this.matrix = matrix;
 
         /**
          * The terrain mesh contains normals.
@@ -116,30 +128,24 @@ define([
         this.hasVertexNormals = hasVertexNormals;
     };
 
-    var cartesian3Scratch = new Cartesian3();
-    var cartesian2Scratch = new Cartesian2();
-
     TerrainEncoding.prototype.encode = function(vertexBuffer, bufferIndex, position, uv, height, normalToPack) {
         var u = uv.x;
         var v = uv.y;
 
         if (this.compression === TerrainCompression.BITS12) {
-            var xDim = this.maximumX - this.minimumX;
-            var yDim = this.maximumY - this.minimumY;
-            var zDim = this.maximumZ - this.minimumZ;
+            position = Matrix4.multiplyByPoint(this.toScaledENU, position, cartesian3Scratch);
+
+            position.x = CesiumMath.clamp(position.x, 0.0, 1.0);
+            position.y = CesiumMath.clamp(position.y, 0.0, 1.0);
+            position.z = CesiumMath.clamp(position.z, 0.0, 1.0);
+
             var hDim = this.maximumHeight - this.minimumHeight;
-
-            Matrix4.multiplyByPoint(this.toENU, position, cartesian3Scratch);
-
-            var x = (cartesian3Scratch.x - this.minimumX) / xDim;
-            var y = (cartesian3Scratch.y - this.minimumY) / yDim;
-            var z = (cartesian3Scratch.z - this.minimumZ) / zDim;
             var h = (height - this.minimumHeight) / hDim;
 
-            Cartesian2.fromElements(x, y, cartesian2Scratch);
+            Cartesian2.fromElements(position.x, position.y, cartesian2Scratch);
             var compressed0 = AttributeCompression.compressTextureCoordinates(cartesian2Scratch);
 
-            Cartesian2.fromElements(z, h, cartesian2Scratch);
+            Cartesian2.fromElements(position.z, h, cartesian2Scratch);
             var compressed1 = AttributeCompression.compressTextureCoordinates(cartesian2Scratch);
 
             Cartesian2.fromElements(u, v, cartesian2Scratch);
@@ -149,8 +155,7 @@ define([
             vertexBuffer[bufferIndex++] = compressed1;
             vertexBuffer[bufferIndex++] = compressed2;
         } else {
-            var center = Matrix4.getTranslation(this.fromENU, cartesian3Scratch);
-            Cartesian3.subtract(position, center, cartesian3Scratch);
+            Cartesian3.subtract(position, this.center, cartesian3Scratch);
 
             vertexBuffer[bufferIndex++] = cartesian3Scratch.x;
             vertexBuffer[bufferIndex++] = cartesian3Scratch.y;
@@ -182,18 +187,13 @@ define([
             var zh = AttributeCompression.decompressTextureCoordinates(buffer[index + 1], cartesian2Scratch);
             result.z = zh.x;
 
-            // TODO: remove
-            result.x = result.x * (this.maximumX - this.minimumX) + this.minimumX;
-            result.y = result.y * (this.maximumY - this.minimumY) + this.minimumY;
-            result.z = result.z * (this.maximumZ - this.minimumZ) + this.minimumZ;
-
-            return Matrix4.multiplyByPoint(this.fromENU, result, result);
+            return Matrix4.multiplyByPoint(this.fromScaledENU, result, result);
         }
 
-        result.x = buffer[index] + this.fromENU[Matrix4.getElementIndex(3, 0)];
-        result.y = buffer[index + 1] + this.fromENU[Matrix4.getElementIndex(3, 1)];
-        result.z = buffer[index + 2] + this.fromENU[Matrix4.getElementIndex(3, 2)];
-        return result;
+        result.x = buffer[index];
+        result.y = buffer[index + 1];
+        result.z = buffer[index + 2];
+        return Cartesian3.add(result, this.center, result);
     };
 
     TerrainEncoding.prototype.getStride = function() {
@@ -273,28 +273,16 @@ define([
      */
     TerrainEncoding.clone = function(encoding, result) {
         if (!defined(result)) {
-            return new TerrainEncoding(
-                encoding.minimumX,
-                encoding.maximumX,
-                encoding.minimumY,
-                encoding.maximumY,
-                encoding.minimumZ,
-                encoding.maximumZ,
-                encoding.minimumHeight,
-                encoding.maximumHeight,
-                encoding.fromENU,
-                encoding.hasVertexNormals);
+            result = new TerrainEncoding();
         }
 
-        result.minimumX = encoding.minimumX;
-        result.maximumX = encoding.maximumX;
-        result.minimumY = encoding.minimumY;
-        result.maximumY = encoding.maximumY;
-        result.minimumZ = encoding.minimumZ;
-        result.maximumZ = encoding.maximumZ;
+        result.compression = encoding.compression;
         result.minimumHeight = encoding.minimumHeight;
         result.maximumHeight = encoding.maximumHeight;
-        result.fromENU = encoding.fromENU;
+        result.center = Cartesian3.clone(encoding.center);
+        result.toScaledENU = Matrix4.clone(encoding.toScaledENU);
+        result.fromScaledENU = Matrix4.clone(encoding.fromScaledENU);
+        result.matrix = Matrix4.clone(encoding.matrix);
         result.hasVertexNormals = encoding.hasVertexNormals;
         return result;
     };
