@@ -7,9 +7,10 @@ define([
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/Event',
-        '../../Core/jsonp',
+        '../../Core/loadJsonp',
         '../../Core/Matrix4',
         '../../Core/Rectangle',
+        '../../Scene/SceneMode',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when',
         '../createCommand'
@@ -21,9 +22,10 @@ define([
         defineProperties,
         DeveloperError,
         Event,
-        jsonp,
+        loadJsonp,
         Matrix4,
         Rectangle,
+        SceneMode,
         knockout,
         when,
         createCommand) {
@@ -44,7 +46,7 @@ define([
      *        written to the console reminding you that you must create and supply a Bing Maps
      *        key as soon as possible.  Please do not deploy an application that uses
      *        this widget without creating a separate key for your application.
-     * @param {Number} [options.flightDuration=1.5] The duration of the camera flight to an entered location, in seconds.
+     * @param {Number} [options.flightDuration] The duration of the camera flight to an entered location, in seconds.
      */
     var GeocoderViewModel = function(options) {
         //>>includeStart('debug', pragmas.debug);
@@ -60,7 +62,7 @@ define([
 
         this._key = BingMapsApi.getKey(options.key);
         this._scene = options.scene;
-        this._flightDuration = defaultValue(options.flightDuration, 1.5);
+        this._flightDuration = options.flightDuration;
         this._searchText = '';
         this._isSearchInProgress = false;
         this._geocodeInProgress = undefined;
@@ -117,9 +119,10 @@ define([
         /**
          * Gets or sets the the duration of the camera flight in seconds.
          * A value of zero causes the camera to instantly switch to the geocoding location.
+         * The duration will be computed based on the distance when undefined.
          *
-         * @type {Number}
-         * @default 1.5
+         * @type {Number|undefined}
+         * @default undefined
          */
         this.flightDuration = undefined;
         knockout.defineProperty(this, 'flightDuration', {
@@ -128,7 +131,7 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (value < 0) {
+                if (defined(value) && value < 0) {
                     throw new DeveloperError('value must be positive.');
                 }
                 //>>includeEnd('debug');
@@ -200,21 +203,16 @@ define([
         }
     });
 
-    function updateCamera(viewModel, position) {
-        if (viewModel._flightDuration === 0) {
-            viewModel._scene.camera.setView({position: position});
-            viewModel._complete.raiseEvent();
-        } else {
-            viewModel._scene.camera.flyTo({
-                destination : position,
-                complete: function() {
-                    viewModel._complete.raiseEvent();
-                },
-                duration : viewModel._flightDuration,
-                endTransform : Matrix4.IDENTITY,
-                convert : false
-            });
-        }
+    function updateCamera(viewModel, destination) {
+        viewModel._scene.camera.flyTo({
+            destination : destination,
+            complete: function() {
+                viewModel._complete.raiseEvent();
+            },
+            duration : viewModel._flightDuration,
+            endTransform : Matrix4.IDENTITY,
+            convert : false
+        });
     }
 
     function geocode(viewModel) {
@@ -240,7 +238,7 @@ define([
         }
         viewModel._isSearchInProgress = true;
 
-        var promise = jsonp(viewModel._url + 'REST/v1/Locations', {
+        var promise = loadJsonp(viewModel._url + 'REST/v1/Locations', {
             parameters : {
                 query : query,
                 key : viewModel._key
@@ -274,16 +272,8 @@ define([
             var west = bbox[1];
             var north = bbox[2];
             var east = bbox[3];
-            var rectangle = Rectangle.fromDegrees(west, south, east, north);
 
-            var camera = viewModel._scene.camera;
-            var position = camera.getRectangleCameraCoordinates(rectangle);
-            if (!defined(position)) {
-                // This can happen during a scene mode transition.
-                return;
-            }
-
-            updateCamera(viewModel, position);
+            updateCamera(viewModel, Rectangle.fromDegrees(west, south, east, north));
         }, function() {
             if (geocodeInProgress.cancel) {
                 return;

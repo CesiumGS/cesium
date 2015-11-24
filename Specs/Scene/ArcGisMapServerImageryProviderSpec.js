@@ -5,10 +5,11 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/DefaultProxy',
+        'Core/defined',
         'Core/GeographicProjection',
         'Core/GeographicTilingScheme',
-        'Core/jsonp',
         'Core/loadImage',
+        'Core/loadJsonp',
         'Core/loadWithXhr',
         'Core/queryToObject',
         'Core/Rectangle',
@@ -28,10 +29,11 @@ defineSuite([
         Cartesian3,
         Cartographic,
         DefaultProxy,
+        defined,
         GeographicProjection,
         GeographicTilingScheme,
-        jsonp,
         loadImage,
+        loadJsonp,
         loadWithXhr,
         queryToObject,
         Rectangle,
@@ -46,15 +48,14 @@ defineSuite([
         pollToPromise,
         Uri) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
 
     afterEach(function() {
-        jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
+        loadJsonp.loadAndExecuteScript = loadJsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
         loadWithXhr.load = loadWithXhr.defaultLoad;
     });
 
-    function expectCorrectUrl(expectedBaseUrl, actualUrl, functionName, withProxy) {
+    function expectCorrectUrl(expectedBaseUrl, actualUrl, functionName, withProxy, token) {
         var uri = new Uri(actualUrl);
 
         if (withProxy) {
@@ -68,15 +69,19 @@ defineSuite([
 
         expect(uriWithoutQuery.toString()).toEqual(expectedBaseUrl);
 
-        expect(params).toEqual({
+        var expectedParams = {
             callback : functionName,
             'f' : 'json'
-        });
+        };
+        if (defined(token)) {
+            expectedParams.token = token;
+        }
+        expect(params).toEqual(expectedParams);
     }
 
-    function stubJSONPCall(baseUrl, result, withProxy) {
-        jsonp.loadAndExecuteScript = function(url, functionName) {
-            expectCorrectUrl(baseUrl, url, functionName, withProxy);
+    function stubJSONPCall(baseUrl, result, withProxy, token) {
+        loadJsonp.loadAndExecuteScript = function(url, functionName) {
+            expectCorrectUrl(baseUrl, url, functionName, withProxy, token);
             setTimeout(function() {
                 window[functionName](result);
             }, 1);
@@ -121,6 +126,36 @@ defineSuite([
             }]
         }
     };
+
+    it('resolves readyPromise', function() {
+        var baseUrl = '//tiledArcGisMapServer.invalid';
+
+        stubJSONPCall(baseUrl, webMercatorResult);
+
+        var provider = new ArcGisMapServerImageryProvider({
+            url : baseUrl
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
+    it('rejects readyPromise on error', function() {
+        var baseUrl = '//tiledArcGisMapServer.invalid';
+
+        var provider = new ArcGisMapServerImageryProvider({
+            url : baseUrl
+        });
+
+        return provider.readyPromise.then(function () {
+            fail('should not resolve');
+        }).otherwise(function (e) {
+            expect(e.message).toContain(baseUrl);
+            expect(provider.ready).toBe(false);
+        });
+    });
 
     it('supports tiled servers in web mercator projection', function() {
         var baseUrl = '//tiledArcGisMapServer.invalid';
@@ -303,14 +338,16 @@ defineSuite([
 
     it('supports non-tiled servers with various constructor parameters', function() {
         var baseUrl = '//tiledArcGisMapServer.invalid';
+        var token = '5e(u|2!7Y';
 
         stubJSONPCall(baseUrl, {
             "currentVersion" : 10.01,
             "copyrightText" : "Test copyright text"
-        });
+        }, undefined, token);
 
         var provider = new ArcGisMapServerImageryProvider({
             url : baseUrl,
+            token: token,
             tileWidth: 128,
             tileHeight: 512,
             tilingScheme: new WebMercatorTilingScheme(),
@@ -351,9 +388,62 @@ defineSuite([
                 expect(params.transparent).toEqual('true');
                 expect(params.size).toEqual('128,512');
                 expect(params.layers).toEqual('show:foo,bar');
+                expect(params.token).toEqual(token);
 
                 // Just return any old image.
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            };
+
+            return provider.requestImage(0, 0, 0).then(function(image) {
+                expect(image).toBeInstanceOf(Image);
+            });
+        });
+    });
+
+    it('includes security token in requests if one is specified', function() {
+        var baseUrl = '//tiledArcGisMapServer.invalid',
+            token = '5e(u|2!7Y';
+
+        stubJSONPCall(baseUrl, webMercatorResult, false, token);
+
+        var provider = new ArcGisMapServerImageryProvider({
+            url : baseUrl,
+            token : token
+        });
+
+        expect(provider.url).toEqual(baseUrl);
+        expect(provider.token).toEqual(token);
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            expect(provider.tileWidth).toEqual(128);
+            expect(provider.tileHeight).toEqual(256);
+            expect(provider.maximumLevel).toEqual(2);
+            expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
+            expect(provider.credit).toBeDefined();
+            expect(provider.tileDiscardPolicy).toBeInstanceOf(DiscardMissingTileImagePolicy);
+            expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
+            expect(provider.usingPrecachedTiles).toEqual(true);
+            expect(provider.hasAlphaChannel).toBeDefined();
+
+            loadImage.createImage = function(url, crossOrigin, deferred) {
+                if (/^blob:/.test(url)) {
+                    // load blob url normally
+                    loadImage.defaultCreateImage(url, crossOrigin, deferred);
+                } else {
+                    expect(url).toEqual(baseUrl + '/tile/0/0/0?token=' + token);
+
+                    // Just return any old image.
+                    loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                }
+            };
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                expect(url).toEqual(baseUrl + '/tile/0/0/0?token=' + token);
+
+                // Just return any old image.
+                loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
             };
 
             return provider.requestImage(0, 0, 0).then(function(image) {
@@ -810,6 +900,35 @@ defineSuite([
                 return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(pickResult) {
                     expect(pickResult.length).toBe(1);
                 });
+            });
+        });
+
+        it('picks using proxy if one is specified', function() {
+            var baseUrl = 'made/up/map/server';
+            var proxy = new DefaultProxy('/proxy/');
+            var layers = '0,1';
+
+            var provider = new ArcGisMapServerImageryProvider({
+                url : baseUrl,
+                usePreCachedTilesIfAvailable : false,
+                layers : layers,
+                proxy : proxy
+            });
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                var proxiedUri = new Uri(url);
+                var originalUriQuery = new Uri(decodeURIComponent(proxiedUri.query)).query;
+
+                // DefaultProxy simply puts the original request as the query string; duplicate it here expect match
+                expect(proxiedUri.toString()).toEqual(proxy.getURL(baseUrl + '/identify?' + originalUriQuery));
+
+                loadWithXhr.defaultLoad('Data/ArcGIS/identify-WebMercator.json', responseType, method, data, headers, deferred, overrideMimeType);
+            };
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5);
             });
         });
     });

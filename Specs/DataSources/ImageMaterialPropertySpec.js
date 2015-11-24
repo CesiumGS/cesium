@@ -14,7 +14,6 @@ defineSuite([
         ConstantProperty,
         TimeIntervalCollectionProperty) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('constructor provides the expected defaults', function() {
         var property = new ImageMaterialProperty();
@@ -23,20 +22,24 @@ defineSuite([
         var result = property.getValue();
         expect(result.image).toBeUndefined();
         expect(result.repeat).toEqual(new Cartesian2(1.0, 1.0));
+        expect(result.alpha).toEqual(1.0);
     });
 
     it('constructor sets options and allows raw assignment', function() {
         var options = {
             image : 'test.invalid',
-            repeat : new Cartesian2(1, 2)
+            repeat : new Cartesian2(1, 2),
+            alpha : 0.5
         };
 
         var property = new ImageMaterialProperty(options);
         expect(property.image).toBeInstanceOf(ConstantProperty);
         expect(property.repeat).toBeInstanceOf(ConstantProperty);
+        expect(property.alpha).toBeInstanceOf(ConstantProperty);
 
         expect(property.image.getValue()).toEqual(options.image);
         expect(property.repeat.getValue()).toEqual(options.repeat);
+        expect(property.alpha.getValue()).toEqual(options.alpha);
     });
 
     it('works with constant values', function() {

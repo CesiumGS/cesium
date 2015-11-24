@@ -5,8 +5,8 @@ define([
         'Cesium/Core/formatError',
         'Cesium/Core/getFilenameFromUri',
         'Cesium/Core/Math',
-        'Cesium/Core/queryToObject',
         'Cesium/Core/objectToQuery',
+        'Cesium/Core/queryToObject',
         'Cesium/DataSources/CzmlDataSource',
         'Cesium/DataSources/GeoJsonDataSource',
         'Cesium/DataSources/KmlDataSource',
@@ -21,8 +21,8 @@ define([
         formatError,
         getFilenameFromUri,
         CesiumMath,
-        queryToObject,
         objectToQuery,
+        queryToObject,
         CzmlDataSource,
         GeoJsonDataSource,
         KmlDataSource,
@@ -95,6 +95,7 @@ define([
         context.throwOnWebGLError = true;
     }
 
+    var view = endUserOptions.view;
     var source = endUserOptions.source;
     if (defined(source)) {
         var loadPromise;
@@ -120,6 +121,8 @@ define([
                         var error = 'No entity with id "' + lookAt + '" exists in the provided data source.';
                         showLoadError(source, error);
                     }
+                } else if (!defined(view)) {
+                    viewer.flyTo(dataSource);
                 }
             }).otherwise(function(error) {
                 showLoadError(source, error);
@@ -142,7 +145,6 @@ define([
         }
     }
 
-    var view = endUserOptions.view;
     if (defined(view)) {
         var splitQuery = view.split(/[ ,]+/);
         if (splitQuery.length > 1) {
@@ -154,17 +156,23 @@ define([
             var roll = ((splitQuery.length > 5) && (!isNaN(+splitQuery[5]))) ? CesiumMath.toRadians(+splitQuery[5]) : undefined;
 
             viewer.camera.setView({
-                position: Cartesian3.fromDegrees(longitude, latitude, height),
-                heading: heading,
-                pitch: pitch,
-                roll: roll
+                destination: Cartesian3.fromDegrees(longitude, latitude, height),
+                orientation: {
+                    heading: heading,
+                    pitch: pitch,
+                    roll: roll
+                }
             });
         }
     }
 
     function saveCamera() {
         var position = camera.positionCartographic;
-        endUserOptions.view = CesiumMath.toDegrees(position.longitude) + ',' + CesiumMath.toDegrees(position.latitude) + ',' + position.height + ',' + CesiumMath.toDegrees(camera.heading) + ',' + CesiumMath.toDegrees(camera.pitch) + ',' + CesiumMath.toDegrees(camera.roll);
+        var hpr = '';
+        if (defined(camera.heading)) {
+            hpr = ',' + CesiumMath.toDegrees(camera.heading) + ',' + CesiumMath.toDegrees(camera.pitch) + ',' + CesiumMath.toDegrees(camera.roll);
+        }
+        endUserOptions.view = CesiumMath.toDegrees(position.longitude) + ',' + CesiumMath.toDegrees(position.latitude) + ',' + position.height + hpr;
         history.replaceState(undefined, '', '?' + objectToQuery(endUserOptions));
     }
 

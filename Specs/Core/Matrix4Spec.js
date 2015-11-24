@@ -14,7 +14,6 @@ defineSuite([
         Matrix3,
         Quaternion) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('default constructor creates values array with all zeros.', function() {
         var matrix = new Matrix4();
@@ -429,7 +428,18 @@ defineSuite([
         returnedResult = Matrix4.setColumn(matrix, 3, new Cartesian4(17.0, 18.0, 19.0, 20.0), result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
-});
+    });
+
+    it('setTranslation works', function() {
+        var matrix = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
+        var translation = new Cartesian3(-1.0, -2.0, -3.0);
+        var result = new Matrix4();
+
+        var expected = new Matrix4(1.0, 2.0, 3.0, -1.0, 5.0, 6.0, 7.0, -2.0, 9.0, 10.0, 11.0, -3.0, 13.0, 14.0, 15.0, 16.0);
+        var returnedResult = Matrix4.setTranslation(matrix, translation, result);
+        expect(result).toBe(returnedResult);
+        expect(result).toEqual(expected);
+    });
 
     it('getRow works for each row', function() {
         var matrix = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
@@ -649,6 +659,14 @@ defineSuite([
         var expected = Matrix4.multiply(m, Matrix4.fromScale(scale), new Matrix4());
         var result = new Matrix4();
         var returnedResult = Matrix4.multiplyByScale(m, scale, result);
+        expect(returnedResult).toBe(result);
+        expect(result).toEqual(expected);
+
+        m = new Matrix4(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 0, 0, 0, 1);
+        scale = new Cartesian3(2.0, 3.0, 4.0);
+        expected = Matrix4.multiply(m, Matrix4.fromScale(scale), new Matrix4());
+        result = new Matrix4();
+        returnedResult = Matrix4.multiplyByScale(m, scale, result);
         expect(returnedResult).toBe(result);
         expect(result).toEqual(expected);
     });
@@ -1273,9 +1291,28 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('getRow throws without matrix parameter', function() {
+    it('setColumn throws without matrix parameter', function() {
+        var cartesian = new Cartesian4();
         expect(function() {
-            Matrix4.getRow(undefined, 1);
+            Matrix4.setColumn(undefined, 2, cartesian);
+        }).toThrowDeveloperError();
+    });
+
+    it('setTranslation throws without matrix parameter', function() {
+        expect(function() {
+            Matrix4.setTranslation(undefined, new Cartesian3(), new Matrix4());
+        }).toThrowDeveloperError();
+    });
+
+    it('setTranslation throws without translation parameter', function() {
+        expect(function() {
+            Matrix4.setTranslation(new Matrix4(), undefined, new Matrix4());
+        }).toThrowDeveloperError();
+    });
+
+    it('setTranslation throws without result parameter', function() {
+        expect(function() {
+            Matrix4.setTranslation(new Matrix4(), new Cartesian3(), undefined);
         }).toThrowDeveloperError();
     });
 
@@ -1643,14 +1680,13 @@ defineSuite([
 
     it('computeInfinitePerspectiveOffCenter throws without near', function() {
         expect(function() {
-            var left = 0, right = 0, bottom = 0, top = 0, far = 0;
+            var left = 0, right = 0, bottom = 0, top = 0;
             Matrix4.computeInfinitePerspectiveOffCenter (left, right, bottom, top, 0);
         }).toThrowDeveloperError();
     });
 
     it('computeViewportTransformation works', function() {
         expect(function() {
-            var left = 0, right = 0, bottom = 0, top = 0, far = 0;
             Matrix4.computeViewportTransformation ({
                 x : 0,
                 y : 0,

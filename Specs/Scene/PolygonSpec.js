@@ -32,7 +32,6 @@ defineSuite([
         pick,
         render) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var context;
     var frameState;
@@ -41,7 +40,6 @@ defineSuite([
 
     beforeAll(function() {
         context = createContext();
-        frameState = createFrameState();
     });
 
     afterAll(function() {
@@ -49,10 +47,11 @@ defineSuite([
     });
 
     beforeEach(function() {
-        us = context.uniformState;
-        us.update(context, createFrameState(createCamera({
+        frameState = createFrameState(context, createCamera({
             offset : new Cartesian3(1.02, 0.0, 0.0)
-        })));
+        }));
+        us = context.uniformState;
+        us.update(frameState);
     });
 
     afterEach(function() {
@@ -264,7 +263,7 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, frameState, polygon);
+        render(frameState, polygon);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
@@ -278,7 +277,7 @@ defineSuite([
         };
         polygon.show = false;
 
-        expect(render(context, frameState, polygon)).toEqual(0);
+        expect(render(frameState, polygon)).toEqual(0);
     });
 
     it('does not render without positions', function() {
@@ -286,7 +285,7 @@ defineSuite([
         polygon.ellipsoid = Ellipsoid.UNIT_SPHERE;
         polygon.granularity = CesiumMath.toRadians(20.0);
         polygon.asynchronous = false;
-        expect(render(context, frameState, polygon)).toEqual(0);
+        expect(render(frameState, polygon)).toEqual(0);
     });
 
     it('renders bounding volume with debugShowBoundingVolume', function() {
@@ -314,7 +313,7 @@ defineSuite([
             id : 'id'
         });
 
-        var pickedObject = pick(context, frameState, polygon, 0, 0);
+        var pickedObject = pick(frameState, polygon, 0, 0);
         expect(pickedObject.primitive).toEqual(polygon);
         expect(pickedObject.id).toEqual('id');
     });
@@ -323,7 +322,7 @@ defineSuite([
         polygon = createPolygon();
         polygon.show = false;
 
-        var pickedObject = pick(context, frameState, polygon, 0, 0);
+        var pickedObject = pick(frameState, polygon, 0, 0);
         expect(pickedObject).not.toBeDefined();
     });
 
@@ -331,15 +330,14 @@ defineSuite([
         polygon = createPolygon();
         polygon.material.uniforms.color.alpha = 0.0;
 
-        var pickedObject = pick(context, frameState, polygon, 0, 0);
+        var pickedObject = pick(frameState, polygon, 0, 0);
         expect(pickedObject).not.toBeDefined();
     });
 
     it('test 3D bounding sphere from positions', function() {
         polygon = createPolygon();
-        var commandList = [];
-        polygon.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].boundingVolume;
+        polygon.update(frameState);
+        var boundingVolume = frameState.commandList[0].boundingVolume;
         var sphere = BoundingSphere.fromPoints(polygon.positions);
         expect(boundingVolume.center).toEqualEpsilon(sphere.center, CesiumMath.EPSILON1);
         expect(boundingVolume.radius).toEqualEpsilon(sphere.radius, CesiumMath.EPSILON2);
@@ -364,9 +362,8 @@ defineSuite([
 
         var mode = frameState.mode;
         frameState.mode = testMode;
-        var commandList = [];
-        polygon.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].boundingVolume;
+        polygon.update(frameState);
+        var boundingVolume = frameState.commandList[0].boundingVolume;
         frameState.mode = mode;
 
         var projectedPositions = [];
@@ -418,7 +415,7 @@ defineSuite([
         polygon.material = undefined;
 
         expect(function() {
-            render(context, frameState, polygon);
+            render(frameState, polygon);
         }).toThrowDeveloperError();
     });
 }, 'WebGL');

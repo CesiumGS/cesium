@@ -62,7 +62,7 @@ define([
         var iEntities;
         var collection;
         var composite = that._composite;
-        var newEntities = new EntityCollection();
+        var newEntities = new EntityCollection(that);
         var eventHash = that._eventHash;
         var collectionId;
 
@@ -127,7 +127,7 @@ define([
      * @param {EntityCollection[]} [collections] The initial list of EntityCollection instances to merge.
      */
     var CompositeEntityCollection = function(collections) {
-        this._composite = new EntityCollection();
+        this._composite = new EntityCollection(this);
         this._suspendCount = 0;
         this._collections = defined(collections) ? collections.slice() : [];
         this._collectionsCopy = [];
@@ -247,7 +247,7 @@ define([
     /**
      * Returns true if the provided entity is in this collection, false otherwise.
      *
-     * @param entity The entity.
+     * @param {Entity} entity The entity.
      * @returns {Boolean} true if the provided entity is in this collection, false otherwise.
      */
     CompositeEntityCollection.prototype.contains = function(entity) {

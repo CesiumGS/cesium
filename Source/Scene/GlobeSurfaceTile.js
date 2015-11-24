@@ -11,6 +11,8 @@ define([
         '../Core/PixelFormat',
         '../Core/Rectangle',
         '../Renderer/PixelDatatype',
+        '../Renderer/Sampler',
+        '../Renderer/Texture',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
@@ -31,6 +33,8 @@ define([
         PixelFormat,
         Rectangle,
         PixelDatatype,
+        Sampler,
+        Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
@@ -124,6 +128,7 @@ define([
         this.maximumHeight = 0.0;
         this.boundingSphere3D = new BoundingSphere();
         this.boundingSphere2D = new BoundingSphere();
+        this.orientedBoundingBox = undefined;
         this.occludeePointInScaledSpace = new Cartesian3();
 
         this.loadedTerrain = undefined;
@@ -170,12 +175,11 @@ define([
         }
     });
 
-    function getPosition(tile, scene, vertices, stride, index, result) {
+    function getPosition(tile, mode, projection, vertices, stride, index, result) {
         Cartesian3.unpack(vertices, index * stride, result);
         Cartesian3.add(tile.center, result, result);
 
-        if (defined(scene) && scene.mode !== SceneMode.SCENE3D) {
-            var projection = scene.mapProjection;
+        if (defined(mode) && mode !== SceneMode.SCENE3D) {
             var ellipsoid = projection.ellipsoid;
             var positionCart = ellipsoid.cartesianToCartographic(result);
             projection.project(positionCart, result);
@@ -190,7 +194,7 @@ define([
     var scratchV2 = new Cartesian3();
     var scratchResult = new Cartesian3();
 
-    GlobeSurfaceTile.prototype.pick = function(ray, scene, cullBackFaces, result) {
+    GlobeSurfaceTile.prototype.pick = function(ray, mode, projection, cullBackFaces, result) {
         var terrain = this.pickTerrain;
         if (!defined(terrain)) {
             return undefined;
@@ -211,9 +215,9 @@ define([
             var i1 = indices[i + 1];
             var i2 = indices[i + 2];
 
-            var v0 = getPosition(this, scene, vertices, stride, i0, scratchV0);
-            var v1 = getPosition(this, scene, vertices, stride, i1, scratchV1);
-            var v2 = getPosition(this, scene, vertices, stride, i2, scratchV2);
+            var v0 = getPosition(this, mode, projection, vertices, stride, i0, scratchV0);
+            var v1 = getPosition(this, mode, projection, vertices, stride, i1, scratchV1);
+            var v2 = getPosition(this, mode, projection, vertices, stride, i2, scratchV2);
 
             var intersection = IntersectionTests.rayTriangle(ray, v0, v1, v2, cullBackFaces, scratchResult);
             if (defined(intersection)) {
@@ -291,7 +295,7 @@ define([
         }
     };
 
-    GlobeSurfaceTile.processStateMachine = function(tile, context, terrainProvider, imageryLayerCollection) {
+    GlobeSurfaceTile.processStateMachine = function(tile, frameState, terrainProvider, imageryLayerCollection) {
         var surfaceTile = tile.data;
         if (!defined(surfaceTile)) {
             surfaceTile = tile.data = new GlobeSurfaceTile();
@@ -303,7 +307,7 @@ define([
         }
 
         if (tile.state === QuadtreeTileLoadState.LOADING) {
-            processTerrainStateMachine(tile, context, terrainProvider);
+            processTerrainStateMachine(tile, frameState, terrainProvider);
         }
 
         // The terrain is renderable as soon as we have a valid vertex array.
@@ -341,7 +345,7 @@ define([
                 }
             }
 
-            var thisTileDoneLoading = tileImagery.processStateMachine(tile, context);
+            var thisTileDoneLoading = tileImagery.processStateMachine(tile, frameState);
             isDoneLoading = isDoneLoading && thisTileDoneLoading;
 
             // The imagery is renderable as soon as we have any renderable imagery for this region.
@@ -429,14 +433,14 @@ define([
         Cartesian3.normalize(northNormal, surfaceTile.northNormal);
     }
 
-    function processTerrainStateMachine(tile, context, terrainProvider) {
+    function processTerrainStateMachine(tile, frameState, terrainProvider) {
         var surfaceTile = tile.data;
         var loaded = surfaceTile.loadedTerrain;
         var upsampled = surfaceTile.upsampledTerrain;
         var suspendUpsampling = false;
 
         if (defined(loaded)) {
-            loaded.processLoadStateMachine(context, terrainProvider, tile.x, tile.y, tile.level);
+            loaded.processLoadStateMachine(frameState, terrainProvider, tile.x, tile.y, tile.level);
 
             // Publish the terrain data on the tile as soon as it is available.
             // We'll potentially need it to upsample child tiles.
@@ -446,7 +450,7 @@ define([
 
                     // If there's a water mask included in the terrain data, create a
                     // texture for it.
-                    createWaterMaskTextureIfNeeded(context, surfaceTile);
+                    createWaterMaskTextureIfNeeded(frameState.context, surfaceTile);
 
                     propagateNewLoadedDataToChildren(tile);
                 }
@@ -469,7 +473,7 @@ define([
         }
 
         if (!suspendUpsampling && defined(upsampled)) {
-            upsampled.processUpsampleStateMachine(context, terrainProvider, tile.x, tile.y, tile.level);
+            upsampled.processUpsampleStateMachine(frameState, terrainProvider, tile.x, tile.y, tile.level);
 
             // Publish the terrain data on the tile as soon as it is available.
             // We'll potentially need it to upsample child tiles.
@@ -631,7 +635,8 @@ define([
         var data = context.cache.tile_waterMaskData;
 
         if (!defined(data)) {
-            var allWaterTexture = context.createTexture2D({
+            var allWaterTexture = new Texture({
+                context : context,
                 pixelFormat : PixelFormat.LUMINANCE,
                 pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
                 source : {
@@ -642,7 +647,7 @@ define([
             });
             allWaterTexture.referenceCount = 1;
 
-            var sampler = context.createSampler({
+            var sampler = new Sampler({
                 wrapS : TextureWrap.CLAMP_TO_EDGE,
                 wrapT : TextureWrap.CLAMP_TO_EDGE,
                 minificationFilter : TextureMinificationFilter.LINEAR,
@@ -693,18 +698,19 @@ define([
             }
         } else {
             var textureSize = Math.sqrt(waterMaskLength);
-            texture = context.createTexture2D({
+            texture = new Texture({
+                context : context,
                 pixelFormat : PixelFormat.LUMINANCE,
                 pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
                 source : {
                     width : textureSize,
                     height : textureSize,
                     arrayBufferView : waterMask
-                }
+                },
+                sampler : waterMaskData.sampler
             });
 
             texture.referenceCount = 0;
-            texture.sampler = waterMaskData.sampler;
         }
 
         ++texture.referenceCount;

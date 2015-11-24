@@ -134,7 +134,7 @@ define([
      * Stores the provided instance into the provided array.
      * @function
      *
-     * @param {Object} value The value to pack.
+     * @param {WallGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
@@ -206,6 +206,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {WallGeometry} [result] The object into which to store the result.
+     * @returns {WallGeometry} The modified result parameter or a new WallGeometry instance if one was not provided.
      */
     WallGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -275,13 +276,15 @@ define([
      * A description of a wall, which is similar to a KML line string. A wall is defined by a series of points,
      * which extrude down to the ground. Optionally, they can extrude downwards to a specified height.
      *
-     * @param {Cartesian3[]} positions An array of Cartesian objects, which are the points of the wall.
-     * @param {Number} [maximumHeight] A constant that defines the maximum height of the
+     * @param {Object} options Object with the following properties:
+     * @param {Cartesian3[]} options.positions An array of Cartesian objects, which are the points of the wall.
+     * @param {Number} [options.maximumHeight] A constant that defines the maximum height of the
      *        wall at <code>positions</code>. If undefined, the height of each position in used.
-     * @param {Number} [minimumHeight] A constant that defines the minimum height of the
+     * @param {Number} [options.minimumHeight] A constant that defines the minimum height of the
      *        wall at <code>positions</code>. If undefined, the height at each position is 0.0.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
+     * @returns {WallGeometry}
      *
      * @see WallGeometry#createGeometry
      *
@@ -389,6 +392,8 @@ define([
         var recomputeNormal = true;
         length /= 3;
         var i;
+        var s = 0;
+        var ds = 1/(length - wallPositions.length + 1);
         for (i = 0; i < length; ++i) {
             var i3 = i * 3;
             var topPosition = Cartesian3.fromArray(topPositions, i3, scratchCartesian3Position1);
@@ -403,6 +408,14 @@ define([
                 positions[positionIndex++] = topPosition.x;
                 positions[positionIndex++] = topPosition.y;
                 positions[positionIndex++] = topPosition.z;
+            }
+
+            if (vertexFormat.st) {
+                textureCoordinates[stIndex++] = s;
+                textureCoordinates[stIndex++] = 0.0;
+
+                textureCoordinates[stIndex++] = s;
+                textureCoordinates[stIndex++] = 1.0;
             }
 
             if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
@@ -421,9 +434,10 @@ define([
                     recomputeNormal = false;
                 }
 
-                if (Cartesian3.equalsEpsilon(nextPosition, groundPosition, CesiumMath.EPSILON6)) {
+                if (Cartesian3.equalsEpsilon(nextPosition, groundPosition, CesiumMath.EPSILON10)) {
                     recomputeNormal = true;
                 } else {
+                    s += ds;
                     if (vertexFormat.tangent) {
                         tangent = Cartesian3.normalize(Cartesian3.subtract(nextPosition, groundPosition, tangent), tangent);
                     }
@@ -461,16 +475,6 @@ define([
                     binormals[binormalIndex++] = binormal.y;
                     binormals[binormalIndex++] = binormal.z;
                 }
-            }
-
-            if (vertexFormat.st) {
-                var s = i / (length - 1);
-
-                textureCoordinates[stIndex++] = s;
-                textureCoordinates[stIndex++] = 0.0;
-
-                textureCoordinates[stIndex++] = s;
-                textureCoordinates[stIndex++] = 1.0;
             }
         }
 
@@ -540,7 +544,7 @@ define([
             var LR = i + 2;
             var pl = Cartesian3.fromArray(positions, LL * 3, scratchCartesian3Position1);
             var pr = Cartesian3.fromArray(positions, LR * 3, scratchCartesian3Position2);
-            if (Cartesian3.equalsEpsilon(pl, pr, CesiumMath.EPSILON6)) {
+            if (Cartesian3.equalsEpsilon(pl, pr, CesiumMath.EPSILON10)) {
                 continue;
             }
             var UL = i + 1;

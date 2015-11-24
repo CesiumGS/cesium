@@ -38,7 +38,6 @@ defineSuite([
         TimeInterval,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var negativeX = new Cartesian4(-1, 0, 0, 0);
     var negativeZ = new Cartesian4(0, 0, -1, 0);
@@ -273,10 +272,7 @@ defineSuite([
     });
 
     it('computeTemeToPseudoFixedMatrix works before noon', function() {
-        var time = JulianDate.now();
-        var secondsDiff = TimeConstants.SECONDS_PER_DAY - time.secondsOfDay;
-        time = JulianDate.addSeconds(time, secondsDiff, new JulianDate());
-
+        var time = JulianDate.fromDate(new Date('June 29, 2015 12:00:00 UTC'));
         var t = Transforms.computeTemeToPseudoFixedMatrix(time);
 
         // rotation matrix determinants are 1.0
@@ -295,9 +291,7 @@ defineSuite([
     });
 
     it('computeTemeToPseudoFixedMatrix works after noon', function() {
-        var time = JulianDate.now();
-        var secondsDiff = TimeConstants.SECONDS_PER_DAY - time.secondsOfDay;
-        time = JulianDate.addSeconds(time, secondsDiff + TimeConstants.SECONDS_PER_DAY * 0.5, new JulianDate());
+        var time = JulianDate.fromDate(new Date('June 29, 2015 12:00:00 UTC'));
 
         var t = Transforms.computeTemeToPseudoFixedMatrix(time);
 
@@ -317,9 +311,7 @@ defineSuite([
     });
 
     it('computeTemeToPseudoFixedMatrix works with a result parameter', function() {
-        var time = JulianDate.now();
-        var secondsDiff = TimeConstants.SECONDS_PER_DAY - time.secondsOfDay;
-        time = JulianDate.addSeconds(time, secondsDiff, new JulianDate());
+        var time = JulianDate.fromDate(new Date('June 29, 2015 12:00:00 UTC'));
 
         var resultT = new Matrix3();
         var t = Transforms.computeTemeToPseudoFixedMatrix(time, resultT);
@@ -344,9 +336,6 @@ defineSuite([
 
     describe('computeIcrfToFixedMatrix', function() {
         function preloadTransformationData(start, stop, eopDescription) {
-            var ready = false;
-            var failed = false;
-
             Transforms.earthOrientationParameters = new EarthOrientationParameters(eopDescription);
             var preloadInterval = new TimeInterval({
                 start : start,

@@ -33,7 +33,7 @@ define([
      * @param {String} url The URL to request.
      * @param {throttleRequestByServer~RequestFunction} requestFunction The actual function that
      *        makes the request.
-     * @returns {Promise} Either undefined, meaning the request would exceed the maximum number of
+     * @returns {Promise.<Object>|undefined} Either undefined, meaning the request would exceed the maximum number of
      *          parallel requests, or a Promise for the requested data.
      *
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
@@ -87,7 +87,7 @@ define([
      * @callback throttleRequestByServer~RequestFunction
      *
      * @param {String} url The url to request.
-     * @returns {Promise} A promise for the requested data.
+     * @returns {Promise.<Object>} A promise for the requested data.
      */
 
     return throttleRequestByServer;

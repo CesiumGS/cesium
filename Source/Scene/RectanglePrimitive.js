@@ -3,6 +3,7 @@ define([
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
@@ -17,6 +18,7 @@ define([
         Color,
         defaultValue,
         defined,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         Ellipsoid,
@@ -53,8 +55,13 @@ define([
      *   rectangle : Cesium.Rectangle.fromDegrees(0.0, 20.0, 10.0, 30.0)
      * });
      * primitives.add(rectanglePrimitive);
+     *
+     * @deprecated
+     * @private
      */
     var RectanglePrimitive = function(options) {
+        deprecationWarning('RectanglePrimitive', 'RectanglePrimitive has been deprecated.  Use RectangleGeometry or Entity.rectangle instead.');
+
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
@@ -150,7 +157,7 @@ define([
          * rectangle.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
-         * rectangle.material = Cesium.Material.fromType(Material.StripeType);
+         * rectangle.material = Cesium.Material.fromType(Cesium.Material.StripeType);
          */
         this.material = defaultValue(options.material, material);
 
@@ -203,7 +210,7 @@ define([
      * @exception {DeveloperError} this.material must be defined.
      * @exception {DeveloperError} this.granularity must be defined.
      */
-    RectanglePrimitive.prototype.update = function(context, frameState, commandList) {
+    RectanglePrimitive.prototype.update = function(frameState) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(this.ellipsoid)) {
             throw new DeveloperError('this.ellipsoid must be defined.');
@@ -266,7 +273,7 @@ define([
         var primitive = this._primitive;
         primitive.appearance.material = this.material;
         primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
-        primitive.update(context, frameState, commandList);
+        primitive.update(frameState);
     };
 
     /**

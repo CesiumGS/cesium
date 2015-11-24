@@ -9,6 +9,7 @@ define([
         '../Core/GeographicTilingScheme',
         '../Core/loadImage',
         '../Core/Rectangle',
+        '../Core/RuntimeError',
         '../Core/TileProviderError',
         '../ThirdParty/when'
     ], function(
@@ -21,6 +22,7 @@ define([
         GeographicTilingScheme,
         loadImage,
         Rectangle,
+        RuntimeError,
         TileProviderError,
         when) {
     "use strict";
@@ -42,9 +44,11 @@ define([
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
-     * @see OpenStreetMapImageryProvider
+     * @see createOpenStreetMapImageryProvider
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
+     * @see WebMapTileServiceImageryProvider
+     * @see UrlTemplateImageryProvider
      */
     var SingleTileImageryProvider = function(options) {
         options = defaultValue(options, {});
@@ -78,6 +82,7 @@ define([
         this._errorEvent = new Event();
 
         this._ready = false;
+        this._readyPromise = when.defer();
 
         var imageUrl = url;
         if (defined(proxy)) {
@@ -98,6 +103,7 @@ define([
             that._tileWidth = image.width;
             that._tileHeight = image.height;
             that._ready = true;
+            that._readyPromise.resolve(true);
             TileProviderError.handleSuccess(that._errorEvent);
         }
 
@@ -111,6 +117,7 @@ define([
                     0, 0, 0,
                     doRequest,
                     e);
+            that._readyPromise.reject(new RuntimeError(message));
         }
 
         function doRequest() {
@@ -302,6 +309,18 @@ define([
         },
 
         /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof SingleTileImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise.promise;
+            }
+        },
+
+        /**
          * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
          * the source of the imagery.  This function should not be called before {@link SingleTileImageryProvider#ready} returns true.
          * @memberof SingleTileImageryProvider.prototype
@@ -352,7 +371,7 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
-     * @returns {Promise} A promise for the image that will resolve when the image is available, or
+     * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
@@ -378,7 +397,7 @@ define([
      * @param {Number} level The tile level.
      * @param {Number} longitude The longitude at which to pick features.
      * @param {Number} latitude  The latitude at which to pick features.
-     * @return {Promise} A promise for the picked features that will resolve when the asynchronous
+     * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
      *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
      *                   instances.  The array may be empty if no features are found at the given location.
      *                   It may also be undefined if picking is not supported.

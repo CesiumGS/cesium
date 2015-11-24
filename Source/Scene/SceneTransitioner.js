@@ -144,7 +144,7 @@ define([
         this._scene.morphStart.raiseEvent(this, this._previousMode, SceneMode.SCENE2D, true);
 
         updateFrustums(this);
-        scene.mode = SceneMode.MORPHING;
+        scene._mode = SceneMode.MORPHING;
         createMorphHandler(this, complete2DCallback);
 
         if (this._previousMode === SceneMode.COLUMBUS_VIEW) {
@@ -172,7 +172,7 @@ define([
         this._scene.morphStart.raiseEvent(this, this._previousMode, SceneMode.COLUMBUS_VIEW, true);
 
         updateFrustums(this);
-        scene.mode = SceneMode.MORPHING;
+        scene._mode = SceneMode.MORPHING;
         createMorphHandler(this, completeColumbusViewCallback);
 
         if (this._previousMode === SceneMode.SCENE2D) {
@@ -200,7 +200,7 @@ define([
         this._scene.morphStart.raiseEvent(this, this._previousMode, SceneMode.SCENE3D, true);
 
         updateFrustums(this);
-        scene.mode = SceneMode.MORPHING;
+        scene._mode = SceneMode.MORPHING;
         createMorphHandler(this, complete3DCallback);
 
         if (this._previousMode === SceneMode.SCENE2D) {
@@ -636,7 +636,7 @@ define([
 
     function complete3DCallback(transitioner) {
         var scene = transitioner._scene;
-        scene.mode = SceneMode.SCENE3D;
+        scene._mode = SceneMode.SCENE3D;
         scene.morphTime = SceneMode.getMorphTime(SceneMode.SCENE3D);
 
         destroyMorphHandler(transitioner);
@@ -656,13 +656,14 @@ define([
 
         var wasMorphing = defined(transitioner._completeMorph);
         transitioner._completeMorph = undefined;
+        scene.camera.update(scene.mode);
         transitioner._scene.morphComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.SCENE3D, wasMorphing);
     }
 
     function complete2DCallback(transitioner) {
         var scene = transitioner._scene;
 
-        scene.mode = SceneMode.SCENE2D;
+        scene._mode = SceneMode.SCENE2D;
         scene.morphTime = SceneMode.getMorphTime(SceneMode.SCENE2D);
 
         destroyMorphHandler(transitioner);
@@ -678,12 +679,13 @@ define([
 
         var wasMorphing = defined(transitioner._completeMorph);
         transitioner._completeMorph = undefined;
+        scene.camera.update(scene.mode);
         transitioner._scene.morphComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.SCENE2D, wasMorphing);
     }
 
     function completeColumbusViewCallback(transitioner) {
         var scene = transitioner._scene;
-        scene.mode = SceneMode.COLUMBUS_VIEW;
+        scene._mode = SceneMode.COLUMBUS_VIEW;
         scene.morphTime = SceneMode.getMorphTime(SceneMode.COLUMBUS_VIEW);
 
         destroyMorphHandler(transitioner);
@@ -703,6 +705,7 @@ define([
 
         var wasMorphing = defined(transitioner._completeMorph);
         transitioner._completeMorph = undefined;
+        scene.camera.update(scene.mode);
         transitioner._scene.morphComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.COLUMBUS_VIEW, wasMorphing);
     }
 

@@ -300,7 +300,6 @@ define([
         var tmp = getBoundingSphereBoundingSphereScratch;
 
         var count = 0;
-        var resultState;
         var state = BoundingSphereState.DONE;
         var visualizers = dataSource._visualizers;
         var visualizersLength = visualizers.length;
@@ -351,7 +350,7 @@ define([
      *
      * @example
      * function createVisualizers(scene, dataSource) {
-     *     return [new BillboardVisualizer(scene, dataSource.entities)];
+     *     return [new Cesium.BillboardVisualizer(scene, dataSource.entities)];
      * }
      */
 

@@ -12,7 +12,6 @@ defineSuite([
         Matrix3,
         createPackableSpecs) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('construct with default values', function() {
         var quaternion = new Quaternion();
@@ -475,7 +474,6 @@ defineSuite([
     it('slerp uses lerp when dot product is close to 1 and a result parameter', function() {
         var start = new Quaternion(0.0, 0.0, 0.0, 1.0);
         var end = new Quaternion(1.0, 2.0, 3.0, 1.0);
-        var expected = new Quaternion(0.5, 1.0, 1.5, 1.0);
 
         var result = new Quaternion();
         var actual = Quaternion.slerp(start, end, 0.0, result);
@@ -1025,5 +1023,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    createPackableSpecs(Quaternion, new Quaternion(1, 2, 3, 4), [1, 2, 3, 4]);
+    var q = new Quaternion(1, 2, 3, 4);
+    Quaternion.normalize(q, q);
+    createPackableSpecs(Quaternion, q, [q.x, q.y, q.z, q.w]);
 });

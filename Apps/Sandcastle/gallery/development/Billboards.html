@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Add billboard images, points, and markers to the scene.">
     <meta name="cesium-sandcastle-labels" content="Development">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
     require.config({
         baseUrl : '../../../Source',
@@ -57,7 +57,8 @@ function setBillboardProperties() {
         rotation : Cesium.Math.PI_OVER_FOUR, // default: 0.0
         alignedAxis : Cesium.Cartesian3.ZERO, // default
         width : 100, // default: undefined
-        height : 25 // default: undefined
+        height : 25, // default: undefined
+        sizeInMeters : false // default
     });
 }
 
@@ -75,6 +76,23 @@ function changeBillboardProperties() {
     b.position = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883, 300000.0);
     b.scale = 3.0;
     b.color = new Cesium.Color(1.0, 1.0, 1.0, 0.25);
+}
+
+function sizeBillboardInMeters() {
+    Sandcastle.declare(sizeBillboardInMeters);
+    
+    var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+    var heading = Cesium.Math.toRadians(50.0);
+    var pitch = Cesium.Math.toRadians(-20.0);
+    var range = 100.0;
+    viewer.camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, range));
+    
+    var billboards = scene.primitives.add(new Cesium.BillboardCollection());
+    billboards.add({
+        image : '../images/Cesium_Logo_overlay.png',
+        sizeInMeters : true,
+        position : center
+    });
 }
 
 function addMultipleBillboards() {
@@ -280,6 +298,12 @@ Sandcastle.addToolbarMenu([{
     onselect : function() {
         changeBillboardProperties();
         Sandcastle.highlight(changeBillboardProperties);
+    }
+}, {
+    text : 'Size billboard in meters',
+    onselect : function() {
+        sizeBillboardInMeters();
+        Sandcastle.highlight(sizeBillboardInMeters);
     }
 }, {
     text : 'Add multiple billboards',

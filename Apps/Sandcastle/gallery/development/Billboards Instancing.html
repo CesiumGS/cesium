@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Clamp billboards to terrain.">
+    <meta name="cesium-sandcastle-labels" content="Development">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+<div id="terrainMenu"></div>
+<div id="zoomButtons"></div>
+<div id="toggleLighting"></div>
+<div id="sampleButtons"></div>
+</div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    "use strict";
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer');
+var scene = viewer.scene;
+var context = scene.context;
+
+var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
+    url : '//assets.agi.com/stk-terrain/world'
+});
+
+viewer.terrainProvider = cesiumTerrainProviderMeshes;
+scene.debugShowFramesPerSecond = true;
+
+var ellipsoid = scene.globe.ellipsoid;
+var billboardCollection;
+var instancingEnabled = true;
+var instancedArraysExtension = context._instancedArrays;
+var billboardCount = 100489;
+var scale = 1.0;
+
+// seneca
+var centerLongitude = -1.385205433269729;
+var centerLatitude = 0.6777926580888163;
+var rectangleHalfSize = 0.5;
+var e = new Cesium.Rectangle(centerLongitude - rectangleHalfSize, centerLatitude - rectangleHalfSize, centerLongitude + rectangleHalfSize, centerLatitude + rectangleHalfSize);
+
+function resetBillboardCollection() {
+    if (Cesium.defined(billboardCollection)) {
+        scene.primitives.remove(billboardCollection);
+    }
+
+    billboardCollection = scene.primitives.add(new Cesium.BillboardCollection({
+        scene : scene
+    }));
+
+    var gridSize = Math.sqrt(billboardCount);
+    for (var y = 0; y < gridSize; ++y) {
+        for (var x = 0; x < gridSize; ++x) {
+            var longitude = Cesium.Math.lerp(e.west, e.east, x / (gridSize - 1));
+            var latitude = Cesium.Math.lerp(e.south, e.north, y / (gridSize - 1));
+            var position = new Cesium.Cartographic(longitude, latitude, 10000.0);
+
+            billboardCollection.add({
+                position : ellipsoid.cartographicToCartesian(position),
+                image : '../images/facility.gif',
+                scale : scale
+            });
+        }
+    }
+}
+
+var moveAmount = new Cesium.Cartesian3(1000, 0.0, 0.0);
+var positionScratch = new Cesium.Cartesian3();
+function animateBillboards() {
+    var billboards = billboardCollection._billboards;
+    var length = billboards.length;
+    for (var i = 0; i < length; ++i) {
+        var billboard = billboards[i];
+        Cesium.Cartesian3.clone(billboard.position, positionScratch);
+        Cesium.Cartesian3.add(positionScratch, moveAmount, positionScratch);
+        billboard.position = positionScratch;
+    }
+}
+
+Sandcastle.addToolbarMenu([ {
+    text : 'Instancing Enabled',
+    onselect : function() {
+        if (!instancingEnabled) {
+            context._instancedArrays = instancedArraysExtension;
+            instancingEnabled = true;
+            resetBillboardCollection();
+        }
+    }
+}, {
+    text : 'Instancing Disabled',
+    onselect : function() {
+        if (instancingEnabled) {
+            context._instancedArrays = undefined;
+            instancingEnabled = false;
+            resetBillboardCollection();
+        }
+    }
+}]);
+
+Sandcastle.addToolbarMenu([ {
+    text : '100489 billboards',
+    onselect : function() {
+        billboardCount = 100489;
+        resetBillboardCollection();
+    }
+}, {
+    text : '10000 billboards',
+    onselect : function() {
+        billboardCount = 10000;
+        resetBillboardCollection();
+    }
+}, {
+    text : '1024 billboards',
+    onselect : function() {
+        billboardCount = 1024;
+        resetBillboardCollection();
+    }
+}, {
+    text : '100 billboards',
+    onselect : function() {
+        billboardCount = 100;
+        resetBillboardCollection();
+    }
+}, {
+    text : '25 billboards',
+    onselect : function() {
+        billboardCount = 25;
+        resetBillboardCollection();
+    }
+}, {
+    text : '4 billboard',
+    onselect : function() {
+        billboardCount = 4;
+        resetBillboardCollection();
+    }
+}]);
+
+Sandcastle.addToolbarMenu([ {
+    text : 'Static billboards',
+    onselect : function() {
+        resetBillboardCollection();
+        scene.preRender.removeEventListener(animateBillboards);
+    }
+}, {
+    text : 'Animated billboards',
+    onselect : function() {
+        resetBillboardCollection();
+        scene.preRender.addEventListener(animateBillboards);
+    }
+}]);
+
+Sandcastle.addToolbarMenu([ {
+    text : 'Scale : 1.0',
+    onselect : function() {
+        scale = 1.0;
+        resetBillboardCollection();
+    }
+}, {
+    text : 'Scale : 0.5',
+    onselect : function() {
+        scale = 0.5;
+        resetBillboardCollection();
+    }
+}, {
+    text : 'Scale : 0.1',
+    onselect : function() {
+        scale = 0.1;
+        resetBillboardCollection();
+    }
+}]);
+
+resetBillboardCollection();
+
+//Sandcastle_End
+Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

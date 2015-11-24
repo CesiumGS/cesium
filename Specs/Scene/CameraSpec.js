@@ -9,6 +9,7 @@ defineSuite([
         'Core/defaultValue',
         'Core/Ellipsoid',
         'Core/GeographicProjection',
+        'Core/HeadingPitchRange',
         'Core/Math',
         'Core/Matrix3',
         'Core/Matrix4',
@@ -16,7 +17,6 @@ defineSuite([
         'Core/Transforms',
         'Core/WebMercatorProjection',
         'Scene/CameraFlightPath',
-        'Scene/HeadingPitchRange',
         'Scene/OrthographicFrustum',
         'Scene/PerspectiveFrustum',
         'Scene/SceneMode',
@@ -31,6 +31,7 @@ defineSuite([
         defaultValue,
         Ellipsoid,
         GeographicProjection,
+        HeadingPitchRange,
         CesiumMath,
         Matrix3,
         Matrix4,
@@ -38,13 +39,11 @@ defineSuite([
         Transforms,
         WebMercatorProjection,
         CameraFlightPath,
-        HeadingPitchRange,
         OrthographicFrustum,
         PerspectiveFrustum,
         SceneMode,
         TweenCollection) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
     var camera;
@@ -70,6 +69,10 @@ defineSuite([
         this.tweens = new TweenCollection();
         this.screenSpaceCameraController = {};
         this.camera = undefined;
+        this.context = {
+            drawingBufferWidth : 1024,
+            drawingBufferHeight : 768
+        };
     };
 
     beforeEach(function() {
@@ -134,15 +137,39 @@ defineSuite([
     it('get heading in 2D', function() {
         camera._mode = SceneMode.SCENE2D;
 
+        var positionWC = Cartesian3.clone(camera.positionWC);
+        var position = Cartesian3.clone(camera.position);
+        var direction = Cartesian3.clone(camera.direction);
+        var up = Cartesian3.clone(camera.up);
+        var right = Cartesian3.clone(camera.right);
+
         var heading = CesiumMath.TWO_PI - Math.atan2(camera.right.y, camera.right.x);
         expect(camera.heading).toEqual(heading);
+
+        expect(camera.positionWC).toEqualEpsilon(positionWC, CesiumMath.EPSILON8);
+        expect(camera.position).toEqualEpsilon(position, CesiumMath.EPSILON8);
+        expect(camera.direction).toEqualEpsilon(direction, CesiumMath.EPSILON8);
+        expect(camera.up).toEqualEpsilon(up, CesiumMath.EPSILON8);
+        expect(camera.right).toEqualEpsilon(right, CesiumMath.EPSILON8);
     });
 
     it('get heading in CV', function() {
         camera._mode = SceneMode.COLUMBUS_VIEW;
 
+        var positionWC = Cartesian3.clone(camera.positionWC);
+        var position = Cartesian3.clone(camera.position);
+        var direction = Cartesian3.clone(camera.direction);
+        var up = Cartesian3.clone(camera.up);
+        var right = Cartesian3.clone(camera.right);
+
         var heading = CesiumMath.TWO_PI - Math.atan2(camera.right.y, camera.right.x);
         expect(camera.heading).toEqualEpsilon(heading, CesiumMath.EPSILON8);
+
+        expect(camera.positionWC).toEqualEpsilon(positionWC, CesiumMath.EPSILON8);
+        expect(camera.position).toEqualEpsilon(position, CesiumMath.EPSILON8);
+        expect(camera.direction).toEqualEpsilon(direction, CesiumMath.EPSILON8);
+        expect(camera.up).toEqualEpsilon(up, CesiumMath.EPSILON8);
+        expect(camera.right).toEqualEpsilon(right, CesiumMath.EPSILON8);
     });
 
     it('get heading in 3D', function() {
@@ -156,18 +183,35 @@ defineSuite([
         var right = Matrix3.multiplyByVector(transform, camera.right, new Cartesian3());
         var heading = CesiumMath.TWO_PI - CesiumMath.zeroToTwoPi(Math.atan2(right.y, right.x));
 
+        var positionWC = Cartesian3.clone(camera.positionWC);
+        var position = Cartesian3.clone(camera.position);
+        var direction = Cartesian3.clone(camera.direction);
+        var up = Cartesian3.clone(camera.up);
+        right = Cartesian3.clone(camera.right);
+
         expect(camera.heading).toEqual(heading);
+
+        expect(camera.positionWC).toEqualEpsilon(positionWC, CesiumMath.EPSILON8);
+        expect(camera.position).toEqualEpsilon(position, CesiumMath.EPSILON8);
+        expect(camera.direction).toEqualEpsilon(direction, CesiumMath.EPSILON8);
+        expect(camera.up).toEqualEpsilon(up, CesiumMath.EPSILON8);
+        expect(camera.right).toEqualEpsilon(right, CesiumMath.EPSILON8);
     });
 
     it('set heading in 2D', function() {
         camera._mode = SceneMode.SCENE2D;
 
         var heading = camera.heading;
+        var positionCartographic = camera.positionCartographic;
+
         var newHeading = CesiumMath.toRadians(45.0);
         camera.setView({
-            heading : newHeading
+            orientation: {
+                heading : newHeading
+            }
         });
 
+        expect(camera.positionCartographic).toEqual(positionCartographic);
         expect(camera.heading).not.toEqual(heading);
         expect(camera.heading).toEqualEpsilon(newHeading, CesiumMath.EPSILON14);
     });
@@ -175,19 +219,24 @@ defineSuite([
     it('set heading in CV', function() {
         camera._mode = SceneMode.COLUMBUS_VIEW;
 
-        camera.position = Cartesian3.fromDegrees(0.0, 0.0, 100000.0);
+        camera.position = Cartesian3.fromDegrees(-72.0, 40.0, 100000.0);
         camera.direction = Cartesian3.negate(Cartesian3.normalize(camera.position, new Cartesian3()), new Cartesian3());
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
 
         var heading = camera.heading;
+        var positionCartographic = camera.positionCartographic;
+
         var newHeading = CesiumMath.toRadians(45.0);
         camera.setView({
-            heading : newHeading
+            orientation: {
+                heading : newHeading
+            }
         });
 
+        expect(camera.positionCartographic).toEqual(positionCartographic);
         expect(camera.heading).not.toEqual(heading);
-        expect(camera.heading).toEqualEpsilon(newHeading, CesiumMath.EPSILON14);
+        expect(camera.heading).toEqualEpsilon(newHeading, CesiumMath.EPSILON4);
     });
 
     it('set heading in 3D', function() {
@@ -201,7 +250,9 @@ defineSuite([
         var heading = camera.heading;
         var newHeading = CesiumMath.toRadians(45.0);
         camera.setView({
-            heading : newHeading
+            orientation: {
+                heading : newHeading
+            }
         });
 
         expect(camera.heading).not.toEqual(heading);
@@ -218,13 +269,25 @@ defineSuite([
         Cartesian3.cross(camera.direction, camera.up, camera.right);
         Cartesian3.cross(camera.right, camera.direction, camera.up);
 
-        camera.setView({ heading : CesiumMath.PI });
+        var positionCartographic = camera.positionCartographic;
 
+        camera.setView({
+            orientation: {
+                heading : CesiumMath.PI
+            }
+        });
+
+        expect(camera.positionCartographic).toEqual(positionCartographic);
         expect(camera.heading).toEqualEpsilon(CesiumMath.PI, CesiumMath.EPSILON8);
         expect(camera.up.z).toBeLessThan(0.0);
 
-        camera.setView({ heading : CesiumMath.TWO_PI });
+        camera.setView({
+            orientation: {
+                heading : CesiumMath.TWO_PI
+            }
+        });
 
+        expect(camera.positionCartographic).toEqual(positionCartographic);
         expect(camera.heading).toEqualEpsilon(CesiumMath.TWO_PI, CesiumMath.EPSILON8);
         expect(camera.up.z).toBeGreaterThan(0.0);
     });
@@ -242,8 +305,20 @@ defineSuite([
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
 
+        var positionWC = Cartesian3.clone(camera.positionWC);
+        var position = Cartesian3.clone(camera.position);
+        var direction = Cartesian3.clone(camera.direction);
+        var up = Cartesian3.clone(camera.up);
+        var right = Cartesian3.clone(camera.right);
+
         var pitch = CesiumMath.PI_OVER_TWO - Math.acos(-camera.direction.z);
         expect(camera.pitch).toEqualEpsilon(pitch, CesiumMath.EPSILON6);
+
+        expect(camera.positionWC).toEqualEpsilon(positionWC, CesiumMath.EPSILON8);
+        expect(camera.position).toEqualEpsilon(position, CesiumMath.EPSILON8);
+        expect(camera.direction).toEqualEpsilon(direction, CesiumMath.EPSILON8);
+        expect(camera.up).toEqualEpsilon(up, CesiumMath.EPSILON8);
+        expect(camera.right).toEqualEpsilon(right, CesiumMath.EPSILON8);
     });
 
     it('get pitch in 3D', function() {
@@ -253,41 +328,63 @@ defineSuite([
         Cartesian3.negate(direction, direction);
         var pitch = CesiumMath.PI_OVER_TWO - Math.acos(-Cartesian3.dot(camera.direction, direction));
 
+        var positionWC = Cartesian3.clone(camera.positionWC);
+        var position = Cartesian3.clone(camera.position);
+        direction = Cartesian3.clone(camera.direction);
+        var up = Cartesian3.clone(camera.up);
+        var right = Cartesian3.clone(camera.right);
+
         expect(camera.pitch).toEqual(pitch);
+
+        expect(camera.positionWC).toEqualEpsilon(positionWC, CesiumMath.EPSILON8);
+        expect(camera.position).toEqualEpsilon(position, CesiumMath.EPSILON8);
+        expect(camera.direction).toEqualEpsilon(direction, CesiumMath.EPSILON8);
+        expect(camera.up).toEqualEpsilon(up, CesiumMath.EPSILON8);
+        expect(camera.right).toEqualEpsilon(right, CesiumMath.EPSILON8);
     });
 
     it('set pitch in CV', function() {
         camera._mode = SceneMode.COLUMBUS_VIEW;
 
-        camera.position = Cartesian3.fromDegrees(0.0, 0.0, 100000.0);
+        camera.position = Cartesian3.fromDegrees(-72.0, 40.0, 100000.0);
         camera.direction = Cartesian3.negate(Cartesian3.normalize(camera.position, new Cartesian3()), new Cartesian3());
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
 
         var pitch = camera.pitch;
+        var positionCartographic = camera.positionCartographic;
+
         var newPitch = CesiumMath.toRadians(45.0);
         camera.setView({
-            pitch : newPitch
+            orientation: {
+                pitch : newPitch
+            }
         });
 
+        expect(camera.positionCartographic).toEqual(positionCartographic);
         expect(camera.pitch).not.toEqual(pitch);
-        expect(camera.pitch).toEqualEpsilon(newPitch, CesiumMath.EPSILON6);
+        expect(camera.pitch).toEqualEpsilon(newPitch, CesiumMath.EPSILON4);
     });
 
     it('set pitch in 3D', function() {
         camera._mode = SceneMode.SCENE3D;
 
-        camera.position = Cartesian3.clone(Cartesian3.UNIT_X);
+        camera.position = Cartesian3.fromDegrees(-72.0, 40.0, 100000.0);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
 
         var pitch = camera.pitch;
+        var positionCartographic = camera.positionCartographic;
+
         var newPitch = CesiumMath.toRadians(45.0);
         camera.setView({
-            pitch : newPitch
+            orientation: {
+                pitch : newPitch
+            }
         });
 
+        expect(camera.positionCartographic).toEqual(positionCartographic);
         expect(camera.pitch).not.toEqual(pitch);
         expect(camera.pitch).toEqualEpsilon(newPitch, CesiumMath.EPSILON14);
     });
@@ -302,8 +399,20 @@ defineSuite([
 
         camera.look(camera.direction, CesiumMath.toRadians(45.0));
 
+        var positionWC = Cartesian3.clone(camera.positionWC);
+        var position = Cartesian3.clone(camera.position);
+        var direction = Cartesian3.clone(camera.direction);
+        var up = Cartesian3.clone(camera.up);
+        var right = Cartesian3.clone(camera.right);
+
         var roll = CesiumMath.zeroToTwoPi(-CesiumMath.toRadians(45.0));
         expect(camera.roll).toEqualEpsilon(roll, CesiumMath.EPSILON6);
+
+        expect(camera.positionWC).toEqualEpsilon(positionWC, CesiumMath.EPSILON8);
+        expect(camera.position).toEqualEpsilon(position, CesiumMath.EPSILON8);
+        expect(camera.direction).toEqualEpsilon(direction, CesiumMath.EPSILON8);
+        expect(camera.up).toEqualEpsilon(up, CesiumMath.EPSILON8);
+        expect(camera.right).toEqualEpsilon(right, CesiumMath.EPSILON8);
     });
 
     it('get roll in 3D', function() {
@@ -325,16 +434,30 @@ defineSuite([
         var right = Matrix3.multiplyByVector(transform, camera.right, new Cartesian3());
         var roll = CesiumMath.TWO_PI - Math.atan2(right.z, right.x);
 
+        var positionWC = Cartesian3.clone(camera.positionWC);
+        var position = Cartesian3.clone(camera.position);
+        var direction = Cartesian3.clone(camera.direction);
+        var up = Cartesian3.clone(camera.up);
+        right = Cartesian3.clone(camera.right);
+
         expect(camera.roll).toEqual(roll);
+
+        expect(camera.positionWC).toEqualEpsilon(positionWC, CesiumMath.EPSILON8);
+        expect(camera.position).toEqualEpsilon(position, CesiumMath.EPSILON8);
+        expect(camera.direction).toEqualEpsilon(direction, CesiumMath.EPSILON8);
+        expect(camera.up).toEqualEpsilon(up, CesiumMath.EPSILON8);
+        expect(camera.right).toEqualEpsilon(right, CesiumMath.EPSILON8);
     });
 
     it('get roll returns correct value past 90 degrees', function() {
         var roll = CesiumMath.toRadians(110.0);
         camera.setView({
-            position : Cartesian3.fromDegrees(-72.0, 40.0, 20.0),
-            heading : 0.0,
-            pitch : 0.0,
-            roll : roll
+            destination : Cartesian3.fromDegrees(-72.0, 40.0, 20.0),
+            orientation: {
+                heading : 0.0,
+                pitch : 0.0,
+                roll : roll
+            }
         });
 
         expect(camera.roll).toEqualEpsilon(roll, CesiumMath.EPSILON14);
@@ -343,17 +466,24 @@ defineSuite([
     it('set roll in CV', function() {
         camera._mode = SceneMode.COLUMBUS_VIEW;
 
-        camera.position = Cartesian3.fromDegrees(0.0, 0.0, 100000.0);
+        camera.position = Cartesian3.fromDegrees(-72.0, 40.0, 100000.0);
         camera.direction = Cartesian3.clone(Cartesian3.UNIT_Y);
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
 
         var roll = camera.roll;
+        var positionCartographic = camera.positionCartographic;
+
         var newRoll = CesiumMath.PI_OVER_FOUR;
         camera.setView({
-            roll : newRoll
+            orientation: {
+                pitch: camera.pitch,
+                roll : newRoll,
+                heading: camera.heading
+            }
         });
 
+        expect(camera.positionCartographic).toEqual(positionCartographic);
         expect(camera.roll).not.toEqual(roll);
         expect(camera.roll).toEqualEpsilon(newRoll, CesiumMath.EPSILON6);
     });
@@ -361,17 +491,24 @@ defineSuite([
     it('set roll in 3D', function() {
         camera._mode = SceneMode.SCENE3D;
 
-        camera.position = Cartesian3.fromDegrees(0.0, 0.0, 100000.0);
+        camera.position = Cartesian3.fromDegrees(-72.0, 40.0, 100000.0);
         camera.direction = Cartesian3.clone(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.clone(Cartesian3.UNIT_X);
         camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
 
         var roll = camera.roll;
+        var positionCartographic = Cartographic.clone(camera.positionCartographic);
+
         var newRoll = CesiumMath.PI_OVER_FOUR;
         camera.setView({
-            roll : newRoll
+            orientation: {
+                pitch: camera.pitch,
+                roll : newRoll,
+                heading: camera.heading
+            }
         });
 
+        expect(camera.positionCartographic).toEqual(positionCartographic);
         expect(camera.roll).not.toEqual(roll);
         expect(camera.roll).toEqualEpsilon(newRoll, CesiumMath.EPSILON6);
     });
@@ -382,7 +519,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('setView with cartographic in 2D', function() {
+    it('setView with cartesian in 2D', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new GeographicProjection(ellipsoid);
         var maxRadii = ellipsoid.maximumRadius;
@@ -400,15 +537,13 @@ defineSuite([
         camera.frustum = frustum;
 
         var ratio = frustum.top / frustum.right;
-        var cart = Cartographic.fromDegrees(-75.0, 42.0, 100.0);
+        var cartesian = Cartesian3.fromDegrees(-75.0, 42.0, 100.0);
         camera.setView({
-            heading : 0.0,
-            pitch : -CesiumMath.PI_OVER_TWO,
-            roll : 0.0,
-            positionCartographic : cart
+            destination : cartesian
         });
 
-        expect(Cartesian2.fromCartesian3(camera.position, new Cartesian2())).toEqualEpsilon(Cartesian2.fromCartesian3(projection.project(cart), new Cartesian2()), CesiumMath.EPSILON11);
+        var cart = ellipsoid.cartesianToCartographic(cartesian);
+        expect(camera.positionCartographic).toEqualEpsilon(cart, CesiumMath.EPSILON6);
         expect(camera.direction).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), CesiumMath.EPSILON6);
         expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON6);
         expect(camera.right).toEqualEpsilon(Cartesian3.UNIT_X, CesiumMath.EPSILON6);
@@ -416,43 +551,38 @@ defineSuite([
         expect(frustum.top / frustum.right).toEqual(ratio);
     });
 
-    it('setView with cartographic in Columbus View', function() {
+    it('setView with cartesian in Columbus View', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new GeographicProjection(ellipsoid);
 
         camera._mode = SceneMode.COLUMBUS_VIEW;
         camera._projection = projection;
 
-        var cart = Cartographic.fromDegrees(-75.0, 42.0, 100.0);
+        var cartesian = Cartesian3.fromDegrees(-75.0, 42.0, 100.0);
         camera.setView({
-            heading : 0.0,
-            pitch : -CesiumMath.PI_OVER_TWO,
-            roll : 0.0,
-            positionCartographic : cart
+            destination : cartesian
         });
 
-        expect(camera.position).toEqualEpsilon(projection.project(cart), CesiumMath.EPSILON11);
+        var cart = ellipsoid.cartesianToCartographic(cartesian);
+        expect(camera.positionCartographic).toEqualEpsilon(cart, CesiumMath.EPSILON11);
         expect(camera.direction).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), CesiumMath.EPSILON6);
         expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON6);
         expect(camera.right).toEqualEpsilon(Cartesian3.UNIT_X, CesiumMath.EPSILON6);
     });
 
-    it('setView with cartographic in 3D', function() {
+    it('setView with cartesian in 3D', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new GeographicProjection(ellipsoid);
 
         camera._mode = SceneMode.SCENE3D;
         camera._projection = projection;
 
-        var cart = new Cartographic(-75.0, 0.0, 100.0);
+        var cartesian = Cartesian3.fromDegrees(-75.0, 0.0, 100.0);
         camera.setView({
-            heading : 0.0,
-            pitch : -CesiumMath.PI_OVER_TWO,
-            roll : 0.0,
-            positionCartographic : cart
+            destination : cartesian
         });
 
-        expect(camera.position).toEqualEpsilon(ellipsoid.cartographicToCartesian(cart), CesiumMath.EPSILON6);
+        expect(camera.positionCartographic).toEqualEpsilon(ellipsoid.cartesianToCartographic(cartesian), CesiumMath.EPSILON6);
         expect(camera.direction).toEqualEpsilon(Cartesian3.normalize(Cartesian3.negate(camera.position, new Cartesian3()), new Cartesian3()), CesiumMath.EPSILON6);
         expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON6);
         expect(camera.right).toEqualEpsilon(Cartesian3.cross(camera.direction, camera.up, new Cartesian3()), CesiumMath.EPSILON6);
@@ -465,10 +595,12 @@ defineSuite([
         var roll = CesiumMath.toRadians(45.0);
 
         camera.setView({
-            position : position,
-            heading : heading,
-            pitch : pitch,
-            roll : roll
+            destination : position,
+            orientation: {
+                heading : heading,
+                pitch : pitch,
+                roll : roll
+            }
         });
 
         expect(camera.position).toEqualEpsilon(position, CesiumMath.EPSILON6);
@@ -484,10 +616,12 @@ defineSuite([
         var roll = CesiumMath.toRadians(45.0);
 
         camera.setView({
-            position : position,
-            heading : heading,
-            pitch : pitch,
-            roll : roll
+            destination : position,
+            orientation: {
+                heading : heading,
+                pitch : pitch,
+                roll : roll
+            }
         });
 
         expect(camera.position).toEqualEpsilon(position, CesiumMath.EPSILON6);
@@ -497,7 +631,13 @@ defineSuite([
 
         heading =  CesiumMath.toRadians(200.0);
 
-        camera.setView({heading : heading});
+        camera.setView({
+            orientation: {
+                pitch: camera.pitch,
+                roll : camera.roll,
+                heading : heading
+            }
+        });
 
         expect(camera.position).toEqualEpsilon(position, CesiumMath.EPSILON6);
         expect(camera.heading).toEqualEpsilon(heading, CesiumMath.EPSILON6);
@@ -512,10 +652,12 @@ defineSuite([
         var roll = CesiumMath.toRadians(45.0);
 
         camera.setView({
-            position : position,
-            heading : heading,
-            pitch : pitch,
-            roll : roll
+            destination : position,
+            orientation: {
+                heading : heading,
+                pitch : pitch,
+                roll : roll
+            }
         });
 
         expect(camera.position).toEqualEpsilon(position, CesiumMath.EPSILON6);
@@ -525,7 +667,13 @@ defineSuite([
 
         pitch =  CesiumMath.toRadians(-50.0);
 
-        camera.setView({pitch : pitch});
+        camera.setView({
+            orientation: {
+                pitch : pitch,
+                roll : camera.roll,
+                heading: camera.heading
+            }
+        });
 
         expect(camera.position).toEqualEpsilon(position, CesiumMath.EPSILON6);
         expect(camera.heading).toEqualEpsilon(heading, CesiumMath.EPSILON6);
@@ -540,10 +688,12 @@ defineSuite([
         var roll = CesiumMath.toRadians(45.0);
 
         camera.setView({
-            position : position,
-            heading : heading,
-            pitch : pitch,
-            roll : roll
+            destination : position,
+            orientation: {
+                heading : heading,
+                pitch : pitch,
+                roll : roll
+            }
         });
 
         expect(camera.position).toEqualEpsilon(position, CesiumMath.EPSILON6);
@@ -553,12 +703,38 @@ defineSuite([
 
         roll =  CesiumMath.toRadians(200.0);
 
-        camera.setView({roll : roll});
+        camera.setView({
+            orientation: {
+                roll : roll,
+                heading: camera.heading,
+                pitch: camera.pitch
+            }
+        });
 
         expect(camera.position).toEqualEpsilon(position, CesiumMath.EPSILON6);
         expect(camera.heading).toEqualEpsilon(heading, CesiumMath.EPSILON6);
         expect(camera.pitch).toEqualEpsilon(pitch, CesiumMath.EPSILON6);
         expect(camera.roll).toEqualEpsilon(roll, CesiumMath.EPSILON6);
+    });
+
+    it('setView with direction, up', function() {
+        scene.mode = SceneMode.SCENE3D;
+
+        var direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
+        var up = Cartesian3.clone(Cartesian3.UNIT_Y);
+
+        var options = {
+            destination : Cartesian3.fromDegrees(-117.16, 32.71, 0.0),
+            orientation : {
+                direction : direction,
+                up : up
+            },
+            duration : 0.001
+        };
+        camera.setView(options);
+
+        expect(camera.direction).toEqualEpsilon(direction, CesiumMath.EPSILON6);
+        expect(camera.up).toEqualEpsilon(up, CesiumMath.EPSILON6);
     });
 
     it('worldToCameraCoordinates throws without cartesian', function() {
@@ -1031,7 +1207,7 @@ defineSuite([
         var target = Cartesian3.fromDegrees(0.0, 0.0);
         var offset = new Cartesian3(0.0, -1.0, 0.0);
 
-        var tempCamera = camera.clone();
+        var tempCamera = Camera.clone(camera);
         tempCamera.lookAt(target, offset);
 
         expect(tempCamera.position).toEqualEpsilon(offset, CesiumMath.EPSILON11);
@@ -1050,7 +1226,7 @@ defineSuite([
         var pitch = CesiumMath.toRadians(-45.0);
         var range = 2.0;
 
-        var tempCamera = camera.clone();
+        var tempCamera = Camera.clone(camera);
         tempCamera.lookAt(target, new HeadingPitchRange(heading, pitch, range));
 
         tempCamera.lookAtTransform(Matrix4.IDENTITY);
@@ -1085,7 +1261,7 @@ defineSuite([
         frustum.top = 1.0;
         frustum.bottom = -1.0;
 
-        var tempCamera = camera.clone();
+        var tempCamera = Camera.clone(camera);
         tempCamera.frustum = frustum;
         tempCamera.update(SceneMode.SCENE2D);
 
@@ -1110,7 +1286,7 @@ defineSuite([
         frustum.top = 1.0;
         frustum.bottom = -1.0;
 
-        var tempCamera = camera.clone();
+        var tempCamera = Camera.clone(camera);
         tempCamera.frustum = frustum;
         tempCamera.update(SceneMode.SCENE2D);
 
@@ -1143,7 +1319,7 @@ defineSuite([
         var offset = new Cartesian3(1.0, 1.0, 0.0);
         var transform = Transforms.eastNorthUpToFixedFrame(target, Ellipsoid.UNIT_SPHERE);
 
-        var tempCamera = camera.clone();
+        var tempCamera = Camera.clone(camera);
         tempCamera.lookAtTransform(transform, offset);
 
         expect(tempCamera.position).toEqualEpsilon(offset, CesiumMath.EPSILON11);
@@ -1185,7 +1361,7 @@ defineSuite([
         var range = 2.0;
         var transform = Transforms.eastNorthUpToFixedFrame(target);
 
-        var tempCamera = camera.clone();
+        var tempCamera = Camera.clone(camera);
         tempCamera.lookAtTransform(transform, new HeadingPitchRange(heading, pitch, range));
 
         tempCamera.lookAtTransform(Matrix4.IDENTITY);
@@ -1214,7 +1390,7 @@ defineSuite([
         frustum.top = 1.0;
         frustum.bottom = -1.0;
 
-        var tempCamera = camera.clone();
+        var tempCamera = Camera.clone(camera);
         tempCamera.frustum = frustum;
         tempCamera.update(SceneMode.SCENE2D);
 
@@ -1239,7 +1415,7 @@ defineSuite([
         frustum.top = 1.0;
         frustum.bottom = -1.0;
 
-        var tempCamera = camera.clone();
+        var tempCamera = Camera.clone(camera);
         tempCamera.frustum = frustum;
         tempCamera.update(SceneMode.SCENE2D);
 
@@ -1268,49 +1444,56 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('viewRectangle throws without rectangle', function() {
-        expect(function () {
-            camera.viewRectangle();
-        }).toThrowDeveloperError();
-    });
-
-    it('views rectangle in 3D (1)', function() {
+    it('setView rectangle in 3D (1)', function() {
         var rectangle = new Rectangle(
             -Math.PI,
             -CesiumMath.PI_OVER_TWO,
             Math.PI,
             CesiumMath.PI_OVER_TWO);
-        camera.viewRectangle(rectangle);
+        camera.setView({destination: rectangle});
         expect(camera.position).toEqualEpsilon(new Cartesian3(14680290.639204923, 0.0, 0.0), CesiumMath.EPSILON6);
         expect(camera.direction).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()), CesiumMath.EPSILON10);
         expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON10);
         expect(camera.right).toEqualEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON10);
     });
 
-    it('views rectangle in 3D (2)', function() {
+    it('setView rectangle in 3D (2)', function() {
         var rectangle = new Rectangle(
             CesiumMath.toRadians(21.25),
             CesiumMath.toRadians(41.23),
             CesiumMath.toRadians(21.51),
             CesiumMath.toRadians(41.38));
-        camera.viewRectangle(rectangle, Ellipsoid.WGS84);
-        expect(camera.position).toEqualEpsilon(new Cartesian3(4481581.054168208, 1754494.5938935655, 4200573.072090136), CesiumMath.EPSILON6);
-        expect(camera.direction).toEqualEpsilon(new Cartesian3(-0.7015530983057745, -0.2746510892984876, -0.6575637074875123), CesiumMath.EPSILON10);
-        expect(camera.up).toEqualEpsilon(new Cartesian3(-0.6123128513437499, -0.23971441651266895, 0.7533989451779698), CesiumMath.EPSILON10);
-        expect(camera.right).toEqualEpsilon(new Cartesian3(-0.36454934142973716, 0.9311840729217532, 0.0), CesiumMath.EPSILON10);
+        camera.setView({destination: rectangle});
+        expect(camera.position).toEqualEpsilon(new Cartesian3(4481555.454147325, 1754498.0086281248, 4200627.581953675), CesiumMath.EPSILON6);
+        expect(camera.direction).toEqualEpsilon(new Cartesian3(-0.6995046749050446, -0.27385124912628594, -0.6600747708691498), CesiumMath.EPSILON10);
+        expect(camera.up).toEqualEpsilon(new Cartesian3(-0.6146504879783901, -0.2406314209863035, 0.7511999047271233), CesiumMath.EPSILON10);
+        expect(camera.right).toEqualEpsilon(new Cartesian3(-0.36455176232452213, 0.9311831251617939, 0), CesiumMath.EPSILON10);
     });
 
-    it('views rectangle in 3D (3)', function() {
+    it('setView rectangle in 3D (3)', function() {
         var rectangle = new Rectangle(
             CesiumMath.toRadians(90.0),
             CesiumMath.toRadians(-50.0),
             CesiumMath.toRadians(157.0),
             CesiumMath.toRadians(0.0));
-        camera.viewRectangle(rectangle);
-        expect(camera.position).toEqualEpsilon(new Cartesian3(-7210721.873278953, 8105929.1576369405, -5972336.199381728), CesiumMath.EPSILON6);
-        expect(camera.direction).toEqualEpsilon(new Cartesian3(0.5822498554483325, -0.6545358652367963, 0.48225294913469874), CesiumMath.EPSILON10);
-        expect(camera.up).toEqualEpsilon(new Cartesian3(-0.32052676705406324, 0.3603199946588929, 0.8760320159964963), CesiumMath.EPSILON10);
-        expect(camera.right).toEqualEpsilon(new Cartesian3(-0.7471597536218517, -0.6646444933705039, 0.0), CesiumMath.EPSILON10);
+        camera.setView({destination: rectangle});
+        expect(camera.position).toEqualEpsilon(new Cartesian3(-6017603.25625715, 9091606.78076493, -5075070.862292178), CesiumMath.EPSILON6);
+        expect(camera.direction).toEqualEpsilon(new Cartesian3(0.49978034145251155, -0.7550857289433265, 0.42434084442077485), CesiumMath.EPSILON10);
+        expect(camera.up).toEqualEpsilon(new Cartesian3(-0.2342094064143758, 0.35385181388649406, 0.905502538790623), CesiumMath.EPSILON10);
+        expect(camera.right).toEqualEpsilon(new Cartesian3(-0.8338858220671682, -0.5519369853120581, 0), CesiumMath.EPSILON10);
+    });
+
+    it('setView rectangle in 3D (4)', function() {
+        var rectangle = new Rectangle(
+            CesiumMath.toRadians(90.0),
+            CesiumMath.toRadians(-62.0),
+            CesiumMath.toRadians(174.0),
+            CesiumMath.toRadians(-4.0));
+        camera.setView({destination: rectangle});
+        expect(camera.position).toEqualEpsilon(new Cartesian3(-7307919.685704952, 8116267.060310548, -7085995.891547672), CesiumMath.EPSILON6);
+        expect(camera.direction).toEqualEpsilon(new Cartesian3(0.5602119862713765, -0.6221784429103113, 0.5468605998017956), CesiumMath.EPSILON10);
+        expect(camera.up).toEqualEpsilon(new Cartesian3(-0.3659211647391443, 0.40639662500016843, 0.8372236764356468), CesiumMath.EPSILON10);
+        expect(camera.right).toEqualEpsilon(new Cartesian3(-0.7431448254773944, -0.6691306063588581, 0), CesiumMath.EPSILON10);
     });
 
     it('views rectangle in 3D across IDL', function() {
@@ -1319,14 +1502,14 @@ defineSuite([
             -CesiumMath.PI_OVER_TWO,
             -0.1,
             CesiumMath.PI_OVER_TWO);
-        camera.viewRectangle(rectangle);
+        camera.setView({destination: rectangle});
         expect(camera.position).toEqualEpsilon(new Cartesian3(-14680290.639204923, 0.0, 0.0), CesiumMath.EPSILON6);
         expect(camera.direction).toEqualEpsilon(Cartesian3.UNIT_X, CesiumMath.EPSILON10);
         expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON10);
         expect(camera.right).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Y, new Cartesian3()), CesiumMath.EPSILON10);
     });
 
-    it('views rectangle in 2D with larger longitude', function() {
+    it('setView rectangle in 2D with larger longitude', function() {
         var frustum = new OrthographicFrustum();
         frustum.left = -10.0;
         frustum.right = 10.0;
@@ -1347,7 +1530,7 @@ defineSuite([
 
         camera._mode = SceneMode.SCENE2D;
         camera._projection = projection;
-        camera.viewRectangle(rectangle);
+        camera.setView({destination: rectangle});
 
         expect(camera.position.x).toEqual(0);
         expect(camera.position.y).toEqual(0);
@@ -1357,7 +1540,7 @@ defineSuite([
         expect(frustum.bottom + expected <= CesiumMath.EPSILON14).toEqual(true);
     });
 
-    it('views rectangle in 2D with larger latitude', function() {
+    it('setView rectangle in 2D with larger latitude', function() {
         var frustum = new OrthographicFrustum();
         frustum.left = -10.0;
         frustum.right = 10.0;
@@ -1378,7 +1561,7 @@ defineSuite([
 
         camera._mode = SceneMode.SCENE2D;
         camera._projection = projection;
-        camera.viewRectangle(rectangle);
+        camera.setView({destination: rectangle});
 
         expect(camera.position.x).toEqual(0);
         expect(camera.position.y).toEqual(0);
@@ -1388,7 +1571,7 @@ defineSuite([
         expect(frustum.bottom + expected <= CesiumMath.EPSILON14).toEqual(true);
     });
 
-    it('views rectangle in Columbus View', function() {
+    it('setView rectangle in Columbus View', function() {
         var rectangle = new Rectangle(
             -CesiumMath.PI_OVER_TWO,
             -CesiumMath.PI_OVER_TWO,
@@ -1397,7 +1580,7 @@ defineSuite([
         var projection = new GeographicProjection();
         camera._mode = SceneMode.COLUMBUS_VIEW;
         camera._projection = projection;
-        camera.viewRectangle(rectangle);
+        camera.setView({destination: rectangle});
         expect(camera.position).toEqualEpsilon(new Cartesian3(0.0, 0.0, 23137321.67119748), CesiumMath.EPSILON8);
         expect(camera.direction).toEqualEpsilon(new Cartesian3(0.0, 0.0, -1.0), CesiumMath.EPSILON2);
         expect(camera.up).toEqualEpsilon(new Cartesian3(0.0, 1.0, 0.0), CesiumMath.EPSILON2);
@@ -1630,7 +1813,6 @@ defineSuite([
 
     it('pick map in columbus view', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var projection = new GeographicProjection(ellipsoid);
         var maxRadii = ellipsoid.maximumRadius;
 
         camera.position = Cartesian3.multiplyByScalar(Cartesian3.normalize(new Cartesian3(0.0, -1.0, 1.0), new Cartesian3()), 5.0 * maxRadii, new Cartesian3());
@@ -1936,7 +2118,7 @@ defineSuite([
         spyOn(CameraFlightPath, 'createTween').and.returnValue({
             startObject : {},
             stopObject: {},
-            duration : 0.0
+            duration : 0.001
         });
 
         var options = {
@@ -1946,13 +2128,16 @@ defineSuite([
 
         var expectedOptions = {
             destination : options.destination,
-            direction : undefined,
-            up : undefined,
+            heading : undefined,
+            pitch : undefined,
+            roll : undefined,
             duration : undefined,
             complete : undefined,
             cancel : undefined,
             endTransform : undefined,
-            convert : undefined
+            convert : undefined,
+            maximumHeight : undefined,
+            easingFunction : undefined
         };
 
         expect(CameraFlightPath.createTween).toHaveBeenCalledWith(scene, expectedOptions);
@@ -1979,6 +2164,26 @@ defineSuite([
         expect(camera.heading).toEqualEpsilon(heading, CesiumMath.EPSILON6);
         expect(camera.pitch).toEqualEpsilon(pitch, CesiumMath.EPSILON6);
         expect(camera.roll).toEqualEpsilon(roll, CesiumMath.EPSILON6);
+    });
+
+    it('flyTo with direction, up', function() {
+        scene.mode = SceneMode.SCENE3D;
+
+        var direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
+        var up = Cartesian3.clone(Cartesian3.UNIT_Y);
+
+        var options = {
+            destination : Cartesian3.fromDegrees(-117.16, 32.71, 0.0),
+            orientation : {
+                direction : direction,
+                up : up
+            },
+            duration : 0.0
+        };
+        camera.flyTo(options);
+
+        expect(camera.direction).toEqualEpsilon(direction, CesiumMath.EPSILON6);
+        expect(camera.up).toEqualEpsilon(up, CesiumMath.EPSILON6);
     });
 
     it('viewBoundingSphere', function() {
@@ -2042,6 +2247,65 @@ defineSuite([
         var distance = Cartesian3.distance(camera.position, sphere.center);
         expect(distance).toBeGreaterThan(sphere.radius);
         expect(distance).toBeLessThan(sphere.radius * 3.0);
+    });
+
+    it('distanceToBoundingSphere', function() {
+        scene.mode = SceneMode.SCENE3D;
+
+        var sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
+        var distance = camera.distanceToBoundingSphere(sphere);
+        expect(distance).toEqual(0.5);
+    });
+
+    it('distanceToBoundingSphere throws when there is no bounding sphere', function() {
+        scene.mode = SceneMode.SCENE3D;
+
+        expect(function() {
+            camera.distanceToBoundingSphere();
+        }).toThrowDeveloperError();
+    });
+
+    it('getPixelSize', function() {
+        scene.mode = SceneMode.SCENE3D;
+
+        var sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
+        var context = scene.context;
+        var drawingBufferWidth = context.drawingBufferWidth;
+        var drawingBufferHeight = context.drawingBufferHeight;
+
+        // Compute expected pixel size
+        var distance = camera.distanceToBoundingSphere(sphere);
+        var pixelDimensions = camera.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, new Cartesian2());
+        var expectedPixelSize = Math.max(pixelDimensions.x, pixelDimensions.y);
+
+        var pixelSize = camera.getPixelSize(sphere, drawingBufferWidth, drawingBufferHeight);
+        expect(pixelSize).toEqual(expectedPixelSize);
+    });
+
+    it('getPixelSize throws when there is no bounding sphere', function() {
+        scene.mode = SceneMode.SCENE3D;
+
+        expect(function() {
+            camera.getPixelSize();
+        }).toThrowDeveloperError();
+    });
+
+    it('getPixelSize throws when there is no drawing buffer width', function() {
+        scene.mode = SceneMode.SCENE3D;
+        var sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
+
+        expect(function() {
+            camera.getPixelSize(sphere);
+        }).toThrowDeveloperError();
+    });
+
+    it('getPixelSize throws when there is no drawing buffer height', function() {
+        scene.mode = SceneMode.SCENE3D;
+        var sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
+
+        expect(function() {
+            camera.getPixelSize(sphere, 10);
+        }).toThrowDeveloperError();
     });
 
 });

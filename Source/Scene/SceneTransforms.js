@@ -42,13 +42,13 @@ define([
      * @param {Scene} scene The scene.
      * @param {Cartesian3} position The position in WGS84 (world) coordinates.
      * @param {Cartesian2} [result] An optional object to return the input position transformed to window coordinates.
-     * @returns {Cartesian2} The modified result parameter or a new Cartesian3 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
+     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
      *
      * @example
      * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
      * var scene = widget.scene;
      * var ellipsoid = scene.globe.ellipsoid;
-     * var position = Cesium.Cartesian3.fromDegrees(0.0, 0.0));
+     * var position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
      * var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
      * handler.setInputAction(function(movement) {
      *     console.log(Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position));
@@ -92,7 +92,7 @@ define([
      * @param {Scene} scene The scene.
      * @param {Cartesian3} position The position in WGS84 (world) coordinates.
      * @param {Cartesian2} [result] An optional object to return the input position transformed to window coordinates.
-     * @returns {Cartesian2} The modified result parameter or a new Cartesian3 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
+     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
      *
      * @example
      * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
@@ -223,6 +223,32 @@ define([
         var xScale = scene.drawingBufferWidth / canvas.clientWidth;
         var yScale = scene.drawingBufferHeight / canvas.clientHeight;
         return Cartesian2.fromElements(windowPosition.x * xScale, windowPosition.y * yScale, result);
+    };
+
+    var scratchNDC = new Cartesian4();
+    var scratchWorldCoords = new Cartesian4();
+
+    /**
+     * @private
+     */
+    SceneTransforms.drawingBufferToWgs84Coordinates = function(scene, drawingBufferPosition, depth, result) {
+        var context = scene.context;
+        var uniformState = context.uniformState;
+
+        var viewport = uniformState.viewport;
+        var ndc = Cartesian4.clone(Cartesian4.UNIT_W, scratchNDC);
+        ndc.x = (drawingBufferPosition.x - viewport.x) / viewport.width * 2.0 - 1.0;
+        ndc.y = (drawingBufferPosition.y - viewport.y) / viewport.height * 2.0 - 1.0;
+        ndc.z = (depth * 2.0) - 1.0;
+        ndc.w = 1.0;
+
+        var worldCoords = Matrix4.multiplyByVector(uniformState.inverseViewProjection, ndc, scratchWorldCoords);
+
+        // Reverse perspective divide
+        var w = 1.0 / worldCoords.w;
+        Cartesian3.multiplyByScalar(worldCoords, w, worldCoords);
+
+        return Cartesian3.fromCartesian4(worldCoords, result);
     };
 
     return SceneTransforms;

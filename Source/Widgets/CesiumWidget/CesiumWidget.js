@@ -98,7 +98,7 @@ define([
         var canvas = widget._canvas;
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
-        var zoomFactor = defaultValue(window.devicePixelRatio, 1.0) * widget._resolutionScale;
+        var zoomFactor = (1.0 / defaultValue(window.devicePixelRatio, 1.0)) * widget._resolutionScale;
 
         widget._canvasWidth = width;
         widget._canvasHeight = height;
@@ -153,6 +153,7 @@ define([
      * @param {Object} [options.contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
      * @param {Element|String} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added
      *        to the bottom of the widget itself.
+     * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *
@@ -167,7 +168,7 @@ define([
      *
      * //Widget with OpenStreetMaps imagery provider and Cesium terrain provider hosted by AGI.
      * var widget = new Cesium.CesiumWidget('cesiumContainer', {
-     *     imageryProvider : new Cesium.OpenStreetMapImageryProvider(),
+     *     imageryProvider : Cesium.createOpenStreetMapImageryProvider(),
      *     terrainProvider : new Cesium.CesiumTerrainProvider({
      *         url : '//assets.agi.com/stk-terrain/world'
      *     }),
@@ -242,7 +243,8 @@ define([
                 creditContainer : creditContainer,
                 mapProjection : options.mapProjection,
                 orderIndependentTranslucency : options.orderIndependentTranslucency,
-                scene3DOnly : defaultValue(options.scene3DOnly, false)
+                scene3DOnly : defaultValue(options.scene3DOnly, false),
+                terrainExaggeration : options.terrainExaggeration
             });
             this._scene = scene;
 
@@ -605,7 +607,10 @@ define([
 
         element.appendChild(overlay);
 
-        console.error(title + '\n' + message + '\n' + errorDetails);
+        //IE8 does not have a console object unless the dev tools are open.
+        if (typeof console !== 'undefined') {
+            console.error(title + '\n' + message + '\n' + errorDetails);
+        }
     };
 
     /**

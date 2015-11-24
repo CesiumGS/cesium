@@ -342,7 +342,7 @@ define([
      *
      * @param {Ray} ray The ray to test for intersection.
      * @param {Scene} scene The scene.
-     * @return {Promise|ImageryLayerFeatureInfo[]} A promise that resolves to an array of features intersected by the pick ray.
+     * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise that resolves to an array of features intersected by the pick ray.
      *                                             If it can be quickly determined that no features are intersected (for example,
      *                                             because no active imagery providers support {@link ImageryProvider#pickFeatures}
      *                                             or because the pick ray does not intersect the surface), this function will
@@ -359,8 +359,7 @@ define([
      *         console.log('Number of features: ' + features.length);
      *         if (features.length > 0) {
      *             console.log('First feature name: ' + features[0].name);
-     *             }
-     *         });
+     *         }
      *     });
      * }
      */
@@ -375,7 +374,6 @@ define([
 
         // Find the terrain tile containing the picked location.
         var tilesToRender = scene.globe._surface._tilesToRender;
-        var length = tilesToRender.length;
         var pickedTile;
 
         for (var textureIndex = 0; !defined(pickedTile) && textureIndex < tilesToRender.length; ++textureIndex) {
@@ -390,10 +388,10 @@ define([
         }
 
         // Pick against all attached imagery tiles containing the pickedLocation.
-        var tileExtent = pickedTile.rectangle;
         var imageryTiles = pickedTile.data.imagery;
 
         var promises = [];
+        var imageryLayers = [];
         for (var i = imageryTiles.length - 1; i >= 0; --i) {
             var terrainImagery = imageryTiles[i];
             var imagery = terrainImagery.readyImagery;
@@ -428,6 +426,7 @@ define([
             }
 
             promises.push(promise);
+            imageryLayers.push(imagery.imageryLayer);
         }
 
         if (promises.length === 0) {
@@ -439,10 +438,12 @@ define([
 
             for (var resultIndex = 0; resultIndex < results.length; ++resultIndex) {
                 var result = results[resultIndex];
+                var image = imageryLayers[resultIndex];
 
                 if (defined(result) && result.length > 0) {
                     for (var featureIndex = 0; featureIndex < result.length; ++featureIndex) {
                         var feature = result[featureIndex];
+                        feature.imageryLayer = image;
 
                         // For features without a position, use the picked location.
                         if (!defined(feature.position)) {

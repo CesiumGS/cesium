@@ -36,7 +36,6 @@ defineSuite([
         pick,
         render) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var context;
     var frameState;
@@ -54,12 +53,12 @@ defineSuite([
     beforeEach(function() {
         rectangle = new RectanglePrimitive();
 
-        frameState = createFrameState(createCamera({
+        frameState = createFrameState(context, createCamera({
             offset : new Cartesian3(1.02, 0.0, 0.0)
         }));
 
         us = context.uniformState;
-        us.update(context, frameState);
+        us.update(frameState);
     });
 
     afterEach(function() {
@@ -113,7 +112,7 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, frameState, rectangle);
+        render(frameState, rectangle);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
@@ -127,14 +126,14 @@ defineSuite([
         };
         rectangle.show = false;
 
-        expect(render(context, frameState, rectangle)).toEqual(0);
+        expect(render(frameState, rectangle)).toEqual(0);
     });
 
     it('does not render without rectangle', function() {
         rectangle = new RectanglePrimitive();
         rectangle.ellipsoid = Ellipsoid.UNIT_SPHERE;
         rectangle.granularity = CesiumMath.toRadians(20.0);
-        expect(render(context, frameState, rectangle)).toEqual(0);
+        expect(render(frameState, rectangle)).toEqual(0);
     });
 
     it('renders bounding volume with debugShowBoundingVolume', function() {
@@ -143,9 +142,9 @@ defineSuite([
             debugShowBoundingVolume : true
         });
 
-        var commands = [];
-        rectangle.update(context, frameState, commands);
+        rectangle.update(frameState);
 
+        var commands = frameState.commandList;
         expect(commands.length).toBeGreaterThan(0);
         for (var i = 0; i < commands.length; ++i) {
             expect(commands[i].debugShowBoundingVolume).toBe(true);
@@ -157,7 +156,7 @@ defineSuite([
             id : 'id'
         });
 
-        var pickedObject = pick(context, frameState, rectangle, 0, 0);
+        var pickedObject = pick(frameState, rectangle, 0, 0);
         expect(pickedObject.primitive).toEqual(rectangle);
         expect(pickedObject.id).toEqual('id');
     });
@@ -166,7 +165,7 @@ defineSuite([
         rectangle = createRectangle();
         rectangle.show = false;
 
-        var pickedObject = pick(context, frameState, rectangle, 0, 0);
+        var pickedObject = pick(frameState, rectangle, 0, 0);
         expect(pickedObject).not.toBeDefined();
     });
 
@@ -174,7 +173,7 @@ defineSuite([
         rectangle = createRectangle();
         rectangle.material.uniforms.color.alpha = 0.0;
 
-        var pickedObject = pick(context, frameState, rectangle, 0, 0);
+        var pickedObject = pick(frameState, rectangle, 0, 0);
         expect(pickedObject).not.toBeDefined();
     });
 
@@ -183,8 +182,8 @@ defineSuite([
         rectangle = createRectangle({
             ellipsoid : ellipsoid
         });
-        var commandList = [];
-        rectangle.update(context, frameState, commandList);
+        rectangle.update(frameState);
+        var commandList = frameState.commandList;
         var boundingVolume = commandList[0].boundingVolume;
         expect(boundingVolume).toEqual(BoundingSphere.fromRectangle3D(rectangle.rectangle, ellipsoid));
     });
@@ -197,8 +196,8 @@ defineSuite([
 
         var mode = frameState.mode;
         frameState.mode = SceneMode.COLUMBUS_VIEW;
-        var commandList = [];
-        rectangle.update(context, frameState, commandList);
+        rectangle.update(frameState);
+        var commandList = frameState.commandList;
         var boundingVolume = commandList[0].boundingVolume;
         frameState.mode = mode;
 
@@ -227,8 +226,8 @@ defineSuite([
 
         var mode = frameState.mode;
         frameState.mode = SceneMode.SCENE2D;
-        var commandList = [];
-        rectangle.update(context, frameState, commandList);
+        rectangle.update(frameState);
+        var commandList = frameState.commandList;
         var boundingVolume = commandList[0].boundingVolume;
         frameState.mode = mode;
 
@@ -261,7 +260,7 @@ defineSuite([
         rectangle.ellipsoid = undefined;
 
         expect(function() {
-            rectangle.update(context, frameState);
+            rectangle.update(frameState);
         }).toThrowDeveloperError();
     });
 
@@ -270,7 +269,7 @@ defineSuite([
         rectangle.granularity = -1.0;
 
         expect(function() {
-            rectangle.update(context, frameState);
+            rectangle.update(frameState);
         }).toThrowDeveloperError();
     });
 
@@ -279,7 +278,7 @@ defineSuite([
         rectangle.material = undefined;
 
         expect(function() {
-            render(context, frameState, rectangle);
+            render(frameState, rectangle);
         }).toThrowDeveloperError();
     });
 }, 'WebGL');

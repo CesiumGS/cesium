@@ -20,7 +20,6 @@ defineSuite([
         createFrameState,
         createScene) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
 
@@ -64,17 +63,18 @@ defineSuite([
         var sun = new Sun();
         sun.show = false;
 
-        var frameState = createFrameState(createCamera({
+        var context = scene.context;
+        var frameState = createFrameState(context, createCamera({
             near : 1.0,
             far : 1.0e10
         }));
-        var context = scene.context;
         var us = context.uniformState;
-        us.update(context, frameState);
+        us.update(frameState);
         viewSun(frameState.camera, us);
-        us.update(context, frameState);
+        us.update(frameState);
 
-        var command = sun.update(context, frameState);
+        scene._frameState = frameState;
+        var command = sun.update(scene);
         expect(command).not.toBeDefined();
 
         sun.destroy();
@@ -83,16 +83,16 @@ defineSuite([
     it('does not render in 2D', function() {
         var sun = new Sun();
 
-        var frameState = createFrameState(createCamera({
+        var context = scene.context;
+        var frameState = createFrameState(context, createCamera({
             near : 1.0,
             far : 1.0e10
         }));
         frameState.mode = SceneMode.SCENE2D;
-        var context = scene.context;
         var us = context.uniformState;
-        us.update(context, frameState);
+        us.update(frameState);
         viewSun(frameState.camera, us);
-        us.update(context, frameState);
+        us.update(frameState);
         scene._frameState = frameState;
         var command = sun.update(scene);
         expect(command).not.toBeDefined();
@@ -103,16 +103,16 @@ defineSuite([
     it('does not render without a render pass', function() {
         var sun = new Sun();
 
-        var frameState = createFrameState(createCamera({
+        var context = scene.context;
+        var frameState = createFrameState(context, createCamera({
             near : 1.0,
             far : 1.0e10
         }));
         frameState.passes.render = false;
-        var context = scene.context;
         var us = context.uniformState;
-        us.update(context, frameState);
+        us.update(frameState);
         viewSun(frameState.camera, us);
-        us.update(context, frameState);
+        us.update(frameState);
         scene._frameState = frameState;
         var command = sun.update(scene);
         expect(command).not.toBeDefined();

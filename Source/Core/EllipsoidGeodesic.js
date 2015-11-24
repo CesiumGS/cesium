@@ -224,9 +224,22 @@ define([
 
     defineProperties(EllipsoidGeodesic.prototype, {
         /**
-         * The surface distance between the start and end point
+         * Gets the ellipsoid.
+         * @memberof EllipsoidGeodesic.prototype
+         * @type {Ellipsoid}
+         * @readonly
+         */
+        ellipsoid : {
+            get : function() {
+                return this._ellipsoid;
+            }
+        },
+
+        /**
+         * Gets the surface distance between the start and end point
          * @memberof EllipsoidGeodesic.prototype
          * @type {Number}
+         * @readonly
          */
         surfaceDistance : {
             get : function() {
@@ -241,9 +254,10 @@ define([
         },
 
         /**
-         * The initial planetodetic point on the path.
+         * Gets the initial planetodetic point on the path.
          * @memberof EllipsoidGeodesic.prototype
          * @type {Cartographic}
+         * @readonly
          */
         start : {
             get : function() {
@@ -252,9 +266,10 @@ define([
         },
 
         /**
-         * The final planetodetic point on the path.
+         * Gets the final planetodetic point on the path.
          * @memberof EllipsoidGeodesic.prototype
          * @type {Cartographic}
+         * @readonly
          */
         end : {
             get : function() {
@@ -263,9 +278,10 @@ define([
         },
 
         /**
-         * The heading at the initial point.
+         * Gets the heading at the initial point.
          * @memberof EllipsoidGeodesic.prototype
          * @type {Number}
+         * @readonly
          */
         startHeading : {
             get : function() {
@@ -280,9 +296,10 @@ define([
         },
 
         /**
-         * The heading at the final point.
+         * Gets the heading at the final point.
          * @memberof EllipsoidGeodesic.prototype
          * @type {Number}
+         * @readonly
          */
         endHeading : {
             get : function() {

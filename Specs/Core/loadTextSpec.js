@@ -1,3 +1,4 @@
+/* jshint jasmine: true*/
 /*global defineSuite*/
 defineSuite([
         'Core/loadText',
@@ -6,7 +7,6 @@ defineSuite([
         loadText,
         RequestErrorEvent) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var fakeXHR;
 

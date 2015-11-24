@@ -54,7 +54,6 @@ defineSuite([
         pollToPromise,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
 
     function makePacket(packet) {
         return [{
@@ -226,41 +225,6 @@ defineSuite([
         expect(clock.multiplier).toEqual(JulianDate.secondsDifference(interval.stop, interval.start) / 120.0);
     });
 
-    it('processUrl loads expected data', function() {
-        var dataSource = new CzmlDataSource();
-        dataSource.processUrl(simpleUrl);
-        return pollToPromise(function() {
-            return dataSource.entities.values.length === 10;
-        });
-    });
-
-    it('processUrl loads data on top of existing', function() {
-        var dataSource = new CzmlDataSource();
-        dataSource.processUrl(simpleUrl);
-
-        return pollToPromise(function() {
-            return dataSource.entities.values.length === 10;
-        }).then(function() {
-            dataSource.processUrl(vehicleUrl);
-            return pollToPromise(function() {
-                return dataSource.entities.values.length > 10;
-            });
-        });
-    });
-
-    it('loadUrl replaces data', function() {
-        var dataSource = new CzmlDataSource();
-        dataSource.processUrl(simpleUrl);
-        return pollToPromise(function() {
-            return dataSource.entities.values.length === 10;
-        }).then(function() {
-            dataSource.loadUrl(vehicleUrl);
-            return pollToPromise(function() {
-                return dataSource.entities.values.length === 1;
-            });
-        });
-    });
-
     it('process loads expected data', function() {
         var dataSource = new CzmlDataSource();
         dataSource.process(simple, simpleUrl);
@@ -427,6 +391,7 @@ defineSuite([
             billboard : {
                 image : 'image.png',
                 scale : 1.0,
+                rotation : 1.3,
                 horizontalOrigin : 'CENTER',
                 verticalOrigin : 'CENTER',
                 color : {
@@ -450,6 +415,7 @@ defineSuite([
 
         expect(entity.billboard).toBeDefined();
         expect(entity.billboard.image.getValue(Iso8601.MINIMUM_VALUE)).toEqual(sourceUri + 'image.png');
+        expect(entity.billboard.rotation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(billboardPacket.billboard.rotation);
         expect(entity.billboard.scale.getValue(Iso8601.MINIMUM_VALUE)).toEqual(billboardPacket.billboard.scale);
         expect(entity.billboard.horizontalOrigin.getValue(Iso8601.MINIMUM_VALUE)).toEqual(HorizontalOrigin.CENTER);
         expect(entity.billboard.verticalOrigin.getValue(Iso8601.MINIMUM_VALUE)).toEqual(VerticalOrigin.CENTER);
@@ -581,7 +547,6 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(clockPacket);
-        var entity = dataSource.entities.values[0];
 
         expect(dataSource.clock).toBeDefined();
         expect(dataSource.clock.startTime).toEqual(interval.start);
@@ -1827,6 +1792,21 @@ defineSuite([
         expect(entity.wall.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
     });
 
+    it('Has entity collection with link to data source', function() {
+        var dataSource = new CzmlDataSource();
+        dataSource.load(nameCzml);
+        var entityCollection = dataSource.entities;
+        expect(entityCollection.owner).toEqual(dataSource);
+    });
+
+    it('Has entity with link to entity collection', function() {
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(staticCzml));
+        var entityCollection = dataSource.entities;
+        var entity = entityCollection.values[0];
+        expect(entity.entityCollection).toEqual(entityCollection);
+    });
+
     it('Can use constant reference properties', function() {
         var time = JulianDate.now();
         var packets = [{
@@ -1926,8 +1906,6 @@ defineSuite([
     });
 
     it('Can use interval reference properties for positions', function() {
-        var time = JulianDate.now();
-
         var packets = [{
             id : 'document',
             version : '1.0'
@@ -2016,7 +1994,6 @@ defineSuite([
     });
 
     it('Polyline glow.', function() {
-        var time = JulianDate.now();
         var packet = {
             id : 'polylineGlow',
             polyline : {

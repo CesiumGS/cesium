@@ -153,11 +153,12 @@ define([
      * @param {Number} x The X coordinate of the tile for which to create the terrain data.
      * @param {Number} y The Y coordinate of the tile for which to create the terrain data.
      * @param {Number} level The level of the tile for which to create the terrain data.
-     * @returns {Promise|TerrainMesh} A promise for the terrain mesh, or undefined if too many
+     * @param {Number} [exaggeration=1.0] The scale used to exaggerate the terrain.
+     * @returns {Promise.<TerrainMesh>|undefined} A promise for the terrain mesh, or undefined if too many
      *          asynchronous mesh creations are already in progress and the operation should
      *          be retried later.
      */
-    HeightmapTerrainData.prototype.createMesh = function(tilingScheme, x, y, level) {
+    HeightmapTerrainData.prototype.createMesh = function(tilingScheme, x, y, level, exaggeration) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(tilingScheme)) {
             throw new DeveloperError('tilingScheme is required.');
@@ -176,6 +177,7 @@ define([
         var ellipsoid = tilingScheme.ellipsoid;
         var nativeRectangle = tilingScheme.tileXYToNativeRectangle(x, y, level);
         var rectangle = tilingScheme.tileXYToRectangle(x, y, level);
+        exaggeration = defaultValue(exaggeration, 1.0);
 
         // Compute the center of the tile for RTC rendering.
         var center = ellipsoid.cartographicToCartesian(Rectangle.center(rectangle));
@@ -195,7 +197,8 @@ define([
             relativeToCenter : center,
             ellipsoid : ellipsoid,
             skirtHeight : Math.min(thisLevelMaxError * 4.0, 1000.0),
-            isGeographic : tilingScheme instanceof GeographicTilingScheme
+            isGeographic : tilingScheme instanceof GeographicTilingScheme,
+            exaggeration : exaggeration
         });
 
         if (!defined(verticesPromise)) {
@@ -211,7 +214,9 @@ define([
                     result.minimumHeight,
                     result.maximumHeight,
                     result.boundingSphere3D,
-                    result.occludeePointInScaledSpace);
+                    result.occludeePointInScaledSpace,
+                    6,
+                    result.orientedBoundingBox);
         });
     };
 
@@ -257,7 +262,7 @@ define([
      * @param {Number} descendantX The X coordinate within the tiling scheme of the descendant tile for which we are upsampling.
      * @param {Number} descendantY The Y coordinate within the tiling scheme of the descendant tile for which we are upsampling.
      * @param {Number} descendantLevel The level within the tiling scheme of the descendant tile for which we are upsampling.
-     * @returns {Promise|HeightmapTerrainData} A promise for upsampled heightmap terrain data for the descendant tile,
+     * @returns {Promise.<HeightmapTerrainData>|undefined} A promise for upsampled heightmap terrain data for the descendant tile,
      *          or undefined if too many asynchronous upsample operations are in progress and the request has been
      *          deferred.
      */
