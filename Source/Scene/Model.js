@@ -2014,16 +2014,17 @@ define([
         return attributeLocations;
     }
 
-    function searchForest(forest, jointName) {
+    function searchForest(forest, jointName, nodes) {
         var length = forest.length;
         for (var i = 0; i < length; ++i) {
             var stack = [forest[i]]; // Push root node of tree
 
             while (stack.length > 0) {
-                var n = stack.pop();
+                var id = stack.pop();
+                var n = nodes[id];
 
                 if (n.jointName === jointName) {
-                    return n;
+                    return id;
                 }
 
                 var children = n.children;
@@ -2057,19 +2058,20 @@ define([
 
             // 1. Find nodes with the names in node.skeletons (the node's skeletons)
             // 2. These nodes form the root nodes of the forest to search for each joint in skin.jointNames.  This search uses jointName, not the node's name.
-
+            // 3. Search for the joint name among the gltf node hierarchy instead of the runtime node hierarchy. Child links aren't set up yet for runtime nodes.
             var forest = [];
             var gltfSkeletons = node.skeletons;
             var skeletonsLength = gltfSkeletons.length;
             for (var k = 0; k < skeletonsLength; ++k) {
-                forest.push(runtimeNodes[gltfSkeletons[k]]);
+                forest.push(gltfSkeletons[k]);
             }
 
             var gltfJointNames = skins[node.skin].jointNames;
             var jointNamesLength = gltfJointNames.length;
             for (var i = 0; i < jointNamesLength; ++i) {
                 var jointName = gltfJointNames[i];
-                skinnedNode.joints.push(searchForest(forest, jointName));
+                var jointNode = runtimeNodes[searchForest(forest, jointName, nodes)];
+                skinnedNode.joints.push(jointNode);
             }
         }
     }

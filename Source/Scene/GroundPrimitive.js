@@ -317,9 +317,13 @@ define([
         return scene.context.fragmentDepth;
     };
 
-    GroundPrimitive._maxHeight = 9000.0;
-    GroundPrimitive._minHeight = -100000.0;
-    GroundPrimitive._minOBBHeight = -11500.0;
+    GroundPrimitive._maxHeight = undefined;
+    GroundPrimitive._minHeight = undefined;
+    GroundPrimitive._minOBBHeight = undefined;
+
+    GroundPrimitive._maxTerrainHeight = 9000.0;
+    GroundPrimitive._minTerrainHeight = -100000.0;
+    GroundPrimitive._minOBBTerrainHeight = -11500.0;
 
     function computeMaximumHeight(granularity, ellipsoid) {
         var r = ellipsoid.maximumRadius;
@@ -673,6 +677,13 @@ define([
         var context = frameState.context;
         if (!context.fragmentDepth || !this.show || (!defined(this._primitive) && !defined(this.geometryInstance))) {
             return;
+        }
+
+        if (!defined(GroundPrimitive._maxHeight)) {
+            var exaggeration = frameState.terrainExaggeration;
+            GroundPrimitive._maxHeight = GroundPrimitive._maxTerrainHeight * exaggeration;
+            GroundPrimitive._minHeight = GroundPrimitive._minTerrainHeight * exaggeration;
+            GroundPrimitive._minOBBHeight = GroundPrimitive._minOBBTerrainHeight * exaggeration;
         }
 
         if (!defined(this._primitive)) {

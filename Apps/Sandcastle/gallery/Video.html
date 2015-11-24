@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Use a video element as a material">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+
+    #trailer {
+        position: absolute;
+        bottom: 75px;
+        right: 0;
+        width: 320px;
+        height: 180px;
+    }
+</style>
+
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+
+<video id="trailer" autoplay loop crossorigin controls>
+    <source src="http://cesiumjs.org/videos/Sandcastle/big-buck-bunny_trailer.webm" type="video/webm">
+    <source src="http://cesiumjs.org/videos/Sandcastle/big-buck-bunny_trailer.mp4" type="video/mp4">
+    <source src="http://cesiumjs.org/videos/Sandcastle/big-buck-bunny_trailer.mov" type="video/quicktime">
+    Your browser does not support the <code>video</code> element.
+</video>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    "use strict";
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer', {showRenderLoopErrors : false});
+
+var videoElement = document.getElementById('trailer');
+
+var sphere = viewer.entities.add({
+    position : Cesium.Cartesian3.fromDegrees(-79, 39, 1000),
+    ellipsoid : {
+        radii : new Cesium.Cartesian3(1000, 1000, 1000),
+        material : videoElement
+    }
+});
+
+viewer.trackedEntity = sphere;
+
+var synchronizer;
+Sandcastle.addToolbarButton('Toggle clock synchronization', function() {
+    // By default, the video plays normally and simply shows
+    // whatever frame the video is currently on.
+    // We can synchronize the video with the scene clock
+    // using a VideoSynchronizer.
+
+    if (Cesium.defined(synchronizer)) {
+        synchronizer = synchronizer.destroy();
+        videoElement.playbackRate = 1.0;
+        return;
+    }
+
+    synchronizer = new Cesium.VideoSynchronizer({
+        clock : viewer.clock,
+        element : videoElement
+    });
+});
+
+// Since it's just an image material, we can modify the number
+// of times the video repeats in each direction..
+var isRepeating = true;
+Sandcastle.addToolbarButton('Toggle Image Repeat', function() {
+    isRepeating = !isRepeating;
+});
+
+sphere.ellipsoid.material.repeat = new Cesium.CallbackProperty(function(time, result) {
+    if (!Cesium.defined(result)) {
+        result = new Cesium.Cartesian2();
+    }
+    if (isRepeating) {
+        result.x = 8;
+        result.y = 8;
+    } else {
+        result.x = 1;
+        result.y = 1;
+    }
+    return result;
+}, false);
+
+// Like Image, the video element doesn't have to be part of the DOM or
+// otherwise on the screen to be used as a texture.
+Sandcastle.addToolbarButton('Toggle Video Overlay', function() {
+    if(videoElement.style.display === 'none'){
+        videoElement.style.display = '';
+        return;
+    }
+    videoElement.style.display = 'none';
+});
+
+// Older browsers do not support WebGL video textures,
+// put up a friendly error message indicating such.
+viewer.scene.renderError.addEventListener(function() {
+    if(!videoElement.paused){
+        videoElement.pause();
+    }
+    viewer.cesiumWidget.showErrorPanel('This browser does not support cross-origin WebGL video textures.', '', '');
+});
+
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>
