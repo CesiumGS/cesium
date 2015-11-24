@@ -6,6 +6,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/GeographicTilingScheme',
@@ -16,8 +17,7 @@ define([
         '../Core/TileProviderError',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/when',
-        './ImageryProvider',
-        '../Core/deprecationWarning'
+        './ImageryProvider'
     ], function(
         Cartesian2,
         Cartographic,
@@ -25,6 +25,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
         GeographicTilingScheme,
@@ -35,8 +36,7 @@ define([
         TileProviderError,
         WebMercatorTilingScheme,
         when,
-        ImageryProvider,
-        deprecationWarning
+        ImageryProvider
       ) {
     "use strict";
 
