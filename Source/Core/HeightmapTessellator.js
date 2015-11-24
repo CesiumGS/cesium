@@ -53,17 +53,9 @@ define([
     var matrix4Scratch = new Matrix4();
 
     /**
-     * Fills an array of vertices from a heightmap image.  On return, the vertex data is in the order
-     * [X, Y, Z, H, U, V], where X, Y, and Z represent the Cartesian position of the vertex, H is the
-     * height above the ellipsoid, and U and V are the texture coordinates.
+     * Fills an array of vertices from a heightmap image.
      *
      * @param {Object} options Object with the following properties:
-     * @param {Array|Float32Array} options.vertices The array to use to store computed vertices.
-     *                             If options.skirtHeight is 0.0, the array should have
-     *                             options.width * options.height * 6 elements.  If
-     *                             options.skirtHeight is greater than 0.0, the array should
-     *                             have (options.width + 2) * (options.height * 2) * 6
-     *                             elements.
      * @param {TypedArray} options.heightmap The heightmap to tessellate.
      * @param {Number} options.width The width of the heightmap, in height samples.
      * @param {Number} options.height The height of the heightmap, in height samples.
@@ -105,9 +97,7 @@ define([
      * @example
      * var width = 5;
      * var height = 5;
-     * var vertices = new Float32Array(width * height * 6);
-     * Cesium.HeightmapTessellator.computeVertices({
-     *     vertices : vertices,
+     * var statistics = Cesium.HeightmapTessellator.computeVertices({
      *     heightmap : [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
      *     width : width,
      *     height : height,
@@ -119,6 +109,9 @@ define([
      *         north : 40.0
      *     }
      * });
+     *
+     * var encoding = statistics.encoding;
+     * var position = encoding.decodePosition(statistics.vertices, index * encoding.getStride());
      */
     HeightmapTessellator.computeVertices = function(options) {
         //>>includeStart('debug', pragmas.debug);
@@ -127,9 +120,6 @@ define([
         }
         if (!defined(options.width) || !defined(options.height)) {
             throw new DeveloperError('options.width and options.height are required.');
-        }
-        if (!defined(options.vertices)) {
-            throw new DeveloperError('options.vertices is required.');
         }
         if (!defined(options.nativeRectangle)) {
             throw new DeveloperError('options.nativeRectangle is required.');
@@ -152,7 +142,6 @@ define([
         var piOverTwo = CesiumMath.PI_OVER_TWO;
         var toRadians = CesiumMath.toRadians;
 
-        var vertices = options.vertices;
         var heightmap = options.heightmap;
         var width = options.width;
         var height = options.height;
@@ -224,7 +213,9 @@ define([
         var yMax = Number.NEGATIVE_INFINITY;
         var zMax = Number.NEGATIVE_INFINITY;
 
-        var size = vertices.length / 6;
+        var arrayWidth = width + (skirtHeight > 0.0 ? 2.0 : 0.0);
+        var arrayHeight = height + (skirtHeight > 0.0 ? 2.0 : 0.0);
+        var size = arrayWidth * arrayHeight;
         var positions = new Array(size);
         var heights = new Array(size);
         var uvs = new Array(size);
@@ -353,6 +344,7 @@ define([
         }
 
         var encoding = new TerrainEncoding(xMin, xMax, yMin, yMax, zMin, zMax, hMin, maximumHeight, fromENU, false);
+        var vertices = new Float32Array(size * encoding.getStride());
 
         var bufferIndex = 0;
         for (var j = 0; j < size; ++j) {
@@ -360,6 +352,7 @@ define([
         }
 
         return {
+            vertices : vertices,
             maximumHeight : maximumHeight,
             minimumHeight : minimumHeight,
             encoding : encoding

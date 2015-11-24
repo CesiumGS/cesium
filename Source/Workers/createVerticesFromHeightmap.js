@@ -20,8 +20,6 @@ define([
     "use strict";
 
     function createVerticesFromHeightmap(parameters, transferableObjects) {
-        var numberOfAttributes = 6;
-
         var arrayWidth = parameters.width;
         var arrayHeight = parameters.height;
 
@@ -30,15 +28,16 @@ define([
             arrayHeight += 2;
         }
 
-        var vertices = new Float32Array(arrayWidth * arrayHeight * numberOfAttributes);
-        transferableObjects.push(vertices.buffer);
-
         parameters.ellipsoid = Ellipsoid.clone(parameters.ellipsoid);
         parameters.rectangle = Rectangle.clone(parameters.rectangle);
 
-        parameters.vertices = vertices;
-
         var statistics = HeightmapTessellator.computeVertices(parameters);
+
+        var vertices = statistics.vertices;
+        transferableObjects.push(vertices.buffer);
+
+        var numberOfAttributes = statistics.encoding.getStride();
+
         var boundingSphere3D = BoundingSphere.fromVertices(vertices, parameters.relativeToCenter, numberOfAttributes);
         var orientedBoundingBox;
         if (parameters.rectangle.width < CesiumMath.PI_OVER_TWO + CesiumMath.EPSILON5) {
