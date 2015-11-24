@@ -17,7 +17,7 @@ defineSuite([
         'Scene/NeverTileDiscardPolicy',
         'Scene/QuadtreeTile',
         'Scene/SingleTileImageryProvider',
-        'Scene/TileMapServiceImageryProvider',
+        'Scene/createTileMapServiceImageryProvider',
         'Scene/WebMapServiceImageryProvider',
         'Specs/createContext',
         'Specs/createFrameState',
@@ -40,7 +40,7 @@ defineSuite([
         NeverTileDiscardPolicy,
         QuadtreeTile,
         SingleTileImageryProvider,
-        TileMapServiceImageryProvider,
+        createTileMapServiceImageryProvider,
         WebMapServiceImageryProvider,
         createContext,
         createFrameState,
@@ -239,7 +239,7 @@ defineSuite([
 
     describe('createTileImagerySkeletons', function() {
         it('handles a base layer that does not cover the entire globe', function() {
-            var provider = new TileMapServiceImageryProvider({
+            var provider = createTileMapServiceImageryProvider({
                 url : 'Data/TMS/SmallArea'
             });
 
@@ -288,7 +288,7 @@ defineSuite([
                 url : 'Data/Images/Blue.png'
             });
 
-            var provider = new TileMapServiceImageryProvider({
+            var provider = createTileMapServiceImageryProvider({
                 url : 'Data/TMS/SmallArea'
             });
 
@@ -334,7 +334,7 @@ defineSuite([
                 url : 'Data/Images/Green4x4.png'
             });
 
-            var provider = new TileMapServiceImageryProvider({
+            var provider = createTileMapServiceImageryProvider({
                 url : 'Data/TMS/SmallArea'
             });
 

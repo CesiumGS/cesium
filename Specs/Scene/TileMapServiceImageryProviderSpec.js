@@ -15,7 +15,7 @@ defineSuite([
         'Core/WebMercatorTilingScheme',
         'Scene/Imagery',
         'Scene/ImageryLayer',
-        'Scene/ImageryProvider',
+        'Scene/UrlTemplateImageryProvider',
         'Scene/ImageryState',
         'Specs/pollToPromise',
         'ThirdParty/when'
@@ -35,7 +35,7 @@ defineSuite([
         WebMercatorTilingScheme,
         Imagery,
         ImageryLayer,
-        ImageryProvider,
+        UrlTemplateImageryProvider,
         ImageryState,
         pollToPromise,
         when) {
@@ -46,8 +46,8 @@ defineSuite([
         loadWithXhr.load = loadWithXhr.defaultLoad;
     });
 
-    it('conforms to ImageryProvider interface', function() {
-        expect(TileMapServiceImageryProvider).toConformToInterface(ImageryProvider);
+    it('conforms to UrlTemplateImageryProvider interface', function() {
+        expect(TileMapServiceImageryProvider).toConformToInterface(UrlTemplateImageryProvider);
     });
 
     it('resolves readyPromise', function() {
