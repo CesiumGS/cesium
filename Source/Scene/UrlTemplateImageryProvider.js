@@ -75,7 +75,7 @@ define([
      *     <li><code>{height}</code>: The height of each tile in pixels.</li>
      * </ul>
      * @param {String} [options.pickFeaturesUrl] The URL template to use to pick features.  If this property is not specified,
-     *                 {@see UrlTemplateImageryProvider#pickFeatures} will immediately returned undefined, indicating no
+     *                 {@link UrlTemplateImageryProvider#pickFeatures} will immediately returned undefined, indicating no
      *                 features picked.  The URL template supports all of the keywords supported by the <code>url</code>
      *                 parameter, plus the following:
      * <ul>
@@ -87,7 +87,7 @@ define([
      *     <li><code>{latitudeDegrees}</code>: The latitude of the picked position in degrees.</li>
      *     <li><code>{longitudeProjected}</code>: The longitude of the picked position in the projected coordinates of the tiling scheme.</li>
      *     <li><code>{latitudeProjected}</code>: The latitude of the picked position in the projected coordinates of the tiling scheme.</li>
-     *     <li><code>{format}</code>: The format in which to get feature information, as specified in the {@see GetFeatureInfoFormat}.</li>
+     *     <li><code>{format}</code>: The format in which to get feature information, as specified in the {@link GetFeatureInfoFormat}.</li>
      * </ul>
      * @param {String|String[]} [options.subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
      *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
@@ -113,15 +113,15 @@ define([
      *                  be treated as if their alpha is 1.0 everywhere.  When this property is false, memory usage
      *                  and texture upload time are potentially reduced.
      * @param {GetFeatureInfoFormat[]} [options.getFeatureInfoFormats] The formats in which to get feature information at a
-     *                                 specific location when {@see UrlTemplateImageryProvider#pickFeatures} is invoked.  If this
+     *                                 specific location when {@link UrlTemplateImageryProvider#pickFeatures} is invoked.  If this
      *                                 parameter is not specified, feature picking is disabled.
-     * @param {Boolean} [options.deferReadiness=false] True to defer full construction of this instance until a later call to {@see UrlTemplateImageryProvider#reinitialize}.
-     *                                                 Until that method is called, {@see UrlTemplateImageryProvider#ready} will be false.  When this property is true,
+     * @param {Boolean} [options.deferReadiness=false] True to defer full construction of this instance until a later call to {@link UrlTemplateImageryProvider#reinitialize}.
+     *                                                 Until that method is called, {@link UrlTemplateImageryProvider#ready} will be false.  When this property is true,
      *                                                 even `options.url` is optional.  This mechanism is useful when implementing other imagery providers in terms
      *                                                 of this one.
      * @param {Boolean} [options.hasReadyPromise=false] True to create a deferred object whose promise resolves to true when the provider is ready for use.
-     *                                                  When this property is true, {@see UrlTemplateImageryProvider#readyPromise} will initialize to a deferred object
-     *                                                  that will be resolved upon a later call to {@see UrlTemplateImageryProvider#reinitialize}.
+     *                                                  When this property is true, {@link UrlTemplateImageryProvider#readyPromise} will initialize to a deferred object
+     *                                                  that will be resolved upon a later call to {@link UrlTemplateImageryProvider#reinitialize}.
      *                                                  This property is meant to be used in conjunction with deferReadiness.
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
