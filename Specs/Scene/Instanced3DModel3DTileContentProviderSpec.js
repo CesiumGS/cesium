@@ -9,7 +9,6 @@ defineSuite([
         'Core/loadArrayBuffer',
         'Scene/Cesium3DTileContentState',
         'Scene/Cesium3DTileset',
-        'Specs/createCanvas',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
@@ -22,18 +21,24 @@ defineSuite([
         loadArrayBuffer,
         Cesium3DTileContentState,
         Cesium3DTileset,
-        createCanvas,
         createScene,
         pollToPromise) {
     "use strict";
 
     var scene;
+    var centerLongitude = -1.31995;
+    var centerLatitude = 0.69871;
+
+    var gltfEmbeddedUrl = './Data/Cesium3DTiles/Instanced/InstancedGltfEmbedded/';
+    var gltfExternalUrl = './Data/Cesium3DTiles/Instanced/InstancedGltfExternal/';
+    var withBatchTableUrl = './Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/';
+    var withoutBatchTableUrl = './Data/Cesium3DTiles/Instanced/InstancedWithoutBatchTable/';
 
     beforeAll(function() {
         scene = createScene();
 
         // One instance in each data set is always located in the center, so point the camera there
-        var center = Cartesian3.fromRadians(-1.31995, 0.69871, 5.0);
+        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
         scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 10.0));
     });
 
@@ -98,68 +103,104 @@ defineSuite([
         });
     }
 
-    function loadTileExpectProcessing(url) {
+    function loadTileExpectError(arrayBuffer) {
         var tileset = {};
         var tile = {};
+        var url = '';
         var instancedTile = new Instanced3DModel3DTileContentProvider(tileset, tile, url);
-        return loadArrayBuffer(url).then(function(arrayBuffer) {
+        expect(function() {
             instancedTile.initialize(arrayBuffer);
-            // Expect to stay in the processing state
-            for (var i = 0; i < 10; ++i) {
-                instancedTile.update(tileset, scene.frameState);
-                expect(instancedTile.state).toEqual(Cesium3DTileContentState.PROCESSING);
-            }
-        });
+            instancedTile.update(tileset, scene.frameState);
+        }).toThrowDeveloperError();
     }
 
-    function loadTileExpectError(url) {
-        var tileset = {};
-        var tile = {};
-        var instancedTile = new Instanced3DModel3DTileContentProvider(tileset, tile, url);
-        return loadArrayBuffer(url).then(function(arrayBuffer) {
-            expect(function() {
-                instancedTile.initialize(arrayBuffer);
-                instancedTile.update(tileset, scene.frameState);
-            }).toThrowDeveloperError();
-        });
+    function generateTileBuffer(options) {
+        // Procedurally generate the tile array buffer for testing purposes
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var magic = defaultValue(options.magic, [105, 51, 100, 109]);
+        var version = defaultValue(options.version, 1);
+        var gltfFormat = defaultValue(options.gltfFormat, 1);
+        var instancesLength = defaultValue(options.instancesLength, 1);
+
+        var headerByteLength = 28;
+        var instancesByteLength = instancesLength * 16;
+        var byteLength = headerByteLength + instancesByteLength;
+        var buffer = new ArrayBuffer(byteLength);
+        var view = new DataView(buffer);
+        view.setUint8(0, magic[0]);
+        view.setUint8(1, magic[1]);
+        view.setUint8(2, magic[2]);
+        view.setUint8(3, magic[3]);
+        view.setUint32(4, version, true);          // version
+        view.setUint32(8, byteLength, true);       // byteLength
+        view.setUint32(12, 0, true);               // batchTableByteLength
+        view.setUint32(16, 0, true);               // gltfByteLength
+        view.setUint32(20, gltfFormat, true);      // gltfFormat
+        view.setUint32(24, instancesLength, true); // instancesLength
+
+        var byteOffset = headerByteLength;
+
+        for (var j = 0; j < instancesLength; ++j) {
+            view.setFloat64(byteOffset, centerLongitude, true);
+            view.setFloat64(byteOffset + 8, centerLatitude, true);
+        }
+
+        return buffer;
     }
 
     it('throws with invalid magic', function() {
-        return loadTileExpectError('./Data/Tiles3D/instanced/instancedInvalidMagic/instancedInvalidMagic.i3dm');
+        loadTileExpectError(generateTileBuffer({
+            magic : [120, 120, 120, 120]
+        }));
     });
 
     it('throws with invalid format', function() {
-        return loadTileExpectError('./Data/Tiles3D/instanced/instancedInvalidGltfFormat/instancedInvalidGltfFormat.i3dm');
+        loadTileExpectError(generateTileBuffer({
+            gltfFormat : 2
+        }));
     });
 
     it('throws with invalid version', function() {
-        return loadTileExpectError('./Data/Tiles3D/instanced/instancedInvalidVersion/instancedInvalidVersion.i3dm');
+        loadTileExpectError(generateTileBuffer({
+            version: 2
+        }));
     });
 
     it('throws with empty gltf', function() {
-        // Expect to throw DeveloperError due to invalid glTF magic
-        return loadTileExpectError('./Data/Tiles3D/instanced/instancedEmptyGltf/instancedEmptyGltf.i3dm');
+        // Expect to throw DeveloperError in Model due to invalid gltf magic
+        loadTileExpectError(generateTileBuffer());
     });
 
     it('loads with no instances, but does not become ready', function() {
+        var arrayBuffer = generateTileBuffer({
+            instancesLength : 0
+        });
+        var tileset = {};
+        var tile = {};
+        var url = '';
+        var instancedTile = new Instanced3DModel3DTileContentProvider(tileset, tile, url);
+        instancedTile.initialize(arrayBuffer);
         // Expect the tile to never reach the ready state due to returning early in ModelInstanceCollection
-        return loadTileExpectProcessing('./Data/Tiles3D/instanced/instancedNoInstances/instancedNoInstances.i3dm');
+        for (var i = 0; i < 10; ++i) {
+            instancedTile.update(tileset, scene.frameState);
+            expect(instancedTile.state).toEqual(Cesium3DTileContentState.PROCESSING);
+        }
     });
 
     it('renders with embedded gltf', function() {
-        return loadTileset('./Data/Tiles3D/instanced/instancedGltfEmbedded/').then(verifyRenderTileset);
+        return loadTileset(gltfEmbeddedUrl).then(verifyRenderTileset);
     });
 
     it('renders with external gltf', function() {
-        return loadTileset('./Data/Tiles3D/instanced/instancedGltfExternal/').then(verifyRenderTileset);
+        return loadTileset(gltfExternalUrl).then(verifyRenderTileset);
     });
 
     it('renders with batch table', function() {
-        return loadTileset('./Data/Tiles3D/instanced/instancedWithBatchTable/').then(verifyRenderTileset);
+        return loadTileset(withBatchTableUrl).then(verifyRenderTileset);
     });
 
     it('renders without batch table', function() {
-        return loadTileset('./Data/Tiles3D/instanced/instancedWithoutBatchTable/').then(verifyRenderTileset);
+        return loadTileset(withoutBatchTableUrl).then(verifyRenderTileset);
     });
 
     it('renders when instancing is disabled', function() {
@@ -167,10 +208,25 @@ defineSuite([
         var instancedArrays = scene.context._instancedArrays;
         scene.context._instancedArrays = undefined;
 
-        return loadTileset('./Data/Tiles3D/instanced/instancedWithoutBatchTable/').then(function(tileset) {
+        return loadTileset(gltfEmbeddedUrl).then(function(tileset) {
             verifyRenderTileset(tileset);
             // Re-enable extension
             scene.context._instancedArrays = instancedArrays;
+        });
+    });
+
+    it('throws when calling getModel with invalid index', function() {
+        return loadTileset(gltfEmbeddedUrl).then(function(tileset) {
+            var content = tileset._root.content;
+            expect(function(){
+                content.getModel(-1);
+            }).toThrowDeveloperError();
+            expect(function(){
+                content.getModel(1000);
+            }).toThrowDeveloperError();
+            expect(function(){
+                content.getModel();
+            }).toThrowDeveloperError();
         });
     });
 });
