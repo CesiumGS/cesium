@@ -121,7 +121,8 @@ define([
 
         this.waterMaskTranslationAndScale = new Cartesian4(0.0, 0.0, 1.0, 1.0);
 
-        this.terrainData = undefined;
+        //this.terrainData = undefined;
+        this._terrainData = undefined;
         this.center = new Cartesian3();
         this.vertexArray = undefined;
         this.minimumHeight = 0.0;
@@ -141,6 +142,15 @@ define([
     };
 
     defineProperties(GlobeSurfaceTile.prototype, {
+        terrainData : {
+            get : function() {
+                return this._terrainData;
+            },
+            set : function(value) {
+                this._terrainData = value;
+            }
+        },
+
         /**
          * Gets a value indicating whether or not this tile is eligible to be unloaded.
          * Typically, a tile is ineligible to be unloaded while an asynchronous operation,
@@ -461,6 +471,7 @@ define([
 
                 // No further loading or upsampling is necessary.
                 surfaceTile.pickTerrain = defaultValue(surfaceTile.loadedTerrain, surfaceTile.upsampledTerrain);
+                surfaceTile.pickTerrain.data = undefined;
                 surfaceTile.loadedTerrain = undefined;
                 surfaceTile.upsampledTerrain = undefined;
             } else if (loaded.state === TerrainState.FAILED) {
@@ -497,6 +508,7 @@ define([
 
                 // No further upsampling is necessary.  We need to continue loading, though.
                 surfaceTile.pickTerrain = surfaceTile.upsampledTerrain;
+                surfaceTile.pickTerrain.data = undefined;
                 surfaceTile.upsampledTerrain = undefined;
             } else if (upsampled.state === TerrainState.FAILED) {
                 // Upsampling failed for some reason.  This is pretty much a catastrophic failure,
