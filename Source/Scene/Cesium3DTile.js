@@ -126,14 +126,14 @@ define([
          *
          * @readonly
          */
-        this.hasSubtree = false;
+        this.hasTilesetContent = false;
 
         /**
          * DOC_TBA
          *
          * @readonly
          */
-        this.subtreeLoading = false;
+        this.tilesetLoading = false;
 
         /**
          * DOC_TBA
@@ -151,7 +151,7 @@ define([
             var contentFactory = Cesium3DTileContentProviderFactory[type];
 
             if (type === 'json') {
-                this.hasSubtree = true;
+                this.hasTilesetContent = true;
                 content = new Empty3DTileContentProvider();
             } else if (defined(contentFactory)) {
                 content = contentFactory(tileset, this, url);
