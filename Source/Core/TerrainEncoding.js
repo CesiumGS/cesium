@@ -23,8 +23,11 @@ define([
     "use strict";
 
     var cartesian3Scratch = new Cartesian3();
+    var cartesian3Scratch2 = new Cartesian3();
     var cartesian2Scratch = new Cartesian2();
     var matrix4Scratch = new Matrix4();
+    var matrix4Scratch2 = new Matrix4();
+
     var SHIFT_LEFT_12 = Math.pow(2.0, 12.0);
 
     /**
@@ -41,7 +44,7 @@ define([
      * @param {Number} maximumZ The maximum distance in the z direction.
      * @param {Number} minimumHeight The minimum height.
      * @param {Number} maximumHeight The maximum height.
-     * @param {Matrix3} fromENU The east-north-up to fixed frame matrix at the center of the terrain mesh.
+     * @param {Matrix4} fromENU The east-north-up to fixed frame matrix at the center of the terrain mesh.
      * @param {Boolean} hasVertexNormals If the mesh has vertex normals.
      *
      * @private
@@ -75,7 +78,7 @@ define([
             translation.z = -minimumZ;
             Matrix4.multiply(Matrix4.fromTranslation(translation, matrix4Scratch), toENU, toENU);
 
-            var scale = cartesian3Scratch;
+            var scale = cartesian3Scratch2;
             scale.x = 1.0 / xDim;
             scale.y = 1.0 / yDim;
             scale.z = 1.0 / zDim;
@@ -86,18 +89,18 @@ define([
 
             fromENU = Matrix4.clone(fromENU, new Matrix4());
 
-            scale = new Cartesian3();
             scale.x = xDim;
             scale.y = yDim;
             scale.z = zDim;
-            translation = new Cartesian3();
             translation.x = minimumX;
             translation.y = minimumY;
             translation.z = minimumZ;
 
-            var st = Matrix4.multiply(Matrix4.fromTranslation(translation), Matrix4.fromScale(scale), new Matrix4());
-            Matrix4.multiply(fromENU, st, fromENU);
+            var translationMatrix = Matrix4.fromTranslation(translation, matrix4Scratch);
+            var scaleMatrix =  Matrix4.fromScale(scale, matrix4Scratch2);
+            var st = Matrix4.multiply(translationMatrix, scaleMatrix,matrix4Scratch);
 
+            Matrix4.multiply(fromENU, st, fromENU);
             Matrix4.multiply(matrix, st, matrix);
         }
 
@@ -107,17 +110,40 @@ define([
          */
         this.compression = compression;
 
+        /**
+         * The minimum height of the tile including the skirts.
+         * @type {Number}
+         */
         this.minimumHeight = minimumHeight;
+
+        /**
+         * The maximum height of the tile.
+         * @type {Number}
+         */
         this.maximumHeight = maximumHeight;
 
+        /**
+         * The center of the tile.
+         * @type {Cartesian3}
+         */
         this.center = center;
 
+        /**
+         * A matrix that takes a vertex from the tile, transforms it to east-north-up at the center and scales
+         * it so each component is in the [0, 1] range.
+         * @type {Matrix4}
+         */
         this.toScaledENU = toENU;
+
+        /**
+         * A matrix that restores a vertex transformed with toScaledENU back to the earth fixed reference frame
+         * @type {Matrix4}
+         */
         this.fromScaledENU = fromENU;
 
         /**
-         * The matrix used to decompress the terrain vertices.
-         * @type {Matrix3}
+         * The matrix used to decompress the terrain vertices in the shader for RTE rendering.
+         * @type {Matrix4}
          */
         this.matrix = matrix;
 
