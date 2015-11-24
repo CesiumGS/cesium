@@ -366,9 +366,9 @@ define([
                     var result = parseBinaryGltfHeader(gltf);
 
                     // CESIUM_binary_glTF is from the beginning of the file but
-                    //  KHR_binary_glTF is from the beginning of the binary section
+                    // KHR_binary_glTF is from the beginning of the binary section
                     if (result.binaryOffset !== 0) {
-                        gltf = new Uint8Array(gltf.buffer, result.binaryOffset);
+                        gltf = gltf.subarray(result.binaryOffset);
                     }
 
                     cachedGltf = new CachedGltf({
@@ -556,8 +556,9 @@ define([
         this._loadError = undefined;
         this._loadResources = undefined;
 
-        this._perNodeShowDirty = false;             // true when the Cesium API was used to change a node's show property
+        this._perNodeShowDirty = false;            // true when the Cesium API was used to change a node's show property
         this._cesiumAnimationsDirty = false;       // true when the Cesium API, not a glTF animation, changed a node transform
+        this._dirty = false;                       // true when the model was transformed this frame
         this._maxDirtyNumber = 0;                  // Used in place of a dirty boolean flag to avoid an extra graph traversal
 
         this._runtime = {
@@ -823,6 +824,22 @@ define([
             get : function() {
                 return defined(this._loadResources) ? this._loadResources.pendingTextureLoads : 0;
             }
+        },
+
+        /**
+         * Returns true if the model was transformed this frame
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @private
+         */
+        dirty : {
+            get : function() {
+                return this._dirty;
+            }
         }
     });
 
@@ -1001,7 +1018,7 @@ define([
                     // CESIUM_binary_glTF is from the beginning of the file but
                     //  KHR_binary_glTF is from the beginning of the binary section
                     if (result.binaryOffset !== 0) {
-                        array = new Uint8Array(arrayBuffer, result.binaryOffset);
+                        array = array.subarray(result.binaryOffset);
                     }
                     cachedGltf.makeReady(result.glTF, array);
                 } else {
@@ -3458,6 +3475,7 @@ define([
         }
 
         if (this._state === ModelState.FAILED) {
+            this._readyPromise.reject(this._loadError);
             throw this._loadError;
         }
 
@@ -3519,6 +3537,7 @@ define([
         if ((show && this._state === ModelState.LOADED) || justLoaded) {
             var animated = this.activeAnimations.update(frameState) || this._cesiumAnimationsDirty;
             this._cesiumAnimationsDirty = false;
+            this._dirty = false;
 
             // Model's model matrix needs to be updated
             var modelTransformChanged = !Matrix4.equals(this._modelMatrix, this.modelMatrix) ||
@@ -3541,6 +3560,7 @@ define([
             // Update modelMatrix throughout the graph as needed
             if (animated || modelTransformChanged || justLoaded) {
                 updateNodeHierarchyModelMatrix(this, modelTransformChanged, justLoaded);
+                this._dirty = true;
 
                 if (animated || justLoaded) {
                     // Apply skins if animation changed any node transforms
