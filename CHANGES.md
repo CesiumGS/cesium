@@ -32,6 +32,8 @@ Change Log
 * Added 'Video' Sandcastle showcase to demonstrate video materials.
 * Added `createOpenStreetMapImageryProvider` function to replace the `OpenStreetMapImageryProvider` class. This function returns a constructed `UrlTemplateImageryProvider`.
 * Fixed an issue with tile selection when below the surface of the ellipsoid. [#3170](https://github.com/AnalyticalGraphicsInc/cesium/issues/3170)
+* Fixed an issue with loading skeletons for skinned glTF models. [#3224](https://github.com/AnalyticalGraphicsInc/cesium/pull/3224)
+* Cesium now honors `window.devicePixelRatio` by default, which greatly improving performance on mobile devices and high DPI displays by rendering at the browser-recommended resolution. This also reduces bandwidth usage in these cases.  To use the previous behavior, set `Viewer.resolutionScale` to `window.devicePixelRatio`.
 
 ### 1.15 - 2015-11-02
 
