@@ -47,7 +47,9 @@ defineSuite([
     });
 
     it('return a UrlTemplateImageryProvider', function() {
-        var provider = createOpenStreetMapImageryProvider();
+        var provider = createTileMapServiceImageryProvider({
+          url: 'made/up/tms/server/'
+        });
         expect(provider).toBeInstanceOf(UrlTemplateImageryProvider);
     });
 
@@ -191,7 +193,7 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            expect(provider.url).toEqual('made/up/tms/server/');
+            expect(provider.url).toEqual('made/up/tms/server/{z}/{x}/{reverseY}.png');
             expect(provider.tileWidth).toEqual(256);
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toBeUndefined();
