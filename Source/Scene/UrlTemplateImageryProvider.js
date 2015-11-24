@@ -159,7 +159,7 @@ define([
     var UrlTemplateImageryProvider = function UrlTemplateImageryProvider(options) {
         this._errorEvent = new Event();
         if (options.hasReadyPromise) {
-          this._readyPromise = when.defer();
+            this._readyPromise = when.defer();
         }
         this.reinitialize(options);
     };
@@ -498,9 +498,9 @@ define([
             this._urlParts = urlTemplateToParts(this._url, tags);
             this._pickFeaturesUrlParts = urlTemplateToParts(this._pickFeaturesUrl, pickFeaturesTags);
             if (defined(this._readyPromise)) {
-              this._readyPromise.resolve(true);
+                this._readyPromise.resolve(true);
             } else {
-              this._readyPromise = when.resolve(true);
+                this._readyPromise = when.resolve(true);
             }
         }
     };
