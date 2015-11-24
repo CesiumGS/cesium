@@ -15,7 +15,7 @@ defineSuite([
         'Core/WebMercatorTilingScheme',
         'Scene/Imagery',
         'Scene/ImageryLayer',
-        'Scene/UrlTemplateImageryProvider',
+        'Scene/ImageryProvider',
         'Scene/ImageryState',
         'Specs/pollToPromise',
         'ThirdParty/when'
@@ -35,7 +35,7 @@ defineSuite([
         WebMercatorTilingScheme,
         Imagery,
         ImageryLayer,
-        UrlTemplateImageryProvider,
+        ImageryProvider,
         ImageryState,
         pollToPromise,
         when) {
@@ -46,8 +46,8 @@ defineSuite([
         loadWithXhr.load = loadWithXhr.defaultLoad;
     });
 
-    it('conforms to UrlTemplateImageryProvider interface', function() {
-        expect(TileMapServiceImageryProvider).toConformToInterface(UrlTemplateImageryProvider);
+    it('conforms to ImageryProvider interface', function() {
+        expect(TileMapServiceImageryProvider).toConformToInterface(ImageryProvider);
     });
 
     it('resolves readyPromise', function() {
@@ -187,10 +187,11 @@ defineSuite([
             url : 'made/up/tms/server/'
         });
 
+        expect(provider.url).toEqual('made/up/tms/server/');
+
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            expect(provider.url).toEqual('made/up/tms/server/');
             expect(provider.tileWidth).toEqual(256);
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toBeUndefined();
@@ -291,10 +292,7 @@ defineSuite([
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toBeUndefined();
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.rectangle.west).toEqualEpsilon(rectangle.west, CesiumMath.EPSILON14);
-            expect(provider.rectangle.east).toEqualEpsilon(rectangle.east, CesiumMath.EPSILON14);
-            expect(provider.rectangle.north).toEqualEpsilon(rectangle.north, CesiumMath.EPSILON14);
-            expect(provider.rectangle.south).toEqualEpsilon(rectangle.south, CesiumMath.EPSILON14);
+            expect(provider.rectangle).toEqual(rectangle);
             expect(provider.tileDiscardPolicy).toBeUndefined();
 
             spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
