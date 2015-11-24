@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './Cartesian2',
         './Cartesian3',
         './defaultValue',
         './defined',
@@ -7,9 +8,12 @@ define([
         './Ellipsoid',
         './freezeObject',
         './Math',
+        './Matrix4',
         './Rectangle',
-        './TerrainEncoding'
+        './TerrainEncoding',
+        './Transforms'
     ], function(
+        Cartesian2,
         Cartesian3,
         defaultValue,
         defined,
@@ -17,8 +21,10 @@ define([
         Ellipsoid,
         freezeObject,
         CesiumMath,
+        Matrix4,
         Rectangle,
-        TerrainEncoding) {
+        TerrainEncoding,
+        Transforms) {
     "use strict";
 
     /**
@@ -42,6 +48,9 @@ define([
         elementMultiplier : 256.0,
         isBigEndian : false
     });
+
+    var cartesian3Scratch = new Cartesian3();
+    var matrix4Scratch = new Matrix4();
 
     /**
      * Fills an array of vertices from a heightmap image.  On return, the vertex data is in the order
@@ -200,10 +209,25 @@ define([
         var radiiSquaredY = radiiSquared.y;
         var radiiSquaredZ = radiiSquared.z;
 
-        var vertexArrayIndex = 0;
-
         var minimumHeight = 65536.0;
         var maximumHeight = -65536.0;
+
+        var fromENU = Transforms.eastNorthUpToFixedFrame(relativeToCenter, ellipsoid);
+        var toENU = Matrix4.inverseTransformation(fromENU, matrix4Scratch);
+
+        var xMin = Number.POSITIVE_INFINITY;
+        var yMin = Number.POSITIVE_INFINITY;
+        var zMin = Number.POSITIVE_INFINITY;
+        var hMin = Number.POSITIVE_INFINITY;
+
+        var xMax = Number.NEGATIVE_INFINITY;
+        var yMax = Number.NEGATIVE_INFINITY;
+        var zMax = Number.NEGATIVE_INFINITY;
+
+        var size = vertices.length / 6;
+        var positions = new Array(size);
+        var heights = new Array(size);
+        var uvs = new Array(size);
 
         var startRow = 0;
         var endRow = height;
@@ -216,6 +240,8 @@ define([
             --startCol;
             ++endCol;
         }
+
+        var index = 0;
 
         for (var rowIndex = startRow; rowIndex < endRow; ++rowIndex) {
             var row = rowIndex;
@@ -299,23 +325,44 @@ define([
                 var rSurfaceY = kY * oneOverGamma;
                 var rSurfaceZ = kZ * oneOverGamma;
 
-                vertices[vertexArrayIndex++] = rSurfaceX + nX * heightSample - relativeToCenter.x;
-                vertices[vertexArrayIndex++] = rSurfaceY + nY * heightSample - relativeToCenter.y;
-                vertices[vertexArrayIndex++] = rSurfaceZ + nZ * heightSample - relativeToCenter.z;
+                var position = new Cartesian3();
+                position.x = rSurfaceX + nX * heightSample;
+                position.y = rSurfaceY + nY * heightSample;
+                position.z = rSurfaceZ + nZ * heightSample;
 
-                vertices[vertexArrayIndex++] = heightSample;
+                positions[index] = position;
+                heights[index] = heightSample;
 
                 var u = (longitude - geographicWest) / (geographicEast - geographicWest);
+                uvs[index] = new Cartesian2(u, v);
 
-                vertices[vertexArrayIndex++] = u;
-                vertices[vertexArrayIndex++] = v;
+                index++;
+
+                Matrix4.multiplyByPoint(toENU, position, cartesian3Scratch);
+
+                xMin = Math.min(xMin, cartesian3Scratch.x);
+                yMin = Math.min(yMin, cartesian3Scratch.y);
+                zMin = Math.min(zMin, cartesian3Scratch.z);
+
+                xMax = Math.max(xMax, cartesian3Scratch.x);
+                yMax = Math.max(yMax, cartesian3Scratch.y);
+                zMax = Math.max(zMax, cartesian3Scratch.z);
+
+                hMin = Math.min(hMin, heightSample);
             }
+        }
+
+        var encoding = new TerrainEncoding(xMin, xMax, yMin, yMax, zMin, zMax, hMin, maximumHeight, fromENU, false);
+
+        var bufferIndex = 0;
+        for (var j = 0; j < size; ++j) {
+            bufferIndex = encoding.encode(vertices, bufferIndex, positions[j], uvs[j], heights[j]);
         }
 
         return {
             maximumHeight : maximumHeight,
             minimumHeight : minimumHeight,
-            encoding : new TerrainEncoding()
+            encoding : encoding
         };
     };
 
