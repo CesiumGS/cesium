@@ -24,6 +24,7 @@ define([
 
     var cartesian3Scratch = new Cartesian3();
     var cartesian3Scratch2 = new Cartesian3();
+    var cartesian3DimScratch = new Cartesian3();
     var cartesian2Scratch = new Cartesian2();
     var matrix4Scratch = new Matrix4();
     var matrix4Scratch2 = new Matrix4();
@@ -36,12 +37,7 @@ define([
      * @alias TerrainEncoding
      * @constructor
      *
-     * @param {Number} minimumX The minimum distance in the x direction.
-     * @param {Number} maximumX The maximum distance in the x direction.
-     * @param {Number} minimumY The minimum distance in the y direction.
-     * @param {Number} maximumY The maximum distance in the y direction.
-     * @param {Number} minimumZ The minimum distance in the z direction.
-     * @param {Number} maximumZ The maximum distance in the z direction.
+     * @param {AxisAlignedBoundingBox} axisAlignedBoundingBox The bounds of the tile in the east-north-up coordinates at the tiles center.
      * @param {Number} minimumHeight The minimum height.
      * @param {Number} maximumHeight The maximum height.
      * @param {Matrix4} fromENU The east-north-up to fixed frame matrix at the center of the terrain mesh.
@@ -49,18 +45,19 @@ define([
      *
      * @private
      */
-    var TerrainEncoding = function(minimumX, maximumX, minimumY, maximumY, minimumZ, maximumZ, minimumHeight, maximumHeight, fromENU, hasVertexNormals) {
+    var TerrainEncoding = function(axisAlignedBoundingBox, minimumHeight, maximumHeight, fromENU, hasVertexNormals) {
         var compression;
         var center;
         var toENU;
         var matrix;
 
-        if (defined(minimumX) && defined(maximumX) && defined(minimumY) && defined(maximumY) && defined(minimumZ) && defined(maximumZ) && defined(minimumHeight) && defined(maximumHeight) && defined(fromENU)) {
-            var xDim = maximumX - minimumX;
-            var yDim = maximumY - minimumY;
-            var zDim = maximumZ - minimumZ;
+        if (defined(axisAlignedBoundingBox) && defined(minimumHeight) && defined(maximumHeight) && defined(fromENU)) {
+            var minimum = axisAlignedBoundingBox.minimum;
+            var maximum = axisAlignedBoundingBox.maximum;
+
+            var dimensions = Cartesian3.subtract(maximum, minimum, cartesian3DimScratch);
             var hDim = maximumHeight - minimumHeight;
-            var maxDim = Math.max(xDim, yDim, zDim, hDim);
+            var maxDim = Math.max(Cartesian3.maximumComponent(dimensions), hDim);
 
             if (maxDim < SHIFT_LEFT_12 - 1.0) {
                 compression = TerrainCompression.BITS12;
@@ -68,20 +65,16 @@ define([
                 compression = TerrainCompression.NONE;
             }
 
-            center = Matrix4.getTranslation(fromENU, new Cartesian3());
-
+            center = axisAlignedBoundingBox.center;
             toENU = Matrix4.inverseTransformation(fromENU, new Matrix4());
 
-            var translation = cartesian3Scratch;
-            translation.x = -minimumX;
-            translation.y = -minimumY;
-            translation.z = -minimumZ;
+            var translation = Cartesian3.negate(minimum, cartesian3Scratch);
             Matrix4.multiply(Matrix4.fromTranslation(translation, matrix4Scratch), toENU, toENU);
 
-            var scale = cartesian3Scratch2;
-            scale.x = 1.0 / xDim;
-            scale.y = 1.0 / yDim;
-            scale.z = 1.0 / zDim;
+            var scale = cartesian3Scratch;
+            scale.x = 1.0 / dimensions.x;
+            scale.y = 1.0 / dimensions.y;
+            scale.z = 1.0 / dimensions.z;
             Matrix4.multiply(Matrix4.fromScale(scale, matrix4Scratch), toENU, toENU);
 
             matrix = Matrix4.clone(fromENU);
@@ -89,15 +82,8 @@ define([
 
             fromENU = Matrix4.clone(fromENU, new Matrix4());
 
-            scale.x = xDim;
-            scale.y = yDim;
-            scale.z = zDim;
-            translation.x = minimumX;
-            translation.y = minimumY;
-            translation.z = minimumZ;
-
-            var translationMatrix = Matrix4.fromTranslation(translation, matrix4Scratch);
-            var scaleMatrix =  Matrix4.fromScale(scale, matrix4Scratch2);
+            var translationMatrix = Matrix4.fromTranslation(minimum, matrix4Scratch);
+            var scaleMatrix =  Matrix4.fromScale(dimensions, matrix4Scratch2);
             var st = Matrix4.multiply(translationMatrix, scaleMatrix,matrix4Scratch);
 
             Matrix4.multiply(fromENU, st, fromENU);

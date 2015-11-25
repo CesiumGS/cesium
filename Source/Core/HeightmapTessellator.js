@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './AxisAlignedBoundingBox',
         './Cartesian2',
         './Cartesian3',
         './defaultValue',
@@ -13,6 +14,7 @@ define([
         './TerrainEncoding',
         './Transforms'
     ], function(
+        AxisAlignedBoundingBox,
         Cartesian2,
         Cartesian3,
         defaultValue,
@@ -51,6 +53,8 @@ define([
 
     var cartesian3Scratch = new Cartesian3();
     var matrix4Scratch = new Matrix4();
+    var minimumScratch = new Cartesian3();
+    var maximumScratch = new Cartesian3();
 
     /**
      * Fills an array of vertices from a heightmap image.
@@ -204,14 +208,17 @@ define([
         var fromENU = Transforms.eastNorthUpToFixedFrame(relativeToCenter, ellipsoid);
         var toENU = Matrix4.inverseTransformation(fromENU, matrix4Scratch);
 
-        var xMin = Number.POSITIVE_INFINITY;
-        var yMin = Number.POSITIVE_INFINITY;
-        var zMin = Number.POSITIVE_INFINITY;
-        var hMin = Number.POSITIVE_INFINITY;
+        var minimum = minimumScratch;
+        minimum.x = Number.POSITIVE_INFINITY;
+        minimum.y = Number.POSITIVE_INFINITY;
+        minimum.z = Number.POSITIVE_INFINITY;
 
-        var xMax = Number.NEGATIVE_INFINITY;
-        var yMax = Number.NEGATIVE_INFINITY;
-        var zMax = Number.NEGATIVE_INFINITY;
+        var maximum = maximumScratch;
+        maximum.x = Number.NEGATIVE_INFINITY;
+        maximum.y = Number.NEGATIVE_INFINITY;
+        maximum.z = Number.NEGATIVE_INFINITY;
+
+        var hMin = Number.POSITIVE_INFINITY;
 
         var arrayWidth = width + (skirtHeight > 0.0 ? 2.0 : 0.0);
         var arrayHeight = height + (skirtHeight > 0.0 ? 2.0 : 0.0);
@@ -256,6 +263,7 @@ define([
             var kZ = radiiSquaredZ * nZ;
 
             var v = (latitude - geographicSouth) / (geographicNorth - geographicSouth);
+            v = CesiumMath.clamp(v, 0.0, 1.0);
 
             for (var colIndex = startCol; colIndex < endCol; ++colIndex) {
                 var col = colIndex;
@@ -325,25 +333,21 @@ define([
                 heights[index] = heightSample;
 
                 var u = (longitude - geographicWest) / (geographicEast - geographicWest);
+                u = CesiumMath.clamp(u, 0.0, 1.0);
                 uvs[index] = new Cartesian2(u, v);
 
                 index++;
 
                 Matrix4.multiplyByPoint(toENU, position, cartesian3Scratch);
 
-                xMin = Math.min(xMin, cartesian3Scratch.x);
-                yMin = Math.min(yMin, cartesian3Scratch.y);
-                zMin = Math.min(zMin, cartesian3Scratch.z);
-
-                xMax = Math.max(xMax, cartesian3Scratch.x);
-                yMax = Math.max(yMax, cartesian3Scratch.y);
-                zMax = Math.max(zMax, cartesian3Scratch.z);
-
+                Cartesian3.minimumByComponent(cartesian3Scratch, minimum, minimum);
+                Cartesian3.maximumByComponent(cartesian3Scratch, maximum, maximum);
                 hMin = Math.min(hMin, heightSample);
             }
         }
 
-        var encoding = new TerrainEncoding(xMin, xMax, yMin, yMax, zMin, zMax, hMin, maximumHeight, fromENU, false);
+        var aaBox = new AxisAlignedBoundingBox(minimum, maximum, relativeToCenter);
+        var encoding = new TerrainEncoding(aaBox, hMin, maximumHeight, fromENU, false);
         var vertices = new Float32Array(size * encoding.getStride());
 
         var bufferIndex = 0;

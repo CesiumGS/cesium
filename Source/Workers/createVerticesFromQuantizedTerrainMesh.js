@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/AttributeCompression',
+        '../Core/AxisAlignedBoundingBox',
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -19,6 +20,7 @@ define([
         './createTaskProcessorWorker'
     ], function(
         AttributeCompression,
+        AxisAlignedBoundingBox,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -40,6 +42,8 @@ define([
     var maxShort = 32767;
 
     var cartesian3Scratch = new Cartesian3();
+    var scratchMinimum = new Cartesian3();
+    var scratchMaximum = new Cartesian3();
     var cartographicScratch = new Cartographic();
     var toPack = new Cartesian2();
     var scratchNormal = new Cartesian3();
@@ -78,13 +82,15 @@ define([
         var heights = new Array(quantizedVertexCount);
         var positions = new Array(quantizedVertexCount);
 
-        var xMin = Number.POSITIVE_INFINITY;
-        var yMin = Number.POSITIVE_INFINITY;
-        var zMin = Number.POSITIVE_INFINITY;
+        var minimum = scratchMinimum;
+        minimum.x = Number.POSITIVE_INFINITY;
+        minimum.y = Number.POSITIVE_INFINITY;
+        minimum.z = Number.POSITIVE_INFINITY;
 
-        var xMax = Number.NEGATIVE_INFINITY;
-        var yMax = Number.NEGATIVE_INFINITY;
-        var zMax = Number.NEGATIVE_INFINITY;
+        var maximum = scratchMaximum;
+        maximum.x = Number.NEGATIVE_INFINITY;
+        maximum.y = Number.NEGATIVE_INFINITY;
+        maximum.z = Number.NEGATIVE_INFINITY;
 
         for (var i = 0; i < quantizedVertexCount; ++i) {
             var u = uBuffer[i] / maxShort;
@@ -103,13 +109,8 @@ define([
 
             Matrix4.multiplyByPoint(toENU, position, cartesian3Scratch);
 
-            xMin = Math.min(xMin, cartesian3Scratch.x);
-            yMin = Math.min(yMin, cartesian3Scratch.y);
-            zMin = Math.min(zMin, cartesian3Scratch.z);
-
-            xMax = Math.max(xMax, cartesian3Scratch.x);
-            yMax = Math.max(yMax, cartesian3Scratch.y);
-            zMax = Math.max(zMax, cartesian3Scratch.z);
+            Cartesian3.minimumByComponent(cartesian3Scratch, minimum, minimum);
+            Cartesian3.maximumByComponent(cartesian3Scratch, maximum, maximum);
         }
 
         var hMin = minimumHeight;
@@ -118,7 +119,8 @@ define([
         hMin = Math.min(hMin, findMinSkirtHeight(parameters.eastIndices, parameters.eastSkirtHeight, heights));
         hMin = Math.min(hMin, findMinSkirtHeight(parameters.northIndices, parameters.northSkirtHeight, heights));
         
-        var encoding = new TerrainEncoding(xMin, xMax, yMin, yMax, zMin, zMax, hMin, maximumHeight, fromENU, hasVertexNormals);
+        var aaBox = new AxisAlignedBoundingBox(minimum, maximum, center);
+        var encoding = new TerrainEncoding(aaBox, hMin, maximumHeight, fromENU, hasVertexNormals);
         var vertexStride = encoding.getStride();
         var size = quantizedVertexCount * vertexStride + edgeVertexCount * vertexStride;
         var vertexBuffer = new Float32Array(size);
