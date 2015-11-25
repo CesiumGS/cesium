@@ -23,7 +23,6 @@ define([
     "use strict";
 
     var cartesian3Scratch = new Cartesian3();
-    var cartesian3Scratch2 = new Cartesian3();
     var cartesian3DimScratch = new Cartesian3();
     var cartesian2Scratch = new Cartesian2();
     var matrix4Scratch = new Matrix4();
