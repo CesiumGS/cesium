@@ -6,6 +6,7 @@ Change Log
 * Deprecated
     * Deprecated `OpenStreetMapImageryProvider`. It will be removed in 1.18. Use `createOpenStreetMapImageryProvider` instead.
     * Deprecated `TileMapServiceImageryProvider`. It will be removed in 1.18. Use `createTileMapServiceImageryProvider` instead.
+    * Added `UrlTemplateImageryProvider.reinitialize`, intended for reinitializing an deferred instance of `UrlTemplateImageryProvider` once the provider is ready for use (i.e., after its `readyPromise` resolves).
 * Fixed an issue where the sun texture is not generated correctly on some mobile devices. [#3141](https://github.com/AnalyticalGraphicsInc/cesium/issues/3141)
 * Fixed a bug in the deprecated `jsonp` that prevented it from returning a promise.  Its replacement, `loadJsonp`, was unaffected.
 * Fixed glTF implementation to read the version as a string as per the specification and to correctly handle backwards compatibility for axis-angle rotations in glTF 0.8 models.

@@ -100,10 +100,8 @@ define([
 
         var url = appendForwardSlash(options.url);
 
-        var imageryProvider = new UrlTemplateImageryProvider({
-            deferReadiness: true,
-            hasReadyPromise: true
-        });
+        var deferred = when.defer();
+        var imageryProvider = new UrlTemplateImageryProvider(deferred.promise);
 
         var metadataError;
 
@@ -230,7 +228,7 @@ define([
 
             var templateUrl = url + '{z}/{x}/{reverseY}.' + fileExtension;
 
-            imageryProvider.reinitialize({
+            deferred.resolve({
                 url : templateUrl,
                 tilingScheme : tilingScheme,
                 rectangle : rectangle,
@@ -256,7 +254,7 @@ define([
 
             var templateUrl = url + '{z}/{x}/{reverseY}.' + fileExtension;
 
-            imageryProvider.reinitialize({
+            deferred.resolve({
                 url : templateUrl,
                 tilingScheme : tilingScheme,
                 rectangle : rectangle,

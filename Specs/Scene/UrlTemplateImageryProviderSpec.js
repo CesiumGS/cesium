@@ -547,4 +547,12 @@ defineSuite([
             expect(provider.pickFeatures(0, 0, 0, 0.0, 0.0)).toBeUndefined();
         });
     });
+
+    // it('throws if tileWidth called before provider is ready', function() {
+    //     var provider = new UrlTemplateImageryProvider(when.defer());
+    //
+    //     expect(function() {
+    //         return provider.tileWidth();
+    //     }).toThrowDeveloperError();
+    // });
 });
