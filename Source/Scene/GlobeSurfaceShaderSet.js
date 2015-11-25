@@ -2,13 +2,13 @@
 define([
         '../Core/defined',
         '../Core/destroyObject',
-        '../Core/TerrainCompression',
+        '../Core/TerrainQuantization',
         '../Renderer/ShaderProgram',
         '../Scene/SceneMode'
     ], function(
         defined,
         destroyObject,
-        TerrainCompression,
+        TerrainQuantization,
         ShaderProgram,
         SceneMode) {
     "use strict";
@@ -71,7 +71,7 @@ define([
 
         var terrainEncoding = surfaceTile.pickTerrain.mesh.encoding;
         var compressionMode = terrainEncoding.compression;
-        if (compressionMode === TerrainCompression.BITS12) {
+        if (compressionMode === TerrainQuantization.BITS12) {
             compression = 1;
             compressionDefine = 'COMPRESSION_BITS12';
         }
@@ -207,7 +207,7 @@ define([
 
         var terrainEncoding = surfaceTile.pickTerrain.mesh.encoding;
         var compressionMode = terrainEncoding.compression;
-        if (compressionMode === TerrainCompression.BITS12) {
+        if (compressionMode === TerrainQuantization.BITS12) {
             compression = 1;
             compressionDefine = 'COMPRESSION_BITS12';
         }

@@ -9,11 +9,11 @@ define([
      * This enumerated type is used to determine how the vertices of the terrain mesh are compressed.
      *
      * @namespace
-     * @alias TerrainCompression
+     * @alias TerrainQuantization
      *
      * @private
      */
-    var TerrainCompression = {
+    var TerrainQuantization = {
         /**
          * The vertices are not compressed.
          *
@@ -31,5 +31,5 @@ define([
         BITS12 : 1
     };
 
-    return freezeObject(TerrainCompression);
+    return freezeObject(TerrainQuantization);
 });

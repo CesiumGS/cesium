@@ -8,7 +8,7 @@ define([
         './Math',
         './Matrix3',
         './Matrix4',
-        './TerrainCompression'
+        './TerrainQuantization'
     ], function(
         AttributeCompression,
         Cartesian2,
@@ -18,7 +18,7 @@ define([
         CesiumMath,
         Matrix3,
         Matrix4,
-        TerrainCompression
+        TerrainQuantization
     ) {
     "use strict";
 
@@ -60,9 +60,9 @@ define([
             var maxDim = Math.max(Cartesian3.maximumComponent(dimensions), hDim);
 
             if (maxDim < SHIFT_LEFT_12 - 1.0) {
-                compression = TerrainCompression.BITS12;
+                compression = TerrainQuantization.BITS12;
             } else {
-                compression = TerrainCompression.NONE;
+                compression = TerrainQuantization.NONE;
             }
 
             center = axisAlignedBoundingBox.center;
@@ -92,7 +92,7 @@ define([
 
         /**
          * How the vertices of the mesh were compressed.
-         * @type {TerrainCompression}
+         * @type {TerrainQuantization}
          */
         this.compression = compression;
 
@@ -144,7 +144,7 @@ define([
         var u = uv.x;
         var v = uv.y;
 
-        if (this.compression === TerrainCompression.BITS12) {
+        if (this.compression === TerrainQuantization.BITS12) {
             position = Matrix4.multiplyByPoint(this.toScaledENU, position, cartesian3Scratch);
 
             position.x = CesiumMath.clamp(position.x, 0.0, 1.0);
@@ -191,7 +191,7 @@ define([
 
         index *= this.getStride();
 
-        if (this.compression === TerrainCompression.BITS12) {
+        if (this.compression === TerrainQuantization.BITS12) {
             var xy = AttributeCompression.decompressTextureCoordinates(buffer[index], cartesian2Scratch);
             result.x = xy.x;
             result.y = xy.y;
@@ -212,7 +212,7 @@ define([
         var vertexStride;
 
         switch (this.compression) {
-            case TerrainCompression.BITS12:
+            case TerrainQuantization.BITS12:
                 vertexStride = 3;
                 break;
             default:
@@ -236,13 +236,12 @@ define([
 
     TerrainEncoding.prototype.getAttributes = function(buffer) {
         var datatype = ComponentDatatype.FLOAT;
-        var sizeInBytes = ComponentDatatype.getSizeInBytes(datatype);
-        var stride;
 
-        if (this.compression === TerrainCompression.NONE) {
+        if (this.compression === TerrainQuantization.NONE) {
+            var sizeInBytes = ComponentDatatype.getSizeInBytes(datatype);
             var position3DAndHeightLength = 4;
             var numTexCoordComponents = this.hasVertexNormals ? 3 : 2;
-            stride = (this.hasVertexNormals ? 7 : 6) * sizeInBytes;
+            var stride = (this.hasVertexNormals ? 7 : 6) * sizeInBytes;
             return [{
                 index : attributesNone.position3DAndHeight,
                 vertexBuffer : buffer,
@@ -271,7 +270,7 @@ define([
     };
 
     TerrainEncoding.prototype.getAttributeLocations = function() {
-        if (this.compression === TerrainCompression.NONE) {
+        if (this.compression === TerrainQuantization.NONE) {
             return attributesNone;
         } else {
             return attributes;

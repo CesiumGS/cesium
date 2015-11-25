@@ -14,7 +14,6 @@ define([
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
-        '../Core/TerrainCompression',
         '../Core/TerrainEncoding',
         '../Core/Transforms',
         './createTaskProcessorWorker'
@@ -33,7 +32,6 @@ define([
         Matrix3,
         Matrix4,
         OrientedBoundingBox,
-        TerrainCompression,
         TerrainEncoding,
         Transforms,
         createTaskProcessorWorker) {

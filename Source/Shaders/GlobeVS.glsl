@@ -92,8 +92,7 @@ vec4 getPositionMorphingMode(vec3 position, float height, vec2 textureCoordinate
 }
 
 #ifdef COMPRESSION_BITS12
-uniform float u_minimumHeight;
-uniform float u_maximumHeight;
+uniform vec2 u_minMaxHeight;
 uniform mat4 u_scaleAndBias;
 #endif
 
@@ -107,7 +106,7 @@ void main()
     vec2 textureCoordinates = czm_decompressTextureCoordinates(compressed.z);
     float encodedNormal = compressed.w;
 
-    height = height * (u_maximumHeight - u_minimumHeight) + u_minimumHeight;
+    height = height * (u_minMaxHeight.y - u_minMaxHeight.x) + u_minMaxHeight.x;
     position = (u_scaleAndBias * vec4(position, 1.0)).xyz;
 #else
     vec3 position = position3DAndHeight.xyz;

@@ -765,11 +765,8 @@ define([
             u_waterMaskTranslationAndScale : function() {
                 return this.waterMaskTranslationAndScale;
             },
-            u_minimumHeight : function() {
-                return this.minimumHeight;
-            },
-            u_maximumHeight : function() {
-                return this.maximumHeight;
+            u_minMaxHeight : function() {
+                return this.minMaxHeight;
             },
             u_scaleAndBias : function() {
                 return this.scaleAndBias;
@@ -802,8 +799,7 @@ define([
             waterMask : undefined,
             waterMaskTranslationAndScale : new Cartesian4(),
 
-            minimumHeight : 0.0,
-            maximumHeight : 0.0,
+            minMaxHeight : new Cartesian2(),
             scaleAndBias : new Matrix4()
         };
 
@@ -1144,8 +1140,8 @@ define([
             Cartesian4.clone(surfaceTile.waterMaskTranslationAndScale, uniformMap.waterMaskTranslationAndScale);
 
             var encoding = surfaceTile.pickTerrain.mesh.encoding;
-            uniformMap.minimumHeight = encoding.minimumHeight;
-            uniformMap.maximumHeight = encoding.maximumHeight;
+            uniformMap.minMaxHeight.x = encoding.minimumHeight;
+            uniformMap.minMaxHeight.y = encoding.maximumHeight;
             Matrix4.clone(encoding.matrix, uniformMap.scaleAndBias);
 
             command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog);
