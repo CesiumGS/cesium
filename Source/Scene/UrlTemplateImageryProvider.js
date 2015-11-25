@@ -158,9 +158,24 @@ define([
      */
     var UrlTemplateImageryProvider = function UrlTemplateImageryProvider(options) {
         this._errorEvent = new Event();
+
         if (options.hasReadyPromise) {
             this._readyPromise = when.defer();
         }
+
+        this._url = undefined;
+        this._pickFeaturesUrl = undefined;
+        this._proxy = undefined;
+        this._tileWidth = undefined;
+        this._tileHeight = undefined;
+        this._maximumLevel = undefined;
+        this._minimumLevel = undefined;
+        this._tilingScheme = undefined;
+        this._rectangle = undefined;
+        this._tileDiscardPolicy = undefined;
+        this._credit = undefined;
+        this._hasAlphaChannel = undefined;
+
         this.reinitialize(options);
     };
 
