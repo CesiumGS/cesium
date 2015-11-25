@@ -171,6 +171,52 @@ defineSuite([
         loadTileExpectError(generateTileBuffer());
     });
 
+    it('resolves readyPromise', function() {
+        return loadTileset(gltfEmbeddedUrl).then(function(tileset) {
+            var content = tileset._root.content;
+            content.readyPromise.then(function(content) {
+                verifyRenderTileset(tileset);
+            });
+        });
+    });
+
+    it('rejects readyPromise on error', function() {
+        // Try loading a tile with an empty url.
+        // Expect promise to be rejected in Model, then in ModelInstanceCollection, and
+        // finally in Instanced3DModel3DTileContentProvider.
+        var arrayBuffer = generateTileBuffer({
+            gltfFormat : 0
+        });
+
+        var tileset = {};
+        var tile = {};
+        var url = '';
+        var instancedTile = new Instanced3DModel3DTileContentProvider(tileset, tile, url);
+        instancedTile.initialize(arrayBuffer);
+        instancedTile.update(tileset, scene.frameState);
+
+        return instancedTile.readyPromise.then(function(instancedTile) {
+            fail('should not resolve');
+        }).otherwise(function(error) {
+            expect(instancedTile.state).toEqual(Cesium3DTileContentState.FAILED);
+        });
+    });
+
+    it('rejects readyPromise on failed request', function() {
+        var tileset = {};
+        var tile = {};
+        var url = 'invalid.i3dm';
+        var instancedTile = new Instanced3DModel3DTileContentProvider(tileset, tile, url);
+        instancedTile.request();
+
+        return instancedTile.readyPromise.then(function(instancedTile) {
+            fail('should not resolve');
+        }).otherwise(function(error) {
+            expect(instancedTile.state).toEqual(Cesium3DTileContentState.FAILED);
+            expect(error.statusCode).toEqual(404);
+        });
+    });
+
     it('loads with no instances, but does not become ready', function() {
         var arrayBuffer = generateTileBuffer({
             instancesLength : 0
@@ -227,6 +273,15 @@ defineSuite([
             expect(function(){
                 content.getModel();
             }).toThrowDeveloperError();
+        });
+    });
+
+    it('destroys', function() {
+        return loadTileset(gltfEmbeddedUrl).then(function(tileset) {
+            var content = tileset._root.content;
+            expect(content.isDestroyed()).toEqual(false);
+            content.destroy();
+            expect(content.isDestroyed()).toEqual(true);
         });
     });
 });

@@ -1170,8 +1170,10 @@ define([
 
     function getFailedLoadFunction(model, type, path) {
         return function() {
-            model._loadError = new RuntimeError('Failed to load ' + type + ': ' + path);
+            var error = new RuntimeError('Failed to load ' + type + ': ' + path);
             model._state = ModelState.FAILED;
+            model._readyPromise.reject(error);
+            throw error;
         };
     }
 
@@ -3346,8 +3348,7 @@ define([
 
                 if (extension !== 'CESIUM_RTC' && extension !== 'CESIUM_binary_glTF' &&
                     extension !== 'KHR_binary_glTF' && extension !== 'KHR_materials_common') {
-                    model._loadError = new RuntimeError('Unsupported glTF Extension: ' + extension);
-                    model._state = ModelState.FAILED;
+                    throw new RuntimeError('Unsupported glTF Extension: ' + extension);
                 }
                 else if(extension === 'CESIUM_binary_glTF') {
                     deprecationWarning('CESIUM_binary_glTF extension', 'Use of the CESIUM_binary_glTF extension has been deprecated. Use the KHR_binary_glTF extension instead.');
@@ -3474,11 +3475,6 @@ define([
                 this._loadResources = new LoadResources();
                 parse(this);
             }
-        }
-
-        if (this._state === ModelState.FAILED) {
-            this._readyPromise.reject(this._loadError);
-            throw this._loadError;
         }
 
         var loadResources = this._loadResources;
