@@ -553,7 +553,6 @@ define([
         this._boundingSphere = undefined;
         this._scaledBoundingSphere = new BoundingSphere();
         this._state = ModelState.NEEDS_LOAD;
-        this._loadError = undefined;
         this._loadResources = undefined;
 
         this._perNodeShowDirty = false;            // true when the Cesium API was used to change a node's show property
