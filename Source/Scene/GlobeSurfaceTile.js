@@ -121,8 +121,7 @@ define([
 
         this.waterMaskTranslationAndScale = new Cartesian4(0.0, 0.0, 1.0, 1.0);
 
-        //this.terrainData = undefined;
-        this._terrainData = undefined;
+        this.terrainData = undefined;
         this.center = new Cartesian3();
         this.vertexArray = undefined;
         this.minimumHeight = 0.0;
@@ -142,15 +141,6 @@ define([
     };
 
     defineProperties(GlobeSurfaceTile.prototype, {
-        terrainData : {
-            get : function() {
-                return this._terrainData;
-            },
-            set : function(value) {
-                this._terrainData = value;
-            }
-        },
-
         /**
          * Gets a value indicating whether or not this tile is eligible to be unloaded.
          * Typically, a tile is ineligible to be unloaded while an asynchronous operation,
