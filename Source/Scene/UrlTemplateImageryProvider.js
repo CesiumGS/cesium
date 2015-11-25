@@ -115,14 +115,6 @@ define([
      * @param {GetFeatureInfoFormat[]} [options.getFeatureInfoFormats] The formats in which to get feature information at a
      *                                 specific location when {@link UrlTemplateImageryProvider#pickFeatures} is invoked.  If this
      *                                 parameter is not specified, feature picking is disabled.
-     * @param {Boolean} [options.deferReadiness=false] True to defer full construction of this instance until a later call to {@link UrlTemplateImageryProvider#reinitialize}.
-     *                                                 Until that method is called, {@link UrlTemplateImageryProvider#ready} will be false.  When this property is true,
-     *                                                 even `options.url` is optional.  This mechanism is useful when implementing other imagery providers in terms
-     *                                                 of this one.
-     * @param {Boolean} [options.hasReadyPromise=false] True to create a deferred object whose promise resolves to true when the provider is ready for use.
-     *                                                  When this property is true, {@link UrlTemplateImageryProvider#readyPromise} will initialize to a deferred object
-     *                                                  that will be resolved upon a later call to {@link UrlTemplateImageryProvider#reinitialize}.
-     *                                                  This property is meant to be used in conjunction with deferReadiness.
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
@@ -159,10 +151,6 @@ define([
     var UrlTemplateImageryProvider = function UrlTemplateImageryProvider(options) {
         this._errorEvent = new Event();
 
-        if (options.hasReadyPromise) {
-            this._readyPromise = when.defer();
-        }
-
         this._url = undefined;
         this._pickFeaturesUrl = undefined;
         this._proxy = undefined;
@@ -176,7 +164,49 @@ define([
         this._credit = undefined;
         this._hasAlphaChannel = undefined;
 
-        this.reinitialize(options);
+        this._readyPromise = when(options).then(function() {
+            //>>includeStart('debug', pragmas.debug);
+            if (!defined(options.url)) {
+                throw new DeveloperError('options.url is required.');
+            }
+            //>>includeEnd('debug');
+
+            this._url = options.url;
+            this._pickFeaturesUrl = options.pickFeaturesUrl;
+            this._proxy = options.proxy;
+            this._tileDiscardPolicy = options.tileDiscardPolicy;
+            this._getFeatureInfoFormats = options.getFeatureInfoFormats;
+
+            this._subdomains = options.subdomains;
+            if (Array.isArray(this._subdomains)) {
+                this._subdomains = this._subdomains.slice();
+            } else if (defined(this._subdomains) && this._subdomains.length > 0) {
+                this._subdomains = this._subdomains.split('');
+            } else {
+                this._subdomains = ['a', 'b', 'c'];
+            }
+
+            this._tileWidth = defaultValue(options.tileWidth, 256);
+            this._tileHeight = defaultValue(options.tileHeight, 256);
+            this._minimumLevel = defaultValue(options.minimumLevel, 0);
+            this._maximumLevel = options.maximumLevel;
+            this._tilingScheme = defaultValue(options.tilingScheme, new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid }));
+            this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
+            this._rectangle = Rectangle.intersection(this._rectangle, this._tilingScheme.rectangle);
+            this._hasAlphaChannel = defaultValue(options.hasAlphaChannel, true);
+
+            var credit = options.credit;
+            if (typeof credit === 'string') {
+                credit = new Credit(credit);
+            }
+            this._credit = credit;
+
+            this._urlParts = urlTemplateToParts(this._url, tags);
+            this._pickFeaturesUrlParts = urlTemplateToParts(this._pickFeaturesUrl, pickFeaturesTags);
+        }).otherwise(function(event, message, x, y, level, retryFunction, errorDetails) {
+            // TODO: handle this._errorEvent
+            // this._errorEvent = TileProviderError.handleError(this._errorEvent, this, event, message, x, y, level, retryFunction, errorDetails);
+        });
     };
 
     defineProperties(UrlTemplateImageryProvider.prototype, {
@@ -464,61 +494,6 @@ define([
             }
         }
     });
-
-    /**
-     * Reinitializes this instance.  This method is primarily intended for use
-     * with the `deferReadiness` flag to the constructor.  Reinitializing an instance already in use is supported, but it is not
-     * recommended because existing tiles provided by the imagery provider will not be updated.
-     * @param {Object} options Any of the options that may be passed to the {@see UrlTemplateImageryProvider} constructor.
-     */
-    UrlTemplateImageryProvider.prototype.reinitialize = function(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        this._url = options.url;
-        this._pickFeaturesUrl = options.pickFeaturesUrl;
-        this._proxy = options.proxy;
-        this._tileDiscardPolicy = options.tileDiscardPolicy;
-        this._getFeatureInfoFormats = options.getFeatureInfoFormats;
-
-        this._subdomains = options.subdomains;
-        if (Array.isArray(this._subdomains)) {
-            this._subdomains = this._subdomains.slice();
-        } else if (defined(this._subdomains) && this._subdomains.length > 0) {
-            this._subdomains = this._subdomains.split('');
-        } else {
-            this._subdomains = ['a', 'b', 'c'];
-        }
-
-        this._tileWidth = defaultValue(options.tileWidth, 256);
-        this._tileHeight = defaultValue(options.tileHeight, 256);
-        this._minimumLevel = defaultValue(options.minimumLevel, 0);
-        this._maximumLevel = options.maximumLevel;
-        this._tilingScheme = defaultValue(options.tilingScheme, new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid }));
-        this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
-        this._rectangle = Rectangle.intersection(this._rectangle, this._tilingScheme.rectangle);
-        this._hasAlphaChannel = defaultValue(options.hasAlphaChannel, true);
-
-        var credit = options.credit;
-        if (typeof credit === 'string') {
-            credit = new Credit(credit);
-        }
-        this._credit = credit;
-
-        if (!options.deferReadiness) {
-            //>>includeStart('debug', pragmas.debug);
-            if (!defined(options.url)) {
-                throw new DeveloperError('options.url is required.');
-            }
-            //>>includeEnd('debug');
-            this._urlParts = urlTemplateToParts(this._url, tags);
-            this._pickFeaturesUrlParts = urlTemplateToParts(this._pickFeaturesUrl, pickFeaturesTags);
-            if (defined(this._readyPromise)) {
-                this._readyPromise.resolve(true);
-            } else {
-                this._readyPromise = when.resolve(true);
-            }
-        }
-    };
 
     /**
      * Gets the credits to be displayed when a given tile is displayed.
