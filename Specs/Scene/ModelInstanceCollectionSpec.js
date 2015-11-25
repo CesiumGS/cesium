@@ -243,6 +243,22 @@ defineSuite([
         }
     });
 
+    it('rejects readyPromise on error', function() {
+        // Expect promise to be rejected in Model, then in ModelInstanceCollection.
+        var collection = scene.primitives.add(new ModelInstanceCollection({
+            url : 'invalid.gltf',
+            instances : createInstances(4)
+        }));
+
+        collection.update(scene.frameState);
+
+        return collection.readyPromise.then(function(collection) {
+            fail('should not resolve');
+        }).otherwise(function(error) {
+            expect(collection.ready).toEqual(false);
+        });
+    });
+
     it('renders one instance', function() {
         return loadCollection({
             gltf : boxGltf,

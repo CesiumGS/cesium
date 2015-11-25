@@ -120,10 +120,6 @@ define([
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
     var sizeOfFloat64 = Float64Array.BYTES_PER_ELEMENT;
 
-    // Each vertex has a longitude, latitude, and batchId
-    // Coordinates are in double precision, batchId is a short
-    var instanceSizeInBytes = sizeOfFloat64 * 2 + sizeOfUint16;
-
     /**
      * DOC_TBA
      *
@@ -199,9 +195,13 @@ define([
         var gltfView = new Uint8Array(arrayBuffer, byteOffset, gltfByteLength);
         byteOffset += gltfByteLength;
 
-        var instancesDataSizeInBytes = instancesLength * instanceSizeInBytes;
-        var instancesView = new DataView(arrayBuffer, byteOffset, instancesDataSizeInBytes);
-        byteOffset += instancesDataSizeInBytes;
+        // Each vertex has a longitude, latitude, and optionally batchId if there is a batch table
+        // Coordinates are in double precision, batchId is a short
+        var instanceByteLength = sizeOfFloat64 * 2 + (hasBatchTable ? sizeOfUint16 : 0);
+        var instancesByteLength = instancesLength * instanceByteLength;
+
+        var instancesView = new DataView(arrayBuffer, byteOffset, instancesByteLength);
+        byteOffset += instancesByteLength;
 
         // Create model instance collection
         var collectionOptions = {
