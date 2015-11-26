@@ -146,6 +146,6 @@ defineSuite([
             }).then(function(result){
                 expect(JSON.parse(result).id).toEqual(101);
             });
-        })
+        });
     });
 });
