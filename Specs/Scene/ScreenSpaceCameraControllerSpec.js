@@ -42,7 +42,6 @@ defineSuite([
         destroyCanvas,
         DomEventSimulator) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var usePointerEvents = FeatureDetection.supportsPointerEvents();
     var scene;
@@ -55,6 +54,7 @@ defineSuite([
         this.camera = camera;
         this.globe = undefined;
         this.mapProjection = new GeographicProjection(ellipsoid);
+        this.terrainExaggeration = 1.0;
     };
 
     var MockGlobe = function(ellipsoid) {
@@ -301,7 +301,7 @@ defineSuite([
         moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
         updateController();
         expect(position.x).toEqual(camera.position.x);
-        expect(position.y).toBeLessThan(camera.position.y);
+        expect(position.y).toEqual(camera.position.y);
         expect(position.z).toEqual(camera.position.z);
         expect(frustumDiff).toBeGreaterThan(camera.frustum.right - camera.frustum.left);
     });
@@ -364,7 +364,7 @@ defineSuite([
         moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
         updateController();
         expect(position.x).toEqual(camera.position.x);
-        expect(position.y).toBeLessThan(camera.position.y);
+        expect(position.y).toEqual(camera.position.y);
         expect(position.z).toEqual(camera.position.z);
         expect(frustumDiff).toBeGreaterThan(camera.frustum.right - camera.frustum.left);
     });
@@ -1020,7 +1020,7 @@ defineSuite([
         updateController();
 
         camera.setView({
-            position : Cartesian3.fromDegrees(-72.0, 40.0, 1.0)
+            destination : Cartesian3.fromDegrees(-72.0, 40.0, 1.0)
         });
 
         updateController();
@@ -1035,7 +1035,7 @@ defineSuite([
         updateController();
 
         camera.setView({
-            position : Cartesian3.fromDegrees(-72.0, 40.0, 1.0)
+            destination : Cartesian3.fromDegrees(-72.0, 40.0, 1.0)
         });
 
         updateController();
@@ -1051,7 +1051,7 @@ defineSuite([
         updateController();
 
         camera.setView({
-            position : Cartesian3.fromDegrees(-72.0, 40.0, 1.0)
+            destination : Cartesian3.fromDegrees(-72.0, 40.0, -10.0)
         });
 
         updateController();
@@ -1067,7 +1067,7 @@ defineSuite([
         updateController();
 
         camera.setView({
-            position : Cartesian3.fromDegrees(-72.0, 40.0, 1.0)
+            destination : Cartesian3.fromDegrees(-72.0, 40.0, -10.0)
         });
 
         updateController();
@@ -1098,7 +1098,7 @@ defineSuite([
 
         updateController();
 
-        expect(camera.positionWC.x).toBeGreaterThanOrEqualTo(controller.minimumZoomDistance);
+        expect(camera.positionWC.x).toEqualEpsilon(controller.minimumZoomDistance, CesiumMath.EPSILON8);
     });
 
     it('is destroyed', function() {

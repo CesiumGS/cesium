@@ -24,7 +24,6 @@ defineSuite([
         ImageryState,
         pollToPromise) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -38,6 +37,18 @@ defineSuite([
         expect(function() {
             return new MapboxImageryProvider({});
         }).toThrowDeveloperError();
+    });
+
+    it('resolves readyPromise', function() {
+        var provider = new MapboxImageryProvider({
+            url : 'made/up/mapbox/server/',
+            mapId: 'test-id'
+        });
+
+        return provider.readyPromise.then(function (result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
     });
 
     it('returns valid value for hasAlphaChannel', function() {
@@ -203,6 +214,25 @@ defineSuite([
             minimumLevel : 1
         });
         expect(provider.minimumLevel).toEqual(1);
+    });
+
+
+    it('when no credit is supplied, the provider adds a default credit', function() {
+        var provider = new MapboxImageryProvider({
+            url : 'made/up/mapbox/server/',
+            mapId: 'test-id'
+        });
+        expect(provider.credit.text).toEqual('© Mapbox © OpenStreetMap');
+    });
+
+    it('turns the supplied credit into a logo', function() {
+        var creditText = 'Thanks to our awesome made up source of this imagery!';
+        var providerWithCredit = new MapboxImageryProvider({
+            url : 'made/up/mapbox/server/',
+            mapId: 'test-id',
+            credit: creditText
+        });
+        expect(providerWithCredit.credit.text).toEqual(creditText);
     });
 
     it('raises error event when image cannot be loaded', function() {

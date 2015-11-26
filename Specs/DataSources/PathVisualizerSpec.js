@@ -3,8 +3,8 @@ defineSuite([
         'DataSources/PathVisualizer',
         'Core/Cartesian3',
         'Core/Color',
-        'Core/Matrix4',
         'Core/JulianDate',
+        'Core/Matrix4',
         'Core/ReferenceFrame',
         'Core/TimeInterval',
         'DataSources/CompositePositionProperty',
@@ -24,8 +24,8 @@ defineSuite([
         PathVisualizer,
         Cartesian3,
         Color,
-        Matrix4,
         JulianDate,
+        Matrix4,
         ReferenceFrame,
         TimeInterval,
         CompositePositionProperty,
@@ -42,7 +42,6 @@ defineSuite([
         SceneMode,
         createScene) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
     var visualizer;

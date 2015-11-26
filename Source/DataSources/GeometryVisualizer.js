@@ -259,7 +259,6 @@ define([
         var tmp = getBoundingSphereBoundingSphereScratch;
 
         var count = 0;
-        var resultState;
         var state = BoundingSphereState.DONE;
         var batches = this._batches;
         var batchesLength = batches.length;

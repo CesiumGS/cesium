@@ -4,8 +4,11 @@ defineSuite([
         'Core/Cartesian3',
         'Core/defined',
         'Core/PrimitiveType',
+        'Renderer/Buffer',
         'Renderer/BufferUsage',
         'Renderer/DrawCommand',
+        'Renderer/ShaderProgram',
+        'Renderer/VertexArray',
         'Specs/createContext',
         'ThirdParty/when'
     ], function(
@@ -13,12 +16,14 @@ defineSuite([
         Cartesian3,
         defined,
         PrimitiveType,
+        Buffer,
         BufferUsage,
         DrawCommand,
+        ShaderProgram,
+        VertexArray,
         createContext,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
 
     var context;
 
@@ -47,15 +52,27 @@ defineSuite([
                 'uniform samplerCube u_texture;' +
                 'uniform mediump vec3 u_direction;' +
                 'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
-            var sp = context.createShaderProgram(vs, fs, {
-                position : 0
+            var sp = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs,
+                attributeLocations : {
+                    position : 0
+                }
             });
             sp.allUniforms.u_texture.value = cm;
 
-            var va = context.createVertexArray([{
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-                componentsPerAttribute : 4
-            }]);
+            var va = new VertexArray({
+                context : context,
+                attributes : [{
+                    vertexBuffer : Buffer.createVertexBuffer({
+                        context : context,
+                        typedArray : new Float32Array([0, 0, 0, 1]),
+                        usage : BufferUsage.STATIC_DRAW
+                    }),
+                    componentsPerAttribute : 4
+                }]
+            });
 
             var command = new DrawCommand({
                 primitiveType : PrimitiveType.POINTS,

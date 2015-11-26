@@ -499,7 +499,7 @@ define([
     }
 
     /**
-     * A description of a cartographic rectangle on an ellipsoid centered at the origin.
+     * A description of a cartographic rectangle on an ellipsoid centered at the origin. Rectangle geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
      *
      * @alias RectangleGeometry
      * @constructor
@@ -513,6 +513,8 @@ define([
      * @param {Number} [options.rotation=0.0] The rotation of the rectangle, in radians. A positive rotation is counter-clockwise.
      * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
      * @param {Number} [options.extrudedHeight] Height of extruded surface.
+     * @param {Boolean} [options.closeTop=true] Specifies whether the rectangle has a top cover when extruded.
+     * @param {Boolean} [options.closeBottom=true] Specifies whether the rectangle has a bottom cover when extruded.
      *
      * @exception {DeveloperError} <code>options.rectangle.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
      * @exception {DeveloperError} <code>options.rectangle.south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
@@ -538,7 +540,7 @@ define([
      *   ellipsoid : Cesium.Ellipsoid.WGS84,
      *   rectangle : Cesium.Rectangle.fromDegrees(-80.0, 39.0, -74.0, 42.0),
      *   height : 10000.0,
-     *   extrudedHieght: 300000,
+     *   extrudedHeight: 300000,
      *   closeTop: false
      * });
      * var geometry = Cesium.RectangleGeometry.createGeometry(rectangle);
@@ -591,7 +593,7 @@ define([
     /**
      * Stores the provided instance into the provided array.
      *
-     * @param {BoundingSphere} value The value to pack.
+     * @param {RectangleGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
@@ -773,6 +775,31 @@ define([
             indices : geometry.indices,
             primitiveType : geometry.primitiveType,
             boundingSphere : boundingSphere
+        });
+    };
+
+    /**
+     * @private
+     */
+    RectangleGeometry.createShadowVolume = function(rectangleGeometry, minHeightFunc, maxHeightFunc) {
+        var granularity = rectangleGeometry._granularity;
+        var ellipsoid = rectangleGeometry._ellipsoid;
+
+        var minHeight = minHeightFunc(granularity, ellipsoid);
+        var maxHeight = maxHeightFunc(granularity, ellipsoid);
+
+        // TODO: stRotation
+        return new RectangleGeometry({
+            rectangle : rectangleGeometry._rectangle,
+            rotation : rectangleGeometry._rotation,
+            ellipsoid : ellipsoid,
+            stRotation : rectangleGeometry._stRotation,
+            granularity : granularity,
+            extrudedHeight : maxHeight,
+            height : minHeight,
+            closeTop : true,
+            closeBottom : true,
+            vertexFormat : VertexFormat.POSITION_ONLY
         });
     };
 

@@ -35,7 +35,6 @@ define([
         '../Scene/VerticalOrigin',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
-        './Rotation',
         './BillboardGraphics',
         './ColorMaterialProperty',
         './CompositeMaterialProperty',
@@ -61,6 +60,7 @@ define([
         './PositionPropertyArray',
         './RectangleGraphics',
         './ReferenceProperty',
+        './Rotation',
         './SampledPositionProperty',
         './SampledProperty',
         './StripeMaterialProperty',
@@ -104,7 +104,6 @@ define([
         VerticalOrigin,
         Uri,
         when,
-        Rotation,
         BillboardGraphics,
         ColorMaterialProperty,
         CompositeMaterialProperty,
@@ -130,6 +129,7 @@ define([
         PositionPropertyArray,
         RectangleGraphics,
         ReferenceProperty,
+        Rotation,
         SampledPositionProperty,
         SampledProperty,
         StripeMaterialProperty,
@@ -178,16 +178,6 @@ define([
             rgbaf[i + 4] = Color.byteToFloat(rgba[i + 4]);
         }
         return rgbaf;
-    }
-
-    function unwrapImageInterval(czmlInterval, sourceUri) {
-        var result = defaultValue(czmlInterval.image, czmlInterval);
-        if (defined(sourceUri)) {
-            var baseUri = new Uri(document.location.href);
-            sourceUri = new Uri(sourceUri);
-            result = new Uri(result).resolve(sourceUri.resolve(baseUri)).toString();
-        }
-        return result;
     }
 
     function unwrapUriInterval(czmlInterval, sourceUri) {
@@ -1015,6 +1005,7 @@ define([
         processPacketData(Cartesian3, billboard, 'alignedAxis', billboardData.alignedAxis, interval, sourceUri, entityCollection);
         processPacketData(Boolean, billboard, 'show', billboardData.show, interval, sourceUri, entityCollection);
         processPacketData(VerticalOrigin, billboard, 'verticalOrigin', billboardData.verticalOrigin, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, billboard, 'sizeInMeters', billboardData.sizeInMeters, interval, sourceUri, entityCollection);
     }
 
     function processDocument(packet, dataSource) {
@@ -1530,7 +1521,7 @@ define([
         this._clock = undefined;
         this._documentPacket = new DocumentPacket();
         this._version = undefined;
-        this._entityCollection = new EntityCollection();
+        this._entityCollection = new EntityCollection(this);
     };
 
     /**

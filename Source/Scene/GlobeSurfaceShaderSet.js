@@ -2,11 +2,13 @@
 define([
         '../Core/defined',
         '../Core/destroyObject',
+        '../Renderer/ShaderProgram',
         '../Scene/SceneMode',
         '../Scene/terrainAttributeLocations'
     ], function(
         defined,
         destroyObject,
+        ShaderProgram,
         SceneMode,
         terrainAttributeLocations) {
     "use strict";
@@ -64,7 +66,7 @@ define([
         return useWebMercatorProjection ? get2DYPositionFractionMercatorProjection : get2DYPositionFractionGeographicProjection;
     }
 
-    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(context, sceneMode, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection) {
+    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(context, sceneMode, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog) {
         var flags = sceneMode |
                     (applyBrightness << 2) |
                     (applyContrast << 3) |
@@ -76,7 +78,8 @@ define([
                     (showOceanWaves << 9) |
                     (enableLighting << 10) |
                     (hasVertexNormals << 11) |
-                    (useWebMercatorProjection << 12);
+                    (useWebMercatorProjection << 12) |
+                    (enableFog << 13);
 
         var surfaceShader = surfaceTile.surfaceShader;
         if (defined(surfaceShader) &&
@@ -136,6 +139,11 @@ define([
                 }
             }
 
+            if (enableFog) {
+                vs.defines.push('FOG');
+                fs.defines.push('FOG');
+            }
+
             var computeDayColor = '\
     vec4 computeDayColor(vec4 initialColor, vec2 textureCoordinates)\n\
     {\n\
@@ -167,7 +175,13 @@ define([
             vs.sources.push(getPositionMode(sceneMode));
             vs.sources.push(get2DYPositionFraction(useWebMercatorProjection));
 
-            var shader = context.createShaderProgram(vs, fs, this._attributeLocations);
+            var shader = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs,
+                attributeLocations : this._attributeLocations
+            });
+
             surfaceShader = shadersByFlags[flags] = new GlobeSurfaceShader(numberOfDayTextures, flags, shader);
         }
 
@@ -191,7 +205,12 @@ define([
                 '    gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);\n' +
                 '}\n';
 
-            pickShader = this._pickShaderPrograms[flags] = context.createShaderProgram(vs, fs, this._attributeLocations);
+            pickShader = this._pickShaderPrograms[flags] = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs,
+                attributeLocations : this._attributeLocations
+            });
         }
 
         return pickShader;

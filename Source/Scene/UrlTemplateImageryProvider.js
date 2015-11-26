@@ -4,7 +4,6 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/combine',
-        '../Core/Math',
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
@@ -17,6 +16,7 @@ define([
         '../Core/loadText',
         '../Core/loadWithXhr',
         '../Core/loadXML',
+        '../Core/Math',
         '../Core/Rectangle',
         '../Core/TileProviderError',
         '../Core/WebMercatorTilingScheme',
@@ -27,7 +27,6 @@ define([
         Cartesian3,
         Cartographic,
         combine,
-        CesiumMath,
         Credit,
         defaultValue,
         defined,
@@ -40,6 +39,7 @@ define([
         loadText,
         loadWithXhr,
         loadXML,
+        CesiumMath,
         Rectangle,
         TileProviderError,
         WebMercatorTilingScheme,
@@ -62,6 +62,7 @@ define([
      *     <li><code>{s}</code>: One of the available subdomains, used to overcome browser limits on the number of simultaneous requests per host.</li>
      *     <li><code>{reverseX}</code>: The tile X coordinate in the tiling scheme, where 0 is the Easternmost tile.</li>
      *     <li><code>{reverseY}</code>: The tile Y coordinate in the tiling scheme, where 0 is the Southernmost tile.</li>
+     *     <li><code>{reverseZ}</code>: The level of the tile in the tiling scheme, where level zero is the maximum level of the quadtree pyramid.  In order to use reverseZ, maximumLevel must be defined.</li>
      *     <li><code>{westDegrees}</code>: The Western edge of the tile in geodetic degrees.</li>
      *     <li><code>{southDegrees}</code>: The Southern edge of the tile in geodetic degrees.</li>
      *     <li><code>{eastDegrees}</code>: The Eastern edge of the tile in geodetic degrees.</li>
@@ -118,7 +119,7 @@ define([
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
-     * @see OpenStreetMapImageryProvider
+     * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
@@ -160,9 +161,9 @@ define([
         this._proxy = options.proxy;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._getFeatureInfoFormats = options.getFeatureInfoFormats;
-        
+
         this._errorEvent = new Event();
-        
+
         this._subdomains = options.subdomains;
         if (Array.isArray(this._subdomains)) {
             this._subdomains = this._subdomains.slice();
@@ -189,6 +190,8 @@ define([
 
         this._urlParts = urlTemplateToParts(this._url, tags);
         this._pickFeaturesUrlParts = urlTemplateToParts(this._pickFeaturesUrl, pickFeaturesTags);
+
+        this._readyPromise = when.resolve(true);
     };
 
     defineProperties(UrlTemplateImageryProvider.prototype, {
@@ -201,6 +204,7 @@ define([
          *  <li> <code>{s}</code>: One of the available subdomains, used to overcome browser limits on the number of simultaneous requests per host.</li>
          *  <li> <code>{reverseX}</code>: The tile X coordinate in the tiling scheme, where 0 is the Easternmost tile.</li>
          *  <li> <code>{reverseY}</code>: The tile Y coordinate in the tiling scheme, where 0 is the Southernmost tile.</li>
+         *  <li> <code>{reverseZ}</code>: The level of the tile in the tiling scheme, where level zero is the maximum level of the quadtree pyramid.  In order to use reverseZ, maximumLevel must be defined.</li>
          *  <li> <code>{westDegrees}</code>: The Western edge of the tile in geodetic degrees.</li>
          *  <li> <code>{southDegrees}</code>: The Southern edge of the tile in geodetic degrees.</li>
          *  <li> <code>{eastDegrees}</code>: The Eastern edge of the tile in geodetic degrees.</li>
@@ -383,6 +387,18 @@ define([
         ready : {
             get : function() {
                 return true;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof UrlTemplateImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise;
             }
         },
 
@@ -598,6 +614,11 @@ define([
         return imageryProvider.tilingScheme.getNumberOfYTilesAtLevel(level) - y - 1;
     }
 
+    function reverseZTag(imageryProvider, x, y, level) {
+        var maximumLevel = imageryProvider.maximumLevel;
+        return defined(maximumLevel) && level < maximumLevel ? maximumLevel - level - 1 : level;
+    }
+
     function zTag(imageryProvider, x, y, level) {
         return level;
     }
@@ -777,6 +798,7 @@ define([
         '{s}': sTag,
         '{reverseX}': reverseXTag,
         '{reverseY}': reverseYTag,
+        '{reverseZ}': reverseZTag,
         '{westDegrees}': westDegreesTag,
         '{southDegrees}': southDegreesTag,
         '{eastDegrees}': eastDegreesTag,

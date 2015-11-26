@@ -15,8 +15,12 @@ Thumbs.db
 /Source/Shaders/*.js
 /Source/Shaders/*/*.js
 /Source/Shaders/*/*/*.js
-!/Source/Shaders/Shaders.profile.js
 
 /Specs/SpecList.js
 
 /node_modules
+npm-debug.log
+
+# WebStorm user-specific
+.idea/workspace.xml
+.idea/tasks.xml
