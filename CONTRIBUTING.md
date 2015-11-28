@@ -1,7 +1,8 @@
 Thanks for contributing to Cesium.  You rock!  Are you
 
-* [Submitting an issue](#submitting-an-issue), or
-* [Opening a pull request](#opening-a-pull-request) (contributing code or documentation)?
+* [submitting an issue](#submitting-an-issue),
+* [getting started contributing code and documentation](getting-started-contributing-code-and-documentation),
+* [opening a pull request](#opening-a-pull-request)?
 
 # Submitting an Issue
 
@@ -16,6 +17,17 @@ If a related issue does not exist, submit a new one.  Please be concise and incl
 * Your operating system and version, browser and version, and video card.  Are they all up-to-date?  Is the issue specific to one of these?
 * The version of Cesium.  Did this use to work in a previous version?
 * Any ideas you have for how to fix or workaround the issue.  Also mention if you are willing to help fix it.  If so, the Cesium team can often provide guidance and it may get fixed more quickly with your help.
+
+# Getting Started Contributing Code and Documentation
+
+Thanks for helping make Cesium awesome!  If you are looking for ideas to start contributing, consider:
+
+* issues labeled [beginner](https://github.com/AnalyticalGraphicsInc/cesium/labels/beginner),
+* issues labeled [doc](https://github.com/AnalyticalGraphicsInc/cesium/labels/doc),
+* issues labeled [roadmap](https://github.com/AnalyticalGraphicsInc/cesium/labels/roadmap), and
+* introducing yourself on the [Cesium forum](http://cesiumjs.org/forum.html) and asking for ideas.
+
+See the [Contributor's Guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide) for how to build and run Cesium on your system.  Then, review the next section for how to open a great pull request.
 
 # Opening a Pull Request
 
@@ -52,7 +64,3 @@ Our code is our lifeblood so maintaining Cesium's high code quality is important
       * Include reference documentation with code examples.  Check out the [best practices](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Documentation-Best-Practices).
       * Update [CHANGES.md](CHANGES.md).
       * If the change is significant, add a new [Sandcastle](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html) example or extend and existing one.
-
-## Resources
-
-See the [Contributor's Guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide) for how to get the code and setup a development environment.
