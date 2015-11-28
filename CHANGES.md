@@ -11,7 +11,7 @@ Change Log
 * `ImageMaterialProperty.image` now accepts an `HTMLVideoElement`. You can also assign a video element directly to an Entity `material` property.
 * `Material` image uniforms now accept and `HTMLVideoElement` anywhere it could previously take a `Canvas` element.
 * Added `VideoSynchronizer` helper object for keeping an `HTMLVideoElement` in sync with a scene's clock.
-* Cesium now honors `window.devicePixelRatio` by default, which greatly improving performance on mobile devices and high DPI displays by rendering at the browser-recommended resolution. This also reduces bandwidth usage in these cases.  To use the previous behavior, set `Viewer.resolutionScale` to `window.devicePixelRatio`.
+* Cesium now honors `window.devicePixelRatio` by default, greatly improving performance on mobile devices and high DPI displays by rendering at the browser-recommended resolution. This also reduces bandwidth usage in these cases.  To use the previous behavior, set `Viewer.resolutionScale` to `window.devicePixelRatio`.
 * Fixed an issue with loading skeletons for skinned glTF models. [#3224](https://github.com/AnalyticalGraphicsInc/cesium/pull/3224)
 * Fixed an issue with tile selection when below the surface of the ellipsoid. [#3170](https://github.com/AnalyticalGraphicsInc/cesium/issues/3170)
 * Added `Cartographic.fromCartesian` function.
