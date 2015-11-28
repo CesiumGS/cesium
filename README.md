@@ -10,7 +10,7 @@ http://cesiumjs.org/
 
 See the [Cesium Up and Running](http://cesiumjs.org/2013/04/12/Cesium-up-and-running/) tutorial.  Have questions?  Ask them on the [forum](https://groups.google.com/d/forum/cesium-dev).
 
-Interested in contributing?  See the [wiki](https://github.com/AnalyticalGraphicsInc/cesium/wiki).
+Interested in contributing?  See the [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### Mission ###
 
