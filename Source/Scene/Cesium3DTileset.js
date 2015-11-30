@@ -165,11 +165,11 @@ define([
             var baseUrl = tileset.url;
             var rootTile = new Cesium3DTile(tileset, baseUrl, tree.root, parentTile);
 
-            // Parent is a tileset, it had no children at time of inception, but after
-            // loading its content, the root tile of the subtree will be its child
+            // If there is a parentTile, add the root of the currently loading
+            // tileset to parentTile's children, and increment its numberOfChildrenWithoutContent
+            // with 1
             if (defined(parentTile)) {
                 parentTile.children.push(rootTile);
-                // TODO: Is this right?
                 parentTile.numberOfChildrenWithoutContent += 1;
             }
 
@@ -337,20 +337,30 @@ define([
         // 2) If its children are already loaded, select its (root) child since the geometric error of it is
         //    same as this tile's
         var contentUrl = tile._header.content.url;
+        var root;
 
         // If the subtree has already been added and child
-        // content requested, select the child and continue
-        if ((tile.content.state === Cesium3DTileContentState.Ready) &&
+        // content requested, select the child (= the root) and continue
+        if ((tile.isReady()) &&
             (tile.numberOfChildrenWithoutContent === 0)) {
-                // TODO: select which tiles? All children tiles?
-            selectTile(selectedTiles, tile.children[0], fullyVisible, frameState);
+            // A tiles.json must specify at least one tile, ie a root
+            root = tile.children[0];
+            if (root.hasTilesetContent) {
+                selectTileWithTilesetContent(tiles3D, selectedTiles, root, fullyVisible, frameState, replace);
+            } else {
+                if (root.isContentUnloaded()) {
+                    requestContent(tiles3D, root);
+                } else if (root.isReady()){
+                    selectTile(selectedTiles, root, fullyVisible, frameState);
+                }
+            }
             return;
         } else if (replace) {
             // Otherwise, select the parent tile, to avoid showing an empty space
-            // Note that tile.parent must always be defined here --
-            // tile should never be the root of the tileset AND
-            // contain another tileset
-            selectTile(selectedTiles, tile.parent, fullyVisible, frameState);
+            // while waiting for tile to load
+            if (defined(tile.parent)) {
+                selectTile(selectedTiles, tile.parent, fullyVisible, frameState);
+            }
         }
 
         // Request the tile's tileset if it's unloaded.
@@ -395,7 +405,9 @@ define([
         }
 
         if (root.isContentUnloaded()) {
-            if (outOfCore) {
+            if (root.hasTilesetContent) {
+                selectTileWithTilesetContent(tiles3D, selectedTiles, root, fullyVisible, frameState, true);
+            } else if (outOfCore) {
                 requestContent(tiles3D, root);
             }
             return;
@@ -485,6 +497,13 @@ define([
                 // is not sufficient, its children (or ancestors) are
                 // rendered instead
 
+                // TODO: Can we change childrenLength check here to
+                // checking hasTilesetContent?
+                // Also, it seems the t.hasTilesetContent checks further down
+                // will never be reached because in all cases (?) where
+                // the tile has tilesetContent the first condition should be true
+                // (Needs to be adjusted, since such a tile actually can have
+                // children)
                 if ((sse <= maximumScreenSpaceError) || (childrenLength === 0)) {
                     // This tile meets the SSE so add its commands.
                     //
