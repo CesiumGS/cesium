@@ -422,7 +422,6 @@ define([
                 debug.maxDepth !== debug.lastMaxDepth ||
                 debug.tilesWaitingForChildren !== debug.lastTilesWaitingForChildren) {
 
-                /*global console*/
                 console.log('Visited ' + debug.tilesVisited + ', Rendered: ' + debug.tilesRendered + ', Culled: ' + debug.tilesCulled + ', Max Depth: ' + debug.maxDepth + ', Waiting for children: ' + debug.tilesWaitingForChildren);
 
                 debug.lastTilesVisited = debug.tilesVisited;

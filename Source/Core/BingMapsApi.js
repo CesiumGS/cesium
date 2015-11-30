@@ -1,4 +1,4 @@
-/*global define,console*/
+/*global define*/
 define([
         './defined'
     ], function(
