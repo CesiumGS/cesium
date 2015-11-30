@@ -1,23 +1,33 @@
 /*global define*/
 define([
         '../Core/AttributeCompression',
+        '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/defined',
         '../Core/Ellipsoid',
+        '../Core/EllipsoidalOccluder',
         '../Core/IndexDatatype',
         '../Core/Math',
+        '../Core/Matrix4',
+        '../Core/OrientedBoundingBox',
+        '../Core/Transforms',
         './createTaskProcessorWorker'
     ], function(
         AttributeCompression,
+        BoundingSphere,
         Cartesian2,
         Cartesian3,
         Cartographic,
         defined,
         Ellipsoid,
+        EllipsoidalOccluder,
         IndexDatatype,
         CesiumMath,
+        Matrix4,
+        OrientedBoundingBox,
+        Transforms,
         createTaskProcessorWorker) {
     "use strict";
 
@@ -34,6 +44,9 @@ define([
     var cartesian3Scratch = new Cartesian3();
     var cartographicScratch = new Cartographic();
     var toPack = new Cartesian2();
+    var scratchNormal = new Cartesian3();
+    var scratchToENU = new Matrix4();
+    var scratchFromENU = new Matrix4();
 
     function createVerticesFromQuantizedTerrainMesh(parameters, transferableObjects) {
         var quantizedVertices = parameters.quantizedVertices;
@@ -44,6 +57,10 @@ define([
         var minimumHeight = parameters.minimumHeight;
         var maximumHeight = parameters.maximumHeight;
         var center = parameters.relativeToCenter;
+
+        var exaggeration = parameters.exaggeration;
+        minimumHeight *= exaggeration;
+        maximumHeight *= exaggeration;
 
         var rectangle = parameters.rectangle;
         var west = rectangle.west;
@@ -85,6 +102,22 @@ define([
             if (hasVertexNormals) {
                 toPack.x = octEncodedNormals[n];
                 toPack.y = octEncodedNormals[n + 1];
+
+                if (exaggeration !== 1.0) {
+                    var normal = AttributeCompression.octDecode(toPack.x, toPack.y, scratchNormal);
+                    var fromENU = Transforms.eastNorthUpToFixedFrame(cartesian3Scratch, ellipsoid, scratchFromENU);
+                    var toENU = Matrix4.inverseTransformation(fromENU, scratchToENU);
+
+                    Matrix4.multiplyByPointAsVector(toENU, normal, normal);
+                    normal.z *= exaggeration;
+                    Cartesian3.normalize(normal, normal);
+
+                    Matrix4.multiplyByPointAsVector(fromENU, normal, normal);
+                    Cartesian3.normalize(normal, normal);
+
+                    AttributeCompression.octEncode(normal, toPack);
+                }
+
                 vertexBuffer[bufferIndex + nIndex] = AttributeCompression.octPackFloat(toPack);
             }
         }
@@ -93,6 +126,19 @@ define([
         var indexBufferLength = parameters.indices.length + edgeTriangleCount * 3;
         var indexBuffer = IndexDatatype.createTypedArray(quantizedVertexCount + edgeVertexCount, indexBufferLength);
         indexBuffer.set(parameters.indices, 0);
+
+        var occludeePointInScaledSpace;
+        var orientedBoundingBox;
+        var boundingSphere;
+
+        if (exaggeration !== 1.0) {
+            // Bounding volumes and horizon culling point need to be recomputed since the tile payload assumes no exaggeration.
+            boundingSphere = BoundingSphere.fromVertices(vertexBuffer, center, vertexStride);
+            orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, minimumHeight, maximumHeight, ellipsoid);
+
+            var occluder = new EllipsoidalOccluder(ellipsoid);
+            occludeePointInScaledSpace = occluder.computeHorizonCullingPointFromVertices(center, vertexBuffer, vertexStride);
+        }
 
         // Add skirts.
         var vertexBufferIndex = quantizedVertexCount * vertexStride;
@@ -110,7 +156,14 @@ define([
 
         return {
             vertices : vertexBuffer.buffer,
-            indices : indexBuffer.buffer
+            indices : indexBuffer.buffer,
+            vertexStride : vertexStride,
+            center : center,
+            minimumHeight : minimumHeight,
+            maximumHeight : maximumHeight,
+            boundingSphere : boundingSphere,
+            orientedBoundingBox : orientedBoundingBox,
+            occludeePointInScaledSpace : occludeePointInScaledSpace
         };
     }
 

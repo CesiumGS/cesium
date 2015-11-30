@@ -136,16 +136,12 @@ function reset() {
             var pitch = Math.random();
             var roll = Math.random();
             var scale = (Math.random() + 1.0)/2.0;
-            var color = Cesium.Color.fromRandom();
-            var show = (Math.random() > 0.5);
 
             var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(position, heading, pitch, roll);
             Cesium.Matrix4.multiplyByUniformScale(modelMatrix, scale, modelMatrix);
 
             instances.push({
-                modelMatrix : modelMatrix,
-                color : color,
-                show : show
+                modelMatrix : modelMatrix
             });
         }
     }

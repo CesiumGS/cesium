@@ -20,6 +20,7 @@ defineSuite([
         'Scene/TileMapServiceImageryProvider',
         'Scene/WebMapServiceImageryProvider',
         'Specs/createContext',
+        'Specs/createFrameState',
         'Specs/pollToPromise'
     ], function(
         ImageryLayer,
@@ -42,14 +43,17 @@ defineSuite([
         TileMapServiceImageryProvider,
         WebMapServiceImageryProvider,
         createContext,
+        createFrameState,
         pollToPromise) {
     "use strict";
 
     var context;
+    var frameState;
     var computeEngine;
 
     beforeAll(function() {
         context = createContext();
+        frameState = createFrameState(context);
         computeEngine = new ComputeEngine(context);
     });
 
@@ -171,9 +175,8 @@ defineSuite([
                     return imagery.state === ImageryState.TEXTURE_LOADED;
                 }).then(function() {
                     var textureBeforeReprojection = imagery.texture;
-                    var commandList = [];
-                    layer._reprojectTexture(context, commandList, imagery);
-                    commandList[0].execute(computeEngine);
+                    layer._reprojectTexture(frameState, imagery);
+                    frameState.commandList[0].execute(computeEngine);
 
                     return pollToPromise(function() {
                         return imagery.state === ImageryState.READY;

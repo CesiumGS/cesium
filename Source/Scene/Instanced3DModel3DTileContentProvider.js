@@ -2,6 +2,8 @@
 define([
         '../Core/Cartesian3',
         '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
@@ -12,12 +14,15 @@ define([
         '../Core/Transforms',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
+        './BatchedModel',
         './Cesium3DTileBatchTableResources',
         './Cesium3DTileContentState',
         './ModelInstanceCollection'
     ], function(
         Cartesian3,
         defaultValue,
+        defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
         Ellipsoid,
@@ -28,6 +33,7 @@ define([
         Transforms,
         Uri,
         when,
+        BatchedModel,
         Cesium3DTileBatchTableResources,
         Cesium3DTileContentState,
         ModelInstanceCollection) {
@@ -40,7 +46,6 @@ define([
         this._modelInstanceCollection = undefined;
         this._url = url;
         this._tileset = tileset;
-        this._batchTableResources = undefined;
         this._boundingVolume = tile.orientedBoundingBox;
 
         /**
@@ -57,19 +62,63 @@ define([
          * @type {Promise}
          */
         this.readyPromise = when.defer();
+
+        this._batchTableResources = undefined;
+        this._models = undefined;
     };
 
+    defineProperties(Instanced3DModel3DTileContentProvider.prototype, {
+        /**
+         * DOC_TBA
+         *
+         * @memberof Instanced3DModel3DTileContentProvider.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        instancesLength : {
+            get : function() {
+                return this._modelInstanceCollection.length;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         */
+        batchTableResources : {
+            get : function() {
+                return this._batchTableResources;
+            }
+        }
+    });
+
+    function createModels(content) {
+        var tileset = content._tileset;
+        var instancesLength = content.instancesLength;
+        if (!defined(content._models) && (instancesLength > 0)) {
+            var models = new Array(instancesLength);
+            for (var i = 0; i < instancesLength; ++i) {
+                models[i] = new BatchedModel(tileset, content._batchTableResources, i);
+            }
+            content._models = models;
+        }
+    }
+
     Instanced3DModel3DTileContentProvider.prototype.getModel = function(index) {
-        return this._modelInstanceCollection.getModel(index);
+        var instancesLength = this._modelInstanceCollection.length;
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(index) || (index < 0) || (index >= instancesLength)) {
+            throw new DeveloperError('index is required and between zero and instancesLength - 1 (' + (instancesLength - 1) + ').');
+        }
+        //>>includeEnd('debug');
+
+        createModels(this);
+        return this._models[index];
     };
 
     var sizeOfUint16 = Uint16Array.BYTES_PER_ELEMENT;
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
     var sizeOfFloat64 = Float64Array.BYTES_PER_ELEMENT;
-
-    // Each vertex has a longitude, latitude, and batchId
-    // Coordinates are in double precision, batchId is a short
-    var instanceSizeInBytes = sizeOfFloat64 * 2 + sizeOfUint16;
 
     /**
      * DOC_TBA
@@ -128,14 +177,8 @@ define([
         byteOffset += sizeOfUint32;
 
         //>>includeStart('debug', pragmas.debug);
-        if (gltfByteLength < 0) {
-            throw new DeveloperError('glTF byte length must be greater than or equal to zero. Value is ' + gltfByteLength + '.');
-        }
         if ((gltfFormat !== 0) && (gltfFormat !== 1)) {
             throw new DeveloperError('Only glTF format 0 (uri) or 1 (embedded) are supported. Format ' + gltfFormat + ' is not');
-        }
-        if (instancesLength < 0) {
-            throw new DeveloperError('Instances length must be greater than or equal to zero. Value is ' + instancesLength + '.');
         }
         //>>includeEnd('debug');
 
@@ -152,16 +195,19 @@ define([
         var gltfView = new Uint8Array(arrayBuffer, byteOffset, gltfByteLength);
         byteOffset += gltfByteLength;
 
-        var instancesDataSizeInBytes = instancesLength * instanceSizeInBytes;
-        var instancesView = new DataView(arrayBuffer, byteOffset, instancesDataSizeInBytes);
-        byteOffset += instancesDataSizeInBytes;
+        // Each vertex has a longitude, latitude, and optionally batchId if there is a batch table
+        // Coordinates are in double precision, batchId is a short
+        var instanceByteLength = sizeOfFloat64 * 2 + (hasBatchTable ? sizeOfUint16 : 0);
+        var instancesByteLength = instancesLength * instanceByteLength;
+
+        var instancesView = new DataView(arrayBuffer, byteOffset, instancesByteLength);
+        byteOffset += instancesByteLength;
 
         // Create model instance collection
         var collectionOptions = {
             instances : new Array(instancesLength),
             batchTableResources : batchTableResources,
             boundingVolume : this._boundingVolume,
-            tileset : this._tileset,
             cull : false,
             url : undefined,
             headers : undefined,
@@ -173,7 +219,6 @@ define([
             var gltfUrl = getStringFromTypedArray(gltfView);
             var url = (new Uri(gltfUrl).isAbsolute()) ? gltfUrl : this._tileset.url + gltfUrl;
             collectionOptions.url = url;
-            // TODO : how to get the correct headers
         } else {
             collectionOptions.gltf = gltfView;
             collectionOptions.basePath = this._url;
@@ -230,6 +275,10 @@ define([
      * Use Cesium3DTile#update
      */
     Instanced3DModel3DTileContentProvider.prototype.update = function(owner, frameState) {
+        // In the PROCESSING state we may be calling update() to move forward
+        // the content's resource loading.  In the READY state, it will
+        // actually generate commands.
+        this._batchTableResources.update(owner, frameState);
         this._modelInstanceCollection.update(frameState);
     };
 
@@ -245,6 +294,7 @@ define([
      */
     Instanced3DModel3DTileContentProvider.prototype.destroy = function() {
         this._modelInstanceCollection = this._modelInstanceCollection && this._modelInstanceCollection.destroy();
+        this._batchTableResources = this._batchTableResources && this._batchTableResources.destroy();
 
         return destroyObject(this);
     };

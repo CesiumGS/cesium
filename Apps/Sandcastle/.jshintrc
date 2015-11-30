@@ -1,0 +1,12 @@
+{
+  "extends": "../.jshintrc",
+  "jasmine": false,
+  "unused": false,
+  "predef": [
+    "JSON",
+    "require",
+    "console",
+    "Sandcastle",
+    "Cesium"
+  ]
+}
