@@ -217,6 +217,23 @@ defineSuite([
         });
     });
 
+    it('rejects readyPromise on error', function() {
+        var promise = when.defer();
+        promise.promise.then(function(model) {
+            fail('should not resolve');
+        }).otherwise(function(error) {
+            expect(error).toBeDefined();
+        });
+
+        var arrayBuffer = new ArrayBuffer(16);
+        expect(function() {
+            return new Model({
+                gltf : arrayBuffer,
+                readyPromise : promise
+            });
+        }).toThrowDeveloperError();
+    });
+
     it('renders from glTF', function() {
         // Simulate using procedural glTF as opposed to loading it from a file
         return loadModelJson(texturedBoxModel.gltf).then(function(model) {

@@ -347,7 +347,9 @@ define([
         this._releaseGltfJson = defaultValue(options.releaseGltfJson, false);
         this._animationIds = undefined;
 
-        this._readyPromise = when.defer();
+        // Use optional readyPromise if provided
+        this._readyPromise = defined(options.readyPromise) ? options.readyPromise : when.defer();
+        this._ready = false;
 
         var cachedGltf;
         if (defined(cacheKey) && defined(gltfCache[cacheKey]) && gltfCache[cacheKey].ready) {
@@ -491,8 +493,6 @@ define([
         this.pickPrimitive = options.pickPrimitive;
 
         this._allowPicking = defaultValue(options.allowPicking, true);
-
-        this._ready = false;
 
         /**
          * The currently playing glTF animations.
