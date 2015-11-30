@@ -495,6 +495,12 @@ defineSuite([
                 gltf : gltf
             }));
 
+            model.readyPromise.then(function(model) {
+                fail('should not resolve');
+            }).otherwise(function(error) {
+                expect(model.ready).toEqual(false);
+            });
+
             expect(function() {
                 scene.renderForSpecs();
             }).toThrowRuntimeError();

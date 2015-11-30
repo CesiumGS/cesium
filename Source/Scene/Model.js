@@ -347,6 +347,8 @@ define([
         this._releaseGltfJson = defaultValue(options.releaseGltfJson, false);
         this._animationIds = undefined;
 
+        this._readyPromise = when.defer();
+
         var cachedGltf;
         if (defined(cacheKey) && defined(gltfCache[cacheKey]) && gltfCache[cacheKey].ready) {
             // glTF JSON is in cache and ready
@@ -363,7 +365,7 @@ define([
 
                 if (gltf instanceof Uint8Array) {
                     // Binary glTF
-                    var result = parseBinaryGltfHeader(gltf);
+                    var result = parseBinaryGltfHeader(this, gltf);
 
                     // CESIUM_binary_glTF is from the beginning of the file but
                     // KHR_binary_glTF is from the beginning of the binary section
@@ -491,7 +493,6 @@ define([
         this._allowPicking = defaultValue(options.allowPicking, true);
 
         this._ready = false;
-        this._readyPromise = when.defer();
 
         /**
          * The currently playing glTF animations.
@@ -869,9 +870,9 @@ define([
         return magic === 'glTF';
     }
 
-    function parseBinaryGltfHeader(uint8Array) {
+    function parseBinaryGltfHeader(model, uint8Array) {
         if (!containsGltfMagic(uint8Array)) {
-            throw new DeveloperError('bgltf is not a valid Binary glTF file.');
+            loadFailure(model, new DeveloperError('bgltf is not a valid Binary glTF file.'));
         }
 
         var view = new DataView(uint8Array.buffer, uint8Array.byteOffset, uint8Array.byteLength);
@@ -882,7 +883,7 @@ define([
         //>>includeStart('debug', pragmas.debug);
         var version = view.getUint32(byteOffset, true);
         if (version !== 1) {
-            throw new DeveloperError('Only Binary glTF version 1 is supported.  Version ' + version + ' is not.');
+            loadFailure(model, new DeveloperError('Only Binary glTF version 1 is supported.  Version ' + version + ' is not.'));
         }
         //>>includeEnd('debug');
         byteOffset += sizeOfUint32;
@@ -1013,7 +1014,7 @@ define([
                 var array = new Uint8Array(arrayBuffer);
                 if (containsGltfMagic(array)) {
                     // Load binary glTF
-                    var result = parseBinaryGltfHeader(array);
+                    var result = parseBinaryGltfHeader(model, array);
                     // CESIUM_binary_glTF is from the beginning of the file but
                     //  KHR_binary_glTF is from the beginning of the binary section
                     if (result.binaryOffset !== 0) {
@@ -1167,12 +1168,16 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    function loadFailure(model, error) {
+        model._state = ModelState.FAILED;
+        model._readyPromise.reject(error);
+        throw error;
+    }
+
     function getFailedLoadFunction(model, type, path) {
         return function() {
             var error = new RuntimeError('Failed to load ' + type + ': ' + path);
-            model._state = ModelState.FAILED;
-            model._readyPromise.reject(error);
-            throw error;
+            loadFailure(model, error);
         };
     }
 
@@ -3347,7 +3352,7 @@ define([
 
                 if (extension !== 'CESIUM_RTC' && extension !== 'CESIUM_binary_glTF' &&
                     extension !== 'KHR_binary_glTF' && extension !== 'KHR_materials_common') {
-                    throw new RuntimeError('Unsupported glTF Extension: ' + extension);
+                    loadFailure(model, new RuntimeError('Unsupported glTF Extension: ' + extension));
                 }
                 else if(extension === 'CESIUM_binary_glTF') {
                     deprecationWarning('CESIUM_binary_glTF extension', 'Use of the CESIUM_binary_glTF extension has been deprecated. Use the KHR_binary_glTF extension instead.');
