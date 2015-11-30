@@ -11,7 +11,7 @@ define([
 
     var activeRequests = {};
 
-    var pageUri = new Uri(document.location.href);
+    var pageUri = typeof document !== 'undefined' ? new Uri(document.location.href) : new Uri();
     function getServer(url) {
         var uri = new Uri(url).resolve(pageUri);
         uri.normalize();
