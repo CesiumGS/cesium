@@ -32,6 +32,7 @@ Change Log
 * Added `Model.maximumScale` and `ModelGraphics.maximumScale` properties, giving an upper limit for minimumPixelSize.
 * Fixed glTF implementation to read the version as a string as per the specification and to correctly handle backwards compatibility for axis-angle rotations in glTF 0.8 models.
 * Fixed a bug in the deprecated `jsonp` that prevented it from returning a promise.  Its replacement, `loadJsonp`, was unaffected.
+* Fixed a bug where loadWithXhr would reject the returned promise with successful HTTP responses (2xx) that weren't 200.
 
 ### 1.15 - 2015-11-02
 

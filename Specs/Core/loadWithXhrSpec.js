@@ -132,5 +132,19 @@ defineSuite([
                 });
             });
         });
+
+        it('can support 2xx HTTP status (other than 200)', function(){
+            return loadWithXhr({
+                method: 'POST',
+                url: 'http://jsonplaceholder.typicode.com/posts',
+                data: {
+                    title: 'foo',
+                    body: 'bar',
+                    userId: 1
+                }
+            }).then(function(result){
+                expect(JSON.parse(result).id).toEqual(101);
+            });
+        });
     });
 });
