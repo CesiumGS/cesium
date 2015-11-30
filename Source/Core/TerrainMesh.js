@@ -1,10 +1,8 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
-        '../Core/deprecationWarning'
+        '../Core/defaultValue'
     ], function(
-        defaultValue,
-        deprecationWarning) {
+        defaultValue) {
     "use strict";
 
     /**
@@ -32,8 +30,6 @@ define([
       * @deprecated
       */
     var TerrainMesh = function TerrainMesh(center, vertices, indices, minimumHeight, maximumHeight, boundingSphere3D, occludeePointInScaledSpace, vertexStride, orientedBoundingBox) {
-        deprecationWarning('TerrainMesh', 'TerrainMesh is deprecated and will be removed in 1.17.');
-
         /**
          * The center of the tile.  Vertex positions are specified relative to this center.
          * @type {Cartesian3}
