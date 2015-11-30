@@ -21,7 +21,7 @@ defineSuite([
 
     it('default constructs', function() {
         var encoding = new TerrainEncoding();
-        expect(encoding.compression).not.toBeDefined();
+        expect(encoding.quantization).not.toBeDefined();
         expect(encoding.minimumHeight).not.toBeDefined();
         expect(encoding.maximumHeight).not.toBeDefined();
         expect(encoding.center).not.toBeDefined();
@@ -46,7 +46,7 @@ defineSuite([
 
         var encoding = new TerrainEncoding(aabox, minimumHeight, maximumHeight, fromENU, hasVertexNormals);
 
-        expect(encoding.compression).toEqual(TerrainQuantization.NONE);
+        expect(encoding.quantization).toEqual(TerrainQuantization.NONE);
         expect(encoding.minimumHeight).toEqual(minimumHeight);
         expect(encoding.maximumHeight).toEqual(maximumHeight);
         expect(encoding.center).toEqual(center);
@@ -74,7 +74,7 @@ defineSuite([
 
         var encoding = new TerrainEncoding(aabox, minimumHeight, maximumHeight, fromENU, hasVertexNormals);
 
-        expect(encoding.compression).toEqual(TerrainQuantization.BITS12);
+        expect(encoding.quantization).toEqual(TerrainQuantization.BITS12);
         expect(encoding.minimumHeight).toEqual(minimumHeight);
         expect(encoding.maximumHeight).toEqual(maximumHeight);
         expect(encoding.center).toEqual(center);
@@ -254,7 +254,7 @@ defineSuite([
         var encoding = new TerrainEncoding(aabox, minimumHeight, maximumHeight, fromENU, hasVertexNormals);
         var cloned = TerrainEncoding.clone(encoding);
 
-        expect(cloned.compression).toEqual(encoding.compression);
+        expect(cloned.quantization).toEqual(encoding.quantization);
         expect(cloned.minimumHeight).toEqual(encoding.minimumHeight);
         expect(cloned.maximumHeight).toEqual(encoding.maximumHeight);
         expect(cloned.center).toEqual(encoding.center);
@@ -282,7 +282,7 @@ defineSuite([
         var cloned = TerrainEncoding.clone(encoding, result);
 
         expect(cloned).toBe(result);
-        expect(cloned.compression).toEqual(encoding.compression);
+        expect(cloned.quantization).toEqual(encoding.quantization);
         expect(cloned.minimumHeight).toEqual(encoding.minimumHeight);
         expect(cloned.maximumHeight).toEqual(encoding.maximumHeight);
         expect(cloned.center).toEqual(encoding.center);

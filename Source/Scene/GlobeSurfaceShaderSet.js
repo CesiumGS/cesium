@@ -66,14 +66,14 @@ define([
     }
 
     GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog) {
-        var compression = 0;
-        var compressionDefine = '';
+        var quantization = 0;
+        var quantizationDefine = '';
 
         var terrainEncoding = surfaceTile.pickTerrain.mesh.encoding;
-        var compressionMode = terrainEncoding.compression;
-        if (compressionMode === TerrainQuantization.BITS12) {
-            compression = 1;
-            compressionDefine = 'COMPRESSION_BITS12';
+        var quantizationMode = terrainEncoding.quantization;
+        if (quantizationMode === TerrainQuantization.BITS12) {
+            quantization = 1;
+            quantizationDefine = 'QUANTIZATION_BITS12';
         }
 
         var sceneMode = frameState.mode;
@@ -90,7 +90,7 @@ define([
                     (hasVertexNormals << 11) |
                     (useWebMercatorProjection << 12) |
                     (enableFog << 13) |
-                    (compression << 14);
+                    (quantization << 14);
 
         var surfaceShader = surfaceTile.surfaceShader;
         if (defined(surfaceShader) &&
@@ -112,7 +112,7 @@ define([
             var vs = this.baseVertexShaderSource.clone();
             var fs = this.baseFragmentShaderSource.clone();
 
-            vs.defines.push(compressionDefine);
+            vs.defines.push(quantizationDefine);
             fs.defines.push('TEXTURE_UNITS ' + numberOfDayTextures);
 
             if (applyBrightness) {
@@ -202,23 +202,23 @@ define([
     };
 
     GlobeSurfaceShaderSet.prototype.getPickShaderProgram = function(frameState, surfaceTile, useWebMercatorProjection) {
-        var compression = 0;
-        var compressionDefine = '';
+        var quantization = 0;
+        var quantizationDefine = '';
 
         var terrainEncoding = surfaceTile.pickTerrain.mesh.encoding;
-        var compressionMode = terrainEncoding.compression;
-        if (compressionMode === TerrainQuantization.BITS12) {
-            compression = 1;
-            compressionDefine = 'COMPRESSION_BITS12';
+        var quantizationMode = terrainEncoding.quantization;
+        if (quantizationMode === TerrainQuantization.BITS12) {
+            quantization = 1;
+            quantizationDefine = 'QUANTIZATION_BITS12';
         }
 
         var sceneMode = frameState.mode;
-        var flags = sceneMode | (useWebMercatorProjection << 2) | (compression << 3);
+        var flags = sceneMode | (useWebMercatorProjection << 2) | (quantization << 3);
         var pickShader = this._pickShaderPrograms[flags];
 
         if (!defined(pickShader)) {
             var vs = this.baseVertexShaderSource.clone();
-            vs.defines.push(compressionDefine);
+            vs.defines.push(quantizationDefine);
             vs.sources.push(getPositionMode(sceneMode));
             vs.sources.push(get2DYPositionFraction(useWebMercatorProjection));
 

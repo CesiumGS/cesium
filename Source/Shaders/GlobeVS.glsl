@@ -1,4 +1,4 @@
-#ifdef COMPRESSION_BITS12
+#ifdef QUANTIZATION_BITS12
 attribute vec4 compressed;
 #else
 attribute vec4 position3DAndHeight;
@@ -91,14 +91,14 @@ vec4 getPositionMorphingMode(vec3 position, float height, vec2 textureCoordinate
     return czm_modelViewProjection * morphPosition;
 }
 
-#ifdef COMPRESSION_BITS12
+#ifdef QUANTIZATION_BITS12
 uniform vec2 u_minMaxHeight;
 uniform mat4 u_scaleAndBias;
 #endif
 
 void main() 
 {
-#ifdef COMPRESSION_BITS12
+#ifdef QUANTIZATION_BITS12
     vec2 xy = czm_decompressTextureCoordinates(compressed.x);
     vec2 zh = czm_decompressTextureCoordinates(compressed.y);
     vec3 position = vec3(xy, zh.x);

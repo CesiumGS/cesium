@@ -45,7 +45,7 @@ define([
      * @private
      */
     var TerrainEncoding = function(axisAlignedBoundingBox, minimumHeight, maximumHeight, fromENU, hasVertexNormals) {
-        var compression;
+        var quantization;
         var center;
         var toENU;
         var matrix;
@@ -59,9 +59,9 @@ define([
             var maxDim = Math.max(Cartesian3.maximumComponent(dimensions), hDim);
 
             if (maxDim < SHIFT_LEFT_12 - 1.0) {
-                compression = TerrainQuantization.BITS12;
+                quantization = TerrainQuantization.BITS12;
             } else {
-                compression = TerrainQuantization.NONE;
+                quantization = TerrainQuantization.NONE;
             }
 
             center = axisAlignedBoundingBox.center;
@@ -93,7 +93,7 @@ define([
          * How the vertices of the mesh were compressed.
          * @type {TerrainQuantization}
          */
-        this.compression = compression;
+        this.quantization = quantization;
 
         /**
          * The minimum height of the tile including the skirts.
@@ -143,7 +143,7 @@ define([
         var u = uv.x;
         var v = uv.y;
 
-        if (this.compression === TerrainQuantization.BITS12) {
+        if (this.quantization === TerrainQuantization.BITS12) {
             position = Matrix4.multiplyByPoint(this.toScaledENU, position, cartesian3Scratch);
 
             position.x = CesiumMath.clamp(position.x, 0.0, 1.0);
@@ -190,7 +190,7 @@ define([
 
         index *= this.getStride();
 
-        if (this.compression === TerrainQuantization.BITS12) {
+        if (this.quantization === TerrainQuantization.BITS12) {
             var xy = AttributeCompression.decompressTextureCoordinates(buffer[index], cartesian2Scratch);
             result.x = xy.x;
             result.y = xy.y;
@@ -210,7 +210,7 @@ define([
     TerrainEncoding.prototype.getStride = function() {
         var vertexStride;
 
-        switch (this.compression) {
+        switch (this.quantization) {
             case TerrainQuantization.BITS12:
                 vertexStride = 3;
                 break;
@@ -236,7 +236,7 @@ define([
     TerrainEncoding.prototype.getAttributes = function(buffer) {
         var datatype = ComponentDatatype.FLOAT;
 
-        if (this.compression === TerrainQuantization.NONE) {
+        if (this.quantization === TerrainQuantization.NONE) {
             var sizeInBytes = ComponentDatatype.getSizeInBytes(datatype);
             var position3DAndHeightLength = 4;
             var numTexCoordComponents = this.hasVertexNormals ? 3 : 2;
@@ -269,7 +269,7 @@ define([
     };
 
     TerrainEncoding.prototype.getAttributeLocations = function() {
-        if (this.compression === TerrainQuantization.NONE) {
+        if (this.quantization === TerrainQuantization.NONE) {
             return attributesNone;
         } else {
             return attributes;
@@ -286,7 +286,7 @@ define([
             result = new TerrainEncoding();
         }
 
-        result.compression = encoding.compression;
+        result.quantization = encoding.quantization;
         result.minimumHeight = encoding.minimumHeight;
         result.maximumHeight = encoding.maximumHeight;
         result.center = Cartesian3.clone(encoding.center);
