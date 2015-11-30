@@ -27,6 +27,8 @@ define([
       * @param {Number} [vertexStride=6] The number of components in each vertex.
       * @param {OrientedBoundingBox} [orientedBoundingBox] A bounding box that completely contains the tile.
       * @param {TerrainEncoding} encoding Information used to decode the mesh.
+      *
+      * @private
       */
     var TerrainMesh = function TerrainMesh(center, vertices, indices, minimumHeight, maximumHeight, boundingSphere3D, occludeePointInScaledSpace, vertexStride, orientedBoundingBox, encoding) {
         /**

@@ -34,6 +34,8 @@ define([
      *
      * @namespace
      * @alias HeightmapTessellator
+     *
+     * @private
      */
     var HeightmapTessellator = {};
 
