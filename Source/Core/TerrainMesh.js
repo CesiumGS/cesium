@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        '../Core/defaultValue'
+        '../Core/defaultValue',
+        '../Core/deprecationWarning'
     ], function(
-        defaultValue) {
+        defaultValue,
+        deprecationWarning) {
     "use strict";
 
     /**
@@ -26,8 +28,12 @@ define([
       *                     the tile is considered to be entirely below the horizon.
       * @param {Number} [vertexStride=6] The number of components in each vertex.
       * @param {OrientedBoundingBox} [orientedBoundingBox] A bounding sphere that completely contains the tile.
+      *
+      * @deprecated
       */
     var TerrainMesh = function TerrainMesh(center, vertices, indices, minimumHeight, maximumHeight, boundingSphere3D, occludeePointInScaledSpace, vertexStride, orientedBoundingBox) {
+        deprecationWarning('TerrainMesh', 'TerrainMesh is deprecated and will be removed in 1.17.');
+
         /**
          * The center of the tile.  Vertex positions are specified relative to this center.
          * @type {Cartesian3}

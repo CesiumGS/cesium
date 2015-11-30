@@ -3,6 +3,7 @@ define([
         './Cartesian3',
         './defaultValue',
         './defined',
+        './deprecationWarning',
         './DeveloperError',
         './Ellipsoid',
         './freezeObject',
@@ -12,6 +13,7 @@ define([
         Cartesian3,
         defaultValue,
         defined,
+        deprecationWarning,
         DeveloperError,
         Ellipsoid,
         freezeObject,
@@ -24,6 +26,8 @@ define([
      *
      * @namespace
      * @alias HeightmapTessellator
+     *
+     * @deprecated
      */
     var HeightmapTessellator = {};
 
@@ -110,6 +114,8 @@ define([
      * });
      */
     HeightmapTessellator.computeVertices = function(options) {
+        deprecationWarning('HeightmapTessellator', 'HeightmapTessellator is deprecated and will be removed in 1.17.');
+
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.heightmap)) {
             throw new DeveloperError('options.heightmap is required.');

@@ -4,6 +4,8 @@ Change Log
 ### 1.16 - 2015-12-01
 
 * Deprecated
+    * Deprecated `HeightmapTessellator`. It will be removed in 1.17.
+    * Deprecated `TerrainMesh`. It will be removed in 1.17.
     * Deprecated `OpenStreetMapImageryProvider`. It will be removed in 1.18. Use `createOpenStreetMapImageryProvider` instead.
 * Improved terrain performance by up to 35%. Added support for fog near the horizon, which improves performance by rendering less terrain tiles and reduces terrain tile requests.  This is enabled by default.  See `Scene.fog` for options.  [#3154](https://github.com/AnalyticalGraphicsInc/cesium/pull/3154)
 * Added terrain exaggeration. Enabled on viewer creation with the exaggeration scalar as the `terrainExaggeration` option.

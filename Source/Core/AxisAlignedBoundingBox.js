@@ -3,18 +3,14 @@ define([
         './Cartesian3',
         './defaultValue',
         './defined',
-        './deprecationWarning',
         './DeveloperError',
-        './Intersect',
-        './Plane'
+        './Intersect'
     ], function(
         Cartesian3,
         defaultValue,
         defined,
-        deprecationWarning,
         DeveloperError,
-        Intersect,
-        Plane) {
+        Intersect) {
     "use strict";
 
     /**
