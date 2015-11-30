@@ -6,11 +6,11 @@ Thanks for contributing to Cesium.  You rock!  Are you
 
 # Submitting an Issue
 
-If you have a question, do not submit an issue; instead, search the [Cesium forum](http://cesiumjs.org/forum.html).  The forum is very active and there are years of informative archives, often with answers by the core Cesium team.  If you do not find an answer to your question, start a new thread and you'll likely get a quick response.
+If you have a question, do not submit an issue; instead, search the [Cesium forum](http://cesiumjs.org/forum.html).  The forum is very active and there are years of informative archives, often with answers from the core Cesium team.  If you do not find an answer to your question, start a new thread and you'll likely get a quick response.
 
 If you think you've found a bug in Cesium, first search the [issues](https://github.com/AnalyticalGraphicsInc/cesium/issues).  If an issue already exists, please add a comment expressing your interest and any additional information.  This helps us prioritize issues.
 
-If a related issue does not exist, submit a new one.  Please be concise and include as much of the following information that is relevant:
+If a related issue does not exist, submit a new one.  Please be concise and include as much of the following information as is relevant:
 * Minimum amount of sample code (and data) that can be copy and pasted into [Sandcastle](https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html) to reproduce the issue.  For example, see [#2657](https://github.com/AnalyticalGraphicsInc/cesium/issues/2657).
 * Screenshot or animated .gif if appropriate (try [LICEcap](http://www.cockos.com/licecap/)).  For example, see [#3153](https://github.com/AnalyticalGraphicsInc/cesium/issues/3153).  Screenshots are particularly useful for exceptions and rendering artifacts.
 * Link to the thread if this was discussed on the Cesium forum or elsewhere.  For example, see [#3045](https://github.com/AnalyticalGraphicsInc/cesium/issues/3045).
@@ -20,7 +20,7 @@ If a related issue does not exist, submit a new one.  Please be concise and incl
 
 # Getting Started Contributing Code and Documentation
 
-Thanks for helping make Cesium awesome!  If you are looking for ideas to start contributing, consider:
+Thanks for helping make Cesium awesome!  If you are looking for places to start contributing, consider:
 
 * issues labeled [beginner](https://github.com/AnalyticalGraphicsInc/cesium/labels/beginner),
 * issues labeled [doc](https://github.com/AnalyticalGraphicsInc/cesium/labels/doc),
@@ -31,7 +31,7 @@ See the [Contributor's Guide](https://github.com/AnalyticalGraphicsInc/cesium/wi
 
 # Opening a Pull Request
 
-We love pull requests.  We strive to promptly review them, provide feedback, and merge.  Interest in Cesium is at an all time high so the core team is busy.  Following the tips in this guide will help your pull request get merged quickly.
+We love pull requests.  We strive to promptly review them, provide feedback, and merge.  Interest in Cesium is at an all-time high so the core team is busy.  Following the tips in this guide will help your pull request get merged quickly.
 
 > If you plan to make a major change, please start a new thread on the [Cesium forum](http://cesiumjs.org/forum.html) first.  Pull requests for small features and bug fixes can generally just be opened without discussion on the forum.
 
