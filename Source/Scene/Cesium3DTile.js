@@ -23,7 +23,8 @@ define([
         './Empty3DTileContentProvider',
         './PerInstanceColorAppearance',
         './Primitive',
-        './TileBoundingBox'
+        './TileBoundingBox',
+        './Tileset3DTileContentProvider'
     ], function(
         BoxOutlineGeometry,
         Cartesian3,
@@ -48,7 +49,8 @@ define([
         Empty3DTileContentProvider,
         PerInstanceColorAppearance,
         Primitive,
-        TileBoundingBox) {
+        TileBoundingBox,
+        Tileset3DTileContentProvider) {
     "use strict";
 
     /**
@@ -131,13 +133,6 @@ define([
         /**
          * DOC_TBA
          *
-         * @readonly
-         */
-        this.tilesetLoading = false;
-
-        /**
-         * DOC_TBA
-         *
          * @type {Promise}
          * @readonly
          */
@@ -152,7 +147,7 @@ define([
 
             if (type === 'json') {
                 this.hasTilesetContent = true;
-                content = new Empty3DTileContentProvider();
+                content = new Tileset3DTileContentProvider();
             } else if (defined(contentFactory)) {
                 content = contentFactory(tileset, this, url);
             } else {

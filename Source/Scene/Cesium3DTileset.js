@@ -13,6 +13,7 @@ define([
         '../ThirdParty/when',
         './Cesium3DTile',
         './Cesium3DTileRefine',
+        './Cesium3DTileContentState',
         './CullingVolume',
         './SceneMode'
     ], function(
@@ -29,6 +30,7 @@ define([
         when,
         Cesium3DTile,
         Cesium3DTileRefine,
+        Cesium3DTileContentState,
         CullingVolume,
         SceneMode) {
     "use strict";
@@ -167,7 +169,8 @@ define([
             // loading its content, the root tile of the subtree will be its child
             if (defined(parentTile)) {
                 parentTile.children.push(rootTile);
-                parentTile.numberOfChildrenWithoutContent = 1;
+                // TODO: Is this right?
+                parentTile.numberOfChildrenWithoutContent += 1;
             }
 
             var stack = [];
@@ -333,12 +336,13 @@ define([
         // 1) If its children are not loaded, load the subtree it points to and then select its root child
         // 2) If its children are already loaded, select its (root) child since the geometric error of it is
         //    same as this tile's
-        var childrenLength = tile.children.length;
         var contentUrl = tile._header.content.url;
 
         // If the subtree has already been added and child
         // content requested, select the child and continue
-        if ((childrenLength > 0) && (tile.numberOfChildrenWithoutContent === 0)) {
+        if ((tile.content.state === Cesium3DTileContentState.Ready) &&
+            (tile.numberOfChildrenWithoutContent === 0)) {
+                // TODO: select which tiles? All children tiles?
             selectTile(selectedTiles, tile.children[0], fullyVisible, frameState);
             return;
         } else if (replace) {
@@ -349,12 +353,12 @@ define([
             selectTile(selectedTiles, tile.parent, fullyVisible, frameState);
         }
 
-        // Request the tile's tileset.
-        if (childrenLength === 0 && !tile.tilesetLoading) {
-            tile.tilesetLoading = true;
+        // Request the tile's tileset if it's unloaded.
+        if (tile.isContentUnloaded()) {
+            tile.content.state = Cesium3DTileContentState.LOADING;
             var tilesUrl = (new Uri(contentUrl).isAbsolute()) ? contentUrl : tiles3D._url + contentUrl;
             loadTilesJson(tiles3D, tilesUrl, tile, function() {
-                tile.tilesetLoading = false;
+                tile.content.state = Cesium3DTileContentState.READY;
             });
         }
     }
