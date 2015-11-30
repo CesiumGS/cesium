@@ -31,7 +31,8 @@ define([
     var SHIFT_LEFT_12 = Math.pow(2.0, 12.0);
 
     /**
-     * Data used to decompress the terrain mesh.
+     * Data used to quantize and pack the terrain mesh. The position can be unpacked for picking and all attributes
+     * are unpacked in the vertex shader.
      *
      * @alias TerrainEncoding
      * @constructor
@@ -276,11 +277,6 @@ define([
         }
     };
 
-    /**
-     * @param {TerrainEncoding} encoding
-     * @param {TerrainEncoding} [result]
-     * @returns {TerrainEncoding}
-     */
     TerrainEncoding.clone = function(encoding, result) {
         if (!defined(result)) {
             result = new TerrainEncoding();
