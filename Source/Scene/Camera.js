@@ -694,7 +694,6 @@ define([
         heading : {
             get : function () {
                 if (this._mode !== SceneMode.MORPHING) {
-                    var origin = this.positionWC;
                     var ellipsoid = this._projection.ellipsoid;
 
                     var oldTransform = Matrix4.clone(this._transform, scratchHPRMatrix1);
@@ -722,7 +721,6 @@ define([
         pitch : {
             get : function() {
                 if (this._mode !== SceneMode.MORPHING) {
-                    var origin = this.positionWC;
                     var ellipsoid = this._projection.ellipsoid;
 
                     var oldTransform = Matrix4.clone(this._transform, scratchHPRMatrix1);
@@ -750,7 +748,6 @@ define([
         roll : {
             get : function() {
                 if (this._mode !== SceneMode.MORPHING) {
-                    var origin = this.positionWC;
                     var ellipsoid = this._projection.ellipsoid;
 
                     var oldTransform = Matrix4.clone(this._transform, scratchHPRMatrix1);
@@ -978,7 +975,7 @@ define([
      * Sets the camera position, orientation and transform.
      *
      * @param {Object} options Object with the following properties:
-     * @param {Cartesian3|Rectangle} options.destination The final position of the camera in WGS84 (world) coordinates or a rectangle that would be visible from a top-down view.
+     * @param {Cartesian3|Rectangle} [options.destination] The final position of the camera in WGS84 (world) coordinates or a rectangle that would be visible from a top-down view.
      * @param {Object} [options.orientation] An object that contains either direction and up properties or heading, pith and roll properties. By default, the direction will point
      * towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D. The up direction will point towards local north in 3D and in the positive
      * y direction in Columbus view or 2D.
@@ -1663,7 +1660,6 @@ define([
     };
 
     var scratchLookAtMatrix4 = new Matrix4();
-    var scratchLookAtTransformMatrix4 = new Matrix4();
 
     /**
      * Sets the camera position and orientation using a target and offset. The target must be given in
@@ -2253,6 +2249,55 @@ define([
         return getPickRayOrthographic(this, windowPosition, result);
     };
 
+    var scratchToCenter = new Cartesian3();
+    var scratchProj = new Cartesian3();
+
+    /**
+     * Return the distance from the camera to the front of the bounding sphere.
+     *
+     * @param {BoundingSphere} boundingSphere The bounding sphere in world coordinates.
+     * @returns {Number} The distance to the bounding sphere.
+     */
+    Camera.prototype.distanceToBoundingSphere = function(boundingSphere) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(boundingSphere)) {
+            throw new DeveloperError('boundingSphere is required.');
+        }
+        //>>includeEnd('debug');
+
+        var toCenter = Cartesian3.subtract(this.positionWC, boundingSphere.center, scratchToCenter);
+        var proj = Cartesian3.multiplyByScalar(this.directionWC, Cartesian3.dot(toCenter, this.directionWC), scratchProj);
+        return Math.max(0.0, Cartesian3.magnitude(proj) - boundingSphere.radius);
+    };
+
+    var scratchPixelSize = new Cartesian2();
+
+    /**
+     * Return the pixel size in meters.
+     *
+     * @param {BoundingSphere} boundingSphere The bounding sphere in world coordinates.
+     * @param {Number} drawingBufferWidth The drawing buffer width.
+     * @param {Number} drawingBufferHeight The drawing buffer height.
+     * @returns {Number} The pixel size in meters.
+     */
+    Camera.prototype.getPixelSize = function(boundingSphere, drawingBufferWidth, drawingBufferHeight) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(boundingSphere)) {
+            throw new DeveloperError('boundingSphere is required.');
+        }
+        if (!defined(drawingBufferWidth)) {
+            throw new DeveloperError('drawingBufferWidth is required.');
+        }
+        if (!defined(drawingBufferHeight)) {
+            throw new DeveloperError('drawingBufferHeight is required.');
+        }
+        //>>includeEnd('debug');
+
+        var distance = this.distanceToBoundingSphere(boundingSphere);
+        var pixelSize = this.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, scratchPixelSize);
+        return Math.max(pixelSize.x, pixelSize.y);
+    };
+
     function createAnimation2D(camera, duration) {
         var position = camera.position;
         var translateX = position.x < -camera._maxCoord.x || position.x > camera._maxCoord.x;
@@ -2388,8 +2433,6 @@ define([
      * @param {Number} duration The duration, in seconds, of the animation.
      * @returns {Object} The animation or undefined if the scene mode is 3D or the map is already ion view.
      *
-     * @exception {DeveloperException} duration is required.
-     *
      * @private
      */
     Camera.prototype.createCorrectPositionTween = function(duration) {
@@ -2410,11 +2453,6 @@ define([
 
 
     var scratchFlyToDestination = new Cartesian3();
-    var scratchFlyToQuaternion = new Quaternion();
-    var scratchFlyToMatrix3 = new Matrix3();
-    var scratchFlyToDirection = new Cartesian3();
-    var scratchFlyToUp = new Cartesian3();
-    var scratchFlyToMatrix4 = new Matrix4();
     var newOptions = {
         destination : undefined,
         heading : undefined,

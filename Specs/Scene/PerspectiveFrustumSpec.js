@@ -14,7 +14,6 @@ defineSuite([
         CesiumMath,
         Matrix4) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var frustum, planes;
 
@@ -112,6 +111,10 @@ defineSuite([
         var farPlane = planes[5];
         var expectedResult = new Cartesian4(0.0, 0.0, 1.0, 2.0);
         expect(farPlane).toEqual(expectedResult);
+    });
+
+    it('get sseDenominator', function() {
+        expect(frustum.sseDenominator).toEqualEpsilon(1.1547, CesiumMath.EPSILON5);
     });
 
     it('get perspective projection matrix', function() {

@@ -27,7 +27,7 @@ define([
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
      * @see MapboxImageryProvider
-     * @see OpenStreetMapImageryProvider
+     * @see createOpenStreetMapImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see WebMapServiceImageryProvider
      *
@@ -98,6 +98,16 @@ define([
          * @readonly
          */
         ready : {
+            get : DeveloperError.throwInstantiationError
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof ImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
             get : DeveloperError.throwInstantiationError
         },
 

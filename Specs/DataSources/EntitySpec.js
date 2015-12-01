@@ -54,7 +54,6 @@ defineSuite([
         RectangleGraphics,
         WallGraphics) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('constructor sets expected properties.', function() {
         var entity = new Entity();
@@ -79,6 +78,7 @@ defineSuite([
         expect(entity.rectangle).toBeUndefined();
         expect(entity.viewFrom).toBeUndefined();
         expect(entity.wall).toBeUndefined();
+        expect(entity.entityCollection).toBeUndefined();
 
         var options = {
             id : 'someId',
@@ -135,6 +135,8 @@ defineSuite([
         expect(entity.rectangle).toBeInstanceOf(RectangleGraphics);
         expect(entity.viewFrom).toBeInstanceOf(ConstantProperty);
         expect(entity.wall).toBeInstanceOf(WallGraphics);
+        
+        expect(entity.entityCollection).toBeUndefined();
     });
 
     it('isAvailable is always true if no availability defined.', function() {
@@ -220,8 +222,6 @@ defineSuite([
         });
         source.addProperty(propertyName);
         source[propertyName] = value;
-
-        var listener = jasmine.createSpy('listener');
 
         var target = new Entity({
             id : 'target'
@@ -458,5 +458,22 @@ defineSuite([
         expect(listener.calls.argsFor(0)).toEqual([entity, 'isShowing', false, true]);
         expect(entity.show).toBe(true);
         expect(entity.isShowing).toBe(false);
+    });
+
+    it('isShowing works when removing parent.', function() {
+        var entity = new Entity();
+        entity.parent = new Entity({
+            show : false
+        });
+        expect(entity.isShowing).toBe(false);
+
+        var listener = jasmine.createSpy('listener');
+        entity.definitionChanged.addEventListener(listener);
+
+        entity.parent = undefined;
+
+        expect(listener.calls.count()).toBe(2);
+        expect(listener.calls.argsFor(0)).toEqual([entity, 'isShowing', true, false]);
+        expect(entity.isShowing).toBe(true);
     });
 });

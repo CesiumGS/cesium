@@ -12,7 +12,6 @@ defineSuite([
         VertexFormat,
         createPackableSpecs) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('constructor throws without minimum corner', function() {
         expect(function() {
@@ -101,8 +100,8 @@ defineSuite([
     });
 
     createPackableSpecs(BoxGeometry, new BoxGeometry({
-        minimumCorner : new Cartesian3(1.0, 2.0, 3.0),
-        maximumCorner : new Cartesian3(4.0, 5.0, 6.0),
+        minimum : new Cartesian3(1.0, 2.0, 3.0),
+        maximum : new Cartesian3(4.0, 5.0, 6.0),
         vertexFormat : VertexFormat.POSITION_AND_NORMAL
     }), [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0]);
 });

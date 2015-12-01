@@ -27,11 +27,14 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Sean Lilley](https://github.com/lilleyse)
    * [Katherina Lim](https://github.com/klim705)
    * [Gabrielle Getz](https://github.com/ggetz)
+   * [Sarah Chow](https://github.com/slchow)
+   * [Brendan Flood](https://github.com/bflood-agi)
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
    * [Kevin Ring](https://github.com/kring)
    * [Keith Grochow](https://github.com/kgrochow)
    * [Chloe Chen](https://github.com/chloeleichen)
+   * [Arthur Street](https://github.com/RacingTadpole)
 * [EU Edge](http://euedge.com/)
    * [Ákos Maróy](https://github.com/akosmaroy)
 * [Raytheon Intelligence and Information Systems](http://www.raytheon.com/)
@@ -73,5 +76,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Cole Murphy](https://github.com/fantasticole)
 * [Keat Tang](https://github.com/keattang)
 * [Denver Pierce](https://github.com/denverpierce)
+* [Tucker Tibbetts](https://github.com/cttibbetts)
 
 Also see [our contributors page](http://cesiumjs.org/contributors.html) for more information.

@@ -295,7 +295,7 @@ define([
         }
     };
 
-    GlobeSurfaceTile.processStateMachine = function(tile, context, commandList, terrainProvider, imageryLayerCollection) {
+    GlobeSurfaceTile.processStateMachine = function(tile, frameState, terrainProvider, imageryLayerCollection) {
         var surfaceTile = tile.data;
         if (!defined(surfaceTile)) {
             surfaceTile = tile.data = new GlobeSurfaceTile();
@@ -307,7 +307,7 @@ define([
         }
 
         if (tile.state === QuadtreeTileLoadState.LOADING) {
-            processTerrainStateMachine(tile, context, terrainProvider);
+            processTerrainStateMachine(tile, frameState, terrainProvider);
         }
 
         // The terrain is renderable as soon as we have a valid vertex array.
@@ -345,7 +345,7 @@ define([
                 }
             }
 
-            var thisTileDoneLoading = tileImagery.processStateMachine(tile, context, commandList);
+            var thisTileDoneLoading = tileImagery.processStateMachine(tile, frameState);
             isDoneLoading = isDoneLoading && thisTileDoneLoading;
 
             // The imagery is renderable as soon as we have any renderable imagery for this region.
@@ -433,14 +433,14 @@ define([
         Cartesian3.normalize(northNormal, surfaceTile.northNormal);
     }
 
-    function processTerrainStateMachine(tile, context, terrainProvider) {
+    function processTerrainStateMachine(tile, frameState, terrainProvider) {
         var surfaceTile = tile.data;
         var loaded = surfaceTile.loadedTerrain;
         var upsampled = surfaceTile.upsampledTerrain;
         var suspendUpsampling = false;
 
         if (defined(loaded)) {
-            loaded.processLoadStateMachine(context, terrainProvider, tile.x, tile.y, tile.level);
+            loaded.processLoadStateMachine(frameState, terrainProvider, tile.x, tile.y, tile.level);
 
             // Publish the terrain data on the tile as soon as it is available.
             // We'll potentially need it to upsample child tiles.
@@ -450,7 +450,7 @@ define([
 
                     // If there's a water mask included in the terrain data, create a
                     // texture for it.
-                    createWaterMaskTextureIfNeeded(context, surfaceTile);
+                    createWaterMaskTextureIfNeeded(frameState.context, surfaceTile);
 
                     propagateNewLoadedDataToChildren(tile);
                 }
@@ -473,7 +473,7 @@ define([
         }
 
         if (!suspendUpsampling && defined(upsampled)) {
-            upsampled.processUpsampleStateMachine(context, terrainProvider, tile.x, tile.y, tile.level);
+            upsampled.processUpsampleStateMachine(frameState, terrainProvider, tile.x, tile.y, tile.level);
 
             // Publish the terrain data on the tile as soon as it is available.
             // We'll potentially need it to upsample child tiles.
@@ -706,11 +706,11 @@ define([
                     width : textureSize,
                     height : textureSize,
                     arrayBufferView : waterMask
-                }
+                },
+                sampler : waterMaskData.sampler
             });
 
             texture.referenceCount = 0;
-            texture.sampler = waterMaskData.sampler;
         }
 
         ++texture.referenceCount;

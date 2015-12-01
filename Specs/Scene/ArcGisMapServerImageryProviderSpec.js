@@ -48,7 +48,6 @@ defineSuite([
         pollToPromise,
         Uri) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
 
     afterEach(function() {
         loadJsonp.loadAndExecuteScript = loadJsonp.defaultLoadAndExecuteScript;
@@ -127,6 +126,36 @@ defineSuite([
             }]
         }
     };
+
+    it('resolves readyPromise', function() {
+        var baseUrl = '//tiledArcGisMapServer.invalid';
+
+        stubJSONPCall(baseUrl, webMercatorResult);
+
+        var provider = new ArcGisMapServerImageryProvider({
+            url : baseUrl
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
+    it('rejects readyPromise on error', function() {
+        var baseUrl = '//tiledArcGisMapServer.invalid';
+
+        var provider = new ArcGisMapServerImageryProvider({
+            url : baseUrl
+        });
+
+        return provider.readyPromise.then(function () {
+            fail('should not resolve');
+        }).otherwise(function (e) {
+            expect(e.message).toContain(baseUrl);
+            expect(provider.ready).toBe(false);
+        });
+    });
 
     it('supports tiled servers in web mercator projection', function() {
         var baseUrl = '//tiledArcGisMapServer.invalid';

@@ -21,7 +21,7 @@ define([
 
     /**
      * <span style="display: block; text-align: center;">
-     * <img src="images/BaseLayerPicker.png" style="border: none; border-radius: 5px;" />
+     * <img src="images/BaseLayerPicker.png" width="264" height="287" alt="" />
      * <br />BaseLayerPicker with its drop-panel open.
      * </span>
      * <br /><br />
@@ -63,7 +63,7 @@ define([
      *      tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable \
      * map of the world.\nhttp://www.openstreetmap.org',
      *      creationFunction : function() {
-     *          return new Cesium.OpenStreetMapImageryProvider({
+     *          return Cesium.createOpenStreetMapImageryProvider({
      *              url : '//a.tile.openstreetmap.org/'
      *          });
      *      }

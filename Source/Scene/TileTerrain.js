@@ -96,17 +96,17 @@ define([
         this.vertexArray = undefined;
     };
 
-    TileTerrain.prototype.processLoadStateMachine = function(context, terrainProvider, x, y, level) {
+    TileTerrain.prototype.processLoadStateMachine = function(frameState, terrainProvider, x, y, level) {
         if (this.state === TerrainState.UNLOADED) {
             requestTileGeometry(this, terrainProvider, x, y, level);
         }
 
         if (this.state === TerrainState.RECEIVED) {
-            transform(this, context, terrainProvider, x, y, level);
+            transform(this, frameState, terrainProvider, x, y, level);
         }
 
         if (this.state === TerrainState.TRANSFORMED) {
-            createResources(this, context, terrainProvider, x, y, level);
+            createResources(this, frameState.context, terrainProvider, x, y, level);
         }
     };
 
@@ -150,7 +150,7 @@ define([
         doRequest();
     }
 
-    TileTerrain.prototype.processUpsampleStateMachine = function(context, terrainProvider, x, y, level) {
+    TileTerrain.prototype.processUpsampleStateMachine = function(frameState, terrainProvider, x, y, level) {
         if (this.state === TerrainState.UNLOADED) {
             var upsampleDetails = this.upsampleDetails;
 
@@ -183,19 +183,19 @@ define([
         }
 
         if (this.state === TerrainState.RECEIVED) {
-            transform(this, context, terrainProvider, x, y, level);
+            transform(this, frameState, terrainProvider, x, y, level);
         }
 
         if (this.state === TerrainState.TRANSFORMED) {
-            createResources(this, context, terrainProvider, x, y, level);
+            createResources(this, frameState.context, terrainProvider, x, y, level);
         }
     };
 
-    function transform(tileTerrain, context, terrainProvider, x, y, level) {
+    function transform(tileTerrain, frameState, terrainProvider, x, y, level) {
         var tilingScheme = terrainProvider.tilingScheme;
 
         var terrainData = tileTerrain.data;
-        var meshPromise = terrainData.createMesh(tilingScheme, x, y, level);
+        var meshPromise = terrainData.createMesh(tilingScheme, x, y, level, frameState.terrainExaggeration);
 
         if (!defined(meshPromise)) {
             // Postponed.

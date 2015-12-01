@@ -30,7 +30,6 @@ defineSuite([
         pick,
         render) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach,beforeAll,afterAll*/
 
     var context;
     var frameState;
@@ -412,7 +411,7 @@ defineSuite([
     });
 
     it('renders polylines with duplicate positions at construction', function() {
-        var p = polylines.add({
+        polylines.add({
             positions : [
                          new Cartesian3(0.0, -1.0, 0.0),
                          new Cartesian3(0.0, 1.0, 0.0),

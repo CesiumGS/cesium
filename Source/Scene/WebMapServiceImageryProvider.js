@@ -4,7 +4,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/freezeObject',
         '../Core/GeographicTilingScheme',
@@ -19,7 +18,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         freezeObject,
         GeographicTilingScheme,
@@ -73,7 +71,7 @@ define([
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
-     * @see OpenStreetMapImageryProvider
+     * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see TileMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
@@ -337,6 +335,18 @@ define([
         ready : {
             get : function() {
                 return this._tileProvider.ready;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof WebMapServiceImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._tileProvider.readyPromise;
             }
         },
 

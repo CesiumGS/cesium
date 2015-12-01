@@ -100,6 +100,7 @@ define([
             credit = new Credit(credit);
         }
         this._credit = credit;
+        this._readyPromise = when.resolve(true);
     };
 
     defineProperties(ArcGisImageServerTerrainProvider.prototype, {
@@ -148,6 +149,18 @@ define([
         ready : {
             get : function() {
                 return true;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof ArcGisImageServerTerrainProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise;
             }
         },
 

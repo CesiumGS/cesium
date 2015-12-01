@@ -440,9 +440,7 @@ define([
             var lastIndex = timesLength - 1;
             var pointsInCollection = lastIndex - firstIndex + 1;
 
-            if (pointsInCollection < degree + 1) {
-                // Use the entire range.
-            } else {
+            if (pointsInCollection >= degree + 1) {
                 var computedFirstIndex = index - ((degree / 2) | 0) - 1;
                 if (computedFirstIndex < firstIndex) {
                     computedFirstIndex = firstIndex;

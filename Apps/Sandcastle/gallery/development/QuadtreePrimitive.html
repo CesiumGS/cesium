@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Demonstrates rendering massive quantities of geometry using quadtree level-of-detail and culling.  This is a low-level feature intended for advanced users.">
+    <meta name="cesium-sandcastle-labels" content="Development">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+   });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    "use strict";
+//Sandcastle_Begin
+var DemoTileProvider = function() {
+    this._quadtree = undefined;
+    this._tilingScheme = new Cesium.GeographicTilingScheme();
+    this._errorEvent = new Cesium.Event();
+    this._levelZeroMaximumError = Cesium.QuadtreeTileProvider.computeDefaultLevelZeroMaximumGeometricError(this._tilingScheme);
+};
+
+Object.defineProperties(DemoTileProvider.prototype, {
+    quadtree : {
+        get : function() {
+            return this._quadtree;
+        },
+        set : function(value) {
+            this._quadtree = value;
+        }
+    },
+
+    ready : {
+        get : function() {
+            return true;
+        }
+    },
+
+    tilingScheme : {
+        get : function() {
+            return this._tilingScheme;
+        }
+    },
+
+    errorEvent : {
+        get : function() {
+            return this._errorEvent;
+        }
+    }
+});
+
+DemoTileProvider.prototype.beginUpdate = function(frameState) {
+};
+
+DemoTileProvider.prototype.endUpdate = function(frameState) {
+};
+
+DemoTileProvider.prototype.getLevelMaximumGeometricError = function(level) {
+    return this._levelZeroMaximumError / (1 << level);
+};
+
+DemoTileProvider.prototype.loadTile = function(frameState, tile) {
+    if (tile.state === Cesium.QuadtreeTileLoadState.START) {
+        tile.data = {
+            primitive : undefined,
+            freeResources : function() {
+                if (Cesium.defined(this.primitive)) {
+                    this.primitive.destroy();
+                    this.primitive = undefined;
+                }
+            }
+        };
+        var color = Cesium.Color.fromBytes(255, 0, 0, 255);
+
+        tile.data.primitive = new Cesium.Primitive({
+            geometryInstances : new Cesium.GeometryInstance({
+                geometry : new Cesium.RectangleOutlineGeometry({
+                    rectangle : tile.rectangle
+                }),
+                attributes : {
+                    color : Cesium.ColorGeometryInstanceAttribute.fromColor(color)
+                }
+            }),
+            appearance : new Cesium.PerInstanceColorAppearance({
+                flat : true
+            })
+        });
+
+        tile.data.boundingSphere3D = Cesium.BoundingSphere.fromRectangle3D(tile.rectangle);
+        tile.data.boundingSphere2D = Cesium.BoundingSphere.fromRectangle2D(tile.rectangle, frameState.mapProjection);
+        Cesium.Cartesian3.fromElements(tile.data.boundingSphere2D.center.z, tile.data.boundingSphere2D.center.x, tile.data.boundingSphere2D.center.y, tile.data.boundingSphere2D.center);
+
+        tile.state = Cesium.QuadtreeTileLoadState.LOADING;
+    }
+
+    if (tile.state === Cesium.QuadtreeTileLoadState.LOADING) {
+        tile.data.primitive.update(frameState);
+        if (tile.data.primitive.ready) {
+            tile.state = Cesium.QuadtreeTileLoadState.DONE;
+            tile.renderable = true;
+        }
+    }
+};
+
+DemoTileProvider.prototype.computeTileVisibility = function(tile, frameState, occluders) {
+    var boundingSphere;
+    if (frameState.mode === Cesium.SceneMode.SCENE3D) {
+        boundingSphere = tile.data.boundingSphere3D;
+    } else {
+        boundingSphere = tile.data.boundingSphere2D;
+    }
+
+    return frameState.cullingVolume.computeVisibility(boundingSphere);
+};
+
+DemoTileProvider.prototype.showTileThisFrame = function(tile, frameState) {
+    tile.data.primitive.update(frameState);
+};
+
+var subtractScratch = new Cesium.Cartesian3();
+
+DemoTileProvider.prototype.computeDistanceToTile = function(tile, frameState) {
+    var boundingSphere;
+
+    if (frameState.mode === Cesium.SceneMode.SCENE3D) {
+        boundingSphere = tile.data.boundingSphere3D;
+    } else {
+        boundingSphere = tile.data.boundingSphere2D;
+    }
+
+    return Math.max(0.0, Cesium.Cartesian3.magnitude(Cesium.Cartesian3.subtract(boundingSphere.center, frameState.camera.positionWC, subtractScratch)) - boundingSphere.radius);
+};
+
+DemoTileProvider.prototype.isDestroyed = function() {
+    return false;
+};
+
+DemoTileProvider.prototype.destroy = function() {
+    return Cesium.destroyObject(this);
+};
+
+var viewer = new Cesium.Viewer('cesiumContainer');
+var scene = viewer.scene;
+var primitives = scene.primitives;
+
+primitives.add(new Cesium.QuadtreePrimitive({
+    tileProvider : new DemoTileProvider()
+}));
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

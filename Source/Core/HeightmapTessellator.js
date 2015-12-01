@@ -24,6 +24,8 @@ define([
      *
      * @namespace
      * @alias HeightmapTessellator
+     *
+     * @deprecated
      */
     var HeightmapTessellator = {};
 
@@ -60,6 +62,7 @@ define([
      * @param {Rectangle} options.nativeRectangle An rectangle in the native coordinates of the heightmap's projection.  For
      *                 a heightmap with a geographic projection, this is degrees.  For the web mercator
      *                 projection, this is meters.
+     * @param {Number} [options.exaggeration=1.0] The scale used to exaggerate the terrain.
      * @param {Rectangle} [options.rectangle] The rectangle covered by the heightmap, in geodetic coordinates with north, south, east and
      *                 west properties in radians.  Either rectangle or nativeRectangle must be provided.  If both
      *                 are provided, they're assumed to be consistent.
@@ -179,6 +182,7 @@ define([
         }
 
         var relativeToCenter = defaultValue(options.relativeToCenter, Cartesian3.ZERO);
+        var exaggeration = defaultValue(options.exaggeration, 1.0);
 
         var structure = defaultValue(options.structure, HeightmapTessellator.DEFAULT_STRUCTURE);
         var heightScale = defaultValue(structure.heightScale, HeightmapTessellator.DEFAULT_STRUCTURE.heightScale);
@@ -273,7 +277,7 @@ define([
                     }
                 }
 
-                heightSample = heightSample * heightScale + heightOffset;
+                heightSample = (heightSample * heightScale + heightOffset) * exaggeration;
 
                 maximumHeight = Math.max(maximumHeight, heightSample);
                 minimumHeight = Math.min(minimumHeight, heightSample);

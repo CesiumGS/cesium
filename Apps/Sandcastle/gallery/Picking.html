@@ -36,7 +36,6 @@ var scene = viewer.scene;
 var handler;
 
 Sandcastle.addDefaultToolbarButton('Show Cartographic Position on Mouse Over', function() {
-    var ellipsoid = scene.globe.ellipsoid;
     var entity = viewer.entities.add({
         label : {
             show : false
@@ -46,9 +45,9 @@ Sandcastle.addDefaultToolbarButton('Show Cartographic Position on Mouse Over', f
     // Mouse over the globe to see the cartographic position
     handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
     handler.setInputAction(function(movement) {
-        var cartesian = viewer.camera.pickEllipsoid(movement.endPosition, ellipsoid);
+        var cartesian = viewer.camera.pickEllipsoid(movement.endPosition, scene.globe.ellipsoid);
         if (cartesian) {
-            var cartographic = ellipsoid.cartesianToCartographic(cartesian);
+            var cartographic = Cesium.Cartographic.fromCartesian(cartesian);
             var longitudeString = Cesium.Math.toDegrees(cartographic.longitude).toFixed(2);
             var latitudeString = Cesium.Math.toDegrees(cartographic.latitude).toFixed(2);
 
@@ -145,8 +144,6 @@ Sandcastle.addToolbarButton('Drill-Down Picking', function() {
 });
 
 Sandcastle.addToolbarButton('Pick position', function() {
-    var ellipsoid = scene.globe.ellipsoid;
-    
     var modelEntity = viewer.entities.add({
         name : 'milktruck',
         position : Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706),
@@ -174,7 +171,7 @@ Sandcastle.addToolbarButton('Pick position', function() {
             var cartesian = viewer.scene.pickPosition(movement.endPosition);
             
             if (Cesium.defined(cartesian)) {
-                var cartographic = ellipsoid.cartesianToCartographic(cartesian);
+                var cartographic = Cesium.Cartographic.fromCartesian(cartesian);
                 var longitudeString = Cesium.Math.toDegrees(cartographic.longitude).toFixed(2);
                 var latitudeString = Cesium.Math.toDegrees(cartographic.latitude).toFixed(2);
                 var heightString = cartographic.height.toFixed(2);

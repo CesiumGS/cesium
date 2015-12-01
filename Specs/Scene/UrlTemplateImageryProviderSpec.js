@@ -32,7 +32,6 @@ defineSuite([
         pollToPromise,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -47,6 +46,17 @@ defineSuite([
             return new UrlTemplateImageryProvider({});
         }
         expect(createWithoutUrl).toThrowDeveloperError();
+    });
+
+    it('resolves readyPromise', function() {
+        var provider = new UrlTemplateImageryProvider({
+            url: 'made/up/tms/server/'
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
     });
 
     it('returns valid value for hasAlphaChannel', function() {

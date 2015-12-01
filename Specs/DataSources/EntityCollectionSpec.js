@@ -14,7 +14,6 @@ defineSuite([
         TimeIntervalCollection,
         Entity) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var CollectionListener = function() {
         this.timesCalled = 0;
@@ -52,6 +51,14 @@ defineSuite([
 
         entityCollection.remove(entity);
         expect(entityCollection.values.length).toEqual(0);
+    });
+
+    it('add sets entityCollection on entity', function() {
+        var entity = new Entity();
+        var entityCollection = new EntityCollection();
+
+        entityCollection.add(entity);
+        expect(entity.entityCollection).toBe(entityCollection);
     });
 
     it('add with template', function() {
