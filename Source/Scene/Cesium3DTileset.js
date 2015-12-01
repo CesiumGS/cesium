@@ -344,7 +344,9 @@ define([
         if ((tile.isReady()) &&
             (tile.numberOfChildrenWithoutContent === 0)) {
             // A tiles.json must specify at least one tile, ie a root
-            root = tile.children[0];
+            // and the root will always be appended to a parent tile's children
+            // list.
+            root = tile.children[tile.children.length - 1];
             if (root.hasTilesetContent) {
                 selectTileWithTilesetContent(tiles3D, selectedTiles, root, fullyVisible, frameState, replace);
             } else {
