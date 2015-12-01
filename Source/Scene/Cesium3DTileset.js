@@ -499,18 +499,12 @@ define([
                 // is not sufficient, its children (or ancestors) are
                 // rendered instead
 
-                // TODO: Can we change childrenLength check here to
-                // checking hasTilesetContent?
-                // Also, it seems the t.hasTilesetContent checks further down
-                // will never be reached because in all cases (?) where
-                // the tile has tilesetContent the first condition should be true
-                // (Needs to be adjusted, since such a tile actually can have
-                // children)
                 if ((sse <= maximumScreenSpaceError) || (childrenLength === 0)) {
                     // This tile meets the SSE so add its commands.
                     //
-                    // We also checked if the tile is a leaf (childrenLength === 0.0) for the potential case when the leaf
-                    // node has a non-zero geometric error, e.g., because its contents is another tileset.
+                    // Select tile if it's a leaf (childrenLength === 0) and
+                    // does not have tileset content.
+                    // If the tile has tileset content, handle that tile separately.
                     if (!t.hasTilesetContent) {
                         selectTile(selectedTiles, t, fullyVisible, frameState);
                     } else {
