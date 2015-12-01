@@ -181,14 +181,14 @@ defineSuite([
     });
 
     it('rejects readyPromise on error', function() {
-        // Try loading a tile with an empty url.
+        // Try loading a tile with an invalid url.
         // Expect promise to be rejected in Model, then in ModelInstanceCollection, and
         // finally in Instanced3DModel3DTileContentProvider.
         var arrayBuffer = generateTileBuffer({
             gltfFormat : 0
         });
 
-        var tileset = {};
+        var tileset = {url : ''};
         var tile = {};
         var url = '';
         var instancedTile = new Instanced3DModel3DTileContentProvider(tileset, tile, url);

@@ -4,6 +4,7 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
+        'Core/clone',
         'Core/combine',
         'Core/defaultValue',
         'Core/defined',
@@ -28,6 +29,7 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        clone,
         combine,
         defaultValue,
         defined,
@@ -218,20 +220,21 @@ defineSuite([
     });
 
     it('rejects readyPromise on error', function() {
-        var promise = when.defer();
-        promise.promise.then(function(model) {
+        var invalidGltf = clone(texturedBoxModel.gltf, true);
+        invalidGltf.shaders.CesiumTexturedBoxTest0FS.uri = 'invalid.glsl';
+
+        var model = primitives.add(new Model({
+            gltf : invalidGltf
+        }));
+
+        scene.renderForSpecs();
+
+        return model.readyPromise.then(function(model) {
             fail('should not resolve');
         }).otherwise(function(error) {
-            expect(error).toBeDefined();
+            expect(model.ready).toEqual(false);
+            primitives.remove(model);
         });
-
-        var arrayBuffer = new ArrayBuffer(16);
-        expect(function() {
-            return new Model({
-                gltf : arrayBuffer,
-                readyPromise : promise
-            });
-        }).toThrowDeveloperError();
     });
 
     it('renders from glTF', function() {
@@ -511,12 +514,6 @@ defineSuite([
             var model = primitives.add(new Model({
                 gltf : gltf
             }));
-
-            model.readyPromise.then(function(model) {
-                fail('should not resolve');
-            }).otherwise(function(error) {
-                expect(model.ready).toEqual(false);
-            });
 
             expect(function() {
                 scene.renderForSpecs();
