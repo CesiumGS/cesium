@@ -1006,9 +1006,11 @@ require({
         });
     }
 
+    var loading = true;
     function setSubtab(tabName) {
-        currentTab = defined(queryObject.label) ? queryObject.label : tabName;
-        queryObject.label = undefined;
+        currentTab = defined(tabName) && !loading ? tabName : queryObject.label;
+        queryObject.label = tabName;
+        loading = false;
     }
 
     function addFileToGallery(index) {
