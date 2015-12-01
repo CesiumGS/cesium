@@ -24,7 +24,6 @@ define([
         BoundingSphereState,
         Property) {
     "use strict";
-    /*global console*/
 
     var defaultScale = 1.0;
     var defaultMinimumPixelSize = 0.0;

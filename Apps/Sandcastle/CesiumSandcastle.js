@@ -985,10 +985,9 @@ require({
             demo.label = labels ? labels : '';
 
             // Select the demo to load upon opening based on the query parameter.
-            var promise;
             if (defined(queryObject.src)) {
                 if (demo.name === queryObject.src.replace('.html', '')) {
-                    promise = loadFromGallery(demo).then(function() {
+                    loadFromGallery(demo).then(function() {
                         window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html&label=' + queryObject.label);
                         document.title = demo.name + ' - Cesium Sandcastle';
                     });
@@ -996,17 +995,14 @@ require({
             }
 
             // Create a tooltip containing the demo's description.
-            return when(promise).then(function() {
-                demoTooltips[demo.name] = new TooltipDialog({
-                    id : demo.name + 'TooltipDialog',
-                    style : 'width: 200px; font-size: 12px;',
-                    content : demo.description.replace(/\\n/g, '<br/>')
-                });
-
-                addFileToTab(index);
-            }).then(function(){
-                return demo;
+            demoTooltips[demo.name] = new TooltipDialog({
+                id : demo.name + 'TooltipDialog',
+                style : 'width: 200px; font-size: 12px;',
+                content : demo.description.replace(/\\n/g, '<br/>')
             });
+
+            addFileToTab(index);
+            return demo;
         });
     }
 
@@ -1136,7 +1132,7 @@ require({
             promises.push(addFileToGallery(i));
         }
 
-        promise = all(promises, function(results) {
+        promise = all(promises).then(function(results) {
             var resultsLength = results.length;
             for (i = 0; i < resultsLength; ++i) {
                 if (results[i].name === queryName) {

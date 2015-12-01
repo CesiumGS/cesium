@@ -24,7 +24,6 @@ define([
         createUniform,
         createUniformArray) {
     "use strict";
-    /*global console*/
 
     var nextShaderProgramId = 0;
 

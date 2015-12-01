@@ -1,4 +1,4 @@
-/*global define,console*/
+/*global define*/
 define([
         '../../Core/buildModuleUrl',
         '../../Core/Cartesian3',
@@ -98,7 +98,7 @@ define([
         var canvas = widget._canvas;
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
-        var zoomFactor = (1.0 / defaultValue(window.devicePixelRatio, 1.0)) * widget._resolutionScale;
+        var zoomFactor = defaultValue(window.devicePixelRatio, 1.0) * widget._resolutionScale;
 
         widget._canvasWidth = width;
         widget._canvasHeight = height;
