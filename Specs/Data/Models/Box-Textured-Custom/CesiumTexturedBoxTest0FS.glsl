@@ -17,6 +17,20 @@ uniform mat4 u_modelViewProjectionInverseMatrix;
 uniform mat4 u_modelInverseTransposeMatrix;
 uniform vec4 u_viewport;
 
+uniform mat4 u_nodeModelMatrix;
+uniform mat4 u_nodeViewMatrix;
+uniform mat4 u_nodeProjectionMatrix;
+uniform mat4 u_nodeModelViewMatrix;
+uniform mat4 u_nodeModelViewProjectionMatrix;
+uniform mat4 u_nodeModelInverseMatrix;
+uniform mat4 u_nodeViewInverseMatrix;
+uniform mat4 u_nodeProjectionInverseMatrix;
+uniform mat4 u_nodeModelViewInverseMatrix;
+uniform mat4 u_nodeModelViewProjectionInverseMatrix;
+uniform mat4 u_nodeModelInverseTransposeMatrix;
+uniform mat4 u_nodeModelViewInverseTransposeMatrix;
+uniform vec4 u_nodeViewport;
+
 uniform vec2 u_vec2;
 uniform mat2 u_mat2;
 uniform mat3 u_mat3;
@@ -46,6 +60,19 @@ color.r =
     u_modelViewProjectionInverseMatrix[0][0] + 
     u_modelInverseTransposeMatrix[0][0] + 
     u_viewport.x + 
+    u_nodeModelMatrix[0][0] +
+    u_nodeViewMatrix[0][0] +
+    u_nodeProjectionMatrix[0][0] +
+    u_nodeModelViewMatrix[0][0] +
+    u_nodeModelViewProjectionMatrix[0][0] +
+    u_nodeModelInverseMatrix[0][0] +
+    u_nodeViewInverseMatrix[0][0] +
+    u_nodeProjectionInverseMatrix[0][0] +
+    u_nodeModelViewInverseMatrix[0][0] +
+    u_nodeModelViewProjectionInverseMatrix[0][0] +
+    u_nodeModelInverseTransposeMatrix[0][0] +
+    u_nodeModelViewInverseTransposeMatrix[0][0] +
+    u_nodeViewport.x +
     u_vec2.x +
     u_mat2[0][0] +
     u_mat3[0][0] +

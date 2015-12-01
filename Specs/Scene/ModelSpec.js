@@ -62,6 +62,7 @@ defineSuite([
     var cesiumAir_0_8Url = './Data/Models/CesiumAir/Cesium_Air_0_8.gltf';
     var animBoxesUrl = './Data/Models/anim-test-1-boxes/anim-test-1-boxes.gltf';
     var riggedFigureUrl = './Data/Models/rigged-figure-test/rigged-figure-test.gltf';
+    var riggedSimpleUrl = './Data/Models/rigged-simple/rigged-simple.gltf';
 
     var boxConstantUrl = './Data/Models/MaterialsCommon/BoxConstant.gltf';
     var boxLambertUrl = './Data/Models/MaterialsCommon/BoxLambert.gltf';
@@ -1152,6 +1153,13 @@ defineSuite([
 
         animations.removeAll();
         riggedFigureModel.show = false;
+    });
+
+    it('renders riggedSimple', function() {
+        return loadModel(riggedSimpleUrl).then(function(m) {
+            expect(m).toBeDefined();
+            verifyRender(m);
+        });
     });
 
     it('should load a model where WebGL shader optimizer removes an attribute (linux)', function() {
