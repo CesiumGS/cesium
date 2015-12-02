@@ -165,20 +165,20 @@ define([
         this._hasAlphaChannel = undefined;
 
         var that = this;
-        this._readyPromise = when(options).then(function() {
+        this._readyPromise = when(options).then(function(properties) {
             //>>includeStart('debug', pragmas.debug);
-            if (!defined(options.url)) {
+            if (!defined(properties.url)) {
                 throw new DeveloperError('options.url is required.');
             }
             //>>includeEnd('debug');
 
-            that._url = options.url;
-            that._pickFeaturesUrl = options.pickFeaturesUrl;
-            that._proxy = options.proxy;
-            that._tileDiscardPolicy = options.tileDiscardPolicy;
-            that._getFeatureInfoFormats = options.getFeatureInfoFormats;
+            that._url = properties.url;
+            that._pickFeaturesUrl = properties.pickFeaturesUrl;
+            that._proxy = properties.proxy;
+            that._tileDiscardPolicy = properties.tileDiscardPolicy;
+            that._getFeatureInfoFormats = properties.getFeatureInfoFormats;
 
-            that._subdomains = options.subdomains;
+            that._subdomains = properties.subdomains;
             if (Array.isArray(that._subdomains)) {
                 that._subdomains = that._subdomains.slice();
             } else if (defined(that._subdomains) && that._subdomains.length > 0) {
@@ -187,16 +187,16 @@ define([
                 that._subdomains = ['a', 'b', 'c'];
             }
 
-            that._tileWidth = defaultValue(options.tileWidth, 256);
-            that._tileHeight = defaultValue(options.tileHeight, 256);
-            that._minimumLevel = defaultValue(options.minimumLevel, 0);
-            that._maximumLevel = options.maximumLevel;
-            that._tilingScheme = defaultValue(options.tilingScheme, new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid }));
-            that._rectangle = defaultValue(options.rectangle, that._tilingScheme.rectangle);
+            that._tileWidth = defaultValue(properties.tileWidth, 256);
+            that._tileHeight = defaultValue(properties.tileHeight, 256);
+            that._minimumLevel = defaultValue(properties.minimumLevel, 0);
+            that._maximumLevel = properties.maximumLevel;
+            that._tilingScheme = defaultValue(properties.tilingScheme, new WebMercatorTilingScheme({ ellipsoid : properties.ellipsoid }));
+            that._rectangle = defaultValue(properties.rectangle, that._tilingScheme.rectangle);
             that._rectangle = Rectangle.intersection(that._rectangle, that._tilingScheme.rectangle);
-            that._hasAlphaChannel = defaultValue(options.hasAlphaChannel, true);
+            that._hasAlphaChannel = defaultValue(properties.hasAlphaChannel, true);
 
-            var credit = options.credit;
+            var credit = properties.credit;
             if (typeof credit === 'string') {
                 credit = new Credit(credit);
             }
