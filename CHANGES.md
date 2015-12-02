@@ -23,13 +23,13 @@ Change Log
 * Fixed a bug that caused setting `Entity.parent` to `undefined` to throw an exception. [#3169](https://github.com/AnalyticalGraphicsInc/cesium/issues/3169)
 * Fixed a bug which caused `Entity` polyline graphics to be incorrect when a scene's ellipsoid was not WGS84. [#3174](https://github.com/AnalyticalGraphicsInc/cesium/pull/3174)
 * Entities have a reference to their entity collection and to their owner (usually a data source, but can be a `CompositeEntityCollection`).
-* Added `ImageMaterialProperty.alpha` and a `alpha` uniform to `Image` `Material` types to control overall image opacity. It defaults to 1.0, fully opaque.
+* Added `ImageMaterialProperty.alpha` and a `alpha` uniform to `Image` and `Material` types to control overall image opacity. It defaults to 1.0, fully opaque.
 * Added `Camera.getPixelSize` function to get the size of a pixel in meters based on the current view.
 * Added `Camera.distanceToBoundingSphere` function.
 * Added `BoundingSphere.fromOrientedBoundingBox` function.
 * Added utility function `getBaseUri`, which given a URI with or without query parameters, returns the base path of the URI.
 * Added `Queue.peek` to return the item at the front of a Queue.
-* Fixed `JulianDate.fromIso8601 ` so that it correctly parses the `YYYY-MM-DDThh:mmTZD` format.
+* Fixed `JulianDate.fromIso8601` so that it correctly parses the `YYYY-MM-DDThh:mmTZD` format.
 * Added `Model.maximumScale` and `ModelGraphics.maximumScale` properties, giving an upper limit for minimumPixelSize.
 * Fixed glTF implementation to read the version as a string as per the specification and to correctly handle backwards compatibility for axis-angle rotations in glTF 0.8 models.
 * Fixed a bug in the deprecated `jsonp` that prevented it from returning a promise.  Its replacement, `loadJsonp`, was unaffected.

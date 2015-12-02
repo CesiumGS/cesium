@@ -772,10 +772,16 @@ var gallery_demos = [' + demos.join(', ') + '];';
 }
 
 function createJsHintOptions() {
-    var contents = fs.readFileSync(path.join('Apps', 'Sandcastle', '.jshintrc'), 'utf8');
-    contents = '\
+    var primary = JSON.parse(fs.readFileSync('.jshintrc', 'utf8'));
+    var gallery = JSON.parse(fs.readFileSync(path.join('Apps', 'Sandcastle', '.jshintrc'), 'utf8'));
+    primary.jasmine = false;
+    primary.predef = gallery.predef;
+    primary.unused = gallery.unused;
+
+    var contents = '\
 // This file is automatically rebuilt by the Cesium build process.\n\
-var sandcastleJsHintOptions = ' + contents + ';';
+var sandcastleJsHintOptions = ' + JSON.stringify(primary, null, 4) + ';';
+
     fs.writeFileSync(path.join('Apps', 'Sandcastle', 'jsHintOptions.js'), contents);
 }
 
