@@ -23,7 +23,6 @@ defineSuite([
         'Scene/QuadtreeTileProvider',
         'Scene/SceneMode',
         'Scene/SingleTileImageryProvider',
-        'Scene/terrainAttributeLocations',
         'Scene/WebMapServiceImageryProvider',
         'Specs/createContext',
         'Specs/createFrameState',
@@ -53,7 +52,6 @@ defineSuite([
         QuadtreeTileProvider,
         SceneMode,
         SingleTileImageryProvider,
-        terrainAttributeLocations,
         WebMapServiceImageryProvider,
         createContext,
         createFrameState,
@@ -134,7 +132,7 @@ defineSuite([
             function constructWithoutTerrainProvider() {
                 return new GlobeSurfaceTileProvider({
                     imageryLayers : new ImageryLayerCollection(),
-                    surfaceShaderSet : new GlobeSurfaceShaderSet(terrainAttributeLocations)
+                    surfaceShaderSet : new GlobeSurfaceShaderSet()
                 });
             }
             expect(constructWithoutTerrainProvider).toThrowDeveloperError();
@@ -144,7 +142,7 @@ defineSuite([
             function constructWithoutImageryLayerCollection() {
                 return new GlobeSurfaceTileProvider({
                     terrainProvider : new EllipsoidTerrainProvider(),
-                    surfaceShaderSet : new GlobeSurfaceShaderSet(terrainAttributeLocations)
+                    surfaceShaderSet : new GlobeSurfaceShaderSet()
                 });
             }
             expect(constructWithoutImageryLayerCollection).toThrowDeveloperError();
@@ -387,6 +385,24 @@ defineSuite([
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
         return updateUntilDone(globe).then(function() {
+            expect(render(frameState, globe)).toBeGreaterThan(0);
+        });
+    });
+
+    it('renders in 3D (2)', function() {
+        var layerCollection = globe.imageryLayers;
+        layerCollection.removeAll();
+        layerCollection.addImageryProvider(new SingleTileImageryProvider({
+            url : 'Data/Images/Red16x16.png'
+        }));
+
+        frameState.camera.viewRectangle(Rectangle.fromDegrees(1.0e7, 1.0e7, 2.5e6, 2.5e6), Ellipsoid.WGS84);
+
+        return pollToPromise(function() {
+            globe.update(frameState);
+            console.log(globe._surface._debug.maxDepth);
+            return globe._surface.tileProvider.ready && !defined(globe._surface._tileLoadQueue.head) && globe._surface._debug.tilesWaitingForChildren === 0 && globe._surface._debug.maxDepth >= 11;
+        }).then(function() {
             expect(render(frameState, globe)).toBeGreaterThan(0);
         });
     });
