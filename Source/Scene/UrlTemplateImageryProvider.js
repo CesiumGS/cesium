@@ -204,9 +204,6 @@ define([
 
             that._urlParts = urlTemplateToParts(that._url, tags);
             that._pickFeaturesUrlParts = urlTemplateToParts(that._pickFeaturesUrl, pickFeaturesTags);
-        }).otherwise(function(event, message, x, y, level, retryFunction, errorDetails) {
-            // TODO: handle this._errorEvent
-            // this._errorEvent = TileProviderError.handleError(this._errorEvent, this, event, message, x, y, level, retryFunction, errorDetails);
         });
     };
 
