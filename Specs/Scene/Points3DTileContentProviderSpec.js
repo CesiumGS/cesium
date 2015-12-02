@@ -28,8 +28,11 @@ defineSuite([
     var pointsUrl = './Data/Cesium3DTiles/Points/Points';
 
     beforeAll(function() {
-        scene = createScene();
-        scene.frameState.scene3DOnly = true;
+        // Point tiles use RTC, which for now requires scene3DOnly to be true
+        scene = createScene({
+            scene3DOnly : true
+        });
+
         scene.frameState.passes.render = true;
 
         // Point the camera to the center of the tile
