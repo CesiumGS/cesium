@@ -527,5 +527,5 @@ defineSuite([
                 expect(cartographic.height).toBeGreaterThan(-500.0);
             });
         });
-    });
+    }, 'WebGL');
 });

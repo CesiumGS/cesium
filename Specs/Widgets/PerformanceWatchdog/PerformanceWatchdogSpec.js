@@ -72,4 +72,4 @@ defineSuite([
             });
         }).toThrowDeveloperError();
     });
-});
+}, 'WebGL');
