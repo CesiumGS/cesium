@@ -164,6 +164,7 @@ define([
         this._credit = undefined;
         this._hasAlphaChannel = undefined;
 
+        var that = this;
         this._readyPromise = when(options).then(function() {
             //>>includeStart('debug', pragmas.debug);
             if (!defined(options.url)) {
@@ -171,38 +172,38 @@ define([
             }
             //>>includeEnd('debug');
 
-            this._url = options.url;
-            this._pickFeaturesUrl = options.pickFeaturesUrl;
-            this._proxy = options.proxy;
-            this._tileDiscardPolicy = options.tileDiscardPolicy;
-            this._getFeatureInfoFormats = options.getFeatureInfoFormats;
+            that._url = options.url;
+            that._pickFeaturesUrl = options.pickFeaturesUrl;
+            that._proxy = options.proxy;
+            that._tileDiscardPolicy = options.tileDiscardPolicy;
+            that._getFeatureInfoFormats = options.getFeatureInfoFormats;
 
-            this._subdomains = options.subdomains;
-            if (Array.isArray(this._subdomains)) {
-                this._subdomains = this._subdomains.slice();
-            } else if (defined(this._subdomains) && this._subdomains.length > 0) {
-                this._subdomains = this._subdomains.split('');
+            that._subdomains = options.subdomains;
+            if (Array.isArray(that._subdomains)) {
+                that._subdomains = that._subdomains.slice();
+            } else if (defined(that._subdomains) && that._subdomains.length > 0) {
+                that._subdomains = that._subdomains.split('');
             } else {
-                this._subdomains = ['a', 'b', 'c'];
+                that._subdomains = ['a', 'b', 'c'];
             }
 
-            this._tileWidth = defaultValue(options.tileWidth, 256);
-            this._tileHeight = defaultValue(options.tileHeight, 256);
-            this._minimumLevel = defaultValue(options.minimumLevel, 0);
-            this._maximumLevel = options.maximumLevel;
-            this._tilingScheme = defaultValue(options.tilingScheme, new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid }));
-            this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
-            this._rectangle = Rectangle.intersection(this._rectangle, this._tilingScheme.rectangle);
-            this._hasAlphaChannel = defaultValue(options.hasAlphaChannel, true);
+            that._tileWidth = defaultValue(options.tileWidth, 256);
+            that._tileHeight = defaultValue(options.tileHeight, 256);
+            that._minimumLevel = defaultValue(options.minimumLevel, 0);
+            that._maximumLevel = options.maximumLevel;
+            that._tilingScheme = defaultValue(options.tilingScheme, new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid }));
+            that._rectangle = defaultValue(options.rectangle, that._tilingScheme.rectangle);
+            that._rectangle = Rectangle.intersection(that._rectangle, that._tilingScheme.rectangle);
+            that._hasAlphaChannel = defaultValue(options.hasAlphaChannel, true);
 
             var credit = options.credit;
             if (typeof credit === 'string') {
                 credit = new Credit(credit);
             }
-            this._credit = credit;
+            that._credit = credit;
 
-            this._urlParts = urlTemplateToParts(this._url, tags);
-            this._pickFeaturesUrlParts = urlTemplateToParts(this._pickFeaturesUrl, pickFeaturesTags);
+            that._urlParts = urlTemplateToParts(that._url, tags);
+            that._pickFeaturesUrlParts = urlTemplateToParts(that._pickFeaturesUrl, pickFeaturesTags);
         }).otherwise(function(event, message, x, y, level, retryFunction, errorDetails) {
             // TODO: handle this._errorEvent
             // this._errorEvent = TileProviderError.handleError(this._errorEvent, this, event, message, x, y, level, retryFunction, errorDetails);
