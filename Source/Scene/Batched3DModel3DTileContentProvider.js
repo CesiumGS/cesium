@@ -133,7 +133,8 @@ define([
      * DOC_TBA
      */
     Batched3DModel3DTileContentProvider.prototype.initialize = function(arrayBuffer, byteOffset) {
-        byteOffset = defaultValue(byteOffset, 0);
+        var byteStart = defaultValue(byteOffset, 0);
+        byteOffset = byteStart;
 
         var uint8Array = new Uint8Array(arrayBuffer);
         var magic = getMagic(uint8Array, byteOffset);
@@ -152,7 +153,7 @@ define([
         //>>includeEnd('debug');
         byteOffset += sizeOfUint32;
 
-        // Skip byteLength
+        var byteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
         var batchLength = view.getUint32(byteOffset, true);
@@ -176,7 +177,8 @@ define([
             batchTableResources.batchTable = JSON.parse(batchTableString);
         }
 
-        var gltfView = new Uint8Array(arrayBuffer, byteOffset, arrayBuffer.byteLength - byteOffset);
+        var gltfByteLength = byteStart + byteLength - byteOffset;
+        var gltfView = new Uint8Array(arrayBuffer, byteOffset, gltfByteLength);
 
         // PERFORMANCE_IDEA: patch the shader on demand, e.g., the first time show/color changes.
         // The pitch shader still needs to be patched.
