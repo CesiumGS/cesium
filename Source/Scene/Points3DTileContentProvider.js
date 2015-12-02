@@ -20,8 +20,8 @@ define([
         Cartesian3,
         Color,
         defaultValue,
-        destroyObject,
         defined,
+        destroyObject,
         DeveloperError,
         GeometryInstance,
         getMagic,
@@ -166,7 +166,6 @@ define([
 
     Points3DTileContentProvider.prototype.destroy = function() {
         this._primitive = this._primitive && this._primitive.destroy();
-
         return destroyObject(this);
     };
 
