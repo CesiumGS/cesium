@@ -156,7 +156,7 @@ define([
         },
         readyPromise : {
             get : function() {
-                return this._readyPromise;
+                return this._readyPromise.promise;
             }
         }
     });
@@ -790,7 +790,7 @@ define([
             var that = this;
             when(this._model.readyPromise).otherwise(function(error) {
                 that._state = LoadState.FAILED;
-                that.readyPromise.reject(error);
+                that._readyPromise.reject(error);
             });
         }
 
@@ -810,7 +810,7 @@ define([
             createCommands(this, modelCommands.draw, modelCommands.pick);
             updateCommands(this);
 
-            this.readyPromise.resolve(this);
+            this._readyPromise.resolve(this);
             return;
         }
 

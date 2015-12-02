@@ -4,6 +4,7 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
+        'Core/clone',
         'Core/combine',
         'Core/defaultValue',
         'Core/defined',
@@ -28,6 +29,7 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        clone,
         combine,
         defaultValue,
         defined,
@@ -214,6 +216,24 @@ defineSuite([
     it('resolves readyPromise', function() {
         return texturedBoxModel.readyPromise.then(function(model) {
             verifyRender(model);
+        });
+    });
+
+    it('rejects readyPromise on error', function() {
+        var invalidGltf = clone(texturedBoxModel.gltf, true);
+        invalidGltf.shaders.CesiumTexturedBoxTest0FS.uri = 'invalid.glsl';
+
+        var model = primitives.add(new Model({
+            gltf : invalidGltf
+        }));
+
+        scene.renderForSpecs();
+
+        return model.readyPromise.then(function(model) {
+            fail('should not resolve');
+        }).otherwise(function(error) {
+            expect(model.ready).toEqual(false);
+            primitives.remove(model);
         });
     });
 

@@ -1169,10 +1169,8 @@ define([
 
     function getFailedLoadFunction(model, type, path) {
         return function() {
-            var error = new RuntimeError('Failed to load ' + type + ': ' + path);
             model._state = ModelState.FAILED;
-            model._readyPromise.reject(error);
-            throw error;
+            model._readyPromise.reject(new RuntimeError('Failed to load ' + type + ': ' + path));
         };
     }
 
