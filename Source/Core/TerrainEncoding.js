@@ -152,7 +152,7 @@ define([
             position.z = CesiumMath.clamp(position.z, 0.0, 1.0);
 
             var hDim = this.maximumHeight - this.minimumHeight;
-            var h = (height - this.minimumHeight) / hDim;
+            var h = CesiumMath.clamp((height - this.minimumHeight) / hDim, 0.0, 1.0);
 
             Cartesian2.fromElements(position.x, position.y, cartesian2Scratch);
             var compressed0 = AttributeCompression.compressTextureCoordinates(cartesian2Scratch);

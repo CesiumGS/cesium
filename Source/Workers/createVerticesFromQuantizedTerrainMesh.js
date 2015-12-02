@@ -112,10 +112,10 @@ define([
         }
 
         var hMin = minimumHeight;
-        hMin = Math.min(hMin, findMinSkirtHeight(parameters.westIndices, parameters.westSkirtHeight, heights));
-        hMin = Math.min(hMin, findMinSkirtHeight(parameters.southIndices, parameters.southSkirtHeight, heights));
-        hMin = Math.min(hMin, findMinSkirtHeight(parameters.eastIndices, parameters.eastSkirtHeight, heights));
-        hMin = Math.min(hMin, findMinSkirtHeight(parameters.northIndices, parameters.northSkirtHeight, heights));
+        hMin = Math.min(hMin, findMinMaxSkirts(parameters.westIndices, parameters.westSkirtHeight, heights, uvs, rectangle, ellipsoid, toENU, minimum, maximum));
+        hMin = Math.min(hMin, findMinMaxSkirts(parameters.southIndices, parameters.southSkirtHeight, heights, uvs, rectangle, ellipsoid, toENU, minimum, maximum));
+        hMin = Math.min(hMin, findMinMaxSkirts(parameters.eastIndices, parameters.eastSkirtHeight, heights, uvs, rectangle, ellipsoid, toENU, minimum, maximum));
+        hMin = Math.min(hMin, findMinMaxSkirts(parameters.northIndices, parameters.northSkirtHeight, heights, uvs, rectangle, ellipsoid, toENU, minimum, maximum));
         
         var aaBox = new AxisAlignedBoundingBox(minimum, maximum, center);
         var encoding = new TerrainEncoding(aaBox, hMin, maximumHeight, fromENU, hasVertexNormals);
@@ -194,11 +194,35 @@ define([
         };
     }
 
-    function findMinSkirtHeight(edgeIndices, edgeHeight, heights) {
+    function findMinMaxSkirts(edgeIndices, edgeHeight, heights, uvs, rectangle, ellipsoid, toENU, minimum, maximum) {
         var hMin = Number.POSITIVE_INFINITY;
+
+        var north = rectangle.north;
+        var south = rectangle.south;
+        var east = rectangle.east;
+        var west = rectangle.west;
+
+        if (east < west) {
+            east += CesiumMath.TWO_PI;
+        }
+
         var length = edgeIndices.length;
         for (var i = 0; i < length; ++i) {
-            hMin = Math.min(hMin, heights[edgeIndices[i]] - edgeHeight);
+            var index = edgeIndices[i];
+            var h = heights[index];
+            var uv = uvs[index];
+
+            cartographicScratch.longitude = CesiumMath.lerp(west, east, uv.x);
+            cartographicScratch.latitude = CesiumMath.lerp(south, north, uv.y);
+            cartographicScratch.height = h - edgeHeight;
+
+            var position = ellipsoid.cartographicToCartesian(cartographicScratch, cartesian3Scratch);
+            Matrix4.multiplyByPoint(toENU, position, position);
+
+            Cartesian3.minimumByComponent(position, minimum, minimum);
+            Cartesian3.maximumByComponent(position, maximum, maximum);
+
+            hMin = Math.min(hMin, cartographicScratch.height);
         }
         return hMin;
     }
@@ -262,7 +286,7 @@ define([
                 }
             }
 
-            vertexBufferIndex = encoding.encode(vertexBuffer, vertexBufferIndex, position, uv, h, toPack);
+            vertexBufferIndex = encoding.encode(vertexBuffer, vertexBufferIndex, position, uv, cartographicScratch.height, toPack);
 
             if (previousIndex !== -1) {
                 indexBuffer[indexBufferIndex++] = previousIndex;
