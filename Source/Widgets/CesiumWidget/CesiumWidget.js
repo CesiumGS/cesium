@@ -1,4 +1,4 @@
-/*global define,console*/
+/*global define*/
 define([
         '../../Core/buildModuleUrl',
         '../../Core/Cartesian3',

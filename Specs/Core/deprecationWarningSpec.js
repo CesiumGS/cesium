@@ -4,7 +4,6 @@ defineSuite([
     ], function(
         deprecationWarning) {
     "use strict";
-    /*global console*/
 
     it('logs a warning', function() {
         spyOn(console, 'log');
