@@ -4,29 +4,21 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Color',
         'Core/defaultValue',
-        'Core/defined',
         'Core/HeadingPitchRange',
-        'Core/loadArrayBuffer',
         'Scene/Cesium3DTileContentState',
         'Scene/Cesium3DTileset',
-        'Scene/Model',
         'Specs/createScene',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
+        'Specs/pollToPromise'
     ], function(
         Batched3DModel3DTileContentProvider,
         Cartesian3,
         Color,
         defaultValue,
-        defined,
         HeadingPitchRange,
-        loadArrayBuffer,
         Cesium3DTileContentState,
         Cesium3DTileset,
-        Model,
         createScene,
-        pollToPromise,
-        when) {
+        pollToPromise) {
     "use strict";
 
     var scene;
