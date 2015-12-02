@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/Instanced3DModel3DTileContentProvider',
+        'Scene/Batched3DModel3DTileContentProvider',
         'Core/Cartesian3',
         'Core/Color',
         'Core/defaultValue',
@@ -9,10 +9,12 @@ defineSuite([
         'Core/loadArrayBuffer',
         'Scene/Cesium3DTileContentState',
         'Scene/Cesium3DTileset',
+        'Scene/Model',
         'Specs/createScene',
-        'Specs/pollToPromise'
+        'Specs/pollToPromise',
+        'ThirdParty/when'
     ], function(
-        Instanced3DModel3DTileContentProvider,
+        Batched3DModel3DTileContentProvider,
         Cartesian3,
         Color,
         defaultValue,
@@ -21,25 +23,25 @@ defineSuite([
         loadArrayBuffer,
         Cesium3DTileContentState,
         Cesium3DTileset,
+        Model,
         createScene,
-        pollToPromise) {
+        pollToPromise,
+        when) {
     "use strict";
 
     var scene;
     var centerLongitude = -1.31995;
     var centerLatitude = 0.69871;
 
-    var gltfEmbeddedUrl = './Data/Cesium3DTiles/Instanced/InstancedGltfEmbedded/';
-    var gltfExternalUrl = './Data/Cesium3DTiles/Instanced/InstancedGltfExternal/';
-    var withBatchTableUrl = './Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/';
-    var withoutBatchTableUrl = './Data/Cesium3DTiles/Instanced/InstancedWithoutBatchTable/';
+    var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
+    var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/';
 
     beforeAll(function() {
         scene = createScene();
 
-        // One instance in each data set is always located in the center, so point the camera there
-        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 10.0));
+        // One building in each data set is always located in the center, so point the camera there
+        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 15.0));
     });
 
     afterAll(function() {
@@ -70,7 +72,7 @@ defineSuite([
         // Verify render before being picked
         verifyRender(tileset);
 
-        // Change the color of the picked instance to yellow
+        // Change the color of the picked building to yellow
         var picked = scene.pickForSpecs();
         expect(picked).toBeDefined();
         picked.color = Color.clone(Color.YELLOW, picked.color);
@@ -107,24 +109,22 @@ defineSuite([
         var tileset = {};
         var tile = {};
         var url = '';
-        var instancedTile = new Instanced3DModel3DTileContentProvider(tileset, tile, url);
+        var batchedTile = new Batched3DModel3DTileContentProvider(tileset, tile, url);
         expect(function() {
-            instancedTile.initialize(arrayBuffer);
-            instancedTile.update(tileset, scene.frameState);
+            batchedTile.initialize(arrayBuffer);
+            batchedTile.update(tileset, scene.frameState);
         }).toThrowDeveloperError();
     }
 
     function generateTileBuffer(options) {
         // Procedurally generate the tile array buffer for testing purposes
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var magic = defaultValue(options.magic, [105, 51, 100, 109]);
+        var magic = defaultValue(options.magic, [98, 51, 100, 109]);
         var version = defaultValue(options.version, 1);
-        var gltfFormat = defaultValue(options.gltfFormat, 1);
-        var instancesLength = defaultValue(options.instancesLength, 1);
+        var batchLength = defaultValue(options.batchLength, 1);
 
-        var headerByteLength = 28;
-        var instancesByteLength = instancesLength * 16;
-        var byteLength = headerByteLength + instancesByteLength;
+        var headerByteLength = 20;
+        var byteLength = headerByteLength;
         var buffer = new ArrayBuffer(byteLength);
         var view = new DataView(buffer);
         view.setUint8(0, magic[0]);
@@ -133,17 +133,8 @@ defineSuite([
         view.setUint8(3, magic[3]);
         view.setUint32(4, version, true);          // version
         view.setUint32(8, byteLength, true);       // byteLength
-        view.setUint32(12, 0, true);               // batchTableByteLength
-        view.setUint32(16, 0, true);               // gltfByteLength
-        view.setUint32(20, gltfFormat, true);      // gltfFormat
-        view.setUint32(24, instancesLength, true); // instancesLength
-
-        var byteOffset = headerByteLength;
-        for (var j = 0; j < instancesLength; ++j) {
-            view.setFloat64(byteOffset, centerLongitude, true);
-            view.setFloat64(byteOffset + 8, centerLatitude, true);
-            byteOffset += 16;
-        }
+        view.setUint32(12, batchLength, true);     // batchLength
+        view.setUint32(16, 0, true);               // batchTableByteLength
 
         return buffer;
     }
@@ -151,12 +142,6 @@ defineSuite([
     it('throws with invalid magic', function() {
         loadTileExpectError(generateTileBuffer({
             magic : [120, 120, 120, 120]
-        }));
-    });
-
-    it('throws with invalid format', function() {
-        loadTileExpectError(generateTileBuffer({
-            gltfFormat : 2
         }));
     });
 
@@ -172,7 +157,7 @@ defineSuite([
     });
 
     it('resolves readyPromise', function() {
-        return loadTileset(gltfEmbeddedUrl).then(function(tileset) {
+        return loadTileset(withoutBatchTableUrl).then(function(tileset) {
             var content = tileset._root.content;
             content.readyPromise.then(function(content) {
                 verifyRenderTileset(tileset);
@@ -180,65 +165,19 @@ defineSuite([
         });
     });
 
-    it('rejects readyPromise on error', function() {
-        // Try loading a tile with an invalid url.
-        // Expect promise to be rejected in Model, then in ModelInstanceCollection, and
-        // finally in Instanced3DModel3DTileContentProvider.
-        var arrayBuffer = generateTileBuffer({
-            gltfFormat : 0
-        });
-
-        var tileset = {url : ''};
-        var tile = {};
-        var url = '';
-        var instancedTile = new Instanced3DModel3DTileContentProvider(tileset, tile, url);
-        instancedTile.initialize(arrayBuffer);
-        instancedTile.update(tileset, scene.frameState);
-
-        return instancedTile.readyPromise.then(function(instancedTile) {
-            fail('should not resolve');
-        }).otherwise(function(error) {
-            expect(instancedTile.state).toEqual(Cesium3DTileContentState.FAILED);
-        });
-    });
-
     it('rejects readyPromise on failed request', function() {
         var tileset = {};
         var tile = {};
-        var url = 'invalid.i3dm';
-        var instancedTile = new Instanced3DModel3DTileContentProvider(tileset, tile, url);
-        instancedTile.request();
+        var url = 'invalid.b3dm';
+        var batchedTile = new Batched3DModel3DTileContentProvider(tileset, tile, url);
+        batchedTile.request();
 
-        return instancedTile.readyPromise.then(function(instancedTile) {
+        return batchedTile.readyPromise.then(function(batchedTile) {
             fail('should not resolve');
         }).otherwise(function(error) {
-            expect(instancedTile.state).toEqual(Cesium3DTileContentState.FAILED);
+            expect(batchedTile.state).toEqual(Cesium3DTileContentState.FAILED);
             expect(error.statusCode).toEqual(404);
         });
-    });
-
-    it('loads with no instances, but does not become ready', function() {
-        var arrayBuffer = generateTileBuffer({
-            instancesLength : 0
-        });
-        var tileset = {};
-        var tile = {};
-        var url = '';
-        var instancedTile = new Instanced3DModel3DTileContentProvider(tileset, tile, url);
-        instancedTile.initialize(arrayBuffer);
-        // Expect the tile to never reach the ready state due to returning early in ModelInstanceCollection
-        for (var i = 0; i < 10; ++i) {
-            instancedTile.update(tileset, scene.frameState);
-            expect(instancedTile.state).toEqual(Cesium3DTileContentState.PROCESSING);
-        }
-    });
-
-    it('renders with embedded gltf', function() {
-        return loadTileset(gltfEmbeddedUrl).then(verifyRenderTileset);
-    });
-
-    it('renders with external gltf', function() {
-        return loadTileset(gltfExternalUrl).then(verifyRenderTileset);
     });
 
     it('renders with batch table', function() {
@@ -249,20 +188,8 @@ defineSuite([
         return loadTileset(withoutBatchTableUrl).then(verifyRenderTileset);
     });
 
-    it('renders when instancing is disabled', function() {
-        // Disable extension
-        var instancedArrays = scene.context._instancedArrays;
-        scene.context._instancedArrays = undefined;
-
-        return loadTileset(gltfEmbeddedUrl).then(function(tileset) {
-            verifyRenderTileset(tileset);
-            // Re-enable extension
-            scene.context._instancedArrays = instancedArrays;
-        });
-    });
-
     it('throws when calling getModel with invalid index', function() {
-        return loadTileset(gltfEmbeddedUrl).then(function(tileset) {
+        return loadTileset(withoutBatchTableUrl).then(function(tileset) {
             var content = tileset._root.content;
             expect(function(){
                 content.getModel(-1);
@@ -277,7 +204,7 @@ defineSuite([
     });
 
     it('destroys', function() {
-        return loadTileset(gltfEmbeddedUrl).then(function(tileset) {
+        return loadTileset(withoutBatchTableUrl).then(function(tileset) {
             var content = tileset._root.content;
             expect(content.isDestroyed()).toEqual(false);
             content.destroy();

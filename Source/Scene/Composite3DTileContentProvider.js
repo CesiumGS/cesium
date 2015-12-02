@@ -95,12 +95,6 @@ define([
         var tilesLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
-        //>>includeStart('debug', pragmas.debug);
-        if (tilesLength < 0) {
-            throw new DeveloperError('Tiles length must be greater than or equal to zero. Value is ' + tilesLength + '.');
-        }
-        //>>includeEnd('debug');
-
         this.state = Cesium3DTileContentState.PROCESSING;
         this.processingPromise.resolve(this);
 
