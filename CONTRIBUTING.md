@@ -58,7 +58,7 @@ Our code is our lifeblood so maintaining Cesium's high code quality is important
 * Code and tests
    * Follow the [coding conventions](https://github.com/AnalyticalGraphicsInc/cesium/wiki/JavaScript-Coding-Conventions).
    * Verify your code passes [JSHint](http://www.jshint.com/).  We use the JSHint Eclipse plugin so it runs automatically when we save.  You can also run `jsHint` from the command line (`npm run jsHint`).
-   * Include tests with excellent code coverage for new features.  We use [Jasmine](http://pivotal.github.com/jasmine/) for writing tests.  Run them by browsing to [http://localhost:8080/Specs/SpecRunner.html](http://localhost:8080/Specs/SpecRunner.html).  Verify all new and existing tests pass.  For bonus points, test Chrome, Firefox, and other browsers supporting WebGL.
+   * Verify all tests pass and write new tests with excellent code coverage for new code.  Follow the [Testing Guide](Documentation/Contributors/TestingGuide/README.md).
    * Update [LICENSE.md](LICENSE.md) if third-party libraries were added/updated/removed, including new version of existing libraries.  Mention it in [CHANGES.md](CHANGES.md).  If you plan to add a third-party library, start a new thread on the [Cesium forum](http://cesiumjs.org/forum.html) first.
    * If new public classes, functions, or properties were added, also:
       * Include reference documentation with code examples.  Check out the [best practices](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Documentation-Best-Practices).
