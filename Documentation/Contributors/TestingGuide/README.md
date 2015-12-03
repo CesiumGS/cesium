@@ -6,35 +6,35 @@ As of Cesium 1.15, Cesium has over 7,000 tests with 93% code coverage.  Cesium h
 
 All new code should have 100% code coverage and should pass all tests.  Always run the tests before opening a pull request.
 
-* [Running the Tests]()
-   * [Run all tests (Run with WebGL validation)]()
-   * [Select a test to run]()
-   * [Run only WebGL tests]()
-   * [Run only non-WebGL tests]()
+* [Running the Tests](#running-the-tests)
+   * [Run all tests (Run with WebGL validation)](#run-all-tests-run-with-webgl-validation)
+   * [Select a test to run](#select-a-test-to-run)
+   * [Run only WebGL tests](#run-only-webgl-tests)
+   * [Run only non-WebGL tests](#run-only-non-webgl-tests)
    * [Run all tests against combined file (Run all tests against combined file with debug code removed)]()
-   * [Run all tests with code coverage (build 'instrumentForCoverage' first.)]()
-* [Testing Previous Versions of Cesium]()
-* [`testfailure` Label for Issues]()
-* [Writing Tests]()
-   * [Directory Organization]()
-   * [Bottom-Up Unit Testing]()
-   * [Test Code is Code]()
-   * [Testing Basics]()
-   * [Comparing Floating-Point Values]()
-   * [Testing Exceptions]()
-   * [Before and After Tests and Suites]()
-   * [Rendering Tests]()
-   * [GLSL]()
-   * [Spies]()
-   * [Test Data and Services]()
-   * [Promises]()
-   * [Mocks]()
-   * [Categories]()
-* [Manual Testing]()
-* [Pragmatic Advice]()
-   * [Start With a Similar (Small) Test]()
-   * [Debugger-Aided Incremental Improvements]()
-* [Resources]()
+   * [Run all tests with code coverage (build 'instrumentForCoverage' first.)](#run-all-tests-against-combined-file-run-all-tests-against-combined-file-with-debug-code-removed)
+* [Testing Previous Versions of Cesium](#testing-previous-versions-of-cesium)
+* [`testfailure` Label for Issues](#testfailure-label-for-issues)
+* [Writing Tests](#writing-tests)
+   * [Directory Organization](#directory-organization)
+   * [Bottom-Up Unit Testing](#bottom-up-unit-testing)
+   * [Test Code is Code](#test-code-is-code)
+   * [Testing Basics](#testing-basics)
+   * [Comparing Floating-Point Values](#comparing-floating-point-values)
+   * [Testing Exceptions](#testing-exceptions)
+   * [Before and After Tests and Suites](#before-and-after-tests-and-suites)
+   * [Rendering Tests](#rendering-tests)
+   * [GLSL](#glsl)
+   * [Spies](#spies)
+   * [Test Data and Services](#test-data-and-services)
+   * [Promises](#promises)
+   * [Mocks](#mocks)
+   * [Categories](#categories)
+* [Manual Testing](#manual-testing)
+* [Pragmatic Advice](#pragmatic-advice)
+   * [Start With a Similar (Small) Test](#start-with-a-similar-small-test)
+   * [Debugger-Aided Incremental Improvements](#debugger-aided-incremental-improvements)
+* [Resources](#resources)
 
 ## Running the Tests
 
@@ -593,13 +593,14 @@ Sometimes running the unit tests is all that is needed to verify new code.  Howe
 
 ## Pragmatic Advice
 
-Advice from @pjcozzi:
+Advice from [@pjcozzi](https://github.com/pjcozzi):
 
 ### Start With a Similar (Small) Test
 
 > Since I wrote the very first Cesium test, I have not written a suite - or even individual test - from scratch.  I suspect no one does.
 
 ![](6.jpg)
+
 The first 73 Cesium tests from March 2011.
 
 > Instead, start with a similar suite or test, copy it, strip it down to the minimum you need, and then start adding your specific code.  For example, if you are adding a new math type, start with Cartesian3Spec.js or Matrix4Spec.js.  If you are adding a new primitive, start with DebugModelMatrixPrimitiveSpec.js.
