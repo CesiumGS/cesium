@@ -2,8 +2,8 @@
 defineSuite([
         'Scene/ImageryLayer',
         'Core/EllipsoidTerrainProvider',
-        'Core/jsonp',
         'Core/loadImage',
+        'Core/loadJsonp',
         'Core/loadWithXhr',
         'Core/Rectangle',
         'Renderer/ComputeEngine',
@@ -20,12 +20,13 @@ defineSuite([
         'Scene/TileMapServiceImageryProvider',
         'Scene/WebMapServiceImageryProvider',
         'Specs/createContext',
+        'Specs/createFrameState',
         'Specs/pollToPromise'
     ], function(
         ImageryLayer,
         EllipsoidTerrainProvider,
-        jsonp,
         loadImage,
+        loadJsonp,
         loadWithXhr,
         Rectangle,
         ComputeEngine,
@@ -42,15 +43,17 @@ defineSuite([
         TileMapServiceImageryProvider,
         WebMapServiceImageryProvider,
         createContext,
+        createFrameState,
         pollToPromise) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var context;
+    var frameState;
     var computeEngine;
 
     beforeAll(function() {
         context = createContext();
+        frameState = createFrameState(context);
         computeEngine = new ComputeEngine(context);
     });
 
@@ -60,7 +63,7 @@ defineSuite([
     });
 
     afterEach(function() {
-        jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
+        loadJsonp.loadAndExecuteScript = loadJsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
         loadWithXhr.load = loadWithXhr.defaultLoad;
     });
@@ -115,7 +118,7 @@ defineSuite([
     });
 
     it('reprojects web mercator images', function() {
-        jsonp.loadAndExecuteScript = function(url, functionName) {
+        loadJsonp.loadAndExecuteScript = function(url, functionName) {
             window[functionName]({
                 "authenticationResultCode" : "ValidCredentials",
                 "brandLogoUri" : "http:\/\/dev.virtualearth.net\/Branding\/logo_powered_by.png",
@@ -172,9 +175,8 @@ defineSuite([
                     return imagery.state === ImageryState.TEXTURE_LOADED;
                 }).then(function() {
                     var textureBeforeReprojection = imagery.texture;
-                    var commandList = [];
-                    layer._reprojectTexture(context, commandList, imagery);
-                    commandList[0].execute(computeEngine);
+                    layer._reprojectTexture(frameState, imagery);
+                    frameState.commandList[0].execute(computeEngine);
 
                     return pollToPromise(function() {
                         return imagery.state === ImageryState.READY;

@@ -46,7 +46,6 @@ defineSuite([
         createDynamicProperty,
         createScene) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
     var time;
@@ -541,4 +540,4 @@ defineSuite([
     createDynamicGeometryBoundingSphereSpecs(CylinderGeometryUpdater, entity, entity.cylinder, function() {
         return scene;
     });
-});
+}, 'WebGL');

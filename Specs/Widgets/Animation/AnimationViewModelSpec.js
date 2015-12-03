@@ -12,7 +12,6 @@ defineSuite([
         JulianDate,
         ClockViewModel) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var clockViewModel;
     beforeEach(function() {

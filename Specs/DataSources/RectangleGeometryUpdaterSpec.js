@@ -42,7 +42,6 @@ defineSuite([
         createDynamicProperty,
         createScene) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var time;
     var time2;
@@ -546,4 +545,4 @@ defineSuite([
     createDynamicGeometryBoundingSphereSpecs(RectangleGeometryUpdater, entity, entity.rectangle, function() {
         return scene;
     });
-});
+}, 'WebGL');

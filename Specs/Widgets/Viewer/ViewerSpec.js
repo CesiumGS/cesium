@@ -1,5 +1,6 @@
 /*global defineSuite*/
 defineSuite([
+        'Widgets/Viewer/Viewer',
         'Core/Cartesian3',
         'Core/ClockRange',
         'Core/ClockStep',
@@ -24,15 +25,16 @@ defineSuite([
         'Widgets/Animation/Animation',
         'Widgets/BaseLayerPicker/BaseLayerPicker',
         'Widgets/BaseLayerPicker/ProviderViewModel',
-        'Widgets/NavigationHelpButton/NavigationHelpButton',
         'Widgets/CesiumWidget/CesiumWidget',
         'Widgets/FullscreenButton/FullscreenButton',
         'Widgets/Geocoder/Geocoder',
         'Widgets/HomeButton/HomeButton',
+        'Widgets/NavigationHelpButton/NavigationHelpButton',
         'Widgets/SceneModePicker/SceneModePicker',
         'Widgets/SelectionIndicator/SelectionIndicator',
         'Widgets/Timeline/Timeline'
     ], function(
+        Viewer,
         Cartesian3,
         ClockRange,
         ClockStep,
@@ -57,16 +59,15 @@ defineSuite([
         Animation,
         BaseLayerPicker,
         ProviderViewModel,
-        NavigationHelpButton,
         CesiumWidget,
         FullscreenButton,
         Geocoder,
         HomeButton,
+        NavigationHelpButton,
         SceneModePicker,
         SelectionIndicator,
         Timeline) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var testProvider = {
         isReady : function() {

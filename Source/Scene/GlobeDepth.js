@@ -96,7 +96,7 @@ define([
             width : width,
             height : height,
             pixelFormat : PixelFormat.DEPTH_STENCIL,
-            pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8_WEBGL
+            pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8
         });
 
         globeDepth._globeDepthTexture = new Texture({

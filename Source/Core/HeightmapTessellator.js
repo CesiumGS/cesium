@@ -1,5 +1,7 @@
 /*global define*/
 define([
+        './AxisAlignedBoundingBox',
+        './Cartesian2',
         './Cartesian3',
         './defaultValue',
         './defined',
@@ -7,8 +9,13 @@ define([
         './Ellipsoid',
         './freezeObject',
         './Math',
-        './Rectangle'
+        './Matrix4',
+        './Rectangle',
+        './TerrainEncoding',
+        './Transforms'
     ], function(
+        AxisAlignedBoundingBox,
+        Cartesian2,
         Cartesian3,
         defaultValue,
         defined,
@@ -16,7 +23,10 @@ define([
         Ellipsoid,
         freezeObject,
         CesiumMath,
-        Rectangle) {
+        Matrix4,
+        Rectangle,
+        TerrainEncoding,
+        Transforms) {
     "use strict";
 
     /**
@@ -24,6 +34,8 @@ define([
      *
      * @namespace
      * @alias HeightmapTessellator
+     *
+     * @private
      */
     var HeightmapTessellator = {};
 
@@ -41,18 +53,15 @@ define([
         isBigEndian : false
     });
 
+    var cartesian3Scratch = new Cartesian3();
+    var matrix4Scratch = new Matrix4();
+    var minimumScratch = new Cartesian3();
+    var maximumScratch = new Cartesian3();
+
     /**
-     * Fills an array of vertices from a heightmap image.  On return, the vertex data is in the order
-     * [X, Y, Z, H, U, V], where X, Y, and Z represent the Cartesian position of the vertex, H is the
-     * height above the ellipsoid, and U and V are the texture coordinates.
+     * Fills an array of vertices from a heightmap image.
      *
      * @param {Object} options Object with the following properties:
-     * @param {Array|Float32Array} options.vertices The array to use to store computed vertices.
-     *                             If options.skirtHeight is 0.0, the array should have
-     *                             options.width * options.height * 6 elements.  If
-     *                             options.skirtHeight is greater than 0.0, the array should
-     *                             have (options.width + 2) * (options.height * 2) * 6
-     *                             elements.
      * @param {TypedArray} options.heightmap The heightmap to tessellate.
      * @param {Number} options.width The width of the heightmap, in height samples.
      * @param {Number} options.height The height of the heightmap, in height samples.
@@ -60,6 +69,7 @@ define([
      * @param {Rectangle} options.nativeRectangle An rectangle in the native coordinates of the heightmap's projection.  For
      *                 a heightmap with a geographic projection, this is degrees.  For the web mercator
      *                 projection, this is meters.
+     * @param {Number} [options.exaggeration=1.0] The scale used to exaggerate the terrain.
      * @param {Rectangle} [options.rectangle] The rectangle covered by the heightmap, in geodetic coordinates with north, south, east and
      *                 west properties in radians.  Either rectangle or nativeRectangle must be provided.  If both
      *                 are provided, they're assumed to be consistent.
@@ -93,9 +103,7 @@ define([
      * @example
      * var width = 5;
      * var height = 5;
-     * var vertices = new Float32Array(width * height * 6);
-     * Cesium.HeightmapTessellator.computeVertices({
-     *     vertices : vertices,
+     * var statistics = Cesium.HeightmapTessellator.computeVertices({
      *     heightmap : [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
      *     width : width,
      *     height : height,
@@ -107,6 +115,9 @@ define([
      *         north : 40.0
      *     }
      * });
+     *
+     * var encoding = statistics.encoding;
+     * var position = encoding.decodePosition(statistics.vertices, index * encoding.getStride());
      */
     HeightmapTessellator.computeVertices = function(options) {
         //>>includeStart('debug', pragmas.debug);
@@ -115,9 +126,6 @@ define([
         }
         if (!defined(options.width) || !defined(options.height)) {
             throw new DeveloperError('options.width and options.height are required.');
-        }
-        if (!defined(options.vertices)) {
-            throw new DeveloperError('options.vertices is required.');
         }
         if (!defined(options.nativeRectangle)) {
             throw new DeveloperError('options.nativeRectangle is required.');
@@ -140,7 +148,6 @@ define([
         var piOverTwo = CesiumMath.PI_OVER_TWO;
         var toRadians = CesiumMath.toRadians;
 
-        var vertices = options.vertices;
         var heightmap = options.heightmap;
         var width = options.width;
         var height = options.height;
@@ -179,6 +186,7 @@ define([
         }
 
         var relativeToCenter = defaultValue(options.relativeToCenter, Cartesian3.ZERO);
+        var exaggeration = defaultValue(options.exaggeration, 1.0);
 
         var structure = defaultValue(options.structure, HeightmapTessellator.DEFAULT_STRUCTURE);
         var heightScale = defaultValue(structure.heightScale, HeightmapTessellator.DEFAULT_STRUCTURE.heightScale);
@@ -196,10 +204,30 @@ define([
         var radiiSquaredY = radiiSquared.y;
         var radiiSquaredZ = radiiSquared.z;
 
-        var vertexArrayIndex = 0;
-
         var minimumHeight = 65536.0;
         var maximumHeight = -65536.0;
+
+        var fromENU = Transforms.eastNorthUpToFixedFrame(relativeToCenter, ellipsoid);
+        var toENU = Matrix4.inverseTransformation(fromENU, matrix4Scratch);
+
+        var minimum = minimumScratch;
+        minimum.x = Number.POSITIVE_INFINITY;
+        minimum.y = Number.POSITIVE_INFINITY;
+        minimum.z = Number.POSITIVE_INFINITY;
+
+        var maximum = maximumScratch;
+        maximum.x = Number.NEGATIVE_INFINITY;
+        maximum.y = Number.NEGATIVE_INFINITY;
+        maximum.z = Number.NEGATIVE_INFINITY;
+
+        var hMin = Number.POSITIVE_INFINITY;
+
+        var arrayWidth = width + (skirtHeight > 0.0 ? 2.0 : 0.0);
+        var arrayHeight = height + (skirtHeight > 0.0 ? 2.0 : 0.0);
+        var size = arrayWidth * arrayHeight;
+        var positions = new Array(size);
+        var heights = new Array(size);
+        var uvs = new Array(size);
 
         var startRow = 0;
         var endRow = height;
@@ -212,6 +240,8 @@ define([
             --startCol;
             ++endCol;
         }
+
+        var index = 0;
 
         for (var rowIndex = startRow; rowIndex < endRow; ++rowIndex) {
             var row = rowIndex;
@@ -235,6 +265,7 @@ define([
             var kZ = radiiSquaredZ * nZ;
 
             var v = (latitude - geographicSouth) / (geographicNorth - geographicSouth);
+            v = CesiumMath.clamp(v, 0.0, 1.0);
 
             for (var colIndex = startCol; colIndex < endCol; ++colIndex) {
                 var col = colIndex;
@@ -273,7 +304,7 @@ define([
                     }
                 }
 
-                heightSample = heightSample * heightScale + heightOffset;
+                heightSample = (heightSample * heightScale + heightOffset) * exaggeration;
 
                 maximumHeight = Math.max(maximumHeight, heightSample);
                 minimumHeight = Math.min(minimumHeight, heightSample);
@@ -295,22 +326,42 @@ define([
                 var rSurfaceY = kY * oneOverGamma;
                 var rSurfaceZ = kZ * oneOverGamma;
 
-                vertices[vertexArrayIndex++] = rSurfaceX + nX * heightSample - relativeToCenter.x;
-                vertices[vertexArrayIndex++] = rSurfaceY + nY * heightSample - relativeToCenter.y;
-                vertices[vertexArrayIndex++] = rSurfaceZ + nZ * heightSample - relativeToCenter.z;
+                var position = new Cartesian3();
+                position.x = rSurfaceX + nX * heightSample;
+                position.y = rSurfaceY + nY * heightSample;
+                position.z = rSurfaceZ + nZ * heightSample;
 
-                vertices[vertexArrayIndex++] = heightSample;
+                positions[index] = position;
+                heights[index] = heightSample;
 
                 var u = (longitude - geographicWest) / (geographicEast - geographicWest);
+                u = CesiumMath.clamp(u, 0.0, 1.0);
+                uvs[index] = new Cartesian2(u, v);
 
-                vertices[vertexArrayIndex++] = u;
-                vertices[vertexArrayIndex++] = v;
+                index++;
+
+                Matrix4.multiplyByPoint(toENU, position, cartesian3Scratch);
+
+                Cartesian3.minimumByComponent(cartesian3Scratch, minimum, minimum);
+                Cartesian3.maximumByComponent(cartesian3Scratch, maximum, maximum);
+                hMin = Math.min(hMin, heightSample);
             }
         }
 
+        var aaBox = new AxisAlignedBoundingBox(minimum, maximum, relativeToCenter);
+        var encoding = new TerrainEncoding(aaBox, hMin, maximumHeight, fromENU, false);
+        var vertices = new Float32Array(size * encoding.getStride());
+
+        var bufferIndex = 0;
+        for (var j = 0; j < size; ++j) {
+            bufferIndex = encoding.encode(vertices, bufferIndex, positions[j], uvs[j], heights[j]);
+        }
+
         return {
+            vertices : vertices,
             maximumHeight : maximumHeight,
-            minimumHeight : minimumHeight
+            minimumHeight : minimumHeight,
+            encoding : encoding
         };
     };
 

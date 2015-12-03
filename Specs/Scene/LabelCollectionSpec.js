@@ -34,7 +34,6 @@ defineSuite([
         VerticalOrigin,
         createScene) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     // TODO: rendering tests for pixel offset, eye offset, horizontal origin, vertical origin, font, style, outlineColor, outlineWidth, and fillColor properties
 
@@ -1399,7 +1398,7 @@ defineSuite([
         });
 
         scene.renderForSpecs();
-        var actual = scene._commandList[0].boundingVolume;
+        var actual = scene.frameState.commandList[0].boundingVolume;
 
         var positions = [one.position, two.position];
         var expected = BoundingSphere.fromPoints(positions);
@@ -1423,7 +1422,7 @@ defineSuite([
         // Update scene state
         scene.morphToColumbusView(0);
         scene.renderForSpecs();
-        var actual = scene._commandList[0].boundingVolume;
+        var actual = scene.frameState.commandList[0].boundingVolume;
 
         var projectedPositions = [
             projection.project(ellipsoid.cartesianToCartographic(one.position)),
@@ -1464,7 +1463,7 @@ defineSuite([
         camera.frustum = orthoFrustum;
 
         scene.renderForSpecs();
-        var actual = scene._commandList[0].boundingVolume;
+        var actual = scene.frameState.commandList[0].boundingVolume;
 
         var projectedPositions = [
             projection.project(ellipsoid.cartesianToCartographic(one.position)),
@@ -1694,7 +1693,7 @@ defineSuite([
             }
 
             scene.globe = createMockGlobe();
-            var l = labelsWithHeight.add({
+            labelsWithHeight.add({
                 heightReference : HeightReference.CLAMP_TO_GROUND,
                 position : Cartesian3.fromDegrees(-72.0, 40.0)
             });

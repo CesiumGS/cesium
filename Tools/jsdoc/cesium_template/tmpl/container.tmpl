@@ -26,6 +26,8 @@
     <?js if (doc.kind === 'class' || doc.kind === 'module') { ?>
         <?js= self.partial('method.tmpl', doc) ?>
     <?js } else { ?>
+        <?js= self.partial('sourceLink.tmpl', doc) ?>
+
         <?js if (doc.description) { ?>
             <div class="description"><?js= doc.description ?></div>
         <?js } ?>

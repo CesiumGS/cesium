@@ -18,7 +18,6 @@ defineSuite([
         ShaderProgram,
         createContext) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var context;
 
@@ -45,7 +44,8 @@ defineSuite([
             componentDatatype : ComponentDatatype.FLOAT,
             normalize : false,
             offsetInBytes : 0,
-            strideInBytes : 0
+            strideInBytes : 0,
+            instanceDivisor : 0
         // tightly packed
         }];
 
@@ -84,6 +84,7 @@ defineSuite([
         expect(va.getAttribute(0).normalize).toEqual(false);
         expect(va.getAttribute(0).offsetInBytes).toEqual(0);
         expect(va.getAttribute(0).strideInBytes).toEqual(0);
+        expect(va.getAttribute(0).instanceDivisor).toEqual(0);
 
         va._bind();
         va._unBind();
@@ -184,6 +185,7 @@ defineSuite([
         expect(va.getAttribute(0).normalize).toEqual(false);
         expect(va.getAttribute(0).offsetInBytes).toEqual(0);
         expect(va.getAttribute(0).strideInBytes).toEqual(0);
+        expect(va.getAttribute(0).instanceDivisor).toEqual(0);
 
         va = va.destroy();
     });
@@ -657,5 +659,106 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('throws if instanceDivisor is less than zero', function() {
+        var buffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 3,
+            usage : BufferUsage.STATIC_DRAW
+        });
 
+        var attributes = [{
+            vertexBuffer : buffer,
+            componentsPerAttribute : 3,
+            instanceDivisor : -1
+        }];
+
+        expect(function() {
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
+        }).toThrowDeveloperError();
+    });
+
+    // Direct3D 9 requires vertex attribute zero to not be instanced. While ANGLE can work around this, it is best
+    // to follow this convention. This test also guarantees that not all vertex attributes are instanced.
+    it('throws if vertex attribute zero is instanced', function() {
+        var buffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 3,
+            usage : BufferUsage.STATIC_DRAW
+        });
+
+        var attributes = [{
+            index : 0,
+            vertexBuffer : buffer,
+            componentsPerAttribute : 3,
+            instanceDivisor : 1
+        }, {
+            index : 1,
+            vertexBuffer : buffer,
+            componentsPerAttribute : 3
+        }];
+
+        expect(function() {
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if an attribute has an instanceDivisor and is not backed by a buffer', function() {
+        var buffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 3,
+            usage : BufferUsage.STATIC_DRAW
+        });
+
+        var attributes = [{
+            index : 0,
+            vertexBuffer : buffer,
+            componentsPerAttribute : 3
+        }, {
+            index : 1,
+            value : [0.0, 0.0, 1.0],
+            componentsPerAttribute : 3,
+            instanceDivisor : 1
+        }];
+
+        expect(function() {
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('throws when instanceDivisor is greater than zero and the instanced arrays extension is not supported.', function() {
+        if (!context.instancedArrays) {
+            var buffer = Buffer.createVertexBuffer({
+                context : context,
+                sizeInBytes : 3,
+                usage : BufferUsage.STATIC_DRAW
+            });
+
+            var attributes = [{
+                index : 0,
+                vertexBuffer : buffer,
+                componentsPerAttribute : 3
+            }, {
+                index : 1,
+                vertexBuffer : buffer,
+                componentsPerAttribute : 3,
+                instanceDivisor : 1
+            }];
+
+            expect(function() {
+                return new VertexArray({
+                    context : context,
+                    attributes : attributes
+                });
+            }).toThrowDeveloperError();
+        }
+    });
 }, 'WebGL');

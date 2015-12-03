@@ -103,7 +103,7 @@ define([
      * @exception {DeveloperError} this.material must be defined.
      * @exception {DeveloperError} this.rectangle must be defined.
      */
-    ViewportQuad.prototype.update = function(context, frameState, commandList) {
+    ViewportQuad.prototype.update = function(frameState) {
         if (!this.show) {
             return;
         }
@@ -127,6 +127,8 @@ define([
 
         var pass = frameState.passes;
         if (pass.render) {
+            var context = frameState.context;
+
             if (this._material !== this.material || !defined(this._overlayCommand)) {
                 // Recompile shader when material changes
                 this._material = this.material;
@@ -149,7 +151,7 @@ define([
             this._material.update(context);
 
             this._overlayCommand.uniformMap = this._material._uniforms;
-            commandList.push(this._overlayCommand);
+            frameState.commandList.push(this._overlayCommand);
         }
     };
 

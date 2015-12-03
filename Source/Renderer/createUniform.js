@@ -22,7 +22,6 @@ define([
         Matrix4,
         RuntimeError) {
     "use strict";
-    /*global console*/
 
     /**
      * @private

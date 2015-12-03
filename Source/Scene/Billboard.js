@@ -103,6 +103,7 @@ define([
         this._translucencyByDistance = options.translucencyByDistance;
         this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
         this._heightReference = defaultValue(options.heightReference, HeightReference.NONE);
+        this._sizeInMeters = defaultValue(options.sizeInMeters, false);
         this._id = options.id;
         this._collection = defaultValue(options.collection, billboardCollection);
 
@@ -695,6 +696,25 @@ define([
         },
 
         /**
+         * Gets or sets if the billboard size is in meters or pixels. <code>true</code> to size the billboard in meters;
+         * otherwise, the size is in pixels.
+         * @memberof Billboard.prototype
+         * @type {Boolean}
+         * @default false
+         */
+        sizeInMeters : {
+            get : function() {
+                return this._sizeInMeters;
+            },
+            set : function(value) {
+                if (this._sizeInMeters !== value) {
+                    this._sizeInMeters = value;
+                    makeDirty(this, COLOR_INDEX);
+                }
+            }
+        },
+
+        /**
          * Gets or sets the user-defined object returned when the billboard is picked.
          * @memberof Billboard.prototype
          * @type {Object}
@@ -930,7 +950,6 @@ define([
             that._imageIndexPromise = undefined;
             makeDirty(that, IMAGE_INDEX_INDEX);
         }).otherwise(function(error) {
-            /*global console*/
             console.error('Error loading image for billboard: ' + error);
             that._imageIndexPromise = undefined;
         });

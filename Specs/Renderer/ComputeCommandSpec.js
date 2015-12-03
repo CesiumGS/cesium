@@ -24,7 +24,6 @@ defineSuite([
         ViewportQuad,
         createScene) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
     var context;
@@ -43,8 +42,8 @@ defineSuite([
     });
 
     function CommandMockPrimitive(command) {
-        this.update = function(context, frameState, commandList) {
-            commandList.push(command);
+        this.update = function(frameState) {
+            frameState.commandList.push(command);
         };
         this.destroy = function() {
         };

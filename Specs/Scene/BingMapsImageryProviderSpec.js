@@ -3,8 +3,8 @@ defineSuite([
         'Scene/BingMapsImageryProvider',
         'Core/DefaultProxy',
         'Core/defined',
-        'Core/jsonp',
         'Core/loadImage',
+        'Core/loadJsonp',
         'Core/loadWithXhr',
         'Core/WebMercatorTilingScheme',
         'Scene/BingMapsStyle',
@@ -18,8 +18,8 @@ defineSuite([
         BingMapsImageryProvider,
         DefaultProxy,
         defined,
-        jsonp,
         loadImage,
+        loadJsonp,
         loadWithXhr,
         WebMercatorTilingScheme,
         BingMapsStyle,
@@ -30,10 +30,9 @@ defineSuite([
         ImageryState,
         pollToPromise) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     afterEach(function() {
-        jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
+        loadJsonp.loadAndExecuteScript = loadJsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
         loadWithXhr.load = loadWithXhr.defaultLoad;
     });
@@ -148,7 +147,7 @@ defineSuite([
             expectedUrl = proxy.getURL(expectedUrl);
         }
 
-        jsonp.loadAndExecuteScript = function(url, functionName) {
+        loadJsonp.loadAndExecuteScript = function(url, functionName) {
             expect(url).toStartWith(expectedUrl);
 
             setTimeout(function() {
@@ -180,6 +179,38 @@ defineSuite([
             loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
         };
     }
+
+    it('resolves readyPromise', function() {
+        var url = 'http://fake.fake.invalid';
+        var mapStyle = BingMapsStyle.ROAD;
+
+        installFakeMetadataRequest(url, mapStyle);
+        installFakeImageRequest();
+
+        var provider = new BingMapsImageryProvider({
+            url : url,
+            mapStyle : mapStyle
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
+    it('rejects readyPromise on error', function() {
+        var url = 'host.invalid';
+        var provider = new BingMapsImageryProvider({
+            url : url
+        });
+
+        return provider.readyPromise.then(function () {
+            fail('should not resolve');
+        }).otherwise(function (e) {
+            expect(provider.ready).toBe(false);
+            expect(e.message).toContain(url);
+        });
+    });
 
     it('returns valid value for hasAlphaChannel', function() {
         var url = 'http://fake.fake.invalid';

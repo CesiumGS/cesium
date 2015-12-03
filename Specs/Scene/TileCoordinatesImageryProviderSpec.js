@@ -18,10 +18,18 @@ defineSuite([
         pollToPromise,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('conforms to ImageryProvider interface', function() {
         expect(TileCoordinatesImageryProvider).toConformToInterface(ImageryProvider);
+    });
+
+    it('resolves readyPromise', function() {
+        var provider = new TileCoordinatesImageryProvider();
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
     });
 
     it('returns valid value for hasAlphaChannel', function() {

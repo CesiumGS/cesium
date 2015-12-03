@@ -28,7 +28,6 @@ define([
         ModelTransformProperty,
         Property) {
     "use strict";
-    /*global console*/
 
     var defaultScale = 1.0;
     var defaultMinimumPixelSize = 0.0;
@@ -78,11 +77,9 @@ define([
         }
         //>>includeEnd('debug');
 
-        var context = this._scene.context;
         var entities = this._entitiesToVisualize.values;
         var modelHash = this._modelHash;
         var primitives = this._primitives;
-        var scene = this._scene;
         var originalNodeMatrixHash = this._originalNodeMatrixHash;
 
         for (var i = 0, len = entities.length; i < len; i++) {
@@ -133,6 +130,7 @@ define([
             model.show = true;
             model.scale = Property.getValueOrDefault(modelGraphics._scale, time, defaultScale);
             model.minimumPixelSize = Property.getValueOrDefault(modelGraphics._minimumPixelSize, time, defaultMinimumPixelSize);
+            model.maximumScale = Property.getValueOrUndefined(modelGraphics._maximumScale, time);
             model.modelMatrix = Matrix4.clone(modelMatrix, model.modelMatrix);
 
             var runAnimations = Property.getValueOrDefault(modelGraphics._runAnimations, time, true);

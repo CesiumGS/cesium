@@ -54,7 +54,6 @@ defineSuite([
         createScene,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
     var context;
@@ -232,7 +231,7 @@ defineSuite([
             };
         };
 
-        Primitive.prototype.update = function(context, frameState, commandList) {
+        Primitive.prototype.update = function(frameState) {
             if (!defined(this._sp)) {
                 var vs = '';
                 vs += 'attribute vec4 position;';
@@ -249,22 +248,22 @@ defineSuite([
                 fs += '}';
 
                 var dimensions = new Cartesian3(500000.0, 500000.0, 500000.0);
-                var maximumCorner = Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3());
-                var minimumCorner = Cartesian3.negate(maximumCorner, new Cartesian3());
+                var maximum = Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3());
+                var minimum = Cartesian3.negate(maximum, new Cartesian3());
                 var geometry = BoxGeometry.createGeometry(new BoxGeometry({
-                    minimumCorner: minimumCorner,
-                    maximumCorner: maximumCorner
+                    minimum : minimum,
+                    maximum : maximum
                 }));
                 var attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
                 this._va = VertexArray.fromGeometry({
-                    context : context,
+                    context : frameState.context,
                     geometry : geometry,
                     attributeLocations : attributeLocations,
                     bufferUsage : BufferUsage.STATIC_DRAW
                 });
 
                 this._sp = ShaderProgram.fromCache({
-                    context : context,
+                    context : frameState.context,
                     vertexShaderSource : vs,
                     fragmentShaderSource : fs,
                     attributeLocations : attributeLocations
@@ -275,7 +274,7 @@ defineSuite([
                 });
             }
 
-            commandList.push(new DrawCommand({
+            frameState.commandList.push(new DrawCommand({
                 renderState : this._rs,
                 shaderProgram : this._sp,
                 vertexArray : this._va,

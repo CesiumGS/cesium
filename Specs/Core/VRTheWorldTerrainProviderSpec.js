@@ -24,7 +24,6 @@ defineSuite([
         pollToPromise,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     beforeEach(function() {
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
@@ -76,6 +75,17 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('resolves readyPromise', function() {
+        var provider = new VRTheWorldTerrainProvider({
+            url : 'made/up/url'
+        });
+
+        return provider.readyPromise.then(function (result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
     it('has error event', function() {
         var provider = new VRTheWorldTerrainProvider({
             url : 'made/up/url'
@@ -114,7 +124,7 @@ defineSuite([
         });
 
         expect(function() {
-            var t = provider.tilingScheme;
+            return provider.tilingScheme;
         }).toThrowDeveloperError();
     });
 

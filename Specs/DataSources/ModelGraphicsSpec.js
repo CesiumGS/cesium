@@ -8,7 +8,6 @@ defineSuite([
         ModelTransformProperty,
         ConstantProperty) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {
@@ -16,6 +15,7 @@ defineSuite([
             scale : 1,
             show : false,
             minimumPixelSize : 2,
+            maximumScale: 200,
             runAnimations : false,
             nodeTransformations : {
                 node1 : new ModelTransformProperty()
@@ -27,6 +27,7 @@ defineSuite([
         expect(model.scale).toBeInstanceOf(ConstantProperty);
         expect(model.show).toBeInstanceOf(ConstantProperty);
         expect(model.minimumPixelSize).toBeInstanceOf(ConstantProperty);
+        expect(model.maximumScale).toBeInstanceOf(ConstantProperty);
         expect(model.runAnimations).toBeInstanceOf(ConstantProperty);
         expect(model.nodeTransformations).toBeInstanceOf(ConstantProperty);
 
@@ -35,6 +36,7 @@ defineSuite([
         expect(model.show.getValue()).toEqual(options.show);
         expect(model.runAnimations.getValue()).toEqual(options.runAnimations);
         expect(model.minimumPixelSize.getValue()).toEqual(options.minimumPixelSize);
+        expect(model.maximumScale.getValue()).toEqual(options.maximumScale);
         expect(model.nodeTransformations.getValue()).toEqual(options.nodeTransformations);
     });
 
@@ -53,6 +55,7 @@ defineSuite([
         source.runAnimations = new ConstantProperty(true);
         source.scale = new ConstantProperty(1.0);
         source.minimumPixelSize = new ConstantProperty(2.0);
+        source.maximumScale = new ConstantProperty(200.0);
         source.nodeTransformations = nodeTransforms;
 
         var target = new ModelGraphics();
@@ -63,6 +66,7 @@ defineSuite([
         expect(target.scale).toBe(source.scale);
         expect(target.runAnimations).toBe(source.runAnimations);
         expect(target.minimumPixelSize).toBe(source.minimumPixelSize);
+        expect(target.maximumScale).toBe(source.maximumScale);
         expect(target.nodeTransformations).toBe(source.nodeTransformations);
     });
 
@@ -76,6 +80,7 @@ defineSuite([
         source.scale = new ConstantProperty(1.0);
         source.runAnimations = new ConstantProperty(true);
         source.minimumPixelSize = new ConstantProperty(2.0);
+        source.maximumScale = new ConstantProperty(200.0);
         source.nodeTransformations = new ConstantProperty({
             transform : node1Transforms
         });
@@ -85,6 +90,7 @@ defineSuite([
         var scale = new ConstantProperty(1.0);
         var runAnimations = new ConstantProperty(true);
         var minimumPixelSize = new ConstantProperty(2.0);
+        var maximumScale = new ConstantProperty(200.0);
         var nodeTransformations = new ConstantProperty({
             transform : node2Transforms
         });
@@ -95,6 +101,7 @@ defineSuite([
         target.scale = scale;
         target.runAnimations = runAnimations;
         target.minimumPixelSize = minimumPixelSize;
+        target.maximumScale = maximumScale;
         target.nodeTransformations = nodeTransformations;
 
         target.merge(source);
@@ -104,6 +111,7 @@ defineSuite([
         expect(target.scale).toBe(scale);
         expect(target.runAnimations).toBe(runAnimations);
         expect(target.minimumPixelSize).toBe(minimumPixelSize);
+        expect(target.maximumScale).toBe(maximumScale);
         expect(target.nodeTransformations).toBe(nodeTransformations);
     });
 
@@ -114,6 +122,7 @@ defineSuite([
         source.runAnimations = new ConstantProperty(true);
         source.scale = new ConstantProperty(1.0);
         source.minimumPixelSize = new ConstantProperty(2.0);
+        source.maximumScale = new ConstantProperty(200.0);
         source.nodeTransformations = {
             node1 : new ModelTransformProperty(),
             node2 : new ModelTransformProperty()
@@ -125,6 +134,7 @@ defineSuite([
         expect(result.runAnimations).toBe(source.runAnimations);
         expect(result.scale).toBe(source.scale);
         expect(result.minimumPixelSize).toBe(source.minimumPixelSize);
+        expect(result.maximumScale).toBe(source.maximumScale);
         expect(result.nodeTransformations).toBe(source.nodeTransformations);
     });
 

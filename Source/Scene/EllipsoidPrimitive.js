@@ -71,22 +71,7 @@ define([
      * @param {Object} [options.id] A user-defined object to return when the instance is picked with {@link Scene#pick}
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Volumes.html|Cesium Sandcastle Volumes Demo}
-     *
-     * @example
-     * // 1. Create a sphere using the ellipsoid primitive
-     * primitives.add(new Cesium.EllipsoidPrimitive({
-     *   center : Cesium.Cartesian3.fromDegrees(-75.0, 40.0, 500000.0),
-     *   radii : new Cesium.Cartesian3(500000.0, 500000.0, 500000.0)
-     * }));
-     *
-     * @example
-     * // 2. Create a tall ellipsoid in an east-north-up reference frame
-     * var e = new Cesium.EllipsoidPrimitive();
-     * e.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
-     *   Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0));
-     * e.radii = new Cesium.Cartesian3(100000.0, 100000.0, 200000.0);
-     * primitives.add(e);
+     * @private
      */
     var EllipsoidPrimitive = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -275,7 +260,7 @@ define([
      *
      * @exception {DeveloperError} this.material must be defined.
      */
-    EllipsoidPrimitive.prototype.update = function(context, frameState, commandList) {
+    EllipsoidPrimitive.prototype.update = function(frameState) {
         if (!this.show ||
             (frameState.mode !== SceneMode.SCENE3D) ||
             (!defined(this.center)) ||
@@ -289,6 +274,7 @@ define([
         }
         //>>includeEnd('debug');
 
+        var context = frameState.context;
         var translucent = this.material.isTranslucent();
         var translucencyChanged = this._translucent !== translucent;
 
@@ -357,7 +343,6 @@ define([
         this._onlySunLighting = this.onlySunLighting;
 
         var colorCommand = this._colorCommand;
-        var vs;
         var fs;
 
         // Recompile shader when material, lighting, or translucency changes
@@ -387,6 +372,7 @@ define([
             colorCommand.executeInClosestFrustum = translucent;
         }
 
+        var commandList = frameState.commandList;
         var passes = frameState.passes;
 
         if (passes.render) {

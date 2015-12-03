@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+  <meta name="description" content="CZML Dynamic Polygon - Intervals and Availability">
+  <meta name="cesium-sandcastle-labels" content="CZML">
+  <title>Cesium Demo</title>
+  <script type="text/javascript" src="../Sandcastle-header.js"></script>
+  <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+  <script type="text/javascript">
+  require.config({
+    baseUrl : '../../../Source',
+    waitSeconds : 60
+  });
+  </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+@import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+  "use strict";
+  //Sandcastle_Begin
+var czml = [
+  {
+    "id" : "document",
+    "name" : "CZML Polygon - Intervals and Availability",
+    "version" : "1.0"
+  }, {
+    "id" : "dynamicPolygon",
+    "name": "Dynamic Polygon with Intervals",
+    "availability":"2012-08-04T16:00:00Z/2012-08-04T17:00:00Z",
+    "polygon": {
+      "positions": [
+        {
+          "interval" : "2012-08-04T16:00:00Z/2012-08-04T16:20:00Z",
+          "cartographicDegrees" : [
+            -50, 20, 0,
+            -50, 40, 0,
+            -40, 40, 0,
+            -40, 20, 0
+          ]
+        },
+        {
+          "interval" : "2012-08-04T16:20:00Z/2012-08-04T16:40:00Z",
+          "cartographicDegrees": [
+            -35, 50, 0,
+            -35, 10, 0,
+            -45, 30, 0
+          ]
+        },
+        {
+          "interval" : "2012-08-04T16:40:00Z/2012-08-04T17:00:00Z",
+          "cartographicDegrees" : [
+            -35, 50, 0,
+            -40, 50, 0,
+            -40, 20, 0,
+            -35, 20, 0
+          ]
+        }
+      ],
+      "material": {
+        "solidColor": {
+          "color": [
+            {
+              "interval" : "2012-08-04T16:00:00Z/2012-08-04T16:30:00Z",
+              "rgbaf" : [1, 0, 1, 1]
+            }, {
+              "interval" : "2012-08-04T16:30:00Z/2012-08-04T17:00:00Z",
+              "rgbaf" : [0, 1, 1, 1]
+            }
+          ]
+        }
+      }
+    }
+  }, {
+    "id" : "california",
+    "name" : "static california with set availability",
+    "availability":"2012-08-04T16:10:00Z/2012-08-04T16:30:00Z",
+    "polygon" : {
+      "positions" : {
+        "cartographicDegrees" : [
+          -120, 42, 50000,
+          -124, 42, 30500,
+          -124.5, 40, 3000,
+          -123, 38, 0,
+          -122, 36, 0,
+          -120.8, 34.2, 0,
+          -118, 34, 0,
+          -117, 32.2, 6000,
+          -115.5, 32.5, 1530,
+          -115, 35, 1530,
+          -120, 39, 30500
+        ]
+      },
+      "material" : {
+        "solidColor" : {
+          "color" : {
+            "rgba" : [255, 0, 0, 150]
+          }
+        }
+      },
+      "perPositionHeight" : true,
+      "extrudedHeight": 0
+    }
+  },
+  {
+    "id" : "pennsylvania",
+    "name" : "static pennsylvania with set availability",
+    "availability":"2012-08-04T16:20:00Z/2012-08-04T16:40:00Z",
+    "polygon" : {
+      "positions" : {
+        "cartographicDegrees" : [
+          -75.5, 42, 0,
+          -79.8, 42, 0,
+          -79.9, 42.3, 0,
+          -80.5, 42, 0,
+          -80.5, 39.8, 0,
+          -75.7, 39.8, 0,
+          -74.5, 40.2, 0,
+          -75.2, 40.8, 0,
+          -74.7, 41.3, 0
+        ]
+      },
+      "material" : {
+        "solidColor" : {
+          "color" : {
+            "rgba" : [0, 255, 0, 150]
+          }
+        }
+      },
+      "height" : 50000,
+      "extrudedHeight": 200000
+    }
+  }
+];
+
+var viewer = new Cesium.Viewer('cesiumContainer');
+viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
+
+  //Sandcastle_End
+  Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+  startup(Cesium);
+} else if (typeof require === "function") {
+  require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

@@ -54,7 +54,6 @@ defineSuite([
         pollToPromise,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
 
     function makePacket(packet) {
         return [{
@@ -548,7 +547,6 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(clockPacket);
-        var entity = dataSource.entities.values[0];
 
         expect(dataSource.clock).toBeDefined();
         expect(dataSource.clock.startTime).toEqual(interval.start);
@@ -1890,6 +1888,21 @@ defineSuite([
         expect(entity.wall.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
     });
 
+    it('Has entity collection with link to data source', function() {
+        var dataSource = new CzmlDataSource();
+        dataSource.load(nameCzml);
+        var entityCollection = dataSource.entities;
+        expect(entityCollection.owner).toEqual(dataSource);
+    });
+
+    it('Has entity with link to entity collection', function() {
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(staticCzml));
+        var entityCollection = dataSource.entities;
+        var entity = entityCollection.values[0];
+        expect(entity.entityCollection).toEqual(entityCollection);
+    });
+
     it('Can use constant reference properties', function() {
         var time = JulianDate.now();
         var packets = [{
@@ -1989,8 +2002,6 @@ defineSuite([
     });
 
     it('Can use interval reference properties for positions', function() {
-        var time = JulianDate.now();
-
         var packets = [{
             id : 'document',
             version : '1.0'
@@ -2079,7 +2090,6 @@ defineSuite([
     });
 
     it('Polyline glow.', function() {
-        var time = JulianDate.now();
         var packet = {
             id : 'polylineGlow',
             polyline : {

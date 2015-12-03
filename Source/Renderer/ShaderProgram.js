@@ -24,7 +24,6 @@ define([
         createUniform,
         createUniformArray) {
     "use strict";
-    /*global console*/
 
     var nextShaderProgramId = 0;
 
@@ -167,9 +166,9 @@ define([
                 for (j = 0; j < fragmentUniformsCount; j++) {
                     if (vertexShaderUniforms[i] === fragmentShaderUniforms[j]) {
                         uniformName = vertexShaderUniforms[i];
-                        duplicateName = "czm_mediump_" + uniformName;
+                        duplicateName = 'czm_mediump_' + uniformName;
                         // Update fragmentShaderText with renamed uniforms
-                        var re = new RegExp(uniformName + "\\b", "g");
+                        var re = new RegExp(uniformName + '\\b', 'g');
                         fragmentShaderText = fragmentShaderText.replace(re, duplicateName);
                         duplicateUniformNames[duplicateName] = uniformName;
                     }

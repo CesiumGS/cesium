@@ -33,6 +33,7 @@ define([
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the model.
      * @param {Property} [options.scale=1.0] A numeric Property specifying a uniform linear scale.
      * @param {Property} [options.minimumPixelSize=0.0] A numeric Property specifying the approximate minimum pixel size of the model regardless of zoom.
+     * @param {Property} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
      * @param {Property} [options.runAnimations=true] A boolean Property specifying if glTF animations specified in the model should be started.
      *
      * @see {@link http://cesiumjs.org/2014/03/03/Cesium-3D-Models-Tutorial/|3D Models Tutorial}
@@ -45,6 +46,8 @@ define([
         this._scaleSubscription = undefined;
         this._minimumPixelSize = undefined;
         this._minimumPixelSizeSubscription = undefined;
+        this._maximumScale = undefined;
+        this._maximumScaleSubscription = undefined;
         this._uri = undefined;
         this._uriSubscription = undefined;
         this._runAnimations = undefined;
@@ -99,6 +102,15 @@ define([
         minimumPixelSize : createPropertyDescriptor('minimumPixelSize'),
 
         /**
+         * Gets or sets the numeric Property specifying the maximum scale
+         * size of a model. This property is used as an upper limit for 
+         * {@link ModelGraphics#minimumPixelSize}.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         */
+        maximumScale : createPropertyDescriptor('maximumScale'),
+
+        /**
          * Gets or sets the string Property specifying the URI of the glTF asset.
          * @memberof ModelGraphics.prototype
          * @type {Property}
@@ -134,6 +146,7 @@ define([
         result.show = this.show;
         result.scale = this.scale;
         result.minimumPixelSize = this.minimumPixelSize;
+        result.maximumScale = this.maximumScale;
         result.uri = this.uri;
         result.runAnimations = this.runAnimations;
         result.nodeTransformations = this.nodeTransformations;
@@ -157,6 +170,7 @@ define([
         this.show = defaultValue(this.show, source.show);
         this.scale = defaultValue(this.scale, source.scale);
         this.minimumPixelSize = defaultValue(this.minimumPixelSize, source.minimumPixelSize);
+        this.maximumScale = defaultValue(this.maximumScale, source.maximumScale);
         this.uri = defaultValue(this.uri, source.uri);
         this.runAnimations = defaultValue(this.runAnimations, source.runAnimations);
         this.nodeTransformations = defaultValue(this.nodeTransformations, source.nodeTransformations);

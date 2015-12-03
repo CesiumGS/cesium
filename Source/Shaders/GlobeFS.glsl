@@ -53,6 +53,12 @@ varying vec2 v_textureCoordinates;
 varying vec3 v_normalMC;
 varying vec3 v_normalEC;
 
+#ifdef FOG
+varying float v_distance;
+varying vec3 v_rayleighColor;
+varying vec3 v_mieColor;
+#endif
+
 vec4 sampleAndBlend(
     vec4 previousColor,
     sampler2D texture,
@@ -82,9 +88,9 @@ vec4 sampleAndBlend(
     vec2 translation = textureCoordinateTranslationAndScale.xy;
     vec2 scale = textureCoordinateTranslationAndScale.zw;
     vec2 textureCoordinates = tileTextureCoordinates * scale + translation;
-    vec4 sample = texture2D(texture, textureCoordinates);
-    vec3 color = sample.rgb;
-    float alpha = sample.a;
+    vec4 value = texture2D(texture, textureCoordinates);
+    vec3 color = value.rgb;
+    float alpha = value.a;
     
 #ifdef APPLY_BRIGHTNESS
     color = mix(vec3(0.0), color, textureBrightness);
@@ -158,7 +164,7 @@ void main()
 
 #ifdef ENABLE_VERTEX_LIGHTING
     float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalize(v_normalEC)) * 0.9 + 0.3, 0.0, 1.0);
-    gl_FragColor = vec4(color.rgb * diffuseIntensity, color.a);
+    vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
 #elif defined(ENABLE_DAYNIGHT_SHADING)
     float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * 5.0 + 0.3, 0.0, 1.0);
     float cameraDist = length(czm_view[3]);
@@ -166,9 +172,20 @@ void main()
     float fadeInDist = u_lightingFadeDistance.y;
     float t = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.0, 1.0);
     diffuseIntensity = mix(1.0, diffuseIntensity, t);
-    gl_FragColor = vec4(color.rgb * diffuseIntensity, color.a);
+    vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
 #else
-    gl_FragColor = color;
+    vec4 finalColor = color;
+#endif
+
+
+#ifdef FOG
+    const float fExposure = 2.0;
+    vec3 fogColor = v_mieColor + finalColor.rgb * v_rayleighColor;
+    fogColor = vec3(1.0) - exp(-fExposure * fogColor);
+    
+    gl_FragColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor), finalColor.a);
+#else
+    gl_FragColor = finalColor;
 #endif
 }
 
