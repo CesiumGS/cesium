@@ -32,6 +32,7 @@ define([
      * @param {Property} [options.scale=1.0] A numeric Property specifying a uniform linear scale.
      * @param {Property} [options.minimumPixelSize=0.0] A numeric Property specifying the approximate minimum pixel size of the model regardless of zoom.
      * @param {Property} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
+     * @param {Property} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      *
      * @see {@link http://cesiumjs.org/2014/03/03/Cesium-3D-Models-Tutorial/|3D Models Tutorial}
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
@@ -45,6 +46,8 @@ define([
         this._minimumPixelSizeSubscription = undefined;
         this._maximumScale = undefined;
         this._maximumScaleSubscription = undefined;
+        this._incrementallyLoadTextures = undefined;
+        this._incrementallyLoadTexturesSubscription = undefined;
         this._uri = undefined;
         this._uriSubscription = undefined;
         this._definitionChanged = new Event();
@@ -104,6 +107,15 @@ define([
         maximumScale : createPropertyDescriptor('maximumScale'),
 
         /**
+         * Get or sets the boolean Property specifying whether textures
+         * may continue to stream in after the model is loaded.
+         * {@link ModelGraphics#incrementallyLoadTextures}.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         */
+        incrementallyLoadTextures : createPropertyDescriptor('incrementallyLoadTextures'),
+
+        /**
          * Gets or sets the string Property specifying the URI of the glTF asset.
          * @memberof ModelGraphics.prototype
          * @type {Property}
@@ -125,6 +137,7 @@ define([
         result.scale = this.scale;
         result.minimumPixelSize = this.minimumPixelSize;
         result.maximumScale = this.maximumScale;
+        result.incrementallyLoadTextures = this.incrementallyLoadTextures;
         result.uri = this.uri;
         return result;
     };
@@ -146,6 +159,7 @@ define([
         this.scale = defaultValue(this.scale, source.scale);
         this.minimumPixelSize = defaultValue(this.minimumPixelSize, source.minimumPixelSize);
         this.maximumScale = defaultValue(this.maximumScale, source.maximumScale);
+        this.incrementallyLoadTextures = defaultValue(this.incrementallyLoadTextures, source.incrementallyLoadTextures);
         this.uri = defaultValue(this.uri, source.uri);
     };
 
