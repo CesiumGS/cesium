@@ -226,26 +226,26 @@ define([
         }
     };
 
-    Cesium3DTileBatchTableResources.prototype.getColor = function(batchId, color) {
+    Cesium3DTileBatchTableResources.prototype.getColor = function(batchId, result) {
         var batchLength = this._batchLength;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(batchId) || (batchId < 0) || (batchId > batchLength)) {
             throw new DeveloperError('batchId is required and between zero and batchLength - 1 (' + batchLength - + ').');
         }
 
-        if (!defined(color)) {
+        if (!defined(result)) {
             throw new DeveloperError('color is required.');
         }
         //>>includeEnd('debug');
 
         if (!defined(this._batchValues)) {
             // Batched models default to WHITE
-            return Color.clone(Color.WHITE, color);
+            return Color.clone(Color.WHITE, result);
         }
 
         var batchValues = this._batchValues;
         var offset = batchId * 4;
-        return Color.fromBytes(batchValues[offset], batchValues[offset + 1], batchValues[offset + 2], 255, color);
+        return Color.fromBytes(batchValues[offset], batchValues[offset + 1], batchValues[offset + 2], 255, result);
     };
 
     Cesium3DTileBatchTableResources.prototype.hasProperty = function(name) {
@@ -263,7 +263,7 @@ define([
         var names = [];
         var batchTable = this._batchTable;
 
-        if (!batchTable) {
+        if (!defined(batchTable)) {
             return names;
         }
 
@@ -593,7 +593,7 @@ define([
                 }
             };
 
-            return combine(uniformMap, batchUniformMap);
+            return combine(batchUniformMap, uniformMap);
         };
     };
 
