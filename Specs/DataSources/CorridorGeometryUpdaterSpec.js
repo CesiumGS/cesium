@@ -549,4 +549,4 @@ defineSuite([
     createDynamicGeometryBoundingSphereSpecs(CorridorGeometryUpdater, entity, entity.corridor, function() {
         return scene;
     });
-});
+}, 'WebGL');

@@ -2,15 +2,15 @@
 define([
         '../Core/defined',
         '../Core/destroyObject',
+        '../Core/TerrainQuantization',
         '../Renderer/ShaderProgram',
-        '../Scene/SceneMode',
-        '../Scene/terrainAttributeLocations'
+        '../Scene/SceneMode'
     ], function(
         defined,
         destroyObject,
+        TerrainQuantization,
         ShaderProgram,
-        SceneMode,
-        terrainAttributeLocations) {
+        SceneMode) {
     "use strict";
 
     function GlobeSurfaceShader(numberOfDayTextures, flags, shaderProgram) {
@@ -28,17 +28,16 @@ define([
     function GlobeSurfaceShaderSet() {
         this.baseVertexShaderSource = undefined;
         this.baseFragmentShaderSource = undefined;
-        this._attributeLocations = terrainAttributeLocations;
 
         this._shadersByTexturesFlags = [];
         this._pickShaderPrograms = [];
     }
 
     function getPositionMode(sceneMode) {
-        var getPosition3DMode = 'vec4 getPosition(vec3 position3DWC) { return getPosition3DMode(position3DWC); }';
-        var getPosition2DMode = 'vec4 getPosition(vec3 position3DWC) { return getPosition2DMode(position3DWC); }';
-        var getPositionColumbusViewMode = 'vec4 getPosition(vec3 position3DWC) { return getPositionColumbusViewMode(position3DWC); }';
-        var getPositionMorphingMode = 'vec4 getPosition(vec3 position3DWC) { return getPositionMorphingMode(position3DWC); }';
+        var getPosition3DMode = 'vec4 getPosition(vec3 position, float height, vec2 textureCoordinates) { return getPosition3DMode(position, height, textureCoordinates); }';
+        var getPosition2DMode = 'vec4 getPosition(vec3 position, float height, vec2 textureCoordinates) { return getPosition2DMode(position, height, textureCoordinates); }';
+        var getPositionColumbusViewMode = 'vec4 getPosition(vec3 position, float height, vec2 textureCoordinates) { return getPositionColumbusViewMode(position, height, textureCoordinates); }';
+        var getPositionMorphingMode = 'vec4 getPosition(vec3 position, float height, vec2 textureCoordinates) { return getPositionMorphingMode(position, height, textureCoordinates); }';
 
         var positionMode;
 
@@ -61,12 +60,23 @@ define([
     }
 
     function get2DYPositionFraction(useWebMercatorProjection) {
-        var get2DYPositionFractionGeographicProjection = 'float get2DYPositionFraction() { return get2DGeographicYPositionFraction(); }';
-        var get2DYPositionFractionMercatorProjection = 'float get2DYPositionFraction() { return get2DMercatorYPositionFraction(); }';
+        var get2DYPositionFractionGeographicProjection = 'float get2DYPositionFraction(vec2 textureCoordinates) { return get2DGeographicYPositionFraction(textureCoordinates); }';
+        var get2DYPositionFractionMercatorProjection = 'float get2DYPositionFraction(vec2 textureCoordinates) { return get2DMercatorYPositionFraction(textureCoordinates); }';
         return useWebMercatorProjection ? get2DYPositionFractionMercatorProjection : get2DYPositionFractionGeographicProjection;
     }
 
-    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(context, sceneMode, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog) {
+    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog) {
+        var quantization = 0;
+        var quantizationDefine = '';
+
+        var terrainEncoding = surfaceTile.pickTerrain.mesh.encoding;
+        var quantizationMode = terrainEncoding.quantization;
+        if (quantizationMode === TerrainQuantization.BITS12) {
+            quantization = 1;
+            quantizationDefine = 'QUANTIZATION_BITS12';
+        }
+
+        var sceneMode = frameState.mode;
         var flags = sceneMode |
                     (applyBrightness << 2) |
                     (applyContrast << 3) |
@@ -79,7 +89,8 @@ define([
                     (enableLighting << 10) |
                     (hasVertexNormals << 11) |
                     (useWebMercatorProjection << 12) |
-                    (enableFog << 13);
+                    (enableFog << 13) |
+                    (quantization << 14);
 
         var surfaceShader = surfaceTile.surfaceShader;
         if (defined(surfaceShader) &&
@@ -101,6 +112,7 @@ define([
             var vs = this.baseVertexShaderSource.clone();
             var fs = this.baseFragmentShaderSource.clone();
 
+            vs.defines.push(quantizationDefine);
             fs.defines.push('TEXTURE_UNITS ' + numberOfDayTextures);
 
             if (applyBrightness) {
@@ -176,10 +188,10 @@ define([
             vs.sources.push(get2DYPositionFraction(useWebMercatorProjection));
 
             var shader = ShaderProgram.fromCache({
-                context : context,
+                context : frameState.context,
                 vertexShaderSource : vs,
                 fragmentShaderSource : fs,
-                attributeLocations : this._attributeLocations
+                attributeLocations : terrainEncoding.getAttributeLocations()
             });
 
             surfaceShader = shadersByFlags[flags] = new GlobeSurfaceShader(numberOfDayTextures, flags, shader);
@@ -189,12 +201,24 @@ define([
         return surfaceShader.shaderProgram;
     };
 
-    GlobeSurfaceShaderSet.prototype.getPickShaderProgram = function(context, sceneMode, useWebMercatorProjection) {
-        var flags = sceneMode | (useWebMercatorProjection << 2);
+    GlobeSurfaceShaderSet.prototype.getPickShaderProgram = function(frameState, surfaceTile, useWebMercatorProjection) {
+        var quantization = 0;
+        var quantizationDefine = '';
+
+        var terrainEncoding = surfaceTile.pickTerrain.mesh.encoding;
+        var quantizationMode = terrainEncoding.quantization;
+        if (quantizationMode === TerrainQuantization.BITS12) {
+            quantization = 1;
+            quantizationDefine = 'QUANTIZATION_BITS12';
+        }
+
+        var sceneMode = frameState.mode;
+        var flags = sceneMode | (useWebMercatorProjection << 2) | (quantization << 3);
         var pickShader = this._pickShaderPrograms[flags];
 
         if (!defined(pickShader)) {
             var vs = this.baseVertexShaderSource.clone();
+            vs.defines.push(quantizationDefine);
             vs.sources.push(getPositionMode(sceneMode));
             vs.sources.push(get2DYPositionFraction(useWebMercatorProjection));
 
@@ -206,10 +230,10 @@ define([
                 '}\n';
 
             pickShader = this._pickShaderPrograms[flags] = ShaderProgram.fromCache({
-                context : context,
+                context : frameState.context,
                 vertexShaderSource : vs,
                 fragmentShaderSource : fs,
-                attributeLocations : this._attributeLocations
+                attributeLocations : terrainEncoding.getAttributeLocations()
             });
         }
 

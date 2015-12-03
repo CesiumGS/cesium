@@ -1,7 +1,7 @@
 Thanks for contributing to Cesium.  You rock!  Are you
 
 * [submitting an issue](#submitting-an-issue),
-* [getting started contributing code and documentation](getting-started-contributing-code-and-documentation), or
+* [getting started contributing code and documentation](#getting-started-contributing-code-and-documentation), or
 * [opening a pull request](#opening-a-pull-request)?
 
 # Submitting an Issue
