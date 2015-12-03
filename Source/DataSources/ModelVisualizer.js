@@ -27,6 +27,7 @@ define([
 
     var defaultScale = 1.0;
     var defaultMinimumPixelSize = 0.0;
+    var defaultIncrementallyLoadTextures = true;
 
     /**
      * A {@link Visualizer} which maps {@link Entity#model} to a {@link Model}.
@@ -104,7 +105,8 @@ define([
                     delete modelHash[entity.id];
                 }
                 model = Model.fromGltf({
-                    url : uri
+                    url : uri,
+                    incrementallyLoadTextures : Property.getValueOrDefault(modelGraphics._incrementallyLoadTextures, time, defaultIncrementallyLoadTextures)
                 });
 
                 model.readyPromise.then(onModelReady).otherwise(onModelError);
