@@ -35,7 +35,7 @@ defineSuite([
 
     var result = new Color();
 
-    var fakeContentProvider = {
+    var mockContentProvider = {
         getModel : function(index) {
             return {};
         }
@@ -111,7 +111,7 @@ defineSuite([
     }
 
     it('setShow throws with invalid batchId', function() {
-        var resources = new Cesium3DTileBatchTableResources(fakeContentProvider, 1);
+        var resources = new Cesium3DTileBatchTableResources(mockContentProvider, 1);
         expect(function() {
             resources.setShow();
         }).toThrowDeveloperError();
@@ -124,14 +124,14 @@ defineSuite([
     });
 
     it('setShow throws with undefined value', function() {
-        var resources = new Cesium3DTileBatchTableResources(fakeContentProvider, 1);
+        var resources = new Cesium3DTileBatchTableResources(mockContentProvider, 1);
         expect(function() {
             resources.setShow(0);
         }).toThrowDeveloperError();
     });
 
     it('setShow', function() {
-        var resources = new Cesium3DTileBatchTableResources(fakeContentProvider, 1);
+        var resources = new Cesium3DTileBatchTableResources(mockContentProvider, 1);
 
         // Batch resources are undefined by default
         expect(resources._batchValues).toBeUndefined();
@@ -139,7 +139,7 @@ defineSuite([
 
         // Check that batch resources are still undefined because value is true by default
         resources.setShow(0, true);
-        resources.update(fakeContentProvider, scene.frameState);
+        resources.update(mockContentProvider, scene.frameState);
         expect(resources._batchValues).toBeUndefined();
         expect(resources._batchTexture).toBeUndefined();
         expect(resources.getShow(0)).toEqual(true);
@@ -147,7 +147,7 @@ defineSuite([
         // Check that batch values are dirty and resources are created when value changes
         resources.setShow(0, false);
         expect(resources._batchValuesDirty).toEqual(true);
-        resources.update(fakeContentProvider, scene.frameState);
+        resources.update(mockContentProvider, scene.frameState);
         expect(resources._batchValues).toBeDefined();
         expect(resources._batchTexture).toBeDefined();
         expect(resources._batchValuesDirty).toEqual(false);
@@ -160,7 +160,7 @@ defineSuite([
     });
 
     it('getShow throws with invalid batchId', function() {
-        var resources = new Cesium3DTileBatchTableResources(fakeContentProvider, 1);
+        var resources = new Cesium3DTileBatchTableResources(mockContentProvider, 1);
         expect(function() {
             resources.getShow();
         }).toThrowDeveloperError();
@@ -173,7 +173,7 @@ defineSuite([
     });
 
     it('getShow', function() {
-        var resources = new Cesium3DTileBatchTableResources(fakeContentProvider, 1);
+        var resources = new Cesium3DTileBatchTableResources(mockContentProvider, 1);
         // Show is true by default
         expect(resources.getShow(0)).toEqual(true);
         resources.setShow(0, false);
@@ -181,7 +181,7 @@ defineSuite([
     });
     
     it('setColor throws with invalid batchId', function() {
-        var resources = new Cesium3DTileBatchTableResources(fakeContentProvider, 1);
+        var resources = new Cesium3DTileBatchTableResources(mockContentProvider, 1);
         expect(function() {
             resources.setColor();
         }).toThrowDeveloperError();
@@ -194,14 +194,14 @@ defineSuite([
     });
 
     it('setColor throws with undefined value', function() {
-        var resources = new Cesium3DTileBatchTableResources(fakeContentProvider, 1);
+        var resources = new Cesium3DTileBatchTableResources(mockContentProvider, 1);
         expect(function() {
             resources.setColor(0);
         }).toThrowDeveloperError();
     });
 
     it('setColor', function() {
-        var resources = new Cesium3DTileBatchTableResources(fakeContentProvider, 1);
+        var resources = new Cesium3DTileBatchTableResources(mockContentProvider, 1);
 
         // Batch resources are undefined by default
         expect(resources._batchValues).toBeUndefined();
@@ -209,7 +209,7 @@ defineSuite([
 
         // Check that batch resources are still undefined because value is true by default
         resources.setColor(0, Color.WHITE);
-        resources.update(fakeContentProvider, scene.frameState);
+        resources.update(mockContentProvider, scene.frameState);
         expect(resources._batchValues).toBeUndefined();
         expect(resources._batchTexture).toBeUndefined();
         expect(resources.getColor(0, result)).toEqual(Color.WHITE);
@@ -217,7 +217,7 @@ defineSuite([
         // Check that batch values are dirty and resources are created when value changes
         resources.setColor(0, Color.YELLOW);
         expect(resources._batchValuesDirty).toEqual(true);
-        resources.update(fakeContentProvider, scene.frameState);
+        resources.update(mockContentProvider, scene.frameState);
         expect(resources._batchValues).toBeDefined();
         expect(resources._batchTexture).toBeDefined();
         expect(resources._batchValuesDirty).toEqual(false);
@@ -230,21 +230,21 @@ defineSuite([
     });
 
     it('setAllColor throws with undefined value', function() {
-        var resources = new Cesium3DTileBatchTableResources(fakeContentProvider, 1);
+        var resources = new Cesium3DTileBatchTableResources(mockContentProvider, 1);
         expect(function() {
             resources.setAllColor();
         }).toThrowDeveloperError();
     });
 
     it('setAllColor', function() {
-        var resources = new Cesium3DTileBatchTableResources(fakeContentProvider, 2);
+        var resources = new Cesium3DTileBatchTableResources(mockContentProvider, 2);
         resources.setAllColor(Color.YELLOW);
         expect(resources.getColor(0, result)).toEqual(Color.YELLOW);
         expect(resources.getColor(1, result)).toEqual(Color.YELLOW);
     });
 
     it('getColor throws with invalid batchId', function() {
-        var resources = new Cesium3DTileBatchTableResources(fakeContentProvider, 1);
+        var resources = new Cesium3DTileBatchTableResources(mockContentProvider, 1);
         expect(function() {
             resources.getColor();
         }).toThrowDeveloperError();
@@ -257,14 +257,14 @@ defineSuite([
     });
 
     it('getColor throws with undefined result', function() {
-        var resources = new Cesium3DTileBatchTableResources(fakeContentProvider, 1);
+        var resources = new Cesium3DTileBatchTableResources(mockContentProvider, 1);
         expect(function() {
             resources.getColor(0);
         }).toThrowDeveloperError();
     });
 
     it('getColor', function() {
-        var resources = new Cesium3DTileBatchTableResources(fakeContentProvider, 1);
+        var resources = new Cesium3DTileBatchTableResources(mockContentProvider, 1);
         // Color is true by default
         expect(resources.getColor(0, result)).toEqual(Color.WHITE);
         resources.setColor(0, Color.YELLOW);
@@ -272,14 +272,14 @@ defineSuite([
     });
 
     it('hasProperty throws with undefined name', function() {
-        var resources = new Cesium3DTileBatchTableResources(fakeContentProvider, 1);
+        var resources = new Cesium3DTileBatchTableResources(mockContentProvider, 1);
         expect(function() {
             resources.hasProperty();
         }).toThrowDeveloperError();
     });
 
     it('hasProperty', function() {
-        var resources = new Cesium3DTileBatchTableResources(fakeContentProvider, 1);
+        var resources = new Cesium3DTileBatchTableResources(mockContentProvider, 1);
         expect(resources.hasProperty('height')).toEqual(false);
         resources.batchTable = {
             height: [0.0]
@@ -289,7 +289,7 @@ defineSuite([
     });
 
     it('getPropertyNames', function() {
-        var resources = new Cesium3DTileBatchTableResources(fakeContentProvider, 1);
+        var resources = new Cesium3DTileBatchTableResources(mockContentProvider, 1);
         expect(resources.getPropertyNames()).toEqual([]);
         resources.batchTable = {
             height: [0.0],
@@ -299,7 +299,7 @@ defineSuite([
     });
 
     it('getProperty throws with invalid batchId', function() {
-        var resources = new Cesium3DTileBatchTableResources(fakeContentProvider, 1);
+        var resources = new Cesium3DTileBatchTableResources(mockContentProvider, 1);
         expect(function() {
             resources.getProperty();
         }).toThrowDeveloperError();
@@ -312,14 +312,14 @@ defineSuite([
     });
 
     it('getProperty throws with undefined name', function() {
-        var resources = new Cesium3DTileBatchTableResources(fakeContentProvider, 1);
+        var resources = new Cesium3DTileBatchTableResources(mockContentProvider, 1);
         expect(function() {
             resources.getProperty(0);
         }).toThrowDeveloperError();
     });
 
     it('getProperty', function() {
-        var resources = new Cesium3DTileBatchTableResources(fakeContentProvider, 1);
+        var resources = new Cesium3DTileBatchTableResources(mockContentProvider, 1);
         expect(resources.getProperty(0, 'height')).toBeUndefined();
         resources.batchTable = {
             height: [1.0]
@@ -329,7 +329,7 @@ defineSuite([
     });
 
     it('setProperty throws with invalid batchId', function() {
-        var resources = new Cesium3DTileBatchTableResources(fakeContentProvider, 1);
+        var resources = new Cesium3DTileBatchTableResources(mockContentProvider, 1);
         expect(function() {
             resources.setProperty();
         }).toThrowDeveloperError();
@@ -342,7 +342,7 @@ defineSuite([
     });
 
     it('setProperty throws with undefined name', function() {
-        var resources = new Cesium3DTileBatchTableResources(fakeContentProvider, 1);
+        var resources = new Cesium3DTileBatchTableResources(mockContentProvider, 1);
         expect(function() {
             resources.setProperty(0);
         }).toThrowDeveloperError();
@@ -350,7 +350,7 @@ defineSuite([
 
     it('setProperty without existing batch table', function() {
         // Check that a batch table is created with a height of 1.0 for the first resource and undefined for the others
-        var resources = new Cesium3DTileBatchTableResources(fakeContentProvider, 3);
+        var resources = new Cesium3DTileBatchTableResources(mockContentProvider, 3);
         resources.setProperty(0, 'height', 1.0);
 
         expect(resources.batchTable.height.length).toEqual(3);
@@ -360,7 +360,7 @@ defineSuite([
     });
 
     it('setProperty with existing batch table', function() {
-        var resources = new Cesium3DTileBatchTableResources(fakeContentProvider, 2);
+        var resources = new Cesium3DTileBatchTableResources(mockContentProvider, 2);
         resources.batchTable = {
             height : [1.0, 2.0]
         };

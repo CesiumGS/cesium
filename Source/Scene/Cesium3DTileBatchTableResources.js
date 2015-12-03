@@ -593,6 +593,8 @@ define([
                 }
             };
 
+            // uniformMap goes through getUniformMap first in Model.
+            // Combine in this order so uniforms with the same name are overridden.
             return combine(batchUniformMap, uniformMap);
         };
     };
