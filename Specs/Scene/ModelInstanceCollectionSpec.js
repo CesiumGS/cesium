@@ -227,20 +227,18 @@ defineSuite([
         });
     });
 
-    it('resolves readyPromise', function(done) {
+    it('resolves readyPromise', function() {
         var collection = scene.primitives.add(new ModelInstanceCollection({
             gltf : boxGltf,
             instances : createInstances(4)
         }));
 
-        collection.readyPromise.then(function(collection) {
-            expect(collection.ready).toEqual(true);
-            done();
-        });
+        scene.renderForSpecs();
+        scene.renderForSpecs();
 
-        for (var i = 0; i < 10; ++i) {
-            scene.renderForSpecs();
-        }
+        return collection.readyPromise.then(function(collection) {
+            expect(collection.ready).toEqual(true);
+        });
     });
 
     it('rejects readyPromise on error', function() {

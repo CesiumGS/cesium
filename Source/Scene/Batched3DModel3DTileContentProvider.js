@@ -121,7 +121,7 @@ define([
 
         this.state = Cesium3DTileContentState.LOADING;
 
-        loadArrayBuffer(this._url). then(function(arrayBuffer) {
+        loadArrayBuffer(this._url).then(function(arrayBuffer) {
             that.initialize(arrayBuffer);
         }).otherwise(function(error) {
             that.state = Cesium3DTileContentState.FAILED;
