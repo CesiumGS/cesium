@@ -907,7 +907,7 @@ defineSuite([
     it('cannot select an entity when selectable is false', function() {
         var viewer = createViewer(container);
         
-        var entity = viewer.entities.add({
+        viewer.entities.add({
             rectangle: {
                 coordinates: Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0)
             },
@@ -918,7 +918,7 @@ defineSuite([
         expect(pickedObject).toBeUndefined();
         
         viewer.destroy();
-    })
+    });
 
     it('does not crash when tracking an object with a position property whose value is undefined.', function() {
         viewer = createViewer(container);
