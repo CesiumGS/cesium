@@ -6,6 +6,9 @@ Change Log
 * Breaking changes
     * Removed `RectanglePrimitive`. Use `RectangleGeometry` or `Entity.rectangle` instead.
     * Removed `Polygon`. Use `PolygonGeometry` or `Entity.polygon` instead.
+    * Removed `OrthographicFrustum.getPixelSize`. Use `OrthographicFrustum.getPixelDimensions` instead.
+    * Removed `PerspectiveFrustum.getPixelSize`. Use `PerspectiveFrustum.getPixelDimensions` instead.
+    * Removed `PerspectiveOffCenterFrustum.getPixelSize`. Use `PerspectiveOffCenterFrustum.getPixelDimensions` instead.
     * Removed `HeightmapTessellator` from the public API. It is now private and subject to change without notice.
     * Removed `TerrainMesh` from the public API. It is now private and subject to change without notice.
 * Reduced the amount of both GPU and CPU memory used by terrain. The CPU memory was reduced by up to 40%.
