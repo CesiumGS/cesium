@@ -4,6 +4,7 @@ Change Log
 ### 1.17 - 2015-01-04
 
 * Breaking changes
+    * Removed `Camera.viewRectangle`. Use `Camera.setView({destination: rectangle})` instead.
     * Removed `RectanglePrimitive`. Use `RectangleGeometry` or `Entity.rectangle` instead.
     * Removed `Polygon`. Use `PolygonGeometry` or `Entity.polygon` instead.
     * Removed `OrthographicFrustum.getPixelSize`. Use `OrthographicFrustum.getPixelDimensions` instead.
