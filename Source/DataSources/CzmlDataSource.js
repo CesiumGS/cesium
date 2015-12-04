@@ -1181,6 +1181,7 @@ define([
         processPacketData(Number, model, 'scale', modelData.scale, interval, sourceUri, entityCollection);
         processPacketData(Number, model, 'minimumPixelSize', modelData.minimumPixelSize, interval, sourceUri, entityCollection);
         processPacketData(Uri, model, 'uri', modelData.gltf, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, model, 'runAnimations', modelData.runAnimations, interval, sourceUri, entityCollection);
         processPacketData(ModelTransformProperty, model, 'nodeTransformations', modelData.nodeTransformations, interval, sourceUri, entityCollection);
     }
 
