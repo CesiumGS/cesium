@@ -6,6 +6,12 @@ Change Log
 * Breaking changes
     * Removed `HeightmapTessellator` from the public API. It is now private and subject to change without notice.
     * Removed `TerrainMesh` from the public API. It is now private and subject to change without notice.
+* Cesium now honors `window.devicePixelRatio` on browsers that support the CSS `imageRendering` attribute.  This greatly improves performance on mobile devices and high DPI displays by rendering at the browser-recommended resolution. This also reduces bandwidth usage and increases battery life in these cases.  To enable the previous behavior, use the following code:
+    ```javascript
+    if(Cesium.FeatureDetection.supportsImageRenderingPixelated()){
+        viewer.resolutionScale = window.devicePixelRatio;
+    }
+    ```
 * Reduced the amount of both GPU and CPU memory used by terrain. The CPU memory was reduced by up to 40%.
 
 ### 1.16 - 2015-12-01

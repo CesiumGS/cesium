@@ -89,4 +89,14 @@ defineSuite([
             console.log('detected Firefox ' + firefoxVersion.join('.'));
         }
     });
+
+    it('detects imageRendering support', function() {
+        var supportsImageRenderingPixelated = FeatureDetection.supportsImageRenderingPixelated();
+        expect(typeof supportsImageRenderingPixelated).toEqual('boolean');
+        if (supportsImageRenderingPixelated) {
+            expect(FeatureDetection.imageRenderingValue()).toBeDefined();
+        } else {
+            expect(FeatureDetection.imageRenderingValue()).not.toBeDefined();
+        }
+    });
 });

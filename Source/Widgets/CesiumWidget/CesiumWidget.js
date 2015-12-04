@@ -10,6 +10,7 @@ define([
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Ellipsoid',
+        '../../Core/FeatureDetection',
         '../../Core/formatError',
         '../../Core/requestAnimationFrame',
         '../../Core/ScreenSpaceEventHandler',
@@ -33,6 +34,7 @@ define([
         destroyObject,
         DeveloperError,
         Ellipsoid,
+        FeatureDetection,
         formatError,
         requestAnimationFrame,
         ScreenSpaceEventHandler,
@@ -98,13 +100,16 @@ define([
         var canvas = widget._canvas;
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
-        var zoomFactor = defaultValue(window.devicePixelRatio, 1.0) * widget._resolutionScale;
+        var resolutionScale = widget._resolutionScale;
+        if (!widget._supportsImageRenderingPixelated) {
+            resolutionScale *= defaultValue(window.devicePixelRatio, 1.0);
+        }
 
         widget._canvasWidth = width;
         widget._canvasHeight = height;
 
-        width *= zoomFactor;
-        height *= zoomFactor;
+        width *= resolutionScale;
+        height *= resolutionScale;
 
         canvas.width = width;
         canvas.height = height;
@@ -205,6 +210,12 @@ define([
         container.appendChild(element);
 
         var canvas = document.createElement('canvas');
+        var supportsImageRenderingPixelated = FeatureDetection.supportsImageRenderingPixelated();
+        this._supportsImageRenderingPixelated = supportsImageRenderingPixelated;
+        if (supportsImageRenderingPixelated) {
+            canvas.style.imageRendering = FeatureDetection.imageRenderingValue();
+        }
+
         canvas.oncontextmenu = function() {
             return false;
         };
