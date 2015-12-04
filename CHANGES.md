@@ -12,6 +12,7 @@ Change Log
     * Removed `Scene\HeadingPitchRange`. Use `Core\HeadingPitchRange` instead.
     * Removed `HeightmapTessellator` from the public API. It is now private and subject to change without notice.
     * Removed `TerrainMesh` from the public API. It is now private and subject to change without notice.
+    * Removed `jsonp`. Use `loadJsonp` instead.
 * Reduced the amount of both GPU and CPU memory used by terrain. The CPU memory was reduced by up to 40%.
 
 ### 1.16 - 2015-12-01
