@@ -2,12 +2,14 @@
 defineSuite([
         'Widgets/Viewer/Viewer',
         'Core/Cartesian3',
+        'Core/Cartesian2',
         'Core/ClockRange',
         'Core/ClockStep',
         'Core/EllipsoidTerrainProvider',
         'Core/JulianDate',
         'Core/Matrix4',
         'Core/WebMercatorProjection',
+        'Core/Rectangle',
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
         'DataSources/DataSourceClock',
@@ -36,12 +38,14 @@ defineSuite([
     ], function(
         Viewer,
         Cartesian3,
+        Cartesian2,
         ClockRange,
         ClockStep,
         EllipsoidTerrainProvider,
         JulianDate,
         Matrix4,
         WebMercatorProjection,
+        Rectangle,
         ConstantPositionProperty,
         ConstantProperty,
         DataSourceClock,
@@ -899,6 +903,22 @@ defineSuite([
             });
         });
     });
+    
+    it('cannot select an entity when selectable is false', function() {
+        var viewer = createViewer(container);
+        
+        var entity = viewer.entities.add({
+            rectangle: {
+                coordinates: Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0)
+            },
+            selectable: false
+        });
+        
+        var pickedObject = viewer.scene.pick(new Cartesian2(0, 0));
+        expect(pickedObject).toBeUndefined();
+        
+        viewer.destroy();
+    })
 
     it('does not crash when tracking an object with a position property whose value is undefined.', function() {
         viewer = createViewer(container);
