@@ -223,14 +223,17 @@ define([
         var lowerCase;
         var hasTexCoords = false;
         for(var name in parameterValues) {
-            if (parameterValues.hasOwnProperty(name)) {
-                var value = parameterValues[name];
+            //generate shader parameters for KHR_materials_common attributes
+            //(including a check, because some boolean flags should not be used as shader parameters)
+            if (parameterValues.hasOwnProperty(name) &&
+                name !== "transparent" && name !== "doubleSided") {
+                var valType = getKHRMaterialsCommonValueType(name);
                 lowerCase = name.toLowerCase();
-                if (!hasTexCoords && (value.type === WebGLConstants.SAMPLER_2D)) {
+                if (!hasTexCoords && (valType === WebGLConstants.SAMPLER_2D)) {
                     hasTexCoords = true;
                 }
                 techniqueParameters[lowerCase] = {
-                    type: value.type
+                    type: valType
                 };
             }
         }
@@ -609,18 +612,35 @@ define([
         return techniqueId;
     }
 
+    function getKHRMaterialsCommonValueType(paramName)
+    {
+        switch (paramName)
+        {
+            case "ambient"      : return WebGLConstants.FLOAT_VEC4;
+            case "diffuse"      : return WebGLConstants.FLOAT_VEC4;
+            case "doubleSided"  : return WebGLConstants.BOOL;
+            case "emission"     : return WebGLConstants.FLOAT_VEC4;
+            case "specular"     : return WebGLConstants.FLOAT_VEC4;
+            case "shininess"    : return WebGLConstants.FLOAT;
+            case "transparency" : return WebGLConstants.FLOAT;
+            case "transparent"  : return WebGLConstants.BOOL;
+        }
+    }
+
     function getTechniqueKey(khrMaterialsCommon) {
         var techniqueKey = '';
-         techniqueKey += 'technique:' + khrMaterialsCommon.technique + ';';
+        techniqueKey += 'technique:' + khrMaterialsCommon.technique + ';';
 
         var values = khrMaterialsCommon.values;
         var keys = Object.keys(values).sort();
         var keysCount = keys.length;
         for (var i=0;i<keysCount;++i) {
             var name = keys[i];
-            if (values.hasOwnProperty(name)) {
-                var value = values[name];
-                techniqueKey += name + ':' + value.type.toString();
+            //generate first part of key using shader parameters for KHR_materials_common attributes
+            //(including a check, because some boolean flags should not be used as shader parameters)
+            if (values.hasOwnProperty(name) &&
+                name !== "transparent" && name !== "doubleSided") {
+                techniqueKey += name + ':' + getKHRMaterialsCommonValueType(name).toString();
                 techniqueKey += ';';
             }
         }
@@ -692,7 +712,7 @@ define([
                         for (var valueName in values) {
                             if (values.hasOwnProperty(valueName)) {
                                 var value = values[valueName];
-                                material.values[valueName] = value.value;
+                                material.values[valueName] = value;
                             }
                         }
 
