@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-### 1.17 - 2015-01-04
+### 1.17 - 2016-01-04
 
 * Breaking changes
     * Removed `HeightmapTessellator` from the public API. It is now private and subject to change without notice.
