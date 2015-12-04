@@ -867,6 +867,11 @@ define([
             sceneLength = sceneFormat;
             binOffset = 0;
         }
+        // if we are using KHR_binary_glTF, make sure the start of the body is aligned to the next 4-byte-boundary
+        else
+        {
+            binOffset = Math.ceil(binOffset / 4) * 4;
+        }
 
         var json = getStringFromTypedArray(uint8Array, sceneOffset, sceneLength);
         return {
