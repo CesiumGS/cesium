@@ -109,7 +109,6 @@ define([
         /**
          * Get or sets the boolean Property specifying whether textures
          * may continue to stream in after the model is loaded.
-         * {@link ModelGraphics#incrementallyLoadTextures}.
          * @memberof ModelGraphics.prototype
          * @type {Property}
          */
