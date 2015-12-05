@@ -1,7 +1,7 @@
 Thanks for contributing to Cesium.  You rock!  Are you
 
 * [submitting an issue](#submitting-an-issue),
-* [getting started contributing code and documentation](#getting-started-contributing-code-and-documentation), or
+* [getting started contributing](#getting-started-contributing), or
 * [opening a pull request](#opening-a-pull-request)?
 
 # Submitting an Issue
@@ -18,16 +18,25 @@ If a related issue does not exist, submit a new one.  Please be concise and incl
 * The version of Cesium.  Did this work in a previous version?
 * Ideas for how to fix or workaround the issue.  Also mention if you are willing to help fix it.  If so, the Cesium team can often provide guidance and the issue may get fixed more quickly with your help.
 
-# Getting Started Contributing Code and Documentation
+# Getting Started Contributing
 
-Thanks for helping make Cesium awesome!  If you are looking for places to start contributing, consider:
+Thanks for helping make Cesium awesome!
+
+In addition to code, we appreciate many types of contributions:
+
+* Being active on the [Cesium forum](http://cesiumjs.org/forum.html) by answering questions and providing input on Cesium's direction.
+* Showcasing your amazing Cesium apps on the [demos page](http://cesiumjs.org/demos.html) or writing a technical guest blog post.  To do either, contact [Sarah Chow](http://cesiumjs.org/team/SarahChow.html), slc1439@gmail.com.
+* Submitting issues as [described above](#submitting-an-issue).
+
+For code contributions, there are a few places to look for ideas:
 
 * issues labeled [beginner](https://github.com/AnalyticalGraphicsInc/cesium/labels/beginner),
-* issues labeled [doc](https://github.com/AnalyticalGraphicsInc/cesium/labels/doc),
-* issues labeled [roadmap](https://github.com/AnalyticalGraphicsInc/cesium/labels/roadmap), and
-* introducing yourself on the [Cesium forum](http://cesiumjs.org/forum.html) and asking for ideas.
+* issues labeled [doc](https://github.com/AnalyticalGraphicsInc/cesium/labels/doc), and
+* issues labeled [roadmap](https://github.com/AnalyticalGraphicsInc/cesium/labels/roadmap).
 
-See the [Contributor's Guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide) for how to build and run Cesium on your system.  Then, review the next section for how to open a great pull request.
+See the [Contributor's Guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide) for how to build and run Cesium on your system.
+
+Always feel free to introduce yourself on the [Cesium forum](http://cesiumjs.org/forum.html) to brainstorm ideas and ask for guidance.
 
 # Opening a Pull Request
 
