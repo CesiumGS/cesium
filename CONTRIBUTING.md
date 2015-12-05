@@ -25,12 +25,12 @@ Everyone is welcome to contribute to Cesium!
 In addition to contributing core Cesium code, we appreciate many types of contributions:
 
 * Being active on the [Cesium forum](http://cesiumjs.org/forum.html) by answering questions and providing input on Cesium's direction.
-* Showcasing your amazing Cesium apps on the [demos page](http://cesiumjs.org/demos.html) or writing a technical guest blog post.  To do either, contact [Sarah Chow](http://cesiumjs.org/team/SarahChow.html), slc1439@gmail.com.
-* Tutorials, examples, and reference documentation.  See the issues labeled [doc](https://github.com/AnalyticalGraphicsInc/cesium/labels/doc).
+* Showcasing your Cesium apps on the [demos page](http://cesiumjs.org/demos.html) or writing a guest post blog on the [Cesium blog](http://cesiumjs.org/blog.html).  To do either, contact [Sarah Chow](http://cesiumjs.org/team/SarahChow.html), slc1439@gmail.com.
+* Writing tutorials, creating examples, and improving the reference documentation.  See the issues labeled [doc](https://github.com/AnalyticalGraphicsInc/cesium/labels/doc).
 * Submitting issues as [described above](#submitting-an-issue).
-* Ecosystem projects for [glTF](https://github.com/KhronosGroup/glTF/issues/456), [CZML](https://github.com/AnalyticalGraphicsInc/cesium/wiki/CZML-Guide), and [3D Tiles](https://github.com/AnalyticalGraphicsInc/3d-tiles).
+* Creating ecosystem projects for [glTF](https://github.com/KhronosGroup/glTF/issues/456), [CZML](https://github.com/AnalyticalGraphicsInc/cesium/wiki/CZML-Guide), and [3D Tiles](https://github.com/AnalyticalGraphicsInc/3d-tiles).
 
-For code contributions, there are a few places to look for ideas:
+For ideas for Cesium code contributions, see:
 
 * issues labeled [beginner](https://github.com/AnalyticalGraphicsInc/cesium/labels/beginner) and
 * issues labeled [roadmap](https://github.com/AnalyticalGraphicsInc/cesium/labels/roadmap).
