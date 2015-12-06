@@ -210,7 +210,188 @@ As described below, from constructors also use optional result parameters.
 
 ## Classes
 
-_TODO_
+* :art: Classes should be **cohesive**; they represent one abstraction.
+* :art: Classes should be **loosely coupled**; two classes should not be entangled and rely on each other's implementation details; they should communicate through well defined interfaces.
+
+### Constructor Functions
+
+* Create a class by creating a constructor function:
+```javascript
+var Cartesian3 = function(x, y, z) {
+    this.x = defaultValue(x, 0.0);
+    this.y = defaultValue(y, 0.0);
+    this.z = defaultValue(z, 0.0);
+};
+```
+* An instance of a class (an _object_) is creating by calling the constructor function with `new`:
+```javascript
+var p = new Cartesian3(1.0, 2.0, 3.0);
+```
+* :speedboat: Assign to all the property members of a class in the constructor function to allow V8 to use a hidden class and avoid going into dictionary mode.  Assign `undefined` if no initial value makes sense.  Do not change the type of a property, e.g., assign a string to a number, and do not add properties to an object, e.g.,
+```javascript
+var p = new Cartesian3(1.0, 2.0, 3.0);
+p.w = 4.0; // Adds the w property to p, but slows down property access since the object is switched into dictionary mode.
+```
+
+### `from` Constructors
+
+Constructor functions should take the class' basic components as parameters.  For example, `Cartesian3` takes `x`, `y`, and `z`.
+
+It is often use to construct objects from other parameters.  Since JavaScript doesn't have function overloading, Cesium uses static
+functions prefixed with `from` to construct objects in this way.  For example:
+```javascript
+var position = Cartesian3.fromRadians(-2.007, 0.645); // Construct a Cartesian3 object using longitude and latitude
+```
+These are implemented with an optional `result` parameter:
+```javascript
+Cartesian3.fromRadians = function(longitude, latitude, height, result) {
+    // Compute x, y, z using longitude, latitude, height
+
+    if (!defined(result)) {
+        result = new Cartesian3();
+    }
+
+    result.x = x;
+    result.y = y;
+    result.z = z;
+    return result;
+};
+```
+Since calling a from function should not require an existing object, the from function is assigned to `Cartesian3.fromRadians`, not `Cartesian3.prototype.fromRadians`.
+
+### `to` Functions
+
+Functions that start with `to` return a new type of object, e.g.,
+```javascript
+Cartesian3.prototype.toString = function() {
+    return '(' + this.x + ', ' + this.y + ', ' + this.z + ')';
+};
+```
+
+### Avoid Prototype Functions for Fundamental Type
+
+Fundamental math types such as `Cartesian3`, `Quaternion`, `Matrix4`, and `JulianDate` use prototype functions sparingly.  For example, `Cartesian3` does not have a prototype `add` function like this:
+```javascript
+v0.add(v1, result);
+```
+Instead, this is written as
+```javascript
+Cartesian3.add(v0, v1, result);
+```
+The only exceptions are:
+* `clone`
+* `equals`
+* `equalsEpsilon`
+* `toString`
+
+These prototype functions generally delegate to the non-prototype (static) version, e.g.,
+```javascript
+Cartesian3.equals = function(left, right) {
+        return (left === right) ||
+          ((defined(left)) &&
+           (defined(right)) &&
+           (left.x === right.x) &&
+           (left.y === right.y) &&
+           (left.z === right.z));
+};
+
+Cartesian3.prototype.equals = function(right) {
+    return Cartesian3.equals(this, right);
+};
+```
+The prototype versions have the benefit of being able to be used polymorphically.
+
+### Constants
+
+To create a static constant related to a class, use `freezeObject`:
+```javascript
+Cartesian3.ZERO = freezeObject(new Cartesian3(0.0, 0.0, 0.0));
+```
+
+### Private Functions
+
+Like private properties, private functions start with an `_`.  In practice, these are rarely used.  Instead, for better encapsulation, a file-scoped function that takes `this` as the first parameter is used.  For example,
+```javascript
+Cesium3DTileset.prototype.update = function(frameState) {
+    this._processTiles(frameState);
+    // ...
+};
+
+Cesium3DTileset.prototype._processTiles(tiles3D, frameState) {
+    var tiles = this._processingQueue;
+    var length = tiles.length;
+
+    for (var i = length - 1; i >= 0; --i) {
+        tiles[i].process(tiles3D, frameState);
+    }
+}
+```
+is better written as
+```javascript
+Cesium3DTileset.prototype.update = function(frameState) {
+    processTiles(this, frameState);
+    // ...
+};
+
+function processTiles(tiles3D, frameState) {
+    var tiles = tiles3D._processingQueue;
+    var length = tiles.length;
+
+    for (var i = length - 1; i >= 0; --i) {
+        tiles[i].process(tiles3D, frameState);
+    }
+}
+```
+
+### Property Getter/Setters
+
+Properties that can be read or written without extra processing can simply be assigned in the constructor function, e.g.,
+```javascript
+var Model = function(options) {
+   this.show = defaultValue(options.show, true);
+};
+```
+
+Read-only properties can be created with a getter, e.g.,
+```javascript
+var Cesium3DTileset = function(options) {
+    this._url = options.url;
+};
+
+defineProperties(Cesium3DTileset.prototype, {
+    url : {
+        get : function() {
+            return this._url;
+        }
+    }
+});
+```
+Getters can perform any needed computation to return the property, but the performance expectation is that they execute quickly.
+
+Setters can also perform computation before assigning to a private property, set a flag to delay computation, or both, for example:
+```javascript
+defineProperties(UniformState.prototype, {
+    viewport : {
+        get : function() {
+            return this._viewport;
+        },
+        set : function(viewport) {
+            if (!BoundingRectangle.equals(viewport, this._viewport)) {
+                BoundingRectangle.clone(viewport, this._viewport);
+
+                var v = this._viewport;
+                var vc = this._viewportCartesian4;
+                vc.x = v.x;
+                vc.y = v.y;
+                vc.z = v.width;
+                vc.w = v.height;
+
+                this._viewportDirty = true;
+            }
+        }
+    }
+});
+```
 
 ## GLSL
 
@@ -273,22 +454,13 @@ _TODO: destroy pattern_
 _TODO: promises_
 _TODO: web workers_
 _TODO: create WebGL resources in update()_
-_TODO: shadow values_
-_TODO: constructors vs from functions_
-_TODO: prototype vs. non prototype function_
-_TODO: implement equals_
-_TODO: file-scope functions_
 _TOOD: compare with ===_
-_TODO: property getters_
 _TODO: only make public if useful_
 _TODO: create enums with freezeObject_
-_TODO: loose coupling_
 _TODO: comment why, not what_
 _TODO: Don't merge code with TODO, PERFORMANCE_IDEA is OK_
 _TODO: declare variables where they are used, even though they are hoisted_
 _TODO: hoisting functions is OK_
-_TOOD: constants with freezeObject_
-_TODO: do not dynamically add members_
 _TODO: profiling/debugging tools - separate guide?_
 _TODO: Cesium stack screenshot like this http://cesiumjs.org/2015/05/26/Graphics-Tech-in-Cesium-Stack/_
 _TODO: Cesium. vs AMD (or put this in doc guide)_
@@ -297,23 +469,6 @@ _TODO: css_
 _TODO: remove old wiki guide_
 
 _TODO: from old guide:_
-
-## Constructors
-
-* Constructor functions should take the objects's basic components as parameters, while static helper methods should be provided for constructing an object via other means.  Helper methods should be prefixed with "from":
-
-```javascript
-var julianDate = new JulianDate(dayNumber, secondsOfDay, TimeStandard.UTC);
-var julianDateFromIso8601 = JulianDate.fromIso8601("2012-04-24T18:08Z");
-var julianDateFromDate = JulianDate.fromDate(new Date(1980, 7, 1));
-```
-
-* Object methods which create a new instance of a different object should be prefixed with "to":
-
-```javascript
-var julianDate = new JulianDate(dayNumber, secondsOfDay, TimeStandard.UTC);
-var javaScriptDate = julianDate.toDate();
-```
 
 ## Making a copy of `this`
 
@@ -353,7 +508,6 @@ comparison, this statement executes faster than a direct comparison with the var
 
 ## Functions
 
-* Likewise if a function argument is required, throw a `DeveloperError` if it is not provided, not in range, etc.
 * Public functions should treat Cartesian and Quaternion type arguments as if they are immutable, and also accept the equivalent object literal.  For example these two lines of code have the same effect:
 
 ```javascript
