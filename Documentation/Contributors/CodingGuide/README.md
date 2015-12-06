@@ -59,7 +59,6 @@ In general, format new code the same as the existing code.
 
 * Use four spaces for indentation.  Do not use [tab characters](http://www.jwz.org/doc/tabs-vs-spaces.html).
 * Do not include trailing whitespace.
-* Use single quotes, `'`, instead of double quotes, `"`.  `"use strict"` is an exception and should use double quotes.
 * Put `{` on the same line as the previous statement:
 ```javascript
 var defaultValue = function(a, b) {
@@ -89,6 +88,7 @@ var Model = function(options) {
     // ...
 };
 ```
+* Use single quotes, `'`, instead of double quotes, `"`.  `"use strict"` is an exception and should use double quotes.
 
 _TODO: something about the Eclipse and Web Storm formatters._
 
@@ -98,10 +98,115 @@ _TODO: something about the Eclipse and Web Storm formatters._
 * Use radians for angles, except for explicit `Degrees` functions such as `Cartesian3.fromDegrees`.
 * Use seconds for time durations.
 
-
 ## Functions
 
-_TODO_
+* :art: Functions should be **cohesive**; they should only do one task.
+* Statements in a function should be at a similar level of abstraction.  If a code block is much lower level than the rest of the statements, it is a good candidate to move to a helper function, e.g., 
+```javascript
+Cesium3DTileset.prototype.update = function(frameState) {
+    var tiles = this._processingQueue;
+    var length = tiles.length;
+
+    for (var i = length - 1; i >= 0; --i) {
+        tiles[i].process(this, frameState);
+    }
+
+    selectTiles(this, frameState);
+    updateTiles(this, frameState);
+};
+```
+is better written as
+```javascript
+Cesium3DTileset.prototype.update = function(frameState) {
+    processTiles(this, frameState);
+    selectTiles(this, frameState);
+    updateTiles(this, frameState);
+};
+
+function processTiles(tiles3D, frameState) {
+    var tiles = tiles3D._processingQueue;
+    var length = tiles.length;
+
+    for (var i = length - 1; i >= 0; --i) {
+        tiles[i].process(tiles3D, frameState);
+    }
+}
+```
+* :speedboat: Smaller functions are more likely to be optimized by V8.  Consider this for code that is likely to be a hot spot. _(TODO: I heard this on the NodeUp podcast, can someone confirm?)_
+* :speedboat: Avoid multiple `return` statements in small hot functions since V8 will not inline them _(TODO: same TODO as above)_
+
+### `options` Parameters
+
+:house: Many Cesium functions take an `options` parameter to support optional parameters, self-documenting code, and forward compatibility.  For example, consider:
+```javascript
+var sphere = new SphereGeometry(10.0, 32, 16, VertexFormat.POSITION_ONLY);
+```
+It is not clear what the numeric values represent and the caller needs to know the order of parameters.  If this took an `options` parameter, it would look like:
+```javascript
+var sphere = new SphereGeometry({
+    radius : 10.0,
+    stackPartitions : 32,
+    slicePartitions : 16,
+    vertexFormat : VertexFormat.POSITION_ONLY
+);
+```
+* :speedboat: Using `{ /* ... */ }` creates an object literal, which is a memory allocation.  Avoid creating functions that use an `options` parameter if the function is likely to be a hot spot; otherwise, callers will have to use a scratch variable for performance.  Constructor functions are good candidates for `options` parameters since Cesium avoid constructing objects in hot spots.
+
+### Default Parameter Values
+
+If a sensible default exists for a function parameter or class member, don't require the user to provide it.  For example, `height` defaults to zero in the following function:
+```javascript
+Cartesian3.fromRadians = function(longitude, latitude, height) {
+    height = defaultValue(height, 0.0);
+    // ...
+};
+```
+* :speedboat: Use `defaultValue` to assign a default value to a local variable unless doing so could cause an unnecessary memory allocation, e.g.,
+```javascript
+this._mapProjection = defaultValue(options.mapProjection, new GeographicProjection());
+```
+is better written as
+```javascript
+this._mapProjection = defined(options.mapProjection) ? options.mapProjection : new GeographicProjection();
+```
+
+Some common sensible defaults are:
+* `height`: `0.0`
+* `ellipsoid`: `Ellipsoid.WGS84`
+* `show`: `true`
+* `modelMatrix`: `Matrix4.IDENTITY`
+* `scale`: `1.0`
+
+### Throwing Exceptions
+
+_TODO: when to throw DeveloperError_
+_TODO: use includeStart for exceptions_
+
+### `result` Parameters and Scratch Variables
+
+:speedboat: In JavaScript, user-defined classes such as `Cartesian3` are reference types and are therefore allocated on the heap.  Frequently allocating these types causes a significant performance problem because it creates GC pressure, which causes the Garbage Collector to run more frequently.
+
+Cesium uses required `result` parameters to avoid implicit memory allocation.  For example,
+```javascript
+var sum = Cartesian3.add(v0, v1);
+```
+would have to implicitly allocate a new `Cartesian3` object for the returned sum.  Instead, `Cartesian3.add` requires a `result` parameter:
+```javascript
+var result = new Cartesian3();
+var sum = Cartesian3.add(v0, v1, result); // result and sum reference the same object
+```
+This makes allocations explicit to the caller, which allows them to, for example, reuse the result object in a file-scoped scratch variable:
+```javascript
+var scratchDistance = new Cartesian3();
+
+Cartesian3.distance = function(left, right) {
+    Cartesian3.subtract(left, right, scratchDistance);
+    return Cartesian3.magnitude(scratchDistance);
+};
+```
+The code is not as clean, but the performance improvement is often dramatic.
+
+As described below, from constructors also use optional result parameters.
 
 ## Classes
 
@@ -167,39 +272,31 @@ _TODO: use defined_
 _TODO: destroy pattern_
 _TODO: promises_
 _TODO: web workers_
-_TODO: comment why, not what_
 _TODO: create WebGL resources in update()_
 _TODO: shadow values_
-_TODO: passing options to functions_
 _TODO: constructors vs from functions_
 _TODO: prototype vs. non prototype function_
 _TODO: implement equals_
-_TODO: underscore for private_
 _TODO: file-scope functions_
 _TOOD: compare with ===_
 _TODO: property getters_
-_TODO: when to throw DeveloperError_
-_TODO: use includeStart for exceptions_
 _TODO: only make public if useful_
 _TODO: create enums with freezeObject_
-_TODO: loose coupling, high cohesion_
+_TODO: loose coupling_
+_TODO: comment why, not what_
 _TODO: Don't merge code with TODO, PERFORMANCE_IDEA is OK_
 _TODO: declare variables where they are used, even though they are hoisted_
 _TODO: hoisting functions is OK_
 _TOOD: constants with freezeObject_
 _TODO: do not dynamically add members_
-_TODO: scratch variables, results parameters, avoid GC_
-_TODO: smaller functions get optimized_
-_TODO: single return to inline_
 _TODO: profiling/debugging tools - separate guide?_
 _TODO: Cesium stack screenshot like this http://cesiumjs.org/2015/05/26/Graphics-Tech-in-Cesium-Stack/_
+_TODO: Cesium. vs AMD (or put this in doc guide)_
 _TODO: UI_
 _TODO: css_
 _TODO: remove old wiki guide_
 
 _TODO: from old guide:_
-
-**This is now out-of-date.  There will be a new version as part of [#1683](https://github.com/AnalyticalGraphicsInc/cesium/issues/1683).**
 
 ## Constructors
 
@@ -256,10 +353,6 @@ comparison, this statement executes faster than a direct comparison with the var
 
 ## Functions
 
-* If a sensible default exists for a function argument or object property, don't require the user to provide it.  Examples:
-   * ellipsoid - `Ellipsoid.getWgs84()`
-   * granularity - `CesiumMath.toRadians(1.0)`
-   * height - `0.0`
 * Likewise if a function argument is required, throw a `DeveloperError` if it is not provided, not in range, etc.
 * Public functions should treat Cartesian and Quaternion type arguments as if they are immutable, and also accept the equivalent object literal.  For example these two lines of code have the same effect:
 
