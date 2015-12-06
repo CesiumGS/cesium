@@ -16,7 +16,34 @@ _TODO: TOC_
 
 ## Naming
 
-_TODO_
+* Directory names are `PascalCase`, e.g., `Source/Scene`.
+* Constructor functions are `PascalCase`, e.g., `Cartesian3`.
+* Functions are `camelCase`, e.g., `defaultValue`, `Cartesian3.equalsEpsilon`.
+* Files end in `.js` and have the same name as the identifier, e.g., `Cartesian3.js` and `defaultValue.js`.
+* Variables, including class members, are `camelCase`, e.g.,
+```javascript
+this.minimumPixelSize = 1.0;
+
+var bufferViews = model.gltf.bufferViews;
+```
+* Private members start with an underscore, e.g.,
+```javascript
+this._canvas = canvas;
+```
+* Constants are in uppercase with underscores, e.g., `Cartesian3.UNIT_X = freezeObject(new Cartesian3(1.0, 0.0, 0.0));`.
+* Avoid abbreviations in public identifiers unless the full name is prohibitively cumbersome, e.g., use ` Cartesian3.maximumComponent()` not ` Cartesian3.maxComponent()`, but use `Ellipsoid.WGS84` instead of `Ellipsoid.WORLD_GEODETIC_SYSTEM_1984`.
+* Prefer short and descriptive names for local variables, e.g., if a function has only one length variable, prefer
+```javascript
+var length = primitives.length;
+```
+instead of
+```javascript
+var primitivesLength = primitives.length;
+```
+
+_TODO: make the following links_
+
+More naming conventions are introduced below along with their design pattern, e.g., options parameters, result parameters, from constructors, and scratch variables.
 
 ## GLSL
 
@@ -65,13 +92,14 @@ Watch [From Console to Chrome](https://www.youtube.com/watch?v=XAqIpGU8ZZk) by L
 
 ---
 
+_TODO: use ()_
 _TODO: use defined_
 _TODO: destroy pattern_
 _TODO: promises_
 _TODO: web workers_
 _TODO: comment why, not what_
 _TODO: create WebGL resources in update()_
-_TODO: Pascal case for classes, camel case for functions_
+_TODO: shadow values_
 _TODO: passing options to functions_
 _TODO: constructors vs from functions_
 _TODO: prototype vs. non prototype function_
@@ -96,6 +124,7 @@ _TODO: single return to inline_
 _TODO: profiling/debugging tools - separate guide?_
 _TODO: Cesium stack screenshot like this http://cesiumjs.org/2015/05/26/Graphics-Tech-in-Cesium-Stack/_
 _TODO: UI_
+_TODO: css_
 _TODO: remove old wiki guide_
 
 _TODO: from old guide:_
