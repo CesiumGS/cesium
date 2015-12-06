@@ -18,20 +18,28 @@ _TODO: TOC_
 
 * Directory names are `PascalCase`, e.g., `Source/Scene`.
 * Constructor functions are `PascalCase`, e.g., `Cartesian3`.
-* Functions are `camelCase`, e.g., `defaultValue`, `Cartesian3.equalsEpsilon`.
-* Files end in `.js` and have the same name as the identifier, e.g., `Cartesian3.js` and `defaultValue.js`.
+* Functions are `camelCase`, e.g., `defaultValue()`, `Cartesian3.equalsEpsilon()`.
+* Files end in `.js` and have the same name as the JavaScript identifier, e.g., `Cartesian3.js` and `defaultValue.js`.
 * Variables, including class members, are `camelCase`, e.g.,
 ```javascript
-this.minimumPixelSize = 1.0;
+this.minimumPixelSize = 1.0; // Class member
 
-var bufferViews = model.gltf.bufferViews;
+var bufferViews = model.gltf.bufferViews; // Local variable
 ```
 * Private members start with an underscore, e.g.,
 ```javascript
 this._canvas = canvas;
 ```
-* Constants are in uppercase with underscores, e.g., `Cartesian3.UNIT_X = freezeObject(new Cartesian3(1.0, 0.0, 0.0));`.
-* Avoid abbreviations in public identifiers unless the full name is prohibitively cumbersome, e.g., use ` Cartesian3.maximumComponent()` not ` Cartesian3.maxComponent()`, but use `Ellipsoid.WGS84` instead of `Ellipsoid.WORLD_GEODETIC_SYSTEM_1984`.
+* Constants are in uppercase with underscores, e.g.,
+```javascript
+Cartesian3.UNIT_X = freezeObject(new Cartesian3(1.0, 0.0, 0.0));
+```
+* Avoid abbreviations in public identifiers unless the full name is prohibitively cumbersome, e.g., 
+```javascript
+Cartesian3.maximumComponent() // not Cartesian3.maxComponent()
+
+Ellipsoid.WGS84 // not Ellipsoid.WORLD_GEODETIC_SYSTEM_1984
+```
 * Prefer short and descriptive names for local variables, e.g., if a function has only one length variable, prefer
 ```javascript
 var length = primitives.length;
@@ -45,6 +53,60 @@ _TODO: make the following links_
 
 More naming conventions are introduced below along with their design pattern, e.g., options parameters, result parameters, from constructors, and scratch variables.
 
+## Formatting
+
+In general, format new code the same as the existing code.
+
+* Use four spaces for indentation.  Do not use [tab characters](http://www.jwz.org/doc/tabs-vs-spaces.html).
+* Do not include trailing whitespace.
+* Use single quotes, `'`, instead of double quotes, `"`.  `"use strict"` is an exception and should use double quotes.
+* Put `{` on the same line as the previous statement:
+```javascript
+var defaultValue = function(a, b) {
+   // ...
+};
+
+if (!defined(result)) {
+   // ...
+}
+```
+* Use parenthesis judiciously, e.g., prefer
+```javascript
+var foo = (x > 0.0) && (y !== 0.0);
+```
+instead of
+```javascript
+var foo = x > 0.0 && y !== 0.0;
+```
+* Use vertical whitespace to separate functions and group related statements within a function, e.g.,
+```javascript
+var Model = function(options) {
+    // ...
+    this._allowPicking = defaultValue(options.allowPicking, true);
+
+    this._ready = false;
+    this._readyPromise = when.defer();
+    // ...
+};
+```
+
+_TODO: something about the Eclipse and Web Storm formatters._
+
+## Units
+
+* Use meters for distances.
+* Use radians for angles, except for explicit `Degrees` functions such as `Cartesian3.fromDegrees`.
+* Use seconds for time durations.
+
+
+## Functions
+
+_TODO_
+
+## Classes
+
+_TODO_
+
 ## GLSL
 
 ### Naming
@@ -52,21 +114,30 @@ More naming conventions are introduced below along with their design pattern, e.
 * GLSL files end with `.glsl` and are in the [Shaders](https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Source/Shaders) directory.
 * Files for vertex shaders have a `VS` suffix; fragment shaders have an `FS` suffix.  For example: `BillboardCollectionVS.glsl` and `BillboardCollectionFS.glsl`.
 * Generally, identifiers, such as functions and variables, use `camelCase`.
-* Cesium built-in identifiers start with `czm_`, for example, [czm_material](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Shaders/Builtin/Structs/material.glsl).  Files have the same name without the `czm_` prefix, e.g., `material.glsl`.
-* Varyings start with `v_`, e.g., `varying vec2 v_textureCoordinates;`.
-* Uniforms start with `u_`, e.g., `uniform sampler2D u_atlas;`.
+* Cesium built-in identifiers start with `czm_`, for example, [`czm_material`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Shaders/Builtin/Structs/material.glsl).  Files have the same name without the `czm_` prefix, e.g., `material.glsl`.
+* Varyings start with `v_`, e.g.,
+```javascript
+varying vec2 v_textureCoordinates;
+```
+* Uniforms start with `u_`, e.g.,
+```javascript
+uniform sampler2D u_atlas;
+```
 * An `EC` suffix indicates the point or vector is in eye coordiantes, e.g.,
 ```glsl
 varying vec3 v_positionEC;
 // ...
 v_positionEC = (czm_modelViewRelativeToEye * p).xyz;
 ```
-* When [GPU RTE](http://blogs.agi.com/insight3d/index.php/2008/09/03/precisions-precisions/) is used `High` and `Low` suffixes define the high and low bits, respectively, e.g.,
+* When [GPU RTE](http://blogs.agi.com/insight3d/index.php/2008/09/03/precisions-precisions/) is used, `High` and `Low` suffixes define the high and low bits, respectively, e.g.,
 ```glsl
 attribute vec3 position3DHigh;
 attribute vec3 position3DLow;
 ```
-* 2D texture coordinates are `s` and `t`, not `u` and `v`, e.g., `attribute vec2 st;`.
+* 2D texture coordinates are `s` and `t`, not `u` and `v`, e.g.,
+```glsl
+attribute vec2 st;
+```
 
 ### Formatting
 
@@ -81,7 +152,7 @@ struct czm_ray
 
 ### Performance
 
-* :speedboat: Compute expensive value as least frequently as possible, e.g., prefer computing a value in JavaScript and passing it in a uniform to redundantly computing the same value per-vertex.  Likewise, prefer to compute a value per-vertex and pass a varying, instead of computing per-fragment when possible.
+* :speedboat: Compute expensive value as least frequently as possible, e.g., prefer computing a value in JavaScript and passing it in a uniform instead of redundantly computing the same value per-vertex.  Likewise, prefer to compute a value per-vertex and pass a varying, instead of computing per-fragment when possible.
 * :speedboat: Use `discard` sparingly since it disables early-z GPU optimizations.
 
 ## Resources
@@ -92,7 +163,6 @@ Watch [From Console to Chrome](https://www.youtube.com/watch?v=XAqIpGU8ZZk) by L
 
 ---
 
-_TODO: use ()_
 _TODO: use defined_
 _TODO: destroy pattern_
 _TODO: promises_
@@ -130,12 +200,6 @@ _TODO: remove old wiki guide_
 _TODO: from old guide:_
 
 **This is now out-of-date.  There will be a new version as part of [#1683](https://github.com/AnalyticalGraphicsInc/cesium/issues/1683).**
-
-## Units
-
-* Use meters for distances.
-* Use radians, not degrees, for angles.
-* Use seconds for time durations.
 
 ## Constructors
 
@@ -214,11 +278,3 @@ v = v.normalize(); // Works because it is a Cartesian3, not an object with just 
 ## Variables
 
 * To aid the human reader, append `.0` to whole numbers intended to be floating-point values, e.g., `var f = 1.0;`.
-
-## Formatting
-
-In general, format new code the same as the existing code.
-
-* Use four (4) spaces for indentation.  Do not use [tab characters](http://www.jwz.org/doc/tabs-vs-spaces.html).
-* Use single quotes, `'`, instead of double quotes, `"`.  `"use strict"` is an exception and should use double quotes.
-* Where possible, eliminate all `jsHint` warnings.  The [[Contributor's Guide]] explains how to set up Eclipse to display these warnings.
