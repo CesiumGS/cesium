@@ -2,7 +2,7 @@
 
 Cesium is one of the largest JavaScript codebases in the world.  Since its start, we have maintained a high standard for code quality, which has made the codebase easier to work with for both new and experienced contributors.  We hope you find the codebase to be clean and consistent.
 
-In addition to describing typical coding conventions, this guide also covers best practices for design, maintainability, and performance.
+In addition to describing typical coding conventions, this guide also covers best practices for design, maintainability, and performance.  It is the cumulative advice of many developers after years of production, research, and experimentation.
 
 :art: The color palette icon indicates a design tip.
 
