@@ -2,7 +2,7 @@
 
 Cesium is one of the largest JavaScript codebases in the world.  Since its start, we have maintained a high standard for code quality, which has made the codebase easier to work with for both new and experienced contributors.  We hope you find the codebase to be clean and consistent.
 
-In addition to describing typical coding conventions, this guide also covers best practices for design, maintainability, and performance.  It is the cumulative advice of many developers after years of production, research, and experimentation.
+In addition to describing typical coding conventions, this guide also covers best practices for design, maintainability, and performance.  It is the cumulative advice of many developers after years of production development, research, and experimentation.
 
 :art: The color palette icon indicates a design tip.
 
@@ -10,7 +10,7 @@ In addition to describing typical coding conventions, this guide also covers bes
 
 :speedboat: The speedboat indicates a performance tip.
 
-This guide can be summarized as _make new code similar to existing code_.
+To some extent, this guide can be summarized as _make new code similar to existing code_.
 
 _TODO: TOC_
 
@@ -20,13 +20,13 @@ _TODO: TOC_
 * Constructor functions are `PascalCase`, e.g., `Cartesian3`.
 * Functions are `camelCase`, e.g., `defaultValue()`, `Cartesian3.equalsEpsilon()`.
 * Files end in `.js` and have the same name as the JavaScript identifier, e.g., `Cartesian3.js` and `defaultValue.js`.
-* Variables, including class members, are `camelCase`, e.g.,
+* Variables, including class properties, are `camelCase`, e.g.,
 ```javascript
-this.minimumPixelSize = 1.0; // Class member
+this.minimumPixelSize = 1.0; // Class property
 
 var bufferViews = model.gltf.bufferViews; // Local variable
 ```
-* Private members start with an underscore, e.g.,
+* Private (by convention) members start with an underscore, e.g.,
 ```javascript
 this._canvas = canvas;
 ```
@@ -34,24 +34,24 @@ this._canvas = canvas;
 ```javascript
 Cartesian3.UNIT_X = freezeObject(new Cartesian3(1.0, 0.0, 0.0));
 ```
-* Avoid abbreviations in public identifiers unless the full name is prohibitively cumbersome, e.g., 
+* Avoid abbreviations in public identifiers unless the full name is prohibitively cumbersome and has a widely accepted abbreviation, e.g., 
 ```javascript
 Cartesian3.maximumComponent() // not Cartesian3.maxComponent()
 
 Ellipsoid.WGS84 // not Ellipsoid.WORLD_GEODETIC_SYSTEM_1984
 ```
-* Prefer short and descriptive names for local variables, e.g., if a function has only one length variable, prefer
-```javascript
-var length = primitives.length;
-```
-instead of
+* Prefer short and descriptive names for local variables, e.g., if a function has only one length variable,
 ```javascript
 var primitivesLength = primitives.length;
+```
+is better written as
+```javascript
+var length = primitives.length;
 ```
 
 _TODO: make the following links_
 
-More naming conventions are introduced below along with their design pattern, e.g., options parameters, result parameters, from constructors, and scratch variables.
+More naming conventions are introduced below along with their design pattern, e.g., `options` parameters, `result` parameters and scratch variables, and `from` constructors.
 
 ## Formatting
 
@@ -69,15 +69,15 @@ if (!defined(result)) {
    // ...
 }
 ```
-* Use parenthesis judiciously, e.g., prefer
-```javascript
-var foo = (x > 0.0) && (y !== 0.0);
-```
-instead of
+* Use parenthesis judiciously, e.g.,
 ```javascript
 var foo = x > 0.0 && y !== 0.0;
 ```
-* Use vertical whitespace to separate functions and group related statements within a function, e.g.,
+is better written as
+```javascript
+var foo = (x > 0.0) && (y !== 0.0);
+```
+* Use vertical whitespace to separate functions and to group related statements within a function, e.g.,
 ```javascript
 var Model = function(options) {
     // ...
@@ -150,11 +150,11 @@ var sphere = new SphereGeometry({
     vertexFormat : VertexFormat.POSITION_ONLY
 );
 ```
-* :speedboat: Using `{ /* ... */ }` creates an object literal, which is a memory allocation.  Avoid creating functions that use an `options` parameter if the function is likely to be a hot spot; otherwise, callers will have to use a scratch variable for performance.  Constructor functions are good candidates for `options` parameters since Cesium avoid constructing objects in hot spots.
+* :speedboat: Using `{ /* ... */ }` creates an object literal, which is a memory allocation.  Avoid creating functions that use an `options` parameter if the function is likely to be a hot spot; otherwise, callers will have to use a scratch variable (see below) for performance.  Constructor functions are good candidates for `options` parameters since Cesium avoids constructing objects in hot spots.
 
 ### Default Parameter Values
 
-If a sensible default exists for a function parameter or class member, don't require the user to provide it.  For example, `height` defaults to zero in the following function:
+If a sensible default exists for a function parameter or class property, don't require the user to provide it.  For example, `height` defaults to zero in `Cartesian3.fromRadians`:
 ```javascript
 Cartesian3.fromRadians = function(longitude, latitude, height) {
     height = defaultValue(height, 0.0);
@@ -184,7 +184,7 @@ _TODO: use includeStart for exceptions_
 
 ### `result` Parameters and Scratch Variables
 
-:speedboat: In JavaScript, user-defined classes such as `Cartesian3` are reference types and are therefore allocated on the heap.  Frequently allocating these types causes a significant performance problem because it creates GC pressure, which causes the Garbage Collector to run more frequently.
+:speedboat: In JavaScript, user-defined classes such as `Cartesian3` are reference types and are therefore allocated on the heap.  Frequently allocating these types causes a significant performance problem because it creates GC pressure, which causes the Garbage Collector to run longer and more frequently.
 
 Cesium uses required `result` parameters to avoid implicit memory allocation.  For example,
 ```javascript
@@ -206,11 +206,11 @@ Cartesian3.distance = function(left, right) {
 ```
 The code is not as clean, but the performance improvement is often dramatic.
 
-As described below, from constructors also use optional result parameters.
+As described below, `from` constructors also use optional `result` parameters.
 
 ## Classes
 
-* :art: Classes should be **cohesive**; they represent one abstraction.
+* :art: Classes should be **cohesive**; a class should represent one abstraction.
 * :art: Classes should be **loosely coupled**; two classes should not be entangled and rely on each other's implementation details; they should communicate through well defined interfaces.
 
 ### Constructor Functions
@@ -223,7 +223,7 @@ var Cartesian3 = function(x, y, z) {
     this.z = defaultValue(z, 0.0);
 };
 ```
-* An instance of a class (an _object_) is creating by calling the constructor function with `new`:
+* Create an instance of a class (an _object_) by calling the constructor function with `new`:
 ```javascript
 var p = new Cartesian3(1.0, 2.0, 3.0);
 ```
@@ -231,11 +231,12 @@ var p = new Cartesian3(1.0, 2.0, 3.0);
 ```javascript
 var p = new Cartesian3(1.0, 2.0, 3.0);
 p.w = 4.0; // Adds the w property to p, but slows down property access since the object is switched into dictionary mode.
+p.x = 'Cesium'; // Changes x to a string, hidden class can't be used
 ```
 
 ### `from` Constructors
 
-Constructor functions should take the class' basic components as parameters.  For example, `Cartesian3` takes `x`, `y`, and `z`.
+Constructor functions should take the basic components of the class as parameters.  For example, `Cartesian3` takes `x`, `y`, and `z`.
 
 It is often use to construct objects from other parameters.  Since JavaScript doesn't have function overloading, Cesium uses static
 functions prefixed with `from` to construct objects in this way.  For example:
@@ -257,7 +258,7 @@ Cartesian3.fromRadians = function(longitude, latitude, height, result) {
     return result;
 };
 ```
-Since calling a from function should not require an existing object, the from function is assigned to `Cartesian3.fromRadians`, not `Cartesian3.prototype.fromRadians`.
+Since calling a `from` constructor should not require an existing object, the function is assigned to `Cartesian3.fromRadians`, not `Cartesian3.prototype.fromRadians`.
 
 ### `to` Functions
 
@@ -268,7 +269,7 @@ Cartesian3.prototype.toString = function() {
 };
 ```
 
-### Avoid Prototype Functions for Fundamental Type
+### Use Prototype Functions for Fundamental Types Sparingly
 
 Fundamental math types such as `Cartesian3`, `Quaternion`, `Matrix4`, and `JulianDate` use prototype functions sparingly.  For example, `Cartesian3` does not have a prototype `add` function like this:
 ```javascript
@@ -352,7 +353,7 @@ var Model = function(options) {
 };
 ```
 
-Read-only properties can be created with a getter, e.g.,
+Read-only properties can be created with a private property and a getter, e.g.,
 ```javascript
 var Cesium3DTileset = function(options) {
     this._url = options.url;
@@ -392,6 +393,10 @@ defineProperties(UniformState.prototype, {
     }
 });
 ```
+
+* :speedboat: Calling the getter/setter function is slower than direct property access so functions internal to a class can also the property directly when appropriate.
+
+_TODO: shadow variables_
 
 ## GLSL
 
