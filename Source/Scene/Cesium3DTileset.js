@@ -343,10 +343,8 @@ define([
         // content requested, select the child (= the root) and continue
         if ((tile.isReady()) &&
             (tile.numberOfChildrenWithoutContent === 0)) {
-            // A tiles.json must specify at least one tile, ie a root
-            // and the root will always be appended to a parent tile's children
-            // list.
-            root = tile.children[tile.children.length - 1];
+            // A tiles.json must specify exactly one tile, ie a root
+            root = tile.children[0];
             if (root.hasTilesetContent) {
                 selectTileWithTilesetContent(tiles3D, selectedTiles, root, fullyVisible, frameState, replace);
             } else {
@@ -366,6 +364,7 @@ define([
         }
 
         // Request the tile's tileset if it's unloaded.
+        // In the case of tileset content tiles, their state must be explicitly set
         if (tile.isContentUnloaded()) {
             tile.content.state = Cesium3DTileContentState.LOADING;
             var tilesUrl = (new Uri(contentUrl).isAbsolute()) ? contentUrl : tiles3D._url + contentUrl;
