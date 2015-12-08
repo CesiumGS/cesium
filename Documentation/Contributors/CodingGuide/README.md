@@ -623,7 +623,7 @@ varying vec2 v_textureCoordinates;
 ```javascript
 uniform sampler2D u_atlas;
 ```
-* An `EC` suffix indicates the point or vector is in eye coordiantes, e.g.,
+* An `EC` suffix indicates the point or vector is in eye coordinates, e.g.,
 ```glsl
 varying vec3 v_positionEC;
 // ...
