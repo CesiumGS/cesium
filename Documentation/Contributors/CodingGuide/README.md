@@ -101,6 +101,92 @@ var Model = function(options) {
 * Use radians for angles, except for explicit `Degrees` functions such as `Cartesian3.fromDegrees`.
 * Use seconds for time durations.
 
+## Basic Code Construction
+
+* To avoid type coercion, test for equality with `===` and `!==`, e.g.,
+```javascript
+var f = 1.0;
+
+if (f === 1.0) {
+    // ...
+}
+
+if (f !== 1.0) {
+    // ...
+}
+```
+* To aid the human reader, append `.0` to whole numbers intended to be floating-point values, e.g., unless `f` is an integer,
+```javascript
+var f = 1;
+```
+is better written as
+```javascript
+var f = 1.0;
+```
+* Declare variables where they are first used.  For example,
+```javascript
+var i;
+var m;
+var models = [ /* ... */ ];
+var length = models.length;
+for (i = 0; i < length; ++i) {
+    m = models[i];
+    // Use m
+}
+```
+is better written as
+```javascript
+var models = [ /* ... */ ];
+var length = models.length;
+for (var i = 0; i < length; ++i) {
+    var m = models[i];
+    // Use m
+}
+```
+* Variables have function-level, not block-level scope.  Do not rely on variable hoisting, i.e., using a variable before it is declared, e.g.,
+```javascript
+console.log(i); // i is undefined here.  Never use a variable before it is declared.
+var i = 0.0;
+```
+* Use `undefined` instead of `null`.
+* Test if a variable is defined using Cesium's `defined` function, e.g.,
+```javascript
+var v = undefined;
+if (defined(v)) {
+    // false
+}
+
+var u = {};
+if (defined(u)) {
+    // true
+}
+```
+* Use Cesium's `definedNotNull` function to test the return of `String.match()` and JSON properties.
+* Use Cesium's `freezeObject` function to create enums, e.g.,
+```javascript
+/*global define*/
+define([
+        '../Core/freezeObject'
+    ], function(
+        freezeObject) {
+    "use strict";
+
+    return freezeObject({
+        STOPPED : 0,
+        ANIMATING : 1
+    });
+});
+```
+* Use descriptive comments for non-obvious code, e.g.,
+```javascript
+byteOffset += sizeOfUint32; // Add 4 to byteOffset
+```
+is better written as
+```javascript
+byteOffset += sizeOfUint32; // Skip length field
+```
+* `TODO` comments need to be removed or addressed before the code is merged into master.  Used sparingly, `PERFORMANCE_IDEA`, can be handy later when profiling.
+
 ## Functions
 
 * :art: Functions should be **cohesive**; they should only do one task.
@@ -306,7 +392,7 @@ Cartesian3.prototype.toString = function() {
 
 ### Use Prototype Functions for Fundamental Classes Sparingly
 
-Fundamental math classes such as `Cartesian3`, `Quaternion`, `Matrix4`, and `JulianDate` use prototype functions sparingly.  For example, `Cartesian3` does not have a prototype `add` function like this:
+:art: Fundamental math classes such as `Cartesian3`, `Quaternion`, `Matrix4`, and `JulianDate` use prototype functions sparingly.  For example, `Cartesian3` does not have a prototype `add` function like this:
 ```javascript
 v0.add(v1, result);
 ```
@@ -433,7 +519,7 @@ defineProperties(UniformState.prototype, {
 
 ### Shadowed Property
 
-When the overhead of getter/setter functions is prohibitive or reference type semantics designed, e.g., the ability to pass a property as a `result` parameter so its properties can be modified, consider combining a public property with a private shadowed property, e.g.,
+When the overhead of getter/setter functions is prohibitive or reference type semantics are desired, e.g., the ability to pass a property as a `result` parameter so its properties can be modified, consider combining a public property with a private shadowed property, e.g.,
 ```javascript
 var Model = function(options) {
     this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
@@ -442,7 +528,9 @@ var Model = function(options) {
 
 Model.prototype.update = function(frameState) {
     if (!Matrix4.equals(this._modelMatrix, this.modelMatrix)) {
-        Matrix4.clone(this.modelMatrix, this._modelMatrix); // Deep copy. Not this._modelMatrix = this._modelMatrix
+        // clone() is a deep copy. Not this._modelMatrix = this._modelMatrix
+        Matrix4.clone(this.modelMatrix, this._modelMatrix);
+
         // Do slow operations that need to happen when the model matrix changes
     }
 };
@@ -450,7 +538,7 @@ Model.prototype.update = function(frameState) {
 
 ### Put the Constructor Function at the Top of the File
 
-It is convenient for the constructor function to be at the top of the file even if it requires that helper functions rely on **hoisting**, for example
+It is convenient for the constructor function to be at the top of the file even if it requires that helper functions rely on **hoisting**, for example, `Cesium3DTileset.js`,
 ```javascript
 function loadTilesJson(tileset, tilesJson, done) {
     // ...
@@ -476,111 +564,25 @@ function loadTilesJson(tileset, tilesJson, done) {
     // ...
 }
 ```
-even though it relies on implicitly hoisting `loadTilesJson` to the top of the module.
+even though it relies on implicitly hoisting `loadTilesJson` to the top of the file.
 
-Note that Cesium never relies on hoisting variables, e.g.
-```javascript
-console.log(i); // i is undefined here.  Never use a variable before it is declared.
-var i = 0.0;
-```
-
-## Basic Code Construction
-
-* To avoid type coercion, test for equality with `===` and `!==`, e.g.,
-```javascript
-var f = 1.0;
-
-if (f === 1.0) {
-    // ...
-}
-
-if (f !== 1.0) {
-    // ...
-}
-```
-* Declare variables where they are first used.  For example,
-```javascript
-var i;
-var m;
-var models = [ /* ... */ ];
-var length = models.length;
-for (i = 0; i < length; ++i) {
-    m = models[i];
-    // Use m
-}
-```
-is better written as
-```javascript
-var models = [ /* ... */ ];
-var length = models.length;
-for (var i = 0; i < length; ++i) {
-    var m = models[i];
-    // Use m
-}
-```
-* Variables have function-level, not block-level scope.  Do not rely on variable hoisting, i.e., using a variable before it is declared.
-* Use `undefined` instead of `null`.
-* Test if a variable is defined using Cesium's `define` function, e.g.,
-```javascript
-var v = undefined;
-if (defined(v)) {
-    // false
-}
-
-var u = {};
-if (defined(u)) {
-    // true
-}
-```
-* To aid the human reader, append `.0` to whole numbers intended to be floating-point values, e.g., unless `f` is an integer,
-```javascript
-var f = 1;
-```
-is better written as
-```javascript
-var f = 1.0;
-```
-* Use Cesium's `definedNotNull` function to test the return of `String.match()` and JSON properties.
-* Use Cesium's `freezeObject` function to create enums, e.g.,
-```javascript
-/*global define*/
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    "use strict";
-
-    return freezeObject({
-        STOPPED : 0,
-        ANIMATING : 1
-    });
-});
-```
-* `TODO` comments need to be removed or addressed before the code is merged into master.  Used sparingly, `PERFORMANCE_IDEA`, can be handy later when profiling.
-* Use descriptive comments for non-obvious code, e.g.,
-```javascript
-byteOffset += sizeOfUint32; // Add 4 to byteOffset
-```
-is better written as
-```javascript
-byteOffset += sizeOfUint32; // Skip length field
-```
+Cesium never relies on hoisting variables.
 
 ## Design
 
 * :house: Only make a class or function part of the Cesium API if it will likely be useful to end users; avoid making an implementation detail part of the public API.  When something is public, it makes the Cesium API bigger and harder to learn, is harder to change later, and requires more documentation work.
 * :art: Put new classes and functions in the right part of the Cesium stack (directory).  From the bottom up:
-   * `Source/Core` - Number crunching. Pure math such as [`Cartesian3`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/Cartesian3.js). Pure geometry such as [`CylinderGeometry`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/CylinderGeometry.js). Request helper functions such as [`loadArrayBuffer`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/loadArrayBuffer.js). Fundamental algorithms such as [`mergeSort`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/mergeSort.js).
+   * `Source/Core` - Number crunching. Pure math such as [`Cartesian3`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/Cartesian3.js). Pure geometry such as [`CylinderGeometry`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/CylinderGeometry.js). Fundamental algorithms such as [`mergeSort`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/mergeSort.js). Request helper functions such as [`loadArrayBuffer`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/loadArrayBuffer.js).
    * `Source/Renderer` - WebGL abstractions such as [`ShaderProgram`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Renderer/ShaderProgram.js) and WebGL-specific utilities such as [`ShaderCache`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Renderer/ShaderCache.js).  Identifiers in this directory are not part of the public Cesium API.
    * `Source/Scene` - The graphics engine, including primitives such as [Model](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Scene/Model.js). Code in this directory often depend on `Renderer`.
    * `Source/DataSources` - Entity API, such as [`Entity`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/DataSources/Entity.js), and data sources such as [`CzmlDataSource`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/DataSources/CzmlDataSource.js).
    * `Source/Widgets` - Widgets such as the main Cesium [`Viewer`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Widgets/Viewer/Viewer.js).
 
-It is usually obvious what directory a file belongs it.  When it isn't, the decision is usually between `Core` and another directory.  Put the file in `Core` if it is pure number crunching or utility that is expected to be generally useful to Cesium, e.g., [`Matrix4`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/Matrix4.js) belongs in `Core` since many parts of the Cesium stack use 4x4 matrices; on the other hand, [`BoundingSphereState`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/DataSources/BoundingSphereState.js) is in `DataSources` because it is specific to data sources.
+It is usually obvious what directory a file belongs it.  When it isn't, the decision is usually between `Core` and another directory.  Put the file in `Core` if it is pure number crunching or a utility that is expected to be generally useful to Cesium, e.g., [`Matrix4`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/Matrix4.js) belongs in `Core` since many parts of the Cesium stack use 4x4 matrices; on the other hand, [`BoundingSphereState`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/DataSources/BoundingSphereState.js) is in `DataSources` because it is specific to data sources.
 
 ![](1.jpg)
 
-* WebGL resources need to be explicitly deleted so classes that contain them (and classes that contain these classes and so on) have `destroy` and `isDestroyed` functions, e.g.,
+* WebGL resources need to be explicitly deleted so classes that contain them (and classes that contain these classes, and so on) have `destroy` and `isDestroyed` functions, e.g.,
 ```javascript
 var primitive = new Primitive(/* ... */);
 expect(content.isDestroyed()).toEqual(false);
@@ -599,9 +601,9 @@ SkyBox.prototype.destroy = function() {
 
 :house: Cesium uses third-party libraries sparingly.  If you want to add a new one, please start a thread on the [Cesium forum](http://cesiumjs.org/forum.html) ([example discussion](https://groups.google.com/forum/#!topic/cesium-dev/Bh4BolxlT80)).  The library should
 * Have a compatible license such as MIT, BSD, or Apache 2.0.
-* Provide capabilities that the Cesium team doesn't have the time and/or expertise to develop.
+* Provide capabilities that the Cesium truly needs and the team doesn't have the time and/or expertise to develop.
 * Be lightweight, tested, maintained, and reasonably widely used.
-* Provide enough value to justify adding another third-party library whose integration needs to be maintained and has the potential to slightly count against Cesium when some users evaluate it (generally, fewer third-parties is better).
+* Provide enough value to justify adding a third-party library whose integration needs to be maintained and has the potential to slightly count against Cesium when some users evaluate it (generally, fewer third-parties is better).
 
 ## GLSL
 
@@ -656,14 +658,3 @@ struct czm_ray
 See Section 4.1 to 4.3 of [Getting Serious with JavaScript](http://webglinsights.github.io/downloads/WebGL-Insights-Chapter-4.pdf) by Cesium contributors Matthew Amato and Kevin Ring in _WebGL Insights_ for a deeper coverage of modules and performance.
 
 Watch [From Console to Chrome](https://www.youtube.com/watch?v=XAqIpGU8ZZk) by Lilli Thompson for even deeper performance coverage.
-
----
-
-**TODO**
-* Can someone add these?
-    * [ ] Promises section.
-    * [ ] Web workers section.
-    * [ ] UI (and CSS?) section.
-    * [ ] Mention Eclipse and Web Storm formatters.
-* [ ] Add TOC
-* [ ] Remove the old [JavaScript Coding Conventions](https://github.com/AnalyticalGraphicsInc/cesium/wiki/JavaScript-Coding-Conventions) on the wiki
