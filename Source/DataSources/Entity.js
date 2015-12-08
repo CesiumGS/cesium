@@ -499,17 +499,18 @@ define([
      */
     Entity.prototype.removeProperty = function(propertyName) {
         var propertyNames = this._propertyNames;
+        var index = propertyNames.indexOf(propertyName);
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(propertyName)) {
             throw new DeveloperError('propertyName is required.');
         }
-        if (propertyNames.indexOf(propertyName) === -1) {
+        if (index === -1) {
             throw new DeveloperError(propertyName + ' is not a registered property.');
         }
         //>>includeEnd('debug');
 
-        this._propertyNames.push(propertyName);
+        this._propertyNames.splice(index, 1);
         delete this[propertyName];
     };
 
