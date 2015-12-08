@@ -211,7 +211,7 @@ if (typeof WebGLRenderingContext === 'undefined') {
     throw new RuntimeError('The browser does not support WebGL.');
 }
 ```
-* Exceptions are exceptional.  Avoid throwing exceptions, e.g., if a polyline is only provide one position, instead of two or more, don't render it instead of throwing an exception.
+* :art: Exceptions are exceptional.  Avoid throwing exceptions, e.g., if a polyline is only provided one position, instead of two or more, don't render it instead of throwing an exception.
 
 ### `result` Parameters and Scratch Variables
 
@@ -226,7 +226,7 @@ would have to implicitly allocate a new `Cartesian3` object for the returned sum
 var result = new Cartesian3();
 var sum = Cartesian3.add(v0, v1, result); // result and sum reference the same object
 ```
-This makes allocations explicit to the caller, which allows them to, for example, reuse the result object in a file-scoped scratch variable:
+This makes allocations explicit to the caller, which allows the caller to, for example, reuse the result object in a file-scoped scratch variable:
 ```javascript
 var scratchDistance = new Cartesian3();
 
@@ -258,23 +258,27 @@ var Cartesian3 = function(x, y, z) {
 ```javascript
 var p = new Cartesian3(1.0, 2.0, 3.0);
 ```
-* :speedboat: Assign to all the property members of a class in the constructor function to allow V8 to use a hidden class and avoid going into dictionary mode.  Assign `undefined` if no initial value makes sense.  Do not change the type of a property, e.g., assign a string to a number, and do not add properties to an object, e.g.,
+* :speedboat: Assign to all the property members of a class in the constructor function to allow V8 to use a hidden class and avoid entering dictionary mode.  Assign `undefined` if no initial value makes sense.  Do not add properties to an object, e.g.,
 ```javascript
 var p = new Cartesian3(1.0, 2.0, 3.0);
-p.w = 4.0; // Adds the w property to p, but slows down property access since the object is switched into dictionary mode.
-p.x = 'Cesium'; // Changes x to a string, hidden class can't be used
+p.w = 4.0; // Adds the w property to p, slows down property access since the object enters dictionary mode
+```
+* :speedboat: For the same reason, do not change the type of a property, e.g., assign a string to a number, e.g.,
+```javascript
+var p = new Cartesian3(1.0, 2.0, 3.0);
+p.x = 'Cesium'; // Changes x to a string, slows down property access
 ```
 
 ### `from` Constructors
 
-Constructor functions should take the basic components of the class as parameters.  For example, `Cartesian3` takes `x`, `y`, and `z`.
+:art: Constructor functions should take the basic components of the class as parameters.  For example, `Cartesian3` takes `x`, `y`, and `z`.
 
-It is often use to construct objects from other parameters.  Since JavaScript doesn't have function overloading, Cesium uses static
+It is often convenient to construct objects from other parameters.  Since JavaScript doesn't have function overloading, Cesium uses static
 functions prefixed with `from` to construct objects in this way.  For example:
 ```javascript
-var position = Cartesian3.fromRadians(-2.007, 0.645); // Construct a Cartesian3 object using longitude and latitude
+var p = Cartesian3.fromRadians(-2.007, 0.645); // Construct a Cartesian3 object using longitude and latitude
 ```
-These are implemented with an optional `result` parameter:
+These are implemented with an optional `result` parameter, which allows callers to pass in a scratch variable:
 ```javascript
 Cartesian3.fromRadians = function(longitude, latitude, height, result) {
     // Compute x, y, z using longitude, latitude, height
@@ -300,9 +304,9 @@ Cartesian3.prototype.toString = function() {
 };
 ```
 
-### Use Prototype Functions for Fundamental Types Sparingly
+### Use Prototype Functions for Fundamental Classes Sparingly
 
-Fundamental math types such as `Cartesian3`, `Quaternion`, `Matrix4`, and `JulianDate` use prototype functions sparingly.  For example, `Cartesian3` does not have a prototype `add` function like this:
+Fundamental math classes such as `Cartesian3`, `Quaternion`, `Matrix4`, and `JulianDate` use prototype functions sparingly.  For example, `Cartesian3` does not have a prototype `add` function like this:
 ```javascript
 v0.add(v1, result);
 ```
@@ -377,14 +381,14 @@ function processTiles(tiles3D, frameState) {
 
 ### Property Getter/Setters
 
-Properties that can be read or written without extra processing can simply be assigned in the constructor function, e.g.,
+Public properties that can be read or written without extra processing can simply be assigned in the constructor function, e.g.,
 ```javascript
 var Model = function(options) {
    this.show = defaultValue(options.show, true);
 };
 ```
 
-Read-only properties can be created with a private property and a getter, e.g.,
+Read-only properties can be created with a private property and a getter using Cesium's `defineProperties` function, e.g.,
 ```javascript
 var Cesium3DTileset = function(options) {
     this._url = options.url;
@@ -425,9 +429,24 @@ defineProperties(UniformState.prototype, {
 });
 ```
 
-* :speedboat: Calling the getter/setter function is slower than direct property access so functions internal to a class can also the property directly when appropriate.
+* :speedboat: Calling the getter/setter function is slower than direct property access so functions internal to a class can use the private property directly when appropriate.
 
-_TODO: shadow variables_
+### Shadowed Property
+
+When the overhead of getter/setter functions is prohibitive or reference type semantics designed, e.g., the ability to pass a property as a `result` parameter so its properties can be modified, consider combining a public property with a private shadowed property, e.g.,
+```javascript
+var Model = function(options) {
+    this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
+    this._modelMatrix = Matrix4.clone(this.modelMatrix);
+};
+
+Model.prototype.update = function(frameState) {
+    if (!Matrix4.equals(this._modelMatrix, this.modelMatrix)) {
+        Matrix4.clone(this.modelMatrix, this._modelMatrix); // Deep copy. Not this._modelMatrix = this._modelMatrix
+        // Do slow operations that need to happen when the model matrix changes
+    }
+};
+```
 
 ### Put the Constructor Function at the Top of the File
 
