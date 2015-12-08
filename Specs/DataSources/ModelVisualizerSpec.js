@@ -147,14 +147,15 @@ defineSuite([
         // wait till the model is loaded before we can check node transformations
         return pollToPromise(function() {
             scene.render();
-            return primitive.ready !== false;
+            return primitive.ready;
         }).then(function() {
             visualizer.update(time);
+
             var node = primitive.getNode('Mesh');
             expect(node).toBeDefined();
 
-            var transformMtx = Matrix4.fromTranslationQuaternionRotationScale(translation, rotation, scale);
-            expect(node.matrix).toEqual(transformMtx);
+            var transformationMatrix = Matrix4.fromTranslationQuaternionRotationScale(translation, rotation, scale);
+            expect(node.matrix).toEqual(transformationMatrix);
         });
     });
 

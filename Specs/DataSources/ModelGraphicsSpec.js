@@ -44,7 +44,7 @@ defineSuite([
         expect(model.incrementallyLoadTextures).toBeInstanceOf(ConstantProperty);
         expect(model.runAnimations).toBeInstanceOf(ConstantProperty);
 
-        expect(model.nodeTransformations).toBeDefined();
+        expect(model.nodeTransformations).toBeInstanceOf(PropertyBag);
 
         expect(model.uri.getValue()).toEqual(options.uri);
         expect(model.scale.getValue()).toEqual(options.scale);
@@ -124,7 +124,6 @@ defineSuite([
         target.uri = uri;
         target.show = show;
         target.scale = scale;
-        target.runAnimations = runAnimations;
         target.minimumPixelSize = minimumPixelSize;
         target.maximumScale = maximumScale;
         target.incrementallyLoadTextures = incrementallyLoadTextures;

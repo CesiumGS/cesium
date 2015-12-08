@@ -1,21 +1,17 @@
 /*global define*/
 define([
-        '../Core/Cartesian3',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
-        '../Core/Quaternion',
         './createPropertyDescriptor',
         './NodeTransformation',
         './Property'
     ], function(
-        Cartesian3,
         defaultValue,
         defined,
         defineProperties,
         Event,
-        Quaternion,
         createPropertyDescriptor,
         NodeTransformation,
         Property) {

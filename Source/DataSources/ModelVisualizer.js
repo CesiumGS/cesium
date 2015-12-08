@@ -2,7 +2,6 @@
 define([
         '../Core/AssociativeArray',
         '../Core/BoundingSphere',
-        '../Core/Cartesian3',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -15,7 +14,6 @@ define([
     ], function(
         AssociativeArray,
         BoundingSphere,
-        Cartesian3,
         defined,
         destroyObject,
         DeveloperError,
