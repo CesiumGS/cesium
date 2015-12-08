@@ -134,20 +134,6 @@ defineSuite([
         expect(frustum.infiniteProjectionMatrix).toEqual(expected);
     });
 
-    it('get pixel size throws without canvas dimensions', function() {
-        expect(function() {
-            return frustum.getPixelSize();
-        }).toThrowDeveloperError();
-    });
-
-    it('get pixel size', function() {
-        var dimensions = new Cartesian2(1.0, 1.0);
-        var pixelSize = frustum.getPixelSize(dimensions);
-        var expected = frustum._offCenterFrustum.getPixelSize(dimensions);
-        expect(pixelSize.x).toEqual(expected.x);
-        expect(pixelSize.y).toEqual(expected.y);
-    });
-
     it('get pixel dimensions', function() {
         var dimensions = new Cartesian2(1.0, 1.0);
         var pixelSize = frustum.getPixelDimensions(dimensions.x, dimensions.y, 1.0, new Cartesian2());

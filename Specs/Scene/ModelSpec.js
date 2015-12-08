@@ -237,6 +237,24 @@ defineSuite([
         });
     });
 
+    it('rejects readyPromise on error', function() {
+        var invalidGltf = clone(texturedBoxModel.gltf, true);
+        invalidGltf.shaders.CesiumTexturedBoxTest0FS.uri = 'invalid.glsl';
+
+        var model = primitives.add(new Model({
+            gltf : invalidGltf
+        }));
+
+        scene.renderForSpecs();
+
+        return model.readyPromise.then(function(model) {
+            fail('should not resolve');
+        }).otherwise(function(error) {
+            expect(model.ready).toEqual(false);
+            primitives.remove(model);
+        });
+    });
+
     it('renders from glTF', function() {
         // Simulate using procedural glTF as opposed to loading it from a file
         return loadModelJson(texturedBoxModel.gltf).then(function(model) {

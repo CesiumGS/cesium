@@ -11,26 +11,26 @@ defineSuite([
         createPackableSpecs) {
     "use strict";
 
-    it('constructor throws without minimum corner', function() {
+    it('constructor throws without maximum corner', function() {
         expect(function() {
             return new BoxOutlineGeometry({
-                maximumCorner : new Cartesian3()
+                maximum : new Cartesian3()
             });
         }).toThrowDeveloperError();
     });
 
-    it('constructor throws without maximum corner', function() {
+    it('constructor throws without minimum corner', function() {
         expect(function() {
             return new BoxOutlineGeometry({
-                minimumCorner : new Cartesian3()
+                minimum : new Cartesian3()
             });
         }).toThrowDeveloperError();
     });
 
     it('constructor creates positions', function() {
         var m = BoxOutlineGeometry.createGeometry(new BoxOutlineGeometry({
-            minimumCorner : new Cartesian3(-1, -2, -3),
-            maximumCorner : new Cartesian3(1, 2, 3)
+            minimum : new Cartesian3(-1, -2, -3),
+            maximum : new Cartesian3(1, 2, 3)
         }));
 
         expect(m.attributes.position.values.length).toEqual(8 * 3);

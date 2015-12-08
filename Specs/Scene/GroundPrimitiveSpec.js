@@ -311,7 +311,7 @@ defineSuite([
     });
 
     function verifyGroundPrimitiveRender(primitive, color) {
-        scene.camera.viewRectangle(rectangle);
+        scene.camera.setView({ destination : rectangle });
 
         scene.groundPrimitives.add(depthPrimitive);
         var pixels = scene.renderForSpecs();
@@ -376,7 +376,7 @@ defineSuite([
         });
 
         scene.groundPrimitives.add(primitive);
-        scene.camera.viewRectangle(rectangle);
+        scene.camera.setView({ destination : rectangle });
         var pixels = scene.renderForSpecs();
         expect(pixels[1]).toBeGreaterThanOrEqualTo(0);
         expect(pixels[1]).toBeGreaterThanOrEqualTo(0);

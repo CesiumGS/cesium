@@ -6,6 +6,21 @@ Change Log
 * Added `vertexShaderLoaded`, `fragmentShaderLoaded`, `uniformMapLoaded`, `pickVertexShaderLoaded`, `pickFragmentShaderLoaded`, and `pickUniformMapLoaded` callbacks to the `Model` constructor and `Model.fromGltf`.
 * Added support for glTF compression using the `mesh_compression_open3dgc` glTF extension.
 
+### 1.17 - 2016-01-04
+
+* Breaking changes
+    * Removed `Camera.viewRectangle`. Use `Camera.setView({destination: rectangle})` instead.
+    * Removed `RectanglePrimitive`. Use `RectangleGeometry` or `Entity.rectangle` instead.
+    * Removed `Polygon`. Use `PolygonGeometry` or `Entity.polygon` instead.
+    * Removed `OrthographicFrustum.getPixelSize`. Use `OrthographicFrustum.getPixelDimensions` instead.
+    * Removed `PerspectiveFrustum.getPixelSize`. Use `PerspectiveFrustum.getPixelDimensions` instead.
+    * Removed `PerspectiveOffCenterFrustum.getPixelSize`. Use `PerspectiveOffCenterFrustum.getPixelDimensions` instead.
+    * Removed `Scene\HeadingPitchRange`. Use `Core\HeadingPitchRange` instead.
+    * Removed `HeightmapTessellator` from the public API. It is now private and subject to change without notice.
+    * Removed `TerrainMesh` from the public API. It is now private and subject to change without notice.
+    * Removed `jsonp`. Use `loadJsonp` instead.
+* Reduced the amount of both GPU and CPU memory used by terrain. The CPU memory was reduced by up to 40%.
+
 ### 1.16 - 2015-12-01
 
 * Deprecated

@@ -10,6 +10,7 @@ define([
         './Math',
         './Rectangle',
         './TaskProcessor',
+        './TerrainEncoding',
         './TerrainMesh',
         './TerrainProvider'
     ], function(
@@ -23,6 +24,7 @@ define([
         CesiumMath,
         Rectangle,
         TaskProcessor,
+        TerrainEncoding,
         TerrainMesh,
         TerrainProvider) {
     "use strict";
@@ -216,7 +218,8 @@ define([
                     result.boundingSphere3D,
                     result.occludeePointInScaledSpace,
                     6,
-                    result.orientedBoundingBox);
+                    result.orientedBoundingBox,
+                    TerrainEncoding.clone(result.encoding));
         });
     };
 

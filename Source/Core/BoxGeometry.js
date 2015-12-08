@@ -5,7 +5,6 @@ define([
         './ComponentDatatype',
         './defaultValue',
         './defined',
-        './deprecationWarning',
         './DeveloperError',
         './Geometry',
         './GeometryAttribute',
@@ -18,7 +17,6 @@ define([
         ComponentDatatype,
         defaultValue,
         defined,
-        deprecationWarning,
         DeveloperError,
         Geometry,
         GeometryAttribute,
@@ -59,15 +57,6 @@ define([
 
         var min = options.minimum;
         var max = options.maximum;
-
-        if (!defined(min) && defined(options.minimumCorner)) {
-            min = options.minimumCorner;
-            deprecationWarning('BoxGeometry', 'options.minimumCorner is deprecated. Use options.minimum instead.');
-        }
-        if (!defined(max) && defined(options.maximumCorner)) {
-            max = options.maximumCorner;
-            deprecationWarning('BoxGeometry', 'options.maximumCorner is deprecated. Use options.maximum instead.');
-        }
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(min)) {
