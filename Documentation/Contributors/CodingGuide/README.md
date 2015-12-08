@@ -48,6 +48,13 @@ is better written as
 ```javascript
 var length = primitives.length;
 ```
+* When accessing an outer-scope's `this` in a closure, name the variable `that`, e.g.,
+```javascript
+var that = this;
+this._showTouch = createCommand(function() {
+    that._touch = true;
+});
+```
 
 _TODO: make the following links_
 
@@ -398,6 +405,161 @@ defineProperties(UniformState.prototype, {
 
 _TODO: shadow variables_
 
+### Put the Constructor Function at the Top of the File
+
+It is convenient for the constructor function to be at the top of the file even if it requires that helper functions rely on **hoisting**, for example
+```javascript
+function loadTilesJson(tileset, tilesJson, done) {
+    // ...
+}
+
+var Cesium3DTileset = function(options) {
+    // ...
+    loadTilesJson(this, options.url, function(data) {
+       // ...
+    });
+};
+```
+is better written as
+```javascript
+var Cesium3DTileset = function(options) {
+    // ...
+    loadTilesJson(this, options.url, function(data) {
+       // ...
+    });
+};
+
+function loadTilesJson(tileset, tilesJson, done) {
+    // ...
+}
+```
+even though it relies on implicitly hoisting `loadTilesJson` to the top of the module.
+
+Note that Cesium never relies on hoisting variables, e.g.
+```javascript
+console.log(i); // i is undefined here.  Never use a variable before it is declared.
+var i = 0.0;
+```
+
+## Basic Code Construction
+
+* To avoid type coercion, test for equality with `===` and `!==`, e.g.,
+```javascript
+var f = 1.0;
+
+if (f === 1.0) {
+    // ...
+}
+
+if (f !== 1.0) {
+    // ...
+}
+```
+* Declare variables where they are first used.  For example,
+```javascript
+var i;
+var m;
+var models = [ /* ... */ ];
+var length = models.length;
+for (i = 0; i < length; ++i) {
+    m = models[i];
+    // Use m
+}
+```
+is better written as
+```javascript
+var models = [ /* ... */ ];
+var length = models.length;
+for (var i = 0; i < length; ++i) {
+    var m = models[i];
+    // Use m
+}
+```
+* Variables have function-level, not block-level scope.  Do not rely on variable hoisting, i.e., using a variable before it is declared.
+* Use `undefined` instead of `null`.
+* Test if a variable is defined using Cesium's `define` function, e.g.,
+```javascript
+var v = undefined;
+if (defined(v)) {
+    // false
+}
+
+var u = {};
+if (defined(u)) {
+    // true
+}
+```
+* To aid the human reader, append `.0` to whole numbers intended to be floating-point values, e.g., unless `f` is an integer,
+```javascript
+var f = 1;
+```
+is better written as
+```javascript
+var f = 1.0;
+```
+* Use Cesium's `definedNotNull` function to test the return of `String.match()` and JSON properties.
+* Use Cesium's `freezeObject` function to create enums, e.g.,
+```javascript
+/*global define*/
+define([
+        '../Core/freezeObject'
+    ], function(
+        freezeObject) {
+    "use strict";
+
+    return freezeObject({
+        STOPPED : 0,
+        ANIMATING : 1
+    });
+});
+```
+* `TODO` comments need to be removed or addressed before the code is merged into master.  Used sparingly, `PERFORMANCE_IDEA`, can be handy later when profiling.
+* Use descriptive comments for non-obvious code, e.g.,
+```javascript
+byteOffset += sizeOfUint32; // Add 4 to byteOffset
+```
+is better written as
+```javascript
+byteOffset += sizeOfUint32; // Skip length field
+```
+
+## Design
+
+* :house: Only make a class or function part of the Cesium API if it will likely be useful to end users; avoid making an implementation detail part of the public API.  When something is public, it makes the Cesium API bigger and harder to learn, is harder to change later, and requires more documentation work.
+* :art: Put new classes and functions in the right part of the Cesium stack (directory).  From the bottom up:
+   * `Source/Core` - Number crunching. Pure math such as [`Cartesian3`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/Cartesian3.js). Pure geometry such as [`CylinderGeometry`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/CylinderGeometry.js). Request helper functions such as [`loadArrayBuffer`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/loadArrayBuffer.js). Fundamental algorithms such as [`mergeSort`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/mergeSort.js).
+   * `Source/Renderer` - WebGL abstractions such as [`ShaderProgram`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Renderer/ShaderProgram.js) and WebGL-specific utilities such as [`ShaderCache`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Renderer/ShaderCache.js).  Identifiers in this directory are not part of the public Cesium API.
+   * `Source/Scene` - The graphics engine, including primitives such as [Model](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Scene/Model.js). Code in this directory often depend on `Renderer`.
+   * `Source/DataSources` - Entity API, such as [`Entity`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/DataSources/Entity.js), and data sources such as [`CzmlDataSource`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/DataSources/CzmlDataSource.js).
+   * `Source/Widgets` - Widgets such as the main Cesium [`Viewer`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Widgets/Viewer/Viewer.js).
+
+It is usually obvious what directory a file belongs it.  When it isn't, the decision is usually between `Core` and another directory.  Put the file in `Core` if it is pure number crunching or utility that is expected to be generally useful to Cesium, e.g., [`Matrix4`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/Matrix4.js) belongs in `Core` since many parts of the Cesium stack use 4x4 matrices; on the other hand, [`BoundingSphereState`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/DataSources/BoundingSphereState.js) is in `DataSources` because it is specific to data sources.
+
+![](1.jpg)
+
+* WebGL resources need to be explicitly deleted so classes that contain them (and classes that contain these classes and so on) have `destroy` and `isDestroyed` functions, e.g.,
+```javascript
+var primitive = new Primitive(/* ... */);
+expect(content.isDestroyed()).toEqual(false);
+primitive.destroy();
+expect(content.isDestroyed()).toEqual(true);
+```
+A `destroy` function is implemented with Cesium's `destroyObject` function, e.g.,
+```javascript
+SkyBox.prototype.destroy = function() {
+    this._vertexArray = this._vertexArray && this._vertexArray.destroy();
+    return destroyObject(this);
+};
+```
+
+## Third-Party Libraries
+
+:house: Cesium uses third-party libraries sparingly.  If you want to add a new one, please start a thread on the [Cesium forum](http://cesiumjs.org/forum.html) ([example discussion](https://groups.google.com/forum/#!topic/cesium-dev/Bh4BolxlT80)).  The library should
+* Have a compatible license such as MIT, BSD, or Apache 2.0.
+* Provide capabilities that the Cesium team doesn't have the time and/or expertise to develop.
+* Be lightweight, tested, maintained, and reasonably widely used.
+* Provide enough value to justify adding another third-party library whose integration needs to be maintained and has the potential to slightly count against Cesium when some users evaluate it (generally, fewer third-parties is better).
+
 ## GLSL
 
 ### Naming
@@ -454,79 +616,9 @@ Watch [From Console to Chrome](https://www.youtube.com/watch?v=XAqIpGU8ZZk) by L
 
 ---
 
-_TODO: use defined_
-_TODO: destroy pattern_
-_TODO: promises_
-_TODO: web workers_
-_TODO: create WebGL resources in update()_
-_TOOD: compare with ===_
-_TODO: only make public if useful_
-_TODO: create enums with freezeObject_
-_TODO: comment why, not what_
-_TODO: Don't merge code with TODO, PERFORMANCE_IDEA is OK_
-_TODO: declare variables where they are used, even though they are hoisted_
-_TODO: hoisting functions is OK_
-_TODO: profiling/debugging tools - separate guide?_
-_TODO: Cesium stack screenshot like this http://cesiumjs.org/2015/05/26/Graphics-Tech-in-Cesium-Stack/_
-_TODO: Cesium. vs AMD (or put this in doc guide)_
-_TODO: UI_
-_TODO: css_
-_TODO: remove old wiki guide_
-
-_TODO: from old guide:_
-
-## Making a copy of `this`
-
-If a closure needs a copy of `this`, our convention is to name it `that`.
-
-```javascript
-var that = this;
-```
-
-Some projects use the name `self` instead of `that` here.  However, `self` is already defined by the browser as a reference to the current window, and we wish to avoid redefining built-in variables.
-
-## `null` vs. `undefined`
-
-Where possible, avoid use of `null` and prefer `undefined`.  To test for this condition, use:
-
-```javascript
-if (typeof myVariable === 'undefined') {
-    // take action
-}
-```
-
-or
-
-```javascript
-if (typeof myVariable !== 'undefined') {
-    // take action
-}
-```
-
-The problem with comparing `myVariable === undefined` directly is that the variable `undefined` itself
-is capable of being re-defined in JavaScript, so the JIT compiler can't make assumptions about what the
-meaning of `undefined` will actually be at runtime.  In the recommended comparison, `typeof` is a language keyword, and
-`'undefined'` in single quotes is a string literal that can't change at runtime, so the only variable is
-`myVariable` itself.  Armed with this, the JIT can avoid string comparisons and optimize the entire statement
-into a single machine-language null pointer check (or similar).  Thus, although it looks like asking for a string
-comparison, this statement executes faster than a direct comparison with the variable `undefined`.
-
-## Functions
-
-* Public functions should treat Cartesian and Quaternion type arguments as if they are immutable, and also accept the equivalent object literal.  For example these two lines of code have the same effect:
-
-```javascript
-foo(new Cartesian3(1.0, 2.0, 3.0));
-foo({ x : 1.0, y : 2.0, z : 3.0 });
-```
-
-* Public functions should always return a Cartesian or Quaternion type, not an equivalent object literal.  For example:
-
-```javascript
-var v = bar();     // Returns a Cartesian3
-v = v.normalize(); // Works because it is a Cartesian3, not an object with just x, y, and z properties
-```
-
-## Variables
-
-* To aid the human reader, append `.0` to whole numbers intended to be floating-point values, e.g., `var f = 1.0;`.
+**TODO**
+* [ ] Promises section.  Can someone add this?
+* [ ] Web workers section.  Can someone add this?
+* [ ] UI (and CSS?) section.  Can someone add this?
+* [ ] Add TOC
+* [ ] Remove the old [JavaScript Coding Conventions](https://github.com/AnalyticalGraphicsInc/cesium/wiki/JavaScript-Coding-Conventions) on the wiki
