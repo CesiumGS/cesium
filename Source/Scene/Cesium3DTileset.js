@@ -332,7 +332,7 @@ define([
         when(tile.readyPromise).then(removeFunction).otherwise(removeFunction);
     }
 
-    function selectTileWithTilesetContent(tiles3D, selectedTiles, tile, fullyVisible, frameState, replace) {
+    function selectTileWithTilesetContent(tiles3D, selectedTiles, tile, fullyVisible, frameState, additiveRefinment) {
         // 1) If its children are not loaded, load the subtree it points to and then select its root child
         // 2) If its children are already loaded, select its (root) child since the geometric error of it is
         //    same as this tile's
@@ -346,7 +346,7 @@ define([
             // A tiles.json must specify exactly one tile, ie a root
             root = tile.children[0];
             if (root.hasTilesetContent) {
-                selectTileWithTilesetContent(tiles3D, selectedTiles, root, fullyVisible, frameState, replace);
+                selectTileWithTilesetContent(tiles3D, selectedTiles, root, fullyVisible, frameState, additiveRefinment);
             } else {
                 if (root.isContentUnloaded()) {
                     requestContent(tiles3D, root);
@@ -355,9 +355,9 @@ define([
                 }
             }
             return;
-        } else if (replace) {
-            // Otherwise, select the parent tile, to avoid showing an empty space
-            // while waiting for tile to load
+        } else if (!additiveRefinment) {
+            // Otherwise, for replacement refinment, select the parent tile to avoid
+            // showing an empty space while waiting for tile to load
             if (defined(tile.parent)) {
                 selectTile(selectedTiles, tile.parent, fullyVisible, frameState);
             }
@@ -407,7 +407,7 @@ define([
 
         if (root.isContentUnloaded()) {
             if (root.hasTilesetContent) {
-                selectTileWithTilesetContent(tiles3D, selectedTiles, root, fullyVisible, frameState, true);
+                selectTileWithTilesetContent(tiles3D, selectedTiles, root, fullyVisible, frameState, false);
             } else if (outOfCore) {
                 requestContent(tiles3D, root);
             }
@@ -439,8 +439,9 @@ define([
             var childrenLength = children.length;
             var child;
             var k;
+            var additiveRefinment = (t.refine === Cesium3DTileRefine.ADD);
 
-            if (t.refine === Cesium3DTileRefine.ADD) {
+            if (additiveRefinment) {
                 // With additive refinement, the tile is rendered
                 // regardless of if its SSE is sufficient.
 
@@ -453,7 +454,7 @@ define([
                     //   2) If its children are already loaded, select its (root) child
                     //      since the geometric error of it is same as this tile's.
                     if (sse <= maximumScreenSpaceError) {
-                        selectTileWithTilesetContent(tiles3D, selectedTiles, t, fullyVisible, frameState, false);
+                        selectTileWithTilesetContent(tiles3D, selectedTiles, t, fullyVisible, frameState, additiveRefinment);
                     }
                 }
 
@@ -507,7 +508,7 @@ define([
                     if (!t.hasTilesetContent) {
                         selectTile(selectedTiles, t, fullyVisible, frameState);
                     } else {
-                        selectTileWithTilesetContent(tiles3D, selectedTiles, t, fullyVisible, frameState, true);
+                        selectTileWithTilesetContent(tiles3D, selectedTiles, t, fullyVisible, frameState, additiveRefinment);
                     }
                 } else {
                     // Tile does not meet SSE.
@@ -531,7 +532,7 @@ define([
                         if (!t.hasTilesetContent) {
                             selectTile(selectedTiles, t, fullyVisible, frameState);
                         } else {
-                            selectTileWithTilesetContent(tiles3D, selectedTiles, t, fullyVisible, frameState, true);
+                            selectTileWithTilesetContent(tiles3D, selectedTiles, t, fullyVisible, frameState, additiveRefinment);
                         }
 
                         if (outOfCore) {
