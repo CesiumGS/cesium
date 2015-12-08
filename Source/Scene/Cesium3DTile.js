@@ -23,7 +23,8 @@ define([
         './Empty3DTileContentProvider',
         './PerInstanceColorAppearance',
         './Primitive',
-        './TileBoundingBox'
+        './TileBoundingBox',
+        './Tileset3DTileContentProvider'
     ], function(
         BoxOutlineGeometry,
         Cartesian3,
@@ -48,7 +49,8 @@ define([
         Empty3DTileContentProvider,
         PerInstanceColorAppearance,
         Primitive,
-        TileBoundingBox) {
+        TileBoundingBox,
+        Tileset3DTileContentProvider) {
     "use strict";
 
     /**
@@ -124,6 +126,13 @@ define([
         /**
          * DOC_TBA
          *
+         * @readonly
+         */
+        this.hasTilesetContent = false;
+
+        /**
+         * DOC_TBA
+         *
          * @type {Promise}
          * @readonly
          */
@@ -136,7 +145,10 @@ define([
             var type = url.substring(url.lastIndexOf('.') + 1);
             var contentFactory = Cesium3DTileContentProviderFactory[type];
 
-            if (defined(contentFactory)) {
+            if (type === 'json') {
+                this.hasTilesetContent = true;
+                content = new Tileset3DTileContentProvider();
+            } else if (defined(contentFactory)) {
                 content = contentFactory(tileset, this, url);
             } else {
                 throw new DeveloperError('Unknown tile content type, ' + type + ', for ' + url);
