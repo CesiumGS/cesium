@@ -1760,6 +1760,7 @@ define([
         passState.framebuffer = undefined;
         passState.blendingEnabled = undefined;
         passState.scissorTest = undefined;
+        passState.viewport = new BoundingRectangle(0, 0, context.drawingBufferWidth, context.drawingBufferHeight);
 
         executeComputeCommands(scene);
         executeCommands(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));

@@ -623,8 +623,7 @@ define([
 
     var scratchViewport = new BoundingRectangle();
     function applyViewport(gl, renderState, passState) {
-        var viewport = renderState.viewport;
-
+        var viewport = defaultValue(renderState.viewport, passState.viewport);
         if (!defined(viewport)) {
             viewport = scratchViewport;
             viewport.width = passState.context.drawingBufferWidth;

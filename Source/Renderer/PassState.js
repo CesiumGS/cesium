@@ -49,6 +49,8 @@ define(function() {
          * @default undefined
          */
         this.scissorTest = undefined;
+
+        this.viewport = undefined;
     };
 
     return PassState;

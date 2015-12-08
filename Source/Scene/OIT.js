@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/BoundingRectangle',
         '../Core/Color',
         '../Core/defined',
         '../Core/destroyObject',
@@ -17,6 +18,7 @@ define([
         './BlendEquation',
         './BlendFunction'
     ], function(
+        BoundingRectangle,
         Color,
         defined,
         destroyObject,
@@ -84,6 +86,9 @@ define([
         this._compositeCommand = undefined;
         this._adjustTranslucentCommand = undefined;
         this._adjustAlphaCommand = undefined;
+
+        this._viewport = new BoundingRectangle();
+        this._rs = undefined;
     };
 
     function destroyTextures(oit) {
@@ -236,7 +241,6 @@ define([
                 }
             };
             this._compositeCommand = context.createViewportQuadCommand(fs, {
-                renderState : RenderState.fromCache(),
                 uniformMap : uniformMap,
                 owner : this
             });
@@ -259,7 +263,6 @@ define([
                 };
 
                 this._adjustTranslucentCommand = context.createViewportQuadCommand(fs, {
-                    renderState : RenderState.fromCache(),
                     uniformMap : uniformMap,
                     owner : this
                 });
@@ -278,7 +281,6 @@ define([
                 };
 
                 this._adjustTranslucentCommand = context.createViewportQuadCommand(fs, {
-                    renderState : RenderState.fromCache(),
                     uniformMap : uniformMap,
                     owner : this
                 });
@@ -293,11 +295,31 @@ define([
                 };
 
                 this._adjustAlphaCommand = context.createViewportQuadCommand(fs, {
-                    renderState : RenderState.fromCache(),
                     uniformMap : uniformMap,
                     owner : this
                 });
             }
+        }
+
+        this._viewport.width = width;
+        this._viewport.height = height;
+
+        if (!defined(this._rs) || !BoundingRectangle.equals(this._viewport, this._rs.viewport)) {
+            this._rs = RenderState.fromCache({
+                viewport : this._viewport
+            });
+        }
+
+        if (defined(this._compositeCommand)) {
+            this._compositeCommand.renderState = this._rs;
+        }
+
+        if (this._adjustTranslucentCommand) {
+            this._adjustTranslucentCommand.renderstate = this._rs;
+        }
+
+        if (defined(this._adjustAlphaCommand)) {
+            this._adjustAlphaCommand.renderState = this._rs;
         }
     };
 
