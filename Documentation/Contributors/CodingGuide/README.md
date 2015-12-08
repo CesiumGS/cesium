@@ -237,7 +237,7 @@ var sphere = new SphereGeometry({
     stackPartitions : 32,
     slicePartitions : 16,
     vertexFormat : VertexFormat.POSITION_ONLY
-);
+});
 ```
 * :speedboat: Using `{ /* ... */ }` creates an object literal, which is a memory allocation.  Avoid designing functions that use an `options` parameter if the function is likely to be a hot spot; otherwise, callers will have to use a scratch variable (see [below](#result-parameters-and-scratch-variables)) for performance.  Constructor functions are good candidates for `options` parameters since Cesium avoids constructing objects in hot spots.
 
