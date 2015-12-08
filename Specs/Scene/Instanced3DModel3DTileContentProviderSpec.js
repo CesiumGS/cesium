@@ -4,14 +4,14 @@ defineSuite([
         'Core/Cartesian3',
         'Core/HeadingPitchRange',
         'Scene/Cesium3DTileContentState',
-        'Specs/Cesium3DTilesSpecHelper',
+        'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
         Instanced3DModel3DTileContentProvider,
         Cartesian3,
         HeadingPitchRange,
         Cesium3DTileContentState,
-        Cesium3DTilesSpecHelper,
+        Cesium3DTilesTester,
         createScene) {
     "use strict";
 
@@ -41,52 +41,52 @@ defineSuite([
     });
 
     it('throws with invalid magic', function() {
-        var arrayBuffer = Cesium3DTilesSpecHelper.generateInstancedTileBuffer({
+        var arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer({
             magic : [120, 120, 120, 120]
         });
-        return Cesium3DTilesSpecHelper.loadTileExpectError(scene, arrayBuffer, 'i3dm');
+        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'i3dm');
     });
 
     it('throws with invalid format', function() {
-        var arrayBuffer = Cesium3DTilesSpecHelper.generateInstancedTileBuffer({
+        var arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer({
             gltfFormat : 2
         });
-        return Cesium3DTilesSpecHelper.loadTileExpectError(scene, arrayBuffer, 'i3dm');
+        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'i3dm');
     });
 
     it('throws with invalid version', function() {
-        var arrayBuffer = Cesium3DTilesSpecHelper.generateInstancedTileBuffer({
+        var arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer({
             version : 2
         });
-        return Cesium3DTilesSpecHelper.loadTileExpectError(scene, arrayBuffer, 'i3dm');
+        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'i3dm');
     });
 
     it('throws with empty gltf', function() {
         // Expect to throw DeveloperError in Model due to invalid gltf magic
-        var arrayBuffer = Cesium3DTilesSpecHelper.generateInstancedTileBuffer();
-        return Cesium3DTilesSpecHelper.loadTileExpectError(scene, arrayBuffer, 'i3dm');
+        var arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer();
+        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'i3dm');
     });
 
     it('resolves readyPromise', function() {
-        return Cesium3DTilesSpecHelper.resolvesReadyPromise(scene, gltfEmbeddedUrl);
+        return Cesium3DTilesTester.resolvesReadyPromise(scene, gltfEmbeddedUrl);
     });
 
     it('rejects readyPromise on error', function() {
         // Try loading a tile with an invalid url.
         // Expect promise to be rejected in Model, then in ModelInstanceCollection, and
         // finally in Instanced3DModel3DTileContentProvider.
-        var arrayBuffer = Cesium3DTilesSpecHelper.generateInstancedTileBuffer({
+        var arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer({
             gltfFormat : 0
         });
-        return Cesium3DTilesSpecHelper.rejectsReadyPromiseOnError(scene, arrayBuffer, 'i3dm');
+        return Cesium3DTilesTester.rejectsReadyPromiseOnError(scene, arrayBuffer, 'i3dm');
     });
 
     it('rejects readyPromise on failed request', function() {
-        return Cesium3DTilesSpecHelper.rejectsReadyPromiseOnFailedRequest('i3dm');
+        return Cesium3DTilesTester.rejectsReadyPromiseOnFailedRequest('i3dm');
     });
 
     it('loads with no instances, but does not become ready', function() {
-        var arrayBuffer = Cesium3DTilesSpecHelper.generateInstancedTileBuffer({
+        var arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer({
             instancesLength : 0
         });
 
@@ -103,26 +103,26 @@ defineSuite([
     });
 
     it('renders with embedded gltf', function() {
-        return Cesium3DTilesSpecHelper.loadTileset(scene, gltfEmbeddedUrl).then(function(tileset) {
-            Cesium3DTilesSpecHelper.verifyRenderTileset(scene, tileset);
+        return Cesium3DTilesTester.loadTileset(scene, gltfEmbeddedUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
 
     it('renders with external gltf', function() {
-        return Cesium3DTilesSpecHelper.loadTileset(scene, gltfExternalUrl).then(function(tileset) {
-            Cesium3DTilesSpecHelper.verifyRenderTileset(scene, tileset);
+        return Cesium3DTilesTester.loadTileset(scene, gltfExternalUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
 
     it('renders with batch table', function() {
-        return Cesium3DTilesSpecHelper.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
-            Cesium3DTilesSpecHelper.verifyRenderTileset(scene, tileset);
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
 
     it('renders without batch table', function() {
-        return Cesium3DTilesSpecHelper.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
-            Cesium3DTilesSpecHelper.verifyRenderTileset(scene, tileset);
+        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
 
@@ -131,15 +131,15 @@ defineSuite([
         var instancedArrays = scene.context._instancedArrays;
         scene.context._instancedArrays = undefined;
 
-        return Cesium3DTilesSpecHelper.loadTileset(scene, gltfEmbeddedUrl).then(function(tileset) {
-            Cesium3DTilesSpecHelper.verifyRenderTileset(scene, tileset);
+        return Cesium3DTilesTester.loadTileset(scene, gltfEmbeddedUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
             // Re-enable extension
             scene.context._instancedArrays = instancedArrays;
         });
     });
 
     it('throws when calling getModel with invalid index', function() {
-        return Cesium3DTilesSpecHelper.loadTileset(scene, gltfEmbeddedUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, gltfEmbeddedUrl).then(function(tileset) {
             var content = tileset._root.content;
             expect(function(){
                 content.getModel(-1);
@@ -154,6 +154,6 @@ defineSuite([
     });
 
     it('destroys', function() {
-        return Cesium3DTilesSpecHelper.tileDestroys(scene, gltfEmbeddedUrl);
+        return Cesium3DTilesTester.tileDestroys(scene, gltfEmbeddedUrl);
     });
 });

@@ -17,10 +17,10 @@ define([
         pollToPromise) {
     "use strict";
 
-    var Cesium3DTilesSpecHelper = function() {
+    var Cesium3DTilesTester = function() {
     };
 
-    function verifyRender(scene, tileset) {
+    function expectRender(scene, tileset) {
         tileset.show = false;
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
         tileset.show = true;
@@ -29,16 +29,16 @@ define([
         return pixelColor;
     }
 
-    function verifyRenderBlank(scene, tileset) {
+    function expectRenderBlank(scene, tileset) {
         tileset.show = false;
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
         tileset.show = true;
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
     }
 
-    Cesium3DTilesSpecHelper.verifyRenderTileset = function(scene, tileset) {
+    Cesium3DTilesTester.expectRenderTileset = function(scene, tileset) {
         // Verify render before being picked
-        verifyRender(scene, tileset);
+        expectRender(scene, tileset);
 
         // Change the color of the picked instance to yellow
         var picked = scene.pickForSpecs();
@@ -46,7 +46,7 @@ define([
         picked.color = Color.clone(Color.YELLOW, picked.color);
 
         // Expect the pixel color to be some shade of yellow
-        var pixelColor = verifyRender(scene, tileset);
+        var pixelColor = expectRender(scene, tileset);
         expect(pixelColor[0]).toBeGreaterThan(0);
         expect(pixelColor[1]).toBeGreaterThan(0);
         expect(pixelColor[2]).toEqual(0);
@@ -54,12 +54,12 @@ define([
 
         // Turn show off and on
         picked.show = false;
-        verifyRenderBlank(scene, tileset);
+        expectRenderBlank(scene, tileset);
         picked.show = true;
-        verifyRender(scene, tileset);
+        expectRender(scene, tileset);
     };
 
-    Cesium3DTilesSpecHelper.loadTileset = function(scene, url) {
+    Cesium3DTilesTester.loadTileset = function(scene, url) {
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : url
         }));
@@ -73,7 +73,7 @@ define([
         });
     };
 
-    Cesium3DTilesSpecHelper.loadTileExpectError = function(scene, arrayBuffer, type) {
+    Cesium3DTilesTester.loadTileExpectError = function(scene, arrayBuffer, type) {
         var tileset = {};
         var tile = {
             orientedBoundingBox : new OrientedBoundingBox()
@@ -89,7 +89,7 @@ define([
     // Use counter to prevent models from sharing the same cache key,
     // this fixes tests that load a model with the same invalid url
     var counter = 0;
-    Cesium3DTilesSpecHelper.rejectsReadyPromiseOnError = function(scene, arrayBuffer, type) {
+    Cesium3DTilesTester.rejectsReadyPromiseOnError = function(scene, arrayBuffer, type) {
         var tileset = {
             url : counter++
         };
@@ -108,7 +108,7 @@ define([
         });
     };
 
-    Cesium3DTilesSpecHelper.rejectsReadyPromiseOnFailedRequest = function(type) {
+    Cesium3DTilesTester.rejectsReadyPromiseOnFailedRequest = function(type) {
         var tileset = {};
         var tile = {
             orientedBoundingBox : new OrientedBoundingBox()
@@ -125,8 +125,8 @@ define([
         });
     };
 
-    Cesium3DTilesSpecHelper.resolvesReadyPromise = function(scene, url) {
-        return Cesium3DTilesSpecHelper.loadTileset(scene, url).then(function(tileset) {
+    Cesium3DTilesTester.resolvesReadyPromise = function(scene, url) {
+        return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
             var content = tileset._root.content;
             content.readyPromise.then(function(content) {
                 expect(content.state).toEqual(Cesium3DTileContentState.READY);
@@ -134,8 +134,8 @@ define([
         });
     };
 
-    Cesium3DTilesSpecHelper.tileDestroys = function(scene, url) {
-        return Cesium3DTilesSpecHelper.loadTileset(scene, url).then(function(tileset) {
+    Cesium3DTilesTester.tileDestroys = function(scene, url) {
+        return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
             var content = tileset._root.content;
             expect(content.isDestroyed()).toEqual(false);
             content.destroy();
@@ -143,7 +143,7 @@ define([
         });
     };
 
-    Cesium3DTilesSpecHelper.generateBatchedTileBuffer = function(options) {
+    Cesium3DTilesTester.generateBatchedTileBuffer = function(options) {
         // Procedurally generate the tile array buffer for testing purposes
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var magic = defaultValue(options.magic, [98, 51, 100, 109]);
@@ -166,7 +166,7 @@ define([
         return buffer;
     };
 
-    Cesium3DTilesSpecHelper.generateInstancedTileBuffer = function(options) {
+    Cesium3DTilesTester.generateInstancedTileBuffer = function(options) {
         // Procedurally generate the tile array buffer for testing purposes
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var magic = defaultValue(options.magic, [105, 51, 100, 109]);
@@ -200,7 +200,7 @@ define([
         return buffer;
     };
 
-    Cesium3DTilesSpecHelper.generatePointsTileBuffer = function(options) {
+    Cesium3DTilesTester.generatePointsTileBuffer = function(options) {
         // Procedurally generate the tile array buffer for testing purposes
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var magic = defaultValue(options.magic, [112, 110, 116, 115]);
@@ -221,7 +221,7 @@ define([
         return buffer;
     };
 
-    Cesium3DTilesSpecHelper.generateCompositeTileBuffer = function(options) {
+    Cesium3DTilesTester.generateCompositeTileBuffer = function(options) {
         // Procedurally generate the tile array buffer for testing purposes
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var magic = defaultValue(options.magic, [99, 109, 112, 116]);
@@ -258,5 +258,5 @@ define([
         return buffer;
     };
 
-    return Cesium3DTilesSpecHelper;
+    return Cesium3DTilesTester;
 });

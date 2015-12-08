@@ -4,14 +4,14 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Color',
         'Core/HeadingPitchRange',
-        'Specs/Cesium3DTilesSpecHelper',
+        'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
         Composite3DTileContentProvider,
         Cartesian3,
         Color,
         HeadingPitchRange,
-        Cesium3DTilesSpecHelper,
+        Cesium3DTilesTester,
         createScene) {
     "use strict";
 
@@ -38,7 +38,7 @@ defineSuite([
         scene.primitives.removeAll();
     });
 
-    function verifyRender(tileset) {
+    function expectRender(tileset) {
         tileset.show = false;
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
         tileset.show = true;
@@ -47,15 +47,15 @@ defineSuite([
         return pixelColor;
     }
 
-    function verifyRenderBlank(tileset) {
+    function expectRenderBlank(tileset) {
         tileset.show = false;
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
         tileset.show = true;
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
     }
 
-    function verifyRenderComposite(tileset) {
-        verifyRender(tileset);
+    function expectRenderComposite(tileset) {
+        expectRender(tileset);
 
         // Change the color of the picked building to yellow
         var pickedBuilding = scene.pickForSpecs();
@@ -63,7 +63,7 @@ defineSuite([
         pickedBuilding.color = Color.clone(Color.YELLOW, pickedBuilding.color);
 
         // Expect building to be some shade of yellow
-        var pixelColor = verifyRender(tileset);
+        var pixelColor = expectRender(tileset);
         expect(pixelColor[0]).toBeGreaterThan(0);
         expect(pixelColor[1]).toBeGreaterThan(0);
         expect(pixelColor[2]).toEqual(0);
@@ -77,7 +77,7 @@ defineSuite([
         pickedInstance.color = Color.clone(Color.GREEN, pickedInstance.color);
 
         // Expect instance to be some shade of green
-        pixelColor = verifyRender(tileset);
+        pixelColor = expectRender(tileset);
         expect(pixelColor[0]).toEqual(0);
         expect(pixelColor[1]).toBeGreaterThan(0);
         expect(pixelColor[2]).toEqual(0);
@@ -85,61 +85,61 @@ defineSuite([
 
         // Hide the instance, and expect the render to be blank
         pickedInstance.show = false;
-        verifyRenderBlank(tileset);
+        expectRenderBlank(tileset);
     }
 
     it('throws with invalid magic', function() {
-        var arrayBuffer = Cesium3DTilesSpecHelper.generateCompositeTileBuffer({
+        var arrayBuffer = Cesium3DTilesTester.generateCompositeTileBuffer({
             magic : [120, 120, 120, 120]
         });
-        return Cesium3DTilesSpecHelper.loadTileExpectError(scene, arrayBuffer, 'cmpt');
+        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'cmpt');
     });
 
     it('throws with invalid version', function() {
-        var arrayBuffer = Cesium3DTilesSpecHelper.generateCompositeTileBuffer({
+        var arrayBuffer = Cesium3DTilesTester.generateCompositeTileBuffer({
             version : 2
         });
-        return Cesium3DTilesSpecHelper.loadTileExpectError(scene, arrayBuffer, 'cmpt');
+        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'cmpt');
     });
 
     it('throws with invalid inner tile content type', function() {
-        var arrayBuffer = Cesium3DTilesSpecHelper.generateCompositeTileBuffer({
-            tiles : [Cesium3DTilesSpecHelper.generateInstancedTileBuffer({
+        var arrayBuffer = Cesium3DTilesTester.generateCompositeTileBuffer({
+            tiles : [Cesium3DTilesTester.generateInstancedTileBuffer({
                 magic : [120, 120, 120, 120]
             })]
         });
-        return Cesium3DTilesSpecHelper.loadTileExpectError(scene, arrayBuffer, 'cmpt');
+        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'cmpt');
     });
 
     it('resolves readyPromise', function() {
-        return Cesium3DTilesSpecHelper.resolvesReadyPromise(scene, compositeUrl);
+        return Cesium3DTilesTester.resolvesReadyPromise(scene, compositeUrl);
     });
 
     it('rejects readyPromise on error', function() {
         // Try loading a composite tile with an instanced tile that has an invalid url.
         // Expect promise to be rejected in Model, ModelInstanceCollection,
         // Instanced3DModel3DTileContentProvider, and Composite3DTileContentProvider.
-        var arrayBuffer = Cesium3DTilesSpecHelper.generateCompositeTileBuffer({
-            tiles : [Cesium3DTilesSpecHelper.generateInstancedTileBuffer({
+        var arrayBuffer = Cesium3DTilesTester.generateCompositeTileBuffer({
+            tiles : [Cesium3DTilesTester.generateInstancedTileBuffer({
                 gltfFormat : 0
             })]
         });
-        return Cesium3DTilesSpecHelper.rejectsReadyPromiseOnError(scene, arrayBuffer, 'cmpt');
+        return Cesium3DTilesTester.rejectsReadyPromiseOnError(scene, arrayBuffer, 'cmpt');
     });
 
     it('rejects readyPromise on failed request', function() {
-        return Cesium3DTilesSpecHelper.rejectsReadyPromiseOnFailedRequest('cmpt');
+        return Cesium3DTilesTester.rejectsReadyPromiseOnFailedRequest('cmpt');
     });
     
     it('renders composite', function() {
-        return Cesium3DTilesSpecHelper.loadTileset(scene, compositeUrl).then(verifyRenderComposite);
+        return Cesium3DTilesTester.loadTileset(scene, compositeUrl).then(expectRenderComposite);
     });
 
     it('renders composite of composite', function() {
-        return Cesium3DTilesSpecHelper.loadTileset(scene, compositeOfComposite).then(verifyRenderComposite);
+        return Cesium3DTilesTester.loadTileset(scene, compositeOfComposite).then(expectRenderComposite);
     });
 
     it('destroys', function() {
-        return Cesium3DTilesSpecHelper.tileDestroys(scene, compositeUrl);
+        return Cesium3DTilesTester.tileDestroys(scene, compositeUrl);
     });
 });

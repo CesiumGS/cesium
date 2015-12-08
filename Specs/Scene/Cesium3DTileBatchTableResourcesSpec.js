@@ -5,7 +5,7 @@ defineSuite([
         'Core/Color',
         'Core/HeadingPitchRange',
         'Renderer/ContextLimits',
-        'Specs/Cesium3DTilesSpecHelper',
+        'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
         Cesium3DTileBatchTableResources,
@@ -13,7 +13,7 @@ defineSuite([
         Color,
         HeadingPitchRange,
         ContextLimits,
-        Cesium3DTilesSpecHelper,
+        Cesium3DTilesTester,
         createScene) {
     "use strict";
 
@@ -49,7 +49,7 @@ defineSuite([
         scene.primitives.removeAll();
     });
 
-    function verifyRender(tileset) {
+    function expectRender(tileset) {
         tileset.show = false;
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
         tileset.show = true;
@@ -319,7 +319,7 @@ defineSuite([
     });
 
     it('renders tileset with batch table', function() {
-        return Cesium3DTilesSpecHelper.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
             var content = tileset._root.content;
             var resources = content.batchTableResources;
 
@@ -328,19 +328,19 @@ defineSuite([
             expect(resources.getProperty(2, 'id')).toEqual(2);
 
             expect(resources.batchLength).toEqual(content.batchLength);
-            Cesium3DTilesSpecHelper.verifyRenderTileset(scene, tileset);
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
 
     it('renders tileset without batch table', function() {
-        return Cesium3DTilesSpecHelper.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
             var content = tileset._root.content;
             var resources = content.batchTableResources;
 
             expect(resources.getProperty(2, 'id')).toBeUndefined();
 
             expect(resources.batchLength).toEqual(content.batchLength);
-            Cesium3DTilesSpecHelper.verifyRenderTileset(scene, tileset);
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
 
@@ -349,8 +349,8 @@ defineSuite([
         var maximumVertexTextureImageUnits = ContextLimits.maximumVertexTextureImageUnits;
         ContextLimits._maximumVertexTextureImageUnits = 0;
 
-        return Cesium3DTilesSpecHelper.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
-            Cesium3DTilesSpecHelper.verifyRenderTileset(scene, tileset);
+        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
 
             // Re-enable VTF
             ContextLimits._maximumVertexTextureImageUnits = maximumVertexTextureImageUnits;
@@ -362,10 +362,10 @@ defineSuite([
         var maximumTextureSize = ContextLimits.maximumTextureSize;
         ContextLimits._maximumTextureSize = 64;
 
-        return Cesium3DTilesSpecHelper.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
             var resources = tileset._root.content.batchTableResources;
             expect(resources.batchLength).toBeGreaterThan(ContextLimits._maximumTextureSize);
-            Cesium3DTilesSpecHelper.verifyRenderTileset(scene, tileset);
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
 
             // Reset maximum texture size
             ContextLimits._maximumVertexTextureImageUnits = maximumTextureSize;
@@ -373,8 +373,8 @@ defineSuite([
     });
 
     it('renders with batchLength of zero', function() {
-        return Cesium3DTilesSpecHelper.loadTileset(scene, batchLengthZeroUrl).then(function(tileset) {
-            verifyRender(tileset);
+        return Cesium3DTilesTester.loadTileset(scene, batchLengthZeroUrl).then(function(tileset) {
+            expectRender(tileset);
 
             // Expect the picked primitive to be the entire model rather than a single building
             var picked = scene.pickForSpecs().primitive;
@@ -383,19 +383,19 @@ defineSuite([
     });
 
     it('renders with debug color', function() {
-        return Cesium3DTilesSpecHelper.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
-            var color = verifyRender(tileset);
+        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
+            var color = expectRender(tileset);
             tileset.debugColorizeTiles = true;
-            var debugColor = verifyRender(tileset);
+            var debugColor = expectRender(tileset);
             expect(debugColor).not.toEqual(color);
             tileset.debugColorizeTiles = false;
-            debugColor = verifyRender(tileset);
+            debugColor = expectRender(tileset);
             expect(debugColor).toEqual(color);
         });
     });
 
     it('destroys', function() {
-        return Cesium3DTilesSpecHelper.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
             var content = tileset._root.content;
             var resources = content.batchTableResources;
             expect(resources.isDestroyed()).toEqual(false);

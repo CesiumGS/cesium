@@ -3,13 +3,13 @@ defineSuite([
         'Scene/Points3DTileContentProvider',
         'Core/Cartesian3',
         'Core/HeadingPitchRange',
-        'Specs/Cesium3DTilesSpecHelper',
+        'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
         Points3DTileContentProvider,
         Cartesian3,
         HeadingPitchRange,
-        Cesium3DTilesSpecHelper,
+        Cesium3DTilesTester,
         createScene) {
     "use strict";
 
@@ -40,7 +40,7 @@ defineSuite([
         scene.primitives.removeAll();
     });
 
-    function verifyRenderPoints(tileset) {
+    function expectRenderPoints(tileset) {
         tileset.show = false;
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
         tileset.show = true;
@@ -50,50 +50,50 @@ defineSuite([
     }
 
     it('throws with invalid magic', function() {
-        var arrayBuffer = Cesium3DTilesSpecHelper.generatePointsTileBuffer({
+        var arrayBuffer = Cesium3DTilesTester.generatePointsTileBuffer({
             magic : [120, 120, 120, 120]
         });
-        return Cesium3DTilesSpecHelper.loadTileExpectError(scene, arrayBuffer, 'pnts');
+        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
     });
 
     it('throws with invalid version', function() {
-        var arrayBuffer = Cesium3DTilesSpecHelper.generatePointsTileBuffer({
+        var arrayBuffer = Cesium3DTilesTester.generatePointsTileBuffer({
             version: 2
         });
-        return Cesium3DTilesSpecHelper.loadTileExpectError(scene, arrayBuffer, 'pnts');
+        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
     });
 
     it('throws with no points', function() {
         // Throws in Buffer due to vertex buffer size of zero
-        var arrayBuffer = Cesium3DTilesSpecHelper.generatePointsTileBuffer();
-        return Cesium3DTilesSpecHelper.loadTileExpectError(scene, arrayBuffer, 'pnts');
+        var arrayBuffer = Cesium3DTilesTester.generatePointsTileBuffer();
+        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
     });
 
     it('resolves readyPromise', function() {
-        return Cesium3DTilesSpecHelper.resolvesReadyPromise(scene, pointsUrl);
+        return Cesium3DTilesTester.resolvesReadyPromise(scene, pointsUrl);
     });
 
     it('rejects readyPromise on failed request', function() {
-        return Cesium3DTilesSpecHelper.rejectsReadyPromiseOnFailedRequest('pnts');
+        return Cesium3DTilesTester.rejectsReadyPromiseOnFailedRequest('pnts');
     });
 
     it('renders points', function() {
-        return Cesium3DTilesSpecHelper.loadTileset(scene, pointsUrl).then(verifyRenderPoints);
+        return Cesium3DTilesTester.loadTileset(scene, pointsUrl).then(expectRenderPoints);
     });
 
     it('renders with debug color', function() {
-        return Cesium3DTilesSpecHelper.loadTileset(scene, pointsUrl).then(function(tileset) {
-            var color = verifyRenderPoints(tileset);
+        return Cesium3DTilesTester.loadTileset(scene, pointsUrl).then(function(tileset) {
+            var color = expectRenderPoints(tileset);
             tileset.debugColorizeTiles = true;
-            var debugColor = verifyRenderPoints(tileset);
+            var debugColor = expectRenderPoints(tileset);
             expect(debugColor).not.toEqual(color);
             tileset.debugColorizeTiles = false;
-            debugColor = verifyRenderPoints(tileset);
+            debugColor = expectRenderPoints(tileset);
             expect(debugColor).toEqual(color);
         });
     });
 
     it('destroys', function() {
-        return Cesium3DTilesSpecHelper.tileDestroys(scene, pointsUrl);
+        return Cesium3DTilesTester.tileDestroys(scene, pointsUrl);
     });
 });

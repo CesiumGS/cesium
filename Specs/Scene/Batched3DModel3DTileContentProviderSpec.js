@@ -3,13 +3,13 @@ defineSuite([
         'Scene/Batched3DModel3DTileContentProvider',
         'Core/Cartesian3',
         'Core/HeadingPitchRange',
-        'Specs/Cesium3DTilesSpecHelper',
+        'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
         Batched3DModel3DTileContentProvider,
         Cartesian3,
         HeadingPitchRange,
-        Cesium3DTilesSpecHelper,
+        Cesium3DTilesTester,
         createScene) {
     "use strict";
 
@@ -37,47 +37,47 @@ defineSuite([
     });
 
     it('throws with invalid magic', function() {
-        var arrayBuffer = Cesium3DTilesSpecHelper.generateBatchedTileBuffer({
+        var arrayBuffer = Cesium3DTilesTester.generateBatchedTileBuffer({
             magic : [120, 120, 120, 120]
         });
-        return Cesium3DTilesSpecHelper.loadTileExpectError(scene, arrayBuffer, 'b3dm');
+        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'b3dm');
     });
 
     it('throws with invalid version', function() {
-        var arrayBuffer = Cesium3DTilesSpecHelper.generateBatchedTileBuffer({
+        var arrayBuffer = Cesium3DTilesTester.generateBatchedTileBuffer({
             version: 2
         });
-        return Cesium3DTilesSpecHelper.loadTileExpectError(scene, arrayBuffer, 'b3dm');
+        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'b3dm');
     });
 
     it('throws with empty gltf', function() {
         // Expect to throw DeveloperError in Model due to invalid gltf magic
-        var arrayBuffer = Cesium3DTilesSpecHelper.generateBatchedTileBuffer();
-        return Cesium3DTilesSpecHelper.loadTileExpectError(scene, arrayBuffer, 'b3dm');
+        var arrayBuffer = Cesium3DTilesTester.generateBatchedTileBuffer();
+        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'b3dm');
     });
 
     it('resolves readyPromise', function() {
-        return Cesium3DTilesSpecHelper.resolvesReadyPromise(scene, withoutBatchTableUrl);
+        return Cesium3DTilesTester.resolvesReadyPromise(scene, withoutBatchTableUrl);
     });
 
     it('rejects readyPromise on failed request', function() {
-        return Cesium3DTilesSpecHelper.rejectsReadyPromiseOnFailedRequest('b3dm');
+        return Cesium3DTilesTester.rejectsReadyPromiseOnFailedRequest('b3dm');
     });
 
     it('renders with batch table', function() {
-        return Cesium3DTilesSpecHelper.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
-            Cesium3DTilesSpecHelper.verifyRenderTileset(scene, tileset);
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
 
     it('renders without batch table', function() {
-        return Cesium3DTilesSpecHelper.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
-            Cesium3DTilesSpecHelper.verifyRenderTileset(scene, tileset);
+        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
 
     it('throws when calling getModel with invalid index', function() {
-        return Cesium3DTilesSpecHelper.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
             var content = tileset._root.content;
             expect(function(){
                 content.getModel(-1);
@@ -92,6 +92,6 @@ defineSuite([
     });
 
     it('destroys', function() {
-        return Cesium3DTilesSpecHelper.tileDestroys(scene, withoutBatchTableUrl);
+        return Cesium3DTilesTester.tileDestroys(scene, withoutBatchTableUrl);
     });
 });
