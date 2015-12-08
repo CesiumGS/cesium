@@ -3,28 +3,16 @@ defineSuite([
         'Scene/Composite3DTileContentProvider',
         'Core/Cartesian3',
         'Core/Color',
-        'Core/defaultValue',
-        'Core/defined',
         'Core/HeadingPitchRange',
-        'Core/loadArrayBuffer',
-        'Scene/Cesium3DTileContentProviderFactory',
-        'Scene/Cesium3DTileContentState',
-        'Scene/Cesium3DTileset',
-        'Specs/createScene',
-        'Specs/pollToPromise'
+        'Specs/Cesium3DTilesSpecHelper',
+        'Specs/createScene'
     ], function(
         Composite3DTileContentProvider,
         Cartesian3,
         Color,
-        defaultValue,
-        defined,
         HeadingPitchRange,
-        loadArrayBuffer,
-        Cesium3DTileContentProviderFactory,
-        Cesium3DTileContentState,
-        Cesium3DTileset,
-        createScene,
-        pollToPromise) {
+        Cesium3DTilesSpecHelper,
+        createScene) {
     "use strict";
 
     var scene;
@@ -66,7 +54,7 @@ defineSuite([
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
     }
 
-    function verifyRenderTileset(tileset) {
+    function verifyRenderComposite(tileset) {
         verifyRender(tileset);
 
         // Change the color of the picked building to yellow
@@ -100,184 +88,58 @@ defineSuite([
         verifyRenderBlank(tileset);
     }
 
-    function loadTileset(url) {
-        var tileset = scene.primitives.add(new Cesium3DTileset({
-            url : url
-        }));
-
-        return pollToPromise(function() {
-            // Render scene to progressively load the content
-            scene.renderForSpecs();
-            return tileset.ready && (tileset._root.isReady());
-        }).then(function() {
-            return tileset;
-        });
-    }
-
-    function loadTileExpectError(arrayBuffer) {
-        var tileset = {};
-        var tile = {};
-        var url = '';
-        var instancedTile = new Composite3DTileContentProvider(tileset, tile, url, Cesium3DTileContentProviderFactory);
-        expect(function() {
-            instancedTile.initialize(arrayBuffer);
-            instancedTile.update(tileset, scene.frameState);
-        }).toThrowDeveloperError();
-    }
-
-    function generateInstancedTileBuffer(options) {
-        // Procedurally generate the tile array buffer for testing purposes
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var magic = defaultValue(options.magic, [105, 51, 100, 109]);
-        var version = defaultValue(options.version, 1);
-        var gltfFormat = defaultValue(options.gltfFormat, 1);
-        var instancesLength = defaultValue(options.instancesLength, 1);
-
-        var headerByteLength = 28;
-        var instancesByteLength = instancesLength * 16;
-        var byteLength = headerByteLength + instancesByteLength;
-        var buffer = new ArrayBuffer(byteLength);
-        var view = new DataView(buffer);
-        view.setUint8(0, magic[0]);
-        view.setUint8(1, magic[1]);
-        view.setUint8(2, magic[2]);
-        view.setUint8(3, magic[3]);
-        view.setUint32(4, version, true);          // version
-        view.setUint32(8, byteLength, true);       // byteLength
-        view.setUint32(12, 0, true);               // batchTableByteLength
-        view.setUint32(16, 0, true);               // gltfByteLength
-        view.setUint32(20, gltfFormat, true);      // gltfFormat
-        view.setUint32(24, instancesLength, true); // instancesLength
-
-        var byteOffset = headerByteLength;
-        for (var j = 0; j < instancesLength; ++j) {
-            view.setFloat64(byteOffset, centerLongitude, true);
-            view.setFloat64(byteOffset + 8, centerLatitude, true);
-            byteOffset += 16;
-        }
-
-        return buffer;
-    }
-
-    function generateTileBuffer(options) {
-        // Procedurally generate the tile array buffer for testing purposes
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var magic = defaultValue(options.magic, [99, 109, 112, 116]);
-        var version = defaultValue(options.version, 1);
-        var tiles = defaultValue(options.tiles, []);
-        var tilesLength = tiles.length;
-
-        var i;
-        var tilesByteLength = 0;
-        for (i = 0; i < tilesLength; ++i) {
-            tilesByteLength += tiles[i].byteLength;
-        }
-
-        var headerByteLength = 16;
-        var byteLength = headerByteLength + tilesByteLength;
-        var buffer = new ArrayBuffer(byteLength);
-        var uint8Array = new Uint8Array(buffer);
-        var view = new DataView(buffer);
-        view.setUint8(0, magic[0]);
-        view.setUint8(1, magic[1]);
-        view.setUint8(2, magic[2]);
-        view.setUint8(3, magic[3]);
-        view.setUint32(4, version, true);          // version
-        view.setUint32(8, byteLength, true);       // byteLength
-        view.setUint32(12, tilesLength, true);     // tilesLength
-
-        var byteOffset = headerByteLength;
-        for (i = 0; i < tilesLength; ++i) {
-            var tile = new Uint8Array(tiles[i]);
-            uint8Array.set(tile, byteOffset);
-            byteOffset += tile.byteLength;
-        }
-
-        return buffer;
-    }
-
     it('throws with invalid magic', function() {
-        loadTileExpectError(generateTileBuffer({
+        var arrayBuffer = Cesium3DTilesSpecHelper.generateCompositeTileBuffer({
             magic : [120, 120, 120, 120]
-        }));
+        });
+        return Cesium3DTilesSpecHelper.loadTileExpectError(scene, arrayBuffer, 'cmpt');
     });
 
     it('throws with invalid version', function() {
-        loadTileExpectError(generateTileBuffer({
-            version: 2
-        }));
+        var arrayBuffer = Cesium3DTilesSpecHelper.generateCompositeTileBuffer({
+            version : 2
+        });
+        return Cesium3DTilesSpecHelper.loadTileExpectError(scene, arrayBuffer, 'cmpt');
     });
 
     it('throws with invalid inner tile content type', function() {
-        loadTileExpectError(generateTileBuffer({
-            tiles : [generateInstancedTileBuffer({
+        var arrayBuffer = Cesium3DTilesSpecHelper.generateCompositeTileBuffer({
+            tiles : [Cesium3DTilesSpecHelper.generateInstancedTileBuffer({
                 magic : [120, 120, 120, 120]
             })]
-        }));
+        });
+        return Cesium3DTilesSpecHelper.loadTileExpectError(scene, arrayBuffer, 'cmpt');
     });
 
     it('resolves readyPromise', function() {
-        return loadTileset(compositeUrl).then(function(tileset) {
-            var content = tileset._root.content;
-            content.readyPromise.then(function(content) {
-                verifyRenderTileset(tileset);
-            });
-        });
+        return Cesium3DTilesSpecHelper.resolvesReadyPromise(scene, compositeUrl);
     });
 
     it('rejects readyPromise on error', function() {
         // Try loading a composite tile with an instanced tile that has an invalid url.
         // Expect promise to be rejected in Model, ModelInstanceCollection,
         // Instanced3DModel3DTileContentProvider, and Composite3DTileContentProvider.
-        var arrayBuffer = generateTileBuffer({
-            tiles : [generateInstancedTileBuffer({
+        var arrayBuffer = Cesium3DTilesSpecHelper.generateCompositeTileBuffer({
+            tiles : [Cesium3DTilesSpecHelper.generateInstancedTileBuffer({
                 gltfFormat : 0
             })]
         });
-
-        var tileset = {};
-        var tile = {};
-        var url = '';
-        var compositeTile = new Composite3DTileContentProvider(tileset, tile, url, Cesium3DTileContentProviderFactory);
-        compositeTile.initialize(arrayBuffer);
-        compositeTile.update(tileset, scene.frameState);
-
-        return compositeTile.readyPromise.then(function(compositeTile) {
-            fail('should not resolve');
-        }).otherwise(function(error) {
-            expect(compositeTile.state).toEqual(Cesium3DTileContentState.FAILED);
-        });
+        return Cesium3DTilesSpecHelper.rejectsReadyPromiseOnError(scene, arrayBuffer, 'cmpt');
     });
 
     it('rejects readyPromise on failed request', function() {
-        var tileset = {};
-        var tile = {};
-        var url = 'invalid.b3dm';
-        var compositeTile = new Composite3DTileContentProvider(tileset, tile, url, Cesium3DTileContentProviderFactory);
-        compositeTile.request();
-
-        return compositeTile.readyPromise.then(function(compositeTile) {
-            fail('should not resolve');
-        }).otherwise(function(error) {
-            expect(compositeTile.state).toEqual(Cesium3DTileContentState.FAILED);
-            expect(error.statusCode).toEqual(404);
-        });
+        return Cesium3DTilesSpecHelper.rejectsReadyPromiseOnFailedRequest('cmpt');
     });
     
     it('renders composite', function() {
-        return loadTileset(compositeUrl).then(verifyRenderTileset);
+        return Cesium3DTilesSpecHelper.loadTileset(scene, compositeUrl).then(verifyRenderComposite);
     });
 
     it('renders composite of composite', function() {
-        return loadTileset(compositeOfComposite).then(verifyRenderTileset);
+        return Cesium3DTilesSpecHelper.loadTileset(scene, compositeOfComposite).then(verifyRenderComposite);
     });
 
     it('destroys', function() {
-        return loadTileset(compositeUrl).then(function(tileset) {
-            var content = tileset._root.content;
-            expect(content.isDestroyed()).toEqual(false);
-            content.destroy();
-            expect(content.isDestroyed()).toEqual(true);
-        });
+        return Cesium3DTilesSpecHelper.tileDestroys(scene, compositeUrl);
     });
 });
