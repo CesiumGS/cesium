@@ -171,10 +171,12 @@ define([
         freezeObject) {
     "use strict";
 
-    return freezeObject({
+    var ModelAnimationState = {
         STOPPED : 0,
         ANIMATING : 1
-    });
+    };
+
+    return freezeObject(ModelAnimationState);
 });
 ```
 * Use descriptive comments for non-obvious code, e.g.,
