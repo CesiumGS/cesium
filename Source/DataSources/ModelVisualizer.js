@@ -29,6 +29,8 @@ define([
     var defaultMinimumPixelSize = 0.0;
     var defaultIncrementallyLoadTextures = true;
 
+    var modelMatrixScratch = new Matrix4();
+
     /**
      * A {@link Visualizer} which maps {@link Entity#model} to a {@link Model}.
      * @alias ModelVisualizer
@@ -54,7 +56,6 @@ define([
         this._entityCollection = entityCollection;
         this._modelHash = {};
         this._entitiesToVisualize = new AssociativeArray();
-        this._modelMatrixScratch = new Matrix4();
         this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
     };
 
@@ -86,7 +87,7 @@ define([
 
             var modelMatrix;
             if (show) {
-                modelMatrix = entity._getModelMatrix(time, this._modelMatrixScratch);
+                modelMatrix = entity._getModelMatrix(time, modelMatrixScratch);
                 uri = Property.getValueOrUndefined(modelGraphics._uri, time);
                 show = defined(modelMatrix) && defined(uri);
             }
