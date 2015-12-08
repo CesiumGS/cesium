@@ -170,7 +170,7 @@ define([
             // with 1
             if (defined(parentTile)) {
                 parentTile.children.push(rootTile);
-                parentTile.numberOfChildrenWithoutContent += 1;
+                ++parentTile.numberOfChildrenWithoutContent;
             }
 
             var stack = [];
