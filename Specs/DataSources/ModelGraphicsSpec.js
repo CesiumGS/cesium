@@ -24,6 +24,7 @@ defineSuite([
             show : false,
             minimumPixelSize : 2,
             maximumScale : 200,
+            incrementallyLoadTextures : false,
             runAnimations : false,
             nodeTransformations : {
                 node1 : {
@@ -40,6 +41,7 @@ defineSuite([
         expect(model.show).toBeInstanceOf(ConstantProperty);
         expect(model.minimumPixelSize).toBeInstanceOf(ConstantProperty);
         expect(model.maximumScale).toBeInstanceOf(ConstantProperty);
+        expect(model.incrementallyLoadTextures).toBeInstanceOf(ConstantProperty);
         expect(model.runAnimations).toBeInstanceOf(ConstantProperty);
 
         expect(model.nodeTransformations).toBeDefined();
@@ -47,9 +49,10 @@ defineSuite([
         expect(model.uri.getValue()).toEqual(options.uri);
         expect(model.scale.getValue()).toEqual(options.scale);
         expect(model.show.getValue()).toEqual(options.show);
-        expect(model.runAnimations.getValue()).toEqual(options.runAnimations);
         expect(model.minimumPixelSize.getValue()).toEqual(options.minimumPixelSize);
         expect(model.maximumScale.getValue()).toEqual(options.maximumScale);
+        expect(model.incrementallyLoadTextures.getValue()).toEqual(options.incrementallyLoadTextures);
+        expect(model.runAnimations.getValue()).toEqual(options.runAnimations);
 
         var actualNodeTransformations = model.nodeTransformations.getValue(new JulianDate());
         var expectedNodeTransformations = options.nodeTransformations;
@@ -64,10 +67,11 @@ defineSuite([
         var source = new ModelGraphics();
         source.uri = new ConstantProperty('');
         source.show = new ConstantProperty(true);
-        source.runAnimations = new ConstantProperty(true);
         source.scale = new ConstantProperty(1.0);
         source.minimumPixelSize = new ConstantProperty(2.0);
         source.maximumScale = new ConstantProperty(200.0);
+        source.incrementallyLoadTextures = new ConstantProperty(true);
+        source.runAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             node1 : new NodeTransformationProperty({
                 scale : Cartesian3.UNIT_X,
@@ -85,9 +89,10 @@ defineSuite([
         expect(target.uri).toBe(source.uri);
         expect(target.show).toBe(source.show);
         expect(target.scale).toBe(source.scale);
-        expect(target.runAnimations).toBe(source.runAnimations);
         expect(target.minimumPixelSize).toBe(source.minimumPixelSize);
         expect(target.maximumScale).toBe(source.maximumScale);
+        expect(target.incrementallyLoadTextures).toBe(source.incrementallyLoadTextures);
+        expect(target.runAnimations).toBe(source.runAnimations);
         expect(target.nodeTransformations).toEqual(source.nodeTransformations);
     });
 
@@ -96,9 +101,10 @@ defineSuite([
         source.uri = new ConstantProperty('');
         source.show = new ConstantProperty(true);
         source.scale = new ConstantProperty(1.0);
-        source.runAnimations = new ConstantProperty(true);
         source.minimumPixelSize = new ConstantProperty(2.0);
         source.maximumScale = new ConstantProperty(200.0);
+        source.incrementallyLoadTextures = new ConstantProperty(true);
+        source.runAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             transform : new NodeTransformationProperty()
         };
@@ -106,9 +112,10 @@ defineSuite([
         var uri = new ConstantProperty('');
         var show = new ConstantProperty(true);
         var scale = new ConstantProperty(1.0);
-        var runAnimations = new ConstantProperty(true);
         var minimumPixelSize = new ConstantProperty(2.0);
         var maximumScale = new ConstantProperty(200.0);
+        var incrementallyLoadTextures = new ConstantProperty(true);
+        var runAnimations = new ConstantProperty(true);
         var nodeTransformations = new PropertyBag({
             transform : new NodeTransformationProperty()
         });
@@ -120,6 +127,8 @@ defineSuite([
         target.runAnimations = runAnimations;
         target.minimumPixelSize = minimumPixelSize;
         target.maximumScale = maximumScale;
+        target.incrementallyLoadTextures = incrementallyLoadTextures;
+        target.runAnimations = runAnimations;
         target.nodeTransformations = nodeTransformations;
 
         target.merge(source);
@@ -127,9 +136,10 @@ defineSuite([
         expect(target.uri).toBe(uri);
         expect(target.show).toBe(show);
         expect(target.scale).toBe(scale);
-        expect(target.runAnimations).toBe(runAnimations);
         expect(target.minimumPixelSize).toBe(minimumPixelSize);
         expect(target.maximumScale).toBe(maximumScale);
+        expect(target.incrementallyLoadTextures).toBe(incrementallyLoadTextures);
+        expect(target.runAnimations).toBe(runAnimations);
         expect(target.nodeTransformations).toBe(nodeTransformations);
     });
 
@@ -137,10 +147,11 @@ defineSuite([
         var source = new ModelGraphics();
         source.uri = new ConstantProperty('');
         source.show = new ConstantProperty(true);
-        source.runAnimations = new ConstantProperty(true);
         source.scale = new ConstantProperty(1.0);
         source.minimumPixelSize = new ConstantProperty(2.0);
         source.maximumScale = new ConstantProperty(200.0);
+        source.incrementallyLoadTextures = new ConstantProperty(true);
+        source.runAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             node1 : new NodeTransformationProperty(),
             node2 : new NodeTransformationProperty()
@@ -149,10 +160,11 @@ defineSuite([
         var result = source.clone();
         expect(result.uri).toBe(source.uri);
         expect(result.show).toBe(source.show);
-        expect(result.runAnimations).toBe(source.runAnimations);
         expect(result.scale).toBe(source.scale);
         expect(result.minimumPixelSize).toBe(source.minimumPixelSize);
         expect(result.maximumScale).toBe(source.maximumScale);
+        expect(result.incrementallyLoadTextures).toBe(source.incrementallyLoadTextures);
+        expect(result.runAnimations).toBe(source.runAnimations);
         expect(result.nodeTransformations).toEqual(source.nodeTransformations);
     });
 

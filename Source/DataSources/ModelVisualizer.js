@@ -29,6 +29,9 @@ define([
 
     var defaultScale = 1.0;
     var defaultMinimumPixelSize = 0.0;
+    var defaultIncrementallyLoadTextures = true;
+
+    var modelMatrixScratch = new Matrix4();
 
     var nodeTransformationScratch = new NodeTransformation();
     var nodeMatrixScratch = new Matrix4();
@@ -58,7 +61,6 @@ define([
         this._entityCollection = entityCollection;
         this._modelHash = {};
         this._entitiesToVisualize = new AssociativeArray();
-        this._modelMatrixScratch = new Matrix4();
         this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
         this._originalNodeMatrixHash = {};
     };
@@ -92,7 +94,7 @@ define([
 
             var modelMatrix;
             if (show) {
-                modelMatrix = entity._getModelMatrix(time, this._modelMatrixScratch);
+                modelMatrix = entity._getModelMatrix(time, modelMatrixScratch);
                 uri = Property.getValueOrUndefined(modelGraphics._uri, time);
                 show = defined(modelMatrix) && defined(uri);
             }
@@ -111,7 +113,8 @@ define([
                     delete modelHash[entity.id];
                 }
                 model = Model.fromGltf({
-                    url : uri
+                    url : uri,
+                    incrementallyLoadTextures : Property.getValueOrDefault(modelGraphics._incrementallyLoadTextures, time, defaultIncrementallyLoadTextures)
                 });
 
                 model.readyPromise.then(onModelReady).otherwise(onModelError);
