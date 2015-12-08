@@ -1492,7 +1492,7 @@ define([
         }
 
         if (sunVisible && scene.sunBloom) {
-            passState.framebuffer = scene._sunPostProcess.update(context);
+            passState.framebuffer = scene._sunPostProcess.update(passState);
         } else if (useGlobeDepthFramebuffer) {
             passState.framebuffer = scene._globeDepth.framebuffer;
         } else if (useFXAA) {
