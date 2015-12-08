@@ -30,7 +30,6 @@ define([
     var defaultIncrementallyLoadTextures = true;
 
     var modelMatrixScratch = new Matrix4();
-
     var nodeTransformationScratch = new NodeTransformation();
     var nodeMatrixScratch = new Matrix4();
 
@@ -141,11 +140,10 @@ define([
                         model.activeAnimations.addAll({
                             loop : ModelAnimationLoop.REPEAT
                         });
-                        modelData.animationsRunning = true;
                     } else {
                         model.activeAnimations.removeAll();
-                        modelData.animationsRunning = false;
                     }
+                    modelData.animationsRunning = runAnimations;
                 }
 
                 // Apply node transformations
@@ -154,24 +152,26 @@ define([
                     var nodeNames = nodeTransformations._propertyNames;
                     for (var nodeIndex = 0, nodeLength = nodeNames.length; nodeIndex < nodeLength; ++nodeIndex) {
                         var nodeName = nodeNames[nodeIndex];
+
                         var nodeTransformationProperty = nodeTransformations[nodeName];
-
-                        if (defined(nodeTransformationProperty)) {
-                            var modelNode = model.getNode(nodeName);
-
-                            if (defined(modelNode)) {
-                                var nodeTransformation = nodeTransformationProperty.getValue(time, nodeTransformationScratch);
-
-                                var originalNodeMatrix = originalNodeMatrixHash[nodeName];
-                                if (!defined(originalNodeMatrix)) {
-                                    originalNodeMatrix = modelNode.matrix.clone();
-                                    originalNodeMatrixHash[nodeName] = originalNodeMatrix;
-                                }
-
-                                var transformationMatrix = nodeTransformation.toMatrix(nodeMatrixScratch);
-                                modelNode.matrix = Matrix4.multiply(originalNodeMatrix, transformationMatrix, transformationMatrix);
-                            }
+                        if (!defined(nodeTransformationProperty)) {
+                            continue;
                         }
+
+                        var modelNode = model.getNode(nodeName);
+                        if (!defined(modelNode)) {
+                            continue;
+                        }
+
+                        var originalNodeMatrix = originalNodeMatrixHash[nodeName];
+                        if (!defined(originalNodeMatrix)) {
+                            originalNodeMatrix = modelNode.matrix.clone();
+                            originalNodeMatrixHash[nodeName] = originalNodeMatrix;
+                        }
+
+                        var nodeTransformation = nodeTransformationProperty.getValue(time, nodeTransformationScratch);
+                        var transformationMatrix = nodeTransformation.toMatrix(nodeMatrixScratch);
+                        modelNode.matrix = Matrix4.multiply(originalNodeMatrix, transformationMatrix, transformationMatrix);
                     }
                 }
             }

@@ -1200,30 +1200,36 @@ define([
         }
 
         var nodeTransformations = model.nodeTransformations;
-        for ( var nodeName in nodeTransformationsData) {
-            if (nodeTransformationsData.hasOwnProperty(nodeName) && nodeName !== 'interval') {
-                var nodeTransformationData = nodeTransformationsData[nodeName];
+        var nodeNames = Object.keys(nodeTransformationsData);
+        for (var i = 0, len = nodeNames.length; i < len; ++i) {
+            var nodeName = nodeNames[i];
 
-                if (defined(nodeTransformationData)) {
-
-                    if (!defined(nodeTransformations)) {
-                        model.nodeTransformations = nodeTransformations = new PropertyBag();
-                    }
-
-                    if (!nodeTransformations.hasProperty(nodeName)) {
-                        nodeTransformations.addProperty(nodeName);
-                    }
-
-                    var nodeTransformation = nodeTransformations[nodeName];
-                    if (!defined(nodeTransformation)) {
-                        nodeTransformations[nodeName] = nodeTransformation = new NodeTransformationProperty();
-                    }
-
-                    processPacketData(Cartesian3, nodeTransformation, 'scale', nodeTransformationData.scale, combinedInterval, sourceUri, entityCollection);
-                    processPacketData(Cartesian3, nodeTransformation, 'translation', nodeTransformationData.translation, combinedInterval, sourceUri, entityCollection);
-                    processPacketData(Quaternion, nodeTransformation, 'rotation', nodeTransformationData.rotation, combinedInterval, sourceUri, entityCollection);
-                }
+            if (nodeName === 'interval') {
+                continue;
             }
+
+            var nodeTransformationData = nodeTransformationsData[nodeName];
+
+            if (!defined(nodeTransformationData)) {
+                continue;
+            }
+
+            if (!defined(nodeTransformations)) {
+                model.nodeTransformations = nodeTransformations = new PropertyBag();
+            }
+
+            if (!nodeTransformations.hasProperty(nodeName)) {
+                nodeTransformations.addProperty(nodeName);
+            }
+
+            var nodeTransformation = nodeTransformations[nodeName];
+            if (!defined(nodeTransformation)) {
+                nodeTransformations[nodeName] = nodeTransformation = new NodeTransformationProperty();
+            }
+
+            processPacketData(Cartesian3, nodeTransformation, 'scale', nodeTransformationData.scale, combinedInterval, sourceUri, entityCollection);
+            processPacketData(Cartesian3, nodeTransformation, 'translation', nodeTransformationData.translation, combinedInterval, sourceUri, entityCollection);
+            processPacketData(Quaternion, nodeTransformation, 'rotation', nodeTransformationData.rotation, combinedInterval, sourceUri, entityCollection);
         }
     }
 
@@ -1673,7 +1679,8 @@ define([
      * @memberof CzmlDataSource
      * @type Array
      */
-    CzmlDataSource.updaters = [processBillboard, //
+    CzmlDataSource.updaters = [
+    processBillboard, //
     processEllipse, //
     processEllipsoid, //
     processLabel, //
