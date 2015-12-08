@@ -400,7 +400,6 @@ defineSuite([
 
         return pollToPromise(function() {
             globe.update(frameState);
-            console.log(globe._surface._debug.maxDepth);
             return globe._surface.tileProvider.ready && !defined(globe._surface._tileLoadQueue.head) && globe._surface._debug.tilesWaitingForChildren === 0 && globe._surface._debug.maxDepth >= 11;
         }).then(function() {
             expect(render(frameState, globe)).toBeGreaterThan(0);
