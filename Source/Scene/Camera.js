@@ -7,7 +7,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/EasingFunction',
         '../Core/Ellipsoid',
@@ -33,7 +32,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         EasingFunction,
         Ellipsoid,
@@ -1024,39 +1022,6 @@ define([
     Camera.prototype.setView = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var orientation = defaultValue(options.orientation, defaultValue.EMPTY_OBJECT);
-
-        var newOptions = scratchSetViewOptions;
-        var newOrientation = newOptions.orientation;
-
-        if (defined(options.heading) || defined(options.pitch) || defined(options.roll)) {
-            deprecationWarning('Camera.setView options', 'options.heading/pitch/roll has been moved to options.orientation.heading/pitch/roll.');
-            newOrientation.heading = defaultValue(options.heading, this.heading);
-            newOrientation.pitch = defaultValue(options.pitch, this.pitch);
-            newOrientation.roll = defaultValue(options.roll, this.roll);
-        } else {
-            newOrientation.heading = orientation.heading;
-            newOrientation.pitch = orientation.pitch;
-            newOrientation.roll = orientation.roll;
-            newOrientation.direction = orientation.direction;
-            newOrientation.up = orientation.up;
-        }
-
-        if (defined(options.position)) {
-            deprecationWarning('Camera.setView options', 'options.position has been renamed to options.destination.');
-            options.destination = options.position;
-        } else if (defined(options.positionCartographic)) {
-            deprecationWarning('Camera.setView options', 'options.positionCartographic has been deprecated.  Convert to a Cartesian3 and use options.position instead.');
-            var projection = this._projection;
-            var ellipsoid = projection.ellipsoid;
-            options.destination = ellipsoid.cartographicToCartesian(options.positionCartographic, scratchSetViewCartesian);
-        } else {
-            newOptions.destination = options.destination;
-        }
-
-        newOptions.endTransform = options.endTransform;
-
-        options = newOptions;
-        orientation = newOrientation;
 
         var mode = this._mode;
         if (mode === SceneMode.MORPHING) {
@@ -2065,27 +2030,6 @@ define([
         }
 
         return undefined;
-    };
-
-    /**
-     * View a rectangle on an ellipsoid or map.
-     *
-     * @param {Rectangle} rectangle The rectangle to view.
-     *
-     * @deprecated
-     */
-    Camera.prototype.viewRectangle = function(rectangle) {
-        deprecationWarning('Camera.viewRectangle', 'Camera.viewRectangle has been deprecated.  Use Camera.setView({ destination:rectangle }) instead');
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(rectangle)) {
-            throw new DeveloperError('rectangle is required.');
-        }
-        //>>includeEnd('debug');
-
-        this.setView({
-            destination: rectangle
-        });
     };
 
     var pickEllipsoid3DRay = new Ray();
