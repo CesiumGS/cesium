@@ -336,15 +336,13 @@ define([
         // 1) If its children are not loaded, load the subtree it points to and then select its root child
         // 2) If its children are already loaded, select its (root) child since the geometric error of it is
         //    same as this tile's
-        var contentUrl = tile._header.content.url;
-        var root;
 
         // If the subtree has already been added and child
         // content requested, select the child (= the root) and continue
         if ((tile.isReady()) &&
             (tile.numberOfChildrenWithoutContent === 0)) {
             // A tiles.json must specify exactly one tile, ie a root
-            root = tile.children[0];
+            var root = tile.children[0];
             if (root.hasTilesetContent) {
                 selectTileWithTilesetContent(tiles3D, selectedTiles, root, fullyVisible, frameState, additiveRefinment);
             } else {
@@ -367,6 +365,7 @@ define([
         // In the case of tileset content tiles, their state must be explicitly set
         if (tile.isContentUnloaded()) {
             tile.content.state = Cesium3DTileContentState.LOADING;
+            var contentUrl = tile._header.content.url;
             var tilesUrl = (new Uri(contentUrl).isAbsolute()) ? contentUrl : tiles3D._url + contentUrl;
             loadTilesJson(tiles3D, tilesUrl, tile, function() {
                 tile.content.state = Cesium3DTileContentState.READY;
