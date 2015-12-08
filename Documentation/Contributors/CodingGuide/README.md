@@ -6,7 +6,7 @@ In addition to describing typical coding conventions, this guide also covers bes
 
 :art: The color palette icon indicates a design tip.
 
-:house: The house icon indicates a maintainability tip.
+:house: The house icon indicates a maintainability tip.  The whole guide is, of course, about writing maintainable code.
 
 :speedboat: The speedboat indicates a performance tip.
 
@@ -24,7 +24,7 @@ _TODO: TOC_
 ```javascript
 this.minimumPixelSize = 1.0; // Class property
 
-var bufferViews = model.gltf.bufferViews; // Local variable
+var bufferViews = gltf.bufferViews; // Local variable
 ```
 * Private (by convention) members start with an underscore, e.g.,
 ```javascript
@@ -56,15 +56,13 @@ this._showTouch = createCommand(function() {
 });
 ```
 
-_TODO: make the following links_
-
-More naming conventions are introduced below along with their design pattern, e.g., `options` parameters, `result` parameters and scratch variables, and `from` constructors.
+A few more naming conventions are introduced below along with their design pattern, e.g., [`options` parameters](#options-parameters), [`result` parameters and scratch variables](#result-parameters-and-scratch-variables), and [`from` constructors](#from-constructors).
 
 ## Formatting
 
 In general, format new code the same as the existing code.
 
-* Use four spaces for indentation.  Do not use [tab characters](http://www.jwz.org/doc/tabs-vs-spaces.html).
+* Use four spaces for indentation.  Do not use tab characters.
 * Do not include trailing whitespace.
 * Put `{` on the same line as the previous statement:
 ```javascript
@@ -96,8 +94,6 @@ var Model = function(options) {
 };
 ```
 * Use single quotes, `'`, instead of double quotes, `"`.  `"use strict"` is an exception and should use double quotes.
-
-_TODO: something about the Eclipse and Web Storm formatters._
 
 ## Units
 
@@ -139,12 +135,12 @@ function processTiles(tiles3D, frameState) {
     }
 }
 ```
-* :speedboat: Smaller functions are more likely to be optimized by V8.  Consider this for code that is likely to be a hot spot. _(TODO: I heard this on the NodeUp podcast, can someone confirm?)_
-* :speedboat: Avoid multiple `return` statements in small hot functions since V8 will not inline them _(TODO: same TODO as above)_
+* :speedboat: Smaller functions are more likely to be optimized by V8.  Consider this for code that is likely to be a hot spot.
+* :speedboat: Avoid multiple `return` statements in small hot functions since V8 will not inline them .
 
 ### `options` Parameters
 
-:house: Many Cesium functions take an `options` parameter to support optional parameters, self-documenting code, and forward compatibility.  For example, consider:
+:art: Many Cesium functions take an `options` parameter to support optional parameters, self-documenting code, and forward compatibility.  For example, consider:
 ```javascript
 var sphere = new SphereGeometry(10.0, 32, 16, VertexFormat.POSITION_ONLY);
 ```
@@ -157,11 +153,11 @@ var sphere = new SphereGeometry({
     vertexFormat : VertexFormat.POSITION_ONLY
 );
 ```
-* :speedboat: Using `{ /* ... */ }` creates an object literal, which is a memory allocation.  Avoid creating functions that use an `options` parameter if the function is likely to be a hot spot; otherwise, callers will have to use a scratch variable (see below) for performance.  Constructor functions are good candidates for `options` parameters since Cesium avoids constructing objects in hot spots.
+* :speedboat: Using `{ /* ... */ }` creates an object literal, which is a memory allocation.  Avoid designing functions that use an `options` parameter if the function is likely to be a hot spot; otherwise, callers will have to use a scratch variable (see [below](#result-parameters-and-scratch-variables)) for performance.  Constructor functions are good candidates for `options` parameters since Cesium avoids constructing objects in hot spots.
 
 ### Default Parameter Values
 
-If a sensible default exists for a function parameter or class property, don't require the user to provide it.  For example, `height` defaults to zero in `Cartesian3.fromRadians`:
+If a _sensible_ default exists for a function parameter or class property, don't require the user to provide it.  For example, `height` defaults to zero in `Cartesian3.fromRadians`:
 ```javascript
 Cartesian3.fromRadians = function(longitude, latitude, height) {
     height = defaultValue(height, 0.0);
@@ -181,13 +177,41 @@ Some common sensible defaults are:
 * `height`: `0.0`
 * `ellipsoid`: `Ellipsoid.WGS84`
 * `show`: `true`
-* `modelMatrix`: `Matrix4.IDENTITY`
-* `scale`: `1.0`
 
 ### Throwing Exceptions
 
-_TODO: when to throw DeveloperError_
-_TODO: use includeStart for exceptions_
+* Throw Cesium's `DeveloperError` when the user has a coding error.  The most common errors are missing parameters and out of range parameters.  For example:
+```javascript
+Cartesian3.maximumComponent = function(cartesian) {
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(cartesian)) {
+        throw new DeveloperError('cartesian is required.');
+    }
+    //>>includeEnd('debug');
+
+    return Math.max(cartesian.x, cartesian.y, cartesian.z);
+};
+```
+* Surround code to check for `DeveloperError` in `includeStart`/`includeEnd` comments as shown above so developer error checks can be optimized out of release builds.  Do not include required side-effects inside `includeStart`/`includeEnd`, e.g.,
+```javascript
+Cartesian3.maximumComponent = function(cartesian) {
+    //>>includeStart('debug', pragmas.debug);
+    var c = cartesian;
+    if (!defined(c)) {
+        throw new DeveloperError('cartesian is required.');
+    }
+    //>>includeEnd('debug');
+
+    return Math.max(c.x, c.y, c.z); // Works in debug. Fails in release!
+};
+```
+* Throw Cesium's `RuntimeError` for an error that will not be known until runtime.  Unlike developer errors, runtime error checks are not optimized out of release builds.
+```javascript
+if (typeof WebGLRenderingContext === 'undefined') {
+    throw new RuntimeError('The browser does not support WebGL.');
+}
+```
+* Exceptions are exceptional.  Avoid throwing exceptions, e.g., if a polyline is only provide one position, instead of two or more, don't render it instead of throwing an exception.
 
 ### `result` Parameters and Scratch Variables
 
@@ -617,8 +641,10 @@ Watch [From Console to Chrome](https://www.youtube.com/watch?v=XAqIpGU8ZZk) by L
 ---
 
 **TODO**
-* [ ] Promises section.  Can someone add this?
-* [ ] Web workers section.  Can someone add this?
-* [ ] UI (and CSS?) section.  Can someone add this?
+* Can someone add these?
+    * [ ] Promises section.
+    * [ ] Web workers section.
+    * [ ] UI (and CSS?) section.
+    * [ ] Mention Eclipse and Web Storm formatters.
 * [ ] Add TOC
 * [ ] Remove the old [JavaScript Coding Conventions](https://github.com/AnalyticalGraphicsInc/cesium/wiki/JavaScript-Coding-Conventions) on the wiki
