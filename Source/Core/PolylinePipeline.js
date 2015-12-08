@@ -199,7 +199,7 @@ define([
         };
     };
 
-    var removeDuplicatesEpsilon = CesiumMath.EPSILON7;
+    var removeDuplicatesEpsilon = CesiumMath.EPSILON10;
 
     /**
      * Removes adjacent duplicate positions in an array of positions.
