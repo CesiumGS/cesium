@@ -7,11 +7,10 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Matrix4',
-        '../Core/RuntimeError',
         '../Scene/Model',
         '../Scene/ModelAnimationLoop',
         './BoundingSphereState',
-        './ModelTransformProperty',
+        './NodeTransformation',
         './Property'
     ], function(
         AssociativeArray,
@@ -21,16 +20,18 @@ define([
         destroyObject,
         DeveloperError,
         Matrix4,
-        RuntimeError,
         Model,
         ModelAnimationLoop,
         BoundingSphereState,
-        ModelTransformProperty,
+        NodeTransformation,
         Property) {
     "use strict";
 
     var defaultScale = 1.0;
     var defaultMinimumPixelSize = 0.0;
+
+    var nodeTransformationScratch = new NodeTransformation();
+    var nodeMatrixScratch = new Matrix4();
 
     /**
      * A {@link Visualizer} which maps {@link Entity#model} to a {@link Model}.
@@ -60,7 +61,6 @@ define([
         this._modelMatrixScratch = new Matrix4();
         this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
         this._originalNodeMatrixHash = {};
-        this._nodeMatrixScratch = new Matrix4();
     };
 
     /**
@@ -133,47 +133,49 @@ define([
             model.maximumScale = Property.getValueOrUndefined(modelGraphics._maximumScale, time);
             model.modelMatrix = Matrix4.clone(modelMatrix, model.modelMatrix);
 
-            var runAnimations = Property.getValueOrDefault(modelGraphics._runAnimations, time, true);
-            if (model.ready && modelData.animationsRunning !== runAnimations) {
-                if (runAnimations === true) {
-                    model.activeAnimations.addAll({
-                        loop : ModelAnimationLoop.REPEAT
-                    });
-                    modelData.animationsRunning = true;
+            if (model.ready) {
+                var runAnimations = Property.getValueOrDefault(modelGraphics._runAnimations, time, true);
+                if (modelData.animationsRunning !== runAnimations) {
+                    if (runAnimations) {
+                        model.activeAnimations.addAll({
+                            loop : ModelAnimationLoop.REPEAT
+                        });
+                        modelData.animationsRunning = true;
+                    } else {
+                        model.activeAnimations.removeAll();
+                        modelData.animationsRunning = false;
+                    }
                 }
-                else {
-                    model.activeAnimations.removeAll();
-                    modelData.animationsRunning = false;
-                }
-            }
 
-            // Apply node transformations
-            var nodeTransformations = Property.getValueOrDefault(modelGraphics._nodeTransformations, time, undefined);
-            if (defined(nodeTransformations) && model.ready === true) {
+                // Apply node transformations
+                var nodeTransformations = modelGraphics._nodeTransformations;
+                if (defined(nodeTransformations)) {
+                    var nodeNames = nodeTransformations._propertyNames;
+                    for (var nodeIndex = 0, nodeLength = nodeNames.length; nodeIndex < nodeLength; ++nodeIndex) {
+                        var nodeName = nodeNames[nodeIndex];
+                        var nodeTransformationProperty = nodeTransformations[nodeName];
 
-                var nodeNames = Object.keys(nodeTransformations);
-                var length = nodeNames.length;
-                for (var j = 0; j < length; j++) {
-                    var nodeName = nodeNames[j];
-                    var transformation = nodeTransformations[nodeName];
+                        if (defined(nodeTransformationProperty)) {
+                            var modelNode = model.getNode(nodeName);
 
-                    var modelNode = model.getNode(nodeName);
-                    if (defined(modelNode)) {
-                        var transformResult = transformation.getValue(time);
+                            if (defined(modelNode)) {
+                                var nodeTransformation = nodeTransformationProperty.getValue(time, nodeTransformationScratch);
 
-                        var originalNodeMatrix = originalNodeMatrixHash[nodeName];
-                        if (!defined(originalNodeMatrix)) {
+                                var originalNodeMatrix = originalNodeMatrixHash[nodeName];
+                                if (!defined(originalNodeMatrix)) {
+                                    originalNodeMatrix = modelNode.matrix.clone();
+                                    originalNodeMatrixHash[nodeName] = originalNodeMatrix;
+                                }
 
-                            originalNodeMatrix = originalNodeMatrixHash[nodeName] = modelNode.matrix.clone();
+                                var transformationMatrix = nodeTransformation.toMatrix(nodeMatrixScratch);
+                                modelNode.matrix = Matrix4.multiply(originalNodeMatrix, transformationMatrix, transformationMatrix);
+                            }
                         }
-
-                        var transformMtx = Matrix4.fromTranslationQuaternionRotationScale(transformResult.translate, transformResult.rotate, transformResult.scale, this._nodeMatrixScratch);
-                        modelNode.matrix = Matrix4.multiply(originalNodeMatrix, transformMtx, transformMtx);
                     }
                 }
             }
-
         }
+
         return true;
     };
 

@@ -1,12 +1,20 @@
 /*global defineSuite*/
 defineSuite([
         'DataSources/ModelGraphics',
-        'DataSources/ModelTransformProperty',
-        'DataSources/ConstantProperty'
+        'Core/Cartesian3',
+        'Core/JulianDate',
+        'Core/Quaternion',
+        'DataSources/ConstantProperty',
+        'DataSources/NodeTransformationProperty',
+        'DataSources/PropertyBag'
     ], function(
         ModelGraphics,
-        ModelTransformProperty,
-        ConstantProperty) {
+        Cartesian3,
+        JulianDate,
+        Quaternion,
+        ConstantProperty,
+        NodeTransformationProperty,
+        PropertyBag) {
     "use strict";
 
     it('creates expected instance from raw assignment and construction', function() {
@@ -15,10 +23,14 @@ defineSuite([
             scale : 1,
             show : false,
             minimumPixelSize : 2,
-            maximumScale: 200,
+            maximumScale : 200,
             runAnimations : false,
             nodeTransformations : {
-                node1 : new ModelTransformProperty()
+                node1 : {
+                    scale : Cartesian3.UNIT_X,
+                    translation : Cartesian3.UNIT_Y,
+                    rotation : new Quaternion(0.5, 0.5, 0.5, 0.5)
+                }
             }
         };
 
@@ -29,7 +41,8 @@ defineSuite([
         expect(model.minimumPixelSize).toBeInstanceOf(ConstantProperty);
         expect(model.maximumScale).toBeInstanceOf(ConstantProperty);
         expect(model.runAnimations).toBeInstanceOf(ConstantProperty);
-        expect(model.nodeTransformations).toBeInstanceOf(ConstantProperty);
+
+        expect(model.nodeTransformations).toBeDefined();
 
         expect(model.uri.getValue()).toEqual(options.uri);
         expect(model.scale.getValue()).toEqual(options.scale);
@@ -37,18 +50,17 @@ defineSuite([
         expect(model.runAnimations.getValue()).toEqual(options.runAnimations);
         expect(model.minimumPixelSize.getValue()).toEqual(options.minimumPixelSize);
         expect(model.maximumScale.getValue()).toEqual(options.maximumScale);
-        expect(model.nodeTransformations.getValue()).toEqual(options.nodeTransformations);
+
+        var actualNodeTransformations = model.nodeTransformations.getValue(new JulianDate());
+        var expectedNodeTransformations = options.nodeTransformations;
+
+        // by default toEqual requires constructors to match.  for the purposes of this test, we only care about the structure.
+        actualNodeTransformations = JSON.parse(JSON.stringify(actualNodeTransformations));
+        expectedNodeTransformations = JSON.parse(JSON.stringify(expectedNodeTransformations));
+        expect(actualNodeTransformations).toEqual(expectedNodeTransformations);
     });
 
     it('merge assigns unassigned properties', function() {
-        var node1Transforms = new ModelTransformProperty();
-        var node2Transforms = new ModelTransformProperty();
-
-        var nodeTransforms = {
-            node1 : node1Transforms,
-            node2 : node2Transforms
-        };
-
         var source = new ModelGraphics();
         source.uri = new ConstantProperty('');
         source.show = new ConstantProperty(true);
@@ -56,7 +68,16 @@ defineSuite([
         source.scale = new ConstantProperty(1.0);
         source.minimumPixelSize = new ConstantProperty(2.0);
         source.maximumScale = new ConstantProperty(200.0);
-        source.nodeTransformations = nodeTransforms;
+        source.nodeTransformations = {
+            node1 : new NodeTransformationProperty({
+                scale : Cartesian3.UNIT_X,
+                translation : Cartesian3.UNIT_Y,
+                rotation : new Quaternion(0.5, 0.5, 0.5, 0.5)
+            }),
+            node2 : new NodeTransformationProperty({
+                scale : Cartesian3.UNIT_Z
+            })
+        };
 
         var target = new ModelGraphics();
         target.merge(source);
@@ -67,13 +88,10 @@ defineSuite([
         expect(target.runAnimations).toBe(source.runAnimations);
         expect(target.minimumPixelSize).toBe(source.minimumPixelSize);
         expect(target.maximumScale).toBe(source.maximumScale);
-        expect(target.nodeTransformations).toBe(source.nodeTransformations);
+        expect(target.nodeTransformations).toEqual(source.nodeTransformations);
     });
 
     it('merge does not assign assigned properties', function() {
-        var node1Transforms = new ModelTransformProperty();
-        var node2Transforms = new ModelTransformProperty();
-
         var source = new ModelGraphics();
         source.uri = new ConstantProperty('');
         source.show = new ConstantProperty(true);
@@ -81,9 +99,9 @@ defineSuite([
         source.runAnimations = new ConstantProperty(true);
         source.minimumPixelSize = new ConstantProperty(2.0);
         source.maximumScale = new ConstantProperty(200.0);
-        source.nodeTransformations = new ConstantProperty({
-            transform : node1Transforms
-        });
+        source.nodeTransformations = {
+            transform : new NodeTransformationProperty()
+        };
 
         var uri = new ConstantProperty('');
         var show = new ConstantProperty(true);
@@ -91,8 +109,8 @@ defineSuite([
         var runAnimations = new ConstantProperty(true);
         var minimumPixelSize = new ConstantProperty(2.0);
         var maximumScale = new ConstantProperty(200.0);
-        var nodeTransformations = new ConstantProperty({
-            transform : node2Transforms
+        var nodeTransformations = new PropertyBag({
+            transform : new NodeTransformationProperty()
         });
 
         var target = new ModelGraphics();
@@ -124,8 +142,8 @@ defineSuite([
         source.minimumPixelSize = new ConstantProperty(2.0);
         source.maximumScale = new ConstantProperty(200.0);
         source.nodeTransformations = {
-            node1 : new ModelTransformProperty(),
-            node2 : new ModelTransformProperty()
+            node1 : new NodeTransformationProperty(),
+            node2 : new NodeTransformationProperty()
         };
 
         var result = source.clone();
@@ -135,7 +153,7 @@ defineSuite([
         expect(result.scale).toBe(source.scale);
         expect(result.minimumPixelSize).toBe(source.minimumPixelSize);
         expect(result.maximumScale).toBe(source.maximumScale);
-        expect(result.nodeTransformations).toBe(source.nodeTransformations);
+        expect(result.nodeTransformations).toEqual(source.nodeTransformations);
     });
 
     it('merge throws if source undefined', function() {

@@ -12,7 +12,7 @@ defineSuite([
         'DataSources/ConstantProperty',
         'DataSources/EntityCollection',
         'DataSources/ModelGraphics',
-        'DataSources/ModelTransformProperty',
+        'DataSources/NodeTransformationProperty',
         'Scene/Globe',
         'Specs/createScene',
         'Specs/pollToPromise'
@@ -29,7 +29,7 @@ defineSuite([
         ConstantProperty,
         EntityCollection,
         ModelGraphics,
-        ModelTransformProperty,
+        NodeTransformationProperty,
         Globe,
         createScene,
         pollToPromise) {
@@ -118,13 +118,13 @@ defineSuite([
         model.uri = new ConstantProperty(boxUrl);
 
         var scale = new Cartesian3(2.0, 2.0, 2.0);
-        var translate = new Cartesian3(1.0, 2.0, 3.0);
-        var rotate = new Quaternion(0.0, 0.707, 0.0, 0.707);
+        var translation = new Cartesian3(1.0, 2.0, 3.0);
+        var rotation = new Quaternion(0.0, 0.707, 0.0, 0.707);
         var nodeTransforms = {
-            Mesh : new ModelTransformProperty({
+            Mesh : new NodeTransformationProperty({
                 scale : new ConstantProperty(scale),
-                translate : new ConstantProperty(translate),
-                rotate : new ConstantProperty(rotate)
+                translation : new ConstantProperty(translation),
+                rotation : new ConstantProperty(rotation)
             })
         };
         model.nodeTransformations = nodeTransforms;
@@ -153,7 +153,7 @@ defineSuite([
             var node = primitive.getNode('Mesh');
             expect(node).toBeDefined();
 
-            var transformMtx = Matrix4.fromTranslationQuaternionRotationScale(translate, rotate, scale);
+            var transformMtx = Matrix4.fromTranslationQuaternionRotationScale(translation, rotation, scale);
             expect(node.matrix).toEqual(transformMtx);
         });
     });

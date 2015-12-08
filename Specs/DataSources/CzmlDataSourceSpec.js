@@ -20,6 +20,7 @@ defineSuite([
         'Core/RuntimeError',
         'Core/TimeInterval',
         'DataSources/EntityCollection',
+        'DataSources/NodeTransformation',
         'DataSources/ReferenceProperty',
         'Scene/HorizontalOrigin',
         'Scene/LabelStyle',
@@ -47,6 +48,7 @@ defineSuite([
         RuntimeError,
         TimeInterval,
         EntityCollection,
+        NodeTransformation,
         ReferenceProperty,
         HorizontalOrigin,
         LabelStyle,
@@ -1529,14 +1531,18 @@ defineSuite([
         expect(entity.model.minimumPixelSize.getValue(Iso8601.MINIMUM_VALUE)).toEqual(5.0);
         expect(entity.model.uri.getValue(Iso8601.MINIMUM_VALUE)).toEqual('./Data/Models/Box/CesiumBoxTest.gltf');
 
-        var meshTransform = entity.model.nodeTransformations.getValue(Iso8601.MINIMUM_VALUE).Mesh;
-        expect(meshTransform).toBeDefined();
-        expect(meshTransform.scale.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
-        expect(meshTransform.translate.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(4.0, 5.0, 6.0));
+        var nodeTransform = entity.model.nodeTransformations.getValue(Iso8601.MINIMUM_VALUE).Mesh;
+        expect(nodeTransform).toBeDefined();
+        expect(nodeTransform.scale).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+        expect(nodeTransform.translation).toEqual(new Cartesian3(4.0, 5.0, 6.0));
 
-        var expected = new Quaternion(0.0, 0.707, 0.0, 0.707);
-        Quaternion.normalize(expected, expected);
-        expect(meshTransform.rotate.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expected);
+        var expectedRotation = new Quaternion(0.0, 0.707, 0.0, 0.707);
+        Quaternion.normalize(expectedRotation, expectedRotation);
+        expect(nodeTransform.rotation).toEqual(expectedRotation);
+
+        expect(entity.model.nodeTransformations.Mesh.scale.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+        expect(entity.model.nodeTransformations.Mesh.translation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(4.0, 5.0, 6.0));
+        expect(entity.model.nodeTransformations.Mesh.rotation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedRotation);
     });
 
     it('CZML adds data for constrained model.', function() {
@@ -1577,19 +1583,29 @@ defineSuite([
         expect(entity.model.scale.getValue(validTime)).toEqual(3.0);
         expect(entity.model.minimumPixelSize.getValue(validTime)).toEqual(5.0);
         expect(entity.model.uri.getValue(validTime)).toEqual('./Data/Models/Box/CesiumBoxTest.gltf');
-        var meshTransform = entity.model.nodeTransformations.getValue(validTime).Mesh;
-        expect(meshTransform).toBeDefined();
-        expect(meshTransform.scale.getValue(validTime)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
-        expect(meshTransform.translate.getValue(validTime)).toEqual(new Cartesian3(4.0, 5.0, 6.0));
-        var expected = new Quaternion(0.0, 0.707, 0.0, 0.707);
-        Quaternion.normalize(expected, expected);
-        expect(meshTransform.rotate.getValue(validTime)).toEqual(expected);
+
+        var nodeTransform = entity.model.nodeTransformations.getValue(validTime).Mesh;
+        expect(nodeTransform).toBeDefined();
+        expect(nodeTransform.scale).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+        expect(nodeTransform.translation).toEqual(new Cartesian3(4.0, 5.0, 6.0));
+
+        var expectedRotation = new Quaternion(0.0, 0.707, 0.0, 0.707);
+        Quaternion.normalize(expectedRotation, expectedRotation);
+        expect(nodeTransform.rotation).toEqual(expectedRotation);
+
+        expect(entity.model.nodeTransformations.Mesh.scale.getValue(validTime)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+        expect(entity.model.nodeTransformations.Mesh.translation.getValue(validTime)).toEqual(new Cartesian3(4.0, 5.0, 6.0));
+        expect(entity.model.nodeTransformations.Mesh.rotation.getValue(validTime)).toEqual(expectedRotation);
 
         expect(entity.model.show.getValue(invalidTime)).toBeUndefined();
         expect(entity.model.scale.getValue(invalidTime)).toBeUndefined();
         expect(entity.model.minimumPixelSize.getValue(invalidTime)).toBeUndefined();
         expect(entity.model.uri.getValue(invalidTime)).toBeUndefined();
-        expect(entity.model.nodeTransformations.getValue(invalidTime)).toBeUndefined();
+
+        expect(entity.model.nodeTransformations.Mesh.getValue(invalidTime)).toEqual(new NodeTransformation());
+        expect(entity.model.nodeTransformations.Mesh.scale.getValue(invalidTime)).toBeUndefined();
+        expect(entity.model.nodeTransformations.Mesh.translation.getValue(invalidTime)).toBeUndefined();
+        expect(entity.model.nodeTransformations.Mesh.rotation.getValue(invalidTime)).toBeUndefined();
     });
 
     it('processCzml deletes an existing object.', function() {

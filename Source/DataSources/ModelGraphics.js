@@ -6,7 +6,8 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         './createPropertyDescriptor',
-        './createRawPropertyDescriptor'
+        './NodeTransformationProperty',
+        './PropertyBag'
     ], function(
         defaultValue,
         defined,
@@ -14,8 +15,17 @@ define([
         DeveloperError,
         Event,
         createPropertyDescriptor,
-        createRawPropertyDescriptor) {
+        NodeTransformationProperty,
+        PropertyBag) {
     "use strict";
+
+    function createNodeTransformationProperty(value) {
+        return new NodeTransformationProperty(value);
+    }
+
+    function createNodeTransformationPropertyBag(value) {
+        return new PropertyBag(value, createNodeTransformationProperty);
+    }
 
     /**
      * A 3D model based on {@link https://github.com/KhronosGroup/glTF|glTF}, the runtime asset format for WebGL, OpenGL ES, and OpenGL.
@@ -35,6 +45,7 @@ define([
      * @param {Property} [options.minimumPixelSize=0.0] A numeric Property specifying the approximate minimum pixel size of the model regardless of zoom.
      * @param {Property} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
      * @param {Property} [options.runAnimations=true] A boolean Property specifying if glTF animations specified in the model should be started.
+     * @param {Property} [options.nodeTransformations] An object, where keys are names of nodes, and values are {@link NodeTransformation} Properties describing the transformation to apply to that node.
      *
      * @see {@link http://cesiumjs.org/2014/03/03/Cesium-3D-Models-Tutorial/|3D Models Tutorial}
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
@@ -103,7 +114,7 @@ define([
 
         /**
          * Gets or sets the numeric Property specifying the maximum scale
-         * size of a model. This property is used as an upper limit for 
+         * size of a model. This property is used as an upper limit for
          * {@link ModelGraphics#minimumPixelSize}.
          * @memberof ModelGraphics.prototype
          * @type {Property}
@@ -126,11 +137,12 @@ define([
         runAnimations : createPropertyDescriptor('runAnimations'),
 
         /**
-         * Gets or sets the object Property specifying the 3D transformations to apply to glTF asset nodes.
+         * Gets or sets the set of node transformations to apply to this model.  This is represented as an {@link PropertyBag}, where keys are
+         * names of nodes, and values are {@link NodeTransformation} Properties describing the transformation to apply to that node.
          * @memberof ModelGraphics.prototype
-         * @type {Property}
+         * @type {PropertyBag}
          */
-        nodeTransformations : createPropertyDescriptor('nodeTransformations')
+        nodeTransformations : createPropertyDescriptor('nodeTransformations', undefined, createNodeTransformationPropertyBag)
     });
 
     /**
@@ -173,7 +185,16 @@ define([
         this.maximumScale = defaultValue(this.maximumScale, source.maximumScale);
         this.uri = defaultValue(this.uri, source.uri);
         this.runAnimations = defaultValue(this.runAnimations, source.runAnimations);
-        this.nodeTransformations = defaultValue(this.nodeTransformations, source.nodeTransformations);
+
+        var sourceNodeTransformations = source.nodeTransformations;
+        if (defined(sourceNodeTransformations)) {
+            var targetNodeTransformations = this.nodeTransformations;
+            if (defined(targetNodeTransformations)) {
+                targetNodeTransformations.merge(sourceNodeTransformations);
+            } else {
+                this.nodeTransformations = new PropertyBag(sourceNodeTransformations, createNodeTransformationProperty);
+            }
+        }
     };
 
     return ModelGraphics;
