@@ -319,7 +319,7 @@ define([
         /**
          * Gets the names of all properties registered on this instance.
          * @memberof Entity.prototype
-         * @type {Event}
+         * @type {Array}
          */
         propertyNames : {
             get : function() {
