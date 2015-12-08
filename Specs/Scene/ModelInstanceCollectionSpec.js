@@ -156,7 +156,7 @@ defineSuite([
         camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, 10.0));
     }
 
-    function verifyRender(collection, expectColor, time) {
+    function expectRender(collection, expectColor, time) {
         expectColor = defaultValue(expectColor, true);
 
         collection.show = false;
@@ -214,7 +214,7 @@ defineSuite([
             url : boxUrl,
             instances : createInstances(4)
         }).then(function(collection) {
-            verifyRender(collection);
+            expectRender(collection);
         });
     });
 
@@ -223,7 +223,7 @@ defineSuite([
             gltf : boxGltf,
             instances : createInstances(4)
         }).then(function(collection) {
-            verifyRender(collection);
+            expectRender(collection);
         });
     });
 
@@ -262,7 +262,7 @@ defineSuite([
             gltf : boxGltf,
             instances : createInstances(1)
         }).then(function(collection) {
-            verifyRender(collection);
+            expectRender(collection);
         });
     });
 
@@ -274,7 +274,7 @@ defineSuite([
 
         // Collection never reaches the ready state due to returning early
         for (var i = 0; i < 10; ++i) {
-            verifyRender(collection, false);
+            expectRender(collection, false);
             expect(collection.ready).toBe(false);
         }
     });
@@ -284,7 +284,7 @@ defineSuite([
             gltf : boxGltf,
             instances : createInstances(100)
         }).then(function(collection) {
-            verifyRender(collection);
+            expectRender(collection);
         });
     });
 
@@ -293,7 +293,7 @@ defineSuite([
             gltf : cesiumAirGltf,
             instances : createInstances(4)
         }).then(function(collection) {
-            verifyRender(collection);
+            expectRender(collection);
         });
     });
 
@@ -302,7 +302,7 @@ defineSuite([
             gltf : riggedFigureGltf,
             instances : createInstances(4)
         }).then(function(collection) {
-            verifyRender(collection);
+            expectRender(collection);
         });
     });
 
@@ -315,7 +315,7 @@ defineSuite([
             gltf : boxGltf,
             instances : createInstances(4)
         }).then(function(collection) {
-            verifyRender(collection);
+            expectRender(collection);
             // Re-enable extension
             scene.context._instancedArrays = instancedArrays;
         });
@@ -327,7 +327,7 @@ defineSuite([
             instances : createInstances(4),
             dynamic : true
         }).then(function(collection) {
-            verifyRender(collection);
+            expectRender(collection);
         });
     });
 
@@ -349,7 +349,7 @@ defineSuite([
             instances : createInstances(4)
         }).then(function(collection) {
             collection.debugShowBoundingVolume = true;
-            verifyRender(collection);
+            expectRender(collection);
         });
     });
 
@@ -375,11 +375,11 @@ defineSuite([
 
             // Render when animation is in view
             var time = JulianDate.now();
-            verifyRender(collection, true, time);
+            expectRender(collection, true, time);
 
             // Render when animation is out of view
             time = JulianDate.addSeconds(time, 0.1, new JulianDate());
-            verifyRender(collection, false, time);
+            expectRender(collection, false, time);
         });
     });
 
@@ -398,11 +398,11 @@ defineSuite([
 
             // Render when animation is in view
             var time = JulianDate.now();
-            verifyRender(collection, true, time);
+            expectRender(collection, true, time);
 
             // Render when animation is out of view
             time = JulianDate.addSeconds(time, 0.1, new JulianDate());
-            verifyRender(collection, false, time);
+            expectRender(collection, false, time);
 
             // Re-enable extension
             scene.context._instancedArrays = instancedArrays;
@@ -414,9 +414,9 @@ defineSuite([
             gltf : boxGltf,
             instances : createInstances(4)
         }).then(function(collection) {
-            verifyRender(collection);
+            expectRender(collection);
             scene.mode = SceneMode.SCENE2D;
-            verifyRender(collection, false);
+            expectRender(collection, false);
             scene.mode = SceneMode.SCENE3D;
         });
     });
@@ -446,9 +446,9 @@ defineSuite([
 
             expect(collections[0]._model.cacheKey).toEqual(collections[1]._model.cacheKey);
             zoomTo(collections[0], 0);
-            verifyRender(collections[0]);
+            expectRender(collections[0]);
             zoomTo(collections[1], 0);
-            verifyRender(collections[1]);
+            expectRender(collections[1]);
 
             // Check that buffers are equal
             for (name in resourcesFirst.buffers) {
