@@ -403,4 +403,5 @@ defineSuite([
             expect(resources.isDestroyed()).toEqual(true);
         });
     });
-});
+
+}, 'WebGL');

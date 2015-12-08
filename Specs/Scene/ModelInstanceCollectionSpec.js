@@ -511,4 +511,5 @@ defineSuite([
             expect(collection.isDestroyed()).toEqual(true);
         });
     });
-});
+
+}, 'WebGL');
