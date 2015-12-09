@@ -6,6 +6,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         './createPropertyDescriptor',
+        './ConstantProperty',
         './Property'
     ], function(
         defaultValue,
@@ -14,6 +15,7 @@ define([
         DeveloperError,
         Event,
         createPropertyDescriptor,
+        ConstantProperty,
         Property) {
     "use strict";
 
@@ -92,8 +94,8 @@ define([
         return this._propertyNames.indexOf(propertyName) !== -1;
     };
 
-    function createRawProperty(value) {
-        return value;
+    function createConstantProperty(value) {
+        return new ConstantProperty(value);
     }
 
     /**
@@ -118,7 +120,7 @@ define([
         //>>includeEnd('debug');
 
         propertyNames.push(propertyName);
-        Object.defineProperty(this, propertyName, createPropertyDescriptor(propertyName, true, defaultValue(createPropertyCallback, createRawProperty)));
+        Object.defineProperty(this, propertyName, createPropertyDescriptor(propertyName, true, defaultValue(createPropertyCallback, createConstantProperty)));
 
         if (defined(value)) {
             this[propertyName] = value;
