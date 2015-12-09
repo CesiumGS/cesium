@@ -35,11 +35,11 @@ You'll give a different talk to a group of researchers than to a group of develo
 
 ## Provide Context
 
-Chances are that your topic is second nature to you; you work on it all day.
+Your topic is probably second nature to you; you work on it all day.
 
 Your audience does not.
 
-Things that are obvious to you are often not obvious to your audience.
+Things that are obvious to you are often not obvious to them.
 
 Focus less on details, and instead **focus on providing context**, especially at the start of your talk.  Otherwise, you will loose the audience the moment they [can't see the forest for the trees](http://www.urbandictionary.com/define.php?term=can%27t+see+the+forest+for+the+trees).
 
@@ -71,17 +71,15 @@ Good writing uses short paragraphs so the reader feels like they are constantly 
 
 Good presenters do the same.  **Don't spend too much time on any one slide**; the audience will tune you out.  Break uber slides into multiple slides.
 
-Think of each slide and the entire presentation as a one-page resume; a resume is only one-page so it highlights your best work, instead of letting your best work get lost in the noise of all your work.
+Think of each slide and the entire presentation as a one-page resume; a resume is only one-page so it highlights your best work.  A longer resume lets your best work get lost in the noise of all your work.
 
 ## Inspire.  Don't Teach
 
-Novice presenters often think they need to go really deep into the material.  This is wrong for almost all talks.
+Novice presenters often think they need to go really deep into the material.  This is wrong for nearly all talks.
 
 Even a presentation for a research paper includes far less detail than the paper; _it is a pitch to read the paper_.
 
 **Too much detail will overwhelm your audience** and likely put you in a time crunch.  Instead, provide enough [context and detail](#provide-context) to inspire the audience to take your [call to action](#finish-with-a-call-to-action).
-
-_TODO: links above_
 
 ## Show.  Don't Tell
 
@@ -99,11 +97,11 @@ Ask them.  But do not ask them to do too many things.  **What is the one most im
 
 ## Practice
 
-A novice speaker will significantly benefit from multiple dry runs.
+A novice speaker will benefit significantly from multiple dry runs.
 
 First, ask your colleagues for feedback on your slides.
 
-Then, organize a _timed_ dry run.  Invite your colleagues and ask them to take to take notes and provide feedback.
+Then, organize a _timed_ dry run.  Invite your colleagues and ask them to take notes and provide feedback.
 
 Then iterate with multiple dry runs until you are satisfied or run out of time.
 
@@ -115,7 +113,7 @@ Present on your own laptop whenever possible.
 
 Ask in advance about the projector connections and Internet access.  Bring adapters, not everyone has HDMI.
 
-Ask for a time when you can test the projector, perhaps before the morning session or during a break.
+Ask for a time when you can test the projector, for a conference, perhaps this is before the morning session or during a break.
 
 ## Engage the Audience
 
@@ -131,33 +129,23 @@ Ask "who has the first question", not "are there any questions."
 
 ## Be Passionate
 
-Give talks on topics you are passionate about.  **Be excited.**  Your passion will naturally show through and will help inspire your audience.
+Give talks on topics you are passionate about.  **Be excited.**  Your passion will naturally show through and will inspire your audience.
 
-The first time you give a talk is often the best because the material is fresh (see the [second-lecture effect](http://blog.virtualglobebook.com/2012/07/reflections-on-teaching-gpu-programming.html)).
+The first time you give a talk is often the best because the material is fresh to you.
 
-To delivery the same talk well a second time, it is important to spend the time to review and update the material so you are not presenting cold and recalling what to say once you see the slide.
+To deliver the same talk well a second time, it is important to spend the time to review and update the material so you are not presenting cold and recalling what to say on the fly.
 
-Once you've spoke about a topic many times, it may be time to give someone else a chance to present.
+Once you've spoke about a topic many times, it may be time to encourage someone else to take the lead.
 
 ## You are the Expert
 
-In almost all talks you give, you will be the expert on the topic in the room, even if you don't think you are.  You prepared the talk.  You presumably have some experience with the topic even if you are not the originator of the work (this is common in grad school where students present recently published research papers).
+In almost all talks you give, you will be the expert on the topic in the room, even if you don't think you are.  You prepared the talk.  You have some experience with the topic even if you are not the originator of the work (this is common in grad school where students present recently published research papers).
 
 **Be confident**.
 
 But don't be arrogant.
 
-Don't worry about failing.
-
-@pjcozzi says:
-
-> If you include teaching, I have given hundreds of talks and nothing remotely terrible has happened.  Cesium has [crashed in front of a 100 people](http://confreaks.tv/videos/jsgeo2014-creating-3d-web-maps-with-cesium).  Laugh it off (we then promptly fixed the bug).
->
-> I've prepared a technical talk for a non-technical audience.  No problem, skip the details, focus on the context, and know the audience better next time.
->
-> _TODO: link above_
->
-> I've prepared a talk of demos and backup videos, and had to present on a machine that supported neither.  No problem, use backup slides and insist on presenting on your own laptop next time.
+Don't worry about failing.  You won't.
 
 ## Present with a Partner
 
@@ -166,9 +154,3 @@ When presenting with a partner, strive to make it like a conversation.  For a gr
 ## Resources
 
 [10 tips for academic talks](http://matt.might.net/articles/academic-presentation-tips/) by Matt Might applies equally well to Cesium talks.
-
----
-
-**TODO**
-
-* [ ] More examples from actual talks (review them for ideas)
