@@ -115,13 +115,33 @@ define([
      * @private
      */
     Property.getValueOrUndefined = function(property, time, result) {
-        return defined(property) ? property.getValue(time, result) : undefined;
+        var value = defined(property) ? property.getValue(time, result) : undefined;
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(time)) {
+            throw new DeveloperError('time is required.');
+        }
+        if (typeof value === 'object' && !defined(result)) {
+            throw new DeveloperError('result is required when value is an object.');
+        }
+        //>>includeEnd('debug');
+        return value;
     };
 
     /**
      * @private
      */
     Property.getValueOrDefault = function(property, time, valueDefault, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(time)) {
+            throw new DeveloperError('time is required.');
+        }
+        if (!defined(valueDefault)) {
+            throw new DeveloperError('valueDefault is required.');
+        }
+        if (typeof valueDefault === 'object' && !defined(result)) {
+            throw new DeveloperError('result is required when value is an object.');
+        }
+        //>>includeEnd('debug');
         return defined(property) ? defaultValue(property.getValue(time, result), valueDefault) : valueDefault;
     };
 
@@ -129,12 +149,24 @@ define([
      * @private
      */
     Property.getValueOrClonedDefault = function(property, time, valueDefault, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(time)) {
+            throw new DeveloperError('time is required.');
+        }
+        if (!defined(valueDefault)) {
+            throw new DeveloperError('valueDefault is required.');
+        }
+        if (typeof valueDefault === 'object' && !defined(result)) {
+            throw new DeveloperError('result is required when value is an object.');
+        }
+        //>>includeEnd('debug');
+
         var value;
         if (defined(property)) {
             value = property.getValue(time, result);
         }
         if (!defined(value)) {
-            value = valueDefault.clone(value);
+            value = valueDefault.clone(result);
         }
         return value;
     };
