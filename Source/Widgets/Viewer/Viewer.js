@@ -438,6 +438,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         var sceneModePicker;
         if (!scene3DOnly && (!defined(options.sceneModePicker) || options.sceneModePicker !== false)) {
+            eventHelper.add(cesiumWidget.scene.morphStart, Viewer.prototype._clearTrackedObject, this);
             sceneModePicker = new SceneModePicker(toolbar, cesiumWidget.scene);
         }
 
