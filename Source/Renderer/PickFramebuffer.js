@@ -70,6 +70,9 @@ define([
             this._passState.framebuffer = this._fb;
         }
 
+        this._passState.viewport.width = width;
+        this._passState.viewport.height = height;
+
         return this._passState;
     };
 

@@ -1,5 +1,5 @@
 /*global define*/
-define(function() {
+define(['../Core/BoundingRectangle'], function(BoundingRectangle) {
     "use strict";
 
     /**
@@ -50,7 +50,7 @@ define(function() {
          */
         this.scissorTest = undefined;
 
-        this.viewport = undefined;
+        this.viewport = new BoundingRectangle();
     };
 
     return PassState;

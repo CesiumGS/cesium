@@ -218,6 +218,11 @@ define([
         this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
 
         this._passState = new PassState(context);
+        this._passState.viewport.x = 0;
+        this._passState.viewport.y = 0;
+        this._passState.viewport.width = context.drawingBufferWidth;
+        this._passState.viewport.height = context.drawingBufferHeight;
+
         this._canvas = canvas;
         this._context = context;
         this._computeEngine = new ComputeEngine(context);
@@ -1760,7 +1765,11 @@ define([
         passState.framebuffer = undefined;
         passState.blendingEnabled = undefined;
         passState.scissorTest = undefined;
-        passState.viewport = new BoundingRectangle(0, 0, context.drawingBufferWidth, context.drawingBufferHeight);
+
+        passState.viewport.x = 0;
+        passState.viewport.y = 0;
+        passState.viewport.width = context.drawingBufferWidth;
+        passState.viewport.height = context.drawingBufferHeight;
 
         executeComputeCommands(scene);
         executeCommands(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
