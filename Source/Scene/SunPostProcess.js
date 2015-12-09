@@ -106,6 +106,7 @@ define([
         this._blendCommand.execute(context, this._upSamplePassState);
     };
 
+    var viewportBoundingRectangle  = new BoundingRectangle();
     var downSampleViewportBoundingRectangle = new BoundingRectangle();
     var sunPositionECScratch = new Cartesian4();
     var sunPositionWCScratch = new Cartesian2();
@@ -115,8 +116,8 @@ define([
     SunPostProcess.prototype.update = function(passState) {
         var context = passState.context;
         var viewport = passState.viewport;
-        var width = viewport.width;
-        var height = viewport.height;
+        var width = context.drawingBufferWidth;
+        var height = context.drawingBufferHeight;
 
         var that = this;
 
@@ -285,9 +286,6 @@ define([
             var downSampleRenderState = RenderState.fromCache({
                 viewport : downSampleViewport
             });
-            var upSampleRenderState = RenderState.fromCache({
-                viewport : viewport
-            });
 
             this._downSampleCommand.uniformMap.u_texture = function() {
                 return fbo.getColorTexture(0);
@@ -314,6 +312,12 @@ define([
                 return that._blurStep;
             };
             this._blurYCommand.renderState = downSampleRenderState;
+
+            var upSampledViewport = viewportBoundingRectangle;
+            upSampledViewport.width = width;
+            upSampledViewport.height = height;
+
+            var upSampleRenderState = RenderState.fromCache({ viewport : upSampledViewport });
 
             this._blendCommand.uniformMap.u_texture0 = function() {
                 return fbo.getColorTexture(0);

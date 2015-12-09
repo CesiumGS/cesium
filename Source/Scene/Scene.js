@@ -1823,12 +1823,10 @@ define([
         var camera = scene._camera;
         var frustum = camera.frustum;
 
-        var drawingBufferWidth = scene.drawingBufferWidth;
-        var drawingBufferHeight = scene.drawingBufferHeight;
-
-        var x = (2.0 / drawingBufferWidth) * drawingBufferPosition.x - 1.0;
+        var viewport = scene._passState.viewport;
+        var x = 2.0 * (drawingBufferPosition.x - viewport.x) / viewport.width - 1.0;
         x *= (frustum.right - frustum.left) * 0.5;
-        var y = (2.0 / drawingBufferHeight) * (drawingBufferHeight - drawingBufferPosition.y) - 1.0;
+        var y = 2.0 * (viewport.height - drawingBufferPosition.y - viewport.y) / viewport.height - 1.0;
         y *= (frustum.top - frustum.bottom) * 0.5;
 
         var transform = Matrix4.clone(camera.transform, scratchPickVolumeMatrix4);
@@ -1844,7 +1842,7 @@ define([
 
         Cartesian3.fromElements(origin.z, origin.x, origin.y, origin);
 
-        var pixelSize = frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, 1.0, scratchPixelSize);
+        var pixelSize = frustum.getPixelDimensions(viewport.width, viewport.height, 1.0, scratchPixelSize);
 
         var ortho = orthoPickingFrustum;
         ortho.right = pixelSize.x * 0.5;
@@ -1864,19 +1862,17 @@ define([
         var frustum = camera.frustum;
         var near = frustum.near;
 
-        var drawingBufferWidth = scene.drawingBufferWidth;
-        var drawingBufferHeight = scene.drawingBufferHeight;
-
         var tanPhi = Math.tan(frustum.fovy * 0.5);
         var tanTheta = frustum.aspectRatio * tanPhi;
 
-        var x = (2.0 / drawingBufferWidth) * drawingBufferPosition.x - 1.0;
-        var y = (2.0 / drawingBufferHeight) * (drawingBufferHeight - drawingBufferPosition.y) - 1.0;
+        var viewport = scene._passState.viewport;
+        var x = 2.0 * (drawingBufferPosition.x - viewport.x) / viewport.width - 1.0;
+        var y = 2.0 * (viewport.height - drawingBufferPosition.y - viewport.y) / viewport.height - 1.0;
 
         var xDir = x * near * tanTheta;
         var yDir = y * near * tanPhi;
 
-        var pixelSize = frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, 1.0, scratchPixelSize);
+        var pixelSize = frustum.getPixelDimensions(viewport.width, viewport.height, 1.0, scratchPixelSize);
         var pickWidth = pixelSize.x * width * 0.5;
         var pickHeight = pixelSize.y * height * 0.5;
 
