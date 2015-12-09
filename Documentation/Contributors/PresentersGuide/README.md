@@ -2,7 +2,22 @@
 
 The Cesium team gives a lot of [talks](http://cesiumjs.org/publications.html).  Here's some tips for delivering a great talk based on our experience.
 
-_TODO: TOC_
+* [Invest Time Preparing](#invest-time-preparing)
+* [Know the Audience](#know-the-audience)
+* [Provide Context](#provide-context)
+* [Tell a Story](#tell-a-story)
+* [You're Not Too Short on Time](#youre-not-too-short-on-time)
+* [Use "Short" Slides](#use-short-slides)
+* [Inspire. Don't Teach](#inspire--dont-teach)
+* [Show. Don't Tell](show--dont-tell)
+* [Finish With a Call to Action](#finish-with-a-call-to-action)
+* [Practice](#practice)
+* [Test the Projector](#test-the-projector)
+* [Engage the Audience](#engage-the-audience)
+* [Be Passionate](#be-passionate)
+* [You are the Expert](#you-are-the-expert)
+* [Present with a Partner](#present-with-a-partner)
+* [Resources](#resources)
 
 ## Invest Time Preparing
 
@@ -68,7 +83,7 @@ Even a presentation for a research paper includes far less detail than the paper
 
 _TODO: links above_
 
-## Show.  Don't Tell.
+## Show.  Don't Tell
 
 **A slide with too many words overwhelms the audience**.  The audience may try to read it and tune you out in the process - or they may just feel that this part of the talk is too much work to take in, and tune everything out.
 
@@ -156,5 +171,4 @@ When presenting with a partner, strive to make it like a conversation.  For a gr
 
 **TODO**
 
-* [ ] TOC
 * [ ] More examples from actual talks (review them for ideas)
