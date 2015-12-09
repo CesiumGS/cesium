@@ -15,6 +15,7 @@ Change Log
     * Removed `TerrainMesh` from the public API. It is now private and subject to change without notice.
     * Removed `jsonp`. Use `loadJsonp` instead.
 * Reduced the amount of both GPU and CPU memory used by terrain. The CPU memory was reduced by up to 40%.
+* Bug fix for `CorridorGeometry` with nearly colinear points [#3320](https://github.com/AnalyticalGraphicsInc/cesium/issues/3320)
 
 ### 1.16 - 2015-12-01
 
