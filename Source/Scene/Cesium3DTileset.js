@@ -405,10 +405,12 @@ define([
         }
 
         if (root.isContentUnloaded()) {
-            if (root.hasTilesetContent) {
-                selectTileWithTilesetContent(tiles3D, selectedTiles, root, fullyVisible, frameState, false);
-            } else if (outOfCore) {
-                requestContent(tiles3D, root);
+            if (outOfCore) {
+                if (root.hasTilesetContent) {
+                    selectTileWithTilesetContent(tiles3D, selectedTiles, root, fullyVisible, frameState, true);
+                } else {
+                    requestContent(tiles3D, root);
+                }
             }
             return;
         }
