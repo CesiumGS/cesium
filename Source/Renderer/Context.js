@@ -357,6 +357,9 @@ define([
         var ps = new PassState(this);
         var rs = RenderState.fromCache();
 
+        // default to the whole drawing buffer
+        ps.viewport = undefined;
+
         this._defaultPassState = ps;
         this._defaultRenderState = rs;
         this._defaultTexture = undefined;
