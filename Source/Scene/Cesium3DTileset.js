@@ -13,7 +13,6 @@ define([
         '../ThirdParty/when',
         './Cesium3DTile',
         './Cesium3DTileRefine',
-        './Cesium3DTileContentState',
         './CullingVolume',
         './SceneMode'
     ], function(
@@ -30,7 +29,6 @@ define([
         when,
         Cesium3DTile,
         Cesium3DTileRefine,
-        Cesium3DTileContentState,
         CullingVolume,
         SceneMode) {
     "use strict";
@@ -151,60 +149,16 @@ define([
         var that = this;
 
         var tilesJson = url + 'tiles.json';
-        loadTilesJson(this, tilesJson, undefined, function(data) {
+        this.loadTilesJson(tilesJson, undefined).then(function(data) {
             var tree = data.tree;
             that._properties = tree.properties;
             that._geometricError = tree.geometricError;
             that._root = data.root;
             that._readyPromise.resolve(that);
+        }).otherwise(function(error) {
+            that._readyPromise.reject(error);
         });
     };
-
-    function loadTilesJson(tileset, tilesJson, parentTile, done) {
-        loadJson(tilesJson).then(function(tree) {
-            var baseUrl = tileset.url;
-            var rootTile = new Cesium3DTile(tileset, baseUrl, tree.root, parentTile);
-
-            // If there is a parentTile, add the root of the currently loading
-            // tileset to parentTile's children, and increment its numberOfChildrenWithoutContent
-            // with 1
-            if (defined(parentTile)) {
-                parentTile.children.push(rootTile);
-                ++parentTile.numberOfChildrenWithoutContent;
-            }
-
-            var stack = [];
-            stack.push({
-                header : tree.root,
-                cesium3DTile : rootTile
-            });
-
-            while (stack.length > 0) {
-                var t = stack.pop();
-                var children = t.header.children;
-                if (defined(children)) {
-                    var length = children.length;
-                    for (var k = 0; k < length; ++k) {
-                        var childHeader = children[k];
-                        var childTile = new Cesium3DTile(tileset, baseUrl, childHeader, t.cesium3DTile);
-                        t.cesium3DTile.children.push(childTile);
-
-                        stack.push({
-                            header : childHeader,
-                            cesium3DTile : childTile
-                        });
-                    }
-                }
-            }
-
-            done({
-                tree : tree,
-                root : rootTile
-            });
-        }).otherwise(function(error) {
-            tileset._readyPromise.reject(error);
-        });
-    }
 
     defineProperties(Cesium3DTileset.prototype, {
         /**
@@ -272,6 +226,50 @@ define([
         }
     });
 
+    Cesium3DTileset.prototype.loadTilesJson = function(tilesJson, parentTile) {
+        var tileset = this;
+        return loadJson(tilesJson).then(function(tree) {
+            var baseUrl = tileset.url;
+            var rootTile = new Cesium3DTile(tileset, baseUrl, tree.root, parentTile);
+
+            // If there is a parentTile, add the root of the currently loading tileset
+            // to parentTile's children, and increment its numberOfChildrenWithoutContent
+            if (defined(parentTile)) {
+                parentTile.children.push(rootTile);
+                ++parentTile.numberOfChildrenWithoutContent;
+            }
+
+            var stack = [];
+            stack.push({
+                header : tree.root,
+                cesium3DTile : rootTile
+            });
+
+            while (stack.length > 0) {
+                var t = stack.pop();
+                var children = t.header.children;
+                if (defined(children)) {
+                    var length = children.length;
+                    for (var k = 0; k < length; ++k) {
+                        var childHeader = children[k];
+                        var childTile = new Cesium3DTile(tileset, baseUrl, childHeader, t.cesium3DTile);
+                        t.cesium3DTile.children.push(childTile);
+
+                        stack.push({
+                            header : childHeader,
+                            cesium3DTile : childTile
+                        });
+                    }
+                }
+            }
+
+            return {
+                tree : tree,
+                root : rootTile
+            };
+        });
+    };
+
     function getScreenSpaceError(geometricError, tile, frameState) {
         // TODO: screenSpaceError2D like QuadtreePrimitive.js
         if (geometricError === 0.0) {
@@ -327,50 +325,10 @@ define([
         addLoadProgressEvent(tiles3D);
 
         tile.requestContent();
+
         var removeFunction = removeFromProcessingQueue(tiles3D, tile);
         when(tile.processingPromise).then(addToProcessingQueue(tiles3D, tile)).otherwise(endRequest(tiles3D, tile));
         when(tile.readyPromise).then(removeFunction).otherwise(removeFunction);
-    }
-
-    function selectTileWithTilesetContent(tiles3D, selectedTiles, tile, fullyVisible, frameState, additiveRefinment) {
-        // 1) If its children are not loaded, load the subtree it points to and then select its root child
-        // 2) If its children are already loaded, select its (root) child since the geometric error of it is
-        //    same as this tile's
-
-        // If the subtree has already been added and child
-        // content requested, select the child (= the root) and continue
-        if ((tile.isReady()) &&
-            (tile.numberOfChildrenWithoutContent === 0)) {
-            // A tiles.json must specify exactly one tile, ie a root
-            var root = tile.children[0];
-            if (root.hasTilesetContent) {
-                selectTileWithTilesetContent(tiles3D, selectedTiles, root, fullyVisible, frameState, additiveRefinment);
-            } else {
-                if (root.isContentUnloaded()) {
-                    requestContent(tiles3D, root);
-                } else if (root.isReady()){
-                    selectTile(selectedTiles, root, fullyVisible, frameState);
-                }
-            }
-            return;
-        } else if (!additiveRefinment) {
-            // Otherwise, for replacement refinment, select the parent tile to avoid
-            // showing an empty space while waiting for tile to load
-            if (defined(tile.parent)) {
-                selectTile(selectedTiles, tile.parent, fullyVisible, frameState);
-            }
-        }
-
-        // Request the tile's tileset if it's unloaded.
-        // In the case of tileset content tiles, their state must be explicitly set
-        if (tile.isContentUnloaded()) {
-            tile.content.state = Cesium3DTileContentState.LOADING;
-            var contentUrl = tile._header.content.url;
-            var tilesUrl = (new Uri(contentUrl).isAbsolute()) ? contentUrl : tiles3D._url + contentUrl;
-            loadTilesJson(tiles3D, tilesUrl, tile, function() {
-                tile.content.state = Cesium3DTileContentState.READY;
-            });
-        }
     }
 
     function selectTile(selectedTiles, tile, fullyVisible, frameState) {
@@ -406,11 +364,7 @@ define([
 
         if (root.isContentUnloaded()) {
             if (outOfCore) {
-                if (root.hasTilesetContent) {
-                    selectTileWithTilesetContent(tiles3D, selectedTiles, root, fullyVisible, frameState, true);
-                } else {
-                    requestContent(tiles3D, root);
-                }
+                requestContent(tiles3D, root);
             }
             return;
         }
@@ -442,26 +396,26 @@ define([
             var k;
             var additiveRefinment = (t.refine === Cesium3DTileRefine.ADD);
 
+
+            if (t.hasTilesetContent && t.isReady()) {
+                // If tile has tileset content, skip it and process its child instead (the tileset root)
+                child = t.children[0];
+                if (child.isContentUnloaded() && outOfCore) {
+                    requestContent(tiles3D, child);
+                } else {
+                    stack.push(child);
+                }
+                continue;
+            }
+
             if (additiveRefinment) {
                 // With additive refinement, the tile is rendered
                 // regardless of if its SSE is sufficient.
-
-                if (!t.hasTilesetContent) {
-                    selectTile(selectedTiles, t, fullyVisible, frameState);
-                } else {
-                    // Check if the tile contains another tileset. If so:
-                    //   1) If its children are not loaded, load the tileset it points to
-                    //      and concatenate with this tileset.
-                    //   2) If its children are already loaded, select its (root) child
-                    //      since the geometric error of it is same as this tile's.
-                    if (sse <= maximumScreenSpaceError) {
-                        selectTileWithTilesetContent(tiles3D, selectedTiles, t, fullyVisible, frameState, additiveRefinment);
-                    }
-                }
+                selectTile(selectedTiles, t, fullyVisible, frameState);
 
 // TODO: experiment with prefetching children
                 if (sse > maximumScreenSpaceError) {
-                    // Tile does not meet SSE. Refine to them in front-to-back order.
+                    // Tile does not meet SSE. Refine them in front-to-back order.
 
                     // Only sort and refine (render or request children) if any
                     // children are loaded or request slots are available.
@@ -502,15 +456,8 @@ define([
 
                 if ((sse <= maximumScreenSpaceError) || (childrenLength === 0)) {
                     // This tile meets the SSE so add its commands.
-                    //
-                    // Select tile if it's a leaf (childrenLength === 0) and
-                    // does not have tileset content.
-                    // If the tile has tileset content, handle that tile separately.
-                    if (!t.hasTilesetContent) {
-                        selectTile(selectedTiles, t, fullyVisible, frameState);
-                    } else {
-                        selectTileWithTilesetContent(tiles3D, selectedTiles, t, fullyVisible, frameState, additiveRefinment);
-                    }
+                    // Select tile if it's a leaf (childrenLength === 0)
+                    selectTile(selectedTiles, t, fullyVisible, frameState);
                 } else {
                     // Tile does not meet SSE.
 
@@ -518,6 +465,7 @@ define([
                     // or slots are available to request them.  If we are just rendering the
                     // tile (and can't make child requests because no slots are available)
                     // then the children do not need to be sorted.
+
                     var allChildrenLoaded = t.numberOfChildrenWithoutContent === 0;
                     if (allChildrenLoaded || requestScheduler.hasAvailableRequests()) {
                         // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
@@ -530,11 +478,7 @@ define([
 
                     if (!allChildrenLoaded) {
                         // Tile does not meet SSE.  Add its commands since it is the best we have and request its children.
-                        if (!t.hasTilesetContent) {
-                            selectTile(selectedTiles, t, fullyVisible, frameState);
-                        } else {
-                            selectTileWithTilesetContent(tiles3D, selectedTiles, t, fullyVisible, frameState, additiveRefinment);
-                        }
+                        selectTile(selectedTiles, t, fullyVisible, frameState);
 
                         if (outOfCore) {
                             for (k = 0; (k < childrenLength) && requestScheduler.hasAvailableRequests(); ++k) {
