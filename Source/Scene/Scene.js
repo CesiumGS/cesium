@@ -531,6 +531,22 @@ define([
         this._cameraClone = Camera.clone(camera);
         this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
 
+        // Keeps track of the state of a frame. FrameState is the state across
+        // the primitives of the scene. This state is for internally keeping track
+        // of celestial and environment effects that need to be updated/rendered in
+        // a certain order as well as updating/tracking framebuffer usage.
+        this._state = {
+            skyBoxCommand : undefined,
+            skyAtmosphereCommand : undefined,
+            sunDrawCommand : undefined,
+            sunComputeCommand : undefined,
+            moonCommand : undefined,
+
+            isSunVisible : false,
+            isMoonVisible : false,
+            isSkyAtmosphereVisible : false
+        };
+
         // initial guess at frustums.
         var near = camera.frustum.near;
         var far = camera.frustum.far;
@@ -1067,17 +1083,23 @@ define([
     var scratchCullingVolume = new CullingVolume();
     var distances = new Interval();
 
+    function isVisible(command, cullingVolume, occluder) {
+        return ((defined(command)) &&
+                ((!defined(command.boundingVolume)) ||
+                 !command.cull ||
+                 ((cullingVolume.computeVisibility(command.boundingVolume) !== Intersect.OUTSIDE) &&
+                  (!defined(occluder) || !command.boundingVolume.isOccluded(occluder)))));
+    }
+
     function createPotentiallyVisibleSet(scene) {
-        var computeList = scene._computeCommandList;
-        var overlayList = scene._overlayCommandList;
-
-        var commandList = scene._frameState.commandList;
-
-        var cullingVolume = scene._frameState.cullingVolume;
-        var camera = scene._camera;
-
+        var frameState = scene._frameState;
+        var camera = frameState.camera;
         var direction = camera.directionWC;
         var position = camera.positionWC;
+
+        var computeList = scene._computeCommandList;
+        var overlayList = scene._overlayCommandList;
+        var commandList = frameState.commandList;
 
         if (scene.debugShowFrustums) {
             scene._debugFrustumStatistics = {
@@ -1102,17 +1124,20 @@ define([
         var far = Number.MIN_VALUE;
         var undefBV = false;
 
-        var occluder;
-        if (scene._frameState.mode === SceneMode.SCENE3D) {
-            occluder = scene._frameState.occluder;
-        }
+        var occluder = (frameState.mode === SceneMode.SCENE3D) ? frameState.occluder: undefined;
+        var cullingVolume = frameState.cullingVolume;
 
         // get user culling volume minus the far plane.
         var planes = scratchCullingVolume.planes;
-        for (var m = 0; m < 5; ++m) {
-            planes[m] = cullingVolume.planes[m];
+        for (var k = 0; k < 5; ++k) {
+            planes[k] = cullingVolume.planes[k];
         }
         cullingVolume = scratchCullingVolume;
+
+        // Determine visibility of celestial and terrestrial environment effects.
+        scene._state.isSkyAtmosphereVisible = defined(scene._state.skyAtmosphereCommand) && defined(scene.globe) && scene.globe._surface._tilesToRender.length > 0;
+        scene._state.isSunVisible = isVisible(scene._state.sunDrawCommand, cullingVolume, occluder);
+        scene._state.isMoonVisible = isVisible(scene._state.moonCommand, cullingVolume, occluder);
 
         var length = commandList.length;
         for (var i = 0; i < length; ++i) {
@@ -1126,9 +1151,7 @@ define([
             } else {
                 var boundingVolume = command.boundingVolume;
                 if (defined(boundingVolume)) {
-                    if (command.cull &&
-                            ((cullingVolume.computeVisibility(boundingVolume) === Intersect.OUTSIDE) ||
-                             (defined(occluder) && boundingVolume.isOccluded(occluder)))) {
+                    if (!isVisible(command, cullingVolume, occluder)) {
                         continue;
                     }
 
@@ -1340,30 +1363,6 @@ define([
         }
     }
 
-    function isVisible(command, frameState) {
-        if (!defined(command)) {
-            return;
-        }
-
-        var occluder = (frameState.mode === SceneMode.SCENE3D) ? frameState.occluder: undefined;
-        var cullingVolume = frameState.cullingVolume;
-
-        // get user culling volume minus the far plane.
-        var planes = scratchCullingVolume.planes;
-        for (var k = 0; k < 5; ++k) {
-            planes[k] = cullingVolume.planes[k];
-        }
-        cullingVolume = scratchCullingVolume;
-
-        var boundingVolume = command.boundingVolume;
-
-        return ((defined(command)) &&
-                 ((!defined(command.boundingVolume)) ||
-                  !command.cull ||
-                  ((cullingVolume.computeVisibility(boundingVolume) !== Intersect.OUTSIDE) &&
-                   (!defined(occluder) || !boundingVolume.isOccluded(occluder)))));
-    }
-
     function translucentCompare(a, b, position) {
         return b.boundingVolume.distanceSquaredTo(position) - a.boundingVolume.distanceSquaredTo(position);
     }
@@ -1423,18 +1422,6 @@ define([
             scene._sunPostProcess = scene._sunPostProcess.destroy();
             scene._sunBloom = false;
         }
-
-        // Manage celestial and terrestrial environment effects.
-        var renderPass = frameState.passes.render;
-        var skyBoxCommand = (renderPass && defined(scene.skyBox)) ? scene.skyBox.update(frameState) : undefined;
-        var skyAtmosphereVisible = defined(scene.globe) && scene.globe._surface._tilesToRender.length > 0;
-        var skyAtmosphereCommand = (renderPass && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(frameState) : undefined;
-        var sunCommands = (renderPass && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
-        var sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
-        var sunComputeCommand = defined(sunCommands) ? sunCommands.computeCommand : undefined;
-        var sunVisible = isVisible(sunDrawCommand, frameState);
-        var moonCommand = (renderPass && defined(scene.moon)) ? scene.moon.update(frameState) : undefined;
-        var moonVisible = isVisible(moonCommand, frameState);
 
         // Preserve the reference to the original framebuffer.
         var originalFramebuffer = passState.framebuffer;
@@ -1496,7 +1483,7 @@ define([
             scene._fxaa.clear(context, passState, clearColor);
         }
 
-        if (sunVisible && scene.sunBloom) {
+        if (scene._state.isSunVisible && scene.sunBloom) {
             passState.framebuffer = scene._sunPostProcess.update(passState);
         } else if (useGlobeDepthFramebuffer) {
             passState.framebuffer = scene._globeDepth.framebuffer;
@@ -1514,19 +1501,17 @@ define([
         frustum.far = camera.frustum.far;
         us.updateFrustum(frustum);
 
+        var skyBoxCommand = scene._state.skyBoxCommand;
         if (defined(skyBoxCommand)) {
             executeCommand(skyBoxCommand, scene, context, passState);
         }
 
-        if (defined(skyAtmosphereCommand) && skyAtmosphereVisible) {
-            executeCommand(skyAtmosphereCommand, scene, context, passState);
+        if (scene._state.isSkyAtmosphereVisible) {
+            executeCommand(scene._state.skyAtmosphereCommand, scene, context, passState);
         }
 
-        if (sunVisible) {
-            if (defined(sunComputeCommand)) {
-                sunComputeCommand.execute(scene._computeEngine);
-            }
-            sunDrawCommand.execute(context, passState);
+        if (scene._state.isSunVisible) {
+            scene._state.sunDrawCommand.execute(context, passState);
             if (scene.sunBloom) {
                 var framebuffer;
                 if (useGlobeDepthFramebuffer) {
@@ -1542,8 +1527,8 @@ define([
         }
 
         // Moon can be seen through the atmosphere, since the sun is rendered after the atmosphere.
-        if (moonVisible) {
-            moonCommand.execute(context, passState);
+        if (scene._state.isMoonVisible) {
+            scene._state.moonCommand.execute(context, passState);
         }
 
         // Determine how translucent surfaces will be handled.
@@ -1670,6 +1655,11 @@ define([
     }
 
     function executeComputeCommands(scene) {
+        var sunComputeCommand = scene._state.sunComputeCommand;
+        if (defined(sunComputeCommand)) {
+            sunComputeCommand.execute(scene._computeEngine);
+        }
+
         var commandList = scene._computeCommandList;
         var length = commandList.length;
         for (var i = 0; i < length; ++i) {
@@ -1688,6 +1678,15 @@ define([
 
     function updatePrimitives(scene) {
         var frameState = scene._frameState;
+
+        // Update celestial and terrestrial environment effects.
+        var renderPass = frameState.passes.render;
+        scene._state.skyBoxCommand = (renderPass && defined(scene.skyBox)) ? scene.skyBox.update(frameState) : undefined;
+        scene._state.skyAtmosphereCommand = (renderPass && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(frameState) : undefined;
+        var sunCommands = (renderPass && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
+        scene._state.sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
+        scene._state.sunComputeCommand = defined(sunCommands) ? sunCommands.computeCommand : undefined;
+        scene._state.moonCommand = (renderPass && defined(scene.moon)) ? scene.moon.update(frameState) : undefined;
 
         if (scene._globe) {
             scene._globe.update(frameState);
