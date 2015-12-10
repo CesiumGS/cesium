@@ -153,7 +153,7 @@ define([
     };
 
     ShaderCache.prototype.releaseShaderProgram = function(shaderProgram) {
-        if (shaderProgram) {
+        if (defined(shaderProgram)) {
             var cachedShader = shaderProgram._cachedShader;
             if (cachedShader && (--cachedShader.count === 0)) {
                 this._shadersToRelease[cachedShader.keyword] = cachedShader;

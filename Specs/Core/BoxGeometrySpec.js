@@ -13,26 +13,26 @@ defineSuite([
         createPackableSpecs) {
     "use strict";
 
-    it('constructor throws without minimum corner', function() {
+    it('constructor throws without maximum corner', function() {
         expect(function() {
             return new BoxGeometry({
-                maximumCorner : new Cartesian3()
+                maximum : new Cartesian3()
             });
         }).toThrowDeveloperError();
     });
 
-    it('constructor throws without maximum corner', function() {
+    it('constructor throws without minimum corner', function() {
         expect(function() {
             return new BoxGeometry({
-                minimumCorner : new Cartesian3()
+                minimum : new Cartesian3()
             });
         }).toThrowDeveloperError();
     });
 
     it('constructor creates optimized number of positions for VertexFormat.POSITIONS_ONLY', function() {
         var m = BoxGeometry.createGeometry(new BoxGeometry({
-            minimumCorner : new Cartesian3(-1, -2, -3),
-            maximumCorner : new Cartesian3(1, 2, 3),
+            minimum : new Cartesian3(-1, -2, -3),
+            maximum : new Cartesian3(1, 2, 3),
             vertexFormat : VertexFormat.POSITION_ONLY
         }));
 
@@ -44,8 +44,8 @@ defineSuite([
         var minimumCorner = new Cartesian3(0, 0, 0);
         var maximumCorner = new Cartesian3(1, 1, 1);
         var m = BoxGeometry.createGeometry(new BoxGeometry({
-            minimumCorner : minimumCorner,
-            maximumCorner : maximumCorner,
+            minimum : minimumCorner,
+            maximum : maximumCorner,
             vertexFormat : VertexFormat.ALL
         }));
 
