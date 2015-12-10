@@ -544,7 +544,10 @@ define([
 
             isSunVisible : false,
             isMoonVisible : false,
-            isSkyAtmosphereVisible : false
+            isSkyAtmosphereVisible : false,
+
+            clearGlobeDepth : false,
+            useDepthPlane : false
         };
 
         // initial guess at frustums.
@@ -1459,15 +1462,6 @@ define([
             }
         }
 
-        var clearGlobeDepth = defined(scene.globe) && (!scene.globe.depthTestAgainstTerrain || scene.mode === SceneMode.SCENE2D);
-        var useDepthPlane = clearGlobeDepth && scene.mode === SceneMode.SCENE3D;
-        if (useDepthPlane) {
-            // Update the depth plane that is rendered in 3D when the primitives are
-            // not depth tested against terrain so primitives on the backface
-            // of the globe are not picked.
-            scene._depthPlane.update(frameState);
-        }
-
         // If supported, configure OIT to use the globe depth framebuffer and clear the OIT framebuffer.
         var useOIT = !picking && renderTranslucentCommands && defined(scene._oit) && scene._oit.isSupported();
         if (useOIT) {
@@ -1544,8 +1538,12 @@ define([
             executeTranslucentCommands = executeTranslucentCommandsSorted;
         }
 
-        // Execute commands in each frustum in back to front order
+        var clearGlobeDepth = scene._state.clearGlobeDepth;
+        var useDepthPlane = scene._state.clearGlobeDepth;
         var clearDepth = scene._depthClearCommand;
+        var depthPlane = scene._depthPlane;
+
+        // Execute commands in each frustum in back to front order
         for (i = 0; i < numFrustums; ++i) {
             var index = numFrustums - i - 1;
             var frustumCommands = frustumCommandsList[index];
@@ -1589,7 +1587,7 @@ define([
             if (clearGlobeDepth) {
                 clearDepth.execute(context, passState);
                 if (useDepthPlane) {
-                    scene._depthPlane.execute(context, passState);
+                    depthPlane.execute(context, passState);
                 }
             }
 
@@ -1687,6 +1685,15 @@ define([
         scene._state.sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
         scene._state.sunComputeCommand = defined(sunCommands) ? sunCommands.computeCommand : undefined;
         scene._state.moonCommand = (renderPass && defined(scene.moon)) ? scene.moon.update(frameState) : undefined;
+
+        var clearGlobeDepth = scene._state.clearGlobeDepth = defined(scene.globe) && (!scene.globe.depthTestAgainstTerrain || scene.mode === SceneMode.SCENE2D);
+        var useDepthPlane = scene._state.useDepthPlane = clearGlobeDepth && scene.mode === SceneMode.SCENE3D;
+        if (useDepthPlane) {
+            // Update the depth plane that is rendered in 3D when the primitives are
+            // not depth tested against terrain so primitives on the backface
+            // of the globe are not picked.
+            scene._depthPlane.update(frameState);
+        }
 
         if (scene._globe) {
             scene._globe.update(frameState);
