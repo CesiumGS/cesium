@@ -50,6 +50,10 @@ define(['../Core/BoundingRectangle'], function(BoundingRectangle) {
          */
         this.scissorTest = undefined;
 
+        /**
+         * The viewport used when one is not defined by a {@link DrawCommand}'s render state.
+         * @type {BoundingRectangle}
+         */
         this.viewport = new BoundingRectangle();
     };
 
