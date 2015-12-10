@@ -93,6 +93,8 @@ The Cesium classes in the `Type` column are links to their doc.
 
 ## `options` Parameters
 
+_TODO: link to Code Guide section._
+
 Each property of an `options` parameter should be documented with a separate `@param` tag, e.g.,
 ```
  * @param {Object} [options] Object with the following properties:
@@ -106,7 +108,7 @@ generates
 
 ![](DebugModelMatrixPrimitive.png)
 
-_TODO: link to Code Guide section._
+* If all properties are optional, mark the options object optional.
 
 ## Exceptions
 
@@ -144,11 +146,87 @@ Matrix4.fromColumnMajorArray = function(values, result) {
 };
 ```
 
+## References
+
+* Use `@see` sparingly to link to related classes, functions, and online resources., e.g.,
+```javascript
+/**
+ * A {@link TerrainProvider} that produces terrain geometry by tessellating height maps
+ * retrieved from an ArcGIS ImageServer.
+ *
+ * ...
+ *
+ * @see TerrainProvider
+ */
+var ArcGisImageServerTerrainProvider = function(options) {
+    // ...
+```
+
+generates
+
+![](ArcGisImageServerTerrainProvider.png)
+
+* Use `#` to reference an instance member (e.g., one that is assigned to the prototype); use `.` to access a static member, e.g.,
+```
+@see Class
+@see Class#instanceMember
+@see Class.staticMember
+```
+* Use `{@link className}` to link to another documented type.  This is not required for `@param` tags when the type is provided.
+* Use `<code> </code>` tags when referring to parameters or other variable names and values within a description.
+* Use `{@link URL|title}` to link to external sites.
+
 ## Examples
 
-_TODO_
+Developers almost always jump to a example before reading the doc.  Provide concise but instructive code examples with enough context whenever possible.
+
+Useful examples:
+```javascript
+/**
+ * ...
+ *
+ * @example
+ * var n = Cesium.Math.lerp(0.0, 2.0, 0.5); // returns 1.0
+ */
+CesiumMath.lerp = function(p, q, time) {
+    // ...
+```
+
+```javascript
+/**
+ * ...
+ *
+ * @example
+ * // Apply non-uniform scale to node LOD3sp
+ * var node = model.getNode('LOD3sp');
+ * node.matrix = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
+ */
+Model.prototype.getNode = function(name) {
+    // ...
+```
+
+Unnecessary example:
+```javascript
+/**
+ * ..
+ *
+ * @example
+ * var f = Cesium.Math.EPSILON1;
+ */
+CesiumMath.EPSILON1 = 0.1;
+```
+
+Use the Cesium namespace (`Cesium.`) in examples.
+
+## Constants
+
+_TODO: @type_
+_TODO: @constant_
+_TODO: @function_
 
 ---
+
+_TODO: Sandcastle links_
 
 **TODO**
 
