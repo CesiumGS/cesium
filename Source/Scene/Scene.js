@@ -1403,31 +1403,10 @@ define([
     var scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
     var scratchOrthographicFrustum = new OrthographicFrustum();
 
-    function executeCommands(scene, passState, clearColor, picking) {
-        var i;
-        var j;
-
-        var frameState = scene._frameState;
+    function executeCommands(scene, passState) {
         var camera = scene._camera;
         var context = scene.context;
         var us = context.uniformState;
-
-        // Manage sun bloom post-processing effect.
-        if (defined(scene.sun) && scene.sunBloom !== scene._sunBloom) {
-            if (scene.sunBloom) {
-                scene._sunPostProcess = new SunPostProcess();
-            } else if(defined(scene._sunPostProcess)){
-                scene._sunPostProcess = scene._sunPostProcess.destroy();
-            }
-
-            scene._sunBloom = scene.sunBloom;
-        } else if (!defined(scene.sun) && defined(scene._sunPostProcess)) {
-            scene._sunPostProcess = scene._sunPostProcess.destroy();
-            scene._sunBloom = false;
-        }
-
-        // Preserve the reference to the original framebuffer.
-        var originalFramebuffer = passState.framebuffer;
 
         // Create a working frustum from the original camera frustum.
         var frustum;
@@ -1437,56 +1416,6 @@ define([
             frustum = camera.frustum.clone(scratchPerspectiveOffCenterFrustum);
         } else {
             frustum = camera.frustum.clone(scratchOrthographicFrustum);
-        }
-
-        // Clear the pass state framebuffer.
-        var clear = scene._clearColorCommand;
-        Color.clone(clearColor, clear.color);
-        clear.execute(context, passState);
-
-        // Update globe depth rendering based on the current context and clear the globe depth framebuffer.
-        var useGlobeDepthFramebuffer = !picking && defined(scene._globeDepth);
-        if (useGlobeDepthFramebuffer) {
-            scene._globeDepth.update(context);
-            scene._globeDepth.clear(context, passState, clearColor);
-        }
-
-        // Determine if there are any translucent surfaces in any of the frustums.
-        var renderTranslucentCommands = false;
-        var frustumCommandsList = scene._frustumCommandsList;
-        var numFrustums = frustumCommandsList.length;
-        for (i = 0; i < numFrustums; ++i) {
-            if (frustumCommandsList[i].indices[Pass.TRANSLUCENT] > 0) {
-                renderTranslucentCommands = true;
-                break;
-            }
-        }
-
-        // If supported, configure OIT to use the globe depth framebuffer and clear the OIT framebuffer.
-        var useOIT = !picking && renderTranslucentCommands && defined(scene._oit) && scene._oit.isSupported();
-        if (useOIT) {
-            scene._oit.update(context, scene._globeDepth.framebuffer);
-            scene._oit.clear(context, passState, clearColor);
-            useOIT = useOIT && scene._oit.isSupported();
-        }
-
-        // If supported, configure FXAA to use the globe depth color texture and clear the FXAA framebuffer.
-        var useFXAA = !picking && scene.fxaa;
-        if (useFXAA) {
-            scene._fxaa.update(context);
-            scene._fxaa.clear(context, passState, clearColor);
-        }
-
-        if (scene._state.isSunVisible && scene.sunBloom) {
-            passState.framebuffer = scene._sunPostProcess.update(passState);
-        } else if (useGlobeDepthFramebuffer) {
-            passState.framebuffer = scene._globeDepth.framebuffer;
-        } else if (useFXAA) {
-            passState.framebuffer = scene._fxaa.getColorFramebuffer();
-        }
-
-        if (defined(passState.framebuffer)) {
-            clear.execute(context, passState);
         }
 
         // Ideally, we would render the sky box and atmosphere last for
@@ -1508,12 +1437,12 @@ define([
             scene._state.sunDrawCommand.execute(context, passState);
             if (scene.sunBloom) {
                 var framebuffer;
-                if (useGlobeDepthFramebuffer) {
+                if (scene._state.useGlobeDepthFramebuffer) {
                     framebuffer = scene._globeDepth.framebuffer;
-                } else if (useFXAA) {
+                } else if (scene._state.useFXAA) {
                     framebuffer = scene._fxaa.getColorFramebuffer();
                 } else {
-                    framebuffer = originalFramebuffer;
+                    framebuffer = scene._state.originalFramebuffer;
                 }
                 scene._sunPostProcess.execute(context, framebuffer);
                 passState.framebuffer = framebuffer;
@@ -1527,7 +1456,7 @@ define([
 
         // Determine how translucent surfaces will be handled.
         var executeTranslucentCommands;
-        if (useOIT) {
+        if (scene._state.useOIT) {
             if (!defined(scene._executeOITFunction)) {
                 scene._executeOITFunction = function(scene, executeFunction, passState, commands) {
                     scene._oit.executeCommands(scene, executeFunction, passState, commands);
@@ -1544,7 +1473,11 @@ define([
         var depthPlane = scene._depthPlane;
 
         // Execute commands in each frustum in back to front order
-        for (i = 0; i < numFrustums; ++i) {
+        var j;
+        var frustumCommandsList = scene._frustumCommandsList;
+        var numFrustums = frustumCommandsList.length;
+
+        for (var i = 0; i < numFrustums; ++i) {
             var index = numFrustums - i - 1;
             var frustumCommands = frustumCommandsList[index];
 
@@ -1555,7 +1488,7 @@ define([
             var globeDepth = scene.debugShowGlobeDepth ? getDebugGlobeDepth(scene, index) : scene._globeDepth;
 
             var fb;
-            if (scene.debugShowGlobeDepth && defined(globeDepth) && useGlobeDepthFramebuffer) {
+            if (scene.debugShowGlobeDepth && defined(globeDepth) && scene._state.useGlobeDepthFramebuffer) {
                 fb = passState.framebuffer;
                 passState.framebuffer = globeDepth.framebuffer;
             }
@@ -1569,12 +1502,12 @@ define([
                 executeCommand(commands[j], scene, context, passState);
             }
 
-            if (defined(globeDepth) && useGlobeDepthFramebuffer && (scene.copyGlobeDepth || scene.debugShowGlobeDepth)) {
+            if (defined(globeDepth) && scene._state.useGlobeDepthFramebuffer && (scene.copyGlobeDepth || scene.debugShowGlobeDepth)) {
                 globeDepth.update(context);
                 globeDepth.executeCopyDepth(context, passState);
             }
 
-            if (scene.debugShowGlobeDepth && defined(globeDepth) && useGlobeDepthFramebuffer) {
+            if (scene.debugShowGlobeDepth && defined(globeDepth) && scene._state.useGlobeDepthFramebuffer) {
                 passState.framebuffer = fb;
             }
 
@@ -1613,7 +1546,7 @@ define([
             commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
             executeTranslucentCommands(scene, executeCommand, passState, commands);
 
-            if (defined(globeDepth) && useGlobeDepthFramebuffer) {
+            if (defined(globeDepth) && scene._state.useGlobeDepthFramebuffer) {
                 // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
                 var pickDepth = getPickDepth(scene, index);
                 pickDepth.update(context, globeDepth.framebuffer.depthStencilTexture);
@@ -1621,33 +1554,33 @@ define([
             }
         }
 
-        if (scene.debugShowGlobeDepth && useGlobeDepthFramebuffer) {
+        if (scene.debugShowGlobeDepth && scene._state.useGlobeDepthFramebuffer) {
             var gd = getDebugGlobeDepth(scene, scene.debugShowDepthFrustum - 1);
             gd.executeDebugGlobeDepth(context, passState);
         }
 
-        if (scene.debugShowPickDepth && useGlobeDepthFramebuffer) {
+        if (scene.debugShowPickDepth && scene._state.useGlobeDepthFramebuffer) {
             var pd = getPickDepth(scene, scene.debugShowDepthFrustum - 1);
             pd.executeDebugPickDepth(context, passState);
         }
 
-        if (useOIT) {
-            passState.framebuffer = useFXAA ? scene._fxaa.getColorFramebuffer() : undefined;
+        if (scene._state.useOIT) {
+            passState.framebuffer = scene._state.useFXAA ? scene._fxaa.getColorFramebuffer() : undefined;
             scene._oit.execute(context, passState);
         }
 
-        if (useFXAA) {
-            if (!useOIT && useGlobeDepthFramebuffer) {
+        if (scene._state.useFXAA) {
+            if (!scene._state.useOIT && scene._state.useGlobeDepthFramebuffer) {
                 passState.framebuffer = scene._fxaa.getColorFramebuffer();
                 scene._globeDepth.executeCopyColor(context, passState);
             }
 
-            passState.framebuffer = originalFramebuffer;
+            passState.framebuffer = scene._state.originalFramebuffer;
             scene._fxaa.execute(context, passState);
         }
 
-        if (!useOIT && !useFXAA && useGlobeDepthFramebuffer) {
-            passState.framebuffer = originalFramebuffer;
+        if (!scene._state.useOIT && !scene._state.useFXAA && scene._state.useGlobeDepthFramebuffer) {
+            passState.framebuffer = scene._state.originalFramebuffer;
             scene._globeDepth.executeCopyColor(context, passState);
         }
     }
@@ -1701,6 +1634,77 @@ define([
 
         scene._groundPrimitives.update(frameState);
         scene._primitives.update(frameState);
+    }
+
+    function updateAndClearFramebuffers(scene, passState, clearColor, picking) {
+        var context = scene._context;
+
+        // Preserve the reference to the original framebuffer.
+        scene._state.originalFramebuffer = passState.framebuffer;
+
+        // Manage sun bloom post-processing effect.
+        if (defined(scene.sun) && scene.sunBloom !== scene._sunBloom) {
+            if (scene.sunBloom) {
+                scene._sunPostProcess = new SunPostProcess();
+            } else if(defined(scene._sunPostProcess)){
+                scene._sunPostProcess = scene._sunPostProcess.destroy();
+            }
+
+            scene._sunBloom = scene.sunBloom;
+        } else if (!defined(scene.sun) && defined(scene._sunPostProcess)) {
+            scene._sunPostProcess = scene._sunPostProcess.destroy();
+            scene._sunBloom = false;
+        }
+
+        // Clear the pass state framebuffer.
+        var clear = scene._clearColorCommand;
+        Color.clone(clearColor, clear.color);
+        clear.execute(context, passState);
+
+        // Update globe depth rendering based on the current context and clear the globe depth framebuffer.
+        var useGlobeDepthFramebuffer = scene._state.useGlobeDepthFramebuffer = !picking && defined(scene._globeDepth);
+        if (useGlobeDepthFramebuffer) {
+            scene._globeDepth.update(context);
+            scene._globeDepth.clear(context, passState, clearColor);
+        }
+
+        // Determine if there are any translucent surfaces in any of the frustums.
+        var renderTranslucentCommands = false;
+        var frustumCommandsList = scene._frustumCommandsList;
+        var numFrustums = frustumCommandsList.length;
+        for (var i = 0; i < numFrustums; ++i) {
+            if (frustumCommandsList[i].indices[Pass.TRANSLUCENT] > 0) {
+                renderTranslucentCommands = true;
+                break;
+            }
+        }
+
+        // If supported, configure OIT to use the globe depth framebuffer and clear the OIT framebuffer.
+        var useOIT = scene._state.useOIT = !picking && renderTranslucentCommands && defined(scene._oit) && scene._oit.isSupported();
+        if (useOIT) {
+            scene._oit.update(context, scene._globeDepth.framebuffer);
+            scene._oit.clear(context, passState, clearColor);
+            scene._state.useOIT = scene._oit.isSupported();
+        }
+
+        // If supported, configure FXAA to use the globe depth color texture and clear the FXAA framebuffer.
+        var useFXAA = scene._state.useFXAA = !picking && scene.fxaa;
+        if (useFXAA) {
+            scene._fxaa.update(context);
+            scene._fxaa.clear(context, passState, clearColor);
+        }
+
+        if (scene._state.isSunVisible && scene.sunBloom) {
+            passState.framebuffer = scene._sunPostProcess.update(passState);
+        } else if (useGlobeDepthFramebuffer) {
+            passState.framebuffer = scene._globeDepth.framebuffer;
+        } else if (useFXAA) {
+            passState.framebuffer = scene._fxaa.getColorFramebuffer();
+        }
+
+        if (defined(passState.framebuffer)) {
+            clear.execute(context, passState);
+        }
     }
 
     function callAfterRenderFunctions(frameState) {
@@ -1764,9 +1768,6 @@ define([
         scene._computeCommandList.length = 0;
         scene._overlayCommandList.length = 0;
 
-        updatePrimitives(scene);
-        createPotentiallyVisibleSet(scene);
-
         var passState = scene._passState;
         passState.framebuffer = undefined;
         passState.blendingEnabled = undefined;
@@ -1777,8 +1778,12 @@ define([
         passState.viewport.width = context.drawingBufferWidth;
         passState.viewport.height = context.drawingBufferHeight;
 
+        updatePrimitives(scene);
+        createPotentiallyVisibleSet(scene);
+        updateAndClearFramebuffers(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
+
         executeComputeCommands(scene);
-        executeCommands(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
+        executeCommands(scene, passState);
         executeOverlayCommands(scene, passState);
 
         frameState.creditDisplay.endFrame();
@@ -1951,13 +1956,15 @@ define([
 
         us.update(frameState);
 
+        var passState = this._pickFramebuffer.begin(scratchRectangle);
         updatePrimitives(this);
         createPotentiallyVisibleSet(this);
+        updateAndClearFramebuffers(this, passState, scratchColorZero, true);
 
         scratchRectangle.x = drawingBufferPosition.x - ((rectangleWidth - 1.0) * 0.5);
         scratchRectangle.y = (this.drawingBufferHeight - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
 
-        executeCommands(this, this._pickFramebuffer.begin(scratchRectangle), scratchColorZero, true);
+        executeCommands(this, passState);
         var object = this._pickFramebuffer.end(scratchRectangle);
         context.endFrame();
         callAfterRenderFunctions(frameState);
