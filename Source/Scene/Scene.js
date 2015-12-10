@@ -547,7 +547,12 @@ define([
             isSkyAtmosphereVisible : false,
 
             clearGlobeDepth : false,
-            useDepthPlane : false
+            useDepthPlane : false,
+
+            originalFramebuffer : undefined,
+            useGlobeDepthFramebuffer : false,
+            useOIT : false,
+            useFXAA : false
         };
 
         // initial guess at frustums.
@@ -1792,6 +1797,7 @@ define([
 
         executeComputeCommands(scene);
         executeCommands(scene, passState);
+
         resolveFramebuffers(scene, passState);
         executeOverlayCommands(scene, passState);
 
