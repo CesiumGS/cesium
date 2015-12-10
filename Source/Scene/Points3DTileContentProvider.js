@@ -55,7 +55,8 @@ define([
          */
         this.readyPromise = when.defer();
 
-        this.boundingSphere = BoundingSphere.fromOrientedBoundingBox(tile.orientedBoundingBox);
+        // TODO : assumes bounding volume is a sphere
+        this.boundingSphere = tile.boundingVolume;
 
         this._debugColor = Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;

@@ -229,16 +229,17 @@ define([
         },
 
         /**
-         * Get the tight oriented bounding box
+         * Get the bounding volume of the tile
          *
-         * @type {Promise}
+         * @type {Object}
          * @readonly
          */
-        orientedBoundingBox : {
-            //TODO deal with this property
+        boundingVolume : {
             get : function() {
-                //throw new DeveloperError("This property has been removed!");
-                return defaultValue(this._contentsOrientedBoundingBox, this._orientedBoundingBox);
+                return defaultValue(
+                    defaultValue(this._contentsOrientedBoundingBox, this._contentsBoundingSphere),
+                    defaultValue(this._orientedBoundingBox, this._tileBoundingSphere)
+                );
             }
         },
 

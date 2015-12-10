@@ -46,7 +46,7 @@ define([
         this._modelInstanceCollection = undefined;
         this._url = url;
         this._tileset = tileset;
-        this._boundingVolume = tile.orientedBoundingBox;
+        this._boundingVolume = tile.boundingVolume;
 
         /**
          * @readonly
