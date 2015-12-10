@@ -1109,6 +1109,10 @@ define([
                 left.radius === right.radius);
     };
 
+    BoundingSphere.distanceToCamera = function(sphere, frameState) {
+        return Math.max(0.0, Cartesian3.distance(sphere.center, frameState.camera.positionWC) - sphere.radius);
+    };
+
     /**
      * Determines which side of a plane the sphere is located.
      *
@@ -1183,6 +1187,11 @@ define([
      */
     BoundingSphere.prototype.clone = function(result) {
         return BoundingSphere.clone(this, result);
+    };
+
+
+    BoundingSphere.prototype.distanceToCamera = function(frameState) {
+        return BoundingSphere.distanceToCamera(this, frameState);
     };
 
     return BoundingSphere;

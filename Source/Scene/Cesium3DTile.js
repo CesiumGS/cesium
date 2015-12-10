@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/BoundingSphere',
         '../Core/BoxOutlineGeometry',
         '../Core/Cartesian3',
         '../Core/Color',
@@ -15,6 +16,7 @@ define([
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
         '../Core/RectangleOutlineGeometry',
+        '../Core/SphereOutlineGeometry',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
         './Cesium3DTileContentProviderFactory',
@@ -26,6 +28,7 @@ define([
         './TileBoundingBox',
         './Tileset3DTileContentProvider'
     ], function(
+        BoundingSphere,
         BoxOutlineGeometry,
         Cartesian3,
         Color,
@@ -41,6 +44,7 @@ define([
         OrientedBoundingBox,
         Rectangle,
         RectangleOutlineGeometry,
+        SphereOutlineGeometry,
         Uri,
         when,
         Cesium3DTileContentProviderFactory,
@@ -61,30 +65,51 @@ define([
         var contentHeader = header.content;
 
 // TODO: For the 3D Tiles spec, we want to change this to basically (x, y, z) to (x, y, z)
-        var b = header.box;
-        var rectangle = new Rectangle(b[0], b[1], b[2], b[3]);
+        var tileBoundingVolume = header.boundingVolume;
+        if (defined(tileBoundingVolume.box)) {
+            var b = tileBoundingVolume.box;
+            var rectangle = new Rectangle(b[0], b[1], b[2], b[3]);
 
-        this._tileBoundingBox = new TileBoundingBox({
-            rectangle : rectangle,
-            minimumHeight : b[4],
-            maximumHeight : b[5]
-        });
-        this._orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, b[4], b[5]);
+            this._tileBoundingBox = new TileBoundingBox({
+                rectangle : rectangle,
+                minimumHeight : b[4],
+                maximumHeight : b[5]
+            });
+            this._orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, b[4], b[5]);
+        } else if (defined(tileBoundingVolume.sphere)) {
+            var sphere = tileBoundingVolume.sphere;
+            this._tileBoundingSphere = new BoundingSphere(
+                new Cartesian3(sphere[0], sphere[1], sphere[2]),
+                sphere[3]
+            );
+        }
 // TODO: if the content type has pixel size, like points or billboards, the bounding volume needs
 // to dynamic size bigger like BillboardCollection and PointCollection
 
-        var rs;
-        if (defined(contentHeader) && defined(contentHeader.box)) {
+        var contentsOrientedBoundingBox;
+        var contentsBoundingSphere;
+        if (defined(contentHeader) && defined(contentHeader.boundingVolume)) {
             // Non-leaf tiles may have a content-box bounding-volume, which is a tight-fit box
             // around only the models in the tile.  This box is useful for culling for rendering,
             // but not for culling for traversing the tree since it is not spatial coherence, i.e.,
             // since it only bounds models in the tile, not the entire tile, children may be
             // outside of this box.
-            var cb = contentHeader.box;
-            rs = OrientedBoundingBox.fromRectangle(new Rectangle(cb[0], cb[1], cb[2], cb[3]), cb[4], cb[5]);
+
+            var contentsBoundingVolume = contentHeader.boundingVolume;
+            if (defined(contentsBoundingVolume.box)) {
+                var cb = contentHeader.boundingVolume.box;
+                contentsOrientedBoundingBox = OrientedBoundingBox.fromRectangle(new Rectangle(cb[0], cb[1], cb[2], cb[3]), cb[4], cb[5]);
+            } else if (defined(contentsBoundingVolume.sphere)) {
+                var cs = contentHeader.boundingVolume.sphere;
+                contentsBoundingSphere = new BoundingSphere(
+                    new Cartesian3(cs[0], cs[1], cs[2]),
+                    cs[3]
+                );
+            }
         }
 
-        this._contentsOrientedBoundingBox = rs;
+        this._contentsOrientedBoundingBox = contentsOrientedBoundingBox;
+        this._contentsBoundingSphere = contentsBoundingSphere;
 
         /**
          * DOC_TBA
@@ -187,10 +212,8 @@ define([
          */
         this.parentPlaneMask = 0;
 
-        this._debugBox = undefined;
-        this._debugcontentBox = undefined;
-        this._debugOrientedBoundingBox = undefined;
-        this._debugContentsOrientedBoundingBox = undefined;
+        this._debugBoundingVolume = undefined;
+        this._debugContentBoundingVolume = undefined;
     };
 
     defineProperties(Cesium3DTile.prototype, {
@@ -212,7 +235,9 @@ define([
          * @readonly
          */
         orientedBoundingBox : {
+            //TODO deal with this property
             get : function() {
+                //throw new DeveloperError("This property has been removed!");
                 return defaultValue(this._contentsOrientedBoundingBox, this._orientedBoundingBox);
             }
         },
@@ -255,25 +280,28 @@ define([
      * DOC_TBA
      */
     Cesium3DTile.prototype.visibility = function(cullingVolume) {
-        return cullingVolume.computeVisibilityWithPlaneMask(this._orientedBoundingBox, this.parentPlaneMask);
+        var boundingVolume = this._orientedBoundingBox || this._tileBoundingSphere;
+        return cullingVolume.computeVisibilityWithPlaneMask(boundingVolume, this.parentPlaneMask);
     };
 
     /**
      * DOC_TBA
      */
     Cesium3DTile.prototype.contentsVisibility = function(cullingVolume) {
-        if (!defined(this._contentsOrientedBoundingBox)) {
+        var boundingVolume = this._contentsOrientedBoundingBox || this._contentsBoundingSphere;
+        if (!defined(boundingVolume)) {
             return Intersect.INSIDE;
         }
 
-        return cullingVolume.computeVisibility(this._contentsOrientedBoundingBox);
+        return cullingVolume.computeVisibility(boundingVolume);
     };
 
     /**
      * DOC_TBA
      */
     Cesium3DTile.prototype.distanceToTile = function(frameState) {
-        return this._tileBoundingBox.distanceToCamera(frameState);
+        var boundingVolume = this._tileBoundingBox || this._tileBoundingSphere;
+        return boundingVolume.distanceToCamera(frameState);
     };
 
     function createDebugPrimitive(geometry, color, modelMatrix) {
@@ -295,66 +323,62 @@ define([
         });
     }
 
-    function createDebugBox(box, color) {
-        var geometry = new RectangleOutlineGeometry({
-            rectangle : new Rectangle(box[0], box[1], box[2], box[3]),
-            height : box[4],
-            extrudedHeight: box[5]
-         });
-        return createDebugPrimitive(geometry, color);
-    }
-
-   function createDebugOrientedBox(obb, color) {
-        var geometry = BoxOutlineGeometry.fromDimensions({
-            dimensions: new Cartesian3(2.0, 2.0, 2.0)
-        });
-        return createDebugPrimitive(geometry, color, Matrix4.fromRotationTranslation(obb.halfAxes, obb.center));
+    function createDebugVolume(boundingVolume, color) {
+        var geometry;
+        var modelMatrix = new Matrix4(
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1
+        );
+        if (boundingVolume.box) {
+            var box = boundingVolume.box;
+            geometry = new RectangleOutlineGeometry({
+                rectangle : new Rectangle(box[0], box[1], box[2], box[3]),
+                height : box[4],
+                extrudedHeight: box[5]
+             });
+        } else if (boundingVolume.sphere) {
+            var sphere = boundingVolume.sphere;
+            geometry = new SphereOutlineGeometry({
+                radius: sphere[3]
+            });
+            Matrix4.fromTranslation(new Cartesian3(sphere[0],sphere[1],sphere[2]), modelMatrix);
+        }
+        return createDebugPrimitive(geometry, color, modelMatrix);
     }
 
 // TODO: remove workaround for https://github.com/AnalyticalGraphicsInc/cesium/issues/2657
-    function workaround2657(rectangle) {
-        return (rectangle[1] !== rectangle[3]) && (rectangle[0] !== rectangle[2]);
+    function workaround2657(boundingVolume) {
+        if (defined(boundingVolume.box)) {
+            var rectangle = boundingVolume.box;
+            return (rectangle[1] !== rectangle[3]) && (rectangle[0] !== rectangle[2]);
+        } else {
+            return true;
+        }
     }
 
     function applyDebugSettings(tile, owner, frameState) {
         // Tiles do not have a content.box if it is the same as the tile's box.
-        var hascontentBox = defined(tile._header.content) && defined(tile._header.content.box);
+        var hasContentBoundingVolume = defined(tile._header.content) && defined(tile._header.content.boundingVolume);
 
-        var showBox = owner.debugShowBox || (owner.debugShowcontentBox && !hascontentBox);
-        if (showBox && workaround2657(tile._header.box)) {
-            if (!defined(tile._debugBox)) {
-                tile._debugBox = createDebugBox(tile._header.box, hascontentBox ? Color.WHITE : Color.RED);
+        var showVolume = owner.debugShowBoundingVolume || (owner.debugShowContentBoundingVolume && !hasContentBoundingVolume);
+        if (showVolume && workaround2657(tile._header.boundingVolume)) {
+            if (!defined(tile._debugBoundingVolume)) {
+                tile._debugBoundingVolume = createDebugVolume(tile._header.boundingVolume, hasContentBoundingVolume ? Color.WHITE : Color.RED);
             }
-            tile._debugBox.update(frameState);
-        } else if (!showBox && defined(tile._debugBox)) {
-            tile._debugBox = tile._debugBox.destroy();
+            tile._debugBoundingVolume.update(frameState);
+        } else if (!showVolume && defined(tile._debugBoundingVolume)) {
+            tile._debugBoundingVolume = tile._debugBoundingVolume.destroy();
         }
 
-        if (owner.debugShowcontentBox && hascontentBox && workaround2657(tile._header.content.box)) {
-            if (!defined(tile._debugcontentBox)) {
-                tile._debugcontentBox = createDebugBox(tile._header.content.box, Color.BLUE);
+        if (owner.debugShowContentBoundingVolume && hasContentBoundingVolume && workaround2657(tile._header.content.boundingVolume)) {
+            if (!defined(tile._debugContentBoundingVolume)) {
+                tile._debugContentBoundingVolume = createDebugVolume(tile._header.content.boundingVolume, Color.BLUE);
             }
-            tile._debugcontentBox.update(frameState);
-        } else if (!owner.debugShowcontentBox && defined(tile._debugcontentBox)) {
-            tile._debugcontentBox = tile._debugcontentBox.destroy();
-        }
-
-        if (owner.debugShowBoundingVolume) {
-            if (!defined(tile._debugOrientedBoundingBox)) {
-                tile._debugOrientedBoundingBox = createDebugOrientedBox(tile._orientedBoundingBox, hascontentBox ? Color.WHITE : Color.RED);
-            }
-            tile._debugOrientedBoundingBox.update(frameState);
-        } else if (!owner.debugShowBoundingVolume && defined(tile._debugOrientedBoundingBox)) {
-            tile._debugOrientedBoundingBox = tile._debugOrientedBoundingBox.destroy();
-        }
-
-        if (owner.debugShowContentsBoundingVolume && hascontentBox) {
-            if (!defined(tile._debugContentsOrientedBoundingBox)) {
-                tile._debugContentsOrientedBoundingBox = createDebugOrientedBox(tile._contentsOrientedBoundingBox, Color.BLUE);
-            }
-            tile._debugContentsOrientedBoundingBox.update(frameState);
-        } else if (!owner.debugShowContentsBoundingVolume && defined(tile._debugContentsOrientedBoundingBox)) {
-            tile._debugContentsOrientedBoundingBox = tile._debugContentsOrientedBoundingBox.destroy();
+            tile._debugContentBoundingVolume.update(frameState);
+        } else if (!owner.debugShowContentBoundingVolume && defined(tile._debugContentBoundingVolume)) {
+            tile._debugContentBoundingVolume = tile._debugContentBoundingVolume.destroy();
         }
     }
 
@@ -393,10 +417,8 @@ define([
      */
     Cesium3DTile.prototype.destroy = function() {
         this._content = this._content && this._content.destroy();
-        this._debugBox = this._debugBox && this._debugBox.destroy();
-        this._debugcontentBox = this._debugcontentBox && this._debugcontentBox.destroy();
-        this._debugOrientedBoundingBox = this._debugOrientedBoundingBox && this._debugOrientedBoundingBox.destroy();
-        this._debugContentsOrientedBoundingBox = this._debugContentsOrientedBoundingBox && this._debugContentsOrientedBoundingBox.destroy();
+        this._debugBoundingVolume = this._debugBoundingVolume && this._debugBoundingVolume.destroy();
+        this._debugContentBoundingVolume = this._debugContentBoundingVolume && this._debugContentBoundingVolume.destroy();
         return destroyObject(this);
     };
 
