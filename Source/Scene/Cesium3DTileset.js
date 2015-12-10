@@ -325,7 +325,6 @@ define([
         addLoadProgressEvent(tiles3D);
 
         tile.requestContent();
-
         var removeFunction = removeFromProcessingQueue(tiles3D, tile);
         when(tile.processingPromise).then(addToProcessingQueue(tiles3D, tile)).otherwise(endRequest(tiles3D, tile));
         when(tile.readyPromise).then(removeFunction).otherwise(removeFunction);
@@ -396,7 +395,6 @@ define([
             var k;
             var additiveRefinment = (t.refine === Cesium3DTileRefine.ADD);
 
-
             if (t.hasTilesetContent && t.isReady()) {
                 // If tile has tileset content, skip it and process its child instead (the tileset root)
                 child = t.children[0];
@@ -465,7 +463,6 @@ define([
                     // or slots are available to request them.  If we are just rendering the
                     // tile (and can't make child requests because no slots are available)
                     // then the children do not need to be sorted.
-
                     var allChildrenLoaded = t.numberOfChildrenWithoutContent === 0;
                     if (allChildrenLoaded || requestScheduler.hasAvailableRequests()) {
                         // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
