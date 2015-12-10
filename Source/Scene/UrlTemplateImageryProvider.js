@@ -149,6 +149,15 @@ define([
      * });
      */
     var UrlTemplateImageryProvider = function UrlTemplateImageryProvider(options) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(options)) {
+          throw new DeveloperError('options is required.');
+        }
+        if (!when.isPromise(options) && !defined(options.url)) {
+          throw new DeveloperError('options is required.');
+        }
+        //>>includeEnd('debug');
+        
         this._errorEvent = new Event();
 
         this._url = undefined;
@@ -204,6 +213,7 @@ define([
 
             that._urlParts = urlTemplateToParts(that._url, tags);
             that._pickFeaturesUrlParts = urlTemplateToParts(that._pickFeaturesUrl, pickFeaturesTags);
+            return true;
         });
     };
 

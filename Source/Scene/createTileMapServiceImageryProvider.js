@@ -164,7 +164,9 @@ define([
                 } else {
                     var message = joinUrls(url, 'tilemapresource.xml') + 'specifies an unsupported profile attribute, ' + tilingSchemeName + '.';
                     metadataError = TileProviderError.handleError(metadataError, imageryProvider, imageryProvider.errorEvent, message, undefined, undefined, undefined, requestMetadata);
-                    imageryProvider.readyPromise.reject(new RuntimeError(message));
+                    if(!metadataError.retry) {
+                        deferred.reject(new RuntimeError(message));
+                    }
                     return;
                 }
             }
