@@ -370,6 +370,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var eventHelper = new EventHelper();
 
         eventHelper.add(clock.onTick, Viewer.prototype._onTick, this);
+        eventHelper.add(cesiumWidget.scene.morphStart, Viewer.prototype._clearTrackedObject, this);
 
         // Selection Indicator
         var selectionIndicator;
@@ -438,7 +439,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         var sceneModePicker;
         if (!scene3DOnly && (!defined(options.sceneModePicker) || options.sceneModePicker !== false)) {
-            eventHelper.add(cesiumWidget.scene.morphStart, Viewer.prototype._clearTrackedObject, this);
             sceneModePicker = new SceneModePicker(toolbar, cesiumWidget.scene);
         }
 
