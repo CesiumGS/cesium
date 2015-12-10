@@ -226,24 +226,21 @@ define([
 
 
     function topIndices(numPts) {
-        // The number of triangles in the ellipse on the positive x half-space and for
-        // the column of triangles in the middle is:
-        //
-        // numTriangles = 4 + 8 + 12 + ... = 4 + (4 + 4) + (4 + 4 + 4) + ... = 4 * (1 + 2 + 3 + ...)
+        // numTriangles in half = 4 + 8 + 12 + ... = 4 + (4 + 4) + (4 + 4 + 4) + ... = 4 * (1 + 2 + 3 + ...)
         //              = 4 * ((n * ( n + 1)) / 2)
-        // numColumnTriangles = 2 * 2 * n
-        // total = 2 * numTrangles + numcolumnTriangles
-        //
-        // Substitute (numPts - 1.0) for n above
-        var indices = new Array(2 * numPts * (numPts + 1));
+        // total triangles = 2 * numTrangles in half
+        // indices = total triangles * 3;
+        // Substitute numPts for n above
+
+        var indices = new Array(12 * (numPts * ( numPts + 1)));
         var indicesIndex = 0;
         var prevIndex;
         var numInterior;
         var positionIndex;
         var i;
         var j;
-        // Indices triangles to the 'left' of the north vector
-        for (i = 1; i < numPts; ++i) {
+        // Indices triangles to the 'right' of the north vector
+        for (i = 1; i < numPts + 1; ++i) {
             positionIndex = i * (i + 1);
             prevIndex = (i - 1) * i;
 
@@ -268,7 +265,7 @@ define([
             indices[indicesIndex++] = positionIndex;
         }
 
-        // Indices for central column of triangles
+        // Indices for center column of triangles
         numInterior = numPts * 2;
         ++positionIndex;
         ++prevIndex;
@@ -282,9 +279,17 @@ define([
             indices[indicesIndex++] = positionIndex;
         }
 
-        // Reverse the process creating indices to the 'right' of the north vector
+        indices[indicesIndex++] = positionIndex;
+        indices[indicesIndex++] = prevIndex++;
+        indices[indicesIndex++] = prevIndex;
+
+        indices[indicesIndex++] = positionIndex++;
+        indices[indicesIndex++] = prevIndex++;
+        indices[indicesIndex++] = prevIndex;
+
+
+        // Reverse the process creating indices to the 'left' of the north vector
         ++prevIndex;
-        ++positionIndex;
         for (i = numPts - 1; i > 0; --i) {
             indices[indicesIndex++] = prevIndex++;
             indices[indicesIndex++] = prevIndex;
