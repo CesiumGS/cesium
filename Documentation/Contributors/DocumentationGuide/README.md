@@ -71,6 +71,10 @@ This guide describes best practices for writing doc.  For complete details on th
 ```
 * @param {Cartesian3} [result] The object onto which to store the result.
 ```
+* If a parameter can be more than one type, use `|` to separate the types, e.g.,
+```
+* @param {GeometryInstance[]|GeometryInstance} [options.geometryInstances] The geometry instances - or a single geometry instance - to render.
+```
 
 As a complete example,
 ```javascript
@@ -146,36 +150,6 @@ Matrix4.fromColumnMajorArray = function(values, result) {
 };
 ```
 
-## References
-
-* Use `@see` sparingly to link to related classes, functions, and online resources., e.g.,
-```javascript
-/**
- * A {@link TerrainProvider} that produces terrain geometry by tessellating height maps
- * retrieved from an ArcGIS ImageServer.
- *
- * ...
- *
- * @see TerrainProvider
- */
-var ArcGisImageServerTerrainProvider = function(options) {
-    // ...
-```
-
-generates
-
-![](ArcGisImageServerTerrainProvider.png)
-
-* Use `#` to reference an instance member (e.g., one that is assigned to the prototype); use `.` to access a static member, e.g.,
-```
-@see Class
-@see Class#instanceMember
-@see Class.staticMember
-```
-* Use `{@link className}` to link to another documented type.  This is not required for `@param` tags when the type is provided.
-* Use `<code> </code>` tags when referring to parameters or other variable names and values within a description.
-* Use `{@link URL|title}` to link to external sites.
-
 ## Examples
 
 Developers almost always jump to a example before reading the doc.  Provide concise but instructive code examples with enough context whenever possible.
@@ -218,6 +192,36 @@ CesiumMath.EPSILON1 = 0.1;
 
 Use the Cesium namespace (`Cesium.`) in examples.
 
+## References
+
+* Use `@see` sparingly to link to related classes, functions, and online resources., e.g.,
+```javascript
+/**
+ * A {@link TerrainProvider} that produces terrain geometry by tessellating height maps
+ * retrieved from an ArcGIS ImageServer.
+ *
+ * ...
+ *
+ * @see TerrainProvider
+ */
+var ArcGisImageServerTerrainProvider = function(options) {
+    // ...
+```
+
+generates
+
+![](ArcGisImageServerTerrainProvider.png)
+
+* Use `#` to reference an instance member (e.g., one that is assigned to the prototype); use `.` to access a static member, e.g.,
+```
+@see Class
+@see Class#instanceMember
+@see Class.staticMember
+```
+* Use `{@link className}` to link to another documented type.  This is not required for `@param` tags when the type is provided.
+* Use `<code> </code>` tags when referring to parameters or other variable names and values within a description.
+* Use `{@link URL|title}` to link to external sites.
+
 ## Constants
 
 _TODO: @type_
@@ -226,7 +230,13 @@ _TODO: @function_
 
 ---
 
-_TODO: Sandcastle links_
+_TODO: Classes_
+_TODO: Properties_
+_TODO: property get/set_
+_TODO: functors_ `@callback`
+_TODO: `@private`_
+_TODO: review old guide_
+_TODO: Sandcastle links_ `@demo`
 
 **TODO**
 
