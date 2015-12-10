@@ -14,7 +14,11 @@ Change Log
     * Removed `HeightmapTessellator` from the public API. It is now private and subject to change without notice.
     * Removed `TerrainMesh` from the public API. It is now private and subject to change without notice.
     * Removed `jsonp`. Use `loadJsonp` instead.
+* Deprecated
+    * Deprecated `TileMapServiceImageryProvider`. It will be removed in 1.18. Use `createTileMapServiceImageryProvider` instead.
+* Refactored `UrlTemplateImageryProvider.reinitialize` to accept a promise to `options`.
 * Reduced the amount of both GPU and CPU memory used by terrain. The CPU memory was reduced by up to 40%.
+
 
 ### 1.16 - 2015-12-01
 
