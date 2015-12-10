@@ -96,6 +96,19 @@ defineSuite([
         expect(rectangle.north).toEqual(maxLat.latitude);
     });
 
+    it('fromCartographicArray produces rectangle that crosses IDL.', function() {
+        var minLon = Cartographic.fromDegrees(-178, 3);
+        var minLat = Cartographic.fromDegrees(-179, -4);
+        var maxLon = Cartographic.fromDegrees(178, 3);
+        var maxLat = Cartographic.fromDegrees(179, 4);
+
+        var rectangle = Rectangle.fromCartographicArray([minLat, minLon, maxLat, maxLon]);
+        expect(rectangle.east).toEqual(minLon.longitude);
+        expect(rectangle.south).toEqual(minLat.latitude);
+        expect(rectangle.west).toEqual(maxLon.longitude);
+        expect(rectangle.north).toEqual(maxLat.latitude);
+    });
+
     it('fromCartographicArray works with a result parameter.', function() {
         var minLon = new Cartographic(-0.1, 0.3, 0.0);
         var minLat = new Cartographic(0.0, -0.2, 0.0);
