@@ -87,6 +87,7 @@ Matrix4.fromRotationTranslation = function(rotation, translation, result) {
     // ..
 ```
 generates
+
 ![](fromRotationTranslation.png)
 The Cesium classes in the `Type` column are links to their doc.
 
@@ -102,13 +103,46 @@ Each property of an `options` parameter should be documented with a separate `@p
  * @param {Object} [options.id] A user-defined object to return when the instance is picked with {@link Scene#pick}
 ```
 generates
+
 ![](DebugModelMatrixPrimitive.png)
 
 _TODO: link to Code Guide section._
 
 ## Exceptions
 
-_TODO_
+* Document exceptions after the `@param`/`@returns` section using `@exception`, e.g.,
+```javascript
+/**
+ * ...
+ *
+ * @exception {DeveloperError} aspectRatio must be greater than zero.
+ */
+Matrix4.computePerspectiveFieldOfView = function(fovY, aspectRatio, near, far, result) {
+    //>>includeStart('debug', pragmas.debug);
+    if (aspectRatio <= 0.0) {
+        throw new DeveloperError('aspectRatio must be greater than zero.');
+    }
+    // ...
+```
+* Do not document exceptions for miss parameters; it is implicit in the `@param` tag because the parameter is not optional, e.g.,
+```javascript
+/**
+ * Computes a Matrix4 instance from a column-major order array.
+ *
+ * @param {Number[]} values The column-major order array.
+ * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
+ * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
+ */
+Matrix4.fromColumnMajorArray = function(values, result) {
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(values)) {
+        throw new DeveloperError('values is required.');
+    }
+    //>>includeEnd('debug');
+
+    return Matrix4.clone(values, result);
+};
+```
 
 ## Examples
 
