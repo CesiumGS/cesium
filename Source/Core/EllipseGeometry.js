@@ -132,7 +132,7 @@ define([
 
             if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
                 if (vertexFormat.tangent || vertexFormat.binormal) {
-                    tangent = Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
+                    tangent = Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent), tangent);
                     Matrix3.multiplyByVector(textureMatrix, tangent, tangent);
                 }
                 if (vertexFormat.normal) {
@@ -158,7 +158,7 @@ define([
                 }
 
                 if (vertexFormat.binormal) {
-                    binormal = Cartesian3.cross(normal, tangent, binormal);
+                    binormal = Cartesian3.normalize(Cartesian3.cross(normal, tangent, binormal), binormal);
                     binormals[i] = binormal.x;
                     binormals[i1] = binormal.y;
                     binormals[i2] = binormal.z;
