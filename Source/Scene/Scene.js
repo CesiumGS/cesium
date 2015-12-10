@@ -1553,36 +1553,6 @@ define([
                 pickDepth.executeCopyDepth(context, passState);
             }
         }
-
-        if (scene.debugShowGlobeDepth && scene._state.useGlobeDepthFramebuffer) {
-            var gd = getDebugGlobeDepth(scene, scene.debugShowDepthFrustum - 1);
-            gd.executeDebugGlobeDepth(context, passState);
-        }
-
-        if (scene.debugShowPickDepth && scene._state.useGlobeDepthFramebuffer) {
-            var pd = getPickDepth(scene, scene.debugShowDepthFrustum - 1);
-            pd.executeDebugPickDepth(context, passState);
-        }
-
-        if (scene._state.useOIT) {
-            passState.framebuffer = scene._state.useFXAA ? scene._fxaa.getColorFramebuffer() : undefined;
-            scene._oit.execute(context, passState);
-        }
-
-        if (scene._state.useFXAA) {
-            if (!scene._state.useOIT && scene._state.useGlobeDepthFramebuffer) {
-                passState.framebuffer = scene._fxaa.getColorFramebuffer();
-                scene._globeDepth.executeCopyColor(context, passState);
-            }
-
-            passState.framebuffer = scene._state.originalFramebuffer;
-            scene._fxaa.execute(context, passState);
-        }
-
-        if (!scene._state.useOIT && !scene._state.useFXAA && scene._state.useGlobeDepthFramebuffer) {
-            passState.framebuffer = scene._state.originalFramebuffer;
-            scene._globeDepth.executeCopyColor(context, passState);
-        }
     }
 
     function executeComputeCommands(scene) {
@@ -1707,6 +1677,44 @@ define([
         }
     }
 
+    function resolveFramebuffers(scene, passState) {
+        var context = scene._context;
+
+        var useGlobeDepthFramebuffer = scene._state.useGlobeDepthFramebuffer;
+        if (scene.debugShowGlobeDepth && useGlobeDepthFramebuffer) {
+            var gd = getDebugGlobeDepth(scene, scene.debugShowDepthFrustum - 1);
+            gd.executeDebugGlobeDepth(context, passState);
+        }
+
+        if (scene.debugShowPickDepth && useGlobeDepthFramebuffer) {
+            var pd = getPickDepth(scene, scene.debugShowDepthFrustum - 1);
+            pd.executeDebugPickDepth(context, passState);
+        }
+
+        var useOIT = scene._state.useOIT;
+        var useFXAA = scene._state.useFXAA;
+
+        if (useOIT) {
+            passState.framebuffer = useFXAA ? scene._fxaa.getColorFramebuffer() : undefined;
+            scene._oit.execute(context, passState);
+        }
+
+        if (useFXAA) {
+            if (!useOIT && useGlobeDepthFramebuffer) {
+                passState.framebuffer = scene._fxaa.getColorFramebuffer();
+                scene._globeDepth.executeCopyColor(context, passState);
+            }
+
+            passState.framebuffer = scene._state.originalFramebuffer;
+            scene._fxaa.execute(context, passState);
+        }
+
+        if (!useOIT && !useFXAA && useGlobeDepthFramebuffer) {
+            passState.framebuffer = scene._state.originalFramebuffer;
+            scene._globeDepth.executeCopyColor(context, passState);
+        }
+    }
+
     function callAfterRenderFunctions(frameState) {
         // Functions are queued up during primitive update and executed here in case
         // the function modifies scene state that should remain constant over the frame.
@@ -1784,6 +1792,7 @@ define([
 
         executeComputeCommands(scene);
         executeCommands(scene, passState);
+        resolveFramebuffers(scene, passState);
         executeOverlayCommands(scene, passState);
 
         frameState.creditDisplay.endFrame();
@@ -1965,6 +1974,8 @@ define([
         scratchRectangle.y = (this.drawingBufferHeight - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
 
         executeCommands(this, passState);
+        resolveFramebuffers(this, passState);
+
         var object = this._pickFramebuffer.end(scratchRectangle);
         context.endFrame();
         callAfterRenderFunctions(frameState);
