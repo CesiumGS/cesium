@@ -217,11 +217,12 @@ define([
         this._frameState = new FrameState(context, new CreditDisplay(creditContainer));
         this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
 
-        this._passState = new PassState(context);
-        this._passState.viewport.x = 0;
-        this._passState.viewport.y = 0;
-        this._passState.viewport.width = context.drawingBufferWidth;
-        this._passState.viewport.height = context.drawingBufferHeight;
+        var ps = new PassState(context);
+        ps.viewport.x = 0;
+        ps.viewport.y = 0;
+        ps.viewport.width = context.drawingBufferWidth;
+        ps.viewport.height = context.drawingBufferHeight;
+        this._passState = ps;
 
         this._canvas = canvas;
         this._context = context;
