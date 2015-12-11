@@ -9,7 +9,6 @@ The Cesium team gives a lot of [talks](http://cesiumjs.org/publications.html).  
 * [You're Not Too Short on Time](#youre-not-too-short-on-time)
 * [Use "Short" Slides](#use-short-slides)
 * [Inspire. Don't Teach](#inspire--dont-teach)
-* [Show. Don't Tell](show--dont-tell)
 * [Finish with a Call to Action](#finish-with-a-call-to-action)
 * [Practice](#practice)
 * [Test the Projector](#test-the-projector)
