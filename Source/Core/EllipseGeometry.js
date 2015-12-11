@@ -226,13 +226,13 @@ define([
 
 
     function topIndices(numPts) {
-        // numTriangles in half = 4 + 8 + 12 + ... = 4 + (4 + 4) + (4 + 4 + 4) + ... = 4 * (1 + 2 + 3 + ...)
-        //              = 4 * ((n * ( n + 1)) / 2)
+        // numTriangles in half = 3 + 8 + 12 + ... = -1 + 4 + (4 + 4) + (4 + 4 + 4) + ... = -1 + 4 * (1 + 2 + 3 + ...)
+        //              = -1 + 4 * ((n * ( n + 1)) / 2)
         // total triangles = 2 * numTrangles in half
         // indices = total triangles * 3;
         // Substitute numPts for n above
 
-        var indices = new Array(12 * (numPts * ( numPts + 1)));
+        var indices = new Array(12 * (numPts * ( numPts + 1)) - 6);
         var indicesIndex = 0;
         var prevIndex;
         var numInterior;
@@ -240,9 +240,18 @@ define([
         var i;
         var j;
         // Indices triangles to the 'right' of the north vector
-        for (i = 1; i < numPts + 1; ++i) {
-            positionIndex = i * (i + 1);
-            prevIndex = (i - 1) * i;
+
+        prevIndex = 0;
+        positionIndex = 1;
+        for (i = 0; i < 3; i++) {
+            indices[indicesIndex++] = positionIndex++;
+            indices[indicesIndex++] = prevIndex;
+            indices[indicesIndex++] = positionIndex;
+        }
+
+        for (i = 2; i < numPts + 1; ++i) {
+            positionIndex = i * (i + 1) - 1;
+            prevIndex = (i - 1) * i - 1;
 
             indices[indicesIndex++] = positionIndex++;
             indices[indicesIndex++] = prevIndex;
@@ -290,7 +299,7 @@ define([
 
         // Reverse the process creating indices to the 'left' of the north vector
         ++prevIndex;
-        for (i = numPts - 1; i > 0; --i) {
+        for (i = numPts - 1; i > 1; --i) {
             indices[indicesIndex++] = prevIndex++;
             indices[indicesIndex++] = prevIndex;
             indices[indicesIndex++] = positionIndex;
@@ -309,6 +318,12 @@ define([
             indices[indicesIndex++] = prevIndex++;
             indices[indicesIndex++] = prevIndex++;
             indices[indicesIndex++] = positionIndex++;
+        }
+
+        for (i = 0; i < 3; i++) {
+            indices[indicesIndex++] = prevIndex++;
+            indices[indicesIndex++] = prevIndex;
+            indices[indicesIndex++] = positionIndex;
         }
         return indices;
     }

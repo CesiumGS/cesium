@@ -137,17 +137,16 @@ define([
         //       / | \ | \
         //     *---*---*---*
         //   / | \ | \ | \ | \
-        // *---*---*---*---*---*
-        // | \ | \ | \ | \ | \ |
-        // *---*---*---*---*---*
+        //  / .*---*---*---*. \
+        // * ` | \ | \ | \ | `*
+        //  \`.*---*---*---*.`/
         //   \ | \ | \ | \ | /
         //     *---*---*---*
         //       \ | \ | /
         //         *---*
-        // Notice each vertical column contains an even number of positions.
-        // The sum of the first n even numbers is n * (n + 1). Double it for the number of points
-        // for the whole ellipse.
-        var size = 2 * (numPts * (numPts + 1) + (numPts + 1));
+        // The first and last column have one position and fan to connect to the adjacent column.
+        // Each other vertical column contains an even number of positions.
+        var size = 2 * (numPts * (numPts + 2));
         var positions = (addFillPositions) ? new Array(size * 3) : undefined;
         var positionIndex = 0;
         var position = scratchCartesian1;
@@ -166,7 +165,19 @@ define([
 
         // Compute points in the 'eastern' half of the ellipse
         theta = CesiumMath.PI_OVER_TWO;
-        for (i = 0; i < numPts + 1; ++i) {
+        position = pointOnEllipsoid(theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, position);
+        if (addFillPositions) {
+        positions[positionIndex++] = position.x;
+        positions[positionIndex++] = position.y;
+        positions[positionIndex++] = position.z;
+        }
+        if (addEdgePositions) {
+            outerPositions[outerRightIndex--] = position.z;
+            outerPositions[outerRightIndex--] = position.y;
+            outerPositions[outerRightIndex--] = position.x;
+        }
+        theta = CesiumMath.PI_OVER_TWO -  deltaTheta;
+        for (i = 1; i < numPts + 1; ++i) {
             position = pointOnEllipsoid(theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, position);
             reflectedPosition = pointOnEllipsoid(Math.PI - theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, reflectedPosition);
 
@@ -193,18 +204,16 @@ define([
                 outerPositions[outerRightIndex--] = position.z;
                 outerPositions[outerRightIndex--] = position.y;
                 outerPositions[outerRightIndex--] = position.x;
-                if (i !== 0) {
-                    outerPositions[outerLeftIndex++] = reflectedPosition.x;
-                    outerPositions[outerLeftIndex++] = reflectedPosition.y;
-                    outerPositions[outerLeftIndex++] = reflectedPosition.z;
-                }
+                outerPositions[outerLeftIndex++] = reflectedPosition.x;
+                outerPositions[outerLeftIndex++] = reflectedPosition.y;
+                outerPositions[outerLeftIndex++] = reflectedPosition.z;
             }
 
             theta = CesiumMath.PI_OVER_TWO - (i + 1) * deltaTheta;
         }
 
         // Compute points in the 'western' half of the ellipse
-        for (i = numPts; i > 0; --i) {
+        for (i = numPts; i > 1; --i) {
             theta = CesiumMath.PI_OVER_TWO - (i - 1) * deltaTheta;
 
             position = pointOnEllipsoid(-theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, position);
@@ -233,21 +242,27 @@ define([
                 outerPositions[outerRightIndex--] = position.z;
                 outerPositions[outerRightIndex--] = position.y;
                 outerPositions[outerRightIndex--] = position.x;
-                if (i !== 1) {
-                    outerPositions[outerLeftIndex++] = reflectedPosition.x;
-                    outerPositions[outerLeftIndex++] = reflectedPosition.y;
-                    outerPositions[outerLeftIndex++] = reflectedPosition.z;
-                }
+                outerPositions[outerLeftIndex++] = reflectedPosition.x;
+                outerPositions[outerLeftIndex++] = reflectedPosition.y;
+                outerPositions[outerLeftIndex++] = reflectedPosition.z;
             }
         }
 
+        theta = CesiumMath.PI_OVER_TWO;
+        position = pointOnEllipsoid(-theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, position);
+
         var r = {};
         if (addFillPositions) {
+            positions[positionIndex++] = position.x;
+            positions[positionIndex++] = position.y;
+            positions[positionIndex++] = position.z;
             r.positions = positions;
             r.numPts = numPts;
         }
-
         if (addEdgePositions) {
+            outerPositions[outerRightIndex--] = position.z;
+            outerPositions[outerRightIndex--] = position.y;
+            outerPositions[outerRightIndex--] = position.x;
             r.outerPositions = outerPositions;
         }
 
