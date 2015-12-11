@@ -281,7 +281,7 @@ define([
      * DOC_TBA
      */
     Cesium3DTile.prototype.visibility = function(cullingVolume) {
-        var boundingVolume = this._orientedBoundingBox || this._tileBoundingSphere;
+        var boundingVolume = defaultValue(this._orientedBoundingBox, this._tileBoundingSphere);
         return cullingVolume.computeVisibilityWithPlaneMask(boundingVolume, this.parentPlaneMask);
     };
 
@@ -289,7 +289,7 @@ define([
      * DOC_TBA
      */
     Cesium3DTile.prototype.contentsVisibility = function(cullingVolume) {
-        var boundingVolume = this._contentsOrientedBoundingBox || this._contentsBoundingSphere;
+        var boundingVolume = defaultValue(this._contentsOrientedBoundingBox, this._contentsBoundingSphere);
         if (!defined(boundingVolume)) {
             return Intersect.INSIDE;
         }
@@ -301,7 +301,7 @@ define([
      * DOC_TBA
      */
     Cesium3DTile.prototype.distanceToTile = function(frameState) {
-        var boundingVolume = this._tileBoundingBox || this._tileBoundingSphere;
+        var boundingVolume = defaultValue(this._tileBoundingBox, this._tileBoundingSphere);
         return boundingVolume.distanceToCamera(frameState);
     };
 
@@ -326,20 +326,15 @@ define([
 
     function createDebugVolume(boundingVolume, color) {
         var geometry;
-        var modelMatrix = new Matrix4(
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1
-        );
-        if (boundingVolume.box) {
+        var modelMatrix = new Matrix4.clone(Matrix4.IDENTITY);
+        if (defined(boundingVolume.box)) {
             var box = boundingVolume.box;
             geometry = new RectangleOutlineGeometry({
                 rectangle : new Rectangle(box[0], box[1], box[2], box[3]),
                 height : box[4],
                 extrudedHeight: box[5]
              });
-        } else if (boundingVolume.sphere) {
+        } else if (defined(boundingVolume.sphere)) {
             var sphere = boundingVolume.sphere;
             geometry = new SphereOutlineGeometry({
                 radius: sphere[3]
