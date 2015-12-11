@@ -319,6 +319,18 @@ define([
             set : function(value) {
                 this._surface.tileProvider.baseColor = value;
             }
+        },
+        /**
+         * Gets an event that's fired when a tile is loaded, or when a new tile to be loaded is added to the queue. The
+         * event passes the new length of the tile load queue.
+         *
+         * @memberof Globe.prototype
+         * @type {Event}
+         */
+        tileLoadProgressEvent : {
+            get: function() {
+                return this._surface.tileLoadProgressEvent;
+            }
         }
     });
 
