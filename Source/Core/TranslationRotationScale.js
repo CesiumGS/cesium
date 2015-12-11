@@ -1,10 +1,10 @@
 /*global define*/
 define([
-        '../Core/Cartesian3',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/Matrix4',
-        '../Core/Quaternion'
+        './Cartesian3',
+        './defaultValue',
+        './defined',
+        './Matrix4',
+        './Quaternion'
     ], function(
         Cartesian3,
         defaultValue,
