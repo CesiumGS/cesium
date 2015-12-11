@@ -131,6 +131,9 @@ define([
         this._occluders = new QuadtreeOccluders({
             ellipsoid : ellipsoid
         });
+
+        this._tileLoadProgressEvent = new Event();
+        this._lastTileLoadQueueLength = 0;
     };
 
     defineProperties(QuadtreePrimitive.prototype, {
@@ -142,6 +145,18 @@ define([
         tileProvider : {
             get : function() {
                 return this._tileProvider;
+            }
+        },
+        /**
+         * Gets an event that's fired when a tile is loaded, or when a new tile to be loaded is added to this quadtree's
+         * load queue. The event passes the new length of the tile load queue.
+         *
+         * @memberof QuadtreePrimitive.prototype
+         * @type {Event}
+         */
+        tileLoadProgressEvent : {
+            get : function() {
+                return this._tileLoadProgressEvent;
             }
         }
     });
@@ -415,6 +430,8 @@ define([
             }
         }
 
+        raiseTileLoadProgressEvent(primitive);
+
         if (debug.enableDebugOutput) {
             if (debug.tilesVisited !== debug.lastTilesVisited ||
                 debug.tilesRendered !== debug.lastTilesRendered ||
@@ -430,6 +447,19 @@ define([
                 debug.lastMaxDepth = debug.maxDepth;
                 debug.lastTilesWaitingForChildren = debug.tilesWaitingForChildren;
             }
+        }
+    }
+
+    /**
+     * Checks if the load queue length has changed since the last time we raised a queue change event - if so, raises
+     * a new one.
+     */
+    function raiseTileLoadProgressEvent(primitive) {
+        var currentLoadQueueLength = primitive._tileLoadQueue.length;
+
+        if (currentLoadQueueLength !== primitive._lastTileLoadQueueLength) {
+            primitive._tileLoadProgressEvent.raiseEvent(currentLoadQueueLength);
+            primitive._lastTileLoadQueueLength = currentLoadQueueLength;
         }
     }
 
