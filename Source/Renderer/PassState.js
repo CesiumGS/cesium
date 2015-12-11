@@ -1,5 +1,8 @@
 /*global define*/
-define(['../Core/BoundingRectangle'], function(BoundingRectangle) {
+define([
+        '../Core/BoundingRectangle'
+    ], function(
+        BoundingRectangle) {
     "use strict";
 
     /**
