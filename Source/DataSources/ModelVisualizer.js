@@ -9,7 +9,6 @@ define([
         '../Scene/Model',
         '../Scene/ModelAnimationLoop',
         './BoundingSphereState',
-        './NodeTransformation',
         './Property'
     ], function(
         AssociativeArray,
@@ -21,7 +20,6 @@ define([
         Model,
         ModelAnimationLoop,
         BoundingSphereState,
-        NodeTransformation,
         Property) {
     "use strict";
 
@@ -30,7 +28,6 @@ define([
     var defaultIncrementallyLoadTextures = true;
 
     var modelMatrixScratch = new Matrix4();
-    var nodeTransformationScratch = new NodeTransformation();
     var nodeMatrixScratch = new Matrix4();
 
     /**
@@ -122,7 +119,8 @@ define([
                 modelData = {
                     modelPrimitive : model,
                     uri : uri,
-                    animationsRunning : false
+                    animationsRunning : false,
+                    nodeTransformationsScratch : {}
                 };
                 modelHash[entity.id] = modelData;
             }
@@ -147,14 +145,14 @@ define([
                 }
 
                 // Apply node transformations
-                var nodeTransformations = modelGraphics._nodeTransformations;
+                var nodeTransformations = Property.getValueOrUndefined(modelGraphics._nodeTransformations, time, modelData.nodeTransformationsScratch);
                 if (defined(nodeTransformations)) {
-                    var nodeNames = nodeTransformations._propertyNames;
+                    var nodeNames = Object.keys(nodeTransformations);
                     for (var nodeIndex = 0, nodeLength = nodeNames.length; nodeIndex < nodeLength; ++nodeIndex) {
                         var nodeName = nodeNames[nodeIndex];
 
-                        var nodeTransformationProperty = nodeTransformations[nodeName];
-                        if (!defined(nodeTransformationProperty)) {
+                        var nodeTransformation = nodeTransformations[nodeName];
+                        if (!defined(nodeTransformation)) {
                             continue;
                         }
 
@@ -169,7 +167,6 @@ define([
                             originalNodeMatrixHash[nodeName] = originalNodeMatrix;
                         }
 
-                        var nodeTransformation = nodeTransformationProperty.getValue(time, nodeTransformationScratch);
                         var transformationMatrix = nodeTransformation.toMatrix(nodeMatrixScratch);
                         modelNode.matrix = Matrix4.multiply(originalNodeMatrix, transformationMatrix, transformationMatrix);
                     }
@@ -262,6 +259,7 @@ define([
         for (i = changed.length - 1; i > -1; i--) {
             entity = changed[i];
             if (defined(entity._model) && defined(entity._position)) {
+                clearNodeTransformationsScratch(entity, modelHash);
                 entities.set(entity.id, entity);
             } else {
                 removeModel(this, entity, modelHash, primitives);
@@ -281,6 +279,13 @@ define([
         if (defined(modelData)) {
             primitives.removeAndDestroy(modelData.modelPrimitive);
             delete modelHash[entity.id];
+        }
+    }
+
+    function clearNodeTransformationsScratch(entity, modelHash) {
+        var modelData = modelHash[entity.id];
+        if (defined(modelData)) {
+            modelData.nodeTransformationsScratch = {};
         }
     }
 

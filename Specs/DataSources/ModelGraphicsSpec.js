@@ -28,9 +28,9 @@ defineSuite([
             runAnimations : false,
             nodeTransformations : {
                 node1 : {
-                    scale : Cartesian3.UNIT_X,
                     translation : Cartesian3.UNIT_Y,
-                    rotation : new Quaternion(0.5, 0.5, 0.5, 0.5)
+                    rotation : new Quaternion(0.5, 0.5, 0.5, 0.5),
+                    scale : Cartesian3.UNIT_X
                 }
             }
         };
@@ -74,9 +74,9 @@ defineSuite([
         source.runAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             node1 : new NodeTransformationProperty({
-                scale : Cartesian3.UNIT_X,
                 translation : Cartesian3.UNIT_Y,
-                rotation : new Quaternion(0.5, 0.5, 0.5, 0.5)
+                rotation : new Quaternion(0.5, 0.5, 0.5, 0.5),
+                scale : Cartesian3.UNIT_X
             }),
             node2 : new NodeTransformationProperty({
                 scale : Cartesian3.UNIT_Z

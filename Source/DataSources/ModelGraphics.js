@@ -46,7 +46,7 @@ define([
      * @param {Property} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
      * @param {Property} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Property} [options.runAnimations=true] A boolean Property specifying if glTF animations specified in the model should be started.
-     * @param {Property} [options.nodeTransformations] An object, where keys are names of nodes, and values are {@link NodeTransformation} Properties describing the transformation to apply to that node.
+     * @param {Property} [options.nodeTransformations] An object, where keys are names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node.
      *
      * @see {@link http://cesiumjs.org/2014/03/03/Cesium-3D-Models-Tutorial/|3D Models Tutorial}
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
@@ -149,7 +149,7 @@ define([
 
         /**
          * Gets or sets the set of node transformations to apply to this model.  This is represented as an {@link PropertyBag}, where keys are
-         * names of nodes, and values are {@link NodeTransformation} Properties describing the transformation to apply to that node.
+         * names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node.
          * @memberof ModelGraphics.prototype
          * @type {PropertyBag}
          */

@@ -41,6 +41,39 @@ defineSuite([
         });
     });
 
+    it('works with result parameter', function() {
+        var property = new PropertyBag({
+            a : new ConstantProperty(1),
+            b : new ConstantProperty(2)
+        });
+
+        var expectedResult = {
+            a : -1
+        };
+        var result = property.getValue(time, expectedResult);
+        expect(result).toEqual({
+            a : 1,
+            b : 2
+        });
+        expect(result).toBe(expectedResult);
+    });
+
+    it('leaves extra properties in result object in place', function() {
+        var property = new PropertyBag({
+            a : new ConstantProperty(1)
+        });
+
+        var expectedResult = {
+            q : -1
+        };
+        var result = property.getValue(time, expectedResult);
+        expect(result).toEqual({
+            a : 1,
+            q : -1
+        });
+        expect(result).toBe(expectedResult);
+    });
+
     it('converts raw values to properties when constructed', function() {
         var property = new PropertyBag({
             a : 1,

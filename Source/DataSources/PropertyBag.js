@@ -156,24 +156,29 @@ define([
     };
 
     /**
-     * Gets the value of this object.  Each contained property will be evaluated at the given time, and the overall
-     * result will be an object mapping property names to those values.
+     * Gets the value of this property.  Each contained property will be evaluated at the given time, and the overall
+     * result will be an object, mapping property names to those values.
      *
      * @param {JulianDate} time The time for which to retrieve the value.
-     * @returns {Object} An object mapping property names to the evaluated value of those properties.
+     * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+     * Note that any properties in result which are not part of this PropertyBag will be left as-is.
+     * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
      */
-    PropertyBag.prototype.getValue = function(time) {
+    PropertyBag.prototype.getValue = function(time, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
         }
         //>>includeEnd('debug');
 
-        var result = {};
+        if (!defined(result)) {
+            result = {};
+        }
+
         var propertyNames = this._propertyNames;
         for (var i = 0, len = propertyNames.length; i < len; i++) {
             var propertyName = propertyNames[i];
-            result[propertyName] = Property.getValueOrUndefined(this[propertyName], time);
+            result[propertyName] = Property.getValueOrUndefined(this[propertyName], time, result[propertyName]);
         }
         return result;
     };

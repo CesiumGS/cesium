@@ -19,8 +19,8 @@ defineSuite([
         'Core/ReferenceFrame',
         'Core/RuntimeError',
         'Core/TimeInterval',
+        'Core/TranslationRotationScale',
         'DataSources/EntityCollection',
-        'DataSources/NodeTransformation',
         'DataSources/ReferenceProperty',
         'Scene/HorizontalOrigin',
         'Scene/LabelStyle',
@@ -47,8 +47,8 @@ defineSuite([
         ReferenceFrame,
         RuntimeError,
         TimeInterval,
+        TranslationRotationScale,
         EntityCollection,
-        NodeTransformation,
         ReferenceProperty,
         HorizontalOrigin,
         LabelStyle,
@@ -1602,7 +1602,7 @@ defineSuite([
         expect(entity.model.minimumPixelSize.getValue(invalidTime)).toBeUndefined();
         expect(entity.model.uri.getValue(invalidTime)).toBeUndefined();
 
-        expect(entity.model.nodeTransformations.Mesh.getValue(invalidTime)).toEqual(new NodeTransformation());
+        expect(entity.model.nodeTransformations.Mesh.getValue(invalidTime)).toEqual(new TranslationRotationScale());
         expect(entity.model.nodeTransformations.Mesh.scale.getValue(invalidTime)).toBeUndefined();
         expect(entity.model.nodeTransformations.Mesh.translation.getValue(invalidTime)).toBeUndefined();
         expect(entity.model.nodeTransformations.Mesh.rotation.getValue(invalidTime)).toBeUndefined();

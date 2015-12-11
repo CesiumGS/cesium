@@ -117,14 +117,14 @@ defineSuite([
         model.minimumPixelSize = new ConstantProperty(24.0);
         model.uri = new ConstantProperty(boxUrl);
 
-        var scale = new Cartesian3(2.0, 2.0, 2.0);
         var translation = new Cartesian3(1.0, 2.0, 3.0);
         var rotation = new Quaternion(0.0, 0.707, 0.0, 0.707);
+        var scale = new Cartesian3(2.0, 2.0, 2.0);
         var nodeTransforms = {
             Mesh : new NodeTransformationProperty({
-                scale : new ConstantProperty(scale),
                 translation : new ConstantProperty(translation),
-                rotation : new ConstantProperty(rotation)
+                rotation : new ConstantProperty(rotation),
+                scale : new ConstantProperty(scale)
             })
         };
         model.nodeTransformations = nodeTransforms;
