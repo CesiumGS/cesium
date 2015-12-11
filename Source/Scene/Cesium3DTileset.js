@@ -393,7 +393,7 @@ define([
             var childrenLength = children.length;
             var child;
             var k;
-            var additiveRefinment = (t.refine === Cesium3DTileRefine.ADD);
+            var additiveRefinement = (t.refine === Cesium3DTileRefine.ADD);
 
             if (t.hasTilesetContent && t.isReady()) {
                 // If tile has tileset content, skip it and process its child instead (the tileset root)
@@ -406,7 +406,7 @@ define([
                 continue;
             }
 
-            if (additiveRefinment) {
+            if (additiveRefinement) {
                 // With additive refinement, the tile is rendered
                 // regardless of if its SSE is sufficient.
                 selectTile(selectedTiles, t, fullyVisible, frameState);
