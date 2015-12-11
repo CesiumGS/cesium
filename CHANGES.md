@@ -18,6 +18,7 @@ Change Log
 * `CorridorGeometry` and `PolylineVolumeGeometry` render short segments [#3293](https://github.com/AnalyticalGraphicsInc/cesium/issues/3293)
 * `Rectangle.fromCartographicArray` finds the smallest rectangle regardess of whether or not it crosses the international date line. [#3227](https://github.com/AnalyticalGraphicsInc/cesium/issues/3227)
 * Bug fix for `CorridorGeometry` with nearly colinear points [#3320](https://github.com/AnalyticalGraphicsInc/cesium/issues/3320)
+* Added `QuadtreePrimitive#tileLoadProgressEvent` and `Globe#tileLoadProgressEvent` - these raise an event when the length of the tile load queue changes, enabling incremental loading indicators.
 
 ### 1.16 - 2015-12-01
 
