@@ -47,7 +47,7 @@ var city = scene.primitives.add(new Cesium.Cesium3DTileset({
     debugShowBox : false,
     debugShowcontentBox : false,
     debugShowBoundingVolume : false,
-    debugShowContentsBoundingVolume : false
+    debugShowContentBoundingVolume : false
 }));
 
 viewer.camera.setView({
@@ -281,7 +281,7 @@ Sandcastle.addToolbarButton('BV on/off', function() {
 });
 
 Sandcastle.addToolbarButton('Contents BV on/off', function() {
-    city.debugShowContentsBoundingVolume = !city.debugShowContentsBoundingVolume;
+    city.debugShowContentBoundingVolume = !city.debugShowContentBoundingVolume;
 });
 
 Sandcastle.addToolbarButton('SSE++', function() {
