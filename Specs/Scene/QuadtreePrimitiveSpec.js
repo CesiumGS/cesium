@@ -24,7 +24,7 @@ defineSuite([
         EventHelper,
         QuadtreeTile) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    /*global jasmine,it,expect,beforeEach,afterEach,beforeAll,afterAll*/
 
     var context;
     var frameState;
