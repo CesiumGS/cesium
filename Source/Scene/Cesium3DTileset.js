@@ -398,8 +398,10 @@ define([
             if (t.hasTilesetContent && t.isReady()) {
                 // If tile has tileset content, skip it and process its child instead (the tileset root)
                 child = t.children[0];
-                if (child.isContentUnloaded() && outOfCore) {
-                    requestContent(tiles3D, child);
+                if (child.isContentUnloaded()) {
+                    if (outOfCore) {
+                        requestContent(tiles3D, child);
+                    }
                 } else {
                     stack.push(child);
                 }
@@ -436,8 +438,10 @@ define([
 
                             // Use parent's geometric error with child's box to see if we already meet the SSE
                             if (getScreenSpaceError(t.geometricError, child, frameState) > maximumScreenSpaceError) {
-                                if (child.isContentUnloaded() && (child.visibility(cullingVolume) !== CullingVolume.MASK_OUTSIDE) && outOfCore) {
-                                    requestContent(tiles3D, child);
+                                if (child.isContentUnloaded()) {
+                                    if ((child.visibility(cullingVolume) !== CullingVolume.MASK_OUTSIDE) && outOfCore) {
+                                        requestContent(tiles3D, child);
+                                    }
                                 } else {
                                     stack.push(child);
                                 }
