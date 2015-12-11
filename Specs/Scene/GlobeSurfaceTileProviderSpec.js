@@ -102,7 +102,7 @@ defineSuite([
         frustum.bottom = -frustum.top;
         frameState.camera.frustum = frustum;
         frameState.camera.update(frameState.mode);
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), frameState.mapProjection);
+        frameState.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0030, 0.0030) });
     }
 
     beforeAll(function() {
@@ -350,7 +350,7 @@ defineSuite([
         frameState.mapProjection = new GeographicProjection(Ellipsoid.WGS84);
 
         frameState.camera.update(SceneMode.COLUMBUS_VIEW);
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
 
         return updateUntilDone(globe).then(function() {
             expect(render(frameState, globe)).toBeGreaterThan(0);
@@ -368,7 +368,7 @@ defineSuite([
         frameState.mapProjection = new WebMercatorProjection(Ellipsoid.WGS84);
 
         frameState.camera.update(SceneMode.COLUMBUS_VIEW);
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
+        frameState.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0030, 0.0030) });
 
         return updateUntilDone(globe).then(function() {
             expect(render(frameState, globe)).toBeGreaterThan(0);
@@ -382,7 +382,7 @@ defineSuite([
             url : 'Data/Images/Red16x16.png'
         }));
 
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
 
         return updateUntilDone(globe).then(function() {
             expect(render(frameState, globe)).toBeGreaterThan(0);
@@ -396,11 +396,10 @@ defineSuite([
             url : 'Data/Images/Red16x16.png'
         }));
 
-        frameState.camera.viewRectangle(Rectangle.fromDegrees(1.0e7, 1.0e7, 2.5e6, 2.5e6), Ellipsoid.WGS84);
+        frameState.camera.setView({ destination : Rectangle.fromDegrees(1.0e7, 1.0e7, 2.5e6, 2.5e6) });
 
         return pollToPromise(function() {
             globe.update(frameState);
-            console.log(globe._surface._debug.maxDepth);
             return globe._surface.tileProvider.ready && !defined(globe._surface._tileLoadQueue.head) && globe._surface._debug.tilesWaitingForChildren === 0 && globe._surface._debug.maxDepth >= 11;
         }).then(function() {
             expect(render(frameState, globe)).toBeGreaterThan(0);
@@ -467,7 +466,7 @@ defineSuite([
         var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
         globe.baseColor = Color.RED;
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
 
         return updateUntilDone(globe).then(function() {
             expect(render(frameState, globe)).toBeGreaterThan(0);
@@ -482,7 +481,7 @@ defineSuite([
             url : 'Data/Images/Red16x16.png'
         }));
 
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
 
         return updateUntilDone(globe).then(function() {
             expect(render(frameState, globe)).toBeGreaterThan(0);
@@ -491,7 +490,7 @@ defineSuite([
             frameState.mapProjection = new GeographicProjection(Ellipsoid.WGS84);
 
             frameState.camera.update(SceneMode.COLUMBUS_VIEW);
-            frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
+            frameState.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0030, 0.0030) });
 
             return updateUntilDone(globe).then(function() {
                 expect(render(frameState, globe)).toBeGreaterThan(0);
@@ -510,7 +509,7 @@ defineSuite([
 
         layerCollection.addImageryProvider(providerWithInvalidRootTiles);
 
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
 
         return updateUntilDone(globe).then(function() {
             expect(render(frameState, globe)).toBeGreaterThan(0);
@@ -531,7 +530,7 @@ defineSuite([
         layer.saturation = 0.123;
         layer.hue = 0.456;
 
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
 
         return updateUntilDone(globe).then(function() {
             expect(render(frameState, globe)).toBeGreaterThan(0);
@@ -570,7 +569,7 @@ defineSuite([
 
         layer.alpha = 0.0;
 
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
 
         return updateUntilDone(globe).then(function() {
             expect(render(frameState, globe)).toBeGreaterThan(0);
@@ -605,7 +604,7 @@ defineSuite([
             }));
         }
 
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
 
         return updateUntilDone(globe).then(function() {
             expect(render(frameState, globe)).toBeGreaterThan(0);

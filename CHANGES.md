@@ -1,11 +1,19 @@
 Change Log
 ==========
 
-### 1.17 - 2015-01-04
+### 1.17 - 2016-01-04
 
 * Breaking changes
+    * Removed `Camera.viewRectangle`. Use `Camera.setView({destination: rectangle})` instead.
+    * Removed `RectanglePrimitive`. Use `RectangleGeometry` or `Entity.rectangle` instead.
+    * Removed `Polygon`. Use `PolygonGeometry` or `Entity.polygon` instead.
+    * Removed `OrthographicFrustum.getPixelSize`. Use `OrthographicFrustum.getPixelDimensions` instead.
+    * Removed `PerspectiveFrustum.getPixelSize`. Use `PerspectiveFrustum.getPixelDimensions` instead.
+    * Removed `PerspectiveOffCenterFrustum.getPixelSize`. Use `PerspectiveOffCenterFrustum.getPixelDimensions` instead.
+    * Removed `Scene\HeadingPitchRange`. Use `Core\HeadingPitchRange` instead.
     * Removed `HeightmapTessellator` from the public API. It is now private and subject to change without notice.
     * Removed `TerrainMesh` from the public API. It is now private and subject to change without notice.
+    * Removed `jsonp`. Use `loadJsonp` instead.
 * Cesium now honors `window.devicePixelRatio` on browsers that support the CSS `imageRendering` attribute.  This greatly improves performance on mobile devices and high DPI displays by rendering at the browser-recommended resolution. This also reduces bandwidth usage and increases battery life in these cases.  To enable the previous behavior, use the following code:
     ```javascript
     if(Cesium.FeatureDetection.supportsImageRenderingPixelated()){
@@ -13,6 +21,9 @@ Change Log
     }
     ```
 * Reduced the amount of both GPU and CPU memory used by terrain. The CPU memory was reduced by up to 40%.
+* `CorridorGeometry` and `PolylineVolumeGeometry` render short segments [#3293](https://github.com/AnalyticalGraphicsInc/cesium/issues/3293)
+* `Rectangle.fromCartographicArray` finds the smallest rectangle regardess of whether or not it crosses the international date line. [#3227](https://github.com/AnalyticalGraphicsInc/cesium/issues/3227)
+* Bug fix for `CorridorGeometry` with nearly colinear points [#3320](https://github.com/AnalyticalGraphicsInc/cesium/issues/3320)
 
 ### 1.16 - 2015-12-01
 
