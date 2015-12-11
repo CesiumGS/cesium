@@ -56,7 +56,6 @@ define([
         this._modelHash = {};
         this._entitiesToVisualize = new AssociativeArray();
         this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
-        this._originalNodeMatrixHash = {};
     };
 
     /**
@@ -76,7 +75,6 @@ define([
         var entities = this._entitiesToVisualize.values;
         var modelHash = this._modelHash;
         var primitives = this._primitives;
-        var originalNodeMatrixHash = this._originalNodeMatrixHash;
 
         for (var i = 0, len = entities.length; i < len; i++) {
             var entity = entities[i];
@@ -120,7 +118,8 @@ define([
                     modelPrimitive : model,
                     uri : uri,
                     animationsRunning : false,
-                    nodeTransformationsScratch : {}
+                    nodeTransformationsScratch : {},
+                    originalNodeMatrixHash : {}
                 };
                 modelHash[entity.id] = modelData;
             }
@@ -147,6 +146,7 @@ define([
                 // Apply node transformations
                 var nodeTransformations = Property.getValueOrUndefined(modelGraphics._nodeTransformations, time, modelData.nodeTransformationsScratch);
                 if (defined(nodeTransformations)) {
+                    var originalNodeMatrixHash = modelData.originalNodeMatrixHash;
                     var nodeNames = Object.keys(nodeTransformations);
                     for (var nodeIndex = 0, nodeLength = nodeNames.length; nodeIndex < nodeLength; ++nodeIndex) {
                         var nodeName = nodeNames[nodeIndex];
