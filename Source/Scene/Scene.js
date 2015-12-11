@@ -521,6 +521,9 @@ define([
          */
         this.fog = new Fog();
 
+        // TODO: default to false
+        this._useWebVR = defaultValue(options.useWebVR, true);
+
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
 
         this._performanceDisplay = undefined;
@@ -967,6 +970,12 @@ define([
         terrainExaggeration : {
             get : function() {
                 return this._terrainExaggeration;
+            }
+        },
+
+        useWebVR : {
+            get : function() {
+                return this._useWebVR;
             }
         }
     });
@@ -1440,7 +1449,8 @@ define([
 
         if (scene._state.isSunVisible) {
             scene._state.sunDrawCommand.execute(context, passState);
-            if (scene.sunBloom) {
+            // TODO: fix with WebVR
+            if (scene.sunBloom && !scene._useWebVR) {
                 var framebuffer;
                 if (scene._state.useGlobeDepthFramebuffer) {
                     framebuffer = scene._globeDepth.framebuffer;
@@ -1619,7 +1629,8 @@ define([
 
         // Manage sun bloom post-processing effect.
         if (defined(scene.sun) && scene.sunBloom !== scene._sunBloom) {
-            if (scene.sunBloom) {
+            // TODO: fix with WebVR
+            if (scene.sunBloom && !scene._useWebVR) {
                 scene._sunPostProcess = new SunPostProcess();
             } else if(defined(scene._sunPostProcess)){
                 scene._sunPostProcess = scene._sunPostProcess.destroy();
@@ -1669,7 +1680,8 @@ define([
             scene._fxaa.clear(context, passState, clearColor);
         }
 
-        if (scene._state.isSunVisible && scene.sunBloom) {
+        // TODO: fix with WebVR
+        if (scene._state.isSunVisible && scene.sunBloom && !scene._useWebVR) {
             passState.framebuffer = scene._sunPostProcess.update(passState);
         } else if (useGlobeDepthFramebuffer) {
             passState.framebuffer = scene._globeDepth.framebuffer;
@@ -1786,17 +1798,68 @@ define([
         passState.blendingEnabled = undefined;
         passState.scissorTest = undefined;
 
-        passState.viewport.x = 0;
-        passState.viewport.y = 0;
-        passState.viewport.width = context.drawingBufferWidth;
-        passState.viewport.height = context.drawingBufferHeight;
-
         updatePrimitives(scene);
         createPotentiallyVisibleSet(scene);
         updateAndClearFramebuffers(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
-
         executeComputeCommands(scene);
-        executeCommands(scene, passState);
+
+        if (!scene._useWebVR) {
+            passState.viewport.x = 0;
+            passState.viewport.y = 0;
+            passState.viewport.width = context.drawingBufferWidth;
+            passState.viewport.height = context.drawingBufferHeight;
+
+            executeCommands(scene, passState);
+        } else {
+            passState.viewport.x = 0;
+            passState.viewport.y = 0;
+            passState.viewport.width = context.drawingBufferWidth * 0.5;
+            passState.viewport.height = context.drawingBufferHeight;
+
+            // TODO
+            var frustum = camera.frustum;
+            var fo = frustum.near * 5.0;
+            var eyeSeparation = fo / 30.0;
+            var eyeTranslation = Cartesian3.multiplyByScalar(scene._camera.right, eyeSeparation * 0.5, new Cartesian3());
+
+            //var aspectRatio = passState.viewport.width / passState.viewport.height;
+            var aspectRatio = context.drawingBufferWidth / context.drawingBufferHeight;
+            var widthdiv2 = frustum.near * Math.tan(frustum.fov * 0.5);
+
+            var cameraL = Camera.clone(scene._camera);
+            Cartesian3.add(cameraL.position, eyeTranslation, cameraL.position);
+
+            var frustumL = cameraL.frustum = new PerspectiveOffCenterFrustum();
+            frustumL.near = frustum.near;
+            frustumL.far = frustum.far;
+            frustumL.top = widthdiv2;
+            frustumL.bottom = -frustumL.top;
+            frustumL.right = aspectRatio * widthdiv2 + 0.5 * eyeSeparation * frustum.near / fo;
+            frustumL.left = -frustumL.right;
+
+            frameState.camera = cameraL;
+            us.update(frameState);
+
+            executeCommands(scene, passState);
+
+            passState.viewport.x = passState.viewport.width;
+
+            var cameraR = Camera.clone(scene._camera);
+            Cartesian3.subtract(cameraR.position, eyeTranslation, cameraR.position);
+
+            var frustumR = cameraR.frustum = new PerspectiveOffCenterFrustum();
+            frustumR.near = frustum.near;
+            frustumR.far = frustum.far;
+            frustumR.top = widthdiv2;
+            frustumR.bottom = -frustum.top;
+            frustumR.right = aspectRatio * widthdiv2 - 0.5 * eyeSeparation * frustum.near / fo;
+            frustumR.left = -frustumR.right;
+
+            frameState.camera = cameraR;
+            us.update(frameState);
+
+            executeCommands(scene, passState);
+        }
 
         resolveFramebuffers(scene, passState);
         executeOverlayCommands(scene, passState);

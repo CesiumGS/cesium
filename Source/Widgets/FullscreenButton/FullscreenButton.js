@@ -33,7 +33,7 @@ define([
      *
      * @see Fullscreen
      */
-    var FullscreenButton = function(container, fullscreenElement) {
+    var FullscreenButton = function(container, fullscreenElement, vrDevice) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
@@ -43,7 +43,7 @@ define([
 
         container = getElement(container);
 
-        var viewModel = new FullscreenButtonViewModel(fullscreenElement);
+        var viewModel = new FullscreenButtonViewModel(fullscreenElement, vrDevice);
 
         viewModel._exitFullScreenPath = exitFullScreenPath;
         viewModel._enterFullScreenPath = enterFullScreenPath;

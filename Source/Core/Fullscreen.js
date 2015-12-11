@@ -231,12 +231,12 @@ define([
      * // Place only the Cesium canvas into fullscreen.
      * Cesium.Fullscreen.requestFullscreen(scene.canvas)
      */
-    Fullscreen.requestFullscreen = function(element) {
+    Fullscreen.requestFullscreen = function(element, vrDevice) {
         if (!Fullscreen.supportsFullscreen()) {
             return;
         }
 
-        element[_names.requestFullscreen]();
+        element[_names.requestFullscreen]({ vrDisplay: vrDevice });
     };
 
     /**
