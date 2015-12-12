@@ -8,7 +8,7 @@ define(function() {
      *
      * @private
      */
-    var PassState = function(context) {
+    function PassState(context) {
         /**
          * The context used to execute commands for this pass.
          *
@@ -49,7 +49,7 @@ define(function() {
          * @default undefined
          */
         this.scissorTest = undefined;
-    };
+    }
 
     return PassState;
 });

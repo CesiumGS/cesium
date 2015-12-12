@@ -42,7 +42,7 @@ define([
      * @see Entity
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
      */
-    var PolygonGraphics = function(options) {
+    function PolygonGraphics(options) {
         this._show = undefined;
         this._showSubscription = undefined;
         this._material = undefined;
@@ -70,7 +70,7 @@ define([
         this._fillSubscription = undefined;
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
-    };
+    }
 
     defineProperties(PolygonGraphics.prototype, {
         /**

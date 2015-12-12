@@ -25,7 +25,7 @@ define([
      * @alias DataSourceClock
      * @constructor
      */
-    var DataSourceClock = function() {
+    function DataSourceClock() {
         this._startTime = undefined;
         this._stopTime = undefined;
         this._currentTime = undefined;
@@ -33,7 +33,7 @@ define([
         this._clockStep = undefined;
         this._multiplier = undefined;
         this._definitionChanged = new Event();
-    };
+    }
 
     defineProperties(DataSourceClock.prototype, {
         /**

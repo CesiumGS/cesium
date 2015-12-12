@@ -43,7 +43,7 @@ define([
      *     // an error occurred
      * });
      */
-    var loadJson = function loadJson(url, headers) {
+    function loadJson(url, headers) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(url)) {
             throw new DeveloperError('url is required.');
@@ -61,7 +61,7 @@ define([
         return loadText(url, headers).then(function(value) {
             return JSON.parse(value);
         });
-    };
+    }
 
     return loadJson;
 });

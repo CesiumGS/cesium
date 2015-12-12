@@ -1499,10 +1499,10 @@ define([
         return dataSource;
     }
 
-    var DocumentPacket = function() {
+    function DocumentPacket() {
         this.name = undefined;
         this.clock = undefined;
-    };
+    }
 
     /**
      * A {@link DataSource} which processes {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/CZML-Guide|CZML}.
@@ -1513,7 +1513,7 @@ define([
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=CZML.html|Cesium Sandcastle CZML Demo}
      */
-    var CzmlDataSource = function(name) {
+    function CzmlDataSource(name) {
         this._name = name;
         this._changed = new Event();
         this._error = new Event();
@@ -1523,7 +1523,7 @@ define([
         this._documentPacket = new DocumentPacket();
         this._version = undefined;
         this._entityCollection = new EntityCollection(this);
-    };
+    }
 
     /**
      * Creates a Promise to a new instance loaded with the provided CZML data.

@@ -77,7 +77,7 @@ define([
      * @example
      * scene.sun = new Cesium.Sun();
      */
-    var Sun = function() {
+    function Sun() {
         /**
          * Determines if the sun will be shown.
          *
@@ -116,7 +116,7 @@ define([
                 return that._size;
             }
         };
-    };
+    }
 
     defineProperties(Sun.prototype, {
         /**

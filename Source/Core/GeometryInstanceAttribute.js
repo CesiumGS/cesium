@@ -44,7 +44,7 @@ define([
      *   }
      * });
      */
-    var GeometryInstanceAttribute = function(options) {
+    function GeometryInstanceAttribute(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -134,7 +134,7 @@ define([
          * })
          */
         this.value = options.value;
-    };
+    }
 
     return GeometryInstanceAttribute;
 });

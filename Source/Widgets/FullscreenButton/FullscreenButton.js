@@ -33,7 +33,7 @@ define([
      *
      * @see Fullscreen
      */
-    var FullscreenButton = function(container, fullscreenElement) {
+    function FullscreenButton(container, fullscreenElement) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
@@ -64,7 +64,7 @@ cesiumSvgPath: { path: isFullscreen ? _exitFullScreenPath : _enterFullScreenPath
         this._container = container;
         this._viewModel = viewModel;
         this._element = element;
-    };
+    }
 
     defineProperties(FullscreenButton.prototype, {
         /**

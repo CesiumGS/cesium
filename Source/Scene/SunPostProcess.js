@@ -49,7 +49,7 @@ define([
         PassThrough) {
     "use strict";
 
-    var SunPostProcess = function() {
+    function SunPostProcess() {
         this._fbo = undefined;
 
         this._downSampleFBO1 = undefined;
@@ -81,7 +81,7 @@ define([
         this._uRadius = undefined;
 
         this._blurStep = new Cartesian2();
-    };
+    }
 
     SunPostProcess.prototype.clear = function(context, color) {
         var clear = this._clearFBO1Command;

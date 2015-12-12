@@ -16,7 +16,7 @@ define([
      *
      * @see Model#getMesh
      */
-    var ModelMesh = function(mesh, runtimeMaterialsById, id) {
+    function ModelMesh(mesh, runtimeMaterialsById, id) {
         var materials = [];
         var primitives = mesh.primitives;
         var length = primitives.length;
@@ -28,7 +28,7 @@ define([
         this._name = mesh.name;
         this._materials = materials;
         this._id = id;
-    };
+    }
 
     defineProperties(ModelMesh.prototype, {
         /**

@@ -19,7 +19,7 @@ define([
      * @param {Number} [pitch=0.0] The pitch angle in radians.
      * @param {Number} [range=0.0] The distance from the center in meters.
      */
-    var HeadingPitchRange = function(heading, pitch, range) {
+    function HeadingPitchRange(heading, pitch, range) {
         /**
          * Heading is the rotation from the local north direction where a positive angle is increasing eastward.
          * @type {Number}
@@ -38,7 +38,7 @@ define([
          * @type {Number}
          */
         this.range = defaultValue(range, 0.0);
-    };
+    }
 
     /**
      * Duplicates a HeadingPitchRange instance.

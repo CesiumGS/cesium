@@ -68,7 +68,7 @@ define([
      *
      * @private
      */
-    var Framebuffer = function(options) {
+    function Framebuffer(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -236,7 +236,7 @@ define([
         }
 
         this._unBind();
-    };
+    }
 
     defineProperties(Framebuffer.prototype, {
         /**

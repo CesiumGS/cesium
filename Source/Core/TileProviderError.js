@@ -26,7 +26,7 @@ define([
      * @param {Number} [timesRetried=0] The number of times this operation has been retried.
      * @param {Error} [error] The error or exception that occurred, if any.
      */
-    var TileProviderError = function TileProviderError(provider, message, x, y, level, timesRetried, error) {
+    function TileProviderError(provider, message, x, y, level, timesRetried, error) {
         /**
          * The {@link ImageryProvider} or {@link TerrainProvider} that experienced the error.
          * @type {ImageryProvider|TerrainProvider}
@@ -81,7 +81,7 @@ define([
          * @type {Error}
          */
         this.error = error;
-    };
+    }
 
     /**
      * Handles an error in an {@link ImageryProvider} or {@link TerrainProvider} by raising an event if it has any listeners, or by

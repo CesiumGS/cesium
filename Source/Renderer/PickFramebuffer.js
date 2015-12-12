@@ -26,7 +26,7 @@ define([
     /**
      * @private
      */
-    var PickFramebuffer = function(context) {
+    function PickFramebuffer(context) {
         // Override per-command states
         var passState = new PassState(context);
         passState.blendingEnabled = false;
@@ -40,8 +40,7 @@ define([
         this._passState = passState;
         this._width = 0;
         this._height = 0;
-    };
-
+    }
     PickFramebuffer.prototype.begin = function(screenSpaceRectangle) {
         var context = this._context;
         var width = context.drawingBufferWidth;
