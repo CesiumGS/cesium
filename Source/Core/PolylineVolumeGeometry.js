@@ -17,6 +17,7 @@ define([
         './IndexDatatype',
         './Math',
         './PolygonPipeline',
+        './PolylinePipeline',
         './PolylineVolumeGeometryLibrary',
         './PrimitiveType',
         './VertexFormat',
@@ -39,6 +40,7 @@ define([
         IndexDatatype,
         CesiumMath,
         PolygonPipeline,
+        PolylinePipeline,
         PolylineVolumeGeometryLibrary,
         PrimitiveType,
         VertexFormat,
@@ -374,7 +376,7 @@ define([
      */
     PolylineVolumeGeometry.createGeometry = function(polylineVolumeGeometry) {
         var positions = polylineVolumeGeometry._positions;
-        var cleanPositions = PolylineVolumeGeometryLibrary.removeDuplicatesFromPositions(positions, polylineVolumeGeometry._ellipsoid);
+        var cleanPositions = PolylinePipeline.removeDuplicates(positions);
         var shape2D = polylineVolumeGeometry._shape;
         shape2D = PolylineVolumeGeometryLibrary.removeDuplicatesFromShape(shape2D);
 
