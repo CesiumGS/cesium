@@ -6,6 +6,7 @@ var path = require('path');
 var os = require('os');
 var child_process = require('child_process');
 
+var webserver = require('gulp-webserver');
 var globby = require('globby');
 var jshint = require('gulp-jshint');
 var async = require('async');
@@ -80,6 +81,15 @@ var filesToSortRequires = ['Source/**/*.js',
                            '!Apps/Sandcastle/Sandcastle-header.js',
                            '!Apps/Sandcastle/Sandcastle-warn.js',
                            '!Apps/Sandcastle/gallery/gallery-index.js'];
+
+gulp.task('webserver', function() {
+  gulp.src('.')
+    .pipe(webserver({
+      livereload: true,
+      directoryListing: true,
+      open: "http://localhost:8000/DevServer/index.html" 
+    }));
+});
 
 gulp.task('default', ['combine']);
 
