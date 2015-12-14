@@ -1,16 +1,18 @@
 # Documentation Guide
 
-The reference documentation is one of the most popular sections of the Cesium website, and a critical resource for developers.  
+Cesium's reference documentation is one of the most popular sections of the Cesium website, and a critical resource for developers.  
 
 This guide describes best practices for writing reference doc.
 
-Always include reference doc for new identifiers (classes, functions, properties, constants) in the public Cesium API.
+Always include doc for new identifiers (classes, functions, properties, constants) in the public Cesium API.
 
-Generally, just follow the patterns that are already in comparable parts of the code, e.g., if you are documenting a new utility function in `Core`, look at a function in `Core` such as [`binarySearch`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/binarySearch.js); likewise if you are documenting a new class in `Scene`, look at a similar class such as [`Model`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Scene/Model.js).
+Generally, just follow the patterns that are already in comparable parts of the code, e.g., if you are documenting a new utility function in `Core`, look at a function in `Core` such as [`binarySearch`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/binarySearch.js); likewise, if you are documenting a new class in `Scene`, look at a similar class such as [`Model`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Scene/Model.js).
+
+_TODO: TOC_
 
 ## Building the Doc
 
-The reference doc is written in comments in the JavaScript code using [JSDoc3](http://usejsdoc.org/index.html).  At the command line, build the doc from the root Cesium directory by running:
+The reference doc is written in JavaScript code comments using [JSDoc3](http://usejsdoc.org/index.html) tags.  At the command line, build the doc from the root Cesium directory by running:
 ```
 npm run generateDocumentation
 ```
@@ -18,7 +20,7 @@ This creates a `Build/Documentation` directory with the built HTML files.  Open 
 
 ![](toc.png)
 
-There is also a link to the doc from the Cesium's main `index.html` when running:
+There is also a link to the doc from Cesium's main `index.html` when running:
 ```
 npm start
 ```
@@ -40,7 +42,7 @@ Consider one of the simplest functions in Cesium, `defined`:
  *      doSomethingElse();
  * }
  */
-var defined = function(value) {
+function defined(value) {
     return value !== undefined;
 };
 ```
@@ -49,7 +51,7 @@ The doc for `defined` is in the comment starting with `/**`.  JSDoc tags begin w
 
 `@exports` describes the name of the function that is exported from the module.
 
-`@param` describes the function's parameters and `@returns` describes the function's return value.
+`@param` describes the function's parameters, and `@returns` describes the function's return value.
 
 `@example` describes a code sample.
 
@@ -57,7 +59,7 @@ The above reference doc is built into:
 
 ![](defined.png)
 
-This guide describes best practices for writing doc.  For complete details on the JSDoc tags, see their [documentation](http://usejsdoc.org/index.html).
+This guide describes best practices for writing doc.  For complete details on JSDoc tags, see their [documentation](http://usejsdoc.org/index.html).
 
 ## Parameters
 
@@ -67,7 +69,7 @@ This guide describes best practices for writing doc.  For complete details on th
 * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
 
 ```
-* If the default value is undefined, omit it, e.g.,
+* Omit the default value if it is `undefined`, e.g.,
 ```
 * @param {Cartesian3} [result] The object onto which to store the result.
 ```
@@ -97,9 +99,7 @@ The Cesium classes in the `Type` column are links to their doc.
 
 ## `options` Parameters
 
-_TODO: link to Code Guide section._
-
-Each property of an `options` parameter should be documented with a separate `@param` tag, e.g.,
+Each property of an `options` parameter (see the [Coding Guide](https://github.com/AnalyticalGraphicsInc/cesium/true/master/Documentation/Contributors/CodingGuide/README.md#options-parameters)) should be documented with a separate `@param` tag, e.g.,
 ```
  * @param {Object} [options] Object with the following properties:
  * @param {Number} [options.length=10000000.0] The length of the axes in meters.
@@ -112,7 +112,7 @@ generates
 
 ![](DebugModelMatrixPrimitive.png)
 
-* If all properties are optional, mark the options object optional.
+If all `options` properties are optional, also mark the `options` object optional.
 
 ## Exceptions
 
@@ -130,7 +130,7 @@ Matrix4.computePerspectiveFieldOfView = function(fovY, aspectRatio, near, far, r
     }
     // ...
 ```
-* Do not document exceptions for miss parameters; it is implicit in the `@param` tag because the parameter is not optional, e.g.,
+* Do not document exceptions for missing parameters; it is implicit in the `@param` tag because the parameter is not optional, e.g.,
 ```javascript
 /**
  * Computes a Matrix4 instance from a column-major order array.
@@ -205,7 +205,7 @@ CesiumMath.EPSILON1 = 0.1;
  *
  * @see TerrainProvider
  */
-var ArcGisImageServerTerrainProvider = function(options) {
+function ArcGisImageServerTerrainProvider(options) {
     // ...
 ```
 
@@ -236,7 +236,7 @@ Define a class with `@alias` and `@constructor` tags on the constructor function
  *
  * ...
  */
-var Cartesian3 = function(x, y, z) {
+function Cartesian3(x, y, z) {
    // ...
 ```
 
@@ -244,9 +244,10 @@ var Cartesian3 = function(x, y, z) {
 
 * Use `@type` and `@default` (whenever possible) to document properties, e.g.,
 ```javascript
-var Cartesian2 = function(x, y) {
+function Cartesian3(x, y) {
     /**
      * The X component.
+     *
      * @type {Number}
      * @default 0.0
      */
@@ -275,7 +276,7 @@ defineProperties(Entity.prototype, {
     // ...
 ```
 * Use `@readonly` to indicate read-only properties, e.g.,
-```
+```javascript
 defineProperties(Entity.prototype, {
     /**
      * Gets the unique ID associated with this object.
@@ -363,9 +364,7 @@ Queue.prototype.sort = function(compareFunction) {
 
 ## Private
 
-_TODO: link to Code Guide section._
-
-Documentation is not generated for private members that start with `_`.  It is often useful to still document them for maintainability.
+Documentation is not generated for private members that start with `_`.  It is often useful to still write doc comments for them for maintainability (see the [Coding Guide](https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Documentation/Contributors/CodingGuide/README.md#design)).
 
 If a member or function doesn't start with `_`, but is intended to be private, use the `@private` tag at the bottom of the documentation, e.g.,
 ```javascript
@@ -385,9 +384,7 @@ If no documentation comments are provided, the identifier will not be documented
 /**
  * @private
  */
-function appendForwardSlash(url) {
-    // ...
-}
+function appendForwardSlash(url) { /* ... */ }
 ```
 
 ## Layout Reference
@@ -397,7 +394,7 @@ There's a general flow to each documentation block that makes it easy to read. T
 ### Constructor Function
 
 ```
-Description.
+DESCRIPTION.
 
 @alias NAME
 @constructor
@@ -418,7 +415,7 @@ Description.
 ### Member Function
 
 ```
-Description.
+DESCRIPTION.
 
 @param {TYPE} NAME DESCRIPTION.
 @param {TYPE|OTHER_TYPE} NAME DESCRIPTION WITH LONG
@@ -437,11 +434,12 @@ Description.
 ### Property
 
 ```
-Description.
+DESCRIPTION.
 
-@type {Type}
+@type {TYPE}
 [@constant]
 [@default DEFAULT_VALUE]
+[@readonly]
 
 @exception {TYPE} DESCRIPTION.
 
@@ -474,7 +472,7 @@ DESCRIPTION.
 ### Standalone Function
 
 ```
-Description.
+DESCRIPTION.
 
 @exports NAME
 
@@ -491,13 +489,3 @@ Description.
 
 @example 
 ```
-
----
-
-
-**TODO**
-
-* [ ] 'Gets'/'Gets or sets'
-* [ ] Sandcastle links, `@demo`
-* [ ] Resize images and convert to jpg
-* [ ] Remove the [old guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Documentation-Best-Practices) on the wiki
