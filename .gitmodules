@@ -1,0 +1,3 @@
+[submodule "zinc.frontend"]
+	path = zinc.frontend
+	url = https://Zuzon@bitbucket.org/Zuzon/zinc.frontend.git
