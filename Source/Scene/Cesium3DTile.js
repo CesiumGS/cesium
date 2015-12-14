@@ -146,10 +146,10 @@ define([
             var contentFactory = Cesium3DTileContentProviderFactory[type];
 
             if (type === 'json') {
-                // TODO : should this be in the factory class?
                 this.hasTilesetContent = true;
-                content = new Tileset3DTileContentProvider(tileset, this, url);
-            } else if (defined(contentFactory)) {
+            }
+
+            if (defined(contentFactory)) {
                 content = contentFactory(tileset, this, url);
             } else {
                 throw new DeveloperError('Unknown tile content type, ' + type + ', for ' + url);

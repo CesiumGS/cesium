@@ -226,6 +226,9 @@ define([
         }
     });
 
+    /**
+     * @private
+     */
     Cesium3DTileset.prototype.loadTilesJson = function(tilesJson, parentTile) {
         var tileset = this;
         return loadJson(tilesJson).then(function(tree) {
@@ -314,7 +317,10 @@ define([
     var requestScheduler = new RequestScheduler();
     ///////////////////////////////////////////////////////////////////////////
 
-    function requestContent(tiles3D, tile) {
+    function requestContent(tiles3D, tile, outOfCore) {
+        if (!outOfCore) {
+            return;
+        }
         if (!requestScheduler.hasAvailableRequests()) {
             return;
         }
@@ -362,9 +368,7 @@ define([
         }
 
         if (root.isContentUnloaded()) {
-            if (outOfCore) {
-                requestContent(tiles3D, root);
-            }
+            requestContent(tiles3D, root, outOfCore);
             return;
         }
 
@@ -395,15 +399,17 @@ define([
             var k;
             var additiveRefinement = (t.refine === Cesium3DTileRefine.ADD);
 
-            if (t.hasTilesetContent && t.isReady()) {
+            if (t.hasTilesetContent) {
                 // If tile has tileset content, skip it and process its child instead (the tileset root)
-                child = t.children[0];
-                if (child.isContentUnloaded()) {
-                    if (outOfCore) {
-                        requestContent(tiles3D, child);
+                // No need to check visibility or sse of the child because its bounding volume
+                // and geometric error are equal to its parent.
+                if (t.isReady()) {
+                    child = t.children[0];
+                    if (child.isContentUnloaded()) {
+                        requestContent(tiles3D, child, outOfCore);
+                    } else {
+                        stack.push(child);
                     }
-                } else {
-                    stack.push(child);
                 }
                 continue;
             }
@@ -439,8 +445,8 @@ define([
                             // Use parent's geometric error with child's box to see if we already meet the SSE
                             if (getScreenSpaceError(t.geometricError, child, frameState) > maximumScreenSpaceError) {
                                 if (child.isContentUnloaded()) {
-                                    if ((child.visibility(cullingVolume) !== CullingVolume.MASK_OUTSIDE) && outOfCore) {
-                                        requestContent(tiles3D, child);
+                                    if (child.visibility(cullingVolume) !== CullingVolume.MASK_OUTSIDE) {
+                                        requestContent(tiles3D, child, outOfCore);
                                     }
                                 } else {
                                     stack.push(child);
@@ -486,7 +492,7 @@ define([
                                 child = children[k];
 // TODO: we could spin a bit less CPU here and probably above by keeping separate lists for unloaded/ready children.
                                 if (child.isContentUnloaded()) {
-                                    requestContent(tiles3D, child);
+                                    requestContent(tiles3D, child, outOfCore);
                                 }
                             }
                         }
