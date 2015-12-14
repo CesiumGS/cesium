@@ -1110,26 +1110,6 @@ define([
     };
 
     /**
-     * Computes the distance between a sphere and the camera attached to frameState.
-     * @param {BoundingSphere} [sphere] The bounding sphere.
-     * @param {FrameState} [frameState] The frameState to which the camera is attached.
-     * @returns {Number} The distance between the camera and the bounding sphere in meters. Returns 0 if the camera is inside the bounding volume.
-     *
-     * @private
-     */
-    BoundingSphere.distanceToCamera = function(sphere, frameState) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(sphere)) {
-            throw new DeveloperError('sphere is required.');
-        }
-        if (!defined(frameState)) {
-            throw new DeveloperError('sphere is required.');
-        }
-        //>>includeEnd('debug');
-        return Math.max(0.0, Cartesian3.distance(sphere.center, frameState.camera.positionWC) - sphere.radius);
-    };
-
-    /**
      * Determines which side of a plane the sphere is located.
      *
      * @param {Plane} plane The plane to test against.
@@ -1203,16 +1183,6 @@ define([
      */
     BoundingSphere.prototype.clone = function(result) {
         return BoundingSphere.clone(this, result);
-    };
-
-
-    /**
-     * Computes the distance between this sphere and the camera attached to frameState.
-     * @param {FrameState} [frameState] The frameState to which the camera is attached.
-     * @returns {Number} The distance between the camera and the bounding sphere in meters. Returns 0 if the camera is inside the bounding volume.
-     */
-    BoundingSphere.prototype.distanceToCamera = function(frameState) {
-        return BoundingSphere.distanceToCamera(this, frameState);
     };
 
     return BoundingSphere;

@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../Core/BoundingSphere',
         '../Core/BoxOutlineGeometry',
         '../Core/Cartesian3',
         '../Core/Color',
@@ -26,9 +25,9 @@ define([
         './PerInstanceColorAppearance',
         './Primitive',
         './TileBoundingBox',
+        './TileBoundingSphere',
         './Tileset3DTileContentProvider'
     ], function(
-        BoundingSphere,
         BoxOutlineGeometry,
         Cartesian3,
         Color,
@@ -54,6 +53,7 @@ define([
         PerInstanceColorAppearance,
         Primitive,
         TileBoundingBox,
+        TileBoundingSphere,
         Tileset3DTileContentProvider) {
     "use strict";
 
@@ -78,7 +78,7 @@ define([
             this._orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, b[4], b[5]);
         } else if (defined(tileBoundingVolume.sphere)) {
             var sphere = tileBoundingVolume.sphere;
-            this._tileBoundingSphere = new BoundingSphere(
+            this._tileBoundingSphere = new TileBoundingSphere(
                 new Cartesian3(sphere[0], sphere[1], sphere[2]),
                 sphere[3]
             );
@@ -101,7 +101,7 @@ define([
                 contentsOrientedBoundingBox = OrientedBoundingBox.fromRectangle(new Rectangle(cb[0], cb[1], cb[2], cb[3]), cb[4], cb[5]);
             } else if (defined(contentsBoundingVolume.sphere)) {
                 var cs = contentHeader.boundingVolume.sphere;
-                contentsBoundingSphere = new BoundingSphere(
+                contentsBoundingSphere = new TileBoundingSphere(
                     new Cartesian3(cs[0], cs[1], cs[2]),
                     cs[3]
                 );
