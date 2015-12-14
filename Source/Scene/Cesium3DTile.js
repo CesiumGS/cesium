@@ -88,6 +88,7 @@ define([
 
         var contentsOrientedBoundingBox;
         var contentsBoundingSphere;
+
         if (defined(contentHeader) && defined(contentHeader.boundingVolume)) {
             // Non-leaf tiles may have a content-box bounding-volume, which is a tight-fit box
             // around only the models in the tile.  This box is useful for culling for rendering,
@@ -96,8 +97,9 @@ define([
             // outside of this box.
 
             var contentsBoundingVolume = contentHeader.boundingVolume;
+
             if (defined(contentsBoundingVolume.box)) {
-                var cb = contentHeader.boundingVolume.box;
+                var cb = contentsBoundingVolume.box;
                 contentsOrientedBoundingBox = OrientedBoundingBox.fromRectangle(new Rectangle(cb[0], cb[1], cb[2], cb[3]), cb[4], cb[5]);
             } else if (defined(contentsBoundingVolume.sphere)) {
                 var cs = contentHeader.boundingVolume.sphere;
