@@ -5,6 +5,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/freezeObject',
@@ -21,6 +22,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
         freezeObject,
@@ -95,8 +97,11 @@ define([
      *     credit : new Cesium.Credit('U. S. Geological Survey')
      * });
      * viewer.imageryLayers.addImageryProvider(shadedRelief2);
+     *
+     * @deprecated
      */
     var WebMapTileServiceImageryProvider = function WebMapTileServiceImageryProvider(options) {
+        deprecationWarning('WebMapTileServiceImageryProvider', 'WebMapTileServiceImageryProvider is deprecated. It will be removed in Cesium 1.18. Use createWebMapTileServiceImageryProvider instead.');
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         if (!defined(options.url)) {

@@ -594,4 +594,4 @@ defineSuite([
     createDynamicGeometryBoundingSphereSpecs(EllipsoidGeometryUpdater, entity, entity.ellipsoid, function() {
         return scene;
     });
-});
+}, 'WebGL');

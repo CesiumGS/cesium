@@ -123,7 +123,7 @@ define([
      * @see SingleTileImageryProvider
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
-     * @see WebMapTileServiceImageryProvider
+     * @see createWebMapTileServiceImageryProvider
      *
      * @example
      * // Access Natural Earth II imagery, which uses a TMS tiling scheme and Geographic (EPSG:4326) project

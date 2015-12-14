@@ -494,4 +494,4 @@ defineSuite([
         updater.destroy();
         scene.primitives.removeAll();
     });
-});
+}, 'WebGL');

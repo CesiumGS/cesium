@@ -370,6 +370,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var eventHelper = new EventHelper();
 
         eventHelper.add(clock.onTick, Viewer.prototype._onTick, this);
+        eventHelper.add(cesiumWidget.scene.morphStart, Viewer.prototype._clearTrackedObject, this);
 
         // Selection Indicator
         var selectionIndicator;

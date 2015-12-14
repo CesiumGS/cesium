@@ -4,7 +4,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/freezeObject',
         '../Core/GeographicTilingScheme',
@@ -19,7 +18,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         freezeObject,
         GeographicTilingScheme,
@@ -76,7 +74,7 @@ define([
      * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see TileMapServiceImageryProvider
-     * @see WebMapTileServiceImageryProvider
+     * @see createWebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
      *
      * @see {@link http://resources.esri.com/help/9.3/arcgisserver/apis/rest/|ArcGIS Server REST API}
@@ -92,7 +90,6 @@ define([
      * viewer.imageryLayers.addImageryProvider(provider);
      */
     var WebMapServiceImageryProvider = function WebMapServiceImageryProvider(options) {
-        deprecationWarning('WebMapServiceImageryProvider', 'WebMapServiceImageryProvider is deprecated. It will be removed in Cesium 1.19. Use createWebMapServiceImageryProvider instead.')
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
