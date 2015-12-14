@@ -97,6 +97,7 @@ define([
      * });
      * viewer.imageryLayers.addImageryProvider(shadedRelief2);
      */
+
     var createWebMapTileServiceImageryProvider = function WebMapTileServiceImageryProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
@@ -117,6 +118,8 @@ define([
         var tileMatrixSetID = options.tileMatrixSetID;
         var proxy = options.proxy;
         var tileDiscardPolicy = options.tileDiscardPolicy;
+        var format = defaultValue(options.format, 'image/jpeg');
+
 
         var tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid });
         var tileWidth = defaultValue(options.tileWidth, 256);
@@ -149,8 +152,36 @@ define([
             subdomains = ['a', 'b', 'c'];
         }
 
-        var templateUrl = "http://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS/" +
-                          "tile/1.0.0/USGSShadedReliefOnly/" + style + "/" + tileMatrixSetID + "/{z}/{y}/{x}.jpg";
+        // construct templateUrl
+        var templateUrl;
+        if (options.url.indexOf('{') >= 0) {
+             templateUrl = options.url
+                .replace('{style}', style)
+                .replace('{Style}', style)
+                .replace('{TileMatrixSet}', tileMatrixSetID)
+                .replace('{TileMatrix}', "{z}")
+                .replace('{TileRow}', "{y}")
+                .replace('{TileCol}', "{x}");
+        }  else {
+            var defaultParameters = freezeObject({
+                service : 'WMTS',
+                version : '1.0.0',
+                request : 'GetTile'
+            });
+            // build KVP request
+            var uri = new Uri(options.url);
+            var queryOptions = queryToObject(defaultValue(uri.query, ''));
+
+            queryOptions = combine(defaultParameters, queryOptions);
+            queryOptions.layer = options.layer;
+            queryOptions.style = style;
+            queryOptions.tilematrixset = tileMatrixSetID;
+            queryOptions.format = format;
+
+            uri.query = objectToQuery(queryOptions);
+            uri += "&tilematrix={z}&tilerow={y}&tilecol={x}";
+            templateUrl = uri.toString();
+        }
 
         return new UrlTemplateImageryProvider({
             url : templateUrl,
