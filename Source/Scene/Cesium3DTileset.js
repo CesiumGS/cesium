@@ -398,6 +398,12 @@ define([
             if (t.hasTilesetContent && t.isReady()) {
                 // If tile has tileset content, skip it and process its child instead (the tileset root)
                 child = t.children[0];
+                // If the child is not yet ready, select t's parent so that
+                // that something can be rendered. This avoids the appearance of
+                // removing a tile and showing nothing in its place
+                if (!child.isReady() && defined(t.parent) && t.parent.isReady()) {
+                    selectTile(selectedTiles, t.parent, fullyVisible, frameState);
+                }
                 if (child.isContentUnloaded()) {
                     if (outOfCore) {
                         requestContent(tiles3D, child);
