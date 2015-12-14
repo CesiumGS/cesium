@@ -413,7 +413,8 @@ define([
             uniformId = loadedImage.id;
             var image = loadedImage.image;
 
-            var texture = context.createTexture2D({
+            var texture = new Texture({
+                context : context,
                 source : image
             });
 
@@ -437,7 +438,8 @@ define([
             uniformId = loadedCubeMap.id;
             var images = loadedCubeMap.images;
 
-            var cubeMap = context.createCubeMap({
+            var cubeMap = new CubeMap({
+                    context : context,
                     source : {
                         positiveX : images[0],
                         negativeX : images[1],

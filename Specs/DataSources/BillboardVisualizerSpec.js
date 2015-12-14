@@ -147,6 +147,7 @@ defineSuite([
         billboard.scaleByDistance = new ConstantProperty(new NearFarScalar());
         billboard.translucencyByDistance = new ConstantProperty(new NearFarScalar());
         billboard.pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar(1.0, 0.0, 3.0e9, 0.0));
+        billboard.sizeInMeters = new ConstantProperty(true);
 
         visualizer.update(time);
 
@@ -172,6 +173,7 @@ defineSuite([
             expect(bb.scaleByDistance).toEqual(testObject.billboard.scaleByDistance.getValue(time));
             expect(bb.translucencyByDistance).toEqual(testObject.billboard.translucencyByDistance.getValue(time));
             expect(bb.pixelOffsetScaleByDistance).toEqual(testObject.billboard.pixelOffsetScaleByDistance.getValue(time));
+            expect(bb.sizeInMeters).toEqual(testObject.billboard.sizeInMeters.getValue(time));
             expect(bb._imageSubRegion).toEqual(testObject.billboard.imageSubRegion.getValue(time));
 
             billboard.show = new ConstantProperty(false);

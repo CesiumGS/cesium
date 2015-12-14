@@ -129,6 +129,11 @@ define([
      * occluder.isScaledSpacePointVisible(scaledSpacePoint); //returns true
      */
     EllipsoidalOccluder.prototype.isScaledSpacePointVisible = function(occludeeScaledSpacePosition) {
+        // Disable occlusion culling when the viewer is under the ellipsoid to avoid false occulsion.
+        if (this._distanceToLimbInScaledSpaceSquared < 0.0) {
+            return true;
+        }
+
         // See http://cesiumjs.org/2013/04/25/Horizon-culling/
         var cv = this._cameraPositionInScaledSpace;
         var vhMagnitudeSquared = this._distanceToLimbInScaledSpaceSquared;

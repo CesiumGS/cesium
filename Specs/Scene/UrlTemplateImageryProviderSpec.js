@@ -1,36 +1,36 @@
 /*global defineSuite*/
 defineSuite([
-    'Scene/UrlTemplateImageryProvider',
-    'Core/DefaultProxy',
-    'Core/Ellipsoid',
-    'Core/GeographicTilingScheme',
-    'Core/loadImage',
-    'Core/Math',
-    'Core/Rectangle',
-    'Core/WebMercatorProjection',
-    'Core/WebMercatorTilingScheme',
-    'Scene/Imagery',
-    'Scene/ImageryLayer',
-    'Scene/ImageryProvider',
-    'Scene/ImageryState',
-    'Specs/pollToPromise',
-    'ThirdParty/when'
-], function(
-    UrlTemplateImageryProvider,
-    DefaultProxy,
-    Ellipsoid,
-    GeographicTilingScheme,
-    loadImage,
-    CesiumMath,
-    Rectangle,
-    WebMercatorProjection,
-    WebMercatorTilingScheme,
-    Imagery,
-    ImageryLayer,
-    ImageryProvider,
-    ImageryState,
-    pollToPromise,
-    when) {
+        'Scene/UrlTemplateImageryProvider',
+        'Core/DefaultProxy',
+        'Core/Ellipsoid',
+        'Core/GeographicTilingScheme',
+        'Core/loadImage',
+        'Core/Math',
+        'Core/Rectangle',
+        'Core/WebMercatorProjection',
+        'Core/WebMercatorTilingScheme',
+        'Scene/Imagery',
+        'Scene/ImageryLayer',
+        'Scene/ImageryProvider',
+        'Scene/ImageryState',
+        'Specs/pollToPromise',
+        'ThirdParty/when'
+    ], function(
+        UrlTemplateImageryProvider,
+        DefaultProxy,
+        Ellipsoid,
+        GeographicTilingScheme,
+        loadImage,
+        CesiumMath,
+        Rectangle,
+        WebMercatorProjection,
+        WebMercatorTilingScheme,
+        Imagery,
+        ImageryLayer,
+        ImageryProvider,
+        ImageryState,
+        pollToPromise,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
@@ -223,17 +223,18 @@ defineSuite([
         });
     });
 
-    it('evaluation of pattern X Y reverseX reverseY Z', function() {
+    it('evaluation of pattern X Y reverseX reverseY Z reverseZ', function() {
         var provider = new UrlTemplateImageryProvider({
-            url: 'made/up/tms/server/{z}/{reverseY}/{y}/{reverseX}/{x}.PNG',
-            tilingScheme: new GeographicTilingScheme()
+            url: 'made/up/tms/server/{z}/{reverseZ}/{reverseY}/{y}/{reverseX}/{x}.PNG',
+            tilingScheme: new GeographicTilingScheme(),
+            maximumLevel: 6
         });
 
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
             spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url).toEqual('made/up/tms/server/2/2/1/4/3.PNG');
+                expect(url).toEqual('made/up/tms/server/2/3/2/1/4/3.PNG');
 
                 // Just return any old image.
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);

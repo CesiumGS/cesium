@@ -9,6 +9,7 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/Math',
         'Core/NearFarScalar',
+        'Renderer/ContextLimits',
         'Scene/HeightReference',
         'Scene/HorizontalOrigin',
         'Scene/LabelStyle',
@@ -25,6 +26,7 @@ defineSuite([
         Ellipsoid,
         CesiumMath,
         NearFarScalar,
+        ContextLimits,
         HeightReference,
         HorizontalOrigin,
         LabelStyle,
@@ -46,7 +48,7 @@ defineSuite([
         scene = createScene();
         camera = scene.camera;
 
-        heightReferenceSupported = defined(scene._globeDepth) && scene._globeDepth.supported && scene.context.maximumVertexTextureImageUnits > 0;
+        heightReferenceSupported = defined(scene._globeDepth) && scene._globeDepth.supported && ContextLimits.maximumVertexTextureImageUnits > 0;
     });
 
     afterAll(function() {
@@ -1397,7 +1399,7 @@ defineSuite([
         });
 
         scene.renderForSpecs();
-        var actual = scene._commandList[0].boundingVolume;
+        var actual = scene.frameState.commandList[0].boundingVolume;
 
         var positions = [one.position, two.position];
         var expected = BoundingSphere.fromPoints(positions);
@@ -1421,7 +1423,7 @@ defineSuite([
         // Update scene state
         scene.morphToColumbusView(0);
         scene.renderForSpecs();
-        var actual = scene._commandList[0].boundingVolume;
+        var actual = scene.frameState.commandList[0].boundingVolume;
 
         var projectedPositions = [
             projection.project(ellipsoid.cartesianToCartographic(one.position)),
@@ -1462,7 +1464,7 @@ defineSuite([
         camera.frustum = orthoFrustum;
 
         scene.renderForSpecs();
-        var actual = scene._commandList[0].boundingVolume;
+        var actual = scene.frameState.commandList[0].boundingVolume;
 
         var projectedPositions = [
             projection.project(ellipsoid.cartesianToCartographic(one.position)),

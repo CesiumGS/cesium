@@ -8,12 +8,12 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
+        '../Core/HeadingPitchRange',
         '../Core/JulianDate',
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Transforms',
-        '../Scene/HeadingPitchRange',
         '../Scene/SceneMode'
     ], function(
         BoundingSphere,
@@ -24,12 +24,12 @@ define([
         defineProperties,
         DeveloperError,
         Ellipsoid,
+        HeadingPitchRange,
         JulianDate,
         CesiumMath,
         Matrix3,
         Matrix4,
         Transforms,
-        HeadingPitchRange,
         SceneMode) {
     "use strict";
 

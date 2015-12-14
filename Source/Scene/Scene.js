@@ -2,6 +2,7 @@
 define([
         '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
+        '../Core/BoxGeometry',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
@@ -28,8 +29,12 @@ define([
         '../Core/Occluder',
         '../Core/ShowGeometryInstanceAttribute',
         '../Renderer/ClearCommand',
+        '../Renderer/ComputeEngine',
         '../Renderer/Context',
+        '../Renderer/ContextLimits',
         '../Renderer/PassState',
+        '../Renderer/ShaderProgram',
+        '../Renderer/ShaderSource',
         './Camera',
         './CreditDisplay',
         './CullingVolume',
@@ -57,6 +62,7 @@ define([
     ], function(
         BoundingRectangle,
         BoundingSphere,
+        BoxGeometry,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -83,8 +89,12 @@ define([
         Occluder,
         ShowGeometryInstanceAttribute,
         ClearCommand,
+        ComputeEngine,
         Context,
+        ContextLimits,
         PassState,
+        ShaderProgram,
+        ShaderSource,
         Camera,
         CreditDisplay,
         CullingVolume,
@@ -127,8 +137,8 @@ define([
      *     stencil : false,
      *     antialias : true,
      *     premultipliedAlpha : true,
-     *     preserveDrawingBuffer : false
-     *     failIfMajorPerformanceCaveat : true
+     *     preserveDrawingBuffer : false,
+     *     failIfMajorPerformanceCaveat : false
      *   },
      *   allowTextureFilterAnisotropic : true
      * }
@@ -142,11 +152,6 @@ define([
      * <code>webgl.alpha</code> defaults to false, which can improve performance compared to the standard WebGL default
      * of true.  If an application needs to composite Cesium above other HTML elements using alpha-blending, set
      * <code>webgl.alpha</code> to true.
-     * </p>
-     * <p>
-     * <code>webgl.failIfMajorPerformanceCaveat</code> defaults to true, which ensures a context is not successfully created
-     * if the system has a major performance issue such as only supporting software rendering.  The standard WebGL default is false,
-     * which is not appropriate for almost any Cesium app.
      * </p>
      * <p>
      * The other <code>webgl</code> properties match the WebGL defaults for {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}.
@@ -205,14 +210,16 @@ define([
         }
 
         this._id = createGuid();
-        this._frameState = new FrameState(new CreditDisplay(creditContainer));
+        this._frameState = new FrameState(context, new CreditDisplay(creditContainer));
         this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
 
         this._passState = new PassState(context);
         this._canvas = canvas;
         this._context = context;
+        this._computeEngine = new ComputeEngine(context);
         this._globe = undefined;
         this._primitives = new PrimitiveCollection();
+        this._groundPrimitives = new PrimitiveCollection();
 
         this._tweens = new TweenCollection();
 
@@ -220,7 +227,7 @@ define([
 
         this._sunPostProcess = undefined;
 
-        this._commandList = [];
+        this._computeCommandList = [];
         this._frustumCommandsList = [];
         this._overlayCommandList = [];
 
@@ -246,6 +253,7 @@ define([
 
         this._clearColorCommand = new ClearCommand({
             color : new Color(),
+            stencil : 0,
             owner : this
         });
         this._depthClearCommand = new ClearCommand({
@@ -498,7 +506,7 @@ define([
         this.copyGlobeDepth = false;
 
         this._performanceDisplay = undefined;
-        this._debugSphere = undefined;
+        this._debugVolume = undefined;
 
         var camera = new Camera(this);
         this._camera = camera;
@@ -573,7 +581,7 @@ define([
          */
         maximumAliasedLineWidth : {
             get : function() {
-                return this._context.maximumAliasedLineWidth;
+                return ContextLimits.maximumAliasedLineWidth;
             }
         },
 
@@ -588,7 +596,7 @@ define([
          */
         maximumCubeMapSize : {
             get : function() {
-                return this._context.maximumCubeMapSize;
+                return ContextLimits.maximumCubeMapSize;
             }
         },
 
@@ -631,6 +639,19 @@ define([
         primitives : {
             get : function() {
                 return this._primitives;
+            }
+        },
+
+        /**
+         * Gets the collection of ground primitives.
+         * @memberof Scene.prototype
+         *
+         * @type {PrimitiveCollection}
+         * @readonly
+         */
+        groundPrimitives : {
+            get : function() {
+                return this._groundPrimitives;
             }
         },
 
@@ -864,13 +885,21 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (!defined(value)) {
-                    throw new DeveloperError('value is required.');
-                }
                 if (this.scene3DOnly && value !== SceneMode.SCENE3D) {
                     throw new DeveloperError('Only SceneMode.SCENE3D is valid when scene3DOnly is true.');
                 }
                 //>>includeEnd('debug');
+                if (value === SceneMode.SCENE2D) {
+                    this.morphTo2D(0);
+                } else if (value === SceneMode.SCENE3D) {
+                    this.morphTo3D(0);
+                } else if (value === SceneMode.COLUMBUS_VIEW) {
+                    this.morphToColumbusView(0);
+                    //>>includeStart('debug', pragmas.debug);
+                } else {
+                    throw new DeveloperError('value must be a valid SceneMode enumeration.');
+                    //>>includeEnd('debug');
+                }
                 this._mode = value;
             }
         },
@@ -935,6 +964,7 @@ define([
         var camera = scene._camera;
 
         var frameState = scene._frameState;
+        frameState.commandList.length = 0;
         frameState.mode = scene._mode;
         frameState.morphTime = scene.morphTime;
         frameState.mapProjection = scene.mapProjection;
@@ -1008,8 +1038,10 @@ define([
     var distances = new Interval();
 
     function createPotentiallyVisibleSet(scene) {
-        var commandList = scene._commandList;
+        var computeList = scene._computeCommandList;
         var overlayList = scene._overlayCommandList;
+
+        var commandList = scene._frameState.commandList;
 
         var cullingVolume = scene._frameState.cullingVolume;
         var camera = scene._camera;
@@ -1032,6 +1064,8 @@ define([
                 frustumCommandsList[n].indices[p] = 0;
             }
         }
+
+        computeList.length = 0;
         overlayList.length = 0;
 
         var near = Number.MAX_VALUE;
@@ -1055,18 +1089,20 @@ define([
             var command = commandList[i];
             var pass = command.pass;
 
-            if (pass === Pass.OVERLAY) {
+            if (pass === Pass.COMPUTE) {
+                computeList.push(command);
+            } else if (pass === Pass.OVERLAY) {
                 overlayList.push(command);
             } else {
                 var boundingVolume = command.boundingVolume;
                 if (defined(boundingVolume)) {
                     if (command.cull &&
                             ((cullingVolume.computeVisibility(boundingVolume) === Intersect.OUTSIDE) ||
-                             (defined(occluder) && !occluder.isBoundingSphereVisible(boundingVolume)))) {
+                             (defined(occluder) && boundingVolume.isOccluded(occluder)))) {
                         continue;
                     }
 
-                    distances = BoundingSphere.computePlaneDistances(boundingVolume, position, direction, distances);
+                    distances = boundingVolume.computePlaneDistances(position, direction, distances);
                     near = Math.min(near, distances.start);
                     far = Math.max(far, distances.stop);
                 } else {
@@ -1122,7 +1158,7 @@ define([
         var fs = sp.fragmentShaderSource.clone();
 
         fs.sources = fs.sources.map(function(source) {
-            source = source.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_Debug_main()');
+            source = ShaderSource.replaceMain(source, 'czm_Debug_main');
             return source;
         });
 
@@ -1153,7 +1189,13 @@ define([
         fs.sources.push(newMain);
 
         var attributeLocations = getAttributeLocations(sp);
-        return context.createShaderProgram(sp.vertexShaderSource, fs, attributeLocations);
+
+        return ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : sp.vertexShaderSource,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
     }
 
     function executeDebugCommand(command, scene, passState, renderState, shaderProgram) {
@@ -1184,21 +1226,17 @@ define([
 
         if (command.debugShowBoundingVolume && (defined(command.boundingVolume))) {
             // Debug code to draw bounding volume for command.  Not optimized!
-            // Assumes bounding volume is a bounding sphere.
-            if (defined(scene._debugSphere)) {
-                scene._debugSphere.destroy();
-            }
-
+            // Assumes bounding volume is a bounding sphere or box
             var frameState = scene._frameState;
             var boundingVolume = command.boundingVolume;
-            var radius = boundingVolume.radius;
-            var center = boundingVolume.center;
 
-            var geometry = GeometryPipeline.toWireframe(EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
-                radii : new Cartesian3(radius, radius, radius),
-                vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
-            })));
+            if (defined(scene._debugVolume)) {
+                scene._debugVolume.destroy();
+            }
 
+            var geometry;
+
+            var center = Cartesian3.clone(boundingVolume.center);
             if (frameState.mode !== SceneMode.SCENE3D) {
                 center = Matrix4.multiplyByPoint(transformFrom2D, center, center);
                 var projection = frameState.mapProjection;
@@ -1206,23 +1244,55 @@ define([
                 center = projection.ellipsoid.cartographicToCartesian(centerCartographic);
             }
 
-            scene._debugSphere = new Primitive({
-                geometryInstances : new GeometryInstance({
-                    geometry : geometry,
-                    modelMatrix : Matrix4.multiplyByTranslation(Matrix4.IDENTITY, center, new Matrix4()),
-                    attributes : {
-                        color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
-                    }
-                }),
-                appearance : new PerInstanceColorAppearance({
-                    flat : true,
-                    translucent : false
-                }),
-                asynchronous : false
-            });
+            if (defined(boundingVolume.radius)) {
+                var radius = boundingVolume.radius;
 
-            var commandList = [];
-            scene._debugSphere.update(context, frameState, commandList);
+                geometry = GeometryPipeline.toWireframe(EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
+                    radii : new Cartesian3(radius, radius, radius),
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
+                })));
+
+                scene._debugVolume = new Primitive({
+                    geometryInstances : new GeometryInstance({
+                        geometry : geometry,
+                        modelMatrix : Matrix4.multiplyByTranslation(Matrix4.IDENTITY, center, new Matrix4()),
+                        attributes : {
+                            color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
+                        }
+                    }),
+                    appearance : new PerInstanceColorAppearance({
+                        flat : true,
+                        translucent : false
+                    }),
+                    asynchronous : false
+                });
+            } else {
+                var halfAxes = boundingVolume.halfAxes;
+
+                geometry = GeometryPipeline.toWireframe(BoxGeometry.createGeometry(BoxGeometry.fromDimensions({
+                    dimensions : new Cartesian3(2.0, 2.0, 2.0),
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
+                })));
+
+                scene._debugVolume = new Primitive({
+                    geometryInstances : new GeometryInstance({
+                        geometry : geometry,
+                        modelMatrix : Matrix4.fromRotationTranslation(halfAxes, center, new Matrix4()),
+                        attributes : {
+                            color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
+                        }
+                    }),
+                    appearance : new PerInstanceColorAppearance({
+                        flat : true,
+                        translucent : false
+                    }),
+                    asynchronous : false
+                });
+            }
+
+            var savedCommandList = frameState.commandList;
+            var commandList = frameState.commandList = [];
+            scene._debugVolume.update(frameState);
 
             var framebuffer;
             if (defined(debugFramebuffer)) {
@@ -1235,6 +1305,8 @@ define([
             if (defined(framebuffer)) {
                 passState.framebuffer = framebuffer;
             }
+
+            frameState.commandList = savedCommandList;
         }
     }
 
@@ -1259,11 +1331,11 @@ define([
                  ((!defined(command.boundingVolume)) ||
                   !command.cull ||
                   ((cullingVolume.computeVisibility(boundingVolume) !== Intersect.OUTSIDE) &&
-                   (!defined(occluder) || occluder.isBoundingSphereVisible(boundingVolume)))));
+                   (!defined(occluder) || !boundingVolume.isOccluded(occluder)))));
     }
 
     function translucentCompare(a, b, position) {
-        return BoundingSphere.distanceSquaredTo(b.boundingVolume, position) - BoundingSphere.distanceSquaredTo(a.boundingVolume, position);
+        return b.boundingVolume.distanceSquaredTo(position) - a.boundingVolume.distanceSquaredTo(position);
     }
 
     function executeTranslucentCommandsSorted(scene, executeFunction, passState, commands) {
@@ -1324,11 +1396,13 @@ define([
 
         // Manage celestial and terrestrial environment effects.
         var renderPass = frameState.passes.render;
-        var skyBoxCommand = (renderPass && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
-        var skyAtmosphereCommand = (renderPass && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
-        var sunCommand = (renderPass && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
-        var sunVisible = isVisible(sunCommand, frameState);
-        var moonCommand = (renderPass && defined(scene.moon)) ? scene.moon.update(context, frameState) : undefined;
+        var skyBoxCommand = (renderPass && defined(scene.skyBox)) ? scene.skyBox.update(frameState) : undefined;
+        var skyAtmosphereCommand = (renderPass && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(frameState) : undefined;
+        var sunCommands = (renderPass && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
+        var sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
+        var sunComputeCommand = defined(sunCommands) ? sunCommands.computeCommand : undefined;
+        var sunVisible = isVisible(sunDrawCommand, frameState);
+        var moonCommand = (renderPass && defined(scene.moon)) ? scene.moon.update(frameState) : undefined;
         var moonVisible = isVisible(moonCommand, frameState);
 
         // Preserve the reference to the original framebuffer.
@@ -1367,11 +1441,13 @@ define([
             }
         }
 
-        if (defined(scene.globe) && !scene.globe.depthTestAgainstTerrain) {
+        var clearGlobeDepth = defined(scene.globe) && (!scene.globe.depthTestAgainstTerrain || scene.mode === SceneMode.SCENE2D);
+        var useDepthPlane = clearGlobeDepth && scene.mode === SceneMode.SCENE3D;
+        if (useDepthPlane) {
             // Update the depth plane that is rendered in 3D when the primitives are
             // not depth tested against terrain so primitives on the backface
             // of the globe are not picked.
-            scene._depthPlane.update(context, frameState);
+            scene._depthPlane.update(frameState);
         }
 
         // If supported, configure OIT to use the globe depth framebuffer and clear the OIT framebuffer.
@@ -1416,7 +1492,10 @@ define([
         }
 
         if (sunVisible) {
-            sunCommand.execute(context, passState);
+            if (defined(sunComputeCommand)) {
+                sunComputeCommand.execute(scene._computeEngine);
+            }
+            sunDrawCommand.execute(context, passState);
             if (scene.sunBloom) {
                 var framebuffer;
                 if (useGlobeDepthFramebuffer) {
@@ -1454,13 +1533,10 @@ define([
         for (i = 0; i < numFrustums; ++i) {
             var index = numFrustums - i - 1;
             var frustumCommands = frustumCommandsList[index];
-            frustum.near = frustumCommands.near;
-            frustum.far = frustumCommands.far;
 
-            if (index !== 0) {
-                // Avoid tearing artifacts between adjacent frustums in the opaque passes
-                frustum.near *= OPAQUE_FRUSTUM_NEAR_OFFSET;
-            }
+            // Avoid tearing artifacts between adjacent frustums in the opaque passes
+            frustum.near = index !== 0 ? frustumCommands.near * OPAQUE_FRUSTUM_NEAR_OFFSET : frustumCommands.near;
+            frustum.far = frustumCommands.far;
 
             var globeDepth = scene.debugShowGlobeDepth ? getDebugGlobeDepth(scene, index) : scene._globeDepth;
 
@@ -1488,14 +1564,22 @@ define([
                 passState.framebuffer = fb;
             }
 
-            if (defined(scene.globe) && !scene.globe.depthTestAgainstTerrain) {
+            commands = frustumCommands.commands[Pass.GROUND];
+            length = frustumCommands.indices[Pass.GROUND];
+            for (j = 0; j < length; ++j) {
+                executeCommand(commands[j], scene, context, passState);
+            }
+
+            if (clearGlobeDepth) {
                 clearDepth.execute(context, passState);
-                scene._depthPlane.execute(context, passState);
+                if (useDepthPlane) {
+                    scene._depthPlane.execute(context, passState);
+                }
             }
 
             // Execute commands in order by pass up to the translucent pass.
             // Translucent geometry needs special handling (sorting/OIT).
-            var startPass = Pass.GLOBE + 1;
+            var startPass = Pass.GROUND + 1;
             var endPass = Pass.TRANSLUCENT;
             for (var pass = startPass; pass < endPass; ++pass) {
                 commands = frustumCommands.commands[pass];
@@ -1554,6 +1638,14 @@ define([
         }
     }
 
+    function executeComputeCommands(scene) {
+        var commandList = scene._computeCommandList;
+        var length = commandList.length;
+        for (var i = 0; i < length; ++i) {
+            commandList[i].execute(scene._computeEngine);
+        }
+    }
+
     function executeOverlayCommands(scene, passState) {
         var context = scene.context;
         var commandList = scene._overlayCommandList;
@@ -1564,15 +1656,14 @@ define([
     }
 
     function updatePrimitives(scene) {
-        var context = scene.context;
         var frameState = scene._frameState;
-        var commandList = scene._commandList;
 
         if (scene._globe) {
-            scene._globe.update(context, frameState, commandList);
+            scene._globe.update(frameState);
         }
 
-        scene._primitives.update(context, frameState, commandList);
+        scene._groundPrimitives.update(frameState);
+        scene._primitives.update(frameState);
     }
 
     function callAfterRenderFunctions(frameState) {
@@ -1620,7 +1711,8 @@ define([
 
         scene._preRender.raiseEvent(scene, time);
 
-        var us = scene.context.uniformState;
+        var context = scene.context;
+        var us = context.uniformState;
         var frameState = scene._frameState;
 
         var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
@@ -1628,10 +1720,9 @@ define([
         frameState.passes.render = true;
         frameState.creditDisplay.beginFrame();
 
-        var context = scene.context;
-        us.update(context, frameState);
+        us.update(frameState);
 
-        scene._commandList.length = 0;
+        scene._computeCommandList.length = 0;
         scene._overlayCommandList.length = 0;
 
         updatePrimitives(scene);
@@ -1642,6 +1733,7 @@ define([
         passState.blendingEnabled = undefined;
         passState.scissorTest = undefined;
 
+        executeComputeCommands(scene);
         executeCommands(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
         executeOverlayCommands(scene, passState);
 
@@ -1690,7 +1782,7 @@ define([
      */
     Scene.prototype.clampLineWidth = function(width) {
         var context = this._context;
-        return Math.max(context.minimumAliasedLineWidth, Math.min(width, context.maximumAliasedLineWidth));
+        return Math.max(ContextLimits.minimumAliasedLineWidth, Math.min(width, ContextLimits.maximumAliasedLineWidth));
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();
@@ -1725,10 +1817,7 @@ define([
 
         Cartesian3.fromElements(origin.z, origin.x, origin.y, origin);
 
-        scratchBufferDimensions.x = drawingBufferWidth;
-        scratchBufferDimensions.y = drawingBufferHeight;
-
-        var pixelSize = frustum.getPixelSize(scratchBufferDimensions, undefined, scratchPixelSize);
+        var pixelSize = frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, 1.0, scratchPixelSize);
 
         var ortho = orthoPickingFrustum;
         ortho.right = pixelSize.x * 0.5;
@@ -1760,10 +1849,7 @@ define([
         var xDir = x * near * tanTheta;
         var yDir = y * near * tanPhi;
 
-        scratchBufferDimensions.x = drawingBufferWidth;
-        scratchBufferDimensions.y = drawingBufferHeight;
-
-        var pixelSize = frustum.getPixelSize(scratchBufferDimensions, undefined, scratchPixelSize);
+        var pixelSize = frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, 1.0, scratchPixelSize);
         var pickWidth = pixelSize.x * width * 0.5;
         var pickHeight = pixelSize.y * height * 0.5;
 
@@ -1825,9 +1911,8 @@ define([
         frameState.cullingVolume = getPickCullingVolume(this, drawingBufferPosition, rectangleWidth, rectangleHeight);
         frameState.passes.pick = true;
 
-        us.update(context, frameState);
+        us.update(frameState);
 
-        this._commandList.length = 0;
         updatePrimitives(this);
         createPotentiallyVisibleSet(this);
 
@@ -2081,9 +2166,11 @@ define([
      */
     Scene.prototype.destroy = function() {
         this._tweens.removeAll();
+        this._computeEngine = this._computeEngine && this._computeEngine.destroy();
         this._screenSpaceCameraController = this._screenSpaceCameraController && this._screenSpaceCameraController.destroy();
         this._pickFramebuffer = this._pickFramebuffer && this._pickFramebuffer.destroy();
         this._primitives = this._primitives && this._primitives.destroy();
+        this._groundPrimitives = this._groundPrimitives && this._groundPrimitives.destroy();
         this._globe = this._globe && this._globe.destroy();
         this.skyBox = this.skyBox && this.skyBox.destroy();
         this.skyAtmosphere = this.skyAtmosphere && this.skyAtmosphere.destroy();
@@ -2091,7 +2178,6 @@ define([
         this.sun = this.sun && this.sun.destroy();
         this._sunPostProcess = this._sunPostProcess && this._sunPostProcess.destroy();
         this._depthPlane = this._depthPlane && this._depthPlane.destroy();
-
         this._transitioner.destroy();
 
         if (defined(this._globeDepth)) {

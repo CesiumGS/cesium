@@ -5,6 +5,7 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Renderer/RenderState',
         '../Renderer/ShaderSource',
         '../Shaders/ViewportQuadFS',
         './BlendingState',
@@ -16,6 +17,7 @@ define([
         defined,
         destroyObject,
         DeveloperError,
+        RenderState,
         ShaderSource,
         ViewportQuadFS,
         BlendingState,
@@ -101,7 +103,7 @@ define([
      * @exception {DeveloperError} this.material must be defined.
      * @exception {DeveloperError} this.rectangle must be defined.
      */
-    ViewportQuad.prototype.update = function(context, frameState, commandList) {
+    ViewportQuad.prototype.update = function(frameState) {
         if (!this.show) {
             return;
         }
@@ -117,7 +119,7 @@ define([
 
         var rs = this._rs;
         if ((!defined(rs)) || !BoundingRectangle.equals(rs.viewport, this.rectangle)) {
-            this._rs = context.createRenderState({
+            this._rs = RenderState.fromCache({
                 blending : BlendingState.ALPHA_BLEND,
                 viewport : this.rectangle
             });
@@ -125,6 +127,8 @@ define([
 
         var pass = frameState.passes;
         if (pass.render) {
+            var context = frameState.context;
+
             if (this._material !== this.material || !defined(this._overlayCommand)) {
                 // Recompile shader when material changes
                 this._material = this.material;
@@ -147,7 +151,7 @@ define([
             this._material.update(context);
 
             this._overlayCommand.uniformMap = this._material._uniforms;
-            commandList.push(this._overlayCommand);
+            frameState.commandList.push(this._overlayCommand);
         }
     };
 

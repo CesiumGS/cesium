@@ -93,6 +93,7 @@ define([
          * Gets the radii of the ellipsoid.
          * @memberof Ellipsoid.prototype
          * @type {Cartesian3}
+         * @readonly
          */
         radii : {
             get: function() {
@@ -103,6 +104,7 @@ define([
          * Gets the squared radii of the ellipsoid.
          * @memberof Ellipsoid.prototype
          * @type {Cartesian3}
+         * @readonly
          */
         radiiSquared : {
             get : function() {
@@ -113,6 +115,7 @@ define([
          * Gets the radii of the ellipsoid raise to the fourth power.
          * @memberof Ellipsoid.prototype
          * @type {Cartesian3}
+         * @readonly
          */
         radiiToTheFourth : {
             get : function() {
@@ -123,6 +126,7 @@ define([
          * Gets one over the radii of the ellipsoid.
          * @memberof Ellipsoid.prototype
          * @type {Cartesian3}
+         * @readonly
          */
         oneOverRadii : {
             get : function() {
@@ -133,6 +137,7 @@ define([
          * Gets one over the squared radii of the ellipsoid.
          * @memberof Ellipsoid.prototype
          * @type {Cartesian3}
+         * @readonly
          */
         oneOverRadiiSquared : {
             get : function() {
@@ -143,6 +148,7 @@ define([
          * Gets the minimum radius of the ellipsoid.
          * @memberof Ellipsoid.prototype
          * @type {Number}
+         * @readonly
          */
         minimumRadius : {
             get : function() {
@@ -153,6 +159,7 @@ define([
          * Gets the maximum radius of the ellipsoid.
          * @memberof Ellipsoid.prototype
          * @type {Number}
+         * @readonly
          */
         maximumRadius : {
             get : function() {
@@ -260,7 +267,7 @@ define([
      * Stores the provided instance into the provided array.
      * @function
      *
-     * @param {Object} value The value to pack.
+     * @param {Ellipsoid} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
