@@ -4,6 +4,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/freezeObject',
         '../Core/GeographicTilingScheme',
@@ -18,6 +19,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         freezeObject,
         GeographicTilingScheme,
@@ -90,6 +92,7 @@ define([
      * viewer.imageryLayers.addImageryProvider(provider);
      */
     var WebMapServiceImageryProvider = function WebMapServiceImageryProvider(options) {
+        deprecationWarning('WebMapServiceImageryProvider', 'WebMapServiceImageryProvider is deprecated. It will be removed in Cesium 1.19. Use createWebMapServiceImageryProvider instead.')
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
