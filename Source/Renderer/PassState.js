@@ -56,8 +56,9 @@ define([
         /**
          * The viewport used when one is not defined by a {@link DrawCommand}'s render state.
          * @type {BoundingRectangle}
+         * @default undefined
          */
-        this.viewport = new BoundingRectangle();
+        this.viewport = undefined;
     };
 
     return PassState;

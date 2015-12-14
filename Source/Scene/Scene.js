@@ -218,6 +218,7 @@ define([
         this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
 
         var ps = new PassState(context);
+        ps.viewport = new BoundingRectangle();
         ps.viewport.x = 0;
         ps.viewport.y = 0;
         ps.viewport.width = context.drawingBufferWidth;
@@ -536,7 +537,7 @@ define([
         // the primitives of the scene. This state is for internally keeping track
         // of celestial and environment effects that need to be updated/rendered in
         // a certain order as well as updating/tracking framebuffer usage.
-        this._state = {
+        this._environmentState = {
             skyBoxCommand : undefined,
             skyAtmosphereCommand : undefined,
             sunDrawCommand : undefined,
@@ -1144,9 +1145,10 @@ define([
         cullingVolume = scratchCullingVolume;
 
         // Determine visibility of celestial and terrestrial environment effects.
-        scene._state.isSkyAtmosphereVisible = defined(scene._state.skyAtmosphereCommand) && defined(scene.globe) && scene.globe._surface._tilesToRender.length > 0;
-        scene._state.isSunVisible = isVisible(scene._state.sunDrawCommand, cullingVolume, occluder);
-        scene._state.isMoonVisible = isVisible(scene._state.moonCommand, cullingVolume, occluder);
+        var environmentState = scene._environmentState;
+        environmentState.isSkyAtmosphereVisible = defined(environmentState.skyAtmosphereCommand) && defined(scene.globe) && scene.globe._surface._tilesToRender.length > 0;
+        environmentState.isSunVisible = isVisible(environmentState.sunDrawCommand, cullingVolume, occluder);
+        environmentState.isMoonVisible = isVisible(environmentState.moonCommand, cullingVolume, occluder);
 
         var length = commandList.length;
         for (var i = 0; i < length; ++i) {
@@ -1430,25 +1432,26 @@ define([
         frustum.far = camera.frustum.far;
         us.updateFrustum(frustum);
 
-        var skyBoxCommand = scene._state.skyBoxCommand;
+        var environmentState = scene._environmentState;
+        var skyBoxCommand = environmentState.skyBoxCommand;
         if (defined(skyBoxCommand)) {
             executeCommand(skyBoxCommand, scene, context, passState);
         }
 
-        if (scene._state.isSkyAtmosphereVisible) {
-            executeCommand(scene._state.skyAtmosphereCommand, scene, context, passState);
+        if (environmentState.isSkyAtmosphereVisible) {
+            executeCommand(environmentState.skyAtmosphereCommand, scene, context, passState);
         }
 
-        if (scene._state.isSunVisible) {
-            scene._state.sunDrawCommand.execute(context, passState);
+        if (environmentState.isSunVisible) {
+            environmentState.sunDrawCommand.execute(context, passState);
             if (scene.sunBloom) {
                 var framebuffer;
-                if (scene._state.useGlobeDepthFramebuffer) {
+                if (environmentState.useGlobeDepthFramebuffer) {
                     framebuffer = scene._globeDepth.framebuffer;
-                } else if (scene._state.useFXAA) {
+                } else if (environmentState.useFXAA) {
                     framebuffer = scene._fxaa.getColorFramebuffer();
                 } else {
-                    framebuffer = scene._state.originalFramebuffer;
+                    framebuffer = environmentState.originalFramebuffer;
                 }
                 scene._sunPostProcess.execute(context, framebuffer);
                 passState.framebuffer = framebuffer;
@@ -1456,13 +1459,13 @@ define([
         }
 
         // Moon can be seen through the atmosphere, since the sun is rendered after the atmosphere.
-        if (scene._state.isMoonVisible) {
-            scene._state.moonCommand.execute(context, passState);
+        if (environmentState.isMoonVisible) {
+            environmentState.moonCommand.execute(context, passState);
         }
 
         // Determine how translucent surfaces will be handled.
         var executeTranslucentCommands;
-        if (scene._state.useOIT) {
+        if (environmentState.useOIT) {
             if (!defined(scene._executeOITFunction)) {
                 scene._executeOITFunction = function(scene, executeFunction, passState, commands) {
                     scene._oit.executeCommands(scene, executeFunction, passState, commands);
@@ -1473,8 +1476,8 @@ define([
             executeTranslucentCommands = executeTranslucentCommandsSorted;
         }
 
-        var clearGlobeDepth = scene._state.clearGlobeDepth;
-        var useDepthPlane = scene._state.clearGlobeDepth;
+        var clearGlobeDepth = environmentState.clearGlobeDepth;
+        var useDepthPlane = environmentState.clearGlobeDepth;
         var clearDepth = scene._depthClearCommand;
         var depthPlane = scene._depthPlane;
 
@@ -1494,7 +1497,7 @@ define([
             var globeDepth = scene.debugShowGlobeDepth ? getDebugGlobeDepth(scene, index) : scene._globeDepth;
 
             var fb;
-            if (scene.debugShowGlobeDepth && defined(globeDepth) && scene._state.useGlobeDepthFramebuffer) {
+            if (scene.debugShowGlobeDepth && defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
                 fb = passState.framebuffer;
                 passState.framebuffer = globeDepth.framebuffer;
             }
@@ -1508,12 +1511,12 @@ define([
                 executeCommand(commands[j], scene, context, passState);
             }
 
-            if (defined(globeDepth) && scene._state.useGlobeDepthFramebuffer && (scene.copyGlobeDepth || scene.debugShowGlobeDepth)) {
+            if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer && (scene.copyGlobeDepth || scene.debugShowGlobeDepth)) {
                 globeDepth.update(context);
                 globeDepth.executeCopyDepth(context, passState);
             }
 
-            if (scene.debugShowGlobeDepth && defined(globeDepth) && scene._state.useGlobeDepthFramebuffer) {
+            if (scene.debugShowGlobeDepth && defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
                 passState.framebuffer = fb;
             }
 
@@ -1552,7 +1555,7 @@ define([
             commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
             executeTranslucentCommands(scene, executeCommand, passState, commands);
 
-            if (defined(globeDepth) && scene._state.useGlobeDepthFramebuffer) {
+            if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
                 // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
                 var pickDepth = getPickDepth(scene, index);
                 pickDepth.update(context, globeDepth.framebuffer.depthStencilTexture);
@@ -1562,7 +1565,7 @@ define([
     }
 
     function executeComputeCommands(scene) {
-        var sunComputeCommand = scene._state.sunComputeCommand;
+        var sunComputeCommand = scene._environmentState.sunComputeCommand;
         if (defined(sunComputeCommand)) {
             sunComputeCommand.execute(scene._computeEngine);
         }
@@ -1583,26 +1586,30 @@ define([
         }
     }
 
-    function updatePrimitives(scene) {
+    function updateEnvironment(scene) {
         var frameState = scene._frameState;
 
         // Update celestial and terrestrial environment effects.
+        var environmentState = scene._environmentState;
         var renderPass = frameState.passes.render;
-        scene._state.skyBoxCommand = (renderPass && defined(scene.skyBox)) ? scene.skyBox.update(frameState) : undefined;
-        scene._state.skyAtmosphereCommand = (renderPass && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(frameState) : undefined;
+        environmentState.skyBoxCommand = (renderPass && defined(scene.skyBox)) ? scene.skyBox.update(frameState) : undefined;
+        environmentState.skyAtmosphereCommand = (renderPass && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(frameState) : undefined;
         var sunCommands = (renderPass && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
-        scene._state.sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
-        scene._state.sunComputeCommand = defined(sunCommands) ? sunCommands.computeCommand : undefined;
-        scene._state.moonCommand = (renderPass && defined(scene.moon)) ? scene.moon.update(frameState) : undefined;
+        environmentState.sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
+        environmentState.sunComputeCommand = defined(sunCommands) ? sunCommands.computeCommand : undefined;
+        environmentState.moonCommand = (renderPass && defined(scene.moon)) ? scene.moon.update(frameState) : undefined;
 
-        var clearGlobeDepth = scene._state.clearGlobeDepth = defined(scene.globe) && (!scene.globe.depthTestAgainstTerrain || scene.mode === SceneMode.SCENE2D);
-        var useDepthPlane = scene._state.useDepthPlane = clearGlobeDepth && scene.mode === SceneMode.SCENE3D;
+        var clearGlobeDepth = environmentState.clearGlobeDepth = defined(scene.globe) && (!scene.globe.depthTestAgainstTerrain || scene.mode === SceneMode.SCENE2D);
+        var useDepthPlane = environmentState.useDepthPlane = clearGlobeDepth && scene.mode === SceneMode.SCENE3D;
         if (useDepthPlane) {
             // Update the depth plane that is rendered in 3D when the primitives are
             // not depth tested against terrain so primitives on the backface
             // of the globe are not picked.
             scene._depthPlane.update(frameState);
         }
+    }
+    function updatePrimitives(scene) {
+        var frameState = scene._frameState;
 
         if (scene._globe) {
             scene._globe.update(frameState);
@@ -1614,9 +1621,10 @@ define([
 
     function updateAndClearFramebuffers(scene, passState, clearColor, picking) {
         var context = scene._context;
+        var environmentState = scene._environmentState;
 
         // Preserve the reference to the original framebuffer.
-        scene._state.originalFramebuffer = passState.framebuffer;
+        environmentState.originalFramebuffer = passState.framebuffer;
 
         // Manage sun bloom post-processing effect.
         if (defined(scene.sun) && scene.sunBloom !== scene._sunBloom) {
@@ -1638,7 +1646,7 @@ define([
         clear.execute(context, passState);
 
         // Update globe depth rendering based on the current context and clear the globe depth framebuffer.
-        var useGlobeDepthFramebuffer = scene._state.useGlobeDepthFramebuffer = !picking && defined(scene._globeDepth);
+        var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = !picking && defined(scene._globeDepth);
         if (useGlobeDepthFramebuffer) {
             scene._globeDepth.update(context);
             scene._globeDepth.clear(context, passState, clearColor);
@@ -1656,21 +1664,21 @@ define([
         }
 
         // If supported, configure OIT to use the globe depth framebuffer and clear the OIT framebuffer.
-        var useOIT = scene._state.useOIT = !picking && renderTranslucentCommands && defined(scene._oit) && scene._oit.isSupported();
+        var useOIT = environmentState.useOIT = !picking && renderTranslucentCommands && defined(scene._oit) && scene._oit.isSupported();
         if (useOIT) {
             scene._oit.update(context, scene._globeDepth.framebuffer);
             scene._oit.clear(context, passState, clearColor);
-            scene._state.useOIT = scene._oit.isSupported();
+            environmentState.useOIT = scene._oit.isSupported();
         }
 
         // If supported, configure FXAA to use the globe depth color texture and clear the FXAA framebuffer.
-        var useFXAA = scene._state.useFXAA = !picking && scene.fxaa;
+        var useFXAA = environmentState.useFXAA = !picking && scene.fxaa;
         if (useFXAA) {
             scene._fxaa.update(context);
             scene._fxaa.clear(context, passState, clearColor);
         }
 
-        if (scene._state.isSunVisible && scene.sunBloom) {
+        if (environmentState.isSunVisible && scene.sunBloom) {
             passState.framebuffer = scene._sunPostProcess.update(passState);
         } else if (useGlobeDepthFramebuffer) {
             passState.framebuffer = scene._globeDepth.framebuffer;
@@ -1685,8 +1693,9 @@ define([
 
     function resolveFramebuffers(scene, passState) {
         var context = scene._context;
+        var environmentState = scene._environmentState;
 
-        var useGlobeDepthFramebuffer = scene._state.useGlobeDepthFramebuffer;
+        var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer;
         if (scene.debugShowGlobeDepth && useGlobeDepthFramebuffer) {
             var gd = getDebugGlobeDepth(scene, scene.debugShowDepthFrustum - 1);
             gd.executeDebugGlobeDepth(context, passState);
@@ -1697,8 +1706,8 @@ define([
             pd.executeDebugPickDepth(context, passState);
         }
 
-        var useOIT = scene._state.useOIT;
-        var useFXAA = scene._state.useFXAA;
+        var useOIT = environmentState.useOIT;
+        var useFXAA = environmentState.useFXAA;
 
         if (useOIT) {
             passState.framebuffer = useFXAA ? scene._fxaa.getColorFramebuffer() : undefined;
@@ -1711,12 +1720,12 @@ define([
                 scene._globeDepth.executeCopyColor(context, passState);
             }
 
-            passState.framebuffer = scene._state.originalFramebuffer;
+            passState.framebuffer = environmentState.originalFramebuffer;
             scene._fxaa.execute(context, passState);
         }
 
         if (!useOIT && !useFXAA && useGlobeDepthFramebuffer) {
-            passState.framebuffer = scene._state.originalFramebuffer;
+            passState.framebuffer = environmentState.originalFramebuffer;
             scene._globeDepth.executeCopyColor(context, passState);
         }
     }
@@ -1792,6 +1801,7 @@ define([
         passState.viewport.width = context.drawingBufferWidth;
         passState.viewport.height = context.drawingBufferHeight;
 
+        updateEnvironment(scene);
         updatePrimitives(scene);
         createPotentiallyVisibleSet(scene);
         updateAndClearFramebuffers(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));

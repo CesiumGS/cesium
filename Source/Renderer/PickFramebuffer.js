@@ -34,6 +34,7 @@ define([
             enabled : true,
             rectangle : new BoundingRectangle()
         };
+        passState.viewport = new BoundingRectangle();
 
         this._context = context;
         this._fb = undefined;
