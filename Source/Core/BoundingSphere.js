@@ -1123,7 +1123,7 @@ define([
             throw new DeveloperError('sphere is required.');
         }
         if (!defined(frameState)) {
-            throw new DeveloperError('sphere is required.');
+            throw new DeveloperError('frameState is required.');
         }
         //>>includeEnd('debug');
         return Math.max(0.0, Cartesian3.distance(sphere.center, frameState.camera.positionWC) - sphere.radius);
