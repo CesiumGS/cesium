@@ -23,6 +23,7 @@ define([
      *
      * @alias DebugAppearance
      * @constructor
+     * @implements {Appearance}
      *
      * @param {Object} options Object with the following properties:
      * @param {String} options.attributeName The name of the attribute to visualize.
