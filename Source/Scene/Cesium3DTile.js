@@ -299,7 +299,6 @@ define([
         if (!defined(this._contentsOrientedBoundingBox)) {
             return Intersect.INSIDE;
         }
-
         return cullingVolume.computeVisibility(this._contentsOrientedBoundingBox);
     };
 
@@ -352,37 +351,37 @@ define([
 
     function applyDebugSettings(tile, owner, frameState) {
         // Tiles do not have a content.box if it is the same as the tile's box.
-        var hascontentBox = defined(tile._header.content) && defined(tile._header.content.box);
+        var hasContentBox = defined(tile._header.content) && defined(tile._header.content.box);
 
-        var showBox = owner.debugShowBox || (owner.debugShowcontentBox && !hascontentBox);
+        var showBox = owner.debugShowBox || (owner.debugShowContentBox && !hasContentBox);
         if (showBox && workaround2657(tile._header.box)) {
             if (!defined(tile._debugBox)) {
-                tile._debugBox = createDebugBox(tile._header.box, hascontentBox ? Color.WHITE : Color.RED);
+                tile._debugBox = createDebugBox(tile._header.box, hasContentBox ? Color.WHITE : Color.RED);
             }
             tile._debugBox.update(frameState);
         } else if (!showBox && defined(tile._debugBox)) {
             tile._debugBox = tile._debugBox.destroy();
         }
 
-        if (owner.debugShowcontentBox && hascontentBox && workaround2657(tile._header.content.box)) {
+        if (owner.debugShowContentBox && hasContentBox && workaround2657(tile._header.content.box)) {
             if (!defined(tile._debugcontentBox)) {
                 tile._debugcontentBox = createDebugBox(tile._header.content.box, Color.BLUE);
             }
             tile._debugcontentBox.update(frameState);
-        } else if (!owner.debugShowcontentBox && defined(tile._debugcontentBox)) {
+        } else if (!owner.debugShowContentBox && defined(tile._debugcontentBox)) {
             tile._debugcontentBox = tile._debugcontentBox.destroy();
         }
 
         if (owner.debugShowBoundingVolume) {
             if (!defined(tile._debugOrientedBoundingBox)) {
-                tile._debugOrientedBoundingBox = createDebugOrientedBox(tile._orientedBoundingBox, hascontentBox ? Color.WHITE : Color.RED);
+                tile._debugOrientedBoundingBox = createDebugOrientedBox(tile._orientedBoundingBox, hasContentBox ? Color.WHITE : Color.RED);
             }
             tile._debugOrientedBoundingBox.update(frameState);
         } else if (!owner.debugShowBoundingVolume && defined(tile._debugOrientedBoundingBox)) {
             tile._debugOrientedBoundingBox = tile._debugOrientedBoundingBox.destroy();
         }
 
-        if (owner.debugShowContentsBoundingVolume && hascontentBox) {
+        if (owner.debugShowContentsBoundingVolume && hasContentBox) {
             if (!defined(tile._debugContentsOrientedBoundingBox)) {
                 tile._debugContentsOrientedBoundingBox = createDebugOrientedBox(tile._contentsOrientedBoundingBox, Color.BLUE);
             }

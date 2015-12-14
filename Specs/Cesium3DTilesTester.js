@@ -59,17 +59,23 @@ define([
         expectRender(scene, tileset);
     };
 
+    Cesium3DTilesTester.waitForPendingRequests = function(scene, tileset) {
+        return pollToPromise(function() {
+            scene.renderForSpecs();
+            var stats = tileset._statistics;
+            return ((stats.numberOfPendingRequests === 0) && (stats.numberProcessing === 0));
+        });
+    };
+
     Cesium3DTilesTester.loadTileset = function(scene, url) {
+        // Load all visible tiles
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : url
         }));
-
-        return pollToPromise(function() {
-            // Render scene to progressively load the content
-            scene.renderForSpecs();
-            return tileset.ready && (tileset._root.isReady());
-        }).then(function() {
-            return tileset;
+        return tileset.readyPromise.then(function(tileset) {
+            return Cesium3DTilesTester.waitForPendingRequests(scene, tileset).then(function() {
+                return tileset;
+            });
         });
     };
 

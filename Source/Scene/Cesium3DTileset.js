@@ -7,6 +7,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/Intersect',
         '../Core/loadJson',
         '../Core/Math',
         '../ThirdParty/Uri',
@@ -23,6 +24,7 @@ define([
         destroyObject,
         DeveloperError,
         Event,
+        Intersect,
         loadJson,
         CesiumMath,
         Uri,
@@ -44,7 +46,7 @@ define([
      * @param {Boolean} [options.debugFreezeFrame=false] TODO
      * @param {Boolean} [options.debugColorizeTiles=false] TODO
      * @param {Boolean} [options.debugShowBox=false] TODO
-     * @param {Boolean} [options.debugShowcontentBox=false] TODO
+     * @param {Boolean} [options.debugShowContentBox=false] TODO
      * @param {Boolean} [options.debugShowBoundingVolume=false] TODO
      * @param {Boolean} [options.debugShowContentsBoundingVolume=false] TODO
      *
@@ -66,7 +68,7 @@ define([
 
         this._url = url;
         this._root = undefined;
-        this._properties = undefined; // // Metadata for per-model/point/etc properties
+        this._properties = undefined; // Metadata for per-model/point/etc properties
         this._geometricError = undefined; // Geometric error when the tree is not rendered at all
         this._processingQueue = [];
         this._selectedTiles = [];
@@ -118,7 +120,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.debugShowcontentBox = defaultValue(options.debugShowcontentBox, false);
+        this.debugShowContentBox = defaultValue(options.debugShowContentBox, false);
 
         /**
          * DOC_TBA
@@ -340,7 +342,7 @@ define([
         // There may also be a tight box around just the tile's contents, e.g., for a city, we may be
         // zoomed into a neighborhood and can cull the skyscrapers in the root node.
         if (tile.isReady() &&
-                (fullyVisible || (tile.contentsVisibility(frameState.cullingVolume) !== CullingVolume.MASK_OUTSIDE))) {
+                (fullyVisible || (tile.contentsVisibility(frameState.cullingVolume) !== Intersect.OUTSIDE))) {
             selectedTiles.push(tile);
         }
     }

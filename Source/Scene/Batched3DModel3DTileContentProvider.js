@@ -120,7 +120,6 @@ define([
         var that = this;
 
         this.state = Cesium3DTileContentState.LOADING;
-
         loadArrayBuffer(this._url).then(function(arrayBuffer) {
             that.initialize(arrayBuffer);
         }).otherwise(function(error) {
