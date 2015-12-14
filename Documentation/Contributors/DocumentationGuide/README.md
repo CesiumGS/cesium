@@ -47,7 +47,7 @@ var defined = function(value) {
 
 The doc for `defined` is in the comment starting with `/**`.  JSDoc tags begin with `@`.
 
-`@exports` describes the name of the function.
+`@exports` describes the name of the function that is exported from the module.
 
 `@param` describes the function's parameters and `@returns` describes the function's return value.
 
@@ -190,7 +190,8 @@ Unnecessary example:
 CesiumMath.EPSILON1 = 0.1;
 ```
 
-Use the Cesium namespace (`Cesium.`) in examples.
+* Use the Cesium namespace (`Cesium.`) in examples.
+* Limit code in `@example` tags to 80 lines so it does not overflow.
 
 ## References
 
@@ -222,23 +223,281 @@ generates
 * Use `<code> </code>` tags when referring to parameters or other variable names and values within a description.
 * Use `{@link URL|title}` to link to external sites.
 
-## Constants
+## Classes
 
-_TODO: @type_
-_TODO: @constant_
-_TODO: @function_
+Define a class with `@alias` and `@constructor` tags on the constructor function, e.g.,
+
+```javascript
+/**
+ * A 3D Cartesian point.
+ *
+ * @alias Cartesian3
+ * @constructor
+ *
+ * ...
+ */
+var Cartesian3 = function(x, y, z) {
+   // ...
+```
+
+## Properties and Constants
+
+* Use `@type` and `@default` (whenever possible) to document properties, e.g.,
+```javascript
+var Cartesian2 = function(x, y) {
+    /**
+     * The X component.
+     * @type {Number}
+     * @default 0.0
+     */
+    this.x = defaultValue(x, 0.0);
+
+    // ...
+```
+* Use `@memberOf` when documenting property getter/setters, e.g.,
+```javascript
+defineProperties(Entity.prototype, {
+    /**
+     * Gets or sets whether this entity should be displayed. When set to true,
+     * the entity is only displayed if the parent entity's show property is also true.
+     *
+     * @memberof Entity.prototype
+     * @type {Boolean}
+     */
+    show : {
+        get : function() {
+           // ...
+        },
+        set : function(value) {
+           // ...
+        }
+    },
+    // ...
+```
+* Use `@readonly` to indicate read-only properties, e.g.,
+```
+defineProperties(Entity.prototype, {
+    /**
+     * Gets the unique ID associated with this object.
+     *
+     * @memberof Entity.prototype
+     * @type {String}
+     * @readonly
+     */
+    id : {
+        get : function() {
+            return this._id;
+        }
+    },
+    // ...
+```
+* Document constants with `@constant`, e.g.,
+
+```javascript
+/**
+ * An immutable Cartesian3 instance initialized to (0.0, 0.0, 0.0).
+ *
+ * @type {Cartesian3}
+ * @constant
+ */
+Cartesian3.ZERO = freezeObject(new Cartesian3(0.0, 0.0, 0.0));
+```
+
+## Functions and callbacks
+
+* Use `@function` when JSDoc can't infer an identifier is a function because the JavaScript `function` keyword isn't used, e.g.,
+```javascript
+/**
+ * Creates a Cartesian4 from four consecutive elements in an array.
+ * @function
+ *
+ * @param {Number[]} array The array whose four consecutive elements correspond to the x, y, z, and w components, respectively.
+ * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to the x component.
+ * @param {Cartesian4} [result] The object onto which to store the result.
+ * @returns {Cartesian4}  The modified result parameter or a new Cartesian4 instance if one was not provided.
+ *
+ * @example
+ * // Create a Cartesian4 with (1.0, 2.0, 3.0, 4.0)
+ * var v = [1.0, 2.0, 3.0, 4.0];
+ * var p = Cesium.Cartesian4.fromArray(v);
+ *
+ * // Create a Cartesian4 with (1.0, 2.0, 3.0, 4.0) using an offset into an array
+ * var v2 = [0.0, 0.0, 1.0, 2.0, 3.0, 4.0];
+ * var p2 = Cesium.Cartesian4.fromArray(v2, 2);
+ */
+Cartesian4.fromArray = Cartesian4.unpack;
+```
+* Use `@callback` to document a function signature, e.g.,
+```javascript
+/**
+ * Sort the items in the queue in-place.
+ *
+ * @param {Queue~Comparator} compareFunction A function that defines the sort order.
+ */
+Queue.prototype.sort = function(compareFunction) {
+    if (this._offset > 0) {
+        //compact array
+        this._array = this._array.slice(this._offset);
+        this._offset = 0;
+    }
+
+    this._array.sort(compareFunction);
+};
+
+/**
+ * A function used to compare two items while sorting a queue.
+ * @callback Queue~Comparator
+ *
+ * @param {Object} a An item in the array.
+ * @param {Object} b An item in the array.
+ * @returns {Number} Returns a negative value if <code>a</code> is less than <code>b</code>,
+ *          a positive value if <code>a</code> is greater than <code>b</code>, or
+ *          0 if <code>a</code> is equal to <code>b</code>.
+ *
+ * @example
+ * function compareNumbers(a, b) {
+ *     return a - b;
+ * }
+ */
+```
+
+## Private
+
+_TODO: link to Code Guide section._
+
+Documentation is not generated for private members that start with `_`.  It is often useful to still document them for maintainability.
+
+If a member or function doesn't start with `_`, but is intended to be private, use the `@private` tag at the bottom of the documentation, e.g.,
+```javascript
+/**
+ * A tween is an animation that interpolates the properties of two objects using an {@link EasingFunction}.  Create
+ * one using {@link Scene#tweens} and {@link TweenCollection#add} and related add functions.
+ *
+ * @alias Tween
+ * @constructor
+ *
+ * @private
+ */
+function Tween(/* ... */) { /* ... */ }
+```
+If no documentation comments are provided, the identifier will not be documented.  In this case, `@private` is not strictly needed, but we use it anyway so it is clear that documentation was not forgotten, e.g.,
+```javascript
+/**
+ * @private
+ */
+function appendForwardSlash(url) {
+    // ...
+}
+```
+
+## Layout Reference
+
+There's a general flow to each documentation block that makes it easy to read. Tags are always in the same order with the same spacing.
+
+### Constructor Function
+
+```
+Description.
+
+@alias NAME
+@constructor
+
+@param {TYPE} NAME DESCRIPTION.
+@param {TYPE|OTHER_TYPE} NAME DESCRIPTION WITH LONG
+       WRAPPING LINES.
+
+@exception {TYPE} DESCRIPTION.
+
+@see TYPE
+@see TYPE#INSTANCE_MEMBER
+@see TYPE.STATIC_MEMBER
+
+@example 
+```
+
+### Member Function
+
+```
+Description.
+
+@param {TYPE} NAME DESCRIPTION.
+@param {TYPE|OTHER_TYPE} NAME DESCRIPTION WITH LONG
+       WRAPPING LINES.
+@returns {TYPE} DESCRIPTION.
+
+@exception {TYPE} DESCRIPTION.
+
+@see TYPE
+@see TYPE#INSTANCE_MEMBER
+@see TYPE.STATIC_MEMBER
+
+@example 
+```
+
+### Property
+
+```
+Description.
+
+@type {Type}
+[@constant]
+[@default DEFAULT_VALUE]
+
+@exception {TYPE} DESCRIPTION.
+
+@see TYPE
+@see TYPE#INSTANCE_MEMBER
+@see TYPE.STATIC_MEMBER
+
+@example 
+```
+
+### Property Getter/Setter
+
+```
+DESCRIPTION.
+
+@memberof CLASS_NAME.prototype
+@type {TYPE}
+[@default DEFAULT_VALUE]
+[@readonly]
+
+@exception {TYPE} DESCRIPTION.
+
+@see TYPE
+@see TYPE#INSTANCE_MEMBER
+@see TYPE.STATIC_MEMBER
+
+@example 
+```
+
+### Standalone Function
+
+```
+Description.
+
+@exports NAME
+
+@param {TYPE} NAME DESCRIPTION.
+@param {TYPE|OTHER_TYPE} NAME DESCRIPTION WITH LONG
+       WRAPPING LINES.
+@returns {TYPE} DESCRIPTION.
+
+@exception {TYPE} DESCRIPTION.
+
+@see TYPE
+@see TYPE#INSTANCE_MEMBER
+@see TYPE.STATIC_MEMBER
+
+@example 
+```
 
 ---
 
-_TODO: Classes_
-_TODO: Properties_
-_TODO: property get/set_
-_TODO: functors_ `@callback`
-_TODO: `@private`_
-_TODO: review old guide_
-_TODO: Sandcastle links_ `@demo`
 
 **TODO**
 
+* [ ] 'Gets'/'Gets or sets'
+* [ ] Sandcastle links, `@demo`
 * [ ] Resize images and convert to jpg
 * [ ] Remove the [old guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Documentation-Best-Practices) on the wiki
