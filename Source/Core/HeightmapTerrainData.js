@@ -212,7 +212,9 @@ define([
             return new TerrainMesh(
                     center,
                     new Float32Array(result.vertices),
+                    undefined,
                     TerrainProvider.getRegularGridIndices(result.gridWidth, result.gridHeight),
+                    undefined,
                     result.minimumHeight,
                     result.maximumHeight,
                     result.boundingSphere3D,
@@ -269,7 +271,7 @@ define([
      *          or undefined if too many asynchronous upsample operations are in progress and the request has been
      *          deferred.
      */
-    HeightmapTerrainData.prototype.upsample = function(tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
+    HeightmapTerrainData.prototype.upsample = function(mesh, tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(tilingScheme)) {
             throw new DeveloperError('tilingScheme is required.');
