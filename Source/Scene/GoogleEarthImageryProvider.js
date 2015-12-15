@@ -86,7 +86,7 @@ define([
      * @see SingleTileImageryProvider
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
-     * @see WebMapTileServiceImageryProvider
+     * @see createWebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
      *
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}

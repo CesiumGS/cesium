@@ -68,7 +68,7 @@ define([
      * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see WebMapServiceImageryProvider
-     * @see WebMapTileServiceImageryProvider
+     * @see createWebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
      *
      * @see {@link http://www.maptiler.org/|MapTiler}

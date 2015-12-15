@@ -45,7 +45,7 @@ define([
      * @see SingleTileImageryProvider
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
-     * @see WebMapTileServiceImageryProvider
+     * @see createWebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
      *
      * @see {@link http://wiki.openstreetmap.org/wiki/Main_Page|OpenStreetMap Wiki}

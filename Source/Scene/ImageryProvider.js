@@ -28,7 +28,7 @@ define([
      * @see GoogleEarthImageryProvider
      * @see MapboxImageryProvider
      * @see createOpenStreetMapImageryProvider
-     * @see WebMapTileServiceImageryProvider
+     * @see createWebMapTileServiceImageryProvider
      * @see WebMapServiceImageryProvider
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers.html|Cesium Sandcastle Imagery Layers Demo}

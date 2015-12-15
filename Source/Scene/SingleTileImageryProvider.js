@@ -47,7 +47,7 @@ define([
      * @see createOpenStreetMapImageryProvider
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
-     * @see WebMapTileServiceImageryProvider
+     * @see createWebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
      */
     var SingleTileImageryProvider = function(options) {
