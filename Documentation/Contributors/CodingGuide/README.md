@@ -118,14 +118,14 @@ function Model(options) {
     // ...
 };
 ```
-* In JavaScript, Use single quotes, `'`, instead of double quotes, `"`.  In HTML, use double quotes.
+* In JavaScript code, use single quotes, `'`, instead of double quotes, `"`.  In HTML, use double quotes.
 
 ## Units
 
 * Cesium uses SI units:
-   * Use meters for distances.
-   * Use radians for angles.
-   * Use seconds for time durations.
+   * meters for distances,
+   * radians for angles, and
+   * seconds for time durations.
 * If a function has a parameter with a non-standard unit, such as degrees, put the unit in the function name, e.g.,
 ```javascript
 Cartesian3.fromDegrees = function(longitude, latitude, height, ellipsoid, result) { /* ... */ }
@@ -288,7 +288,7 @@ var sphere = new SphereGeometry({
     vertexFormat : VertexFormat.POSITION_ONLY
 });
 ```
-* :speedboat: Using `{ /* ... */ }` creates an object literal, which is a memory allocation.  Avoid designing functions that use an `options` parameter if the function is likely to be a hot spot; otherwise, callers will have to use a scratch variable (see [below](#result-parameters-and-scratch-variables)) for performance.  Constructor functions are good candidates for `options` parameters since Cesium avoids constructing objects in hot spots.  For example,
+* :speedboat: Using `{ /* ... */ }` creates an object literal, which is a memory allocation.  Avoid designing functions that use an `options` parameter if the function is likely to be a hot spot; otherwise, callers will have to use a scratch variable (see [below](#result-parameters-and-scratch-variables)) for performance.  Constructor functions for non-math classes are good candidates for `options` parameters since Cesium avoids constructing objects in hot spots.  For example,
 ```javascript
 var p = new Cartesian3({
     x : 1.0,
@@ -303,7 +303,7 @@ var p = new Cartesian3(1.0, 2.0, 3.0);
 
 ### Default Parameter Values
 
-If a _sensible_ default exists for a function parameter or class property, don't require the user to provide it.  Use Cesium's `defaultValue` to assign a default value to a local variable.  For example, `height` defaults to zero in `Cartesian3.fromRadians`:
+If a _sensible_ default exists for a function parameter or class property, don't require the user to provide it.  Use Cesium's `defaultValue` to assign a default value.  For example, `height` defaults to zero in `Cartesian3.fromRadians`:
 ```javascript
 Cartesian3.fromRadians = function(longitude, latitude, height) {
     height = defaultValue(height, 0.0);
@@ -479,12 +479,12 @@ The only exceptions are:
 These prototype functions generally delegate to the non-prototype (static) version, e.g.,
 ```javascript
 Cartesian3.equals = function(left, right) {
-        return (left === right) ||
-          ((defined(left)) &&
-           (defined(right)) &&
-           (left.x === right.x) &&
-           (left.y === right.y) &&
-           (left.z === right.z));
+    return (left === right) ||
+           ((defined(left)) &&
+            (defined(right)) &&
+            (left.x === right.x) &&
+            (left.y === right.y) &&
+            (left.z === right.z));
 };
 
 Cartesian3.prototype.equals = function(right) {
@@ -727,6 +727,6 @@ struct czm_ray
 
 ## Resources
 
-See Section 4.1 to 4.3 of [Getting Serious with JavaScript](http://webglinsights.github.io/downloads/WebGL-Insights-Chapter-4.pdf) by Cesium contributors Matthew Amato and Kevin Ring in _WebGL Insights_ for a deeper coverage of modules and performance.
+See Section 4.1 to 4.3 of [Getting Serious with JavaScript](http://webglinsights.github.io/downloads/WebGL-Insights-Chapter-4.pdf) by Cesium contributors Matthew Amato and Kevin Ring in _WebGL Insights_ for deeper coverage of modules and performance.
 
 Watch [From Console to Chrome](https://www.youtube.com/watch?v=XAqIpGU8ZZk) by Lilli Thompson for even deeper performance coverage.
