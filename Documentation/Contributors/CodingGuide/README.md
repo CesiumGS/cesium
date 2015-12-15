@@ -66,7 +66,7 @@ In general, format new code the same as the existing code.
 * Do not include trailing whitespace.
 * Put `{` on the same line as the previous statement:
 ```javascript
-var defaultValue = function(a, b) {
+function defaultValue(a, b) {
    // ...
 };
 
@@ -84,7 +84,7 @@ var foo = (x > 0.0) && (y !== 0.0);
 ```
 * Use vertical whitespace to separate functions and to group related statements within a function, e.g.,
 ```javascript
-var Model = function(options) {
+function Model(options) {
     // ...
     this._allowPicking = defaultValue(options.allowPicking, true);
 
@@ -336,7 +336,7 @@ As described below, `from` constructors also use optional `result` parameters.
 
 * Create a class by creating a constructor function:
 ```javascript
-var Cartesian3 = function(x, y, z) {
+function Cartesian3(x, y, z) {
     this.x = defaultValue(x, 0.0);
     this.y = defaultValue(y, 0.0);
     this.z = defaultValue(z, 0.0);
@@ -471,14 +471,14 @@ function processTiles(tiles3D, frameState) {
 
 Public properties that can be read or written without extra processing can simply be assigned in the constructor function, e.g.,
 ```javascript
-var Model = function(options) {
+function Model(options) {
    this.show = defaultValue(options.show, true);
 };
 ```
 
 Read-only properties can be created with a private property and a getter using Cesium's `defineProperties` function, e.g.,
 ```javascript
-var Cesium3DTileset = function(options) {
+function Cesium3DTileset(options) {
     this._url = options.url;
 };
 
@@ -523,7 +523,7 @@ defineProperties(UniformState.prototype, {
 
 When the overhead of getter/setter functions is prohibitive or reference type semantics are desired, e.g., the ability to pass a property as a `result` parameter so its properties can be modified, consider combining a public property with a private shadowed property, e.g.,
 ```javascript
-var Model = function(options) {
+function Model(options) {
     this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
     this._modelMatrix = Matrix4.clone(this.modelMatrix);
 };
@@ -546,7 +546,7 @@ function loadTilesJson(tileset, tilesJson, done) {
     // ...
 }
 
-var Cesium3DTileset = function(options) {
+function Cesium3DTileset(options) {
     // ...
     loadTilesJson(this, options.url, function(data) {
        // ...
@@ -555,7 +555,7 @@ var Cesium3DTileset = function(options) {
 ```
 is better written as
 ```javascript
-var Cesium3DTileset = function(options) {
+function Cesium3DTileset(options) {
     // ...
     loadTilesJson(this, options.url, function(data) {
        // ...
