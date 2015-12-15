@@ -1,17 +1,17 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Cesium3DTile',
+        'Scene/TileOrientedBoundingBox',
         'Core/Cartesian3',
         'Core/defined',
-        'Core/OrientedBoundingBox',
         'Core/Rectangle',
         'Core/SphereOutlineGeometry',
         'Specs/createScene'
     ], function(
         Cesium3DTile,
+        TileOrientedBoundingBox,
         Cartesian3,
         defined,
-        OrientedBoundingBox,
         Rectangle,
         SphereOutlineGeometry,
         createScene) {
@@ -71,17 +71,17 @@ defineSuite([
         it('can have a bounding sphere', function() {
             var tile = new Cesium3DTile(undefined, '/some_url', tileWithBoundingSphere, undefined);
             var radius = tileWithBoundingSphere.boundingVolume.sphere[3];
-            expect(tile._tileBoundingSphere).toBeDefined();
-            expect(tile._tileBoundingSphere.radius).toEqual(radius);
-            expect(tile._tileBoundingSphere.center).toEqual(Cartesian3.ZERO);
+            expect(tile._boundingVolume).toBeDefined();
+            expect(tile._boundingVolume.radius).toEqual(radius);
+            expect(tile._boundingVolume.center).toEqual(Cartesian3.ZERO);
         });
 
         it('can have a contents bounding sphere', function() {
             var tile = new Cesium3DTile(undefined, '/some_url', tileWithContentsBoundingSphere, undefined);
             var radius = tileWithContentsBoundingSphere.content.boundingVolume.sphere[3];
-            expect(tile._contentsBoundingSphere).toBeDefined();
-            expect(tile._contentsBoundingSphere.radius).toEqual(radius);
-            expect(tile._contentsBoundingSphere.center).toEqual(Cartesian3.ZERO);
+            expect(tile._contentsBoundingVolume).toBeDefined();
+            expect(tile._contentsBoundingVolume.radius).toEqual(radius);
+            expect(tile._contentsBoundingVolume.center).toEqual(Cartesian3.ZERO);
         });
 
         it('can have a bounding box', function() {
@@ -98,9 +98,9 @@ defineSuite([
         it('can have a contents bounding box', function() {
             var box = tileWithContentsBoundingBox.content.boundingVolume.box;
             var tile = new Cesium3DTile(undefined, '/some_url', tileWithContentsBoundingBox, undefined);
-            expect(tile._contentsOrientedBoundingBox).toBeDefined();
-            var obb = OrientedBoundingBox.fromRectangle(new Rectangle(box[0], box[1], box[2], box[3]), box[4], box[5]);
-            expect(tile._contentsOrientedBoundingBox).toEqual(obb);
+            expect(tile._contentsBoundingVolume).toBeDefined();
+            var tobb = new TileOrientedBoundingBox(new Rectangle(box[0], box[1], box[2], box[3]), box[4], box[5]);
+            expect(tile._contentsBoundingVolume).toEqual(tobb);
         });
     });
 

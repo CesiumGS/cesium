@@ -26,7 +26,8 @@ define([
         './Primitive',
         './TileBoundingBox',
         './TileBoundingSphere',
-        './Tileset3DTileContentProvider'
+        './Tileset3DTileContentProvider',
+        './TileOrientedBoundingBox'
     ], function(
         BoxOutlineGeometry,
         Cartesian3,
@@ -54,7 +55,8 @@ define([
         Primitive,
         TileBoundingBox,
         TileBoundingSphere,
-        Tileset3DTileContentProvider) {
+        Tileset3DTileContentProvider,
+        TileOrientedBoundingBox) {
     "use strict";
 
     /**
@@ -75,10 +77,10 @@ define([
                 minimumHeight : b[4],
                 maximumHeight : b[5]
             });
-            this._orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, b[4], b[5]);
+            this._boundingVolume = new TileOrientedBoundingBox(rectangle, b[4], b[5]);
         } else if (defined(tileBoundingVolume.sphere)) {
             var sphere = tileBoundingVolume.sphere;
-            this._tileBoundingSphere = new TileBoundingSphere(
+            this._boundingVolume = new TileBoundingSphere(
                 new Cartesian3(sphere[0], sphere[1], sphere[2]),
                 sphere[3]
             );
@@ -86,32 +88,28 @@ define([
 // TODO: if the content type has pixel size, like points or billboards, the bounding volume needs
 // to dynamic size bigger like BillboardCollection and PointCollection
 
-        var contentsOrientedBoundingBox;
-        var contentsBoundingSphere;
-
+        var contentsBoundingVolume;
         if (defined(contentHeader) && defined(contentHeader.boundingVolume)) {
             // Non-leaf tiles may have a content-box bounding-volume, which is a tight-fit box
             // around only the models in the tile.  This box is useful for culling for rendering,
             // but not for culling for traversing the tree since it is not spatial coherence, i.e.,
             // since it only bounds models in the tile, not the entire tile, children may be
             // outside of this box.
+            var headerVolume = contentHeader.boundingVolume;
 
-            var contentsBoundingVolume = contentHeader.boundingVolume;
-
-            if (defined(contentsBoundingVolume.box)) {
-                var cb = contentsBoundingVolume.box;
-                contentsOrientedBoundingBox = OrientedBoundingBox.fromRectangle(new Rectangle(cb[0], cb[1], cb[2], cb[3]), cb[4], cb[5]);
-            } else if (defined(contentsBoundingVolume.sphere)) {
+            if (defined(headerVolume.box)) {
+                var cb = contentHeader.boundingVolume.box;
+                contentsBoundingVolume = new TileOrientedBoundingBox(new Rectangle(cb[0], cb[1], cb[2], cb[3]), cb[4], cb[5]);
+            } else if (defined(headerVolume.sphere)) {
                 var cs = contentHeader.boundingVolume.sphere;
-                contentsBoundingSphere = new TileBoundingSphere(
+                contentsBoundingVolume = new TileBoundingSphere(
                     new Cartesian3(cs[0], cs[1], cs[2]),
                     cs[3]
                 );
             }
         }
 
-        this._contentsOrientedBoundingBox = contentsOrientedBoundingBox;
-        this._contentsBoundingSphere = contentsBoundingSphere;
+        this._contentsBoundingVolume = contentsBoundingVolume;
 
         /**
          * DOC_TBA
@@ -239,8 +237,8 @@ define([
         boundingVolume : {
             get : function() {
                 return defaultValue(
-                    defaultValue(this._contentsOrientedBoundingBox, this._contentsBoundingSphere),
-                    defaultValue(this._orientedBoundingBox, this._tileBoundingSphere)
+                    this._contentsBoundingVolume,
+                    this._boundingVolume
                 );
             }
         },
@@ -283,7 +281,7 @@ define([
      * DOC_TBA
      */
     Cesium3DTile.prototype.visibility = function(cullingVolume) {
-        var boundingVolume = defaultValue(this._orientedBoundingBox, this._tileBoundingSphere);
+        var boundingVolume = this._boundingVolume;
         return cullingVolume.computeVisibilityWithPlaneMask(boundingVolume, this.parentPlaneMask);
     };
 
@@ -291,7 +289,7 @@ define([
      * DOC_TBA
      */
     Cesium3DTile.prototype.contentsVisibility = function(cullingVolume) {
-        var boundingVolume = defaultValue(this._contentsOrientedBoundingBox, this._contentsBoundingSphere);
+        var boundingVolume = this._contentsBoundingVolume;
         if (!defined(boundingVolume)) {
             return Intersect.INSIDE;
         }
@@ -303,7 +301,7 @@ define([
      * DOC_TBA
      */
     Cesium3DTile.prototype.distanceToTile = function(frameState) {
-        var boundingVolume = defaultValue(this._tileBoundingBox, this._tileBoundingSphere);
+        var boundingVolume = defaultValue(this._tileBoundingBox, this._boundingVolume);
         return boundingVolume.distanceToCamera(frameState);
     };
 
