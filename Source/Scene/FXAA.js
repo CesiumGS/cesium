@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Color',
         '../Core/defined',
@@ -14,6 +15,7 @@ define([
         '../Renderer/Texture',
         '../Shaders/PostProcessFilters/FXAA'
     ], function(
+        BoundingRectangle,
         Cartesian2,
         Color,
         defined,
@@ -38,6 +40,9 @@ define([
         this._depthRenderbuffer = undefined;
         this._fbo = undefined;
         this._command = undefined;
+
+        this._viewport = new BoundingRectangle();
+        this._rs = undefined;
 
         var clearCommand = new ClearCommand({
             color : new Color(0.0, 0.0, 0.0, 0.0),
@@ -115,10 +120,20 @@ define([
 
         if (!defined(this._command)) {
             this._command = context.createViewportQuadCommand(FXAAFS, {
-                renderState : RenderState.fromCache(),
                 owner : this
             });
         }
+
+        this._viewport.width = width;
+        this._viewport.height = height;
+
+        if (!defined(this._rs) || !BoundingRectangle.equals(this._rs.viewport, this._viewport)) {
+            this._rs = RenderState.fromCache({
+                viewport : this._viewport
+            });
+        }
+
+        this._command.renderState = this._rs;
 
         if (textureChanged) {
             var that = this;

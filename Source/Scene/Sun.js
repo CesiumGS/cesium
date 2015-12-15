@@ -147,6 +147,7 @@ define([
      * @private
      */
     Sun.prototype.update = function(scene) {
+        var passState = scene._passState;
         var frameState = scene.frameState;
         var context = scene.context;
 
@@ -163,8 +164,8 @@ define([
             return undefined;
         }
 
-        var drawingBufferWidth = scene.drawingBufferWidth;
-        var drawingBufferHeight = scene.drawingBufferHeight;
+        var drawingBufferWidth = passState.viewport.width;
+        var drawingBufferHeight = passState.viewport.height;
 
         if (!defined(this._texture) ||
                 drawingBufferWidth !== this._drawingBufferWidth ||

@@ -1,5 +1,8 @@
 /*global define*/
-define(function() {
+define([
+        '../Core/BoundingRectangle'
+    ], function(
+        BoundingRectangle) {
     "use strict";
 
     /**
@@ -49,6 +52,13 @@ define(function() {
          * @default undefined
          */
         this.scissorTest = undefined;
+
+        /**
+         * The viewport used when one is not defined by a {@link DrawCommand}'s render state.
+         * @type {BoundingRectangle}
+         * @default undefined
+         */
+        this.viewport = undefined;
     }
 
     return PassState;

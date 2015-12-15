@@ -34,6 +34,7 @@ define([
             enabled : true,
             rectangle : new BoundingRectangle()
         };
+        passState.viewport = new BoundingRectangle();
 
         this._context = context;
         this._fb = undefined;
@@ -68,6 +69,9 @@ define([
             });
             this._passState.framebuffer = this._fb;
         }
+
+        this._passState.viewport.width = width;
+        this._passState.viewport.height = height;
 
         return this._passState;
     };
