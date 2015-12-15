@@ -64,6 +64,7 @@ define([
         } else {
             this.boundingSphere = boundingVolume;
         }
+        // TODO: need to improve this for other bounding volumes, e.g., regions
 
         this._debugColor = Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;
