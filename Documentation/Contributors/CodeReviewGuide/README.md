@@ -14,20 +14,20 @@ This guide describes best practices for code reviews.
 ## General
 
 * GitHub has great tools for code reviews in pull requests.  Become familiar with [them](https://help.github.com/articles/using-pull-requests/#reviewing-proposed-changes).
-* If we don't have a CLA for the contributor who opened the pull request (or any contributor to the branch), politely ask for one before reviewing the pull request ([example](https://github.com/AnalyticalGraphicsInc/cesium/pull/2918#issuecomment-127805425)).
+* If we don't have a CLA for the contributor who opened the pull request (or, more precisely, any contributor to the branch), politely ask for one before reviewing the pull request ([example](https://github.com/AnalyticalGraphicsInc/cesium/pull/2918#issuecomment-127805425)).
 * Most pull requests require additional work, often minor but sometimes major, before being merged.  It's not a big deal.  Sometimes we open a pull request with a [task list](https://github.com/blog/1375%0A-task-lists-in-gfm-issues-pulls-comments) for early feedback.
 * Anyone is encouraged to review any pull request that interests them.  However, someone familiar with the changed code should ultimately merge it.
 
 ## Reviewing
 
 * See the forest through the trees.  Don't just review code one line at a time.  Consider the big picture and its implications.
-* Comments are about code, not the contributor who wrote the code.  Don't be offended by a reviewer's comments and don't aim to offend when commenting.  We all want the same thing: to improve Cesium.
-* Provide motivation when it isn't obvious.  Suggest _why_ a change should be made.
+* _Comments are about code_, not the contributor who wrote the code.  Don't be offended by a reviewer's comments and don't aim to offend when commenting.  We all want the same thing: to improve Cesium.
+* Provide motivation when it isn't obvious.  Suggest why a change should be made.
 * Point contributors to a relevant part of the [Coding Guide](../CodingGuide/README.md) when useful.
-* Be concise.  Make every word tell.
-* Be responsive.  The contributor should expect prompt feedback from reviewers, and reviewers should expect the same.  If not, politely ask for it.  We all want pull requests to get into master.
-* Limit the scope.  As a reviewer, it is easy to want to increase the scope, e.g., "why don't we do this everywhere?".  These are often fair questions but can be better served by submitting a separate issue to allow more incremental pull requests.
-* Bring other people into the conversation.  If someone has expertise with a particular language feature or problem domain under review, invite them to comment.
+* _Be concise_.  Make every word tell.
+* _Be responsive_.  The contributor should expect prompt feedback from reviewers, and reviewers should expect the same.  If not, politely ask for it.  We all want pull requests to get into master.
+* _Limit the scope_.  As a reviewer, it is easy to want to increase the scope, e.g., "why don't we do this everywhere?".  These are often fair questions but can be better served by submitting a separate issue to allow more incremental pull requests.
+* Bring others into the conversation sparingly.  If someone has expertise with a particular language feature or problem domain under review, invite them to comment.
 * If an experienced contributor makes a occasional whitespace or trivial mistake, just fix it to save on noise and speedup the review.
 
 ## Changes to the Public Cesium API
@@ -57,9 +57,3 @@ This guide describes best practices for code reviews.
 ## Resources
 
 * [Practice Conspicuous Code Review](http://producingoss.com/en/producingoss.html#code-review) in [Producing Open Source Software](http://producingoss.com/).
-
----
-
-**TODO**
-* [ ] Resize images
-* [ ] Remove [old guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Code-Review-Tips)
