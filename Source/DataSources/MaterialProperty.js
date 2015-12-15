@@ -28,9 +28,9 @@ define([
      * @see PolylineOutlineMaterialProperty
      * @see StripeMaterialProperty
      */
-    var MaterialProperty = function() {
+    function MaterialProperty() {
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     defineProperties(MaterialProperty.prototype, {
         /**

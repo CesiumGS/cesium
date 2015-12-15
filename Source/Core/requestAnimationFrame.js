@@ -64,12 +64,12 @@ define([
      * }
      * tick();
      */
-    var requestAnimationFrame = function(callback) {
+    function requestAnimationFrame(callback) {
         // we need this extra wrapper function because the native requestAnimationFrame
         // functions must be invoked on the global scope (window), which is not the case
         // if invoked as Cesium.requestAnimationFrame(callback)
         return implementation(callback);
-    };
+    }
 
     /**
      * A function that will be called when the next frame should be drawn.

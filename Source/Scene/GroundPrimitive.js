@@ -109,7 +109,7 @@ define([
      *   geometryInstance : rectangleInstance
      * }));
      */
-    var GroundPrimitive = function(options) {
+    function GroundPrimitive(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
@@ -179,7 +179,7 @@ define([
             _createShaderProgramFunction : undefined,
             _createCommandsFunction : undefined
         };
-    };
+    }
 
     defineProperties(GroundPrimitive.prototype, {
         /**

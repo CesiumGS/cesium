@@ -15,7 +15,7 @@ define([
         MaterialProperty) {
     "use strict";
 
-    var Batch = function(primitives, appearanceType, materialProperty, closed) {
+    function Batch(primitives, appearanceType, materialProperty, closed) {
         this.primitives = primitives;
         this.appearanceType = appearanceType;
         this.materialProperty = materialProperty;
@@ -32,8 +32,7 @@ define([
         this.removeMaterialSubscription = materialProperty.definitionChanged.addEventListener(Batch.prototype.onMaterialChanged, this);
         this.subscriptions = new AssociativeArray();
         this.showsUpdated = new AssociativeArray();
-    };
-
+    }
     Batch.prototype.onMaterialChanged = function() {
         this.invalidated = true;
     };
@@ -239,13 +238,12 @@ define([
     /**
      * @private
      */
-    var StaticGeometryPerMaterialBatch = function(primitives, appearanceType, closed) {
+    function StaticGeometryPerMaterialBatch(primitives, appearanceType, closed) {
         this._items = [];
         this._primitives = primitives;
         this._appearanceType = appearanceType;
         this._closed = closed;
-    };
-
+    }
     StaticGeometryPerMaterialBatch.prototype.add = function(time, updater) {
         var items = this._items;
         var length = items.length;

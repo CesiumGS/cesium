@@ -62,7 +62,7 @@ define([
      * });
      * viewer.terrainProvider = terrainProvider;
      */
-    var ArcGisImageServerTerrainProvider = function ArcGisImageServerTerrainProvider(options) {
+    function ArcGisImageServerTerrainProvider(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.url)) {
             throw new DeveloperError('options.url is required.');
@@ -101,7 +101,7 @@ define([
         }
         this._credit = credit;
         this._readyPromise = when.resolve(true);
-    };
+    }
 
     defineProperties(ArcGisImageServerTerrainProvider.prototype, {
         /**

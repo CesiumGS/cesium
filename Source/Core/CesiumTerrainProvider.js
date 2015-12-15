@@ -93,7 +93,7 @@ define([
      * // The globe must enable lighting to make use of the terrain's vertex normals
      * viewer.scene.globe.enableLighting = true;
      */
-    var CesiumTerrainProvider = function CesiumTerrainProvider(options) {
+    function CesiumTerrainProvider(options) {
         //>>includeStart('debug', pragmas.debug)
         if (!defined(options) || !defined(options.url)) {
             throw new DeveloperError('options.url is required.');
@@ -250,7 +250,7 @@ define([
         }
 
         requestMetadata();
-    };
+    }
 
     /**
      * When using the Quantized-Mesh format, a tile may be returned that includes additional extensions, such as PerVertexNormals, watermask, etc.
@@ -517,10 +517,9 @@ define([
             extensionList.push("watermask");
         }
 
-        var tileLoader = function(tileUrl) {
+        function tileLoader(tileUrl) {
             return loadArrayBuffer(tileUrl, getRequestHeader(extensionList));
-        };
-
+        }
         throttleRequests = defaultValue(throttleRequests, true);
         if (throttleRequests) {
             promise = throttleRequestByServer(url, tileLoader);

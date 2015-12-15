@@ -72,7 +72,7 @@ define([
      * });
      * var geometry = Cesium.WallOutlineGeometry.createGeometry(wall);
      */
-    var WallOutlineGeometry = function(options) {
+    function WallOutlineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var wallPositions = options.positions;
@@ -117,7 +117,7 @@ define([
          * @type {Number}
          */
         this.packedLength = numComponents + Ellipsoid.packedLength + 1;
-    };
+    }
 
     /**
      * Stores the provided instance into the provided array.
