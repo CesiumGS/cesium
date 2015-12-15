@@ -30,9 +30,9 @@ define([
      * @see SampledPositionProperty
      * @see TimeIntervalCollectionPositionProperty
      */
-    var PositionProperty = function() {
+    function PositionProperty() {
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     defineProperties(PositionProperty.prototype, {
         /**

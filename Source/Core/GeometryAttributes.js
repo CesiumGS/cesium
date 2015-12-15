@@ -15,7 +15,7 @@ define([
      * @alias GeometryAttributes
      * @constructor
      */
-    var GeometryAttributes = function(options) {
+    function GeometryAttributes(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
@@ -89,7 +89,7 @@ define([
          * @default undefined
          */
         this.color = options.color;
-    };
+    }
 
     return GeometryAttributes;
 });

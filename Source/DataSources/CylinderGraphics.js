@@ -39,7 +39,7 @@ define([
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cylinder.html|Cesium Sandcastle Cylinder Demo}
      */
-    var CylinderGraphics = function(options) {
+    function CylinderGraphics(options) {
         this._length = undefined;
         this._lengthSubscription = undefined;
         this._topRadius = undefined;
@@ -65,7 +65,8 @@ define([
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
-    };
+    }
+
     defineProperties(CylinderGraphics.prototype, {
         /**
          * Gets the event that is raised whenever a property or sub-property is changed or modified.

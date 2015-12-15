@@ -282,7 +282,7 @@ define([
      * });
      * var geometry = Cesium.PolygonOutlineGeometry.createGeometry(extrudedPolygon);
      */
-    var PolygonOutlineGeometry = function(options) {
+    function PolygonOutlineGeometry(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.polygonHierarchy)) {
             throw new DeveloperError('options.polygonHierarchy is required.');
@@ -317,7 +317,7 @@ define([
          * @type {Number}
          */
         this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + 6;
-    };
+    }
 
     /**
      * Stores the provided instance into the provided array.

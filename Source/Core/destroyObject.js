@@ -37,7 +37,7 @@ define([
      *     return Cesium.destroyObject(this);
      * };
      */
-    var destroyObject = function(object, message) {
+    function destroyObject(object, message) {
         message = defaultValue(message, 'This object was destroyed, i.e., destroy() was called.');
 
         function throwOnDestroyed() {
@@ -53,7 +53,7 @@ define([
         object.isDestroyed = returnTrue;
 
         return undefined;
-    };
+    }
 
     return destroyObject;
 });

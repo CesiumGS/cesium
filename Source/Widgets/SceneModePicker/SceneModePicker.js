@@ -52,7 +52,7 @@ define([
      *
      * var sceneModePicker = new Cesium.SceneModePicker('sceneModePickerContainer', scene);
      */
-    var SceneModePicker = function(container, scene, duration) {
+    function SceneModePicker(container, scene, duration) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
@@ -143,7 +143,7 @@ cesiumSvgPath: { path: _columbusViewPath, width: 64, height: 64 }');
             document.addEventListener('mousedown', this._closeDropDown, true);
             document.addEventListener('touchstart', this._closeDropDown, true);
         }
-    };
+    }
 
     defineProperties(SceneModePicker.prototype, {
         /**

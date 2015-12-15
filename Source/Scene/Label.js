@@ -60,7 +60,7 @@ define([
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
      */
-    var Label = function(options, labelCollection) {
+    function Label(options, labelCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -101,7 +101,7 @@ define([
         this._mode = undefined;
 
         this._updateClamping();
-    };
+    }
 
     defineProperties(Label.prototype, {
         /**

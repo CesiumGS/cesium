@@ -73,7 +73,7 @@ define([
      *
      * @private
      */
-    var EllipsoidPrimitive = function(options) {
+    function EllipsoidPrimitive(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
@@ -224,7 +224,7 @@ define([
                 return that._pickId.color;
             }
         };
-    };
+    }
 
     function getVertexArray(context) {
         var vertexArray = context.cache.ellipsoidPrimitive_vertexArray;

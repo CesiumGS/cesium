@@ -31,7 +31,7 @@ define([
      *
      * @see BoundingSphere
      */
-    var BoundingRectangle = function(x, y, width, height) {
+    function BoundingRectangle(x, y, width, height) {
         /**
          * The x coordinate of the rectangle.
          * @type {Number}
@@ -59,7 +59,7 @@ define([
          * @default 0.0
          */
         this.height = defaultValue(height, 0.0);
-    };
+    }
 
     /**
      * Computes a bounding rectangle enclosing the list of 2D points.

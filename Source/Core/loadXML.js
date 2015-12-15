@@ -31,14 +31,14 @@ define([
      *     // an error occurred
      * });
      */
-    var loadXML = function(url, headers) {
+    function loadXML(url, headers) {
         return loadWithXhr({
             url : url,
             responseType : 'document',
             headers : headers,
             overrideMimeType : 'text/xml'
         });
-    };
+    }
 
     return loadXML;
 });

@@ -67,7 +67,7 @@ define([
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] Determines the size and shape of the
      * globe.
      */
-    var Globe = function(ellipsoid) {
+    function Globe(ellipsoid) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         var terrainProvider = new EllipsoidTerrainProvider({
             ellipsoid : ellipsoid
@@ -190,7 +190,7 @@ define([
 
         this._oceanNormalMap = undefined;
         this._zoomedOutOceanSpecularIntensity = 0.5;
-    };
+    }
 
     defineProperties(Globe.prototype, {
         /**

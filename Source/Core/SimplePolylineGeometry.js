@@ -106,7 +106,7 @@ define([
      * });
      * var geometry = Cesium.SimplePolylineGeometry.createGeometry(polyline);
      */
-    var SimplePolylineGeometry = function(options) {
+    function SimplePolylineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var positions = options.positions;
         var colors = options.colors;
@@ -137,7 +137,7 @@ define([
          * @type {Number}
          */
         this.packedLength = numComponents + Ellipsoid.packedLength + 3;
-    };
+    }
 
     /**
      * Stores the provided instance into the provided array.

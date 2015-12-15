@@ -14,7 +14,7 @@ define([
      *
      * @private
      */
-    var ClearCommand = function(options) {
+    function ClearCommand(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
@@ -77,7 +77,7 @@ define([
          * @see Scene#debugCommandFilter
          */
         this.owner = options.owner;
-    };
+    }
 
     /**
      * Clears color to (0.0, 0.0, 0.0, 0.0); depth to 1.0; and stencil to 0.

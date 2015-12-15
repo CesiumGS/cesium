@@ -89,7 +89,7 @@ define([
      *
      * viewer.imageryLayers.addImageryProvider(provider);
      */
-    var WebMapServiceImageryProvider = function WebMapServiceImageryProvider(options) {
+    function WebMapServiceImageryProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -180,7 +180,7 @@ define([
             credit : options.credit,
             getFeatureInfoFormats : getFeatureInfoFormats
         });
-    };
+    }
 
     defineProperties(WebMapServiceImageryProvider.prototype, {
         /**

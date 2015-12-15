@@ -27,12 +27,12 @@
 function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
-var DemoTileProvider = function() {
+function DemoTileProvider() {
     this._quadtree = undefined;
     this._tilingScheme = new Cesium.GeographicTilingScheme();
     this._errorEvent = new Cesium.Event();
     this._levelZeroMaximumError = Cesium.QuadtreeTileProvider.computeDefaultLevelZeroMaximumGeometricError(this._tilingScheme);
-};
+}
 
 Object.defineProperties(DemoTileProvider.prototype, {
     quadtree : {

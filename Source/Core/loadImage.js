@@ -43,7 +43,7 @@ define([
      *     // images is an array containing all the loaded images
      * });
      */
-    var loadImage = function(url, allowCrossOrigin) {
+    function loadImage(url, allowCrossOrigin) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(url)) {
             throw new DeveloperError('url is required.');
@@ -68,7 +68,7 @@ define([
 
             return deferred.promise;
         });
-    };
+    }
 
     // This is broken out into a separate function so that it can be mocked for testing purposes.
     loadImage.createImage = function(url, crossOrigin, deferred) {

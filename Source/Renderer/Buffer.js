@@ -22,7 +22,7 @@ define([
     /**
      * @private
      */
-    var Buffer = function(options) {
+    function Buffer(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -75,7 +75,7 @@ define([
         this._usage = usage;
         this._buffer = buffer;
         this.vertexArrayDestroyable = true;
-    };
+    }
 
     /**
      * Creates a vertex buffer, which contains untyped vertex data in GPU-controlled memory.
