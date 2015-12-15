@@ -511,7 +511,8 @@ define([
     function getUpsampleTileDetails(tile) {
         // Find the nearest ancestor with loaded terrain.
         var sourceTile = tile.parent;
-        while (defined(sourceTile) && defined(sourceTile.data) && !defined(sourceTile.data.terrainData)) {
+        //while (defined(sourceTile) && defined(sourceTile.data) && !defined(sourceTile.data.terrainData)) {
+        while (defined(sourceTile) && defined(sourceTile.data) && !defined(sourceTile.data.pickTerrain)) {
             sourceTile = sourceTile.parent;
         }
 
@@ -522,6 +523,7 @@ define([
 
         return {
             data : sourceTile.data.terrainData,
+            mesh : sourceTile.data.pickTerrain.mesh,
             x : sourceTile.x,
             y : sourceTile.y,
             level : sourceTile.level
@@ -556,6 +558,7 @@ define([
                     }
                     childSurfaceTile.upsampledTerrain = new TileTerrain({
                         data : surfaceTile.terrainData,
+                        mesh : surfaceTile.pickTerrain.mesh,
                         x : tile.x,
                         y : tile.y,
                         level : tile.level
@@ -592,6 +595,7 @@ define([
                     }
                     childSurfaceTile.upsampledTerrain = new TileTerrain({
                         data : surfaceTile.terrainData,
+                        mesh : surfaceTile.pickTerrain.mesh,
                         x : tile.x,
                         y : tile.y,
                         level : tile.level

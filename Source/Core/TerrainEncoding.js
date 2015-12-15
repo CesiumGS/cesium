@@ -208,6 +208,42 @@ define([
         return Cartesian3.add(result, this.center, result);
     };
 
+    TerrainEncoding.prototype.decodeTextureCoordinates = function(buffer, index, result) {
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+
+        index *= this.getStride();
+
+        if (this.quantization === TerrainQuantization.BITS12) {
+            return AttributeCompression.decompressTextureCoordinates(buffer[index + 2], result);
+        }
+
+        return Cartesian2.fromElements(buffer[index + 4], buffer[index + 5], result);
+    };
+
+    TerrainEncoding.prototype.decodeHeight = function(buffer, index) {
+        index *= this.getStride();
+
+        if (this.quantization === TerrainQuantization.BITS12) {
+            var zh = AttributeCompression.decompressTextureCoordinates(buffer[index + 1], cartesian2Scratch);
+            return zh.y * (this.maximumHeight - this.minimumHeight) + this.minimumHeight;
+        }
+
+        return buffer[index + 3];
+    };
+
+    TerrainEncoding.prototype.getOctEncodedNormal = function(buffer, index, result) {
+        var stride = this.getStride();
+        index = (index + 1) * stride - 1;
+
+        var temp = buffer[index] / 256.0;
+        var x = Math.floor(temp);
+        var y = (temp - x) * 256.0;
+
+        return Cartesian2.fromElements(x, y, result);
+    }
+
     TerrainEncoding.prototype.getStride = function() {
         var vertexStride;
 

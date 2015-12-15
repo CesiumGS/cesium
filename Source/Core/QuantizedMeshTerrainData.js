@@ -301,11 +301,15 @@ define([
             var occlusionPoint = defaultValue(result.occludeePointInScaledSpace, that._horizonOcclusionPoint);
             var stride = result.vertexStride;
             var terrainEncoding = TerrainEncoding.clone(result.encoding);
+            var skirtIndex = result.skirtIndex;
+            var vertexCountWithoutSkirts = that._quantizedVertices.length / 3;
 
             return new TerrainMesh(
                     rtc,
                     vertices,
+                    vertexCountWithoutSkirts,
                     indicesTypedArray,
+                    skirtIndex,
                     minimumHeight,
                     maximumHeight,
                     boundingSphere,
@@ -333,7 +337,7 @@ define([
      *          or undefined if too many asynchronous upsample operations are in progress and the request has been
      *          deferred.
      */
-    QuantizedMeshTerrainData.prototype.upsample = function(tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
+    QuantizedMeshTerrainData.prototype.upsample = function(mesh, tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(tilingScheme)) {
             throw new DeveloperError('tilingScheme is required.');
@@ -369,9 +373,15 @@ define([
         var childRectangle = tilingScheme.tileXYToRectangle(descendantX, descendantY, descendantLevel);
 
         var upsamplePromise = upsampleTaskProcessor.scheduleTask({
-            vertices : this._quantizedVertices,
-            indices : this._indices,
-            encodedNormals : this._encodedNormals,
+            //vertices : this._quantizedVertices,
+            //indices : this._indices,
+            //encodedNormals : this._encodedNormals,
+            quantizedVertices : this._quantizedVertices,
+            vertices : mesh.vertices,
+            vertexCountWithoutSkirts : mesh.vertexCountWithoutSkirts,
+            indices : mesh.indices,
+            skirtIndex : mesh.skirtIndex,
+            encoding : mesh.encoding,
             minimumHeight : this._minimumHeight,
             maximumHeight : this._maximumHeight,
             isEastChild : isEastChild,

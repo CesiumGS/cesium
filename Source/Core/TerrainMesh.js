@@ -30,7 +30,7 @@ define([
       *
       * @private
       */
-    var TerrainMesh = function TerrainMesh(center, vertices, indices, minimumHeight, maximumHeight, boundingSphere3D, occludeePointInScaledSpace, vertexStride, orientedBoundingBox, encoding) {
+    var TerrainMesh = function TerrainMesh(center, vertices, vertexCountWithoutSkirts, indices, skirtIndex, minimumHeight, maximumHeight, boundingSphere3D, occludeePointInScaledSpace, vertexStride, orientedBoundingBox, encoding) {
         /**
          * The center of the tile.  Vertex positions are specified relative to this center.
          * @type {Cartesian3}
@@ -98,6 +98,9 @@ define([
          * @type {TerrainEncoding}
          */
         this.encoding = encoding;
+
+        this.skirtIndex = skirtIndex;
+        this.vertexCountWithoutSkirts = vertexCountWithoutSkirts;
     };
 
     return TerrainMesh;
