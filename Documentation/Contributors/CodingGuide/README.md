@@ -148,6 +148,19 @@ for (var i = 0; i < length; ++i) {
 console.log(i); // i is undefined here.  Never use a variable before it is declared.
 var i = 0.0;
 ```
+* :speedboat: Avoid redundant nested property access.  This
+```javascript
+scene._state.isSkyAtmosphereVisible = true
+scene._state.isSunVisible = true;
+scene._state.isMoonVisible = false;
+```
+is better written as
+```javascript
+var state = scene._state;
+state.isSkyAtmosphereVisible = true
+state.isSunVisible = true;
+state.isMoonVisible = false;
+```
 * Use `undefined` instead of `null`.
 * Test if a variable is defined using Cesium's `defined` function, e.g.,
 ```javascript
