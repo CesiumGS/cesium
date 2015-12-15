@@ -239,20 +239,13 @@ define([
         var width = this._width;
         var height = this._height;
 
-        var heightSample;
-
         var structure = this._structure;
         var stride = structure.stride;
-        if (stride > 1) {
-            var elementsPerHeight = structure.elementsPerHeight;
-            var elementMultiplier = structure.elementMultiplier;
-            var isBigEndian = structure.isBigEndian;
+        var elementsPerHeight = structure.elementsPerHeight;
+        var elementMultiplier = structure.elementMultiplier;
+        var isBigEndian = structure.isBigEndian;
 
-            heightSample = interpolateHeightWithStride(this._buffer, elementsPerHeight, elementMultiplier, stride, isBigEndian, rectangle, width, height, longitude, latitude);
-        } else {
-            heightSample = interpolateHeight(this._buffer, rectangle, width, height, longitude, latitude);
-        }
-
+        var heightSample = interpolateHeight(this._buffer, elementsPerHeight, elementMultiplier, stride, isBigEndian, rectangle, width, height, longitude, latitude);
         return heightSample * structure.heightScale + structure.heightOffset;
     };
 
@@ -413,23 +406,14 @@ define([
         var heights = new sourceHeights.constructor(numberOfElements);
 
         var outputIndex = 0;
-        var i, j;
         var stride = structure.stride;
-        if (stride > 1) {
-            for (j = topInteger; j <= bottomInteger; ++j) {
-                for (i = leftInteger; i <= rightInteger; ++i) {
-                    var index = (j * width + i) * stride;
-                    for (var k = 0; k < stride; ++k) {
-                        //heights[outputIndex++] = sourceHeights[index + k];
-                        heights[outputIndex++] = encoding.decodeHeight(buffer, index + k);
-                    }
-                }
-            }
-        } else {
-            for (j = topInteger; j <= bottomInteger; ++j) {
-                for (i = leftInteger; i <= rightInteger; ++i) {
-                    //heights[outputIndex++] = sourceHeights[j * width + i];
-                    heights[outputIndex++] = encoding.decodeHeight(buffer, j * width + i);
+
+        for (var j = topInteger; j <= bottomInteger; ++j) {
+            for (var i = leftInteger; i <= rightInteger; ++i) {
+                var index = (j * width + i) * stride;
+                for (var k = 0; k < stride; ++k) {
+                    //heights[outputIndex++] = sourceHeights[index + k];
+                    heights[outputIndex++] = encoding.decodeHeight(buffer, index + k);
                 }
             }
         }
@@ -463,35 +447,23 @@ define([
         var heightOffset = structure.heightOffset;
         var heightScale = structure.heightScale;
 
-        var i, j, latitude, longitude;
-
         var ellipsoid = tilingScheme.ellipsoid;
         var levelZeroMaxError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(ellipsoid, width, tilingScheme.getNumberOfXTilesAtLevel(0));
         var thisLevelMaxError = levelZeroMaxError / (1 << thisLevel);
         var skirtHeight = Math.min(thisLevelMaxError * 4.0, 1000.0);
 
-        if (stride > 1) {
-            var elementsPerHeight = structure.elementsPerHeight;
-            var elementMultiplier = structure.elementMultiplier;
-            var isBigEndian = structure.isBigEndian;
+        var elementsPerHeight = structure.elementsPerHeight;
+        var elementMultiplier = structure.elementMultiplier;
+        var isBigEndian = structure.isBigEndian;
 
-            var divisor = Math.pow(elementMultiplier, elementsPerHeight - 1);
+        var divisor = Math.pow(elementMultiplier, elementsPerHeight - 1);
 
-            for (j = 0; j < height; ++j) {
-                latitude = CesiumMath.lerp(destinationRectangle.north, destinationRectangle.south, j / (height - 1));
-                for (i = 0; i < width; ++i) {
-                    longitude = CesiumMath.lerp(destinationRectangle.west, destinationRectangle.east, i / (width - 1));
-                    var heightSample = interpolateMeshHeightWithStride(buffer, encoding, heightOffset, heightScale, skirtHeight, sourceRectangle, width, height, longitude, latitude);
-                    setHeight(heights, elementsPerHeight, elementMultiplier, divisor, stride, isBigEndian, j * width + i, heightSample);
-                }
-            }
-        } else {
-            for (j = 0; j < height; ++j) {
-                latitude = CesiumMath.lerp(destinationRectangle.north, destinationRectangle.south, j / (height - 1));
-                for (i = 0; i < width; ++i) {
-                    longitude = CesiumMath.lerp(destinationRectangle.west, destinationRectangle.east, i / (width - 1));
-                    heights[j * width + i] = interpolateHeight(sourceHeights, sourceRectangle, width, height, longitude, latitude);
-                }
+        for (var j = 0; j < height; ++j) {
+            var latitude = CesiumMath.lerp(destinationRectangle.north, destinationRectangle.south, j / (height - 1));
+            for (var i = 0; i < width; ++i) {
+                var longitude = CesiumMath.lerp(destinationRectangle.west, destinationRectangle.east, i / (width - 1));
+                var heightSample = interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, skirtHeight, sourceRectangle, width, height, longitude, latitude);
+                setHeight(heights, elementsPerHeight, elementMultiplier, divisor, stride, isBigEndian, j * width + i, heightSample);
             }
         }
 
@@ -505,39 +477,7 @@ define([
         });
     }
 
-    function interpolateHeight(sourceHeights, sourceRectangle, width, height, longitude, latitude) {
-        var fromWest = (longitude - sourceRectangle.west) * (width - 1) / (sourceRectangle.east - sourceRectangle.west);
-        var fromSouth = (latitude - sourceRectangle.south) * (height - 1) / (sourceRectangle.north - sourceRectangle.south);
-
-        var westInteger = fromWest | 0;
-        var eastInteger = westInteger + 1;
-        if (eastInteger >= width) {
-            eastInteger = width - 1;
-            westInteger = width - 2;
-        }
-
-        var southInteger = fromSouth | 0;
-        var northInteger = southInteger + 1;
-        if (northInteger >= height) {
-            northInteger = height - 1;
-            southInteger = height - 2;
-        }
-
-        var dx = fromWest - westInteger;
-        var dy = fromSouth - southInteger;
-
-        southInteger = height - 1 - southInteger;
-        northInteger = height - 1 - northInteger;
-
-        var southwestHeight = sourceHeights[southInteger * width + westInteger];
-        var southeastHeight = sourceHeights[southInteger * width + eastInteger];
-        var northwestHeight = sourceHeights[northInteger * width + westInteger];
-        var northeastHeight = sourceHeights[northInteger * width + eastInteger];
-
-        return triangleInterpolateHeight(dx, dy, southwestHeight, southeastHeight, northwestHeight, northeastHeight);
-    }
-
-    function interpolateHeightWithStride(sourceHeights, elementsPerHeight, elementMultiplier, stride, isBigEndian, sourceRectangle, width, height, longitude, latitude) {
+    function interpolateHeight(sourceHeights, elementsPerHeight, elementMultiplier, stride, isBigEndian, sourceRectangle, width, height, longitude, latitude) {
         var fromWest = (longitude - sourceRectangle.west) * (width - 1) / (sourceRectangle.east - sourceRectangle.west);
         var fromSouth = (latitude - sourceRectangle.south) * (height - 1) / (sourceRectangle.north - sourceRectangle.south);
 
@@ -569,7 +509,7 @@ define([
         return triangleInterpolateHeight(dx, dy, southwestHeight, southeastHeight, northwestHeight, northeastHeight);
     }
 
-    function interpolateMeshHeightWithStride(buffer, encoding, heightOffset, heightScale, skirtHeight, sourceRectangle, width, height, longitude, latitude) {
+    function interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, skirtHeight, sourceRectangle, width, height, longitude, latitude) {
         var fromWest = (longitude - sourceRectangle.west) * (width - 1) / (sourceRectangle.east - sourceRectangle.west);
         var fromSouth = (latitude - sourceRectangle.south) * (height - 1) / (sourceRectangle.north - sourceRectangle.south);
 
@@ -600,11 +540,6 @@ define([
 
         southInteger = height - 1 - southInteger;
         northInteger = height - 1 - northInteger;
-
-        //var southwestHeight = getHeight(sourceHeights, elementsPerHeight, elementMultiplier, stride, isBigEndian, southInteger * width + westInteger);
-        //var southeastHeight = getHeight(sourceHeights, elementsPerHeight, elementMultiplier, stride, isBigEndian, southInteger * width + eastInteger);
-        //var northwestHeight = getHeight(sourceHeights, elementsPerHeight, elementMultiplier, stride, isBigEndian, northInteger * width + westInteger);
-        //var northeastHeight = getHeight(sourceHeights, elementsPerHeight, elementMultiplier, stride, isBigEndian, northInteger * width + eastInteger);
 
         var southwestHeight = (encoding.decodeHeight(buffer, southInteger * width + westInteger) - heightOffset) / heightScale;
         var southeastHeight = (encoding.decodeHeight(buffer, southInteger * width + eastInteger) - heightOffset) / heightScale;
