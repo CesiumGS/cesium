@@ -2,18 +2,18 @@
 define([
         'Core/Color',
         'Core/defaultValue',
-        'Core/OrientedBoundingBox',
         'Scene/Cesium3DTileContentProviderFactory',
         'Scene/Cesium3DTileContentState',
         'Scene/Cesium3DTileset',
+        'Scene/TileBoundingSphere',
         'Specs/pollToPromise'
     ], function(
         Color,
         defaultValue,
-        OrientedBoundingBox,
         Cesium3DTileContentProviderFactory,
         Cesium3DTileContentState,
         Cesium3DTileset,
+        TileBoundingSphere,
         pollToPromise) {
     "use strict";
 
@@ -76,7 +76,7 @@ define([
     Cesium3DTilesTester.loadTileExpectError = function(scene, arrayBuffer, type) {
         var tileset = {};
         var tile = {
-            orientedBoundingBox : new OrientedBoundingBox()
+            boundingVolume : new TileBoundingSphere()
         };
         var url = '';
         var content = Cesium3DTileContentProviderFactory[type](tileset, tile, url);
@@ -94,7 +94,7 @@ define([
             url : counter++
         };
         var tile = {
-            orientedBoundingBox : new OrientedBoundingBox()
+            boundingVolume : new TileBoundingSphere()
         };
         var url = '';
         var content = Cesium3DTileContentProviderFactory[type](tileset, tile, url);
@@ -111,7 +111,7 @@ define([
     Cesium3DTilesTester.rejectsReadyPromiseOnFailedRequest = function(type) {
         var tileset = {};
         var tile = {
-            orientedBoundingBox : new OrientedBoundingBox()
+            boundingVolume : new TileBoundingSphere()
         };
         var url = 'invalid';
         var content = Cesium3DTileContentProviderFactory[type](tileset, tile, url);

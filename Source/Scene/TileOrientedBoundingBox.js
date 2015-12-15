@@ -2,11 +2,13 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/OrientedBoundingBox'
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         OrientedBoundingBox) {
     "use strict";
@@ -15,6 +17,22 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         this.orientedBoundingBox = OrientedBoundingBox.fromRectangle(options.rectangle, options.minimumHeight, options.maximumHeight);
     };
+
+    defineProperties(TileOrientedBoundingBox.prototype, {
+        /**
+         * The underlying bounding volume
+         *
+         * @memberof TileOrientedBoundingBox.prototype
+         *
+         * @type {Object}
+         * @readonly
+         */
+        boundingVolume : {
+            get : function() {
+                return this.orientedBoundingBox;
+            }
+        }
+    });
 
     /**
      * Computes the distance between this bounding box and the camera attached to frameState.
