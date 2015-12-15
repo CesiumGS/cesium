@@ -11,7 +11,7 @@ define([
      *
      * @private
      */
-    var PassState = function(context) {
+    function PassState(context) {
         /**
          * The context used to execute commands for this pass.
          *
@@ -59,7 +59,7 @@ define([
          * @default undefined
          */
         this.viewport = undefined;
-    };
+    }
 
     return PassState;
 });

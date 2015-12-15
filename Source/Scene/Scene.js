@@ -189,7 +189,7 @@ define([
      *   }
      * });
      */
-    var Scene = function(options) {
+    function Scene(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var canvas = options.canvas;
         var contextOptions = options.contextOptions;
@@ -566,7 +566,7 @@ define([
         // give frameState, camera, and screen space camera controller initial state before rendering
         updateFrameState(this, 0.0, JulianDate.now());
         this.initializeFrame();
-    };
+    }
 
     var OPAQUE_FRUSTUM_NEAR_OFFSET = 0.99;
 

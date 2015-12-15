@@ -34,7 +34,7 @@ define([
     /**
      * @private
      */
-    var FXAA = function(context) {
+    function FXAA(context) {
         this._texture = undefined;
         this._depthTexture = undefined;
         this._depthRenderbuffer = undefined;
@@ -50,7 +50,7 @@ define([
             owner : this
         });
         this._clearCommand = clearCommand;
-    };
+    }
 
     function destroyResources(fxaa) {
         fxaa._fbo = fxaa._fbo && fxaa._fbo.destroy();

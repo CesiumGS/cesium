@@ -16,12 +16,12 @@ define([
     /**
      * @private
      */
-    var ShaderCache = function(context) {
+    function ShaderCache(context) {
         this._context = context;
         this._shaders = {};
         this._numberOfShaders = 0;
         this._shadersToRelease = {};
-    };
+    }
 
     defineProperties(ShaderCache.prototype, {
         numberOfShaders : {

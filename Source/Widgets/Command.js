@@ -16,7 +16,7 @@ define([
      * @alias Command
      * @constructor
      */
-    var Command = function() {
+    function Command() {
         /**
          * Gets whether this command can currently be executed.  This property is observable.
          * @type {Boolean}
@@ -43,7 +43,7 @@ define([
         this.afterExecute = undefined;
 
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     return Command;
 });

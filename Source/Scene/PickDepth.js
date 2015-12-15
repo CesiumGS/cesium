@@ -24,7 +24,7 @@ define([
     /**
      * @private
      */
-    var PickDepth = function() {
+    function PickDepth() {
         this.framebuffer = undefined;
 
         this._depthTexture = undefined;
@@ -32,7 +32,7 @@ define([
         this._copyDepthCommand = undefined;
 
         this._debugPickDepthViewportCommand = undefined;
-    };
+    }
 
     function executeDebugPickDepth(pickDepth, context, passState) {
         if (!defined(pickDepth._debugPickDepthViewportCommand)) {

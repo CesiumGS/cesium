@@ -115,7 +115,7 @@ define([
      *
      * @see {@link http://cesiumjs.org/2015/02/02/Visualizing-Spatial-Data/|Visualizing Spatial Data}
      */
-    var Entity = function(options) {
+    function Entity(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var id = options.id;
@@ -181,7 +181,7 @@ define([
 
         this.parent = options.parent;
         this.merge(options);
-    };
+    }
 
     function updateShow(entity, children, isShowing) {
         var length = children.length;

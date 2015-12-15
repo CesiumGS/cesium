@@ -48,7 +48,7 @@ define([
      *
      * var p0 = spline.evaluate(times[0]);
      */
-    var LinearSpline = function(options) {
+    function LinearSpline(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var points = options.points;
@@ -70,7 +70,7 @@ define([
         this._points = points;
 
         this._lastTimeIndex = 0;
-    };
+    }
 
     defineProperties(LinearSpline.prototype, {
         /**

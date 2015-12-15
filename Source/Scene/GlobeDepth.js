@@ -30,7 +30,7 @@ define([
     /**
      * @private
      */
-    var GlobeDepth = function() {
+    function GlobeDepth() {
         this._colorTexture = undefined;
         this._depthStencilTexture = undefined;
         this._globeDepthTexture = undefined;
@@ -46,7 +46,7 @@ define([
         this._rs = undefined;
 
         this._debugGlobeDepthViewportCommand = undefined;
-    };
+    }
 
     function executeDebugGlobeDepth(globeDepth, context, passState) {
         if (!defined(globeDepth._debugGlobeDepthViewportCommand)) {

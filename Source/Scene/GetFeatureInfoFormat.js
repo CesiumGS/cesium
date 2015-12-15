@@ -32,7 +32,7 @@ define([
      *        in order to produce an array of picked {@link ImageryLayerFeatureInfo} instances.  If this parameter is not specified,
      *        a default function for the type of response is used.
      */
-    var GetFeatureInfoFormat = function(type, format, callback) {
+    function GetFeatureInfoFormat(type, format, callback) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
@@ -78,7 +78,7 @@ define([
         }
 
         this.callback = callback;
-    };
+    }
 
     function geoJsonToFeatureInfo(json) {
         var result = [];

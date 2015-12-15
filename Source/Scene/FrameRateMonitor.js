@@ -42,7 +42,7 @@ define([
      *        the end of the warmup period.  If the frame rate averages less than this during any samplingWindow after the warmupPeriod, the
      *        lowFrameRate event will be raised and the page will redirect to the redirectOnLowFrameRateUrl, if any.
      */
-    var FrameRateMonitor = function(options) {
+    function FrameRateMonitor(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.scene)) {
             throw new DeveloperError('options.scene is required.');
@@ -125,7 +125,7 @@ define([
                 document.removeEventListener(visibilityChangeEventName, visibilityChangeListener, false);
             };
         }
-    };
+    }
 
     /**
      * The default frame rate monitoring settings.  These settings are used when {@link FrameRateMonitor.fromScene}
