@@ -71,13 +71,14 @@ define([
         if (defined(tileBoundingVolume.box)) {
             var b = tileBoundingVolume.box;
             var rectangle = new Rectangle(b[0], b[1], b[2], b[3]);
-
-            this._tileBoundingBox = new TileBoundingBox({
+            var boxObject = {
                 rectangle : rectangle,
                 minimumHeight : b[4],
                 maximumHeight : b[5]
-            });
-            this._boundingVolume = new TileOrientedBoundingBox(rectangle, b[4], b[5]);
+            };
+
+            this._tileBoundingBox = new TileBoundingBox(boxObject);
+            this._boundingVolume = new TileOrientedBoundingBox(boxObject);
         } else if (defined(tileBoundingVolume.sphere)) {
             var sphere = tileBoundingVolume.sphere;
             this._boundingVolume = new TileBoundingSphere(
@@ -99,7 +100,11 @@ define([
 
             if (defined(headerVolume.box)) {
                 var cb = contentHeader.boundingVolume.box;
-                contentsBoundingVolume = new TileOrientedBoundingBox(new Rectangle(cb[0], cb[1], cb[2], cb[3]), cb[4], cb[5]);
+                contentsBoundingVolume = new TileOrientedBoundingBox({
+                    rectangle: new Rectangle(cb[0], cb[1], cb[2], cb[3]),
+                    minimumHeight: cb[4],
+                    maximumHeight: cb[5]
+                });
             } else if (defined(headerVolume.sphere)) {
                 var cs = contentHeader.boundingVolume.sphere;
                 contentsBoundingVolume = new TileBoundingSphere(

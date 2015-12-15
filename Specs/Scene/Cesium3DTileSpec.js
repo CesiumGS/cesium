@@ -99,7 +99,11 @@ defineSuite([
             var box = tileWithContentsBoundingBox.content.boundingVolume.box;
             var tile = new Cesium3DTile(undefined, '/some_url', tileWithContentsBoundingBox, undefined);
             expect(tile._contentsBoundingVolume).toBeDefined();
-            var tobb = new TileOrientedBoundingBox(new Rectangle(box[0], box[1], box[2], box[3]), box[4], box[5]);
+            var tobb = new TileOrientedBoundingBox({
+                rectangle: new Rectangle(box[0], box[1], box[2], box[3]),
+                minimumHeight: box[4],
+                maximumHeight: box[5]
+            });
             expect(tile._contentsBoundingVolume).toEqual(tobb);
         });
     });

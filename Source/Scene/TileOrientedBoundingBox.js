@@ -2,20 +2,34 @@
 define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/OrientedBoundingBox'
+        '../Core/OrientedBoundingBox',
+        '../Core/Rectangle'
     ], function(
         BoundingSphere,
         Cartesian3,
+        defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        OrientedBoundingBox) {
+        OrientedBoundingBox,
+        Rectangle) {
     "use strict";
 
-    var TileOrientedBoundingBox = function(rectangle, minimumHeight, maximumHeight) {
+    var TileOrientedBoundingBox = function(options) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(options.rectangle)) {
+            throw new DeveloperError('options.rectangle is required.');
+        }
+        //>>includeEnd('debug');
+
+        var rectangle = Rectangle.clone(options.rectangle);
+        var minimumHeight = defaultValue(options.minimumHeight, 0.0);
+        var maximumHeight = defaultValue(options.maximumHeight, 0.0);
+
         this.orientedBoundingBox = new OrientedBoundingBox();
         OrientedBoundingBox.fromRectangle(rectangle, minimumHeight, maximumHeight);
     };
