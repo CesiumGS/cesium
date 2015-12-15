@@ -93,25 +93,34 @@ function Model(options) {
     // ...
 };
 ```
-* Use single quotes, `'`, instead of double quotes, `"`.  `"use strict"` is an exception and should use double quotes.
+* In JavaScript, Use single quotes, `'`, instead of double quotes, `"`.  In HTML, use double quotes.
 
 ## Units
 
-* Use meters for distances.
-* Use radians for angles, except for explicit `Degrees` functions such as `Cartesian3.fromDegrees`.
-* Use seconds for time durations.
+* Cesium uses SI units:
+   * Use meters for distances.
+   * Use radians for angles.
+   * Use seconds for time durations.
+* If a function has a parameter with a non-standard unit, such as degrees, put the unit in the function name, e.g.,
+```javascript
+Cartesian3.fromDegrees = function(longitude, latitude, height, ellipsoid, result) { /* ... */ }
+```
 
 ## Basic Code Construction
 
-* To avoid type coercion, test for equality with `===` and `!==`, e.g.,
+* Cesium uses JavaScript's [strict mode](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode) so each module (file) contains
 ```javascript
-var f = 1.0;
+'use strict';
+```
+* :speedboat: To avoid type coercion (implicit type conversion), test for equality with `===` and `!==`, e.g.,
+```javascript
+var i = 1;
 
-if (f === 1.0) {
+if (i === 1) {
     // ...
 }
 
-if (f !== 1.0) {
+if (i !== 1) {
     // ...
 }
 ```
@@ -201,6 +210,7 @@ is better written as
 byteOffset += sizeOfUint32; // Skip length field
 ```
 * `TODO` comments need to be removed or addressed before the code is merged into master.  Used sparingly, `PERFORMANCE_IDEA`, can be handy later when profiling.
+* Remove commented out code before merging into master.
 
 ## Functions
 
@@ -236,8 +246,7 @@ function processTiles(tiles3D, frameState) {
     }
 }
 ```
-* :speedboat: Smaller functions are more likely to be optimized by V8.  Consider this for code that is likely to be a hot spot.
-* :speedboat: Avoid multiple `return` statements in small hot functions since V8 will not inline them .
+* :speedboat: Smaller functions are more likely to be optimized by JavaScript engines.  Consider this for code that is likely to be a hot spot.
 
 ### `options` Parameters
 
@@ -254,24 +263,44 @@ var sphere = new SphereGeometry({
     vertexFormat : VertexFormat.POSITION_ONLY
 });
 ```
-* :speedboat: Using `{ /* ... */ }` creates an object literal, which is a memory allocation.  Avoid designing functions that use an `options` parameter if the function is likely to be a hot spot; otherwise, callers will have to use a scratch variable (see [below](#result-parameters-and-scratch-variables)) for performance.  Constructor functions are good candidates for `options` parameters since Cesium avoids constructing objects in hot spots.
+* :speedboat: Using `{ /* ... */ }` creates an object literal, which is a memory allocation.  Avoid designing functions that use an `options` parameter if the function is likely to be a hot spot; otherwise, callers will have to use a scratch variable (see [below](#result-parameters-and-scratch-variables)) for performance.  Constructor functions are good candidates for `options` parameters since Cesium avoids constructing objects in hot spots.  For example,
+```javascript
+var p = new Cartesian3({
+    x : 1.0,
+    y : 2.0,
+    z : 3.0
+});
+```
+is a bad design for the `Cartesian3` constructor function since it doesn't have as good of performance as:
+```javascript
+var p = new Cartesian3(1.0, 2.0, 3.0);
+```
 
 ### Default Parameter Values
 
-If a _sensible_ default exists for a function parameter or class property, don't require the user to provide it.  For example, `height` defaults to zero in `Cartesian3.fromRadians`:
+If a _sensible_ default exists for a function parameter or class property, don't require the user to provide it.  Use Cesium's `defaultValue` to assign a default value to a local variable.  For example, `height` defaults to zero in `Cartesian3.fromRadians`:
 ```javascript
 Cartesian3.fromRadians = function(longitude, latitude, height) {
     height = defaultValue(height, 0.0);
     // ...
 };
 ```
-* :speedboat: Use `defaultValue` to assign a default value to a local variable unless doing so could cause an unnecessary memory allocation, e.g.,
+* :speedboat: Don't use `defaultValue` if it could cause an unnecessary function call or memory allocation, e.g.,
 ```javascript
 this._mapProjection = defaultValue(options.mapProjection, new GeographicProjection());
 ```
 is better written as
 ```javascript
 this._mapProjection = defined(options.mapProjection) ? options.mapProjection : new GeographicProjection();
+```
+* If an `options` parameter is optional, use `defaultValue.EMPTY_OBJECT`, e.g.,
+```javascript
+function DebugModelMatrixPrimitive(options) {
+    options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+    this.length = defaultValue(options.length, 10000000.0);
+    this.width = defaultValue(options.width, 2.0);
+    // ...
+}
 ```
 
 Some common sensible defaults are:
@@ -303,7 +332,8 @@ Cartesian3.maximumComponent = function(cartesian) {
     }
     //>>includeEnd('debug');
 
-    return Math.max(c.x, c.y, c.z); // Works in debug. Fails in release!
+    // Works in debug. Fails in release since c is optimized out!
+    return Math.max(c.x, c.y, c.z);
 };
 ```
 * Throw Cesium's `RuntimeError` for an error that will not be known until runtime.  Unlike developer errors, runtime error checks are not optimized out of release builds.
@@ -359,7 +389,7 @@ function Cartesian3(x, y, z) {
 ```javascript
 var p = new Cartesian3(1.0, 2.0, 3.0);
 ```
-* :speedboat: Assign to all the property members of a class in the constructor function to allow V8 to use a hidden class and avoid entering dictionary mode.  Assign `undefined` if no initial value makes sense.  Do not add properties to an object, e.g.,
+* :speedboat: Assign to all the property members of a class in the constructor function to allow JavaScript engines to use a hidden class and avoid entering dictionary mode.  Assign `undefined` if no initial value makes sense.  Do not add properties to an object, e.g.,
 ```javascript
 var p = new Cartesian3(1.0, 2.0, 3.0);
 p.w = 4.0; // Adds the w property to p, slows down property access since the object enters dictionary mode
@@ -579,9 +609,7 @@ function loadTilesJson(tileset, tilesJson, done) {
     // ...
 }
 ```
-even though it relies on implicitly hoisting `loadTilesJson` to the top of the file.
-
-Cesium never relies on hoisting variables.
+even though it relies on implicitly hoisting the `loadTilesJson` function to the top of the file.
 
 ## Design
 
@@ -597,6 +625,8 @@ It is usually obvious what directory a file belongs it.  When it isn't, the deci
 
 ![](1.jpg)
 
+Modules (files) should only reference modules in the same level or a lower level of the stack.  For example, a module in `Scene` can use modules in `Scene`, `Renderer`, and `Core`, but not in `DataSources` or `Widgets`.
+
 * WebGL resources need to be explicitly deleted so classes that contain them (and classes that contain these classes, and so on) have `destroy` and `isDestroyed` functions, e.g.,
 ```javascript
 var primitive = new Primitive(/* ... */);
@@ -611,6 +641,7 @@ SkyBox.prototype.destroy = function() {
     return destroyObject(this);
 };
 ```
+* Only `destroy` objects that you create; external objects given to a class should be destroyed by their owner, not the class.
 
 ## Third-Party Libraries
 
@@ -618,6 +649,7 @@ SkyBox.prototype.destroy = function() {
 * Have a compatible license such as MIT, BSD, or Apache 2.0.
 * Provide capabilities that the Cesium truly needs and the team doesn't have the time and/or expertise to develop.
 * Be lightweight, tested, maintained, and reasonably widely used.
+* Not pollute the global namespace.
 * Provide enough value to justify adding a third-party library whose integration needs to be maintained and has the potential to slightly count against Cesium when some users evaluate it (generally, fewer third-parties is better).
 
 ## GLSL
