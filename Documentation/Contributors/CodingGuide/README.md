@@ -61,9 +61,9 @@ Cartesian3.UNIT_X = freezeObject(new Cartesian3(1.0, 0.0, 0.0));
 ```
 * Avoid abbreviations in public identifiers unless the full name is prohibitively cumbersome and has a widely accepted abbreviation, e.g., 
 ```javascript
-Cartesian3.maximumComponent() // not Cartesian3.maxComponent()
+Cartesian3.maximumComponent() // Not Cartesian3.maxComponent()
 
-Ellipsoid.WGS84 // not Ellipsoid.WORLD_GEODETIC_SYSTEM_1984
+Ellipsoid.WGS84 // Not Ellipsoid.WORLD_GEODETIC_SYSTEM_1984
 ```
 * Prefer short and descriptive names for local variables, e.g., if a function has only one length variable,
 ```javascript
@@ -85,7 +85,7 @@ A few more naming conventions are introduced below along with their design patte
 
 ## Formatting
 
-In general, format new code the same as the existing code.
+In general, format new code in the same way as the existing code.
 
 * Use four spaces for indentation.  Do not use tab characters.
 * Do not include trailing whitespace.
@@ -200,12 +200,12 @@ state.isMoonVisible = false;
 ```javascript
 var v = undefined;
 if (defined(v)) {
-    // false
+    // False
 }
 
 var u = {};
 if (defined(u)) {
-    // true
+    // True
 }
 ```
 * Use Cesium's `definedNotNull` function to test the return of `String.match()` and JSON properties.
@@ -279,7 +279,7 @@ function processTiles(tiles3D, frameState) {
 ```javascript
 var sphere = new SphereGeometry(10.0, 32, 16, VertexFormat.POSITION_ONLY);
 ```
-It is not clear what the numeric values represent and the caller needs to know the order of parameters.  If this took an `options` parameter, it would look like:
+It is not clear what the numeric values represent, and the caller needs to know the order of parameters.  If this took an `options` parameter, it would look like this:
 ```javascript
 var sphere = new SphereGeometry({
     radius : 10.0,
@@ -296,7 +296,7 @@ var p = new Cartesian3({
     z : 3.0
 });
 ```
-is a bad design for the `Cartesian3` constructor function since it doesn't have as good of performance as:
+is a bad design for the `Cartesian3` constructor function since its performance is not as good as that of 
 ```javascript
 var p = new Cartesian3(1.0, 2.0, 3.0);
 ```
@@ -328,14 +328,14 @@ function DebugModelMatrixPrimitive(options) {
 }
 ```
 
-Some common sensible defaults are:
+Some common sensible defaults are
 * `height`: `0.0`
 * `ellipsoid`: `Ellipsoid.WGS84`
 * `show`: `true`
 
 ### Throwing Exceptions
 
-* Throw Cesium's `DeveloperError` when the user has a coding error.  The most common errors are missing parameters and out of range parameters.  For example:
+* Throw Cesium's `DeveloperError` when the user has a coding error.  The most common errors are missing parameters and out-of-range parameters.  For example:
 ```javascript
 Cartesian3.maximumComponent = function(cartesian) {
     //>>includeStart('debug', pragmas.debug);
@@ -347,7 +347,7 @@ Cartesian3.maximumComponent = function(cartesian) {
     return Math.max(cartesian.x, cartesian.y, cartesian.z);
 };
 ```
-* Surround code to check for `DeveloperError` in `includeStart`/`includeEnd` comments as shown above so developer error checks can be optimized out of release builds.  Do not include required side-effects inside `includeStart`/`includeEnd`, e.g.,
+* To check for `DeveloperError`, surround code in `includeStart`/`includeEnd` comments, as shown above, so developer error checks can be optimized out of release builds.  Do not include required side effects inside `includeStart`/`includeEnd`, e.g.,
 ```javascript
 Cartesian3.maximumComponent = function(cartesian) {
     //>>includeStart('debug', pragmas.debug);
@@ -367,7 +367,7 @@ if (typeof WebGLRenderingContext === 'undefined') {
     throw new RuntimeError('The browser does not support WebGL.');
 }
 ```
-* :art: Exceptions are exceptional.  Avoid throwing exceptions, e.g., if a polyline is only provided one position, instead of two or more, don't render it instead of throwing an exception.
+* :art: Exceptions are exceptional.  Avoid throwing exceptions, e.g., if a polyline is only provided one position, instead of two or more, instead of throwing an exception just don't render it.
 
 ### `result` Parameters and Scratch Variables
 
@@ -380,7 +380,7 @@ var sum = Cartesian3.add(v0, v1);
 would have to implicitly allocate a new `Cartesian3` object for the returned sum.  Instead, `Cartesian3.add` requires a `result` parameter:
 ```javascript
 var result = new Cartesian3();
-var sum = Cartesian3.add(v0, v1, result); // result and sum reference the same object
+var sum = Cartesian3.add(v0, v1, result); // Result and sum reference the same object
 ```
 This makes allocations explicit to the caller, which allows the caller to, for example, reuse the result object in a file-scoped scratch variable:
 ```javascript
@@ -397,8 +397,8 @@ As described below, `from` constructors also use optional `result` parameters.
 
 ## Classes
 
-* :art: Classes should be **cohesive**; a class should represent one abstraction.
-* :art: Classes should be **loosely coupled**; two classes should not be entangled and rely on each other's implementation details; they should communicate through well defined interfaces.
+* :art: Classes should be **cohesive**. A class should represent one abstraction.
+* :art: Classes should be **loosely coupled**. Two classes should not be entangled and rely on each other's implementation details; they should communicate through well-defined interfaces.
 
 ### Constructor Functions
 
@@ -414,7 +414,7 @@ function Cartesian3(x, y, z) {
 ```javascript
 var p = new Cartesian3(1.0, 2.0, 3.0);
 ```
-* :speedboat: Assign to all the property members of a class in the constructor function to allow JavaScript engines to use a hidden class and avoid entering dictionary mode.  Assign `undefined` if no initial value makes sense.  Do not add properties to an object, e.g.,
+* :speedboat: Assign to all the property members of a class in the constructor function. This allows JavaScript engines to use a hidden class and avoid entering dictionary mode.  Assign `undefined` if no initial value makes sense.  Do not add properties to an object, e.g.,
 ```javascript
 var p = new Cartesian3(1.0, 2.0, 3.0);
 p.w = 4.0; // Adds the w property to p, slows down property access since the object enters dictionary mode
@@ -470,7 +470,7 @@ Instead, this is written as
 ```javascript
 Cartesian3.add(v0, v1, result);
 ```
-The only exceptions are:
+The only exceptions are
 * `clone`
 * `equals`
 * `equalsEpsilon`
@@ -589,7 +589,7 @@ defineProperties(UniformState.prototype, {
 
 ### Shadowed Property
 
-When the overhead of getter/setter functions is prohibitive or reference type semantics are desired, e.g., the ability to pass a property as a `result` parameter so its properties can be modified, consider combining a public property with a private shadowed property, e.g.,
+When the overhead of getter/setter functions is prohibitive or reference-type semantics are desired, e.g., the ability to pass a property as a `result` parameter so its properties can be modified, consider combining a public property with a private shadowed property, e.g.,
 ```javascript
 function Model(options) {
     this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
@@ -638,15 +638,15 @@ even though it relies on implicitly hoisting the `loadTilesJson` function to the
 
 ## Design
 
-* :house: Only make a class or function part of the Cesium API if it will likely be useful to end users; avoid making an implementation detail part of the public API.  When something is public, it makes the Cesium API bigger and harder to learn, is harder to change later, and requires more documentation work.
+* :house: Make a class or function part of the Cesium API only if it will likely be useful to end users; avoid making an implementation detail part of the public API.  When something is public, it makes the Cesium API bigger and harder to learn, is harder to change later, and requires more documentation work.
 * :art: Put new classes and functions in the right part of the Cesium stack (directory).  From the bottom up:
    * `Source/Core` - Number crunching. Pure math such as [`Cartesian3`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/Cartesian3.js). Pure geometry such as [`CylinderGeometry`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/CylinderGeometry.js). Fundamental algorithms such as [`mergeSort`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/mergeSort.js). Request helper functions such as [`loadArrayBuffer`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/loadArrayBuffer.js).
    * `Source/Renderer` - WebGL abstractions such as [`ShaderProgram`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Renderer/ShaderProgram.js) and WebGL-specific utilities such as [`ShaderCache`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Renderer/ShaderCache.js).  Identifiers in this directory are not part of the public Cesium API.
-   * `Source/Scene` - The graphics engine, including primitives such as [Model](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Scene/Model.js). Code in this directory often depend on `Renderer`.
+   * `Source/Scene` - The graphics engine, including primitives such as [Model](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Scene/Model.js). Code in this directory often depends on `Renderer`.
    * `Source/DataSources` - Entity API, such as [`Entity`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/DataSources/Entity.js), and data sources such as [`CzmlDataSource`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/DataSources/CzmlDataSource.js).
    * `Source/Widgets` - Widgets such as the main Cesium [`Viewer`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Widgets/Viewer/Viewer.js).
 
-It is usually obvious what directory a file belongs it.  When it isn't, the decision is usually between `Core` and another directory.  Put the file in `Core` if it is pure number crunching or a utility that is expected to be generally useful to Cesium, e.g., [`Matrix4`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/Matrix4.js) belongs in `Core` since many parts of the Cesium stack use 4x4 matrices; on the other hand, [`BoundingSphereState`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/DataSources/BoundingSphereState.js) is in `DataSources` because it is specific to data sources.
+It is usually obvious what directory a file belongs in.  When it isn't, the decision is usually between `Core` and another directory.  Put the file in `Core` if it is pure number crunching or a utility that is expected to be generally useful to Cesium, e.g., [`Matrix4`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/Matrix4.js) belongs in `Core` since many parts of the Cesium stack use 4x4 matrices; on the other hand, [`BoundingSphereState`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/DataSources/BoundingSphereState.js) is in `DataSources` because it is specific to data sources.
 
 ![](1.jpg)
 
@@ -672,7 +672,7 @@ SkyBox.prototype.destroy = function() {
 
 :house: Cesium uses third-party libraries sparingly.  If you want to add a new one, please start a thread on the [Cesium forum](http://cesiumjs.org/forum.html) ([example discussion](https://groups.google.com/forum/#!topic/cesium-dev/Bh4BolxlT80)).  The library should
 * Have a compatible license such as MIT, BSD, or Apache 2.0.
-* Provide capabilities that the Cesium truly needs and the team doesn't have the time and/or expertise to develop.
+* Provide capabilities that Cesium truly needs and that the team doesn't have the time and/or expertise to develop.
 * Be lightweight, tested, maintained, and reasonably widely used.
 * Not pollute the global namespace.
 * Provide enough value to justify adding a third-party library whose integration needs to be maintained and has the potential to slightly count against Cesium when some users evaluate it (generally, fewer third-parties is better).
@@ -722,7 +722,7 @@ struct czm_ray
 
 ### Performance
 
-* :speedboat: Compute expensive value as least frequently as possible, e.g., prefer computing a value in JavaScript and passing it in a uniform instead of redundantly computing the same value per-vertex.  Likewise, prefer to compute a value per-vertex and pass a varying, instead of computing per-fragment when possible.
+* :speedboat: Compute expensive values as infrequently as possible, e.g., prefer computing a value in JavaScript and passing it in a uniform instead of redundantly computing the same value per-vertex.  Likewise, prefer to compute a value per-vertex and pass a varying, instead of computing per-fragment when possible.
 * :speedboat: Use `discard` sparingly since it disables early-z GPU optimizations.
 
 ## Resources
