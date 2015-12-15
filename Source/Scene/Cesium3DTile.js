@@ -89,7 +89,7 @@ define([
 // TODO: if the content type has pixel size, like points or billboards, the bounding volume needs
 // to dynamic size bigger like BillboardCollection and PointCollection
 
-        var contentsBoundingVolume;
+        var contentBoundingVolume;
         if (defined(contentHeader) && defined(contentHeader.boundingVolume)) {
             // Non-leaf tiles may have a content-box bounding-volume, which is a tight-fit box
             // around only the models in the tile.  This box is useful for culling for rendering,
@@ -100,21 +100,21 @@ define([
 
             if (defined(headerVolume.box)) {
                 var cb = contentHeader.boundingVolume.box;
-                contentsBoundingVolume = new TileOrientedBoundingBox({
+                contentBoundingVolume = new TileOrientedBoundingBox({
                     rectangle: new Rectangle(cb[0], cb[1], cb[2], cb[3]),
                     minimumHeight: cb[4],
                     maximumHeight: cb[5]
                 });
             } else if (defined(headerVolume.sphere)) {
                 var cs = contentHeader.boundingVolume.sphere;
-                contentsBoundingVolume = new TileBoundingSphere(
+                contentBoundingVolume = new TileBoundingSphere(
                     new Cartesian3(cs[0], cs[1], cs[2]),
                     cs[3]
                 );
             }
         }
 
-        this._contentsBoundingVolume = contentsBoundingVolume;
+        this._contentBoundingVolume = contentBoundingVolume;
 
         /**
          * DOC_TBA
@@ -241,7 +241,7 @@ define([
          */
         boundingVolume : {
             get : function() {
-                return defaultValue(this._contentsBoundingVolume, this._boundingVolume);
+                return defaultValue(this._contentBoundingVolume, this._boundingVolume);
             }
         },
 
@@ -291,7 +291,7 @@ define([
      * DOC_TBA
      */
     Cesium3DTile.prototype.contentsVisibility = function(cullingVolume) {
-        var boundingVolume = this._contentsBoundingVolume;
+        var boundingVolume = this._contentBoundingVolume;
         if (!defined(boundingVolume)) {
             return Intersect.INSIDE;
         }
