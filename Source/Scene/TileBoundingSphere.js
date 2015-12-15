@@ -73,12 +73,7 @@ define([
      *                      intersects the plane.
      */
     TileBoundingSphere.prototype.intersectPlane = function(plane) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(plane)) {
-            throw new DeveloperError('plane is required.');
-        }
-        //>>includeEnd('debug');
-        BoundingSphere.intersectPlane(this.boundingSphere, plane);
+        return BoundingSphere.intersectPlane(this.boundingSphere, plane);
     };
 
     return TileBoundingSphere;

@@ -35,11 +35,11 @@ defineSuite([
             boundingVolume : {
                 sphere: [0.0, 0.0, 0.0, 5.0]
             }
-         },
-         children : [],
-         boundingVolume : {
-             sphere: [0.0, 0.0, 0.0, 5.0]
-         }
+        },
+            children : [],
+            boundingVolume : {
+            sphere: [0.0, 0.0, 0.0, 5.0]
+        }
     };
 
     var tileWithBoundingBox = {

@@ -1,11 +1,7 @@
 /*global define*/
 define([
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
+        '../Core/DeveloperError'
     ], function(
-        defined,
-        defineProperties,
         DeveloperError) {
     "use strict";
 
@@ -22,14 +18,13 @@ define([
     /**
      * Calculates the distance between the tile and the camera.
      *
-     * @function
-     *
      * @param {FrameState} frameState The frame state.
      * @return {Number} The distance between the tile and the camera, in meters.
      *                  Returns 0.0 if the camera is inside the tile.
-     *
      */
-    TileBoundingVolume.prototype.distanceToCamera = DeveloperError.throwInstantiationError;
+    TileBoundingVolume.prototype.distanceToCamera = function(frameState) {
+        DeveloperError.throwInstantiationError();
+    };
 
     /**
      * Determines which side of a plane this volume is located.
@@ -40,7 +35,9 @@ define([
      *                      on the opposite side, and {@link Intersect.INTERSECTING} if the volume
      *                      intersects the plane.
      */
-     TileBoundingVolume.prototype.intersectPlane = DeveloperError.throwInstantiationError;
+    TileBoundingVolume.prototype.intersectPlane = function(plane) {
+        DeveloperError.throwInstantiationError();
+    };
 
     return TileBoundingVolume;
 });

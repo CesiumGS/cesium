@@ -241,10 +241,7 @@ define([
          */
         boundingVolume : {
             get : function() {
-                return defaultValue(
-                    this._contentsBoundingVolume,
-                    this._boundingVolume
-                );
+                return defaultValue(this._contentsBoundingVolume, this._boundingVolume);
             }
         },
 
@@ -420,6 +417,7 @@ define([
         this._content = this._content && this._content.destroy();
         this._debugBoundingVolume = this._debugBoundingVolume && this._debugBoundingVolume.destroy();
         this._debugContentBoundingVolume = this._debugContentBoundingVolume && this._debugContentBoundingVolume.destroy();
+        this._tileBoundingBox = this._tileBoundingBox && this._tileBoundingBox.destroy();
         return destroyObject(this);
     };
 
