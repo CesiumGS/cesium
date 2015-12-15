@@ -14,7 +14,10 @@ define([
         '../ThirdParty/when',
         './Cesium3DTileContentState',
         './PointAppearance',
-        './Primitive'
+        './Primitive',
+        './TileBoundingBox',
+        './TileBoundingSphere',
+        './TileOrientedBoundingBox'
     ], function(
         BoundingSphere,
         Cartesian3,
@@ -30,7 +33,10 @@ define([
         when,
         Cesium3DTileContentState,
         PointAppearance,
-        Primitive) {
+        Primitive,
+        TileBoundingBox,
+        TileBoundingSphere,
+        TileOrientedBoundingBox) {
     "use strict";
 
     /**
@@ -56,7 +62,15 @@ define([
         this.readyPromise = when.defer();
 
         // TODO : assumes bounding volume is a sphere
-        this.boundingSphere = tile.boundingVolume;
+        if (tile.boundingVolume instanceof TileBoundingSphere) {
+            this.boundingSphere = tile.boundingVolume;
+        } else if (tile.boundingVolume instanceof TileBoundingBox) {
+            var corner = TileBoundingBox.southwestCornerCartesian;
+            var oppositeCorner = TileBoundingBox.northeastCornerCartesian;
+            this.boundingSphere = BoundingSphere.fromCornerPoints(corner, oppositeCorner);
+        } else if (tile.boundingVolume instanceof TileOrientedBoundingBox) {
+            this.boundingSphere = BoundingSphere.fromOrientedBoundingBox(tile.boundingVolume);
+        }
 
         this._debugColor = Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;
