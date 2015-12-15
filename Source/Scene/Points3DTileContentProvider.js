@@ -10,6 +10,7 @@ define([
         '../Core/GeometryInstance',
         '../Core/getMagic',
         '../Core/loadArrayBuffer',
+        '../Core/OrientedBoundingBox',
         '../Core/PointGeometry',
         '../ThirdParty/when',
         './Cesium3DTileContentState',
@@ -29,6 +30,7 @@ define([
         GeometryInstance,
         getMagic,
         loadArrayBuffer,
+        OrientedBoundingBox,
         PointGeometry,
         when,
         Cesium3DTileContentState,
@@ -61,15 +63,12 @@ define([
          */
         this.readyPromise = when.defer();
 
-        // TODO : assumes bounding volume is a sphere
-        if (tile.boundingVolume instanceof TileBoundingSphere) {
-            this.boundingSphere = tile.boundingVolume;
-        } else if (tile.boundingVolume instanceof TileBoundingBox) {
-            var corner = TileBoundingBox.southwestCornerCartesian;
-            var oppositeCorner = TileBoundingBox.northeastCornerCartesian;
-            this.boundingSphere = BoundingSphere.fromCornerPoints(corner, oppositeCorner);
-        } else if (tile.boundingVolume instanceof TileOrientedBoundingBox) {
-            this.boundingSphere = BoundingSphere.fromOrientedBoundingBox(tile.boundingVolume);
+        // If the tile's bounding volume is not a BoundingSphere, convert to a BoundingSphere
+        var boundingVolume = tile.boundingVolume.boundingVolume;
+        if (boundingVolume instanceof OrientedBoundingBox) {
+            this.boundingSphere = BoundingSphere.fromOrientedBoundingBox(boundingVolume);
+        } else {
+            this.boundingSphere = boundingVolume;
         }
 
         this._debugColor = Color.fromRandom({ alpha : 1.0 });

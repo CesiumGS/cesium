@@ -44,6 +44,20 @@ define([
             get : function() {
                 return this.boundingSphere.radius;
             }
+        },
+
+        /**
+         * The underlying bounding volume
+         *
+         * @memberof TileBoundingSphere.prototype
+         *
+         * @type {Object}
+         * @readonly
+         */
+        boundingVolume : {
+            get : function() {
+                return this.boundingSphere;
+            }
         }
     });
 

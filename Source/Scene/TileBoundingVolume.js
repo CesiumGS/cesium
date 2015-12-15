@@ -16,6 +16,16 @@ define([
     };
 
     /**
+     * The underlying bounding volume
+     *
+     * @memberof TileBoundingVolume.prototype
+     *
+     * @type {Object}
+     * @readonly
+     */
+    TileBoundingVolume.prototype.boundingVolume = undefined;
+
+    /**
      * Calculates the distance between the tile and the camera.
      *
      * @param {FrameState} frameState The frame state.
