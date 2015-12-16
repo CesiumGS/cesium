@@ -1137,6 +1137,82 @@ defineSuite([
         expect(entity.description.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet.description);
     });
 
+    it('works with properties that are constant.', function() {
+        var testObject = {
+            foo: 4,
+            bar: 9
+        };
+        var testArray = [2, 4, 16, 'test'];
+        var packet = {
+            properties: {
+                constant_name: 'ABC',
+                constant_value: 16,
+                constant_object: {
+                    value: testObject
+                },
+                constant_array: {
+                    value: testArray
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+        var entity = dataSource.entities.values[0];
+        expect(entity.properties.constant_name.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet.properties.constant_name);
+        expect(entity.properties.constant_value.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet.properties.constant_value);
+        expect(entity.properties.constant_object.getValue(Iso8601.MINIMUM_VALUE)).toEqual(testObject);
+        expect(entity.properties.constant_array.getValue(Iso8601.MINIMUM_VALUE)).toEqual(testArray);  // failing
+    });
+
+    it('works with properties with one interval defined on the subproperty.', function() {
+        var packet = {
+            properties: {
+                changing_name: {
+                    interval: '2012/2014',
+                    value: 'ABC'
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+        var entity = dataSource.entities.values[0];
+
+        var time1 = JulianDate.fromIso8601('2013');
+        var time2 = JulianDate.fromIso8601('2015');
+
+        expect(entity.properties.changing_name.getValue(time1)).toEqual('ABC');
+        expect(entity.properties.changing_name.getValue(time2)).toBeUndefined();
+    });
+
+    it('works with properties with multiple interval defined on the subproperty.', function() {
+        var packet = {
+            properties: {
+                changing_name: [
+                    {
+                        interval: '2012/2013',
+                        value: 'ABC'
+                    },
+                    {
+                        interval: '2013/2014',
+                        value: 'XYZ'
+                    }
+                ]
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+        var entity = dataSource.entities.values[0];
+
+        var time1 = JulianDate.fromIso8601('2012-06-01');
+        var time2 = JulianDate.fromIso8601('2013-06-01');
+
+        expect(entity.properties.changing_name.getValue(time1)).toEqual('ABC');
+        expect(entity.properties.changing_name.getValue(time2)).toEqual('XYZ');
+    });
+
     it('CZML Availability works with a single interval.', function() {
         var packet1 = {
             id : 'testObject',

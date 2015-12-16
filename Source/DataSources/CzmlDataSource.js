@@ -366,6 +366,8 @@ define([
             return unwrapUriInterval(czmlInterval, sourceUri);
         case VerticalOrigin:
             return VerticalOrigin[defaultValue(czmlInterval.verticalOrigin, czmlInterval)];
+        case Object:
+            return defaultValue(czmlInterval.value, czmlInterval);
         default:
             throw new RuntimeError(type);
         }
@@ -858,6 +860,23 @@ define([
         var positionData = packet.position;
         if (defined(positionData)) {
             processPositionPacketData(entity, 'position', positionData, undefined, sourceUri, entityCollection);
+        }
+    }
+
+    //process the 'properties' property
+    function processProperties(entity, packet, entityCollection, sourceUri) {
+        var propertiesData = packet.properties;
+        if (defined(propertiesData)) {
+            //cannot simply call processPacketData(entity, 'properties', propertyData, undefined, sourceUri, entityCollection)
+            //because each property of "properties" may be time varying separately.
+            if (!defined(entity.properties)) {
+                entity.properties = {};
+            }
+            for (var key in propertiesData) {
+                if (propertiesData.hasOwnProperty(key)) {
+                    processPacketData(Object, entity.properties, key, propertiesData[key], undefined, sourceUri, entityCollection);
+                }
+            }
         }
     }
 
@@ -1629,6 +1648,7 @@ define([
     processPoint, //
     processPolygon, //
     processPolyline, //
+    processProperties, //
     processRectangle, //
     processPosition, //
     processViewFrom, //
