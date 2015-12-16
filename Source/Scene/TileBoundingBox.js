@@ -4,8 +4,10 @@ define([
         '../Core/Cartographic',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
+        '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
         './SceneMode'
     ], function(
@@ -13,8 +15,10 @@ define([
         Cartographic,
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         Ellipsoid,
+        OrientedBoundingBox,
         Rectangle,
         SceneMode) {
     "use strict";
@@ -27,7 +31,7 @@ define([
      * @param {Number} [options.minimumHeight=0.0]
      * @param {Number} [options.maximumHeight=0.0]
      * @param {Ellipsoid} [options.ellipsoid=Cesium.Ellipsoid.WGS84]
-     * 
+     *
      * @private
      */
     var TileBoundingBox = function(options) {
@@ -40,6 +44,16 @@ define([
         this.rectangle = Rectangle.clone(options.rectangle);
         this.minimumHeight = defaultValue(options.minimumHeight, 0.0);
         this.maximumHeight = defaultValue(options.maximumHeight, 0.0);
+
+
+        /**
+         * An oriented bounding box that encloses this tile's region.
+         * This is used to calculate tile visibility.
+         *
+         * @type {OrientedBoundingBox}
+         * @default OrientedBoundingBox()
+         */
+        this.orientedBoundingBox = new OrientedBoundingBox();
 
         /**
          * The world coordinates of the southwest corner of the tile's rectangle.
@@ -99,7 +113,24 @@ define([
 
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         computeBox(this, options.rectangle, ellipsoid);
+        computeOrientedBoundingBox(this);
     };
+
+    defineProperties(TileBoundingBox.prototype, {
+        /**
+         * The underlying bounding volume
+         *
+         * @memberof TileBoundingBox.prototype
+         *
+         * @type {Object}
+         * @readonly
+         */
+        boundingVolume : {
+            get : function() {
+                return this;
+            }
+        }
+    });
 
     var cartesian3Scratch = new Cartesian3();
     var cartesian3Scratch2 = new Cartesian3();
@@ -146,6 +177,11 @@ define([
     var negativeUnitY = new Cartesian3(0.0, -1.0, 0.0);
     var negativeUnitZ = new Cartesian3(0.0, 0.0, -1.0);
     var vectorScratch = new Cartesian3();
+
+    function computeOrientedBoundingBox(tileBB) {
+        var points = [tileBB.southwestCornerCartesian, tileBB.northeastCornerCartesian];
+        tileBB.orientedBoundingBox = OrientedBoundingBox.fromPoints(points);
+    }
 
     TileBoundingBox.prototype.distanceToCamera = function(frameState) {
         var southwestCornerCartesian = this.southwestCornerCartesian;
@@ -210,6 +246,19 @@ define([
         }
 
         return Math.sqrt(result);
+    };
+
+    /**
+     * Determines which side of a plane this box is located.
+     *
+     * @param {Plane} plane The plane to test against.
+     * @returns {Intersect} {@link Intersect.INSIDE} if the entire box is on the side of the plane
+     *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire box is
+     *                      on the opposite side, and {@link Intersect.INTERSECTING} if the box
+     *                      intersects the plane.
+     */
+    TileBoundingBox.prototype.intersectPlane = function(plane) {
+        return this.orientedBoundingBox.intersectPlane(plane);
     };
 
     return TileBoundingBox;

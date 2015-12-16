@@ -69,18 +69,26 @@ define([
 // TODO: For the 3D Tiles spec, we want to change this to basically (x, y, z) to (x, y, z)
         var tileBoundingVolume = header.boundingVolume;
         if (defined(tileBoundingVolume.box)) {
-            var b = tileBoundingVolume.box;
-            var rectangle = new Rectangle(b[0], b[1], b[2], b[3]);
-            var boxObject = {
-                rectangle : rectangle,
-                minimumHeight : b[4],
-                maximumHeight : b[5]
-            };
+            var box = tileBoundingVolume.box;
+            var rectangleBox = new Rectangle(box[0], box[1], box[2], box[3]);
 
-            this._tileBoundingBox = new TileBoundingBox(boxObject);
-            this._boundingVolume = new TileOrientedBoundingBox(boxObject);
+            this._boundingVolume = new TileOrientedBoundingBox({
+                rectangle : rectangleBox,
+                minimumHeight : box[4],
+                maximumHeight : box[5]
+            });
+        } else if (defined(tileBoundingVolume.region)) {
+            var region = tileBoundingVolume.region;
+            var rectangleRegion = new Rectangle(region[0], region[1], region[2], region[3]);
+
+            this._boundingVolume = new TileBoundingBox({
+                rectangle : rectangleRegion,
+                minimumHeight : region[4],
+                maximumHeight : region[5]
+            });
         } else if (defined(tileBoundingVolume.sphere)) {
             var sphere = tileBoundingVolume.sphere;
+
             this._boundingVolume = new TileBoundingSphere(
                 new Cartesian3(sphere[0], sphere[1], sphere[2]),
                 sphere[3]
@@ -104,6 +112,13 @@ define([
                     rectangle: new Rectangle(cb[0], cb[1], cb[2], cb[3]),
                     minimumHeight: cb[4],
                     maximumHeight: cb[5]
+                });
+            } else if (defined(headerVolume.region)) {
+                var cr = contentHeader.boundingVolume.region;
+                contentBoundingVolume = new TileBoundingBox({
+                    rectangle: new Rectangle(cr[0], cr[1], cr[2], cr[3]),
+                    minimumHeight: cr[4],
+                    maximumHeight: cr[5]
                 });
             } else if (defined(headerVolume.sphere)) {
                 var cs = contentHeader.boundingVolume.sphere;
@@ -302,8 +317,7 @@ define([
      * DOC_TBA
      */
     Cesium3DTile.prototype.distanceToTile = function(frameState) {
-        var boundingVolume = defaultValue(this._tileBoundingBox, this._boundingVolume);
-        return boundingVolume.distanceToCamera(frameState);
+        return this._boundingVolume.distanceToCamera(frameState);
     };
 
     function createDebugPrimitive(geometry, color, modelMatrix) {
@@ -328,12 +342,18 @@ define([
     function createDebugVolume(boundingVolume, color) {
         var geometry;
         var modelMatrix = new Matrix4.clone(Matrix4.IDENTITY);
-        if (defined(boundingVolume.box)) {
-            var box = boundingVolume.box;
+        if (defined(boundingVolume.region)) {
+            var region = boundingVolume.region;
             geometry = new RectangleOutlineGeometry({
-                rectangle : new Rectangle(box[0], box[1], box[2], box[3]),
-                height : box[4],
-                extrudedHeight: box[5]
+                rectangle : new Rectangle(region[0], region[1], region[2], region[3]),
+                height : region[4],
+                extrudedHeight: region[5]
+             });
+        } else if (defined(boundingVolume.box)) {
+            var box = boundingVolume.box;
+            geometry = new BoxOutlineGeometry({
+                minimum: new Cartesian3(box[0], box[1], box[2]),
+                maximum: new Cartesian3(box[3], box[4], box[5])
              });
         } else if (defined(boundingVolume.sphere)) {
             var sphere = boundingVolume.sphere;
@@ -348,8 +368,11 @@ define([
 // TODO: remove workaround for https://github.com/AnalyticalGraphicsInc/cesium/issues/2657
     function workaround2657(boundingVolume) {
         if (defined(boundingVolume.box)) {
-            var rectangle = boundingVolume.box;
-            return (rectangle[1] !== rectangle[3]) && (rectangle[0] !== rectangle[2]);
+            var box = boundingVolume.box;
+            return (box[1] !== box[3]) && (box[0] !== box[2]);
+        } else if (defined(boundingVolume.region)) {
+            var region = boundingVolume.region;
+            return (region[1] !== region[3]) && (region[0] !== region[2]);
         } else {
             return true;
         }
@@ -416,7 +439,8 @@ define([
         this._content = this._content && this._content.destroy();
         this._debugBoundingVolume = this._debugBoundingVolume && this._debugBoundingVolume.destroy();
         this._debugContentBoundingVolume = this._debugContentBoundingVolume && this._debugContentBoundingVolume.destroy();
-        this._tileBoundingBox = this._tileBoundingBox && this._tileBoundingBox.destroy();
+        this._boundingVolume = this._boundingVolume && this._boundingVolume.destroy();
+        this._contentBoundingVolume = this._contentBoundingVolume && this._contentBoundingVolume.destroy();
         return destroyObject(this);
     };
 
