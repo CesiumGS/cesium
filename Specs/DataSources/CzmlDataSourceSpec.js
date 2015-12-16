@@ -1140,7 +1140,9 @@ defineSuite([
     it('works with properties that are constant.', function() {
         var testObject = {
             foo: 4,
-            bar: 9
+            bar: {
+                name: 'bar'
+            }
         };
         var testArray = [2, 4, 16, 'test'];
         var packet = {
