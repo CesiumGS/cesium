@@ -399,7 +399,7 @@ defineSuite([
             var content = tileset._root.content;
             var resources = content.batchTableResources;
             expect(resources.isDestroyed()).toEqual(false);
-            content.destroy();
+            scene.primitives.remove(tileset);
             expect(resources.isDestroyed()).toEqual(true);
         });
     });

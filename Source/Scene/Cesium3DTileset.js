@@ -158,7 +158,9 @@ define([
             that._root = data.root;
             that._readyPromise.resolve(that);
         }).otherwise(function(error) {
-            that._readyPromise.reject(error);
+            if (!that.isDestroyed()) {
+                that._readyPromise.reject(error);
+            }
         });
     };
 
@@ -234,6 +236,14 @@ define([
     Cesium3DTileset.prototype.loadTilesJson = function(tilesJson, parentTile) {
         var tileset = this;
         return loadJson(tilesJson).then(function(tree) {
+
+            // TODO : is there a better way to reject the promise?
+
+            // Throw error to reject promise
+            if (tileset.isDestroyed()) {
+                throw new Error('tileset is destroyed');
+            }
+
             var baseUrl = tileset.url;
             var rootTile = new Cesium3DTile(tileset, baseUrl, tree.root, parentTile);
 
@@ -334,7 +344,7 @@ define([
 
         tile.requestContent();
         var removeFunction = removeFromProcessingQueue(tiles3D, tile);
-        when(tile.processingPromise).then(addToProcessingQueue(tiles3D, tile)).otherwise(endRequest(tiles3D, tile));
+        when(tile.processingPromise).then(addToProcessingQueue(tiles3D, tile)).otherwise(removeFunction);
         when(tile.readyPromise).then(removeFunction).otherwise(removeFunction);
     }
 
@@ -534,9 +544,9 @@ define([
         return function() {
             tiles3D._processingQueue.push(tile);
 
-            var stats = tiles3D._statistics;
-            --stats.numberOfPendingRequests;
-            ++stats.numberProcessing;
+            --requestScheduler.numberOfPendingRequests;
+            --tiles3D._statistics.numberOfPendingRequests;
+            ++tiles3D._statistics.numberProcessing;
             addLoadProgressEvent(tiles3D);
         };
     }
@@ -544,18 +554,16 @@ define([
     function removeFromProcessingQueue(tiles3D, tile) {
         return function() {
             var index = tiles3D._processingQueue.indexOf(tile);
-            tiles3D._processingQueue.splice(index, 1);
+            if (index >= 0) {
+                // Remove from processing queue
+                tiles3D._processingQueue.splice(index, 1);
+                --tiles3D._statistics.numberProcessing;
+            } else {
+                // Not in processing queue
+                --requestScheduler.numberOfPendingRequests;
+                --tiles3D._statistics.numberOfPendingRequests;
+            }
 
-            --requestScheduler.numberOfPendingRequests;
-            --tiles3D._statistics.numberProcessing;
-            addLoadProgressEvent(tiles3D);
-        };
-    }
-
-    function endRequest(tiles3D, tile) {
-        return function() {
-            --requestScheduler.numberOfPendingRequests;
-            --tiles3D._statistics.numberProcessing;
             addLoadProgressEvent(tiles3D);
         };
     }
@@ -703,7 +711,24 @@ define([
      * DOC_TBA
      */
     Cesium3DTileset.prototype.destroy = function() {
-// TODO: traverse and destroy...careful of pending loads/processing
+        // Traverse the tree and destroy all tiles
+        if (defined(this._root)) {
+            var stack = scratchStack;
+            stack.push(this._root);
+
+            while (stack.length > 0) {
+                var t = stack.pop();
+                t.destroy();
+
+                var children = t.children;
+                var length = children.length;
+                for (var i = 0; i < length; ++i) {
+                    stack.push(children[i]);
+                }
+            }
+        }
+
+        this._root = undefined;
         return destroyObject(this);
     };
 

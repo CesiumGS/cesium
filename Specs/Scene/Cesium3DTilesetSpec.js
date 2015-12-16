@@ -32,6 +32,9 @@ defineSuite([
     // Parent tile with content and four child tiles with content
     var tilesetUrl = './Data/Cesium3DTiles/Tilesets/Tileset/';
 
+    // One child points to and invalid url
+    var tilesetInvalidUrl = './Data/Cesium3DTiles/Tilesets/TilesetInvalid/';
+
     // Parent tile with no content and four child tiles with content
     var tilesetEmptyRootUrl = './Data/Cesium3DTiles/Tilesets/TilesetEmptyRoot/';
 
@@ -128,6 +131,33 @@ defineSuite([
         expect(function() {
             return tileset.properties;
         }).toThrowDeveloperError();
+    });
+
+    it('handles failed tile requests', function() {
+        viewRootOnly();
+        return Cesium3DTilesTester.loadTileset(scene, tilesetInvalidUrl).then(function(tileset) {
+            viewAllTiles();
+            scene.renderForSpecs();
+            var stats = tileset._statistics;
+            expect(stats.numberOfPendingRequests).toEqual(4);
+            expect(stats.numberProcessing).toEqual(0);
+
+            return Cesium3DTilesTester.waitForPendingRequests(scene, tileset).then(function() {
+                expect(stats.numberOfPendingRequests).toEqual(0);
+                expect(stats.numberProcessing).toEqual(0);
+
+                // Check that one tile has failed
+                var children = tileset._root.children;
+                var length = children.length;
+                var failedTiles = 0;
+                for (var i = 0; i < length; ++i) {
+                    if (children[i].content.state === Cesium3DTileContentState.FAILED) {
+                        ++failedTiles;
+                    }
+                }
+                expect(failedTiles).toEqual(1);
+            });
+       });
     });
 
     it('renders tileset', function() {
@@ -380,7 +410,7 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             tileset.debugShowStatistics = true;
             scene.renderForSpecs();
-            // TODO : no expectations, not sure how to test this
+            // TODO : not sure how to test this
         });
     });
 
@@ -468,9 +498,67 @@ defineSuite([
 
     it('destroys', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            var root = tileset._root;
             expect(tileset.isDestroyed()).toEqual(false);
             scene.primitives.remove(tileset);
             expect(tileset.isDestroyed()).toEqual(true);
+
+            // Check that all tiles are destroyed
+            expect(root.isDestroyed()).toEqual(true);
+            expect(root.children[0].isDestroyed()).toEqual(true);
+            expect(root.children[1].isDestroyed()).toEqual(true);
+            expect(root.children[2].isDestroyed()).toEqual(true);
+            expect(root.children[3].isDestroyed()).toEqual(true);
+        });
+    });
+
+    it('destroys before loadTilesJson finishes', function() {
+        var tileset = scene.primitives.add(new Cesium3DTileset({
+            url : tilesetUrl
+        }));
+        scene.primitives.remove(tileset);
+        // TODO : hard to test this one (check that promise never resolves or rejects?)
+        // Should destroy function reject ready promise?
+    });
+
+    it('destroys before external tiles.json finishes loading', function() {
+        viewNothing();
+        return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(function(tileset) {
+            var root = tileset._root;
+
+            viewRootOnly();
+            scene.renderForSpecs(); // Request external tiles.json
+
+            var stats = tileset._statistics;
+            expect(stats.numberOfPendingRequests).toEqual(1);
+            scene.primitives.remove(tileset);
+
+            return root.readyPromise.then(function(root) {
+                fail('should not resolve');
+            }).otherwise(function(error) {
+                // Expect the root to not have added any children from the external tiles.json
+                expect(root.children.length).toEqual(0);
+                // TODO : check that request scheduler is empty
+            });
+        });
+    });
+
+    it('destroys before tile finishes loading', function() {
+        viewNothing();
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            var root = tileset._root;
+            var content = root.content;
+
+            viewRootOnly();
+            scene.renderForSpecs(); // Request root
+            scene.primitives.remove(tileset);
+
+            return root.readyPromise.then(function(root) {
+                fail('should not resolve');
+            }).otherwise(function(error) {
+                expect(content.state).toEqual(Cesium3DTileContentState.FAILED);
+                // TODO : check that request schedule is empty
+            });
         });
     });
 

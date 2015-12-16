@@ -134,7 +134,7 @@ define([
     Cesium3DTilesTester.resolvesReadyPromise = function(scene, url) {
         return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
             var content = tileset._root.content;
-            content.readyPromise.then(function(content) {
+            return content.readyPromise.then(function(content) {
                 expect(content.state).toEqual(Cesium3DTileContentState.READY);
             });
         });
@@ -144,8 +144,26 @@ define([
         return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
             var content = tileset._root.content;
             expect(content.isDestroyed()).toEqual(false);
-            content.destroy();
+            scene.primitives.remove(tileset);
             expect(content.isDestroyed()).toEqual(true);
+        });
+    };
+
+    Cesium3DTilesTester.tileDestroysBeforeLoad = function(scene, url) {
+        var tileset = scene.primitives.add(new Cesium3DTileset({
+            url : url
+        }));
+        return tileset.readyPromise.then(function(tileset) {
+            var content = tileset._root.content;
+            scene.renderForSpecs(); // Request root
+            scene.primitives.remove(tileset);
+
+            return content.readyPromise.then(function(content) {
+                fail('should not resolve');
+            }).otherwise(function(error) {
+                expect(content.state).toEqual(Cesium3DTileContentState.FAILED);
+                return content;
+            });
         });
     };
 
