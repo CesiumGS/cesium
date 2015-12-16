@@ -282,7 +282,7 @@ define([
 
         requestMetadata();
         return imageryProvider;
-    };
+    }
 
     return createTileMapServiceImageryProvider;
 });

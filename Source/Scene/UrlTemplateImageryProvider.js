@@ -215,7 +215,7 @@ define([
             that._pickFeaturesUrlParts = urlTemplateToParts(that._pickFeaturesUrl, pickFeaturesTags);
             return true;
         });
-    };
+    }
 
     defineProperties(UrlTemplateImageryProvider.prototype, {
         /**
