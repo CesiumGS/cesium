@@ -433,7 +433,7 @@ define([
             unwrappedInterval = unwrapInterval(type, packetData, sourceUri);
             packedLength = defaultValue(type.packedLength, 1);
             unwrappedIntervalLength = defaultValue(unwrappedInterval.length, 1);
-            isSampled = !defined(packetData.array) && (typeof unwrappedInterval !== 'string') && unwrappedIntervalLength > packedLength;
+            isSampled = !defined(packetData.array) && (typeof unwrappedInterval !== 'string') && (unwrappedIntervalLength > packedLength) && (type !== Object);
         }
 
         //Rotation is a special case because it represents a native type (Number)

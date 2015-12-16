@@ -1162,7 +1162,7 @@ defineSuite([
         expect(entity.properties.constant_name.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet.properties.constant_name);
         expect(entity.properties.constant_value.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet.properties.constant_value);
         expect(entity.properties.constant_object.getValue(Iso8601.MINIMUM_VALUE)).toEqual(testObject);
-        expect(entity.properties.constant_array.getValue(Iso8601.MINIMUM_VALUE)).toEqual(testArray);  // failing
+        expect(entity.properties.constant_array.getValue(Iso8601.MINIMUM_VALUE)).toEqual(testArray);
     });
 
     it('works with properties with one interval defined on the subproperty.', function() {
