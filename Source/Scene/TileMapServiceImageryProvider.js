@@ -93,9 +93,8 @@ define([
      *        Cesium.Math.toRadians(40.0))
      * });
      */
-    var TileMapServiceImageryProvider = function TileMapServiceImageryProvider(options) {
+     function TileMapServiceImageryProvider(options) {
         deprecationWarning('TileMapServiceImageryProvider', 'Scene/TileMapServiceImageryProvider is deprecated. Use Scene/createTileMapServiceImageryProvider instead.');
-
         options = defaultValue(options, {});
 
         //>>includeStart('debug', pragmas.debug);
@@ -279,7 +278,7 @@ define([
         }
 
         requestMetadata();
-    };
+    }
 
     function buildImageUrl(imageryProvider, x, y, level) {
         var yTiles = imageryProvider._tilingScheme.getNumberOfYTilesAtLevel(level);

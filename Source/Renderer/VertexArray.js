@@ -262,7 +262,7 @@ define([
      *
      * @private
      */
-    var VertexArray = function(options) {
+    function VertexArray(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -338,7 +338,7 @@ define([
         this._vao = vao;
         this._attributes = vaAttributes;
         this._indexBuffer = indexBuffer;
-    };
+    }
 
     function computeNumberOfVertices(attribute) {
         return attribute.values.length / attribute.componentsPerAttribute;

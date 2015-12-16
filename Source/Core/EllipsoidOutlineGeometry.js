@@ -59,7 +59,7 @@ define([
      * });
      * var geometry = Cesium.EllipsoidOutlineGeometry.createGeometry(ellipsoid);
      */
-    var EllipsoidOutlineGeometry = function(options) {
+    function EllipsoidOutlineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var radii = defaultValue(options.radii, defaultRadii);
@@ -84,7 +84,7 @@ define([
         this._slicePartitions = slicePartitions;
         this._subdivisions = subdivisions;
         this._workerName = 'createEllipsoidOutlineGeometry';
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.

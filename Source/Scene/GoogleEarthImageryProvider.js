@@ -97,7 +97,7 @@ define([
      *     channel : 1008
      * });
      */
-    var GoogleEarthImageryProvider = function GoogleEarthImageryProvider(options) {
+    function GoogleEarthImageryProvider(options) {
         options = defaultValue(options, {});
 
         //>>includeStart('debug', pragmas.debug);
@@ -223,8 +223,7 @@ define([
         }
 
         requestMetadata();
-    };
-
+    }
 
     defineProperties(GoogleEarthImageryProvider.prototype, {
         /**

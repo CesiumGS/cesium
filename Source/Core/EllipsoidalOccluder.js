@@ -40,7 +40,7 @@ define([
      *
      * @private
      */
-    var EllipsoidalOccluder = function(ellipsoid, cameraPosition) {
+    function EllipsoidalOccluder(ellipsoid, cameraPosition) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(ellipsoid)) {
             throw new DeveloperError('ellipsoid is required.');
@@ -56,7 +56,7 @@ define([
         if (defined(cameraPosition)) {
             this.cameraPosition = cameraPosition;
         }
-    };
+    }
 
     defineProperties(EllipsoidalOccluder.prototype, {
         /**

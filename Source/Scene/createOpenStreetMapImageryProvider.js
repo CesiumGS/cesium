@@ -56,7 +56,7 @@ define([
      *     url : '//a.tile.openstreetmap.org/'
      * });
      */
-    var createOpenStreetMapImageryProvider = function createOpenStreetMapImageryProvider(options) {
+    function createOpenStreetMapImageryProvider(options) {
         options = defaultValue(options, {});
 
         var url = defaultValue(options.url, '//a.tile.openstreetmap.org/');
@@ -105,7 +105,7 @@ define([
             maximumLevel: maximumLevel,
             rectangle: rectangle
         });
-    };
+    }
 
     return createOpenStreetMapImageryProvider;
 });

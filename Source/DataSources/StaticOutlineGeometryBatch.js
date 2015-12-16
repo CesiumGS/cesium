@@ -19,7 +19,7 @@ define([
         BoundingSphereState) {
     "use strict";
 
-    var Batch = function(primitives, translucent, width) {
+    function Batch(primitives, translucent, width) {
         this.translucent = translucent;
         this.primitives = primitives;
         this.createPrimitive = false;
@@ -33,8 +33,7 @@ define([
         this.width = width;
         this.subscriptions = new AssociativeArray();
         this.showsUpdated = new AssociativeArray();
-    };
-
+    }
     Batch.prototype.add = function(updater, instance) {
         var id = updater.entity.id;
         this.createPrimitive = true;
@@ -237,13 +236,12 @@ define([
     /**
      * @private
      */
-    var StaticOutlineGeometryBatch = function(primitives, scene) {
+    function StaticOutlineGeometryBatch(primitives, scene) {
         this._primitives = primitives;
         this._scene = scene;
         this._solidBatches = new AssociativeArray();
         this._translucentBatches = new AssociativeArray();
-    };
-
+    }
     StaticOutlineGeometryBatch.prototype.add = function(time, updater) {
         var instance = updater.createOutlineGeometryInstance(time);
         var width = this._scene.clampLineWidth(updater.outlineWidth);

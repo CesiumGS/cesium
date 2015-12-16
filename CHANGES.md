@@ -18,6 +18,9 @@ Change Log
     * Deprecated `TileMapServiceImageryProvider`. It will be removed in 1.18. Use `createTileMapServiceImageryProvider` instead.
 * Refactored `UrlTemplateImageryProvider.reinitialize` to accept a promise to `options`.
 * Reduced the amount of both GPU and CPU memory used by terrain. The CPU memory was reduced by up to 40%.
+* `CorridorGeometry` and `PolylineVolumeGeometry` render short segments [#3293](https://github.com/AnalyticalGraphicsInc/cesium/issues/3293)
+* `Rectangle.fromCartographicArray` finds the smallest rectangle regardess of whether or not it crosses the international date line. [#3227](https://github.com/AnalyticalGraphicsInc/cesium/issues/3227)
+* Bug fix for `CorridorGeometry` with nearly colinear points [#3320](https://github.com/AnalyticalGraphicsInc/cesium/issues/3320)
 
 
 ### 1.16 - 2015-12-01

@@ -89,7 +89,7 @@ define([
      *        Cesium.Math.toRadians(40.0))
      * });
      */
-    var createTileMapServiceImageryProvider = function createTileMapServiceImageryProvider(options) {
+    function createTileMapServiceImageryProvider(options) {
         options = defaultValue(options, {});
 
         //>>includeStart('debug', pragmas.debug);

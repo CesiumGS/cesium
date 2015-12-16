@@ -110,7 +110,7 @@ define([
      *     url: '//services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
      * });
      */
-    var ArcGisMapServerImageryProvider = function ArcGisMapServerImageryProvider(options) {
+    function ArcGisMapServerImageryProvider(options) {
         options = defaultValue(options, {});
 
         //>>includeStart('debug', pragmas.debug);
@@ -233,7 +233,7 @@ define([
             this._ready = true;
             this._readyPromise.resolve(true);
         }
-    };
+    }
 
     function buildImageUrl(imageryProvider, x, y, level) {
         var url;

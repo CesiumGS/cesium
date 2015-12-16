@@ -66,7 +66,7 @@ define([
      * });
      * viewer.terrainProvider = terrainProvider;
      */
-    var VRTheWorldTerrainProvider = function VRTheWorldTerrainProvider(options) {
+    function VRTheWorldTerrainProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         if (!defined(options.url)) {
             throw new DeveloperError('options.url is required.');
@@ -147,7 +147,7 @@ define([
         }
 
         requestMetadata();
-    };
+    }
 
     defineProperties(VRTheWorldTerrainProvider.prototype, {
         /**

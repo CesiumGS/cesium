@@ -94,7 +94,7 @@ define([
      *     mapStyle : Cesium.BingMapsStyle.AERIAL
      * });
      */
-    var BingMapsImageryProvider = function BingMapsImageryProvider(options) {
+    function BingMapsImageryProvider(options) {
         options = defaultValue(options, {});
 
         //>>includeStart('debug', pragmas.debug);
@@ -218,7 +218,7 @@ define([
         }
 
         requestMetadata();
-    };
+    }
 
     defineProperties(BingMapsImageryProvider.prototype, {
         /**

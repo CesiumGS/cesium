@@ -148,7 +148,7 @@ define([
      *    rectangle : Cesium.Rectangle.fromDegrees(96.799393, -43.598214999057824, 153.63925700000001, -9.2159219997013)
      * });
      */
-    var UrlTemplateImageryProvider = function UrlTemplateImageryProvider(options) {
+    function UrlTemplateImageryProvider(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options)) {
           throw new DeveloperError('options is required.');
@@ -157,7 +157,7 @@ define([
           throw new DeveloperError('options is required.');
         }
         //>>includeEnd('debug');
-        
+
         this._errorEvent = new Event();
 
         this._url = undefined;

@@ -34,7 +34,7 @@ define([
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Box.html|Cesium Sandcastle Box Demo}
      */
-    var BoxGraphics = function(options) {
+    function BoxGraphics(options) {
         this._dimensions = undefined;
         this._dimensionsSubscription = undefined;
         this._show = undefined;
@@ -52,7 +52,7 @@ define([
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
-    };
+    }
 
     defineProperties(BoxGraphics.prototype, {
         /**

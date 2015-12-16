@@ -22,11 +22,11 @@ define([
      * @alias DataSourceCollection
      * @constructor
      */
-    var DataSourceCollection = function() {
+    function DataSourceCollection() {
         this._dataSources = [];
         this._dataSourceAdded = new Event();
         this._dataSourceRemoved = new Event();
-    };
+    }
 
     defineProperties(DataSourceCollection.prototype, {
         /**

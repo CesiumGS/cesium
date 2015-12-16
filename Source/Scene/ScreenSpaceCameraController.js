@@ -58,7 +58,7 @@ define([
      *
      * @param {Scene} scene The scene.
      */
-    var ScreenSpaceCameraController = function(scene) {
+    function ScreenSpaceCameraController(scene) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
@@ -304,7 +304,7 @@ define([
         this._translateFactor = 1.0;
         this._minimumZoomRate = 20.0;
         this._maximumZoomRate = 5906376272000.0;  // distance from the Sun to Pluto in meters.
-    };
+    }
 
     function decay(time, coefficient) {
         if (time < 0) {

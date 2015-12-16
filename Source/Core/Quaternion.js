@@ -31,7 +31,7 @@ define([
      *
      * @see PackableForInterpolation
      */
-    var Quaternion = function(x, y, z, w) {
+    function Quaternion(x, y, z, w) {
         /**
          * The X component.
          * @type {Number}
@@ -59,7 +59,7 @@ define([
          * @default 0.0
          */
         this.w = defaultValue(w, 0.0);
-    };
+    }
 
     var fromAxisAngleScratch = new Cartesian3();
 

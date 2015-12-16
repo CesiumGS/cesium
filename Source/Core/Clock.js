@@ -51,7 +51,7 @@ define([
      *    clockStep : Cesium.ClockStep.SYSTEM_CLOCK_MULTIPLIER
      * });
      */
-    var Clock = function(options) {
+    function Clock(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var startTime = options.startTime;
@@ -155,7 +155,7 @@ define([
         this.onTick = new Event();
 
         this._lastSystemTime = getTimestamp();
-    };
+    }
 
     /**
      * Advances the clock from the currentTime based on the current configuration options.

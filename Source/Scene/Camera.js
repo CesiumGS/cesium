@@ -81,7 +81,7 @@ define([
      * camera.frustum.near = 1.0;
      * camera.frustum.far = 2.0;
      */
-    var Camera = function(scene) {
+    function Camera(scene) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
@@ -216,7 +216,7 @@ define([
         mag += mag * Camera.DEFAULT_VIEW_FACTOR;
         Cartesian3.normalize(this.position, this.position);
         Cartesian3.multiplyByScalar(this.position, mag, this.position);
-    };
+    }
 
     /**
      * @private
@@ -233,7 +233,7 @@ define([
     Camera.TRANSFORM_2D_INVERSE = Matrix4.inverseTransformation(Camera.TRANSFORM_2D, new Matrix4());
 
     /**
-     * The default extent the camera will view on creation.
+     * The default rectangle the camera will view on creation.
      * @type Rectangle
      */
     Camera.DEFAULT_VIEW_RECTANGLE = Rectangle.fromDegrees(-95.0, -20.0, -70.0, 90.0);
@@ -2314,11 +2314,10 @@ define([
             newPosition.z += -maxY - center.z;
         }
 
-        var updateCV = function(value) {
+        function updateCV(value) {
             var interp = Cartesian3.lerp(position, newPosition, value.time, new Cartesian3());
             camera.worldToCameraCoordinatesPoint(interp, camera.position);
-        };
-
+        }
         return {
             easingFunction : EasingFunction.EXPONENTIAL_OUT,
             startObject : {

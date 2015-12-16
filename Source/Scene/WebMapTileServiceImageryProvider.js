@@ -96,7 +96,7 @@ define([
      * });
      * viewer.imageryLayers.addImageryProvider(shadedRelief2);
      */
-    var WebMapTileServiceImageryProvider = function WebMapTileServiceImageryProvider(options) {
+    function WebMapTileServiceImageryProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         if (!defined(options.url)) {
@@ -155,7 +155,7 @@ define([
         } else {
             this._subdomains = ['a', 'b', 'c'];
         }
-    };
+    }
 
     var defaultParameters = freezeObject({
         service : 'WMTS',

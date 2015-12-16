@@ -41,7 +41,7 @@ define([
      *     // an error occurred
      * });
      */
-    var loadJsonp = function(url, options) {
+    function loadJsonp(url, options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(url)) {
             throw new DeveloperError('url is required.');
@@ -92,7 +92,7 @@ define([
         loadJsonp.loadAndExecuteScript(url, functionName, deferred);
 
         return deferred.promise;
-    };
+    }
 
     // This is broken out into a separate function so that it can be mocked for testing purposes.
     loadJsonp.loadAndExecuteScript = function(url, functionName, deferred) {
