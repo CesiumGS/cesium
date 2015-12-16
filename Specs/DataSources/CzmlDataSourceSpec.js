@@ -1148,7 +1148,7 @@ defineSuite([
         var packet = {
             properties: {
                 constant_name: 'ABC',
-                constant_value: 16,
+                constant_height: 8,
                 constant_object: {
                     value: testObject
                 },
@@ -1162,7 +1162,7 @@ defineSuite([
         dataSource.load(makePacket(packet));
         var entity = dataSource.entities.values[0];
         expect(entity.properties.constant_name.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet.properties.constant_name);
-        expect(entity.properties.constant_value.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet.properties.constant_value);
+        expect(entity.properties.constant_height.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet.properties.constant_height);
         expect(entity.properties.constant_object.getValue(Iso8601.MINIMUM_VALUE)).toEqual(testObject);
         expect(entity.properties.constant_array.getValue(Iso8601.MINIMUM_VALUE)).toEqual(testArray);
     });
@@ -1215,6 +1215,113 @@ defineSuite([
 
         expect(entity.properties.changing_array.getValue(time1)).toEqual(array1);
         expect(entity.properties.changing_array.getValue(time2)).toEqual(array2);
+    });
+
+    it('works with properties when properties itself is constant.', function() {
+        var testObject = {
+            foo: 4,
+            bar: {
+                name: 'bar'
+            }
+        };
+        var testArray = [2, 4, 16, 'test'];
+        var packet = {
+            properties: [
+                {
+                    value: {
+                        name: 'ABC',
+                        height: 8,
+                        object: testObject,
+                        array: testArray
+                    }
+                }
+            ]
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+        var entity = dataSource.entities.values[0];
+        expect(entity.properties.name.getValue(Iso8601.MINIMUM_VALUE)).toEqual('ABC');
+        expect(entity.properties.height.getValue(Iso8601.MINIMUM_VALUE)).toEqual(8);
+        expect(entity.properties.object.getValue(Iso8601.MINIMUM_VALUE)).toEqual(testObject);
+        expect(entity.properties.array.getValue(Iso8601.MINIMUM_VALUE)).toEqual(testArray);
+    });
+
+    it('works with properties when properties itself has a single interval.', function() {
+        var testObject = {
+            foo: 4,
+            bar: {
+                name: 'bar'
+            }
+        };
+        var testArray = [2, 4, 16, 'test'];
+        var packet = {
+            properties: [
+                {
+                    interval: '2012/2013',
+                    value: {
+                        name: 'ABC',
+                        height: 8,
+                        object: testObject,
+                        array: testArray
+                    }
+                }
+            ]
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+        var entity = dataSource.entities.values[0];
+
+        var time1 = JulianDate.fromIso8601('2012-06-01');
+        var time2 = JulianDate.fromIso8601('2013-06-01');
+
+        expect(entity.properties.name.getValue(time1)).toEqual('ABC');
+        expect(entity.properties.name.getValue(time2)).toBeUndefined();
+        expect(entity.properties.height.getValue(time1)).toEqual(8);
+        expect(entity.properties.height.getValue(time2)).toBeUndefined();
+        expect(entity.properties.object.getValue(time1)).toEqual(testObject);
+        expect(entity.properties.object.getValue(time2)).toBeUndefined();
+        expect(entity.properties.array.getValue(time1)).toEqual(testArray);
+        expect(entity.properties.array.getValue(time2)).toBeUndefined();
+    });
+
+    it('works with properties when properties itself has multiple intervals.', function() {
+        var testArray1 = [2, 4, 16, 'test'];
+        var testArray2 = [1, 6, 'foo'];
+        var packet = {
+            properties: [
+                {
+                    interval: '2012/2013',
+                    value: {
+                        name: 'ABC',
+                        height: 8,
+                        array: testArray1
+                    }
+                },
+                {
+                    interval: '2013/2014',
+                    value: {
+                        name: 'XYZ',
+                        array: testArray2
+                    }
+                }
+            ]
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+        var entity = dataSource.entities.values[0];
+
+        var time1 = JulianDate.fromIso8601('2012-06-01');
+        var time2 = JulianDate.fromIso8601('2013-06-01');
+
+        expect(entity.properties.name.getValue(time1)).toEqual('ABC');
+        expect(entity.properties.name.getValue(time2)).toEqual('XYZ');
+        expect(entity.properties.height.getValue(time1)).toEqual(8);
+        expect(entity.properties.height.getValue(time2)).toBeUndefined();
+        expect(entity.properties.array.getValue(time1)).toEqual(testArray1);
+        expect(entity.properties.array.getValue(time2)).toEqual(testArray2);
     });
 
     it('CZML Availability works with a single interval.', function() {

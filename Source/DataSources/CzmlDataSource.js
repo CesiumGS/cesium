@@ -863,18 +863,42 @@ define([
         }
     }
 
-    //process the 'properties' property
+    //Process the 'properties' property
     function processProperties(entity, packet, entityCollection, sourceUri) {
         var propertiesData = packet.properties;
         if (defined(propertiesData)) {
-            //cannot simply call processPacketData(entity, 'properties', propertyData, undefined, sourceUri, entityCollection)
-            //because each property of "properties" may be time varying separately.
+            //There are two alternative ways of specifying properties:
+            //- If all properties vary over time in the same way, properties should be an array of objects [{interval: "2012/2013", value: {...}}, ...].
+            //  As usual, if "interval" is missing, the value is assumed constant for all time.
+            //- If properties vary differently, properties should be an object, each of whose properties has the structure above.
+            //Either way, the properties are accessible as if they vary independently, ie. as entity.properties.myprop.getValue(time),
             if (!defined(entity.properties)) {
                 entity.properties = {};
             }
-            for (var key in propertiesData) {
-                if (propertiesData.hasOwnProperty(key)) {
-                    processPacketData(Object, entity.properties, key, propertiesData[key], undefined, sourceUri, entityCollection);
+            var key;
+            if (!isArray(propertiesData)) {
+                //We cannot simply call processPacketData(entity, 'properties', propertyData, undefined, sourceUri, entityCollection)
+                //because each property of "properties" may vary separately.
+                for (key in propertiesData) {
+                    if (propertiesData.hasOwnProperty(key)) {
+                        processPacketData(Object, entity.properties, key, propertiesData[key], undefined, sourceUri, entityCollection);
+                    }
+                }
+            } else {
+                //Make it look like the interval is specified on each subproperty.
+                var thisInterval,
+                    revisedInterval;
+                for (var i = 0; i < propertiesData.length; i++) {
+                    thisInterval = propertiesData[i].value;
+                    for (key in thisInterval) {
+                        if (thisInterval.hasOwnProperty(key)) {
+                            revisedInterval = {
+                                interval: propertiesData[i].interval,
+                                value: thisInterval[key]
+                            };
+                            processPacketData(Object, entity.properties, key, revisedInterval, undefined, sourceUri, entityCollection);
+                        }
+                    }
                 }
             }
         }
