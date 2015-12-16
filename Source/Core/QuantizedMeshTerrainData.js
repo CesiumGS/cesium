@@ -466,17 +466,56 @@ define([
      *          the rectangle, so expect incorrect results for positions far outside the rectangle.
      */
     QuantizedMeshTerrainData.prototype.interpolateHeight = function(rectangle, longitude, latitude) {
-        // TODO
         var u = CesiumMath.clamp((longitude - rectangle.west) / rectangle.width, 0.0, 1.0);
         u *= maxShort;
         var v = CesiumMath.clamp((latitude - rectangle.south) / rectangle.height, 0.0, 1.0);
         v *= maxShort;
 
-        var uBuffer = this._uValues;
-        var vBuffer = this._vValues;
-        var heightBuffer = this._heightValues;
+        if (!defined(this._mesh)) {
+            return interpolateHeight(this, u, v);
+        }
 
-        var indices = this._indices;
+        interpolateMeshHeight(this, u, v);
+    };
+
+    var texCoordScratch0 = new Cartesian2();
+    var texCoordScratch1 = new Cartesian2();
+    var texCoordScratch2 = new Cartesian2();
+
+    function interpolateMeshHeight(terrainData, u, v) {
+        var mesh = terrainData._mesh;
+        var vertices = mesh.vertices;
+        var encoding = mesh.encoding;
+        var indices = mesh.indices;
+
+        for (var i = 0, len = indices.length; i < len; i += 3) {
+            var i0 = indices[i];
+            var i1 = indices[i + 1];
+            var i2 = indices[i + 2];
+
+            var uv0 = encoding.decodeTextureCoordinates(vertices, i0, texCoordScratch0);
+            var uv1 = encoding.decodeTextureCoordinates(vertices, i1, texCoordScratch1);
+            var uv2 = encoding.decodeTextureCoordinates(vertices, i2, texCoordScratch2);
+
+            var barycentric = Intersections2D.computeBarycentricCoordinates(u, v, uv0.x, uv0.y, uv1.x, uv1.y, uv2.x, uv2.y, barycentricCoordinateScratch);
+            if (barycentric.x >= -1e-15 && barycentric.y >= -1e-15 && barycentric.z >= -1e-15) {
+                var h0 = encoding.decodeHeight(vertices, i0);
+                var h1 = encoding.decodeHeight(vertices, i1);
+                var h2 = encoding.decodeHeight(vertices, i2);
+                return barycentric.x * h0 + barycentric.y * h1 + barycentric.z * h2;
+            }
+        }
+
+        // Position does not lie in any triangle in this mesh.
+        return undefined;
+    }
+
+    function interpolateHeight(terrainData, u, v) {
+        var uBuffer = terrainData._uValues;
+        var vBuffer = terrainData._vValues;
+        var heightBuffer = terrainData._heightValues;
+
+        var indices = terrainData._indices;
         for (var i = 0, len = indices.length; i < len; i += 3) {
             var i0 = indices[i];
             var i1 = indices[i + 1];
@@ -495,13 +534,13 @@ define([
                 var quantizedHeight = barycentric.x * heightBuffer[i0] +
                                       barycentric.y * heightBuffer[i1] +
                                       barycentric.z * heightBuffer[i2];
-                return CesiumMath.lerp(this._minimumHeight, this._maximumHeight, quantizedHeight / maxShort);
+                return CesiumMath.lerp(terrainData._minimumHeight, terrainData._maximumHeight, quantizedHeight / maxShort);
             }
         }
 
         // Position does not lie in any triangle in this mesh.
         return undefined;
-    };
+    }
 
     /**
      * Determines if a given child tile is available, based on the
