@@ -23,7 +23,7 @@ define([
      * @type {Object}
      * @readonly
      */
-    TileBoundingVolume.prototype.boundingVolume = undefined;
+    TileBoundingVolume.prototype.contentsBoundingVolume = undefined;
 
     /**
      * Calculates the distance between the tile and the camera.

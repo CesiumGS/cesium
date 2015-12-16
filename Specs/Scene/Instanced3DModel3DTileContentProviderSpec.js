@@ -94,7 +94,7 @@ defineSuite([
 
         var tileset = {};
         var tile = {
-            boundingVolume : new TileBoundingSphere()
+            contentsBoundingVolume : new TileBoundingSphere()
         };
         var url = '';
         var instancedTile = new Instanced3DModel3DTileContentProvider(tileset, tile, url);

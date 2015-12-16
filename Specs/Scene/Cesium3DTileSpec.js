@@ -98,17 +98,17 @@ defineSuite([
         it('can have a bounding sphere', function() {
             var tile = new Cesium3DTile(undefined, '/some_url', tileWithBoundingSphere, undefined);
             var radius = tileWithBoundingSphere.boundingVolume.sphere[3];
-            expect(tile._boundingVolume).toBeDefined();
-            expect(tile._boundingVolume.radius).toEqual(radius);
-            expect(tile._boundingVolume.center).toEqual(Cartesian3.ZERO);
+            expect(tile.contentsBoundingVolume).toBeDefined();
+            expect(tile.contentsBoundingVolume.boundingVolume.radius).toEqual(radius);
+            expect(tile.contentsBoundingVolume.boundingVolume.center).toEqual(Cartesian3.ZERO);
         });
 
         it('can have a contents bounding sphere', function() {
             var tile = new Cesium3DTile(undefined, '/some_url', tileWithContentsBoundingSphere, undefined);
             var radius = tileWithContentsBoundingSphere.content.boundingVolume.sphere[3];
-            expect(tile._contentBoundingVolume).toBeDefined();
-            expect(tile._contentBoundingVolume.radius).toEqual(radius);
-            expect(tile._contentBoundingVolume.center).toEqual(Cartesian3.ZERO);
+            expect(tile.contentsBoundingVolume).toBeDefined();
+            expect(tile.contentsBoundingVolume.boundingVolume.radius).toEqual(radius);
+            expect(tile.contentsBoundingVolume.boundingVolume.center).toEqual(Cartesian3.ZERO);
         });
 
         it('can have a bounding region', function() {
@@ -116,10 +116,10 @@ defineSuite([
             var minimumHeight = tileWithBoundingRegion.boundingVolume.region[4];
             var maximumHeight = tileWithBoundingRegion.boundingVolume.region[5];
             var tile = new Cesium3DTile(undefined, '/some_url', tileWithBoundingRegion, undefined);
-            expect(tile.boundingVolume).toBeDefined();
-            expect(tile.boundingVolume.boundingVolume.minimumHeight).toEqual(minimumHeight);
-            expect(tile.boundingVolume.boundingVolume.maximumHeight).toEqual(maximumHeight);
-            expect(tile.boundingVolume.boundingVolume.rectangle).toEqual(new Rectangle(rectangle[0], rectangle[1], rectangle[2], rectangle[3]));
+            expect(tile.contentsBoundingVolume).toBeDefined();
+            expect(tile.contentsBoundingVolume.boundingVolume.minimumHeight).toEqual(minimumHeight);
+            expect(tile.contentsBoundingVolume.boundingVolume.maximumHeight).toEqual(maximumHeight);
+            expect(tile.contentsBoundingVolume.boundingVolume.rectangle).toEqual(new Rectangle(rectangle[0], rectangle[1], rectangle[2], rectangle[3]));
         });
 
         it('can have a contents bounding region', function() {
@@ -137,25 +137,25 @@ defineSuite([
         it('can have an oriented bounding box', function() {
             var box = tileWithBoundingBox.boundingVolume.box;
             var tile = new Cesium3DTile(undefined, '/some_url', tileWithBoundingBox, undefined);
-            expect(tile.boundingVolume).toBeDefined();
+            expect(tile.contentsBoundingVolume).toBeDefined();
             var obb = new TileOrientedBoundingBox({
                 rectangle: new Rectangle(box[0], box[1], box[2], box[3]),
                 minimumHeight: box[4],
                 maximumHeight: box[5]
             });
-            expect(tile.boundingVolume).toEqual(obb);
+            expect(tile.contentsBoundingVolume).toEqual(obb);
         });
 
         it('can have a contents oriented bounding box', function() {
             var box = tileWithContentsBoundingBox.boundingVolume.box;
             var tile = new Cesium3DTile(undefined, '/some_url', tileWithContentsBoundingBox, undefined);
-            expect(tile.boundingVolume).toBeDefined();
+            expect(tile.contentsBoundingVolume).toBeDefined();
             var obb = new TileOrientedBoundingBox({
                 rectangle: new Rectangle(box[0], box[1], box[2], box[3]),
                 minimumHeight: box[4],
                 maximumHeight: box[5]
             });
-            expect(tile.boundingVolume).toEqual(obb);
+            expect(tile.contentsBoundingVolume).toEqual(obb);
         });
     });
 

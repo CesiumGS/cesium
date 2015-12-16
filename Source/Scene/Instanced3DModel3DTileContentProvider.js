@@ -207,7 +207,7 @@ define([
         var collectionOptions = {
             instances : new Array(instancesLength),
             batchTableResources : batchTableResources,
-            boundingVolume : this._tile.boundingVolume.boundingVolume,
+            boundingVolume : this._tile.contentsBoundingVolume.boundingVolume,
             cull : false,
             url : undefined,
             headers : undefined,

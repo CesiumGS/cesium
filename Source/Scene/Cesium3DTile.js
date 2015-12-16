@@ -254,7 +254,7 @@ define([
          * @type {Object}
          * @readonly
          */
-        boundingVolume : {
+        contentsBoundingVolume : {
             get : function() {
                 return defaultValue(this._contentBoundingVolume, this._boundingVolume);
             }
