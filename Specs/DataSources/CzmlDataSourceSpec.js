@@ -1189,16 +1189,18 @@ defineSuite([
     });
 
     it('works with properties with multiple interval defined on the subproperty.', function() {
+        var array1 = [1, 2, 3],
+            array2 = [4, 5, 6];
         var packet = {
             properties: {
-                changing_name: [
+                changing_array: [
                     {
                         interval: '2012/2013',
-                        value: 'ABC'
+                        value: array1
                     },
                     {
                         interval: '2013/2014',
-                        value: 'XYZ'
+                        value: array2
                     }
                 ]
             }
@@ -1211,8 +1213,8 @@ defineSuite([
         var time1 = JulianDate.fromIso8601('2012-06-01');
         var time2 = JulianDate.fromIso8601('2013-06-01');
 
-        expect(entity.properties.changing_name.getValue(time1)).toEqual('ABC');
-        expect(entity.properties.changing_name.getValue(time2)).toEqual('XYZ');
+        expect(entity.properties.changing_array.getValue(time1)).toEqual(array1);
+        expect(entity.properties.changing_array.getValue(time2)).toEqual(array2);
     });
 
     it('CZML Availability works with a single interval.', function() {
