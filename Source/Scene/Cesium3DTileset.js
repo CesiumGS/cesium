@@ -339,7 +339,8 @@ define([
     function selectTile(selectedTiles, tile, fullyVisible, frameState) {
         // There may also be a tight box around just the tile's contents, e.g., for a city, we may be
         // zoomed into a neighborhood and can cull the skyscrapers in the root node.
-        if (tile.isReady() &&
+        var parentRefines = defined(tile.parent) ? tile.parent.isRefinable() : true;
+        if (tile.isReady() && parentRefines &&
                 (fullyVisible || (tile.contentsVisibility(frameState.cullingVolume) !== CullingVolume.MASK_OUTSIDE))) {
             selectedTiles.push(tile);
         }
@@ -405,12 +406,6 @@ define([
                 // and geometric error are equal to its parent.
                 if (t.isReady()) {
                     child = t.children[0];
-                    // If the child is not yet ready, select t's parent so that
-                    // that something can be rendered. This avoids the appearance of
-                    // removing a tile and showing nothing in its place
-                    if (!child.isReady() && defined(t.parent) && t.parent.isReady()) {
-                        selectTile(selectedTiles, t.parent, fullyVisible, frameState);
-                    }
                     if (child.isContentUnloaded()) {
                         requestContent(tiles3D, child, outOfCore);
                     } else {
@@ -489,7 +484,7 @@ define([
 // TODO: same TODO as above.
                     }
 
-                    if (!allChildrenLoaded) {
+                    if (!t.isRefinable()) {
                         // Tile does not meet SSE.  Add its commands since it is the best we have and request its children.
                         selectTile(selectedTiles, t, fullyVisible, frameState);
 
@@ -499,6 +494,10 @@ define([
 // TODO: we could spin a bit less CPU here and probably above by keeping separate lists for unloaded/ready children.
                                 if (child.isContentUnloaded()) {
                                     requestContent(tiles3D, child, outOfCore);
+                                } else if (!child.isRefinable()) {
+                                    // Child needs to load its children in order to become refinable
+                                    child.parentPlaneMask = planeMask;
+                                    stack.push(child);
                                 }
                             }
                         }

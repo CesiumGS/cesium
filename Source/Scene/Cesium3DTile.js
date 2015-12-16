@@ -23,8 +23,7 @@ define([
         './Empty3DTileContentProvider',
         './PerInstanceColorAppearance',
         './Primitive',
-        './TileBoundingBox',
-        './Tileset3DTileContentProvider'
+        './TileBoundingBox'
     ], function(
         BoxOutlineGeometry,
         Cartesian3,
@@ -49,8 +48,7 @@ define([
         Empty3DTileContentProvider,
         PerInstanceColorAppearance,
         Primitive,
-        TileBoundingBox,
-        Tileset3DTileContentProvider) {
+        TileBoundingBox) {
     "use strict";
 
     /**
@@ -128,6 +126,13 @@ define([
          *
          * @readonly
          */
+        this.numberOfUnrefinableChildren = this.numberOfChildrenWithoutContent;
+
+        /**
+         * DOC_TBA
+         *
+         * @readonly
+         */
         this.hasTilesetContent = false;
 
         /**
@@ -147,6 +152,7 @@ define([
 
             if (type === 'json') {
                 this.hasTilesetContent = true;
+                this.numberOfUnrefinableChildren = 1;
             }
 
             if (defined(contentFactory)) {
@@ -159,6 +165,17 @@ define([
         }
         this._content = content;
 
+        function setRefinable(tile) {
+            // Update the tree recursively once this tile becomes refinable
+            if (tile.isRefinable()) {
+                var parent = tile.parent;
+                if (defined(parent)) {
+                    --parent.numberOfUnrefinableChildren;
+                    setRefinable(parent);
+                }
+            }
+        }
+
         var that = this;
 
         // Content enters the READY state
@@ -166,6 +183,8 @@ define([
             if (defined(that.parent)) {
                 --that.parent.numberOfChildrenWithoutContent;
             }
+
+            setRefinable(that);
 
             that.readyPromise.resolve(that);
         }).otherwise(function(error) {
@@ -236,6 +255,13 @@ define([
      */
     Cesium3DTile.prototype.isReady = function() {
         return this._content.state === Cesium3DTileContentState.READY;
+    };
+
+    /**
+     * DOC_TBA
+     */
+    Cesium3DTile.prototype.isRefinable = function() {
+        return this.numberOfUnrefinableChildren === 0;
     };
 
     /**
