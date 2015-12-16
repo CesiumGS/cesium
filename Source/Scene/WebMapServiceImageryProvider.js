@@ -114,12 +114,11 @@ define([
 
         var pickFeaturesUri;
         var pickFeaturesQueryOptions;
-        if (defaultValue(options.enablePickFeatures, true)) {
-            pickFeaturesUri = new Uri(options.url);
-            pickFeaturesQueryOptions = queryToObject(defaultValue(pickFeaturesUri.query, ''));
-            var pickFeaturesParameters = combine(objectToLowercase(defaultValue(options.getFeatureInfoParameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters);
-            pickFeaturesQueryOptions = combine(pickFeaturesParameters, pickFeaturesQueryOptions);
-        }
+
+        pickFeaturesUri = new Uri(options.url);
+        pickFeaturesQueryOptions = queryToObject(defaultValue(pickFeaturesUri.query, ''));
+        var pickFeaturesParameters = combine(objectToLowercase(defaultValue(options.getFeatureInfoParameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters);
+        pickFeaturesQueryOptions = combine(pickFeaturesParameters, pickFeaturesQueryOptions);
 
         function setParameter(name, value) {
             if (!defined(queryOptions[name])) {
@@ -178,7 +177,8 @@ define([
             subdomains: options.subdomains,
             tileDiscardPolicy : options.tileDiscardPolicy,
             credit : options.credit,
-            getFeatureInfoFormats : getFeatureInfoFormats
+            getFeatureInfoFormats : getFeatureInfoFormats,
+            enablePickFeatures: options.enablePickFeatures
         });
     }
 
@@ -376,6 +376,23 @@ define([
         hasAlphaChannel : {
             get : function() {
                 return this._tileProvider.hasAlphaChannel;
+            }
+        },
+
+        /**
+         * A flag indicating whether this imagery provider should be able to pick features - if it's set to false,
+         * WebMapServiceImageryProvider#pickFeatures will always return undefined.
+         *
+         * @memberof WebMapServiceImageryProvider.prototype
+         * @type {Boolean}
+         * @default true
+         */
+        enablePickFeatures : {
+            get : function() {
+                return this._tileProvider.enablePickFeatures;
+            },
+            set : function(enablePickFeatures)  {
+                this._tileProvider.enablePickFeatures = enablePickFeatures;
             }
         }
     });

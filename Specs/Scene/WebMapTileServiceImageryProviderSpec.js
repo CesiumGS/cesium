@@ -13,7 +13,8 @@ defineSuite([
         'Scene/ImageryProvider',
         'Scene/ImageryState',
         'Specs/pollToPromise',
-        'ThirdParty/Uri'
+        'ThirdParty/Uri',
+        'Scene/GetFeatureInfoFormat'
     ], function(
         WebMapTileServiceImageryProvider,
         Credit,
@@ -28,7 +29,8 @@ defineSuite([
         ImageryProvider,
         ImageryState,
         pollToPromise,
-        Uri) {
+        Uri,
+        GetFeatureInfoFormat) {
     "use strict";
 
     afterEach(function() {
@@ -390,6 +392,48 @@ defineSuite([
                 expect(imagery.image).toBeInstanceOf(Image);
                 expect(tries).toEqual(2);
                 imagery.releaseReference();
+            });
+        });
+    });
+
+    describe('pickFeatures', function() {
+        it('should return undefined when enablePickFeatures is false', function() {
+            var provider = new WebMapTileServiceImageryProvider({
+                layer : 'someLayer',
+                url : 'http://example.com',
+                style : 'someStyle',
+                tileMatrixSetID : 'someTMS',
+                getFeatureInfoFormats: [
+                    new GetFeatureInfoFormat('json', 'application/json')
+                ],
+                enablePickFeatures: false
+            });
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                expect(provider.pickFeatures(0, 0, 0, 0.0, 0.0)).toBeUndefined();
+            });
+        });
+
+        it('should NOT return undefined when enablePickFeatures is subsequently set to true', function() {
+            var provider = new WebMapTileServiceImageryProvider({
+                layer : 'someLayer',
+                url : 'http://example.com',
+                style : 'someStyle',
+                tileMatrixSetID : 'someTMS',
+                getFeatureInfoFormats: [
+                    new GetFeatureInfoFormat('json', 'application/json')
+                ],
+                enablePickFeatures: false
+            });
+
+            provider.enablePickFeatures = true;
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                expect(provider.pickFeatures(0, 0, 0, 0.0, 0.0)).not.toBeUndefined();
             });
         });
     });
