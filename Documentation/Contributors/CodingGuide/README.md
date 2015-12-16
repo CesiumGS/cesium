@@ -93,7 +93,7 @@ In general, format new code in the same way as the existing code.
 ```javascript
 function defaultValue(a, b) {
    // ...
-};
+}
 
 if (!defined(result)) {
    // ...
