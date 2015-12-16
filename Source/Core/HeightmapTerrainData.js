@@ -226,6 +226,7 @@ define([
                     6,
                     result.orientedBoundingBox,
                     TerrainEncoding.clone(result.encoding));
+            that._buffer = undefined;
             return that._mesh;
         });
     };
@@ -249,9 +250,21 @@ define([
         var elementsPerHeight = structure.elementsPerHeight;
         var elementMultiplier = structure.elementMultiplier;
         var isBigEndian = structure.isBigEndian;
+        var heightOffset = structure.heightOffset;
+        var heightScale = structure.heightScale;
 
-        var heightSample = interpolateHeight(this._buffer, elementsPerHeight, elementMultiplier, stride, isBigEndian, rectangle, width, height, longitude, latitude);
-        return heightSample * structure.heightScale + structure.heightOffset;
+        var heightSample;
+        if (defined(this._mesh)) {
+            var buffer = this._mesh.vertices;
+            var encoding = this._mesh.encoding;
+            var skirtHeight = this._skirtHeight;
+            heightSample = interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, skirtHeight, rectangle, width, height, longitude, latitude);
+        } else {
+            heightSample = interpolateHeight(this._buffer, elementsPerHeight, elementMultiplier, stride, isBigEndian, rectangle, width, height, longitude, latitude);
+            heightSample = heightSample * heightScale + heightOffset;
+        }
+
+        return heightSample;
     };
 
     /**

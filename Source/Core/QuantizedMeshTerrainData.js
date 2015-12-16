@@ -318,6 +318,20 @@ define([
                     stride,
                     obb,
                     terrainEncoding);
+
+            that._quantizedVertices = undefined;
+            that._encodedNormals = undefined;
+            that._indices = undefined;
+
+            that._uValues = undefined;
+            that._vValues = undefined;
+            that._heightValues = undefined;
+
+            that._westIndices = undefined;
+            that._southIndices = undefined;
+            that._eastIndices = undefined;
+            that._northIndices = undefined;
+
             return that._mesh;
         });
     };
@@ -381,7 +395,6 @@ define([
 
 
         var upsamplePromise = upsampleTaskProcessor.scheduleTask({
-            quantizedVertices : this._quantizedVertices,
             vertices : mesh.vertices,
             vertexCountWithoutSkirts : this._vertexCountWithoutSkirts,
             indices : mesh.indices,
@@ -453,6 +466,7 @@ define([
      *          the rectangle, so expect incorrect results for positions far outside the rectangle.
      */
     QuantizedMeshTerrainData.prototype.interpolateHeight = function(rectangle, longitude, latitude) {
+        // TODO
         var u = CesiumMath.clamp((longitude - rectangle.west) / rectangle.width, 0.0, 1.0);
         u *= maxShort;
         var v = CesiumMath.clamp((latitude - rectangle.south) / rectangle.height, 0.0, 1.0);
