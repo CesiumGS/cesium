@@ -9,8 +9,9 @@ define([
      * Defines a bounding volume for a tile. This type describes an interface
      * and is not intended to be instantiated directly.
      *
-     * @see TileBoundingBox
+     * @see TileBoundingRegion
      * @see TileBoundingSphere
+     * @see TileOrientedBoundingBox
      */
     var TileBoundingVolume = function() {
     };

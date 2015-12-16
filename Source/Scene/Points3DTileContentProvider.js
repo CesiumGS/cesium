@@ -16,7 +16,7 @@ define([
         './Cesium3DTileContentState',
         './PointAppearance',
         './Primitive',
-        './TileBoundingBox',
+        './TileBoundingRegion',
         './TileBoundingSphere',
         './TileOrientedBoundingBox'
     ], function(
@@ -36,7 +36,7 @@ define([
         Cesium3DTileContentState,
         PointAppearance,
         Primitive,
-        TileBoundingBox,
+        TileBoundingRegion,
         TileBoundingSphere,
         TileOrientedBoundingBox) {
     "use strict";

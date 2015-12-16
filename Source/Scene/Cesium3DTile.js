@@ -24,7 +24,7 @@ define([
         './Empty3DTileContentProvider',
         './PerInstanceColorAppearance',
         './Primitive',
-        './TileBoundingBox',
+        './TileBoundingRegion',
         './TileBoundingSphere',
         './Tileset3DTileContentProvider',
         './TileOrientedBoundingBox'
@@ -53,7 +53,7 @@ define([
         Empty3DTileContentProvider,
         PerInstanceColorAppearance,
         Primitive,
-        TileBoundingBox,
+        TileBoundingRegion,
         TileBoundingSphere,
         Tileset3DTileContentProvider,
         TileOrientedBoundingBox) {
@@ -81,7 +81,7 @@ define([
             var region = tileBoundingVolume.region;
             var rectangleRegion = new Rectangle(region[0], region[1], region[2], region[3]);
 
-            this._boundingVolume = new TileBoundingBox({
+            this._boundingVolume = new TileBoundingRegion({
                 rectangle : rectangleRegion,
                 minimumHeight : region[4],
                 maximumHeight : region[5]
@@ -115,7 +115,7 @@ define([
                 });
             } else if (defined(headerVolume.region)) {
                 var cr = contentHeader.boundingVolume.region;
-                contentBoundingVolume = new TileBoundingBox({
+                contentBoundingVolume = new TileBoundingRegion({
                     rectangle: new Rectangle(cr[0], cr[1], cr[2], cr[3]),
                     minimumHeight: cr[4],
                     maximumHeight: cr[5]

@@ -1,7 +1,7 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Cesium3DTile',
-        'Scene/TileBoundingBox',
+        'Scene/TileBoundingRegion',
         'Scene/TileOrientedBoundingBox',
         'Core/Cartesian3',
         'Core/defined',
@@ -10,7 +10,7 @@ defineSuite([
         'Specs/createScene'
     ], function(
         Cesium3DTile,
-        TileBoundingBox,
+        TileBoundingRegion,
         TileOrientedBoundingBox,
         Cartesian3,
         defined,
@@ -126,7 +126,7 @@ defineSuite([
             var region = tileWithContentsBoundingRegion.content.boundingVolume.region;
             var tile = new Cesium3DTile(undefined, '/some_url', tileWithContentsBoundingRegion, undefined);
             expect(tile._contentBoundingVolume).toBeDefined();
-            var tbb = new TileBoundingBox({
+            var tbb = new TileBoundingRegion({
                 rectangle: new Rectangle(region[0], region[1], region[2], region[3]),
                 minimumHeight: region[4],
                 maximumHeight: region[5]

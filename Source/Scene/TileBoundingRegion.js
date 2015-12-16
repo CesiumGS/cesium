@@ -34,7 +34,7 @@ define([
      *
      * @private
      */
-    var TileBoundingBox = function(options) {
+    var TileBoundingRegion = function(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options.rectangle)) {
             throw new DeveloperError('options.url is required.');
@@ -116,11 +116,11 @@ define([
         computeOrientedBoundingBox(this);
     };
 
-    defineProperties(TileBoundingBox.prototype, {
+    defineProperties(TileBoundingRegion.prototype, {
         /**
          * The underlying bounding volume
          *
-         * @memberof TileBoundingBox.prototype
+         * @memberof TileBoundingRegion.prototype
          *
          * @type {Object}
          * @readonly
@@ -183,7 +183,7 @@ define([
         tileBB.orientedBoundingBox = OrientedBoundingBox.fromPoints(points);
     }
 
-    TileBoundingBox.prototype.distanceToCamera = function(frameState) {
+    TileBoundingRegion.prototype.distanceToCamera = function(frameState) {
         var southwestCornerCartesian = this.southwestCornerCartesian;
         var northeastCornerCartesian = this.northeastCornerCartesian;
         var westNormal = this.westNormal;
@@ -257,9 +257,9 @@ define([
      *                      on the opposite side, and {@link Intersect.INTERSECTING} if the box
      *                      intersects the plane.
      */
-    TileBoundingBox.prototype.intersectPlane = function(plane) {
+    TileBoundingRegion.prototype.intersectPlane = function(plane) {
         return this.orientedBoundingBox.intersectPlane(plane);
     };
 
-    return TileBoundingBox;
+    return TileBoundingRegion;
 });
