@@ -128,6 +128,10 @@ define([
         this._structure = structure;
         this._createdByUpsampling = defaultValue(options.createdByUpsampling, false);
         this._waterMask = options.waterMask;
+
+        this._skirtHeight = undefined;
+        this._bufferType = this._buffer.constructor;
+        this._mesh = undefined;
     };
 
     defineProperties(HeightmapTerrainData.prototype, {
@@ -188,6 +192,7 @@ define([
 
         var levelZeroMaxError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(ellipsoid, this._width, tilingScheme.getNumberOfXTilesAtLevel(0));
         var thisLevelMaxError = levelZeroMaxError / (1 << level);
+        this._skirtHeight = Math.min(thisLevelMaxError * 4.0, 1000.0);
 
         var verticesPromise = taskProcessor.scheduleTask({
             heightmap : this._buffer,
@@ -198,7 +203,7 @@ define([
             rectangle : rectangle,
             relativeToCenter : center,
             ellipsoid : ellipsoid,
-            skirtHeight : Math.min(thisLevelMaxError * 4.0, 1000.0),
+            skirtHeight : this._skirtHeight,
             isGeographic : tilingScheme instanceof GeographicTilingScheme,
             exaggeration : exaggeration
         });
@@ -208,13 +213,12 @@ define([
             return undefined;
         }
 
+        var that = this;
         return when(verticesPromise, function(result) {
-            return new TerrainMesh(
+            that._mesh = new TerrainMesh(
                     center,
                     new Float32Array(result.vertices),
-                    undefined,
                     TerrainProvider.getRegularGridIndices(result.gridWidth, result.gridHeight),
-                    undefined,
                     result.minimumHeight,
                     result.maximumHeight,
                     result.boundingSphere3D,
@@ -222,6 +226,7 @@ define([
                     6,
                     result.orientedBoundingBox,
                     TerrainEncoding.clone(result.encoding));
+            return that._mesh;
         });
     };
 
@@ -264,7 +269,7 @@ define([
      *          or undefined if too many asynchronous upsample operations are in progress and the request has been
      *          deferred.
      */
-    HeightmapTerrainData.prototype.upsample = function(mesh, tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
+    HeightmapTerrainData.prototype.upsample = function(tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(tilingScheme)) {
             throw new DeveloperError('tilingScheme is required.');
@@ -296,13 +301,17 @@ define([
         var width = this._width;
         var height = this._height;
         var structure = this._structure;
+        var skirtHeight = this._skirtHeight;
         var stride = structure.stride;
 
-        var sourceHeights = this._buffer;
-        var heights = new sourceHeights.constructor(width * height * stride);
+        var heights = new this._bufferType(width * height * stride);
+        var meshData = this._mesh;
+        if (!defined(meshData)) {
+            return undefined;
+        }
 
-        var buffer = mesh.vertices;
-        var encoding = mesh.encoding;
+        var buffer = meshData.vertices;
+        var encoding = meshData.encoding;
 
         // PERFORMANCE_IDEA: don't recompute these rectangles - the caller already knows them.
         var sourceRectangle = tilingScheme.tileXYToRectangle(thisX, thisY, thisLevel);
@@ -310,11 +319,6 @@ define([
 
         var heightOffset = structure.heightOffset;
         var heightScale = structure.heightScale;
-
-        var ellipsoid = tilingScheme.ellipsoid;
-        var levelZeroMaxError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(ellipsoid, width, tilingScheme.getNumberOfXTilesAtLevel(0));
-        var thisLevelMaxError = levelZeroMaxError / (1 << thisLevel);
-        var skirtHeight = Math.min(thisLevelMaxError * 4.0, 1000.0);
 
         var elementsPerHeight = structure.elementsPerHeight;
         var elementMultiplier = structure.elementMultiplier;

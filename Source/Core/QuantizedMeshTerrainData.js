@@ -191,6 +191,8 @@ define([
 
         this._createdByUpsampling = defaultValue(options.createdByUpsampling, false);
         this._waterMask = options.waterMask;
+
+        this._mesh = undefined;
     };
 
     defineProperties(QuantizedMeshTerrainData.prototype, {
@@ -301,15 +303,14 @@ define([
             var occlusionPoint = defaultValue(result.occludeePointInScaledSpace, that._horizonOcclusionPoint);
             var stride = result.vertexStride;
             var terrainEncoding = TerrainEncoding.clone(result.encoding);
-            var skirtIndex = result.skirtIndex;
-            var vertexCountWithoutSkirts = that._quantizedVertices.length / 3;
 
-            return new TerrainMesh(
+            that._skirtIndex = result.skirtIndex;
+            that._vertexCountWithoutSkirts = that._quantizedVertices.length / 3;
+
+            that._mesh = new TerrainMesh(
                     rtc,
                     vertices,
-                    vertexCountWithoutSkirts,
                     indicesTypedArray,
-                    skirtIndex,
                     minimumHeight,
                     maximumHeight,
                     boundingSphere,
@@ -317,6 +318,7 @@ define([
                     stride,
                     obb,
                     terrainEncoding);
+            return that._mesh;
         });
     };
 
@@ -337,7 +339,7 @@ define([
      *          or undefined if too many asynchronous upsample operations are in progress and the request has been
      *          deferred.
      */
-    QuantizedMeshTerrainData.prototype.upsample = function(mesh, tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
+    QuantizedMeshTerrainData.prototype.upsample = function(tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(tilingScheme)) {
             throw new DeveloperError('tilingScheme is required.');
@@ -366,21 +368,24 @@ define([
         }
         //>>includeEnd('debug');
 
+        var mesh = this._mesh;
+        if (!defined(this._mesh)) {
+            return undefined;
+        }
+
         var isEastChild = thisX * 2 !== descendantX;
         var isNorthChild = thisY * 2 === descendantY;
 
         var ellipsoid = tilingScheme.ellipsoid;
         var childRectangle = tilingScheme.tileXYToRectangle(descendantX, descendantY, descendantLevel);
 
+
         var upsamplePromise = upsampleTaskProcessor.scheduleTask({
-            //vertices : this._quantizedVertices,
-            //indices : this._indices,
-            //encodedNormals : this._encodedNormals,
             quantizedVertices : this._quantizedVertices,
             vertices : mesh.vertices,
-            vertexCountWithoutSkirts : mesh.vertexCountWithoutSkirts,
+            vertexCountWithoutSkirts : this._vertexCountWithoutSkirts,
             indices : mesh.indices,
-            skirtIndex : mesh.skirtIndex,
+            skirtIndex : this._skirtIndex,
             encoding : mesh.encoding,
             minimumHeight : this._minimumHeight,
             maximumHeight : this._maximumHeight,

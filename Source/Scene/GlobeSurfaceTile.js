@@ -523,7 +523,6 @@ define([
 
         return {
             data : sourceTile.data.terrainData,
-            mesh : sourceTile.data.pickTerrain.mesh,
             x : sourceTile.x,
             y : sourceTile.y,
             level : sourceTile.level
@@ -558,7 +557,6 @@ define([
                     }
                     childSurfaceTile.upsampledTerrain = new TileTerrain({
                         data : surfaceTile.terrainData,
-                        mesh : surfaceTile.pickTerrain.mesh,
                         x : tile.x,
                         y : tile.y,
                         level : tile.level
@@ -595,7 +593,6 @@ define([
                     }
                     childSurfaceTile.upsampledTerrain = new TileTerrain({
                         data : surfaceTile.terrainData,
-                        mesh : surfaceTile.pickTerrain.mesh,
                         x : tile.x,
                         y : tile.y,
                         level : tile.level

@@ -163,7 +163,7 @@ define([
             var sourceY = upsampleDetails.y;
             var sourceLevel = upsampleDetails.level;
 
-            this.data = sourceData.upsample(upsampleDetails.mesh, terrainProvider.tilingScheme, sourceX, sourceY, sourceLevel, x, y, level);
+            this.data = sourceData.upsample(terrainProvider.tilingScheme, sourceX, sourceY, sourceLevel, x, y, level);
             if (!defined(this.data)) {
                 // The upsample request has been deferred - try again later.
                 return;
