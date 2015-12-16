@@ -283,8 +283,7 @@ define([
      * DOC_TBA
      */
     Cesium3DTile.prototype.visibility = function(cullingVolume) {
-        var boundingVolume = this._boundingVolume;
-        return cullingVolume.computeVisibilityWithPlaneMask(boundingVolume, this.parentPlaneMask);
+        return cullingVolume.computeVisibilityWithPlaneMask(this._boundingVolume, this.parentPlaneMask);
     };
 
     /**
