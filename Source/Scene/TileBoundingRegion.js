@@ -45,16 +45,6 @@ define([
         this.minimumHeight = defaultValue(options.minimumHeight, 0.0);
         this.maximumHeight = defaultValue(options.maximumHeight, 0.0);
 
-
-        /**
-         * An oriented bounding box that encloses this tile's region.
-         * This is used to calculate tile visibility.
-         *
-         * @type {OrientedBoundingBox}
-         * @default OrientedBoundingBox()
-         */
-        this.orientedBoundingBox = new OrientedBoundingBox();
-
         /**
          * The world coordinates of the southwest corner of the tile's rectangle.
          *
@@ -113,7 +103,17 @@ define([
 
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         computeBox(this, options.rectangle, ellipsoid);
-        computeOrientedBoundingBox(this);
+
+        /**
+         * An oriented bounding box that encloses this tile's region.
+         * This is used to calculate tile visibility.
+         *
+         * @type {OrientedBoundingBox}
+         * @default OrientedBoundingBox()
+         *
+         * @private
+         */
+        this._orientedBoundingBox = OrientedBoundingBox.fromPoints([this.southwestCornerCartesian, this.northeastCornerCartesian]);
     };
 
     defineProperties(TileBoundingRegion.prototype, {
@@ -177,11 +177,6 @@ define([
     var negativeUnitY = new Cartesian3(0.0, -1.0, 0.0);
     var negativeUnitZ = new Cartesian3(0.0, 0.0, -1.0);
     var vectorScratch = new Cartesian3();
-
-    function computeOrientedBoundingBox(tileBB) {
-        var points = [tileBB.southwestCornerCartesian, tileBB.northeastCornerCartesian];
-        tileBB.orientedBoundingBox = OrientedBoundingBox.fromPoints(points);
-    }
 
     TileBoundingRegion.prototype.distanceToCamera = function(frameState) {
         var southwestCornerCartesian = this.southwestCornerCartesian;
@@ -258,7 +253,7 @@ define([
      *                      intersects the plane.
      */
     TileBoundingRegion.prototype.intersectPlane = function(plane) {
-        return this.orientedBoundingBox.intersectPlane(plane);
+        return this._orientedBoundingBox.intersectPlane(plane);
     };
 
     return TileBoundingRegion;
