@@ -2,5 +2,8 @@ language: node_js
 node_js:
   - "0.12"
 sudo: false
+before_script:
+  - export DISPLAY=:99.0
+  - sh -e /etc/init.d/xvfb start
 script:
-  - npm run jsHint && npm run release
+  - npm run jsHint && npm run release && /node_modules/.bin/karma start --browsers Firefox --single-run
