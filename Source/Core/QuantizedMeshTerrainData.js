@@ -12,6 +12,7 @@ define([
         './Math',
         './OrientedBoundingBox',
         './TaskProcessor',
+        './TerrainEncoding',
         './TerrainMesh'
     ], function(
         when,
@@ -26,6 +27,7 @@ define([
         CesiumMath,
         OrientedBoundingBox,
         TaskProcessor,
+        TerrainEncoding,
         TerrainMesh) {
     "use strict";
 
@@ -103,7 +105,7 @@ define([
      *     northSkirtHeight : 1.0
      * });
      */
-    var QuantizedMeshTerrainData = function QuantizedMeshTerrainData(options) {
+    function QuantizedMeshTerrainData(options) {
         //>>includeStart('debug', pragmas.debug)
         if (!defined(options) || !defined(options.quantizedVertices)) {
             throw new DeveloperError('options.quantizedVertices is required.');
@@ -189,7 +191,7 @@ define([
 
         this._createdByUpsampling = defaultValue(options.createdByUpsampling, false);
         this._waterMask = options.waterMask;
-    };
+    }
 
     defineProperties(QuantizedMeshTerrainData.prototype, {
         /**
@@ -298,6 +300,7 @@ define([
             var obb = defaultValue(result.orientedBoundingBox, that._orientedBoundingBox);
             var occlusionPoint = defaultValue(result.occludeePointInScaledSpace, that._horizonOcclusionPoint);
             var stride = result.vertexStride;
+            var terrainEncoding = TerrainEncoding.clone(result.encoding);
 
             return new TerrainMesh(
                     rtc,
@@ -308,7 +311,8 @@ define([
                     boundingSphere,
                     occlusionPoint,
                     stride,
-                    obb);
+                    obb,
+                    terrainEncoding);
         });
     };
 

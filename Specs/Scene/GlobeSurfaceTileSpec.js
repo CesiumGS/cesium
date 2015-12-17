@@ -90,7 +90,7 @@ defineSuite([
             };
 
             realTerrainProvider = new CesiumTerrainProvider({
-                url : '//s3.amazonaws.com/cesiumjs/smallTerrain'
+                url : '//cesiumjs.org/smallTerrain'
             });
         });
 
@@ -527,5 +527,5 @@ defineSuite([
                 expect(cartographic.height).toBeGreaterThan(-500.0);
             });
         });
-    });
+    }, 'WebGL');
 });

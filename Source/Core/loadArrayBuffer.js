@@ -28,13 +28,13 @@ define([
      *     // an error occurred
      * });
      */
-    var loadArrayBuffer = function(url, headers) {
+    function loadArrayBuffer(url, headers) {
         return loadWithXhr({
             url : url,
             responseType : 'arraybuffer',
             headers : headers
         });
-    };
+    }
 
     return loadArrayBuffer;
 });

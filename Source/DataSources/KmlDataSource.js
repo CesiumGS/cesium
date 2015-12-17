@@ -850,7 +850,7 @@ define([
 
         if ((defined(altitudeMode) && altitudeMode !== 'clampToGround') || //
             (defined(gxAltitudeMode) && gxAltitudeMode !== 'clampToSeaFloor')) {
-            window.console.log('KML - Unknown altitudeMode: ' + defaultValue(altitudeMode, gxAltitudeMode));
+            console.log('KML - Unknown altitudeMode: ' + defaultValue(altitudeMode, gxAltitudeMode));
         }
 
         //Clamp to ellipsoid until we support terrain
@@ -869,7 +869,7 @@ define([
 
         if ((defined(altitudeMode) && altitudeMode !== 'clampToGround') || //
             (defined(gxAltitudeMode) && gxAltitudeMode !== 'clampToSeaFloor')) {
-            window.console.log('KML - Unknown altitudeMode: ' + defaultValue(altitudeMode, gxAltitudeMode));
+            console.log('KML - Unknown altitudeMode: ' + defaultValue(altitudeMode, gxAltitudeMode));
         }
 
         //Clamp to ellipsoid until we support terrain.
@@ -1442,7 +1442,7 @@ define([
         var href = queryStringValue(iconNode, 'href', namespaces.kml);
         if (defined(href)) {
             if (isLatLonQuad) {
-                window.console.log('KML - gx:LatLonQuad Icon does not support texture projection.');
+                console.log('KML - gx:LatLonQuad Icon does not support texture projection.');
             }
             geometry.material = resolveHref(href, dataSource._proxy, sourceUri, uriResolver);
         } else {
@@ -1456,24 +1456,24 @@ define([
                 //Use height above ellipsoid until we support MSL.
                 geometry.height = queryNumericValue(groundOverlay, 'altitude', namespaces.kml);
             } else if (altitudeMode !== 'clampToGround'){
-                window.console.log('KML - Unknown altitudeMode: ' + altitudeMode);
+                console.log('KML - Unknown altitudeMode: ' + altitudeMode);
             }
             // else just use the default of 0 until we support 'clampToGround'
         } else {
             altitudeMode = queryStringValue(groundOverlay, 'altitudeMode', namespaces.gx);
             if (altitudeMode === 'relativeToSeaFloor') {
-                window.console.log('KML - altitudeMode relativeToSeaFloor is currently not supported, treating as absolute.');
+                console.log('KML - altitudeMode relativeToSeaFloor is currently not supported, treating as absolute.');
                 geometry.height = queryNumericValue(groundOverlay, 'altitude', namespaces.kml);
             } else if (altitudeMode === 'clampToSeaFloor') {
-                window.console.log('KML - altitudeMode clampToSeaFloor is currently not supported, treating as clampToGround.');
+                console.log('KML - altitudeMode clampToSeaFloor is currently not supported, treating as clampToGround.');
             } else if (defined(altitudeMode)) {
-                window.console.log('KML - Unknown altitudeMode: ' + altitudeMode);
+                console.log('KML - Unknown altitudeMode: ' + altitudeMode);
             }
         }
     }
 
     function processUnsupported(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
-        window.console.log('KML - Unsupported feature: ' + node.localName);
+        console.log('KML - Unsupported feature: ' + node.localName);
     }
 
     function processNetworkLink(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
@@ -1516,7 +1516,7 @@ define([
         if (defined(featureProocessor)) {
             featureProocessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
         } else {
-            window.console.log('KML - Unsupported feature node: ' + node.localName);
+            console.log('KML - Unsupported feature node: ' + node.localName);
         }
     }
 
@@ -1670,7 +1670,7 @@ define([
      * var viewer = new Cesium.Viewer('cesiumContainer');
      * viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/facilities.kmz'));
      */
-    var KmlDataSource = function(proxy) {
+    function KmlDataSource(proxy) {
         this._changed = new Event();
         this._error = new Event();
         this._loading = new Event();
@@ -1681,7 +1681,7 @@ define([
         this._proxy = proxy;
         this._pinBuilder = new PinBuilder();
         this._promises = [];
-    };
+    }
 
     /**
      * Creates a Promise to a new instance loaded with the provided KML data.
@@ -1843,7 +1843,7 @@ define([
         }).otherwise(function(error) {
             DataSource.setLoading(that, false);
             that._error.raiseEvent(that, error);
-            window.console.log(error);
+            console.log(error);
             return when.reject(error);
         });
     };
@@ -1853,7 +1853,7 @@ define([
      * @alias KmlFeatureData
      * @constructor
      */
-    var KmlFeatureData = function() {
+    function KmlFeatureData() {
         /**
          * Gets the atom syndication format author field.
          * @type Object
@@ -1962,7 +1962,7 @@ define([
          * @type String
          */
         this.extendedData = undefined;
-    };
+    }
 
     return KmlDataSource;
 });

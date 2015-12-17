@@ -27,7 +27,7 @@ define([
      * @param {Scene} scene The Scene instance to use.
      * @param {Number} [duration] The time, in seconds, it takes to complete the camera flight home.
      */
-    var HomeButton = function(container, scene, duration) {
+    function HomeButton(container, scene, duration) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
@@ -55,7 +55,7 @@ cesiumSvgPath: { path: _svgPath, width: 28, height: 28 }');
         this._container = container;
         this._viewModel = viewModel;
         this._element = element;
-    };
+    }
 
     defineProperties(HomeButton.prototype, {
         /**

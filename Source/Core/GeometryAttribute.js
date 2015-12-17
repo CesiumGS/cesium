@@ -43,7 +43,7 @@ define([
      *   primitiveType : Cesium.PrimitiveType.LINE_LOOP
      * });
      */
-    var GeometryAttribute = function(options) {
+    function GeometryAttribute(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -135,7 +135,7 @@ define([
          * ]);
          */
         this.values = options.values;
-    };
+    }
 
     return GeometryAttribute;
 });

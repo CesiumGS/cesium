@@ -12,11 +12,11 @@ define([
 
     var viewerPositionWCScratch = new Cartesian3();
 
-    var AutomaticUniform = function(options) {
+    function AutomaticUniform(options) {
         this._size = options.size;
         this._datatype = options.datatype;
         this.getValue = options.getValue;
-    };
+    }
 
     // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
     if (typeof WebGLRenderingContext === 'undefined') {

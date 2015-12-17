@@ -10,6 +10,7 @@ define([
         './Math',
         './Rectangle',
         './TaskProcessor',
+        './TerrainEncoding',
         './TerrainMesh',
         './TerrainProvider'
     ], function(
@@ -23,6 +24,7 @@ define([
         CesiumMath,
         Rectangle,
         TaskProcessor,
+        TerrainEncoding,
         TerrainMesh,
         TerrainProvider) {
     "use strict";
@@ -92,7 +94,7 @@ define([
      *   waterMask : waterMask
      * });
      */
-    var HeightmapTerrainData = function HeightmapTerrainData(options) {
+    function HeightmapTerrainData(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.buffer)) {
             throw new DeveloperError('options.buffer is required.');
@@ -126,7 +128,7 @@ define([
         this._structure = structure;
         this._createdByUpsampling = defaultValue(options.createdByUpsampling, false);
         this._waterMask = options.waterMask;
-    };
+    }
 
     defineProperties(HeightmapTerrainData.prototype, {
         /**
@@ -216,7 +218,8 @@ define([
                     result.boundingSphere3D,
                     result.occludeePointInScaledSpace,
                     6,
-                    result.orientedBoundingBox);
+                    result.orientedBoundingBox,
+                    TerrainEncoding.clone(result.encoding));
         });
     };
 

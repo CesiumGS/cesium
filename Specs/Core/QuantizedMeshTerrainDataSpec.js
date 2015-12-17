@@ -419,7 +419,7 @@ defineSuite([
          it('creates specified vertices plus skirt vertices', function() {
              return data.createMesh(tilingScheme, 0, 0, 0).then(function(mesh) {
                  expect(mesh).toBeInstanceOf(TerrainMesh);
-                 expect(mesh.vertices.length).toBe(12 * 6); // 4 regular vertices, 8 skirt vertices.
+                 expect(mesh.vertices.length).toBe(12 * mesh.encoding.getStride()); // 4 regular vertices, 8 skirt vertices.
                  expect(mesh.indices.length).toBe(10 * 3); // 2 regular triangles, 8 skirt triangles.
                  expect(mesh.minimumHeight).toBe(data._minimumHeight);
                  expect(mesh.maximumHeight).toBe(data._maximumHeight);
@@ -430,7 +430,7 @@ defineSuite([
          it('exaggerates mesh', function() {
              return data.createMesh(tilingScheme, 0, 0, 0, 2).then(function(mesh) {
                  expect(mesh).toBeInstanceOf(TerrainMesh);
-                 expect(mesh.vertices.length).toBe(12 * 6); // 4 regular vertices, 8 skirt vertices.
+                 expect(mesh.vertices.length).toBe(12 * mesh.encoding.getStride()); // 4 regular vertices, 8 skirt vertices.
                  expect(mesh.indices.length).toBe(10 * 3); // 2 regular triangles, 8 skirt triangles.
                  expect(mesh.minimumHeight).toBe(data._minimumHeight);
                  expect(mesh.maximumHeight).toBeGreaterThan(data._maximumHeight);

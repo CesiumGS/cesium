@@ -67,7 +67,7 @@ define([
      * 
      * @deprecated
      */
-    var OpenStreetMapImageryProvider = function OpenStreetMapImageryProvider(options) {
+    function OpenStreetMapImageryProvider(options) {
         deprecationWarning('OpenStreetMapImageryProvider', 'OpenStreetMapImageryProvider is deprecated. It will be removed in Cesium 1.18. Use createOpenStreetMapImageryProvider instead.');
         options = defaultValue(options, {});
 
@@ -112,7 +112,7 @@ define([
             credit = new Credit(credit);
         }
         this._credit = credit;
-    };
+    }
 
     function buildImageUrl(imageryProvider, x, y, level) {
         var url = imageryProvider._url + level + '/' + x + '/' + y + '.' + imageryProvider._fileExtension;

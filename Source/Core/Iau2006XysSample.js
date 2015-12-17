@@ -14,7 +14,7 @@ define(function() {
      *
      * @private
      */
-    var Iau2006XysSample = function Iau2006XysSample(x, y, s) {
+    function Iau2006XysSample(x, y, s) {
         /**
          * The X value.
          * @type {Number}
@@ -32,7 +32,7 @@ define(function() {
          * @type {Number}
          */
         this.s = s;
-    };
+    }
 
     return Iau2006XysSample;
 });

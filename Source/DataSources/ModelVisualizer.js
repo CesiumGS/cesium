@@ -24,10 +24,12 @@ define([
         BoundingSphereState,
         Property) {
     "use strict";
-    /*global console*/
 
     var defaultScale = 1.0;
     var defaultMinimumPixelSize = 0.0;
+    var defaultIncrementallyLoadTextures = true;
+
+    var modelMatrixScratch = new Matrix4();
 
     /**
      * A {@link Visualizer} which maps {@link Entity#model} to a {@link Model}.
@@ -37,7 +39,7 @@ define([
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {EntityCollection} entityCollection The entityCollection to visualize.
      */
-    var ModelVisualizer = function(scene, entityCollection) {
+    function ModelVisualizer(scene, entityCollection) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
@@ -54,9 +56,8 @@ define([
         this._entityCollection = entityCollection;
         this._modelHash = {};
         this._entitiesToVisualize = new AssociativeArray();
-        this._modelMatrixScratch = new Matrix4();
         this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
-    };
+    }
 
     /**
      * Updates models created this visualizer to match their
@@ -86,7 +87,7 @@ define([
 
             var modelMatrix;
             if (show) {
-                modelMatrix = entity._getModelMatrix(time, this._modelMatrixScratch);
+                modelMatrix = entity._getModelMatrix(time, modelMatrixScratch);
                 uri = Property.getValueOrUndefined(modelGraphics._uri, time);
                 show = defined(modelMatrix) && defined(uri);
             }
@@ -105,7 +106,8 @@ define([
                     delete modelHash[entity.id];
                 }
                 model = Model.fromGltf({
-                    url : uri
+                    url : uri,
+                    incrementallyLoadTextures : Property.getValueOrDefault(modelGraphics._incrementallyLoadTextures, time, defaultIncrementallyLoadTextures)
                 });
 
                 model.readyPromise.then(onModelReady).otherwise(onModelError);

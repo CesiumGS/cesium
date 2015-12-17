@@ -50,7 +50,7 @@ define([
      *     // an error occurred
      * });
      */
-    var loadWithXhr = function(options) {
+    function loadWithXhr(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -72,7 +72,7 @@ define([
 
             return deferred.promise;
         });
-    };
+    }
 
     var dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/;
 
@@ -150,7 +150,7 @@ define([
         }
 
         xhr.onload = function() {
-            if (xhr.status === 200) {
+            if (xhr.status >= 200 && xhr.status < 300) {
                 if (defined(xhr.response)) {
                     deferred.resolve(xhr.response);
                 } else {

@@ -4,7 +4,6 @@ define([
         './Cartographic',
         './defaultValue',
         './defined',
-        './deprecationWarning',
         './DeveloperError',
         './Ellipsoid',
         './GeographicProjection',
@@ -19,7 +18,6 @@ define([
         Cartographic,
         defaultValue,
         defined,
-        deprecationWarning,
         DeveloperError,
         Ellipsoid,
         GeographicProjection,
@@ -43,7 +41,7 @@ define([
      * @see BoundingRectangle
      * @see Packable
      */
-    var BoundingSphere = function(center, radius) {
+    function BoundingSphere(center, radius) {
         /**
          * The center point of the sphere.
          * @type {Cartesian3}
@@ -57,7 +55,7 @@ define([
          * @default 0.0
          */
         this.radius = defaultValue(radius, 0.0);
-    };
+    }
 
     var fromPointsXMin = new Cartesian3();
     var fromPointsYMin = new Cartesian3();
@@ -975,6 +973,7 @@ define([
     for (var n = 0; n < 8; ++n) {
         projectTo2DPositionsScratch[n] = new Cartesian3();
     }
+
     var projectTo2DProjection = new GeographicProjection();
     /**
      * Creates a bounding sphere in 2D from a bounding sphere in 3D world coordinates.

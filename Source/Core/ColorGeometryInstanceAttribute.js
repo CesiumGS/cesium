@@ -42,7 +42,7 @@ define([
      *   }
      * });
      */
-    var ColorGeometryInstanceAttribute = function(red, green, blue, alpha) {
+    function ColorGeometryInstanceAttribute(red, green, blue, alpha) {
         red = defaultValue(red, 1.0);
         green = defaultValue(green, 1.0);
         blue = defaultValue(blue, 1.0);
@@ -61,7 +61,7 @@ define([
             Color.floatToByte(blue),
             Color.floatToByte(alpha)
         ]);
-    };
+    }
 
     defineProperties(ColorGeometryInstanceAttribute.prototype, {
         /**

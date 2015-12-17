@@ -32,7 +32,7 @@ define([
      *                   from measureText will also be added to the returned canvas. If text is
      *                   blank, returns undefined.
      */
-    var writeTextToCanvas = function(text, options) {
+    function writeTextToCanvas(text, options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(text)) {
             throw new DeveloperError('text is required.');
@@ -112,7 +112,7 @@ define([
         }
 
         return canvas;
-    };
+    }
 
     return writeTextToCanvas;
 });

@@ -60,7 +60,7 @@ define([
      *        frame, so the actual number of resident tiles may be higher.  The value of
      *        this property will not affect visual quality.
      */
-    var QuadtreePrimitive = function QuadtreePrimitive(options) {
+    function QuadtreePrimitive(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.tileProvider)) {
             throw new DeveloperError('options.tileProvider is required.');
@@ -131,7 +131,7 @@ define([
         this._occluders = new QuadtreeOccluders({
             ellipsoid : ellipsoid
         });
-    };
+    }
 
     defineProperties(QuadtreePrimitive.prototype, {
         /**
@@ -422,7 +422,6 @@ define([
                 debug.maxDepth !== debug.lastMaxDepth ||
                 debug.tilesWaitingForChildren !== debug.lastTilesWaitingForChildren) {
 
-                /*global console*/
                 console.log('Visited ' + debug.tilesVisited + ', Rendered: ' + debug.tilesRendered + ', Culled: ' + debug.tilesCulled + ', Max Depth: ' + debug.maxDepth + ', Waiting for children: ' + debug.tilesWaitingForChildren);
 
                 debug.lastTilesVisited = debug.tilesVisited;

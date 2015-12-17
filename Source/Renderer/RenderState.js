@@ -87,7 +87,7 @@ define([
     /**
      * @private
      */
-    var RenderState = function(renderState) {
+    function RenderState(renderState) {
         var rs = defaultValue(renderState, {});
         var cull = defaultValue(rs.cull, {});
         var polygonOffset = defaultValue(rs.polygonOffset, {});
@@ -273,7 +273,7 @@ define([
 
         this.id = 0;
         this._applyFunctions = [];
-    };
+    }
 
     var nextRenderStateId = 0;
     var renderStateCache = {};
@@ -558,9 +558,9 @@ define([
         gl.stencilMask(renderState.stencilMask);
     }
 
-    var applyBlendingColor = function(gl, color) {
+    function applyBlendingColor(gl, color) {
         gl.blendColor(color.red, color.green, color.blue, color.alpha);
-    };
+    }
 
     function applyBlending(gl, renderState, passState) {
         var blending = renderState.blending;
@@ -610,7 +610,7 @@ define([
         }
     }
 
-    var applySampleCoverage = function(gl, renderState) {
+    function applySampleCoverage(gl, renderState) {
         var sampleCoverage = renderState.sampleCoverage;
         var enabled = sampleCoverage.enabled;
 
@@ -619,12 +619,11 @@ define([
         if (enabled) {
             gl.sampleCoverage(sampleCoverage.value, sampleCoverage.invert);
         }
-    };
+    }
 
     var scratchViewport = new BoundingRectangle();
     function applyViewport(gl, renderState, passState) {
-        var viewport = renderState.viewport;
-
+        var viewport = defaultValue(renderState.viewport, passState.viewport);
         if (!defined(viewport)) {
             viewport = scratchViewport;
             viewport.width = passState.context.drawingBufferWidth;

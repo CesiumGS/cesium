@@ -7,7 +7,7 @@ define([
         defined,
         DeveloperError,
         isArray) {
-    'use strict';
+    "use strict";
 
     /**
      * Parses a query string into an object, where the keys and values of the object are the
@@ -29,7 +29,7 @@ define([
      * //   key3 : ['x', 'y']
      * // }
      */
-    var queryToObject = function(queryString) {
+    function queryToObject(queryString) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(queryString)) {
             throw new DeveloperError('queryString is required.');
@@ -63,7 +63,7 @@ define([
             }
         }
         return result;
-    };
+    }
 
     return queryToObject;
 });

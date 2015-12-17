@@ -244,4 +244,4 @@ defineSuite([
 
         expect(position).toEqual(updatedPosition);
     });
-});
+}, 'WebGL');

@@ -4,7 +4,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/freezeObject',
         '../Core/GeographicTilingScheme',
@@ -19,7 +18,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         freezeObject,
         GeographicTilingScheme,
@@ -91,7 +89,7 @@ define([
      *
      * viewer.imageryLayers.addImageryProvider(provider);
      */
-    var WebMapServiceImageryProvider = function WebMapServiceImageryProvider(options) {
+    function WebMapServiceImageryProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -182,7 +180,7 @@ define([
             credit : options.credit,
             getFeatureInfoFormats : getFeatureInfoFormats
         });
-    };
+    }
 
     defineProperties(WebMapServiceImageryProvider.prototype, {
         /**

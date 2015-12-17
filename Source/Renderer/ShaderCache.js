@@ -16,12 +16,12 @@ define([
     /**
      * @private
      */
-    var ShaderCache = function(context) {
+    function ShaderCache(context) {
         this._context = context;
         this._shaders = {};
         this._numberOfShaders = 0;
         this._shadersToRelease = {};
-    };
+    }
 
     defineProperties(ShaderCache.prototype, {
         numberOfShaders : {
@@ -153,7 +153,7 @@ define([
     };
 
     ShaderCache.prototype.releaseShaderProgram = function(shaderProgram) {
-        if (shaderProgram) {
+        if (defined(shaderProgram)) {
             var cachedShader = shaderProgram._cachedShader;
             if (cachedShader && (--cachedShader.count === 0)) {
                 this._shadersToRelease[cachedShader.keyword] = cachedShader;
