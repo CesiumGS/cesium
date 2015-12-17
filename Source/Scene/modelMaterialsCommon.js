@@ -412,20 +412,13 @@ define([
                     fragmentLightingBlock += '    diffuseLight += ' + lightColorName + '* max(dot(normal,l), 0.) * attenuation;\n';
 
                     if (hasSpecular) {
-
-                        //the KHR_materials_common spec requires to dynamically handle the shininess value differently,
-                        //depending on whether it is in [0,1] or in [1, n]
-                        //https://github.com/KhronosGroup/glTF/tree/master/extensions/Khronos/KHR_materials_common#blinn
-                        fragmentLightingBlock +=     '    float shininess = u_shininess;';
-                        fragmentLightingBlock +=     '    if (shininess <= 1.0){ shininess *= 128.0; }';
-
                         if (lightingModel === 'BLINN') {
                             fragmentLightingBlock += '    vec3 h = normalize(l + viewDir);\n';
-                            fragmentLightingBlock += '    float specularIntensity = max(0., pow(max(dot(normal, h), 0.), shininess)) * attenuation;\n';
+                            fragmentLightingBlock += '    float specularIntensity = max(0., pow(max(dot(normal, h), 0.), u_shininess)) * attenuation;\n';
                         }
                         else { // PHONG
                             fragmentLightingBlock += '    vec3 reflectDir = reflect(-l, normal);\n';
-                            fragmentLightingBlock += '    float specularIntensity = max(0., pow(max(dot(reflectDir, viewDir), 0.), shininess)) * attenuation;\n';
+                            fragmentLightingBlock += '    float specularIntensity = max(0., pow(max(dot(reflectDir, viewDir), 0.), u_shininess)) * attenuation;\n';
                         }
                         fragmentLightingBlock += '    specularLight += ' + lightColorName + ' * specularIntensity;\n';
                     }
