@@ -52,7 +52,7 @@ define([
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
     var scratchColor = new Color();
 
-    var GeometryOptions = function(entity) {
+    function GeometryOptions(entity) {
         this.id = entity;
         this.vertexFormat = undefined;
         this.positions = undefined;
@@ -61,7 +61,7 @@ define([
         this.height = undefined;
         this.extrudedHeight = undefined;
         this.granularity = undefined;
-    };
+    }
 
     /**
      * A {@link GeometryUpdater} for corridors.
@@ -72,7 +72,7 @@ define([
      * @param {Entity} entity The entity containing the geometry to be visualized.
      * @param {Scene} scene The scene where visualization is taking place.
      */
-    var CorridorGeometryUpdater = function(entity, scene) {
+    function CorridorGeometryUpdater(entity, scene) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(entity)) {
             throw new DeveloperError('entity is required');
@@ -98,7 +98,7 @@ define([
         this._outlineWidth = 1.0;
         this._options = new GeometryOptions(entity);
         this._onEntityPropertyChanged(entity, 'corridor', entity.corridor, undefined);
-    };
+    }
 
     defineProperties(CorridorGeometryUpdater, {
         /**
@@ -505,14 +505,13 @@ define([
     /**
      * @private
      */
-    var DynamicGeometryUpdater = function(primitives, geometryUpdater) {
+    function DynamicGeometryUpdater(primitives, geometryUpdater) {
         this._primitives = primitives;
         this._primitive = undefined;
         this._outlinePrimitive = undefined;
         this._geometryUpdater = geometryUpdater;
         this._options = new GeometryOptions(geometryUpdater._entity);
-    };
-
+    }
     DynamicGeometryUpdater.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {

@@ -144,7 +144,7 @@ define([
      *   width : 4
      * });
      */
-    var PolylineCollection = function(options) {
+    function PolylineCollection(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
@@ -198,7 +198,7 @@ define([
         this._positionBuffer = undefined;
         this._pickColorBuffer = undefined;
         this._texCoordExpandWidthAndShowBuffer = undefined;
-    };
+    }
 
     defineProperties(PolylineCollection.prototype, {
         /**
@@ -1046,7 +1046,7 @@ define([
         this.bucket = bucket;
     }
 
-    var PolylineBucket = function(material, mode, modelMatrix) {
+    function PolylineBucket(material, mode, modelMatrix) {
         this.polylines = [];
         this.lengthOfPositions = 0;
         this.material = material;
@@ -1054,8 +1054,7 @@ define([
         this.pickShaderProgram = undefined;
         this.mode = mode;
         this.modelMatrix = modelMatrix;
-    };
-
+    }
     PolylineBucket.prototype.addPolyline = function(p) {
         var polylines = this.polylines;
         polylines.push(p);

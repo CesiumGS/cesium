@@ -20,7 +20,7 @@ define([
     /**
      * @private
      */
-    var PerformanceDisplay = function(options) {
+    function PerformanceDisplay(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var container = getElement(options.container);
@@ -49,7 +49,7 @@ define([
         this._time = undefined;
         this._fps = 0;
         this._frameTime = 0;
-    };
+    }
 
     /**
      * Update the display.  This function should only be called once per frame, because

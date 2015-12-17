@@ -51,7 +51,7 @@ define([
      *     accessToken: 'thisIsMyAccessToken'
      * });
      */
-    var MapboxImageryProvider = function MapboxImageryProvider(options) {
+    function MapboxImageryProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var mapId = options.mapId;
         //>>includeStart('debug', pragmas.debug);
@@ -94,7 +94,7 @@ define([
             maximumLevel: options.maximumLevel,
             rectangle: options.rectangle
         });
-    };
+    }
 
     defineProperties(MapboxImageryProvider.prototype, {
         /**

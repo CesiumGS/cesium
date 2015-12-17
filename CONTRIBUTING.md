@@ -25,9 +25,10 @@ Everyone is welcome to contribute to Cesium!
 In addition to contributing core Cesium code, we appreciate many types of contributions:
 
 * Being active on the [Cesium forum](http://cesiumjs.org/forum.html) by answering questions and providing input on Cesium's direction.
-* Showcasing your Cesium apps on the [demos page](http://cesiumjs.org/demos.html) or writing a guest post blog on the [Cesium blog](http://cesiumjs.org/blog.html).  To do either, contact [Sarah Chow](http://cesiumjs.org/team/SarahChow.html), slc1439@gmail.com.
+* Showcasing your Cesium apps on the [demos page](http://cesiumjs.org/demos.html) or writing a guest post blog on the [Cesium blog](http://cesiumjs.org/blog.html).  To do either, contact [Sarah Chow](http://cesiumjs.org/team/SarahChow.html), schow@agi.com.
 * Writing tutorials, creating examples, and improving the reference documentation.  See the issues labeled [doc](https://github.com/AnalyticalGraphicsInc/cesium/labels/doc).
 * Submitting issues as [described above](#submitting-an-issue).
+* Triaging issues.  Browse the [issues](https://github.com/AnalyticalGraphicsInc/cesium/issues) and comment on issues that are no longer reproducible or on issues which you have additional information.
 * Creating ecosystem projects for [glTF](https://github.com/KhronosGroup/glTF/issues/456), [CZML](https://github.com/AnalyticalGraphicsInc/cesium/wiki/CZML-Guide), and [3D Tiles](https://github.com/AnalyticalGraphicsInc/3d-tiles).
 
 For ideas for Cesium code contributions, see:
@@ -66,7 +67,7 @@ Our code is our lifeblood so maintaining Cesium's high code quality is important
    * If your pull request needs additional work, include a [task list](https://github.com/blog/1375%0A-task-lists-in-gfm-issues-pulls-comments).
    * Once you are done making new commits to address feedback, add a comment to the pull request such as `"this is ready"` since GitHub doesn't notify us about commits.
 * Code and tests
-   * Follow the [coding conventions](https://github.com/AnalyticalGraphicsInc/cesium/wiki/JavaScript-Coding-Conventions).
+   * Follow the [Coding Guide](Documentation/Contributors/CodingGuide/README.md).
    * Verify your code passes [JSHint](http://www.jshint.com/).  We use the JSHint Eclipse plugin so it runs automatically when we save.  You can also run `jsHint` from the command line (`npm run jsHint`).
    * Verify that all tests pass, and write new tests with excellent code coverage for new code.  Follow the [Testing Guide](Documentation/Contributors/TestingGuide/README.md).
    * Update [LICENSE.md](LICENSE.md) if third-party libraries were added/updated/removed, including new version of existing libraries.  Mention it in [CHANGES.md](CHANGES.md).  If you plan to add a third-party library, start a new thread on the [Cesium forum](http://cesiumjs.org/forum.html) first.

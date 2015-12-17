@@ -68,7 +68,7 @@ define([
      * var dateToCheck = Cesium.JulianDate.fromIso8601('1982-09-08T11:30:00Z');
      * var containsDate = Cesium.TimeInterval.contains(timeInterval, dateToCheck);
      */
-    var TimeInterval = function(options) {
+    function TimeInterval(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         /**
          * Gets or sets the start time of this interval.
@@ -101,7 +101,7 @@ define([
          * @default true
          */
         this.isStopIncluded = defaultValue(options.isStopIncluded, true);
-    };
+    }
 
     defineProperties(TimeInterval.prototype, {
         /**

@@ -7,7 +7,7 @@ define([
         RuntimeError) {
     "use strict";
 
-    var BadGeometry = function() {
+    function BadGeometry() {
         this._workerName = '../../Specs/TestWorkers/createBadGeometry';
 
         // Make this worker loadable when testing against the built version of Cesium.
@@ -17,7 +17,7 @@ define([
                 this._workerName = '../' + this._workerName;
             }
         }
-    };
+    }
 
     BadGeometry.createGeometry = function() {
         //This function is only called when synchronous, see Specs/TestWorks/createBadGeometry for asynchronous.

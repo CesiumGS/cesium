@@ -53,7 +53,7 @@ define([
      * @alias GlobeSurfaceTile
      * @private
      */
-    var GlobeSurfaceTile = function() {
+    function GlobeSurfaceTile() {
         /**
          * The {@link TileImagery} attached to this tile.
          * @type {TileImagery[]}
@@ -138,7 +138,7 @@ define([
         this.pickTerrain = undefined;
 
         this.surfaceShader = undefined;
-    };
+    }
 
     defineProperties(GlobeSurfaceTile.prototype, {
         /**

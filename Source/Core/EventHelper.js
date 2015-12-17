@@ -26,9 +26,9 @@ define([
      * // later...
      * helper.removeAll();
      */
-    var EventHelper = function() {
+    function EventHelper() {
         this._removalFunctions = [];
-    };
+    }
 
     /**
      * Adds a listener to an event, and records the registration to be cleaned up later.

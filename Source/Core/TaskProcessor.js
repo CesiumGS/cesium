@@ -171,13 +171,13 @@ define([
      *                                        scheduleTask will not queue any more tasks, allowing
      *                                        work to be rescheduled in future frames.
      */
-    var TaskProcessor = function(workerName, maximumActiveTasks) {
+    function TaskProcessor(workerName, maximumActiveTasks) {
         this._workerName = workerName;
         this._maximumActiveTasks = defaultValue(maximumActiveTasks, 5);
         this._activeTasks = 0;
         this._deferreds = {};
         this._nextID = 0;
-    };
+    }
 
     var emptyTransferableObjectArray = [];
 

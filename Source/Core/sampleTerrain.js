@@ -43,7 +43,7 @@ define([
      *     // updatedPositions is just a reference to positions.
      * });
      */
-    var sampleTerrain = function(terrainProvider, level, positions) {
+    function sampleTerrain(terrainProvider, level, positions) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(terrainProvider)) {
             throw new DeveloperError('terrainProvider is required.');
@@ -71,7 +71,7 @@ define([
         doSamplingWhenReady();
 
         return deferred.promise;
-    };
+    }
 
     function doSampling(terrainProvider, level, positions) {
         var tilingScheme = terrainProvider.tilingScheme;

@@ -18,6 +18,8 @@ Change Log
 * `CorridorGeometry` and `PolylineVolumeGeometry` render short segments [#3293](https://github.com/AnalyticalGraphicsInc/cesium/issues/3293)
 * `Rectangle.fromCartographicArray` finds the smallest rectangle regardess of whether or not it crosses the international date line. [#3227](https://github.com/AnalyticalGraphicsInc/cesium/issues/3227)
 * Bug fix for `CorridorGeometry` with nearly colinear points [#3320](https://github.com/AnalyticalGraphicsInc/cesium/issues/3320)
+* Added support for msGMLOutput and Thredds server feature information formats to `GetFeatureInfoFormat` and `WebMapServiceImageryProvider`.
+* Added `QuadtreePrimitive#tileLoadProgressEvent` and `Globe#tileLoadProgressEvent`.  These event are raised when the length of the tile load queue changes, enabling incremental loading indicators.
 * Added missing points to `EllipseGeometry` and `EllipseOutlineGeometry` [#3078](https://github.com/AnalyticalGraphicsInc/cesium/issues/3078)
 
 ### 1.16 - 2015-12-01

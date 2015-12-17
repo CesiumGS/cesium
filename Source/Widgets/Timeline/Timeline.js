@@ -82,7 +82,7 @@ define([
      * @param {Element} container The parent HTML container node for this widget.
      * @param {Clock} clock The clock to use.
      */
-    var Timeline = function(container, clock) {
+    function Timeline(container, clock) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
@@ -165,7 +165,7 @@ define([
 
         clock.onTick.addEventListener(this.updateFromClock, this);
         this.updateFromClock();
-    };
+    }
 
     /**
      * @private

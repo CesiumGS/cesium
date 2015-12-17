@@ -48,7 +48,7 @@ define([
      * });
      * var geometry = Cesium.BoxOutlineGeometry.createGeometry(box);
      */
-    var BoxOutlineGeometry = function(options) {
+    function BoxOutlineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var min = options.minimum;
@@ -66,7 +66,7 @@ define([
         this._min = Cartesian3.clone(min);
         this._max = Cartesian3.clone(max);
         this._workerName = 'createBoxOutlineGeometry';
-    };
+    }
 
     /**
      * Creates an outline of a cube centered at the origin given its dimensions.

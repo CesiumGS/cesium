@@ -130,7 +130,7 @@ define([
      *   shapePositions : computeCircle(100000.0)
      * });
      */
-    var PolylineVolumeOutlineGeometry = function(options) {
+    function PolylineVolumeOutlineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var positions = options.polylinePositions;
         var shape = options.shapePositions;
@@ -159,7 +159,7 @@ define([
          * @type {Number}
          */
         this.packedLength = numComponents + Ellipsoid.packedLength + 2;
-    };
+    }
 
     /**
      * Stores the provided instance into the provided array.

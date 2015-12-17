@@ -110,7 +110,7 @@ define([
      *   color : Cesium.Color.CYAN
      * });
      */
-    var PointPrimitiveCollection = function(options) {
+    function PointPrimitiveCollection(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._sp = undefined;
@@ -212,7 +212,7 @@ define([
                 return that._maxTotalPointSize;
             }
         };
-    };
+    }
 
     defineProperties(PointPrimitiveCollection.prototype, {
         /**

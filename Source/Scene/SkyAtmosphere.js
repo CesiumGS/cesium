@@ -61,7 +61,7 @@ define([
      *
      * @see Scene.skyAtmosphere
      */
-    var SkyAtmosphere = function(ellipsoid) {
+    function SkyAtmosphere(ellipsoid) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
         /**
@@ -113,7 +113,7 @@ define([
                 return (1.0 / (that._outerRadius - innerRadius)) / rayleighScaleDepth;
             }
         };
-    };
+    }
 
     defineProperties(SkyAtmosphere.prototype, {
         /**

@@ -27,9 +27,9 @@ define([
      * @see RectangleGeometryUpdater
      * @see WallGeometryUpdater
      */
-    var GeometryUpdater = function(entity, scene) {
+    function GeometryUpdater(entity, scene) {
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     defineProperties(GeometryUpdater, {
         /**

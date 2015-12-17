@@ -66,7 +66,7 @@ define([
      *
      * @private
      */
-    var buildModuleUrl = function(moduleID) {
+    function buildModuleUrl(moduleID) {
         if (!defined(implementation)) {
             //select implementation
             if (defined(require.toUrl)) {
@@ -86,7 +86,7 @@ define([
         a.href = a.href; // IE only absolutizes href on get, not set
 
         return a.href;
-    };
+    }
 
     // exposed for testing
     buildModuleUrl._cesiumScriptRegex = cesiumScriptRegex;

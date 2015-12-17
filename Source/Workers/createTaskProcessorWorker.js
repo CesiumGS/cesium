@@ -33,7 +33,7 @@ define([
      * return Cesium.createTaskProcessorWorker(doCalculation);
      * // the resulting function is compatible with TaskProcessor
      */
-    var createTaskProcessorWorker = function(workerFunction) {
+    function createTaskProcessorWorker(workerFunction) {
         var postMessage;
         var transferableObjects = [];
         var responseMessage = {
@@ -84,7 +84,7 @@ define([
                 postMessage(responseMessage);
             }
         };
-    };
+    }
 
     /**
      * A function that performs a calculation in a Web Worker.

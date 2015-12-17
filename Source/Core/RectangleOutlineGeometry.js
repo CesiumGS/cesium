@@ -193,7 +193,7 @@ define([
      * });
      * var geometry = Cesium.RectangleOutlineGeometry.createGeometry(rectangle);
      */
-    var RectangleOutlineGeometry = function(options) {
+    function RectangleOutlineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var rectangle = options.rectangle;
@@ -220,7 +220,7 @@ define([
         this._rotation = rotation;
         this._extrudedHeight = extrudedHeight;
         this._workerName = 'createRectangleOutlineGeometry';
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.

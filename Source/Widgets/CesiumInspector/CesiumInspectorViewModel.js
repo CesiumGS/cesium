@@ -75,7 +75,7 @@ define([
      *
      * @exception {DeveloperError} scene is required.
      */
-    var CesiumInspectorViewModel = function(scene, performanceContainer) {
+    function CesiumInspectorViewModel(scene, performanceContainer) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required');
@@ -453,7 +453,7 @@ define([
             return true;
         });
 
-        var pickPrimitive = function(e) {
+        function pickPrimitive(e) {
             eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
             that.pickPrimitiveActive = false;
             var newPick = that._scene.pick({
@@ -463,8 +463,7 @@ define([
             if (defined(newPick)) {
                 that.primitive = defined(newPick.collection) ? newPick.collection : newPick.primitive;
             }
-        };
-
+        }
         this._pickPrimitive = createCommand(function() {
             that.pickPrimitiveActive = !that.pickPrimitiveActive;
             if (that.pickPrimitiveActive) {
@@ -474,7 +473,7 @@ define([
             }
         });
 
-        var selectTile = function(e) {
+        function selectTile(e) {
             var selectedTile;
             var ellipsoid = globe.ellipsoid;
             var cartesian = that._scene.camera.pickEllipsoid({
@@ -504,8 +503,7 @@ define([
 
             eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
             that.pickTileActive = false;
-        };
-
+        }
         this._pickTile = createCommand(function() {
             that.pickTileActive = !that.pickTileActive;
 
@@ -515,7 +513,7 @@ define([
                 eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
             }
         });
-    };
+    }
 
     defineProperties(CesiumInspectorViewModel.prototype, {
         /**
