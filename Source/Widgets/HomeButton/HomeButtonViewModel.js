@@ -78,7 +78,7 @@ define([
      * @param {Scene} scene The scene instance to use.
      * @param {Number} [duration] The duration of the camera flight in seconds.
      */
-    var HomeButtonViewModel = function(scene, duration) {
+    function HomeButtonViewModel(scene, duration) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
@@ -101,7 +101,7 @@ define([
         this.tooltip = 'View Home';
 
         knockout.track(this, ['tooltip']);
-    };
+    }
 
     defineProperties(HomeButtonViewModel.prototype, {
         /**

@@ -38,7 +38,7 @@ define([
      * var viewportQuad = new Cesium.ViewportQuad(new Cesium.BoundingRectangle(0, 0, 80, 40));
      * viewportQuad.material.uniforms.color = new Cesium.Color(1.0, 0.0, 0.0, 1.0);
      */
-    var ViewportQuad = function(rectangle, material) {
+    function ViewportQuad(rectangle, material) {
         /**
          * Determines if the viewport quad primitive will be shown.
          *
@@ -90,7 +90,7 @@ define([
 
         this._overlayCommand = undefined;
         this._rs = undefined;
-    };
+    }
 
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to

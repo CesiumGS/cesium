@@ -67,7 +67,7 @@ define([
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] Determines the size and shape of the
      * globe.
      */
-    var Globe = function(ellipsoid) {
+    function Globe(ellipsoid) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         var terrainProvider = new EllipsoidTerrainProvider({
             ellipsoid : ellipsoid
@@ -190,7 +190,7 @@ define([
 
         this._oceanNormalMap = undefined;
         this._zoomedOutOceanSpecularIntensity = 0.5;
-    };
+    }
 
     defineProperties(Globe.prototype, {
         /**
@@ -227,8 +227,8 @@ define([
             }
         },
         /**
-         * Gets an event that's fired when a tile is loaded, or when a new tile to be loaded is added to the queue. The
-         * event passes the new length of the tile load queue.
+         * Gets an event that's raised when the length of the tile load queue has changed since the last render frame.  When the load queue is empty,
+         * all terrain and imagery for the current view have been loaded.  The event passes the new length of the tile load queue.
          *
          * @memberof Globe.prototype
          * @type {Event}

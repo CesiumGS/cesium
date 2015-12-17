@@ -18,10 +18,9 @@ define([
     "use strict";
 
     function subscribeAll(property, eventHelper, definitionChanged, intervals) {
-        var callback = function() {
+        function callback() {
             definitionChanged.raiseEvent(property);
-        };
-
+        }
         var items = [];
         eventHelper.removeAll();
         var length = intervals.length;
@@ -64,12 +63,12 @@ define([
      *     data : sampledProperty
      * }));
      */
-    var CompositeProperty = function() {
+    function CompositeProperty() {
         this._eventHelper = new EventHelper();
         this._definitionChanged = new Event();
         this._intervals = new TimeIntervalCollection();
         this._intervals.changedEvent.addEventListener(CompositeProperty.prototype._intervalsChanged, this);
-    };
+    }
 
     defineProperties(CompositeProperty.prototype, {
         /**

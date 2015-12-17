@@ -105,7 +105,7 @@ define([
      *     northSkirtHeight : 1.0
      * });
      */
-    var QuantizedMeshTerrainData = function QuantizedMeshTerrainData(options) {
+    function QuantizedMeshTerrainData(options) {
         //>>includeStart('debug', pragmas.debug)
         if (!defined(options) || !defined(options.quantizedVertices)) {
             throw new DeveloperError('options.quantizedVertices is required.');
@@ -191,7 +191,7 @@ define([
 
         this._createdByUpsampling = defaultValue(options.createdByUpsampling, false);
         this._waterMask = options.waterMask;
-    };
+    }
 
     defineProperties(QuantizedMeshTerrainData.prototype, {
         /**

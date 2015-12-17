@@ -60,7 +60,7 @@ define([
      *        frame, so the actual number of resident tiles may be higher.  The value of
      *        this property will not affect visual quality.
      */
-    var QuadtreePrimitive = function QuadtreePrimitive(options) {
+    function QuadtreePrimitive(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.tileProvider)) {
             throw new DeveloperError('options.tileProvider is required.');
@@ -134,7 +134,7 @@ define([
 
         this._tileLoadProgressEvent = new Event();
         this._lastTileLoadQueueLength = 0;
-    };
+    }
 
     defineProperties(QuadtreePrimitive.prototype, {
         /**
@@ -148,8 +148,8 @@ define([
             }
         },
         /**
-         * Gets an event that's fired when a tile is loaded, or when a new tile to be loaded is added to this quadtree's
-         * load queue. The event passes the new length of the tile load queue.
+         * Gets an event that's raised when the length of the tile load queue has changed since the last render frame.  When the load queue is empty,
+         * all terrain and imagery for the current view have been loaded.  The event passes the new length of the tile load queue.
          *
          * @memberof QuadtreePrimitive.prototype
          * @type {Event}

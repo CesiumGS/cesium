@@ -24,7 +24,7 @@ define([
     /**
      * @private
      */
-    var VertexArrayFacade = function(context, attributes, sizeInVertices, instanced) {
+    function VertexArrayFacade(context, attributes, sizeInVertices, instanced) {
         //>>includeStart('debug', pragmas.debug);
         if (!context) {
             throw new DeveloperError('context is required.');
@@ -102,8 +102,7 @@ define([
         this.va = undefined;
 
         this.resize(sizeInVertices);
-    };
-
+    }
     VertexArrayFacade._verifyAttributes = function(attributes) {
         var attrs = [];
 

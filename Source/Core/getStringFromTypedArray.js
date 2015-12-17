@@ -13,7 +13,7 @@ define([
     /**
      * @private
      */
-    var getStringFromTypedArray = function(uint8Array, byteOffset, byteLength) {
+    function getStringFromTypedArray(uint8Array, byteOffset, byteLength) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(uint8Array)) {
             throw new DeveloperError('uint8Array is required.');
@@ -35,7 +35,7 @@ define([
         uint8Array = uint8Array.subarray(byteOffset, byteOffset + byteLength);
 
         return getStringFromTypedArray.decode(uint8Array);
-    };
+    }
 
     // Exposed functions for testing
     getStringFromTypedArray.decodeWithTextDecoder = function(view) {

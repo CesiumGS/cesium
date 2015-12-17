@@ -33,7 +33,7 @@ define([
      *
      * @see Model#activeAnimations
      */
-    var ModelAnimationCollection = function(model) {
+    function ModelAnimationCollection(model) {
         /**
          * The event fired when an animation is added to the collection.  This can be used, for
          * example, to keep a UI in sync.
@@ -65,7 +65,7 @@ define([
         this._model = model;
         this._scheduledAnimations = [];
         this._previousTime = undefined;
-    };
+    }
 
     defineProperties(ModelAnimationCollection.prototype, {
         /**

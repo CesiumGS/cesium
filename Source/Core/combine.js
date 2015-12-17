@@ -38,7 +38,7 @@ define([
      *
      * @exports combine
      */
-    var combine = function(object1, object2, deep) {
+    function combine(object1, object2, deep) {
         deep = defaultValue(deep, false);
 
         var result = {};
@@ -74,7 +74,7 @@ define([
             }
         }
         return result;
-    };
+    }
 
     return combine;
 });

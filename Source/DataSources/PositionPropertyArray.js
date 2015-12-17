@@ -28,13 +28,13 @@ define([
      *
      * @param {Property[]} [value] An array of Property instances.
      */
-    var PositionPropertyArray = function(value, referenceFrame) {
+    function PositionPropertyArray(value, referenceFrame) {
         this._value = undefined;
         this._definitionChanged = new Event();
         this._eventHelper = new EventHelper();
         this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
         this.setValue(value);
-    };
+    }
 
     defineProperties(PositionPropertyArray.prototype, {
         /**

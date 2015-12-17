@@ -33,7 +33,7 @@ define([
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      */
-    var InfoBox = function(container) {
+    function InfoBox(container) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
@@ -140,7 +140,7 @@ click: function () { closeClicked.raiseEvent(this); }');
 
         //Chrome does not send the load event unless we explicitly set a src
         frame.setAttribute('src', 'about:blank');
-    };
+    }
 
     defineProperties(InfoBox.prototype, {
         /**

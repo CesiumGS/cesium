@@ -40,7 +40,7 @@ define([
      *   }
      * });
      */
-    var ShowGeometryInstanceAttribute = function(show) {
+    function ShowGeometryInstanceAttribute(show) {
         show = defaultValue(show, true);
 
         /**
@@ -51,7 +51,7 @@ define([
          * @default [1.0]
          */
         this.value = ShowGeometryInstanceAttribute.toValue(show);
-    };
+    }
 
     defineProperties(ShowGeometryInstanceAttribute.prototype, {
         /**

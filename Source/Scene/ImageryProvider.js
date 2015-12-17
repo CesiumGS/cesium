@@ -34,7 +34,7 @@ define([
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers.html|Cesium Sandcastle Imagery Layers Demo}
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
      */
-    var ImageryProvider = function ImageryProvider() {
+    function ImageryProvider() {
         /**
          * The default alpha blending value of this provider, with 0.0 representing fully transparent and
          * 1.0 representing fully opaque.
@@ -88,7 +88,7 @@ define([
         this.defaultGamma = undefined;
 
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     defineProperties(ImageryProvider.prototype, {
         /**

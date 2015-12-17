@@ -17,12 +17,12 @@ define([
      * @param {Cartesian4} textureCoordinateRectangle The texture rectangle of the tile that is covered
      *        by the imagery, where X=west, Y=south, Z=east, W=north.
      */
-    var TileImagery = function(imagery, textureCoordinateRectangle) {
+    function TileImagery(imagery, textureCoordinateRectangle) {
         this.readyImagery = undefined;
         this.loadingImagery = imagery;
         this.textureCoordinateRectangle = textureCoordinateRectangle;
         this.textureTranslationAndScale = undefined;
-    };
+    }
 
     /**
      * Frees the resources held by this instance.
