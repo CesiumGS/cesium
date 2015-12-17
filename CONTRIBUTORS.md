@@ -78,5 +78,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Denver Pierce](https://github.com/denverpierce)
 * [Tucker Tibbetts](https://github.com/cttibbetts)
 * [Eric Putnam](https://github.com/eputnam)
+* [Max Limper](https://github.com/mlimper)
 
 Also see [our contributors page](http://cesiumjs.org/contributors.html) for more information.
