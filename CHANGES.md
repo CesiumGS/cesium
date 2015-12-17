@@ -21,6 +21,7 @@ Change Log
 * Added support for msGMLOutput and Thredds server feature information formats to `GetFeatureInfoFormat` and `WebMapServiceImageryProvider`.
 * Added `QuadtreePrimitive#tileLoadProgressEvent` and `Globe#tileLoadProgressEvent`.  These event are raised when the length of the tile load queue changes, enabling incremental loading indicators.
 * Added missing points to `EllipseGeometry` and `EllipseOutlineGeometry` [#3078](https://github.com/AnalyticalGraphicsInc/cesium/issues/3078)
+* Added dynamic `enableFeaturePicking` toggle to all ImageryProviders that support feature picking.
 
 ### 1.16 - 2015-12-01
 
