@@ -116,11 +116,11 @@ define([
      *                                 specific location when {@see UrlTemplateImageryProvider#pickFeatures} is invoked.  If this
      *                                 parameter is not specified, feature picking is disabled.
      * @param {Boolean} [options.enablePickFeatures=true] If true, {@link UrlTemplateImageryProvider#pickFeatures} will
-     *        make ajax calls to options.pickFeaturesUrl for the features included in the response.  If false,
+     *        request the <code>options.pickFeaturesUrl</code> and attempt to interpret the features included in the response.  If false,
      *        {@link UrlTemplateImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable
-     *        features) without communicating with the server.  Set this property to false if you know your your data
-     *        source does not support GetFeatureInfo or if you don't want this provider's features to be pickable. Note
-     *        that this can be dynamically overridden by modifying the UriTemplateImageryProvider#enablePickFeatures
+     *        features) without communicating with the server.  Set this property to false if you know your data
+     *        source does not support picking features or if you don't want this provider's features to be pickable. Note
+     *        that this can be dynamically overridden by modifying the {@link UriTemplateImageryProvider#enablePickFeatures}
      *        property.
      *
      * @see ArcGisMapServerImageryProvider
@@ -190,9 +190,11 @@ define([
         this._hasAlphaChannel = defaultValue(options.hasAlphaChannel, true);
 
         /**
-         * A flag indicating whether this imagery provider should be able to pick features - if it's set to false,
-         * UrlTemplateImageryProvider#pickFeatures will always return undefined.
-         *
+         * Gets or sets a value indicating whether feature picking is enabled.  If true, {@link UrlTemplateImageryProvider#pickFeatures} will
+         * request the <code>options.pickFeaturesUrl</code> and attempt to interpret the features included in the response.  If false,
+         * {@link UrlTemplateImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable
+         * features) without communicating with the server.  Set this property to false if you know your data
+         * source does not support picking features or if you don't want this provider's features to be pickable.
          * @type {Boolean}
          * @default true
          */
