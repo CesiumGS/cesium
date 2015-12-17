@@ -49,7 +49,7 @@ define([
      *        {@link WebMapServiceImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
      *        without communicating with the server.  Set this property to false if you know your WMS server does not support
      *        GetFeatureInfo or if you don't want this provider's features to be pickable. Note that this can be dynamically
-     *        overridden by modifying the UriTemplateImageryProvider#enablePickFeatures property.
+     *        overridden by modifying the WebMapServiceImageryProvider#enablePickFeatures property.
      * @param {GetFeatureInfoFormat[]} [options.getFeatureInfoFormats=WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats] The formats
      *        in which to try WMS GetFeatureInfo requests.
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
@@ -371,10 +371,11 @@ define([
         },
 
         /**
-         * A flag indicating whether this imagery provider should be able to pick features - if it's set to false,
-         * WebMapServiceImageryProvider#pickFeatures will always return undefined.
-         *
-         * @memberof WebMapServiceImageryProvider.prototype
+         * Gets or sets a value indicating whether feature picking is enabled.  If true, {@link WebMapServiceImageryProvider#pickFeatures} will
+         * invoke the <code>GetFeatureInfo</code> service on the WMS server and attempt to interpret the features included in the response.  If false,
+         * {@link WebMapServiceImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable
+         * features) without communicating with the server.  Set this property to false if you know your data
+         * source does not support picking features or if you don't want this provider's features to be pickable.
          * @type {Boolean}
          * @default true
          */

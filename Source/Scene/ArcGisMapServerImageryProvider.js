@@ -80,7 +80,7 @@ define([
      *        the Identify service on the MapServer and return the features included in the response.  If false,
      *        {@link ArcGisMapServerImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
      *        without communicating with the server.  Set this property to false if you don't want this provider's features to
-     *        be pickable. Can be overridden by setting the enablePickFeatures property on the object.
+     *        be pickable. Can be overridden by setting the {@link ArcGisMapServerImageryProvider#enablePickFeatures} property on the object.
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.  This parameter is ignored when accessing
      *                    a tiled layer.
      * @param {TilingScheme} [options.tilingScheme=new GeographicTilingScheme()] The tiling scheme to use to divide the world into tiles.
@@ -136,7 +136,7 @@ define([
         this._layers = options.layers;
 
         /**
-         * Gets a value indicating whether feature picking is enabled.  If true, {@link ArcGisMapServerImageryProvider#pickFeatures} will
+         * Gets or sets a value indicating whether feature picking is enabled.  If true, {@link ArcGisMapServerImageryProvider#pickFeatures} will
          * invoke the "identify" operation on the ArcGIS server and return the features included in the response.  If false,
          * {@link ArcGisMapServerImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
          * without communicating with the server.
