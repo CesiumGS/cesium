@@ -133,6 +133,13 @@ define([
         /**
          * DOC_TBA
          *
+         * @readonly
+         */
+        this.hasContent = true;
+
+        /**
+         * DOC_TBA
+         *
          * @type {Promise}
          * @readonly
          */
@@ -147,6 +154,7 @@ define([
 
             if (type === 'json') {
                 this.hasTilesetContent = true;
+                this.hasContent = false;
                 this._numberOfUnrefinableChildren = 1;
             }
 
@@ -157,15 +165,19 @@ define([
             }
         } else {
             content = new Empty3DTileContentProvider();
+            this.hasContent = false;
         }
         this._content = content;
 
         function setRefinable(tile) {
-            // Update the tree recursively once this tile becomes refinable
-            if (tile.isRefinable()) {
-                var parent = tile.parent;
-                if (defined(parent)) {
-                    --parent.numberOfUnrefinableChildren;
+            var parent = tile.parent;
+            if (defined(parent) && (tile.hasContent || tile.isRefinable())) {
+                // When a tile with content is loaded, its parent can safely refine to it without any gaps in rendering
+                // Since an empty tile doesn't have content of its own, its descendants with content need to be loaded
+                // before the parent is able to refine to it.
+                --parent._numberOfUnrefinableChildren;
+                // If the parent is empty, traverse up the tree to update ancestor tiles.
+                if (!parent.hasContent) {
                     setRefinable(parent);
                 }
             }

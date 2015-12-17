@@ -339,8 +339,7 @@ define([
     function selectTile(selectedTiles, tile, fullyVisible, frameState) {
         // There may also be a tight box around just the tile's contents, e.g., for a city, we may be
         // zoomed into a neighborhood and can cull the skyscrapers in the root node.
-        var parentRefines = defined(tile.parent) ? tile.parent.isRefinable() : true;
-        if (tile.isReady() && parentRefines &&
+        if (tile.isReady() &&
                 (fullyVisible || (tile.contentsVisibility(frameState.cullingVolume) !== CullingVolume.MASK_OUTSIDE))) {
             selectedTiles.push(tile);
         }
@@ -487,20 +486,7 @@ define([
                     if (!t.isRefinable()) {
                         // Tile does not meet SSE.  Add its commands since it is the best we have and request its children.
                         selectTile(selectedTiles, t, fullyVisible, frameState);
-
-                        if (outOfCore) {
-                            for (k = 0; (k < childrenLength) && requestScheduler.hasAvailableRequests(); ++k) {
-                                child = children[k];
-// TODO: we could spin a bit less CPU here and probably above by keeping separate lists for unloaded/ready children.
-                                if (child.isContentUnloaded()) {
-                                    requestContent(tiles3D, child, outOfCore);
-                                } else if (!child.isRefinable()) {
-                                    // Child needs to load its children in order to become refinable
-                                    child.parentPlaneMask = planeMask;
-                                    stack.push(child);
-                                }
-                            }
-                        }
+                        makeRefinable(tiles3D, frameState, outOfCore, t);
                     } else {
                         // Tile does not meet SEE and its children are loaded.  Refine to them in front-to-back order.
                         for (k = 0; k < childrenLength; ++k) {
@@ -509,6 +495,31 @@ define([
                             child.parentPlaneMask = planeMask;
                             stack.push(child);
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    var refineStack = [];
+    function makeRefinable(tiles3D, frameState, outOfCore, tile) {
+        var maximumScreenSpaceError = tiles3D.maximumScreenSpaceError;
+        var stack = refineStack;
+        stack.push(tile);
+        while (stack.length > 0) {
+            var t = stack.pop();
+            var sse = getScreenSpaceError(t.geometricError, t, frameState);
+            if (sse > maximumScreenSpaceError) {
+                var children = t.children;
+                var childrenLength = children.length;
+                for (var k = 0; (k < childrenLength) && requestScheduler.hasAvailableRequests(); ++k) {
+// TODO: we could spin a bit less CPU here and probably above by keeping separate lists for unloaded/ready children.
+                    var child = children[k];
+                    if (child.isContentUnloaded()) {
+                        requestContent(tiles3D, child, outOfCore);
+                    } else if (!child.hasContent && !child.isRefinable()) {
+                        // If the child is empty, we need to load all its descendants with content before it can refine
+                        stack.push(child);
                     }
                 }
             }
