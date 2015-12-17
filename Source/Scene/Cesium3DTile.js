@@ -11,6 +11,7 @@ define([
         '../Core/DeveloperError',
         '../Core/GeometryInstance',
         '../Core/Intersect',
+        '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
@@ -40,6 +41,7 @@ define([
         DeveloperError,
         GeometryInstance,
         Intersect,
+        Matrix3,
         Matrix4,
         OrientedBoundingBox,
         Rectangle,
@@ -273,12 +275,13 @@ define([
         var volume;
         if (boundingVolumeHeader.box) {
             var box = boundingVolumeHeader.box;
-            var rectangleBox = new Rectangle(box[0], box[1], box[2], box[3]);
+            var center = new Cartesian3(box[0], box[1], box[2]);
+            var halfAxes = new Matrix3();
+            halfAxes = Matrix3.fromArray(box, 3);
 
             volume = new TileOrientedBoundingBox({
-                rectangle : rectangleBox,
-                minimumHeight : box[4],
-                maximumHeight : box[5]
+                center: center,
+                halfAxes: halfAxes
             });
         } else if (boundingVolumeHeader.region) {
             var region = boundingVolumeHeader.region;

@@ -15,7 +15,7 @@ define([
 
     var TileOrientedBoundingBox = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        this.orientedBoundingBox = OrientedBoundingBox.fromRectangle(options.rectangle, options.minimumHeight, options.maximumHeight);
+        this.orientedBoundingBox = new OrientedBoundingBox(options.center, options.halfAxes);
     };
 
     defineProperties(TileOrientedBoundingBox.prototype, {

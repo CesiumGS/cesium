@@ -8,7 +8,7 @@
     "geometricError": 40,
     "root": {
         "boundingVolume": {
-            "box": [
+            "region": [
                 -1.319970476767974,
                 0.6986942109000001,
                 -1.3199295232320258,

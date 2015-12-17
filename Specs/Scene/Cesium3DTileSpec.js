@@ -5,6 +5,7 @@ defineSuite([
         'Scene/TileOrientedBoundingBox',
         'Core/Cartesian3',
         'Core/defined',
+        'Core/Matrix3',
         'Core/Rectangle',
         'Core/SphereOutlineGeometry',
         'Specs/createScene'
@@ -14,6 +15,7 @@ defineSuite([
         TileOrientedBoundingBox,
         Cartesian3,
         defined,
+        Matrix3,
         Rectangle,
         SphereOutlineGeometry,
         createScene) {
@@ -74,7 +76,7 @@ defineSuite([
         refine : 'replace',
         children : [],
         boundingVolume: {
-            box : [-1.2, -1.2, 0.0, 0.0, -30, -34]
+            box : [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
         }
     };
 
@@ -86,11 +88,11 @@ defineSuite([
             batchSize: 1,
             url : '0/0.b3dm',
             boundingVolume : {
-                box : [-1.2, -1.2, 0, 0, -30, -34]
+                box : [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
             }
         },
         boundingVolume: {
-            box : [-1.2, -1.2, 0, 0, -30, -34]
+            box : [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
         }
     };
 
@@ -138,10 +140,11 @@ defineSuite([
             var box = tileWithBoundingBox.boundingVolume.box;
             var tile = new Cesium3DTile(undefined, '/some_url', tileWithBoundingBox, undefined);
             expect(tile.contentsBoundingVolume).toBeDefined();
+            var center = new Cartesian3(box[0], box[1], box[2]);
+            var halfAxes = new Matrix3.fromArray(box, 3);
             var obb = new TileOrientedBoundingBox({
-                rectangle: new Rectangle(box[0], box[1], box[2], box[3]),
-                minimumHeight: box[4],
-                maximumHeight: box[5]
+                center: center,
+                halfAxes: halfAxes
             });
             expect(tile.contentsBoundingVolume).toEqual(obb);
         });
@@ -150,10 +153,11 @@ defineSuite([
             var box = tileWithContentsBoundingBox.boundingVolume.box;
             var tile = new Cesium3DTile(undefined, '/some_url', tileWithContentsBoundingBox, undefined);
             expect(tile.contentsBoundingVolume).toBeDefined();
+            var center = new Cartesian3(box[0], box[1], box[2]);
+            var halfAxes = new Matrix3.fromArray(box, 3);
             var obb = new TileOrientedBoundingBox({
-                rectangle: new Rectangle(box[0], box[1], box[2], box[3]),
-                minimumHeight: box[4],
-                maximumHeight: box[5]
+                center: center,
+                halfAxes: halfAxes
             });
             expect(tile.contentsBoundingVolume).toEqual(obb);
         });
