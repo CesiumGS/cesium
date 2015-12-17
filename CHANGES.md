@@ -14,6 +14,9 @@ Change Log
     * Removed `HeightmapTessellator` from the public API. It is now private and subject to change without notice.
     * Removed `TerrainMesh` from the public API. It is now private and subject to change without notice.
     * Removed `jsonp`. Use `loadJsonp` instead.
+* Deprecated
+    * Deprecated `TileMapServiceImageryProvider`. It will be removed in 1.18. Use `createTileMapServiceImageryProvider` instead.
+* Refactored `UrlTemplateImageryProvider.reinitialize` to accept a promise to `options`.
 * Reduced the amount of both GPU and CPU memory used by terrain. The CPU memory was reduced by up to 40%.
 * `CorridorGeometry` and `PolylineVolumeGeometry` render short segments [#3293](https://github.com/AnalyticalGraphicsInc/cesium/issues/3293)
 * `Rectangle.fromCartographicArray` finds the smallest rectangle regardess of whether or not it crosses the international date line. [#3227](https://github.com/AnalyticalGraphicsInc/cesium/issues/3227)
@@ -21,6 +24,7 @@ Change Log
 * Added support for msGMLOutput and Thredds server feature information formats to `GetFeatureInfoFormat` and `WebMapServiceImageryProvider`.
 * Added `QuadtreePrimitive#tileLoadProgressEvent` and `Globe#tileLoadProgressEvent`.  These event are raised when the length of the tile load queue changes, enabling incremental loading indicators.
 * Added missing points to `EllipseGeometry` and `EllipseOutlineGeometry` [#3078](https://github.com/AnalyticalGraphicsInc/cesium/issues/3078)
+
 
 ### 1.16 - 2015-12-01
 
