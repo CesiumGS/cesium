@@ -24,7 +24,7 @@ define([
      * @type {Object}
      * @readonly
      */
-    TileBoundingVolume.prototype.contentsBoundingVolume = undefined;
+    TileBoundingVolume.prototype.boundingVolume = undefined;
 
     /**
      * Creates a debug primitive that shows the outline of the tile bounding
