@@ -2,24 +2,36 @@
 define([
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
+        '../Core/GeometryInstance',
+        '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
+        '../Core/RectangleOutlineGeometry',
+        './PerInstanceColorAppearance',
+        './Primitive',
         './SceneMode'
     ], function(
         Cartesian3,
         Cartographic,
+        ColorGeometryInstanceAttribute,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Ellipsoid,
+        GeometryInstance,
+        Matrix4,
         OrientedBoundingBox,
         Rectangle,
+        RectangleOutlineGeometry,
+        PerInstanceColorAppearance,
+        Primitive,
         SceneMode) {
     "use strict";
 
@@ -254,6 +266,31 @@ define([
      */
     TileBoundingRegion.prototype.intersectPlane = function(plane) {
         return this._orientedBoundingBox.intersectPlane(plane);
+    };
+
+    TileBoundingRegion.prototype.createDebugVolume = function(color) {
+        var modelMatrix = new Matrix4.clone(Matrix4.IDENTITY);
+        var geometry = new RectangleOutlineGeometry({
+            rectangle : this.boundingVolume.rectangle,
+            height : this.boundingVolume.minimumHeight,
+            extrudedHeight: this.boundingVolume.maximumHeight
+         });
+        var instance = new GeometryInstance({
+            geometry : geometry,
+            modelMatrix : modelMatrix,
+            attributes : {
+                color : ColorGeometryInstanceAttribute.fromColor(color)
+            }
+        });
+
+        return new Primitive({
+            geometryInstances : instance,
+            appearance : new PerInstanceColorAppearance({
+                translucent : false,
+                flat : true
+            }),
+            asynchronous : false
+        });
     };
 
     return TileBoundingRegion;

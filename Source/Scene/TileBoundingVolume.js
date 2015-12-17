@@ -27,6 +27,18 @@ define([
     TileBoundingVolume.prototype.contentsBoundingVolume = undefined;
 
     /**
+     * Creates a debug primitive that shows the outline of the tile bounding
+     * volume.
+     *
+     * @param {Color} color The desired color of the primitive's mesh
+     * @return {Primitive}
+     *
+     */
+    TileBoundingVolume.prototype.createDebugVolume = function(color) {
+        DeveloperError.throwInstantiationError();
+    };
+
+    /**
      * Calculates the distance between the tile and the camera.
      *
      * @param {FrameState} frameState The frame state.

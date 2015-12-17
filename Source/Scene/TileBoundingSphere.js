@@ -2,15 +2,27 @@
 define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
+        '../Core/ColorGeometryInstanceAttribute',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/DeveloperError'
+        '../Core/DeveloperError',
+        '../Core/GeometryInstance',
+        '../Core/Matrix4',
+        '../Core/SphereOutlineGeometry',
+        './PerInstanceColorAppearance',
+        './Primitive'
     ], function(
         BoundingSphere,
         Cartesian3,
+        ColorGeometryInstanceAttribute,
         defined,
         defineProperties,
-        DeveloperError) {
+        DeveloperError,
+        GeometryInstance,
+        Matrix4,
+        SphereOutlineGeometry,
+        PerInstanceColorAppearance,
+        Primitive) {
     "use strict";
 
     var TileBoundingSphere = function(center, radius) {
@@ -88,6 +100,29 @@ define([
      */
     TileBoundingSphere.prototype.intersectPlane = function(plane) {
         return BoundingSphere.intersectPlane(this.boundingSphere, plane);
+    };
+
+    TileBoundingSphere.prototype.createDebugVolume = function(color) {
+        var geometry = new SphereOutlineGeometry({
+            radius: this.radius
+        });
+        var modelMatrix = Matrix4.fromTranslation(this.center, new Matrix4.clone(Matrix4.IDENTITY));
+        var instance = new GeometryInstance({
+            geometry : geometry,
+            modelMatrix : modelMatrix,
+            attributes : {
+                color : ColorGeometryInstanceAttribute.fromColor(color)
+            }
+        });
+
+        return new Primitive({
+            geometryInstances : instance,
+            appearance : new PerInstanceColorAppearance({
+                translucent : false,
+                flat : true
+            }),
+            asynchronous : false
+        });
     };
 
     return TileBoundingSphere;

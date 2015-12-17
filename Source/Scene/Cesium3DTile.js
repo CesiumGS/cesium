@@ -303,51 +303,6 @@ define([
         return volume;
     }
 
-    function createDebugPrimitive(geometry, color, modelMatrix) {
-        var instance = new GeometryInstance({
-            geometry : geometry,
-            modelMatrix : modelMatrix,
-            attributes : {
-                color : ColorGeometryInstanceAttribute.fromColor(color)
-            }
-        });
-
-        return new Primitive({
-            geometryInstances : instance,
-            appearance : new PerInstanceColorAppearance({
-                translucent : false,
-                flat : true
-            }),
-            asynchronous : false
-        });
-    }
-
-    function createDebugVolume(boundingVolume, color) {
-        var geometry;
-        var modelMatrix = new Matrix4.clone(Matrix4.IDENTITY);
-        if (defined(boundingVolume.region)) {
-            var region = boundingVolume.region;
-            geometry = new RectangleOutlineGeometry({
-                rectangle : new Rectangle(region[0], region[1], region[2], region[3]),
-                height : region[4],
-                extrudedHeight: region[5]
-             });
-        } else if (defined(boundingVolume.box)) {
-            var box = boundingVolume.box;
-            geometry = new BoxOutlineGeometry({
-                minimum: new Cartesian3(box[0], box[1], box[2]),
-                maximum: new Cartesian3(box[3], box[4], box[5])
-             });
-        } else if (defined(boundingVolume.sphere)) {
-            var sphere = boundingVolume.sphere;
-            geometry = new SphereOutlineGeometry({
-                radius: sphere[3]
-            });
-            Matrix4.fromTranslation(new Cartesian3(sphere[0],sphere[1],sphere[2]), modelMatrix);
-        }
-        return createDebugPrimitive(geometry, color, modelMatrix);
-    }
-
 // TODO: remove workaround for https://github.com/AnalyticalGraphicsInc/cesium/issues/2657
     function workaround2657(boundingVolume) {
         if (defined(boundingVolume.box)) {
@@ -368,7 +323,7 @@ define([
         var showVolume = owner.debugShowBoundingVolume || (owner.debugShowContentBoundingVolume && !hasContentBoundingVolume);
         if (showVolume && workaround2657(tile._header.boundingVolume)) {
             if (!defined(tile._debugBoundingVolume)) {
-                tile._debugBoundingVolume = createDebugVolume(tile._header.boundingVolume, hasContentBoundingVolume ? Color.WHITE : Color.RED);
+                tile._debugBoundingVolume = tile._boundingVolume.createDebugVolume(hasContentBoundingVolume ? Color.WHITE : Color.RED);
             }
             tile._debugBoundingVolume.update(frameState);
         } else if (!showVolume && defined(tile._debugBoundingVolume)) {
@@ -377,7 +332,7 @@ define([
 
         if (owner.debugShowContentBoundingVolume && hasContentBoundingVolume && workaround2657(tile._header.content.boundingVolume)) {
             if (!defined(tile._debugContentBoundingVolume)) {
-                tile._debugContentBoundingVolume = createDebugVolume(tile._header.content.boundingVolume, Color.BLUE);
+                tile._debugContentBoundingVolume = tile._boundingVolume.createDebugVolume(Color.BLUE);
             }
             tile._debugContentBoundingVolume.update(frameState);
         } else if (!owner.debugShowContentBoundingVolume && defined(tile._debugContentBoundingVolume)) {

@@ -61,5 +61,11 @@ define([
         return this.orientedBoundingBox.intersectPlane(plane);
     };
 
+
+    // TODO: fill in this function. What outline geometry should it use?
+    TileOrientedBoundingBox.prototype.createDebugVolume = function(color) {
+        throw new DeveloperError("createDebugVolume is not yet defined for type TileOrientedBoundingBox");
+    };
+
     return TileOrientedBoundingBox;
 });
