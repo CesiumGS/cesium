@@ -180,6 +180,16 @@ define([
         return rgbaf;
     }
 
+    function unwrapImageInterval(czmlInterval, sourceUri) {
+        var result = defaultValue(czmlInterval.image, czmlInterval);
+        if (defined(sourceUri)) {
+            var baseUri = new Uri(document.location.href);
+            sourceUri = new Uri(sourceUri);
+            result = new Uri(result).resolve(sourceUri.resolve(baseUri)).toString();
+        }
+        return result;
+    }
+
     function unwrapUriInterval(czmlInterval, sourceUri) {
         var result = defaultValue(czmlInterval.uri, czmlInterval);
         if (defined(sourceUri)) {
@@ -1210,7 +1220,6 @@ define([
         processPacketData(Boolean, model, 'show', modelData.show, interval, sourceUri, entityCollection);
         processPacketData(Number, model, 'scale', modelData.scale, interval, sourceUri, entityCollection);
         processPacketData(Number, model, 'minimumPixelSize', modelData.minimumPixelSize, interval, sourceUri, entityCollection);
-        processPacketData(Boolean, model, 'incrementallyLoadTextures', modelData.incrementallyLoadTextures, interval, sourceUri, entityCollection);
         processPacketData(Uri, model, 'uri', modelData.gltf, interval, sourceUri, entityCollection);
     }
 
@@ -1506,7 +1515,7 @@ define([
         }).otherwise(function(error) {
             DataSource.setLoading(dataSource, false);
             dataSource._error.raiseEvent(dataSource, error);
-            console.log(error);
+            window.console.log(error);
             return when.reject(error);
         });
     }
