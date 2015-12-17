@@ -66,7 +66,6 @@ define([
         this._header = header;
         var contentHeader = header.content;
 
-// TODO: For the 3D Tiles spec, we want to change this to basically (x, y, z) to (x, y, z)
         this._boundingVolume = createBoundingVolume(header.boundingVolume);
 
 // TODO: if the content type has pixel size, like points or billboards, the bounding volume needs
@@ -80,8 +79,6 @@ define([
             // outside of this box.
             this._contentBoundingVolume = createBoundingVolume(contentHeader.boundingVolume);
         }
-
-        //this._contentBoundingVolume = contentBoundingVolume;
 
         /**
          * DOC_TBA
