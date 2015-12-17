@@ -415,15 +415,6 @@ define([
             get : function() {
                 return true;
             }
-        },
-
-        enablePickFeatures : {
-            get : function() {
-                return this._enablePickFeatures;
-            },
-            set : function(enablePickFeatures)  {
-                this._enablePickFeatures = enablePickFeatures;
-            }
         }
     });
 

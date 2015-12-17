@@ -48,7 +48,8 @@ define([
      *        the GetFeatureInfo operation on the WMS server and return the features included in the response.  If false,
      *        {@link WebMapServiceImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
      *        without communicating with the server.  Set this property to false if you know your WMS server does not support
-     *        GetFeatureInfo or if you don't want this provider's features to be pickable.
+     *        GetFeatureInfo or if you don't want this provider's features to be pickable. Note that this can be dynamically
+     *        overridden by modifying the UriTemplateImageryProvider#enablePickFeatures property.
      * @param {GetFeatureInfoFormat[]} [options.getFeatureInfoFormats=WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats] The formats
      *        in which to try WMS GetFeatureInfo requests.
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.

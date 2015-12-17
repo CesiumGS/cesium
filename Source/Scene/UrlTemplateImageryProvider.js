@@ -118,8 +118,10 @@ define([
      * @param {Boolean} [options.enablePickFeatures=true] If true, {@link UrlTemplateImageryProvider#pickFeatures} will
      *        make ajax calls to options.pickFeaturesUrl for the features included in the response.  If false,
      *        {@link UrlTemplateImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable
-     *        features) without communicating with the server.  Set this property to false if you know your WMS server
-     *        does not support GetFeatureInfo or if you don't want this provider's features to be pickable.
+     *        features) without communicating with the server.  Set this property to false if you know your your data
+     *        source does not support GetFeatureInfo or if you don't want this provider's features to be pickable. Note
+     *        that this can be dynamically overridden by modifying the UriTemplateImageryProvider#enablePickFeatures
+     *        property.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
@@ -186,7 +188,15 @@ define([
         this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
         this._rectangle = Rectangle.intersection(this._rectangle, this._tilingScheme.rectangle);
         this._hasAlphaChannel = defaultValue(options.hasAlphaChannel, true);
-        this._enablePickFeatures = defaultValue(options.enablePickFeatures, true);
+
+        /**
+         * A flag indicating whether this imagery provider should be able to pick features - if it's set to false,
+         * UrlTemplateImageryProvider#pickFeatures will always return undefined.
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.enablePickFeatures = defaultValue(options.enablePickFeatures, true);
 
         var credit = options.credit;
         if (typeof credit === 'string') {
@@ -425,22 +435,14 @@ define([
             }
         },
 
-        /**
-         * A flag indicating whether this imagery provider should be able to pick features - if it's set to false,
-         * UrlTemplateImageryProvider#pickFeatures will always return undefined.
-         *
-         * @memberof UrlTemplateImageryProvider.prototype
-         * @type {Boolean}
-         * @default true
-         */
-        enablePickFeatures : {
-            get : function() {
-                return this._enablePickFeatures;
-            },
-            set : function(enablePickFeatures)  {
-                this._enablePickFeatures = enablePickFeatures;
-            }
-        }
+        //enablePickFeatures : {
+        //    get : function() {
+        //        return this.;
+        //    },
+        //    set : function(enablePickFeatures)  {
+        //        this. = enablePickFeatures;
+        //    }
+        //}
     });
 
     /**
@@ -489,7 +491,7 @@ define([
      *                   It may also be undefined if picking is not supported.
      */
     UrlTemplateImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
-        if (!this._enablePickFeatures || !defined(this._pickFeaturesUrl) || this._getFeatureInfoFormats.length === 0) {
+        if (!this.enablePickFeatures || !defined(this._pickFeaturesUrl) || this._getFeatureInfoFormats.length === 0) {
             return undefined;
         }
 
