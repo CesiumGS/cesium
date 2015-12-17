@@ -121,12 +121,7 @@ define([
          */
         this.numberOfChildrenWithoutContent = defined(header.children) ? header.children.length : 0;
 
-        /**
-         * DOC_TBA
-         *
-         * @readonly
-         */
-        this.numberOfUnrefinableChildren = this.numberOfChildrenWithoutContent;
+        this._numberOfUnrefinableChildren = this.numberOfChildrenWithoutContent;
 
         /**
          * DOC_TBA
@@ -152,7 +147,7 @@ define([
 
             if (type === 'json') {
                 this.hasTilesetContent = true;
-                this.numberOfUnrefinableChildren = 1;
+                this._numberOfUnrefinableChildren = 1;
             }
 
             if (defined(contentFactory)) {
@@ -261,7 +256,7 @@ define([
      * DOC_TBA
      */
     Cesium3DTile.prototype.isRefinable = function() {
-        return this.numberOfUnrefinableChildren === 0;
+        return this._numberOfUnrefinableChildren === 0;
     };
 
     /**
