@@ -2,6 +2,7 @@
 define([
         '../ThirdParty/when',
         './BoundingSphere',
+        './Cartesian2',
         './Cartesian3',
         './defaultValue',
         './defined',
@@ -17,6 +18,7 @@ define([
     ], function(
         when,
         BoundingSphere,
+        Cartesian2,
         Cartesian3,
         defaultValue,
         defined,

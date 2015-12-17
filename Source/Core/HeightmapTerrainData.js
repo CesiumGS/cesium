@@ -453,16 +453,18 @@ define([
             height += 2;
         }
 
+        var widthEdge = (skirtHeight > 0) ? width - 1 : width;
         var westInteger = fromWest | 0;
         var eastInteger = westInteger + 1;
-        if (eastInteger >= width) {
+        if (eastInteger >= widthEdge) {
             eastInteger = width - 1;
             westInteger = width - 2;
         }
 
+        var heightEdge = (skirtHeight > 0) ? height - 1 : height;
         var southInteger = fromSouth | 0;
         var northInteger = southInteger + 1;
-        if (northInteger >= height) {
+        if (northInteger >= heightEdge) {
             northInteger = height - 1;
             southInteger = height - 2;
         }
