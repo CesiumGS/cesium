@@ -433,16 +433,7 @@ define([
             get : function() {
                 return this._hasAlphaChannel;
             }
-        },
-
-        //enablePickFeatures : {
-        //    get : function() {
-        //        return this.;
-        //    },
-        //    set : function(enablePickFeatures)  {
-        //        this. = enablePickFeatures;
-        //    }
-        //}
+        }
     });
 
     /**
