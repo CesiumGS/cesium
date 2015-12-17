@@ -67,69 +67,21 @@ define([
         var contentHeader = header.content;
 
 // TODO: For the 3D Tiles spec, we want to change this to basically (x, y, z) to (x, y, z)
-        var tileBoundingVolume = header.boundingVolume;
-        if (defined(tileBoundingVolume.box)) {
-            var box = tileBoundingVolume.box;
-            var rectangleBox = new Rectangle(box[0], box[1], box[2], box[3]);
+        this._boundingVolume = createBoundingVolume(header.boundingVolume);
 
-            this._boundingVolume = new TileOrientedBoundingBox({
-                rectangle : rectangleBox,
-                minimumHeight : box[4],
-                maximumHeight : box[5]
-            });
-        } else if (defined(tileBoundingVolume.region)) {
-            var region = tileBoundingVolume.region;
-            var rectangleRegion = new Rectangle(region[0], region[1], region[2], region[3]);
-
-            this._boundingVolume = new TileBoundingRegion({
-                rectangle : rectangleRegion,
-                minimumHeight : region[4],
-                maximumHeight : region[5]
-            });
-        } else if (defined(tileBoundingVolume.sphere)) {
-            var sphere = tileBoundingVolume.sphere;
-
-            this._boundingVolume = new TileBoundingSphere(
-                new Cartesian3(sphere[0], sphere[1], sphere[2]),
-                sphere[3]
-            );
-        }
 // TODO: if the content type has pixel size, like points or billboards, the bounding volume needs
 // to dynamic size bigger like BillboardCollection and PointCollection
 
-        var contentBoundingVolume;
         if (defined(contentHeader) && defined(contentHeader.boundingVolume)) {
             // Non-leaf tiles may have a content-box bounding-volume, which is a tight-fit box
             // around only the models in the tile.  This box is useful for culling for rendering,
             // but not for culling for traversing the tree since it is not spatial coherence, i.e.,
             // since it only bounds models in the tile, not the entire tile, children may be
             // outside of this box.
-            var headerVolume = contentHeader.boundingVolume;
-
-            if (defined(headerVolume.box)) {
-                var cb = contentHeader.boundingVolume.box;
-                contentBoundingVolume = new TileOrientedBoundingBox({
-                    rectangle: new Rectangle(cb[0], cb[1], cb[2], cb[3]),
-                    minimumHeight: cb[4],
-                    maximumHeight: cb[5]
-                });
-            } else if (defined(headerVolume.region)) {
-                var cr = contentHeader.boundingVolume.region;
-                contentBoundingVolume = new TileBoundingRegion({
-                    rectangle: new Rectangle(cr[0], cr[1], cr[2], cr[3]),
-                    minimumHeight: cr[4],
-                    maximumHeight: cr[5]
-                });
-            } else if (defined(headerVolume.sphere)) {
-                var cs = contentHeader.boundingVolume.sphere;
-                contentBoundingVolume = new TileBoundingSphere(
-                    new Cartesian3(cs[0], cs[1], cs[2]),
-                    cs[3]
-                );
-            }
+            this._contentBoundingVolume = createBoundingVolume(contentHeader.boundingVolume);
         }
 
-        this._contentBoundingVolume = contentBoundingVolume;
+        //this._contentBoundingVolume = contentBoundingVolume;
 
         /**
          * DOC_TBA
@@ -319,6 +271,38 @@ define([
     Cesium3DTile.prototype.distanceToTile = function(frameState) {
         return this._boundingVolume.distanceToCamera(frameState);
     };
+
+    function createBoundingVolume(boundingVolumeHeader) {
+        var volume;
+        if (boundingVolumeHeader.box) {
+            var box = boundingVolumeHeader.box;
+            var rectangleBox = new Rectangle(box[0], box[1], box[2], box[3]);
+
+            volume = new TileOrientedBoundingBox({
+                rectangle : rectangleBox,
+                minimumHeight : box[4],
+                maximumHeight : box[5]
+            });
+        } else if (boundingVolumeHeader.region) {
+            var region = boundingVolumeHeader.region;
+            var rectangleRegion = new Rectangle(region[0], region[1], region[2], region[3]);
+
+            volume = new TileBoundingRegion({
+                rectangle : rectangleRegion,
+                minimumHeight : region[4],
+                maximumHeight : region[5]
+            });
+        } else if (boundingVolumeHeader.sphere) {
+            var sphere = boundingVolumeHeader.sphere;
+
+            volume = new TileBoundingSphere(
+                new Cartesian3(sphere[0], sphere[1], sphere[2]),
+                sphere[3]
+            );
+        }
+
+        return volume;
+    }
 
     function createDebugPrimitive(geometry, color, modelMatrix) {
         var instance = new GeometryInstance({
