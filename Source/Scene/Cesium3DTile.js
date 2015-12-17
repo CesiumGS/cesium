@@ -73,14 +73,17 @@ define([
 // TODO: if the content type has pixel size, like points or billboards, the bounding volume needs
 // to dynamic size bigger like BillboardCollection and PointCollection
 
+        var contentBoundingVolume;
+
         if (defined(contentHeader) && defined(contentHeader.boundingVolume)) {
             // Non-leaf tiles may have a content-box bounding-volume, which is a tight-fit box
             // around only the models in the tile.  This box is useful for culling for rendering,
             // but not for culling for traversing the tree since it is not spatial coherence, i.e.,
             // since it only bounds models in the tile, not the entire tile, children may be
             // outside of this box.
-            this._contentBoundingVolume = createBoundingVolume(contentHeader.boundingVolume);
+            contentBoundingVolume = createBoundingVolume(contentHeader.boundingVolume);
         }
+        this._contentBoundingVolume = contentBoundingVolume;
 
         /**
          * DOC_TBA
