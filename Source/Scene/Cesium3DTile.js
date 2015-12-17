@@ -276,8 +276,7 @@ define([
         if (boundingVolumeHeader.box) {
             var box = boundingVolumeHeader.box;
             var center = new Cartesian3(box[0], box[1], box[2]);
-            var halfAxes = new Matrix3();
-            halfAxes = Matrix3.fromArray(box, 3);
+            var halfAxes = Matrix3.fromArray(box, 3);
 
             volume = new TileOrientedBoundingBox({
                 center: center,

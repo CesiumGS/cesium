@@ -141,7 +141,7 @@ defineSuite([
             var tile = new Cesium3DTile(undefined, '/some_url', tileWithBoundingBox, undefined);
             expect(tile.contentsBoundingVolume).toBeDefined();
             var center = new Cartesian3(box[0], box[1], box[2]);
-            var halfAxes = new Matrix3.fromArray(box, 3);
+            var halfAxes = Matrix3.fromArray(box, 3);
             var obb = new TileOrientedBoundingBox({
                 center: center,
                 halfAxes: halfAxes
@@ -154,7 +154,7 @@ defineSuite([
             var tile = new Cesium3DTile(undefined, '/some_url', tileWithContentsBoundingBox, undefined);
             expect(tile.contentsBoundingVolume).toBeDefined();
             var center = new Cartesian3(box[0], box[1], box[2]);
-            var halfAxes = new Matrix3.fromArray(box, 3);
+            var halfAxes = Matrix3.fromArray(box, 3);
             var obb = new TileOrientedBoundingBox({
                 center: center,
                 halfAxes: halfAxes
