@@ -1,16 +1,30 @@
 /*global define*/
 define([
+        '../Core/BoxOutlineGeometry',
+        '../Core/Cartesian3',
+        '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/OrientedBoundingBox'
+        '../Core/GeometryInstance',
+        '../Core/Matrix4',
+        '../Core/OrientedBoundingBox',
+        './PerInstanceColorAppearance',
+        './Primitive'
     ], function(
+        BoxOutlineGeometry,
+        Cartesian3,
+        ColorGeometryInstanceAttribute,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        OrientedBoundingBox) {
+        GeometryInstance,
+        Matrix4,
+        OrientedBoundingBox,
+        PerInstanceColorAppearance,
+        Primitive) {
     "use strict";
 
     var TileOrientedBoundingBox = function(options) {
@@ -61,10 +75,29 @@ define([
         return this.orientedBoundingBox.intersectPlane(plane);
     };
 
-
-    // TODO: fill in this function. What outline geometry should it use?
     TileOrientedBoundingBox.prototype.createDebugVolume = function(color) {
-        throw new DeveloperError("createDebugVolume is not yet defined for type TileOrientedBoundingBox");
+        var geometry = new BoxOutlineGeometry({
+            // Make a cube of unit size -- all sides of length 1.0
+            minimum: new Cartesian3(-0.5, -0.5, -0.5),
+            maximum: new Cartesian3(0.5, 0.5, 0.5)
+        });
+        var modelMatrix = Matrix4.fromRotationTranslation(this.halfAxes, this.center);
+        var instance = new GeometryInstance({
+            geometry : geometry,
+            modelMatrix : modelMatrix,
+            attributes : {
+                color : ColorGeometryInstanceAttribute.fromColor(color)
+            }
+        });
+
+        return new Primitive({
+            geometryInstances : instance,
+            appearance : new PerInstanceColorAppearance({
+                translucent : false,
+                flat : true
+            }),
+            asynchronous : false
+        });
     };
 
     return TileOrientedBoundingBox;
