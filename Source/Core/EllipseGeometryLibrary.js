@@ -167,9 +167,9 @@ define([
         theta = CesiumMath.PI_OVER_TWO;
         position = pointOnEllipsoid(theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, position);
         if (addFillPositions) {
-        positions[positionIndex++] = position.x;
-        positions[positionIndex++] = position.y;
-        positions[positionIndex++] = position.z;
+            positions[positionIndex++] = position.x;
+            positions[positionIndex++] = position.y;
+            positions[positionIndex++] = position.z;
         }
         if (addEdgePositions) {
             outerPositions[outerRightIndex--] = position.z;
