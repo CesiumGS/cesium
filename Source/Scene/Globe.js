@@ -225,6 +225,18 @@ define([
             set : function(value) {
                 this._surface.tileProvider.baseColor = value;
             }
+        },
+        /**
+         * Gets an event that's raised when the length of the tile load queue has changed since the last render frame.  When the load queue is empty,
+         * all terrain and imagery for the current view have been loaded.  The event passes the new length of the tile load queue.
+         *
+         * @memberof Globe.prototype
+         * @type {Event}
+         */
+        tileLoadProgressEvent : {
+            get: function() {
+                return this._surface.tileLoadProgressEvent;
+            }
         }
     });
 
