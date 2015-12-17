@@ -45,7 +45,7 @@ define([
      *
      * @private
      */
-    var TerrainEncoding = function(axisAlignedBoundingBox, minimumHeight, maximumHeight, fromENU, hasVertexNormals) {
+    function TerrainEncoding(axisAlignedBoundingBox, minimumHeight, maximumHeight, fromENU, hasVertexNormals) {
         var quantization;
         var center;
         var toENU;
@@ -138,8 +138,7 @@ define([
          * @type {Boolean}
          */
         this.hasVertexNormals = hasVertexNormals;
-    };
-
+    }
     TerrainEncoding.prototype.encode = function(vertexBuffer, bufferIndex, position, uv, height, normalToPack) {
         var u = uv.x;
         var v = uv.y;

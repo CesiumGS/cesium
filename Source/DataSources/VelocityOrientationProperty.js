@@ -46,7 +46,7 @@ define([
      *   orientation : new Cesium.VelocityOrientationProperty(position)
      * }));
      */
-    var VelocityOrientationProperty = function(position, ellipsoid) {
+    function VelocityOrientationProperty(position, ellipsoid) {
         this._position = undefined;
         this._subscription = undefined;
         this._ellipsoid = undefined;
@@ -54,7 +54,7 @@ define([
 
         this.position = position;
         this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-    };
+    }
 
     defineProperties(VelocityOrientationProperty.prototype, {
         /**

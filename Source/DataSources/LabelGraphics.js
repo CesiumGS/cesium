@@ -45,7 +45,7 @@ define([
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
      */
-    var LabelGraphics = function(options) {
+    function LabelGraphics(options) {
         this._text = undefined;
         this._textSubscription = undefined;
         this._font = undefined;
@@ -77,7 +77,7 @@ define([
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
-    };
+    }
 
     defineProperties(LabelGraphics.prototype, {
         /**

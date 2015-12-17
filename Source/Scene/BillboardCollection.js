@@ -150,7 +150,7 @@ define([
      *   image : 'url/to/another/image'
      * });
      */
-    var BillboardCollection = function(options) {
+    function BillboardCollection(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._scene = options.scene;
@@ -280,7 +280,7 @@ define([
                 return that._textureAtlas.texture;
             }
         };
-    };
+    }
 
     defineProperties(BillboardCollection.prototype, {
         /**

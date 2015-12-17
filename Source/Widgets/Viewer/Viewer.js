@@ -277,7 +277,7 @@ define([
      *     window.alert(error);
      * });
      */
-    var Viewer = function(container, options) {
+    function Viewer(container, options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
@@ -613,7 +613,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         cesiumWidget.screenSpaceEventHandler.setInputAction(pickAndSelectObject, ScreenSpaceEventType.LEFT_CLICK);
         cesiumWidget.screenSpaceEventHandler.setInputAction(pickAndTrackObject, ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
-    };
+    }
 
     defineProperties(Viewer.prototype, {
         /**

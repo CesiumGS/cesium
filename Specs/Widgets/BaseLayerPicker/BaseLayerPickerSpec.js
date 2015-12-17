@@ -13,10 +13,10 @@ defineSuite([
         DomEventSimulator) {
     "use strict";
 
-    var MockGlobe = function(){
+    function MockGlobe(){
         this.imageryLayers = new ImageryLayerCollection();
         this.terrainProvider = new EllipsoidTerrainProvider();
-    };
+    }
 
     it('can create and destroy', function() {
         var container = document.createElement('div');

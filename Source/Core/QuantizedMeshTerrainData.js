@@ -105,7 +105,7 @@ define([
      *     northSkirtHeight : 1.0
      * });
      */
-    var QuantizedMeshTerrainData = function QuantizedMeshTerrainData(options) {
+    function QuantizedMeshTerrainData(options) {
         //>>includeStart('debug', pragmas.debug)
         if (!defined(options) || !defined(options.quantizedVertices)) {
             throw new DeveloperError('options.quantizedVertices is required.');
@@ -193,7 +193,7 @@ define([
         this._waterMask = options.waterMask;
 
         this._mesh = undefined;
-    };
+    }
 
     defineProperties(QuantizedMeshTerrainData.prototype, {
         /**
@@ -392,7 +392,6 @@ define([
 
         var ellipsoid = tilingScheme.ellipsoid;
         var childRectangle = tilingScheme.tileXYToRectangle(descendantX, descendantY, descendantLevel);
-
 
         var upsamplePromise = upsampleTaskProcessor.scheduleTask({
             vertices : mesh.vertices,

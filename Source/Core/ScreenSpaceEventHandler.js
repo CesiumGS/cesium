@@ -62,10 +62,9 @@ define([
     };
 
     function registerListener(screenSpaceEventHandler, domType, element, callback) {
-        var listener = function(e) {
+        function listener(e) {
             callback(screenSpaceEventHandler, e);
-        };
-
+        }
         element.addEventListener(domType, listener, false);
 
         screenSpaceEventHandler._removalFunctions.push(function() {
@@ -641,7 +640,7 @@ define([
      *
      * @constructor
      */
-    var ScreenSpaceEventHandler = function(element) {
+    function ScreenSpaceEventHandler(element) {
         this._inputEvents = {};
         this._buttonDown = undefined;
         this._isPinching = false;
@@ -663,7 +662,7 @@ define([
         this._element = defaultValue(element, document);
 
         registerListeners(this);
-    };
+    }
 
     /**
      * Set a function to be executed on an input event.

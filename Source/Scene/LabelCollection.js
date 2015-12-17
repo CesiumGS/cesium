@@ -320,7 +320,7 @@ define([
      *   text : 'Another label'
      * });
      */
-    var LabelCollection = function(options) {
+    function LabelCollection(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._scene = options.scene;
@@ -381,7 +381,7 @@ define([
          * @default false
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
-    };
+    }
 
     defineProperties(LabelCollection.prototype, {
         /**

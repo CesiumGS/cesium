@@ -25,12 +25,12 @@ define([
      * @alias CompositePositionProperty
      * @constructor
      */
-    var CompositePositionProperty = function(referenceFrame) {
+    function CompositePositionProperty(referenceFrame) {
         this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
         this._definitionChanged = new Event();
         this._composite = new CompositeProperty();
         this._composite.definitionChanged.addEventListener(CompositePositionProperty.prototype._raiseDefinitionChanged, this);
-    };
+    }
 
     defineProperties(CompositePositionProperty.prototype, {
         /**

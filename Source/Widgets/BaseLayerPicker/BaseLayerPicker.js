@@ -104,7 +104,7 @@ define([
      *     imageryProviderViewModels : imageryViewModels
      * });
      */
-    var BaseLayerPicker = function(container, options) {
+    function BaseLayerPicker(container, options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
@@ -218,7 +218,7 @@ click: function($data) { $parent.selectedTerrain = $data; }');
             document.addEventListener('mousedown', this._closeDropDown, true);
             document.addEventListener('touchstart', this._closeDropDown, true);
         }
-    };
+    }
 
     defineProperties(BaseLayerPicker.prototype, {
         /**

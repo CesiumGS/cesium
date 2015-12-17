@@ -42,7 +42,7 @@ define([
      *        this widget without creating a separate key for your application.
      * @param {Number} [options.flightDuration=1.5] The duration of the camera flight to an entered location, in seconds.
      */
-    var Geocoder = function(options) {
+    function Geocoder(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.container)) {
             throw new DeveloperError('options.container is required.');
@@ -112,7 +112,7 @@ cesiumSvgPath: { path: isSearchInProgress ? _stopSearchPath : _startSearchPath, 
             document.addEventListener('touchend', this._onInputEnd, true);
         }
 
-    };
+    }
 
     defineProperties(Geocoder.prototype, {
         /**

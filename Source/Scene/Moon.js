@@ -47,7 +47,7 @@ define([
      * @example
      * scene.moon = new Cesium.Moon();
      */
-    var Moon = function(options) {
+    function Moon(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var url = options.textureUrl;
@@ -88,7 +88,7 @@ define([
         this._ellipsoidPrimitive.material.translucent = false;
 
         this._axes = new IauOrientationAxes();
-    };
+    }
 
     defineProperties(Moon.prototype, {
         /**

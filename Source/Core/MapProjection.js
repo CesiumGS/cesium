@@ -17,9 +17,9 @@ define([
      * @see GeographicProjection
      * @see WebMercatorProjection
      */
-    var MapProjection = function() {
+    function MapProjection() {
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     defineProperties(MapProjection.prototype, {
         /**
