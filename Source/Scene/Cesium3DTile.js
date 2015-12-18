@@ -308,10 +308,7 @@ define([
 
 // TODO: remove workaround for https://github.com/AnalyticalGraphicsInc/cesium/issues/2657
     function workaround2657(boundingVolume) {
-        if (defined(boundingVolume.box)) {
-            var box = boundingVolume.box;
-            return (box[1] !== box[3]) && (box[0] !== box[2]);
-        } else if (defined(boundingVolume.region)) {
+        if (defined(boundingVolume.region)) {
             var region = boundingVolume.region;
             return (region[1] !== region[3]) && (region[0] !== region[2]);
         } else {
