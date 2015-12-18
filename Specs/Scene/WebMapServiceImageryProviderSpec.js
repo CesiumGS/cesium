@@ -620,6 +620,38 @@ defineSuite([
             });
         });
 
+        it('returns undefined if enablePickFeatures is set to false after initialization', function() {
+            var provider = new WebMapServiceImageryProvider({
+                url : 'made/up/wms/server',
+                layers : 'someLayer',
+                enablePickFeatures : true
+            });
+
+            provider.enablePickFeatures = false;
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).toBeUndefined();
+            });
+        });
+
+        it('does not return undefined if enablePickFeatures is set to true after initialization as false', function() {
+            var provider = new WebMapServiceImageryProvider({
+                url : 'made/up/wms/server',
+                layers : 'someLayer',
+                enablePickFeatures : false
+            });
+
+            provider.enablePickFeatures = true;
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).not.toBeUndefined();
+            });
+        });
+
         it('requests XML exclusively if specified in getFeatureInfoFormats', function() {
             var provider = new WebMapServiceImageryProvider({
                 url : 'made/up/wms/server',
