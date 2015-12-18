@@ -152,7 +152,7 @@ Matrix4.fromColumnMajorArray = function(values, result) {
 
 ## Examples
 
-Developers almost always jump to a example before reading the doc.  Provide concise but instructive code examples with enough context whenever possible.
+Developers almost always jump to an example before reading the doc.  Provide concise but instructive code examples with enough context whenever possible.
 
 Useful examples:
 ```javascript
