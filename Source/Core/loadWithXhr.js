@@ -50,7 +50,7 @@ define([
      *     // an error occurred
      * });
      */
-    var loadWithXhr = function(options) {
+    function loadWithXhr(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -72,7 +72,7 @@ define([
 
             return deferred.promise;
         });
-    };
+    }
 
     var dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/;
 

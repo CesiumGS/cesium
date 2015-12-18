@@ -20,7 +20,7 @@ define([
     /**
      * @private
      */
-    var Sampler = function(options) {
+    function Sampler(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var wrapS = defaultValue(options.wrapS, TextureWrap.CLAMP_TO_EDGE);
@@ -56,7 +56,7 @@ define([
         this._minificationFilter = minificationFilter;
         this._magnificationFilter = magnificationFilter;
         this._maximumAnisotropy = maximumAnisotropy;
-    };
+    }
 
     defineProperties(Sampler.prototype, {
         wrapS : {

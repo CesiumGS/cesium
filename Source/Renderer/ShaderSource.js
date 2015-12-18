@@ -260,7 +260,7 @@ define([
      *
      * @private
      */
-    var ShaderSource = function(options) {
+    function ShaderSource(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var pickColorQualifier = options.pickColorQualifier;
 
@@ -274,8 +274,7 @@ define([
         this.sources = defined(options.sources) ? options.sources.slice(0) : [];
         this.pickColorQualifier = pickColorQualifier;
         this.includeBuiltIns = defaultValue(options.includeBuiltIns, true);
-    };
-
+    }
     ShaderSource.prototype.clone = function() {
         return new ShaderSource({
             sources : this.sources,

@@ -51,7 +51,7 @@ define([
      * @see {@link http://cesiumjs.org/2014/03/03/Cesium-3D-Models-Tutorial/|3D Models Tutorial}
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
      */
-    var ModelGraphics = function(options) {
+    function ModelGraphics(options) {
         this._show = undefined;
         this._showSubscription = undefined;
         this._scale = undefined;
@@ -71,7 +71,7 @@ define([
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
-    };
+    }
 
     defineProperties(ModelGraphics.prototype, {
         /**

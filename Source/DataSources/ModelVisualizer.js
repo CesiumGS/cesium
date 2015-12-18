@@ -38,7 +38,7 @@ define([
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {EntityCollection} entityCollection The entityCollection to visualize.
      */
-    var ModelVisualizer = function(scene, entityCollection) {
+    function ModelVisualizer(scene, entityCollection) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
@@ -56,7 +56,7 @@ define([
         this._modelHash = {};
         this._entitiesToVisualize = new AssociativeArray();
         this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
-    };
+    }
 
     /**
      * Updates models created this visualizer to match their

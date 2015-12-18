@@ -72,7 +72,7 @@ define([
      *   }
      * });
      */
-    var SkyBox = function(options) {
+    function SkyBox(options) {
         /**
          * The sources used to create the cube map faces: an object
          * with <code>positiveX</code>, <code>negativeX</code>, <code>positiveY</code>,
@@ -98,7 +98,7 @@ define([
             owner : this
         });
         this._cubeMap = undefined;
-    };
+    }
 
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to

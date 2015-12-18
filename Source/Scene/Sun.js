@@ -77,7 +77,7 @@ define([
      * @example
      * scene.sun = new Cesium.Sun();
      */
-    var Sun = function() {
+    function Sun() {
         /**
          * Determines if the sun will be shown.
          *
@@ -116,7 +116,7 @@ define([
                 return that._size;
             }
         };
-    };
+    }
 
     defineProperties(Sun.prototype, {
         /**
@@ -147,6 +147,7 @@ define([
      * @private
      */
     Sun.prototype.update = function(scene) {
+        var passState = scene._passState;
         var frameState = scene.frameState;
         var context = scene.context;
 
@@ -163,8 +164,8 @@ define([
             return undefined;
         }
 
-        var drawingBufferWidth = scene.drawingBufferWidth;
-        var drawingBufferHeight = scene.drawingBufferHeight;
+        var drawingBufferWidth = passState.viewport.width;
+        var drawingBufferHeight = passState.viewport.height;
 
         if (!defined(this._texture) ||
                 drawingBufferWidth !== this._drawingBufferWidth ||

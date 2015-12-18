@@ -37,7 +37,7 @@ define([
      * scene.primitives.add(collection);  // Add collection
      * scene.primitives.add(labels);      // Add regular primitive
      */
-    var PrimitiveCollection = function(options) {
+    function PrimitiveCollection(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._primitives = [];
@@ -76,7 +76,7 @@ define([
          * labels = labels.destroy();    // explicitly destroy
          */
         this.destroyPrimitives = defaultValue(options.destroyPrimitives, true);
-    };
+    }
 
     defineProperties(PrimitiveCollection.prototype, {
         /**

@@ -20,9 +20,9 @@ define([
      * @see WebMercatorTilingScheme
      * @see GeographicTilingScheme
      */
-    var TilingScheme = function TilingScheme(options) {
+    function TilingScheme(options) {
         throw new DeveloperError('This type should not be instantiated directly.  Instead, use WebMercatorTilingScheme or GeographicTilingScheme.');
-    };
+    }
 
     defineProperties(TilingScheme.prototype, {
         /**

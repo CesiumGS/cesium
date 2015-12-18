@@ -212,7 +212,7 @@ defineSuite([
         bounded = defaultValue(bounded, true);
         closestFrustum = defaultValue(closestFrustum, false);
 
-        var Primitive = function() {
+        function Primitive() {
             this._va = undefined;
             this._sp = undefined;
             this._rs = undefined;
@@ -229,8 +229,7 @@ defineSuite([
                     return that._modelMatrix;
                 }
             };
-        };
-
+        }
         Primitive.prototype.update = function(frameState) {
             if (!defined(this._sp)) {
                 var vs = '';

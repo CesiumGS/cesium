@@ -55,7 +55,7 @@ define([
      *   id : 'top'
      * });
      */
-    var GeometryInstance = function(options) {
+    function GeometryInstance(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -122,7 +122,7 @@ define([
          * @private
          */
         this.eastHemisphereGeometry = undefined;
-    };
+    }
 
     return GeometryInstance;
 });

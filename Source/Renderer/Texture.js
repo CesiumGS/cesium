@@ -35,7 +35,7 @@ define([
         WebGLConstants) {
     "use strict";
     
-    var Texture = function(options) {
+    function Texture(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -183,7 +183,7 @@ define([
         this._sampler = undefined;
 
         this.sampler = defined(options.sampler) ? options.sampler : new Sampler();
-    };
+    }
 
     /**
      * Creates a texture, and copies a subimage of the framebuffer to it.  When called without arguments,

@@ -38,7 +38,7 @@ define([
      * @param {Number} [options.numberOfLevelZeroTilesY=1] The number of tiles in the Y direction at level zero of
      * the tile tree.
      */
-    var GeographicTilingScheme = function GeographicTilingScheme(options) {
+    function GeographicTilingScheme(options) {
         options = defaultValue(options, {});
 
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
@@ -46,8 +46,7 @@ define([
         this._projection = new GeographicProjection(this._ellipsoid);
         this._numberOfLevelZeroTilesX = defaultValue(options.numberOfLevelZeroTilesX, 2);
         this._numberOfLevelZeroTilesY = defaultValue(options.numberOfLevelZeroTilesY, 1);
-    };
-
+    }
 
     defineProperties(GeographicTilingScheme.prototype, {
         /**

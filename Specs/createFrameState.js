@@ -15,7 +15,7 @@ define([
         FrameState) {
     "use strict";
 
-    var createFrameState = function(context, camera, frameNumber, time) {
+    function createFrameState(context, camera, frameNumber, time) {
         // Mock frame-state for testing.
         var frameState = new FrameState(context, new CreditDisplay(document.createElement('div')));
 
@@ -38,7 +38,7 @@ define([
         frameState.passes.pick = false;
 
         return frameState;
-    };
+    }
 
     return createFrameState;
 });
