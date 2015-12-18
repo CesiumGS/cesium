@@ -351,7 +351,9 @@ define([
     function selectTile(selectedTiles, tile, fullyVisible, frameState) {
         // There may also be a tight box around just the tile's contents, e.g., for a city, we may be
         // zoomed into a neighborhood and can cull the skyscrapers in the root node.
-        if (tile.isReady() &&
+        //
+        // Don't select if the tile is being loaded to refine another tile
+        if (tile.isReady() && !tile.refining &&
                 (fullyVisible || (tile.contentsVisibility(frameState.cullingVolume) !== Intersect.OUTSIDE))) {
             selectedTiles.push(tile);
         }
@@ -451,6 +453,8 @@ define([
                         // to replacement refinement where we need all children.
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
+                            // Pass along whether the child is being loaded for refinement
+                            child.refining = t.refining;
                             // Store the plane mask so that the child can optimize based on its parent's returned mask
                             child.parentPlaneMask = planeMask;
 
@@ -496,42 +500,32 @@ define([
                     }
 
                     if (!t.isRefinable()) {
-                        // Tile does not meet SSE.  Add its commands since it is the best we have and request its children.
+                        // Tile does not meet SSE. Add its commands since it is the best we have until it becomes refinable.
+                        // If all its children have content, it will became refinable once they are loaded.
+                        // If a child is empty (such as for accelerating culling), its descendants with content must be loaded first.
                         selectTile(selectedTiles, t, fullyVisible, frameState);
-                        makeRefinable(tiles3D, frameState, outOfCore, t);
-                    } else {
-                        // Tile does not meet SEE and its children are loaded.  Refine to them in front-to-back order.
+
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
+                            if (child.isContentUnloaded()) {
+                                requestContent(tiles3D, child, outOfCore);
+                            } else if (!child.hasContent && !child.isRefinable()){
+                                // If the child is empty, start loading its descendants. Mark as refining so they aren't selected.
+                                child.refining = true;
+                                // Store the plane mask so that the child can optimize based on its parent's returned mask
+                                child.parentPlaneMask = planeMask;
+                                stack.push(child);
+                            }
+                        }
+                    } else {
+                        // Tile does not meet SEE and it is refinable. Refine to children in front-to-back order.
+                        for (k = 0; k < childrenLength; ++k) {
+                            child = children[k];
+                            child.refining = false;
                             // Store the plane mask so that the child can optimize based on its parent's returned mask
                             child.parentPlaneMask = planeMask;
                             stack.push(child);
                         }
-                    }
-                }
-            }
-        }
-    }
-
-    var refineStack = [];
-    function makeRefinable(tiles3D, frameState, outOfCore, tile) {
-        var maximumScreenSpaceError = tiles3D.maximumScreenSpaceError;
-        var stack = refineStack;
-        stack.push(tile);
-        while (stack.length > 0) {
-            var t = stack.pop();
-            var sse = getScreenSpaceError(t.geometricError, t, frameState);
-            if (sse > maximumScreenSpaceError) {
-                var children = t.children;
-                var childrenLength = children.length;
-                for (var k = 0; (k < childrenLength) && requestScheduler.hasAvailableRequests(); ++k) {
-// TODO: we could spin a bit less CPU here and probably above by keeping separate lists for unloaded/ready children.
-                    var child = children[k];
-                    if (child.isContentUnloaded()) {
-                        requestContent(tiles3D, child, outOfCore);
-                    } else if (!child.hasContent && !child.isRefinable()) {
-                        // If the child is empty, we need to load all its descendants with content before it can refine
-                        stack.push(child);
                     }
                 }
             }

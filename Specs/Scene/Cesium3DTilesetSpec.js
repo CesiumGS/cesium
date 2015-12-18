@@ -38,9 +38,11 @@ defineSuite([
     // Parent tile with no content and four child tiles with content
     var tilesetEmptyRootUrl = './Data/Cesium3DTiles/Tilesets/TilesetEmptyRoot/';
 
-    // Same formation as tilesetUrl, but with multiple tiles.json files
+    var tilesetReplacement1Url = './Data/Cesium3DTiles/Tilesets/TilesetReplacement1/';
+    var tilesetReplacement2Url = './Data/Cesium3DTiles/Tilesets/TilesetReplacement2/';
+
     // tiles.json : root content points to tiles2.json
-    // tiles2.json: three children with b3dm content, one child points to tiles3.json
+    // tiles2.json: root with b3dm content, three children with b3dm content, one child points to tiles3.json
     // tiles3.json: root with b3dm content
     var tilesetOfTilesetsUrl = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/';
 
@@ -344,10 +346,76 @@ defineSuite([
             scene.renderForSpecs();
 
             var stats = tileset._statistics;
+            expect(root.isRefinable()).toEqual(false);
             expect(stats.visited).toEqual(1);
             expect(stats.numberOfCommands).toEqual(1);
             expect(stats.numberOfPendingRequests).toEqual(4);
             expect(root.numberOfChildrenWithoutContent).toEqual(4);
+        });
+    });
+
+    it('replacement refinement - selects root when sse is not met and subtree is not refinable (1)', function() {
+        // No children have content, but all grandchildren have content
+        //
+        //          C
+        //      E       E
+        //    C   C   C   C
+        //
+
+        viewRootOnly();
+        return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement1Url).then(function(tileset) {
+            viewAllTiles();
+            scene.renderForSpecs();
+
+            var stats = tileset._statistics;
+            var root = tileset._root;
+            return when.join(root.children[0].readyPromise, root.children[1].readyPromise).then(function() {
+                // Even though root's children are loaded, the grandchildren need to be loaded before it becomes refinable
+                scene.renderForSpecs();
+                expect(root.isRefinable()).toEqual(false);
+                expect(root.numberOfChildrenWithoutContent).toEqual(0); // Children are loaded
+                expect(stats.numberOfCommands).toEqual(1); // Render root
+                expect(stats.numberOfPendingRequests).toEqual(4); // Loading grandchildren
+
+                return Cesium3DTilesTester.waitForPendingRequests(scene, tileset).then(function() {
+                    scene.renderForSpecs();
+                    expect(root.isRefinable()).toEqual(true);
+                    expect(stats.numberOfCommands).toEqual(4); // Render children
+                });
+            });
+        });
+    });
+
+    it('replacement refinement - selects root when sse is not met and subtree is not refinable (2)', function() {
+        // Check that the root is refinable once its child is loaded
+        //
+        //          E
+        //          E
+        //        C   E
+        //            C (smaller geometric error)
+        //
+
+        viewRootOnly();
+        return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement2Url).then(function(tileset) {
+            viewAllTiles();
+            scene.renderForSpecs();
+
+            var stats = tileset._statistics;
+            var root = tileset._root;
+            return Cesium3DTilesTester.waitForPendingRequests(scene, tileset).then(function() {
+                scene.renderForSpecs();
+                expect(root.isRefinable()).toEqual(false);
+                expect(stats.numberOfCommands).toEqual(0);
+
+                setZoom(5.0); // Zoom into the last tile, when it is ready the root is refinable
+                scene.renderForSpecs();
+
+                return Cesium3DTilesTester.waitForPendingRequests(scene, tileset).then(function() {
+                    scene.renderForSpecs();
+                    expect(root.isRefinable()).toEqual(true);
+                    expect(stats.numberOfCommands).toEqual(2); // Renders two content tiles
+                });
+            });
         });
     });
 

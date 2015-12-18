@@ -114,14 +114,13 @@ define([
          */
         this.parent = parent;
 
-        /**
-         * DOC_TBA
-         *
-         * @readonly
-         */
         this.numberOfChildrenWithoutContent = defined(header.children) ? header.children.length : 0;
 
         this._numberOfUnrefinableChildren = this.numberOfChildrenWithoutContent;
+
+        this.refining = false;
+
+        this.hasContent = true;
 
         /**
          * DOC_TBA
@@ -129,13 +128,6 @@ define([
          * @readonly
          */
         this.hasTilesetContent = false;
-
-        /**
-         * DOC_TBA
-         *
-         * @readonly
-         */
-        this.hasContent = true;
 
         /**
          * DOC_TBA
