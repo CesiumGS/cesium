@@ -23,7 +23,7 @@ module.exports = function(config) {
 
 
     proxies: {
-
+        '/Data': '/Data'
     },
 
 
