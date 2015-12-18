@@ -115,7 +115,9 @@ define([
     };
 
     Cesium3DTilesTester.rejectsReadyPromiseOnFailedRequest = function(type) {
-        var tileset = {};
+        var tileset = {
+            loadTilesJson : Cesium3DTileset.prototype.loadTilesJson
+        };
         var tile = {
             orientedBoundingBox : new OrientedBoundingBox()
         };
