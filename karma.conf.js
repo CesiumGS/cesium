@@ -73,8 +73,17 @@ module.exports = function(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['Firefox'],
+    browsers: ['FirefoxWithWebGL'],
 
+
+    customLaunchers: {
+      FirefoxWithWebGL: {
+        base: 'Firefox',
+        prefs: {
+          'webgl.force-enabled': true
+        }
+      }
+    },
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
