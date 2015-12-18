@@ -686,6 +686,7 @@ function Foo() {
 }
 ```
 * Add the [`@deprecated`](http://usejsdoc.org/tags-deprecated.html) doc tag.
+* Remove all use of the deprecated API inside Cesium except for unit tests that specifically test the deprecated API.
 * Mention the deprecation in the `Deprecated` section of [`CHANGES.md`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CHANGES.md).  Include what Cesium version it will be removed in.
 * Create an [issue](https://github.com/AnalyticalGraphicsInc/cesium/issues) to remove the API with the appropriate `remove in [version]` label.
 
