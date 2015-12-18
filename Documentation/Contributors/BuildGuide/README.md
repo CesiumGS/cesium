@@ -15,7 +15,7 @@
 * Have commit access to cesium?
    * No
       * Fork [cesium](https://github.com/AnalyticalGraphicsInc/cesium).
-      * Delete all branches except `master`.
+      * Use the [GitHub website](https://github.com/AnalyticalGraphicsInc/cesium/branches/all) to delete all branches in your fork except `master`.
       * Clone your fork, e.g., `git clone git@github.com:yourusername/cesium.git`.
       * Make changes in a branch, e.g., `git checkout -b my-feature`.
    * Yes
