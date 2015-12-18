@@ -114,6 +114,11 @@ define([
          */
         this.parent = parent;
 
+        /**
+         * DOC_TBA
+         *
+         * @readonly
+         */
         this.numberOfChildrenWithoutContent = defined(header.children) ? header.children.length : 0;
 
         this._numberOfUnrefinableChildren = this.numberOfChildrenWithoutContent;
@@ -291,6 +296,7 @@ define([
         if (!defined(this._contentsOrientedBoundingBox)) {
             return Intersect.INSIDE;
         }
+        
         return cullingVolume.computeVisibility(this._contentsOrientedBoundingBox);
     };
 
