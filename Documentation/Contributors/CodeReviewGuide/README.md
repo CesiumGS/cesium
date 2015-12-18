@@ -49,7 +49,7 @@ This guide describes best practices for code reviews.
 
 * Cesium uses Travis CI for continuous integration.  Travis automatically builds Cesium, runs JSHint, and generates the documentation for each branch pushed to GitHub.  Before merging a pull request, verify that all Travis checks pass, indicated by the green check-mark and green `Merge pull request` button:
 
-![](Travis.png)
+![](Travis.jpg)
 
 * Delete the branch after merging the pull request.
 * Verify that the corresponding issue (if any) was closed.
