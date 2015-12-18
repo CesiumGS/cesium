@@ -265,10 +265,21 @@ define([
      *                      intersects the plane.
      */
     TileBoundingRegion.prototype.intersectPlane = function(plane) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(plane)) {
+            throw new DeveloperError('plane is required.');
+        }
+        //>>includeEnd('debug');
         return this._orientedBoundingBox.intersectPlane(plane);
     };
 
     TileBoundingRegion.prototype.createDebugVolume = function(color) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(color)) {
+            throw new DeveloperError('color is required.');
+        }
+        //>>includeEnd('debug');
+
         var modelMatrix = new Matrix4.clone(Matrix4.IDENTITY);
         var geometry = new RectangleOutlineGeometry({
             rectangle : this.boundingVolume.rectangle,

@@ -72,16 +72,27 @@ define([
      *                      intersects the plane.
      */
     TileOrientedBoundingBox.prototype.intersectPlane = function(plane) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(plane)) {
+            throw new DeveloperError('plane is required.');
+        }
+        //>>includeEnd('debug');
         return this.orientedBoundingBox.intersectPlane(plane);
     };
 
     TileOrientedBoundingBox.prototype.createDebugVolume = function(color) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(color)) {
+            throw new DeveloperError('color is required.');
+        }
+        //>>includeEnd('debug');
+
         var geometry = new BoxOutlineGeometry({
             // Make a cube of unit size -- all sides of length 1.0
             minimum: new Cartesian3(-0.5, -0.5, -0.5),
             maximum: new Cartesian3(0.5, 0.5, 0.5)
         });
-        var modelMatrix = Matrix4.fromRotationTranslation(this.halfAxes, this.center);
+        var modelMatrix = Matrix4.fromRotationTranslation(this.boundingVolume.halfAxes, this.boundingVolume.center);
         var instance = new GeometryInstance({
             geometry : geometry,
             modelMatrix : modelMatrix,

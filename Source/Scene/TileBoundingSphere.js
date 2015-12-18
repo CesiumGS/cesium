@@ -99,10 +99,20 @@ define([
      *                      intersects the plane.
      */
     TileBoundingSphere.prototype.intersectPlane = function(plane) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(plane)) {
+            throw new DeveloperError('plane is required.');
+        }
+        //>>includeEnd('debug');
         return BoundingSphere.intersectPlane(this.boundingSphere, plane);
     };
 
     TileBoundingSphere.prototype.createDebugVolume = function(color) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(color)) {
+            throw new DeveloperError('color is required.');
+        }
+        //>>includeEnd('debug');
         var geometry = new SphereOutlineGeometry({
             radius: this.radius
         });
