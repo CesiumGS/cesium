@@ -1,7 +1,8 @@
 # WebStorm Guide
 
-Install [WebStorm](https://www.jetbrains.com/webstorm/) if you don't already have it. While it's a commercial IDE,
-it's pretty cheap and there's a 30-day free trial.
+Install [WebStorm](https://www.jetbrains.com/webstorm/).
+
+While it's a commercial IDE, it's pretty cheap and there's a 30-day free trial.
 
 WebStorm requires very little configuration out of the box.  Just browse to and open the WebStorm project included with Cesium.  Most things a Web Developer would want are built-in.  Whenever you open a file that has a plugin available, such as `md`, `glsl`, or `.gitignore`, WebStorm will ask if you want to install it.  Simply say yes and off you go.  While most of us still use `git` on the command-line, WebStorm includes excellent tools for merging, diffing, and managing branches as well.
 
