@@ -11,6 +11,7 @@
         }
     });
 
+    /* global require */
     require({
             // Karma serves files from '/base', which is the basePath from your config file
             baseUrl : 'http://localhost:8080/base/Source',

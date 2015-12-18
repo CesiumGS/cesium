@@ -274,6 +274,21 @@ gulp.task('minifyRelease', ['generateStubs'], function() {
 
 gulp.task('release', ['combine', 'minifyRelease', 'generateDocumentation']);
 
+gulp.task('tests', function() {
+    return new Promise(function(resolve, reject) {
+        var karmapath =  path.join('node_modules', '.bin', 'karma');
+        var cmdLine = karmapath + ' start --browsers Firefox --single-run';
+        child_process.exec(cmdLine, function(error, stdout, stderr) {
+            if (error) {
+                console.log(stderr);
+                return reject(error);
+            }
+            console.log(stdout);
+            resolve();
+        });
+    });
+});
+
 gulp.task('generateStubs', ['build'], function(done) {
     mkdirp.sync(path.join('Build', 'Stubs'));
 
