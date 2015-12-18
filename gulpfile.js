@@ -283,7 +283,7 @@ gulp.task('test', function() {
                 console.log(stderr);
                 return reject(error);
             }
-            console.log(stdout);
+           // console.log(stdout);
             resolve();
         });
     });
