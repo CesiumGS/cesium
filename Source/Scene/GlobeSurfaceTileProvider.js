@@ -540,6 +540,12 @@ define([
      */
     GlobeSurfaceTileProvider.prototype.computeDistanceToTile = function(tile, frameState) {
         var surfaceTile = tile.data;
+        var camera = frameState.camera;
+        var cameraCartographicPosition = camera.positionCartographic;
+
+        if (Rectangle.contains(tile.rectangle, cameraCartographicPosition) && cameraCartographicPosition.height >= surfaceTile.minimumHeight && cameraCartographicPosition.height <= surfaceTile.maximumHeight) {
+            return 0.0;
+        }
 
         var southwestCornerCartesian = surfaceTile.southwestCornerCartesian;
         var northeastCornerCartesian = surfaceTile.northeastCornerCartesian;
@@ -566,7 +572,6 @@ define([
         }
 
         var cameraCartesianPosition = frameState.camera.positionWC;
-        var cameraCartographicPosition = frameState.camera.positionCartographic;
 
         var vectorFromSouthwestCorner = Cartesian3.subtract(cameraCartesianPosition, southwestCornerCartesian, vectorScratch);
         var distanceToWestPlane = Cartesian3.dot(vectorFromSouthwestCorner, westNormal);

@@ -22,6 +22,7 @@ Change Log
 * Added `QuadtreePrimitive#tileLoadProgressEvent` and `Globe#tileLoadProgressEvent`.  These event are raised when the length of the tile load queue changes, enabling incremental loading indicators.
 * Added missing points to `EllipseGeometry` and `EllipseOutlineGeometry` [#3078](https://github.com/AnalyticalGraphicsInc/cesium/issues/3078)
 * Added dynamic `enableFeaturePicking` toggle to all ImageryProviders that support feature picking.
+* Fix disappearing terrain while fog is active. [#3335](https://github.com/AnalyticalGraphicsInc/cesium/issues/3335)
 
 ### 1.16 - 2015-12-01
 
