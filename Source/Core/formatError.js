@@ -14,7 +14,7 @@ define([
      * @param {Object} object The item to find in the array.
      * @returns {String} A string containing the formatted error.
      */
-    var formatError = function(object) {
+    function formatError(object) {
         var result;
 
         var name = object.name;
@@ -31,7 +31,7 @@ define([
         }
 
         return result;
-    };
+    }
 
     return formatError;
 });

@@ -48,7 +48,7 @@ define([
      *
      * @private
      */
-    var loadCubeMap = function(context, urls, allowCrossOrigin) {
+    function loadCubeMap(context, urls, allowCrossOrigin) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(context)) {
             throw new DeveloperError('context is required.');
@@ -92,7 +92,7 @@ define([
                 }
             });
         });
-    };
+    }
 
     return loadCubeMap;
 });

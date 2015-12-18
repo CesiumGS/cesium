@@ -103,7 +103,7 @@ define([
      * object5.billboard.scale = Cesium.ReferenceProperty.fromString(collection, '\\#object\\.4#billboard.scale');
      * collection.add(object5);
      */
-    var ReferenceProperty = function(targetCollection, targetId, targetPropertyNames) {
+    function ReferenceProperty(targetCollection, targetId, targetPropertyNames) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(targetCollection)) {
             throw new DeveloperError('targetCollection is required.');
@@ -132,7 +132,7 @@ define([
         this._resolveProperty = true;
 
         targetCollection.collectionChanged.addEventListener(ReferenceProperty.prototype._onCollectionChanged, this);
-    };
+    }
 
     defineProperties(ReferenceProperty.prototype, {
         /**

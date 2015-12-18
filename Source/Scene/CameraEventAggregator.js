@@ -254,7 +254,7 @@ define([
      *
      * @see ScreenSpaceEventHandler
      */
-    var CameraEventAggregator = function(canvas) {
+    function CameraEventAggregator(canvas) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(canvas)) {
             throw new DeveloperError('canvas is required.');
@@ -295,7 +295,7 @@ define([
                 }
             }
         }
-    };
+    }
 
     defineProperties(CameraEventAggregator.prototype, {
         /**

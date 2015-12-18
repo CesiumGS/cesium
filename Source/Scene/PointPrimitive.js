@@ -51,7 +51,7 @@ define([
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Points.html|Cesium Sandcastle Points Demo}
      */
-    var PointPrimitive = function(options, pointPrimitiveCollection) {
+    function PointPrimitive(options, pointPrimitiveCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -79,7 +79,7 @@ define([
         this._pointPrimitiveCollection = pointPrimitiveCollection;
         this._dirty = false;
         this._index = -1; //Used only by PointPrimitiveCollection
-    };
+    }
 
     var SHOW_INDEX = PointPrimitive.SHOW_INDEX = 0;
     var POSITION_INDEX = PointPrimitive.POSITION_INDEX = 1;

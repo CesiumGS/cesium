@@ -205,7 +205,7 @@ define([
      * @param {Cartographic} [end] The final planetodetic point on the path.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the geodesic lies.
      */
-    var EllipsoidGeodesic = function(start, end, ellipsoid) {
+    function EllipsoidGeodesic(start, end, ellipsoid) {
         var e = defaultValue(ellipsoid, Ellipsoid.WGS84);
         this._ellipsoid = e;
         this._start = new Cartographic();
@@ -220,7 +220,7 @@ define([
         if (defined(start) && defined(end)) {
             computeProperties(this, start, end, e);
         }
-    };
+    }
 
     defineProperties(EllipsoidGeodesic.prototype, {
         /**

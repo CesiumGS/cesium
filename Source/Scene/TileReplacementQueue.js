@@ -12,12 +12,12 @@ define([
      * @alias TileReplacementQueue
      * @private
      */
-    var TileReplacementQueue = function TileReplacementQueue() {
+    function TileReplacementQueue() {
         this.head = undefined;
         this.tail = undefined;
         this.count = 0;
         this._lastBeforeStartOfFrame = undefined;
-    };
+    }
 
     /**
      * Marks the start of the render frame.  Tiles before (closer to the head) this tile in the

@@ -17,9 +17,9 @@ define([
      * @alias DynamicGeometryUpdater
      * @constructor
      */
-    var DynamicGeometryUpdater = function() {
+    function DynamicGeometryUpdater() {
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     /**
      * Updates the geometry to the specified time.

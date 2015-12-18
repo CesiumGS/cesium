@@ -63,7 +63,7 @@ define([
      * });
      * var geometry = Cesium.CylinderOutlineGeometry.createGeometry(cylinder);
      */
-    var CylinderOutlineGeometry = function(options) {
+    function CylinderOutlineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var length = options.length;
@@ -96,7 +96,7 @@ define([
         this._slices = slices;
         this._numberOfVerticalLines = numberOfVerticalLines;
         this._workerName = 'createCylinderOutlineGeometry';
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.

@@ -11,10 +11,10 @@ defineSuite([
         ProviderViewModel) {
     "use strict";
 
-    var MockGlobe = function() {
+    function MockGlobe() {
         this.imageryLayers = new ImageryLayerCollection();
         this.terrainProvider = new EllipsoidTerrainProvider();
-    };
+    }
 
     var testProvider = {
         isReady : function() {

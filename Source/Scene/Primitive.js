@@ -178,7 +178,7 @@ define([
      *   appearance : new Cesium.PerInstanceColorAppearance()
      * }));
      */
-    var Primitive = function(options) {
+    function Primitive(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
@@ -326,7 +326,7 @@ define([
         this._createGeometryResults = undefined;
         this._ready = false;
         this._readyPromise = when.defer();
-    };
+    }
 
     defineProperties(Primitive.prototype, {
         /**

@@ -29,7 +29,7 @@ define([
      * @param {Property} [options.image] A Property specifying the Image, URL, Canvas, or Video.
      * @param {Property} [options.repeat=new Cartesian2(1.0, 1.0)] A {@link Cartesian2} Property specifying the number of times the image repeats in each direction.
      */
-    var ImageMaterialProperty = function(options) {
+    function ImageMaterialProperty(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._definitionChanged = new Event();
@@ -43,7 +43,7 @@ define([
         this.image = options.image;
         this.repeat = options.repeat;
         this.alpha = options.alpha;
-    };
+    }
 
     defineProperties(ImageMaterialProperty.prototype, {
         /**

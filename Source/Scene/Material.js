@@ -258,7 +258,7 @@ define([
      *     }
      * });
      */
-    var Material = function(options) {
+    function Material(options) {
         /**
          * The material type. Can be an existing type or a new type. If no type is specified in fabric, type is a GUID.
          * @type {String}
@@ -321,7 +321,7 @@ define([
         if (!defined(Material._uniformList[this.type])) {
             Material._uniformList[this.type] = Object.keys(this._uniforms);
         }
-    };
+    }
 
     // Cached list of combined uniform names indexed by type.
     // Used to get the list of uniforms in the same order.

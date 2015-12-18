@@ -50,7 +50,7 @@ define([
      *     window.alert('Error processing ' + source + ':' + error);
      * });
      */
-    var viewerDragDropMixin = function(viewer, options) {
+    function viewerDragDropMixin(viewer, options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(viewer)) {
             throw new DeveloperError('viewer is required.');
@@ -212,7 +212,7 @@ define([
 
         //Specs need access to handleDrop
         viewer._handleDrop = handleDrop;
-    };
+    }
 
     function stop(event) {
         event.stopPropagation();
