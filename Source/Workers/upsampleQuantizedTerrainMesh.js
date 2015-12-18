@@ -93,11 +93,12 @@ define([
         var parentNormalBuffer = hasVertexNormals ? new Array(quantizedVertexCount * 2) : undefined;
 
         var threshold = 20;
+        var height;
 
         var i, n;
         for (i = 0, n = 0; i < quantizedVertexCount; ++i, n += 2) {
             var texCoords = encoding.decodeTextureCoordinates(parentVertices, i, decodeTexCoordsScratch);
-            var height  = encoding.decodeHeight(parentVertices, i);
+            height  = encoding.decodeHeight(parentVertices, i);
 
             parentUBuffer[i] = CesiumMath.clamp((texCoords.x * maxShort) | 0, 0, maxShort);
             parentVBuffer[i] = CesiumMath.clamp((texCoords.y * maxShort) | 0, 0, maxShort);
@@ -261,7 +262,7 @@ define([
 
             vBuffer[i] = v;
 
-            var height = CesiumMath.lerp(parentMinimumHeight, parentMaximumHeight, heightBuffer[i] / maxShort);
+            height = CesiumMath.lerp(parentMinimumHeight, parentMaximumHeight, heightBuffer[i] / maxShort);
             if (height < minimumHeight) {
                 minimumHeight = height;
             }

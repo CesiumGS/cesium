@@ -241,7 +241,7 @@ define([
         var y = (temp - x) * 256.0;
 
         return Cartesian2.fromElements(x, y, result);
-    }
+    };
 
     TerrainEncoding.prototype.getStride = function() {
         var vertexStride;
