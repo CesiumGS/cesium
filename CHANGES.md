@@ -22,6 +22,15 @@ Change Log
 * Added `QuadtreePrimitive#tileLoadProgressEvent` and `Globe#tileLoadProgressEvent`.  These event are raised when the length of the tile load queue changes, enabling incremental loading indicators.
 * Added missing points to `EllipseGeometry` and `EllipseOutlineGeometry` [#3078](https://github.com/AnalyticalGraphicsInc/cesium/issues/3078)
 * Added dynamic `enableFeaturePicking` toggle to all ImageryProviders that support feature picking.
+* Added the ability to manipulate `Model` node transformations via CZML and the Entity API. [#3316](https://github.com/AnalyticalGraphicsInc/cesium/pull/3316)
+* Added `TranslationRotationScale` property, which as the name suggests, represents an affine transformation defined by a translation, rotation, and scale.
+* Added `Matrix4.fromTranslationRotationScale`.
+* Added `NodeTransformationProperty`, which is a `Property` value that is defined by independent `translation`, `rotation`, and `scale` `Property` instances.
+* Added `PropertyBag`, which is a `Property` whose value is a key-value mapping of property names to the computed value of other properties.
+* Added `ModelGraphics.runAnimations` which is a boolean `Property` indicating if all model animations should be started after the model is loaded.
+* Added `ModelGraphics.nodeTransformations` which is a `PropertyBag` of `TranslationRotationScale` properties to be applied to a loaded model.
+* Added CZML support for new `runAnimations` and `nodeTransformations` properties on the `model` packet.
+* Added a new Sandcastle example: [CZML Model - Node Transformations](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=CZML%20Model%20-%20Node%20Transformations.html&label=CZML).
 * Fix disappearing terrain while fog is active. [#3335](https://github.com/AnalyticalGraphicsInc/cesium/issues/3335)
 
 ### 1.16 - 2015-12-01
