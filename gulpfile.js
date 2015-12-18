@@ -280,8 +280,11 @@ gulp.task('test', function(done) {
         configFile: path.join(__dirname, 'karma.conf.js'),
         singleRun: true,
         browsers: ['Firefox']
-    }, function() {
-        done();
+    }, function(karmaExitStatus) {
+        if(karmaExitStatus) {
+            return done(karmaExitStatus);
+        }
+        return done();
     });
 });
 

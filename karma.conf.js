@@ -33,9 +33,7 @@ module.exports = function(config) {
         'Specs/Widgets/**/*.js',
         'Specs/Scene/**/*.js',
         'Specs/DataSources/**/*.js',
-        'Specs/Renderer/**/*.js',
-        'Specs/Core/QuantizedMeshTerrainDataSpec.js',
-        'Specs/Core/EllipsoidTerrainProvider.js'
+        'Specs/Renderer/**/*.js'
     ],
 
 
