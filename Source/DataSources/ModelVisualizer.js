@@ -109,7 +109,7 @@ define([
                     incrementallyLoadTextures : Property.getValueOrDefault(modelGraphics._incrementallyLoadTextures, time, defaultIncrementallyLoadTextures)
                 });
 
-                model.readyPromise.then(onModelReady).otherwise(onModelError);
+                model.readyPromise.otherwise(onModelError);
 
                 model.id = entity;
                 primitives.add(model);
@@ -167,7 +167,7 @@ define([
                             originalNodeMatrixHash[nodeName] = originalNodeMatrix;
                         }
 
-                        var transformationMatrix = nodeTransformation.toMatrix(nodeMatrixScratch);
+                        var transformationMatrix = Matrix4.fromTranslationRotationScale(nodeTransformation, nodeMatrixScratch);
                         modelNode.matrix = Matrix4.multiply(originalNodeMatrix, transformationMatrix, transformationMatrix);
                     }
                 }
@@ -287,10 +287,6 @@ define([
         if (defined(modelData)) {
             modelData.nodeTransformationsScratch = {};
         }
-    }
-
-    function onModelReady(model) {
-
     }
 
     function onModelError(error) {

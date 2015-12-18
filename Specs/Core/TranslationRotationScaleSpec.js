@@ -54,19 +54,4 @@ defineSuite([
         right.rotation = Quaternion.ZERO;
         expect(left.equals(right)).toEqual(false);
     });
-
-    it('can produce a matrix', function() {
-        var translation = Cartesian3.UNIT_Y;
-        var rotation = new Quaternion(0.5, 0.5, 0.5, 0.5);
-        var scale = Cartesian3.UNIT_X;
-
-        var transformation = new TranslationRotationScale(translation, rotation, scale);
-
-        expect(transformation.toMatrix()).toEqual(Matrix4.fromTranslationQuaternionRotationScale(translation, rotation, scale));
-
-        var result = new Matrix4();
-
-        expect(transformation.toMatrix(result)).toBe(result);
-        expect(transformation.toMatrix(result)).toEqual(Matrix4.fromTranslationQuaternionRotationScale(translation, rotation, scale));
-    });
 });

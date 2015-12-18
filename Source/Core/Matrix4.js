@@ -47,6 +47,7 @@ define([
      * @see Matrix4.fromColumnMajorArray
      * @see Matrix4.fromRowMajorArray
      * @see Matrix4.fromRotationTranslation
+     * @see Matrix4.fromTranslationRotationScale
      * @see Matrix4.fromTranslationQuaternionRotationScale
      * @see Matrix4.fromTranslation
      * @see Matrix4.fromScale
@@ -408,6 +409,23 @@ define([
         result[15] = 1.0;
 
         return result;
+    };
+
+    /**
+     * Creates a Matrix4 instance from a {@link TranslationRotationScale} instance.
+     *
+     * @param {TranslationRotationScale} translationRotationScale The instance.
+     * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
+     */
+    Matrix4.fromTranslationRotationScale = function(translationRotationScale, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(translationRotationScale)) {
+            throw new DeveloperError('translationRotationScale is required.');
+        }
+        //>>includeEnd('debug');
+
+        return Matrix4.fromTranslationQuaternionRotationScale(translationRotationScale.translation, translationRotationScale.rotation, translationRotationScale.scale, result);
     };
 
     /**
