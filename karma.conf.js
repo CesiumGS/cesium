@@ -47,6 +47,13 @@ module.exports = function(config) {
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
     reporters: ['spec'],
+    specReporter: {
+      maxLogLines: 10,
+      suppressErrorSummary: true,
+      suppressFailed: false,
+      suppressPassed: true,  // do not print information about passed tests
+      suppressSkipped: true  // do not print information about skipped tests
+    },
 
 
     // web server port
