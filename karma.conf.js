@@ -15,16 +15,15 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-		{pattern: 'Source/**/*.js', included: false, served: true},
-		{pattern: 'Specs/**/*.js', included: false, served: true},
+		{pattern: 'Source/**/*', included: false, served: true},
+		{pattern: 'Specs/**/*', included: false, served: true},
 
 		'Specs/test-main.js'
     ],
 
 
     proxies: {
-      '/Data' : 'http://localhost:8080/Data',
-      '/base/Source/Assets' : 'http://localhost:8080/Source/Assets'
+
     },
 
 
