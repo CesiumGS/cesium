@@ -75,7 +75,7 @@
     "minify": "gulp minify",
     "minifyRelease": "gulp minifyRelease",
     "release": "gulp release",
-    "tests" : "gulp tests",
+    "test" : "gulp test",
     "generateStubs": "gulp generateStubs",
     "sortRequires": "gulp sortRequires"
   }

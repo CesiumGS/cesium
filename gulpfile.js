@@ -274,7 +274,7 @@ gulp.task('minifyRelease', ['generateStubs'], function() {
 
 gulp.task('release', ['combine', 'minifyRelease', 'generateDocumentation']);
 
-gulp.task('tests', function() {
+gulp.task('test', function() {
     return new Promise(function(resolve, reject) {
         var karmapath =  path.join('node_modules', '.bin', 'karma');
         var cmdLine = karmapath + ' start --browsers Firefox --single-run';
