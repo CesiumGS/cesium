@@ -20,6 +20,7 @@ var gulpRename = require('gulp-rename');
 var gulpReplace = require('gulp-replace');
 var Promise = require('bluebird');
 var requirejs = require('requirejs');
+var karma = require('karma').Server;
 
 var packageJson = require('./package.json');
 var version = packageJson.version;
@@ -274,18 +275,13 @@ gulp.task('minifyRelease', ['generateStubs'], function() {
 
 gulp.task('release', ['combine', 'minifyRelease', 'generateDocumentation']);
 
-gulp.task('test', function() {
-    return new Promise(function(resolve, reject) {
-        var karmapath =  path.join('node_modules', '.bin', 'karma');
-        var cmdLine = karmapath + ' start --browsers Firefox --single-run';
-        child_process.exec(cmdLine, function(error, stdout, stderr) {
-            if (error) {
-                console.log(stderr);
-                return reject(error);
-            }
-           // console.log(stdout);
-            resolve();
-        });
+gulp.task('test', function(done) {
+    karma.start({
+        configFile: path.join(__dirname, 'karma.conf.js'),
+        singleRun: true,
+        browsers: ['Firefox']
+    }, function() {
+        done();
     });
 });
 
