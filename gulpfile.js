@@ -880,7 +880,7 @@ function buildZinc() {
             pragmas : {
                 debug : false
             },
-            //optimize : 'uglify2',
+            optimize : 'uglify2',
             mainConfigFile : 'zinc.frontend/Startup.js',
             name : 'Startup',
             out : zincStartup
@@ -892,7 +892,7 @@ function buildZinc() {
             pragmas : {
                 debug : false
             },
-            cssIn : 'zinc.frontend/Content/main.min.css',
+            cssIn : 'zinc.frontend/Content/main.css',
             out : zincCss
         })
     );
@@ -922,7 +922,9 @@ function buildZinc() {
                 'zinc.frontend/Content/images/**',
                 'zinc.frontend/Content/models/**',
                 '!zinc.frontend/**/*.scss',
-                '!zinc.frontend/**/*.map'
+                '!zinc.frontend/**/*.map',
+                '!zinc.frontend/**/*.coffee',
+                '!zinc.frontend/*.coffee'
             ]),
 
             gulp.src(['ThirdParty/requirejs-2.1.20/require.min.js'])
