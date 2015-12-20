@@ -51,6 +51,7 @@ define([
         './ImageMaterialProperty',
         './LabelGraphics',
         './ModelGraphics',
+        './NodeTransformationProperty',
         './PathGraphics',
         './PointGraphics',
         './PolygonGraphics',
@@ -58,6 +59,7 @@ define([
         './PolylineGraphics',
         './PolylineOutlineMaterialProperty',
         './PositionPropertyArray',
+        './PropertyBag',
         './RectangleGraphics',
         './ReferenceProperty',
         './Rotation',
@@ -120,6 +122,7 @@ define([
         ImageMaterialProperty,
         LabelGraphics,
         ModelGraphics,
+        NodeTransformationProperty,
         PathGraphics,
         PointGraphics,
         PolygonGraphics,
@@ -127,6 +130,7 @@ define([
         PolylineGraphics,
         PolylineOutlineMaterialProperty,
         PositionPropertyArray,
+        PropertyBag,
         RectangleGraphics,
         ReferenceProperty,
         Rotation,
@@ -1169,6 +1173,65 @@ define([
         processPacketData(Number, model, 'minimumPixelSize', modelData.minimumPixelSize, interval, sourceUri, entityCollection);
         processPacketData(Boolean, model, 'incrementallyLoadTextures', modelData.incrementallyLoadTextures, interval, sourceUri, entityCollection);
         processPacketData(Uri, model, 'uri', modelData.gltf, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, model, 'runAnimations', modelData.runAnimations, interval, sourceUri, entityCollection);
+
+        var nodeTransformationsData = modelData.nodeTransformations;
+        if (defined(nodeTransformationsData)) {
+            if (isArray(nodeTransformationsData)) {
+                for (var i = 0, len = nodeTransformationsData.length; i < len; i++) {
+                    processNodeTransformations(model, nodeTransformationsData[i], interval, sourceUri, entityCollection);
+                }
+            } else {
+                processNodeTransformations(model, nodeTransformationsData, interval, sourceUri, entityCollection);
+            }
+        }
+    }
+
+    function processNodeTransformations(model, nodeTransformationsData, constrainedInterval, sourceUri, entityCollection) {
+        var combinedInterval;
+        var packetInterval = nodeTransformationsData.interval;
+        if (defined(packetInterval)) {
+            iso8601Scratch.iso8601 = packetInterval;
+            combinedInterval = TimeInterval.fromIso8601(iso8601Scratch);
+            if (defined(constrainedInterval)) {
+                combinedInterval = TimeInterval.intersect(combinedInterval, constrainedInterval, scratchTimeInterval);
+            }
+        } else if (defined(constrainedInterval)) {
+            combinedInterval = constrainedInterval;
+        }
+
+        var nodeTransformations = model.nodeTransformations;
+        var nodeNames = Object.keys(nodeTransformationsData);
+        for (var i = 0, len = nodeNames.length; i < len; ++i) {
+            var nodeName = nodeNames[i];
+
+            if (nodeName === 'interval') {
+                continue;
+            }
+
+            var nodeTransformationData = nodeTransformationsData[nodeName];
+
+            if (!defined(nodeTransformationData)) {
+                continue;
+            }
+
+            if (!defined(nodeTransformations)) {
+                model.nodeTransformations = nodeTransformations = new PropertyBag();
+            }
+
+            if (!nodeTransformations.hasProperty(nodeName)) {
+                nodeTransformations.addProperty(nodeName);
+            }
+
+            var nodeTransformation = nodeTransformations[nodeName];
+            if (!defined(nodeTransformation)) {
+                nodeTransformations[nodeName] = nodeTransformation = new NodeTransformationProperty();
+            }
+
+            processPacketData(Cartesian3, nodeTransformation, 'translation', nodeTransformationData.translation, combinedInterval, sourceUri, entityCollection);
+            processPacketData(Quaternion, nodeTransformation, 'rotation', nodeTransformationData.rotation, combinedInterval, sourceUri, entityCollection);
+            processPacketData(Cartesian3, nodeTransformation, 'scale', nodeTransformationData.scale, combinedInterval, sourceUri, entityCollection);
+        }
     }
 
     function processPath(entity, packet, entityCollection, sourceUri) {
