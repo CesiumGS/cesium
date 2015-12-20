@@ -12,7 +12,7 @@ _TODO: TOC_
 
 ## Building the Doc
 
-The reference doc is written in JavaScript code comments using [JSDoc3](http://usejsdoc.org/index.html) tags.  At the command line, build the doc from the root Cesium directory by running:
+The reference doc is written in JavaScript code comments using [JSDoc3](http://usejsdoc.org/index.html) tags.  At the command line, build the doc from the root Cesium directory by running the following:
 ```
 npm run generateDocumentation
 ```
@@ -20,7 +20,7 @@ This creates a `Build/Documentation` directory with the built HTML files.  Open 
 
 ![](toc.png)
 
-There is also a link to the doc from Cesium's main `index.html` when running:
+There is also a link to the doc from Cesium's main `index.html` when running
 ```
 npm start
 ```
@@ -47,15 +47,12 @@ function defined(value) {
 };
 ```
 
-The doc for `defined` is in the comment starting with `/**`.  JSDoc tags begin with `@`.
+* The doc for `defined` is in the comment starting with `/**`.  JSDoc tags begin with `@`.
+* `@exports` describes the name of the function that is exported from the module.
+* `@param` describes the function's parameters, and `@returns` describes the function's return value.
+* `@example` describes a code sample.
 
-`@exports` describes the name of the function that is exported from the module.
-
-`@param` describes the function's parameters, and `@returns` describes the function's return value.
-
-`@example` describes a code sample.
-
-The above reference doc is built into:
+The above reference doc is built into the following:
 
 ![](defined.png)
 
@@ -71,7 +68,7 @@ This guide describes best practices for writing doc.  For complete details on JS
 ```
 * Omit the default value if it is `undefined`, e.g.,
 ```
-* @param {Cartesian3} [result] The object onto which to store the result.
+* @param {Cartesian3} [result] The object on which to store the result.
 ```
 * If a parameter can be more than one type, use `|` to separate the types, e.g.,
 ```
@@ -136,7 +133,7 @@ Matrix4.computePerspectiveFieldOfView = function(fovY, aspectRatio, near, far, r
  * Computes a Matrix4 instance from a column-major order array.
  *
  * @param {Number[]} values The column-major order array.
- * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
+ * @param {Matrix4} [result] The object in which the result will be stored. If undefined a new instance will be created.
  * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
  */
 Matrix4.fromColumnMajorArray = function(values, result) {
@@ -304,9 +301,9 @@ defineProperties(Entity.prototype, {
 Cartesian3.ZERO = freezeObject(new Cartesian3(0.0, 0.0, 0.0));
 ```
 
-## Functions and callbacks
+## Functions and Callbacks
 
-* Use `@function` when JSDoc can't infer an identifier is a function because the JavaScript `function` keyword isn't used, e.g.,
+* Use `@function` when JSDoc can't infer that an identifier is a function because the JavaScript `function` keyword isn't used, e.g.,
 ```javascript
 /**
  * Creates a Cartesian4 from four consecutive elements in an array.
@@ -314,7 +311,7 @@ Cartesian3.ZERO = freezeObject(new Cartesian3(0.0, 0.0, 0.0));
  *
  * @param {Number[]} array The array whose four consecutive elements correspond to the x, y, z, and w components, respectively.
  * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to the x component.
- * @param {Cartesian4} [result] The object onto which to store the result.
+ * @param {Cartesian4} [result] The object on which to store the result.
  * @returns {Cartesian4}  The modified result parameter or a new Cartesian4 instance if one was not provided.
  *
  * @example
