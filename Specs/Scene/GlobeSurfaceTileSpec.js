@@ -321,10 +321,9 @@ defineSuite([
 
             return pollToPromise(function() {
                 GlobeSurfaceTile.processStateMachine(rootTile, frameState, realTerrainProvider, imageryLayerCollection);
-                return rootTile.data.loadedTerrain.state >= TerrainState.RECEIVED;
-            }).then(function() {
                 GlobeSurfaceTile.processStateMachine(childTile, frameState, alwaysDeferTerrainProvider, imageryLayerCollection);
-                return childTile.data.upsampledTerrain.state >= TerrainState.RECEIVED;
+                return defined(rootTile.data.terrainData) && defined(rootTile.data.terrainData._mesh) &&
+                       defined(childTile.data.terrainData);
             }).then(function() {
                 // Mark the grandchild as present even though the child is upsampled.
                 childTile.data.terrainData._childTileMask = 15;
@@ -357,9 +356,9 @@ defineSuite([
                 GlobeSurfaceTile.processStateMachine(rootTile, frameState, realTerrainProvider, imageryLayerCollection);
                 GlobeSurfaceTile.processStateMachine(childTile, frameState, alwaysDeferTerrainProvider, imageryLayerCollection);
                 GlobeSurfaceTile.processStateMachine(grandchildTile, frameState, alwaysDeferTerrainProvider, imageryLayerCollection);
-                return rootTile.data.loadedTerrain.state >= TerrainState.RECEIVED &&
-                       childTile.data.upsampledTerrain.state >= TerrainState.RECEIVED &&
-                       grandchildTile.data.upsampledTerrain.state >= TerrainState.RECEIVED;
+                return defined(rootTile.data.terrainData) && defined(rootTile.data.terrainData._mesh) &&
+                       defined(childTile.data.terrainData) && defined(childTile.data.terrainData._mesh) &&
+                       defined(grandchildTile.data.terrainData);
             }).then(function() {
                 // Mark the great-grandchild as present even though the grandchild is upsampled.
                 grandchildTile.data.terrainData._childTileMask = 15;
