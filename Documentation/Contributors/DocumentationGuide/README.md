@@ -8,7 +8,23 @@ Always include doc for new identifiers (classes, functions, properties, constant
 
 Generally, just follow the patterns that are already in comparable parts of the code, e.g., if you are documenting a new utility function in `Core`, look at a function in `Core` such as [`binarySearch`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/binarySearch.js); likewise, if you are documenting a new class in `Scene`, look at a similar class such as [`Model`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Scene/Model.js).
 
-_TODO: TOC_
+* [Building the Doc](#building-the-doc)
+* [Basics](#basics)
+* [Parameters](#parameters)
+* [`options` Parameters](#options-parameters)
+* [Exceptions](#exceptions)
+* [Examples](#examples)
+* [References](#references)
+* [Classes](#classes)
+* [Properties and Constants](#properties-and-constants)
+* [Functions and Callbacks](#functions-and-callbacks)
+* [Private](#private)
+* [Layout Reference](#layout-reference)
+   * [Constructor Function](#constructor-function)
+   * [Member Function](#member-function)
+   * [Property](#property)
+   * [Property Getter/Setter](#property-gettersetter)
+   * [Standalone Function](#standalone-function)
 
 ## Building the Doc
 
@@ -18,7 +34,7 @@ npm run generateDocumentation
 ```
 This creates a `Build/Documentation` directory with the built HTML files.  Open `index.html` to see the top-level contents:
 
-![](toc.png)
+![](toc.jpg)
 
 There is also a link to the doc from Cesium's main `index.html` when running
 ```
@@ -54,7 +70,7 @@ function defined(value) {
 
 The above reference doc is built into the following:
 
-![](defined.png)
+![](defined.jpg)
 
 This guide describes best practices for writing doc.  For complete details on JSDoc tags, see their [documentation](http://usejsdoc.org/index.html).
 
@@ -91,7 +107,7 @@ Matrix4.fromRotationTranslation = function(rotation, translation, result) {
 ```
 generates
 
-![](fromRotationTranslation.png)
+![](fromRotationTranslation.jpg)
 The Cesium classes in the `Type` column are links to their doc.
 
 ## `options` Parameters
@@ -107,7 +123,7 @@ Each property of an `options` parameter (see the [Coding Guide](https://github.c
 ```
 generates
 
-![](DebugModelMatrixPrimitive.png)
+![](DebugModelMatrixPrimitive.jpg)
 
 If all `options` properties are optional, also mark the `options` object optional.
 
@@ -208,7 +224,7 @@ function ArcGisImageServerTerrainProvider(options) {
 
 generates
 
-![](ArcGisImageServerTerrainProvider.png)
+![](ArcGisImageServerTerrainProvider.jpg)
 
 * Use `#` to reference an instance member (e.g., one that is assigned to the prototype); use `.` to access a static member, e.g.,
 ```
