@@ -900,7 +900,7 @@ define([
         }
     }
 
-     function processVertexData(object, propertyName, positionsData, entityCollection) {
+    function processVertexData(object, propertyName, positionsData, entityCollection) {
         var i;
         var len;
         var references = positionsData.references;
