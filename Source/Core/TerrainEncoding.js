@@ -139,6 +139,7 @@ define([
          */
         this.hasVertexNormals = hasVertexNormals;
     }
+
     TerrainEncoding.prototype.encode = function(vertexBuffer, bufferIndex, position, uv, height, normalToPack) {
         var u = uv.x;
         var v = uv.y;
@@ -209,7 +210,7 @@ define([
 
     TerrainEncoding.prototype.decodeTextureCoordinates = function(buffer, index, result) {
         if (!defined(result)) {
-            result = new Cartesian3();
+            result = new Cartesian2();
         }
 
         index *= this.getStride();
