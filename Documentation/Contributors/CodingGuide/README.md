@@ -32,6 +32,7 @@ To some extent, this guide can be summarized as _make new code similar to existi
    * [Shadowed Property](#shadowed-property)
    * [Put the Constructor Function at the Top of the File](#put-the-constructor-function-at-the-top-of-the-file)
 * [Design](#design)
+   * [Deprecation and Breaking Changes](#deprecation-and-breaking-changes)
 * [Third-Party Libraries](#third-party-libraries)
 * [GLSL](#glsl)
    * [Naming](#naming-1)
@@ -667,6 +668,27 @@ SkyBox.prototype.destroy = function() {
 };
 ```
 * Only `destroy` objects that you create; external objects given to a class should be destroyed by their owner, not the class.
+
+### Deprecation and Breaking Changes
+
+From release to release, we strive to keep the public Cesium API stable but also maintain mobility for speedy development and to take the API in the right direction.  As such, we sparingly deprecate and then remove or replace parts of the public API.
+
+A `@private` API is considered a Cesium implementation detail and can be broken immediately without deprecation.
+
+A public identifier (class, function, property) should be deprecated before being removed.  To do so:
+
+* Decide on which future version the deprecated API should be removed.  This is on a case-by-case basis depending on how badly it impacts users and Cesium development.  Most deprecated APIs will removed in 1-3 releases.  This can be discussed in the pull request if needed.
+* Use [`deprecationWarning`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/deprecationWarning.js) to warn users that the API is deprecated and what proactive changes they can take, e.g.,
+```javascript
+function Foo() {
+    deprecationWarning('Foo', 'Foo was deprecated in Cesium 1.01.  It will be removed in 1.03.  Use newFoo instead.');
+    // ...
+}
+```
+* Add the [`@deprecated`](http://usejsdoc.org/tags-deprecated.html) doc tag.
+* Remove all use of the deprecated API inside Cesium except for unit tests that specifically test the deprecated API.
+* Mention the deprecation in the `Deprecated` section of [`CHANGES.md`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CHANGES.md).  Include what Cesium version it will be removed in.
+* Create an [issue](https://github.com/AnalyticalGraphicsInc/cesium/issues) to remove the API with the appropriate `remove in [version]` label.
 
 ## Third-Party Libraries
 

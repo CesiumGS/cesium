@@ -1280,7 +1280,7 @@ define([
     var nodeQuaternionScratch = new Quaternion();
     var nodeScaleScratch = new Cartesian3();
 
-    function getTransform(node, version) {
+    function getTransform(node) {
         if (defined(node.matrix)) {
             return Matrix4.fromArray(node.matrix);
         }
