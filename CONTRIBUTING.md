@@ -71,7 +71,7 @@ Our code is our lifeblood so maintaining Cesium's high code quality is important
    * Verify your code passes [JSHint](http://www.jshint.com/).  We use the JSHint Eclipse plugin so it runs automatically when we save.  You can also run `jsHint` from the command line (`npm run jsHint`).
    * Verify that all tests pass, and write new tests with excellent code coverage for new code.  Follow the [Testing Guide](Documentation/Contributors/TestingGuide/README.md).
    * Update [LICENSE.md](LICENSE.md) if third-party libraries were added/updated/removed, including new version of existing libraries.  Mention it in [CHANGES.md](CHANGES.md).  If you plan to add a third-party library, start a new thread on the [Cesium forum](http://cesiumjs.org/forum.html) first.
-   * If new public classes, functions, or properties were added, also:
-      * Include reference documentation with code examples.  Check out the [best practices](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Documentation-Best-Practices).
+   * If new identifiers were added to the Cesium API:
+      * Include reference documentation with code examples.  Follow the [Documentation Guide](Documentation/Contributors/DocumentationGuide/README.md).
       * Update [CHANGES.md](CHANGES.md).
       * If the change is significant, add a new [Sandcastle](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html) example or extend and existing one.
