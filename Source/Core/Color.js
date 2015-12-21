@@ -47,7 +47,7 @@ define([
      *
      * @see Packable
      */
-    var Color = function(red, green, blue, alpha) {
+    function Color(red, green, blue, alpha) {
         /**
          * The red component.
          * @type {Number}
@@ -72,7 +72,7 @@ define([
          * @default 1.0
          */
         this.alpha = defaultValue(alpha, 1.0);
-    };
+    }
 
     /**
      * Creates a Color instance from a {@link Cartesian4}. <code>x</code>, <code>y</code>, <code>z</code>,

@@ -58,7 +58,7 @@ defineSuite([
     var rotateAmount = CesiumMath.PI_OVER_TWO;
     var zoomAmount = 1.0;
 
-    var FakeScene = function(projection) {
+    function FakeScene(projection) {
         this.canvas = {
             clientWidth: 512,
             clientHeight: 384
@@ -73,8 +73,7 @@ defineSuite([
             drawingBufferWidth : 1024,
             drawingBufferHeight : 768
         };
-    };
-
+    }
     beforeEach(function() {
         position = Cartesian3.clone(Cartesian3.UNIT_Z);
         up = Cartesian3.clone(Cartesian3.UNIT_Y);

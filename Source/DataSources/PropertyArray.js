@@ -24,12 +24,12 @@ define([
      *
      * @param {Property[]} [value] An array of Property instances.
      */
-    var PropertyArray = function(value) {
+    function PropertyArray(value) {
         this._value = undefined;
         this._definitionChanged = new Event();
         this._eventHelper = new EventHelper();
         this.setValue(value);
-    };
+    }
 
     defineProperties(PropertyArray.prototype, {
         /**

@@ -16,9 +16,9 @@ define([
      * @constructor
      * @private
      */
-    var QuadtreeTileProvider = function QuadtreeTileProvider() {
+    function QuadtreeTileProvider() {
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     /**
      * Computes the default geometric error for level zero of the quadtree.

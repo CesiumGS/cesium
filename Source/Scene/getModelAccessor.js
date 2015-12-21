@@ -18,7 +18,7 @@ define([
     /**
      * @private
      */
-    var getModelAccessor = function(accessor) {
+    function getModelAccessor(accessor) {
         var componentDatatype = accessor.componentType;
         var componentsPerAttribute = ComponentsPerAttribute[accessor.type];
 
@@ -28,7 +28,7 @@ define([
                 return ComponentDatatype.createArrayBufferView(componentDatatype, buffer, byteOffset, componentsPerAttribute * length);
             }
         };
-    };
+    }
 
     return getModelAccessor;
 });

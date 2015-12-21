@@ -30,7 +30,7 @@ define([
      *
      * @private
      */
-    var scaleToGeodeticSurface = function(cartesian, oneOverRadii, oneOverRadiiSquared, centerToleranceSquared, result) {
+    function scaleToGeodeticSurface(cartesian, oneOverRadii, oneOverRadiiSquared, centerToleranceSquared, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required.');
@@ -130,7 +130,7 @@ define([
         result.y = positionY * yMultiplier;
         result.z = positionZ * zMultiplier;
         return result;
-    };
+    }
 
     return scaleToGeodeticSurface;
 });

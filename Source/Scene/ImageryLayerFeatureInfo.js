@@ -11,7 +11,7 @@ define([
      * @alias ImageryLayerFeatureInfo
      * @constructor
      */
-    var ImageryLayerFeatureInfo = function() {
+    function ImageryLayerFeatureInfo() {
         /**
          * Gets or sets the name of the feature.
          * @type {String}
@@ -44,7 +44,7 @@ define([
          * @type {Object}
          */
         this.imageryLayer = undefined;
-    };
+    }
 
     /**
      * Configures the name of this feature by selecting an appropriate property.  The name will be obtained from

@@ -12,7 +12,7 @@ define([
      *
      * @exception {DeveloperError} Element with id "id" does not exist in the document.
      */
-    var getElement = function(element) {
+    function getElement(element) {
         if (typeof element === 'string') {
             var foundElement = document.getElementById(element);
 
@@ -25,7 +25,7 @@ define([
             element = foundElement;
         }
         return element;
-    };
+    }
 
     return getElement;
 });

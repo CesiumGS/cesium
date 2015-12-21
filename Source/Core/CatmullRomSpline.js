@@ -142,7 +142,7 @@ define([
      * var p0 = spline.evaluate(times[i]);         // equal to positions[i]
      * var p1 = spline.evaluate(times[i] + delta); // interpolated value when delta < times[i + 1] - times[i]
      */
-    var CatmullRomSpline = function(options) {
+    function CatmullRomSpline(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var points = options.points;
@@ -188,7 +188,7 @@ define([
 
         this._evaluateFunction = createEvaluateFunction(this);
         this._lastTimeIndex = 0;
-    };
+    }
 
     defineProperties(CatmullRomSpline.prototype, {
         /**

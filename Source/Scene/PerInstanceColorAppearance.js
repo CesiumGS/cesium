@@ -82,7 +82,7 @@ define([
      *   appearance : new Cesium.PerInstanceColorAppearance()
      * });
      */
-    var PerInstanceColorAppearance = function(options) {
+    function PerInstanceColorAppearance(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var translucent = defaultValue(options.translucent, true);
@@ -122,7 +122,7 @@ define([
         this._vertexFormat = vertexFormat;
         this._flat = flat;
         this._faceForward = defaultValue(options.faceForward, !closed);
-    };
+    }
 
     defineProperties(PerInstanceColorAppearance.prototype, {
         /**

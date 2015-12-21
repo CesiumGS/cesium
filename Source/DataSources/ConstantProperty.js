@@ -26,13 +26,13 @@ define([
      * @exception {DeveloperError} value.clone is a required function.
      * @exception {DeveloperError} value.equals is a required function.
      */
-    var ConstantProperty = function(value) {
+    function ConstantProperty(value) {
         this._value = undefined;
         this._hasClone = false;
         this._hasEquals = false;
         this._definitionChanged = new Event();
         this.setValue(value);
-    };
+    }
 
     defineProperties(ConstantProperty.prototype, {
         /**
