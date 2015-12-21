@@ -4,13 +4,15 @@ define([
         './Composite3DTileContentProvider',
         './Empty3DTileContentProvider',
         './Instanced3DModel3DTileContentProvider',
-        './Points3DTileContentProvider'
+        './Points3DTileContentProvider',
+        './Tileset3DTileContentProvider'
     ], function(
         Batched3DModel3DTileContentProvider,
         Composite3DTileContentProvider,
         Empty3DTileContentProvider,
         Instanced3DModel3DTileContentProvider,
-        Points3DTileContentProvider) {
+        Points3DTileContentProvider,
+        Tileset3DTileContentProvider) {
     "use strict";
 
     /**
@@ -29,6 +31,9 @@ define([
         cmpt : function(tileset, tile, url) {
             // Send in the factory in order to avoid a cyclical dependency
             return new Composite3DTileContentProvider(tileset, tile, url, Cesium3DTileContentProviderFactory);
+        },
+        json : function(tileset, tile, url) {
+            return new Tileset3DTileContentProvider(tileset, tile, url);
         }
     };
 
