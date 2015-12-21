@@ -439,15 +439,7 @@ define([
      * @returns {Visibility} The visibility of the tile.
      */
     GlobeSurfaceTileProvider.prototype.computeTileVisibility = function(tile, frameState, occluders) {
-        var distance = this.computeDistanceToTile(tile, frameState);
-        tile._distance = distance;
-
-        if (frameState.fog.enabled) {
-            if (CesiumMath.fog(distance, frameState.fog.density) >= 1.0) {
-                // Tile is completely in fog so return that it is not visible.
-                return Visibility.NONE;
-            }
-        }
+        tile._distance = this.computeDistanceToTile(tile, frameState);
 
         var surfaceTile = tile.data;
         var cullingVolume = frameState.cullingVolume;
@@ -540,12 +532,6 @@ define([
      */
     GlobeSurfaceTileProvider.prototype.computeDistanceToTile = function(tile, frameState) {
         var surfaceTile = tile.data;
-        var camera = frameState.camera;
-        var cameraCartographicPosition = camera.positionCartographic;
-
-        if (Rectangle.contains(tile.rectangle, cameraCartographicPosition) && cameraCartographicPosition.height >= surfaceTile.minimumHeight && cameraCartographicPosition.height <= surfaceTile.maximumHeight) {
-            return 0.0;
-        }
 
         var southwestCornerCartesian = surfaceTile.southwestCornerCartesian;
         var northeastCornerCartesian = surfaceTile.northeastCornerCartesian;
@@ -572,6 +558,7 @@ define([
         }
 
         var cameraCartesianPosition = frameState.camera.positionWC;
+        var cameraCartographicPosition = frameState.camera.positionCartographic;
 
         var vectorFromSouthwestCorner = Cartesian3.subtract(cameraCartesianPosition, southwestCornerCartesian, vectorScratch);
         var distanceToWestPlane = Cartesian3.dot(vectorFromSouthwestCorner, westNormal);
