@@ -32,14 +32,14 @@ The reference doc is written in JavaScript code comments using [JSDoc3](http://u
 ```
 npm run generateDocumentation
 ```
-This creates a `Build/Documentation` directory with the built HTML files.  Open `index.html` to see the top-level contents:
+This creates a `Build/Documentation` directory with the built HTML files.
 
-![](toc.jpg)
-
-There is also a link to the doc from Cesium's main `index.html` when running
+There is a link to the doc from Cesium's main `index.html` when running
 ```
 npm start
 ```
+
+![](toc.jpg)
 
 ## Basics
 
@@ -211,20 +211,19 @@ CesiumMath.EPSILON1 = 0.1;
 * Use `@see` sparingly to link to related classes, functions, and online resources., e.g.,
 ```javascript
 /**
- * A {@link TerrainProvider} that produces terrain geometry by tessellating height maps
- * retrieved from an ArcGIS ImageServer.
+ * Provides terrain or other geometry for the surface of an ellipsoid.  The surface geometry is
+ * organized into a pyramid of tiles according to a {@link TilingScheme}.  This type describes an
+ * interface and is not intended to be instantiated directly.
  *
- * ...
+ * @alias TerrainProvider
+ * @constructor
  *
- * @see TerrainProvider
+ * @see EllipsoidTerrainProvider
+ * @see CesiumTerrainProvider
+ * @see ArcGisImageServerTerrainProvider
  */
-function ArcGisImageServerTerrainProvider(options) {
-    // ...
+function TerrainProvider() { /* ... */ }
 ```
-
-generates
-
-![](ArcGisImageServerTerrainProvider.jpg)
 
 * Use `#` to reference an instance member (e.g., one that is assigned to the prototype); use `.` to access a static member, e.g.,
 ```
@@ -255,7 +254,7 @@ function Cartesian3(x, y, z) {
 
 ## Properties and Constants
 
-* Use `@type` and `@default` (whenever possible) to document properties, e.g.,
+* Use `@type` and `@default` (whenever possible, except when the default is `undefined`) to document properties, e.g.,
 ```javascript
 function Cartesian3(x, y) {
     /**
@@ -305,6 +304,7 @@ defineProperties(Entity.prototype, {
     },
     // ...
 ```
+* The description for readonly properties should start with "Gets", and the description for read/write properties should start with "Gets or sets."
 * Document constants with `@constant`, e.g.,
 
 ```javascript
