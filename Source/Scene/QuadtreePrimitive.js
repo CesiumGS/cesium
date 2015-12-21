@@ -412,7 +412,7 @@ define([
 
             if (screenSpaceError(primitive, frameState, tile) < primitive.maximumScreenSpaceError) {
                 // This tile meets SSE requirements, so render it.
-                addTileToRenderList(primitive, frameState, tile);
+                addTileToRenderList(primitive, tile);
             } else if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(primitive, tile)) {
                 // SSE is not good enough and children are loaded, so refine.
                 var children = tile.children;
@@ -426,7 +426,7 @@ define([
                 }
             } else {
                 // SSE is not good enough but not all children are loaded, so render this tile anyway.
-                addTileToRenderList(primitive, frameState, tile);
+                addTileToRenderList(primitive, tile);
             }
         }
 
@@ -496,14 +496,7 @@ define([
         return maxGeometricError / pixelSize;
     }
 
-    function addTileToRenderList(primitive, frameState, tile) {
-        if (frameState.fog.enabled) {
-            if (CesiumMath.fog(tile._distance, frameState.fog.density) >= 1.0) {
-                // Tile is completely in fog so do not render.
-                return;
-            }
-        }
-
+    function addTileToRenderList(primitive, tile) {
         primitive._tilesToRender.push(tile);
         ++primitive._debug.tilesRendered;
     }
