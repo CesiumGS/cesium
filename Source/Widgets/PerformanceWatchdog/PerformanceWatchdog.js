@@ -30,7 +30,7 @@ define([
      *        message to display when a low frame rate is detected.  The message is interpeted as HTML, so make sure
      *        it comes from a trusted source so that your application is not vulnerable to cross-site scripting attacks.
      */
-    var PerformanceWatchdog = function(options) {
+    function PerformanceWatchdog(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.container)) {
             throw new DeveloperError('options.container is required.');
@@ -67,7 +67,7 @@ define([
         this._container = container;
         this._viewModel = viewModel;
         this._element = element;
-    };
+    }
 
     defineProperties(PerformanceWatchdog.prototype, {
         /**

@@ -52,12 +52,12 @@ define([
     var subSampleCompositePropertyScratch = new TimeInterval();
     var subSampleIntervalPropertyScratch = new TimeInterval();
 
-    var EntityData = function(entity) {
+    function EntityData(entity) {
         this.entity = entity;
         this.polyline = undefined;
         this.index = undefined;
         this.updater = undefined;
-    };
+    }
 
     function subSampleSampledProperty(property, start, stop, times, updateTime, referenceFrame, maximumStep, startingIndex, result) {
         var r = startingIndex;
@@ -266,14 +266,13 @@ define([
     }
 
     var toFixedScratch = new Matrix3();
-    var PolylineUpdater = function(scene, referenceFrame) {
+    function PolylineUpdater(scene, referenceFrame) {
         this._unusedIndexes = [];
         this._polylineCollection = new PolylineCollection();
         this._scene = scene;
         this._referenceFrame = referenceFrame;
         scene.primitives.add(this._polylineCollection);
-    };
-
+    }
     PolylineUpdater.prototype.update = function(time) {
         if (this._referenceFrame === ReferenceFrame.INERTIAL) {
             var toFixed = Transforms.computeIcrfToFixedMatrix(time, toFixedScratch);
@@ -394,7 +393,7 @@ define([
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {EntityCollection} entityCollection The entityCollection to visualize.
      */
-    var PathVisualizer = function(scene, entityCollection) {
+    function PathVisualizer(scene, entityCollection) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
@@ -412,7 +411,7 @@ define([
         this._items = new AssociativeArray();
 
         this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
-    };
+    }
 
     /**
      * Updates all of the primitives created by this visualizer to match their

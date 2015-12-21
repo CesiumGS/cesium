@@ -19,12 +19,13 @@ define([
 
     var colorScratch = new Color();
 
-    var Batch = function(primitives, translucent, appearanceType, closed) {
+    function Batch(primitives, translucent, appearanceType, closed) {
         this.translucent = translucent;
         this.appearanceType = appearanceType;
         this.closed = closed;
         this.primitives = primitives;
         this.createPrimitive = false;
+        this.waitingOnCreate = false;
         this.primitive = undefined;
         this.oldPrimitive = undefined;
         this.geometry = new AssociativeArray();
@@ -34,8 +35,7 @@ define([
         this.subscriptions = new AssociativeArray();
         this.showsUpdated = new AssociativeArray();
         this.itemsToRemove = [];
-    };
-
+    }
     Batch.prototype.add = function(updater, instance) {
         var id = updater.entity.id;
         this.createPrimitive = true;
@@ -126,6 +126,7 @@ define([
             this.attributes.removeAll();
             this.primitive = primitive;
             this.createPrimitive = false;
+            this.waitingOnCreate = true;
         } else if (defined(primitive) && primitive.ready) {
             if (defined(this.oldPrimitive)) {
                 primitives.remove(this.oldPrimitive);
@@ -133,6 +134,7 @@ define([
             }
             var updatersWithAttributes = this.updatersWithAttributes.values;
             var length = updatersWithAttributes.length;
+            var waitingOnCreate = this.waitingOnCreate;
             for (i = 0; i < length; i++) {
                 var updater = updatersWithAttributes[i];
                 var instance = this.geometry.get(updater.entity.id);
@@ -143,7 +145,7 @@ define([
                     this.attributes.set(instance.id.id, attributes);
                 }
 
-                if (!updater.fillMaterialProperty.isConstant) {
+                if (!updater.fillMaterialProperty.isConstant || waitingOnCreate) {
                     var colorProperty = updater.fillMaterialProperty.color;
                     colorProperty.getValue(time, colorScratch);
                     if (!Color.equals(attributes._lastColor, colorScratch)) {
@@ -163,6 +165,7 @@ define([
             }
 
             this.updateShows(primitive);
+            this.waitingOnCreate = false;
         } else if (defined(primitive) && !primitive.ready) {
             isUpdated = false;
         }
@@ -231,11 +234,10 @@ define([
     /**
      * @private
      */
-    var StaticGeometryColorBatch = function(primitives, appearanceType, closed) {
+    function StaticGeometryColorBatch(primitives, appearanceType, closed) {
         this._solidBatch = new Batch(primitives, false, appearanceType, closed);
         this._translucentBatch = new Batch(primitives, true, appearanceType, closed);
-    };
-
+    }
     StaticGeometryColorBatch.prototype.add = function(time, updater) {
         var instance = updater.createFillGeometryInstance(time);
         if (instance.attributes.color.value[3] === 255) {

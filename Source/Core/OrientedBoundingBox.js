@@ -54,7 +54,7 @@ define([
      *
      * var obb = new Cesium.OrientedBoundingBox(center, halfAxes);
      */
-    var OrientedBoundingBox = function(center, halfAxes) {
+    function OrientedBoundingBox(center, halfAxes) {
         /**
          * The center of the box.
          * @type {Cartesian3}
@@ -67,7 +67,7 @@ define([
          * @default {@link Matrix3.IDENTITY}
          */
         this.halfAxes = Matrix3.clone(defaultValue(halfAxes, Matrix3.ZERO));
-    };
+    }
 
     var scratchCartesian1 = new Cartesian3();
     var scratchCartesian2 = new Cartesian3();
@@ -191,7 +191,7 @@ define([
      * @param {OrientedBoundingBox} [result] The object onto which to store the result.
      * @returns {OrientedBoundingBox} The modified result parameter or a new OrientedBoundingBox instance if one was not provided.
      */
-    var fromTangentPlaneExtents = function(tangentPlane, minimumX, maximumX, minimumY, maximumY, minimumZ, maximumZ, result) {
+    function fromTangentPlaneExtents(tangentPlane, minimumX, maximumX, minimumY, maximumY, minimumZ, maximumZ, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(minimumX) ||
             !defined(maximumX) ||
@@ -228,7 +228,7 @@ define([
         Matrix3.multiplyByScale(halfAxes, scale, halfAxes);
 
         return result;
-    };
+    }
 
     var scratchRectangleCenterCartographic = new Cartographic();
     var scratchRectangleCenter = new Cartesian3();

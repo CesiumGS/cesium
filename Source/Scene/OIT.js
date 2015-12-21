@@ -40,7 +40,7 @@ define([
     /**
      * @private
      */
-    var OIT = function(context) {
+    function OIT(context) {
         // We support multipass for the Chrome D3D9 backend and ES 2.0 on mobile.
         this._translucentMultipassSupport = false;
         this._translucentMRTSupport = false;
@@ -89,7 +89,7 @@ define([
 
         this._viewport = new BoundingRectangle();
         this._rs = undefined;
-    };
+    }
 
     function destroyTextures(oit) {
         oit._accumulationTexture = oit._accumulationTexture && !oit._accumulationTexture.isDestroyed() && oit._accumulationTexture.destroy();

@@ -34,7 +34,7 @@ define([
     /**
      * @private
      */
-    var UniformState = function() {
+    function UniformState() {
         /**
          * @type {Texture}
          */
@@ -148,7 +148,7 @@ define([
         this._resolutionScale = 1.0;
 
         this._fogDensity = undefined;
-    };
+    }
 
     defineProperties(UniformState.prototype, {
         /**

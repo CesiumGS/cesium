@@ -52,7 +52,7 @@ define([
      * });
      * var geometry = Cesium.BoxGeometry.createGeometry(box);
      */
-    var BoxGeometry = function(options) {
+    function BoxGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var min = options.minimum;
@@ -73,7 +73,7 @@ define([
         this._maximum = Cartesian3.clone(max);
         this._vertexFormat = vertexFormat;
         this._workerName = 'createBoxGeometry';
-    };
+    }
 
     /**
      * Creates a cube centered at the origin given its dimensions.

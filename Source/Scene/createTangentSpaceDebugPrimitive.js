@@ -42,7 +42,7 @@ define([
      *    modelMatrix : instance.modelMatrix
      * }));
      */
-    var createTangentSpaceDebugPrimitive = function(options) {
+    function createTangentSpaceDebugPrimitive(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var instances = [];
         var geometry = options.geometry;
@@ -105,7 +105,7 @@ define([
         }
 
         return undefined;
-    };
+    }
 
     return createTangentSpaceDebugPrimitive;
 });

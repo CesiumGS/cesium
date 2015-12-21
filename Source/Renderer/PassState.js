@@ -1,5 +1,8 @@
 /*global define*/
-define(['../Core/BoundingRectangle'], function(BoundingRectangle) {
+define([
+        '../Core/BoundingRectangle'
+    ], function(
+        BoundingRectangle) {
     "use strict";
 
     /**
@@ -8,7 +11,7 @@ define(['../Core/BoundingRectangle'], function(BoundingRectangle) {
      *
      * @private
      */
-    var PassState = function(context) {
+    function PassState(context) {
         /**
          * The context used to execute commands for this pass.
          *
@@ -53,9 +56,10 @@ define(['../Core/BoundingRectangle'], function(BoundingRectangle) {
         /**
          * The viewport used when one is not defined by a {@link DrawCommand}'s render state.
          * @type {BoundingRectangle}
+         * @default undefined
          */
-        this.viewport = new BoundingRectangle();
-    };
+        this.viewport = undefined;
+    }
 
     return PassState;
 });

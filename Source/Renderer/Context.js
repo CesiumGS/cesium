@@ -180,7 +180,7 @@ define([
     /**
      * @private
      */
-    var Context = function(canvas, options) {
+    function Context(canvas, options) {
         // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
         if (typeof WebGLRenderingContext === 'undefined') {
             throw new RuntimeError('The browser does not support WebGL.  Visit http://get.webgl.org.');
@@ -357,9 +357,6 @@ define([
         var ps = new PassState(this);
         var rs = RenderState.fromCache();
 
-        // default to the whole drawing buffer
-        ps.viewport = undefined;
-
         this._defaultPassState = ps;
         this._defaultRenderState = rs;
         this._defaultTexture = undefined;
@@ -411,7 +408,7 @@ define([
 
 
         RenderState.apply(gl, rs, ps);
-    };
+    }
 
     var defaultFramebufferMarker = {};
 

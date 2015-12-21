@@ -39,7 +39,7 @@ defineSuite([
         }
     });
 
-    var MockVisualizer = function(scene, entityCollection) {
+    function MockVisualizer(scene, entityCollection) {
         this.scene = scene;
         this.entityCollection = entityCollection;
         this.updatesCalled = 0;
@@ -48,8 +48,7 @@ defineSuite([
 
         this.getBoundingSphereResult = undefined;
         this.getBoundingSphereState = undefined;
-    };
-
+    }
     MockVisualizer.prototype.update = function(time) {
         this.lastUpdateTime = time;
         this.updatesCalled++;
@@ -68,9 +67,9 @@ defineSuite([
         this.destroyed = true;
     };
 
-    var visualizersCallback = function() {
+    function visualizersCallback() {
         return [new MockVisualizer()];
-    };
+    }
 
     it('constructor sets expected values', function() {
         display = new DataSourceDisplay({

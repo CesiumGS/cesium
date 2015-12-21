@@ -32,7 +32,7 @@ define([
      *
      * @see Packable
      */
-    var Rectangle = function(west, south, east, north) {
+    function Rectangle(west, south, east, north) {
         /**
          * The westernmost longitude in radians in the range [-Pi, Pi].
          *
@@ -64,7 +64,7 @@ define([
          * @default 0.0
          */
         this.north = defaultValue(north, 0.0);
-    };
+    }
 
     defineProperties(Rectangle.prototype, {
         /**

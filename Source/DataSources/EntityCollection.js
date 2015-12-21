@@ -50,7 +50,7 @@ define([
      *
      * @param {DataSource|CompositeEntityCollection} [owner] The data source (or composite entity collection) which created this collection.
      */
-    var EntityCollection = function(owner) {
+    function EntityCollection(owner) {
         this._owner = owner;
         this._entities = new AssociativeArray();
         this._addedEntities = new AssociativeArray();
@@ -59,7 +59,7 @@ define([
         this._suspendCount = 0;
         this._collectionChanged = new Event();
         this._id = createGuid();
-    };
+    }
 
     /**
      * Prevents {@link EntityCollection#collectionChanged} events from being raised

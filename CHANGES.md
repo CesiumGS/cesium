@@ -14,10 +14,23 @@ Change Log
     * Removed `HeightmapTessellator` from the public API. It is now private and subject to change without notice.
     * Removed `TerrainMesh` from the public API. It is now private and subject to change without notice.
     * Removed `jsonp`. Use `loadJsonp` instead.
-* Reduced the amount of both GPU and CPU memory used by terrain. The CPU memory was reduced by up to 40%.
+* Reduced the amount of both GPU and CPU memory used by terrain by using [compression](http://cesiumjs.org/2015/12/18/Terrain-Quantization/). The CPU memory was reduced by up to 40%.
 * `CorridorGeometry` and `PolylineVolumeGeometry` render short segments [#3293](https://github.com/AnalyticalGraphicsInc/cesium/issues/3293)
 * `Rectangle.fromCartographicArray` finds the smallest rectangle regardess of whether or not it crosses the international date line. [#3227](https://github.com/AnalyticalGraphicsInc/cesium/issues/3227)
 * Bug fix for `CorridorGeometry` with nearly colinear points [#3320](https://github.com/AnalyticalGraphicsInc/cesium/issues/3320)
+* Added support for msGMLOutput and Thredds server feature information formats to `GetFeatureInfoFormat` and `WebMapServiceImageryProvider`.
+* Added `QuadtreePrimitive#tileLoadProgressEvent` and `Globe#tileLoadProgressEvent`.  These event are raised when the length of the tile load queue changes, enabling incremental loading indicators.
+* Added missing points to `EllipseGeometry` and `EllipseOutlineGeometry` [#3078](https://github.com/AnalyticalGraphicsInc/cesium/issues/3078)
+* Added dynamic `enableFeaturePicking` toggle to all ImageryProviders that support feature picking.
+* Added the ability to manipulate `Model` node transformations via CZML and the Entity API. [#3316](https://github.com/AnalyticalGraphicsInc/cesium/pull/3316)
+* Added `TranslationRotationScale` property, which as the name suggests, represents an affine transformation defined by a translation, rotation, and scale.
+* Added `Matrix4.fromTranslationRotationScale`.
+* Added `NodeTransformationProperty`, which is a `Property` value that is defined by independent `translation`, `rotation`, and `scale` `Property` instances.
+* Added `PropertyBag`, which is a `Property` whose value is a key-value mapping of property names to the computed value of other properties.
+* Added `ModelGraphics.runAnimations` which is a boolean `Property` indicating if all model animations should be started after the model is loaded.
+* Added `ModelGraphics.nodeTransformations` which is a `PropertyBag` of `TranslationRotationScale` properties to be applied to a loaded model.
+* Added CZML support for new `runAnimations` and `nodeTransformations` properties on the `model` packet.
+* Added a new Sandcastle example: [CZML Model - Node Transformations](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=CZML%20Model%20-%20Node%20Transformations.html&label=CZML).
 
 ### 1.16 - 2015-12-01
 
