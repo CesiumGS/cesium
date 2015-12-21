@@ -446,8 +446,8 @@ define([
         var fromSouth = (latitude - sourceRectangle.south) * (height - 1) / (sourceRectangle.north - sourceRectangle.south);
 
         if (skirtHeight > 0) {
-            ++fromWest;
-            ++fromSouth;
+            fromWest += 1.0;
+            fromSouth += 1.0;
 
             width += 2;
             height += 2;
@@ -519,13 +519,13 @@ define([
         var i;
         if (isBigEndian) {
             for (i = 0; i < elementsPerHeight; ++i) {
-                heights[index + i] = (height / divisor) | 0;
+                heights[index + i] = height / divisor;
                 height -= heights[index + i] * divisor;
                 divisor /= elementMultiplier;
             }
         } else {
             for (i = elementsPerHeight - 1; i >= 0; --i) {
-                heights[index + i] = (height / divisor) | 0;
+                heights[index + i] = height / divisor;
                 height -= heights[index + i] * divisor;
                 divisor /= elementMultiplier;
             }

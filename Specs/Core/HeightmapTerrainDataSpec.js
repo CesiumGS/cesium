@@ -217,7 +217,7 @@ defineSuite([
              });
 
              return data.createMesh(tilingScheme, 0, 0, 0, 1).then(function() {
-                 return data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
+                 return data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
              }).then(function(upsampled) {
                  expect(upsampled.wasCreatedByUpsampling()).toBe(true);
                  expect(upsampled._width).toBe(4);
@@ -238,7 +238,7 @@ defineSuite([
              });
 
              return data.createMesh(tilingScheme, 0, 0, 0, 1).then(function() {
-                 return data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
+                 return data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
              }).then(function(upsampled) {
                  expect(upsampled.wasCreatedByUpsampling()).toBe(true);
                  expect(upsampled._width).toBe(4);
