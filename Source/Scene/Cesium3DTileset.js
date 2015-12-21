@@ -499,7 +499,7 @@ define([
 // TODO: same TODO as above.
                     }
 
-                    if (!t.isRefinable()) {
+                    if (!t.isRefinable() || t.refining) {
                         // Tile does not meet SSE. Add its commands since it is the best we have until it becomes refinable.
                         // If all its children have content, it will became refinable once they are loaded.
                         // If a child is empty (such as for accelerating culling), its descendants with content must be loaded first.
