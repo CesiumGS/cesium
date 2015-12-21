@@ -370,6 +370,8 @@ define([
             return unwrapUriInterval(czmlInterval, sourceUri);
         case VerticalOrigin:
             return VerticalOrigin[defaultValue(czmlInterval.verticalOrigin, czmlInterval)];
+        case Object:
+            return defaultValue(czmlInterval.value, czmlInterval);
         default:
             throw new RuntimeError(type);
         }
@@ -435,7 +437,7 @@ define([
             unwrappedInterval = unwrapInterval(type, packetData, sourceUri);
             packedLength = defaultValue(type.packedLength, 1);
             unwrappedIntervalLength = defaultValue(unwrappedInterval.length, 1);
-            isSampled = !defined(packetData.array) && (typeof unwrappedInterval !== 'string') && unwrappedIntervalLength > packedLength;
+            isSampled = !defined(packetData.array) && (typeof unwrappedInterval !== 'string') && (unwrappedIntervalLength > packedLength) && (type !== Object);
         }
 
         //Rotation is a special case because it represents a native type (Number)
@@ -879,7 +881,26 @@ define([
         }
     }
 
-    function processVertexData(object, propertyName, positionsData, entityCollection) {
+    //Process the 'properties' property
+    function processProperties(entity, packet, entityCollection, sourceUri) {
+        var propertiesData = packet.properties;
+        if (defined(propertiesData)) {
+            if (!defined(entity.properties)) {
+                entity.properties = {};
+            }
+            var key;
+            //We cannot simply call processPacketData(entity, 'properties', propertyData, undefined, sourceUri, entityCollection)
+            //because each property of "properties" may vary separately.
+            //The properties will be accessible as entity.properties.myprop.getValue(time).
+            for (key in propertiesData) {
+                if (propertiesData.hasOwnProperty(key)) {
+                    processPacketData(Object, entity.properties, key, propertiesData[key], undefined, sourceUri, entityCollection);
+                }
+            }
+        }
+    }
+
+     function processVertexData(object, propertyName, positionsData, entityCollection) {
         var i;
         var len;
         var references = positionsData.references;
@@ -1692,6 +1713,7 @@ define([
     processPoint, //
     processPolygon, //
     processPolyline, //
+    processProperties, //
     processRectangle, //
     processPosition, //
     processViewFrom, //
