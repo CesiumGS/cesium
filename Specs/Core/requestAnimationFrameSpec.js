@@ -29,10 +29,8 @@ defineSuite([
             if (callbackTimestamps.length < 3) {
                 requestAnimationFrame(callback);
             } else {
-                // We can't rely on the default matcher because this is called outside of jasmine
-                expect(callbackTimestamps[0] <= callbackTimestamps[1]).toBe(true);
-                expect(callbackTimestamps[1] <= callbackTimestamps[2]).toBe(true);
-
+                expect(callbackTimestamps[0]).toBeLessThanOrEqualTo(callbackTimestamps[1]);
+                expect(callbackTimestamps[1]).toBeLessThanOrEqualTo(callbackTimestamps[2]);
                 deferred.resolve();
             }
         }

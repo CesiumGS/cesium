@@ -697,7 +697,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         return dataSource.load(mixedGeometries).then(function() {
             var entityCollection = dataSource.entities;
-            var entities = entityCollection.entities;
+            var entities = entityCollection.values;
 
             var entity = entities[0];
             expect(entity.polyline.material.color.getValue()).toEqual(GeoJsonDataSource.stroke);

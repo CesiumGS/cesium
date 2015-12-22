@@ -275,7 +275,7 @@ gulp.task('minifyRelease', ['generateStubs'], function() {
 
 gulp.task('release', ['combine', 'minifyRelease', 'generateDocumentation']);
 
-gulp.task('test', function(done) {
+gulp.task('test', ['build'], function(done) {
     karma.start({
         configFile: path.join(__dirname, 'karma.conf.js'),
         singleRun: true,
