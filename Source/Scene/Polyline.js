@@ -156,12 +156,10 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                var positions = PolylinePipeline.removeDuplicates(value);
+                var positions = value.slice();
+                positions = PolylinePipeline.removeDuplicates(positions);
 
                 if (this._loop && positions.length > 2) {
-                    if (positions === value) {
-                        positions = value.slice();
-                    }
                     positions.push(Cartesian3.clone(positions[0]));
                 }
 
