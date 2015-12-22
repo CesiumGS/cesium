@@ -52,6 +52,7 @@ var jsHintFiles = ['Source/**/*.js',
                    'Apps/Sandcastle/gallery/*.html',
                    '!Apps/Sandcastle/ThirdParty/**',
                    'Specs/**/*.js',
+                   'karma.conf.js',
                    'Tools/buildTasks/**/*.js',
                    'gulpfile.js'];
 
