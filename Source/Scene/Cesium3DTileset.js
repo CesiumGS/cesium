@@ -413,6 +413,9 @@ define([
                 // and geometric error are equal to its parent.
                 if (t.isReady()) {
                     child = t.children[0];
+                    child.parentPlaneMask = t.parentPlaneMask;
+                    child.distanceToCamera = t.distanceToCamera;
+                    child.refining = t.refining;
                     if (child.isContentUnloaded()) {
                         requestContent(tiles3D, child, outOfCore);
                     } else {
