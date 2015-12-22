@@ -1,16 +1,32 @@
 /*global define*/
 define([
-    'Source/Cesium',
+    'Source/ThirdParty/when',
     'Specs/addDefaultMatchers',
     'Specs/equalsMethodEqualityTester'
-], function (Cesium,
+], function (when,
              addDefaultMatchers,
              equalsMethodEqualityTester) {
     "use strict";
 
     return function (env) {
+        window.defineSuite = function(deps, name, suite, categories) {
+            /*global define,describe*/
+            if (typeof suite === 'object' || typeof suite === 'string') {
+                categories = suite;
+            }
 
-        var when = Cesium.when;
+            if (typeof name === 'function') {
+                suite = name;
+                name = deps[0];
+            }
+
+            define(deps, function() {
+                var args = arguments;
+                describe(name, function() {
+                    suite.apply(null, args);
+                }, categories);
+            });
+        };
 
         // Override beforeEach(), afterEach(), beforeAll(), afterAll(), and it() to automatically
         // call done() when a returned promise resolves.
