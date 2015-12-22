@@ -218,7 +218,7 @@ function radiiEquals(left, right) {
 is better written as
 ```javascript
 function radiiEquals(left, right) {
-    return (left.radius=== right.radius);
+    return (left.radius === right.radius);
 }
 ```
 * Use `undefined` instead of `null`.
