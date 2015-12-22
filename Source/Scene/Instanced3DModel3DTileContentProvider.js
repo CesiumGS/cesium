@@ -132,7 +132,7 @@ define([
 
         loadArrayBuffer(this._url).then(function(arrayBuffer) {
             if (that.isDestroyed()) {
-                throw new Error('tileset is destroyed');
+                return when.reject('tileset is destroyed');
             }
             that.initialize(arrayBuffer);
         }).otherwise(function(error) {

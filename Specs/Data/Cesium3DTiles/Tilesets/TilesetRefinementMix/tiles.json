@@ -1,0 +1,120 @@
+{
+    "properties": {
+        "id": {
+            "minimum": 0,
+            "maximum": 99
+        }
+    },
+    "geometricError": 240,
+    "root": {
+        "box": [
+            -1.3199909535359484,
+            0.6986784218000001,
+            -1.3199090464640515,
+            0.6987415782,
+            0,
+            88
+        ],
+        "geometricError": 240,
+        "refine": "add",
+        "content": {
+            "url": "parent.b3dm"
+        },
+        "children": [
+            {
+                "box": [
+                    -1.3199909535359484,
+                    0.6986784218000001,
+                    -1.3199090464640515,
+                    0.6987415782,
+                    0,
+                    20
+                ],
+                "geometricError": 70,
+                "refine": "replace",
+                "content": {
+                    "url": "parent.b3dm"
+                },
+                "children": [
+                    {
+                        "box": [
+                            -1.3199909535359484,
+                            0.6986784218000001,
+                            -1.31995,
+                            0.69871,
+                            0,
+                            20
+                        ],
+                        "geometricError": 0,
+                        "refine": "add",
+                        "content": {
+                            "url": "ll.b3dm"
+                        }
+                    },
+                    {
+                        "box": [
+                            -1.31995,
+                            0.69871,
+                            -1.3199090464640515,
+                            0.6987415782,
+                            0,
+                            20
+                        ],
+                        "geometricError": 0,
+                        "refine": "replace",
+                        "content": {
+                            "url": "ur.b3dm"
+                        }
+                    }
+                ]
+            },
+            {
+                "box": [
+                    -1.3199909535359484,
+                    0.6986784218000001,
+                    -1.3199090464640515,
+                    0.6987415782,
+                    0,
+                    20
+                ],
+                "geometricError": 70,
+                "refine": "add",
+                "content": {
+                    "url": "parent.b3dm"
+                },
+                "children": [
+                    {
+                        "box": [
+                            -1.31995,
+                            0.6986784218000001,
+                            -1.3199090464640515,
+                            0.69871,
+                            0,
+                            20
+                        ],
+                        "geometricError": 0,
+                        "refine": "add",
+                        "content": {
+                            "url": "lr.b3dm"
+                        }
+                    },
+                    {
+                        "box": [
+                            -1.3199909535359484,
+                            0.69871,
+                            -1.31995,
+                            0.6987415782,
+                            0,
+                            20
+                        ],
+                        "geometricError": 0,
+                        "refine": "replace",
+                        "content": {
+                            "url": "ul.b3dm"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}

@@ -158,9 +158,7 @@ define([
             that._root = data.root;
             that._readyPromise.resolve(that);
         }).otherwise(function(error) {
-            if (!that.isDestroyed()) {
-                that._readyPromise.reject(error);
-            }
+            that._readyPromise.reject(error);
         });
     };
 
@@ -236,12 +234,8 @@ define([
     Cesium3DTileset.prototype.loadTilesJson = function(tilesJson, parentTile) {
         var tileset = this;
         return loadJson(tilesJson).then(function(tree) {
-
-            // TODO : is there a better way to reject the promise?
-
-            // Throw error to reject promise
             if (tileset.isDestroyed()) {
-                throw new Error('tileset is destroyed');
+                return when.reject('tileset is destroyed');
             }
 
             var baseUrl = tileset.url;
@@ -427,7 +421,6 @@ define([
                 }
                 continue;
             }
-
             if (additiveRefinement) {
                 // With additive refinement, the tile is rendered
                 // regardless of if its SSE is sufficient.
@@ -554,6 +547,7 @@ define([
                 --tiles3D._statistics.numberProcessing;
             } else {
                 // Not in processing queue
+                // For example, when a url request fails and the ready promise is rejected
                 --requestScheduler.numberOfPendingRequests;
                 --tiles3D._statistics.numberOfPendingRequests;
             }

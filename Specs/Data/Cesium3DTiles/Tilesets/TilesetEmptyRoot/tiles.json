@@ -6,7 +6,6 @@
         }
     },
     "geometricError": 70,
-    "refine": "add",
     "root": {
         "box": [
             -1.3199909535359484,
