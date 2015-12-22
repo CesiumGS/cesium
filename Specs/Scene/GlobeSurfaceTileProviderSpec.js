@@ -396,7 +396,7 @@ defineSuite([
             url : 'Data/Images/Red16x16.png'
         }));
 
-        frameState.camera.setView({ destination : Rectangle.fromDegrees(1.0e7, 1.0e7, 2.5e6, 2.5e6) });
+        frameState.camera.setView({ destination : new Rectangle(0.0000001, 0.0000001, 0.0000025, 0.0000025) });
 
         return pollToPromise(function() {
             globe.update(frameState);

@@ -32,6 +32,7 @@ To some extent, this guide can be summarized as _make new code similar to existi
    * [Shadowed Property](#shadowed-property)
    * [Put the Constructor Function at the Top of the File](#put-the-constructor-function-at-the-top-of-the-file)
 * [Design](#design)
+   * [Deprecation and Breaking Changes](#deprecation-and-breaking-changes)
 * [Third-Party Libraries](#third-party-libraries)
 * [GLSL](#glsl)
    * [Naming](#naming-1)
@@ -97,6 +98,17 @@ function defaultValue(a, b) {
 
 if (!defined(result)) {
    // ...
+}
+```
+* Use curly braces even for single line `if`, `for`, and `while` blocks, e.g.,
+```javascript
+if (!defined(result))
+    result = new Cartesian3();
+```
+is better written as
+```javascript
+if (!defined(result)) {
+    result = new Cartesian3();
 }
 ```
 * Use parenthesis judiciously, e.g.,
@@ -195,6 +207,20 @@ state.isSkyAtmosphereVisible = true
 state.isSunVisible = true;
 state.isMoonVisible = false;
 ```
+* Do not create a local variable that is used only once unless it significantly improves readability, e.g.,
+```javascript
+function radiiEquals(left, right) {
+    var leftRadius = left.radius;
+    var rightRadius = right.radius;
+    return (leftRadius === rightRadius);
+}
+```
+is better written as
+```javascript
+function radiiEquals(left, right) {
+    return (left.radius === right.radius);
+}
+```
 * Use `undefined` instead of `null`.
 * Test if a variable is defined using Cesium's `defined` function, e.g.,
 ```javascript
@@ -269,6 +295,26 @@ function processTiles(tiles3D, frameState) {
     for (var i = length - 1; i >= 0; --i) {
         tiles[i].process(tiles3D, frameState);
     }
+}
+```
+* Do not use an unnecessary `else` block at the end of a function, e.g.,
+```javascript
+function getTransform(node) {
+    if (defined(node.matrix)) {
+        return Matrix4.fromArray(node.matrix);
+    } else {
+        return Matrix4.fromTranslationQuaternionRotationScale(node.translation, node.rotation, node.scale);
+    }
+}
+```
+is better written as
+```javascript
+function getTransform(node) {
+    if (defined(node.matrix)) {
+        return Matrix4.fromArray(node.matrix);
+    }
+
+    return Matrix4.fromTranslationQuaternionRotationScale(node.translation, node.rotation, node.scale);
 }
 ```
 * :speedboat: Smaller functions are more likely to be optimized by JavaScript engines.  Consider this for code that is likely to be a hot spot.
@@ -652,6 +698,23 @@ It is usually obvious what directory a file belongs in.  When it isn't, the deci
 
 Modules (files) should only reference modules in the same level or a lower level of the stack.  For example, a module in `Scene` can use modules in `Scene`, `Renderer`, and `Core`, but not in `DataSources` or `Widgets`.
 
+* Modules in `define` statements should be in alphabetical order.  This can be done automatically with `npm run sortRequires`, see the [Build Guide](../BuildGuide/README.md).  For example, the modules required by `Scene/ModelAnimation.js` are:
+```javascript
+define([
+        '../Core/defaultValue',
+        '../Core/defineProperties',
+        '../Core/Event',
+        '../Core/JulianDate',
+        './ModelAnimationLoop',
+        './ModelAnimationState'
+    ], function(
+        defaultValue,
+        defineProperties,
+        Event,
+        JulianDate,
+        ModelAnimationLoop,
+        ModelAnimationState) { /* ... */ });
+```
 * WebGL resources need to be explicitly deleted so classes that contain them (and classes that contain these classes, and so on) have `destroy` and `isDestroyed` functions, e.g.,
 ```javascript
 var primitive = new Primitive(/* ... */);
@@ -667,6 +730,27 @@ SkyBox.prototype.destroy = function() {
 };
 ```
 * Only `destroy` objects that you create; external objects given to a class should be destroyed by their owner, not the class.
+
+### Deprecation and Breaking Changes
+
+From release to release, we strive to keep the public Cesium API stable but also maintain mobility for speedy development and to take the API in the right direction.  As such, we sparingly deprecate and then remove or replace parts of the public API.
+
+A `@private` API is considered a Cesium implementation detail and can be broken immediately without deprecation.
+
+A public identifier (class, function, property) should be deprecated before being removed.  To do so:
+
+* Decide on which future version the deprecated API should be removed.  This is on a case-by-case basis depending on how badly it impacts users and Cesium development.  Most deprecated APIs will removed in 1-3 releases.  This can be discussed in the pull request if needed.
+* Use [`deprecationWarning`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/deprecationWarning.js) to warn users that the API is deprecated and what proactive changes they can take, e.g.,
+```javascript
+function Foo() {
+    deprecationWarning('Foo', 'Foo was deprecated in Cesium 1.01.  It will be removed in 1.03.  Use newFoo instead.');
+    // ...
+}
+```
+* Add the [`@deprecated`](http://usejsdoc.org/tags-deprecated.html) doc tag.
+* Remove all use of the deprecated API inside Cesium except for unit tests that specifically test the deprecated API.
+* Mention the deprecation in the `Deprecated` section of [`CHANGES.md`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CHANGES.md).  Include what Cesium version it will be removed in.
+* Create an [issue](https://github.com/AnalyticalGraphicsInc/cesium/issues) to remove the API with the appropriate `remove in [version]` label.
 
 ## Third-Party Libraries
 
