@@ -7,6 +7,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/Intersect',
         '../Core/loadJson',
         '../Core/Math',
         '../ThirdParty/Uri',
@@ -23,6 +24,7 @@ define([
         destroyObject,
         DeveloperError,
         Event,
+        Intersect,
         loadJson,
         CesiumMath,
         Uri,
@@ -44,7 +46,7 @@ define([
      * @param {Boolean} [options.debugFreezeFrame=false] TODO
      * @param {Boolean} [options.debugColorizeTiles=false] TODO
      * @param {Boolean} [options.debugShowBox=false] TODO
-     * @param {Boolean} [options.debugShowcontentBox=false] TODO
+     * @param {Boolean} [options.debugShowContentBox=false] TODO
      * @param {Boolean} [options.debugShowBoundingVolume=false] TODO
      * @param {Boolean} [options.debugShowContentsBoundingVolume=false] TODO
      *
@@ -66,7 +68,7 @@ define([
 
         this._url = url;
         this._root = undefined;
-        this._properties = undefined; // // Metadata for per-model/point/etc properties
+        this._properties = undefined; // Metadata for per-model/point/etc properties
         this._geometricError = undefined; // Geometric error when the tree is not rendered at all
         this._processingQueue = [];
         this._selectedTiles = [];
@@ -118,7 +120,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.debugShowcontentBox = defaultValue(options.debugShowcontentBox, false);
+        this.debugShowContentBox = defaultValue(options.debugShowContentBox, false);
 
         /**
          * DOC_TBA
@@ -232,6 +234,10 @@ define([
     Cesium3DTileset.prototype.loadTilesJson = function(tilesJson, parentTile) {
         var tileset = this;
         return loadJson(tilesJson).then(function(tree) {
+            if (tileset.isDestroyed()) {
+                return when.reject('tileset is destroyed');
+            }
+
             var baseUrl = tileset.url;
             var rootTile = new Cesium3DTile(tileset, baseUrl, tree.root, parentTile);
 
@@ -332,15 +338,17 @@ define([
 
         tile.requestContent();
         var removeFunction = removeFromProcessingQueue(tiles3D, tile);
-        when(tile.processingPromise).then(addToProcessingQueue(tiles3D, tile)).otherwise(endRequest(tiles3D, tile));
+        when(tile.processingPromise).then(addToProcessingQueue(tiles3D, tile)).otherwise(removeFunction);
         when(tile.readyPromise).then(removeFunction).otherwise(removeFunction);
     }
 
     function selectTile(selectedTiles, tile, fullyVisible, frameState) {
         // There may also be a tight box around just the tile's contents, e.g., for a city, we may be
         // zoomed into a neighborhood and can cull the skyscrapers in the root node.
-        if (tile.isReady() &&
-                (fullyVisible || (tile.contentsVisibility(frameState.cullingVolume) !== CullingVolume.MASK_OUTSIDE))) {
+        //
+        // Don't select if the tile is being loaded to refine another tile
+        if (tile.isReady() && !tile.refining &&
+                (fullyVisible || (tile.contentsVisibility(frameState.cullingVolume) !== Intersect.OUTSIDE))) {
             selectedTiles.push(tile);
         }
     }
@@ -405,6 +413,9 @@ define([
                 // and geometric error are equal to its parent.
                 if (t.isReady()) {
                     child = t.children[0];
+                    child.parentPlaneMask = t.parentPlaneMask;
+                    child.distanceToCamera = t.distanceToCamera;
+                    child.refining = t.refining;
                     if (child.isContentUnloaded()) {
                         requestContent(tiles3D, child, outOfCore);
                     } else {
@@ -413,7 +424,6 @@ define([
                 }
                 continue;
             }
-
             if (additiveRefinement) {
                 // With additive refinement, the tile is rendered
                 // regardless of if its SSE is sufficient.
@@ -439,6 +449,8 @@ define([
                         // to replacement refinement where we need all children.
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
+                            // Pass along whether the child is being loaded for refinement
+                            child.refining = t.refining;
                             // Store the plane mask so that the child can optimize based on its parent's returned mask
                             child.parentPlaneMask = planeMask;
 
@@ -483,43 +495,33 @@ define([
 // TODO: same TODO as above.
                     }
 
-                    if (!t.isRefinable()) {
-                        // Tile does not meet SSE.  Add its commands since it is the best we have and request its children.
+                    if (!t.isRefinable() || t.refining) {
+                        // Tile does not meet SSE. Add its commands since it is the best we have until it becomes refinable.
+                        // If all its children have content, it will became refinable once they are loaded.
+                        // If a child is empty (such as for accelerating culling), its descendants with content must be loaded first.
                         selectTile(selectedTiles, t, fullyVisible, frameState);
-                        makeRefinable(tiles3D, frameState, outOfCore, t);
-                    } else {
-                        // Tile does not meet SEE and its children are loaded.  Refine to them in front-to-back order.
+
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
+                            if (child.isContentUnloaded()) {
+                                requestContent(tiles3D, child, outOfCore);
+                            } else if (!child.hasContent && !child.isRefinable()){
+                                // If the child is empty, start loading its descendants. Mark as refining so they aren't selected.
+                                child.refining = true;
+                                // Store the plane mask so that the child can optimize based on its parent's returned mask
+                                child.parentPlaneMask = planeMask;
+                                stack.push(child);
+                            }
+                        }
+                    } else {
+                        // Tile does not meet SEE and it is refinable. Refine to children in front-to-back order.
+                        for (k = 0; k < childrenLength; ++k) {
+                            child = children[k];
+                            child.refining = false;
                             // Store the plane mask so that the child can optimize based on its parent's returned mask
                             child.parentPlaneMask = planeMask;
                             stack.push(child);
                         }
-                    }
-                }
-            }
-        }
-    }
-
-    var refineStack = [];
-    function makeRefinable(tiles3D, frameState, outOfCore, tile) {
-        var maximumScreenSpaceError = tiles3D.maximumScreenSpaceError;
-        var stack = refineStack;
-        stack.push(tile);
-        while (stack.length > 0) {
-            var t = stack.pop();
-            var sse = getScreenSpaceError(t.geometricError, t, frameState);
-            if (sse > maximumScreenSpaceError) {
-                var children = t.children;
-                var childrenLength = children.length;
-                for (var k = 0; (k < childrenLength) && requestScheduler.hasAvailableRequests(); ++k) {
-// TODO: we could spin a bit less CPU here and probably above by keeping separate lists for unloaded/ready children.
-                    var child = children[k];
-                    if (child.isContentUnloaded()) {
-                        requestContent(tiles3D, child, outOfCore);
-                    } else if (!child.hasContent && !child.isRefinable()) {
-                        // If the child is empty, we need to load all its descendants with content before it can refine
-                        stack.push(child);
                     }
                 }
             }
@@ -532,9 +534,9 @@ define([
         return function() {
             tiles3D._processingQueue.push(tile);
 
-            var stats = tiles3D._statistics;
-            --stats.numberOfPendingRequests;
-            ++stats.numberProcessing;
+            --requestScheduler.numberOfPendingRequests;
+            --tiles3D._statistics.numberOfPendingRequests;
+            ++tiles3D._statistics.numberProcessing;
             addLoadProgressEvent(tiles3D);
         };
     }
@@ -542,18 +544,17 @@ define([
     function removeFromProcessingQueue(tiles3D, tile) {
         return function() {
             var index = tiles3D._processingQueue.indexOf(tile);
-            tiles3D._processingQueue.splice(index, 1);
+            if (index >= 0) {
+                // Remove from processing queue
+                tiles3D._processingQueue.splice(index, 1);
+                --tiles3D._statistics.numberProcessing;
+            } else {
+                // Not in processing queue
+                // For example, when a url request fails and the ready promise is rejected
+                --requestScheduler.numberOfPendingRequests;
+                --tiles3D._statistics.numberOfPendingRequests;
+            }
 
-            --requestScheduler.numberOfPendingRequests;
-            --tiles3D._statistics.numberProcessing;
-            addLoadProgressEvent(tiles3D);
-        };
-    }
-
-    function endRequest(tiles3D, tile) {
-        return function() {
-            --requestScheduler.numberOfPendingRequests;
-            --tiles3D._statistics.numberProcessing;
             addLoadProgressEvent(tiles3D);
         };
     }
@@ -701,7 +702,24 @@ define([
      * DOC_TBA
      */
     Cesium3DTileset.prototype.destroy = function() {
-// TODO: traverse and destroy...careful of pending loads/processing
+        // Traverse the tree and destroy all tiles
+        if (defined(this._root)) {
+            var stack = scratchStack;
+            stack.push(this._root);
+
+            while (stack.length > 0) {
+                var t = stack.pop();
+                t.destroy();
+
+                var children = t.children;
+                var length = children.length;
+                for (var i = 0; i < length; ++i) {
+                    stack.push(children[i]);
+                }
+            }
+        }
+
+        this._root = undefined;
         return destroyObject(this);
     };
 

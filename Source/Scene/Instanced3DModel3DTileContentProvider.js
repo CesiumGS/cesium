@@ -131,6 +131,9 @@ define([
         this.state = Cesium3DTileContentState.LOADING;
 
         loadArrayBuffer(this._url).then(function(arrayBuffer) {
+            if (that.isDestroyed()) {
+                return when.reject('tileset is destroyed');
+            }
             that.initialize(arrayBuffer);
         }).otherwise(function(error) {
             that.state = Cesium3DTileContentState.FAILED;

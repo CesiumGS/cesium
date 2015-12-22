@@ -33,6 +33,11 @@ define([
         this.readyPromise = when.defer();
     };
 
+    /**
+     * DOC_TBA
+     *
+     * Use Cesium3DTile#requestContent
+     */
     Tileset3DTileContentProvider.prototype.request = function() {
         var that = this;
 

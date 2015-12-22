@@ -63,12 +63,20 @@ define([
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
+    /**
+     * DOC_TBA
+     *
+     * Use Cesium3DTile#requestContent
+     */
     Points3DTileContentProvider.prototype.request = function() {
         var that = this;
 
         this.state = Cesium3DTileContentState.LOADING;
 
         loadArrayBuffer(this._url).then(function(arrayBuffer) {
+            if (that.isDestroyed()) {
+                return when.reject('tileset is destroyed');
+            }
             that.initialize(arrayBuffer);
         }).otherwise(function(error) {
             that.state = Cesium3DTileContentState.FAILED;

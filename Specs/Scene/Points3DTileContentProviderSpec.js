@@ -97,4 +97,8 @@ defineSuite([
         return Cesium3DTilesTester.tileDestroys(scene, pointsUrl);
     });
 
+    it('destroys before loading finishes', function() {
+        return Cesium3DTilesTester.tileDestroysBeforeLoad(scene, pointsUrl);
+    });
+
 }, 'WebGL');
