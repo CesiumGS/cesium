@@ -10,10 +10,12 @@ define([
         '../Core/Intersect',
         '../Core/loadJson',
         '../Core/Math',
+        '../Core/RequestScheduler',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
         './Cesium3DTile',
         './Cesium3DTileRefine',
+        './Cesium3DTilesetState',
         './CullingVolume',
         './SceneMode'
     ], function(
@@ -27,10 +29,12 @@ define([
         Intersect,
         loadJson,
         CesiumMath,
+        RequestScheduler,
         Uri,
         when,
         Cesium3DTile,
         Cesium3DTileRefine,
+        Cesium3DTilesetState,
         CullingVolume,
         SceneMode) {
     "use strict";
@@ -67,6 +71,8 @@ define([
         url = appendForwardSlash(url);
 
         this._url = url;
+        this._tilesJson = url + 'tiles.json';
+        this._state = Cesium3DTilesetState.UNLOADED;
         this._root = undefined;
         this._properties = undefined; // Metadata for per-model/point/etc properties
         this._geometricError = undefined; // Geometric error when the tree is not rendered at all
@@ -147,19 +153,6 @@ define([
         this.tileVisible = new Event();
 
         this._readyPromise = when.defer();
-
-        var that = this;
-
-        var tilesJson = url + 'tiles.json';
-        this.loadTilesJson(tilesJson, undefined).then(function(data) {
-            var tree = data.tree;
-            that._properties = tree.properties;
-            that._geometricError = tree.geometricError;
-            that._root = data.root;
-            that._readyPromise.resolve(that);
-        }).otherwise(function(error) {
-            that._readyPromise.reject(error);
-        });
     };
 
     defineProperties(Cesium3DTileset.prototype, {
@@ -233,7 +226,13 @@ define([
      */
     Cesium3DTileset.prototype.loadTilesJson = function(tilesJson, parentTile) {
         var tileset = this;
-        return loadJson(tilesJson).then(function(tree) {
+        var promise = RequestScheduler.throttleRequest(tilesJson, loadJson);
+
+        if (!defined(promise)) {
+            return undefined;
+        }
+
+        return promise.then(function(tree) {
             if (tileset.isDestroyed()) {
                 return when.reject('tileset is destroyed');
             }
@@ -309,28 +308,14 @@ define([
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    // TODO: make this real and system-wide
-    var RequestScheduler = function() {
-        this.numberOfPendingRequests = 0;
-        /**
-         * @readonly
-         */
-        this.maximumNumberOfPendingRequests = 6;
-    };
-    RequestScheduler.prototype.hasAvailableRequests = function() {
-        return this.numberOfPendingRequests < this.maximumNumberOfPendingRequests;
-    };
-    var requestScheduler = new RequestScheduler();
-    ///////////////////////////////////////////////////////////////////////////
 
     function requestContent(tiles3D, tile, outOfCore) {
         if (!outOfCore) {
             return;
         }
-        if (!requestScheduler.hasAvailableRequests()) {
+        if (!hasAvailableRequests(tiles3D)) {
             return;
         }
-        ++requestScheduler.numberOfPendingRequests;
 
         var stats = tiles3D._statistics;
         ++stats.numberOfPendingRequests;
@@ -340,6 +325,10 @@ define([
         var removeFunction = removeFromProcessingQueue(tiles3D, tile);
         when(tile.processingPromise).then(addToProcessingQueue(tiles3D, tile)).otherwise(removeFunction);
         when(tile.readyPromise).then(removeFunction).otherwise(removeFunction);
+    }
+
+    function hasAvailableRequests(tiles3D) {
+        return RequestScheduler.hasAvailableRequests(tiles3D._url);
     }
 
     function selectTile(selectedTiles, tile, fullyVisible, frameState) {
@@ -436,7 +425,7 @@ define([
                     // Only sort and refine (render or request children) if any
                     // children are loaded or request slots are available.
                     var anyChildrenLoaded = (t.numberOfChildrenWithoutContent < childrenLength);
-                    if (anyChildrenLoaded || requestScheduler.hasAvailableRequests()) {
+                    if (anyChildrenLoaded || hasAvailableRequests(tiles3D)) {
                         // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
                         computeDistanceToCamera(children, frameState);
 
@@ -486,7 +475,7 @@ define([
                     // tile (and can't make child requests because no slots are available)
                     // then the children do not need to be sorted.
                     var allChildrenLoaded = t.numberOfChildrenWithoutContent === 0;
-                    if (allChildrenLoaded || requestScheduler.hasAvailableRequests()) {
+                    if (allChildrenLoaded || hasAvailableRequests(tiles3D)) {
                         // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
                         computeDistanceToCamera(children, frameState);
 
@@ -534,7 +523,6 @@ define([
         return function() {
             tiles3D._processingQueue.push(tile);
 
-            --requestScheduler.numberOfPendingRequests;
             --tiles3D._statistics.numberOfPendingRequests;
             ++tiles3D._statistics.numberProcessing;
             addLoadProgressEvent(tiles3D);
@@ -551,7 +539,6 @@ define([
             } else {
                 // Not in processing queue
                 // For example, when a url request fails and the ready promise is rejected
-                --requestScheduler.numberOfPendingRequests;
                 --tiles3D._statistics.numberOfPendingRequests;
             }
 
@@ -660,10 +647,32 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    function loadTiles(tileset) {
+        var promise = tileset.loadTilesJson(tileset._tilesJson, undefined);
+        if (defined(promise)) {
+            tileset._state = Cesium3DTilesetState.LOADING;
+            promise.then(function(data) {
+                var tree = data.tree;
+                tileset._state = Cesium3DTilesetState.READY;
+                tileset._properties = tree.properties;
+                tileset._geometricError = tree.geometricError;
+                tileset._root = data.root;
+                tileset._readyPromise.resolve(tileset);
+            }).otherwise(function(error) {
+                tileset._state = Cesium3DTilesetState.FAILED;
+                tileset._readyPromise.reject(error);
+            });
+        }
+    }
+
     /**
      * DOC_TBA
      */
     Cesium3DTileset.prototype.update = function(frameState) {
+        if (this._state === Cesium3DTilesetState.UNLOADED) {
+            loadTiles(this);
+        }
+
         // TODO: Support 2D and CV
         if (!this.show || !defined(this._root) || (frameState.mode !== SceneMode.SCENE3D)) {
             return;

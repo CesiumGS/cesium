@@ -6,6 +6,7 @@ define([
         'Scene/Cesium3DTileContentProviderFactory',
         'Scene/Cesium3DTileContentState',
         'Scene/Cesium3DTileset',
+        'Scene/Cesium3DTilesetState',
         'Specs/pollToPromise'
     ], function(
         Color,
@@ -14,6 +15,7 @@ define([
         Cesium3DTileContentProviderFactory,
         Cesium3DTileContentState,
         Cesium3DTileset,
+        Cesium3DTilesetState,
         pollToPromise) {
     "use strict";
 
@@ -72,7 +74,11 @@ define([
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : url
         }));
-        return tileset.readyPromise.then(function(tileset) {
+
+        return pollToPromise(function() {
+            scene.renderForSpecs();
+            return (tileset._state === Cesium3DTilesetState.READY);
+        }).then(function() {
             return Cesium3DTilesTester.waitForPendingRequests(scene, tileset).then(function() {
                 return tileset;
             });
@@ -155,6 +161,7 @@ define([
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : url
         }));
+        scene.renderForSpecs();
         return tileset.readyPromise.then(function(tileset) {
             var content = tileset._root.content;
             scene.renderForSpecs(); // Request root
