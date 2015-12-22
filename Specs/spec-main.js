@@ -310,7 +310,6 @@
                     if (toCheck.categories) {
                         if (notCategories.indexOf(toCheck.categories) >= 0) {
                             keep = false;
-
                         }
 
                         for (i = 0; keep && i < toCheck.categories.length; ++i) {
