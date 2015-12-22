@@ -1,25 +1,19 @@
 (function () {
     /*global __karma__*/
     "use strict";
-    var allTestFiles = [];
-    var TEST_REGEXP = /(spec|test)\.js$/i;
 
-    Object.keys(__karma__.files).forEach(function(file) {
-        if (TEST_REGEXP.test(file)) {
-            // Normalize paths to RequireJS module names.
-            allTestFiles.push(file.replace(/^\/base\//, 'http://localhost:8080/base/'));
-        }
+    var allTestFiles = Object.keys(__karma__.files).filter(function(file) {
+        return /Spec\.js$/.test(file);
     });
 
     /* global require */
     require({
             // Karma serves files from '/base', which is the basePath from your config file
-            baseUrl : 'http://localhost:8080/base/Source',
+            baseUrl : '/base/Source',
 
             paths : {
                 'Specs' : '../Specs',
-                'Source' : '.',
-                'Cesium' : 'Cesium'
+                'Source' : '.'
             },
 
             // dynamically load all test files

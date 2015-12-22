@@ -23,6 +23,7 @@ module.exports = function(config) {
 
 
     proxies: {
+      '/Data': '/base/Specs/Data'
     },
 
 
@@ -73,17 +74,8 @@ module.exports = function(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['FirefoxWithWebGL'],
+    browsers: ['Firefox'],
 
-
-    customLaunchers: {
-      FirefoxWithWebGL: {
-        base: 'Firefox',
-        prefs: {
-          'webgl.force-enabled': true
-        }
-      }
-    },
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
