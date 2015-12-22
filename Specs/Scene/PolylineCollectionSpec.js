@@ -114,6 +114,18 @@ defineSuite([
         expect(p.material.uniforms.outlineWidth).toEqual(material.uniforms.outlineWidth);
     });
 
+    it('polyline.positions makes a copy of the input array', function() {
+        var positions = [new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(4.0, 5.0, 6.0), new Cartesian3(7.0, 8.0, 9.0)];
+        var p = polylines.add({positions: positions});
+        expect(p._actualPositions).not.toBe(positions);
+        expect(p._actualPositions.length).toEqual(positions.length);
+
+        positions.pop();
+        p.positions = positions;
+        expect(p._actualPositions).not.toBe(positions);
+        expect(p._actualPositions.length).toEqual(positions.length);
+    });
+
     it('constructor sets loop only when number of positions is greater than 2', function() {
         var p = polylines.add({
             positions : [new Cartesian3(0.0, 1.0, 2.0), new Cartesian3(3.0, 4.0, 5.0)],

@@ -61,12 +61,9 @@ define([
         }
 
         this._positions = positions;
-        this._actualPositions = PolylinePipeline.removeDuplicates(positions);
+        this._actualPositions = PolylinePipeline.removeDuplicates(positions.slice());
 
         if (this._loop && this._actualPositions.length > 2) {
-            if (this._actualPositions === this._positions) {
-                this._actualPositions = positions.slice();
-            }
             this._actualPositions.push(Cartesian3.clone(this._actualPositions[0]));
         }
 
