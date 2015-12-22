@@ -114,14 +114,14 @@ defineSuite([
         });
 
         it('can have a bounding region', function() {
-            var rectangle = tileWithBoundingRegion.boundingVolume.region;
+            var box = tileWithBoundingRegion.boundingVolume.region;
+            var rectangle = new Rectangle(box[0], box[1], box[2], box[3]);
             var minimumHeight = tileWithBoundingRegion.boundingVolume.region[4];
             var maximumHeight = tileWithBoundingRegion.boundingVolume.region[5];
             var tile = new Cesium3DTile(undefined, '/some_url', tileWithBoundingRegion, undefined);
+            var tbr = new TileBoundingRegion({rectangle: rectangle, minimumHeight: minimumHeight, maximumHeight: maximumHeight});
             expect(tile.contentsBoundingVolume).toBeDefined();
-            expect(tile.contentsBoundingVolume.boundingVolume.minimumHeight).toEqual(minimumHeight);
-            expect(tile.contentsBoundingVolume.boundingVolume.maximumHeight).toEqual(maximumHeight);
-            expect(tile.contentsBoundingVolume.boundingVolume.rectangle).toEqual(new Rectangle(rectangle[0], rectangle[1], rectangle[2], rectangle[3]));
+            expect(tile.contentsBoundingVolume).toEqual(tbr);
         });
 
         it('can have a contents bounding region', function() {
@@ -133,7 +133,7 @@ defineSuite([
                 minimumHeight: region[4],
                 maximumHeight: region[5]
             });
-            expect(tile._contentBoundingVolume.boundingVolume).toEqual(tbb);
+            expect(tile._contentBoundingVolume).toEqual(tbb);
         });
 
         it('can have an oriented bounding box', function() {
