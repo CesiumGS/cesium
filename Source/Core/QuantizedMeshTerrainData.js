@@ -321,6 +321,7 @@ define([
                     obb,
                     terrainEncoding);
 
+            // Free memory received from server after mesh is created.
             that._quantizedVertices = undefined;
             that._encodedNormals = undefined;
             that._indices = undefined;

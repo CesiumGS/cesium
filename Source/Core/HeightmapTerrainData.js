@@ -226,6 +226,8 @@ define([
                     6,
                     result.orientedBoundingBox,
                     TerrainEncoding.clone(result.encoding));
+
+            // Free memory received from server after mesh is created.
             that._buffer = undefined;
             return that._mesh;
         });
