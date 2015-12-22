@@ -36,7 +36,7 @@ For ideas for Cesium code contributions, see:
 * issues labeled [beginner](https://github.com/AnalyticalGraphicsInc/cesium/labels/beginner) and
 * issues labeled [roadmap](https://github.com/AnalyticalGraphicsInc/cesium/labels/roadmap).
 
-See the [Build Guide](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Documentation/Contributors/BuildGuide/README.md) for how to build and run Cesium on your system.
+See the [Build Guide](Documentation/Contributors/BuildGuide/README.md) for how to build and run Cesium on your system.
 
 Always feel free to introduce yourself on the [Cesium forum](http://cesiumjs.org/forum.html) to brainstorm ideas and ask for guidance.
 
