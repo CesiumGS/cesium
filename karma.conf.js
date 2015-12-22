@@ -1,5 +1,5 @@
-// Karma configuration
-// Generated on Mon Dec 14 2015 13:37:20 GMT-0500 (Eastern Standard Time)
+/*jshint node:true*/
+"use strict;"
 
 module.exports = function(config) {
   config.set({
@@ -15,10 +15,12 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-		{pattern: 'Source/**/*', included: false, served: true},
-		{pattern: 'Specs/**/*', included: false, served: true},
-
-		'Specs/test-main.js'
+        'Specs/SpecList.js',
+        'Specs/karma-main.js',
+        {pattern: 'Source/**/*.js', included: false},
+        {pattern: 'Specs/**/*.js', included: false},
+        {pattern: 'Specs/Data/**', included: false, served: true},
+        {pattern: 'Source/Assets/**', included: false, served: true}
     ],
 
 
@@ -29,10 +31,10 @@ module.exports = function(config) {
 
     // list of files to exclude
     exclude: [
-        'Specs/Widgets/**/*.js',
-        'Specs/Scene/**/*.js',
-        'Specs/DataSources/**/*.js',
-        'Specs/Renderer/**/*.js'
+        //'Specs/Widgets/**/*.js',
+        //'Specs/Scene/**/*.js',
+        //'Specs/DataSources/**/*.js',
+        //'Specs/Renderer/**/*.js'
     ],
 
 
@@ -56,7 +58,7 @@ module.exports = function(config) {
 
 
     // web server port
-    port: 8080,
+    port: 9876,
 
 
     // enable / disable colors in the output (reporters and logs)
@@ -74,7 +76,7 @@ module.exports = function(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['Firefox'],
+    browsers: ['Chrome'],
 
 
     // Continuous Integration mode

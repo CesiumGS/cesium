@@ -17,14 +17,12 @@
             },
 
             // dynamically load all test files
-            deps : allTestFiles,
-
-            // we have to kickoff jasmine, as it is asynchronous
-            callback : __karma__.start
+            deps : allTestFiles
         },
         ['../Specs/customizeJasmine'],
         function (customizeJasmine) {
             customizeJasmine(jasmine.getEnv());
+            __karma__.start();
         });
 
     window.defineSuite = function(deps, name, suite, categories) {
