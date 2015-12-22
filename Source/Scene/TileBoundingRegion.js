@@ -139,7 +139,7 @@ define([
          */
         boundingVolume : {
             get : function() {
-                return this;
+                return this._orientedBoundingBox;
             }
         }
     });
@@ -282,9 +282,9 @@ define([
 
         var modelMatrix = new Matrix4.clone(Matrix4.IDENTITY);
         var geometry = new RectangleOutlineGeometry({
-            rectangle : this.boundingVolume.rectangle,
-            height : this.boundingVolume.minimumHeight,
-            extrudedHeight: this.boundingVolume.maximumHeight
+            rectangle : this.rectangle,
+            height : this.minimumHeight,
+            extrudedHeight: this.maximumHeight
          });
         var instance = new GeometryInstance({
             geometry : geometry,
