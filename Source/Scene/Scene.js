@@ -560,6 +560,20 @@ define([
             useFXAA : false
         };
 
+        var cameraL;
+        var cameraR;
+
+        if (this._useWebVR) {
+            cameraL = new Camera(this);
+            cameraL.frustum = new PerspectiveOffCenterFrustum();
+
+            cameraR = new Camera(this);
+            cameraR.frustum = new PerspectiveOffCenterFrustum();
+        }
+
+        this._cameraVRL = cameraL;
+        this._cameraVRR = cameraR;
+
         // initial guess at frustums.
         var near = camera.frustum.near;
         var far = camera.frustum.far;
@@ -1767,6 +1781,8 @@ define([
         this._screenSpaceCameraController.update();
     };
 
+    var scratchEyeTranslation = new Cartesian3();
+
     function render(scene, time) {
         if (!defined(time)) {
             time = JulianDate.now();
@@ -1819,33 +1835,37 @@ define([
         updateAndClearFramebuffers(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
         executeComputeCommands(scene);
 
+        var viewport = passState.viewport;
+
         if (!scene._useWebVR) {
-            passState.viewport.x = 0;
-            passState.viewport.y = 0;
-            passState.viewport.width = context.drawingBufferWidth;
-            passState.viewport.height = context.drawingBufferHeight;
+            viewport.x = 0;
+            viewport.y = 0;
+            viewport.width = context.drawingBufferWidth;
+            viewport.height = context.drawingBufferHeight;
 
             executeCommands(scene, passState);
         } else {
-            passState.viewport.x = 0;
-            passState.viewport.y = 0;
-            passState.viewport.width = context.drawingBufferWidth * 0.5;
-            passState.viewport.height = context.drawingBufferHeight;
+            // Based on Calculating Stereo pairs by Paul Bourke
+            // http://paulbourke.net/stereographics/stereorender/
+
+            viewport.x = 0;
+            viewport.y = 0;
+            viewport.width = context.drawingBufferWidth * 0.5;
+            viewport.height = context.drawingBufferHeight;
 
             // TODO
             var frustum = camera.frustum;
             var fo = frustum.near * 5.0;
             var eyeSeparation = fo / 30.0;
-            var eyeTranslation = Cartesian3.multiplyByScalar(scene._camera.right, eyeSeparation * 0.5, new Cartesian3());
+            var eyeTranslation = Cartesian3.multiplyByScalar(scene._camera.right, eyeSeparation * 0.5, scratchEyeTranslation);
 
-            //var aspectRatio = passState.viewport.width / passState.viewport.height;
             var aspectRatio = context.drawingBufferWidth / context.drawingBufferHeight;
             var widthdiv2 = frustum.near * Math.tan(frustum.fov * 0.5);
 
-            var cameraL = Camera.clone(scene._camera);
+            var cameraL = Camera.clone(scene._camera, scene._cameraVRL);
             Cartesian3.add(cameraL.position, eyeTranslation, cameraL.position);
 
-            var frustumL = cameraL.frustum = new PerspectiveOffCenterFrustum();
+            var frustumL = cameraL.frustum;
             frustumL.near = frustum.near;
             frustumL.far = frustum.far;
             frustumL.top = widthdiv2;
@@ -1858,12 +1878,12 @@ define([
 
             executeCommands(scene, passState);
 
-            passState.viewport.x = passState.viewport.width;
+            viewport.x = passState.viewport.width;
 
-            var cameraR = Camera.clone(scene._camera);
+            var cameraR = Camera.clone(scene._camera, scene._cameraVRR);
             Cartesian3.subtract(cameraR.position, eyeTranslation, cameraR.position);
 
-            var frustumR = cameraR.frustum = new PerspectiveOffCenterFrustum();
+            var frustumR = cameraR.frustum;
             frustumR.near = frustum.near;
             frustumR.far = frustum.far;
             frustumR.top = widthdiv2;
