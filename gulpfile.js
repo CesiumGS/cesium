@@ -278,9 +278,7 @@ gulp.task('release', ['combine', 'minifyRelease', 'generateDocumentation']);
 
 gulp.task('test', ['build'], function(done) {
     karma.start({
-        configFile: path.join(__dirname, 'karma.conf.js'),
-        singleRun: true,
-        browsers: ['Firefox']
+        configFile: path.join(__dirname, 'karma.conf.js')
     }, function(karmaExitStatus) {
         if(karmaExitStatus) {
             return done(karmaExitStatus);
