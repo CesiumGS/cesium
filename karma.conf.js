@@ -2,8 +2,7 @@
 "use strict";
 
 module.exports = function(config) {
-    config.set({
-
+    var options = {
         // base path that will be used to resolve all patterns (eg. files, exclude)
         baseUrl : '',
 
@@ -19,7 +18,7 @@ module.exports = function(config) {
         ],
 
         proxies : {
-            '/Data' : 'http://localhost:8080/Specs/Data'
+            '/Data' : '/base/Specs/Data'
         },
 
         // list of files to exclude
@@ -33,6 +32,7 @@ module.exports = function(config) {
         // possible values: 'dots', 'progress'
         // available reporters: https://npmjs.org/browse/keyword/karma-reporter
         reporters : ['spec'],
+
         specReporter : {
             maxLogLines : 0,
             suppressErrorSummary : false,
@@ -61,5 +61,7 @@ module.exports = function(config) {
         // Continuous Integration mode
         // if true, Karma captures browsers, runs the tests and exits
         singleRun : true
-    });
+    };
+
+    config.set(options);
 };

@@ -28,6 +28,24 @@ if (/\.0$/.test(version)) {
     version = version.substring(0, version.length - 2);
 }
 
+//Manually patch list of karma binary files until bug https://github.com/karma-runner/karma/issues/1070 is addressed
+var extensionsObject = require('./node_modules/karma/lib/binary-extensions.json');
+var extensions = extensionsObject.extensions;
+if (extensions.indexOf('terrain') === -1) { //Change this check when adding a new extension
+    var firstCesiumExtension = extensions.indexOf('bgltf');
+    if (firstCesiumExtension !== -1) {
+        extensions = extensions.slice(0, firstCesiumExtension);
+        extensionsObject.extensions = extensions;
+    }
+
+    extensions.push('bgltf');
+    extensions.push('bin');
+    extensions.push('glb');
+    extensions.push('kmz');
+    extensions.push('terrain');
+    fs.writeFileSync('./node_modules/karma/lib/binary-extensions.json', JSON.stringify(extensionsObject, null, 2));
+}
+
 //Gulp doesn't seem to have a way to get the currently running tasks for setting
 //per-task variables.  We use the command line argument here to detect which task is being run.
 var taskName = process.argv[2];
@@ -279,10 +297,10 @@ gulp.task('release', ['combine', 'minifyRelease', 'generateDocumentation']);
 gulp.task('test', ['build'], function(done) {
     karma.start({
         configFile: path.join(__dirname, 'karma.conf.js')
-    }, function(karmaExitStatus) {
-        if(karmaExitStatus) {
-            return done(karmaExitStatus);
-        }
+    }, function() {
+        //Failed tests case a return code of 1 to be passed into the callback
+        //but we ignore because failing tests don't indicate that the script failed
+        //to run.
         return done();
     });
 });
