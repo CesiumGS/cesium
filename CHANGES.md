@@ -31,6 +31,7 @@ Change Log
 * Added `ModelGraphics.nodeTransformations` which is a `PropertyBag` of `TranslationRotationScale` properties to be applied to a loaded model.
 * Added CZML support for new `runAnimations` and `nodeTransformations` properties on the `model` packet.
 * Added a new Sandcastle example: [CZML Model - Node Transformations](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=CZML%20Model%20-%20Node%20Transformations.html&label=CZML).
+* Fix disappearing terrain while fog is active. [#3335](https://github.com/AnalyticalGraphicsInc/cesium/issues/3335)
 
 ### 1.16 - 2015-12-01
 
