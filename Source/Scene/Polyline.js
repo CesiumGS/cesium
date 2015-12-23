@@ -61,9 +61,12 @@ define([
         }
 
         this._positions = positions;
-        this._actualPositions = PolylinePipeline.removeDuplicates(positions.slice());
+        this._actualPositions = PolylinePipeline.removeDuplicates(positions);
 
         if (this._loop && this._actualPositions.length > 2) {
+            if (this._actualPositions === this._positions) {
+                this._actualPositions = positions.slice();
+            }
             this._actualPositions.push(Cartesian3.clone(this._actualPositions[0]));
         }
 
@@ -153,10 +156,12 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                var positions = value.slice();
-                positions = PolylinePipeline.removeDuplicates(positions);
+                var positions = PolylinePipeline.removeDuplicates(value);
 
                 if (this._loop && positions.length > 2) {
+                    if (positions === value) {
+                        positions = value.slice();
+                    }
                     positions.push(Cartesian3.clone(positions[0]));
                 }
 

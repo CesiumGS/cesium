@@ -483,7 +483,7 @@ define([
         }
 
         line.show = true;
-        line.positions = positions;
+        line.positions = positions.slice();
         line.material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, line.material);
         line.width = Property.getValueOrDefault(polyline._width, time, 1);
     };
