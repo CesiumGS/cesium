@@ -28,6 +28,8 @@ if (/\.0$/.test(version)) {
     version = version.substring(0, version.length - 2);
 }
 
+var karmaConfigFile = path.join(__dirname, 'karma.conf.js');
+
 //Manually patch list of karma binary files until bug https://github.com/karma-runner/karma/issues/1070 is addressed
 var extensionsObject = require('./node_modules/karma/lib/binary-extensions.json');
 var extensions = extensionsObject.extensions;
@@ -296,11 +298,22 @@ gulp.task('release', ['combine', 'minifyRelease', 'generateDocumentation']);
 
 gulp.task('test', ['build'], function(done) {
     karma.start({
-        configFile: path.join(__dirname, 'karma.conf.js')
+        configFile: karmaConfigFile
     }, function() {
         //Failed tests case a return code of 1 to be passed into the callback
         //but we ignore because failing tests don't indicate that the script failed
         //to run.
+        return done();
+    });
+});
+
+gulp.task('test-all', ['build'], function(done) {
+    karma.start({
+        configFile: karmaConfigFile,
+        detectBrowsers: {
+            enabled : true
+        }
+    }, function() {
         return done();
     });
 });
