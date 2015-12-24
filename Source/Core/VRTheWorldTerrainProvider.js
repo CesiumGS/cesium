@@ -15,8 +15,8 @@ define([
         './loadXML',
         './Math',
         './Rectangle',
+        './RequestScheduler',
         './TerrainProvider',
-        './throttleRequestByServer',
         './TileProviderError'
     ], function(
         when,
@@ -34,8 +34,8 @@ define([
         loadXML,
         CesiumMath,
         Rectangle,
+        RequestScheduler,
         TerrainProvider,
-        throttleRequestByServer,
         TileProviderError) {
     "use strict";
 
@@ -273,7 +273,7 @@ define([
 
         throttleRequests = defaultValue(throttleRequests, true);
         if (throttleRequests) {
-            promise = throttleRequestByServer(url, loadImage);
+            promise = RequestScheduler.throttleRequest(url, loadImage);
             if (!defined(promise)) {
                 return undefined;
             }

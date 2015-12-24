@@ -20,9 +20,9 @@ define([
         './Matrix3',
         './OrientedBoundingBox',
         './QuantizedMeshTerrainData',
+        './RequestScheduler',
         './RuntimeError',
         './TerrainProvider',
-        './throttleRequestByServer',
         './TileProviderError'
     ], function(
         Uri,
@@ -45,9 +45,9 @@ define([
         Matrix3,
         OrientedBoundingBox,
         QuantizedMeshTerrainData,
+        RequestScheduler,
         RuntimeError,
         TerrainProvider,
-        throttleRequestByServer,
         TileProviderError) {
     "use strict";
 
@@ -523,7 +523,7 @@ define([
 
         throttleRequests = defaultValue(throttleRequests, true);
         if (throttleRequests) {
-            promise = throttleRequestByServer(url, tileLoader);
+            promise = RequestScheduler.throttleRequest(url, tileLoader);
             if (!defined(promise)) {
                 return undefined;
             }

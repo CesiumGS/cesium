@@ -130,11 +130,15 @@ defineSuite([
                 var params = queryToObject(uri.query);
                 expect(params.something).toEqual('foo');
                 expect(params.another).toEqual('false');
+
+                // Just return any old image.
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
-            provider.requestImage(0, 0, 0);
+            return provider.requestImage(0, 0, 0).then(function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+            });
 
-            expect(loadImage.createImage).toHaveBeenCalled();
         });
     });
 
@@ -176,11 +180,14 @@ defineSuite([
             spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var questionMarkCount = url.match(/\?/g).length;
                 expect(questionMarkCount).toEqual(1);
+
+                // Just return any old image.
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
-            provider.requestImage(0, 0, 0);
-
-            expect(loadImage.createImage).toHaveBeenCalled();
+            return provider.requestImage(0, 0, 0).then(function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+            });
         });
     });
 
@@ -196,13 +203,16 @@ defineSuite([
             spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var questionMarkCount = url.match(/\?/g).length;
                 expect(questionMarkCount).toEqual(1);
-
                 expect(url).not.toContain('&&');
+
+                // Just return any old image.
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+
             });
 
-            provider.requestImage(0, 0, 0);
-
-            expect(loadImage.createImage).toHaveBeenCalled();
+            return provider.requestImage(0, 0, 0).then(function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+            });
         });
     });
 
@@ -222,11 +232,14 @@ defineSuite([
                 var uri = new Uri(url);
                 var params = queryToObject(uri.query);
                 expect(params.foo).toEqual('bar');
+
+                // Just return any old image.
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
-            provider.requestImage(0, 0, 0);
-
-            expect(loadImage.createImage).toHaveBeenCalled();
+            return provider.requestImage(0, 0, 0).then(function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+            });
         });
     });
 
@@ -289,6 +302,7 @@ defineSuite([
                 var rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
                 expect(params.bbox).toEqual(rect.west + ',' + rect.south + ',' + rect.east + ',' + rect.north);
 
+                // Just return any old image.
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
@@ -317,11 +331,14 @@ defineSuite([
 
                 expect(params.format).toEqual('foo');
                 expect(params.format).not.toEqual('image/jpeg');
+
+                // Just return any old image.
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
-            provider.requestImage(0, 0, 0);
-
-            expect(loadImage.createImage).toHaveBeenCalled();
+            return provider.requestImage(0, 0, 0).then(function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+            });
         });
     });
 

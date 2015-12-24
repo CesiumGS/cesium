@@ -12,8 +12,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError
-    ) {
+        DeveloperError) {
     "use strict";
 
     var activeRequestsByServer = {};
@@ -27,6 +26,8 @@ define([
      * @exports RequestScheduler
      *
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     *
+     * @private
      */
     var RequestScheduler = function() {
     };

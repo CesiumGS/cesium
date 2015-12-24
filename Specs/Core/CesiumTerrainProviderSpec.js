@@ -9,6 +9,7 @@ defineSuite([
         'Core/loadWithXhr',
         'Core/Math',
         'Core/QuantizedMeshTerrainData',
+        'Core/RequestScheduler',
         'Core/TerrainProvider',
         'Specs/pollToPromise',
         'ThirdParty/Uri',
@@ -23,6 +24,7 @@ defineSuite([
         loadWithXhr,
         CesiumMath,
         QuantizedMeshTerrainData,
+        RequestScheduler,
         TerrainProvider,
         pollToPromise,
         Uri,
@@ -370,13 +372,13 @@ defineSuite([
                 return provider.ready;
             }).then(function() {
                 spyOn(loadWithXhr, 'load');
-                provider.requestTileGeometry(0, 0, 0);
+                provider.requestTileGeometry(0, 0, 0, false);
                 expect(loadWithXhr.load.calls.mostRecent().args[0]).toContain('foo0.com');
-                provider.requestTileGeometry(1, 0, 0);
+                provider.requestTileGeometry(1, 0, 0, false);
                 expect(loadWithXhr.load.calls.mostRecent().args[0]).toContain('foo1.com');
-                provider.requestTileGeometry(1, -1, 0);
+                provider.requestTileGeometry(1, -1, 0, false);
                 expect(loadWithXhr.load.calls.mostRecent().args[0]).toContain('foo2.com');
-                provider.requestTileGeometry(1, 0, 1);
+                provider.requestTileGeometry(1, 0, 1, false);
                 expect(loadWithXhr.load.calls.mostRecent().args[0]).toContain('foo3.com');
             });
         });
@@ -396,17 +398,16 @@ defineSuite([
                 return provider.ready;
             }).then(function() {
                 spyOn(loadWithXhr, 'load');
-                provider.requestTileGeometry(0, 0, 0);
+                provider.requestTileGeometry(0, 0, 0, false);
                 expect(loadWithXhr.load.calls.mostRecent().args[0]).toContain('foo0.com');
-                provider.requestTileGeometry(1, 0, 0);
+                provider.requestTileGeometry(1, 0, 0, false);
                 expect(loadWithXhr.load.calls.mostRecent().args[0]).toContain('foo1.com');
-                provider.requestTileGeometry(1, -1, 0);
+                provider.requestTileGeometry(1, -1, 0, false);
                 expect(loadWithXhr.load.calls.mostRecent().args[0]).toContain('foo2.com');
-                provider.requestTileGeometry(1, 0, 1);
+                provider.requestTileGeometry(1, 0, 1, false);
                 expect(loadWithXhr.load.calls.mostRecent().args[0]).toContain('foo3.com');
             });
         });
-
 
         it('uses the proxy if one is supplied', function() {
             var baseUrl = 'made/up/url';
